@@ -3,8 +3,8 @@
  * the share row, people, movies and shows, streaming and the action beside them (below on phones).
  * The host starts; friends wait for the host.
  */
-import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
-import { Animated, TextInput, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { Animated, Keyboard, TextInput, View } from 'react-native';
 import { guestOnly } from '../../core/config';
 import { GoodWatchButton, RECONNECTED_DETAIL, RECONNECT_GOODWATCH } from '../home/Landing';
 import { Or } from '../home/start-parts';
@@ -101,14 +101,44 @@ function RoomBefore({ testID, label, actions, pinned, extra, start = 'idle' }: {
  * so the button works until the command comes back; `ready` (the round arrived) shows the check while
  * voting takes over. A start that fails reads Try again.
  */
+/** How long after the last keystroke the host's name saves. */
+const NAME_SAVE_MS = 600;
+
 export function RoomSetup({ ready = false }: { ready?: boolean }) {
   const { view, cmd, state, latest, disabled, signin, memberBusy, memberLapsed, openSheet } = useRoom();
   const { z } = useLayout();
   const pinned = usePinnedActions();
   const [name, setName] = useState('');
   const [focus, setFocus] = useState(false);
-  // A name sent on blur may still be in flight when Start is pressed: Start waits for it.
+  // A name being saved may still be in flight when Start is pressed: Start waits for it.
   const renaming = useRef<Promise<boolean> | null>(null);
+  // The name saves as it's typed (shortly after typing stops), when the keyboard goes away (Android back
+  // hides it without leaving the field), on Enter, on blur, and when the screen goes: never a draft only
+  // this phone knows. The field stays while you type, even once the first save gives you a name.
+  const typedName = useRef('');
+  const [keepField, setKeepField] = useState(false);
+  const commands = useRef({ cmd, latest });
+  useEffect(() => { commands.current = { cmd, latest }; });
+  const saveName = useCallback(function save() {
+    const want = typedName.current.trim();
+    if (!want || renaming.current) return;
+    const s = commands.current.latest();
+    if (want === s?.shared.participants.find((p) => p.participantId === s.own.participantId)?.nickname.trim()) return;
+    renaming.current = commands.current.cmd.rename(want).finally(() => {
+      renaming.current = null;
+      // Typed on while that save was out: save the newer name too.
+      if (typedName.current.trim() !== want) save();
+    });
+  }, []);
+  useEffect(() => {
+    if (!name.trim()) return;
+    const timer = setTimeout(saveName, NAME_SAVE_MS);
+    return () => clearTimeout(timer);
+  }, [name, saveName]);
+  useEffect(() => {
+    const sub = Keyboard.addListener('keyboardDidHide', saveName);
+    return () => { sub.remove(); saveName(); };
+  }, [saveName]);
   const nameInput = useRef<ComponentRef<typeof TextInput>>(null);
   const [attempt, setAttempt] = useState<'starting' | 'failed' | null>(null);
   const mounted = useRef(true);
@@ -117,15 +147,12 @@ export function RoomSetup({ ready = false }: { ready?: boolean }) {
   if (!view) return null;
   const typed = name.trim();
   const named = Boolean(view.me.nickname || typed);
-  const rename = () => {
-    if (!typed || typed === view.me.nickname || renaming.current) return;
-    renaming.current = cmd.rename(typed).finally(() => { renaming.current = null; });
-  };
+  const typeName = (text: string) => { typedName.current = text; setName(text); if (!keepField) setKeepField(true); };
   const start = async () => {
     if (renaming.current) await renaming.current;
     const s = latest();
     const current = s?.shared.participants.find((p) => p.participantId === s.own.participantId)?.nickname.trim();
-    if (!current && typed && !(await cmd.rename(typed))) return false;
+    if (typed && typed !== current && !(await cmd.rename(typed))) return false;
     return cmd.start();
   };
   // A start the server hasn't confirmed (the answer got lost) is saved and goes out again by itself;
@@ -154,10 +181,10 @@ export function RoomSetup({ ready = false }: { ready?: boolean }) {
       </Actions>
     </View>
   );
-  const nameField = view.needName ? (
+  const nameField = view.needName || keepField ? (
     <View style={{ gap: z(10) }}>
       <Small>Your name</Small>
-      <TextInput ref={nameInput} accessibilityLabel="Your name" value={name} onChangeText={setName} onFocus={() => setFocus(true)} onBlur={() => { setFocus(false); rename(); }} onSubmitEditing={rename}
+      <TextInput ref={nameInput} accessibilityLabel="Your name" value={name} onChangeText={typeName} onFocus={() => setFocus(true)} onBlur={() => { setFocus(false); saveName(); }} onSubmitEditing={saveName}
         maxLength={NAME_MAX} autoCapitalize="words" autoComplete="nickname" placeholder="Your name" placeholderTextColor={warm.placeholder} returnKeyType="done" selectionColor={glow.amber}
         style={fieldStyleFor(z, focus)} />
       {!guestOnly && <><Or /><GoodWatchButton {...(memberLapsed ? { label: RECONNECT_GOODWATCH, detail: RECONNECTED_DETAIL } : { detail: 'Brings your name and streaming services' })} disabled={memberBusy || disabled} onPress={() => void signin()} /></>}
