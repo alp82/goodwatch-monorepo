@@ -78,7 +78,11 @@ export function Entrance({ invite, open: request, from }: {
   // the app to the background cancels it: pending waits end, no new attempt starts, nothing navigates
   // afterwards, and the saved request stays for a manual retry.
   const attempt = useRef<AbortController | null>(null);
-  const cancelAttempt = useCallback(() => { attempt.current?.abort(); attempt.current = null; }, []);
+  // A join that got no answer goes again by itself (same saved request) once the browser is back online,
+  // but only while its form is still in front: leaving, closing it or backgrounding drops that intent
+  // (the saved request stays for a manual retry).
+  const offlineJoin = useRef<{ member: boolean; code: string } | null>(null);
+  const cancelAttempt = useCallback(() => { attempt.current?.abort(); attempt.current = null; offlineJoin.current = null; }, []);
   useEffect(() => cancelAttempt, [cancelAttempt]);
   useFocusEffect(useCallback(() => cancelAttempt, [cancelAttempt]));
   useEffect(() => {
@@ -193,72 +197,6 @@ export function Entrance({ invite, open: request, from }: {
   }, [invite, checkVersion, intent]);
   /** The name is remembered once admitted, for every later room on this device. */
   const rememberName = (name: string) => (name && name !== 'Guest' ? roomRegistry.setNickname(name).catch(() => undefined) : Promise.resolve());
-  // A join that got no answer goes again by itself (same saved request) once the browser is back online.
-  const offlineJoin = useRef<{ member: boolean; code: string } | null>(null);
-  const joinRef = useRef<typeof joinRoom | null>(null);
-  useEffect(() => { joinRef.current = joinRoom; });
-  useEffect(() => onBackOnline(() => {
-    const saved = offlineJoin.current;
-    offlineJoin.current = null;
-    if (saved) void joinRef.current?.(saved.member, undefined, undefined, saved.code);
-  }), []);
-  async function joinRoom(member = false, returning?: { code: string; nickname: string }, name?: string, joinCode?: string) {
-    if (inFlight.current || restoring || restoreFailed || (admission && admission.intent !== intent) || waiting(admission)) return;
-    inFlight.current = true;
-    attempt.current?.abort();
-    const controller = new AbortController();
-    attempt.current = controller;
-    const { signal } = controller;
-    setRecoveryDismissed(false);
-    setBusy(true);
-    setError('');
-    setDiagnostic(undefined);
-    let saved = admission;
-    // Recovery continues the original action, including sign-in after admission.
-    member = saved ? saved.member === true : member;
-    try {
-      const cleanCode = parseInvite(returning?.code ?? joinCode ?? code);
-      if (!cleanCode)
-        throw new Error('Enter the complete room code or YepWatch invitation link.');
-      if (!saved) {
-        const bytes = await Crypto.getRandomBytesAsync(32);
-        saved = {
-          request: {
-            contractVersion: 3,
-            commandId: Crypto.randomUUID(),
-            admissionSecret: Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join(''),
-            nickname: (returning?.nickname ?? name ?? nickname).trim() || (member ? 'Guest' : ''),
-          },
-          code: cleanCode,
-          intent,
-          member,
-          retryAt: 0,
-        };
-      }
-      const request = saved;
-      // A restart answers busy or not at all for a while: send the same saved request again by itself
-      // (same command id and secret, so it can never make a second room), and only then show an error.
-      await retryTransient(() => admit(request, signal), { retries: AUTO_RETRIES, retryAt: retryDeadline, signal, giveUp: stopWaiting });
-    } catch (e) {
-      // Cancelled (the screen went away): the request saved before the submit stays for a manual retry.
-      if (signal.aborted) return;
-      setError(unanswered(e) && browserOffline() ? OFFLINE_WORDS
-        : transientFailure(e) ? 'Couldn’t reach YepWatch. Your request is saved. Try again.' : e instanceof Error ? e.message : 'Could not join this room.');
-      offlineJoin.current = unanswered(e) && saved ? { member, code: saved.code } : null;
-      setDiagnostic(e instanceof ApiFailure ? e.diagnostic : undefined);
-      if (saved) {
-        // No answer at all has no server deadline: a resend (Try again, back online) may go at once.
-        const next = retainRequest(e) ? { ...saved, retryAt: unanswered(e) ? 0 : retryDeadline(e) } : null;
-        setAdmission(next);
-        try { await writeAdmission(intent, next); }
-        catch { setError('Your request is kept on this screen only: storage is unavailable. Keep it open to retry.'); }
-      }
-    } finally {
-      if (attempt.current === controller) attempt.current = null;
-      inFlight.current = false;
-      setBusy(false);
-    }
-  }
   /** One admission submit of the saved request; on success it opens the room. */
   async function admit(saved: AdmissionRecovery, signal: AbortSignal) {
     /** Nothing opens once the person has left: the room (if made) waits in Your rooms. */
@@ -319,6 +257,71 @@ export function Entrance({ invite, open: request, from }: {
     if (saved.code) await unarchive(result.credential.roomId);
     go({ pathname: '/room/[id]', params: { id: result.credential.roomId } }, true);
   }
+  async function joinRoom(member = false, returning?: { code: string; nickname: string }, name?: string, joinCode?: string) {
+    if (inFlight.current || restoring || restoreFailed || (admission && admission.intent !== intent) || waiting(admission)) return;
+    inFlight.current = true;
+    attempt.current?.abort();
+    const controller = new AbortController();
+    attempt.current = controller;
+    const { signal } = controller;
+    setRecoveryDismissed(false);
+    setBusy(true);
+    setError('');
+    setDiagnostic(undefined);
+    let saved = admission;
+    // Recovery continues the original action, including sign-in after admission.
+    member = saved ? saved.member === true : member;
+    try {
+      const cleanCode = parseInvite(returning?.code ?? joinCode ?? code);
+      if (!cleanCode)
+        throw new Error('Enter the complete room code or YepWatch invitation link.');
+      if (!saved) {
+        const bytes = await Crypto.getRandomBytesAsync(32);
+        saved = {
+          request: {
+            contractVersion: 3,
+            commandId: Crypto.randomUUID(),
+            admissionSecret: Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join(''),
+            nickname: (returning?.nickname ?? name ?? nickname).trim() || (member ? 'Guest' : ''),
+          },
+          code: cleanCode,
+          intent,
+          member,
+          retryAt: 0,
+        };
+      }
+      const request = saved;
+      // A restart answers busy or not at all for a while: send the same saved request again by itself
+      // (same command id and secret, so it can never make a second room), and only then show an error.
+      await retryTransient(() => admit(request, signal), { retries: AUTO_RETRIES, retryAt: retryDeadline, signal, giveUp: stopWaiting });
+      offlineJoin.current = null;
+    } catch (e) {
+      // Cancelled (the screen went away): the request saved before the submit stays for a manual retry.
+      if (signal.aborted) return;
+      setError(unanswered(e) && browserOffline() ? OFFLINE_WORDS
+        : transientFailure(e) ? 'Couldn’t reach YepWatch. Your request is saved. Try again.' : e instanceof Error ? e.message : 'Could not join this room.');
+      offlineJoin.current = unanswered(e) && saved ? { member, code: saved.code } : null;
+      setDiagnostic(e instanceof ApiFailure ? e.diagnostic : undefined);
+      if (saved) {
+        // No answer at all has no server deadline: a resend (Try again, back online) may go at once.
+        const next = retainRequest(e) ? { ...saved, retryAt: unanswered(e) ? 0 : retryDeadline(e) } : null;
+        setAdmission(next);
+        try { await writeAdmission(intent, next); }
+        catch { setError('Your request is kept on this screen only: storage is unavailable. Keep it open to retry.'); }
+      }
+    } finally {
+      if (attempt.current === controller) attempt.current = null;
+      inFlight.current = false;
+      setBusy(false);
+    }
+  }
+  const joinRef = useRef<typeof joinRoom | null>(null);
+  useEffect(() => { joinRef.current = joinRoom; });
+  useEffect(() => onBackOnline(() => {
+    const saved = offlineJoin.current;
+    offlineJoin.current = null;
+    if (saved) void joinRef.current?.(saved.member, undefined, undefined, saved.code);
+  }), []);
   // A lapsed sign-in keeps its name: the page doesn't turn back into a guest's mid-session.
   const known = home.nickname ?? (account.member || account.lapsed ? account.name : null);
   // Offline says so only after the quiet period (connection-words.ts); the request goes by itself when back.

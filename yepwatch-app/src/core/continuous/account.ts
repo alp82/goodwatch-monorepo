@@ -73,6 +73,9 @@ export async function signOut() {
 export function useAccount() {
   const query = useQuery({
     queryKey: accountKey, queryFn: loadAccount, enabled: !guestOnly, staleTime: 60_000, retry: 1,
+    // Never paused offline: a guest is known from the device alone, and a member's check fails (and says
+    // so) instead of leaving the start page waiting for a network that may not come.
+    networkMode: 'always',
     // GoodWatch couldn't renew the session just now: check again soon, quietly.
     refetchInterval: (q) => (q.state.data?.unavailable ? 30_000 : false),
   });
@@ -107,6 +110,10 @@ export function useAccount() {
     member: data?.state === 'member',
     /** Signed in here before and the session ran out: the name stays, Profile offers Reconnect. */
     lapsed: data?.state === 'lapsed',
+    /** The sign-in couldn't be checked (no network, YepWatch unreachable) and nothing is known yet. */
+    failed: !guestOnly && query.isError && query.data === undefined,
+    /** Checks the sign-in again. */
+    recheck: () => { void query.refetch(); },
     /** Signed in, but GoodWatch couldn't renew the session just now (tried again shortly). */
     unavailable: data?.unavailable === true,
     name: data?.displayName ?? null,

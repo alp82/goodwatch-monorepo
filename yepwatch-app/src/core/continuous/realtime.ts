@@ -56,10 +56,15 @@ export class ContinuousRealtime {
   private renewal?: Timer;
   private repairTimer?: Timer;
   private failures = 0;
-  private repairFailures = 0;
-  /** Epoch ms before which the resync read must not run again (backoff or server Retry-After). */
-  private repairAt = 0;
-  private reading?: Promise<void>;
+  /** Epoch ms before which no new reconnect may start: the server named a wait (Retry-After, retryAfterMs). */
+  private serverRetryAt = 0;
+  /** Failed room reads in a row, shared by the resync read and the HTTP fallback. */
+  private readFailures = 0;
+  /** Epoch ms before which no room read may start (backoff or server Retry-After), for both readers. */
+  private readAt = 0;
+  /** The one room read in flight; the resync read and the HTTP fallback share it. */
+  private reading?: Promise<boolean>;
+  private repairing = false;
   private dirty = false;
   private session: string | null = null;
   private sequence = 0;
@@ -68,7 +73,6 @@ export class ContinuousRealtime {
   private pollTimer?: Timer;
   private polling = false;
   private pollSession = 0;
-  private pollFailures = 0;
   constructor(private readonly o: RealtimeOptions) {}
   private later(fn: () => void, ms: number) {
     return (this.o.later ?? setTimeout)(fn, ms);
@@ -129,7 +133,9 @@ export class ContinuousRealtime {
       this.start();
       return;
     }
-    if (this.live) return;
+    // An attempt already running is kept (a second would ask for another ticket), and so is a wait the
+    // server named. Only the waits that grew while requests got no answer at all start over.
+    if (this.live || this.attempting || this.serverRetryAt > Date.now()) return;
     this.failures = 0;
     this.detach();
     const epoch = ++this.epoch;
@@ -198,90 +204,109 @@ export class ContinuousRealtime {
   private renew() {
     this.clear(this.renewal);
     this.renewal = this.later(() => {
-      if (this.active && this.live) {
+      // Keeps ticking while the channel is degraded (nothing is sent then), so presence carries on after it.
+      if (this.active && this.session) {
         this.sendActivity();
         this.renew();
       }
     }, 3000);
   }
+  /**
+   * One room read over HTTP. A read already in flight is shared, and a failure sets one deadline (backoff,
+   * never shorter than a server Retry-After) that both the resync read and the HTTP fallback wait for.
+   */
+  private read(): Promise<boolean> {
+    if (this.reading) return this.reading;
+    const reading = this.o.privateRead().then(
+      () => {
+        this.readFailures = 0;
+        this.readAt = 0;
+        return true;
+      },
+      (e: unknown) => {
+        this.readAt = Date.now() + backoffDelay(this.readFailures++, this.o.random ?? Math.random, serverWait(e));
+        return false;
+      }
+    ).finally(() => {
+      if (this.reading === reading) this.reading = undefined;
+    });
+    this.reading = reading;
+    return reading;
+  }
+  /** Runs `fn` once the shared read deadline has passed. The timer is the deadline's authority (fake clocks too). */
+  private afterDeadline(fn: () => void, minimum = 0) {
+    const deadline = this.readAt;
+    return this.later(() => {
+      if (this.readAt > deadline) return void this.afterDeadline(fn, 0);
+      if (this.readAt === deadline) this.readAt = 0;
+      fn();
+    }, Math.max(minimum, deadline - Date.now(), 0));
+  }
   private repair() {
     this.dirty = true;
-    if (this.reading) return;
+    if (this.repairing) return;
     // A failed read set a deadline: newer revisions (or a reconnect) wait for it instead of reading early.
-    const wait = this.repairAt - Date.now();
-    if (wait > 0) {
-      if (this.repairTimer === undefined) this.scheduleRepair(wait);
+    if (this.readAt > Date.now()) {
+      if (this.repairTimer === undefined) this.scheduleRepair();
       return;
     }
-    this.reading = (async () => {
+    this.repairing = true;
+    void (async () => {
       while (this.active && this.dirty) {
-        this.dirty = false;
-        try {
-          await this.o.privateRead();
-          this.repairFailures = 0;
-          this.repairAt = 0;
-          this.clear(this.repairTimer);
-          this.repairTimer = undefined;
-        } catch (e) {
-          // The resync read keeps trying (backing off to 15 s, jittered) while the room is open, even if no
-          // later revision arrives: a restart can take the API down longer than the socket. A server
-          // Retry-After (busy, 429 rate limit) is a floor, never shortened.
-          if (this.active) {
-            const delay = backoffDelay(this.repairFailures++, this.o.random ?? Math.random, serverWait(e));
-            this.repairAt = Date.now() + delay;
-            this.scheduleRepair(delay);
-          }
-          return;
+        // A read already in flight (the fallback's) may have started before this revision: let it finish,
+        // then read again.
+        if (this.reading) {
+          await this.reading;
+          if (this.readAt > Date.now()) break;
+          continue;
         }
+        this.dirty = false;
+        if (!(await this.read())) {
+          // The resync read keeps trying (backing off to 15 s, jittered) while the room is open, even if no
+          // later revision arrives: a restart can take the API down longer than the socket.
+          this.dirty = true;
+          break;
+        }
+        this.clear(this.repairTimer);
+        this.repairTimer = undefined;
       }
     })().finally(() => {
-      this.reading = undefined;
-      if (this.active && this.dirty) this.repair();
+      this.repairing = false;
+      if (!this.active || !this.dirty) return;
+      if (this.readAt > Date.now()) this.scheduleRepair();
+      else this.repair();
     });
   }
-  private scheduleRepair(ms: number) {
+  private scheduleRepair() {
     this.clear(this.repairTimer);
-    this.repairTimer = this.later(() => {
-      // The timer is the deadline's authority (tests and slow clocks alike).
+    this.repairTimer = this.afterDeadline(() => {
       this.repairTimer = undefined;
-      this.repairAt = 0;
       this.repair();
-    }, ms);
+    });
   }
   /** Reads the room over HTTP until the live channel connects; while reads work the room counts as current. */
   private poll(ms = POLL_MS) {
     const session = this.pollSession;
     const current = () => this.active && !this.live && session === this.pollSession;
-    this.pollTimer = this.later(() => {
+    // Never before the shared read deadline (a 429 on the resync read holds the fallback too).
+    this.pollTimer = this.afterDeadline(() => {
       if (!current()) {
         if (session === this.pollSession) this.pollTimer = undefined;
         return;
       }
-      void this.o.privateRead().then(
-        () => {
-          if (!current()) return POLL_MS;
-          this.pollFailures = 0;
-          this.polling = true;
-          this.o.status('polling');
-          return POLL_MS;
-        },
-        (e: unknown) => {
-          // Failed reads back off like the resync read, and a server Retry-After is a floor.
-          const wait = Math.max(POLL_MS, backoffDelay(this.pollFailures++, this.o.random ?? Math.random, serverWait(e)));
-          if (!current()) return wait;
-          this.polling = false;
-          this.o.status('reconnecting');
-          return wait;
+      void this.read().then((ok) => {
+        if (!current()) {
+          if (session === this.pollSession) this.pollTimer = undefined;
+          return;
         }
-      ).then((next) => {
-        if (current()) this.poll(next);
-        else if (session === this.pollSession) this.pollTimer = undefined;
+        this.polling = ok;
+        this.o.status(ok ? 'polling' : 'reconnecting');
+        this.poll();
       });
     }, ms);
   }
   private stopPolling() {
     this.pollSession++;
-    this.pollFailures = 0;
     this.clear(this.pollTimer);
     this.pollTimer = undefined;
     this.polling = false;
@@ -291,6 +316,7 @@ export class ContinuousRealtime {
     this.detach();
     if (!this.polling) this.o.status('reconnecting');
     const ms = backoffDelay(this.failures++, this.o.random ?? Math.random, minimum);
+    this.serverRetryAt = minimum > 0 ? Date.now() + minimum : 0;
     if (this.failures >= POLL_AFTER_FAILURES && this.pollTimer === undefined) this.poll();
     this.report(false, Date.now() + ms);
     this.retryTimer = this.later(() => {
@@ -361,9 +387,16 @@ export class ContinuousRealtime {
             this.o.status('expired');
             return;
           }
+          // Back from degraded on the same socket: others see this person again at once, renewals carry on.
+          const recovered = !this.live && this.session !== null;
           this.live = true;
           this.failures = 0;
+          this.serverRetryAt = 0;
           this.stopPolling();
+          if (recovered) {
+            this.sendActivity();
+            this.renew();
+          }
           this.report(false);
           this.o.status('live');
           this.heartbeat(epoch);

@@ -585,7 +585,101 @@ test('degraded keeps the socket: the room is read over HTTP until the gateway se
   s.frame({ type: 'room.snapshot', snapshot: continuousFixture().shared });
   assert.equal(h.statuses.at(-1), 'live');
   assert.equal([...h.jobs.values()].some((j) => j.ms === POLL_MS), false, 'polling stops');
+  assert.equal(s.sent.length, count + 1, 'recovery tells the others at once');
+  assert.equal(JSON.parse(s.sent.at(-1)!).type, 'activity');
   h.client.sendActivity('trailer');
-  assert.equal(s.sent.length, count + 1, 'the activity session carries on');
+  assert.equal(s.sent.length, count + 2, 'the activity session carries on');
+  h.client.stop();
+});
+test('a renewal that comes due while degraded keeps the presence going after recovery', async () => {
+  const h = harness();
+  h.client.start();
+  await tick();
+  const s = h.sockets[0];
+  s.open();
+  s.frame({ type: 'room.snapshot', snapshot: continuousFixture().shared });
+  s.frame({ type: 'activity.session', roomId: 'test-room', sessionId: 's1', serverTime: Date.now() });
+  s.frame({ type: 'degraded', retryAfterMs: 10000 });
+  await tick();
+  const count = s.sent.length;
+  h.run(3000);
+  assert.equal(s.sent.length, count, 'nothing goes out while degraded');
+  assert.ok([...h.jobs.values()].some((j) => j.ms === 3000), 'the renewal keeps ticking');
+  s.frame({ type: 'room.snapshot', snapshot: continuousFixture().shared });
+  assert.equal(s.sent.length, count + 1);
+  h.run(3000);
+  assert.equal(s.sent.length, count + 2, 'renewals resume');
+  h.client.stop();
+});
+test('degraded: a 429 on the resync read holds the HTTP fallback too, and the two never read at once', async () => {
+  let reads = 0;
+  let inFlight = 0;
+  let most = 0;
+  const releases: (() => void)[] = [];
+  let fail: RoomFailure | null = new RoomFailure('limit_reached', 'Slow down', 429, undefined, undefined, true, 30);
+  const h = harness({
+    privateRead: () => {
+      reads++;
+      most = Math.max(most, ++inFlight);
+      return new Promise<void>((resolve, reject) => releases.push(() => {
+        inFlight--;
+        const e = fail;
+        fail = null;
+        if (e) reject(e); else resolve();
+      }));
+    },
+  });
+  h.client.start();
+  await tick();
+  const s = h.sockets[0];
+  s.open();
+  s.frame({ type: 'room.snapshot', snapshot: continuousFixture().shared });
+  await tick();
+  releases.shift()!(); // the first resync read answers 429, Retry-After 30 s
+  await tick();
+  await tick();
+  assert.equal(reads, 1);
+  // Live again before degrading, so the 30 s deadline stands.
+  s.frame({ type: 'degraded', retryAfterMs: 10000 });
+  await tick();
+  assert.equal(reads, 1, 'degraded does not read before the Retry-After');
+  const waits = [...h.jobs.values()].map((j) => j.ms).filter((ms) => ms >= 30000 && ms < 35000);
+  assert.ok(waits.length >= 1, `both readers wait for the deadline: ${[...h.jobs.values()].map((j) => j.ms)}`);
+  assert.equal([...h.jobs.values()].some((j) => j.ms === POLL_MS), false, 'no poll 5 s later');
+  for (const ms of waits) h.run(ms);
+  await tick();
+  assert.equal(reads, 2, 'one read when the deadline passes');
+  assert.equal(most, 1, 'never two reads at once');
+  releases.shift()!();
+  await tick();
+  await tick();
+  h.client.stop();
+});
+test('resume keeps a running attempt and a server-named wait', async () => {
+  let tickets = 0;
+  let hold: (() => void) | null = null;
+  const h = harness({
+    ticket: () => {
+      tickets++;
+      if (tickets === 1) return Promise.reject(new RoomFailure('limit_reached', 'Slow down', 429, undefined, undefined, true, 8));
+      return new Promise((r) => { hold = () => r({ ticket: 'fresh', expiresAt: Date.now() + 10000, websocketPath: '/api/yepwatch/v1/proposal/realtime' }); });
+    },
+  });
+  h.client.start();
+  await tick();
+  assert.deepEqual([...h.jobs.values()].map((j) => j.ms), [8000]);
+  h.client.resume();
+  await tick();
+  assert.equal(tickets, 1, 'no new ticket before the Retry-After');
+  assert.deepEqual([...h.jobs.values()].map((j) => j.ms), [8000]);
+  h.run(8000);
+  await tick();
+  assert.equal(tickets, 2);
+  h.client.resume();
+  await tick();
+  assert.equal(tickets, 2, 'a running attempt is kept');
+  (hold as unknown as () => void)();
+  await tick();
+  assert.equal(h.sockets.length, 1);
   h.client.stop();
 });

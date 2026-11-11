@@ -31,7 +31,10 @@ function NewRoomDraft({ account }: { account: ReturnType<typeof useAccount> }) {
   // Local and offline-aware: neither waits for React Query's online state (a paused create sat on Saving…).
   const draft = useQuery({ queryKey: draftKey, queryFn: () => flow.draft(), networkMode: 'always' });
   const attempt = useRef<AbortController | null>(null);
-  const cancel = useCallback(() => { attempt.current?.abort(); }, []);
+  // Offline: an unanswered save goes again by itself once the browser is back online, but only while this
+  // page is in front. Leaving or backgrounding drops that intent; the saved request stays for a manual retry.
+  const resendArmed = useRef(false);
+  const cancel = useCallback(() => { attempt.current?.abort(); resendArmed.current = false; }, []);
   useFocusEffect(useCallback(() => { newRoomInFront(true); return () => { newRoomInFront(false); cancel(); }; }, [cancel]));
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => { if (state !== 'active') cancel(); });
@@ -56,7 +59,8 @@ function NewRoomDraft({ account }: { account: ReturnType<typeof useAccount> }) {
       client.setQueryData(draftKey, { text: submittedText, retryAt: 0 });
       if (!attempt.current?.signal.aborted) router.replace({ pathname: '/room/[id]', params: { id: snapshot.shared.roomId } });
     },
-    onError: async () => {
+    onError: async (error) => {
+      resendArmed.current = !attempt.current?.signal.aborted && unanswered(error);
       try { client.setQueryData(draftKey, await flow.draft()); }
       catch { client.setQueryData(draftKey, { text: text ?? '', retryAt: flow.retryAt }); }
     },
@@ -64,10 +68,13 @@ function NewRoomDraft({ account }: { account: ReturnType<typeof useAccount> }) {
   const retrySeconds = useRetryCountdown(draft.data?.retryAt ?? 0);
   // Offline: the saved request goes again by itself as soon as the browser is back online.
   const resend = useRef(() => {});
-  resend.current = () => {
-    const failed = mutation.error;
-    if (mutation.isError && failed?.name !== 'AbortError' && unanswered(failed) && mutation.variables !== undefined) mutation.mutate(mutation.variables);
-  };
+  useEffect(() => {
+    resend.current = () => {
+      if (!resendArmed.current) return;
+      resendArmed.current = false;
+      if (mutation.isError && mutation.variables !== undefined) mutation.mutate(mutation.variables);
+    };
+  });
   useEffect(() => onBackOnline(() => resend.current()), []);
   const back = () => { cancel(); if (router.canGoBack()) router.back(); else router.replace('/'); };
   useBackAction(back);

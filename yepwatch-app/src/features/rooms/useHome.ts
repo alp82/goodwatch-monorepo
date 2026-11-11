@@ -111,7 +111,7 @@ export function useHome() {
   const account = useAccount();
   const lifecycle = useQuery({ queryKey: ['account-deletion', account.generation], enabled: account.member, retry: false, refetchInterval: 15_000,
     queryFn: async () => { const result = await continuousApi.deletionStatus(); return { accountTag: result.accountTag, deletion: result.deletion ? deletionStateSchema.parse(result.deletion) : null }; } });
-  const local = useGuestHome(account.ready && !account.member && !account.lapsed);
+  const local = useGuestHome(account.ready && !account.member && !account.lapsed && !account.failed);
   const [mutationFailed, setMutationFailed] = useState(false);
   const key = ['account-home', account.generation] as const;
   const cloud = useQuery({ queryKey: key, queryFn: async () => {
@@ -134,6 +134,10 @@ export function useHome() {
     return { ...(await continuousApi.accountHome()), notice: replacedGuest ? 'Resumed your existing place. Your account’s saved answers were kept.' : '' };
   }, enabled: account.member && lifecycle.isSuccess && !lifecycle.data?.deletion,
     retry: 1, refetchInterval: 15_000 });
+  // The sign-in couldn't be checked: neither a member's rooms nor a guest's start page can be told apart
+  // yet, so the page says Your rooms didn't load and Retry checks again.
+  if (!account.member && account.failed) return { ...local, ready: local.ready, settled: true, loadingRooms: false, hasRooms: false, active: [], archived: [], left: [], decisions: [], decidedRooms: new Set<string>(),
+    unavailable: [{ kind: 'unavailable' as const, roomId: 'account', nickname: 'Your rooms' }], notice: '', deletionPending: false, retry: account.recheck, reload: () => { account.recheck(); local.reload(); } };
   if (!account.member) return account.lapsed
     ? { ...local, ready: account.ready, hasRooms: false, active: [], archived: [], left: [], decisions: [], decidedRooms: new Set<string>(), unavailable: [], notice: '', deletionPending: false }
     // Until the sign-in is known the page can't tell a member's rooms from a guest's start page: it shows neither.

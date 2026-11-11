@@ -1,6 +1,6 @@
 /** Room pieces shared by several screens and sheets: ideas, the share and people rows, services, country and kinds. */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Image, Platform, Pressable, TextInput, View, type TextStyle } from 'react-native';
+import { Image, Platform, Pressable, TextInput, View, useWindowDimensions, type TextStyle } from 'react-native';
 import { deviceCountryHint, rankedCountries } from '../../core/lobby';
 import { shareInvitation } from '../../core/share-invitation';
 import { FaceStack } from '../shell/parts';
@@ -195,12 +195,15 @@ export function fieldStyleFor(z: (n: number) => number, focus = false): TextStyl
 /** Logo tiles: the 8 biggest first, the rest and search after More. */
 export function ServiceGrid({ all, loading, selected, toggle }: { all: ServiceChoice[]; loading: boolean; selected: number[]; toggle: (s: ServiceChoice) => void }) {
   const { phone, z } = useLayout();
+  // Large text (the system font size) makes the label line taller; the tiles grow with it.
+  const { fontScale } = useWindowDimensions();
   const [more, setMore] = useState(false);
   const [q, setQ] = useState('');
   const cell = { width: `${100 / (phone ? 3 : 4)}%`, padding: 5 } as const;
   const logo = phone ? 52 : z(60);
-  // One fixed height (border, padding, logo, gap, one label line), so loading tiles and service tiles match exactly.
-  const tile = { alignItems: 'center', justifyContent: 'center', gap: 8, padding: 10, height: logo + 50, borderRadius: R.card, borderWidth: 2 } as const;
+  // One height (border 4, padding 20, logo, gap 8, one 13 px label line at the font scale), so loading tiles
+  // and service tiles match exactly.
+  const tile = { alignItems: 'center', justifyContent: 'center', gap: 8, padding: 10, height: logo + 33 + Math.ceil(13 * 1.28 * Math.max(1, fontScale || 1)), borderRadius: R.card, borderWidth: 2 } as const;
   // Loading: empty tiles in the grid's usual shape (8 services and More), so the sheet already has its
   // height and doesn't jump when the services arrive.
   if (loading && !all.length) return (

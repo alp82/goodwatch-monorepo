@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Animated, Image, PanResponder, View } from 'react-native';
+import { Animated, Image, PanResponder } from 'react-native';
 import type { Candidate, RoomCommand, RoomSnapshot } from '@goodwatch/yepwatch-contracts';
 import { Button, Heading, Notice, Panel, Row, Words, useReducedMotion } from '../components/ui';
 import { nextCandidate } from '../core/room-state';

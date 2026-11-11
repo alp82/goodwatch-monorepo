@@ -332,28 +332,6 @@ export function useContinuousRoom(roomId: string) {
   // and a saved action whose request never got an answer goes again right away.
   const [offline, setOffline] = useState(() => browserOffline());
   useEffect(() => {
-    if (!browserEvents()) return;
-    const resume = () => {
-      setOffline(browserOffline());
-      if (browserOffline() || terminalRef.current || expired() || AppState.currentState !== 'active') return;
-      channel.current?.resume();
-      if (queue.current.pending && queue.current.unanswered) {
-        queue.current.retryAt = 0;
-        setRetryAt(0);
-        void retryRef.current();
-      }
-    };
-    const away = () => setOffline(true);
-    window.addEventListener('online', resume);
-    window.addEventListener('focus', resume);
-    window.addEventListener('offline', away);
-    return () => {
-      window.removeEventListener('online', resume);
-      window.removeEventListener('focus', resume);
-      window.removeEventListener('offline', away);
-    };
-  }, [expired]);
-  useEffect(() => {
     if (!activities.size) return;
     const next = Math.min(
       ...[...activities.values()].flatMap((a) => [
@@ -522,6 +500,28 @@ export function useContinuousRoom(roomId: string) {
   const retryOnline = (connection === 'live' || connection === 'polling') && Boolean(pending) && !busy && retrySeconds === 0;
   const retryRef = useRef(send);
   useEffect(() => { retryRef.current = send; });
+  useEffect(() => {
+    if (!browserEvents()) return;
+    const resume = () => {
+      setOffline(browserOffline());
+      if (browserOffline() || terminalRef.current || expired() || AppState.currentState !== 'active') return;
+      channel.current?.resume();
+      if (queue.current.pending && queue.current.unanswered) {
+        queue.current.retryAt = 0;
+        setRetryAt(0);
+        void retryRef.current();
+      }
+    };
+    const away = () => setOffline(true);
+    window.addEventListener('online', resume);
+    window.addEventListener('focus', resume);
+    window.addEventListener('offline', away);
+    return () => {
+      window.removeEventListener('online', resume);
+      window.removeEventListener('focus', resume);
+      window.removeEventListener('offline', away);
+    };
+  }, [expired]);
   // Bounded: after a few tries the line with Retry stays, so a failing server isn't kept busy by this device.
   const autoRetries = useRef({ commandId: '', tries: 0 });
   useEffect(() => {
