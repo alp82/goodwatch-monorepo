@@ -146,7 +146,8 @@ function RoomProviderContent({ id, children, renderSheet }: { id: string; childr
   const latest = useCallback(() => queryClient.getQueryData<CachedRoom>(continuousKey(id)), [id]);
   // state.send is a new function every render; commands go through a stable ref so timers and effects keyed on them don't restart.
   const sendRef = useRef(state.send);
-  useEffect(() => { sendRef.current = state.send; });
+  const viewRef = useRef(state.view);
+  useEffect(() => { sendRef.current = state.send; viewRef.current = state.view; });
   const [seenIdeas, setSeenIdeas] = useState<ReadonlySet<string>>(() => new Set());
   const seenRef = useRef(seenIdeas);
   useEffect(() => {
@@ -167,7 +168,7 @@ function RoomProviderContent({ id, children, renderSheet }: { id: string; childr
   const cmd = useMemo<RoomCommands>(() => {
     // Commands are only sent from handlers and effects, never while rendering.
     // eslint-disable-next-line react-hooks/refs
-    const base = roomCommands((command) => sendRef.current(command), latest);
+    const base = roomCommands((command) => sendRef.current(command), latest, () => viewRef.current());
     // Switching a friend's idea (either way) means the host has dealt with it: never NEW again.
     return {
       ...base,

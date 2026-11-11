@@ -186,13 +186,27 @@ type Send = (command: RoomCommand | CommandBuild) => Promise<boolean>;
 
 /**
  * Every command the redesigned screens send. Commands wait their turn behind this device's earlier
- * ones, which move the room's versions on, so version guards are read when they go out. What the
- * person actually acted on is fixed at the tap: a vote belongs to this round, an agreement to this
- * proposal. If that has moved on by then, the command is dropped, never re-aimed.
+ * ones, which move the room's versions on, so shared version guards are read when they go out. What the
+ * person actually acted on is fixed at the tap: a vote belongs to this round and to the choice it
+ * replaces, an agreement to this proposal and to your agreement as you saw it. If that has moved on by
+ * then (another device of yours changed it), the command is dropped, never re-aimed: the room shows the
+ * newer choice. `view` is the room as the person sees it (this device's unconfirmed commands on top), so a
+ * tap queued behind your own unconfirmed vote is aimed at that vote.
  */
-export function roomCommands(send: Send, latest: () => RoomSnapshot | undefined) {
+export function roomCommands(send: Send, latest: () => RoomSnapshot | undefined, view: () => RoomSnapshot | undefined = latest) {
   /** The round this tap happened in. */
-  const round = () => latest()?.shared.generation;
+  const round = () => view()?.shared.generation;
+  const voteRevision = (s: RoomSnapshot, candidateId: string) => s.own.votes.find((v) => v.candidateId === candidateId)?.revision ?? 0;
+  /** A vote or Undo on `candidateId`, aimed at the choice the person saw. */
+  const voteOn = (candidateId: string, value: 'watch' | 'pass' | null, activeExposureMs: number | null) => {
+    const seen = view();
+    if (!seen) return Promise.resolve(false);
+    const generation = seen.shared.generation;
+    const expectedVoteRevision = voteRevision(seen, candidateId);
+    return send((s) => (s.shared.generation !== generation || voteRevision(s, candidateId) !== expectedVoteRevision ? null : {
+      type: 'vote', generation, candidateId, expectedVoteRevision, value, ...(value === null ? {} : { activeExposureMs }),
+    }));
+  };
   return {
     addIdea: (text: string) => send({ type: 'add_idea', text: text.trim() }),
     editIdea: (ideaId: string, text: string) => send({ type: 'edit_idea', ideaId, text: text.trim() }),
@@ -204,28 +218,24 @@ export function roomCommands(send: Send, latest: () => RoomSnapshot | undefined)
     setShowSeen: (show: boolean) => send({ type: 'set_show_seen', show }),
     configure: (patch: { country?: string; constraints?: RoomConstraints }) =>
       send((s) => ({ type: 'configure', expectedContextVersion: s.shared.contextVersion, ...patch })),
-    start: () => send((s) => ({ type: 'start', expectedRosterVersion: s.shared.rosterVersion, expectedContextVersion: s.shared.contextVersion, hostReady: true })),
-    vote: (candidateId: string, yes: boolean, activeExposureMs: number | null) => {
+    start: () => {
       const generation = round();
-      return send((s) => (s.shared.generation !== generation ? null : {
-        type: 'vote', generation, candidateId, expectedVoteRevision: s.own.votes.find((v) => v.candidateId === candidateId)?.revision ?? 0,
-        value: yes ? 'watch' : 'pass', activeExposureMs: yes ? activeExposureMs : null,
-      }));
+      return send((s) => (s.shared.generation !== generation ? null : { type: 'start', expectedGeneration: generation, expectedRosterVersion: s.shared.rosterVersion, expectedContextVersion: s.shared.contextVersion, hostReady: true }));
     },
-    undo: (candidateId: string) => {
-      const generation = round();
-      return send((s) => (s.shared.generation !== generation ? null : { type: 'vote', generation, candidateId, expectedVoteRevision: s.own.votes.find((v) => v.candidateId === candidateId)?.revision ?? 0, value: null }));
-    },
+    vote: (candidateId: string, yes: boolean, activeExposureMs: number | null) => voteOn(candidateId, yes ? 'watch' : 'pass', yes ? activeExposureMs : null),
+    undo: (candidateId: string) => voteOn(candidateId, null, null),
     propose: (candidateId: string) => {
-      const seen = latest()?.shared;
+      const seen = view()?.shared;
       if (!seen) return Promise.resolve(false);
       return send((s) => (s.shared.generation !== seen.generation ? null : { type: 'propose', generation: seen.generation, expectedRosterVersion: s.shared.rosterVersion, expectedProposalVersion: seen.proposalVersion, candidateId }));
     },
     agree: (agreed: boolean) => {
-      const proposal = latest()?.shared.proposal;
-      if (!proposal) return Promise.resolve(false);
-      return send((s) => (s.shared.proposal?.version !== proposal.version || s.shared.proposal.candidateId !== proposal.candidateId ? null : {
-        type: 'agree', generation: s.shared.generation, expectedRosterVersion: s.shared.rosterVersion, expectedProposalVersion: proposal.version, candidateId: proposal.candidateId, expectedOwnAgreementRevision: s.own.agreement.revision, agreed,
+      const seen = view();
+      const proposal = seen?.shared.proposal;
+      if (!seen || !proposal) return Promise.resolve(false);
+      const expectedOwnAgreementRevision = seen.own.agreement.revision;
+      return send((s) => (s.shared.proposal?.version !== proposal.version || s.shared.proposal.candidateId !== proposal.candidateId || s.own.agreement.revision !== expectedOwnAgreementRevision ? null : {
+        type: 'agree', generation: s.shared.generation, expectedRosterVersion: s.shared.rosterVersion, expectedProposalVersion: proposal.version, candidateId: proposal.candidateId, expectedOwnAgreementRevision, agreed,
       }));
     },
     retryAgreement: () => {
@@ -234,7 +244,10 @@ export function roomCommands(send: Send, latest: () => RoomSnapshot | undefined)
       return send((s) => ({ type: 'retry_agreement', generation: s.shared.generation, expectedAgreementVersion: seen.agreement.version, expectedProposalVersion: seen.proposalVersion }));
     },
     refill: () => send((s) => ({ type: 'refill', generation: s.shared.generation, expectedStreamVersion: s.shared.stream.version })),
-    restart: () => send((s) => ({ type: 'restart', expectedRevision: s.shared.revision })),
+    restart: () => {
+      const generation = round();
+      return send((s) => (s.shared.generation !== generation ? null : { type: 'restart', expectedGeneration: generation, expectedRevision: s.shared.revision }));
+    },
     leave: () => send({ type: 'leave' }),
   };
 }

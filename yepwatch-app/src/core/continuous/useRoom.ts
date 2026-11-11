@@ -472,7 +472,9 @@ export function useContinuousRoom(roomId: string) {
         const command = snapshot ? entry.build(snapshot) : null;
         let ok = command ? await submitRef.current(command, entry.commandId) : false;
         if (!ok && conflicted.current === entry.commandId && !terminalRef.current) {
-          // Rebased once on the room the conflict brought (the same command id: it can only apply once).
+          // Rebased once on the room the conflict brought (the same command id: it can only apply once). A
+          // conflict about your own choice (another device of yours changed that vote or agreement) builds
+          // nothing: the newer choice stays and the room shows it (roomCommands).
           const fresh = cached();
           const again = fresh ? entry.build(fresh) : null;
           ok = again ? await submitRef.current(again, entry.commandId) : false;
@@ -541,6 +543,11 @@ export function useContinuousRoom(roomId: string) {
     confirmed,
     /** The room with this device's unconfirmed commands applied: screens read this. */
     display,
+    /** `display` as of now (not the last render): taps aim their own-choice guards at it. */
+    view: () => {
+      const now = cached();
+      return now ? overlayRoom(now, queue.current.pending, outbox.current) : undefined;
+    },
     /** A command the server has to decide (Start, Propose, Leave…) is on its way. */
     working: queued.some((e) => e.foreground),
     access,
