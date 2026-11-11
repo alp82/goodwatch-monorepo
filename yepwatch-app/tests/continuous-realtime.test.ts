@@ -139,7 +139,7 @@ test('activity requires authenticated live snapshot and a fresh session; backgro
   assert.equal(h.statuses.at(-1), 'background');
   assert.ok(h.cleared() >= 2);
 });
-test('degraded transport clears peer activity; reconnect rotates one-use ticket and session sequence', async () => {
+test('a restarting gateway clears peer activity; reconnect rotates one-use ticket and session sequence', async () => {
   const h = harness();
   h.client.start();
   await tick();
@@ -152,7 +152,7 @@ test('degraded transport clears peer activity; reconnect rotates one-use ticket 
     sessionId: 's1',
     serverTime: Date.now(),
   });
-  s.frame({ type: 'degraded', retryAfterMs: 500 });
+  s.frame({ type: 'restarting', retryAfterMs: 500 });
   assert.equal(s.closed, true);
   assert.equal(h.statuses.at(-1), 'reconnecting');
   const count = s.sent.length;
@@ -555,5 +555,37 @@ test('resume (back online, back in front) connects at once with a fresh backoff 
   await tick();
   assert.equal(h.sockets[0].closed, false, 'a live socket is kept');
   assert.equal(h.sockets.length, 1);
+  h.client.stop();
+});
+test('degraded keeps the socket: the room is read over HTTP until the gateway sends a fresh snapshot', async () => {
+  let reads = 0;
+  let cleared = 0;
+  const h = harness({ privateRead: async () => { reads++; }, clearActivity: () => { cleared++; } });
+  h.client.start();
+  await tick();
+  const s = h.sockets[0];
+  s.open();
+  s.frame({ type: 'room.snapshot', snapshot: continuousFixture().shared });
+  s.frame({ type: 'activity.session', roomId: 'test-room', sessionId: 's1', serverTime: Date.now() });
+  await tick();
+  const before = reads;
+  const clearedBefore = cleared;
+  s.frame({ type: 'degraded', retryAfterMs: 10000 });
+  await tick();
+  assert.equal(s.closed, false, 'no 10 s reconnect wait');
+  assert.equal(h.sockets.length, 1);
+  assert.equal(reads, before + 1, 'read over HTTP at once');
+  assert.ok(cleared > clearedBefore, 'peer activity is cleared while updates may be stale');
+  const count = s.sent.length;
+  h.client.sendActivity('trailer');
+  assert.equal(s.sent.length, count, 'no activity while degraded');
+  h.run(POLL_MS);
+  await tick();
+  assert.equal(reads, before + 2, 'and keeps reading until the gateway recovers');
+  s.frame({ type: 'room.snapshot', snapshot: continuousFixture().shared });
+  assert.equal(h.statuses.at(-1), 'live');
+  assert.equal([...h.jobs.values()].some((j) => j.ms === POLL_MS), false, 'polling stops');
+  h.client.sendActivity('trailer');
+  assert.equal(s.sent.length, count + 1, 'the activity session carries on');
   h.client.stop();
 });

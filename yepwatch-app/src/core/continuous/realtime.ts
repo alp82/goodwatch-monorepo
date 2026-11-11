@@ -297,6 +297,18 @@ export class ContinuousRealtime {
       void this.connect(epoch);
     }, ms);
   }
+  /**
+   * The gateway can't vouch for live updates just now (the API restarts, or its bus recovers) and sends a
+   * fresh room snapshot as soon as it can. The socket stays: closing it would wait out the gateway's audit
+   * period (10 s) after a restart that took 2. The room is read over HTTP meanwhile.
+   */
+  private degrade() {
+    if (!this.live) return;
+    this.live = false;
+    this.o.clearActivity();
+    this.repair();
+    if (this.pollTimer === undefined) this.poll();
+  }
   private heartbeat(epoch: number) {
     this.clear(this.watchdog);
     this.clear(this.ping);
@@ -366,8 +378,8 @@ export class ContinuousRealtime {
           if (this.live && frame.roomId === this.o.roomId) this.o.activity(frame);
         } else if (frame.type === 'pong') this.heartbeat(epoch);
         else if (frame.type === 'resync_required') this.retry(epoch);
-        else if (frame.type === 'degraded' || frame.type === 'restarting')
-          this.retry(epoch, frame.retryAfterMs);
+        else if (frame.type === 'degraded') this.degrade();
+        else if (frame.type === 'restarting') this.retry(epoch, frame.retryAfterMs);
         else if (frame.type === 'error') {
           if (frame.code === 'expired') {
             if ((this.o.expiresAt() ?? Infinity) <= Date.now()) {
