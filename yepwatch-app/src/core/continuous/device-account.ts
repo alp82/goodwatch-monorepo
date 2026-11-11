@@ -103,16 +103,23 @@ export function createDeviceAccount(deps: DeviceAccountDeps) {
      * and after (a read that started during Log out saw the old session) the session is cleared.
      */
     async signOut() {
+      // Guest at once, before the epoch moves: its listeners drop the account reads, and nothing may read
+      // them again as a member while the session ends (account home would only answer 403). A failed
+      // Log out puts the sign-in back.
+      const before = deps.cache.get();
+      deps.cache.set(guestAccount);
       epoch.advance();
       try {
         await deps.api.accountLogout(await store.readSession());
         await store.clearSession();
         await store.forgetMemberName();
         deps.hint.forget();
+      } catch (e) {
+        if (before) deps.cache.set(before);
+        throw e;
       } finally {
         epoch.advance();
       }
-      deps.cache.set(guestAccount);
       deps.bump();
     },
   };

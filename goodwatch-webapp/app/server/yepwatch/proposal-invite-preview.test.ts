@@ -109,3 +109,15 @@ test("preview uses resolve's active-room guard and preserves budget denial", asy
 	assert.equal(checks, 2)
 	assert.deepEqual(responses[0], responses[1])
 })
+
+test("resolve says whether the request carries a credential for the room, so a fresh browser skips the membership read", async () => {
+	const f = await fixture()
+	const handler = createProposalHandler(new ProposalService(f.repo, proposalFixtureCatalog, secret), { serviceSecret: secret, allowedOrigins: [] })
+	const resolve = (cookie?: string) => handler(new Request(`http://fixture.test${paths.resolveInvite}`, {
+		method: "POST", headers: { "content-type": "application/json", ...(cookie ? { cookie } : {}) }, body: JSON.stringify({ code: f.a.invite.code })
+	})).then((r) => r.json())
+	const id = f.a.credential.roomId
+	assert.deepEqual(await resolve(), { roomId: id, credential: false })
+	assert.deepEqual(await resolve(`yepwatch3_other=x.y`), { roomId: id, credential: false })
+	assert.deepEqual(await resolve(`a=b; yepwatch3_${id}=p.t`), { roomId: id, credential: true })
+})

@@ -2,7 +2,8 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { transientFailure } from '../../core/continuous/backoff';
+import { transientFailure, unanswered } from '../../core/continuous/backoff';
+import { browserOffline, onBackOnline } from '../../core/continuous/network';
 import { RoomFailure } from '../../core/continuous/api';
 import { ConnectionDetails } from '../rooms/ConnectionDetails';
 import { CreateRoom } from '../../core/continuous/create-room';
@@ -25,7 +26,8 @@ function NewRoomDraft({ account }: { account: ReturnType<typeof useAccount> }) {
   const client = useQueryClient();
   const instance = useId();
   const draftKey = ['new-room-draft', account.generation, instance] as const;
-  const draft = useQuery({ queryKey: draftKey, queryFn: () => flow.draft() });
+  // Local and offline-aware: neither waits for React Query's online state (a paused create sat on Saving…).
+  const draft = useQuery({ queryKey: draftKey, queryFn: () => flow.draft(), networkMode: 'always' });
   const attempt = useRef<AbortController | null>(null);
   const cancel = useCallback(() => { attempt.current?.abort(); }, []);
   useFocusEffect(useCallback(() => { newRoomInFront(true); return () => { newRoomInFront(false); cancel(); }; }, [cancel]));
@@ -36,6 +38,7 @@ function NewRoomDraft({ account }: { account: ReturnType<typeof useAccount> }) {
   // Opened straight from an address: the room this draft becomes loads its code meanwhile.
   useEffect(preloadStartPages, []);
   const mutation = useMutation({
+    networkMode: 'always',
     mutationFn: async (text: string) => {
       const controller = new AbortController();
       attempt.current = controller;
@@ -57,11 +60,18 @@ function NewRoomDraft({ account }: { account: ReturnType<typeof useAccount> }) {
     },
   });
   const retrySeconds = useRetryCountdown(draft.data?.retryAt ?? 0);
+  // Offline: the saved request goes again by itself as soon as the browser is back online.
+  const resend = useRef(() => {});
+  resend.current = () => {
+    const failed = mutation.error;
+    if (mutation.isError && failed?.name !== 'AbortError' && unanswered(failed) && mutation.variables !== undefined) mutation.mutate(mutation.variables);
+  };
+  useEffect(() => onBackOnline(() => resend.current()), []);
   const back = () => { cancel(); if (router.canGoBack()) router.back(); else router.replace('/'); };
   useBackAction(back);
   const failure = mutation.error;
   const cancelled = failure?.name === 'AbortError';
-  const error = mutation.isError && !cancelled ? transientFailure(failure) ? 'Couldn’t reach YepWatch. Your request is saved. Try again.' : failure instanceof RoomFailure && failure.code !== 'catalog_unavailable'
+  const error = mutation.isError && !cancelled ? unanswered(failure) && browserOffline() ? 'You’re offline. Your room is saved and gets created when you’re back online.' : transientFailure(failure) ? 'Couldn’t reach YepWatch. Your request is saved. Try again.' : failure instanceof RoomFailure && failure.code !== 'catalog_unavailable'
     ? failure.message : 'Couldn’t save this mood. Try again; your text is kept.' : undefined;
   // Saved: the button keeps saying Saving… until the room replaces this screen (no frame of Create room again).
   const saving = mutation.isPending || mutation.isSuccess;

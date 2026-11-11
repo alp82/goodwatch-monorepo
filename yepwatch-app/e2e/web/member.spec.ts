@@ -35,8 +35,12 @@ test.describe('GoodWatch sign-in (local fake issuer)', () => {
     // Short GoodWatch access tokens: the server has to renew, and renewal is what lapses.
     await issuer(`/_e2e/user?user=${encodeURIComponent(user)}`, { accessTtlS: 2 });
     await p.open('/');
+    // The signed-in start page reads its rooms once; the session lapses after that read, not during it
+    // (a lapse mid-read is answered 403 by design, which this journey isn't about).
+    const home = p.page.waitForResponse((r) => r.url().endsWith('/api/yepwatch/v1/proposal/account/home'), { timeout: 15000 });
     await p.roundTrip(p.button('Continue with GoodWatch').first());
     await p.see({ visible: ['avatar-goodwatch-mark'] }, 15000, 'signed in');
+    await home;
     await issuer(`/_e2e/lapse?user=${encodeURIComponent(user)}`);
     await p.page.waitForTimeout(2500);
     await p.reload();

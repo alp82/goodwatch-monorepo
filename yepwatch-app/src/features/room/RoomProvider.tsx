@@ -180,7 +180,9 @@ function RoomProviderContent({ id, children, renderSheet }: { id: string; childr
   const snapshot = useMemo(() => (display ? previewDrafts(display, saves.saving) : undefined), [display, saves.saving]);
   const view = useMemo(() => (snapshot ? roomView(snapshot, seenIdeas) : null), [snapshot, seenIdeas]);
 
-  const connectionLate = useLate(state.connection !== 'live' && state.connection !== 'polling', CONNECTION_QUIET_MS);
+  // Offline has its own line. Back online or back in front (a hidden page reads as background), the quiet
+  // period starts again while the channel reconnects: a quick return shows no connection words.
+  const connectionLate = useLate(!state.offline && !['live', 'polling', 'background'].includes(state.connection), CONNECTION_QUIET_MS);
   const nickname = view?.me.nickname;
   const expiresAt = snapshot?.shared.expiresAt;
   useEffect(() => {

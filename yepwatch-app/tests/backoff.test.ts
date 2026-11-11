@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { abortableSleep, backoffDelay, retryTransient, serverWait, transientFailure } from '../src/core/continuous/backoff';
+import { abortableSleep, backoffDelay, retryTransient, serverWait, transientFailure, unanswered } from '../src/core/continuous/backoff';
 import { RoomFailure } from '../src/core/continuous/api-client';
 
 const busy = () => new RoomFailure('busy', 'Service unavailable', 503, undefined, undefined, true, 2);
@@ -96,4 +96,16 @@ test('aborting ends a pending wait at once, clears its timer, and starts no furt
   const sleeping = abortableSleep(60_000, quick.signal);
   quick.abort();
   await sleeping;
+});
+
+test('giveUp ends the retries at once for that failure (offline): the caller keeps the request and resends later', async () => {
+  let calls = 0;
+  const waits: number[] = [];
+  await assert.rejects(retryTransient(async () => { calls++; throw offline(); }, { retries: 5, retryAt: () => 0, sleep: async (ms) => { waits.push(ms); }, giveUp: (e, tries) => unanswered(e) && tries >= 1 }), /not been confirmed/);
+  assert.equal(calls, 2, 'one more try, then shown');
+  assert.equal(waits.length, 1);
+  calls = 0;
+  await assert.rejects(retryTransient(async () => { calls++; throw busy(); }, { retries: 2, retryAt: () => 0, sleep: async () => undefined, giveUp: (e) => unanswered(e) }));
+  assert.equal(calls, 3, 'an answered busy still retries');
+  assert.equal(unanswered(new RoomFailure('outcome_unknown', 'proxy page', 502)), false);
 });

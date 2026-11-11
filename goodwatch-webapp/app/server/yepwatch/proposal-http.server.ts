@@ -406,9 +406,14 @@ export function createProposalHandler(
 			if (request.method === "POST" &&
 				(url.pathname === paths.resolveInvite || url.pathname === paths.invitePreview)) {
 				const value = parse(resolveSchema, await body(request))
-				return reply(await (url.pathname === paths.invitePreview
-					? service.invitePreview(value.code)
-					: service.resolveInvite(value.code)))
+				if (url.pathname === paths.invitePreview) return reply(await service.invitePreview(value.code))
+				const resolved = await service.resolveInvite(value.code)
+				// Whether this request carries a credential for the room: a browser without one skips the
+				// membership read before joining (it could only answer 401).
+				const credential = request.headers.has("authorization") || (request.headers.get("cookie") ?? "")
+					.split(";")
+					.some((c) => c.trim().startsWith(`yepwatch3_${resolved.roomId}=`))
+				return reply({ ...resolved, credential })
 			}
 			const match = url.pathname.match(
 				/^\/api\/yepwatch\/v1\/proposal\/rooms\/([A-Za-z0-9_-]{32})(?:\/(join|resume|archive|commands|preview|realtime-ticket|member(?:\/progress|\/link)?))?$/

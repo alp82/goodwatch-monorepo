@@ -46,18 +46,19 @@ export function RoomStatus() {
 export function RoomNotes() {
   const focused = useIsFocused();
   const { view, state, entry, notice, setNotice, connectionLate, sheet, openSheet, linkFailed, retryLink } = useRoom();
-  const any = Boolean(state.error || state.privateError || entry.error || state.pending || connectionLate || notice || linkFailed || developmentNotice);
+  const any = Boolean(state.error || state.privateError || entry.error || state.pending || state.offline || connectionLate || notice || linkFailed || developmentNotice);
   // Nobody brings a service (or the last one would go): ask for services, not an error.
   const noServices = state.errorCode === 'needs_context' && !state.pending;
   const ideaLimit = state.errorCode === 'limit_reached' && !state.pending;
   function connectionText() {
     if (!connectionLate) return '';
-    if (state.connection === 'background') return 'Updates paused while away.';
     if (state.reconnecting) return state.connection === 'connecting' ? 'Connecting…' : 'Reconnecting…';
     if (state.reconnectSeconds > 0) return `Trying again in ${state.reconnectSeconds} s`;
     return state.connection === 'unavailable' ? 'Not connected.' : 'Connecting…';
   }
-  const text = !any ? '' : state.retrySeconds > 0 ? `Try again in ${state.retrySeconds}s. Your action is saved.`
+  // No network at all: one calm line. Actions stay saved and go by themselves when it's back.
+  const text = !any ? '' : state.offline ? (state.pending ? 'You’re offline. Your action is saved and goes when you’re back.' : 'You’re offline.')
+    : state.retrySeconds > 0 ? `Try again in ${state.retrySeconds}s. Your action is saved.`
     : notice || entry.error || (state.privateError ? 'Refresh to keep choosing.'
       : state.pending ? 'Your choice is awaiting confirmation.'
       : noServices ? 'Pick a streaming service'
@@ -71,7 +72,7 @@ export function RoomNotes() {
     text,
     detail: developmentNotice || undefined,
     busy: spinning,
-    action: {
+    action: state.offline ? undefined : {
       label,
       disabled: state.busy || state.retrySeconds > 0 || spinning,
       onPress: () => {
