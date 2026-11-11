@@ -75,5 +75,11 @@ test.describe('rooms: leave, archive, history, back', () => {
     const other = host.testId('rooms-sheet').getByRole('button', { name: /^heist night/ }).first();
     if (!(await other.isVisible())) host.journeyFailure(`the other room is not listed in Your rooms: ${await host.testId('rooms-sheet').ariaSnapshot()}`);
     await host.tap(other, { expect: { visible: ['voting', 'poster'] } });
+    // Back in the first room, it's that room's one screen again (no second copy of it on the stack: two
+    // copies would run two refills and two command queues for one room).
+    const stages = await host.page.locator('[data-testid="voting"]').count();
+    if (stages !== 1) host.journeyFailure(`switching back to the first room mounted it again: ${stages} voting stages`);
+    // Back from it goes to the start page.
+    await host.tap(host.button('Back'), { expect: { visible: ['home-rooms'] } });
   });
 });

@@ -22,6 +22,7 @@ import { deviceCountryHint } from '../../core/lobby';
 import { queryClient } from '../../core/providers';
 import { readSeenIdeas, writeSeenIdeas } from '../../core/continuous/room-local';
 import { useLobbyEntry } from '../glow/useLobbyEntry';
+import { leaveScreen } from '../shell/sheet-back';
 import { roomCommands, roomView, type RoomCommands, type RoomView } from './model';
 import { exitRoom } from './nav';
 import { RefillGate } from './refill';
@@ -108,10 +109,23 @@ function RoomProviderContent({ id, children, renderSheet }: { id: string; childr
   const entry = useLobbyEntry(state);
   // Another room goes on the app's stack as a room of its own. The router would resolve /room/<other>
   // inside this room's stack (same layout), leaving this room's provider, and so this room, on screen.
+  // A room already on the stack (A → B → A) is gone back to instead: one provider per room, so one
+  // live connection, one refill and one command queue for its session.
   const navigation = useNavigation();
   const openRoom = useCallback((roomId: string) => {
     if (roomId === id) return;
-    navigation.dispatch({ type: 'PUSH', payload: { name: 'room/[id]', params: { id: roomId, screen: 'index', params: { id: roomId } } } });
+    const below = (stack: ReturnType<typeof navigation.getState>) =>
+      stack ? stack.routes.findLastIndex((r) => r.name === 'room/[id]' && (r.params as { id?: string } | undefined)?.id === roomId) : -1;
+    if (below(navigation.getState()) < 0) {
+      navigation.dispatch({ type: 'PUSH', payload: { name: 'room/[id]', params: { id: roomId, screen: 'index', params: { id: roomId } } } });
+      return;
+    }
+    // Going back is shaped like a Back, which an open sheet would take for itself: the sheets close first.
+    leaveScreen(() => {
+      const stack = navigation.getState();
+      const at = below(stack);
+      if (stack && at >= 0) navigation.dispatch({ type: 'POP', payload: { count: stack.routes.length - 1 - at }, target: stack.key });
+    });
   }, [navigation, id]);
   const invitation = useQuery<StoredInvite | null>({ queryKey: ['continuous-invite', id], queryFn: () => loadInvite(id) });
   const confirmed = state.confirmed;
