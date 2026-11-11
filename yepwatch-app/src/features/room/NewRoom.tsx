@@ -11,7 +11,7 @@ import { roomRegistry } from '../../core/continuous/room-registry';
 import { useRetryCountdown } from '../../core/continuous/useRetryCountdown';
 import { MoodComposer } from './MoodComposer';
 import { useBackAction } from '../shell/sheet-back';
-import { newRoomInFront } from './nav';
+import { newRoomInFront, preloadStartPages } from './nav';
 
 /** The draft owns the screen until the complete create-and-save operation succeeds. */
 export function NewRoom() {
@@ -33,6 +33,8 @@ function NewRoomDraft({ account }: { account: ReturnType<typeof useAccount> }) {
     const subscription = AppState.addEventListener('change', (state) => { if (state !== 'active') cancel(); });
     return () => { subscription.remove(); cancel(); };
   }, [cancel]);
+  // Opened straight from an address: the room this draft becomes loads its code meanwhile.
+  useEffect(preloadStartPages, []);
   const mutation = useMutation({
     mutationFn: async (text: string) => {
       const controller = new AbortController();

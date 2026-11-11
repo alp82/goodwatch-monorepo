@@ -40,3 +40,11 @@ export function newRoomInFront(front: boolean) {
   moodInFront = front;
   newRoomPushedAt = 0;
 }
+
+/**
+ * Fetches the code of the pages a start-page action opens (Mood, the room) ahead of the tap. A route
+ * still loading when it is opened holds its page back for React's 300 ms Suspense reveal throttle.
+ */
+export function preloadStartPages() {
+  void Promise.all([import('../../app/new'), import('../../app/room/[id]/_layout'), import('../../app/room/[id]/index')]).catch(() => undefined);
+}

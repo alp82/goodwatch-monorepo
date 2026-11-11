@@ -31,7 +31,7 @@ import { useHome } from './rooms/useHome';
 import { useAccount } from '../core/continuous/account';
 import { memberTransition } from '../core/continuous/member-transition';
 import { AppFrame } from './shell/Frame';
-import { openNewRoom } from './room/nav';
+import { openNewRoom, preloadStartPages } from './room/nav';
 
 type PanelKind = 'join' | 'profile' | 'history';
 /** What another screen can open on the start page (`/?open=…`). */
@@ -63,9 +63,8 @@ export function Entrance({ invite, open: request, from }: {
   useEffect(() => { if (boot === 'ready' && home.deletionPending) router.replace('/delete-account'); }, [boot, home.deletionPending]);
   useEffect(() => { if (boot === 'ready') void roomRegistry.recovery().then(value => { if (value?.confirmed) router.replace('/delete-account'); }); }, [boot]);
   useFocusEffect(useCallback(() => { home.reload(); }, [])); // eslint-disable-line react-hooks/exhaustive-deps
-  // The Mood page's code arrives once the start page is up: New room then opens it without waiting
-  // (a route still loading holds its page back for React's 300 ms reveal throttle).
-  useEffect(() => { if (boot === 'ready') void import('../app/new').catch(() => undefined); }, [boot]);
+  // Once the start page is up, the pages its actions open load in the background.
+  useEffect(() => { if (boot === 'ready') preloadStartPages(); }, [boot]);
   const [panel, setPanel] = useState<PanelKind | null>(invite ? 'join' : request && request !== 'new' ? request : null);
   const [nickname, setNickname] = useState('');
   const [code, setCode] = useState(invite ?? '');
