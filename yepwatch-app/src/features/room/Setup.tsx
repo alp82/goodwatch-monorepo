@@ -41,12 +41,12 @@ function RoomDetails() {
         <GText size={z(15)} color={glow.soft} style={{ flex: 1 }}>{kinds}</GText>
       </Chip>
       {on.length || !view.isHost ? (
-        <Chip label={`${on.length ? namesLine(on) : 'Streaming'}, change`} action="Change" onPress={() => openSheet('streaming')}>
+        <Chip key="streaming" label={`${on.length ? namesLine(on) : 'Streaming'}, change`} action="Change" onPress={() => openSheet('streaming')}>
           <Logos services={on} size={z(24)} />
           <View ref={names} style={{ flex: 1, minWidth: 0 }}><GText size={z(15)} color={glow.soft} lines={1}>{on.length ? namesLine(on) : 'Streaming'}</GText></View>
         </Chip>
       ) : (
-        <Chip warn label="Streaming services, add" action="Add" onPress={() => openSheet('services')}>
+        <Chip key="add-services" warn label="Streaming services, add" action="Add" onPress={() => openSheet('services')}>
           <Glyph name="plus" size={z(18)} color={glow.amber} />
           <GText bold size={z(15)} color={glow.amber} style={{ flex: 1 }}>Streaming services</GText>
         </Chip>

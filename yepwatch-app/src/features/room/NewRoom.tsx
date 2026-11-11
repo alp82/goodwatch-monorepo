@@ -60,8 +60,10 @@ function NewRoomDraft({ account }: { account: ReturnType<typeof useAccount> }) {
   const cancelled = failure?.name === 'AbortError';
   const error = mutation.isError && !cancelled ? transientFailure(failure) ? 'Couldn’t reach YepWatch. Your request is saved. Try again.' : failure instanceof RoomFailure && failure.code !== 'catalog_unavailable'
     ? failure.message : 'Couldn’t save this mood. Try again; your text is kept.' : undefined;
+  // Saved: the button keeps saying Saving… until the room replaces this screen (no frame of Create room again).
+  const saving = mutation.isPending || mutation.isSuccess;
   return <MoodComposer first text={text ?? draft.data?.text ?? ''} onTextChange={setText} pick={(value) => mutation.mutate(value)} back={back}
-    saving={mutation.isPending} disabled={mutation.isPending || retrySeconds > 0 || !account.ready || draft.isPending}
+    saving={saving} disabled={saving || retrySeconds > 0 || !account.ready || draft.isPending}
     error={error} details={error && failure instanceof RoomFailure && failure.diagnostic ? <ConnectionDetails diagnostic={failure.diagnostic} /> : undefined}
     action={retrySeconds ? `Retry in ${retrySeconds}s` : mutation.isError ? 'Try again' : 'Create room'} />;
 }

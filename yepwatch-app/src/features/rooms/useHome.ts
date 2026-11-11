@@ -22,12 +22,12 @@ import { deletionStateSchema } from '../../core/continuous/deletion-state';
  * become History records; snapshots also seed the room cache so opening a room is immediate.
  */
 function useGuestHome(enabled: boolean) {
-  const [registry, setRegistry] = useState<(RegistrySnapshot & { at: number }) | null>(null);
+  const [registry, setRegistry] = useState<(RegistrySnapshot & { at: number; read?: number }) | null>(null);
   const [version, setVersion] = useState(0);
   useEffect(() => {
     // The device nickname is editable for members too; only guest room reads are disabled.
     let active = true;
-    void roomRegistry.load().then((value) => { if (active) setRegistry({ ...value, at: Date.now() }); }).catch(() => { if (active) setRegistry({ rooms: [], nickname: null, decisions: [], at: Date.now() }); });
+    void roomRegistry.load().then((value) => { if (active) setRegistry({ ...value, at: Date.now(), read: version }); }).catch(() => { if (active) setRegistry({ rooms: [], nickname: null, decisions: [], at: Date.now(), read: version }); });
     return () => { active = false; };
   }, [version, enabled]);
   const reload = useCallback(() => setVersion((v) => v + 1), []);
@@ -85,6 +85,8 @@ function useGuestHome(enabled: boolean) {
 
   return {
     ready: registry !== null,
+    /** The device's rooms were read since the last reload() (a page coming back into view reloads). */
+    settled: registry !== null && registry.read === version,
     loadingRooms: classified.some((x) => x.c === null),
     nickname: registry?.nickname && registry.nickname !== 'Guest' ? registry.nickname : memberName ?? registry?.nickname ?? null,
     hasRooms: (registry?.rooms.length ?? 0) > 0,
@@ -152,7 +154,7 @@ export function useHome() {
   };
   const unavailable = cloud.isError || lifecycle.isError || mutationFailed ? [{ kind: 'unavailable' as const, roomId: 'account', nickname: 'Your rooms' }] : [];
   return {
-    notice: data?.notice ?? '', deletionPending,
+    notice: data?.notice ?? '', deletionPending, settled: true,
     ready: (deletionPending || lifecycle.isError || cloud.isFetched) && local.ready, loadingRooms: lifecycle.isPending || (!deletionPending && !lifecycle.isError && cloud.isPending), nickname: local.nickname ?? account.name,
     hasRooms: classified.length > 0,
     active: classified.flatMap(x => x.c.kind === 'active' && !x.entry.archivedAt ? [x.c.room] : []),

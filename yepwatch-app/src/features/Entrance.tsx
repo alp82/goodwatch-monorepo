@@ -111,7 +111,7 @@ export function Entrance({ invite, open: request, from }: {
   }, [justArchived]);
   // An invitation's page is ready once its room preview is in and the membership check is done, so the join
   // page appears whole (never with a placeholder head) as the startup word dissolves.
-  const pageReady = home.ready && !restoring && (invite ? preview !== undefined && !checkingInvite : !home.loadingRooms);
+  const pageReady = home.ready && home.settled && !restoring && (invite ? preview !== undefined && !checkingInvite : !home.loadingRooms);
   useEffect(() => { if (pageReady) markPageReady(); }, [pageReady, markPageReady]);
   // Already in the invited room: it opens once the startup word is leaving, never behind it (the room's
   // reads and card clocks don't start while the word still covers the page).
@@ -378,7 +378,9 @@ export function Entrance({ invite, open: request, from }: {
   // The saved-request check takes a moment on every visit: the page appears once, already usable.
   const me = { name: known, member: account.member };
   const openProfile = () => { setError(''); setPanel('profile'); };
-  if (!home.ready || restoring || memberOf) return <AppFrame header={{ me, onProfile: openProfile, profileQuiet: true }}>{null}</AppFrame>;
+  // Back on the start page: a guest start page from before isn't shown again until the device's rooms
+  // are read anew (a room made meanwhile turns it into Your rooms).
+  if (!home.ready || restoring || memberOf || (!returning && !home.settled)) return <AppFrame header={{ me, onProfile: openProfile, profileQuiet: true }}>{null}</AppFrame>;
   // Joining is its own screen, like the room's pages: the start page doesn't render underneath.
   if (shown === 'join') return (
     <JoinScreen invite={Boolean(invite)} head={invite && preview !== null ? <InviteHead preview={preview} /> : null} checking={checkingInvite}

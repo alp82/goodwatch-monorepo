@@ -56,8 +56,10 @@ export function useAcknowledgeShownIdeas() {
  */
 export function IdeaStack() {
   const { id, view, cmd, disabled } = useRoom();
-  const { phone, z } = useLayout();
-  const [width, setWidth] = useState(330);
+  const { phone, wide, max, z } = useLayout();
+  // Start from the column RoomBefore gives the ideas (measured below), so the first frame already has the
+  // final headline size instead of resizing a frame later.
+  const [width, setWidth] = useState(() => (wide ? max - Math.min(z(420), max * 0.4) - z(56) : max));
   // An idea arriving above glides Add an idea down instead of pushing it.
   const add = useGlide();
   if (!view) return null;
@@ -193,11 +195,18 @@ export function ServiceGrid({ all, loading, selected, toggle }: { all: ServiceCh
   const { phone, z } = useLayout();
   const [more, setMore] = useState(false);
   const [q, setQ] = useState('');
-  if (loading && !all.length) return <Small>Loading…</Small>;
-  const shown = more ? all.filter((s) => !q || s.name.toLowerCase().includes(q.toLowerCase())) : firstTiles(all, selected);
   const cell = { width: `${100 / (phone ? 3 : 4)}%`, padding: 5 } as const;
   const logo = phone ? 52 : z(60);
-  const tile = { alignItems: 'center', justifyContent: 'center', gap: 8, padding: 10, minHeight: logo + 46, borderRadius: R.card, borderWidth: 2 } as const;
+  // One fixed height (border, padding, logo, gap, one label line), so loading tiles and service tiles match exactly.
+  const tile = { alignItems: 'center', justifyContent: 'center', gap: 8, padding: 10, height: logo + 50, borderRadius: R.card, borderWidth: 2 } as const;
+  // Loading: empty tiles in the grid's usual shape (8 services and More), so the sheet already has its
+  // height and doesn't jump when the services arrive.
+  if (loading && !all.length) return (
+    <View aria-hidden style={{ flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -5 }}>
+      {Array.from({ length: 9 }, (_, i) => <View key={i} style={cell}><View style={{ ...tile, borderColor: warm.line, backgroundColor: warm.faint }} /></View>)}
+    </View>
+  );
+  const shown = more ? all.filter((s) => !q || s.name.toLowerCase().includes(q.toLowerCase())) : firstTiles(all, selected);
   return (
     <View testID="service-grid" style={{ gap: 12 }}>
       {more && <TextInput autoFocus accessibilityLabel="Find a service" value={q} onChangeText={setQ} placeholder="Find a service" placeholderTextColor={warm.placeholder} autoCapitalize="none" autoCorrect={false} selectionColor={glow.amber} style={fieldStyleFor(z)} />}
