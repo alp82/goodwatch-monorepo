@@ -93,7 +93,10 @@ function ProfileButton({ me, onPress, quiet }: { me?: HeaderMe; onPress?: () => 
 export function AppHeader({ back, onLogo, logoLabel = 'Your rooms', pill, onPill, me, onProfile, profileQuiet }: AppHeaderProps) {
   const { phone, gutter, max, header, z } = useLayout();
   const brand = <BrandMark size={phone ? 21 : z(23)} />;
-  const logo = onLogo ? <Press label={logoLabel} onPress={onLogo} style={{ alignItems: 'flex-start', paddingRight: 6 }}>{brand}</Press> : brand;
+  // The same box whether or not it's pressable (a panel opening by itself makes it a control): the
+  // wordmark never moves.
+  const logo = onLogo ? <Press label={logoLabel} onPress={onLogo} style={{ alignItems: 'flex-start', paddingRight: 6 }}>{brand}</Press>
+    : <View style={{ minWidth: 48, minHeight: 48, justifyContent: 'center', alignItems: 'flex-start', paddingRight: 6 }}>{brand}</View>;
   const backButton = back ? (
     <Press label="Back" onPress={back} style={grow(Math.max(44, z(40)), Math.max(44, z(40)))}
       visual={{ width: Math.max(44, z(40)), height: Math.max(44, z(40)), borderRadius: R.control, backgroundColor: '#ffffff0a', alignItems: 'center', justifyContent: 'center' }}><Icon name="left" size={z(20)} color={glow.soft} /></Press>

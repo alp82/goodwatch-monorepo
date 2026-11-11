@@ -123,7 +123,12 @@ export function JoinScreen({ invite, checking = false, nickname, nameLocked = fa
     <View style={{ flexDirection: 'row' }}>
       <Press label={label} onPress={go} disabled={!filled} quiet={busy} style={{ flex: 1, minHeight: z(54), borderRadius: 12, flexDirection: 'row', gap: 9, backgroundColor: glow.amber }}>
         {member ? <GoodWatchMark size={22} /> : null}
-        <GText bold size={z(17)} color={warm.ink}>{label}</GText>
+        {/* The label changes (Join as …, Joining…, Retry joining) inside one fixed box sized by the longest, so
+            a join that starts by itself (back from GoodWatch) doesn't move the words. */}
+        <View>
+          <View aria-hidden importantForAccessibility="no-hide-descendants" style={{ opacity: 0 }}><GText bold size={z(17)} color={warm.ink}>{[fixedName ? `Join as ${fixedName}` : 'Join', 'Joining…', 'Retry joining', label].reduce((a, b) => (b.length > a.length ? b : a))}</GText></View>
+          <GText bold size={z(17)} color={warm.ink} style={{ position: 'absolute', left: 0, right: 0, textAlign: 'center' }}>{label}</GText>
+        </View>
       </Press>
     </View>
   );

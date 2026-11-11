@@ -204,6 +204,9 @@ export function ServiceGrid({ all, loading, selected, toggle }: { all: ServiceCh
   // One height (border 4, padding 20, logo, gap 8, one 13 px label line at the font scale), so loading tiles
   // and service tiles match exactly.
   const tile = { alignItems: 'center', justifyContent: 'center', gap: 8, padding: 10, height: logo + 33 + Math.ceil(13 * 1.28 * Math.max(1, fontScale || 1)), borderRadius: R.card, borderWidth: 2 } as const;
+  // The loading grid's height (9 tiles) is the least the first tiles take: a country with fewer big
+  // services keeps that space instead of pulling what's below up when they arrive.
+  const firstRowsHeight = Math.ceil(9 / (phone ? 3 : 4)) * (tile.height + 10);
   // Loading: empty tiles in the grid's usual shape (8 services and More), so the sheet already has its
   // height and doesn't jump when the services arrive.
   if (loading && !all.length) return (
@@ -218,7 +221,7 @@ export function ServiceGrid({ all, loading, selected, toggle }: { all: ServiceCh
   return (
     <View testID="service-grid" style={{ gap: 12 }}>
       {more && <TextInput autoFocus accessibilityLabel="Find a service" value={q} onChangeText={setQ} placeholder="Find a service" placeholderTextColor={warm.placeholder} autoCapitalize="none" autoCorrect={false} selectionColor={glow.amber} style={fieldStyleFor(z)} />}
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -5 }}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignContent: 'flex-start', marginHorizontal: -5, minHeight: more ? undefined : firstRowsHeight }}>
         {shown.map((s) => {
           const on = pickedIn(s, selected);
           return (
