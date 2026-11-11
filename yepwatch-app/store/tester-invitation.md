@@ -1,39 +1,44 @@
 # YepWatch tester links
 
-Android self-service enrollment is being prepared. Do not announce the three Android links as working until the Google Group is created, added to Play's closed-test tester eligibility, and a closed-test release is available. Use **hello@goodwatch.app** for Google Groups and Play Console. The selected group name is **YepWatch Testers**, with anyone allowed to join, posting limited to managers, and the member list limited to managers.
+The Android tester group is live under **hello@goodwatch.app**. Production bundle **1.0.0 (17)**, the English listing, eight Android screenshots and required declarations have been submitted for the **Closed testing - Alpha** track. Play Console shows **Changes in review**, after automated quick checks completed. Approval and tester installation have not yet been verified. Keep the pending wording until Google makes the release available.
 
-## Android invitation draft — pending activation
+## Android invitation — pending Google approval
 
 Help test YepWatch, the free app that helps friends agree on what to watch.
 
+The Android test is awaiting Google approval. You can join the tester group now; the opt-in and installation steps will become available once Google publishes the release:
+
 1. Join the tester group: https://groups.google.com/g/yepwatch-testers
-2. Opt in to the Android test: https://play.google.com/apps/testing/com.yepwatch.app
+2. After approval, opt in: https://play.google.com/apps/testing/com.yepwatch.app
 3. Install from Google Play: https://play.google.com/store/apps/details?id=com.yepwatch.app
 
-Use the same Google account for all three steps. Joining the group alone does not opt you into the test. If Play does not show the app immediately after you join, allow time for enrollment changes to take effect and try the opt-in link again.
+Use the same Google account for all three steps. Joining the group alone does not opt you into the test. If Play does not show the app immediately after enrollment, allow time for changes to take effect and try the opt-in link again.
 
 Try creating a room, inviting someone, voting Yep/Nope and agreeing on a movie or show. Send feedback through the app or to hello@goodwatch.app.
 
-## iPhone and iPad — existing public TestFlight link
+## iPhone and iPad — public TestFlight link
 
 https://testflight.apple.com/join/V2gzwSFA
 
-## Activation checklist
+## Verified configuration
 
-1. Finish Google's CAPTCHA in the prepared Google Groups creation dialog under **hello@goodwatch.app** (`/u/2/my-groups` in the current browser session). Its settings allow anyone to join and discover the group, while only managers can post or see members. The older attempt under a different login did not complete. No tester addresses have been added or invited.
-2. The correct Play Console login is now verified: **hello@goodwatch.app**, developer account **GoodWatch**, YepWatch package `com.yepwatch.app`. Its existing **Closed testing - Alpha** track has no release. The track's Copy link control confirms `https://play.google.com/apps/testing/com.yepwatch.app`, but enrollment is unavailable until a test release is published.
-3. Open YepWatch → Test and release → Testing → Closed testing → the test track → Testers. Add `yepwatch-testers@googlegroups.com` under Google Groups and save. Preserve existing eligible tester lists if the Console allows both; do not remove enrolled testers.
-4. Complete required app setup/listing and create the closed-test release using the production `com.yepwatch.app` AAB, version code 17. The downloaded bundle is `YepWatch-1.0.0-17.aab` (SHA-256 `610cefbd91b57c09ce01494f275e56d61920d3900acaac0f1a81dc394b898e58`). Upload and submission remain pending. Play requires the remaining app-setup declarations and store listing before closed testing can be activated.
-5. Confirm the track's actual opt-in link, release status, supported countries and enrollment from a tester Google account. First test links can take several hours to become available after publication. Only then promote these links on the website or social posts.
+- Google Group: **YepWatch Testers**, yepwatch-testers@googlegroups.com. Anyone can discover and join; posting, member lists and member email visibility are limited to managers. No tester addresses were imported and no invitations or posts were sent.
+- Play account: **hello@goodwatch.app**, developer **GoodWatch**, package com.yepwatch.app. The group and feedback email are saved on the Alpha track; all 178 available country/region entries are selected.
+- AAB: version code **17**, SHA-256 610cefbd91b57c09ce01494f275e56d61920d3900acaac0f1a81dc394b898e58. Play accepted it with target SDK 36 and minimum API 24.
+- Listing: English copy, icon, feature graphic and eight original Android gallery screenshots saved and submitted in their canonical order. The icon and feature graphic carry the Console's AI-assisted asset labels; the real native screenshots do not.
+- App setup: Entertainment, privacy policy, reviewer access, ads, advertising ID, government, health, financial features, content rating, 13+ audience and Data safety completed. Embedded YouTube trailers can show ads; the app does not use Android advertising ID. Reviewer credentials were entered privately and verified; their values are not stored in this repository.
+- Google generated regional content ratings from the catalog/trailers and private room interactions: Teen in North America, 16+ in Germany/Brazil, PEGI parental guidance and generic 12+. The developer target audience is 13+ without an in-app age gate.
+- Production Play signing certificate is deployed at https://yepwatch.com/.well-known/assetlinks.json, alongside the existing preview certificate. Physical installation/App Link verification remains pending.
 
-The existing direct beta APK uses `com.yepwatch.preview`; those installs do not enroll a person in the Play closed test. Keep this distinction explicit. Do not promise reciprocal testing or contact other developers without the owner's instruction.
+## Remaining activation checks
 
-Reference: https://support.google.com/googleplay/android-developer/answer/9845334
+1. Wait for Google review. Automated quick checks have completed. Resolve any reported issue using the actual app behavior.
+2. Verify the approved Alpha release and all three links using one eligible tester Google account. First test links can take several hours after publication.
+3. Update the invitation wording and group description once installation works, then announce the links only within the owner's authorized channels.
+4. Run the closed test with at least **12 continuously opted-in testers for 14 days**, then apply for production access. The dashboard currently shows **0 opted-in testers**.
 
-## Play setup progress — 2026-11-11
+The direct beta APK uses com.yepwatch.preview; those installs do not enroll a person in the Play closed test. Do not promise reciprocal testing or contact other developers without the owner's instruction.
 
-The privacy-policy URL was saved as `https://yepwatch.com/privacy`. The ads answer is **Yes** because the native app embeds YouTube trailers, which can display ads controlled by YouTube/video owners; this is independent of YepWatch earning money. Government-app status is **No**, and health features are **None**. The financial-features form was set to **None** and saved. Category **Entertainment** was saved. No changes have been sent for Google review.
+See [the enrollment record](../artifacts/releases/tester-enrollment-2026-11-11.json) and [data-safety rationale](google-data-safety-notes.json).
 
-The public contact email and website remain to enter as `hello@goodwatch.app` and `https://yepwatch.com`; their editor opened but was not filled before the Play browser tab closed. The listing text and artwork are prepared in the repository. Sign-in review instructions, content rating, target audience and Data safety still require completion based on the actual app. Do not declare unrestricted access while optional GoodWatch member features require sign-in.
-
-Google currently rejects the tester-group field because the group does not exist or is inaccessible. That unsaved tester-form draft was discarded while completing independent setup items. Add the group and feedback email again after group creation completes.
+References: [Google testing tracks](https://support.google.com/googleplay/android-developer/answer/9845334), [personal-account production access](https://support.google.com/googleplay/android-developer/answer/14151465).

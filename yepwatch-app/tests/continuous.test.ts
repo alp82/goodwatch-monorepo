@@ -281,6 +281,20 @@ test('embedding refusals retain explicit YouTube recovery instead of suggesting 
   assert.equal(reports.at(-1)?.error, undefined);
 });
 
+test('trailers use an explicit privacy-enhanced player with the embedding origin', () => {
+  for (const origin of ['https://yepwatch.com', 'http://localhost:8081']) {
+    const html = playerHtml('dQw4w9WgXcQ', 'test', origin);
+    const src = html.match(/<iframe[^>]+src="([^"]+)"/)?.[1].replace(/&amp;/g, '&');
+    assert.ok(src);
+    const embed = new URL(src);
+    assert.equal(embed.origin, 'https://www.youtube-nocookie.com');
+    assert.equal(embed.pathname, '/embed/dQw4w9WgXcQ');
+    assert.equal(embed.searchParams.get('enablejsapi'), '1');
+    assert.equal(embed.searchParams.get('origin'), origin);
+    assert.match(html, /new YT\.Player\('player',\{events:/);
+  }
+});
+
 test('native member callbacks require fixed URI, retained room, unexpired local state and no duplicate parameters', async () => {
   const { nativeMemberCallback } = await import('../src/core/continuous/member-state');
   const pending = {
