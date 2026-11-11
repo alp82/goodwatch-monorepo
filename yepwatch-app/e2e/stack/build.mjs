@@ -99,7 +99,7 @@ export const WEB_ENV = {
 export function buildWeb(log) {
   const hash = hashTree([
     path.join(APP_DIR, 'src'), path.join(APP_DIR, 'assets'), path.join(APP_DIR, 'public'), path.join(APP_DIR, 'app.config.ts'),
-    path.join(APP_DIR, 'app.json'), path.join(APP_DIR, 'package-lock.json'), path.join(APP_DIR, 'scripts/invite-page.cjs'),
+    path.join(APP_DIR, 'app.json'), path.join(APP_DIR, 'metro.config.js'), path.join(APP_DIR, 'metro'), path.join(APP_DIR, 'package-lock.json'), path.join(APP_DIR, 'scripts/invite-page.cjs'),
     path.join(WEBAPP_DIR, 'packages/yepwatch-contracts'),
   ]) + createHash('sha256').update(JSON.stringify(WEB_ENV)).digest('hex').slice(0, 6);
   const out = path.join(CACHE_DIR, `web-${hash}`);
