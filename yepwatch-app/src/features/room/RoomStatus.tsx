@@ -52,7 +52,6 @@ export function RoomNotes() {
   const ideaLimit = state.errorCode === 'limit_reached' && !state.pending;
   function connectionText() {
     if (!connectionLate) return '';
-    if (state.connection === 'background') return 'Updates paused while away.';
     if (state.reconnecting) return state.connection === 'connecting' ? 'Connecting…' : 'Reconnecting…';
     if (state.reconnectSeconds > 0) return `Trying again in ${state.reconnectSeconds} s`;
     return state.connection === 'unavailable' ? 'Not connected.' : 'Connecting…';
