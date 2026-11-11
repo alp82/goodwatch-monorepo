@@ -26,7 +26,7 @@ const ids = (value: string | null | undefined) =>
 		.filter((id) => Number.isSafeInteger(id) && id > 0)
 
 export function useStartSearch(
-	query: Pick<StartQuery, "text" | "picks">,
+	query: Pick<StartQuery, "text" | "picks" | "trigger">,
 	{ member = null }: { member?: { services: number[] } | null } = {},
 ): StartResults & {
 	retry: () => void
@@ -71,7 +71,7 @@ export function useStartSearch(
 	const picksKey = picks.join(",")
 	// picksKey names the picks.
 	useEffect(() => {
-		search.current?.set({ text, picks })
+		search.current?.set({ text, picks }, { surface: "start", trigger: query.trigger ?? "navigation" })
 	}, [text, picksKey, ready, scope])
 
 	const retry = useMemo(() => () => search.current?.retry(), [])

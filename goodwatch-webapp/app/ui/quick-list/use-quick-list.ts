@@ -82,6 +82,7 @@ function useCatalogSearch(raw: string) {
 		queryFn: async ({ signal }) => {
 			const batch = await requestSearch({
 				body: { q: settled },
+				attribution: { surface: "quick_list", trigger: "typing_pause" },
 				language: locale.language,
 				signal,
 				onReading: () => {},

@@ -2,6 +2,7 @@
 // title's write-up at a reading measure with spoilers covered, what the trope is, and where to go next. The rarity
 // meter and the tiny poster stack are the cards' (TropeCard.tsx).
 import { ArrowUpRightIcon } from "@heroicons/react/20/solid"
+import { searchNavigationState } from "~/ui/search/search-attribution"
 import { Link } from "@remix-run/react"
 import { useEffect, useRef, useState } from "react"
 import { MovieTvCard } from "~/ui/MovieTvCard"
@@ -75,6 +76,7 @@ export function AlsoIn({
 					</h3>
 					<Link
 						to={discoverQueryPath(t.name)}
+						state={searchNavigationState(t.name, "title_trope", "link")}
 						prefetch="intent"
 						className="shrink-0 text-xs font-semibold text-gray-400 hover:text-white"
 					>
@@ -231,6 +233,7 @@ export function NextLinks({
 			) : (
 				<Link
 					to={discoverQueryPath(t.name)}
+					state={searchNavigationState(t.name, "title_trope", "link")}
 					prefetch="intent"
 					className="inline-flex min-h-10 items-center text-sm font-semibold text-gray-200 hover:text-white"
 				>

@@ -5,7 +5,7 @@ import useLocale from "~/utils/locale"
 // Search never retries automatically or on focus/remount. The user can explicitly Retry a failed request.
 // Interaction-only: mounted by the lazy Search screen. No previous-query placeholder cards are reported.
 import { useQuery } from "@tanstack/react-query"
-import { useCallback, useMemo } from "react"
+import { useCallback, useMemo, useRef } from "react"
 import { browseIdentity, browseQuery, pageInfo } from "./tv-browse"
 import { resultSummary } from "./use-tv-discover"
 import { useDiscoverResults } from "~/routes/api.discover_.results"
@@ -73,19 +73,24 @@ export function useTvSearch({
 			),
 		[guest, scope, screen.name === "search" ? screen.browse : undefined],
 	)
+	const retrying = useRef(false)
 	const search = useQuery({
 		queryKey: tvSearchKey(q ?? "", filters, locale.language),
-		queryFn: async ({ signal }) =>
-			tvSearchResult(
+		queryFn: async ({ signal }) => {
+			const trigger = retrying.current ? "retry" : "selection"
+			retrying.current = false
+			return tvSearchResult(
 				q ?? "",
 				await requestSearch({
 					body: tvSearchBody(q ?? "", filters),
+					attribution: { surface: "tv", trigger },
 					language: locale.language,
 					signal,
 					onReading: () => {},
 					unavailable: SEARCH_UNAVAILABLE,
 				}),
-			),
+			)
+		},
 		enabled: q !== null && !(screen.name === "search" && screen.filters),
 		// One search per OK (see the header).
 		retry: false,
@@ -134,7 +139,10 @@ export function useTvSearch({
 		[results.data],
 	)
 	const retry = useCallback(() => {
-		if (search.isError) void search.refetch()
+		if (search.isError) {
+			retrying.current = true
+			void search.refetch()
+		}
 		else void results.refetch()
 	}, [search.isError, search.refetch, results.refetch])
 	const failed =

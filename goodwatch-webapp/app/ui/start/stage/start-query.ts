@@ -10,6 +10,7 @@
 //
 // StartResults is what the search and the results requests (useStartSearch, a later step) answer for one query,
 // marked with the query's signature, so the stage never shows one query's titles under another.
+import type { SearchTrigger } from "~/domain/search-attribution"
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
 import type { DiscoverInterpretation } from "~/server/discover-query.server"
 import type { DiscoverResults } from "~/server/discover-results.server"
@@ -23,6 +24,8 @@ export const MAX_START_PICKS = 3
 export const LOVED_NEEDED = 3
 
 export type StartQuery = {
+	/** In-memory cause of this query; never serialized into its URL/cache signature. */
+	trigger?: SearchTrigger
 	/** The last committed field text, before trimming. */
 	draft: string
 	/** The searched text, trimmed; "" for none. */
@@ -36,7 +39,7 @@ export type StartQueryAction =
 	/** A draft-only update for pure query consumers; StartSearchBar keeps typing local. */
 	| { type: "draft"; draft: string }
 	/** Search this text now (the pause is over, Enter, Search, or a preset's phrase). */
-	| { type: "search"; text: string }
+	| { type: "search"; text: string; trigger?: SearchTrigger }
 	/** The field's Clear, or the field emptied. */
 	| { type: "clearSearch" }
 	/** The picks as the picker leaves them (a mix is its parts). */
@@ -63,12 +66,12 @@ export function reduceQuery(
 			const text = action.text.trim()
 			return text === query.text && action.text === query.draft
 				? query
-				: { ...query, draft: action.text, text }
+				: { ...query, draft: action.text, text, trigger: action.trigger ?? "selection" }
 		}
 		case "clearSearch":
 			return query.draft === "" && query.text === ""
 				? query
-				: { ...query, draft: "", text: "" }
+				: { draft: "", text: "", picks: query.picks }
 		case "picks": {
 			const picks = [...new Set(action.picks)].slice(0, MAX_START_PICKS)
 			return samePicks(picks, query.picks) ? query : { ...query, picks }

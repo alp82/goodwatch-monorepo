@@ -12,7 +12,7 @@ export async function runRankedSearch(
 	const batch = await combinedSearch(
 		query,
 		{ includeAdult: false, lesserKnown: false },
-		{ accountId: userId, networkIdentity: "mcp-authenticated" },
+		{ accountId: userId, networkIdentity: "mcp-authenticated", attribution: { consumer: "mcp", surface: "mcp", trigger: "api", reported_by: "server" } },
 		signal,
 		undefined,
 		{ allTitles: true, rows: RESULT_LENGTH },

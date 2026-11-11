@@ -1,3 +1,4 @@
+import type { SearchOrigin, SearchTrigger } from "~/domain/search-attribution"
 import useLocale from "~/utils/locale"
 import { mediaLanguageUrl } from "~/utils/media-presentation"
 // Discover's search: the combined search's ranked list for the query and the ranking's eligibility, read from its
@@ -23,7 +24,9 @@ export function useDiscoverSearch({
 	allTitles,
 	enabled,
 	preferences,
+	attribution = { surface: "discover", trigger: "navigation" },
 }: {
+	attribution?: SearchOrigin
 	/** Read preferences: the original reading's single genre and the read filters to count (search-preferences.ts). */
 	preferences?: { originalGenres?: string[]; counted?: string[]; named?: string }
 	/** The query, or null while browsing. */
@@ -38,6 +41,8 @@ export function useDiscoverSearch({
 		chips: ReadingChip[]
 	} | null>(null)
 	const [provisional, setProvisional] = useState<{ key: string; result: DiscoverSearchResult } | null>(null)
+	const nextTrigger = useRef<SearchTrigger | null>(null)
+	const previousAttempt = useRef<{ q: string | null; key: string } | null>(null)
 	const generation = useRef(0)
 	const liveKey = useRef("")
 	const { locale } = useLocale()
@@ -48,6 +53,9 @@ export function useDiscoverSearch({
 	const result = useQuery({
 		queryKey: ["discover-search", key],
 		queryFn: async ({ signal }) => {
+			const trigger = nextTrigger.current ?? (previousAttempt.current?.q === q && previousAttempt.current.key !== key ? "filter_change" : attribution.trigger)
+			nextTrigger.current = null
+			previousAttempt.current = { q, key }
 			const attempt = ++generation.current
 			// Another search's partial list goes; this search's own stays through a retry, until its next packet or its
 			// completed answer.
@@ -59,7 +67,7 @@ export function useDiscoverSearch({
 				if (current()) setProvisional({ key, result: answer })
 			}, locale.language, preferences, (found) => {
 				if (current()) setCounts({ key, counts: found })
-			})
+			}, { ...attribution, trigger })
 			// The completed answer replaces its partial list for good.
 			if (generation.current === attempt)
 				setProvisional((old) => (old?.key === key ? null : old))
@@ -111,7 +119,7 @@ export function useDiscoverSearch({
 					? "Title matches could not finish. Showing the results found so far."
 					: (result.error?.message ?? null)
 			: null,
-		retry: result.refetch,
+		retry: () => { nextTrigger.current = "retry"; return result.refetch() },
 		/** The read filters' hides for this search; null until they arrive (or when none were asked for). */
 		counts: counts?.key === key ? counts.counts : null,
 	}

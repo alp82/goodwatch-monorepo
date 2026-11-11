@@ -27,6 +27,7 @@ test("typing changes only the draft; searching sets the trimmed text and keeps t
 	assert.deepEqual(searched, {
 		draft: " rainy day whodunit ",
 		text: "rainy day whodunit",
+		trigger: "selection",
 		picks: ["m:funny"],
 	})
 })

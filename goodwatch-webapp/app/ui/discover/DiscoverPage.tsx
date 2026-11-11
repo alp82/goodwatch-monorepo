@@ -12,7 +12,9 @@
 //
 // Best match (the sort by taste match) and the Taste match filter need taste; the bar hears from the results whether
 // the viewer has it. For you sits in You's Order block.
-import { useLocation, useNavigation, useSearchParams } from "@remix-run/react"
+import type { SearchTrigger } from "~/domain/search-attribution"
+import { navigationSearchOrigin, searchNavigationState } from "~/ui/search/search-attribution"
+import { useLocation, useNavigation, useNavigationType, useSearchParams } from "@remix-run/react"
 import { MotionConfig } from "framer-motion"
 import { Suspense, lazy, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
 import { useInView } from "react-intersection-observer"
@@ -146,6 +148,9 @@ export function DiscoverPage({
 	const hydrated = useHydrated()
 	// The words as typed. An older link keeps them in `asked`, with what they read as the person's own filters.
 	const fullTyped = searchText(params.get("asked") ?? params.get("q"))
+	const invocationLocation = useLocation()
+	const invocationNavigation = useNavigationType()
+	const attribution = navigationSearchOrigin(fullTyped, invocationLocation.state, invocationNavigation)
 	// Award words that became the awards filter ("oscar winners") leave the search: only the rest is searched.
 	const awardWords = fullTyped && params.get("awards") ? readAwardWords(fullTyped) : null
 	const typed = awardWords ? searchText(awardWords.rest) : fullTyped
@@ -225,6 +230,7 @@ export function DiscoverPage({
 	}, [plan, settled?.text, filters.defaults, filters.state, eligibility, scope])
 	const search = useDiscoverSearch({
 		q,
+		attribution,
 		filters: eligibility,
 		allTitles,
 		enabled: guest !== undefined && reading.plan !== null,
@@ -264,7 +270,7 @@ export function DiscoverPage({
 	const navigation = useNavigation()
 	// Only the words go into the URL: what they read is read again on every change, so nothing the last words implied
 	// stays behind as the person's own filter. Entering a search chooses Relevance.
-	const onSearch = (text: string) => {
+	const onSearch = (text: string, trigger: SearchTrigger = "selection") => {
 		if (!text) return clearSearch()
 		const entering = !searching
 		if (entering) browseSort.current = params.get("sort")
@@ -279,7 +285,7 @@ export function DiscoverPage({
 				if (entering) out.delete("sort")
 				return out
 			},
-			{ replace: !entering, preventScrollReset: true },
+			{ replace: !entering, preventScrollReset: true, state: searchNavigationState(text, "discover", trigger) },
 		)
 	}
 	const clearSearch = () => {

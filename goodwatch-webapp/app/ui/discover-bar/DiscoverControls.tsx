@@ -1,3 +1,4 @@
+import type { SearchTrigger } from "~/domain/search-attribution"
 // Discover's controls above the grid, one page in two modes. Both show the title row: the page heading (screen readers
 // only on phones) and the count (FilterMix) at the left, the Easy | Advanced switch (ModeSwitch) at the right; then
 // the search field with Ready to watch, and one line with how the search was read and Sort. Advanced (mode=advanced)
@@ -140,7 +141,7 @@ export interface DiscoverControlsProps {
 	/** How the search read the query. */
 	reading?: ReadingChip[]
 	/** Runs a search; empty text clears it. */
-	onSearch: (text: string) => void
+	onSearch: (text: string, trigger?: SearchTrigger) => void
 	onClearSearch: () => void
 	sort: SortChoice
 	page: DiscoverPageContext
@@ -249,9 +250,9 @@ function DiscoverControlsContent({
 			?.querySelector<HTMLElement>(`[data-tab="${refocus}"] button`)
 			?.focus({ preventScroll: true })
 	}, [refocus, open, desktop])
-	const runSearch = (value: string) => {
+	const runSearch = (value: string, trigger: SearchTrigger = "selection") => {
 		const trimmed = value.trim()
-		if (trimmed) onSearch(trimmed)
+		if (trimmed) onSearch(trimmed, trigger)
 		close()
 	}
 	// Clear all, the Filters list's Clear, the field's clear button and emptying the field: the search and its filters
@@ -445,12 +446,12 @@ function DiscoverControlsContent({
 												toSearch()
 											}}
 											onFocus={toSearch}
-											onEnter={() => runSearch(text)}
+											onEnter={() => runSearch(text, "enter")}
 											onEscape={close}
 											inputRef={field}
 										/>
 										<SearchButton
-											onClick={() => runSearch(text)}
+											onClick={() => runSearch(text, "search_button")}
 											empty={!typed}
 										/>
 									</div>
@@ -526,12 +527,12 @@ function DiscoverControlsContent({
 										<SearchInput
 											value={text}
 											onChange={setText}
-											onEnter={() => runSearch(text)}
+											onEnter={() => runSearch(text, "enter")}
 											inputRef={sheetField}
 											size="md"
 										/>
 										<SearchButton
-											onClick={() => runSearch(text)}
+											onClick={() => runSearch(text, "search_button")}
 											empty={!typed}
 											small
 										/>

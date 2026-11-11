@@ -133,6 +133,7 @@ export async function discordSearchResponse(
 					{ includeAdult: false, lesserKnown: false },
 					{
 						accountId: null,
+						attribution: { consumer: "discord", surface: "discord", trigger: "api", reported_by: "server", actor: "external" },
 						networkIdentity: `discord:${user}`,
 						allowTranslation: false,
 						beforeUncachedReading: async () => {

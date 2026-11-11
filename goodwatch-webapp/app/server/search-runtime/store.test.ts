@@ -4,6 +4,7 @@ import * as nodeModule from "node:module"
 import { test } from "node:test"
 import ts from "typescript"
 import { TypeSafeClient } from "@typesafe-ai/sdk"
+import type { SearchAttribution } from "../../domain/search-attribution.ts"
 import type { SearchRedis } from "./coordination.server.ts"
 
 // Load the real store and coordinator without connecting to Crate or Redis. Node's type stripping doesn't support
@@ -42,7 +43,7 @@ const { SearchStore } = await import("./store.server.ts")
 const { SearchCoordination } = await import("./coordination.server.ts")
 const { executeJevStage, JEV_RESERVE_NANO } = await import("./runtime.server.ts")
 
-function fixture(client: () => SearchRedis | null) {
+function fixture(client: () => SearchRedis | null, attribution?: SearchAttribution, conflict = false) {
 	const statements: { stmt: string; args: unknown[] }[] = []
 	const store = new SearchStore(async (stmt, args = []) => {
 		statements.push({ stmt, args })
@@ -51,11 +52,47 @@ function fixture(client: () => SearchRedis | null) {
 		if (stmt.startsWith("SELECT CURRENT_TIMESTAMP"))
 			return { cols: ["now", "day", "month"], rows: [[1000, 0, 0]], rowcount: 1 }
 		if (stmt.startsWith("SELECT cache_key, budget_at, amount_nano"))
-			return { cols: ["cache_key", "budget_at", "amount_nano"], rows: [["key", 1000, JEV_RESERVE_NANO]], rowcount: 1 }
+			return { cols: ["cache_key", "budget_at", "amount_nano", "attribution"], rows: [["key", 1000, JEV_RESERVE_NANO, attribution]], rowcount: 1 }
+		if (conflict && stmt.startsWith("INSERT INTO doc.search_interpretations")) throw new Error("claim conflict")
 		return { cols: [], rows: [], rowcount: 1 }
 	}, new SearchCoordination(client), Buffer.alloc(32, 1))
 	return { store, statements }
 }
+
+const attribution: SearchAttribution = {
+	version: 1, consumer: "web", surface: "start", trigger: "typing_pause", actor_kind: "guest", search_id: "search-1", reported_by: "client",
+}
+
+test("paid estimates and every adjustment retain the originating search attribution", async (t) => {
+	t.mock.method(SearchCoordination.prototype, "release", async () => {})
+	t.mock.method(SearchCoordination.prototype, "cache", async () => {})
+	for (const conflict of [false, true]) {
+		const { store, statements } = fixture(() => ({ eval: async () => "ok" }) as unknown as SearchRedis, attribution, conflict)
+		if (conflict) await assert.rejects(store.claim({ ...claim, attribution }), /claim conflict/)
+		else {
+			assert.equal((await store.claim({ ...claim, attribution })).kind, "claimed")
+			await store.finish("attempt", 840, [{}, {}])
+		}
+		const ledger = statements.filter(({ stmt }) => stmt.startsWith("INSERT INTO doc.search_spending"))
+		assert.equal(ledger.length, 2)
+		assert.deepEqual(ledger.map(({ args }) => args.at(-1)), [attribution, attribution])
+	}
+	const { store, statements } = fixture(() => null, attribution)
+	assert.equal(await store.reconcileUnknown("attempt", 840, "provider evidence"), true)
+	const adjustment = statements.find(({ stmt }) => stmt.includes("'reconciliation'"))!
+	assert.deepEqual(adjustment.args.at(-1), attribution)
+	assert.equal(adjustment.args[3], 1000, "adjustment stays in the original budget period")
+	assert.ok(!JSON.stringify(adjustment.args).includes("provider evidence"), "evidence remains encrypted")
+})
+
+test("history preserves current request attribution, including cache hits", async () => {
+	const { store, statements } = fixture(() => null)
+	const current = { ...attribution, trigger: "enter" as const, search_id: "search-2" }
+	await store.history({ text: "private query", accountId: null, attribution: current, elapsedMs: 10, chargedNano: 0, outcome: "cached", rankerVersion: "test" })
+	const row = statements.find(({ stmt }) => stmt.startsWith("INSERT INTO doc.search_history"))!
+	assert.deepEqual(row.args.at(-1), current)
+	assert.ok(!JSON.stringify(row.args).includes("private query"), "query remains encrypted")
+})
 const claim = {
 	cacheKey: "key",
 	contract: "test",
@@ -293,7 +330,7 @@ for (const cost of [840, null, JEV_RESERVE_NANO + 1]) {
 			assert.equal(settlement, undefined) // Unknown usage never creates a refund.
 			assert.equal(cache.mock.callCount(), 0)
 		} else {
-			assert.deepEqual(settlement?.args, ["attempt:settled", "attempt", "key", 1000, cost - JEV_RESERVE_NANO])
+			assert.deepEqual(settlement?.args, ["attempt:settled", "attempt", "key", 1000, cost - JEV_RESERVE_NANO, null])
 			assert.equal(cache.mock.callCount(), cost <= JEV_RESERVE_NANO ? 1 : 0)
 		}
 		assert.equal(statements.some(({ stmt }) => stmt.includes("status = 'ready'")), cost !== null && cost <= JEV_RESERVE_NANO)

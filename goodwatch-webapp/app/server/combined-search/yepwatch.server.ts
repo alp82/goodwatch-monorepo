@@ -44,6 +44,7 @@ export async function searchYepWatchRoom(request: Request) {
 				prompt: z.string().trim().min(2).max(1000),
 				country: z.string().regex(/^[A-Z]{2}$/),
 				serviceIds: z.array(z.number().int().positive()).max(1200),
+				actor: z.enum(["member", "guest", "unknown"]).optional(),
 			})
 			.strict()
 			.parse(JSON.parse(Buffer.concat(chunks).toString("utf8")))
@@ -57,7 +58,7 @@ export async function searchYepWatchRoom(request: Request) {
 					...(input.serviceIds.length ? { streaming: { country: input.country, providerIds: input.serviceIds } } : {}),
 				},
 			},
-			{ accountId: null, networkIdentity: "yepwatch-room-prompts" },
+			{ accountId: null, networkIdentity: "yepwatch-room-prompts", attribution: { consumer: "yepwatch", surface: "yepwatch", trigger: "api", reported_by: "server", actor: input.actor ?? "unknown" } },
 			request.signal,
 			undefined,
 			{

@@ -219,7 +219,8 @@ export class ProposalService {
 		const result = await this.interpret!(
 			input.prompt,
 			input.country,
-			input.serviceIds
+			input.serviceIds,
+			p.memberUserId ? "member" : "guest"
 		)
 		return { prompt: result.prompt, attributes: result.attributes }
 	}
@@ -658,7 +659,8 @@ export class ProposalService {
 				interpreted = await this.interpret!(
 					c.text,
 					old.room.screens[0]?.country ?? "US",
-					old.room.screens[0]?.serviceIds ?? []
+					old.room.screens[0]?.serviceIds ?? [],
+					p.memberUserId ? "member" : "guest"
 				)
 				break
 			}

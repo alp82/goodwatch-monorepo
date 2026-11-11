@@ -125,11 +125,11 @@ function page({
 	})
 	const dispatch = (action: StartQueryAction) => {
 		query = reduceQuery(query, action)
-		search.set(query)
+		search.set(query, { surface: "start", trigger: query.trigger ?? "navigation" })
 	}
 	const field = createFieldCommit({
 		searched: () => query.text,
-		search: (text) => dispatch({ type: "search", text }),
+		search: (text, trigger) => dispatch({ type: "search", text, trigger }),
 		clear: () => dispatch({ type: "clearSearch" }),
 	})
 	const type = (draft: string) => {
@@ -212,6 +212,9 @@ test("typing searches once, after the pause", async (t) => {
 	t.mock.timers.tick(100)
 	await until(() => p.last()?.status === "ready", "the results")
 	assert.equal(net.searches().length, 1)
+	assert.deepEqual(JSON.parse(String(net.searches()[0].init?.body)).attribution, { surface: "start", trigger: "typing_pause" })
+	assert.equal(p.field.submit("twist"), true)
+	assert.equal(net.searches().length, 1, "Enter after a preview does not add an invocation")
 	assert.equal(JSON.parse(String(net.searches()[0].init?.body)).q, "twist")
 	assert.equal(JSON.parse(String(net.searches()[0].init?.body)).discover, true)
 	// The same text again (a pause after a space) isn't searched again.
@@ -706,6 +709,24 @@ for (const text of ["scary", "scary dark", "scary horror"]) {
 				"moods",
 			),
 			"scary",
+		)
+	})
+}
+
+for (const trigger of ["enter", "search_button"] as const) {
+	test(`explicit ${trigger} cancels the debounce and persists its cause`, async (t) => {
+		t.mock.timers.enable({ apis: ["setTimeout"] })
+		const net = stubFetch(t, server)
+		const p = page()
+		t.after(() => p.search.dispose())
+		p.type("quiet movies")
+		p.field.submit("quiet movies", trigger)
+		await until(() => p.last()?.status === "ready")
+		t.mock.timers.tick(SEARCH_PAUSE_MS)
+		assert.equal(net.searches().length, 1)
+		assert.deepEqual(
+			JSON.parse(String(net.searches()[0].init?.body)).attribution,
+			{ surface: "start", trigger },
 		)
 	})
 }

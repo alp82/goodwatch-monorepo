@@ -1,3 +1,4 @@
+import { attributedSearch, type SearchContext } from "../../domain/search-attribution.ts";
 import { recordSearchHistoryWrite } from "./telemetry.server";
 import { runsSearch } from "../role.server";
 import { Agent, fetch } from "undici";
@@ -131,6 +132,7 @@ export interface JevStageInput {
 	// accountId may still be resolving (the route verifies the session while the search starts). It is awaited only
 	// where it is needed, before admission; a rejection means the search must not make a paid call.
 	visitor: {
+		attribution?: SearchContext;
 		accountId: string | null | Promise<string | null>;
 		networkIdentity: string;
 		/** Trusted integrations may meter fresh readings. Cache hits never call this. */
@@ -243,6 +245,7 @@ export async function executeJevStage(
 	try {
 		claim = await store.claim({
 			checks,
+			attribution: () => Promise.resolve(input.visitor.accountId).then(accountId => attributedSearch(input.visitor.attribution, accountId)),
 			cacheKey,
 			contract,
 			// The account scope waits for the session check; the spending checks don't.

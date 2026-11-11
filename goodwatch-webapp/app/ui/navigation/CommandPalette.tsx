@@ -8,6 +8,8 @@
 // else is, so Enter with nothing chosen runs it. A combobox over a listbox: focus stays in the field, Up and Down move
 // the active option (group headers, cards, rows), Enter runs it; Alt+Left and Alt+Right switch the rail's tabs when the
 // rail shows, and Tab moves through the Search button, the rail and the cards' own buttons as usual; Escape closes the dialog around it.
+import { searchNavigationState } from "~/ui/search/search-attribution"
+import type { SearchTrigger } from "~/domain/search-attribution"
 import { ArrowTurnDownLeftIcon } from "@heroicons/react/20/solid"
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid"
 import { useLocation, useNavigate } from "@remix-run/react"
@@ -328,22 +330,26 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 		setActive(floor)
 		document.getElementById(listId)?.scrollTo({ top: 0 })
 	}
-	const go = (href: string, action?: Option["action"]) => {
+	const go = (href: string, action?: Option["action"], trigger: SearchTrigger = "selection") => {
 		if (action === "feedback")
 			// After the dialog has handed focus back, so the drawer keeps it.
 			setTimeout(() => {
 				if (!openFeedback()) navigate(href)
 			}, FEEDBACK_AFTER_MS)
-		else navigate(href)
+		else {
+			const target = new URL(href, window.location.origin)
+			const query = target.pathname.startsWith("/discover") ? target.searchParams.get("q") : null
+			navigate(href, query ? { state: searchNavigationState(query, "header", trigger) } : undefined)
+		}
 		onDone()
 	}
-	const run = (option: Option) => {
+	const run = (option: Option, trigger: SearchTrigger = "selection") => {
 		if (option.opens) {
 			showTab(option.opens)
 			field.current?.focus()
-		} else go(option.href, option.action)
+		} else go(option.href, option.action, trigger)
 	}
-	const search = () => go(searchHref(trimmed))
+	const search = (trigger: SearchTrigger = "search_button") => go(searchHref(trimmed), undefined, trigger)
 
 	const ctx: Ctx = {
 		indexOf: (option) => positions.get(option.key) ?? -1,
@@ -376,10 +382,10 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 		} else if (event.key === "Enter" && !event.nativeEvent.isComposing) {
 			event.preventDefault()
 			if (at < 0) {
-				if (trimmed) search()
+				if (trimmed) search("enter")
 			} else {
 				const option = options[at]
-				if (option) run(option)
+				if (option) run(option, "enter")
 			}
 		}
 	}
@@ -428,7 +434,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 							<button
 								id={optionId(-1)}
 								type="button"
-								onClick={search}
+								onClick={() => search("search_button")}
 								onMouseMove={() => at !== -1 && setActive(-1)}
 								aria-label={`Search Discover for “${trimmed}”`}
 								className={`flex h-10 shrink-0 items-center gap-2 rounded-[10px] pr-2.5 pl-3 text-[13.5px] font-semibold ${at === -1 ? "bg-amber-400 text-gray-950" : "bg-white/[0.06] text-gray-200 hover:bg-white/10"}`}

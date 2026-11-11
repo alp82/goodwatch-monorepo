@@ -23,7 +23,8 @@ export const roomIntentSchema = z
 export type InterpretRoom = (
 	prompt: string,
 	country: string,
-	serviceIds: number[]
+	serviceIds: number[],
+	actor?: "member" | "guest"
 ) => Promise<NonNullable<ProposalRoom["intent"]>>
 /** Dedicated authenticated search-role endpoint; never impersonates a browser Origin or shares account credentials. */
 export function roomSearch(
@@ -41,7 +42,7 @@ export function roomSearch(
 		!["127.0.0.1", "localhost"].includes(endpoint.hostname)
 	)
 		throw new Error("Search requires HTTPS")
-	return async (prompt, country, serviceIds) => {
+	return async (prompt, country, serviceIds, actor) => {
 		let response: Response
 		try {
 			response = await transport(endpoint, {
@@ -52,7 +53,7 @@ export function roomSearch(
 					"content-type": "application/json",
 					"x-goodwatch-consumer": "yepwatch"
 				},
-				body: JSON.stringify({ prompt, country, serviceIds }),
+				body: JSON.stringify({ prompt, country, serviceIds, ...(actor ? { actor } : {}) }),
 				signal: AbortSignal.timeout(12000)
 			})
 		} catch {

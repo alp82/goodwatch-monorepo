@@ -10,6 +10,9 @@ An appealing movie or TV show unfamiliar to the person and available on their st
 **Interest discovery**:
 Finding movies and TV shows the person wants to watch, without requiring availability on their services. Interest discovery precedes the decision about what they can watch next. For members with saved services, On my services still narrows it by default, and one tap widens it to everywhere.
 
+**Search invocation**:
+A request that reaches the combined search, whether started by a typing pause, explicit submission, navigation or an API consumer. Its attribution separates the trigger, surface, consumer and verified actor type. Paid interpretation attempts retain the attribution of the request that started them; later cache users have their own invocation. Attribution never changes search or reading cache identity. See [search invocation attribution](docs/search-invocation-attribution.md).
+
 **Watchability check**:
 The follow-up assessment of where a title of interest can be watched in the person's country and on their services.
 

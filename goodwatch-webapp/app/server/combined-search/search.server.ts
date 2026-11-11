@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+import { attributedSearch } from "../../domain/search-attribution";
 import { peopleSearchFilters } from "./people-filter.server";
 import { withTitleScope } from "./search-filters";
 import { fetch } from "undici";
@@ -713,6 +715,7 @@ export async function combinedSearch(
 		named?: string;
 	} = {},
 ): Promise<SearchBatch> {
+	visitor = { ...visitor, attribution: { consumer: "unknown", surface: "unknown", trigger: "unknown", reported_by: "unknown", ...visitor.attribution, search_id: randomUUID() } };
 	const started = Date.now(),
 		errors: string[] = [];
 	let chargedNano = 0;
@@ -869,7 +872,7 @@ export async function combinedSearch(
 		};
 		setImmediate(() => {
 			Promise.resolve(visitor.accountId).then(
-				(accountId) => recordSearchHistory({ ...entry, accountId }),
+				(accountId) => recordSearchHistory({ ...entry, accountId, attribution: attributedSearch(visitor.attribution, accountId) }),
 				() => {},
 			);
 		});

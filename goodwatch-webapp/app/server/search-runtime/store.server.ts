@@ -1,3 +1,4 @@
+import { attributedSearch, type SearchAttribution } from "../../domain/search-attribution.ts"
 import {
 	createCipheriv,
 	createDecipheriv,
@@ -35,7 +36,7 @@ type Interpretation = {
 	ciphertext: string
 	created_at: number
 }
-type Reservation = { cache_key: string; budget_at: number; amount_nano: number }
+type Reservation = { cache_key: string; budget_at: number; amount_nano: number; attribution?: SearchAttribution }
 
 let lastCoordinationWarning = -Infinity
 
@@ -142,6 +143,7 @@ export class SearchStore {
 		reserveNano: number
 		priceVersion: string
 		admissionAttemptId?: string
+		attribution?: SearchAttribution | (() => Promise<SearchAttribution>)
 		// Independent overlapping durations, including rejected operations.
 		timings?: Record<string, number>
 	}): Promise<Claim> {
@@ -168,6 +170,7 @@ export class SearchStore {
 		)
 			return { kind: "basic", reason: "budget" }
 		const scopes = await timed("claimScopes", () => scopesReady)
+		const attribution = (typeof input.attribution === "function" ? await input.attribution() : input.attribution) ?? { ...attributedSearch(undefined, null), actor_kind: "unknown" as const }
 		if (!scopes.length) return { kind: "basic", reason: "configuration" }
 		const id = randomUUID()
 		let admitted
@@ -202,7 +205,7 @@ export class SearchStore {
 					[input.cacheKey, id, input.contract, now],
 				)),
 				timed("claimEstimateInsert", () => this.execute(
-					"INSERT INTO doc.search_spending (id, attempt_id, cache_key, event, budget_at, created_at, amount_nano, price_version) VALUES (?, ?, ?, 'estimate', ?, ?, ?, ?)",
+					"INSERT INTO doc.search_spending (id, attempt_id, cache_key, event, budget_at, created_at, amount_nano, price_version, attribution) VALUES (?, ?, ?, 'estimate', ?, ?, ?, ?, ?)",
 					[
 						`${id}:estimate`,
 						id,
@@ -211,6 +214,7 @@ export class SearchStore {
 						now,
 						input.reserveNano,
 						input.priceVersion,
+						attribution,
 					],
 				)),
 			])
@@ -219,8 +223,8 @@ export class SearchStore {
 				// cancelled before dispatch. If that fails, the estimate stays counted, which only errs on the safe side.
 				if (estimate.status === "fulfilled")
 					await this.execute(
-						"INSERT INTO doc.search_spending (id, attempt_id, cache_key, event, budget_at, created_at, amount_nano) VALUES (?, ?, ?, 'settlement', ?, CURRENT_TIMESTAMP, ?) ON CONFLICT DO NOTHING",
-						[`${id}:settled`, id, input.cacheKey, now, -input.reserveNano],
+						"INSERT INTO doc.search_spending (id, attempt_id, cache_key, event, budget_at, created_at, amount_nano, attribution) VALUES (?, ?, ?, 'settlement', ?, CURRENT_TIMESTAMP, ?, ?) ON CONFLICT DO NOTHING",
+						[`${id}:settled`, id, input.cacheKey, now, -input.reserveNano, attribution],
 					).catch(() => {})
 				if (inserted.status === "rejected") throw inserted.reason
 				const cached = await this.lookup(input.cacheKey)
@@ -246,7 +250,7 @@ export class SearchStore {
 	}
 	private async reservation(id: string) {
 		const [row] = await this.query<Reservation>(
-			"SELECT cache_key, budget_at, amount_nano FROM doc.search_spending WHERE id = ?",
+			"SELECT cache_key, budget_at, amount_nano, attribution FROM doc.search_spending WHERE id = ?",
 			[`${id}:estimate`],
 		)
 		if (!row) throw new Error("Search attempt unavailable")
@@ -303,13 +307,14 @@ export class SearchStore {
 				)
 			}
 			await this.execute(
-				"INSERT INTO doc.search_spending (id, attempt_id, cache_key, event, budget_at, created_at, amount_nano) VALUES (?, ?, ?, 'settlement', ?, CURRENT_TIMESTAMP, ?) ON CONFLICT DO NOTHING",
+				"INSERT INTO doc.search_spending (id, attempt_id, cache_key, event, budget_at, created_at, amount_nano, attribution) VALUES (?, ?, ?, 'settlement', ?, CURRENT_TIMESTAMP, ?, ?) ON CONFLICT DO NOTHING",
 				[
 					`${id}:settled`,
 					id,
 					row.cache_key,
 					row.budget_at,
 					costNano - Number(row.amount_nano),
+					row.attribution ?? null,
 				],
 			)
 			if (ciphertext !== null)
@@ -333,7 +338,7 @@ export class SearchStore {
 		if (settled) return false
 		if (actualNano > Number(row.amount_nano)) await this.haltPaidAdmissions()
 		const result = await this.execute(
-			"INSERT INTO doc.search_spending (id, attempt_id, cache_key, event, budget_at, created_at, amount_nano, evidence) VALUES (?, ?, ?, 'reconciliation', ?, CURRENT_TIMESTAMP, ?, ?) ON CONFLICT DO NOTHING",
+			"INSERT INTO doc.search_spending (id, attempt_id, cache_key, event, budget_at, created_at, amount_nano, evidence, attribution) VALUES (?, ?, ?, 'reconciliation', ?, CURRENT_TIMESTAMP, ?, ?, ?) ON CONFLICT DO NOTHING",
 			[
 				`${id}:settled`,
 				id,
@@ -341,6 +346,7 @@ export class SearchStore {
 				row.budget_at,
 				actualNano - Number(row.amount_nano),
 				this.seal({ evidence }),
+				row.attribution ?? null,
 			],
 		)
 		// No automatic paid retry. Maintenance may explicitly release an abandoned cache key.
@@ -349,6 +355,7 @@ export class SearchStore {
 	async history(input: {
 		text: string
 		accountId: string | null
+		attribution?: SearchAttribution
 		elapsedMs: number
 		chargedNano: number
 		outcome: "ready" | "cached" | "basic"
@@ -362,7 +369,7 @@ export class SearchStore {
 	}): Promise<string> {
 		const id = randomUUID()
 		await this.execute(
-			"INSERT INTO doc.search_history (id, created_at, account_id, ciphertext, elapsed_ms, charged_nano, outcome, reason, ranker_version, ranker_fallback, stage_ms) VALUES (?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+			"INSERT INTO doc.search_history (id, created_at, account_id, ciphertext, elapsed_ms, charged_nano, outcome, reason, ranker_version, ranker_fallback, stage_ms, attribution) VALUES (?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 			[
 				id,
 				input.accountId,
@@ -374,6 +381,7 @@ export class SearchStore {
 				input.rankerVersion,
 				input.rankerFallback ?? null,
 				input.stageMs ?? null,
+				input.attribution ?? attributedSearch(undefined, input.accountId),
 			],
 		)
 		return id

@@ -1,3 +1,4 @@
+import { attributedSearch } from "../../domain/search-attribution";
 import { fetch } from "undici";
 import {
 	getSearchStore,
@@ -149,6 +150,7 @@ export async function prepareLanguage(
 		const claim = await store.claim({
 			cacheKey,
 			contract,
+			attribution: () => Promise.resolve(visitor.accountId).then(accountId => attributedSearch(visitor.attribution, accountId)),
 			scopes: Promise.resolve(visitor.accountId).then((accountId) => [
 				"global",
 				store.digest(`network:${visitor.networkIdentity}`),

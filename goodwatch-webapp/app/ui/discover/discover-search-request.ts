@@ -3,6 +3,7 @@
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
 import type { SearchFilters } from "~/server/combined-search/search-filters"
 import type { ReadCount, SearchBatch } from "~/server/combined-search/search.server"
+import type { SearchOrigin } from "~/domain/search-attribution"
 import { requestSearch } from "~/ui/search/search-client"
 import { type TitleKey, titleKey } from "~/utils/title-key"
 
@@ -77,9 +78,11 @@ export async function runDiscoverSearch(
 	// to count; the counts come after the results.
 	preferences?: { originalGenres?: string[]; counted?: string[]; named?: string },
 	onCounts?: (counts: ReadCount[]) => void,
+	attribution?: SearchOrigin,
 ): Promise<DiscoverSearchResult> {
 	const batch = await requestSearch({
 		language,
+		attribution,
 		// discover: the frozen ranked candidate set, which the results endpoint filters and counts.
 		body: {
 			q,

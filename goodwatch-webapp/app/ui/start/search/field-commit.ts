@@ -5,6 +5,7 @@
 // dropped whenever something else searches first.
 //
 // Framework-free, so the timing is tested with mocked timers (start-search.test.ts); StartSearchBar holds one per bar.
+import type { SearchTrigger } from "~/domain/search-attribution"
 import { searchText } from "~/domain/discover-search"
 
 /** Typing searches once it pauses this long (Discover's COMMIT_MS). */
@@ -14,7 +15,7 @@ export interface FieldCommit {
 	/** The field changed: (re)start the pause, or clear the search when the field is empty. */
 	type(draft: string): void
 	/** Enter or the Search button. Returns whether there is a search to show (searched now or already on). */
-	submit(draft: string): boolean
+	submit(draft: string, trigger?: "enter" | "search_button"): boolean
 	/** A preset: search its exact phrase now. */
 	preset(phrase: string): void
 	/** Drop a pending pause (the field's Clear, unmount). */
@@ -30,7 +31,7 @@ export function createFieldCommit({
 	/** The text being searched now ("" for none). */
 	searched: () => string
 	/** Search this text (the field's text, untrimmed: the query keeps it as the draft). */
-	search: (text: string) => void
+	search: (text: string, trigger: SearchTrigger) => void
 	/** Clear the search (the field was emptied). */
 	clear: () => void
 	delay?: number
@@ -40,10 +41,10 @@ export function createFieldCommit({
 		if (timer !== null) clearTimeout(timer)
 		timer = null
 	}
-	const run = (draft: string) => {
+	const run = (draft: string, trigger: SearchTrigger) => {
 		const text = searchText(draft)
 		if (text === null || text === searched()) return
-		search(draft)
+		search(draft, trigger)
 	}
 	return {
 		type(draft) {
@@ -54,17 +55,17 @@ export function createFieldCommit({
 			}
 			timer = setTimeout(() => {
 				timer = null
-				run(draft)
+				run(draft, "typing_pause")
 			}, delay)
 		},
-		submit(draft) {
+		submit(draft, trigger = "enter") {
 			cancel()
-			run(draft)
+			run(draft, trigger)
 			return searchText(draft) !== null || searched() !== ""
 		},
 		preset(phrase) {
 			cancel()
-			run(phrase)
+			run(phrase, "selection")
 		},
 		cancel,
 	}

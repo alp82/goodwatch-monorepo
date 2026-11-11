@@ -6,7 +6,7 @@ import ts from "typescript"
 import "../title-filter/test-alias.ts"
 
 const state = {
-	auth: 0, taste: 0, release: 0, run: null as null | ((...args: any[]) => Promise<any>),
+	userId: "member" as string | null, auth: 0, taste: 0, release: 0, run: null as null | ((...args: any[]) => Promise<any>),
 	// The shared limiter's answer (server/rate-limit.server.ts), and the clients it was asked about.
 	rate: { allowed: true, store: "valkey" } as { allowed: boolean; store: string; retryAfterSeconds?: number },
 	rateClients: [] as string[],
@@ -28,7 +28,7 @@ const stubs: Record<string, string> = {
 	"/server/discover-search-set.server.ts": `export const saveSearchSet=async()=>null;`,
 	"/media-payload.server.ts": `export const payloadLanguage=request=>new URL(request.url).searchParams.get("displayLanguage")||"en"; export const localizeApiTitlePayload=async(batch,request)=>new URL(request.url).searchParams.has("displayLanguage")?({...batch,rows:batch.rows.map(row=>({...row,displayLanguage:new URL(request.url).searchParams.get("displayLanguage")}))}):batch;`,
 	"@remix-run/node": `export const json=(body,options={})=>Response.json(body,options);`,
-	"/utils/auth.ts": `export const getAuthFromRequest=async()=>{globalThis.__routeSearchTest.auth++;return {user:{id:'member'},headers:new Headers()}};`,
+	"/utils/auth.ts": `export const getAuthFromRequest=async()=>{globalThis.__routeSearchTest.auth++;return {user:globalThis.__routeSearchTest.userId?{id:globalThis.__routeSearchTest.userId}:null,headers:new Headers()}};`,
 	"/combined-search/search.server.ts": `export const combinedSearch=(...args)=>globalThis.__routeSearchTest.run(...args);`,
 	"/combined-search/search-filters.ts": `export const parseSearchFilters=()=>({});`,
 	"/role.server.ts": `export const runsSearch=()=>true;`,
@@ -60,7 +60,7 @@ registerHooks({
 })
 const { action } = await import("../../routes/api.combined-search.ts")
 const reset = () => {
-	state.auth = 0; state.taste = 0; state.release = 0; events.length = 0
+	state.userId = "member"; state.auth = 0; state.taste = 0; state.release = 0; events.length = 0
 	state.rate = { allowed: true, store: "valkey" }; state.rateClients = []
 }
 process.env.SEARCH_TRUSTED_IP_HEADER = "X-Real-Ip"
@@ -257,4 +257,41 @@ test("Discover asks for the expanded candidate set and retains it when shared st
 	const packets = (await response.text()).trim().split("\n").map(line => JSON.parse(line))
 	assert.equal(response.status, 200)
 	assert.deepEqual(packets.find(packet => packet.kind === "batch").batch.searchKeys, keys)
+})
+
+test("browser source labels cannot claim an API consumer or a different actor", async () => {
+	for (const userId of [null, "verified-member"]) {
+		reset()
+		state.userId = userId
+		let viewer: any
+		state.run = async (_q, _policy, visitor) => {
+			viewer = visitor
+			return { rows: [], pendingTitleLookup: false }
+		}
+		const req = new Request("http://localhost:3107/api/combined-search", {
+			method: "POST",
+			headers: {
+				Origin: "http://localhost:3107",
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				q: "quiet movies",
+				attribution: {
+					surface: "header",
+					trigger: "enter",
+					consumer: "yepwatch",
+					actor: userId ? "guest" : "member",
+					search_id: "forged",
+				},
+			}),
+		})
+		await (await search(req)).text()
+		assert.equal(await viewer.accountId, userId)
+		assert.deepEqual(viewer.attribution, {
+			surface: "header",
+			trigger: "enter",
+			consumer: "web",
+			reported_by: "client",
+		})
+	}
 })

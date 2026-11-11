@@ -33,6 +33,36 @@ registerHooks({
 });
 const { executeJevStage } = await import("./runtime.server.ts");
 
+test("different invocation origins reuse the same reading key and resolve verified actors before reservation", async (t) => {
+	const originalKey = process.env.TYPESAFE_API_KEY;
+	process.env.TYPESAFE_API_KEY = "test-key";
+	t.after(() => { if (originalKey === undefined) delete process.env.TYPESAFE_API_KEY; else process.env.TYPESAFE_API_KEY = originalKey });
+	const keys: string[] = [];
+	const origins: unknown[] = [];
+	const store = {
+		digest: (value: string) => value,
+		lookup: async (key: string) => { keys.push(key); return null },
+		claimChecks: async () => [[], []],
+		claim: async (input: Parameters<SearchStore["claim"]>[0]) => {
+			await input.scopes;
+			origins.push(typeof input.attribution === "function" ? await input.attribution() : input.attribution);
+			return { kind: "basic", reason: "budget" };
+		},
+	} as unknown as SearchStore;
+	for (const [surface, trigger, accountId] of [["start", "typing_pause", null], ["header", "enter", "verified-member"]] as const) {
+		await executeJevStage(store, {
+			requestText: "quiet films", questionVersion: "test", language: { mode: "english", version: "test" },
+			requests: [{ state: { request: "quiet films" }, questions: {} }, { state: {}, questions: {} }],
+			visitor: { accountId: Promise.resolve(accountId), networkIdentity: "test", attribution: { consumer: "web", surface, trigger, reported_by: "client", search_id: `${surface}-id` } },
+		});
+	}
+	assert.equal(keys[0], keys[1], "origin and actor never affect reading identity");
+	assert.deepEqual(origins, [
+		{ version: 1, consumer: "web", surface: "start", trigger: "typing_pause", actor_kind: "guest", search_id: "start-id", reported_by: "client" },
+		{ version: 1, consumer: "web", surface: "header", trigger: "enter", actor_kind: "member", search_id: "header-id", reported_by: "client" },
+	]);
+});
+
 for (const scenario of [
 	{ name: "cached reading", cached: true, key: false, calls: 0, kind: "cached" },
 	{ name: "missing provider key", key: false, calls: 0, kind: "basic", reason: "configuration" },

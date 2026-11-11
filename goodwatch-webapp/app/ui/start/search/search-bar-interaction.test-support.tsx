@@ -168,6 +168,7 @@ try {
 		await import("./SearchInterpretation")
 	})
 	assert.equal(current().query.text, "funny")
+	assert.equal(current().query.trigger, "typing_pause")
 	assert.deepEqual(current().query.picks, ["m:scary"])
 	assert.equal(
 		new URLSearchParams(router.state.location.search).get("q"),
@@ -197,6 +198,7 @@ try {
 	)
 	await submit()
 	assert.equal(current().query.text, "space adventure")
+	assert.equal(current().query.trigger, "enter")
 	assert.equal(asks, 1)
 	await advance(800)
 	await paint()
@@ -349,6 +351,22 @@ try {
 		"keyboard activation returns focus to the emptied field",
 	)
 	await paint()
+
+	await type("button submission")
+	await act(async () => {
+		const button = find<HTMLButtonElement>('button[type="submit"]')
+		button.dispatchEvent(new browser.MouseEvent("click", { bubbles: true, cancelable: true, detail: 1 }) as unknown as Event)
+	})
+	await submit()
+	assert.equal(current().query.trigger, "search_button")
+	await type("implicit Enter submission")
+	await act(async () => {
+		input().focus()
+		input().dispatchEvent(new browser.KeyboardEvent("keydown", { key: "Enter", bubbles: true }) as unknown as Event)
+		find<HTMLButtonElement>('button[type="submit"]').dispatchEvent(new browser.MouseEvent("click", { bubbles: true, detail: 0 }) as unknown as Event)
+	})
+	await submit()
+	assert.equal(current().query.trigger, "enter", "implicit submit-button click retains Enter origin")
 
 	await type("discarded when unmounted")
 	await act(async () => current().search("queued before unmount"))

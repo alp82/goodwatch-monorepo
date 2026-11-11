@@ -32,6 +32,7 @@ import { picksOf } from "~/domain/taste-picker"
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
 import type { DiscoverResults } from "~/server/discover-results.server"
 import { discoverFetch } from "~/ui/discover/discover-fetch"
+import type { SearchOrigin } from "~/domain/search-attribution"
 import { runDiscoverSearch } from "~/ui/discover/discover-search-request"
 import type { GuestBody } from "~/ui/discover/useDiscoverBrowse"
 import { mediaLanguageUrl } from "~/utils/media-presentation"
@@ -146,7 +147,7 @@ type Searched = { ranked: TitleKey[]; reading: ReadingChip[] }
 
 export interface StartSearch {
 	/** Answer this query (a no-op for the query already asked). */
-	set(query: Pick<StartQuery, "text" | "picks">): void
+	set(query: Pick<StartQuery, "text" | "picks">, attribution?: SearchOrigin): void
 	/** Ask the current query again (after an error). */
 	retry(): void
 	/** Abort everything; nothing is answered after this. */
@@ -174,6 +175,7 @@ export function createStartSearch({
 	let asked: {
 		query: Pick<StartQuery, "text" | "picks">
 		signature: string
+		attribution: SearchOrigin
 	} | null = null
 	let requests: AbortController | null = null
 	/** The search in flight, aborted when another text is searched. */
@@ -209,6 +211,7 @@ export function createStartSearch({
 		filters: SearchFilters,
 		original: string,
 		prefix: ReadingChip[],
+		attribution: SearchOrigin,
 	): Promise<Searched> {
 		const key = JSON.stringify([text, filters])
 		const kept = searches.get(key)
@@ -232,6 +235,9 @@ export function createStartSearch({
 			},
 			undefined,
 			language,
+			undefined,
+			undefined,
+			attribution,
 		).then(
 			(answer) => {
 				if (searching?.abort === abort) searching = null
@@ -290,6 +296,7 @@ export function createStartSearch({
 		signal: AbortSignal,
 		attempt: number,
 	) {
+		const attribution = asked?.attribution ?? { surface: "start" as const, trigger: "unknown" as const }
 		const live = () =>
 			!disposed && !signal.aborted && asked?.signature === signature
 		const fail = (error: string) =>
@@ -339,6 +346,7 @@ export function createStartSearch({
 					),
 					text!,
 					inferred,
+					attribution,
 				)
 			} catch (error) {
 				if (live()) fail(error instanceof Error ? error.message : RESULTS_ERROR)
@@ -427,12 +435,12 @@ export function createStartSearch({
 		})
 	}
 
-	function run(query: Pick<StartQuery, "text" | "picks">) {
+	function run(query: Pick<StartQuery, "text" | "picks">, attribution: SearchOrigin) {
 		stopRetry()
 		requests?.abort()
 		requests = null
 		const signature = querySignature(query)
-		asked = { query, signature }
+		asked = { query, signature, attribution }
 		const text = searchText(query.text)
 		if (text === null && !query.picks.length) {
 			emit({ ...IDLE_RESULTS, signature })
@@ -454,15 +462,15 @@ export function createStartSearch({
 	}
 
 	return {
-		set(query) {
+		set(query, attribution = { surface: "start", trigger: "navigation" }) {
 			if (disposed || asked?.signature === querySignature(query)) return
 			// A search no longer asked for stops; a kept one (the same text) carries on.
 			if (searching && searching.text !== searchText(query.text))
 				stopSearching()
-			run(query)
+			run(query, attribution)
 		},
 		retry() {
-			if (!disposed && asked) run(asked.query)
+			if (!disposed && asked) run(asked.query, { ...asked.attribution, trigger: "retry" })
 		},
 		dispose() {
 			disposed = true

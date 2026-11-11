@@ -1,3 +1,4 @@
+import type { SearchOrigin } from "~/domain/search-attribution"
 import { mediaLanguageUrl } from "~/utils/media-presentation"
 // One request to the combined search, for Discover's free-text search and the TV's search: what kind of answer came
 // back, and the ranked stream read to its batch. Every failure is an Error whose message the page shows next to Retry.
@@ -48,6 +49,7 @@ export async function classifySearchResponse(
 
 export async function requestSearch({
 	body,
+	attribution,
 	language,
 	signal,
 	onReading,
@@ -62,6 +64,7 @@ export async function requestSearch({
 	onCounts?: (counts: ReadCount[]) => void
 	/** The JSON body of the search request. */
 	body: unknown
+	attribution?: SearchOrigin
 	language?: string
 	signal: AbortSignal
 	/** The reading of the query, which arrives before the results. */
@@ -81,7 +84,7 @@ export async function requestSearch({
 			method: "POST",
 			signal,
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify(body),
+			body: JSON.stringify(attribution && body && typeof body === "object" ? { ...body, attribution } : body),
 		})
 	} catch (error) {
 		throw lost(error)

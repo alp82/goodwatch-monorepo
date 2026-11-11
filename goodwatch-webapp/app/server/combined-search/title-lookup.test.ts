@@ -2,6 +2,7 @@
 // filters (allowsTitle, toCrateSql) are the real module. The catalog is a stub: its `eligible` is a gate the tests
 // set, so these tests show where the search asks it and with what, not catalog.server.ts's own rule.
 import assert from "node:assert/strict"
+import type { SearchAttribution, SearchContext } from "../../domain/search-attribution.ts"
 import { readFileSync } from "node:fs"
 import * as nodeModule from "node:module"
 import { after, test } from "node:test"
@@ -10,6 +11,7 @@ import { MockAgent, getGlobalDispatcher, setGlobalDispatcher } from "undici"
 import "../title-filter/test-alias.ts"
 
 const probe = {
+	invocations: [] as SearchContext[],
 	translation: false,
 	translations: 0,
 	readings: 0,
@@ -79,6 +81,7 @@ const probe = {
 	>,
 	peopleReads: [] as { q: string; narrow: boolean }[],
 	history: [] as {
+		attribution: SearchAttribution
 		elapsedMs: number
 		chargedNano: number
 		outcome?: string
@@ -97,7 +100,7 @@ const stubs: Record<string, string> = {
 	"/combined-search/reading-retrieval.server.ts": `export const attributeRequest=()=>({}); export const fingerprintRequest=()=>({}); export const describeTitles=async(_reading,rows,options)=>{const probe=globalThis.titleLookupProbe;probe.displays.push(rows.map(row=>row.key));if(probe.displayGate){const gate=probe.displayGate;probe.displayHeld++;probe.displayTimeouts.push(options?.timeoutMs);await gate;probe.displaySettled++}return []}; export const readingFields=()=>({}); export const summarizeReading=()=>[];`,
 	"/combined-search/catalog.server.ts": `export const eligible=(metadata,_policy,discovery)=>{const probe=globalThis.titleLookupProbe;const key=metadata?metadata.media_type+':'+metadata.tmdb_id:'';probe.eligibility?.push({key,discovery});return !probe.ineligible.has(key)}; export const metadataFor=async keys=>{if(keys.includes(globalThis.titleLookupProbe.failMetadataKey))throw new Error("Catalog completion failed");if(keys.length)globalThis.titleLookupProbe.metadata.push(keys);const probe=globalThis.titleLookupProbe;if(probe.metadataGate&&keys.includes(probe.heldMetadataKey)){const gate=probe.metadataGate;probe.metadataHeld++;await gate;probe.metadataSettled++}return keys.map(key=>({media_type:key.split(':')[0],tmdb_id:Number(key.split(':')[1]),adult:false,imdb_id:globalThis.titleLookupProbe.imdb[key]??null,poster_path:null,genres:null,goodwatch_overall_score_voting_count:0,goodwatch_overall_score_normalized_percent:null}))}; export const searchQuery=async()=>{globalThis.titleLookupProbe.literals++;return []}; export const exactCatalogTitles=async q=>{if(q.includes('race fallback'))await new Promise(resolve=>setTimeout(resolve,180));return q.includes('delayed primary')?[{id:41,title:q,original:'Native name',type:'movie',year:'1980',poster:null,popularity:0}]:[]};`,
 	"/combined-search/language.server.ts": `export const prepareLanguage=async text=>{if(!globalThis.titleLookupProbe.translation)return {text,policy:{mode:'english'},chargedNano:0};globalThis.titleLookupProbe.translations++;return {text:'translated '+text,policy:{mode:'translated'},chargedNano:99}};`,
-	"/search-runtime/runtime.server.ts": `export const BASIC_SEARCH_MESSAGE='Showing basic search results'; export const translationEnabled=()=>globalThis.titleLookupProbe.translation; export const keepJevConnectionsWarm=()=>{}; export const runJevStage=async input=>{globalThis.titleLookupProbe.readings++;if(globalThis.titleLookupProbe.readGate&&input.requestText.includes('held reading')){globalThis.titleLookupProbe.readHeld++;await globalThis.titleLookupProbe.readGate;const outcome=input.signal?.aborted?{kind:'basic',reason:'cancelled',message:BASIC_SEARCH_MESSAGE,chargedNano:123}:{kind:'ready',readings:{},chargedNano:123};globalThis.titleLookupProbe.readOutcomes.push(outcome);return outcome}return input.requestText.startsWith('ranked ')||globalThis.titleLookupProbe.forced.has(input.requestText)?{kind:'ready',readings:{},chargedNano:input.requestText.includes('abort after')?123:0}:{kind:'basic',reason:'budget',chargedNano:0}}; export const recordSearchHistory=async entry=>{globalThis.titleLookupProbe.history.push(entry);return {recorded:true,id:'test'}};`,
+	"/search-runtime/runtime.server.ts": `export const BASIC_SEARCH_MESSAGE='Showing basic search results'; export const translationEnabled=()=>globalThis.titleLookupProbe.translation; export const keepJevConnectionsWarm=()=>{}; export const runJevStage=async input=>{globalThis.titleLookupProbe.invocations.push(input.visitor.attribution);globalThis.titleLookupProbe.readings++;if(globalThis.titleLookupProbe.readGate&&input.requestText.includes('held reading')){globalThis.titleLookupProbe.readHeld++;await globalThis.titleLookupProbe.readGate;const outcome=input.signal?.aborted?{kind:'basic',reason:'cancelled',message:BASIC_SEARCH_MESSAGE,chargedNano:123}:{kind:'ready',readings:{},chargedNano:123};globalThis.titleLookupProbe.readOutcomes.push(outcome);return outcome}return input.requestText.startsWith('ranked ')||globalThis.titleLookupProbe.forced.has(input.requestText)?{kind:'ready',readings:{},chargedNano:input.requestText.includes('abort after')?123:0}:{kind:'basic',reason:'budget',chargedNano:0}}; export const recordSearchHistory=async entry=>{globalThis.titleLookupProbe.history.push(entry);return {recorded:true,id:'test'}};`,
 	"/search-ranking/serve.server.ts": `export class RankingDeadlineError extends Error{timings=Object.freeze({round1Elapsed:40,round1Pending:1});constructor(message,ranking,timings){super(message);this.ranking=ranking;if(timings)this.timings=timings}}; const rows=titles=>titles.map(t=>({id:1e12+t.id,mediaType:t.type==='tv'?'show':'movie',title:t.title,year:t.year,score:3})); export const rankForServing=async(_reading,request)=>{globalThis.titleLookupProbe.rankings++;if(request.query.includes("diagnostic deadline"))throw new RankingDeadlineError("private fixture failure");if(globalThis.titleLookupProbe.rankGate&&request.query.includes("staged ranking")){const probe=globalThis.titleLookupProbe;const gate=probe.rankGate;const staged=probe.staged={progress:request.progress};const started=performance.now();staged.ranking=(async()=>{probe.rankHeld++;await request.progress.measure("round1",()=>gate);const round1=performance.now()-started;probe.rankSettled++;staged.completed={results:[...rows(request.titleLookup),...(request.query.includes('sibling rejection')?[{id:1e12+99,mediaType:'movie',title:'A ranked discovery',year:'2000',score:1}]:[])],reblend:rows,rounds:[],timings:{round1,total:performance.now()-started},rankerVersion:'fixture'};return staged.completed})();await new Promise(resolve=>setTimeout(resolve,40));staged.deadline=request.progress.snapshot();staged.deadlineCopy={...staged.deadline};throw new RankingDeadlineError("private fixture failure",staged.ranking,staged.deadline)}if(globalThis.titleLookupProbe.rankGate&&request.query.includes("late ranking")){const gate=globalThis.titleLookupProbe.rankGate;const ranking=(async()=>{globalThis.titleLookupProbe.rankHeld++;await gate;globalThis.titleLookupProbe.rankSettled++;return {results:[...rows(request.titleLookup),...(request.query.includes('sibling rejection')?[{id:1e12+99,mediaType:'movie',title:'A ranked discovery',year:'2000',score:1}]:[])],reblend:rows,rounds:[],timings:{},rankerVersion:'fixture'}})();ranking.catch(()=>{});await new Promise(resolve=>setTimeout(resolve,40));throw new RankingDeadlineError("private fixture failure",ranking)}if(globalThis.titleLookupProbe.rankGate&&(request.query.includes("held ranking")||globalThis.titleLookupProbe.forced.has(request.query.toLowerCase()))){globalThis.titleLookupProbe.rankHeld++;await globalThis.titleLookupProbe.rankGate;globalThis.titleLookupProbe.rankSettled++}return {results:[...rows(request.titleLookup),...(request.query.includes('sibling rejection')?[{id:1e12+99,mediaType:'movie',title:'A ranked discovery',year:'2000',score:1}]:[])],reblend:rows,rounds:[],timings:{},rankerVersion:'fixture'}}; export const servingFallback=search=>search.hasReading?null:'basic search'; export const startSearchRanking=()=>{};`,
 	"/search-ranking/rank-search.server.ts": `export const prepareSearch=async()=>({});`,
 	"/search-runtime/limits.server.ts": `export const readingsConfigured=()=>false; export const searchInFlightLimit=()=>4;`,
@@ -3810,5 +3813,40 @@ test("the early batch holds only titles the filters allow and the catalog gate a
 		delete probe.imdb["movie:45"]
 		probe.ineligible.clear()
 		probe.eligibility = null
+	}
+})
+
+test("server invocation IDs join history to its reading stage and never reuse a caller ID", async () => {
+	const before = probe.history.length
+	const calls = probe.invocations.length
+	for (const accountId of [null, "verified-member"]) {
+		await combinedSearch("quiet attribution fixture", policy, {
+			accountId,
+			networkIdentity: "test",
+			attribution: {
+				consumer: "web",
+				surface: "header",
+				trigger: "enter",
+				reported_by: "client",
+				search_id: "caller-supplied",
+			},
+		}, new AbortController().signal)
+		await new Promise((resolve) => setImmediate(resolve))
+	}
+	const history = probe.history.slice(before)
+	const stages = probe.invocations.slice(calls)
+	assert.equal(history.length, 2)
+	assert.equal(stages.length, 2)
+	assert.notEqual(
+		history[0].attribution.search_id,
+		history[1].attribution.search_id,
+	)
+	for (let i = 0; i < 2; i++) {
+		const row = history[i].attribution
+		assert.match(row.search_id, /^[0-9a-f-]{36}$/)
+		assert.equal(row.search_id, stages[i].search_id)
+		assert.equal(row.surface, "header")
+		assert.equal(row.trigger, "enter")
+		assert.equal(row.actor_kind, i === 0 ? "guest" : "member")
 	}
 })

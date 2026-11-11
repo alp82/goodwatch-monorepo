@@ -12,11 +12,13 @@ test('a capped mood search is a definitive refusal, not a saved connection retry
   const code = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText
   const secret = 'test-search-secret-at-least-32-characters'
   const batch = { rows: [], reading: [], errors: ['Showing basic search results'], readingUnavailable: 'budget' }
+  let viewer: any
+  let calls = 0
   runInNewContext(code, { exports, Request, Response, Buffer, process: { env: { YEPWATCH_SEARCH_SECRET: secret } }, require: (name: string) => {
     if (name === '@remix-run/node') return { json: (body: unknown, init: ResponseInit) => Response.json(body, init) }
     if (name === 'zod') return { z }
     if (name.endsWith('crypto.server')) return { equal: (a: string, b: string) => a === b }
-    if (name.endsWith('search.server')) return { combinedSearch: async () => batch }
+    if (name.endsWith('search.server')) return { combinedSearch: async (_q: unknown, _policy: unknown, visitor: unknown) => { viewer = visitor; calls++; return batch } }
     if (name.endsWith('admission.server')) return { searchAdmission: { enter: () => () => {} } }
     if (name.endsWith('role.server')) return { runsSearch: () => true }
     if (name.endsWith('search-filters')) return { titlePointId: () => 1 }
@@ -31,4 +33,13 @@ test('a capped mood search is a definitive refusal, not a saved connection retry
     assert.match(e.message, /start without an idea/i)
     return true
   })
+  assert.equal(viewer.attribution.actor, 'unknown', 'old API clients are not misclassified as guests')
+  for (const actor of ['member', 'guest'] as const) {
+    await assert.rejects(interpret('dark and funny', 'DE', [8], actor))
+    assert.deepEqual({ ...viewer.attribution }, { consumer: 'yepwatch', surface: 'yepwatch', trigger: 'api', reported_by: 'server', actor })
+  }
+  const before = calls
+  const unauthorized = await exports.searchYepWatchRoom!(new Request('https://search.invalid/api/combined-search', { method: 'POST', body: JSON.stringify({ prompt: 'dark and funny', country: 'DE', serviceIds: [], actor: 'member' }) }))
+  assert.equal(unauthorized.status, 403)
+  assert.equal(calls, before, 'no identity is accepted before the integration secret is verified')
 })

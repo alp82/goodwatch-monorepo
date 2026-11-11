@@ -1,3 +1,4 @@
+import { browserSearchOrigin } from "~/domain/search-attribution"
 import { searchYepWatchRoom } from "~/server/combined-search/yepwatch.server"
 import { localizeApiTitlePayload } from "~/server/media-payload.server"
 import { json, type ActionFunctionArgs } from "@remix-run/node";
@@ -163,7 +164,7 @@ export async function action({ request }: ActionFunctionArgs) {
 							lesserKnown: body.lesserKnown === true,
 							filters,
 						},
-						{ accountId, networkIdentity },
+						{ accountId, networkIdentity, attribution: { ...browserSearchOrigin(body.attribution), consumer: "web", reported_by: "client" } },
 						searchAbort.signal,
 						(reading) => send({ kind: "reading", reading }),
 						{

@@ -5,6 +5,7 @@
 // The searched text and the picks live in the URL too (`q`, and Discover's `moods`, `themes`, `styles`): a reload or a
 // shared link opens the same query. The URL is replaced, not pushed, and changing it doesn't read the page again
 // (routes/_index.tsx `shouldRevalidate`).
+import type { SearchTrigger } from "~/domain/search-attribution"
 import { useNavigate, useSearchParams } from "@remix-run/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
@@ -76,7 +77,7 @@ export function useStartQuery({
 	const actions = useMemo(
 		() => ({
 			dispatch,
-			search: (text: string) => dispatch({ type: "search", text }),
+			search: (text: string, trigger: SearchTrigger = "selection") => dispatch({ type: "search", text, trigger }),
 			clearSearch: () => dispatch({ type: "clearSearch" }),
 			setPicks: (picks: readonly string[]) =>
 				dispatch({ type: "picks", picks }),

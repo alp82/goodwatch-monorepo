@@ -188,6 +188,7 @@ export function useSearchPreview(
 	)
 	const search = useDiscoverSearch({
 		q: active ? term : null,
+		attribution: { surface: "discover", trigger: "typing_pause" },
 		filters: eligibility,
 		allTitles: false,
 		enabled: active,

@@ -5,6 +5,7 @@ import {
 	CheckIcon,
 	XMarkIcon,
 } from "@heroicons/react/20/solid"
+import { searchNavigationState } from "~/ui/search/search-attribution"
 import { Link } from "@remix-run/react"
 import { useState } from "react"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
@@ -85,6 +86,7 @@ function EssenceTags({ tags }: { tags: string[] }) {
 				<li key={tag}>
 					<Link
 						to={discoverQueryPath(tag)}
+						state={searchNavigationState(tag, "title_tag", "link")}
 						prefetch="intent"
 						title={`Search Discover for “${tag}”`}
 						className="group flex items-center gap-2 rounded-lg bg-gradient-to-b from-white/[0.07] to-white/[0.025] py-1.5 pr-3 pl-2.5 text-[15px] leading-5 text-gray-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-white/[0.08] ring-inset transition-colors hover:from-amber-300/[0.12] hover:to-amber-300/[0.04] hover:text-white hover:ring-amber-300/30"

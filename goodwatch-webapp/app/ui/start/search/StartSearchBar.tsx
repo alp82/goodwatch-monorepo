@@ -15,6 +15,7 @@ import {
 	useRef,
 	useState,
 } from "react"
+import type { SearchTrigger } from "~/domain/search-attribution"
 import { SEARCH_MAX_CHARS } from "~/domain/discover-search"
 import { preloadSearchRequest } from "~/ui/search/search-client"
 import { SEARCH_EXAMPLES } from "~/ui/search/search-examples"
@@ -104,20 +105,21 @@ export function StartSearchBar({
 	>
 	/** Changes on a committed search, explicit clear or URL navigation, including equal text. */
 	searchRevision: number
-	search: (text: string) => void
+	search: (text: string, trigger?: SearchTrigger) => void
 	clearSearch: () => void
 	onAsk?: () => void
 }) {
 	// Live typing stays in this control; the stage and Browse only see committed searches.
 	const [draft, setDraft] = useState(query.draft)
 	const field = useRef<HTMLInputElement>(null)
+	const submitTrigger = useRef<"enter" | "search_button">("enter")
 	const latest = useRef({ query, search, clearSearch })
 	latest.current = { query, search, clearSearch }
 	const commit = useMemo(
 		() =>
 			createFieldCommit({
 				searched: () => latest.current.query.text,
-				search: (text) => latest.current.search(text),
+				search: (text, trigger) => latest.current.search(text, trigger),
 				clear: () => latest.current.clearSearch(),
 			}),
 		[],
@@ -143,7 +145,9 @@ export function StartSearchBar({
 			onBlur={onBlur}
 			onSubmit={(event) => {
 				event.preventDefault()
-				if (!commit.submit(draft)) return
+				const trigger = submitTrigger.current
+				submitTrigger.current = "enter"
+				if (!commit.submit(draft, trigger)) return
 				field.current?.blur()
 				onAsk?.()
 			}}
@@ -172,7 +176,10 @@ export function StartSearchBar({
 						data-ph-no-capture
 						className="search-private ph-no-capture sentry-mask"
 						onFocus={preloadSearchRequest}
-						onChange={(e) => {
+						onKeyDown={(e) => {
+							if (e.key === "Enter") submitTrigger.current = "enter"
+						}}
+					onChange={(e) => {
 							setDraft(e.target.value)
 							commit.type(e.target.value)
 						}}
@@ -210,7 +217,16 @@ export function StartSearchBar({
 						<XMarkIcon className="h-5 w-5" aria-hidden />
 					</button>
 				)}
-				<button type="submit" aria-label="Search" className="start-pill-go">
+				<button
+					type="submit"
+					onClick={(event) => {
+						// Enter in the field can produce an implicit click on the default submit button.
+						if (event.detail !== 0 || document.activeElement !== field.current)
+							submitTrigger.current = "search_button"
+					}}
+					aria-label="Search"
+					className="start-pill-go"
+				>
 					<ArrowRightIcon className="h-5 w-5 sm:hidden" aria-hidden />
 					<span className="hidden sm:inline">Search</span>
 				</button>
