@@ -1,5 +1,5 @@
 import * as Crypto from 'expo-crypto';
-import type { GuestAdmission, RoomCommand, RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
+import type { GuestAdmission, RoomCommand, RoomSetupRequest, RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
 import { continuousApi as api, RoomFailure } from './api';
 import { saveAccess } from '../credentials';
 import { deviceCountryHint } from '../lobby';
@@ -21,6 +21,21 @@ import { readAdmission, readCommandRecovery, writeAdmission, writePending } from
  */
 export function stopWaiting(error: unknown, tries: number) {
   return unanswered(error) && (browserOffline() || tries >= 1);
+}
+
+/**
+ * The setup the create request carries, so the room page is one round trip: the room country
+ * (the server prefers the member's GoodWatch country) and the first idea. The steps after the
+ * create still check both and send what the server didn't apply.
+ */
+function roomSetup(text: string): RoomSetupRequest {
+  const idea = text.trim();
+  return { country: deviceCountryHint() ?? 'US', ...(idea.length >= 2 && idea.length <= 200 ? { idea } : {}) };
+}
+
+/** Servers from before `setup` refuse the whole request as malformed. */
+function refusedSetup(error: unknown) {
+  return error instanceof RoomFailure && error.code === 'invalid_request' && error.status === 400;
 }
 
 /** One room per draft, including retries and reloads. Navigation belongs to the successful caller. */
@@ -57,9 +72,10 @@ export class CreateRoom {
         saved = { intent: '', code: '', member: options.member, retryAt: 0, request: {
           contractVersion: 3, commandId: Crypto.randomUUID(), nickname: options.nickname,
           admissionSecret: Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join(''),
+          setup: roomSetup(text),
         } } satisfies AdmissionRecovery;
       }
-      const request = { ...saved, mood: text };
+      let request: AdmissionRecovery = { ...saved, mood: text };
       this.request = request;
       this.retryAt = request.retryAt;
       if (Date.now() < this.retryAt) throw new Error('Wait before retrying this room request.');
@@ -68,7 +84,18 @@ export class CreateRoom {
           active();
           // Persist before every possible POST, including after a previous storage failure.
           await writeAdmission('', request);
-          this.admitted = await api.create(request.request, options.signal);
+          try {
+            this.admitted = await api.create(request.request, options.signal);
+          } catch (error) {
+            if (!request.request.setup || !refusedSetup(error)) throw error;
+            // A server from before setup refused it (nothing was created): the same request without it,
+            // then the configure and idea steps below set the room up as before.
+            const { setup: _, ...plain } = request.request;
+            request = { ...request, request: plain };
+            this.request = request;
+            await writeAdmission('', request);
+            this.admitted = await api.create(request.request, options.signal);
+          }
         }, { retries: 5, retryAt: retryDeadline, signal: options.signal, giveUp: stopWaiting });
       } catch (error) {
         // No answer at all has no server deadline: a resend (Try again, back online) may go at once.

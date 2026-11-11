@@ -1,7 +1,8 @@
-import type { CommandEnvelope, GuestAdmissionRequest } from '@goodwatch/yepwatch-contracts/proposal';
+import type { CommandEnvelope, CreateRoomRequest } from '@goodwatch/yepwatch-contracts/proposal';
 import { restoredRetryAt } from './retry';
 export interface AdmissionRecovery {
-  request: GuestAdmissionRequest;
+  /** A join's request carries no setup. */
+  request: CreateRoomRequest;
   code: string;
   intent: string;
   retryAt: number;

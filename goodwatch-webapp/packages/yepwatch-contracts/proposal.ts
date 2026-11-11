@@ -172,6 +172,21 @@ export interface GuestAdmissionRequest {
 	admissionSecret: string
 	nickname: string
 }
+/**
+ * The first setup a new room starts with, carried by the create request so the room page needs one
+ * round trip. The server applies what it can before the room is first stored and leaves the rest
+ * unapplied (the client's configure/add_idea commands repair it). Servers before this field refuse
+ * the request with 400 invalid_request; clients then send it again without `setup`.
+ */
+export interface RoomSetupRequest {
+	/** The room country when the creator's GoodWatch sign-in has none: the device's region, else US. */
+	country: string
+	/** The first idea (mood), 2-200 characters after trimming. */
+	idea?: string
+}
+export interface CreateRoomRequest extends GuestAdmissionRequest {
+	setup?: RoomSetupRequest
+}
 export interface JoinRoomRequest extends GuestAdmissionRequest {
 	inviteCode: string
 	screenId?: string

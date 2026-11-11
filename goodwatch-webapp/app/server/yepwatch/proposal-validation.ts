@@ -31,6 +31,16 @@ export const proposalAdmissionSchema = z
 		nickname: z.string().trim().max(40)
 	})
 	.strict()
+/** Room creation: an admission plus the first setup (one round trip to the room page). */
+export const proposalCreateSchema = proposalAdmissionSchema.extend({
+	setup: z
+		.object({
+			country: z.string().regex(/^[A-Z]{2}$/),
+			idea: z.string().trim().min(2).max(200).optional()
+		})
+		.strict()
+		.optional()
+})
 export const proposalJoinSchema = proposalAdmissionSchema.extend({
 	nickname: z.string().trim().min(1).max(40),
 	inviteCode: z.string().max(200),

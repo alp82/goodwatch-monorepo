@@ -5,7 +5,7 @@ import {
   type CommandEnvelope,
   type CommandResult,
   type GuestAdmission,
-  type GuestAdmissionRequest,
+  type CreateRoomRequest,
   type JoinRoomRequest,
   type RoomSnapshot,
   type CatalogMetadata,
@@ -126,7 +126,7 @@ export class ContinuousApi {
     }
   }
   /** A saved admission is safe to send again (same command id and secret): don't wait long on a dead network. */
-  create = (body: GuestAdmissionRequest, signal?: AbortSignal) => this.request<GuestAdmission>(paths.rooms, body, undefined, signal, undefined, ADMISSION_TIMEOUT_MS);
+  create = (body: CreateRoomRequest, signal?: AbortSignal) => this.request<GuestAdmission>(paths.rooms, body, undefined, signal, undefined, ADMISSION_TIMEOUT_MS);
   /** `credential`: the request carried a credential for the room (missing from older servers). */
   resolve = (code: string, signal?: AbortSignal) => this.request<{ roomId: string; credential?: boolean }>(paths.resolveInvite, { code }, undefined, signal);
   invitePreview = async (code: string): Promise<InvitePreview> =>

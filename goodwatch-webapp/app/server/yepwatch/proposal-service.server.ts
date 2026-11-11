@@ -16,8 +16,10 @@ import type {
 	CommandEnvelope,
 	CommandResult,
 	GuestAdmission,
+	CreateRoomRequest,
 	GuestAdmissionRequest,
 	JoinRoomRequest,
+	RoomSetupRequest,
 	RealtimeAttachment,
 	RealtimeTicket,
 	RealtimeViewResponse,
@@ -343,8 +345,47 @@ export class ProposalService {
 			receipts: []
 		}
 	}
-	async create(request: GuestAdmissionRequest, account?: RoomAccount) {
+	/**
+	 * The first setup a create request carries (country, first idea), applied to the new room before it
+	 * is first stored, as the host's configure and add_idea would. Whatever can't apply (unknown country,
+	 * search unavailable) is left out: the app's own commands set it afterwards, as before.
+	 */
+	private async withSetup(
+		room: ProposalRoom,
+		setup: RoomSetupRequest,
+		interpretation: { value?: Promise<NonNullable<ProposalRoom["intent"]> | null> }
+	): Promise<ProposalRoom> {
+		const metadata = await this.catalog.metadata(setup.country).catch(() => null)
+		if (!metadata?.countries.some((c) => c.code === setup.country)) return room
+		const host = actor(room, room.hostId)
+		const step = (from: ProposalRoom, command: RoomCommand, commandId: string) =>
+			proposalTransition(from, host.id, { commandId, sequence: 0, command }, this.now(), undefined, true)
+		let next = step(room, { type: "configure", expectedContextVersion: room.contextVersion, country: setup.country }, "setup-country")
+		if (setup.idea && this.interpret) {
+			const interpret = this.interpret
+			const services = next.screens[0]?.serviceIds ?? []
+			// Searched once per create request, also when a lost insert makes the loop go round again.
+			interpretation.value ??= interpret(setup.idea, setup.country, services, host.memberUserId ? "member" : "guest").catch(() => null)
+			const interpreted = await interpretation.value
+			if (interpreted) {
+				const ideaId = keyed(this.secret, "proposal-setup-idea", room.id).slice(0, 32)
+				next = step(next, { type: "add_idea", text: setup.idea }, ideaId)
+				const idea = next.ideas!.find((i) => i.id === ideaId)!
+				idea.attributes = structuredClone(interpreted.attributes)
+				idea.rankedKeys = [...interpreted.rankedKeys]
+				idea.interpretedAt = interpreted.interpretedAt
+				next.interpretationCount = (next.interpretationCount ?? 0) + 1
+				attributeCandidates(next)
+			}
+		}
+		if (this.catalog.refresh) next.candidates = await this.catalog.refresh(activeRoom(next))
+		retireIneligible(next, new Set((await this.catalog.excludedKeys?.(next)) ?? []))
+		reconcile(next, room)
+		return next
+	}
+	async create(request: CreateRoomRequest, account?: RoomAccount) {
 		if (account) await this.requireAccountActive(account.userId);
+		const interpretation: { value?: Promise<NonNullable<ProposalRoom["intent"]> | null> } = {}
 		const id = keyed(
 			this.secret,
 			"proposal-room",
@@ -364,7 +405,7 @@ export class ProposalService {
 			const p = this.member(id, request)
 			p.joinedAt = this.now()
 			if (account) this.connectAccount(id, p, account, invitation.expiresAt)
-			const room: ProposalRoom = {
+			const blank: ProposalRoom = {
 				format: 2,
 				flowVersion: 3,
 				ideas: [],
@@ -395,6 +436,7 @@ export class ProposalService {
 				decision: null,
 				tickets: []
 			}
+			const room = request.setup ? await this.withSetup(blank, request.setup, interpretation) : blank
 			try {
 				if (account) await this.accounts.remember(account.userId, { roomId: id, expiresAt: room.expiresAt })
 				await this.repository.insert(room)

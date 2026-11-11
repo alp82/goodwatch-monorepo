@@ -403,3 +403,23 @@ test('signing in before joining with an existing guest cookie claims that place 
   assert.equal(linked.snapshot.own.canHost, true)
   assert.notEqual(linked.credential.sessionKey, guest.credential.sessionKey)
 })
+
+test("a room created with setup while signed in takes the member's GoodWatch country over the device's, in the same request", async () => {
+	const { handler } = setup()
+	const { callback } = await signIn(handler, `${origin}/`)
+	const session = cookies(callback)[MEMBER_COOKIE].value
+	const create = (cookie: string | null, country: string) => handler(new Request(api("/rooms"), {
+		method: "POST", headers: { origin, "content-type": "application/json", ...(cookie ? { cookie } : {}) },
+		body: JSON.stringify({ contractVersion: 3, commandId: randomBytes(16).toString("hex"), admissionSecret: randomBytes(32).toString("base64url"), nickname: "", setup: { country } }),
+	}))
+	const member = await create(`${MEMBER_COOKIE}=${session}`, "JP")
+	assert.equal(member.status, 200)
+	const linked = await member.json()
+	assert.equal(linked.snapshot.own.member.prefill.country, "DE")
+	assert.equal(linked.snapshot.shared.screens[0].country, "DE")
+	const same = await (await create(`${MEMBER_COOKIE}=${session}`, "DE")).json()
+	assert.equal(same.snapshot.shared.screens[0].country, "DE")
+	assert.equal(same.snapshot.own.nextSequence, 1, "nothing more is sent when the countries agree")
+	const guest = await (await create(null, "JP")).json()
+	assert.equal(guest.snapshot.shared.screens[0].country, "JP")
+})

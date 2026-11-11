@@ -14,7 +14,7 @@ import { ProposalService } from "./proposal-service.server.ts"
 import type { ActorCredential } from "./service.server.ts"
 import { attachSchema, parse, resolveSchema, viewSchema } from "./validation.ts"
 import {
-	proposalAdmissionSchema as admissionSchema,
+	proposalCreateSchema as createSchema,
 	proposalJoinSchema as joinSchema,
 	proposalCommandSchema as commandSchema,
 	proposalPreviewSchema,
@@ -164,12 +164,24 @@ export function createProposalHandler(
       if (!a && !url.pathname.endsWith('/deletion') && !url.pathname.endsWith('/restore')) await requireNotDeleting(service.deletions, { kind: 'guest', roomId, participantId: c.participantId })
       return a ? { ...c, accountId: a.userId, sessionId: a.sessionId } : c
     }
-    const sendAdmission = async (admission: import('../../../packages/yepwatch-contracts/proposal.ts').GuestAdmission, a: import('./proposal-types.ts').RoomAccount | null) => {
+    const sendAdmission = async (admission: import('../../../packages/yepwatch-contracts/proposal.ts').GuestAdmission, a: import('./proposal-types.ts').RoomAccount | null, setup?: import('../../../packages/yepwatch-contracts/proposal.ts').RoomSetupRequest) => {
       const c = admission.credential
       if (a && options.members && freshMemberSession) {
         await options.members.linkRoom(c.roomId, c.participantId, options.members.sealSession(freshMemberSession))
         await service.notify(c.roomId)
-        admission.snapshot = await service.read(c.roomId, { participantId: c.participantId, token: c.token, accountId: a.userId, sessionId: a.sessionId })
+        const scoped = { participantId: c.participantId, token: c.token, accountId: a.userId, sessionId: a.sessionId }
+        admission.snapshot = await service.read(c.roomId, scoped)
+        // A new room takes the member's GoodWatch country over the device's (the country the create
+        // request carried), as the app's own country step does. Only before anything else was sent.
+        const snapshot = admission.snapshot
+        const prefill = snapshot.own.member.prefill?.country
+        if (setup && prefill && prefill !== setup.country && snapshot.shared.screens[0]?.country === setup.country && snapshot.own.nextSequence === 1 && snapshot.shared.phase === 'setup') {
+          try {
+            admission.snapshot = (await service.command(c.roomId, scoped, { commandId: `setup-${c.participantId}`, sequence: 1, command: { type: 'configure', expectedContextVersion: snapshot.shared.contextVersion, country: prefill } })).snapshot
+          } catch (e) {
+            if (!(e instanceof RoomError)) throw e
+          }
+        }
       }
       if (request.headers.get('x-yepwatch-client') !== 'native') {
         setCookie(`yepwatch3_${c.roomId}`, `${c.participantId}.${c.token}`, Math.floor((c.expiresAt - Date.now()) / 1000))
@@ -427,9 +439,12 @@ export function createProposalHandler(
 				const value = await body(request)
 				const a = await account()
 				let admission
-				if (url.pathname === paths.rooms)
-					admission = await service.create(parse(admissionSchema, value), a ?? undefined)
-				else {
+				let setup
+				if (url.pathname === paths.rooms) {
+					const create = parse(createSchema, value)
+					setup = create.setup
+					admission = await service.create(create, a ?? undefined)
+				} else {
 					const join = parse(joinSchema, value)
 					const roomId = match![1]
 					const hasCredential =
@@ -457,7 +472,7 @@ export function createProposalHandler(
 						? await service.resumeOrJoin(roomId, credential(roomId), join)
 						: await service.join(roomId, join)
 				}
-				return sendAdmission(admission, a)
+				return sendAdmission(admission, a, setup)
 			}
 			if (match) {
 				const [, id, operation] = match

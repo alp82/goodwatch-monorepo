@@ -1,5 +1,8 @@
-import { test, eventually } from '../lib/harness';
+import { expect } from '@playwright/test';
+import { test, eventually, type Person } from '../lib/harness';
 import { createRoom, hostName, pickServices } from './flows';
+
+const roomCountry = (p: Person) => (p.latest?.screens as { country: string | null }[] | undefined)?.[0]?.country;
 
 test.describe('create and set up a room', () => {
   test('create room: start page → Mood → room page @core', async ({ room }) => {
@@ -10,10 +13,38 @@ test.describe('create and set up a room', () => {
     await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] }, moment: 'newRoomMs' });
     await host.audit('Mood page');
     await host.fill(host.page.getByLabel('Mood'), 'funny space heist');
+    const sent = host.commandLog.length;
     await host.tap(host.button('Create room'), { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' });
+    // One round trip: the create request carries the country and the first idea (no configure/add_idea after it).
+    if (room.fault === 'none') expect(host.commandLog.slice(sent).map((c) => c.path.replace(/^.*\/proposal/, '')).filter((path) => !path.endsWith('/realtime-ticket'))).toEqual(['/rooms']);
+    expect(roomCountry(host)).toMatch(/^[A-Z]{2}$/);
     await room.point('room');
     await host.audit('room page (host, before Start)');
     await eventually(() => host.latest?.ideas.map((i) => [i.text, i.on]), (v) => JSON.stringify(v) === JSON.stringify([['funny space heist', true]]), 'exactly one idea, on', host);
+  });
+
+  // Deploy window: an older server refuses the create request's setup (400, nothing created).
+  test('an older server refuses setup: the app sends the plain create and sets the room up itself', async ({ room }) => {
+    const host = await room.person('Alp');
+    host.expectStatus(/^400 .*\/proposal\/rooms$/);
+    await host.page.route(/\/api\/yepwatch\/v1\/proposal\/rooms$/, (route) => route.request().method() === 'POST' && route.request().postDataJSON()?.setup
+      ? route.fulfill({ status: 400, contentType: 'application/json', body: JSON.stringify({ error: { code: 'invalid_request', message: 'Invalid request shape', retryable: false } }) })
+      : route.continue());
+    await createRoom(host, 'cozy murder mystery');
+    expect(roomCountry(host)).toMatch(/^[A-Z]{2}$/);
+  });
+
+  // Older app bundles send the plain create, then configure and add_idea.
+  test('an older app (plain create, then its own setup steps) still gets a set-up room', async ({ room }) => {
+    const host = await room.person('Alp');
+    await host.page.route(/\/api\/yepwatch\/v1\/proposal\/rooms$/, (route) => {
+      const body = route.request().method() === 'POST' ? route.request().postDataJSON() : null;
+      if (!body?.setup) return route.continue();
+      delete body.setup;
+      return route.continue({ postData: JSON.stringify(body) });
+    });
+    await createRoom(host, 'cozy murder mystery');
+    expect(roomCountry(host)).toMatch(/^[A-Z]{2}$/);
   });
 
   test('create room from a preset chip ("Anything goes")', async ({ room }) => {
