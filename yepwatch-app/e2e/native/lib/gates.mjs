@@ -40,6 +40,19 @@ export class Logcat {
 }
 
 // ---------- accessibility ----------
+/** The node's visible rect ends on an edge of its nearest scrolling ancestor (else the screen). */
+function clippedByViewport(nodes, n) {
+  let i = nodes.indexOf(n), depth = n.depth, view = nodes[0]?.bounds;
+  while (--i >= 0) {
+    if (nodes[i].depth >= depth) continue;
+    depth = nodes[i].depth;
+    if (nodes[i].scrollable) { view = nodes[i].bounds; break; }
+  }
+  if (!view) return false;
+  const [l, t, r, b] = n.bounds;
+  return t <= view[1] + 1 || b >= view[3] - 1 || l <= view[0] + 1 || r >= view[2] - 1;
+}
+
 /** dp = px * 160 / dpi; Pixel 8 emulator is 420 dpi. */
 export function a11yAudit(nodes, { screen, density = 420, minDp = 48 } = {}) {
   const minPx = Math.round(minDp * density / 160);
@@ -52,7 +65,9 @@ export function a11yAudit(nodes, { screen, density = 420, minDp = 48 } = {}) {
     const name = n.desc || n.text || subtree.map(c => c.desc || c.text).filter(Boolean).join(' ');
     const what = `${n.cls.split('.').pop()} "${name || '?'}" ${n.bounds.join(',')}`;
     if (!name) out.push({ screen, rule: 'label', element: what });
-    if (n.w < minPx || n.h < minPx) out.push({ screen, rule: 'target-size', element: what, dp: `${Math.round(n.w * 160 / density)}x${Math.round(n.h * 160 / density)}` });
+    // Bounds are the visible part. A target cut by the edge of its scroll view (or the screen) is partly
+    // scrolled out, not small: its size can't be read here; scroll it into view to audit it.
+    if ((n.w < minPx || n.h < minPx) && !clippedByViewport(nodes, n)) out.push({ screen, rule: 'target-size', element: what, dp: `${Math.round(n.w * 160 / density)}x${Math.round(n.h * 160 / density)}` });
   }
   return out;
 }

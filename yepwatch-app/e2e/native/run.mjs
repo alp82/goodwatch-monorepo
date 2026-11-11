@@ -235,6 +235,15 @@ async function main() {
     await A.tap(/^\d+ match(es)?$/);
     await A.waitFor('matches');
     await audit(A, 'matches');
+    // The end of the list: the last match's Propose this sits fully above the system navigation bar.
+    await A.swipe(540, 1800, 540, 500, 250); await sleep(700);
+    await audit(A, 'matches (end of the list)');
+    const nodes = await A.nodes();
+    const bar = nodes[0].bounds[3] - Math.round(24 * 420 / 160); // gesture navigation bar: 24 dp on the Pixel 8 AVD
+    const last = nodes.filter(n => n.desc === 'Propose this').at(-1);
+    if (!last) journeyFail('Propose this at the end of the list', 'no Propose this on screen after scrolling to the end', A);
+    else if (last.bounds[3] > bar) journeyFail('Propose this under the navigation bar', `the last Propose this ends at y=${last.bounds[3]} px; the navigation bar starts at ${bar}`, A);
+    await A.swipe(540, 500, 540, 1800, 250); await sleep(700);
     await A.tap('Propose this');
     await Bp.waitFor('Agree', { timeout: 5000 });
     await audit(Bp, 'proposal (friend)');
