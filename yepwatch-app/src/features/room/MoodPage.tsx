@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { IDEA_LIMITS } from './model';
@@ -42,17 +42,31 @@ export function MoodPage() {
       : ideas.some((i) => !intent.beforeIds.includes(i.id) && i.text === intent.text && i.authorId === confirmed.own.participantId);
     if (saved) { recovered.current = mutation.submittedAt; leave(); }
   }, [mutation.isError, mutation.variables, mutation.submittedAt, state.confirmed, leave]);
+  const ownPending = Boolean(mutation.variables && state.pending && ['add_idea', 'edit_idea', 'remove_idea'].includes(state.pending.command.type));
+  // Another of this person's changes is still on its way (a switch just flipped, on a slow network): the
+  // mood waits its turn and goes right after, instead of the press (or Enter) doing nothing.
+  const othersFirst = !mutation.isPending && !state.privateError && (state.busy || (disabled && !ownPending));
+  const [waiting, setWaiting] = useState<string | null>(null);
+  const send = (text: string, after?: () => void) => mutation.mutate({ text, editId: editing?.id, beforeIds: latest()?.shared.ideas.map((i) => i.id) ?? [] }, { onSettled: after });
+  const sendRef = useRef(send);
+  useEffect(() => { sendRef.current = send; });
+  const sentWaiting = useRef<string | null>(null);
+  useEffect(() => {
+    if (waiting === null || othersFirst || sentWaiting.current === waiting) return;
+    sentWaiting.current = waiting;
+    sendRef.current(waiting, () => { sentWaiting.current = null; setWaiting(null); });
+  }, [waiting, othersFirst]);
   if (!view) return <RoomStatus />;
-  const ownPending = mutation.variables && state.pending && ['add_idea', 'edit_idea', 'remove_idea'].includes(state.pending.command.type);
   const error = mutation.isError ? state.errorCode === 'limit_reached'
     ? view.ideas.length >= IDEA_LIMITS.perRoom ? `Up to ${IDEA_LIMITS.perRoom} ideas. Remove one first.` : 'No more new ideas in this room'
     : 'Couldn’t save this mood. Try again; your text is kept.' : undefined;
   const pick = (text: string) => {
     if (editing && text === editing.text) { leave(); return; }
-    mutation.mutate({ text, editId: editing?.id, beforeIds: latest()?.shared.ideas.map((i) => i.id) ?? [] });
+    if (othersFirst) setWaiting(text);
+    else send(text);
   };
   return <MoodComposer key={idea} initialText={editing?.text ?? ''} first={view.isHost && !view.ideas.length && !editing}
     action={mutation.isError ? 'Try again' : editing ? 'Save' : view.isHost && !view.ideas.length ? 'Create room' : view.isHost ? 'Add idea' : 'Suggest'} editing={Boolean(editing)}
-    disabled={(disabled && !ownPending) || mutation.isPending || state.busy || state.retrySeconds > 0}
-    saving={mutation.isPending} error={error} pick={pick} back={leave} />;
+    disabled={mutation.isPending || waiting !== null || state.privateError || state.retrySeconds > 0}
+    saving={mutation.isPending || waiting !== null} error={error} pick={pick} back={leave} />;
 }
