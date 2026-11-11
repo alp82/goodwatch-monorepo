@@ -104,11 +104,11 @@ test.describe('Continue with GoodWatch never creates a room; New room still open
     await expect(button(page, 'Continue with GoodWatch')).toHaveCount(0);
     await button(page, 'New room').click();
     await expect(page.getByLabel('Mood')).toBeVisible();
-    await expect(page).toHaveURL(/\/room\/test-room\/mood/);
-    await expect.poll(() => f.room.own.member.state).toBe('linked');
+    await expect(page).toHaveURL(/\/new$/);
     await button(page, 'cheer me up').click();
     await button(page, 'Create room').click();
     await expect(page.getByTestId('room-setup')).toBeVisible();
+    await expect.poll(() => f.room.own.member.state).toBe('linked');
     // Opening the room again doesn't bring Mood back.
     await page.reload();
     await expect(page.getByTestId('room-setup')).toBeVisible();

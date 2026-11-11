@@ -1,5 +1,5 @@
 import { ActivityIndicator, View } from 'react-native';
-import { router } from 'expo-router';
+import { router, useIsFocused } from 'expo-router';
 import { developmentNotice } from '../../core/config';
 import { useLate } from '../../core/useLate';
 import { useLayout } from '../shell/layout';
@@ -44,6 +44,7 @@ export function RoomStatus() {
 
 /** Connection, saved actions and errors, in one quiet line floating over the screen's content. */
 export function RoomNotes() {
+  const focused = useIsFocused();
   const { view, state, entry, notice, setNotice, connectionLate, sheet, openSheet, linkFailed, retryLink } = useRoom();
   const any = Boolean(state.error || state.privateError || entry.error || state.pending || connectionLate || notice || linkFailed || developmentNotice);
   // Nobody brings a service (or the last one would go): ask for services, not an error.
@@ -66,7 +67,7 @@ export function RoomNotes() {
   const spinning = state.reconnecting && text === connectionText();
   const linkLine = linkFailed && text === 'Couldn’t connect GoodWatch to this room.';
   const label = linkLine ? 'Retry' : state.retrySeconds > 0 ? `Retry in ${state.retrySeconds}s` : state.pending ? 'Retry' : entry.error ? 'Retry' : noServices ? 'Your services' : ideaLimit ? 'OK' : 'Refresh';
-  const note: FrameNote | null = any && (text || developmentNotice) ? {
+  const note: FrameNote | null = focused && any && (text || developmentNotice) ? {
     text,
     detail: developmentNotice || undefined,
     busy: spinning,

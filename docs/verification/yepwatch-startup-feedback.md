@@ -1,5 +1,7 @@
 # YepWatch connection and startup feedback — 2026-11-11
 
+The admission-to-editor handoff described here is superseded by the [mood navigation refactor](yepwatch-mood-navigation.md). This record retains the original investigation and verification.
+
 Production investigation used read-only container logs, SQL summaries and the existing authenticated room-search endpoint. No room was created or changed.
 
 The room-search endpoint returned HTTP 503 `interpretation_unavailable` on four attempts (100–2759 ms). Search history recorded `basic / budget`. Paid search was not halted: the ledger showed $0.994544082 for the day and $3.107149542 for the month, against the existing $1/day and $5/month limits. The next reading's reservation could not fit. The endpoint discarded that reason and the room API converted the response to retryable `busy`, leaving a saved action and connection-style retries. Spending limits remain unchanged pending the owner's decision.

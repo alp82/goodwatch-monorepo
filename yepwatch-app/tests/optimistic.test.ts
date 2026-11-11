@@ -17,31 +17,28 @@ function room(): RoomSnapshot {
 }
 const fixed = (command: RoomCommand, commandId = 'c1') => ({ commandId, build: () => command });
 
-test('an added idea has its real id at once, and a broadcast of it does not double it', () => {
-  const s = room();
-  const shown = previewCommand(s, 'cmd-1', { type: 'add_idea', text: 'space adventure' });
-  assert.deepEqual(shown.shared.ideas.at(-1), { id: 'cmd-1', text: 'space adventure', authorId: 'host', on: true, attributes: [] });
-  assert.equal(previewCommand(shown, 'cmd-1', { type: 'add_idea', text: 'space adventure' }), shown);
-  s.own.canHost = false;
-  assert.equal(previewCommand(s, 'cmd-2', { type: 'add_idea', text: 'a suggestion' }).shared.ideas.at(-1)?.on, true, 'a friend’s suggestion arrives switched on, as the server adds it');
-});
-
-test('edits, switches and removals show at once and leave the confirmed room untouched', () => {
+test('idea text is published only after confirmation; switches still react immediately', () => {
   const s = room();
   const before = JSON.stringify(s);
-  assert.equal(previewCommand(s, 'c', { type: 'edit_idea', ideaId: 'i1', text: 'something funny' }).shared.ideas[0].text, 'something funny');
+  for (const command of [
+    { type: 'add_idea', text: 'space adventure' },
+    { type: 'edit_idea', ideaId: 'i1', text: 'something funny' },
+    { type: 'remove_idea', ideaId: 'i1' },
+  ] as const) {
+    assert.equal(previewCommand(s, 'c', command), s);
+    assert.equal(awaitsServer(command), true);
+  }
   assert.equal(previewCommand(s, 'c', { type: 'set_idea', ideaId: 'i1', on: false }).shared.ideas[0].on, false);
-  assert.deepEqual(previewCommand(s, 'c', { type: 'remove_idea', ideaId: 'i1' }).shared.ideas, []);
   assert.equal(JSON.stringify(s), before);
 });
 
-test('commands queued behind each other stack, including an edit of an idea still being added', () => {
+test('a queued mood interpretation cannot flash an unconfirmed room label', () => {
   const s = room();
   const shown = overlayRoom(s, { commandId: 'a', sequence: 1, command: { type: 'add_idea', text: 'first' } }, [
     fixed({ type: 'edit_idea', ideaId: 'a', text: 'second' }, 'b'),
     fixed({ type: 'set_idea', ideaId: 'i1', on: false }, 'c'),
   ]);
-  assert.deepEqual(shown.shared.ideas.map((i) => [i.text, i.on]), [['cheer me up', false], ['second', true]]);
+  assert.deepEqual(shown.shared.ideas.map((i) => [i.text, i.on]), [['cheer me up', false]]);
 });
 
 test('name, your services, service switches, seen titles, country and kinds', () => {
@@ -86,7 +83,7 @@ test('agreeing counts once, even when a broadcast already counted it', () => {
 test('what the server decides waits for its answer; everything else shows at once', () => {
   assert.equal(awaitsServer({ type: 'leave' }), true);
   assert.equal(awaitsServer({ type: 'start', expectedRosterVersion: 1, expectedContextVersion: 1, hostReady: true }), true);
-  assert.equal(awaitsServer({ type: 'edit_idea', ideaId: 'i', text: 'x' }), false);
+  assert.equal(awaitsServer({ type: 'edit_idea', ideaId: 'i', text: 'x' }), true);
   const s = room();
   assert.equal(previewCommand(s, 'c', { type: 'leave' }), s);
 });

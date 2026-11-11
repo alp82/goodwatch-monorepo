@@ -18,6 +18,7 @@ test('a signed-in member can save their name for future rooms', async ({ page })
   await profile.getByRole('button', { name: 'Close', exact: true }).click();
   const created = page.waitForRequest(request => request.method() === 'POST' && request.url().endsWith('/proposal/rooms'));
   await page.getByRole('button', { name: 'New room', exact: true }).click();
+  await page.getByRole('button', { name: 'Anything goes', exact: true }).click();
   expect((await created).postDataJSON().nickname).toBe('Sam');
 });
 

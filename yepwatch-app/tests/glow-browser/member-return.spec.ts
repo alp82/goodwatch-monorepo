@@ -84,6 +84,8 @@ test('a member pressing New room still creates a room as themselves', async ({ p
   await page.goto('/');
   await button(page, 'New room').click();
   await expect(page.getByLabel('Mood')).toBeVisible();
+  expect(rooms.count).toBe(0);
+  await button(page, 'Anything goes').click();
   await expect.poll(() => f.room.own.member.state).toBe('linked');
   expect(rooms.count).toBe(1);
   expect(f.account.starts).toBe(0);

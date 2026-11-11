@@ -29,7 +29,8 @@ import { useAccount } from './account';
 import { adoptAccountRoom } from './account-access';
 import { authEpoch } from './account-flow';
 import { ACTIVITY_LIMITS } from '@goodwatch/yepwatch-contracts/proposal';
-export const continuousKey = (id: string) => ['proposal-room', id] as const;
+import { continuousKey } from './keys';
+export { continuousKey } from './keys';
 /** Your rooms keeps one query per room; room snapshots update it directly. */
 export const homeRoomKey = (roomId: string) => ['home-room', roomId] as const;
 const EMPTY_HOLDERS: ReadonlyMap<string, number> = new Map();
@@ -49,6 +50,7 @@ export function useContinuousRoom(roomId: string) {
   const [error, setError] = useState('');
   /** The last command failure's code, for screens that answer it in place (needs_context, limit_reached). */
   const [errorCode, setErrorCode] = useState<string | null>(null);
+  const clearError = useCallback(() => { setError(''); setErrorCode(null); }, []);
   const [busy, setBusy] = useState(false);
   const [privateError, setPrivateError] = useState(false);
   const [terminal, setTerminal] = useState<'expired' | 'access' | null>(null);
@@ -515,7 +517,7 @@ export function useContinuousRoom(roomId: string) {
     reconnectSeconds,
     error,
     errorCode,
-    clearError: () => { setError(''); setErrorCode(null); },
+    clearError,
     busy,
     privateError,
     terminal,

@@ -7,6 +7,8 @@ export interface AdmissionRecovery {
   retryAt: number;
   /** Continue GoodWatch sign-in after the exact admission succeeds. */
   member?: boolean;
+  /** The submitted local mood remains with an unfinished create workflow, including after reload. */
+  mood?: string;
 }
 export interface CommandRecovery { envelope: CommandEnvelope | null; retryAt: number }
 /** Accept the previous bare-envelope storage format without losing an uncertain action. */
@@ -23,6 +25,7 @@ export function decodeAdmissionRecovery(raw: string | null, intent: string): Adm
   const value = JSON.parse(raw);
   if (value?.intent !== intent || typeof value.code !== 'string' || value.request?.contractVersion !== 3 ||
       typeof value.request?.commandId !== 'string' || typeof value.request?.admissionSecret !== 'string' ||
-      typeof value.request?.nickname !== 'string' || (value.member !== undefined && typeof value.member !== 'boolean')) throw new Error('The saved room request could not be restored.');
+      typeof value.request?.nickname !== 'string' || (value.member !== undefined && typeof value.member !== 'boolean') ||
+      (value.mood !== undefined && (typeof value.mood !== 'string' || value.mood.length > 1000))) throw new Error('The saved room request could not be restored.');
   return { ...value, retryAt: restoredRetryAt(value.retryAt) };
 }

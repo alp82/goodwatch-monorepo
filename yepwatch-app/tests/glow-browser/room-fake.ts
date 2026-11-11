@@ -218,6 +218,12 @@ export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts:
         const next = opts.nextRooms?.shift();
         if (next) { room.shared = next.shared; room.own = next.own; }
         me().nickname = body.nickname;
+        // The production create endpoint links the account as part of admission.
+        if (account.member) {
+          room.own.member = { state: 'linked', prefill: { country: 'DE', serviceIds: [8], savedProgressAvailable: false } };
+          if (!me().nickname) me().nickname = opts.accountName ?? 'Alex';
+          if (me().serviceIds === null) me().serviceIds = [8];
+        }
       }
       bump();
       return route.fulfill({ json: { credential: { roomId: room.shared.roomId, participantId: room.own.participantId, token: 'fixture', expiresAt: room.shared.expiresAt }, invite: { code: opts.invite ?? 'K7QX', path: `/r/${opts.invite ?? 'K7QX'}` }, snapshot: room } });

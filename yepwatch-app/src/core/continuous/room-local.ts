@@ -1,6 +1,5 @@
 /**
- * Small per-room notes kept on this device only (never sent): friend ideas the host has already
- * seen, and the "open Mood next" step of a just-created room that waits through member sign-in.
+ * Friend ideas the host has already seen, kept on this device only.
  */
 import * as SecureStore from 'expo-secure-store';
 const safe = (roomId: string) => roomId.replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -15,8 +14,3 @@ export async function readSeenIdeas(roomId: string): Promise<string[]> {
 export async function writeSeenIdeas(roomId: string, seen: string[]) {
   await SecureStore.setItemAsync(seenKey(roomId), JSON.stringify(seen));
 }
-// Native sign-in returns into this same app process (auth session), so memory is enough here.
-const moodSteps = new Set<string>();
-export function markMoodStep(roomId: string) { moodSteps.add(roomId); }
-export function hasMoodStep(roomId: string) { return moodSteps.has(roomId); }
-export function clearMoodStep(roomId: string) { moodSteps.delete(roomId); }

@@ -9,7 +9,7 @@ test('guest host: New room opens Mood at once, a preset then Create room, name a
   await page.goto('/');
   await button(page, 'New room').click();
   await expect(page.getByLabel('Mood')).toBeVisible();
-  await expect(page).toHaveURL(/\/room\/test-room\/mood/);
+  await expect(page).toHaveURL(/\/new$/);
   expect(f.room.shared.participants[0].nickname).toBe('');
   await shot(page, '01-mood');
   // Create room waits for a mood; a preset fills the field (and shows it picked), Create room continues.

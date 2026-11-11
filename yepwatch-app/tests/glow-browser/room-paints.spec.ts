@@ -37,9 +37,9 @@ test('create: the start page goes straight to Mood, the room page never shows on
   const seen = await paints(page);
   // The start page's own film shows rooms too: only what paints after it counts.
   expect(seen.filter((p) => !/New room/.test(p.text) && /Just you|YOUR ROOM|MOOD|Connecting|Not connected/.test(p.text) && !/or try:/.test(p.text))).toEqual([]);
-  // Back shows the room that was waiting underneath.
+  // A local draft returns to its caller; no room has been allocated.
   await button(page, 'Back').click();
-  await expect(page.getByTestId('room-setup')).toBeVisible();
+  await expect(button(page, 'New room')).toBeVisible();
 });
 
 test('join: from the invitation straight to Your services, open over the room from its first paint', async ({ page }) => {
@@ -95,41 +95,39 @@ test('sign-in: back from GoodWatch to the start page, no room screen ever paints
   expect((await paints(page)).filter((p) => /Just you|YOUR ROOM|Opening the room|Describe a mood/.test(p.text))).toEqual([]);
 });
 
-test('editing an idea shows at once, nothing dims, the room stays usable, and it goes out in order', async ({ page }) => {
+test('an edited mood stays in its editor until accepted, then the confirmed room stays usable', async ({ page }) => {
   const f = await fakeRoom(page, setupRoom());
   await page.goto('/room/test-room');
-  await expect(page.getByTestId('room-setup')).toBeVisible();
   const release = f.hold('edit_idea');
   await button(page, 'cheer me up, edit').click();
   await page.getByLabel('Mood').fill('something funny');
-  await page.evaluate(() => { (window as unknown as { paints: Paint[] }).paints.length = 0; });
   await button(page, 'Save').click();
-  await expect(page.getByTestId('room-setup').getByTestId('idea-list').getByText('something funny')).toBeVisible();
-  // While the search runs: add another idea and switch one off. All of it shows, none of it dims.
+  await expect(page.getByLabel('Mood')).toHaveValue('something funny');
+  await expect(button(page, 'Saving…')).toBeVisible();
+  expect(f.room.shared.ideas[0].text).toBe('cheer me up');
+  release();
+  await expect(page.getByTestId('room-setup')).toBeVisible();
+  await expect(button(page, 'something funny, edit')).toBeVisible();
   await button(page, 'Add an idea').click();
   await button(page, 'space adventure').click();
   await button(page, 'Add idea').click();
   await expect(page.getByTestId('room-setup').getByTestId('idea-list').getByText('space adventure')).toBeVisible();
   await page.getByRole('switch', { name: 'Use something funny' }).click();
-  await expect(page.getByRole('switch', { name: 'Use something funny' })).toHaveAttribute('aria-checked', 'false');
-  expect(f.room.shared.ideas[0].text).toBe('cheer me up');
-  const seen = (await paints(page)).filter((p) => /room|Just|MOOD/i.test(p.text));
-  // (Start and Mood's own action wait for what they need; that's not a change in flight.)
-  expect(seen.filter((p) => p.dim > 0 && !/Start|Add idea/.test(p.text)).length).toBe(0);
-  release();
   await expect.poll(() => f.sent().filter((t) => t !== 'configure')).toEqual(['edit_idea', 'add_idea', 'set_idea']);
   await expect.poll(() => f.room.shared.ideas.map((i) => [i.text, i.on])).toEqual([['something funny', false], ['space adventure', true]]);
-  await expect(page.getByTestId('room-setup').getByTestId('idea-list').getByText('space adventure')).toBeVisible();
 });
 
-test('a refused change goes back and says why', async ({ page }) => {
+test('a refused change stays in the editor and preserves the confirmed room', async ({ page }) => {
   const f = await fakeRoom(page, setupRoom(), { interpretations: 24 });
   await page.goto('/room/test-room');
   await button(page, 'cheer me up, edit').click();
   await page.getByLabel('Mood').fill('something funny');
   await button(page, 'Save').click();
-  await expect(page.getByTestId('room-setup').getByTestId('idea-list').getByText('cheer me up')).toBeVisible();
+  await expect(page.getByLabel('Mood')).toHaveValue('something funny');
   await expect(page.getByText('No more new ideas in this room')).toBeVisible();
+  await expect(page.getByTestId('room-note')).toHaveCount(0);
+  await button(page, 'Back').click();
+  await expect(page.getByTestId('room-setup').getByTestId('idea-list').getByText('cheer me up')).toBeVisible();
   expect(f.room.shared.ideas[0].text).toBe('cheer me up');
 });
 

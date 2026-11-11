@@ -1,5 +1,3 @@
-import { MoodComposer } from './room/MoodPage';
-import { rememberMoodDraft } from './room/mood-draft';
 import { ConnectionDetails } from './rooms/ConnectionDetails';
 import type { ConnectionDiagnostic } from '../core/continuous/connection-diagnostic';
 import { guestOnly } from '../core/config';
@@ -12,7 +10,7 @@ import { continuousApi as api, RoomFailure as ApiFailure } from '../core/continu
 import { loadAccess, nativeClient, saveAccess } from '../core/credentials';
 import { inviteIntent, parseInvite } from '../core/invites';
 import { queryClient } from '../core/providers';
-import { continuousKey as roomKey } from '../core/continuous/useRoom';
+import { continuousKey as roomKey } from '../core/continuous/keys';
 import { loadInvite, saveInvite } from '../core/continuous/invite-store';
 import { authEpoch } from '../core/continuous/account-flow';
 import { adoptAccountRoom } from '../core/continuous/account-access';
@@ -27,14 +25,14 @@ import { Landing } from './home/Landing';
 import { BootPageReady } from './home/boot-phase';
 import { greeting, type HomeRoom } from './rooms/home-model';
 import { YourRooms } from './rooms/YourRooms';
-import { HistorySheet, InviteHead, JoinScreen, ProfileSheet, RetrySheet } from './rooms/panels';
+import { HistorySheet, InviteHead, JoinScreen, ProfileSheet } from './rooms/panels';
 import type { InvitePreview } from '@goodwatch/yepwatch-contracts/proposal';
 import { useHome } from './rooms/useHome';
 import { useAccount } from '../core/continuous/account';
 import { memberTransition } from '../core/continuous/member-transition';
 import { AppFrame } from './shell/Frame';
 
-type PanelKind = 'create' | 'join' | 'profile' | 'history';
+type PanelKind = 'join' | 'profile' | 'history';
 /** What another screen can open on the start page (`/?open=…`). */
 export type StartRequest = 'profile' | 'history' | 'join' | 'new';
 /** Automatic retries of the same saved request while the server restarts (about half a minute in all). */
@@ -46,7 +44,7 @@ const waiting = (saved: AdmissionRecovery | null) => Date.now() < (saved?.retryA
 
 /**
  * The entrance: first visit lands on the approved intro; returning people land on Your rooms.
- * Create makes the room at once (a guest host names themselves on the room page); Join, Profile and
+ * New room opens a local draft; Join, Profile and
  * History are panels in the same frame. Admission keeps the existing recovery: the exact request is
  * persisted before every submit and retried as-is.
  */
@@ -64,12 +62,6 @@ export function Entrance({ invite, open: request, from }: {
   const [nickname, setNickname] = useState('');
   const [code, setCode] = useState(invite ?? '');
   const [busy, setBusy] = useState(false);
-  /** New room was pressed (here or in a room's header): its Mood page shows while the room is made. */
-  const moodDraft = useRef('');
-  const [moodText, setMoodText] = useState('');
-  const [creating, setCreating] = useState(request === 'new');
-  /** The server didn't answer the first try: the New room sheet takes over with its Connecting… and retry notes. */
-  const [retried, setRetried] = useState(false);
   const inFlight = useRef(false);
   // The running admission (with its automatic retries). Leaving the screen, closing its panel or sending
   // the app to the background cancels it: pending waits end, no new attempt starts, nothing navigates
@@ -116,7 +108,7 @@ export function Entrance({ invite, open: request, from }: {
   useEffect(() => { if (home.ready && !restoring && !home.loadingRooms) markPageReady(); }, [home.ready, restoring, home.loadingRooms, markPageReady]);
   // Back from GoodWatch: the cover lifts once the page is whole, with the account already in it.
   useEffect(() => { if (home.ready && !restoring && account.ready) memberTransition.arrived(); }, [home.ready, restoring, account.ready]);
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     let active = true;
     void readAdmission(intent).then((saved) => {
       if (!active) return;
@@ -133,7 +125,7 @@ export function Entrance({ invite, open: request, from }: {
       }
     }).finally(() => { if (active) setRestoring(false); });
     return () => { active = false; };
-  }, [intent, restoreVersion]);
+  }, [intent, restoreVersion])); // eslint-disable-line react-hooks/exhaustive-deps -- explicit retry re-reads the same saved request
   useEffect(() => {
     if (!invite) return;
     let active = true;
@@ -182,7 +174,7 @@ export function Entrance({ invite, open: request, from }: {
   }, [invite, checkVersion, intent]);
   /** The name is remembered once admitted, for every later room on this device. */
   const rememberName = (name: string) => (name && name !== 'Guest' ? roomRegistry.setNickname(name).catch(() => undefined) : Promise.resolve());
-  async function enter(join: boolean, member = false, returning?: { code: string; nickname: string }, name?: string, joinCode?: string) {
+  async function joinRoom(member = false, returning?: { code: string; nickname: string }, name?: string, joinCode?: string) {
     if (inFlight.current || restoring || restoreFailed || (admission && admission.intent !== intent) || waiting(admission)) return;
     inFlight.current = true;
     attempt.current?.abort();
@@ -197,8 +189,8 @@ export function Entrance({ invite, open: request, from }: {
     // Recovery continues the original action, including sign-in after admission.
     member = saved ? saved.member === true : member;
     try {
-      const cleanCode = join ? parseInvite(returning?.code ?? joinCode ?? code) : '';
-      if (join && !cleanCode)
+      const cleanCode = parseInvite(returning?.code ?? joinCode ?? code);
+      if (!cleanCode)
         throw new Error('Enter the complete room code or YepWatch invitation link.');
       if (!saved) {
         const bytes = await Crypto.getRandomBytesAsync(32);
@@ -218,8 +210,7 @@ export function Entrance({ invite, open: request, from }: {
       const request = saved;
       // A restart answers busy or not at all for a while: send the same saved request again by itself
       // (same command id and secret, so it can never make a second room), and only then show an error.
-      let tries = 0;
-      await retryTransient(() => { if (tries++) setRetried(true); return admit(request, signal); }, { retries: AUTO_RETRIES, retryAt: retryDeadline, signal });
+      await retryTransient(() => admit(request, signal), { retries: AUTO_RETRIES, retryAt: retryDeadline, signal });
     } catch (e) {
       // Cancelled (the screen went away): the request saved before the submit stays for a manual retry.
       if (signal.aborted) return;
@@ -249,43 +240,40 @@ export function Entrance({ invite, open: request, from }: {
     // Persist the exact bootstrap before EVERY possible admission submit.
     await writeAdmission(intent, saved);
     setAdmission(saved);
-    let result;
-    if (saved.code) {
-      const { roomId } = await api.resolve(saved.code, signal);
-      const stored = await loadAccess(roomId);
-      // Manual code entry has the same recovery guard as a direct invitation.
-      if (!nativeClient || stored) {
-        try {
-          const access = stored ?? { roomId, participantId: '', token: '', expiresAt: 0 };
-          const snapshot = await api.snapshot(access, signal);
-          await saveAccess({
-            roomId,
-            participantId: snapshot.own.participantId,
-            token: access.token,
-            expiresAt: snapshot.shared.expiresAt,
-          });
-          queryClient.setQueryData(roomKey(roomId), mergeRoom(undefined, snapshot));
-          await saveInvite(roomId, { code: saved.code, path: inviteIntent(saved.code) });
-          queryClient.setQueryData(['continuous-invite', roomId], {
-            code: saved.code,
-            path: inviteIntent(saved.code),
-          });
-          await writeAdmission(intent, null);
-          await rememberName(saved.request.nickname);
-          await unarchive(roomId);
-          setAdmission(null);
-          go({ pathname: '/room/[id]', params: { id: roomId } }, true);
-          return;
-        } catch (e) {
-          if (
-            !(e instanceof ApiFailure) ||
-            !['unauthorized', 'not_found', 'expired', 'forbidden'].includes(e.code)
-          )
-            throw e;
-        }
+    const { roomId } = await api.resolve(saved.code, signal);
+    const stored = await loadAccess(roomId);
+    // Manual code entry has the same recovery guard as a direct invitation.
+    if (!nativeClient || stored) {
+      try {
+        const access = stored ?? { roomId, participantId: '', token: '', expiresAt: 0 };
+        const snapshot = await api.snapshot(access, signal);
+        await saveAccess({
+          roomId,
+          participantId: snapshot.own.participantId,
+          token: access.token,
+          expiresAt: snapshot.shared.expiresAt,
+        });
+        queryClient.setQueryData(roomKey(roomId), mergeRoom(undefined, snapshot));
+        await saveInvite(roomId, { code: saved.code, path: inviteIntent(saved.code) });
+        queryClient.setQueryData(['continuous-invite', roomId], {
+          code: saved.code,
+          path: inviteIntent(saved.code),
+        });
+        await writeAdmission(intent, null);
+        await rememberName(saved.request.nickname);
+        await unarchive(roomId);
+        setAdmission(null);
+        go({ pathname: '/room/[id]', params: { id: roomId } }, true);
+        return;
+      } catch (e) {
+        if (
+          !(e instanceof ApiFailure) ||
+          !['unauthorized', 'not_found', 'expired', 'forbidden'].includes(e.code)
+        )
+          throw e;
       }
-      result = await api.join(roomId, { ...saved.request, inviteCode: saved.code }, stored ?? undefined, signal);
-    } else result = await api.create(saved.request, signal);
+    }
+    const result = await api.join(roomId, { ...saved.request, inviteCode: saved.code }, stored ?? undefined, signal);
     await saveAccess(result.credential);
     queryClient.setQueryData(
       roomKey(result.credential.roomId),
@@ -298,11 +286,7 @@ export function Entrance({ invite, open: request, from }: {
     setAdmission(null);
     await rememberName(saved.request.nickname);
     if (saved.code) await unarchive(result.credential.roomId);
-    // A new room opens on its Mood step, above the room page and the start page (Back returns through both).
-    // A signed-in member's room links to their GoodWatch account as it opens.
-    const target = { pathname: '/room/[id]', params: { id: result.credential.roomId, ...(saved.code ? {} : { fresh: '1' }) } };
-    if (!saved.code) rememberMoodDraft(result.credential.roomId, moodDraft.current);
-    go(target, Boolean(saved.code));
+    go({ pathname: '/room/[id]', params: { id: result.credential.roomId } }, true);
   }
   // A lapsed sign-in keeps its name: the page doesn't turn back into a guest's mid-session.
   const known = home.nickname ?? (account.member || account.lapsed ? account.name : null);
@@ -333,18 +317,18 @@ export function Entrance({ invite, open: request, from }: {
     }
     const self = room.people.find((p) => p.self)?.nickname ?? known ?? '';
     void loadInvite(room.roomId).then((saved) => {
-      if (saved) void enter(true, false, { code: saved.code, nickname: self });
+      if (saved) void joinRoom(false, { code: saved.code, nickname: self });
       else open(room.roomId);
     }).catch(() => setError('Could not restore your invitation. Try again.'));
   }
   const resumeAdmission = () => {
     if (!admission && !restoreFailed && !recoveryBlocked) return false;
-    setRecoveryDismissed(false); setPanel(admission ? (admission.code ? 'join' : 'create') : 'join');
+    if (admission && !admission.code) { router.push('/new'); return true; }
+    setRecoveryDismissed(false); setPanel('join');
     return true;
   };
-  // No name first: the room exists at once; a guest host names themselves on the room page. A signed-in
-  // member's room is theirs: it links to their GoodWatch account as it opens.
-  const create = () => { setError(''); setCreating(true); setRetried(false); if (resumeAdmission()) return; void enter(false, account.member, undefined, known ?? ''); };
+  // Creation opens a local draft; only its explicit submit allocates a room.
+  const create = () => { setError(''); if (!resumeAdmission()) router.push('/new'); };
   // Continue with GoodWatch signs this device in and comes back to this screen: it never creates a room.
   const signInFrom = (path: string) => { setError(''); void account.signIn(path); };
   const fromRoom = from?.match(/^\/room\/([A-Za-z0-9_-]{1,64})(?:\/|$)/)?.[1];
@@ -352,7 +336,7 @@ export function Entrance({ invite, open: request, from }: {
   // The start page's big button is for guests; a lapsed sign-in gets the small Reconnect GoodWatch.
   const signIn = guestOnly || account.member ? undefined : () => signInFrom('/');
   const signInFromProfile = guestOnly || account.member ? undefined : () => signInFrom(roomFrom ?? '/?open=profile');
-  const openJoin = () => { setError(''); setCreating(false); if (!resumeAdmission()) setPanel('join'); };
+  const openJoin = () => { setError(''); if (!resumeAdmission()) setPanel('join'); };
   // Another screen's header asked for New room: it starts once the saved request is known.
   const handled = useRef(false);
   useEffect(() => {
@@ -363,7 +347,7 @@ export function Entrance({ invite, open: request, from }: {
     if (request === 'new') create(); // eslint-disable-line react-hooks/set-state-in-effect
   }, [request, home.ready, restoring]); // eslint-disable-line react-hooks/exhaustive-deps
   const returning = home.hasRooms || home.decisions.length > 0 || home.unavailable.length > 0 || Boolean(known);
-  const pending = admission ? (admission.code ? 'join' : 'create') : null;
+  const pending = admission?.code ? 'join' : null;
   const shown: PanelKind | null = panel ?? (recoveryDismissed ? null : pending ?? (restoreFailed || recoveryBlocked ? 'join' : null));
   const actionLabel = (first: string, again: string) => (busy ? 'Connecting…' : retrySeconds > 0 ? `Retry in ${retrySeconds}s` : admission ? again : first);
   const notices = (
@@ -378,10 +362,6 @@ export function Entrance({ invite, open: request, from }: {
   // The saved-request check takes a moment on every visit: the page appears once, already usable.
   const me = { name: known, member: account.member };
   const openProfile = () => { setError(''); setPanel('profile'); };
-  // Making a new room looks like its Mood page already; a failure falls back to the start page and its New room sheet.
-  if (creating && !retried && !error && !account.error && retrySeconds === 0 && (busy || !home.ready || restoring || request === 'new'))
-    return <MoodComposer first initialText={moodText} onTextChange={(text) => { moodDraft.current = text; setMoodText(text); }} disabled pick={() => {}}
-      back={() => { cancelAttempt(); setCreating(false); setRecoveryDismissed(true); if (request === 'new' && router.canGoBack()) router.back(); }} />;
   if (!home.ready || restoring) return <AppFrame header={{ me, onProfile: openProfile, profileQuiet: true }}>{null}</AppFrame>;
   // Joining is its own screen, like the room's pages: the start page doesn't render underneath.
   if (shown === 'join') return (
@@ -391,13 +371,11 @@ export function Entrance({ invite, open: request, from }: {
       back={closePanel} editName={openProfile}
       /* Back on this invitation (or the code you typed) as yourself, ready to join. */
       signIn={guestOnly || account.member ? undefined : (c) => { const typed = parseInvite(c); signInFrom(invite ? `/r/${invite}` : typed ? `/r/${typed}` : '/?open=join'); }}
-      submit={(c, name) => void enter(true, account.member, undefined, name, c)} extra={notices} />
+      submit={(c, name) => void joinRoom(account.member, undefined, name, c)} extra={notices} />
   );
   const openCount = home.active.filter((r) => r.live).length;
   const history = home.decisions.length || home.left.length || home.archived.length ? () => setPanel('history') : undefined;
-  const sheet = shown === 'create' ? (
-    <RetrySheet action={actionLabel('Create room', 'Retry room request')} busy={locked} error={error} retry={() => void enter(false, false, undefined, admission?.request.nickname ?? known ?? '')} extra={notices} onClose={closePanel} />
-  ) : shown === 'profile' ? (
+  const sheet = shown === 'profile' ? (
     <ProfileSheet nickname={known} member={account.member} lapsed={account.lapsed} signIn={signInFromProfile} logOut={account.member || account.lapsed ? () => void account.logOut() : undefined}
       busy={locked || home.loadingRooms} error={error || account.error} onClose={closePanel}
       save={(name) => { void home.setNickname(name).then(() => { if (invite) setPanel('join'); else closePanel(); }); }} />

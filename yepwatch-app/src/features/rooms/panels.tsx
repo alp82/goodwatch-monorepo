@@ -50,16 +50,6 @@ function ErrorText({ children }: { children?: string }) {
   return children ? <GText size={14} color="#fca5a5">{children}</GText> : null;
 }
 
-/** A room request that hasn't been confirmed yet: retry it as-is (same identity, same request). */
-export function RetrySheet({ action, busy, error, retry, extra, onClose }: { action: string; busy: boolean; error?: string; retry: () => void; extra?: ReactNode; onClose: () => void }) {
-  return (
-    <Sheet testID="retry-panel" title="New room" onClose={onClose} actions={<Action gold label={action} onPress={retry} disabled={busy} style={{ flex: 1 }} />}>
-      <ErrorText>{error}</ErrorText>
-      {extra}
-    </Sheet>
-  );
-}
-
 /** Room label, ideas and people take this much before the preview arrives, so the form doesn't move. */
 const HEAD_HEIGHT = 150;
 /** The host's possessive for the room label: "ALP’S ROOM", or "YOUR FRIEND’S ROOM" without a name. */

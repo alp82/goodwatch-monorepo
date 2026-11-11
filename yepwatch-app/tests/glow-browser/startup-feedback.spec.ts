@@ -1,20 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { choosingRoom, fakeRoom, newRoom } from './room-fake';
-
-test('mood accepts typing while room creation is still pending and keeps the draft', async ({ page }) => {
-  await fakeRoom(page, newRoom());
-  let release!: () => void;
-  const gate = new Promise<void>((resolve) => { release = resolve; });
-  await page.route('**/proposal/rooms', async (route) => { await gate; await route.fallback(); });
-  await page.goto('/');
-  await page.getByRole('button', { name: 'New room', exact: true }).click();
-  try {
-    await expect(page.getByLabel('Mood', { exact: true })).toBeVisible({ timeout: 1500 });
-    await page.getByLabel('Mood', { exact: true }).fill('dark and funny');
-  } finally { release(); }
-  await expect(page).toHaveURL(/\/room\/test-room\/mood/);
-  await expect(page.getByLabel('Mood', { exact: true })).toHaveValue('dark and funny');
-});
+import { choosingRoom, fakeRoom } from './room-fake';
 
 test('a solo Yep adds a match without a match celebration', async ({ page }) => {
   const room = choosingRoom();

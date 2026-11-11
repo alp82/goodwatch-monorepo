@@ -61,10 +61,10 @@ export interface AppFrameProps {
   noteTop?: number;
 }
 
-/** Where the header's defaults lead: the start page does the rest (it owns admission and recovery). */
+/** Header destinations: a local new-room draft, an existing room, or the start page's join form. */
 export const startPage = {
   open: (roomId: string) => router.push({ pathname: '/room/[id]', params: { id: roomId } }),
-  newRoom: () => router.push({ pathname: '/', params: { open: 'new' } }),
+  newRoom: () => router.push('/new'),
   join: () => router.push({ pathname: '/', params: { open: 'join' } }),
 };
 

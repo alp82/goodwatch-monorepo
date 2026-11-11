@@ -11,7 +11,7 @@ export type CommandBuild = (snapshot: RoomSnapshot) => RoomCommand | null;
 export interface QueuedCommand { commandId: string; build: CommandBuild }
 
 /** The server decides what these lead to, so the screen waits for its answer. */
-const SERVER_DECIDES: ReadonlySet<RoomCommand['type']> = new Set<RoomCommand['type']>(['start', 'propose', 'restart', 'leave', 'retry_agreement']);
+const SERVER_DECIDES: ReadonlySet<RoomCommand['type']> = new Set<RoomCommand['type']>(['add_idea', 'edit_idea', 'remove_idea', 'start', 'propose', 'restart', 'leave', 'retry_agreement']);
 export const awaitsServer = (command: RoomCommand) => SERVER_DECIDES.has(command.type);
 
 export function previewCommand<T extends RoomSnapshot>(s: T, commandId: string, c: RoomCommand): T {
@@ -22,14 +22,11 @@ export function previewCommand<T extends RoomSnapshot>(s: T, commandId: string, 
   const participant = (patch: Partial<RoomSnapshot['shared']['participants'][number]>) =>
     shared({ participants: s.shared.participants.map((p) => (p.participantId === me ? { ...p, ...patch } : p)) } as Partial<T['shared']>);
   switch (c.type) {
+    // Interpreting a mood may be refused. Publish its label only with the confirmed interpretation.
     case 'add_idea':
-      // The server names the idea after the command, so this row is already the real one. Every
-      // idea arrives switched on, a friend's too (the host can switch it off).
-      if (s.shared.ideas.some((i) => i.id === commandId)) return s;
-      return shared({ ideas: [...s.shared.ideas, { id: commandId, text: c.text, authorId: me, on: true, attributes: [] }] } as Partial<T['shared']>);
-    case 'edit_idea': return ideas((i) => (i.id === c.ideaId ? { ...i, text: c.text } : i));
+    case 'edit_idea':
+    case 'remove_idea': return s;
     case 'set_idea': return ideas((i) => (i.id === c.ideaId ? { ...i, on: c.on } : i));
-    case 'remove_idea': return shared({ ideas: s.shared.ideas.filter((i) => i.id !== c.ideaId) } as Partial<T['shared']>);
     case 'set_services': return participant({ serviceIds: c.serviceIds });
     case 'rename': return participant({ nickname: c.nickname });
     case 'set_service_enabled':

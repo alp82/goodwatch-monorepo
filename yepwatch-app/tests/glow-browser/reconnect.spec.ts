@@ -71,7 +71,7 @@ test('Refresh tries at once, shows that it is working, and the banner goes away 
   await expect(refresh).toHaveCount(0);
 });
 
-test('Create during a restart: two 503s are retried with the same request, showing Connecting…, then the room opens', async ({ page }) => {
+test('Create during a restart: two 503s are retried with the same request, keeping the editor until the room opens', async ({ page }) => {
   await fakeRoom(page, newRoom());
   const bodies: GuestAdmissionRequest[] = [];
   await page.route('**/proposal/rooms', (route) => {
@@ -81,10 +81,13 @@ test('Create during a restart: two 503s are retried with the same request, showi
   });
   await page.goto('/');
   await page.getByRole('button', { name: 'New room', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Connecting…', exact: true })).toBeVisible();
-  await expect(page).toHaveURL(/\/room\/test-room\/mood/, { timeout: 15_000 });
+  await page.getByLabel('Mood').fill('cheer me up');
+  await page.getByRole('button', { name: 'Create room', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Saving…', exact: true })).toBeVisible();
+  await expect(page.getByLabel('Mood')).toHaveValue('cheer me up');
+  await expect(page).toHaveURL(/\/room\/test-room$/, { timeout: 15_000 });
   expect(bodies).toHaveLength(3);
   expect(bodies[1]).toEqual(bodies[0]);
   expect(bodies[2]).toEqual(bodies[0]);
-  await expect(page.getByLabel('Mood')).toBeVisible();
+  await expect(page.getByTestId('room-setup')).toBeVisible();
 });

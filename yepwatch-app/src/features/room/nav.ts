@@ -15,11 +15,9 @@ export function openPage(id: string, page: RoomPage, params: Record<string, stri
 export const sheetHref = (id: string, sheet: RoomSheet) => ({ pathname: '/room/[id]' as const, params: { id, sheet } });
 /** Back from a sub-page: the page underneath, or the room itself when the page was opened directly. */
 export function leavePage(id: string) {
-  if (router.canGoBack()) router.back();
-  else router.replace({ pathname: '/room/[id]', params: { id } });
+  router.dismissTo({ pathname: '/room/[id]', params: { id } });
 }
-/** Back from the room: where you came from, else the start page (the room stays listed there). */
+/** Back from the room returns to the start page; the room stays listed there. */
 export function toRooms() {
-  if (router.canGoBack()) router.back();
-  else router.replace('/');
+  router.dismissTo('/');
 }
