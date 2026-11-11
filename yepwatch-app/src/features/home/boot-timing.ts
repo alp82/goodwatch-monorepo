@@ -13,8 +13,9 @@ export const BOOT = {
   introMs: 1950,
   /** After the word: the cover and the word fade out over the ready page. */
   dissolveMs: 150,
-  /** Stop waiting for the page after this; it shows its own loading state. */
-  pageWaitCapMs: 4000,
+  /** Stop waiting for the page after this (from the app's first frame); it shows its own loading state.
+   * As long as the old fixed word plus its wait, so slow networks see no more loading states than before. */
+  pageWaitCapMs: 6000,
   /** One turn of the amber arc around the Y while the page is not ready. */
   waitLoopMs: 1500,
 } as const;
