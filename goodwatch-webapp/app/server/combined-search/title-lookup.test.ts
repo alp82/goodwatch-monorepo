@@ -301,6 +301,7 @@ test("completed additional pages survive a sibling timeout and partial results a
 		partial.rows.map((row) => row.key),
 		["movie:42", "movie:43"],
 	)
+	assert.equal(partial.readingUnavailable, 'budget')
 	page(query, 1, { total_pages: 2, results: [fixture] })
 	page(query, 2, { results: [{ ...fixture, id: 45 }] })
 	const complete = await combinedSearch(

@@ -121,6 +121,8 @@ export interface SearchBatch {
 	reading: ReadingChip[];
 	metadata: Metadata[];
 	errors: string[];
+	/** Why an interpreted search was unavailable; lets first-party consumers distinguish spending caps from transport failures. */
+	readingUnavailable?: import('../search-runtime/store.server').BasicReason;
 	// The language step's mode; UNKNOWN_MODE on a batch sent before that step finished.
 	mode: string;
 	elapsedMs: number;
@@ -1319,6 +1321,7 @@ export async function combinedSearch(
 		const pairs =
 			discoverKeys && originalKeys && index ? identityPairs(index, discoverKeys, originalKeys) : [];
 		const batch: SearchBatch = {
+			...(read?.kind === 'basic' ? { readingUnavailable: read.reason } : {}),
 			...(discoverKeys ? { searchKeys: discoverKeys } : {}),
 			...(discoverKeys && originalKeys ? { originalKeys } : {}),
 			...(pairs.length ? { identityPairs: pairs } : {}),

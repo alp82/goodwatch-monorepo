@@ -69,6 +69,11 @@ export async function searchYepWatchRoom(request: Request) {
 			}
 		)
 		const batch = complete ?? result
+		if (batch?.readingUnavailable === 'budget')
+			return json(
+				{ error: 'interpretation_unavailable', reason: 'budget', retryable: false },
+				{ status: 503, headers }
+			)
 		// A lexical/basic fallback must not be presented as an interpreted room prompt.
 		if (!batch || batch.errors.length || batch.pendingRanking)
 			return json(

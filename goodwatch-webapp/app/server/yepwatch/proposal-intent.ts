@@ -63,13 +63,22 @@ export function roomSearch(
 				true
 			)
 		}
-		if (!response.ok)
+		if (!response.ok) {
+			const failure = await response.json().catch(() => null)
+			if (response.status === 503 && failure?.error === 'interpretation_unavailable' && failure?.reason === 'budget')
+				throw new RoomError(
+					'catalog_unavailable',
+					'Mood matching is unavailable for now. You can still start without an idea.',
+					503,
+					false
+				)
 			throw new RoomError(
 				"busy",
 				"GoodWatch search is unavailable. Retry this prompt shortly.",
 				503,
 				true
 			)
+		}
 		let intent: NonNullable<ProposalRoom["intent"]>
 		try {
 			intent = roomIntentSchema.parse(await response.json())

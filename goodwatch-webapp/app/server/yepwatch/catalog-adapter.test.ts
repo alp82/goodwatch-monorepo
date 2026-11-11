@@ -112,3 +112,26 @@ test('Guest show-start selection ignores legacy manual continuation inputs and p
   const deck = await createDeckAdapter(p).candidates(r)
   assert.equal(deck[0].identity.kind, 'show_start'); assert.equal(deck[0].identity.tmdbId, 10)
 })
+
+test('starting a show deck overlaps bounded episode reads and preserves ranked card order', async () => {
+  const r = await room(); r.constraints.kinds = ['show_start']
+  const titles = Array.from({ length: 24 }, (_, i) => ({ ...start, key: start.key + i, tmdbId: 11 + i }))
+  let active = 0, peak = 0, episodeReads = 0
+  const adapter = createDeckAdapter({ ...reads(),
+    async rankedKeys() { return titles.map(t => t.key) },
+    async displays() { return new Map(titles.map(t => [t.key, t])) },
+    async episodes(id) {
+      episodeReads++; active++; peak = Math.max(peak, active)
+      await new Promise(resolve => setTimeout(resolve, 10))
+      active--
+      return [{ ...fixtureEpisodes[0], tmdbId: id * 100 }]
+    },
+  }, { limit: 12 })
+  const before = performance.now()
+  const cards = await adapter.candidates(r)
+  console.info(`show deck: ${Math.round(performance.now() - before)} ms; peak episode reads: ${peak}`)
+  assert.deepEqual(cards.map(c => c.identity.tmdbId), titles.slice(0, 12).map(t => t.tmdbId))
+  assert.equal(episodeReads, 12, 'unused tail cards must not delay the first page')
+  assert.ok(peak > 1, 'independent show episode reads must overlap')
+  assert.ok(peak <= 6, 'episode reads must remain bounded')
+})

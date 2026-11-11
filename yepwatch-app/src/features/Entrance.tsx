@@ -1,4 +1,5 @@
-import { MoodArriving } from './room/MoodArriving';
+import { MoodComposer } from './room/MoodPage';
+import { rememberMoodDraft } from './room/mood-draft';
 import { ConnectionDetails } from './rooms/ConnectionDetails';
 import type { ConnectionDiagnostic } from '../core/continuous/connection-diagnostic';
 import { guestOnly } from '../core/config';
@@ -64,6 +65,8 @@ export function Entrance({ invite, open: request, from }: {
   const [code, setCode] = useState(invite ?? '');
   const [busy, setBusy] = useState(false);
   /** New room was pressed (here or in a room's header): its Mood page shows while the room is made. */
+  const moodDraft = useRef('');
+  const [moodText, setMoodText] = useState('');
   const [creating, setCreating] = useState(request === 'new');
   /** The server didn't answer the first try: the New room sheet takes over with its Connecting… and retry notes. */
   const [retried, setRetried] = useState(false);
@@ -298,6 +301,7 @@ export function Entrance({ invite, open: request, from }: {
     // A new room opens on its Mood step, above the room page and the start page (Back returns through both).
     // A signed-in member's room links to their GoodWatch account as it opens.
     const target = { pathname: '/room/[id]', params: { id: result.credential.roomId, ...(saved.code ? {} : { fresh: '1' }) } };
+    if (!saved.code) rememberMoodDraft(result.credential.roomId, moodDraft.current);
     go(target, Boolean(saved.code));
   }
   // A lapsed sign-in keeps its name: the page doesn't turn back into a guest's mid-session.
@@ -376,7 +380,8 @@ export function Entrance({ invite, open: request, from }: {
   const openProfile = () => { setError(''); setPanel('profile'); };
   // Making a new room looks like its Mood page already; a failure falls back to the start page and its New room sheet.
   if (creating && !retried && !error && !account.error && retrySeconds === 0 && (busy || !home.ready || restoring || request === 'new'))
-    return <MoodArriving back={request === 'new' && router.canGoBack() ? () => router.back() : undefined} />;
+    return <MoodComposer first initialText={moodText} onTextChange={(text) => { moodDraft.current = text; setMoodText(text); }} disabled pick={() => {}}
+      back={() => { cancelAttempt(); setCreating(false); setRecoveryDismissed(true); if (request === 'new' && router.canGoBack()) router.back(); }} />;
   if (!home.ready || restoring) return <AppFrame header={{ me, onProfile: openProfile, profileQuiet: true }}>{null}</AppFrame>;
   // Joining is its own screen, like the room's pages: the start page doesn't render underneath.
   if (shown === 'join') return (

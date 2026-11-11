@@ -16,6 +16,7 @@ import { CHAR_EM, webField } from './parts';
 import { useRoom } from './RoomProvider';
 import { Actions, Button, Screen, TextLink, usePinnedActions } from './ui';
 import { RoomStatus } from './RoomStatus';
+import { clearMoodDraft, readMoodDraft } from './mood-draft';
 
 /** Moods, themes and plots, not titles. */
 export const MOOD_PLACEHOLDER = 'Describe a mood, a theme, or a plot…';
@@ -43,13 +44,32 @@ function typedSize(text: string, col: number, phone: boolean, z: (n: number) => 
 
 export function MoodPage() {
   const { id, view, cmd, disabled } = useRoom();
+  const { idea = 'new' } = useLocalSearchParams<{ idea?: string }>();
+  const [draft] = useState(() => readMoodDraft(id));
+  useEffect(() => { clearMoodDraft(id); }, [id]);
+  const editing = view?.ideas.find((i) => i.id === idea && i.mine) ?? null;
+  if (!view) return <RoomStatus />;
+  const pick = (value: string) => {
+    if (disabled) return;
+    if (editing && value === editing.text) { leavePage(id); return; }
+    if (editing) void (value ? cmd.editIdea(editing.id, value) : cmd.removeIdea(editing.id));
+    else if (value) void cmd.addIdea(value);
+    leavePage(id);
+  };
+  return <MoodComposer key={editing?.id ?? 'new'} initialText={editing?.text ?? draft} first={view.isHost && !view.ideas.length && !editing}
+    action={editing ? 'Save' : view.isHost ? 'Add idea' : 'Suggest'} editing={Boolean(editing)} disabled={disabled} pick={pick} back={() => leavePage(id)} />;
+}
+
+/** The editor is local: room creation and saves never prevent typing or picking a preset. */
+export function MoodComposer({ initialText = '', first = false, action = 'Create room', editing = false, disabled = false, pick, back, onTextChange }: {
+  initialText?: string; first?: boolean; action?: string; editing?: boolean; disabled?: boolean;
+  pick: (text: string) => void; back?: () => void; onTextChange?: (text: string) => void;
+}) {
   const { phone, max, z } = useLayout();
   const pinned = usePinnedActions();
   const reduced = useReducedMotion();
-  const { idea = 'new' } = useLocalSearchParams<{ idea?: string }>();
-  const editing = view?.ideas.find((i) => i.id === idea && i.mine) ?? null;
-  const mine = editing?.text ?? '';
-  const [own, setOwn] = useState(mine);
+  const [own, setOwn] = useState(initialText);
+  const change = (text: string) => { setOwn(text); onTextChange?.(text); };
   const [focus, setFocus] = useState(true);
   // Widths measured from the rendered words, so the underline is never narrower than them.
   const [placeholderWidths, setPlaceholderWidths] = useState<Record<string, number>>({});
@@ -59,31 +79,20 @@ export function MoodPage() {
     if (reduced) { line.setValue(1); return; }
     Animated.timing(line, { toValue: 1, duration: 500, delay: 150, easing: Easing.out(Easing.cubic), useNativeDriver: native }).start();
   }, [line, reduced]);
-  if (!view) return <RoomStatus />;
   const text = own.trim();
-  // Unchanged text still saves: Save then just goes back, so an opened idea never shows a dead button.
   const ready = text.length >= IDEA_LIMITS.min;
-  const pick = (value: string) => {
-    if (disabled) return;
-    if (editing && value === mine) { leavePage(id); return; }
-    if (editing) void (value ? cmd.editIdea(editing.id, value) : cmd.removeIdea(editing.id));
-    else if (value) void cmd.addIdea(value);
-    leavePage(id);
-  };
-  const submit = () => { if (ready) pick(text); };
-  const first = view.isHost && !view.ideas.length && !editing;
+  const submit = () => { if (ready && !disabled) pick(text); };
   const col = Math.min(max, z(980));
   const placeholder = placeholderFit(col, phone, z);
   const size = own ? typedSize(own, col, phone, z) : placeholder.size;
   const lines = own ? Math.max(1, Math.min(4, Math.ceil((typedWidth * 1.06) / col))) : placeholder.lines.length;
   const placeholderWidth = Math.max(0, ...placeholder.lines.map((l) => placeholderWidths[l] ?? 0));
   const underline = Math.min(col, Math.max(placeholderWidth, own ? typedWidth : 0, z(240)) + z(24));
-  const action = first ? 'Create room' : editing ? 'Save' : view.isHost ? 'Add idea' : 'Suggest';
-  const create = <Button label={action} disabled={!ready || disabled} icon={<Icon name="right" size={18} color={warm.ink} />} onPress={submit} />;
+  const create = <Button label={first ? 'Create room' : action} disabled={!ready || disabled} icon={<Icon name="right" size={18} color={warm.ink} />} onPress={submit} />;
   const chip = (preset: string) => {
     const on = text.toLowerCase() === preset;
     return (
-      <Press key={preset} label={preset} selected={on} disabled={disabled} onPress={() => setOwn(on ? '' : preset)}
+      <Press key={preset} label={preset} selected={on} onPress={() => change(on ? '' : preset)}
         style={{ minHeight: z(44), paddingHorizontal: z(17), borderRadius: 14, flexDirection: 'row', gap: 7, backgroundColor: on ? warm.amberSoft : '#ffffff07', borderWidth: 1, borderColor: on ? glow.amber : warm.line }}>
         {on ? <Icon name="check" size={z(15)} color={glow.amber} /> : null}
         <GText size={phone ? 15 : z(17)} bold={on} color={on ? glow.amber : glow.soft}>{preset}</GText>
@@ -92,12 +101,12 @@ export function MoodPage() {
   };
   const font = { fontFamily: 'GabaritoBold', fontSize: size, lineHeight: size * 1.2, letterSpacing: -size * 0.03 } as const;
   return (
-    <Screen testID="mood-page" back={() => leavePage(id)} pill={first ? { label: 'New room', state: 'new' } : undefined} width={col} gap={0}
+    <Screen testID="mood-page" back={back} pill={first ? { label: 'New room', state: 'new' } : undefined} width={col} gap={0}
       footer={pinned ? create : undefined}>
       <View style={{ gap: phone ? 30 : z(44), alignItems: 'center' }}>
         <View style={{ width: '100%', alignItems: 'center' }}>
           <View style={{ width: '100%' }}>
-            <TextInput autoFocus multiline accessibilityLabel="Mood" value={own} onChangeText={setOwn} maxLength={IDEA_LIMITS.max} spellCheck={false} autoCorrect={false}
+            <TextInput autoFocus multiline accessibilityLabel="Mood" value={own} onChangeText={change} maxLength={IDEA_LIMITS.max} spellCheck={false} autoCorrect={false}
               onFocus={() => setFocus(true)} onBlur={() => setFocus(false)} selectionColor={glow.amber} cursorColor={glow.amber}
               returnKeyType={first ? 'go' : 'done'} submitBehavior="submit" onSubmitEditing={submit}
               onKeyPress={Platform.OS === 'web' ? (e) => {
@@ -130,7 +139,7 @@ export function MoodPage() {
         {!pinned ? <Actions style={{ width: Math.min(col, z(340)) }}>{create}</Actions> : null}
         {first || editing ? (
           <View>
-            {first ? <TextLink label="Anything goes" color={glow.muted} onPress={() => pick('')} />
+            {first ? <TextLink label="Anything goes" color={glow.muted} disabled={disabled} onPress={() => pick('')} />
               : <TextLink label="Remove this idea" color={glow.muted} disabled={disabled} onPress={() => pick('')} />}
           </View>
         ) : null}

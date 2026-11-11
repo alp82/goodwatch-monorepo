@@ -57,43 +57,52 @@ export function createDeckAdapter(reads: CatalogReads, options: { scanLimit?: nu
         const keys = ordered.slice(offset, offset + Math.min(40, scanLimit - scanned)); scanned += keys.length
         const displays = await reads.displays(keys)
         const availability = await reads.availability([...displays.values()], screens, false)
-        for (const key of keys) {
-          const title = displays.get(key)
-          const mediaType = title?.mediaType ?? (key >= 2_000_000_000_000 ? 'show' : 'movie')
-          if (mediaType === 'movie' ? !room.constraints.kinds.includes('movie') : !room.constraints.kinds.some(k => k !== 'movie')) continue
-          if (!title) { missingMetadataTitles++; continue }
-          if (room.constraints.maxMinutes != null) {
-            if (title.runtimeMinutes == null) { missingMetadataTitles++; continue }
-            if (title.runtimeMinutes > room.constraints.maxMinutes) continue
-          }
-          const offers = availability.get(key) ?? []
-          const states = screens.map((screen, index) => {
-            const state = offers.find(a => a.screenId === screen.id)?.state ?? 'unknown'
-            screenCounts[index][state === 'no_match' ? 'noMatch' : state]++
-            return state
-          })
-          // One verified exclusion rules out the all-screen intersection, even if another screen is unknown.
-          if (states.includes('no_match')) { noMatchTitles++; continue }
-          if (states.includes('unknown')) { uncertainTitles++; continue }
-          let identity: Candidate['identity']
-          if (title.mediaType === 'movie') {
-            if (!room.constraints.kinds.includes('movie')) continue
-            identity = { kind: 'movie', tmdbId: title.tmdbId }
-          } else {
-            const plan = progressPlans.get(title.tmdbId)
-            const hasContinuing = selectedShows.has(title.tmdbId)
-            if (plan?.agreed && hasContinuing && room.constraints.kinds.includes('show_continue')) identity = { kind: 'show_continue', tmdbId: title.tmdbId, episode: episodeIdentity(plan.proposed!) }
-            else {
-              if (!room.constraints.kinds.includes('show_start') || hasContinuing) continue
-              const episodes = await reads.episodes(title.tmdbId)
-              const first = [...episodes].sort((a, b) => a.season - b.season || a.number - b.number)[0]
-              if (!first) { missingEpisodeTitles++; continue }
-              identity = { kind: 'show_start', tmdbId: title.tmdbId, episode: episodeIdentity(first) }
+        // Fetch only the next few needed cards. Ineligible rows leave room for the next window.
+        for (let position = 0; position < keys.length;) {
+          const batchKeys = keys.slice(position, position + Math.min(6, (options.limit ?? LIMITS.deck) - results.length))
+          position += batchKeys.length
+          const batch = await Promise.all(batchKeys.map(async (key): Promise<Candidate | null> => {
+            const title = displays.get(key)
+            const mediaType = title?.mediaType ?? (key >= 2_000_000_000_000 ? 'show' : 'movie')
+            if (mediaType === 'movie' ? !room.constraints.kinds.includes('movie') : !room.constraints.kinds.some(k => k !== 'movie')) return null
+            if (!title) { missingMetadataTitles++; return null }
+            if (room.constraints.maxMinutes != null) {
+              if (title.runtimeMinutes == null) { missingMetadataTitles++; return null }
+              if (title.runtimeMinutes > room.constraints.maxMinutes) return null
             }
+            const offers = availability.get(key) ?? []
+            const states = screens.map((screen, index) => {
+              const state = offers.find(a => a.screenId === screen.id)?.state ?? 'unknown'
+              screenCounts[index][state === 'no_match' ? 'noMatch' : state]++
+              return state
+            })
+            // One verified exclusion rules out the all-screen intersection, even if another screen is unknown.
+            if (states.includes('no_match')) { noMatchTitles++; return null }
+            if (states.includes('unknown')) { uncertainTitles++; return null }
+            let identity: Candidate['identity']
+            if (title.mediaType === 'movie') {
+              if (!room.constraints.kinds.includes('movie')) return null
+              identity = { kind: 'movie', tmdbId: title.tmdbId }
+            } else {
+              const plan = progressPlans.get(title.tmdbId)
+              const hasContinuing = selectedShows.has(title.tmdbId)
+              if (plan?.agreed && hasContinuing && room.constraints.kinds.includes('show_continue')) identity = { kind: 'show_continue', tmdbId: title.tmdbId, episode: episodeIdentity(plan.proposed!) }
+              else {
+                if (!room.constraints.kinds.includes('show_start') || hasContinuing) return null
+                const episodes = await reads.episodes(title.tmdbId)
+                const first = [...episodes].sort((a, b) => a.season - b.season || a.number - b.number)[0]
+                if (!first) { missingEpisodeTitles++; return null }
+                identity = { kind: 'show_start', tmdbId: title.tmdbId, episode: episodeIdentity(first) }
+              }
+            }
+            const id = identity.kind === 'movie' ? `movie_${identity.tmdbId}` : `${identity.kind}_${identity.tmdbId}_${identity.episode.tmdbId}`
+            return { id, identity, title: title.title, year: title.year, overview: title.overview, posterUrl: title.posterUrl, runtimeMinutes: title.runtimeMinutes, availability: offers, ...(title.backdropUrl === undefined ? {} : { backdropUrl: title.backdropUrl }), ...(title.trailerUrl === undefined ? {} : { trailerUrl: title.trailerUrl }), ...(title.goodwatchScore === undefined ? {} : { goodwatchScore: title.goodwatchScore }), ...(title.genres === undefined ? {} : { genres: title.genres }) }
+          }))
+          for (const candidate of batch) {
+            if (!candidate) continue
+            results.push(candidate)
+            if (results.length >= (options.limit ?? LIMITS.deck)) { options.onComplete?.(false); return results }
           }
-          const id = identity.kind === 'movie' ? `movie_${identity.tmdbId}` : `${identity.kind}_${identity.tmdbId}_${identity.episode.tmdbId}`
-          results.push({ id, identity, title: title.title, year: title.year, overview: title.overview, posterUrl: title.posterUrl, runtimeMinutes: title.runtimeMinutes, availability: offers, ...(title.backdropUrl === undefined ? {} : { backdropUrl: title.backdropUrl }), ...(title.trailerUrl === undefined ? {} : { trailerUrl: title.trailerUrl }), ...(title.goodwatchScore === undefined ? {} : { goodwatchScore: title.goodwatchScore }), ...(title.genres === undefined ? {} : { genres: title.genres }) })
-          if (results.length >= (options.limit ?? LIMITS.deck)) { options.onComplete?.(false); return results }
         }
       }
       if (results.length) { options.onComplete?.(!budgetReason && !uncertainTitles && !missingEpisodeTitles && !missingMetadataTitles); return results }

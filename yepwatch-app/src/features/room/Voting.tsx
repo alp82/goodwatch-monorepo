@@ -139,7 +139,7 @@ export function Voting() {
     setYeps(settled.pending);
     const made = settled.matched[0];
     const matched = made ? shared.candidates.find((c) => c.id === made.candidateId) : undefined;
-    if (made && matched) setMoment({ key: matchKey(made), title: titlePresentation(matched), look: made.look });
+    if (made && matched && view.people.length > 1) setMoment({ key: matchKey(made), title: titlePresentation(matched), look: made.look });
   }
   const nextCard = nextCandidate(snapshot, card?.id);
   const geo = stageGeometry({ aw: area.width, stageH: area.height, vw: layout.width, phone, z });
@@ -199,7 +199,7 @@ export function Voting() {
           empty={<FindingMore style={{ flex: 1 }} />}
           activity={activity}
           services={offered.length ? <Logos services={offered} size={z(22)} /> : undefined}
-          moment={moment} onMomentEnd={endMoment}
+          moment={view.people.length > 1 ? moment : null} onMomentEnd={endMoment}
           onVote={choose}
           onDetails={() => setPanel('details')}
           onTrailer={() => setPanel('trailer')}
