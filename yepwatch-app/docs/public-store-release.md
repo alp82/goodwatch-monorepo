@@ -22,7 +22,7 @@ The additive deletion table/grant was installed in production and is GREEN. Cool
 
 Production binaries `1.0.0 (17)` completed: iOS EAS `3ff02e10-be8f-4832-bd1d-e1db9ab28e94`, Android EAS `564c242f-f5ad-429b-a631-352c38a263e4`. Apple submission `8db4f1a5-c297-410d-afc6-9c69aba7e994` finished; Apple build `d2c3fec9-f537-4964-bb75-22885e89de65` is VALID and attached to the draft. The Android AAB is downloaded with SHA-256 `610cefbd91b57c09ce01494f275e56d61920d3900acaac0f1a81dc394b898e58`. It has not been uploaded to Play: the submission service-account key is still absent.
 
-**Personal room allowance:** new creations use 10 unexpired rooms per account or guest installation/browser. Joining someone else’s room uses no slot. Existing rooms retain their reservations; leaving or transferring hosting does not release an unexpired creation slot. See [the decision and additive migration](../../docs/adr/yepwatch-personal-room-allowance.md).
+**Personal room allowance:** new creations use 10 unexpired rooms per account or guest installation/browser. Joining someone else’s room uses no slot. Existing rooms retain their reservations; leaving or transferring hosting does not release an unexpired creation slot. See [the decision and additive migration](../../docs/adr/yepwatch-personal-room-allowance.md). The additive migration and runtime grants are installed, the website/API are live, and compatible native OTA updates are published for `beta`, `beta-preview` and `production`. [Verification record](../artifacts/releases/personal-room-limit-2026-11-11.json).
 
 Apple listing copy was refreshed with the complete English description, subtitle, promotional text, keywords, copyright and URL fields. A later partial update through `@expo/apple-utils` had cleared omitted marketing fields to null. `scripts/sync-apple-listing.cjs` now sends the complete localization records and checks a fresh readback; `--apply` saves them, while the default only inspects. Set `YEPWATCH_EAS_CLI_ROOT` to an installed `eas-cli` package directory. The draft remains `1.0.0`, `PREPARE_FOR_SUBMISSION`, with VALID production build 17 attached and no public review submitted. The earlier sanitized preparation record is [here](../artifacts/releases/public-store-preparation-2026-11-11.json).
 
@@ -87,3 +87,8 @@ Once approved, release the store versions and verify their public pages from an 
 - [Apple App Privacy](https://developer.apple.com/app-store/app-privacy-details/) and [App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/).
 - [Apple account deletion](https://developer.apple.com/help/app-review/guideline-reference/5-1-1-account-deletion) and [Google account/data deletion](https://support.google.com/googleplay/android-developer/answer/13327111?hl=en).
 - [Google personal-account testing and production access](https://support.google.com/googleplay/android-developer/answer/14151465?hl=en).
+
+
+## Self-service tester enrollment
+
+The [Android invitation draft and activation steps](../store/tester-invitation.md) use a Google Group, followed by Play opt-in and installation links. Activation is pending Google’s group-creation CAPTCHA and sign-in with the developer account that owns the new listing. No tester emails were added or invitations sent. The existing public TestFlight link remains available. Include the random installation identifier used for the creation allowance when completing the stores’ identifier/privacy disclosures; it is used for app functionality, not advertising or tracking.
