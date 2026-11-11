@@ -4,6 +4,15 @@ import { createRoom, hostName, pickServices } from './flows';
 
 const roomCountry = (p: Person) => (p.latest?.screens as { country: string | null }[] | undefined)?.[0]?.country;
 
+/** Create room, untimed: the compatibility paths take extra round trips and aren't the createRoomMs moment. */
+async function createWithoutTiming(host: Person, mood: string) {
+  await host.open('/');
+  await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] } });
+  await host.fill(host.page.getByLabel('Mood'), mood);
+  await host.tap(host.button('Create room'), { expect: { visible: ['room-setup'] } });
+  await eventually(() => host.latest?.ideas.map((i) => i.text), (v) => JSON.stringify(v) === JSON.stringify([mood]), 'the room has exactly the one idea', host);
+}
+
 test.describe('create and set up a room', () => {
   test('create room: start page → Mood → room page @core', async ({ room }) => {
     const host = await room.person('Alp');
@@ -30,7 +39,7 @@ test.describe('create and set up a room', () => {
     await host.page.route(/\/api\/yepwatch\/v1\/proposal\/rooms$/, (route) => route.request().method() === 'POST' && route.request().postDataJSON()?.setup
       ? route.fulfill({ status: 400, contentType: 'application/json', body: JSON.stringify({ error: { code: 'invalid_request', message: 'Invalid request shape', retryable: false } }) })
       : route.continue());
-    await createRoom(host, 'cozy murder mystery');
+    await createWithoutTiming(host, 'cozy murder mystery');
     expect(roomCountry(host)).toMatch(/^[A-Z]{2}$/);
   });
 
@@ -43,7 +52,7 @@ test.describe('create and set up a room', () => {
       delete body.setup;
       return route.continue({ postData: JSON.stringify(body) });
     });
-    await createRoom(host, 'cozy murder mystery');
+    await createWithoutTiming(host, 'cozy murder mystery');
     expect(roomCountry(host)).toMatch(/^[A-Z]{2}$/);
   });
 
