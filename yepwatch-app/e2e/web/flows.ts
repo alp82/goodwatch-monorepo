@@ -62,14 +62,33 @@ export async function start(host: Person, friends: Person[]) {
   });
 }
 
+/** The current card's title, from its accessible label ("<title>. Swipe or use the choice buttons."). */
 export async function cardTitle(p: Person) {
-  return (await p.testId('poster').getAttribute('aria-label').catch(() => null)) ?? (await p.testId('poster').innerText().catch(() => ''));
+  return p.page.evaluate(() => {
+    const cards = [...document.querySelectorAll('[data-testid="poster"]')].filter((e) => (e as HTMLElement).offsetParent !== null);
+    for (const card of cards) {
+      const sel = '[aria-label$="Swipe or use the choice buttons."]';
+      const el = card.closest(sel) ?? card.querySelector(sel);
+      const label = el?.getAttribute('aria-label');
+      if (label) return label.replace(/\. Swipe or use the choice buttons\.$/, '');
+    }
+    return '';
+  });
 }
 
-/** One vote; measures Yep/Nope → next card. */
-export async function vote(p: Person, yes: boolean) {
+/**
+ * One vote; measures Yep/Nope → the next card becoming the current card. A press that does nothing
+ * (card unchanged after 2 s) is a dead-button failure; the journey then presses once more to go on.
+ */
+export async function vote(p: Person, yes: boolean, { pace = 400 } = {}) {
+  const label = yes ? 'Yep' : 'Nope';
+  // Human pace: a moment after the card arrived. Faster presses are tested on their own (voting.spec.ts).
+  if (pace) await p.page.waitForTimeout(pace);
   const before = await cardTitle(p);
-  await p.tap(p.button(yes ? 'Yep' : 'Nope'), { expect: { textChanged: { id: 'poster', from: before } }, moment: 'swipeNextCardMs', repeatable: true });
+  const r = await p.tap(p.button(label), { expect: { cardChanged: { from: before } }, moment: 'swipeNextCardMs', repeatable: true, soft: true, timeout: 2000 });
+  if (r !== undefined) return;
+  p.failures.push({ gate: 'dead-button', person: p.name, detail: `${label} on "${before}" did nothing: the card was unchanged 2 s later `, measured: '> 2000 ms', budget: '16 ms', at: Date.now() });
+  await p.tap(p.button(label), { expect: { cardChanged: { from: before } }, repeatable: true, timeout: 10000 });
 }
 
 /** Everyone says Yep until the room has a match; returns the match count. */

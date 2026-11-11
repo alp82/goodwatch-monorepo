@@ -40,6 +40,7 @@ export async function buildApi(log) {
     path.join(WEBAPP_DIR, 'packages/yepwatch-contracts'),
     path.join(E2E_DIR, 'stack/api-entry.ts'),
     path.join(E2E_DIR, 'stack/fixture-titles.mjs'),
+    path.join(E2E_DIR, 'stack/build.mjs'),
   ], (p) => /\.(ts|tsx|mjs|js|json)$/.test(p));
   const out = path.join(API_BUNDLE_DIR, 'api.mjs');
   if (fresh('api', hash, out)) return { built: false, out };
@@ -48,7 +49,8 @@ export async function buildApi(log) {
   const { build } = require('esbuild');
   await build({
     absWorkingDir: WEBAPP_DIR,
-    entryPoints: { api: path.join(E2E_DIR, 'stack/api-entry.ts') },
+    // link-card.mjs beside the bundle draws invite preview cards (as in build-release.mjs).
+    entryPoints: { api: path.join(E2E_DIR, 'stack/api-entry.ts'), 'link-card': path.join(WEBAPP_DIR, 'app/server/yepwatch/link-card.child.ts') },
     outdir: API_BUNDLE_DIR,
     outExtension: { '.js': '.mjs' },
     bundle: true,
@@ -61,6 +63,8 @@ export async function buildApi(log) {
     logLevel: 'error',
     banner: { js: 'import { createRequire as __e2eRequire } from "node:module"; const require = __e2eRequire(import.meta.url);' },
   });
+  fs.mkdirSync(path.join(API_BUNDLE_DIR, 'fonts'), { recursive: true });
+  for (const f of ['Gabarito-Bold.ttf', 'OFL-Gabarito.txt']) fs.copyFileSync(path.join(WEBAPP_DIR, 'app/server/og-image/fonts', f), path.join(API_BUNDLE_DIR, 'fonts', f));
   fs.writeFileSync(stamp('api'), hash);
   return { built: true, out };
 }

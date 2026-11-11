@@ -72,11 +72,20 @@
 
   function check(spec) {
     if (spec.visible && !spec.visible.every((id) => [...document.querySelectorAll(`[data-testid="${id}"]`)].some(visible))) return false;
+    if (spec.any && !spec.any.some((id) => [...document.querySelectorAll(`[data-testid="${id}"]`)].some(visible))) return false;
     if (spec.hidden && spec.hidden.some((id) => [...document.querySelectorAll(`[data-testid="${id}"]`)].some(visible))) return false;
     if (spec.textChanged) {
       const el = [...document.querySelectorAll(`[data-testid="${spec.textChanged.id}"]`)].find(visible);
       const text = el ? (el.getAttribute('aria-label') || el.textContent || '') : null;
       if (text === null || text === spec.textChanged.from) return false;
+    }
+    if (spec.cardChanged) {
+      // The voting card's title, from its accessible label "<title>. Swipe or use the choice buttons."
+      const sel = '[aria-label$="Swipe or use the choice buttons."]';
+      const card = [...document.querySelectorAll('[data-testid="poster"]')].find(visible);
+      const el = card && (card.closest(sel) || card.querySelector(sel));
+      const title = el ? el.getAttribute('aria-label').replace(/\. Swipe or use the choice buttons\.$/, '') : null;
+      if (title === null || title === spec.cardChanged.from) return false;
     }
     if (spec.label) {
       const el = [...document.querySelectorAll('[aria-label]')].find((e) => (spec.label.exact ? e.getAttribute('aria-label') === spec.label.text : new RegExp(spec.label.text).test(e.getAttribute('aria-label'))) && visible(e));

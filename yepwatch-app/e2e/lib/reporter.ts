@@ -15,6 +15,7 @@ interface Row {
   gates: unknown[];
   timings: unknown[];
   artifacts: string[];
+  screens: Record<string, string>;
 }
 
 export default class GateReporter implements Reporter {
@@ -36,6 +37,7 @@ export default class GateReporter implements Reporter {
       gates: read('gates'),
       timings: read('timings'),
       artifacts: result.attachments.filter((a) => a.path).map((a) => a.path!),
+      screens: Object.fromEntries(result.attachments.filter((a) => a.name.startsWith('screen ') && a.contentType === 'text/plain' && a.body).map((a) => [a.name.slice(7), a.body!.toString('utf8').slice(0, 4000)])),
     });
   }
   onEnd(result: FullResult) {

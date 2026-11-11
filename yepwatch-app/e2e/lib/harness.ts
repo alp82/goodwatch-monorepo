@@ -21,14 +21,16 @@ import { blockingWords, deadButtons, flashes, frameGaps, layoutShifts, type Gate
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const RECORDER = path.join(here, 'recorder.page.js');
-const STACK = JSON.parse(fs.readFileSync(path.join(here, '..', '.stack.json'), 'utf8')) as Record<string, string>;
+// The local stack's origins (e2e/stack/up.mjs). Smoke runs against a real origin need none of it.
+const stackFile = path.join(here, '..', '.stack.json');
+const STACK = (fs.existsSync(stackFile) ? JSON.parse(fs.readFileSync(stackFile, 'utf8')) : {}) as Record<string, string>;
 export const ORIGIN = process.env.E2E_ORIGIN ?? STACK.front;
 export const CONTROL = STACK.control;
 export const ISSUER = STACK.issuer;
 const B = budgetsFor();
 
 export type Fault = 'none' | 'nows' | 'slow' | 'hidden' | 'restart' | 'twodevice' | 'rapid';
-export type Spec = { visible?: string[]; hidden?: string[]; text?: string; label?: { text: string; exact?: boolean }; textChanged?: { id: string; from: string } };
+export type Spec = { visible?: string[]; any?: string[]; hidden?: string[]; text?: string; label?: { text: string; exact?: boolean }; textChanged?: { id: string; from: string }; cardChanged?: { from: string } };
 export interface Sample { moment: string; ms: number; person: string; detail?: string }
 type Shared = { roomId: string; phase: string; ideas: { text: string; on: boolean; authorId: string }[]; participants: { participantId: string; nickname: string }[]; matches?: unknown[]; generation: number; [k: string]: unknown };
 
@@ -71,7 +73,7 @@ export class Person {
       const err = r.failure()?.errorText ?? '';
       if (/ERR_ABORTED|NS_BINDING_ABORTED/.test(err)) return; // navigation/unmount cancellations
       if (this.room.faultAllowsNetworkErrors()) return;
-      if (!r.url().startsWith(ORIGIN) && !r.url().startsWith(STACK.images)) return;
+      if (!r.url().startsWith(ORIGIN) && !(STACK.images && r.url().startsWith(STACK.images))) return;
       fail(`request failed: ${r.method()} ${new URL(r.url()).pathname} ${err}`);
     });
     page.on('response', async (r) => {
@@ -127,7 +129,11 @@ export class Person {
     if (settle) await this.settle();
   }
   async settle(timeout = 15000) {
-    await this.page.waitForFunction(() => !document.querySelector('[data-testid="yepwatch-boot"]'), undefined, { timeout }).catch(() => this.journeyFailure('the startup word never dissolved'));
+    // A screen is up and the startup word is gone (goto resolves before React has rendered anything).
+    await this.page.waitForFunction(() => {
+      const sig = (window as unknown as { __yw?: { signature(): string } }).__yw?.signature() ?? '';
+      return !sig.includes('yepwatch-boot') && /landing|home-rooms|mood-page|room-setup|waiting|voting|matches|proposal|tonight|join-screen|room-status/.test(sig);
+    }, undefined, { timeout, polling: 50 }).catch(() => this.journeyFailure('no screen came up after the startup word'));
   }
   async reload() {
     await this.harvest();
@@ -139,16 +145,24 @@ export class Person {
   testId(id: string) { return this.page.getByTestId(id).filter({ visible: true }); }
 
   // ---- actions with timing ----------------------------------------------------------------------------
+  private specs = new Map<string, Spec>();
   private async arm(spec: Spec) {
     const key = `w${++this.waiterSeq}`;
-    await this.page.evaluate(([k, s]) => (window as unknown as { __yw: { arm(k: string, s: unknown): void } }).__yw.arm(k, s), [key, spec] as const);
+    this.specs.set(key, spec);
+    await this.page.evaluate(([k, s]) => (window as unknown as { __yw: { arm(k: string, s: unknown): void } }).__yw.arm(k, s), [key, spec] as const).catch(() => undefined);
     return key;
   }
+  /** Polls the page for a waiter's result; re-arms it when the document changed underneath (navigation). */
   private async result(key: string, timeout: number): Promise<{ at: number; armedAt: number } | null> {
     const end = Date.now() + timeout;
     for (;;) {
-      const r = await this.page.evaluate((k) => (window as unknown as { __yw: { results: Record<string, { at: number; armedAt: number }> } }).__yw.results[k] ?? null, key).catch(() => null);
-      if (r) return r;
+      const r = await this.page.evaluate((k) => {
+        const yw = (window as unknown as { __yw?: { results: Record<string, unknown>; waiters: Record<string, unknown> } }).__yw;
+        if (!yw) return 'missing';
+        return yw.results[k] ?? (yw.waiters[k] ? null : 'missing');
+      }, key).catch(() => 'missing' as const);
+      if (r && r !== 'missing') return r as { at: number; armedAt: number };
+      if (r === 'missing') await this.page.evaluate(([k, s]) => (window as unknown as { __yw?: { arm(k: string, s: unknown): void } }).__yw?.arm(k, s), [key, this.specs.get(key)] as const).catch(() => undefined);
       if (Date.now() > end) return null;
       await sleep(25);
     }
@@ -169,7 +183,7 @@ export class Person {
    * from the input event to its first frame as `moment`. Every press also records tap feedback.
    * Under the rapid-taps fault a non-repeatable press becomes a triple tap.
    */
-  async tap(target: Locator, opts: { expect?: Spec; moment?: string; repeatable?: boolean; timeout?: number; key?: string; observers?: [Person, Spec, string][] } = {}) {
+  async tap(target: Locator, opts: { expect?: Spec; moment?: string; repeatable?: boolean; timeout?: number; key?: string; observers?: [Person, Spec, string][]; soft?: boolean } = {}) {
     await target.waitFor({ state: 'visible', timeout: opts.timeout ?? 10000 }).catch(() => this.journeyFailure(`control not visible: ${target}`));
     const keys = opts.expect ? await this.arm(opts.expect) : await this.arm({});
     const observerKeys = await Promise.all((opts.observers ?? []).map(async ([p, s]) => p.arm(s)));
@@ -182,6 +196,7 @@ export class Person {
     let elapsed: number | null = null;
     if (opts.expect) {
       const r = await this.result(keys, opts.timeout ?? 15000);
+      if (!r && opts.soft) return undefined; // soft: the expected state never came; the caller decides
       if (!r) this.journeyFailure(`after pressing ${target}: expected ${JSON.stringify(opts.expect)} never showed (now: ${await this.signature()})`);
       const input = await this.inputAfter(r!.armedAt);
       if (input && opts.moment) {
@@ -191,6 +206,7 @@ export class Person {
       if (input?.feedbackAt) this.record('tapFeedbackMs', input.feedbackAt - input.t, String(target));
       for (const [i, [p, , moment]] of (opts.observers ?? []).entries()) {
         const o = await p.result(observerKeys[i], opts.timeout ?? 15000);
+        if (!o && opts.soft) continue;
         if (!o) p.journeyFailure(`after ${this.name} pressed ${target}: ${moment} never showed for ${p.name} (now: ${await p.signature()})`);
         if (input) p.record(moment, o!.at - input.t, `${this.name}: ${target}`);
       }
@@ -200,6 +216,25 @@ export class Person {
       if (input?.feedbackAt) this.record('tapFeedbackMs', input.feedbackAt - input.t, String(target));
     }
     return elapsed;
+  }
+
+  /** A full-page round trip (GoodWatch sign-in): press, leave the app, come back to it and settle. */
+  async roundTrip(target: Locator) {
+    await target.waitFor({ state: 'visible' }).catch(() => this.journeyFailure(`control not visible: ${target}`));
+    const origin = new URL(this.page.url()).origin;
+    await this.harvest();
+    await Promise.all([
+      this.page.waitForURL((u) => u.origin !== origin || u.pathname.includes('/callback'), { timeout: 15000 }),
+      target.click(),
+    ]).catch((e) => this.journeyFailure(`pressing ${target} did not leave for GoodWatch: ${String(e).split('\n')[0]}`));
+    await this.page.waitForURL((u) => u.origin === origin && !u.pathname.includes('/callback'), { timeout: 20000, waitUntil: 'load' })
+      .catch(() => this.journeyFailure(`did not come back from GoodWatch (at ${this.page.url()})`));
+    await this.settle();
+  }
+  /** Browser Back, recorded as an input so the screen it closes isn't taken for a flash. */
+  async back() {
+    await this.page.evaluate(() => (window as unknown as { __yw: Recording }).__yw.inputs.push({ t: performance.timeOrigin + performance.now(), type: 'history-back', target: 'browser Back', feedbackAt: performance.timeOrigin + performance.now() }));
+    await this.page.goBack();
   }
 
   async fill(target: Locator, text: string) {
@@ -401,6 +436,14 @@ export class Room {
     const unique = [...dedup.values()];
     await this.info.attach('gates', { body: JSON.stringify(unique, null, 1), contentType: 'application/json' });
     await this.info.attach('timings', { body: JSON.stringify(samples), contentType: 'application/json' });
+    if (unique.length || this.info.status !== this.info.expectedStatus) {
+      for (const p of this.people) {
+        if (p.page.isClosed()) continue;
+        const aria = await p.page.locator('body').ariaSnapshot({ timeout: 3000 }).catch(() => '(unavailable)');
+        await this.info.attach(`screen ${p.name}`, { body: `[${await p.signature()}] ${p.page.url()}\n${aria}`, contentType: 'text/plain' });
+        await this.info.attach(`screenshot ${p.name}`, { body: await p.page.screenshot().catch(() => Buffer.from('')), contentType: 'image/png' });
+      }
+    }
     const traced = new Set<BrowserContext>();
     for (const p of this.people) {
       if (traced.has(p.context)) continue;
