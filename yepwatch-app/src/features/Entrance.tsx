@@ -316,7 +316,12 @@ export function Entrance({ invite, open: request, from }: {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => { closePanel(); return true; });
     return () => sub.remove();
   }, [panel, recoveryPanel, closePanel]));
-  const open = (roomId: string) => router.push({ pathname: '/room/[id]', params: { id: roomId } });
+  // One press opens one screen: routes render at once now, so a double tap's second press would push a
+  // second copy of the page it just opened. Pressing works again once this page is back in front.
+  const leaving = useRef(false);
+  useFocusEffect(useCallback(() => { leaving.current = false; }, []));
+  const push = (target: Parameters<typeof router.push>[0]) => { if (leaving.current) return; leaving.current = true; router.push(target); };
+  const open = (roomId: string) => push({ pathname: '/room/[id]', params: { id: roomId } });
   /** Return to a room you left: the saved invitation re-admits the same identity. */
   function returnTo(room: HomeRoom) {
     if (account.member) {
@@ -334,12 +339,12 @@ export function Entrance({ invite, open: request, from }: {
   }
   const resumeAdmission = () => {
     if (!admission && !restoreFailed && !recoveryBlocked) return false;
-    if (admission && !admission.code) { router.push('/new'); return true; }
+    if (admission && !admission.code) { push('/new'); return true; }
     setRecoveryDismissed(false); setPanel('join');
     return true;
   };
   // Creation opens a local draft; only its explicit submit allocates a room.
-  const create = () => { setError(''); if (!resumeAdmission()) router.push('/new'); };
+  const create = () => { setError(''); if (!resumeAdmission()) push('/new'); };
   // Continue with GoodWatch signs this device in and comes back to this screen: it never creates a room.
   const signInFrom = (path: string) => { setError(''); void account.signIn(path); };
   const fromRoom = from?.match(/^\/room\/([A-Za-z0-9_-]{1,64})(?:\/|$)/)?.[1];
