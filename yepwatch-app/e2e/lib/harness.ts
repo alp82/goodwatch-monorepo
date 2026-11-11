@@ -22,7 +22,8 @@ import { blockingWords, deadButtons, flashes, frameGaps, layoutShifts, type Gate
 const here = path.dirname(fileURLToPath(import.meta.url));
 const RECORDER = path.join(here, 'recorder.page.js');
 // The local stack's origins (e2e/stack/up.mjs). Smoke runs against a real origin need none of it.
-const stackFile = path.join(here, '..', '.stack.json');
+const slot = Number(process.env.E2E_SLOT || 0);
+const stackFile = path.join(here, '..', slot ? `.stack-s${slot}.json` : '.stack.json');
 const STACK = (fs.existsSync(stackFile) ? JSON.parse(fs.readFileSync(stackFile, 'utf8')) : {}) as Record<string, string>;
 export const ORIGIN = process.env.E2E_ORIGIN ?? STACK.front;
 export const CONTROL = STACK.control;

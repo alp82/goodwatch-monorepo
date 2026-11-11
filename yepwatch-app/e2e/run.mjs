@@ -11,6 +11,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { budgetsFor } from './budgets.mjs';
+import { ORIGINS } from './stack/config.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
@@ -40,7 +41,7 @@ function phase(name, args, env) {
 
 const phases = [];
 function reset() {
-  const r = spawnSync('curl', ['-s', '-X', 'POST', 'http://127.0.0.1:18490/reset'], { encoding: 'utf8' });
+  const r = spawnSync('curl', ['-s', '-X', 'POST', `${ORIGINS.control}/reset`], { encoding: 'utf8' });
   log(`store reset: ${r.stdout.trim()}`);
 }
 if (tier === 'smoke') {

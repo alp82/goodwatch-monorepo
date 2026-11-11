@@ -14,7 +14,7 @@ function fromFile(file) {
     capabilities: { members: Boolean(s.issuer), catalog: 'fixture', faults: Boolean(s.control) }, source: file, raw: s };
 }
 export function resolveStack() {
-  const candidates = [process.env.YW_E2E_STACK, path.join(NATIVE_DIR, '../.stack.json'), path.join(NATIVE_DIR, '.cache/dev-stack.json')].filter(Boolean);
+  const candidates = [process.env.YW_E2E_STACK, path.join(NATIVE_DIR, Number(process.env.E2E_SLOT || 0) ? `../.stack-s${process.env.E2E_SLOT}.json` : '../.stack.json'), path.join(NATIVE_DIR, '.cache/dev-stack.json')].filter(Boolean);
   for (const f of candidates) if (fs.existsSync(f)) return check(fromFile(f));
   if (process.env.YW_E2E_API) return check({ api: process.env.YW_E2E_API, ws: process.env.YW_E2E_WS, app: process.env.YW_E2E_APP, capabilities: {}, source: 'env' });
   throw new Error('No stack: start yepwatch-app/e2e stack (npm --prefix yepwatch-app/e2e run stack:up) or node e2e/native/stack/dev-stack.mjs up');

@@ -2,3 +2,5 @@
 .stack.json
 artifacts/
 node_modules/
+.cache-s*/
+.stack-s*.json

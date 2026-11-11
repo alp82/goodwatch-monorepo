@@ -48,6 +48,7 @@ export function cleanEnv(extra, { node = true } = {}) {
     HOME: process.env.HOME,
     LANG: 'C.UTF-8',
     TZ: 'UTC',
+    ...(process.env.E2E_SLOT ? { E2E_SLOT: process.env.E2E_SLOT } : {}),
     ...extra,
   };
   if (node) env.NODE_OPTIONS = `--import=${EGRESS_PRELOAD}`;
