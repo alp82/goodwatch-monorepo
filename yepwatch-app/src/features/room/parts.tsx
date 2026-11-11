@@ -4,6 +4,7 @@ import { Image, Platform, Pressable, TextInput, View, type TextStyle } from 'rea
 import { deviceCountryHint, rankedCountries } from '../../core/lobby';
 import { shareInvitation } from '../../core/share-invitation';
 import { FaceStack } from '../shell/parts';
+import { useGlide } from '../shell/glide';
 import { useLayout } from '../shell/layout';
 import { R, warm } from '../shell/tokens';
 import { GText, Icon, Press, glow } from '../glow/theme';
@@ -57,6 +58,8 @@ export function IdeaStack() {
   const { id, view, cmd, disabled } = useRoom();
   const { phone, z } = useLayout();
   const [width, setWidth] = useState(330);
+  // An idea arriving above glides Add an idea down instead of pushing it.
+  const add = useGlide();
   if (!view) return null;
   const top = phone ? 54 : z(92);
   const rest = phone ? 30 : z(48);
@@ -79,19 +82,32 @@ export function IdeaStack() {
         const text = <GText bold size={size} color={i.on ? glow.ink : '#8c8478'} style={{ letterSpacing: -size * 0.032, lineHeight: size * 1.06 }}>{i.text}</GText>;
         const body = { flex: 1, minWidth: 0, gap: 6, alignItems: 'flex-start', justifyContent: 'flex-start' } as const;
         return (
-          <View key={i.id} style={{ flexDirection: 'row', alignItems: 'center', gap: z(18) }}>
-            {i.mine
+          <IdeaRow key={i.id}
+            body={i.mine
               ? <Press label={`${i.text}, edit`} onPress={() => openPage(id, 'mood', { idea: i.id })} style={body}>{text}{meta}</Press>
               : <View accessible accessibilityLabel={`${i.text}${i.author?.nickname ? `, from ${i.author.nickname}` : ''}${fresh ? ', new' : ''}`} style={body}>{text}{meta}</View>}
-            <Switch on={i.on} disabled={!view.isHost || disabled} label={`Use ${i.text}`} onPress={() => void cmd.setIdea(i.id, !i.on)} />
-          </View>
+            control={<Switch on={i.on} disabled={!view.isHost || disabled} label={`Use ${i.text}`} onPress={() => void cmd.setIdea(i.id, !i.on)} />} />
         );
       })}
       {view.canAddIdea && (
-        <Press label={addLabel} onPress={() => openPage(id, 'mood', { idea: 'new' })} style={{ alignSelf: 'flex-start', minHeight: z(44), flexDirection: 'row', gap: 8, paddingRight: 8 }}>
-          <Glyph name="plus" size={z(18)} color={glow.amber} /><GText bold size={z(17)} color={glow.amber}>{addLabel}</GText>
-        </Press>
+        <View ref={add} style={{ alignSelf: 'flex-start' }}>
+          <Press label={addLabel} onPress={() => openPage(id, 'mood', { idea: 'new' })} style={{ minHeight: z(44), flexDirection: 'row', gap: 8, paddingRight: 8 }}>
+            <Glyph name="plus" size={z(18)} color={glow.amber} /><GText bold size={z(17)} color={glow.amber}>{addLabel}</GText>
+          </Press>
+        </View>
       )}
+    </View>
+  );
+}
+
+/** One idea and its switch. A line appearing under the idea (Yours, a name) glides the switch to the new centre. */
+function IdeaRow({ body, control }: { body: ReactNode; control: ReactNode }) {
+  const { z } = useLayout();
+  const switchRef = useGlide();
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: z(18) }}>
+      {body}
+      <View ref={switchRef}>{control}</View>
     </View>
   );
 }
@@ -131,6 +147,8 @@ export function ShareRow() {
 export function PeopleRow({ onPress }: { onPress: () => void }) {
   const { view } = useRoom();
   const { z } = useLayout();
+  // Someone joins: the words glide over as the faces widen.
+  const words = useGlide({ axis: 'x' });
   if (!view) return null;
   const people = view.faces;
   const text = people.length < 2 ? 'Just you' : `${people.length} people`;
@@ -139,10 +157,12 @@ export function PeopleRow({ onPress }: { onPress: () => void }) {
     <Press label={`${text}, people`} onPress={onPress}
       style={{ minHeight: z(56), borderRadius: 12, paddingHorizontal: 14, flexDirection: 'row', justifyContent: 'flex-start', gap: 12, backgroundColor: warm.faint, borderWidth: 1, borderColor: warm.line }}>
       <FaceStack people={people} size={z(30)} max={5} />
-      <GText size={z(15)} color={glow.soft} lines={1} style={{ flex: 1 }}>
-        {text}
-        {picking.length ? <GText size={z(15)} color={glow.muted}>{` · ${picking.join(', ')} picking`}</GText> : null}
-      </GText>
+      <View ref={words} style={{ flex: 1, minWidth: 0 }}>
+        <GText size={z(15)} color={glow.soft} lines={1}>
+          {text}
+          {picking.length ? <GText size={z(15)} color={glow.muted}>{` · ${picking.join(', ')} picking`}</GText> : null}
+        </GText>
+      </View>
       <Icon name="right" size={16} color={glow.muted} />
     </Press>
   );

@@ -9,6 +9,7 @@ import Svg, { Path } from 'react-native-svg';
 import { BootReveal } from '../home/BootReveal';
 import { GetTheApp, installable } from '../home/install';
 import { GText, Icon, Press, glow } from '../glow/theme';
+import { useGlide } from './glide';
 import { GoodWatchMark } from './marks';
 import { useLayout } from './layout';
 import { Avatar, LiveDot } from './parts';
@@ -67,13 +68,15 @@ function Plus({ size, color }: { size: number; color: string }) {
 export function RoomPill({ pill, onPress }: { pill: HeaderPill; onPress?: () => void }) {
   const { phone, z } = useLayout();
   const fresh = pill.fresh ?? 0;
+  // A longer label (another idea, a NEW count): the chevron glides over instead of jumping.
+  const chevron = useGlide({ axis: 'x' });
   return (
     <Press label={`${pill.label}${fresh ? `, ${fresh} new` : ''}, switch room`} onPress={onPress ?? (() => undefined)} disabled={!onPress}
       style={{ height: z(40), maxWidth: phone ? undefined : z(420), flexShrink: 1, minWidth: 0, flexDirection: 'row', gap: 8, paddingLeft: 14, paddingRight: 10, borderRadius: 12, backgroundColor: '#ffffff0a', borderWidth: 1, borderColor: fresh ? '#fbbf2499' : pill.state === 'live' ? '#ffffff22' : warm.line }}>
       {pill.state === 'live' || pill.state === 'rooms' ? <LiveDot /> : pill.state === 'decided' ? <Icon name="tickets" size={z(15)} color={glow.amber} /> : <Plus size={z(15)} color={glow.amber} />}
       <GText bold size={z(15)} lines={1} style={{ flexShrink: 1 }}>{pill.label}</GText>
       {fresh ? <View style={{ minWidth: 18, height: 18, paddingHorizontal: 5, borderRadius: 9, backgroundColor: glow.amber, alignItems: 'center', justifyContent: 'center' }}><GText bold size={11} color={warm.ink}>{fresh}</GText></View> : null}
-      <Chevron size={z(16)} color={glow.muted} />
+      <View ref={chevron}><Chevron size={z(16)} color={glow.muted} /></View>
     </Press>
   );
 }
