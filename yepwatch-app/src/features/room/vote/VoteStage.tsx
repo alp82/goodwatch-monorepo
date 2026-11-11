@@ -92,29 +92,31 @@ export function VoteStage({ geo, card, next, empty, disabled, keys, reduced, act
    */
   const [engaged, setEngaged] = useState(false);
   /**
-   * Answered cards flying off, in the order they were answered. Each answer is sent the moment it is
-   * pressed; the stage plays one fly-off after another, and `card` (the next unanswered one) becomes
-   * the top card once they are done. A press during a fly-off answers the card underneath.
+   * The answered card flying off. Its answer was sent the moment it was pressed, so `card` is already
+   * the next unanswered one: it shows underneath the flight, and it is what the next press answers.
+   * A press during a fly-off ends that fly-off at once and flies the card it answered, so the card
+   * underneath is always the next press's target (never a card already answered).
    */
-  const [flights, setFlights] = useState<readonly Flight[]>([]);
-  const flightsRef = useRef<readonly Flight[]>([]);
+  const [flight, setFlightState] = useState<Flight | null>(null);
+  const flightRef = useRef<Flight | null>(null);
   const flightSerial = useRef(0);
-  /** The flight whose animation runs (started from the press, or after the one before it). */
+  /** The flight whose animation runs. */
   const flying = useRef<number | null>(null);
   /** The last flight just left: its look keeps fading over the next card. */
   const landed = useRef(false);
-  /** A fly-off is playing (no drags meanwhile; presses queue up behind it). */
+  /** The answered look fading after its card left (a new fly-off takes the stage over from it). */
+  const fade = useRef<Animated.CompositeAnimation | null>(null);
+  /** A fly-off is playing (no drags meanwhile). */
   const busy = useRef(false);
-  const setQueue = (next: readonly Flight[]) => {
-    flightsRef.current = next;
-    busy.current = next.length > 0;
-    setFlights(next);
+  const setFlight = (next: Flight | null) => {
+    flightRef.current = next;
+    busy.current = next !== null;
+    setFlightState(next);
   };
 
-  const head = flights[0] ?? null;
-  const top: StageCard | null = head ? head.card : card;
-  const under: GlowTitle | null = head ? (flights[1]?.card.title ?? card?.title ?? null) : next;
-  const topKey = head ? `f:${head.id}` : `c:${card?.key ?? ''}`;
+  const top: StageCard | null = flight ? flight.card : card;
+  const under: GlowTitle | null = flight ? card?.title ?? null : next;
+  const topKey = flight ? `f:${flight.id}` : `c:${card?.key ?? ''}`;
   const stageLook = fading?.look ?? top?.look ?? null;
   const stagePoster = fading ? fading.posterUrl : top?.title.posterUrl ?? null;
 
@@ -181,25 +183,28 @@ export function VoteStage({ geo, card, next, empty, disabled, keys, reduced, act
       Animated.spring(v, { toValue: 0, friction: 7, tension: 90, overshootClamping: true, useNativeDriver: driver }),
     ]).start(({ finished }) => { if (finished) rest(); });
   };
-  /** The flight left the stage: the next one (or the current card) takes its place, its look fades. */
+  /** The flight left the stage: the current card takes its place, the flight's look fades. */
   const land = (f: Flight) => {
-    if (flightsRef.current[0]?.id !== f.id) return;
+    if (flightRef.current?.id !== f.id) return;
     flying.current = null;
     landed.current = true;
     setFading({ look: f.card.look, posterUrl: f.card.title.posterUrl });
-    setQueue(flightsRef.current.slice(1));
+    setFlight(null);
     if (reduced) {
       v.setValue(0);
       setFading(null);
       if (!busy.current) setEngaged(false);
       return;
     }
-    Animated.sequence([
+    const run = Animated.sequence([
       Animated.delay(260),
       Animated.timing(v, { toValue: 0, duration: 340, easing: Easing.out(Easing.quad), useNativeDriver: driver }),
-    ]).start(() => { setFading(null); rest(); });
+    ]);
+    fade.current = run;
+    run.start(() => { if (fade.current === run) fade.current = null; setFading(null); rest(); });
   };
   const fly = (f: Flight) => {
+    fade.current?.stop();
     flying.current = f.id;
     engage();
     playFeedback('swipe');
@@ -230,26 +235,31 @@ export function VoteStage({ geo, card, next, empty, disabled, keys, reduced, act
   const commit = (answer: boolean, fromDrag = false) => {
     // The card a press is aimed at: the top card, or during a fly-off the one underneath.
     const target = card;
-    if (disabled || !target || flightsRef.current.some((f) => f.card.key === target.key)) {
+    if (disabled || !target || flightRef.current?.card.key === target.key) {
       if (fromDrag) settle();
       return;
     }
+    const running = flightRef.current;
+    if (running) {
+      // The card underneath comes on top now and flies from rest (drags never start during a fly-off).
+      x.stopAnimation();
+      punch.stopAnimation();
+      land(running);
+      x.setValue(0);
+      y.setValue(0);
+      punch.setValue(0);
+    }
     const f: Flight = { id: ++flightSerial.current, card: target, answer, fromDrag, services };
-    const idle = flightsRef.current.length === 0;
-    setQueue([...flightsRef.current, f]);
+    setFlight(f);
     // The answer goes out now; the fly-off is only its picture.
-    void onVote(answer, target.key).then((sent) => {
-      // Never sent: a fly-off still waiting its turn is dropped (the card stays unanswered).
-      if (!sent && flying.current !== f.id && flightsRef.current.some((q) => q.id === f.id)) setQueue(flightsRef.current.filter((q) => q.id !== f.id));
-    });
+    void onVote(answer, target.key);
     // From where the drag left the card (or from rest).
-    if (idle) fly(f);
+    fly(f);
   };
 
-  // A new top card starts clean; a flight queued behind the one that just left starts its fly-off.
-  // The look of a card this device just answered keeps fading on the stage.
+  // A new top card starts clean; the look of a card this device just answered keeps fading on the stage.
   useLayoutEffect(() => {
-    const f = flightsRef.current[0];
+    const f = flightRef.current;
     if (f && flying.current === f.id) return;
     x.stopAnimation();
     y.stopAnimation();
@@ -260,9 +270,6 @@ export function VoteStage({ geo, card, next, empty, disabled, keys, reduced, act
       v.setValue(0);
     }
     landed.current = false;
-    if (f) fly(f);
-    // fly reads the current props; only a change of top card matters here.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [topKey, x, y, v]);
 
   // The responder lives as long as the stage; it reads the current props through `live`.
@@ -369,7 +376,7 @@ export function VoteStage({ geo, card, next, empty, disabled, keys, reduced, act
         {stageSide('yep', vYep, BackLayer)}
       </Animated.View>
       {under && top ? (
-        <Animated.View {...hidden} style={[box, { opacity: 0.85, transform: [{ scale: x.interpolate({ inputRange: [-lean, 0, lean], outputRange: [1, 0.94, 1], ...clampI }) }, { translateY: x.interpolate({ inputRange: [-lean, 0, lean], outputRange: [0, 14, 0], ...clampI }) }] }]}>
+        <Animated.View {...hidden} testID="card-under" style={[box, { opacity: 0.85, transform: [{ scale: x.interpolate({ inputRange: [-lean, 0, lean], outputRange: [1, 0.94, 1], ...clampI }) }, { translateY: x.interpolate({ inputRange: [-lean, 0, lean], outputRange: [0, 14, 0], ...clampI }) }] }]}>
           <View style={{ flex: 1, borderRadius: 14, overflow: 'hidden', backgroundColor: '#1a1610' }}>
             {under.posterUrl ? <Image source={{ uri: under.posterUrl }} accessible={false} resizeMode="cover" style={{ width: '100%', height: '100%' }} /> : null}
           </View>
@@ -379,8 +386,8 @@ export function VoteStage({ geo, card, next, empty, disabled, keys, reduced, act
         <View style={box}>
           <PeerStage layer="back" activity={activity} width={w} height={h} desktop={false} />
           <PointerSurface width={w} height={h} onPointer={onPointer}>
-            <Poster title={top.title} width={w} height={h} phone={phone} z={geo.z} showText={h >= 300} x={x} y={y} pan={pan.panHandlers} look={top.look} services={head ? head.services : services}
-              onDetails={onDetails} onTrailer={onTrailer}
+            <Poster title={top.title} width={w} height={h} phone={phone} z={geo.z} showText={h >= 300} x={x} y={y} pan={pan.panHandlers} look={top.look} services={flight ? flight.services : services}
+              interactive={!flight} onDetails={onDetails} onTrailer={onTrailer}
               halo={engaged ? <><CardGlow {...nopeCard} /><CardGlow {...yepCard} /></> : null}
               under={engaged ? <><CardUnder {...nopeCard} /><CardUnder {...yepCard} /></> : null}
               over={engaged ? <><CardOver {...nopeCard} /><CardOver {...yepCard} /></> : null} />

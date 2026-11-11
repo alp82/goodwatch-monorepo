@@ -112,6 +112,26 @@ test.describe('deck and voting', () => {
     }
   });
 
+  test('three quick Nopes: every press answers the card shown underneath the flying one', async ({ room }) => {
+    const host = await readyHost(room);
+    await start(host, []);
+    await host.page.waitForTimeout(500);
+    const nope = host.button('Nope');
+    const under = () => host.page.evaluate(() => {
+      const el = [...document.querySelectorAll('[data-testid="card-under"]')].find((e) => (e as HTMLElement).offsetParent !== null);
+      return el?.querySelector('img')?.getAttribute('src') ?? null;
+    });
+    await nope.click();
+    await host.page.waitForTimeout(120);
+    const shownFirst = await under();
+    await nope.click();
+    await host.page.waitForTimeout(60);
+    const shownSecond = await under();
+    if (!shownFirst || !shownSecond) host.journeyFailure(`no card underneath during the fly-off: ${shownFirst} / ${shownSecond}`);
+    // The second press answered the card that was underneath: it can't stay there as the next card.
+    if (shownFirst === shownSecond) host.journeyFailure(`after the second press the card underneath is still the one it answered (${shownSecond}): a third press would answer an unseen card`);
+  });
+
   test('title details sheet from the card', async ({ room }) => {
     const host = await readyHost(room);
     await start(host, []);
@@ -124,6 +144,27 @@ test.describe('deck and voting', () => {
     await host.tap(host.button(`Details about ${title}`), { expect: { visible: ['details-panel'] } });
     await host.back();
     await host.see({ hidden: ['details-panel'], visible: ['voting'] }, 5000, 'browser Back closes the details sheet first');
+  });
+
+  test('Details on a card flying off never opens another card', async ({ room }) => {
+    const host = await readyHost(room);
+    await start(host, []);
+    await host.page.waitForTimeout(500);
+    const title = await cardTitle(host);
+    // Yep: the card flies right, so its Details button (top left) stays on screen a moment.
+    await host.button('Yep').click();
+    await host.page.waitForTimeout(60);
+    // The answered card is still on its way out; a click on its Details button (as a quick hand would land).
+    const pt = await host.page.evaluate((name) => {
+      const el = [...document.querySelectorAll('[role="button"]')].find((e) => e.getAttribute('aria-label') === name && e.getBoundingClientRect().width > 0);
+      const r = el?.getBoundingClientRect();
+      return r ? { x: r.x + r.width / 2, y: r.y + r.height / 2 } : null;
+    }, `Details about ${title}`);
+    if (!pt) host.journeyFailure(`the flying "${title}" left the screen before the click`);
+    await host.page.mouse.click(pt!.x, pt!.y);
+    const panel = host.testId('details-panel');
+    const open = await panel.waitFor({ state: 'visible', timeout: 1500 }).then(() => true).catch(() => false);
+    if (open && !(await panel.getByText(title, { exact: true }).first().isVisible())) host.journeyFailure(`Details on the flying "${title}" opened another card's details`);
   });
 
   test('deck refills while voting (no end, "Finding more…" only while loading)', async ({ room }) => {

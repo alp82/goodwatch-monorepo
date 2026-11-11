@@ -9,7 +9,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { playFeedback } from '../feedback/sounds';
 import { FadeImage } from './FadeImage';
 import { ScorePill } from './scores';
-import { GText, Icon, Press, glow, native, s } from './theme';
+import { GText, Icon, Press, glow, grow, native, s } from './theme';
 import type { GlowTitle } from './model';
 
 export const titleMeta = (title: GlowTitle) => [
@@ -19,7 +19,7 @@ export const titleMeta = (title: GlowTitle) => [
   title.runtimeMinutes ? `${title.runtimeMinutes} min` : null,
 ].filter(Boolean).join(' · ');
 
-export function Poster({ title, width, height, phone, z, showText = true, x, y, pan, halo, under, over, look, services, onDetails, onTrailer }: {
+export function Poster({ title, width, height, phone, z, showText = true, x, y, pan, halo, under, over, look, services, interactive = true, onDetails, onTrailer }: {
   title: GlowTitle;
   width: number;
   height: number;
@@ -37,6 +37,8 @@ export function Poster({ title, width, height, phone, z, showText = true, x, y, 
   look?: string;
   /** The room's services this title is on. */
   services?: ReactNode;
+  /** False while the card flies off: its buttons look the same but answer nothing. */
+  interactive?: boolean;
   onDetails: () => void;
   onTrailer: () => void;
 }) {
@@ -99,8 +101,9 @@ export function Poster({ title, width, height, phone, z, showText = true, x, y, 
         <View style={s.absolute} />
       </View>
       {title.trailerUrl && (
-        <Press label="Watch trailer" onPress={onTrailer}
-          style={{ position: 'absolute', right: 16, top: 16, borderRadius: 10, paddingHorizontal: 12, minHeight: 44, flexDirection: 'row', gap: 8, backgroundColor: '#fff' }}>
+        <Press label="Watch trailer" onPress={onTrailer} quiet={!interactive}
+          style={{ position: 'absolute', right: 16, top: 14, ...grow(44) }}
+          visual={{ borderRadius: 10, paddingHorizontal: 12, minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#fff' }}>
           <View style={{ width: 30, height: 30, borderRadius: 20, backgroundColor: '#dc2626', alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="play" size={16} color="#fff" />
           </View>
@@ -110,15 +113,19 @@ export function Poster({ title, width, height, phone, z, showText = true, x, y, 
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`Details about ${title.title}`}
+        disabled={!interactive}
         onPress={onDetails}
         onFocus={() => setDetailsFocused(true)}
         onBlur={() => setDetailsFocused(false)}
-        style={{
-          position: 'absolute', left: 16, top: 16, minWidth: 44, height: 44, borderRadius: 12, paddingHorizontal: 10, alignItems: 'center', justifyContent: 'center',
-          backgroundColor: detailsFocused ? '#fbbf24' : '#fbbf24df', borderWidth: 1, borderColor: '#fff5', flexDirection: 'row', gap: 5,
-        }}
+        // The press area is the full touch target; the amber box inside keeps its 44 px look.
+        style={{ position: 'absolute', left: 16, top: 14, ...grow(44), justifyContent: 'center' }}
       >
-        <GText size={14} bold color="#18130a">Details ↗</GText>
+        <View style={{
+          minWidth: 44, height: 44, borderRadius: 12, paddingHorizontal: 10, alignItems: 'center', justifyContent: 'center',
+          backgroundColor: detailsFocused ? '#fbbf24' : '#fbbf24df', borderWidth: 1, borderColor: '#fff5', flexDirection: 'row', gap: 5,
+        }}>
+          <GText size={14} bold color="#18130a">Details ↗</GText>
+        </View>
       </Pressable>
     </Animated.View>
   );
