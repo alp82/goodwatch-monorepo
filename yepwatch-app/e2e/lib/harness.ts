@@ -278,6 +278,7 @@ export class Person {
   }
 }
 
+let restartCount = 0;
 export class Room {
   readonly people: Person[] = [];
   private points = 0;
@@ -342,7 +343,8 @@ export class Room {
     switch (this.fault) {
       case 'restart': {
         if (label !== 'voting' && !(n === 1 && label === 'room')) return;
-        const service = this.restartLog.length % 2 ? 'gateway' : 'api';
+        // Alternates across the whole (serial) restart phase: API, gateway, API, …
+        const service = restartCount++ % 2 ? 'gateway' : 'api';
         const at = Date.now();
         // Not awaited: the journey keeps going while the server is down (votes queue meanwhile).
         const done = fetch(`${CONTROL}/restart/${service}?downMs=1500`, { method: 'POST' }).then(() => this.restartLog.push({ at, back: Date.now(), service }));
@@ -390,9 +392,10 @@ export class Room {
       case 'twodevice': {
         // Same person, second tab (shares the browser's room cookie), then the first device reloads mid-vote.
         if (!this.twin && (label === 'room' || label === 'voting')) {
+          const main = (await primary.signature()).split(' ').find((m) => ['voting', 'room-setup', 'waiting', 'matches', 'tonight', 'proposal'].includes(m));
           const twin = await this.person(`${primary.name} (2nd device)`, { context: primary.context, device: primary.device });
-          await twin.open(primary.page.url());
-          await twin.see({ hidden: ['room-opening'] }, 15000, 'second device opens the room');
+          await twin.open(primary.page.url(), { settle: false });
+          await twin.see({ visible: [main ?? 'room-setup'] }, 15000, `the same person's second device shows the room (${main})`);
           this.twin = twin;
           return;
         }
