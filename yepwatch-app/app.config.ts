@@ -7,6 +7,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     throw new Error('APP_VARIANT must be development, preview or production.');
   if (variant === 'development') return config as ExpoConfig;
   const preview = variant === 'preview';
+  const version = process.env.APP_VERSION ?? config.version ?? '0.1.0';
+  if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error('APP_VERSION must use major.minor.patch format.');
   const build = Number(process.env.APP_BUILD_NUMBER ?? '4');
   if (!Number.isSafeInteger(build) || build < 1) throw new Error('APP_BUILD_NUMBER must be a positive integer.');
   for (const key of ['EXPO_PUBLIC_API_ORIGIN', 'EXPO_PUBLIC_APP_ORIGIN']) {
@@ -21,7 +23,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ...config,
     name: preview ? 'YepWatch Beta' : 'YepWatch',
     slug: 'yepwatch',
-    version: '0.1.0',
+    version,
     runtimeVersion: { policy: 'fingerprint' },
     updates: {
       url: `https://u.expo.dev/${process.env.EAS_PROJECT_ID ?? config.extra?.eas?.projectId}`,

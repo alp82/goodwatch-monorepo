@@ -1,0 +1,13 @@
+{
+  "name": "YepWatch",
+  "apple": {
+    "subtitle": "Find your next movie together",
+    "keywords": "movie,show,TV,together,friends,couple,night,choose,match,streaming,discovery,watch",
+    "promotionalText": "Less scrolling, more watching. Bring your ideas and streaming services, swipe privately, and find something everyone wants to watch.",
+    "marketingUrl": "https://yepwatch.com"
+  },
+  "google": {
+    "shortDescription": "Pick a movie or show together. Swipe, find matches, and agree on what to watch."
+  },
+  "description": "Choose something to watch, together.\n\nYepWatch helps you and your friends find a movie or TV show everyone wants to watch. Create a room, share the invitation, and choose together from your own phones. Friends can also join in a browser.\n\nBRING YOUR IDEAS\nStart with a mood, a genre, or something specific you feel like watching. Add ideas to the room and choose your country and streaming services.\n\nSWIPE PRIVATELY\nSay Yep or Nope to movies and shows. Your individual choices stay private while shared matches appear as you go.\n\nMAKE THE DECISION TOGETHER\nExplore your matches, propose a title, and agree on what to watch. When everyone agrees, YepWatch checks availability again before confirming the choice.\n\nCOME BACK FOR ANOTHER NIGHT\nReturn to your rooms and revisit past decisions. Connect GoodWatch to bring your saved streaming services and recover your rooms across devices. You can also take part as a guest.\n\nYepWatch helps you decide what to watch and find where it is available. Watching the movie or show happens on the streaming service, which may require a separate subscription. Availability varies by country and service."
+}

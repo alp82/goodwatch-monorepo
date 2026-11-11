@@ -2,6 +2,8 @@
 
 **[Friend beta: accounts, Android/iPhone installs and testing](docs/friend-beta.md).**
 
+[Public App Store and Google Play release readiness](docs/public-store-release.md).
+
 [Earlier preview packaging notes](docs/private-beta-builds.md).
 
 **Have a Mac? [Build and test the iPhone Simulator app](docs/ios-quickstart.md).**

@@ -1,0 +1,49 @@
+{
+  "checkedAt": "2026-11-11T09:41:53.793Z",
+  "sourceBase": "129cea16f4308f6bf1273d17d4738797adce02f1",
+  "apple": {
+    "appId": "6826403019",
+    "bundleId": "com.yepwatch.app",
+    "draftVersion": "1.0.0",
+    "state": "PREPARE_FOR_SUBMISSION",
+    "locale": "en-US",
+    "descriptionSaved": true,
+    "subtitleSaved": true,
+    "keywordsSaved": true,
+    "promotionalTextSaved": true,
+    "marketingUrl": "https://yepwatch.com",
+    "readbackVerified": true,
+    "buildAttached": false,
+    "submittedForReview": false,
+    "latestTestFlightVersion": "0.1.0",
+    "latestTestFlightBuild": "16",
+    "latestTestFlightExternalState": "IN_BETA_TESTING",
+    "privacyDeclarationsVerified": false
+  },
+  "android": {
+    "ownerReportedAppCreated": true,
+    "ownerReportedPackageName": "com.yepwatch.app",
+    "productionCredentialRecordPresent": true,
+    "submissionKeyAssigned": false,
+    "playAccountVerificationKnown": false,
+    "productionEligibilityKnown": false,
+    "productionAppSigningAssociationPresent": false,
+    "submittedForReview": false
+  },
+  "preparedBuild": {
+    "version": "1.0.0",
+    "buildNumber": "17",
+    "profile": "production",
+    "channel": "production",
+    "cloudBuildStarted": false
+  },
+  "validation": {
+    "typecheck": "pass",
+    "lint": "pass with existing unused View import warning in src/features/Voting.tsx",
+    "unitTestsPassed": 187,
+    "listingCharacterLimits": "pass",
+    "resolvedProductionConfig": "1.0.0 (17), com.yepwatch.app, production channel",
+    "resolvedBetaConfig": "0.1.0 (16), com.yepwatch.app, beta channel",
+    "resolvedPreviewConfig": "0.1.0 (16), com.yepwatch.preview, beta-preview channel"
+  }
+}

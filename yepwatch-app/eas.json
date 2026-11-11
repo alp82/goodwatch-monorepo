@@ -37,6 +37,10 @@
     },
     "production": {
       "extends": "base",
+      "env": {
+        "APP_VERSION": "1.0.0",
+        "APP_BUILD_NUMBER": "17"
+      },
       "distribution": "store",
       "developmentClient": false,
       "android": {
@@ -46,6 +50,10 @@
     },
     "beta": {
       "extends": "production",
+      "env": {
+        "APP_VERSION": "0.1.0",
+        "APP_BUILD_NUMBER": "16"
+      },
       "ios": {
         "simulator": false
       },
@@ -53,6 +61,19 @@
     }
   },
   "submit": {
+    "production": {
+      "android": {
+        "applicationId": "com.yepwatch.app",
+        "track": "production",
+        "releaseStatus": "draft",
+        "changesNotSentForReview": true
+      },
+      "ios": {
+        "bundleIdentifier": "com.yepwatch.app",
+        "ascAppId": "6826403019",
+        "appleTeamId": "QKFZC8CC8J"
+      }
+    },
     "beta": {
       "android": {
         "applicationId": "com.yepwatch.app",
