@@ -1,0 +1,10 @@
+# After a match: Matches -> Propose this. Ends on "Your proposal".
+appId: ${APP_ID || 'dev.yepwatch.e2e'}
+name: Propose the match
+tags: [gate, host]
+---
+- extendedWaitUntil: { visible: "\\d+ match(es)?", timeout: 10000 }
+- tapOn: { text: "\\d+ match(es)?", waitToSettleTimeoutMs: 300 }
+- extendedWaitUntil: { visible: { id: "matches" }, timeout: 5000 }
+- tapOn: { text: "Propose this", waitToSettleTimeoutMs: 300 }
+- assertVisible: "YOUR PROPOSAL"

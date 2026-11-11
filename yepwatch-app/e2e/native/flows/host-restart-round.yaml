@@ -1,0 +1,9 @@
+appId: ${APP_ID || 'dev.yepwatch.e2e'}
+name: Start again
+tags: [full, host]
+---
+- extendedWaitUntil: { visible: { id: "tonight-poster" }, timeout: 10000 }
+- tapOn: { text: "Start again", waitToSettleTimeoutMs: 300 }
+- extendedWaitUntil: { visible: { id: "room-setup" }, timeout: 8000 }
+- tapOn: { text: "Start", waitToSettleTimeoutMs: 300 }
+- extendedWaitUntil: { visible: { id: "poster" }, timeout: 10000 }

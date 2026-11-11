@@ -1,0 +1,13 @@
+# Invitation link into the installed app (warm). Ends on the friend's waiting room page.
+appId: ${APP_ID || 'dev.yepwatch.e2e'}
+name: Join by invitation link
+tags: [gate, guest]
+---
+- openLink: ${INVITE_URL}
+- extendedWaitUntil: { visible: { id: "join-screen" }, timeout: 10000 }
+- tapOn: { text: "Your name", waitToSettleTimeoutMs: 300 }
+- inputText: ${NAME || 'Bob'}
+- pressKey: Enter
+- tapOn: { text: "Join", waitToSettleTimeoutMs: 300, optional: true }
+- runFlow: _pick-netflix.yaml
+- extendedWaitUntil: { visible: "Waiting for .*", timeout: 10000 }

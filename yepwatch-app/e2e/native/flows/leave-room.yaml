@@ -1,0 +1,10 @@
+appId: ${APP_ID || 'dev.yepwatch.e2e'}
+name: Leave the room
+tags: [full, guest]
+---
+- tapOn: { text: ".*, switch room", waitToSettleTimeoutMs: 300 }
+- tapOn: { text: ".*, Room page", waitToSettleTimeoutMs: 300 }
+- extendedWaitUntil: { visible: { id: "room-sheet" }, timeout: 5000 }
+- tapOn: { text: "Leave room", waitToSettleTimeoutMs: 300 }
+- tapOn: { id: "leave-confirm", optional: true, waitToSettleTimeoutMs: 300 }
+- extendedWaitUntil: { visible: "New room", timeout: 8000 }

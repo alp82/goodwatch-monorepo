@@ -1,0 +1,11 @@
+# Background for BACKGROUND_MS (default 3 min), then resume: the room is live, not stuck.
+appId: ${APP_ID || 'dev.yepwatch.e2e'}
+name: Background and resume
+tags: [full]
+---
+- pressKey: Home
+- runScript: { file: _wait.js, env: { MS: "${BACKGROUND_MS || '180000'}" } }
+- launchApp: { clearState: false, stopApp: false }
+- extendedWaitUntil: { visible: { id: "voting" }, timeout: 8000 }
+- assertNotVisible: "Trying again.*"
+- assertNotVisible: "Not connected.*"

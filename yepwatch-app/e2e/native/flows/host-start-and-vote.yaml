@@ -1,0 +1,11 @@
+# Host on the room page with a friend joined: Start, one Yep, one Nope, Undo.
+appId: ${APP_ID || 'dev.yepwatch.e2e'}
+name: Start and vote
+tags: [gate, host]
+---
+- tapOn: { text: "Start", waitToSettleTimeoutMs: 300 }
+- extendedWaitUntil: { visible: { id: "poster" }, timeout: 10000 }
+- tapOn: { text: "Nope", waitToSettleTimeoutMs: 300 }
+- tapOn: { text: "Undo", waitToSettleTimeoutMs: 300 }
+- assertVisible: { id: "poster" }
+- tapOn: { text: "Yep", waitToSettleTimeoutMs: 300 }

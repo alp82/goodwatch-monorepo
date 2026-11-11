@@ -1,0 +1,16 @@
+{
+  "name": "yepwatch-e2e-native",
+  "private": true,
+  "type": "module",
+  "description": "Android E2E harness for YepWatch. Kept out of yepwatch-app/package.json: its scripts are part of the Expo runtime fingerprint (docs/ota-updates.md). Uses yepwatch-app's node_modules (Playwright, Expo CLI).",
+  "scripts": {
+    "e2e:native:gate": "node run.mjs gate",
+    "e2e:native:full": "node run.mjs full",
+    "e2e:native:maestro": "node run.mjs maestro",
+    "e2e:native:apk": "node -e \"import('./lib/build.mjs').then(async b => { const { resolveStack } = await import('./lib/stack.mjs'); console.log(await b.ensureApk(resolveStack())); })\"",
+    "e2e:native:boot": "node -e \"import('./lib/device.mjs').then(async d => console.log(await d.boot(2)))\"",
+    "e2e:native:down": "node -e \"import('./lib/device.mjs').then(d => d.shutdown())\"",
+    "dev-stack:up": "node stack/dev-stack.mjs up",
+    "dev-stack:down": "node stack/dev-stack.mjs down"
+  }
+}

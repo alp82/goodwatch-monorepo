@@ -1,0 +1,4 @@
+appId: ${APP_ID || 'dev.yepwatch.e2e'}
+---
+- tapOn: { text: "Streaming services.*", waitToSettleTimeoutMs: 300 }
+- runFlow: _pick-netflix.yaml

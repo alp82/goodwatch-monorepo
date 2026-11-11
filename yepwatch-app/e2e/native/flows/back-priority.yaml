@@ -1,0 +1,21 @@
+# Android Back: a sheet closes before the screen under it; voting -> start page; the app stays open.
+appId: ${APP_ID || 'dev.yepwatch.e2e'}
+name: Back priority while voting
+tags: [full]
+---
+- assertVisible: { id: "voting" }
+- tapOn: { text: "Profile", waitToSettleTimeoutMs: 300 }
+- extendedWaitUntil: { visible: { id: "profile-panel" }, timeout: 4000 }
+- back
+- assertNotVisible: { id: "profile-panel" }
+- assertVisible: { id: "voting" }
+- tapOn: { text: ".*, switch room", waitToSettleTimeoutMs: 300 }
+- extendedWaitUntil: { visible: { id: "rooms-sheet" }, timeout: 4000 }
+- back
+- assertNotVisible: { id: "rooms-sheet" }
+- assertVisible: { id: "voting" }
+- tapOn: { text: "Details about .*", waitToSettleTimeoutMs: 300 }
+- back
+- assertVisible: { id: "voting" }
+- back
+- extendedWaitUntil: { visible: "New room", timeout: 5000 }
