@@ -92,7 +92,9 @@ export class ContinuousApi {
       const renewed = response.headers.get('x-yepwatch-session');
       if (renewed && authEpoch.isCurrent(asked)) await this.sessions?.save(renewed);
       const result = await response.json();
-      if (!authEpoch.isCurrent(asked)) throw new RoomFailure('unauthorized', 'Sign-in changed. Open the room again.', 401);
+      // An account answer asked under an earlier sign-in is outdated. A room answer isn't: the room
+      // credential is the same before and after Log out or a sign-in (the server keeps the place).
+      if (!access && !authEpoch.isCurrent(asked)) throw new RoomFailure('unauthorized', 'Sign-in changed. Open the room again.', 401);
       if (!response.ok) {
         const e = result as ApiError;
         throw new RoomFailure(

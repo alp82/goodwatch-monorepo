@@ -210,7 +210,7 @@ test("logout revokes only one login and its leases, while membership, history an
 	const b = await service.resumeAccount(id, pc);
 	const ticket = await service.ticket(id, credential(a, phone)),
 		lease = await service.attach(id, ticket.ticket);
-	await service.logoutAccount(phone);
+	assert.deepEqual(await service.logoutAccount(phone), [], "another device holds the account's place: this one keeps no guest seat");
 	assert.equal(await service.accounts.sessionActive(phone.sessionId), false);
 	await assert.rejects(
 		service.read(id, credential(a, phone)),

@@ -23,8 +23,10 @@ test.describe('GoodWatch sign-in (local fake issuer)', () => {
     await host.tap(host.button('Profile'), { expect: { visible: ['profile-panel'] } });
     await host.audit('Profile (member)');
     await expect(host.testId('profile-panel').getByText('Signed in with GoodWatch')).toBeVisible();
-    await host.tap(host.button('Log out'), { expect: { text: 'Continue with GoodWatch' } });
-    await host.tap(host.button('Close').last(), { expect: { hidden: ['profile-panel'] } });
+    // Log out keeps this device in the room as a guest: same room, same screen, only the GoodWatch link goes.
+    await host.tap(host.button('Log out'), { expect: { text: 'Continue with GoodWatch', visible: ['room-setup', 'profile-panel'] } });
+    await host.tap(host.button('Close').last(), { expect: { visible: ['room-setup'], hidden: ['profile-panel'] } });
+    await eventually(() => (host.own?.member as { state?: string } | undefined)?.state, (v) => v === 'guest', 'the room reads this device as a guest', host);
     // The linked room keeps its GoodWatch services after logging out.
     await expect(host.button(/^Netflix, Disney\+.*, change$/)).toBeVisible();
   });

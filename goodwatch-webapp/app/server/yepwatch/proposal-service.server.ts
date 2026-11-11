@@ -1159,9 +1159,9 @@ export class ProposalService {
 			true,
 		);
 	}
+	/** Returns the rooms this device stays in as a guest. */
 	async logoutAccount(account: RoomAccount) {
-		// Revocation is durable before clearing capabilities; replaying an old sealed sign-in cannot resume.
-		await this.accounts.revokeSession(account.sessionId, account.expiresAt);
+		const kept: { roomId: string; nickname: string; expiresAt: number }[] = [];
 		for (const entry of await this.accounts.rooms(account.userId)) {
 			if (entry.expiresAt <= this.now()) continue;
 			for (let attempt = 0; attempt < 8; attempt++) {
@@ -1171,11 +1171,14 @@ export class ProposalService {
 				const p = room.participants.find(
 					(p) => p.memberUserId === account.userId,
 				);
-				if (!p?.sessions?.some((s) => s.id === account.sessionId)) break;
-				p.sessions = p.sessions.filter((s) => s.id !== account.sessionId);
+				const session = p?.sessions?.find((s) => s.id === account.sessionId);
+				if (!p || !session) break;
+				p.sessions = p.sessions!.filter((s) => s.id !== account.sessionId);
 				room.tickets = room.tickets.filter(
 					(t) => t.sessionId !== account.sessionId,
 				);
+				const guest = p.leftAt == null && !p.sessions.some((s) => s.expiresAt > this.now());
+				if (guest) this.keepDeviceAsGuest(p, session);
 				room.revision++;
 				try {
 					if (!(await this.repository.compareAndSwap(old, room, true)))
@@ -1184,10 +1187,33 @@ export class ProposalService {
 					if (!(e instanceof IndeterminateWrite)) throw e;
 					continue;
 				}
+				if (guest) kept.push({ roomId: room.id, nickname: p.nickname, expiresAt: room.expiresAt });
 				await this.notify(entry.roomId);
 				break;
 			}
 		}
+		// Revoked after the rooms are guest places: a room read racing Log out reads the guest place, never a
+		// refusal. Once revoked, replaying the old sealed sign-in cannot resume or link anything.
+		await this.accounts.revokeSession(account.sessionId, account.expiresAt);
+		return kept;
+	}
+	/**
+	 * Log out on the account's last device in a room: that device keeps its seat (name, votes, host role)
+	 * as a guest. Only the GoodWatch link goes: the grant, prefill and seen titles. The device's room
+	 * credential becomes the guest credential, so it never acts as the signed-out account again.
+	 */
+	private keepDeviceAsGuest(
+		p: ProposalParticipant,
+		session: NonNullable<ProposalParticipant["sessions"]>[number],
+	) {
+		p.memberUserId = null;
+		delete p.memberGrant;
+		p.member = { state: "guest", prefill: null };
+		p.showSeen = false;
+		p.sessions = [];
+		p.tokenHash = session.tokenHash;
+		p.nextSequence = session.nextSequence;
+		p.receipts = session.receipts;
 	}
 	async requireAccountActive(userId: string) {
 		await requireNotDeleting(this.deletions, { kind: 'account', userId });

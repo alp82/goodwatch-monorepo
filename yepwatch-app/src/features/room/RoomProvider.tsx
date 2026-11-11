@@ -101,7 +101,11 @@ export function useRoom() {
 
 export function RoomProvider(props: { id: string; children: ReactNode; renderSheet: (sheet: RoomSheet) => ReactNode }) {
   const account = useAccount();
-  return <RoomProviderContent key={account.generation} {...props} />;
+  // A new sign-in starts the room afresh. Log out doesn't: this device keeps its place as a guest, so the
+  // room, its open sheet and its connection stay as they are.
+  const signedIn = useRef(account.generation);
+  if (account.member) signedIn.current = account.generation;
+  return <RoomProviderContent key={signedIn.current} {...props} />;
 }
 
 function RoomProviderContent({ id, children, renderSheet }: { id: string; children: ReactNode; renderSheet: (sheet: RoomSheet) => ReactNode }) {

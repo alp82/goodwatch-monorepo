@@ -135,7 +135,8 @@ export function createProposalHandler(
 		}
     let accountRead: Promise<import('./proposal-types.ts').RoomAccount | null> | undefined
     let freshMemberSession: MemberSession | null = null
-    const account = (required = false) => {
+    /** `roomScoped`: a signed-out (revoked) sign-in on a room request is no sign-in; the room credential decides. */
+    const account = (required = false, roomScoped = false) => {
       accountRead ??= (async () => {
         const raw = memberSession()
         if (!raw || !options.members) return null
@@ -145,6 +146,9 @@ export function createProposalHandler(
         const session = result.session
         if (!session?.sessionId || !(await service.accounts.sessionActive(session.sessionId))) {
           if (!nativeRequest()) setCookie(MEMBER_COOKIE, '', 0)
+          // Log out keeps this device's room places as guests: a read racing the logout (its cookie not yet
+          // cleared) reads as that guest instead of failing.
+          if (roomScoped && session?.sessionId) return null
           throw new RoomError('member_required', 'Sign in with GoodWatch again', 403)
         }
         if (session.unverified || result.status.unavailable) throw new RoomError('busy', 'GoodWatch is temporarily unavailable', 503, true)
@@ -160,7 +164,7 @@ export function createProposalHandler(
     }
     const scopedCredential = async (roomId: string) => {
       const c = credential(roomId)
-      const a = await account()
+      const a = await account(false, true)
       if (!a && !url.pathname.endsWith('/deletion') && !url.pathname.endsWith('/restore')) await requireNotDeleting(service.deletions, { kind: 'guest', roomId, participantId: c.participantId })
       return a ? { ...c, accountId: a.userId, sessionId: a.sessionId } : c
     }
@@ -304,11 +308,12 @@ export function createProposalHandler(
 				if (request.method === "POST" && url.pathname === paths.accountLogout) {
 					originCheck(!nativeRequest())
 					const opened = members.openSession(memberSession())
-					if (opened?.sessionId) await service.logoutAccount({ userId: opened.userId, sessionId: opened.sessionId, expiresAt: Date.now() + 90 * 86400000 })
+					// This device stays in its rooms as a guest; the app lists them on the device again.
+					const keptRooms = opened?.sessionId ? await service.logoutAccount({ userId: opened.userId, sessionId: opened.sessionId, expiresAt: Date.now() + 90 * 86400000 }) : []
 					// Ends this device's sign-in for YepWatch only. GoodWatch's own session is untouched.
 					setCookie(MEMBER_COOKIE, "", 0)
 					setCookie(MEMBER_INTENT_COOKIE, "", 0)
-					return reply({ state: "guest", displayName: null })
+					return reply({ state: "guest", displayName: null, keptRooms })
 				}
 				throw new RoomError("not_found", "Endpoint unavailable", 404)
 			}

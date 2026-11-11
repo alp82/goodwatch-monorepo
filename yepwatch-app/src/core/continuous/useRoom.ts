@@ -93,7 +93,7 @@ export function useContinuousRoom(roomId: string) {
   const expired = useCallback(
     (e?: unknown) => {
       if (terminalRef.current) return true;
-      if (!authEpoch.isCurrent(startedEpoch.current)) { end('access'); return true; }
+      // Log out doesn't end access: the server keeps this device's place as a guest, same credential.
       const shared = cached()?.shared;
       if (
         (e instanceof RoomFailure && (e.status === 410 || e.code === 'expired')) ||
