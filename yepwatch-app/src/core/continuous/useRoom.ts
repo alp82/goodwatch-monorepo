@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AppState } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
+import { AppState, Platform } from 'react-native';
+import { hashKey, useQuery } from '@tanstack/react-query';
 import * as Crypto from 'expo-crypto';
 import type {
   ActivityGesture,
@@ -32,6 +32,7 @@ import { authEpoch } from './account-flow';
 import { ACTIVITY_LIMITS } from '@goodwatch/yepwatch-contracts/proposal';
 import { continuousKey } from './keys';
 import { browserEvents, browserOffline } from './network';
+import { readSavedRoom, saveRoom } from './room-snapshot';
 export { continuousKey } from './keys';
 /** Your rooms keeps one query per room; room snapshots update it directly. */
 export const homeRoomKey = (roomId: string) => ['home-room', roomId] as const;
@@ -81,6 +82,12 @@ export function useContinuousRoom(roomId: string) {
     () => queryClient.getQueryData<CachedRoom>(continuousKey(roomId)),
     [roomId]
   );
+  // A reload paints the room as this tab last saw it confirmed, then reads it again (stale on purpose).
+  useState(() => {
+    if (cached()) return;
+    const saved = readSavedRoom(roomId);
+    if (saved) queryClient.setQueryData<CachedRoom>(continuousKey(roomId), mergeRoom(undefined, saved), { updatedAt: 0 });
+  });
   const end = useCallback((why: 'expired' | 'access') => {
     terminalRef.current = why;
     setTerminal(why);
@@ -445,6 +452,8 @@ export function useContinuousRoom(roomId: string) {
     };
     try {
       while (outbox.current.length && (!queue.current.pending || terminalRef.current)) {
+        // Not read yet: the access effect drains again once it is.
+        if (!terminalRef.current && !accessRef.current) break;
         const entry = outbox.current[0];
         const snapshot = terminalRef.current ? undefined : cached();
         const command = snapshot ? entry.build(snapshot) : null;
@@ -484,11 +493,54 @@ export function useContinuousRoom(roomId: string) {
   useEffect(() => {
     if (terminal || !pending) void drain();
   }, [pending, terminal, drain]);
+  // Taps made before this device's access is read (a reload that painted the saved room) wait for it;
+  // without access they can't go.
+  useEffect(() => {
+    if (access) { if (!pending) void drain(); return; }
+    if (access !== null || !outbox.current.length) return;
+    const lost = outbox.current;
+    outbox.current = [];
+    setQueued([]);
+    lost.forEach((entry) => entry.settle(false));
+  }, [access, pending, drain]);
+  // The room as last confirmed, kept for a reload of this tab (room-snapshot.web.ts): saved when the page
+  // is idle a moment after a change, and right away when the page goes away.
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+    if (terminal) { saveRoom(roomId, null); return; }
+    const hash = hashKey(continuousKey(roomId));
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let idle: number | null = null;
+    const flush = () => {
+      if (timer) clearTimeout(timer);
+      if (idle !== null && 'cancelIdleCallback' in window) window.cancelIdleCallback(idle);
+      timer = null; idle = null;
+      const room = cached();
+      if (room && !terminalRef.current) saveRoom(roomId, room);
+    };
+    const later = () => {
+      timer = null;
+      if ('requestIdleCallback' in window) idle = window.requestIdleCallback(flush, { timeout: 3000 });
+      else flush();
+    };
+    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
+      if (event.type === 'updated' && event.query.queryHash === hash && !timer && idle === null) timer = setTimeout(later, 1500);
+    });
+    const hidden = () => { if (document.visibilityState === 'hidden') flush(); };
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', hidden);
+    return () => {
+      unsubscribe();
+      window.removeEventListener('pagehide', flush);
+      document.removeEventListener('visibilitychange', hidden);
+      flush();
+    };
+  }, [roomId, terminal, cached]);
   /** With a command: shown at once and queued. Without: retries the command awaiting confirmation. */
   function send(input?: RoomCommand | CommandBuild): Promise<boolean> {
     if (!input) return submit();
     const snapshot = cached();
-    if (!access || !snapshot || expired() || privateError) return Promise.resolve(false);
+    if (access === null || !snapshot || expired() || privateError) return Promise.resolve(false);
     const build: CommandBuild = typeof input === 'function' ? input : () => input;
     // Built against the room as shown: a tap behind this device's own unconfirmed commands is aimed at them.
     const command = build(overlayRoom(snapshot, queue.current.pending, outbox.current));
