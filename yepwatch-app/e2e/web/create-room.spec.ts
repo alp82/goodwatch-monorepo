@@ -156,7 +156,7 @@ test.describe('create and set up a room', () => {
     await host.open('/');
     await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] } });
     await host.fill(host.page.getByLabel('Mood'), 'rate limited heist');
-    const stop = await recordMoodPage(host);
+    const stop = await recordPage(host, 'mood-page', /Couldn|Try again|offline/i);
     await host.tap(host.button('Create room'), { expect: {} });
     await expect.poll(() => tries).toBe(1);
     // Away before the quiet period ends, back a second later: the saved wait resumes.
