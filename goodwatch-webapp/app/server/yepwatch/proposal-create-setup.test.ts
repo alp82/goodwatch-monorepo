@@ -2,13 +2,14 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 import { randomUUID } from "node:crypto"
 import { ProposalService } from "./proposal-service.server.ts"
+import { RoomError } from "./errors.ts"
 import { ProposalMemoryRepository, proposalFixtureCatalog } from "./proposal-test-support.ts"
 import { proposalAdmissionSchema, proposalCreateSchema, proposalJoinSchema } from "./proposal-validation.ts"
 import type { CreateRoomRequest, RoomCommand } from "../../../packages/yepwatch-contracts/proposal.ts"
 import type { ProposalRoom } from "./proposal-types.ts"
 
 /** A service whose repository counts writes, so "one stored write" is checkable. */
-function fixture(options: { search?: "ok" | "fail" | "none" } = {}) {
+function fixture(options: { search?: "ok" | "fail" | "budget" | "none" } = {}) {
 	const repo = new ProposalMemoryRepository()
 	let inserts = 0
 	let swaps = 0
@@ -34,6 +35,8 @@ function fixture(options: { search?: "ok" | "fail" | "none" } = {}) {
 		search === "none" ? undefined : async (prompt) => {
 			searches++
 			if (search === "fail") throw new Error("search down")
+			if (search === "budget")
+				throw new RoomError("catalog_unavailable", "Mood matching is unavailable for now. You can still start without an idea.", 503, false)
 			return { prompt, attributes: [{ text: "heist", kind: "attribute" as const }], rankedKeys: [1_000_000_000_001], interpretedAt: 7 }
 		}
 	)
@@ -106,15 +109,33 @@ test("the host's later commands follow on from a set-up room (edit idea, change 
 	assert.equal(after.own.nextSequence, 3)
 })
 
-test("setup that can't apply is left for the app's own commands; the room is still created", async () => {
-	const failed = fixture({ search: "fail" })
-	const a = await failed.service.create(failed.request({ country: "DE", idea: "space heist" }))
-	assert.equal(a.snapshot.shared.screens[0]?.country, "DE")
-	assert.deepEqual(a.snapshot.shared.ideas, [])
-	const none = fixture({ search: "none" })
-	const b = await none.service.create(none.request({ country: "DE", idea: "space heist" }))
-	assert.equal(b.snapshot.shared.screens[0]?.country, "DE")
-	assert.deepEqual(b.snapshot.shared.ideas, [])
+test("search unavailable keeps the idea uninterpreted; an unknown country is left for the app's own commands", async () => {
+	for (const search of ["fail", "budget", "none"] as const) {
+		const f = fixture({ search })
+		const a = await f.service.create(f.request({ country: "DE", idea: "space heist" }))
+		const s = a.snapshot.shared
+		assert.equal(s.screens[0]?.country, "DE", search)
+		// The idea the app sent is in the room, so the app sends no add_idea command after the create.
+		assert.deepEqual(s.ideas.map((i) => [i.text, i.authorId, i.on, i.attributes]), [["space heist", a.snapshot.own.participantId, true, []]], search)
+		assert.equal(a.snapshot.own.nextSequence, 1, search)
+		assert.equal(f.inserts(), 1, search)
+		const room = (await f.repo.read(s.roomId))!.room
+		assert.deepEqual(room.ideas![0].rankedKeys, [], search)
+		// Only an answered search spends the room's budget (as before).
+		assert.equal(room.interpretationCount, 0, search)
+		// Setup goes on: the host can still start the room with the normal ranking.
+		const send = async (command: RoomCommand) => {
+			const now = await f.service.read(s.roomId, a.credential)
+			return f.service.command(s.roomId, a.credential, { commandId: randomUUID(), sequence: now.own.nextSequence, command })
+		}
+		await send({ type: "rename", nickname: "Host" })
+		await send({ type: "set_services", serviceIds: [1] })
+		const ready = await f.service.read(s.roomId, a.credential)
+		const started = await send({ type: "start", expectedContextVersion: ready.shared.contextVersion, expectedRosterVersion: ready.shared.rosterVersion, hostReady: true })
+		assert.equal(started.snapshot.shared.phase, "choosing", search)
+		assert.ok(started.snapshot.shared.candidates.length > 0, search)
+		assert.deepEqual(started.snapshot.shared.ideas.map((i) => i.text), ["space heist"], search)
+	}
 	const unknown = fixture()
 	const c = await unknown.service.create(unknown.request({ country: "ZZ", idea: "space heist" }))
 	assert.deepEqual(c.snapshot.shared.screens, [])

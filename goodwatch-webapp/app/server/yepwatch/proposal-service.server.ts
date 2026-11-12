@@ -393,8 +393,8 @@ export class ProposalService {
 	}
 	/**
 	 * The first setup a create request carries (country, first idea), applied to the new room before it
-	 * is first stored, as the host's configure and add_idea would. Whatever can't apply (unknown country,
-	 * search unavailable) is left out: the app's own commands set it afterwards, as before.
+	 * is first stored, as the host's configure and add_idea would. An unknown country is left out (the app's
+	 * own commands set it afterwards); search unavailable only leaves the idea uninterpreted.
 	 */
 	private async withSetup(
 		room: ProposalRoom,
@@ -418,15 +418,18 @@ export class ProposalService {
 		for (const c of metadata?.countries ?? []) this.knownCountries.add(c.code)
 		if (!metadata?.countries.some((c) => c.code === setup.country)) return room
 		search()
-		if (setup.idea && interpretation.value) {
-			const interpreted = await interpretation.value
+		if (setup.idea) {
+			// The idea is kept also when search is unavailable (budget, outage, timeout, none configured): it opens
+			// uninterpreted, the deck uses the normal ranking, and the app never has to send it again as a command.
+			const interpreted = interpretation.value ? await interpretation.value : null
+			const ideaId = keyed(this.secret, "proposal-setup-idea", room.id).slice(0, 32)
+			next = step(next, { type: "add_idea", text: setup.idea }, ideaId)
 			if (interpreted) {
-				const ideaId = keyed(this.secret, "proposal-setup-idea", room.id).slice(0, 32)
-				next = step(next, { type: "add_idea", text: setup.idea }, ideaId)
 				const idea = next.ideas!.find((i) => i.id === ideaId)!
 				idea.attributes = structuredClone(interpreted.attributes)
 				idea.rankedKeys = [...interpreted.rankedKeys]
 				idea.interpretedAt = interpreted.interpretedAt
+				// Only a search that answered spends the room's budget, as before.
 				next.interpretationCount = (next.interpretationCount ?? 0) + 1
 				attributeCandidates(next)
 			}
@@ -743,8 +746,12 @@ export class ProposalService {
 		const ideaCommand =
 			envelope.command.type === "add_idea" ||
 			envelope.command.type === "edit_idea"
-		if (ideaCommand) {
-			// Reserve the lifetime spend before search; failed searches also spend a slot.
+		// Search unavailable never refuses an idea: it is stored uninterpreted (normal ranking, no ranked keys).
+		let searchFailed = false
+		let budgetRefused = false
+		if (ideaCommand && this.interpret) {
+			// Reserve the lifetime spend before search; failed searches also spend a slot, except a refusal for
+			// GoodWatch's spend limit, which never ran a search (refunded when the idea is stored).
 			// Search runs once here, outside the command-publication retry loop.
 			for (let attempt = 0; attempt < 6; attempt++) {
 				const old = await this.get(id),
@@ -757,7 +764,6 @@ export class ProposalService {
 					"Commands must be sent in order"
 				)
 				proposalTransition(old.room, p.id, envelope, this.now())
-				requireRoom(this.interpret, "busy", "Room search is unavailable", 503)
 				await allowed
 				await this.guard?.command(id, p.id, digest)
 				const reserved = structuredClone(old.room)
@@ -770,15 +776,20 @@ export class ProposalService {
 					RoomCommand,
 					{ type: "add_idea" | "edit_idea" }
 				>
-				interpreted = await this.interpret!(
-					c.text,
-					old.room.screens[0]?.country ?? "US",
-					old.room.screens[0]?.serviceIds ?? [],
-					p.memberUserId ? "member" : "guest"
-				)
+				try {
+					interpreted = await this.interpret(
+						c.text,
+						old.room.screens[0]?.country ?? "US",
+						old.room.screens[0]?.serviceIds ?? [],
+						p.memberUserId ? "member" : "guest"
+					)
+				} catch (error) {
+					searchFailed = true
+					budgetRefused = error instanceof RoomError && error.code === "catalog_unavailable"
+				}
 				break
 			}
-			requireRoom(interpreted, "busy", "Room busy; retry this idea", 503)
+			requireRoom(interpreted || searchFailed, "busy", "Room busy; retry this idea", 503)
 		}
 		for (let i = 0; i < 6; i++) {
 			const { stored: old, check } = await this.readChecked(id)
@@ -890,10 +901,15 @@ export class ProposalService {
 						i.id ===
 						(command.type === "add_idea" ? envelope.commandId : command.ideaId)
 				)!
-				idea.attributes = structuredClone(interpreted!.attributes)
-				idea.rankedKeys = [...interpreted!.rankedKeys]
-				idea.interpretedAt = interpreted!.interpretedAt
-				attributeCandidates(room)
+				if (interpreted) {
+					idea.attributes = structuredClone(interpreted.attributes)
+					idea.rankedKeys = [...interpreted.rankedKeys]
+					idea.interpretedAt = interpreted.interpretedAt
+					attributeCandidates(room)
+				}
+				// The transition left it uninterpreted (no attributes or ranked keys).
+				if (budgetRefused)
+					room.interpretationCount = Math.max(0, (room.interpretationCount ?? 0) - 1)
 			}
 			if (
 				redesignCommands.has(command.type) ||

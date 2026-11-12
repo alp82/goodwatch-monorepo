@@ -2,6 +2,7 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 import { randomUUID } from "node:crypto"
 import { ProposalService } from "./proposal-service.server.ts"
+import { RoomError } from "./errors.ts"
 import {
 	ProposalMemoryRepository,
 	proposalFixtureCatalog
@@ -488,9 +489,9 @@ test("proposal and matches withdraw when their only service or idea is switched 
 	assert.equal(next.proposal, null)
 	assert.equal(proposalSnapshot(next, next.hostId).shared.matches.length, 0)
 })
-test("failed interpretations consume the budget and do not publish ideas; idea count is capped at eight", async () => {
+test("failed interpretations consume the budget and keep the idea uninterpreted; a spend-limit refusal is refunded; idea count is capped at eight", async () => {
 	const f = await fixture()
-	const broken = new ProposalService(
+	const failing = (error: Error) => new ProposalService(
 		f.repo,
 		proposalFixtureCatalog,
 		"redesign-test-secret-over-thirty-two",
@@ -498,29 +499,37 @@ test("failed interpretations consume the budget and do not publish ideas; idea c
 		Date.now,
 		undefined,
 		async () => {
-			throw new Error("search unavailable")
+			throw error
 		}
 	)
-	const s = await broken.read(f.id, f.a.credential)
-	await assert.rejects(
-		broken.command(f.id, f.a.credential, {
-			commandId: "failure",
-			sequence: s.own.nextSequence,
-			command: { type: "add_idea", text: "Fail search" }
-		}),
-		/search unavailable/
-	)
-	assert.equal((await f.repo.read(f.id))!.room.interpretationCount, 1)
-	assert.deepEqual(
-		(await f.service.read(f.id, f.a.credential)).shared.ideas,
-		[]
-	)
-	for (let i = 0; i < 8; i++)
+	const broken = failing(new Error("search unavailable"))
+	let s = await broken.read(f.id, f.a.credential)
+	// A failing search never refuses the idea: it is stored without attributes or ranked keys.
+	s = (await broken.command(f.id, f.a.credential, {
+		commandId: "failure",
+		sequence: s.own.nextSequence,
+		command: { type: "add_idea", text: "Fail search" }
+	})).snapshot
+	assert.deepEqual(s.shared.ideas.map((i) => [i.text, i.attributes]), [["Fail search", []]])
+	let room = (await f.repo.read(f.id))!.room
+	assert.equal(room.interpretationCount, 1)
+	assert.deepEqual(room.ideas![0].rankedKeys, [])
+	// GoodWatch's spend limit refused before any search: the idea is kept, the room's budget is not spent.
+	const limited = failing(new RoomError("catalog_unavailable", "Mood matching is unavailable for now. You can still start without an idea.", 503, false))
+	s = (await limited.command(f.id, f.a.credential, {
+		commandId: "budget",
+		sequence: s.own.nextSequence,
+		command: { type: "edit_idea", ideaId: s.shared.ideas[0].id, text: "Budget refused" }
+	})).snapshot
+	assert.deepEqual(s.shared.ideas.map((i) => [i.text, i.attributes]), [["Budget refused", []]])
+	room = (await f.repo.read(f.id))!.room
+	assert.equal(room.interpretationCount, 1)
+	for (let i = 0; i < 7; i++)
 		await f.send({ type: "add_idea", text: `Idea ${i}` })
 	await assert.rejects(f.send({ type: "add_idea", text: "Ninth idea" }), {
 		code: "limit_reached"
 	})
-	assert.equal(f.searches(), 8)
+	assert.equal(f.searches(), 7)
 })
 
 test("readiness probes every new nullable column and the immutable idea table", async () => {
