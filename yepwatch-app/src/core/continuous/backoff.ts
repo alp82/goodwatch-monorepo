@@ -5,6 +5,11 @@
  * wait for everybody; the result never drops below the server's minimum.
  */
 export const BACKOFF_BASE_MS = 1000;
+/**
+ * How long an outage stays silent before its page says so (owner rule Q24a, connection-words.ts). Kept here,
+ * with the other timing, so the resend loop (resend.ts) arms the same quiet period without the page's hooks.
+ */
+export const QUIET_OUTAGE_MS = 3000;
 export const BACKOFF_MAX_MS = 15000;
 export const BACKOFF_JITTER = 0.3;
 /** The longest automatic wait: the capped step with full jitter. */

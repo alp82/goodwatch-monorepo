@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { QUIET_OUTAGE_MS } from '../src/core/continuous/backoff';
 import { RoomFailure } from '../src/core/continuous/api-client';
 import { definitiveRefusal, incompleteAnswer, resendable, resendUntilAnswered } from '../src/core/continuous/resend';
 
@@ -24,6 +25,51 @@ test('only a parsed API refusal is definitive; an unreadable 4xx page is neither
   const proxyPage = unread(403, 'response');
   assert.equal(definitiveRefusal(proxyPage), false);
   assert.equal(resendable(proxyPage), false);
+});
+
+test('a request still unanswered after the quiet period is trouble from when it began; the answer comes later', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'Date'], now: 1000 });
+  const troubles: number[] = [];
+  let answer!: () => void;
+  const running = resendUntilAnswered(() => new Promise<void>((resolve) => { answer = resolve; }), {
+    signal: new AbortController().signal, onTrouble: (since) => troubles.push(since),
+  });
+  t.mock.timers.tick(QUIET_OUTAGE_MS - 1);
+  assert.deepEqual(troubles, [], 'nothing under 3 s');
+  t.mock.timers.tick(1);
+  assert.deepEqual(troubles, [1000], 'at 3 s, while the request still hangs, from when it began');
+  answer();
+  assert.equal(await running, true);
+  t.mock.timers.tick(60000);
+  assert.deepEqual(troubles, [1000], 'heard once');
+});
+
+test('a prompt answer is no trouble at all', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+  const troubles: number[] = [];
+  let answer!: () => void;
+  const running = resendUntilAnswered(() => new Promise<void>((resolve) => { answer = resolve; }), {
+    signal: new AbortController().signal, onTrouble: (since) => troubles.push(since),
+  });
+  t.mock.timers.tick(QUIET_OUTAGE_MS - 100);
+  answer();
+  assert.equal(await running, true);
+  t.mock.timers.tick(60000);
+  assert.deepEqual(troubles, []);
+});
+
+test('a hanging request cut off by the background before 3 s tells the page nothing', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const troubles: number[] = [];
+  const controller = new AbortController();
+  const running = resendUntilAnswered(() => new Promise<void>((_, reject) => {
+    controller.signal.addEventListener('abort', () => reject(Object.assign(new Error('Aborted'), { name: 'AbortError' })));
+  }), { signal: controller.signal, onTrouble: (since) => troubles.push(since) });
+  t.mock.timers.tick(1000);
+  controller.abort();
+  assert.equal(await running, false);
+  t.mock.timers.tick(60000);
+  assert.deepEqual(troubles, []);
 });
 
 test('a Retry-After that lands as the app leaves the front is kept before the send stops', async () => {

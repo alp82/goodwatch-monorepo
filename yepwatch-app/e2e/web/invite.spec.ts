@@ -1,5 +1,5 @@
 import { test, expect, eventually, ORIGIN } from '../lib/harness';
-import { inviteLink, join, pickServices, readyHost, recordPage } from './flows';
+import { inviteLink, join, pageTap, pickServices, readyHost, recordPage } from './flows';
 
 test.describe('invite and join', () => {
   test('public invite preview: link-preview tags and card image', async ({ room }) => {
@@ -71,12 +71,18 @@ test.describe('invite and join', () => {
     // Q24a: quiet at first, then one small floating line; never "Couldn't reach" or Retry joining.
     await expect(mia.page.getByTestId('room-note').filter({ visible: true })).toHaveText('Reconnecting…', { timeout: 12000 });
     await mia.see({ visible: ['services-sheet'] }, 30000, 'the friend gets in by itself');
+    // The wait starts with the press: the join first reads the invitation, so its POST (`first`) leaves later.
+    const tapped = await pageTap(mia);
     const samples = await stop().catch(() => null);
-    room.noteOutage(first, answered);
+    expect(tapped).toBeLessThanOrEqual(first);
+    room.noteOutage(tapped, answered);
     expect(samples, 'the join page was sampled').not.toBeNull();
     const firstNote = samples!.find((s) => s.note)?.t ?? Infinity;
-    expect(firstNote - first, 'quiet for the first 3 s of the outage').toBeGreaterThanOrEqual(3000);
-    expect(samples!.some((s) => s.t < first + 3000 && s.t > first), 'sampled during the quiet period').toBe(true);
+    expect(firstNote - tapped, 'quiet for the first 3 s of the outage').toBeGreaterThanOrEqual(3000);
+    // The first join is still unanswered (the app waits 6 s, the answer comes after 7 s): the line shows at the
+    // end of the quiet period, not when that request finally fails.
+    expect(firstNote - tapped, 'the line shows at 3 s while the first request still waits').toBeLessThan(4000);
+    expect(samples!.some((s) => s.t < tapped + 3000 && s.t > tapped), 'sampled during the quiet period').toBe(true);
     expect(samples!.filter((s) => s.error), 'no error or Retry joining meanwhile').toEqual([]);
     expect(answers.length).toBe(3);
     expect(answers.every((a) => a.status === 200)).toBe(true);

@@ -105,6 +105,13 @@ export async function voteUntilMatch(people: Person[], rounds = 15) {
  * "Reconnecting…" line is up and whether the page shows `error` (an error or a retry button). `stop` returns
  * the samples.
  */
+/** When the person first pressed after recordPage began (page clock, epoch ms): the start of what they wait for. */
+export async function pageTap(p: Person): Promise<number> {
+  const t = await p.page.evaluate(() => (window as unknown as { __pageTap?: number }).__pageTap ?? null);
+  if (t === null) throw new Error('no press recorded since recordPage');
+  return t;
+}
+
 export async function recordPage(p: Person, testId: string, error: RegExp) {
   await p.page.evaluate(({ testId, source, flags }) => {
     const w = window as unknown as { __pageLog?: { t: number; note: boolean; error: boolean }[]; __pageTimer?: number };
@@ -118,6 +125,9 @@ export async function recordPage(p: Person, testId: string, error: RegExp) {
     };
     sample();
     w.__pageTimer = window.setInterval(sample, 50);
+    // The person's first press from here on: the earliest an admission they start can begin waiting.
+    delete (w as { __pageTap?: number }).__pageTap;
+    document.addEventListener('pointerdown', () => { (w as { __pageTap?: number }).__pageTap ??= Date.now(); }, { capture: true, once: true });
   }, { testId, source: error.source, flags: error.flags });
   return () => p.page.evaluate(() => {
     const w = window as unknown as { __pageLog: { t: number; note: boolean; error: boolean }[]; __pageTimer: number };

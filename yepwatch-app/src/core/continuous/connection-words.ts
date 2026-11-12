@@ -1,5 +1,6 @@
 import type { Connection } from '../realtime';
 import { useLate } from '../useLate';
+import { QUIET_OUTAGE_MS } from './backoff';
 
 /**
  * What a room says about its connection, decided here and nowhere else (owner rule Q24a):
@@ -8,7 +9,7 @@ import { useLate } from '../useLate';
  *  - never a countdown, a retry timer or "awaiting confirmation".
  * The E2E harness holds the app to the same rule (e2e/lib/gates.ts, connectionWords).
  */
-export const QUIET_OUTAGE_MS = 3000;
+export { QUIET_OUTAGE_MS };
 export const OFFLINE_WORDS = 'You’re offline.';
 export const RECONNECTING_WORDS = 'Reconnecting…';
 

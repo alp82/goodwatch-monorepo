@@ -1,4 +1,4 @@
-import { abortableSleep, BACKOFF_BASE_MS, BACKOFF_JITTER, serverWait, transientFailure, unanswered } from './backoff';
+import { abortableSleep, BACKOFF_BASE_MS, BACKOFF_JITTER, QUIET_OUTAGE_MS, serverWait, transientFailure, unanswered } from './backoff';
 import { browserOffline } from './network';
 
 /**
@@ -71,10 +71,12 @@ export async function waitOutDeadline(retryAt: number, signal: AbortSignal, slee
 /**
  * Sends the saved request until it is answered. Stops (resolves false) when `signal` aborts (the page left
  * the front, the app went to the background); throws a final refusal (also one that came as it aborted), an offline browser (the page resends
- * on the online event) and a server wait longer than SERVER_WAIT_MAX_MS. `onTrouble` hears once when the
- * first attempt that failed began. `onServerWait` hears the absolute end of a server's wait (Retry-After)
- * before it is waited out, and also when the answer lands as `signal` aborts, so an interrupted wait
- * (background, relaunch) still holds when the request goes again.
+ * on the online event) and a server wait longer than SERVER_WAIT_MAX_MS. `onTrouble` hears when the first
+ * attempt began, once it has waited QUIET_OUTAGE_MS without an answer or failed (whichever comes first), so
+ * the page's connection line shows at the end of the quiet period while a request still hangs (owner rule
+ * Q24a). `onServerWait` hears the absolute end of a server's wait (Retry-After) before it is waited out, and
+ * also when the answer lands as `signal` aborts, so an interrupted wait (background, relaunch) still holds
+ * when the request goes again.
  */
 export async function resendUntilAnswered(attempt: () => Promise<void>, o: {
   signal: AbortSignal;
@@ -87,6 +89,8 @@ export async function resendUntilAnswered(attempt: () => Promise<void>, o: {
   for (let failures = 0; ; failures++) {
     if (o.signal.aborted) return false;
     const began = Date.now();
+    // Still unanswered after the quiet period: the trouble began with this attempt (a prompt answer cancels it).
+    const quiet = failures === 0 && o.onTrouble ? setTimeout(() => { if (!o.signal.aborted) o.onTrouble?.(began); }, QUIET_OUTAGE_MS) : undefined;
     try {
       await attempt();
       return true;
@@ -105,6 +109,8 @@ export async function resendUntilAnswered(attempt: () => Promise<void>, o: {
       const delay = resendDelay(failures, error, o.random);
       if (serverWait(error) > 0) await o.onServerWait?.(Date.now() + delay);
       await sleep(delay, o.signal);
+    } finally {
+      clearTimeout(quiet);
     }
   }
 }

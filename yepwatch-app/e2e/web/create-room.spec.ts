@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
 import { test, eventually, type Person } from '../lib/harness';
-import { createRoom, hostName, pickServices, recordPage } from './flows';
+import { createRoom, hostName, pageTap, pickServices, recordPage } from './flows';
 
 const roomCountry = (p: Person) => (p.latest?.screens as { country: string | null }[] | undefined)?.[0]?.country;
 
@@ -82,11 +82,17 @@ test.describe('create and set up a room', () => {
     // Q24a: quiet at first, then one small floating line; never "Couldn't reach" or Try again.
     await expect(host.page.getByTestId('room-note').filter({ visible: true })).toHaveText('Reconnecting…', { timeout: 12000 });
     await host.see({ visible: ['room-setup'] }, 30000, 'the room opens by itself');
+    // The wait starts with the press (the create's own request leaves a moment later, `first`).
+    const tapped = await pageTap(host);
     const samples = await stop();
-    room.noteOutage(first, answered);
+    expect(tapped).toBeLessThanOrEqual(first);
+    room.noteOutage(tapped, answered);
     const firstNote = samples.find((s) => s.note)?.t ?? Infinity;
-    expect(firstNote - first, 'quiet for the first 3 s of the outage').toBeGreaterThanOrEqual(3000);
-    expect(samples.some((s) => s.t < first + 3000 && s.t > first), 'sampled during the quiet period').toBe(true);
+    expect(firstNote - tapped, 'quiet for the first 3 s of the outage').toBeGreaterThanOrEqual(3000);
+    // The first create is still unanswered (the app waits 6 s, the answer comes after 7 s): the line shows at the
+    // end of the quiet period, not when that request finally fails.
+    expect(firstNote - tapped, 'the line shows at 3 s while the first request still waits').toBeLessThan(4000);
+    expect(samples.some((s) => s.t < tapped + 3000 && s.t > tapped), 'sampled during the quiet period').toBe(true);
     expect(samples.filter((s) => s.error), 'no error or Try again meanwhile').toEqual([]);
     expect(answers.length).toBe(3);
     expect(answers.every((a) => a.status === 200)).toBe(true);
