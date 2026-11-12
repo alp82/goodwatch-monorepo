@@ -703,12 +703,14 @@ export class ProposalService {
 		await allowed
 		// The command answers with the room it committed: its read was checked (v3, live, capacity reserved) just
 		// before the compare-and-swap, and a newer revision reaches this phone over the socket like any other change.
+		// Its expiry and capacity reservation are checked again after the commit, as any read would.
 		// notify (publish + acknowledge) then runs on its own, unless the answer has to wait for it: a decision moved
 		// into the history is stored on the accounts first, and an agreement check settles before it answers.
 		// Fresh availability checks must not block joins or withdrawals that invalidate them.
 		if (room && !(room.committed.phase === "choosing" && room.committed.agreement.state === "checking") && !room.historyChanged) {
 			void this.notify(id, { yieldToQueued: true })
 			continuousLive(room.committed, this.now())
+			await this.guard?.active(room.committed)
 			return { receipt, snapshot: this.snapshot(room.committed, credential) }
 		}
 		let stored = await this.notify(id, { yieldToQueued: true })
