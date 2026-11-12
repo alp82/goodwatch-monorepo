@@ -808,7 +808,7 @@ export function activeChips(
 				})
 	}
 	if (state.trope) chips.push({
-  key: `trope-${state.trope}`, group: "trope", label: `Trope: ${tropeLabel(state.trope)}`,
+  key: `trope-${state.trope}`, group: "trope", label: tropeLabel(state.trope),
   remove: s => ({ ...s, trope: undefined }),
  })
 	for (const key of state.similarTo ?? [])
