@@ -6,7 +6,7 @@ import type {
 	RoomCommand,
 	CommandEnvelope,
 } from "../../../packages/yepwatch-contracts/proposal.ts"
-import { paths } from "../../../packages/yepwatch-contracts/proposal.ts"
+import { paths, PENDING_IDEA_ATTRIBUTE } from "../../../packages/yepwatch-contracts/proposal.ts"
 import { ProposalService } from "./proposal-service.server.ts"
 import {
 	ProposalMemoryRepository,
@@ -525,7 +525,7 @@ test("Leave removes a required voter, transfers host, and exact retry recovers t
 	assert.deepEqual(recovered.snapshot.shared.ideas, [])
 })
 
-test("Room prompt is interpreted before publication and retained across start, refill and restart", async () => {
+test("Room prompt is interpreted after the command answers and retained across start, refill and restart", async () => {
 	const repo = new ProposalMemoryRepository()
 	let interpreted = 0
 	const service = new ProposalService(
@@ -559,6 +559,11 @@ test("Room prompt is interpreted before publication and retained across start, r
 		configured.snapshot.shared.ideas[0]?.text,
 		"Something funny"
 	)
+	// The answer carries the idea pending; its interpretation lands with a later revision.
+	assert.deepEqual(configured.snapshot.shared.ideas[0]?.attributes, [PENDING_IDEA_ATTRIBUTE])
+	await service.interpretationsIdle()
+	const interpretedIdeas = (await service.read(id, credential(a))).shared.ideas
+	assert.deepEqual(interpretedIdeas[0]?.attributes, [{ text: "Funny", kind: "want", key: "humor" }])
 	assert.equal(configured.snapshot.shared.screens.length, 1)
 	assert.equal(configured.snapshot.shared.participants[0].ready, true)
 	await service.command(id, credential(a), {
@@ -596,7 +601,7 @@ test("Room prompt is interpreted before publication and retained across start, r
 	await send({ type: "restart", expectedRevision: current.shared.revision })
 	assert.deepEqual(
 		(await service.read(id, credential(a))).shared.ideas,
-		configured.snapshot.shared.ideas
+		interpretedIdeas
 	)
 	assert.equal(interpreted, 1)
 })

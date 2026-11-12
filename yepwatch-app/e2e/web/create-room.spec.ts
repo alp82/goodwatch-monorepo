@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
 import { test, eventually, issuer, type Person } from '../lib/harness';
-import { createRoom, hostName, pageTap, pickServices, recordPage, start } from './flows';
+import { cardTitle, createRoom, hostName, pageTap, pickServices, recordPage, start } from './flows';
 
 const roomCountry = (p: Person) => (p.latest?.screens as { country: string | null }[] | undefined)?.[0]?.country;
 
@@ -211,8 +211,8 @@ test.describe('create and set up a room', () => {
       await host.audit('room page with an unmatched idea');
       // Another idea while search is still refused is added too (the command path).
       await host.tap(host.button('Add an idea'), { expect: { visible: ['mood-page'] } });
-      await host.fill(host.page.getByLabel('Mood'), second);
-      await host.tap(host.page.getByLabel('Mood'), { key: 'Enter', expect: { visible: ['room-setup'] } });
+      await host.fill(host.page.getByLabel('Mood', { exact: true }), second);
+      await host.tap(host.page.getByLabel('Mood', { exact: true }), { key: 'Enter', expect: { visible: ['room-setup'] } });
       await eventually(() => host.latest?.ideas.map((i) => i.text), (v) => JSON.stringify(v) === JSON.stringify([mood, second]), 'the second idea is kept too', host);
       await hostName(host, 'Alp');
       await pickServices(host, ['Netflix'], () => host.tap(host.button('Streaming services, add'), { expect: { visible: ['services-sheet'] } }));
@@ -220,6 +220,37 @@ test.describe('create and set up a room', () => {
     } finally {
       await issuer(`/_e2e/search-budget?prompt=${encodeURIComponent(mood)}&on=0`);
       await issuer(`/_e2e/search-budget?prompt=${encodeURIComponent(second)}&on=0`);
+    }
+  });
+
+  // Owner decision Q32: Create room never waits for the idea's interpretation (GoodWatch's two Jev calls,
+  // ~0.6-1.5 s). The search fake takes 1 s for this prompt: the room still opens within createRoomMs, the idea is
+  // pending (no "unavailable" note), and its matching lands a moment later and shapes the deck.
+  test('create with a slow idea search: the room opens at once, the idea\'s matching lands later, no unavailable note', async ({ room }) => {
+    const host = await room.person('Alp');
+    const mood = `slow western ${Math.random().toString(36).slice(2, 8)}`;
+    await issuer(`/_e2e/search-delay?prompt=${encodeURIComponent(mood)}&ms=1000`);
+    try {
+      await host.open('/');
+      await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] } });
+      await host.fill(host.page.getByLabel('Mood'), mood);
+      const stop = await recordPage(host, 'room-setup', /Mood matching is unavailable/i);
+      await host.tap(host.button('Create room'), { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' });
+      const created = host.samples.filter((x) => x.moment === 'createRoomMs').at(-1);
+      if (room.fault === 'none') expect(created?.ms, 'Create room → room page with a 1 s search').toBeLessThanOrEqual(300);
+      await eventually(() => host.latest?.ideas.map((i) => [i.text, i.attributes.map((a) => a.key ?? a.text)]), (v) => JSON.stringify(v) === JSON.stringify([[mood, ['western']]]), 'the idea\'s matching lands', host, 10000);
+      const samples = await stop().catch(() => null);
+      expect(samples?.length, 'the room page was sampled').toBeGreaterThan(0);
+      expect(samples!.filter((x) => x.error), 'no "Mood matching is unavailable" while the search runs').toEqual([]);
+      await expect(host.page.getByTestId('idea-unmatched')).toHaveCount(0);
+      await room.point('room');
+      await hostName(host, 'Alp');
+      await pickServices(host, ['Netflix'], () => host.tap(host.button('Streaming services, add'), { expect: { visible: ['services-sheet'] } }));
+      await start(host, []);
+      // The landed idea leads the deck: its first card is a western.
+      expect(await cardTitle(host)).toMatch(/western/i);
+    } finally {
+      await issuer(`/_e2e/search-delay?prompt=${encodeURIComponent(mood)}&ms=0`);
     }
   });
 

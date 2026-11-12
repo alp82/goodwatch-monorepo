@@ -24,7 +24,7 @@ export function guestProposalCatalog(members?: ContinuousMembers) {
 										!(p as import("./proposal-types.ts").ProposalParticipant)
 											.showSeen
 								)
-								.map((p) => members?.seen(room, p.id) ?? [])
+								.map((p) => members?.seenOrNone(room, p.id) ?? [])
 						)
 					).flat()
 				)
@@ -82,7 +82,7 @@ export function guestProposalCatalog(members?: ContinuousMembers) {
 							(p) =>
 								p.leftAt == null && p.member.state === "linked" && !p.showSeen
 						)
-						.map((p) => members.seen(room, p.id, { fresh: options?.fresh }))
+						.map((p) => members.seenOrNone(room, p.id, { fresh: options?.fresh }))
 				)
 			).flat()
 		}

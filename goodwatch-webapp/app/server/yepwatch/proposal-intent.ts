@@ -21,6 +21,15 @@ export const roomIntentSchema = z
 		interpretedAt: z.number().int().nonnegative()
 	})
 	.strip()
+/**
+ * GoodWatch search refused for load (busy or rate limited, with Retry-After): nothing ran and nothing failed, so a
+ * background interpretation keeps its idea pending and tries again later instead of ending it as unavailable.
+ */
+export class SearchBusy extends RoomError {
+	constructor() {
+		super("busy", "GoodWatch search is busy. Retry this prompt shortly.", 503, true)
+	}
+}
 export type InterpretRoom = (
 	prompt: string,
 	country: string,
@@ -76,6 +85,9 @@ export function roomSearch(
 					503,
 					false
 				)
+			// Busy (every search slot in flight) or rate limited: GoodWatch asks to come back, it didn't fail.
+			if (response.status === 429 || (response.status === 503 && response.headers.has("retry-after")))
+				throw new SearchBusy()
 			throw new RoomError(
 				"busy",
 				"GoodWatch search is unavailable. Retry this prompt shortly.",

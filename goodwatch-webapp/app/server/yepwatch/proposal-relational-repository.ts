@@ -1,6 +1,7 @@
 import { SqlAccountRooms, encodeDecision, decodeDecision } from "./proposal-account-store.ts"
 import { SqlDeletionStore } from './proposal-deletion.ts'
 import { ROOM_CONTEXT } from "./proposal-context.ts"
+import { PENDING_IDEA_ATTRIBUTE } from "../../../packages/yepwatch-contracts/proposal.ts"
 import { z } from "zod"
 import { codec, keyed } from "./crypto.server.ts"
 import { IndeterminateWrite, RoomError } from "./errors.ts"
@@ -867,6 +868,15 @@ export class RelationalProposalRepository implements ProposalRepository {
 			if (e instanceof RoomError) throw e
 			throw fail()
 		}
+	}
+	async stalePendingIdeas(leaseBefore: number, now: number, limit: number, after = "") {
+		// Idea rows are immutable and outlive the head that stopped listing them: only the head's own ideas count.
+		return (
+			await this.sql(
+				`SELECT DISTINCT i.room_id FROM ${tables.idea.name} i JOIN ${tables.room.name} r ON r.id=i.room_id WHERE r.expires_at>? AND i.record_id=ANY(r.idea_records) AND i.interpreted_at<? AND ?=ANY(i.attributes['key']) AND i.room_id>? ORDER BY i.room_id LIMIT ?`,
+				[now, leaseBefore, PENDING_IDEA_ATTRIBUTE.key, after, Math.min(100, limit)]
+			)
+		).rows.map((r) => String(r[0]))
 	}
 	async pending(limit: number) {
 		return (
