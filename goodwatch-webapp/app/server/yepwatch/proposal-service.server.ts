@@ -1,3 +1,4 @@
+import { timed } from "./server-timing.ts"
 import { MemoryAccountRooms } from "./proposal-account-store.ts"
 import { MemoryDeletionStore, requireNotDeleting, type DeletionStore } from './proposal-deletion.ts'
 import type { AccountRoomsStore, RoomAccount } from "./proposal-types.ts"
@@ -992,7 +993,7 @@ export class ProposalService {
 			const capacity = this.guard?.active(room.committed)
 			capacity?.catch(() => {}) // awaited below
 			const snapshot = this.snapshot(room.committed, credential)
-			await capacity
+			if (capacity) await timed("capacity", capacity)
 			return { receipt, snapshot }
 		}
 		let stored = await this.notify(id, { yieldToQueued: true })
@@ -1019,7 +1020,7 @@ export class ProposalService {
 		// With no search configured nothing is reserved and the idea stays uninterpreted (normal ranking).
 		const reserved = !this.interpret
 		for (let i = 0; i < 6; i++) {
-			const { stored: old, check } = await this.readChecked(id)
+			const { stored: old, check } = await timed("read", this.readChecked(id))
 			const p = this.auth(
 				old.room,
 				credential,
@@ -1055,8 +1056,8 @@ export class ProposalService {
 					undefined,
 					reserved
 				)
-			await allowed
-			await this.guard?.command(id, p.id, digest, check)
+			await timed("allowed", allowed)
+			if (this.guard) await timed("guard", this.guard.command(id, p.id, digest, check))
 			const command = envelope.command
 			if (command.type === "configure" && command.country) {
 				const metadata = await this.catalog.metadata(command.country)
@@ -1108,15 +1109,15 @@ export class ProposalService {
 				// Fresh: never joins a background build's read that started before a title was marked Seen. Read
 				// alongside the deck, not after it: each is a round trip (GoodWatch, the catalog) on Start's path.
 				const seenRead = wantsPage && envelope.command.type === "start" && this.catalog.excludedKeys
-					? this.catalog.excludedKeys(room, { fresh: true })
+					? timed("seen", this.catalog.excludedKeys(room, { fresh: true }))
 					: null
 				seenRead?.catch(() => {}) // Awaited below; a failed deck must not leave it unhandled.
 				// Best effort (members time-box and log their own reads): a failed read starts without those exclusions.
 				// Usually prepared during setup; a Start retried after losing its compare-and-swap reuses the same build.
 				if (wantsPage)
-					page = await this.decks.page(room, {
+					page = await timed("deck", this.decks.page(room, {
 						seenReadFresh: envelope.command.type === "start" && Boolean(this.catalog.excludedKeys),
-					})
+					}))
 				if (page && seenRead) {
 					const excluded = new Set(await seenRead.catch(() => [] as string[]))
 					const unseen = (p: NonNullable<typeof page>) =>
@@ -1189,7 +1190,7 @@ export class ProposalService {
 			})
 			commandState.receipts = commandState.receipts.slice(-L.receipts)
 			try {
-				if (!(await this.repository.compareAndSwap(old, room, true))) continue
+				if (!(await timed("write", this.repository.compareAndSwap(old, room, true)))) continue
 			} catch (e) {
 				if (!(e instanceof IndeterminateWrite)) throw e
 				uncertain = true

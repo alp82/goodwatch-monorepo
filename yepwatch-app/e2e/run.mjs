@@ -245,5 +245,8 @@ function runTier() {
   }
   fs.writeFileSync(path.join(out, 'summary.md'), `${lines.join('\n')}\n`);
   log(`done in ${(wallClockMs / 1000).toFixed(0)} s → ${path.relative(process.cwd(), path.join(out, 'summary.md'))}, report.json`);
+  // Playwright's own line can say "passed": budgets are judged here, across the run's samples, after it ends.
+  for (const [m, v] of Object.entries(timing)) if (!v.pass) log(`FAIL ${m}: p95 ${v.p95} ms over budget ${v.budget} ms (${v.samples} samples)`);
+  if (failures.length || report.failed) log(`FAILED: ${report.failed} test(s), ${failures.length} gate failure(s)`);
   return failures.length || report.failed ? 1 : 0;
 }

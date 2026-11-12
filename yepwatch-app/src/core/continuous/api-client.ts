@@ -25,6 +25,7 @@ import { authEpoch } from './account-flow';
 import { connectionDiagnostic, type ConnectionDiagnostic, type ConnectionStage } from './connection-diagnostic';
 import { apiUrl } from '../config';
 import { invitePreviewSchema } from './wire';
+import { earlyInviteResponse } from './early-invite';
 import { parseRetryAfter } from './retry';
 import type { RoomAccess } from '../credentials';
 /** How long a room create or join waits for an answer before it counts as unanswered (and is kept for a resend). */
@@ -87,13 +88,14 @@ export class ContinuousApi {
     try {
       const url = apiUrl(path);
       stage = 'request';
-      response = await this.fetcher(url, {
+      const init: RequestInit = {
         method: body === undefined ? 'GET' : 'POST',
         body: body === undefined ? undefined : JSON.stringify(body),
         credentials: 'include',
         headers,
         signal: controller.signal,
-      });
+      };
+      response = await (earlyInviteResponse(url, init, this.fetcher) ?? this.fetcher(url, init));
       stage = 'response';
       // While Log out runs, the server may still answer as the account: only Log out's own answer counts.
       const outdated = () => !authEpoch.isCurrent(asked) || (!authEpoch.settled() && path !== paths.accountLogout);

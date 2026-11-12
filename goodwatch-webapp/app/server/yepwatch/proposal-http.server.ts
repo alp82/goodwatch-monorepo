@@ -1,3 +1,4 @@
+import { timed, withServerTiming } from "./server-timing.ts"
 import { z } from "zod"
 import { randomBytes } from 'node:crypto'
 import type { ContinuousMembers } from "./continuous-members.server.ts"
@@ -78,7 +79,8 @@ export function createProposalHandler(
 	const allowed = new Set(options.allowedOrigins)
 	/** GoodWatch links in flight, per place and sign-in session (see `link`). */
 	const links = new Map<string, Promise<boolean>>()
-	return async (request: Request): Promise<Response> => {
+	return (request: Request): Promise<Response> => withServerTiming(() => handle(request))
+	async function handle(request: Request): Promise<Response> {
 		const url = new URL(request.url)
 		const origin = request.headers.get("origin")
 		const headers = new Headers({
@@ -606,7 +608,7 @@ export function createProposalHandler(
         }
 				// A command's deletion check runs alongside its room read (the command waits for it before any write or answer).
 				let deletionCheck: Promise<void> | undefined
-				const actor = await scopedCredential(id, request.method === "POST" && operation === "commands" ? (check) => { deletionCheck = check } : undefined)
+				const actor = await timed("auth", scopedCredential(id, request.method === "POST" && operation === "commands" ? (check) => { deletionCheck = timed("deletion", check) } : undefined))
 				if (request.method === "POST" && operation === "preview")
 					return reply(await service.preview(id, actor, parse(proposalPreviewSchema, await body(request))))
 				if (request.method === "GET" && !operation) {
