@@ -171,6 +171,27 @@ test("a command answer still checks the room is live after the commit", async ()
 	f.service.decks.forget(r.id)
 })
 
+test("a command answer still checks the room's capacity reservation after the commit", async () => {
+	let revoked = false
+	const guard: ProposalOperationGuard = {
+		async active() { if (revoked) throw Object.assign(new Error("Room capacity unavailable"), { code: "capacity" }) },
+		async create() { return Date.now() + 3_600_000 },
+		async join() {},
+		async command() {},
+	}
+	const f = fixture({ delayMs: 60_000, guard })
+	const r = await room(f)
+	await r.send({ type: "rename", nickname: "Early" } as RoomCommand) // the room is known: its check runs alongside the read
+	const cas = f.repository.compareAndSwap.bind(f.repository)
+	f.repository.compareAndSwap = async (old, next, notify) => {
+		const ok = await cas(old, next, notify)
+		revoked = true
+		return ok
+	}
+	await assert.rejects(r.send({ type: "rename", nickname: "Late" } as RoomCommand), { code: "capacity" })
+	f.service.decks.forget(r.id)
+})
+
 test("a command is refused, and commits nothing, once the room's capacity reservation is gone", async () => {
 	let revoked = false
 	const guard: ProposalOperationGuard = {

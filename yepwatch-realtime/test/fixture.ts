@@ -42,6 +42,8 @@ export async function fixture(continuous: boolean | 'proposal' = false) {
     // The proposal API reads a room once for all of its phones; false stands in for an older API without that read.
     batched: continuous === 'proposal', viewsCalls: 0,
     beforeView: undefined as undefined | (() => Promise<void>),
+    // Participants whose leases the API refuses (their access was revoked); `revoked` refuses every lease.
+    revokedParticipants: new Set<string>(),
     corruptAttachment: undefined as undefined | Record<string, unknown>,
   }
   const tickets = new Map<string, { roomId: string; participantId: string; expiresAt: number }>()
@@ -72,7 +74,7 @@ export async function fixture(continuous: boolean | 'proposal' = false) {
     if (req.url === routes.realtimeView) {
       state.viewCalls++
       const a = leases.get(body.lease)
-      if (state.revoked || !a || a.leaseExpiresAt <= Date.now() || a.roomId !== body.roomId) { reply(403, {}); return }
+      if (state.revoked || !a || state.revokedParticipants.has(a.participantId) || a.leaseExpiresAt <= Date.now() || a.roomId !== body.roomId) { reply(403, {}); return }
       // Capture BEFORE delay to exercise subscribe/read/update races.
       const shared = structuredClone(state.shared)
       await state.beforeView?.()
@@ -84,7 +86,7 @@ export async function fixture(continuous: boolean | 'proposal' = false) {
       await state.beforeView?.()
       const views = (body.leases as string[]).map(value => {
         const a = leases.get(value)
-        return state.revoked || !a || a.leaseExpiresAt <= Date.now() || a.roomId !== body.roomId
+        return state.revoked || !a || state.revokedParticipants.has(a.participantId) || a.leaseExpiresAt <= Date.now() || a.roomId !== body.roomId
           ? { error: { code: 'forbidden', status: 403 } } : lease(a.participantId)
       })
       reply(200, { snapshot: views.some(v => !('error' in v)) ? shared : null, views }); return

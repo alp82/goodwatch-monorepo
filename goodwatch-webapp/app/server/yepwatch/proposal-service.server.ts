@@ -706,13 +706,19 @@ export class ProposalService {
 		await allowed
 		// The command answers with the room it committed: its read was checked (v3, live, capacity reserved) just
 		// before the compare-and-swap, and a newer revision reaches this phone over the socket like any other change.
+		// Its expiry and capacity reservation are checked again after the commit, as any read would.
 		// notify (publish + acknowledge) then runs on its own, unless the answer has to wait for it: a decision moved
 		// into the history is stored on the accounts first, and an agreement check settles before it answers.
 		// Fresh availability checks must not block joins or withdrawals that invalidate them.
 		if (room && !(room.committed.phase === "choosing" && room.committed.agreement.state === "checking") && !room.historyChanged) {
 			void this.notify(id, { yieldToQueued: true })
 			continuousLive(room.committed, this.now())
-			return { receipt, snapshot: this.snapshot(room.committed, credential) }
+			// The capacity read is in flight while the answer's snapshot is built.
+			const capacity = this.guard?.active(room.committed)
+			capacity?.catch(() => {}) // awaited below
+			const snapshot = this.snapshot(room.committed, credential)
+			await capacity
+			return { receipt, snapshot }
 		}
 		let stored = await this.notify(id, { yieldToQueued: true })
 		if (!stored || (stored.room.phase === "choosing" && stored.room.agreement.state === "checking")) {
@@ -1662,9 +1668,17 @@ export class ProposalService {
 			? lease
 			: null
 	}
-	/** A lease's renewed attachment on the room as read, or why it is refused. `session`: whether its sign-in is still active. */
+	/**
+	 * A lease's renewed attachment on the room as read, or why it is refused. `session`: whether its sign-in is still
+	 * active, checked alongside the room read. That early answer only holds while the room as read still lists the
+	 * session on its account participant (attachment requires it): Log out takes the session off every room before
+	 * it revokes it. A participant that is a guest now may have become one by that very Log out, after the early
+	 * check, so its session is checked again after the read.
+	 */
 	private async leaseView(room: ProposalRoom, lease: Lease, session?: Promise<boolean>): Promise<RealtimeAttachment | RoomError> {
 		try {
+			if (lease.sessionId && !room.participants.find((p) => p.id === lease.participantId)?.memberUserId)
+				session = this.accounts.sessionActive(lease.sessionId)
 			if (session) requireRoom(await session, "forbidden", "Session ended", 403)
 			requireRoom(
 				actor(room, lease.participantId).epoch === lease.epoch,

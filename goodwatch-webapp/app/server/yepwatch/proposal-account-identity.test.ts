@@ -452,3 +452,42 @@ test("the gateway's one read for all of a room's phones answers each lease as it
 	const missing = await service.views("x".repeat(32), [leases[2]]);
 	assert.deepEqual(missing, { snapshot: null, views: [{ error: { code: "unauthorized", status: 401 } }] }, "a lease for another room");
 });
+
+test("a lease whose sign-in was still active when its refresh began is refused once Log out made the seat a guest before the room read", async () => {
+	for (const batched of [false, true]) {
+		const repo = new ProposalMemoryRepository(),
+			service = new ProposalService(repo, proposalFixtureCatalog, secret);
+		const phone = account("phone");
+		const a = await service.create(request(), phone),
+			id = a.credential.roomId;
+		const guest = await service.join(id, { ...request("Sam"), inviteCode: a.invite.code });
+		await choosing(service, a, phone);
+		const lease = async (admission: GuestAdmission, who?: RoomAccount) =>
+			(await service.attach(id, (await service.ticket(id, credential(admission, who))).ticket)).lease;
+		const leases = [await lease(a, phone), await lease(guest)];
+		// The session check answers "active" first; Log out then completes (the seat becomes a guest, the
+		// session is revoked) before the refresh's room read.
+		const sessionActive = service.accounts.sessionActive.bind(service.accounts);
+		let race: Promise<unknown> | undefined;
+		service.accounts.sessionActive = (sessionId) => {
+			const active = sessionActive(sessionId);
+			race ??= active.then(() => service.logoutAccount(phone));
+			return active;
+		};
+		const read = repo.read.bind(repo);
+		let raced = false;
+		repo.read = async (roomId) => {
+			if (race && !raced) { raced = true; await race; }
+			return read(roomId);
+		};
+		if (batched) {
+			const after = await service.views(id, leases);
+			assert.deepEqual(after.views[0], { error: { code: "forbidden", status: 403 } }, "batched: the signed-out login's lease is not renewed");
+			assert.ok(!("error" in after.views[1]), "batched: the friend keeps theirs");
+		} else {
+			await assert.rejects(service.view(id, leases[0]), isError("forbidden"), "single: the signed-out login's lease is not renewed");
+		}
+		const seat = (await read(id))!.room.participants.find((p) => p.id === a.credential.participantId)!;
+		assert.equal(seat.memberUserId, null, "the race happened: the seat is a guest now");
+	}
+});
