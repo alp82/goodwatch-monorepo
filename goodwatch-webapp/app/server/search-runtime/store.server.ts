@@ -25,7 +25,8 @@ export type BasicReason =
 	| "cancelled"
 	| "provider"
 	| "contract"
-	// A guest's search that arrived in the URL, with no action on the page: no paid reading (paidReadingAllowed).
+	// A guest's web search without an action label (it arrived in the URL, or its label is missing or invalid): no paid
+	// reading (paidReadingAllowed). The page shows the basic results and reads again once the person acts.
 	| "navigation"
 export type Claim =
 	| { kind: "claimed"; id: string }

@@ -14,7 +14,7 @@ import { exactSearchParams } from "~/domain/exact-search"
 // Best match (the sort by taste match) and the Taste match filter need taste; the bar hears from the results whether
 // the viewer has it. For you sits in You's Order block.
 import type { SearchTrigger } from "~/domain/search-attribution"
-import { navigationSearchOrigin, searchNavigationState } from "~/ui/search/search-attribution"
+import { filterChangeState, navigationSearchOrigin, searchNavigationState } from "~/ui/search/search-attribution"
 import { useLocation, useNavigation, useNavigationType, useSearchParams } from "@remix-run/react"
 import { MotionConfig } from "framer-motion"
 import { Suspense, lazy, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
@@ -570,13 +570,14 @@ export function DiscoverPage({
 				params,
 				item.on ? [...off, item.phrase] : off.filter((o) => o.toLowerCase() !== item.phrase.toLowerCase()),
 			),
-			{ replace: true, preventScrollReset: true },
+			{ replace: true, preventScrollReset: true, state: filterChangeState(params) },
 		)
 	}
 	const allRead = (allOff: boolean) =>
 		setParams(withOff(params, allOff ? items.filter((item) => !item.aside).map((item) => item.phrase) : []), {
 			replace: true,
 			preventScrollReset: true,
+			state: filterChangeState(params),
 		})
 	const page = useMemo<DiscoverPageContext>(
 		() => ({

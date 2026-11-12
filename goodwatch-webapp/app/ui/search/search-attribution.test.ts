@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import "../../server/title-filter/test-alias.ts"
-const { navigationSearchOrigin, searchNavigationState } = await import(
+const { filterChangeState, navigationSearchOrigin, searchNavigationState } = await import(
 	"./search-attribution.ts"
 )
 
@@ -44,4 +44,17 @@ test("reload, back/forward, new tabs and a different query never reuse an old cl
 		),
 		navigation,
 	)
+})
+
+test("a filter the person changes labels the search filter_change; back/forward to that entry is navigation", () => {
+	const params = new URLSearchParams({ q: " quiet movies ", type: "movie" })
+	const state = filterChangeState(params)
+	const filterChange = { surface: "discover", trigger: "filter_change" }
+	for (const type of ["REPLACE", "PUSH"])
+		assert.deepEqual(navigationSearchOrigin("quiet movies", state, type), filterChange)
+	assert.deepEqual(navigationSearchOrigin("quiet movies", state, "POP"), { surface: "discover", trigger: "navigation" })
+	// An older link's words in `asked` are the query the page compares.
+	assert.deepEqual(navigationSearchOrigin("dark heist", filterChangeState(new URLSearchParams({ asked: "dark heist", q: "heist" })), "REPLACE"), filterChange)
+	// Browsing without a search carries no label.
+	assert.equal(filterChangeState(new URLSearchParams({ type: "movie" })), undefined)
 })

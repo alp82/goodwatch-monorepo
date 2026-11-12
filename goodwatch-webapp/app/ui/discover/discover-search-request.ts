@@ -3,7 +3,7 @@
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
 import type { SearchFilters } from "~/server/combined-search/search-filters"
 import type { ReadCount, SearchBatch } from "~/server/combined-search/search.server"
-import type { SearchOrigin, SearchTrigger } from "~/domain/search-attribution"
+import { isActionTrigger, type SearchOrigin, type SearchTrigger } from "~/domain/search-attribution"
 import { requestSearch } from "~/ui/search/search-client"
 import { type TitleKey, titleKey } from "~/utils/title-key"
 
@@ -32,13 +32,19 @@ export interface DiscoverSearchResult {
 	pendingTitleLookup?: boolean
 	/** Set on a partial list of title and people matches sent ahead of the reading and the ranking. */
 	pendingRanking?: boolean
-	/** A guest's search that arrived in the URL: basic results, no reading bought (domain paidReadingAllowed). */
+	/** A guest's search without an action label: basic results, no reading bought (domain paidReadingAllowed). */
 	readingWithheld?: boolean
 }
 
-/** A search answered without a reading because it came from a link reads again once the person acts on the same words. */
-export const readsAgainOnAction = (answer: DiscoverSearchResult | null | undefined, trigger: SearchTrigger) =>
-	Boolean(answer?.readingWithheld) && trigger !== "navigation"
+/**
+ * A search answered without a reading because it was asked without an action (a link, back/forward, no label) reads
+ * again once the person acts on the same words. An answer to an action is never asked again, so nothing loops.
+ */
+export const readsAgainOnAction = (
+	answer: DiscoverSearchResult | null | undefined,
+	askedAs: SearchTrigger | undefined,
+	trigger: SearchTrigger,
+) => Boolean(answer?.readingWithheld) && askedAs !== undefined && !isActionTrigger(askedAs) && isActionTrigger(trigger)
 
 const rankedKeys = (batch: SearchBatch): TitleKey[] => {
 	const keys: TitleKey[] = []

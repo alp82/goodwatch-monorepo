@@ -42,7 +42,8 @@ export function useDiscoverSearch({
 	} | null>(null)
 	const [provisional, setProvisional] = useState<{ key: string; result: DiscoverSearchResult } | null>(null)
 	const nextTrigger = useRef<SearchTrigger | null>(null)
-	const previousAttempt = useRef<{ q: string | null; key: string } | null>(null)
+	// The label this key's last request carried.
+	const askedAs = useRef<{ key: string; trigger: SearchTrigger } | null>(null)
 	const generation = useRef(0)
 	const liveKey = useRef("")
 	const { locale } = useLocale()
@@ -53,9 +54,12 @@ export function useDiscoverSearch({
 	const result = useQuery({
 		queryKey: ["discover-search", key],
 		queryFn: async ({ signal }) => {
-			const trigger = nextTrigger.current ?? (previousAttempt.current?.q === q && previousAttempt.current.key !== key ? "filter_change" : attribution.trigger)
+			// The label is the page's (history state, set only by the person's own action, filter changes included) or a
+			// retry's. Nothing is inferred from the key: back/forward to another filter entry and changes the page makes by
+			// itself stay "navigation", which buys a guest no reading.
+			const trigger = nextTrigger.current ?? attribution.trigger
 			nextTrigger.current = null
-			previousAttempt.current = { q, key }
+			askedAs.current = { key, trigger }
 			const attempt = ++generation.current
 			// Another search's partial list goes; this search's own stays through a retry, until its next packet or its
 			// completed answer.
@@ -81,10 +85,12 @@ export function useDiscoverSearch({
 	})
 	const partial = provisional?.key === key ? provisional.result : null
 	const completed = q !== null && !result.isPlaceholderData ? (result.data ?? null) : null
-	// A guest who opened a link got the basic results; Enter or the search button on the same words is an action, so
-	// the same search runs again and may read. Editing the words or a filter searches anew anyway.
-	// Once per key: an answer that is withheld again is kept.
-	const readAgain = readsAgainOnAction(completed, attribution.trigger) && !result.isFetching
+	// A guest who opened a link got the basic results; an action on the same words (Enter, the search button, a sort
+	// or filter that keeps the key) runs the same search again, which may read. Editing the words or a filter searches
+	// anew anyway. Once per key: an answer that is withheld again is kept.
+	const readAgain =
+		readsAgainOnAction(completed, askedAs.current?.key === key ? askedAs.current.trigger : undefined, attribution.trigger) &&
+		!result.isFetching
 	const readAgainFor = useRef<string | null>(null)
 	const refetch = result.refetch
 	useEffect(() => {

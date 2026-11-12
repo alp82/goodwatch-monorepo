@@ -4,7 +4,7 @@ import * as nodeModule from "node:module"
 import { test } from "node:test"
 import ts from "typescript"
 import { TypeSafeClient } from "@typesafe-ai/sdk"
-import type { SearchAttribution } from "../../domain/search-attribution.ts"
+import { attributedSearch, browserSearchOrigin, type SearchAttribution } from "../../domain/search-attribution.ts"
 import type { SearchRedis } from "./coordination.server.ts"
 
 // Load the real store and coordinator without connecting to Crate or Redis. Node's type stripping doesn't support
@@ -337,15 +337,27 @@ for (const cost of [840, null, JEV_RESERVE_NANO + 1]) {
 	})
 }
 
-// Pay only when a person acts: a guest's web search that arrived in the URL buys no reading.
+// Pay only when a person acts: a guest's web search buys a reading only with an action label.
 const origin = (trigger: SearchAttribution["trigger"], actor_kind: SearchAttribution["actor_kind"], consumer: SearchAttribution["consumer"] = "web"): SearchAttribution =>
 	({ ...attribution, consumer, trigger, actor_kind, surface: "discover" })
+// What the route makes of a browser body's label (routes/api.combined-search.ts), for a guest.
+const fromBrowser = (label: unknown) =>
+	attributedSearch({ ...browserSearchOrigin(label), consumer: "web", reported_by: "client" }, null)
 for (const [name, label, paid] of [
 	["guest navigation", origin("navigation", "guest"), false],
+	["guest unknown", origin("unknown", "guest"), false],
+	["guest with the label omitted", fromBrowser(undefined), false],
+	["guest with an invalid label", fromBrowser({ surface: "discover", trigger: "crawl" }), false],
+	["guest claiming an API label", fromBrowser({ surface: "discover", trigger: "api" }), false],
 	["guest typing", origin("typing_pause", "guest"), true],
 	["guest Enter", origin("enter", "guest"), true],
+	["guest search button", origin("search_button", "guest"), true],
+	["guest selection", origin("selection", "guest"), true],
 	["guest in-app tag link", origin("link", "guest"), true],
+	["guest filter change", origin("filter_change", "guest"), true],
+	["guest retry", origin("retry", "guest"), true],
 	["member navigation", origin("navigation", "member"), true],
+	["member with the label omitted", attributedSearch({ ...browserSearchOrigin(undefined), consumer: "web", reported_by: "client" }, "member-id"), true],
 	["MCP", origin("api", "external", "mcp"), true],
 ] as const)
 	test(`claim: ${name} ${paid ? "may buy" : "buys no"} reading`, async (t) => {
@@ -358,27 +370,28 @@ for (const [name, label, paid] of [
 		assert.equal(statements.some(({ stmt }) => stmt.startsWith("INSERT")), paid, "no estimate without a claim")
 	})
 
-test("guest navigation: a cached reading still serves, a miss is basic with no paid call", async (t) => {
-	const originalKey = process.env.TYPESAFE_API_KEY
-	process.env.TYPESAFE_API_KEY = "test-key"
-	t.after(() => { if (originalKey === undefined) delete process.env.TYPESAFE_API_KEY; else process.env.TYPESAFE_API_KEY = originalKey })
-	const paid = t.mock.method(TypeSafeClient.prototype, "systemOne", async () => { throw new Error("Unexpected paid call") })
-	const input: Parameters<typeof executeJevStage>[1] = {
-		requestText: "quiet movies", questionVersion: "test", language: { mode: "english", version: "test" },
-		requests: [{ state: {}, questions: {} }, { state: {}, questions: {} }],
-		visitor: { accountId: null, networkIdentity: "test", attribution: { consumer: "web", surface: "discover", trigger: "navigation", reported_by: "client" } },
-	}
-	for (const hit of [true, false]) {
-		const statements: string[] = []
-		const store: InstanceType<typeof SearchStore> = new SearchStore(async stmt => {
-			statements.push(stmt)
-			if (stmt.startsWith("SELECT halted")) return { cols: ["halted"], rows: [[false]], rowcount: 1 }
-			if (stmt.startsWith("SELECT CURRENT_TIMESTAMP")) return { cols: ["now", "day", "month"], rows: [[1000, 0, 0]], rowcount: 1 }
-			return { cols: [], rows: [], rowcount: 0 }
-		}, new SearchCoordination(() => ({ get: async () => hit ? store.seal([{}, {}]) : null, eval: async () => { throw new Error("Unexpected admission") } }) as unknown as SearchRedis), Buffer.alloc(32, 1))
-		const outcome = await executeJevStage(store, input)
-		assert.deepEqual(hit ? outcome.kind : outcome, hit ? "cached" : { kind: "basic", reason: "navigation", message: "Showing basic search results.", chargedNano: 0 })
-		assert.ok(statements.every(stmt => stmt.startsWith("SELECT")), "no estimate is written")
-	}
-	assert.equal(paid.mock.callCount(), 0)
-})
+for (const [name, label] of [["navigation", { surface: "discover", trigger: "navigation" }], ["an omitted label", undefined], ["an invalid label", { trigger: "crawl" }]] as const)
+	test(`guest ${name}: a cached reading still serves, a miss is basic with no paid call`, async (t) => {
+		const originalKey = process.env.TYPESAFE_API_KEY
+		process.env.TYPESAFE_API_KEY = "test-key"
+		t.after(() => { if (originalKey === undefined) delete process.env.TYPESAFE_API_KEY; else process.env.TYPESAFE_API_KEY = originalKey })
+		const paid = t.mock.method(TypeSafeClient.prototype, "systemOne", async () => { throw new Error("Unexpected paid call") })
+		const input: Parameters<typeof executeJevStage>[1] = {
+			requestText: "quiet movies", questionVersion: "test", language: { mode: "english", version: "test" },
+			requests: [{ state: {}, questions: {} }, { state: {}, questions: {} }],
+			visitor: { accountId: null, networkIdentity: "test", attribution: { ...browserSearchOrigin(label), consumer: "web", reported_by: "client" } },
+		}
+		for (const hit of [true, false]) {
+			const statements: string[] = []
+			const store: InstanceType<typeof SearchStore> = new SearchStore(async stmt => {
+				statements.push(stmt)
+				if (stmt.startsWith("SELECT halted")) return { cols: ["halted"], rows: [[false]], rowcount: 1 }
+				if (stmt.startsWith("SELECT CURRENT_TIMESTAMP")) return { cols: ["now", "day", "month"], rows: [[1000, 0, 0]], rowcount: 1 }
+				return { cols: [], rows: [], rowcount: 0 }
+			}, new SearchCoordination(() => ({ get: async () => hit ? store.seal([{}, {}]) : null, eval: async () => { throw new Error("Unexpected admission") } }) as unknown as SearchRedis), Buffer.alloc(32, 1))
+			const outcome = await executeJevStage(store, input)
+			assert.deepEqual(hit ? outcome.kind : outcome, hit ? "cached" : { kind: "basic", reason: "navigation", message: "Showing basic search results.", chargedNano: 0 })
+			assert.ok(statements.every(stmt => stmt.startsWith("SELECT")), "no estimate is written")
+		}
+		assert.equal(paid.mock.callCount(), 0)
+	})

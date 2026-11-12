@@ -132,14 +132,20 @@ test("Discover keeps every candidate and the shared snapshot token, not only the
 	assert.equal(answer.searchSet, "ab".repeat(16))
 })
 
-test("a guest's link search answered without a reading reads again on Enter or the search button, once acted on", async (t) => {
+test("a guest's search answered without a reading reads again once acted on, never after an action", async (t) => {
 	for (const [reason, withheld] of [["navigation", true], ["budget", false], [undefined, false]] as const) {
 		stubFetch(t, () => streamAnswer({ kind: "batch", batch: { rows: [{ key: "movie:603" }], reading: [], errors: [], ...(reason ? { readingUnavailable: reason } : {}) } }))
 		const answer = await discover()
 		assert.equal(Boolean(answer.readingWithheld), withheld)
-		// Still the link: the basic results stay. An action on the same words asks again.
-		assert.equal(readsAgainOnAction(answer, "navigation"), false)
-		for (const trigger of ["enter", "search_button", "typing_pause", "link"] as const)
-			assert.equal(readsAgainOnAction(answer, trigger), withheld)
+		for (const askedAs of ["navigation", "unknown"] as const) {
+			// Still no action: the basic results stay. An action on the same words asks again.
+			assert.equal(readsAgainOnAction(answer, askedAs, "navigation"), false)
+			assert.equal(readsAgainOnAction(answer, askedAs, "unknown"), false)
+			for (const trigger of ["enter", "search_button", "typing_pause", "link", "filter_change", "retry"] as const)
+				assert.equal(readsAgainOnAction(answer, askedAs, trigger), withheld)
+		}
+		// An answer to an action is kept, whatever it says: no loop.
+		assert.equal(readsAgainOnAction(answer, "enter", "enter"), false)
+		assert.equal(readsAgainOnAction(answer, undefined, "enter"), false)
 	}
 })
