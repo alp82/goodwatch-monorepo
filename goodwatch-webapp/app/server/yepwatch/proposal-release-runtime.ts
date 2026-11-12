@@ -3,6 +3,7 @@ import { releaseMembers } from "./proposal-release-members.ts"
 import type { ContinuousMembers } from "./continuous-members.server.ts"
 import { ReleaseControl } from "./proposal-release-control.ts"
 import { SqlCreationQuotas } from './proposal-creation-quota.ts'
+import { RoomRetention, hasDeletions } from './proposal-room-retention.ts'
 import {
 	API_PREFIX,
 	REVISION_CHANNEL,
@@ -153,11 +154,21 @@ export function createReleaseRuntime(
 			})
 	}, 2000)
 	repair.unref()
+	// Its own repository: rooms read for deletion stay out of the serving cache.
+	const retention = new RoomRetention(deps.sql, new RelationalProposalRepository(deps.sql, config.secret), {
+		retentionDays: config.roomRetentionDays,
+	})
 	let purging = false
 	const purge = setInterval(() => {
 		if (purging || draining || !readiness().ready) return
 		purging = true
-		void Promise.all([service.deletions.purgeDue(now()), quotas.purgeExpired()]).catch(() => console.error('YepWatch retention cleanup will retry')).finally(() => { purging = false })
+		void Promise.all([
+			service.deletions.purgeDue(now()),
+			quotas.purgeExpired(),
+			retention.run().then((report) => {
+				if (hasDeletions(report)) console.log(JSON.stringify({ event: "yepwatch_room_retention", ...report }))
+			}),
+		]).catch(() => console.error('YepWatch retention cleanup will retry')).finally(() => { purging = false })
 	}, 60_000)
 	purge.unref()
 	return {
