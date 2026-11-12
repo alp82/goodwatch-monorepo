@@ -6,7 +6,50 @@ import type {
 	ProposalStored,
 	ProposalCatalog,
 } from "./proposal-types.ts"
-import { IndeterminateWrite } from "./errors.ts"
+import { IndeterminateWrite, RoomError } from "./errors.ts"
+import { CONTINUOUS_LIMITS } from "./continuous-types.ts"
+import { allowanceFull, type CreationQuotaStore } from "./proposal-creation-quota.ts"
+
+/** Per-person room allowances in memory, on the caller's clock: the reservation rules of SqlCreationQuotas. */
+export class MemoryCreationQuotas implements CreationQuotaStore {
+	readonly limit: number
+	readonly rooms = new Map<string, { creator: string; admission: string; expiresAt: number }>()
+	private now: () => number
+	constructor(now: () => number = Date.now, limit = 10) {
+		this.now = now
+		this.limit = limit
+	}
+	async eligible(roomId: string, admissionDigest: string, creatorDigest: string) {
+		const prior = this.rooms.get(roomId)
+		if (prior && prior.expiresAt > this.now()) {
+			if (prior.admission !== admissionDigest) throw new RoomError("conflict", "Admission retry changed", 409)
+			return
+		}
+		const live = [...this.rooms.values()].filter((r) => r.creator === creatorDigest && r.expiresAt > this.now())
+		if (live.length >= this.limit) throw allowanceFull(this.limit)
+	}
+	async reserve(roomId: string, admissionDigest: string, creatorDigest: string) {
+		const prior = this.rooms.get(roomId)
+		if (prior && prior.expiresAt > this.now()) {
+			if (prior.admission !== admissionDigest) throw new RoomError("conflict", "Admission retry changed", 409)
+			return prior.expiresAt
+		}
+		const live = [...this.rooms.values()].filter((r) => r.creator === creatorDigest && r.expiresAt > this.now())
+		if (live.length >= this.limit) throw allowanceFull(this.limit)
+		const expiresAt = this.now() + CONTINUOUS_LIMITS.roomMs
+		this.rooms.set(roomId, { creator: creatorDigest, admission: admissionDigest, expiresAt })
+		return expiresAt
+	}
+	async active(roomId: string, expectedExpiry?: number) {
+		const room = this.rooms.get(roomId)
+		if (room && room.expiresAt <= this.now()) throw new RoomError("expired", "Room expired", 410)
+		if (!room || (expectedExpiry !== undefined && expectedExpiry !== room.expiresAt))
+			throw new RoomError("busy", "Room allowance could not be confirmed. Retry the same request.", 503, true)
+	}
+	async count() {
+		return [...this.rooms.values()].filter((r) => r.expiresAt > this.now()).length
+	}
+}
 
 export class ProposalMemoryRepository implements ProposalRepository {
 	accountStore = new MemoryAccountRooms()

@@ -4,7 +4,7 @@ import { execFileSync } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
 import { crateSql, type Sql } from './repository.server.ts'
 import { SqlCreationQuotas, provisionCreationQuotas } from './proposal-creation-quota.ts'
-import { DEFAULT_CONTROL, ReleaseControl, provisionControl } from './proposal-release-control.ts'
+import { CONTROL_TABLE, DEFAULT_CONTROL, ReleaseControl, provisionControl } from './proposal-release-control.ts'
 import { provisionReleaseStore } from './proposal-release-store.ts'
 import { ProposalService } from './proposal-service.server.ts'
 import { RelationalProposalRepository } from './proposal-relational-repository.ts'
@@ -41,7 +41,7 @@ test('creation identity: private browser cookie, stable native installation and 
   assert.notEqual(creators[4], creators[2])
 })
 
-test('Crate personal allowance: ten across instances, independent people, legacy rooms, retries and expiry cleanup', { skip: process.env.YEPWATCH_TEST_RELATIONAL_CRATE !== '1', timeout: 180000 }, async t => {
+test('Crate personal allowance: ten across instances, more independent people than the old shared cap, legacy rooms, full creators charge nothing, retries and expiry cleanup', { skip: process.env.YEPWATCH_TEST_RELATIONAL_CRATE !== '1', timeout: 180000 }, async t => {
   const name = `yepwatch-personal-quota-${process.pid}`
   docker('run', '-d', '--name', name, '-p', '127.0.0.1::4200', '-e', 'CRATE_HEAP_SIZE=512m', 'crate:5.10.16', 'crate', '-Cdiscovery.type=single-node', '-Ccluster.name=' + name)
   t.after(() => docker('rm', '-f', name))
@@ -51,11 +51,16 @@ test('Crate personal allowance: ten across instances, independent people, legacy
     try { await sql('SELECT 1'); break } catch (error) { if (i > 100) throw error; await new Promise(r => setTimeout(r, 300)) }
   }
   await provisionReleaseStore(sql, 0, 'personal-test', secret)
-  const policy = { ...DEFAULT_CONTROL, rooms: 2, admissions: 120 }
+  const policy = { ...DEFAULT_CONTROL, admissions: 120 }
   await provisionControl(sql, policy, 0)
-  const legacy = new ReleaseControl(sql, policy)
-  const legacyExpiry = await legacy.create('old-one', 'old-admission-one')
-  await legacy.create('old-two', 'old-admission-two')
+  // Rooms created under the removed shared cap before the upgrade: their capacity records are only in the control row.
+  const dbNow = Number((await sql('SELECT CURRENT_TIMESTAMP')).rows[0][0])
+  const legacyExpiry = dbNow + 3_600_000
+  await sql(`UPDATE ${CONTROL_TABLE} SET room_reservations=? WHERE id='proposal3'`, [[
+    { room_id: 'old-one', admission_digest: 'old-admission-one', expires_at: legacyExpiry },
+    { room_id: 'old-two', admission_digest: 'old-admission-two', expires_at: legacyExpiry },
+  ]])
+  const admissionGrants = async () => ((await sql(`SELECT admission_digests FROM ${CONTROL_TABLE} WHERE id='proposal3'`)).rows[0][0] as string[]).length
   let loseQuota = true, loseProof = true
   const unreliable: Sql = async (stmt, args) => {
     const result = await sql(stmt, args)
@@ -66,6 +71,16 @@ test('Crate personal allowance: ten across instances, independent people, legacy
   const a = new SqlCreationQuotas(unreliable), b = new SqlCreationQuotas(sql)
   const control = new ReleaseControl(sql, policy, a)
   await control.active({ id: 'old-one', expiresAt: legacyExpiry })
+  await control.join('old-one', 'legacy-guest', 'legacy-join')
+  await control.command('old-one', 'legacy-guest', 'legacy-command', await control.active({ id: 'old-one', expiresAt: legacyExpiry }))
+  await control.command('old-two', 'legacy-host', 'legacy-command-two')
+  // An exact creation retry gets the original expiry, charges nothing and reserves no allowance; a changed one conflicts.
+  const grantsBefore = await admissionGrants()
+  assert.equal(await control.create('old-one', 'old-admission-one', 'legacy-creator'), legacyExpiry)
+  await assert.rejects(control.create('old-two', 'changed-admission', 'legacy-creator'), (e: unknown) => e instanceof RoomError && e.code === 'conflict')
+  assert.equal(await admissionGrants(), grantsBefore)
+  assert.equal((await sql('SELECT count(*) FROM doc.yepwatch_creation_reservation WHERE room_id IN (?,?)', ['old-one', 'old-two'])).rows[0][0], 0)
+  await assert.rejects(control.active({ id: 'old-one', expiresAt: legacyExpiry + 1 }), (e: unknown) => e instanceof RoomError && e.status === 503)
   const expiry = await control.create('fixed-room', 'fixed-admission', 'retry-person')
   assert.equal(await new ReleaseControl(sql, policy, b).create('fixed-room', 'fixed-admission', 'retry-person'), expiry)
   await assert.rejects(b.reserve('fixed-room', 'changed-admission', 'retry-person'), (e: unknown) => e instanceof RoomError && e.code === 'conflict')
@@ -77,7 +92,15 @@ test('Crate personal allowance: ten across instances, independent people, legacy
   }))
   assert.equal(outcomes.filter(Boolean).length, 10)
   await assert.rejects(a.reserve('eleventh', 'new-admission', 'same-person'), (e: unknown) => e instanceof RoomError && e.code === 'limit_reached' && e.status === 409)
-  for (let i = 0; i < 22; i++) await control.create(`independent-${i}`, `different-admission-${i}`, `person-${i}`)
+  // A full creator is refused before the shared admission budget is charged; an exact retry still passes the check.
+  const grantsBeforeFull = await admissionGrants()
+  for (let i = 0; i < 3; i++)
+    await assert.rejects(control.create(`full-${i}`, `full-admission-${i}`, 'same-person'), (e: unknown) => e instanceof RoomError && e.code === 'limit_reached' && e.status === 409)
+  assert.equal(await admissionGrants(), grantsBeforeFull)
+  await b.eligible('fixed-room', 'fixed-admission', 'retry-person')
+  await assert.rejects(b.eligible('fixed-room', 'changed-admission', 'retry-person'), (e: unknown) => e instanceof RoomError && e.code === 'conflict')
+  // 25 people, each one room: more than the removed shared cap of 20.
+  for (let i = 0; i < 25; i++) await control.create(`independent-${i}`, `different-admission-${i}`, `person-${i}`)
   await control.join('fixed-room', 'participant-from-full-person', 'join-admission')
   // Same signed-in account uses one allowance even when its device session and guest identity change.
   const service = new ProposalService(new RelationalProposalRepository(sql, secret), proposalFixtureCatalog, secret, undefined, undefined, control)

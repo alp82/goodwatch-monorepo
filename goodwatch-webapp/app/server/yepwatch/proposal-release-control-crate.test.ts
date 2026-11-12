@@ -16,6 +16,7 @@ import {
 } from "./proposal-release-control.ts"
 import { crateSql, type Sql } from "./repository.server.ts"
 import { ProposalService } from "./proposal-service.server.ts"
+import { SqlCreationQuotas } from "./proposal-creation-quota.ts"
 import { proposalFixtureCatalog } from "./proposal-test-support.ts"
 import { createProposalHandler } from "./proposal-http.server.ts"
 import { releaseHttp } from "./proposal-release-http.ts"
@@ -36,7 +37,7 @@ const credential = (a: GuestAdmission) => ({
 	token: a.credential.token,
 })
 test(
-	"Disposable Crate + two actual HTTP API instances: concurrent cap, lost acknowledgements, budgets, restart, expiry and delayed insert",
+	"Disposable Crate + two actual HTTP API instances: no shared room cap, lost acknowledgements, budgets, restart, expiry and delayed insert",
 	{ skip: !enabled, timeout: 150000 },
 	async () => {
 		const port = Number(process.env.YEPWATCH_TEST_CONTROL_PORT ?? 15978)
@@ -56,7 +57,7 @@ test(
 			}
 			throw Error("Disposable Crate unavailable")
 		}
-		const policy = { rooms: 3, admissions: 4, commands: 3, actorCommands: 2 }
+		const policy = { admissions: 10, commands: 3, actorCommands: 2 }
 		let servers: Awaited<ReturnType<typeof releaseHttp>>[] = []
 		let backupRows: { table: string; columns: Record<string, unknown> }[] = []
 		try {
@@ -84,8 +85,7 @@ test(
 				YEPWATCH_PROPOSAL_CRATEDB_USERNAME: "crate",
 				YEPWATCH_PROPOSAL_SECRET: secret,
 				YEPWATCH_PROPOSAL_KEY_ID: "control-proof",
-				YEPWATCH_PROPOSAL_MAX_ACTIVE_ROOMS: "3",
-				YEPWATCH_PROPOSAL_ADMISSIONS_PER_MINUTE: "4",
+				YEPWATCH_PROPOSAL_ADMISSIONS_PER_MINUTE: "10",
 				YEPWATCH_PROPOSAL_COMMANDS_PER_MINUTE: "3",
 				YEPWATCH_PROPOSAL_ACTOR_COMMANDS_PER_MINUTE: "2",
 			}
@@ -137,7 +137,7 @@ test(
 					secret,
 					async () => {},
 					Date.now,
-					new ReleaseControl(connection, policy)
+					new ReleaseControl(connection, policy, new SqlCreationQuotas(connection))
 				)
 			let a = build(unreliable),
 				b = build(sql)
@@ -155,9 +155,12 @@ test(
 			const origins = servers.map(
 				(s) => `http://127.0.0.1:${(s.address() as { port: number }).port}`
 			)
+			// Two concurrent waves (5 then 4): each permit retries a lost compare-and-swap 8 times, and the injected
+			// fence and lost acknowledgement use two of them, so a wave of 9 could exhaust a writer's tries.
 			const requests = Array.from({ length: 9 }, request)
-			const results = await Promise.all(
-				requests.map(async (body, i) => {
+			const send = (wave: typeof requests, offset: number) => Promise.all(
+				wave.map(async (body, j) => {
+					const i = offset + j
 					const response = await fetch(origins[i % 2] + paths.rooms, {
 						method: "POST",
 						headers: {
@@ -173,20 +176,20 @@ test(
 					}
 				})
 			)
+			const results = [...(await send(requests.slice(0, 5), 0)), ...(await send(requests.slice(5), 5))]
+			// Nine browsers, nine allowances, no shared cap: every creation lands (9 of the 10 admissions this minute).
 			const accepted = results.filter((r) => r.status === 200)
 			assert.equal(
 				accepted.length,
-				3,
+				9,
 				JSON.stringify(
 					results.map((r) => ({ status: r.status, error: r.body.error }))
 				)
 			)
+			await sql("REFRESH TABLE doc.yepwatch_creation_reservation") // the summary counts by search
 			assert.equal(
-				(await new ReleaseControl(sql, policy).summary()).activeReservations,
-				3
-			)
-			assert.ok(
-				results.filter((r) => r.status !== 200).every((r) => r.status === 503)
+				(await new ReleaseControl(sql, policy, new SqlCreationQuotas(sql)).summary()).activeReservations,
+				9
 			)
 			const first = accepted[0].body as GuestAdmission,
 				id = first.credential.roomId
@@ -235,7 +238,7 @@ test(
 				b.command(other.credential.roomId, credential(other), setup(2)),
 				(e: RoomError) => e.status === 429
 			)
-			// A new join consumes the fourth admission; a second cannot bypass exhausted global admission tokens.
+			// A new join consumes the tenth admission; a second cannot bypass exhausted global admission tokens.
 			const joinRequest = { ...request(), inviteCode: first.invite.code }
 			const joined = await a.join(id, joinRequest)
 			assert.equal(
@@ -266,7 +269,11 @@ test(
 				assert.equal(
 					lines.find((line) => line.table === CONTROL_TABLE).columns
 						.room_reservations.length,
-					3
+					0
+				)
+				assert.equal(
+					lines.filter((line) => line.table === "doc.yepwatch_creation_reservation").length,
+					9
 				)
 			} finally {
 				rmSync(backupDirectory, { recursive: true })
@@ -288,6 +295,9 @@ test(
               const {ReleaseControl}=await import(${JSON.stringify(
 								new URL("./proposal-release-control.ts", import.meta.url).href
 							)});
+              const {SqlCreationQuotas}=await import(${JSON.stringify(
+								new URL("./proposal-creation-quota.ts", import.meta.url).href
+							)});
               const {ProposalService}=await import(${JSON.stringify(
 								new URL("./proposal-service.server.ts", import.meta.url).href
 							)});
@@ -295,7 +305,7 @@ test(
 								new URL("./proposal-test-support.ts", import.meta.url).href
 							)});
               const sql=crateSql(input.origin,'crate','');
-              const service=new ProposalService(new RelationalProposalRepository(sql,input.secret),proposalFixtureCatalog,input.secret,async()=>{},Date.now,new ReleaseControl(sql,input.policy));
+              const service=new ProposalService(new RelationalProposalRepository(sql,input.secret),proposalFixtureCatalog,input.secret,async()=>{},Date.now,new ReleaseControl(sql,input.policy,new SqlCreationQuotas(sql)));
               let s; for(let attempt=0;attempt<65;attempt++){try{s=await service.read(input.id,input.credential);break}catch(error){if(error.status!==503 || attempt===64)throw error;await new Promise(r=>setTimeout(r,500))}}
               console.log(JSON.stringify({actor:s.own.participantId,host:s.shared.hostParticipantId,sequence:s.own.nextSequence}));
             `
@@ -332,11 +342,7 @@ test(
 				true
 			)
 			await assert.rejects(
-				b.create(request()),
-				(e: RoomError) => e.status === 503
-			)
-			await assert.rejects(
-				new ReleaseControl(sql, { ...policy, rooms: 4 }).check(),
+				new ReleaseControl(sql, { ...policy, admissions: 11 }, new SqlCreationQuotas(sql)).check(),
 				/mismatch/
 			)
 			// Controlled fixture expiry on this disposable store only: keep room expiry and reservation expiry identical.
@@ -359,7 +365,7 @@ test(
 			const state = controlState(
 				Object.fromEntries(CONTROL_COLUMNS.map((k, i) => [k, row[i]]))
 			)
-			state.rooms.find((r) => r[0] === id)![2] = expiredAt
+			await sql("UPDATE doc.yepwatch_creation_reservation SET expires_at=? WHERE room_id=?", [expiredAt, id])
 			// Reset only budget-window fixture to the previous SQL minute, exercising rollover without waiting a minute.
 			state.window = Math.floor(dbNow / 60000) - 1
 			const changed = CONTROL_COLUMNS.filter((k) => k !== "id"),
@@ -376,9 +382,10 @@ test(
 			)
 			const replacement = await b.create(request())
 			assert.notEqual(replacement.credential.roomId, id)
+			await sql("REFRESH TABLE doc.yepwatch_creation_reservation") // the summary counts by search
 			assert.equal(
-				(await new ReleaseControl(sql, policy).summary()).activeReservations,
-				3
+				(await new ReleaseControl(sql, policy, new SqlCreationQuotas(sql)).summary()).activeReservations,
+				9
 			)
 			// Existing repository's database-side insert fence refuses an expired delayed room; no reservation can resurrect it.
 			const delayed = { ...expired, id: "delayed-expired-fixture" }
@@ -411,9 +418,9 @@ test(
 				JSON.stringify({
 					proof: "disposable-control-crate",
 					apiInstances: 2,
-					concurrentCreates: 9,
-					accepted: 3,
-					globalCap: 3,
+					concurrentCreates: "5+4",
+					accepted: 9,
+					sharedRoomCap: false,
 					lostControlAndRoomAckRecovered: true,
 					admissionAndCommandLimits: true,
 					exactReplay: true,

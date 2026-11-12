@@ -4,9 +4,9 @@
 //   member  signed in with GoodWatch, NOT throttled, joins by the same link ("Join as …")   (unthrottled_* moments: reported, never gated)
 // Then Start → votes until a match → everyone leaves / the host archives.
 //
-// Why one room: production holds at most YEPWATCH_PROPOSAL_MAX_ACTIVE_ROOMS (20) active rooms and a room keeps
-// its capacity reservation for its whole 6 h life (proposal-release-control.ts; archiving doesn't free it).
-// A run costs 1 room reservation + 2 admissions + ~40 commands, far under the 20 creates/joins a minute.
+// Why one room: there's no shared cap on active rooms, but a run should stay light on the shared rate windows.
+// A run costs 1 room (the guest host's own allowance of 10, held for the room's 6 h life) + 2 admissions +
+// ~40 commands, far under the 20 creates/joins a minute.
 //
 // Member sign-in:
 //   - production: E2E_SMOKE_MEMBER_EMAIL / E2E_SMOKE_MEMBER_PASSWORD (a dedicated GoodWatch account) fill the

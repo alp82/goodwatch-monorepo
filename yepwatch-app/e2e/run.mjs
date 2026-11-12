@@ -61,7 +61,7 @@ if (tier === 'smoke') {
       E2E_WORKERS: process.env.E2E_WORKERS ?? '10', E2E_TIMING_RUNS: '3', E2E_FAULT_GREP: '@core',
     }));
   } else if (tier === 'full') {
-    // The room store holds at most 100 active rooms: reset it between phases of ~60 rooms each.
+    // Each phase starts from an empty room store (~60 rooms each), so one phase's rooms can't affect the next.
     const groups = [['none', 'nows'], ['rapid', 'slow'], ['hidden', 'twodevice']];
     for (const [i, g] of groups.entries()) {
       if (i) reset();

@@ -108,7 +108,7 @@ Register the public S256 client and set the three `AUTH_YEPWATCH_*` values descr
 
 ## Operations / rollback
 
-Defaults are 20 active rooms, 20 admission grants/minute, 600 command grants/minute and 60/actor/minute. They are durable policy settings, not live tuning knobs; changing the fingerprint is refused. These do not limit every HTTP read or connection. Rooms expire after six hours.
+Defaults are 10 active rooms created per person (no shared cap on active rooms), 20 admission grants/minute, 600 command grants/minute and 60/actor/minute. They are durable policy settings, not live tuning knobs; changing the rate settings is refused (the per-person allowance is not part of the fingerprint). These do not limit every HTTP read or connection. Rooms expire after six hours.
 
 Before cleanup/backup, stop API writers and gateway; keep keys/private backups secure. Use the operator's `backup FILE --writers-stopped` and `purge-expired --apply --writers-stopped` as documented in [GUEST-RELEASE.md](../../goodwatch-webapp/app/server/yepwatch/GUEST-RELEASE.md). Cleanup exists but no schedule is installed. Full key rotation and sustained-load validation remain separate work.
 

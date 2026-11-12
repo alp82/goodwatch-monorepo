@@ -68,7 +68,8 @@ interface Lease {
 export interface ProposalOperationGuard {
 	/** Throws unless the room is live and holds its capacity. What it resolves to may be passed to `command`. */
 	active(room: Pick<ProposalRoom, "id" | "expiresAt">): Promise<unknown>
-	create(roomId: string, admissionDigest: string, creatorDigest?: string): Promise<number>
+	/** Reserves the room in its creator's allowance; there is no shared cap on active rooms. */
+	create(roomId: string, admissionDigest: string, creatorDigest: string): Promise<number>
 	join(roomId: string, actorId: string, admissionDigest: string): Promise<void>
 	/** `checked`: what `active` just resolved to for this room, so the guard can start from what it read. */
 	command(roomId: string, actorId: string, commandDigest: string, checked?: unknown): Promise<void>
@@ -424,9 +425,11 @@ export class ProposalService {
 				await this.guard?.active(existing.room)
 				return this.admission(existing.room, request, account)
 			}
-			const creatorDigest = account
-				? keyed(this.secret, 'room-creator', `account:${account.userId}`)
-				: guestCreatorId ? keyed(this.secret, 'room-creator', `guest:${guestCreatorId}`) : undefined
+			// A caller without any creator identity (HTTP always sends one) gets an allowance of its own, like a
+			// browser without the creator cookie.
+			const creatorDigest = keyed(this.secret, 'room-creator', account
+				? `account:${account.userId}`
+				: guestCreatorId ? `guest:${guestCreatorId}` : `room:${id}`)
 			const expiresAt =
 				(await this.guard?.create(id, hash(JSON.stringify(request)), creatorDigest)) ??
 				this.now() + L.roomMs
