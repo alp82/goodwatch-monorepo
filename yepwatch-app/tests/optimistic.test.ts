@@ -89,3 +89,20 @@ test('what the server decides waits for its answer; everything else shows at onc
   const s = room();
   assert.equal(previewCommand(s, 'c', { type: 'leave' }), s);
 });
+
+test('a propose in flight: once the shared room shows it, the proposal is this device\'s own and agreed', () => {
+  const s = continuousFixture();
+  const command = { type: 'propose', generation: s.shared.generation, expectedRosterVersion: s.shared.rosterVersion, expectedProposalVersion: s.shared.proposalVersion, candidateId: 'c1' } as RoomCommand;
+  // Not shown yet: the server decides, nothing changes.
+  assert.deepEqual(previewCommand(s, 'p1', command), s);
+  // A poll brought the shared room with the proposal before this device's answer.
+  const ahead: RoomSnapshot = { ...s, shared: { ...s.shared, proposalVersion: s.shared.proposalVersion + 1, proposal: { candidateId: 'c1', version: s.shared.proposalVersion + 1, agreeCount: 1, requiredCount: 2 } as RoomSnapshot['shared']['proposal'] } };
+  const shown = previewCommand(ahead, 'p1', command);
+  assert.equal(shown.own.agreement.proposalVersion, ahead.shared.proposalVersion);
+  assert.equal(shown.own.agreement.isProposer, true);
+  assert.equal(shown.own.agreement.agreed, true);
+  assert.deepEqual(previewCommand(shown, 'p1', command), shown, 'safe to apply twice');
+  // Someone else's proposal of another title: not ours.
+  const other = { ...command, candidateId: 'c2' } as RoomCommand;
+  assert.deepEqual(previewCommand(ahead, 'p1', other), ahead);
+});
