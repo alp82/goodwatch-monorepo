@@ -47,14 +47,18 @@ export function controlFingerprint(p: ControlPolicy) {
 	return fingerprint(p, LEGACY_ROOM_CAP)
 }
 /** Every fingerprint a row may carry for this policy: the old cap was configurable from 1 to 100. */
+const LEGACY_ROOM_CAP_MAX = 100
 function acceptedFingerprints(p: ControlPolicy) {
-	return new Set(Array.from({ length: 100 }, (_, i) => fingerprint(p, i + 1)))
+	return new Set(Array.from({ length: LEGACY_ROOM_CAP_MAX }, (_, i) => fingerprint(p, i + 1)))
 }
 export interface Control {
 	format: 1
 	fingerprint: string
 	window: number
-	/** Reservations of the removed shared room cap. Nothing adds any; kept because the row schema has the column. */
+	/**
+	 * Reservations of the removed shared room cap: room ID, admission digest, fixed expiry. Nothing adds any now; a
+	 * live one still proves its room (reads, joins, commands, exact creation retries) until it expires.
+	 */
 	rooms: [string, string, number][]
 	admissions: string[]
 	/** Logical command digest, hashed authenticated actor identity. */
@@ -204,6 +208,7 @@ export class ReleaseControl {
 			)
 		if (
 			!Array.isArray(state.rooms) ||
+			state.rooms.length > LEGACY_ROOM_CAP_MAX ||
 			!Array.isArray(state.commands) ||
 			state.commands.length > this.policy.commands ||
 			!Array.isArray(state.admissions) ||
@@ -245,17 +250,26 @@ export class ReleaseControl {
 			(error: unknown) => ({ error })
 		)
 	}
+	/** A live reservation of the removed shared cap for this room (read only: none is ever added). */
+	private legacy(r: Read, roomId: string, expiresAt?: number) {
+		return r.state.rooms.find(
+			(x) => x[0] === roomId && x[2] > r.now && (expiresAt === undefined || x[2] === expiresAt)
+		)
+	}
 	/**
-	 * Whether the room is live and holds its creator's allowance reservation.
-	 * Returns what it read: a command for this room passes it to `command`, whose permit then starts from it.
+	 * Whether the room is live and holds its capacity: its creator's allowance reservation, or a legacy reservation
+	 * in the control row from before allowances. Returns what it read: a command for this room passes it to
+	 * `command`, whose permit then starts from it.
 	 */
 	async active(room: Pick<ProposalRoom, "id" | "expiresAt">): Promise<unknown> {
 		const quota = this.quotaProof(room.id, room.expiresAt)
 		const r = await this.read()
 		if (r.now >= room.expiresAt)
 			throw new RoomError("expired", "Room expired", 410)
-		const failed = await quota
-		if (failed) throw failed.error
+		if (!this.legacy(r, room.id, room.expiresAt)) {
+			const failed = await quota
+			if (failed) throw failed.error
+		}
 		const check: Check = { ...r, roomId: room.id }
 		checks.add(check)
 		return check
@@ -307,11 +321,29 @@ export class ReleaseControl {
 		}
 	}
 	/**
-	 * Charges the shared admission budget, then reserves the room in its creator's allowance. A denied admission
-	 * writes no allowance rows; an exact retry finds its grant and its reservation again.
+	 * Checks (read only) that the creator's allowance has room, charges the shared admission budget, then reserves
+	 * the room in the allowance (compare-and-swap, authoritative). A creator who is already full is refused before
+	 * any grant is charged, so they can't use up everyone's admissions; a rate-denied admission writes no allowance
+	 * rows. Only a creator racing themselves for their last slot can spend a grant on a refused reservation. An exact
+	 * retry finds its grant and its reservation again; an exact retry of a room created under the removed shared cap
+	 * gets that room's original expiry and creates nothing.
 	 */
 	async create(roomId: string, admissionDigest: string, creatorDigest: string) {
-		await this.permit("create", roomId, creatorDigest, admissionDigest)
+		const eligibility = this.quotas.eligible(roomId, admissionDigest, creatorDigest).then(
+			() => null,
+			(error: unknown) => ({ error })
+		)
+		const r = await this.read()
+		const legacy = this.legacy(r, roomId)
+		if (legacy) {
+			if (legacy[1] !== admissionDigest) throw new RoomError("conflict", "Admission retry changed")
+			return legacy[2]
+		}
+		const refused = await eligibility
+		if (refused) throw refused.error
+		const check: Check = { ...r, roomId }
+		checks.add(check)
+		await this.permit("create", roomId, creatorDigest, admissionDigest, check)
 		return this.quotas.reserve(roomId, admissionDigest, creatorDigest)
 	}
 	private admissionBudget(state: Control, now: number) {
@@ -347,12 +379,15 @@ export class ReleaseControl {
 		for (let i = 0; i < 8; i++) {
 			const fresh = reuse
 			reuse = null
-			// A room being created has no reservation yet; every other permit proves the room's.
+			// A room being created has no reservation yet; every other permit proves the room's, unless the control
+			// row still holds a live legacy reservation for it.
 			const quota = fresh || kind === "create" ? undefined : this.quotaProof(roomId)
 			const r = fresh ?? (await this.read()),
 				state = this.clean(r)
-			const failed = await quota
-			if (failed) throw failed.error
+			if (quota && !state.rooms.some((x) => x[0] === roomId)) {
+				const failed = await quota
+				if (failed) throw failed.error
+			}
 			const admitted =
 				kind !== "command"
 					? state.admissions.includes(op)

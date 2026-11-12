@@ -107,6 +107,10 @@ function database(policy = DEFAULT_CONTROL) {
 		setFingerprint: (fingerprint: string) => {
 			state = { ...state, fingerprint }
 		},
+		/** A reservation written by the removed shared cap before an upgrade. */
+		addLegacyRoom: (roomId: string, admissionDigest: string, expiresAt: number) => {
+			state = { ...state, rooms: [...state.rooms, [roomId, admissionDigest, expiresAt]] }
+		},
 		loseAndHideProof: () => {
 			lost = true
 			failAfterUpdate = true
@@ -310,25 +314,106 @@ test("Creating more rooms than the removed shared cap (25 over HTTP) succeeds; o
 		serviceSecret: secret,
 		allowedOrigins: ["https://yepwatch.com"],
 	})
-	for (let i = 0; i < 25; i++) {
-		// The admission budget (20 a minute) is a separate abuse control: the 21st creation waits for the next window.
-		if (i === DEFAULT_CONTROL.admissions) db.advance(60_000)
-		const response = await handler(
+	// Every request is its own installation, so no creator's allowance gets in the way.
+	const create = (body: string, installation: string) =>
+		handler(
 			new Request("http://api" + paths.rooms, {
 				method: "POST",
 				headers: {
 					"content-type": "application/json",
 					origin: "https://yepwatch.com",
 					"x-yepwatch-client": "native",
+					"x-yepwatch-creator": installation,
 				},
-				body: JSON.stringify(admission()),
+				body,
 			})
 		)
+	for (let i = 0; i < 25; i++) {
+		const body = JSON.stringify(admission()),
+			installation = randomBytes(32).toString("hex")
+		let response = await create(body, installation)
+		if (i === DEFAULT_CONTROL.admissions) {
+			// The admission budget (20 a minute) is a separate abuse control: the 21st creation is told to wait for
+			// the next window, then the exact same request succeeds.
+			assert.equal(response.status, 429, `room ${i + 1}`)
+			const retryAfter = Number(response.headers.get("retry-after"))
+			assert.ok(retryAfter > 0 && retryAfter <= 60)
+			assert.equal((await response.json()).error.retryable, true)
+			assert.equal(repo.rows.size, DEFAULT_CONTROL.admissions)
+			db.advance(retryAfter * 1000)
+			response = await create(body, installation)
+		}
 		assert.equal(response.status, 200, `room ${i + 1}`)
 	}
 	assert.equal(repo.rows.size, 25)
 	assert.equal(await quotas.count(), 25)
 	assert.equal(db.state().rooms.length, 0)
+})
+test("A creator whose allowance is full is refused before any admission grant is charged; other creators and joiners stay admissible", async () => {
+	const policy = { ...DEFAULT_CONTROL, admissions: 12 },
+		db = database(policy),
+		repo = new ProposalMemoryRepository(),
+		quotas = new MemoryCreationQuotas(db.now),
+		service = new ProposalService(repo, proposalFixtureCatalog, secret, async () => {}, db.now, guarded(db, policy, quotas))
+	const full = { userId: "full-creator", sessionId: "s", expiresAt: db.now() + 86_400_000 }
+	let host: Awaited<ReturnType<ProposalService["create"]>> | undefined
+	for (let i = 0; i < quotas.limit; i++) host = await service.create(admission(), full)
+	assert.equal(db.state().admissions.length, 10)
+	// More refused attempts than the whole shared budget: none of them spends a grant.
+	for (let i = 0; i < 20; i++)
+		await assert.rejects(service.create(admission(), full), (e: RoomError) => e.code === "limit_reached" && e.status === 409)
+	assert.equal(db.state().admissions.length, 10)
+	assert.equal(await quotas.count(), 10)
+	await service.create(admission(), { ...full, userId: "another-creator" })
+	await service.join(host!.credential.roomId, { ...admission(), inviteCode: host!.invite.code })
+	assert.equal(db.state().admissions.length, 12)
+	// The shared budget still bounds everyone once it is really spent.
+	await assert.rejects(service.create(admission(), { ...full, userId: "third-creator" }), (e: BudgetError) => e.status === 429)
+})
+test("Rooms holding a legacy shared-cap reservation stay readable, joinable and commandable; exact creation retries keep their expiry and add nothing", async () => {
+	const db = database(),
+		repo = new ProposalMemoryRepository(),
+		quotas = new MemoryCreationQuotas(db.now),
+		guard = guarded(db, DEFAULT_CONTROL, quotas),
+		service = new ProposalService(repo, proposalFixtureCatalog, secret, async () => {}, db.now, guard)
+	// A room created before allowances: its capacity record lives only in the control row.
+	const request = admission(),
+		host = await service.create(request),
+		id = host.credential.roomId,
+		held = quotas.rooms.get(id)!
+	quotas.rooms.delete(id)
+	db.addLegacyRoom(id, held.admission, held.expiresAt)
+	assert.equal((await service.read(id, who(host))).shared.revision, 1)
+	assert.equal((await service.create(request)).credential.participantId, host.credential.participantId)
+	const guest = await service.join(id, { ...admission(), inviteCode: host.invite.code })
+	assert.equal((await service.read(id, who(guest))).own.participantId, guest.credential.participantId)
+	const setup = {
+		commandId: "legacy-setup",
+		sequence: 1,
+		command: {
+			type: "setup" as const,
+			expectedContextVersion: 1,
+			screens: [{ id: "tv", label: "TV", country: "DE", serviceIds: [1], confirmed: true }],
+			constraints: { kinds: ["movie" as const, "show_start" as const], maxMinutes: null, moods: [] },
+			screenId: "tv",
+		},
+	}
+	await service.command(id, who(host), setup)
+	assert.equal(db.state().commands.length, 1)
+	// The room insert's acknowledgement was lost before the upgrade: an exact creation retry gets the original
+	// expiry without a new grant or an allowance reservation; a changed retry conflicts.
+	const admissionsBefore = db.state().admissions.length
+	db.addLegacyRoom("legacy-uninserted", "legacy-digest", held.expiresAt)
+	assert.equal(await guard.create("legacy-uninserted", "legacy-digest", "any-creator"), held.expiresAt)
+	await assert.rejects(guard.create("legacy-uninserted", "changed-digest", "any-creator"), /retry changed/)
+	assert.equal(db.state().admissions.length, admissionsBefore)
+	assert.equal(await quotas.count(), 0)
+	// Only a matching reservation counts: another expiry proves nothing.
+	await assert.rejects(guard.active({ id, expiresAt: held.expiresAt + 1 }), (e: RoomError) => e.status === 503)
+	// A legacy reservation is never renewed: once it expires, so does the room.
+	db.advance(held.expiresAt - db.now())
+	await assert.rejects(service.read(id, who(host)), (e: RoomError) => e.status === 410)
+	await assert.rejects(guard.join(id, "late", "late-join"), (e: RoomError) => e.status === 503)
 })
 test("Missing control record cannot be initialized over room history and configuration changes are never implicit", async () => {
 	let inserts = 0
@@ -492,6 +577,7 @@ test("with creation quotas, a check reads the room's quota proof alongside the c
 	const quotas = {
 		limit: 10,
 		async reserve() { return 0 },
+		async eligible() {},
 		async count() { return 0 },
 		async active() {
 			events.push("quota proof")
@@ -519,6 +605,7 @@ test("a command's permit starts from the control row its room check just read an
 	const quotas = {
 		limit: 10,
 		async reserve() { return 0 },
+		async eligible() {},
 		async count() { return 0 },
 		async active() { events.push("quota proof") },
 	}

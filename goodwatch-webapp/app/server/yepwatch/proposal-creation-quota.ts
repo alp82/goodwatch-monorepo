@@ -8,9 +8,15 @@ interface Quota { reservations: Reservation[]; seq: number; term: number; now: n
 export interface CreationQuotaStore {
   readonly limit: number
   reserve(roomId: string, admissionDigest: string, creatorDigest: string): Promise<number>
+  /**
+   * Read only: throws what `reserve` would refuse with now (a full allowance, a changed retry), without writing.
+   * Passing is no promise: `reserve` stays the authoritative compare-and-swap.
+   */
+  eligible(roomId: string, admissionDigest: string, creatorDigest: string): Promise<void>
   active(roomId: string, expectedExpiry?: number): Promise<void>
   count(): Promise<number>
 }
+export const allowanceFull = (limit: number) => new RoomError('limit_reached', `You can create up to ${limit} rooms at a time. Start again in an existing room, or wait for a room to expire.`, 409)
 const busy = () => new RoomError('busy', 'Room allowance could not be confirmed. Retry the same request.', 503, true)
 export async function provisionCreationQuotas(sql: Sql, replicas: 0 | 2) {
   for (const table of [quotaTable, reservationTable]) await sql(tableDdl(table, replicas))
@@ -51,6 +57,23 @@ export class SqlCreationQuotas implements CreationQuotaStore {
     const proof = await this.proof(roomId)
     if (!proof || (expectedExpiry !== undefined && expectedExpiry !== proof.expires_at)) throw busy()
   }
+  async eligible(roomId: string, admissionDigest: string, creator: string) {
+    const prior = await this.proof(roomId)
+    if (prior) {
+      if (prior.admission_digest !== admissionDigest) throw new RoomError('conflict', 'Admission retry changed', 409)
+      return
+    }
+    const current = await this.read(creator)
+    if (!current) return
+    const live = current.reservations.filter(r => r.expires_at > current.now)
+    const own = live.find(r => r.room_id === roomId)
+    if (own) {
+      // A reservation whose room proof isn't written yet: `reserve` finishes it.
+      if (own.admission_digest !== admissionDigest) throw new RoomError('conflict', 'Admission retry changed', 409)
+      return
+    }
+    if (live.length >= this.limit) throw allowanceFull(this.limit)
+  }
   async reserve(roomId: string, admissionDigest: string, creator: string) {
     const prior = await this.proof(roomId)
     if (prior) {
@@ -65,7 +88,7 @@ export class SqlCreationQuotas implements CreationQuotaStore {
       let reservation = reservations.find(r => r.room_id === roomId)
       if (reservation && reservation.admission_digest !== admissionDigest) throw new RoomError('conflict', 'Admission retry changed', 409)
       if (!reservation) {
-        if (reservations.length >= this.limit) throw new RoomError('limit_reached', `You can create up to ${this.limit} rooms at a time. Start again in an existing room, or wait for a room to expire.`, 409)
+        if (reservations.length >= this.limit) throw allowanceFull(this.limit)
         reservation = { room_id: roomId, admission_digest: admissionDigest, expires_at: now + CONTINUOUS_LIMITS.roomMs }
         reservations.push(reservation)
         const expiresAt = Math.max(...reservations.map(r => r.expires_at))

@@ -8,7 +8,7 @@ import type {
 } from "./proposal-types.ts"
 import { IndeterminateWrite, RoomError } from "./errors.ts"
 import { CONTINUOUS_LIMITS } from "./continuous-types.ts"
-import type { CreationQuotaStore } from "./proposal-creation-quota.ts"
+import { allowanceFull, type CreationQuotaStore } from "./proposal-creation-quota.ts"
 
 /** Per-person room allowances in memory, on the caller's clock: the reservation rules of SqlCreationQuotas. */
 export class MemoryCreationQuotas implements CreationQuotaStore {
@@ -19,6 +19,15 @@ export class MemoryCreationQuotas implements CreationQuotaStore {
 		this.now = now
 		this.limit = limit
 	}
+	async eligible(roomId: string, admissionDigest: string, creatorDigest: string) {
+		const prior = this.rooms.get(roomId)
+		if (prior && prior.expiresAt > this.now()) {
+			if (prior.admission !== admissionDigest) throw new RoomError("conflict", "Admission retry changed", 409)
+			return
+		}
+		const live = [...this.rooms.values()].filter((r) => r.creator === creatorDigest && r.expiresAt > this.now())
+		if (live.length >= this.limit) throw allowanceFull(this.limit)
+	}
 	async reserve(roomId: string, admissionDigest: string, creatorDigest: string) {
 		const prior = this.rooms.get(roomId)
 		if (prior && prior.expiresAt > this.now()) {
@@ -26,7 +35,7 @@ export class MemoryCreationQuotas implements CreationQuotaStore {
 			return prior.expiresAt
 		}
 		const live = [...this.rooms.values()].filter((r) => r.creator === creatorDigest && r.expiresAt > this.now())
-		if (live.length >= this.limit) throw new RoomError("limit_reached", `You can create up to ${this.limit} rooms at a time.`, 409)
+		if (live.length >= this.limit) throw allowanceFull(this.limit)
 		const expiresAt = this.now() + CONTINUOUS_LIMITS.roomMs
 		this.rooms.set(roomId, { creator: creatorDigest, admission: admissionDigest, expiresAt })
 		return expiresAt
