@@ -105,7 +105,8 @@ ignores limits, so a truncation exception would silently skip hooks. Other expli
 limits and offsets remain supported; an explicit limit equal to the configured
 factory default also returns the complete population. Populations over the safety
 bound refuse mutation rather than silently truncate. The #565 runtime enables
-per-actor CAS admission, with 20 browser sessions per member (oldest revoked)
+per-actor CAS admission, with 20 browser sessions per member (oldest revoked),
+128 app grants per member (one per app sign-in session; oldest revoked with its tokens)
 and separate member/client issuance allowances. Users and accounts have no global
 cap. Maintenance streams independently bounded pages and returns slots per row.
 The runtime limits DCR by trusted IP and collects unused clients and only

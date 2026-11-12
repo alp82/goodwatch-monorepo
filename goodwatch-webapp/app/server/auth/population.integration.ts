@@ -347,6 +347,45 @@ test("a member keeps the twenty newest sessions and cannot evict another member"
 	)
 })
 
+test("a member's newest app grants evict the oldest instead of failing sign-in", async () => {
+	await clean()
+	const adapter = crateAuthAdapter({ sql, populationBounds: true })(
+		authTestOptions,
+	)
+	const clientId = randomUUID()
+	const grant = (userId: string, i: number) =>
+		adapter.create<{ id: string }>({
+			model: "oauthConsent",
+			data: {
+				clientId,
+				userId,
+				// One grant per app sign-in session, as consentReferenceId makes them.
+				referenceId: `session-${i}`,
+				scopes: ["yepwatch:read"],
+				createdAt: new Date(Date.now() + i),
+				grantVersion: randomUUID(),
+			},
+		})
+	const other = await grant("other", 0)
+	const grants: { id: string }[] = []
+	for (let i = 0; i < 130; i++) grants.push(await grant("busy", i))
+	const retained = await adapter.findMany<{ id: string }>({
+		model: "oauthConsent",
+		where: [{ field: "userId", value: "busy" }],
+	})
+	assert.equal(retained.length, 128)
+	assert.deepEqual(
+		new Set(retained.map((row) => row.id)),
+		new Set(grants.slice(-128).map((row) => row.id)),
+	)
+	assert.ok(
+		await adapter.findOne({
+			model: "oauthConsent",
+			where: [{ field: "id", value: other.id }],
+		}),
+	)
+})
+
 test("empty actor ledgers are physically purged after thirty days", async () => {
 	await clean()
 	const { collectAuthGarbage, reconcileAuthCapacity } = await import(

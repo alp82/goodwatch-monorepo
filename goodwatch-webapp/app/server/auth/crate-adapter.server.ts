@@ -339,10 +339,12 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 					const accountBase = model === "account" ? await stored(model, row.id) : undefined
 					const actor = authPopulationActor(model, row, payloadSecret)
 					const admission = bounds && actor !== undefined && !testOnlyConformance ? await admitAuthRow(sql, codec, model, row.id, populationBounds === true ? authActorBounds(model) : bounds, actor,
-							model === "session" && populationBounds === true ? async (id, admission) => {
-								const oldest = await stored("session", id)
+							// A member's newest sessions and app grants win: each sign-in through an app makes a grant per session
+							// (consentReferenceId), so without eviction a member's 129th app sign-in would fail forever.
+							(model === "session" || model === "oauthConsent") && populationBounds === true ? async (id, admission) => {
+								const oldest = await stored(model, id)
 								if (!oldest || oldest.envelope.admission?.generation !== admission.generation || (!oldest.deleted && oldest.row.userId !== row.userId)) return false
-								if (!oldest.deleted && !(await mutate("session", oldest, {}, true))) return false
+								if (!oldest.deleted && !(await mutate(model, oldest, {}, true))) return false
 								await releaseAuthAdmission(sql,codec,id,admission)
 								return true
 							} : undefined) : undefined
