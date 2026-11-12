@@ -97,6 +97,13 @@ interface Read {
 	term: number
 	now: number
 }
+/** What `active` saw for a room, handed back to `command` for the same room so its permit doesn't read it again. */
+const checks = new WeakSet<object>()
+interface Check extends Read {
+	roomId: string
+}
+/** An UPDATE whose acknowledgement was lost: the outcome is only known from a fresh read. */
+const UNCERTAIN = Symbol("uncertain")
 export class BudgetError extends RoomError {
 	readonly retryAfterSeconds: number
 	constructor(message: string, seconds: number, status = 429) {
@@ -159,6 +166,10 @@ export class ReleaseControl {
 				[ID]
 			)
 		).rows[0]
+		return this.parse(row)
+	}
+	/** A control row as `${CONTROL_COLUMNS},_seq_no,_primary_term,CURRENT_TIMESTAMP`, validated. */
+	private parse(row: unknown[] | undefined): Read {
 		if (!row)
 			throw new RoomError(
 				"busy",
@@ -224,24 +235,29 @@ export class ReleaseControl {
 			(error: unknown) => ({ error })
 		)
 	}
-	async active(room: Pick<ProposalRoom, "id" | "expiresAt">) {
+	/**
+	 * Whether the room is live and holds its capacity (a reservation in the control row, or its creation quota).
+	 * Returns what it read: a command for this room passes it to `command`, whose permit then starts from it.
+	 */
+	async active(room: Pick<ProposalRoom, "id" | "expiresAt">): Promise<unknown> {
 		const quota = this.quotaProof(room.id, room.expiresAt)
 		const r = await this.read()
 		if (r.now >= room.expiresAt)
 			throw new RoomError("expired", "Room expired", 410)
 		if (!r.state.rooms.some((x) => x[0] === room.id && x[2] === room.expiresAt)) {
-			if (quota) {
-				const failed = await quota
-				if (failed) throw failed.error
-				return
-			}
-			throw new RoomError(
-				"busy",
-				"Room capacity reservation unavailable",
-				503,
-				true
-			)
+			if (!quota)
+				throw new RoomError(
+					"busy",
+					"Room capacity reservation unavailable",
+					503,
+					true
+				)
+			const failed = await quota
+			if (failed) throw failed.error
 		}
+		const check: Check = { ...r, roomId: room.id }
+		checks.add(check)
+		return check
 	}
 	private clean(r: Read) {
 		const s = structuredClone(r.state)
@@ -260,26 +276,32 @@ export class ReleaseControl {
 		}
 		return s
 	}
-	private async update(r: Read, state: Control) {
+	/**
+	 * Writes `state` over the row `r` read (compare-and-swap), unless the window has ended by the database clock.
+	 * Returns the row as written (RETURNING: whether the grant landed is known without reading it back), null when
+	 * another write came first, or UNCERTAIN when the acknowledgement was lost.
+	 */
+	private async update(r: Read, state: Control): Promise<Read | null | typeof UNCERTAIN> {
 		const row = controlRow(state)
 		const changed = CONTROL_COLUMNS.filter((k) => k !== "id")
 		const end = (state.window + 1) * WINDOW_MS
 		try {
-			return (
-				(
-					await this.sql(
-						`UPDATE ${CONTROL_TABLE} SET ${changed
-							.map(
-								(k) =>
-									`${k}=CASE WHEN CURRENT_TIMESTAMP < ? THEN ? ELSE ${k} END`
-							)
-							.join(",")} WHERE id=? AND _seq_no=? AND _primary_term=?`,
-						[...changed.flatMap((k) => [end, row[k]]), ID, r.seq, r.term]
+			const result = await this.sql(
+				`UPDATE ${CONTROL_TABLE} SET ${changed
+					.map(
+						(k) =>
+							`${k}=CASE WHEN CURRENT_TIMESTAMP < ? THEN ? ELSE ${k} END`
 					)
-				).rowcount === 1
+					.join(",")} WHERE id=? AND _seq_no=? AND _primary_term=? RETURNING ${CONTROL_COLUMNS.join(
+					","
+				)},_seq_no,_primary_term,CURRENT_TIMESTAMP`,
+				[...changed.flatMap((k) => [end, row[k]]), ID, r.seq, r.term]
 			)
+			if (result.rowcount !== 1) return null
+			// A store that acknowledged the write without the row: read it back like a lost acknowledgement.
+			return result.rows[0]?.length ? this.parse(result.rows[0]) : UNCERTAIN
 		} catch (e) {
-			if (e instanceof IndeterminateWrite) return true
+			if (e instanceof IndeterminateWrite) return UNCERTAIN
 			throw e
 		}
 	}
@@ -309,8 +331,9 @@ export class ReleaseControl {
 			const expiry = r.now + CONTINUOUS_LIMITS.roomMs
 			state.rooms.push([roomId, admissionDigest, expiry])
 			state.admissions.push(op)
-			if (!(await this.update(r, state))) continue
-			const proof = await this.read()
+			const written = await this.update(r, state)
+			if (!written) continue
+			const proof = written === UNCERTAIN ? await this.read() : written
 			if (
 				proof.now < expiry &&
 				proof.state.rooms.some(
@@ -335,22 +358,33 @@ export class ReleaseControl {
 	async join(roomId: string, actorId: string, admissionDigest: string) {
 		await this.permit("join", roomId, actorId, admissionDigest)
 	}
-	async command(roomId: string, actorId: string, commandDigest: string) {
-		await this.permit("command", roomId, actorId, commandDigest)
+	/** `checked`: what `active` returned for this room just before, so the permit starts from that read. */
+	async command(roomId: string, actorId: string, commandDigest: string, checked?: unknown) {
+		await this.permit("command", roomId, actorId, commandDigest, checked)
 	}
 	private async permit(
 		kind: "create" | "join" | "command",
 		roomId: string,
 		actorId: string,
-		inputDigest: string
+		inputDigest: string,
+		checked?: unknown
 	) {
 		const op = digest(JSON.stringify([kind, roomId, actorId, inputDigest])),
 			actor = digest(`${roomId}:${actorId}`).slice(0, 32)
+		// The room's capacity was just proven by `active` from this very read: the first try starts from it (a
+		// compare-and-swap lost to a newer row reads again below, with the room checked again).
+		let reuse =
+			typeof checked === "object" && checked !== null && checks.has(checked) && (checked as Check).roomId === roomId
+				? (checked as Check)
+				: null
+		if (reuse) checks.delete(reuse)
 		for (let i = 0; i < 8; i++) {
-			const quota = this.quotaProof(roomId)
-			const r = await this.read(),
+			const fresh = reuse
+			reuse = null
+			const quota = fresh ? undefined : this.quotaProof(roomId)
+			const r = fresh ?? (await this.read()),
 				state = this.clean(r)
-			if (!state.rooms.some((x) => x[0] === roomId)) {
+			if (!fresh && !state.rooms.some((x) => x[0] === roomId)) {
 				if (quota) {
 					const failed = await quota
 					if (failed) throw failed.error
@@ -376,8 +410,9 @@ export class ReleaseControl {
 					)
 				state.commands.push([op, actor])
 			}
-			if (!(await this.update(r, state))) continue
-			const proof = await this.read()
+			const written = await this.update(r, state)
+			if (!written) continue
+			const proof = written === UNCERTAIN ? await this.read() : written
 			// Never confirm an old window using a later window. New authorization remains subject to domain receipts/sequence/CAS.
 			if (
 				proof.state.window !== state.window ||

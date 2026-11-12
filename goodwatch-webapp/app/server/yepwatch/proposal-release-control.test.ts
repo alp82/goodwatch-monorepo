@@ -86,7 +86,9 @@ function database(policy = DEFAULT_CONTROL) {
 				lost = false
 				throw new IndeterminateWrite("Lost control acknowledgement")
 			}
-			return { rows: [], rowcount: 1 }
+			// RETURNING: the row as written (unchanged when the window had ended by the store's clock).
+			const row = controlRow(state)
+			return { rows: [[...CONTROL_COLUMNS.map((k) => row[k]), seq, 1, now]], rowcount: 1 }
 		}
 		throw Error("Unexpected test statement: " + stmt)
 	}
@@ -487,4 +489,48 @@ test("with creation quotas, a check reads the room's quota proof alongside the c
 	valid = false
 	await assert.rejects(control.active(room), { code: "busy" })
 	await assert.rejects(control.command(room.id, "actor", "digest-2"), { code: "busy" })
+})
+test("a command's permit starts from the control row its room check just read and learns the grant from its write", async () => {
+	const db = database()
+	let events: string[] = []
+	const sql: Sql = async (stmt, args) => {
+		if (stmt.includes(CONTROL_TABLE)) events.push(stmt.startsWith("SELECT") ? "control read" : "control write")
+		return db.sql(stmt, args)
+	}
+	const quotas = {
+		limit: 10,
+		async reserve() { return 0 },
+		async count() { return 0 },
+		async active() { events.push("quota proof") },
+	}
+	const control = new ReleaseControl(sql, DEFAULT_CONTROL, quotas)
+	const room = { id: "room-q", expiresAt: 1_900_000_000_000 }
+	const check = await control.active(room)
+	events = []
+	await control.command(room.id, "actor", "digest-1", check)
+	assert.deepEqual(events, ["control write"], "no second room check, no read-back")
+	assert.equal(db.state().commands.length, 1)
+
+	events = []
+	await control.command(room.id, "actor", "digest-2", check)
+	assert.deepEqual(events, ["quota proof", "control read", "control write"], "a check is used once")
+	events = []
+	await control.command("another-room", "actor", "digest-3", await control.active(room))
+	assert.ok(events.includes("quota proof"), "a check for another room proves nothing")
+
+	// A newer row (another instance's grant) makes the first try lose: the retry reads and checks the room again.
+	const stale = await control.active(room)
+	await control.command(room.id, "other", "digest-4")
+	events = []
+	await control.command(room.id, "actor", "digest-5", stale)
+	assert.deepEqual(events, ["control write", "quota proof", "control read", "control write"])
+	assert.equal(db.state().commands.length, 5)
+
+	// A lost acknowledgement is still settled by reading the row back.
+	const fresh = await control.active(room)
+	db.lose()
+	events = []
+	await control.command(room.id, "actor", "digest-6", fresh)
+	assert.deepEqual(events, ["control write", "control read"])
+	assert.equal(db.state().commands.length, 6)
 })

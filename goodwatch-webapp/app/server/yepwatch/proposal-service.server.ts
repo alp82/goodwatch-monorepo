@@ -66,10 +66,12 @@ interface Lease {
 }
 /** Optional release-only guard; legacy runtimes retain existing behavior. */
 export interface ProposalOperationGuard {
-	active(room: Pick<ProposalRoom, "id" | "expiresAt">): Promise<void>
+	/** Throws unless the room is live and holds its capacity. What it resolves to may be passed to `command`. */
+	active(room: Pick<ProposalRoom, "id" | "expiresAt">): Promise<unknown>
 	create(roomId: string, admissionDigest: string, creatorDigest?: string): Promise<number>
 	join(roomId: string, actorId: string, admissionDigest: string): Promise<void>
-	command(roomId: string, actorId: string, commandDigest: string): Promise<void>
+	/** `checked`: what `active` just resolved to for this room, so the guard can start from what it read. */
+	command(roomId: string, actorId: string, commandDigest: string, checked?: unknown): Promise<void>
 }
 export class ProposalService {
 	readonly deletions: DeletionStore
@@ -141,6 +143,10 @@ export class ProposalService {
 	}
 	/** A stored room any answer may be built from: a v3 room, not expired, its capacity reservation still active. */
 	private async live(stored: ProposalStored | null): Promise<ProposalStored> {
+		return (await this.checked(stored)).stored
+	}
+	/** live(), also returning what the guard's capacity check read (for the command's permit). */
+	private async checked(stored: ProposalStored | null): Promise<{ stored: ProposalStored; check: unknown }> {
 		requireRoom(
 			stored && stored.room.format === 2 && stored.room.flowVersion === 3,
 			"not_found",
@@ -148,8 +154,8 @@ export class ProposalService {
 			404
 		)
 		continuousLive(stored.room, this.now())
-		await this.guard?.active(stored.room)
-		return stored
+		const check = await this.guard?.active(stored.room)
+		return { stored, check }
 	}
 	private auth(
 		room: ProposalRoom,
@@ -722,7 +728,7 @@ export class ProposalService {
 			requireRoom(interpreted, "busy", "Room busy; retry this idea", 503)
 		}
 		for (let i = 0; i < 6; i++) {
-			const old = await this.get(id)
+			const { stored: old, check } = await this.checked(await this.repository.read(id))
 			const p = this.auth(
 				old.room,
 				credential,
@@ -758,7 +764,7 @@ export class ProposalService {
 					undefined,
 					ideaCommand
 				)
-			await this.guard?.command(id, p.id, digest)
+			await this.guard?.command(id, p.id, digest, check)
 			const command = envelope.command
 			if (command.type === "configure" && command.country) {
 				const metadata = await this.catalog.metadata(command.country)
