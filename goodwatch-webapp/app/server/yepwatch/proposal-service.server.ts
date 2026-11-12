@@ -993,7 +993,7 @@ export class ProposalService {
 			const capacity = this.guard?.active(room.committed)
 			capacity?.catch(() => {}) // awaited below
 			const snapshot = this.snapshot(room.committed, credential)
-			if (capacity) await timed("capacity", capacity)
+			await (capacity && timed("capacity", capacity))
 			return { receipt, snapshot }
 		}
 		let stored = await this.notify(id, { yieldToQueued: true })
@@ -1057,7 +1057,7 @@ export class ProposalService {
 					reserved
 				)
 			await timed("allowed", allowed)
-			if (this.guard) await timed("guard", this.guard.command(id, p.id, digest, check))
+			await (this.guard && timed("guard", this.guard.command(id, p.id, digest, check)))
 			const command = envelope.command
 			if (command.type === "configure" && command.country) {
 				const metadata = await this.catalog.metadata(command.country)
