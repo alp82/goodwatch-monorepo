@@ -83,11 +83,13 @@ export function FloatingNote({ note, width, top = 8 }: { note: FrameNote | null;
   if (!shown) return null;
   return (
     <View pointerEvents="box-none" style={{ position: 'absolute', top, left: 0, right: 0, alignItems: 'center', paddingHorizontal: 12, zIndex: 60, elevation: 6 }}>
-      <Animated.View testID="room-note" pointerEvents={visible ? 'auto' : 'none'}
+      <Animated.View testID="room-note" pointerEvents={visible ? 'box-none' : 'none'}
         style={{ width: '100%', maxWidth: width, gap: 4, opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [-6, 0] }) }],
           shadowColor: '#000', shadowOpacity: 0.4, shadowRadius: 12, shadowOffset: { width: 0, height: 4 } }}>
-        {shown.detail ? <GText size={11} color={glow.muted} style={{ textAlign: 'center' }}>{shown.detail}</GText> : null}
-        {shown.text ? <NoteLine note={shown} onDismiss={() => setDismissed(shown.text)} /> : null}
+        {/* The line keeps its place right under the header; the small detail hangs below it and takes no
+            touches, so it never covers a tall sheet's title and Close. */}
+        {shown.text ? <View pointerEvents={visible ? 'auto' : 'none'}><NoteLine note={shown} onDismiss={() => setDismissed(shown.text)} /></View> : null}
+        {shown.detail ? <View pointerEvents="none"><GText size={11} color={glow.muted} style={{ textAlign: 'center' }}>{shown.detail}</GText></View> : null}
       </Animated.View>
     </View>
   );

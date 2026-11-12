@@ -129,7 +129,9 @@ export function AppFrame({ header = {}, rooms, children, footer, footerPlacement
           </KeyboardAvoidingView>
         </CoveredBody>
         {shownSheet}
-        <FloatingNote note={notes.note} width={Math.min(z(560), max)} top={noteTop} />
+        {/* Under a screen's own top bar the note sits lower (noteTop); with a sheet open it goes back up to
+            the header, above the sheet's title and Close. */}
+        <FloatingNote note={notes.note} width={Math.min(z(560), max)} top={shownSheet ? 8 : noteTop} />
       </View>
       {overlay}
       {header.back && !covered && !shownSheet ? <EdgeBack back={header.back} /> : null}

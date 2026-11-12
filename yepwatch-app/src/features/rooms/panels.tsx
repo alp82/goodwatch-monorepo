@@ -122,13 +122,10 @@ export function JoinScreen({ invite, checking = false, nickname, nameLocked = fa
   const join = (
     <View style={{ flexDirection: 'row' }}>
       <Press label={label} onPress={go} disabled={!filled} quiet={busy} style={{ flex: 1, minHeight: z(54), borderRadius: 12, flexDirection: 'row', gap: 9, backgroundColor: glow.amber }}>
-        {member ? <GoodWatchMark size={22} /> : null}
-        {/* The label changes (Join as …, Joining…, Retry joining) inside one fixed box sized by the longest, so
-            a join that starts by itself (back from GoodWatch) doesn't move the words. */}
-        <View>
-          <View aria-hidden importantForAccessibility="no-hide-descendants" style={{ opacity: 0 }}><GText bold size={z(17)} color={warm.ink}>{[fixedName ? `Join as ${fixedName}` : 'Join', 'Joining…', 'Retry joining', label].reduce((a, b) => (b.length > a.length ? b : a))}</GText></View>
-          <GText bold size={z(17)} color={warm.ink} style={{ position: 'absolute', left: 0, right: 0, textAlign: 'center' }}>{label}</GText>
-        </View>
+        {/* The words fill the button, centered, and the GoodWatch mark keeps a fixed place: a label that
+            changes by itself (Join as … → Joining… when a join starts on return from GoodWatch) moves nothing. */}
+        {member ? <View style={{ position: 'absolute', left: 16, top: 0, bottom: 0, justifyContent: 'center' }}><GoodWatchMark size={22} /></View> : null}
+        <GText bold size={z(17)} color={warm.ink} style={{ flex: 1, textAlign: 'center', paddingHorizontal: member ? 44 : 12 }}>{label}</GText>
       </Press>
     </View>
   );
