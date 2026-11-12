@@ -7,8 +7,13 @@ export const DAY_MS = 86_400_000
 export const DEFAULT_ROOM_RETENTION_DAYS = 30
 /** The floor is enforced here, not only in configuration: no caller can delete a room less than a day after it expired. */
 export const MIN_ROOM_RETENTION_DAYS = 1
-/** More distinct people than this in one room's participant records cannot be proven free of deletion requests. */
-const PEOPLE_PER_ROOM = 64
+/** Participant records checked for deletion requests per room and run; a room with more continues on later runs. */
+const PARTICIPANT_PAGE = 64
+/**
+ * A room's identity check that started longer ago than this starts over. A purge only begins 30 days after its request,
+ * so no purge can be running for an identity found free less than a day ago.
+ */
+const CHECK_VALID_MS = DAY_MS
 /** A room that failed waits 2^failures runs (at most this many) before this instance tries it again. */
 const MAX_BACKOFF_RUNS = 60
 const REMEMBERED_FAILURES = 1000
@@ -43,6 +48,8 @@ export interface RoomRetentionReport {
 	skipped: number
 	/** Rooms with a person whose deletion request is open: the deletion purge removes them, nothing is published here. */
 	waiting: number
+	/** Rooms with more participant records than one run checks for deletion requests; the check continues next run. */
+	checking: number
 	/** Rooms whose cleanup threw; retried by this instance after a backoff. */
 	failed: number
 	deleted: Record<string, number>
@@ -72,20 +79,25 @@ export const ROOM_RECORD_TABLES: Table[] = [
  * request's purge erases the person from history and deletes the room itself (it needs the participant rows to find
  * the person's history entries), and publishing history from such a room could race the purge's history scrub. A
  * purge can only start 30 days after its request, so a request made after this check cannot purge during the run.
+ * Participant records are not bounded by the roster, so they are checked 64 per run across as many runs as needed;
+ * the head's people are rechecked in the run that removes it, and a check older than a day starts over.
  *
  * Progress: heads and each record table are walked with a rotating primary-key cursor held by this instance, so rooms
- * that must stay (unreadable, waiting for a deletion, failing) never hide the ones behind them. A failing room is
- * retried after 2, 4, … up to 60 runs.
+ * that must stay (unreadable, waiting for a deletion, failing) never hide the ones behind them. The record table that
+ * is scanned first rotates every run, so no table waits behind the others for the shared row budget. A failing room
+ * is retried after 2, 4, … up to 60 runs.
  *
  * Work per run (bounded, the runtime calls it once a minute per API instance), with R = roomsPerRun,
- * N = rowsPerStatement and T = ROOM_RECORD_TABLES.length:
- * - one clock read and 1 + T scans (heads, one per record table), each returning at most R or N rows (key + room id);
- * - per head (at most R): its primary-key reads (head and at most 12 participants' records), one participant
- *   scan of that room (at most 64 rows), at most 2 × 64 primary-key deletion-request reads, the room's history
- *   publication (at most 128 decisions), one invitation and one head DELETE by primary key;
+ * N = rowsPerStatement, T = ROOM_RECORD_TABLES.length and P = 64 participant records per room:
+ * - one clock read and at most 1 + T + R scans: heads (≤ R rows), one per record table (≤ N rows), and one page of
+ *   each examined head's participant records (≤ P rows);
+ * - per head (at most R): its repository read (head and at most 12 participants' records) or, when that fails, one raw
+ *   head read; at most 2 × (12 + P) primary-key deletion-request reads (accounts and guests of the head's people and
+ *   of the page); the room's history publication; one invitation and one head DELETE by primary key;
  * - per record table: at most N head reads by primary key and one DELETE naming at most N primary keys;
  * - at most rowsPerRun rows deleted in total.
- * Defaults (R 10, N 100, 1000 rows, T 13): ≤ 14 scans, ≤ 1300 primary-key head checks, ≤ 20 + 13 DELETEs, ≤ 1000 rows.
+ * Defaults (R 10, N 100, 1000 rows, T 13, P 64): ≤ 24 scans, ≤ 1320 primary-key head reads (1300 record checks and
+ * 2 per head), ≤ 152 deletion-request reads per head (1520 per run), ≤ 20 + 13 DELETEs, ≤ 1000 rows.
  *
  * Several API instances may run this at once: heads are removed with a primary-key compare-and-swap, records by
  * primary key with the expiry predicate repeated, so a second runner deletes nothing twice.
@@ -100,6 +112,9 @@ export class RoomRetention {
 	private headCursor = ""
 	private recordCursors = new Map<string, string>()
 	private runs = 0
+	private tableStart = 0
+	/** Per room: the participant record after which its deletion-request check continues, and when the check began. */
+	private checks = new Map<string, { cursor: string; since: number }>()
 	private failures = new Map<string, { count: number; retryAt: number }>()
 	constructor(sql: Sql, repository: RetentionRepository, options: RoomRetentionOptions) {
 		if (!Number.isFinite(options.retentionDays) || options.retentionDays < MIN_ROOM_RETENTION_DAYS)
@@ -109,7 +124,8 @@ export class RoomRetention {
 		this.retentionMs = Math.round(options.retentionDays * DAY_MS)
 		this.roomsPerRun = bounded(options.roomsPerRun ?? 10, 1, 100)
 		this.rowsPerStatement = bounded(options.rowsPerStatement ?? 100, 1, 500)
-		this.rowsPerRun = bounded(options.rowsPerRun ?? 1000, 1, 10_000)
+		// A head needs two rows of budget (its invitation and itself).
+		this.rowsPerRun = bounded(options.rowsPerRun ?? 1000, 2, 10_000)
 	}
 
 	async run(): Promise<RoomRetentionReport> {
@@ -118,7 +134,7 @@ export class RoomRetention {
 		const now = Number((await this.sql("SELECT CURRENT_TIMESTAMP")).rows[0]?.[0])
 		if (!Number.isSafeInteger(now)) throw new Error("Store clock unavailable")
 		const cutoff = now - this.retentionMs
-		const report: RoomRetentionReport = { cutoff, rooms: 0, skipped: 0, waiting: 0, failed: 0, deleted: {} }
+		const report: RoomRetentionReport = { cutoff, rooms: 0, skipped: 0, waiting: 0, checking: 0, failed: 0, deleted: {} }
 		let budget = this.rowsPerRun
 		const count = (table: string, rows: number) => {
 			if (!rows) return
@@ -134,10 +150,11 @@ export class RoomRetention {
 			const failure = this.failures.get(id)
 			if (failure && failure.retryAt > run) continue
 			try {
-				const outcome = await this.removeHead(id, cutoff, count)
+				const outcome = await this.removeHead(id, cutoff, now, count)
 				if (outcome === "removed") report.rooms++
 				else if (outcome === "skipped") report.skipped++
 				else if (outcome === "waiting") report.waiting++
+				else if (outcome === "checking") report.checking++
 				this.failures.delete(id)
 			} catch {
 				report.failed++
@@ -149,7 +166,10 @@ export class RoomRetention {
 		}
 
 		// Records of rooms whose head is gone, found by their own expiry: a bounded window per table, checked by primary key.
-		for (const table of ROOM_RECORD_TABLES) {
+		// The first table rotates, so tables late in the list still get the budget when earlier ones have plenty to delete.
+		const start = this.tableStart
+		this.tableStart = (start + 1) % ROOM_RECORD_TABLES.length
+		for (const table of [...ROOM_RECORD_TABLES.slice(start), ...ROOM_RECORD_TABLES.slice(0, start)]) {
 			if (budget <= 0) break
 			const window = Math.min(this.rowsPerStatement, budget)
 			const rows = (
@@ -172,7 +192,12 @@ export class RoomRetention {
 	}
 
 	/** Publishes the room's decisions, then removes its invitation and head; leaves it when it must stay for now. */
-	private async removeHead(id: string, cutoff: number, count: (table: string, rows: number) => void): Promise<"removed" | "skipped" | "waiting" | "gone"> {
+	private async removeHead(
+		id: string,
+		cutoff: number,
+		now: number,
+		count: (table: string, rows: number) => void
+	): Promise<"removed" | "skipped" | "waiting" | "checking" | "gone"> {
 		let head: { seq: number; term: number; inviteHash: string; history: HistoricalDecision[]; people: { id: string; memberUserId?: string | null }[] }
 		try {
 			const stored = await this.repository.read(id)
@@ -185,7 +210,8 @@ export class RoomRetention {
 			if (Number(raw[1]) !== 0 || raw[2] !== false) return "skipped"
 			head = { seq: Number(raw[3]), term: Number(raw[4]), inviteHash: String(raw[5]), history: [], people: [] }
 		}
-		if (await this.deletionOpen(id, head.people)) return "waiting"
+		const check = await this.deletionCheck(id, head.people, now)
+		if (check !== "clear") return check
 		await this.repository.accountStore.publish(head.history)
 		count(invitationTable.name, (await this.sql(`DELETE FROM ${invitationTable.name} WHERE code_hash=? AND room_id=? AND expires_at<=?`, [head.inviteHash, id, cutoff])).rowcount)
 		// Crate 5.10 rejects extra predicates beside a CAS; the head read above proved the expiry.
@@ -194,19 +220,38 @@ export class RoomRetention {
 		return removed ? "removed" : "gone"
 	}
 
-	/** Whether anyone who was ever in the room (head or participant records) has an open deletion request. */
-	private async deletionOpen(roomId: string, people: { id: string; memberUserId?: string | null }[]) {
-		const rows = (await this.sql(`SELECT DISTINCT participant_id,member_user_id FROM ${PARTICIPANT} WHERE room_id=? LIMIT ?`, [roomId, PEOPLE_PER_ROOM])).rows
-		if (rows.length >= PEOPLE_PER_ROOM) throw new Error("Too many people to check for deletion requests")
+	/**
+	 * Whether anyone who was ever in the room (head or participant records) has an open deletion request. Participant
+	 * records are not bounded by the roster (guests who joined and merged leave theirs), so they are checked one page per
+	 * run, continuing where the last run stopped. The head's people are checked on every run, so the run that removes the
+	 * head has rechecked them right before; identities from earlier pages were found free within CHECK_VALID_MS.
+	 */
+	private async deletionCheck(roomId: string, people: { id: string; memberUserId?: string | null }[], now: number): Promise<"clear" | "waiting" | "checking"> {
+		let progress = this.checks.get(roomId)
+		if (!progress || now - progress.since > CHECK_VALID_MS) progress = { cursor: "", since: now }
+		const page = (
+			await this.sql(`SELECT ${tables.participant.primary},participant_id,member_user_id FROM ${PARTICIPANT} WHERE room_id=? AND ${tables.participant.primary}>? ORDER BY ${tables.participant.primary} LIMIT ?`, [
+				roomId,
+				progress.cursor,
+				PARTICIPANT_PAGE,
+			])
+		).rows
 		const participants = new Set(people.map((p) => p.id))
 		const accounts = new Set(people.flatMap((p) => (p.memberUserId ? [p.memberUserId] : [])))
-		for (const [participant, account] of rows) {
+		for (const [, participant, account] of page) {
 			participants.add(String(participant))
 			if (account) accounts.add(String(account))
 		}
-		for (const userId of accounts) if (await this.repository.deletionStore.get({ kind: "account", userId })) return true
-		for (const participantId of participants) if (await this.repository.deletionStore.get({ kind: "guest", roomId, participantId })) return true
-		return false
+		let open = false
+		for (const userId of accounts) if (!open && (await this.repository.deletionStore.get({ kind: "account", userId }))) open = true
+		for (const participantId of participants) if (!open && (await this.repository.deletionStore.get({ kind: "guest", roomId, participantId }))) open = true
+		this.checks.delete(roomId)
+		// Once a request is restored the whole room is checked again from the start.
+		if (open) return "waiting"
+		if (page.length < PARTICIPANT_PAGE) return "clear"
+		this.checks.set(roomId, { cursor: String(page[page.length - 1][0]), since: progress.since })
+		if (this.checks.size > REMEMBERED_FAILURES) this.checks.delete(this.checks.keys().next().value!)
+		return "checking"
 	}
 }
 
@@ -216,7 +261,7 @@ function bounded(value: number, min: number, max: number) {
 }
 
 export function hasDeletions(report: RoomRetentionReport) {
-	return report.skipped > 0 || report.waiting > 0 || report.failed > 0 || Object.keys(report.deleted).length > 0
+	return report.skipped > 0 || report.waiting > 0 || report.checking > 0 || report.failed > 0 || Object.keys(report.deleted).length > 0
 }
 
 /**

@@ -7,10 +7,12 @@ import { tables } from "./proposal-storage-schema.ts"
 
 const ROOM = tables.room.name
 const NOW = 1_800_000_000_000
+const PAGE = `SELECT record_id,participant_id,member_user_id FROM ${tables.participant.name} WHERE room_id=? AND record_id>? ORDER BY record_id LIMIT ?`
 type Row = { room_id: string; expires_at: number; seq: number; pending_revision?: number; corrupt?: boolean; history?: any[]; participant_id?: string; member_user_id?: string | null }
 
 /** An in-memory store answering exactly the statements the cleanup sends; anything else fails the test. */
-function store(now = NOW) {
+function store(start = NOW) {
+	let now = start
 	const data = new Map<string, Map<string, Row>>()
 	const statements: { stmt: string; args: unknown[] }[] = []
 	const table = (name: string) => {
@@ -36,11 +38,9 @@ function store(now = NOW) {
 			const r = table(ROOM).get(String(args[0]))
 			return { rows: r ? [[r.expires_at, r.pending_revision ?? 0, false, r.seq, 1, `${invitationTable.name}:${args[0]}`]] : [], rowcount: 0 }
 		}
-		if (stmt === `SELECT DISTINCT participant_id,member_user_id FROM ${tables.participant.name} WHERE room_id=? LIMIT ?`) {
-			const pairs = new Map<string, unknown[]>()
-			for (const r of table(tables.participant.name).values())
-				if (r.room_id === args[0] && r.participant_id) pairs.set(`${r.participant_id}:${r.member_user_id}`, [r.participant_id, r.member_user_id ?? null])
-			return { rows: [...pairs.values()].slice(0, Number(args[1])), rowcount: 0 }
+		if (stmt === PAGE) {
+			const rows = [...table(tables.participant.name)].filter(([k, r]) => r.room_id === args[0] && r.participant_id && k > String(args[1])).sort((a, b) => (a[0] < b[0] ? -1 : 1))
+			return { rows: rows.slice(0, Number(args[2])).map(([k, r]) => [k, r.participant_id, r.member_user_id ?? null]), rowcount: 0 }
 		}
 		if (stmt === `DELETE FROM ${invitationTable.name} WHERE code_hash=? AND room_id=? AND expires_at<=?`) {
 			const r = table(invitationTable.name).get(String(args[0]))
@@ -77,8 +77,10 @@ function store(now = NOW) {
 			const r = table(ROOM).get(id)
 			if (!r) return null
 			if (r.corrupt) throw new Error("Room records are incomplete")
-			const participants = [...table(tables.participant.name).values()]
-				.filter((p) => p.room_id === id && p.participant_id)
+			// The head's roster: the room's own participant record, not the historical ones a test adds beside it.
+			const participants = [...table(tables.participant.name)]
+				.filter(([k, p]) => k === `${tables.participant.name}:${id}` && p.participant_id)
+				.map(([, p]) => p)
 				.map((p) => ({ id: p.participant_id!, memberUserId: p.member_user_id ?? null }))
 			return { room: { expiresAt: r.expires_at, inviteHash: `${invitationTable.name}:${id}`, history: r.history ?? [], participants }, seq: r.seq, term: 1 }
 		},
@@ -107,6 +109,7 @@ function store(now = NOW) {
 	return {
 		sql, repository, room, rowsOf, statements, published, table, markers,
 		get markerReads() { return markerReads },
+		set now(v: number) { now = v },
 		set publishFails(v: boolean) { publishFails = v },
 		failNext(pattern: RegExp) { failOn = pattern },
 	}
@@ -239,7 +242,7 @@ test("room retention: a full batch of rooms that must stay never hides a healthy
 		assert.equal(s.rowsOf(`b-failing-${i}`), 1 + ROOM_RECORD_TABLES.length)
 	}
 	// Failing rooms are retried with a backoff: over 60 more runs each is attempted only a handful of times.
-	const attempts = () => s.statements.filter((x) => x.stmt.startsWith("SELECT DISTINCT participant_id") && x.args[0] === "b-failing-0").length
+	const attempts = () => s.statements.filter((x) => x.stmt === PAGE && x.args[0] === "b-failing-0").length
 	const before = attempts()
 	for (let i = 0; i < 60; i++) await retention.run()
 	assert.ok(attempts() - before <= 6, `retried ${attempts() - before} times`)
@@ -280,12 +283,13 @@ test("room retention: every statement is bounded; invitations go by primary key,
 		const ran = s.statements.slice(from)
 		const rows = Object.values(report.deleted).reduce((a, b) => a + b, 0)
 		assert.ok(rows <= 1000)
-		const scans = ran.filter((x) => /LIMIT \?$/.test(x.stmt) && !x.stmt.startsWith("SELECT DISTINCT"))
-		assert.ok(scans.length <= 1 + T, `${scans.length} scans`)
+		const scans = ran.filter((x) => /LIMIT \?$/.test(x.stmt))
+		assert.ok(scans.length <= 1 + T + 10, `${scans.length} scans`)
 		for (const x of scans) assert.ok(Number(x.args.at(-1)) <= 100)
+		assert.ok(ran.filter((x) => x.stmt === PAGE).length <= 10)
+		for (const x of ran.filter((x) => x.stmt === PAGE)) assert.ok(Number(x.args.at(-1)) <= 64)
 		assert.ok(ran.filter((x) => x.stmt === `SELECT id FROM ${ROOM} WHERE id=?`).length <= 100 * T)
 		assert.ok(ran.filter((x) => x.stmt.startsWith("DELETE")).length <= 2 * 10 + T)
-		assert.ok(ran.filter((x) => x.stmt.startsWith("SELECT DISTINCT")).length <= 10)
 		for (const x of ran) {
 			assert.doesNotMatch(x.stmt, /NOT IN|WHERE room_id=\? AND expires_at/, "no room-wide or subquery statement")
 			if (/=ANY\(\?\)/.test(x.stmt)) assert.ok((x.args[0] as string[]).length <= 100)
@@ -295,6 +299,81 @@ test("room retention: every statement is bounded; invitations go by primary key,
 	await drain(retention)
 	for (let i = 0; i < 40; i++) assert.equal(s.rowsOf(`old-${String(i).padStart(2, "0")}`), 0)
 	for (let i = 0; i < 40; i++) assert.equal(s.rowsOf(`live-${i}`), 6 + ROOM_RECORD_TABLES.length)
+})
+
+test("room retention: a room with more participant records than one run checks is checked across runs, never stuck", async () => {
+	const s = store()
+	// One current participant, but 150 historical participant/account pairs from guests who joined and merged.
+	s.room("crowded", NOW - 40 * DAY_MS, { member_user_id: "current", history: [{ id: "decision-crowded" }] })
+	for (let i = 0; i < 150; i++)
+		s.table(tables.participant.name).set(`p:crowded:${String(i).padStart(3, "0")}`, { room_id: "crowded", expires_at: NOW - 40 * DAY_MS, seq: 1, participant_id: `old-${i}`, member_user_id: `account-${i}` })
+	s.room("plain", NOW - 40 * DAY_MS)
+	// The request of a person on the third page keeps the room for its purge.
+	s.markers.add("account:account-140")
+	const retention = new RoomRetention(s.sql, s.repository, { retentionDays: 30, roomsPerRun: 2 })
+	const reports = []
+	for (let i = 0; i < 8; i++) reports.push(await retention.run())
+	assert.equal(reports[0].checking, 1, "the first page is clear, the check continues")
+	assert.equal(reports[0].failed, 0)
+	assert.ok(reports.some((r) => r.waiting === 1), "the request on a later page is found")
+	assert.equal(s.rowsOf("crowded"), 1 + ROOM_RECORD_TABLES.length + 150)
+	assert.equal(s.rowsOf("plain"), 0, "the room beside it goes")
+	assert.deepEqual(s.published, [])
+	for (const x of s.statements.filter((x) => x.stmt === PAGE)) assert.equal(x.args[2], 64)
+
+	// Restored: the check starts again from the first page and the room goes once every page is clear.
+	s.markers.clear()
+	await drain(retention)
+	assert.equal(s.rowsOf("crowded"), 0)
+	assert.deepEqual(s.published, ["decision-crowded"])
+})
+
+test("room retention: the run that removes a head rechecks its people; a check older than a day starts over", async () => {
+	const s = store()
+	s.room("crowded", NOW - 40 * DAY_MS, { member_user_id: "current" })
+	for (let i = 0; i < 100; i++)
+		s.table(tables.participant.name).set(`p:crowded:${String(i).padStart(3, "0")}`, { room_id: "crowded", expires_at: NOW - 40 * DAY_MS, seq: 1, participant_id: `old-${i}` })
+	const retention = new RoomRetention(s.sql, s.repository, { retentionDays: 30 })
+	assert.equal((await retention.run()).checking, 1)
+	// The current member asks for deletion between the first page and the last.
+	s.markers.add("account:current")
+	const last = await retention.run()
+	assert.equal(last.waiting, 1)
+	assert.equal(last.rooms, 0)
+	s.markers.clear()
+
+	// A check that began more than a day ago is not trusted: the first page is read again.
+	assert.equal((await retention.run()).checking, 1)
+	s.now = NOW + DAY_MS + 1
+	const pages = () => s.statements.filter((x) => x.stmt === PAGE && x.args[0] === "crowded").map((x) => x.args[1])
+	const before = pages().length
+	assert.equal((await retention.run()).checking, 1)
+	assert.equal(pages()[before], "", "started over")
+	await drain(retention)
+	assert.equal(s.rowsOf("crowded"), 0)
+})
+
+test("room retention: every record table gets a share of the row budget, whatever comes first", async () => {
+	const s = store()
+	// Headless records: 1500 in every table, so the first ten tables alone could fill the run budget for 15 runs.
+	for (const t of ROOM_RECORD_TABLES)
+		for (let i = 0; i < 1500; i++) s.table(t.name).set(`${t.name}:${String(i).padStart(4, "0")}`, { room_id: `gone-${i % 50}`, expires_at: NOW - 40 * DAY_MS, seq: 1 })
+	const retention = new RoomRetention(s.sql, s.repository, { retentionDays: 30 })
+	const reached = new Set<string>()
+	for (let run = 0; run < ROOM_RECORD_TABLES.length; run++) {
+		const report = await retention.run()
+		assert.ok(Object.values(report.deleted).reduce((a, b) => a + b, 0) <= 1000)
+		for (const table of Object.keys(report.deleted)) reached.add(table)
+	}
+	assert.deepEqual([...reached].sort(), ROOM_RECORD_TABLES.map((t) => t.name).sort(), "each table deletes within one rotation")
+	await drain(retention, 120)
+	for (const t of ROOM_RECORD_TABLES) assert.equal(s.table(t.name).size, 0, t.name)
+})
+
+test("room retention: the row budget must fit one head", () => {
+	const s = store()
+	assert.throws(() => new RoomRetention(s.sql, s.repository, { retentionDays: 30, rowsPerRun: 1 }), /Invalid room retention bound/)
+	assert.ok(new RoomRetention(s.sql, s.repository, { retentionDays: 30, rowsPerRun: 2 }))
 })
 
 test("cleanup rounds: a rejected sibling does not let a second retention run start while the first is still running", async () => {
