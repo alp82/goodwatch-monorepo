@@ -4,7 +4,7 @@ import { MutationObserver, QueryClient } from '@tanstack/query-core';
 import type { RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
 import { ResendResume } from '../src/core/continuous/resend-resume';
 import { newRoomSave, type NewRoomSaveDeps } from '../src/features/room/new-room-save';
-import { RoomFailure } from '../src/core/continuous/api-client';
+import { ADMISSION_TIMEOUT_MS, RoomFailure } from '../src/core/continuous/api-client';
 import * as backoff from '../src/core/continuous/backoff';
 import * as network from '../src/core/continuous/network';
 import * as retry from '../src/core/continuous/retry';
@@ -223,6 +223,31 @@ test('real create: an answer still being processed when the app goes to the back
   p.resume.appState('active');
   await flush();
   assert.equal(server.posts('/rooms').length, 2);
+  assert.deepEqual(p.opened, ['room-1']);
+  assert.equal(server.rooms.size, 1);
+});
+
+test('real create: 200 headers whose body never comes before the 6 s wait: the same create goes again and the room opens', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const settle = async () => { for (let i = 0; i < 30; i++) { t.mock.timers.tick(0); await new Promise((r) => setImmediate(r)); } };
+  const server = admissionServer((s, n) => (s.path.endsWith('/rooms') && n === 1 ? 'stalled' : 'ok'));
+  const p = realPage(server);
+  p.resume.pick('heist');
+  await settle();
+  assert.equal(server.posts('/rooms').length, 1, 'the first create hangs on its body');
+  t.mock.timers.tick(ADMISSION_TIMEOUT_MS);
+  await settle();
+  assert.equal(server.posts('/rooms').length, 2, `sent again by itself (${p.result().error?.message ?? 'no error'})`);
+  assert.deepEqual(p.opened, ['room-1']);
+  assert.equal(server.rooms.size, 1, 'the same room');
+});
+
+test('real create: 200 headers whose body is lost: the same create goes again and the room opens', async () => {
+  const server = admissionServer((s, n) => (s.path.endsWith('/rooms') && n === 1 ? 'body-lost' : 'ok'));
+  const p = realPage(server);
+  p.resume.pick('heist');
+  await flush();
+  assert.equal(server.posts('/rooms').length, 2, `sent again by itself (${p.result().error?.message ?? 'no error'})`);
   assert.deepEqual(p.opened, ['room-1']);
   assert.equal(server.rooms.size, 1);
 });

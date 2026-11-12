@@ -6,10 +6,13 @@ import { continuousFixture } from './continuous-fixture';
  * A fake YepWatch server behind the real ContinuousApi (api-client.ts), for the admission flows' integrated
  * tests: one room per create command id + secret, one seat per join command id + secret, a command applied
  * once per command id (the real server's idempotency). Every request first asks `script` how to answer:
- * 'ok' (the real answer), 'lost' (the server acts, then the connection drops: no answer), or a refusal.
- * Answers carry a renewed member session, and storing it (the app's SecureStore write) waits on `store`.
+ * 'ok' (the real answer), 'lost' (the server acts, then the connection drops: no answer), 'stalled' (the
+ * server acts and its 200 headers arrive, but the body never does until the request is aborted, e.g. by the
+ * app's own timeout), 'body-lost' (the same, then the connection drops while the body is read), or a refusal
+ * (with a Retry-After header when `retryAfter` is set). Answers carry a renewed member session, and storing
+ * it (the app's SecureStore write) waits on `store`.
  */
-export type Reply = 'ok' | 'lost' | { status: number; code: string; message?: string; retryable?: boolean; retryAfter?: number };
+export type Reply = 'ok' | 'lost' | 'stalled' | 'body-lost' | { status: number; code: string; message?: string; retryable?: boolean; retryAfter?: number };
 export type Seen = { path: string; body: { commandId?: string; command?: { type: string; text?: string; country?: string }; [k: string]: unknown } };
 
 export function admissionServer(script: (seen: Seen, n: number) => Reply | Promise<Reply>, o: { store?: () => Promise<void> } = {}) {
@@ -19,10 +22,14 @@ export function admissionServer(script: (seen: Seen, n: number) => Reply | Promi
   const seen: Seen[] = [];
   const stored: string[] = [];
   let seats = 0;
-  const reply = (status: number, body: unknown) => ({
+  const reply = (status: number, body: unknown, o: { retryAfter?: number; json?: () => Promise<unknown> } = {}) => ({
     ok: status >= 200 && status < 300, status,
-    headers: { get: (name: string) => (name.toLowerCase() === 'x-yepwatch-session' ? `session-${seen.length}` : null) },
-    json: async () => body,
+    headers: { get: (name: string) => {
+      const key = name.toLowerCase();
+      if (key === 'x-yepwatch-session') return `session-${seen.length}`;
+      return key === 'retry-after' && o.retryAfter !== undefined ? String(o.retryAfter) : null;
+    } },
+    json: o.json ?? (async () => body),
   });
   const room = (id: string) => rooms.get(id)!;
   const fetcher = async (url: string | URL | Request, init?: RequestInit) => {
@@ -32,7 +39,7 @@ export function admissionServer(script: (seen: Seen, n: number) => Reply | Promi
     seen.push(entry);
     const answer = await script(entry, seen.filter((s) => s.path === path).length);
     if (init?.signal?.aborted) throw Object.assign(new Error('Aborted'), { name: 'AbortError' });
-    if (answer !== 'ok' && answer !== 'lost')
+    if (typeof answer === 'object')
       return reply(answer.status, { error: { code: answer.code, message: answer.message ?? answer.code, retryable: answer.retryable === true } });
     let result: unknown;
     if (path === paths.rooms) {
@@ -67,6 +74,14 @@ export function admissionServer(script: (seen: Seen, n: number) => Reply | Promi
       result = { receipt: { commandId: body.commandId }, snapshot: structuredClone(snapshot) };
     } else throw new Error(`unexpected request ${path}`);
     if (answer === 'lost') throw new TypeError('Network request failed');
+    if (answer === 'body-lost') return reply(200, result, { json: async () => { throw new TypeError('Network request failed'); } });
+    if (answer === 'stalled') {
+      const signal = init?.signal;
+      return reply(200, result, { json: () => new Promise((_, reject) => {
+        const aborted = () => reject(Object.assign(new Error('Aborted'), { name: 'AbortError' }));
+        if (signal?.aborted) aborted(); else signal?.addEventListener('abort', aborted, { once: true });
+      }) });
+    }
     return reply(200, result);
   };
   const api = new ContinuousApi(fetcher as typeof fetch, true, {

@@ -134,7 +134,8 @@ export class ContinuousApi {
         undefined,
         undefined,
         false,
-        response ? parseRetryAfter(response.headers.get('Retry-After')) : undefined,
+        // A 2xx whose body never came asked for no wait: it goes again like an unanswered request.
+        response && !response.ok ? parseRetryAfter(response.headers.get('Retry-After')) : undefined,
         connectionDiagnostic(e, stage, response?.status, Date.now() - started, timedOut, signal?.aborted === true)
       );
     } finally {

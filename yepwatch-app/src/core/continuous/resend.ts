@@ -12,17 +12,34 @@ export const RESEND_MAX_MS = 5000;
 /** A server wait (Retry-After) up to this is waited out by itself; a longer one is shown as a manual gate. */
 export const SERVER_WAIT_MAX_MS = 60000;
 
+/**
+ * The server's headers came but its answer never did: the body stalled past the wait or the connection
+ * dropped while it was read (a 2xx), or it stalled with any status. No API answer was read, so the room or
+ * the seat may already be made; it is as uncertain as no answer at all, never a refusal.
+ */
+export function incompleteAnswer(error: unknown) {
+  if (!(error instanceof Error)) return false;
+  const e = error as Error & { code?: unknown; status?: unknown; diagnostic?: { reason?: unknown } };
+  if (e.code !== 'outcome_unknown' || typeof e.status !== 'number') return false;
+  return (e.status >= 200 && e.status < 300) || e.diagnostic?.reason === 'timeout';
+}
+
 /** A failure after which the same request may go again by itself. */
 export function resendable(error: unknown) {
-  if (transientFailure(error)) return true;
+  if (transientFailure(error) || incompleteAnswer(error)) return true;
   // A rate limit that names its wait: wait it out, then send the same request.
   const e = error as Error & { status?: unknown; retryable?: unknown };
   return error instanceof Error && Number(e.status) === 429 && e.retryable === true;
 }
 
-/** The server answered and said no (a 409, a 4xx): no resend can change it, so a cancellation doesn't hide it. */
+/**
+ * The server answered and said no (a parsed API refusal: a 409, a 4xx): no resend can change it, so a
+ * cancellation doesn't hide it. An answer that couldn't be read (outcome_unknown) is never one.
+ */
 export function definitiveRefusal(error: unknown) {
-  return error instanceof Error && typeof (error as { status?: unknown }).status === 'number' && !resendable(error);
+  if (!(error instanceof Error)) return false;
+  const e = error as Error & { code?: unknown; status?: unknown };
+  return typeof e.status === 'number' && e.code !== 'outcome_unknown' && !resendable(error);
 }
 
 /** One send's trouble callback that passes on only the first call (a saved wait, then a failed resend, is one outage). */

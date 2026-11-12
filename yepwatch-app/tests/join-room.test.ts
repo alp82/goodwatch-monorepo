@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as backoff from '../src/core/continuous/backoff';
 import * as state from '../src/core/continuous/state';
-import { RoomFailure } from '../src/core/continuous/api-client';
+import { ADMISSION_TIMEOUT_MS, RoomFailure } from '../src/core/continuous/api-client';
 import { ResendResume, resendOutcome, sendFailure } from '../src/core/continuous/resend-resume';
 import { admissionServer } from './admission-server';
 import { continuousFixture } from './continuous-fixture';
@@ -248,4 +248,28 @@ test('real join: a full room\'s 409 whose renewed session is still being stored 
   assert.equal(server.posts('/join').length, 1, 'no second join');
   assert.deepEqual(p.sends, [1]);
   assert.equal(p.resume.phase, 'idle');
+});
+
+test('real join: 200 headers whose body never comes before the 6 s wait: the same join goes again and the friend gets in', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const settle = async () => { for (let i = 0; i < 30; i++) { t.mock.timers.tick(0); await new Promise((r) => setImmediate(r)); } };
+  const server = admissionServer((s, n) => (s.path.endsWith('/join') && n === 1 ? 'stalled' : 'ok'));
+  const p = realJoin(server);
+  p.resume.pick('INVITE1');
+  await settle();
+  assert.equal(server.posts('/join').length, 1, 'the first join hangs on its body');
+  t.mock.timers.tick(ADMISSION_TIMEOUT_MS);
+  await settle();
+  assert.equal(server.posts('/join').length, 2, 'sent again by itself');
+  assert.equal(new Set(server.posts('/join').map((s) => s.body.commandId)).size, 1, 'the same seat');
+  assert.equal(p.resume.phase, 'done');
+});
+
+test('real join: 200 headers whose body is lost: the same join goes again and the friend gets in', async () => {
+  const server = admissionServer((s, n) => (s.path.endsWith('/join') && n === 1 ? 'body-lost' : 'ok'));
+  const p = realJoin(server);
+  p.resume.pick('INVITE1');
+  await new Promise((r) => setTimeout(r, 10));
+  assert.equal(server.posts('/join').length, 2, 'sent again by itself');
+  assert.equal(p.resume.phase, 'done');
 });
