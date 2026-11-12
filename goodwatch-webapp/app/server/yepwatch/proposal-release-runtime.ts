@@ -3,7 +3,7 @@ import { releaseMembers } from "./proposal-release-members.ts"
 import type { ContinuousMembers } from "./continuous-members.server.ts"
 import { ReleaseControl } from "./proposal-release-control.ts"
 import { SqlCreationQuotas } from './proposal-creation-quota.ts'
-import { RoomRetention, hasDeletions } from './proposal-room-retention.ts'
+import { RoomRetention, cleanupRounds, hasDeletions } from './proposal-room-retention.ts'
 import {
 	API_PREFIX,
 	REVISION_CHANNEL,
@@ -158,17 +158,21 @@ export function createReleaseRuntime(
 	const retention = new RoomRetention(deps.sql, new RelationalProposalRepository(deps.sql, config.secret), {
 		retentionDays: config.roomRetentionDays,
 	})
-	let purging = false
-	const purge = setInterval(() => {
-		if (purging || draining || !readiness().ready) return
-		purging = true
-		void Promise.all([
-			service.deletions.purgeDue(now()),
-			quotas.purgeExpired(),
-			retention.run().then((report) => {
+	// Every operation settles before the next round starts: a failed sibling never lets a second retention run begin.
+	const cleanup = cleanupRounds(
+		[
+			() => service.deletions.purgeDue(now()),
+			() => quotas.purgeExpired(),
+			async () => {
+				const report = await retention.run()
 				if (hasDeletions(report)) console.log(JSON.stringify({ event: "yepwatch_room_retention", ...report }))
-			}),
-		]).catch(() => console.error('YepWatch retention cleanup will retry')).finally(() => { purging = false })
+			},
+		],
+		() => console.error("YepWatch cleanup will retry")
+	)
+	const purge = setInterval(() => {
+		if (draining || !readiness().ready) return
+		void cleanup()
 	}, 60_000)
 	purge.unref()
 	return {
