@@ -18,7 +18,7 @@ import { publicFailureMessage } from '../recovery';
 import { continuousRealtimeUrl } from '../config';
 import type { Connection } from '../realtime';
 import { mergeRoom, mergePublic, PersistentCommands, type CachedRoom } from './state';
-import { awaitsServer, overlayRoom, type CommandBuild, type QueuedCommand } from './optimistic';
+import { awaitsServer, overlayRoom, proposingCandidate, type CommandBuild, type QueuedCommand } from './optimistic';
 import { readCommandRecovery, writePending, writePendingNow } from './storage';
 import { useRetryCountdown } from './useRetryCountdown';
 import { transientFailure } from './backoff';
@@ -602,6 +602,7 @@ export function useContinuousRoom(roomId: string) {
   // Read straight from the cache: a settled command leaves the queue in the same render its result shows.
   const confirmed = cached() ?? room.data;
   const display = useMemo(() => (confirmed ? overlayRoom(confirmed, pending, queued) : undefined), [confirmed, pending, queued]);
+  const proposing = useMemo(() => (confirmed ? proposingCandidate(confirmed, pending, queued) : null), [confirmed, pending, queued]);
   const decided = room.data?.shared.phase === 'decided' ? room.data.shared.generation : null;
   return {
     room,
@@ -609,6 +610,8 @@ export function useContinuousRoom(roomId: string) {
     confirmed,
     /** The room with this device's unconfirmed commands applied: screens read this. */
     display,
+    /** The title this device's Propose is on its way for: a proposal of it shows as pending until the answer. */
+    proposing,
     /** `display` as of now (not the last render): taps aim their own-choice guards at it. */
     view: () => {
       const now = cached();

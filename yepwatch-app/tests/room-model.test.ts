@@ -166,6 +166,19 @@ test('room view: NEW is a friend idea not yet acknowledged on this device, switc
   assert.deepEqual(roomView(s, new Set(['i2'])).ideas.filter((i) => i.fresh).map((i) => i.id), ['i3']);
 });
 
+test('proposal in flight: the same title shown by the room reads as pending, never as someone else\'s or as yours', () => {
+  const s = continuousFixture();
+  s.shared.proposalVersion = 3;
+  s.shared.proposal = { candidateId: 'c2', version: 3, previousCandidateId: null, agreeCount: 1, requiredCount: 2, averageYepMs: null };
+  const pending = roomView(s, undefined, 'c2').proposal!;
+  assert.deepEqual([pending.pending, pending.mine, pending.agreed], [true, false, false]);
+  // Another title proposed meanwhile is someone else's.
+  assert.equal(roomView(s, undefined, 'c1').proposal!.pending, false);
+  // The server's answer settles it: this device's own (or not).
+  s.own.agreement = { ...s.own.agreement, proposalVersion: 3, agreed: true, isProposer: true };
+  const mine = roomView(s, undefined, 'c2').proposal!;
+  assert.deepEqual([mine.pending, mine.mine, mine.agreed], [false, true, true]);
+});
 test('a queued tap keeps what it was aimed at: a new proposal or round drops it, own version bumps do not', async () => {
   const s = room();
   s.shared.phase = 'choosing';
