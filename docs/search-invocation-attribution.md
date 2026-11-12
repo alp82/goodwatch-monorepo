@@ -24,7 +24,7 @@ The labels grant nothing, but one rule reads them to take away: a guest's `web` 
 
 ## Accounting and failure behavior
 
-The positive spending estimate is persisted with attribution before provider dispatch. Settlements, canceled claims and later manual reconciliations copy the original estimate's attribution and budget timestamp. Grouping the **sum of all ledger amounts**, including negative adjustments, therefore retains correct source totals even if the request is canceled or history fails. Unknown provider costs remain reserved until reconciled. Each JEV stage currently makes two provider requests; ledger attempts are not provider-request counts. Translation reservations, when enabled, share the invocation ID too.
+The positive spending estimate is persisted with attribution before provider dispatch. Settlements, canceled claims and later manual reconciliations copy the original estimate's attribution and budget timestamp. Grouping the **sum of all ledger amounts**, including negative adjustments, therefore retains correct source totals even if the request is canceled or history fails. Unknown provider costs remain reserved until reconciled. A JEV reading makes two provider requests; Liquid overflow currently makes three. Ledger attempts are not provider-request counts. Translation reservations, when enabled, share the invocation ID too.
 
 History records completed/basic/cached searches and latency; it is best effort. It is not a complete failure or cancellation counter. The spending ledger is the source for money. Existing encrypted query/evidence fields remain encrypted; attribution adds only enums, a version and a random ID. Old rows stay null and must be reported as unknown, without guessing member/guest or trigger.
 
@@ -36,7 +36,7 @@ YepWatch sends its verified participant category in `x-goodwatch-actor-kind`, al
 
 ## Billing-cycle queries
 
-Supply the actual billing-period boundaries (the 17th to the next 17th), with explicit timezone, as the two parameters. Do not use a calendar-month filter. The ledger's `budget_at` keeps adjustments in the period that reserved them; this query does not change runtime budget admission settings.
+Supply the actual billing-period boundaries with an explicit timezone as the two parameters: the 17th to the next 17th for JEV, UTC calendar months for OpenRouter overflow. Filter the pool as the third parameter (`jev` or `openrouter-overflow`); historical NULL pools mean JEV. The ledger's `budget_at` keeps adjustments in the period that reserved them. Runtime admission now uses these separate periods too; see [search overflow](search-overflow.md).
 
 ```sql
 SELECT coalesce(attribution['consumer'], 'unknown') AS consumer,
@@ -46,6 +46,7 @@ SELECT coalesce(attribution['consumer'], 'unknown') AS consumer,
        sum(amount_nano) / 1000000000.0 AS reserved_or_settled_usd
 FROM doc.search_spending
 WHERE budget_at >= ? AND budget_at < ?
+  AND coalesce(budget_pool, 'jev') = ?
 GROUP BY 1, 2, 3, 4
 ORDER BY reserved_or_settled_usd DESC;
 ```
@@ -64,5 +65,7 @@ WHERE created_at >= ? AND created_at < ?
 GROUP BY 1, 2, 3, 4, 5
 ORDER BY requests DESC;
 ```
+
+History also records `interpretation_provider`, `interpretation_model` and `overflow_reason` for readings after the [overflow migration](../goodwatch-webapp/scripts/migrations/2026-11-12-search-overflow-budget.sql). Use those fields to compare provider quality and latency; a missing field on an older row is unknown.
 
 For individual traces, join spending `attribution['search_id']` to history's same field. Exclude null/`unknown` IDs when joining historical or internal unlabelled callers. Do not sum history costs and ledger costs together.

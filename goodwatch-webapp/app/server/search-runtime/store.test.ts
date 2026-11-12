@@ -43,7 +43,7 @@ const { SearchStore } = await import("./store.server.ts")
 const { SearchCoordination } = await import("./coordination.server.ts")
 const { executeJevStage, JEV_RESERVE_NANO } = await import("./runtime.server.ts")
 
-function fixture(client: () => SearchRedis | null, attribution?: SearchAttribution, conflict = false) {
+function fixture(client: () => SearchRedis | null, attribution?: SearchAttribution, conflict = false, budget?: import("./store.server.ts").SearchBudget) {
 	const statements: { stmt: string; args: unknown[] }[] = []
 	const store = new SearchStore(async (stmt, args = []) => {
 		statements.push({ stmt, args })
@@ -55,7 +55,7 @@ function fixture(client: () => SearchRedis | null, attribution?: SearchAttributi
 			return { cols: ["cache_key", "budget_at", "amount_nano", "attribution"], rows: [["key", 1000, JEV_RESERVE_NANO, attribution]], rowcount: 1 }
 		if (conflict && stmt.startsWith("INSERT INTO doc.search_interpretations")) throw new Error("claim conflict")
 		return { cols: [], rows: [], rowcount: 1 }
-	}, new SearchCoordination(client), Buffer.alloc(32, 1))
+	}, new SearchCoordination(client), Buffer.alloc(32, 1), budget)
 	return { store, statements }
 }
 
@@ -266,7 +266,7 @@ for (const blocked of ["halted", "day", "month"] as const) {
 			return { cols: ["now", "day", "month"], rows: [[1000, blocked === "day" ? 1_000_000_000 : 0, blocked === "month" ? 5_000_000_000 : 0]], rowcount: 1 }
 		}, new SearchCoordination(() => { throw new Error("Unexpected admission") }), Buffer.alloc(32, 1))
 		const checks = store.claimChecks()
-		assert.deepEqual(await store.claim({ ...claim, checks }), { kind: "basic", reason: "budget" })
+		assert.deepEqual(await store.claim({ ...claim, checks }), { kind: "basic", reason: "budget", ...(blocked === "month" ? { overflowEligible: true } : {}) })
 		assert.equal(statements.length, 2)
 		assert.ok(statements.every(stmt => stmt.startsWith("SELECT")))
 	})
@@ -330,7 +330,7 @@ for (const cost of [840, null, JEV_RESERVE_NANO + 1]) {
 			assert.equal(settlement, undefined) // Unknown usage never creates a refund.
 			assert.equal(cache.mock.callCount(), 0)
 		} else {
-			assert.deepEqual(settlement?.args, ["attempt:settled", "attempt", "key", 1000, cost - JEV_RESERVE_NANO, null])
+			assert.deepEqual(settlement?.args, ["attempt:settled", "attempt", "key", 1000, cost - JEV_RESERVE_NANO, "jev", null])
 			assert.equal(cache.mock.callCount(), cost <= JEV_RESERVE_NANO ? 1 : 0)
 		}
 		assert.equal(statements.some(({ stmt }) => stmt.includes("status = 'ready'")), cost !== null && cost <= JEV_RESERVE_NANO)
@@ -395,3 +395,33 @@ for (const [name, label] of [["navigation", { surface: "discover", trigger: "nav
 		}
 		assert.equal(paid.mock.callCount(), 0)
 	})
+
+test("overflow has its own budget query and tagged estimates; adjustments keep the estimate pool", async t => {
+	t.mock.method(SearchCoordination.prototype, "release", async () => {});
+	t.mock.method(SearchCoordination.prototype, "cache", async () => {});
+	const budget = { pool: "openrouter-overflow" as const, dailyNano: 1e9, monthlyNano: 1e9, resetDay: 1 as const };
+	const { store, statements } = fixture(() => ({ eval: async () => "ok" }) as unknown as SearchRedis, attribution, false, budget);
+	await store.claim({ ...claim, attribution });
+	const spend = statements.find(s => s.stmt.startsWith("SELECT CURRENT_TIMESTAMP"))!;
+	assert.deepEqual(spend.args, ["openrouter-overflow"]);
+	const estimate = statements.find(s => s.stmt.includes("'estimate'"))!;
+	assert.equal(estimate.args.at(-2), "openrouter-overflow");
+	// The fixture's old reservation has no pool: it belongs to JEV even when reconciled through this store.
+	await store.reconcileUnknown("old", 840, "verified");
+	assert.equal(statements.find(s => s.stmt.includes("'reconciliation'"))!.args.at(-2), "jev");
+});
+
+for (const failure of ["budget", "navigation", "account"] as const) {
+	test(`overflow preserves ${failure} admission stops`, async () => {
+		const { store, statements } = fixture(() => { throw new Error("Unexpected Redis admission"); }, attribution, false, { pool: "openrouter-overflow", dailyNano: 1e9, monthlyNano: 1e9, resetDay: 1 });
+		const request = {
+			...claim,
+			attribution: failure === "navigation" ? { ...attribution, trigger: "navigation" as const } : attribution,
+			scopes: failure === "account" ? Promise.reject(new Error("Session unavailable")) : ["global"],
+			...(failure === "budget" ? { checks: Promise.resolve([[{ halted: false }], [{ now: 1000, day: 0, month: 1e9 }]]) as ReturnType<typeof store.claimChecks> } : {}),
+		};
+		if (failure === "account") await assert.rejects(store.claim(request), /Session unavailable/);
+		else assert.deepEqual(await store.claim(request), { kind: "basic", reason: failure });
+		assert.ok(statements.every(s => s.stmt.startsWith("SELECT")));
+	});
+}

@@ -31,7 +31,7 @@ export type BasicReason =
 export type Claim =
 	| { kind: "claimed"; id: string }
 	| { kind: "cached"; ciphertext: string }
-	| { kind: "basic"; reason: BasicReason }
+	| { kind: "basic"; reason: BasicReason; overflowEligible?: true }
 type Interpretation = {
 	cache_key: string
 	attempt_id: string
@@ -39,11 +39,19 @@ type Interpretation = {
 	ciphertext: string
 	created_at: number
 }
-type Reservation = { cache_key: string; budget_at: number; amount_nano: number; attribution?: SearchAttribution }
+type Reservation = { cache_key: string; budget_at: number; amount_nano: number; attribution?: SearchAttribution; budget_pool?: string }
 
 let lastCoordinationWarning = -Infinity
 
-export function productionStore() {
+export type SearchBudget = {
+	pool: "jev" | "openrouter-overflow"
+	dailyNano: number
+	monthlyNano: number
+	resetDay: 1 | 17
+}
+export const JEV_BUDGET: SearchBudget = { pool: "jev", dailyNano: DAILY_NANO, monthlyNano: MONTHLY_NANO, resetDay: 17 }
+
+export function productionStore(budget: SearchBudget = JEV_BUDGET) {
 	const key = process.env.SEARCH_STORAGE_KEY
 	if (!readingsConfigured())
 		throw new Error("Search storage key is not configured")
@@ -51,6 +59,7 @@ export function productionStore() {
 		searchStatement,
 		new SearchCoordination(),
 		Buffer.from(key!, "hex"),
+		budget,
 	)
 }
 
@@ -62,8 +71,12 @@ export class SearchStore {
 		private readonly execute: typeof searchStatement,
 		private readonly coordination: SearchCoordination,
 		private readonly key: Buffer,
+		private readonly budget: SearchBudget = JEV_BUDGET,
 	) {
 		if (key.length !== 32) throw new Error("Invalid search storage key")
+		if (![1, 17].includes(budget.resetDay) || !["jev", "openrouter-overflow"].includes(budget.pool) ||
+			![budget.dailyNano, budget.monthlyNano].every(n => Number.isSafeInteger(n) && n >= 0))
+			throw new Error("Invalid search budget")
 	}
 	private async query<T>(stmt: string, args: unknown[] = []): Promise<T[]> {
 		const data = await this.execute(stmt, args)
@@ -125,13 +138,14 @@ export class SearchStore {
 			}
 		}
 		// The control row and the spending, in parallel. The spending query reads Crate's clock once, and sums today's
-		// and this month's (UTC) spending by it.
+		// and this budget cycle's (UTC) spending by it. JEV renews on the 17th; OpenRouter resets on the 1st.
 		return Promise.all([
 			timed("claimControl", () => this.query<{ halted: boolean }>(
 				"SELECT halted FROM doc.search_control WHERE id = 'paid'",
 			)),
 			timed("claimSpend", () => this.query<{ now: number; day: number; month: number }>(
-				"SELECT CURRENT_TIMESTAMP AS now, coalesce(sum(CASE WHEN budget_at >= date_trunc('day', CURRENT_TIMESTAMP) THEN amount_nano ELSE 0 END), 0) AS day, coalesce(sum(amount_nano), 0) AS month FROM doc.search_spending WHERE budget_at >= date_trunc('month', CURRENT_TIMESTAMP)",
+				`SELECT CURRENT_TIMESTAMP AS now, coalesce(sum(CASE WHEN budget_at >= date_trunc('day', CURRENT_TIMESTAMP) THEN amount_nano ELSE 0 END), 0) AS day, coalesce(sum(amount_nano), 0) AS month FROM doc.search_spending WHERE budget_at >= ${this.budget.resetDay === 17 ? "date_trunc('month', CURRENT_TIMESTAMP - INTERVAL '16' DAY) + INTERVAL '16' DAY" : "date_trunc('month', CURRENT_TIMESTAMP)"} AND coalesce(budget_pool, 'jev') = ?`,
+				[this.budget.pool],
 			)),
 		])
 	}
@@ -167,10 +181,11 @@ export class SearchStore {
 		const [[control], [spend]] = await (input.checks ?? this.claimChecks(input.timings))
 		if (!control || control.halted) return { kind: "basic", reason: "budget" }
 		const now = Number(spend.now)
-		if (
-			Number(spend.day) + input.reserveNano > DAILY_NANO ||
-			Number(spend.month) + input.reserveNano > MONTHLY_NANO
-		)
+		if (![now, Number(spend.day), Number(spend.month)].every(Number.isSafeInteger))
+			return { kind: "basic", reason: "storage" }
+		if (Number(spend.month) + input.reserveNano > this.budget.monthlyNano)
+			return { kind: "basic", reason: "budget", ...(this.budget.pool === "jev" ? { overflowEligible: true as const } : {}) }
+		if (Number(spend.day) + input.reserveNano > this.budget.dailyNano)
 			return { kind: "basic", reason: "budget" }
 		const scopes = await timed("claimScopes", () => scopesReady)
 		const attribution = (typeof input.attribution === "function" ? await input.attribution() : input.attribution) ?? { ...attributedSearch(undefined, null), actor_kind: "unknown" as const }
@@ -210,7 +225,7 @@ export class SearchStore {
 					[input.cacheKey, id, input.contract, now],
 				)),
 				timed("claimEstimateInsert", () => this.execute(
-					"INSERT INTO doc.search_spending (id, attempt_id, cache_key, event, budget_at, created_at, amount_nano, price_version, attribution) VALUES (?, ?, ?, 'estimate', ?, ?, ?, ?, ?)",
+					"INSERT INTO doc.search_spending (id, attempt_id, cache_key, event, budget_at, created_at, amount_nano, price_version, budget_pool, attribution) VALUES (?, ?, ?, 'estimate', ?, ?, ?, ?, ?, ?)",
 					[
 						`${id}:estimate`,
 						id,
@@ -219,6 +234,7 @@ export class SearchStore {
 						now,
 						input.reserveNano,
 						input.priceVersion,
+						this.budget.pool,
 						attribution,
 					],
 				)),
@@ -228,8 +244,8 @@ export class SearchStore {
 				// cancelled before dispatch. If that fails, the estimate stays counted, which only errs on the safe side.
 				if (estimate.status === "fulfilled")
 					await this.execute(
-						"INSERT INTO doc.search_spending (id, attempt_id, cache_key, event, budget_at, created_at, amount_nano, attribution) VALUES (?, ?, ?, 'settlement', ?, CURRENT_TIMESTAMP, ?, ?) ON CONFLICT DO NOTHING",
-						[`${id}:settled`, id, input.cacheKey, now, -input.reserveNano, attribution],
+						"INSERT INTO doc.search_spending (id, attempt_id, cache_key, event, budget_at, created_at, amount_nano, budget_pool, attribution) VALUES (?, ?, ?, 'settlement', ?, CURRENT_TIMESTAMP, ?, ?, ?) ON CONFLICT DO NOTHING",
+						[`${id}:settled`, id, input.cacheKey, now, -input.reserveNano, this.budget.pool, attribution],
 					).catch(() => {})
 				if (inserted.status === "rejected") throw inserted.reason
 				const cached = await this.lookup(input.cacheKey)
@@ -255,7 +271,7 @@ export class SearchStore {
 	}
 	private async reservation(id: string) {
 		const [row] = await this.query<Reservation>(
-			"SELECT cache_key, budget_at, amount_nano, attribution FROM doc.search_spending WHERE id = ?",
+			"SELECT cache_key, budget_at, amount_nano, budget_pool, attribution FROM doc.search_spending WHERE id = ?",
 			[`${id}:estimate`],
 		)
 		if (!row) throw new Error("Search attempt unavailable")
@@ -312,13 +328,14 @@ export class SearchStore {
 				)
 			}
 			await this.execute(
-				"INSERT INTO doc.search_spending (id, attempt_id, cache_key, event, budget_at, created_at, amount_nano, attribution) VALUES (?, ?, ?, 'settlement', ?, CURRENT_TIMESTAMP, ?, ?) ON CONFLICT DO NOTHING",
+				"INSERT INTO doc.search_spending (id, attempt_id, cache_key, event, budget_at, created_at, amount_nano, budget_pool, attribution) VALUES (?, ?, ?, 'settlement', ?, CURRENT_TIMESTAMP, ?, ?, ?) ON CONFLICT DO NOTHING",
 				[
 					`${id}:settled`,
 					id,
 					row.cache_key,
 					row.budget_at,
 					costNano - Number(row.amount_nano),
+					row.budget_pool ?? "jev",
 					row.attribution ?? null,
 				],
 			)
@@ -343,7 +360,7 @@ export class SearchStore {
 		if (settled) return false
 		if (actualNano > Number(row.amount_nano)) await this.haltPaidAdmissions()
 		const result = await this.execute(
-			"INSERT INTO doc.search_spending (id, attempt_id, cache_key, event, budget_at, created_at, amount_nano, evidence, attribution) VALUES (?, ?, ?, 'reconciliation', ?, CURRENT_TIMESTAMP, ?, ?, ?) ON CONFLICT DO NOTHING",
+			"INSERT INTO doc.search_spending (id, attempt_id, cache_key, event, budget_at, created_at, amount_nano, evidence, budget_pool, attribution) VALUES (?, ?, ?, 'reconciliation', ?, CURRENT_TIMESTAMP, ?, ?, ?, ?) ON CONFLICT DO NOTHING",
 			[
 				`${id}:settled`,
 				id,
@@ -351,6 +368,7 @@ export class SearchStore {
 				row.budget_at,
 				actualNano - Number(row.amount_nano),
 				this.seal({ evidence }),
+				row.budget_pool ?? "jev",
 				row.attribution ?? null,
 			],
 		)
@@ -365,6 +383,9 @@ export class SearchStore {
 		chargedNano: number
 		outcome: "ready" | "cached" | "basic" | "resolved"
 		reason?: BasicReason
+		interpretationProvider?: string
+		interpretationModel?: string
+		overflowReason?: string
 		// The ranking that produced the served list, so results can be compared by version.
 		rankerVersion: string
 		// Why the basic search served a search that has a reading, instead of the ranking.
@@ -374,7 +395,7 @@ export class SearchStore {
 	}): Promise<string> {
 		const id = randomUUID()
 		await this.execute(
-			"INSERT INTO doc.search_history (id, created_at, account_id, ciphertext, elapsed_ms, charged_nano, outcome, reason, ranker_version, ranker_fallback, stage_ms, attribution) VALUES (?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+			"INSERT INTO doc.search_history (id, created_at, account_id, ciphertext, elapsed_ms, charged_nano, outcome, reason, ranker_version, ranker_fallback, stage_ms, interpretation_provider, interpretation_model, overflow_reason, attribution) VALUES (?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 			[
 				id,
 				input.accountId,
@@ -386,6 +407,9 @@ export class SearchStore {
 				input.rankerVersion,
 				input.rankerFallback ?? null,
 				input.stageMs ?? null,
+				input.interpretationProvider ?? null,
+				input.interpretationModel ?? null,
+				input.overflowReason ?? null,
 				input.attribution ?? attributedSearch(undefined, input.accountId),
 			],
 		)

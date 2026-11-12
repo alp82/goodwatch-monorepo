@@ -187,7 +187,7 @@ for (const fail of [false, true]) {
 				requests: [{ state: {}, questions: {} }, { state: {}, questions: {} }],
 				visitor: { accountId: null, networkIdentity: "test" },
 			});
-			assert.deepEqual(outcome, { kind: "ready", readings: [reading, reading], chargedNano: 840 });
+			assert.deepEqual(outcome, { kind: "ready", readings: [reading, reading], chargedNano: 840, interpretationProvider: "typesafe", interpretationModel: JEV_MODEL });
 			assert.equal(completed, false);
 			assert.deepEqual(finishes, [["id", 840, [reading, reading]]]);
 			assert.deepEqual(primes, [["key", [reading, reading]]]);
@@ -201,5 +201,136 @@ for (const fail of [false, true]) {
 		}
 		assert.equal(completed, true);
 		if (fail) assert.equal(warning.mock.callCount(), 1);
+	});
+}
+
+const overflowInput = (): JevStageInput => ({
+	requestText: "quiet movies", questionVersion: "overflow-test", language: { mode: "english", version: "test" },
+	requests: [{ state: {}, questions: { mood: { type: "noul" } } }, { state: {}, questions: { style: { type: "noul" } } }],
+	visitor: { accountId: null, networkIdentity: "test", attribution: { consumer: "web", surface: "start", trigger: "enter", reported_by: "client" } },
+	admissionAttemptId: "trusted-attempt",
+});
+function overflowStore(claim: Claim = { kind: "claimed", id: "overflow-attempt" }) {
+	const finishes: unknown[][] = [], keys: string[] = [], claims: Parameters<SearchStore["claim"]>[0][] = [];
+	const store = {
+		digest: (text: string) => text,
+		lookup: async (key: string) => { keys.push(key); return undefined; },
+		claimChecks: async () => [[], []],
+		claim: async (input: Parameters<SearchStore["claim"]>[0]) => { await input.scopes; claims.push(input); return claim; },
+		unseal: () => [{ cached: true }, { cached: true }],
+		dispatch: async () => {}, prime: async () => {}, haltPaidAdmissions: async () => {},
+		finish: async (...args: unknown[]) => { finishes.push(args); },
+	} as unknown as SearchStore;
+	return { store, finishes, keys, claims };
+}
+
+for (const denied of ["budget", "rate", "busy", "coordination", "storage", "navigation"] as const) {
+	test(`ordinary ${denied} denial never activates paid overflow`, async t => {
+		const saved = process.env.TYPESAFE_API_KEY; process.env.TYPESAFE_API_KEY = "test";
+		t.after(() => { if (saved === undefined) delete process.env.TYPESAFE_API_KEY; else process.env.TYPESAFE_API_KEY = saved; });
+		const { executeJevWithOverflow } = await import("./runtime.server.ts");
+		const primary = overflowStore({ kind: "basic", reason: denied }), alternate = overflowStore();
+		const result = await executeJevWithOverflow(primary.store, overflowInput(), { store: alternate.store, apiKey: "dedicated", read: async () => { throw new Error("Unexpected paid overflow"); } });
+		assert.equal(result.kind, "basic"); assert.equal(alternate.keys.length, 0);
+	});
+}
+
+test("cycle exhaustion selects separately claimed Liquid readings, preserves cache identity and meters once", async t => {
+	const saved = process.env.TYPESAFE_API_KEY; process.env.TYPESAFE_API_KEY = "test";
+	t.after(() => { if (saved === undefined) delete process.env.TYPESAFE_API_KEY; else process.env.TYPESAFE_API_KEY = saved; });
+	const { executeJevWithOverflow } = await import("./runtime.server.ts");
+	const { LIQUID_RESPONSE_MODEL, LIQUID_RESERVE_NANO } = await import("./liquid.server.ts");
+	const primary = overflowStore({ kind: "basic", reason: "budget", overflowEligible: true }), alternate = overflowStore();
+	const input = overflowInput(); let calls = 0, metered = 0, notified = 0;
+	input.visitor.beforeUncachedReading = async () => { metered++; }; input.onClaimed = () => { notified++; };
+	const readings = input.requests.map(r => ({ model: LIQUID_RESPONSE_MODEL, answers: Object.fromEntries(Object.keys(r.questions).map(k => [k, { type: "noul" as const, noul: 0.9 }])), usage: { input_tokens: 100, output_tokens: 0 } })) as [import("@typesafe-ai/sdk").SystemOneResult<import("@typesafe-ai/sdk").Questions>, import("@typesafe-ai/sdk").SystemOneResult<import("@typesafe-ai/sdk").Questions>];
+	const outcome = await executeJevWithOverflow(primary.store, input, {
+		store: alternate.store, apiKey: "dedicated", read: async (_requests, key) => {
+			assert.equal(key, "dedicated"); calls++; return { readings, chargedNano: 4000 };
+		},
+	});
+	assert.equal(outcome.kind, "ready"); assert.equal(outcome.chargedNano, 4000);
+	assert.equal(outcome.interpretationProvider, "openrouter"); assert.equal(outcome.overflowReason, "cycle-budget");
+	assert.equal(calls, 1); assert.equal(metered, 1); assert.equal(notified, 1);
+	assert.notEqual(primary.keys[0], alternate.keys[0]);
+	assert.equal(alternate.claims[0].reserveNano, LIQUID_RESERVE_NANO);
+	assert.equal(alternate.claims[0].admissionAttemptId, input.admissionAttemptId);
+	assert.equal(alternate.finishes[0][1], 4000);
+});
+
+test("fallback disabled, exhausted, cached and unknown-cost outcomes keep their accounting", async t => {
+	const saved = process.env.TYPESAFE_API_KEY; process.env.TYPESAFE_API_KEY = "test";
+	t.after(() => { if (saved === undefined) delete process.env.TYPESAFE_API_KEY; else process.env.TYPESAFE_API_KEY = saved; });
+	const { executeJevWithOverflow } = await import("./runtime.server.ts");
+	const { LIQUID_RESERVE_NANO } = await import("./liquid.server.ts");
+	const primary = overflowStore({ kind: "basic", reason: "budget", overflowEligible: true });
+	const disabled = await executeJevWithOverflow(primary.store, overflowInput());
+	assert.equal(disabled.kind, "basic"); assert.equal(disabled.chargedNano, 0);
+	for (const claim of [{ kind: "basic", reason: "budget" }, { kind: "cached", ciphertext: "cipher" }, { kind: "claimed", id: "attempt" }] as Claim[]) {
+		const alternate = overflowStore(claim); let calls = 0;
+		const result = await executeJevWithOverflow(primary.store, overflowInput(), { store: alternate.store, apiKey: "dedicated", read: async () => { calls++; throw new Error("Lost response"); } });
+		assert.equal(result.kind, claim.kind === "cached" ? "cached" : "basic");
+		assert.equal(result.chargedNano, claim.kind === "claimed" ? LIQUID_RESERVE_NANO : 0);
+		assert.equal(calls, claim.kind === "claimed" ? 1 : 0);
+		if (claim.kind === "claimed") assert.equal(alternate.finishes[0][1], null);
+	}
+});
+
+test("a payment-required response may overflow, but integration metering and onClaimed still run once", async t => {
+	const saved = process.env.TYPESAFE_API_KEY; process.env.TYPESAFE_API_KEY = "test";
+	t.after(() => { if (saved === undefined) delete process.env.TYPESAFE_API_KEY; else process.env.TYPESAFE_API_KEY = saved; });
+	const { APIError, TypeSafeClient } = await import("@typesafe-ai/sdk");
+	t.mock.method(TypeSafeClient.prototype, "systemOne", async () => { throw new APIError(402, {}, new Headers()); });
+	const { executeJevWithOverflow, JEV_RESERVE_NANO } = await import("./runtime.server.ts");
+	const primary = overflowStore(), alternate = overflowStore({ kind: "cached", ciphertext: "cipher" });
+	const input = overflowInput(); let metered = 0, notified = 0;
+	input.visitor.beforeUncachedReading = async () => { metered++; }; input.onClaimed = () => { notified++; };
+	const result = await executeJevWithOverflow(primary.store, input, { store: alternate.store, apiKey: "dedicated" });
+	assert.equal(result.kind, "cached"); assert.equal(result.overflowReason, "provider-payment-required");
+	assert.equal(result.chargedNano, JEV_RESERVE_NANO); assert.equal(primary.finishes[0][1], null);
+	assert.equal(metered, 1); assert.equal(notified, 1);
+	assert.equal(alternate.claims[0].admissionAttemptId, "overflow-attempt");
+});
+
+test("overflow deadline covers body/transport stalls and retains the full estimate", async t => {
+	const { executeJevStage } = await import("./runtime.server.ts");
+	const { LIQUID_RESERVE_NANO } = await import("./liquid.server.ts");
+	const alternate = overflowStore(); let signal: AbortSignal | undefined;
+	const result = await executeJevStage(alternate.store, overflowInput(), { apiKey: "dedicated", read: async (_r, _k, abort) => {
+		signal = abort; return new Promise(() => {});
+	} });
+	assert.equal(result.kind, "basic"); if (result.kind === "basic") assert.equal(result.reason, "deadline");
+	assert.equal(signal?.aborted, true); assert.equal(result.chargedNano, LIQUID_RESERVE_NANO);
+	assert.equal(alternate.finishes[0][1], null);
+});
+
+test("cached JEV remains first choice when paid overflow is configured", async () => {
+	const { executeJevWithOverflow } = await import("./runtime.server.ts");
+	const primary = overflowStore({ kind: "cached", ciphertext: "cipher" }), alternate = overflowStore();
+	primary.store.lookup = async () => ({ kind: "cached", ciphertext: "cipher" });
+	const result = await executeJevWithOverflow(primary.store, overflowInput(), { store: alternate.store, apiKey: "dedicated", read: async () => { throw new Error("Unexpected paid call"); } });
+	assert.equal(result.kind, "cached"); assert.equal(result.interpretationProvider, "typesafe");
+	assert.equal(result.chargedNano, 0); assert.equal(alternate.keys.length, 0);
+});
+
+test("complete invalid Liquid output settles its known cost without caching", async () => {
+	const { executeJevStage } = await import("./runtime.server.ts");
+	const { LiquidContractError } = await import("./liquid.server.ts");
+	const alternate = overflowStore();
+	const result = await executeJevStage(alternate.store, overflowInput(), { apiKey: "dedicated", read: async () => { throw new LiquidContractError(4000); } });
+	assert.equal(result.kind, "basic"); if (result.kind === "basic") assert.equal(result.reason, "contract");
+	assert.equal(result.chargedNano, 4000); assert.deepEqual(alternate.finishes, [["overflow-attempt", 4000]]);
+});
+
+for (const status of [401, 429, 529, 500]) {
+	test(`HTTP ${status} from JEV cannot activate paid overflow`, async t => {
+		const saved = process.env.TYPESAFE_API_KEY; process.env.TYPESAFE_API_KEY = "test";
+		t.after(() => { if (saved === undefined) delete process.env.TYPESAFE_API_KEY; else process.env.TYPESAFE_API_KEY = saved; });
+		const { APIError, TypeSafeClient } = await import("@typesafe-ai/sdk");
+		t.mock.method(TypeSafeClient.prototype, "systemOne", async () => { throw new APIError(status, {}, new Headers()); });
+		const { executeJevWithOverflow } = await import("./runtime.server.ts");
+		const primary = overflowStore(), alternate = overflowStore();
+		const result = await executeJevWithOverflow(primary.store, overflowInput(), { store: alternate.store, apiKey: "dedicated", read: async () => { throw new Error("Unexpected paid call"); } });
+		assert.equal(result.kind, "basic"); assert.equal(alternate.keys.length, 0);
 	});
 }

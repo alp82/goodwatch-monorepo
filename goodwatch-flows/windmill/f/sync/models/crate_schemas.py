@@ -1141,6 +1141,8 @@ SCHEMAS = {
     # Settlements stay in the original estimate's UTC budget window.
     "search_spending": {
         "columns": {
+            # NULL historical rows belong to the JEV allowance; paid overflow has its own pool.
+            "budget_pool": "TEXT",
             "attribution": "OBJECT(STRICT) AS (version INTEGER, consumer TEXT, surface TEXT, trigger TEXT, actor_kind TEXT, search_id TEXT, reported_by TEXT)",
             "id": "TEXT",
             "attempt_id": "TEXT NOT NULL",
@@ -1159,6 +1161,9 @@ SCHEMAS = {
     },
     "search_history": {
         "columns": {
+            "interpretation_provider": "TEXT",
+            "interpretation_model": "TEXT",
+            "overflow_reason": "TEXT",
             "attribution": "OBJECT(STRICT) AS (version INTEGER, consumer TEXT, surface TEXT, trigger TEXT, actor_kind TEXT, search_id TEXT, reported_by TEXT)",
             "id": "TEXT",
             "created_at": "TIMESTAMP WITH TIME ZONE NOT NULL",

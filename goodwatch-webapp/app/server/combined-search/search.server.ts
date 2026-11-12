@@ -914,6 +914,9 @@ export async function combinedSearch(
 					? ("basic" as const)
 					: read.kind,
 			...(read?.kind === "basic" ? { reason: read.reason } : {}),
+			interpretationProvider: read?.interpretationProvider,
+			interpretationModel: read?.interpretationModel,
+			overflowReason: read?.overflowReason,
 			rankerVersion: served ? served.rankerVersion : BASIC_RANKER_VERSION,
 			...(fallback ? { rankerFallback: fallback } : {}),
 			stageMs: { ...stageMs, total: elapsedMs },

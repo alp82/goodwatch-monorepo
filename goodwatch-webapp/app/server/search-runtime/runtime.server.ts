@@ -1,3 +1,7 @@
+import {
+	LIQUID_MODEL, LIQUID_RESPONSE_MODEL, LIQUID_PRICE_VERSION, LIQUID_RESERVE_NANO,
+	LiquidContractError, overflowConfiguration, readLiquid,
+} from "./liquid.server.ts";
 import { attributedSearch, type SearchContext } from "../../domain/search-attribution.ts";
 import { recordSearchHistoryWrite } from "./telemetry.server";
 import { runsSearch } from "../role.server";
@@ -63,6 +67,13 @@ export function keepJevConnectionsWarm(): void {
 }
 
 type Reading = SystemOneResult<Questions>;
+type OverflowReason = "cycle-budget" | "provider-payment-required";
+type ReadingMetadata = {
+	interpretationProvider?: string;
+	interpretationModel?: string;
+	overflowReason?: OverflowReason;
+};
+type LiquidProvider = { apiKey: string; read?: typeof readLiquid };
 export type LanguagePolicy =
 	| { mode: "english"; version: string }
 	| { mode: "native-vector-only"; version: string }
@@ -82,7 +93,7 @@ export function nativeLanguagePolicy(isEnglish: boolean): LanguagePolicy {
 	};
 }
 
-export type JevOutcome =
+export type JevOutcome = ReadingMetadata & (
 	| {
 			kind: "ready" | "cached";
 			readings: [Reading, Reading];
@@ -92,8 +103,10 @@ export type JevOutcome =
 			kind: "basic";
 			reason: BasicReason;
 			message: typeof BASIC_SEARCH_MESSAGE;
+			overflowEligible?: OverflowReason;
+			admissionAttemptId?: string;
 			chargedNano: number;
-	  };
+	  });
 const basic = (reason: BasicReason, chargedNano = 0): JevOutcome => ({
 	kind: "basic",
 	reason,
@@ -137,7 +150,7 @@ export interface JevStageInput {
 		networkIdentity: string;
 		/** Trusted integrations may meter fresh readings. Cache hits never call this. */
 		beforeUncachedReading?: () => Promise<void>;
-		/** Discord permits only the website's Jev reading, with no translation model call. */
+		/** Discord permits only the website's reading, with no translation model call. */
 		allowTranslation?: boolean;
 	};
 	signal?: AbortSignal;
@@ -157,15 +170,64 @@ export async function runJevStage(input: JevStageInput): Promise<JevOutcome> {
 	} catch {
 		return basic("configuration");
 	}
-	return executeJevStage(store, input);
+	const config = overflowConfiguration();
+	// Build no paid overflow store unless explicitly configured. A missing schema fails closed at admission.
+	const overflow = config ? {
+		store: productionStore({
+			pool: "openrouter-overflow", dailyNano: config.monthlyNano,
+			monthlyNano: config.monthlyNano, resetDay: 1,
+		}),
+		apiKey: config.apiKey,
+	} : undefined;
+	return executeJevWithOverflow(store, input, overflow);
+}
+
+/** Free JEV credit first. Overflow is only for exhausted cycle credit, never daily/rate/storage/deadline denials. */
+export async function executeJevWithOverflow(
+	store: SearchStore,
+	input: JevStageInput,
+	overflow?: LiquidProvider & { store: SearchStore },
+): Promise<JevOutcome> {
+	let metered: Promise<void> | undefined;
+	let notified = false;
+	const once: JevStageInput = {
+		...input,
+		visitor: {
+			...input.visitor,
+			beforeUncachedReading: () => metered ??= Promise.resolve().then(() => input.visitor.beforeUncachedReading?.()),
+		},
+		onClaimed: () => { if (!notified) { notified = true; input.onClaimed?.(); } },
+	};
+	const primary = await executeJevStage(store, once);
+	if (primary.kind !== "basic" || !primary.overflowEligible || !overflow || input.signal?.aborted) return primary;
+	const overflowTimings: Record<string, number> = {};
+	const fallback = await executeJevStage(overflow.store, {
+		...once,
+		admissionAttemptId: primary.admissionAttemptId ?? input.admissionAttemptId,
+		timings: overflowTimings,
+	}, overflow);
+	if (input.timings) for (const [name, ms] of Object.entries(overflowTimings)) {
+		input.timings[`overflow${name[0].toUpperCase()}${name.slice(1)}`] = ms;
+	}
+	return {
+		...fallback,
+		chargedNano: primary.chargedNano + fallback.chargedNano,
+		interpretationProvider: "openrouter", interpretationModel: LIQUID_RESPONSE_MODEL,
+		overflowReason: primary.overflowEligible,
+	};
 }
 
 // Explicit store parameter supports isolated maintenance/ad hoc verification.
-// Only the production SDK transport is used; there is no prototype credential fallback.
+// Production uses the TypeSafe SDK or the fixed native Liquid transport; credentials stay separate.
 export async function executeJevStage(
 	store: SearchStore,
 	input: JevStageInput,
+	provider?: LiquidProvider,
 ): Promise<JevOutcome> {
+	const model = provider ? LIQUID_MODEL : JEV_MODEL;
+	const responseModel = provider ? LIQUID_RESPONSE_MODEL : JEV_MODEL;
+	const reserveNano = provider ? LIQUID_RESERVE_NANO : JEV_RESERVE_NANO;
+	const metadata = { interpretationProvider: provider ? "openrouter" : "typesafe", interpretationModel: responseModel };
 	if (input.signal?.aborted) return basic("cancelled");
 	if (
 		!input.requestText.trim() ||
@@ -187,12 +249,12 @@ export async function executeJevStage(
 	let requests: [SystemOneRequest, SystemOneRequest];
 	let cacheKey: string;
 	let checks: ReturnType<SearchStore["claimChecks"]> | undefined;
-	const contract = `d4+/${JEV_MODEL}/${input.questionVersion}/${input.language.mode}/${input.language.version}`;
+	const contract = `d4+/${model}${provider ? "/native128-v1" : ""}/${input.questionVersion}/${input.language.mode}/${input.language.version}`;
 	try {
 		requests = input.requests.map((request) => ({
 			state: request.state,
 			questions: request.questions,
-			model: JEV_MODEL,
+			model,
 		})) as [SystemOneRequest, SystemOneRequest];
 		// Bound the actual serialized input too. Oversized requests fall back without a paid attempt.
 		if (
@@ -220,12 +282,13 @@ export async function executeJevStage(
 				kind: "cached",
 				readings: store.unseal(hit.ciphertext),
 				chargedNano: 0,
+				...metadata,
 			};
 	} catch {
 		return basic("storage");
 	}
 	// Cache reuse doesn't depend on provider credentials or available paid allowance.
-	const apiKey = process.env.TYPESAFE_API_KEY;
+	const apiKey = provider?.apiKey ?? process.env.TYPESAFE_API_KEY;
 	if (!apiKey) return basic("configuration");
 	let claim;
 	const accountStarted = performance.now();
@@ -251,8 +314,8 @@ export async function executeJevStage(
 			// The account scope waits for the session check; the spending checks don't.
 			scopes,
 			timings: input.timings,
-			reserveNano: JEV_RESERVE_NANO,
-			priceVersion: JEV_PRICE_VERSION,
+			reserveNano,
+			priceVersion: provider ? LIQUID_PRICE_VERSION : JEV_PRICE_VERSION,
 			admissionAttemptId: input.admissionAttemptId,
 		});
 	} catch {
@@ -260,13 +323,17 @@ export async function executeJevStage(
 	} finally {
 		step("claim");
 	}
-	if (claim.kind === "basic") return basic(claim.reason);
+	if (claim.kind === "basic") return {
+		...basic(claim.reason),
+		...(claim.overflowEligible && !provider ? { overflowEligible: "cycle-budget" as const } : {}),
+	};
 	if (claim.kind === "cached") {
 		try {
 			return {
 				kind: "cached",
 				readings: store.unseal(claim.ciphertext),
 				chargedNano: 0,
+				...metadata,
 			};
 		} catch {
 			return basic("storage");
@@ -295,7 +362,7 @@ export async function executeJevStage(
 	try {
 		await store.dispatch(id, cacheKey);
 	} catch {
-		return basic("storage", JEV_RESERVE_NANO);
+		return basic("storage", reserveNano);
 	}
 	step("dispatch");
 	const controller = new AbortController();
@@ -308,7 +375,7 @@ export async function executeJevStage(
 		deadlineExpired = true;
 		controller.abort();
 	}, JEV_DEADLINE_MS);
-	const client = new TypeSafeClient({
+	const client = provider ? undefined : new TypeSafeClient({
 		// Undici implements Fetch; Remix augments the global DOM types with its shim.
 		fetch: typesafeFetch as unknown as typeof globalThis.fetch,
 		apiKey,
@@ -319,12 +386,13 @@ export async function executeJevStage(
 		logLevel: "off",
 	});
 	let readings: [Reading, Reading] | undefined;
+	let nativeCharge: number | undefined;
 	// Rejected attempts per request. Retries run under the claim and estimate above: no new claim, no second estimate.
 	const overloaded = [0, 0];
 	const read = async (request: SystemOneRequest, index: number) => {
 		for (let attempt = 0; ; attempt++) {
 			try {
-				return await client.systemOne(request, {
+				return await client!.systemOne(request, {
 					signal: controller.signal,
 					timeout: JEV_DEADLINE_MS,
 					retry: { maxRetries: 0 },
@@ -355,22 +423,32 @@ export async function executeJevStage(
 					{ once: true },
 				);
 		});
-		readings = (await Promise.race([
-			Promise.all(requests.map(read)),
-			aborted,
-		])) as [Reading, Reading];
-	} catch {
+		if (provider) {
+			const native = await Promise.race([(provider.read ?? readLiquid)(requests, apiKey, controller.signal), aborted]);
+			readings = native.readings;
+			nativeCharge = native.chargedNano;
+		} else {
+			readings = (await Promise.race([Promise.all(requests.map(read)), aborted])) as [Reading, Reading];
+		}
+	} catch (error) {
 		controller.abort();
-		// Even HTTP rejection/cancellation can be billable. Never infer zero usage from an error.
-		await store.finish(id, null).catch(() => {});
-		return basic(
+		// Lost or partial responses retain the full estimate. Only a fully received billable response settles.
+		const known = provider && error instanceof LiquidContractError ? error.chargedNano : null;
+		await store.finish(id, known).catch(() => {});
+		const result = basic(
 			deadlineExpired
 				? "deadline"
 				: input.signal?.aborted
 					? "cancelled"
-					: "provider",
-			JEV_RESERVE_NANO,
+					: error instanceof LiquidContractError ? "contract" : "provider",
+			known ?? reserveNano,
 		);
+		// TypeSafe does not publish an exhaustion response contract; 402 is defensive payment-required handling.
+		return {
+			...result, ...metadata,
+			...(!provider && !deadlineExpired && !input.signal?.aborted && error instanceof APIError && error.status === 402
+				? { overflowEligible: "provider-payment-required" as const, admissionAttemptId: id } : {}),
+		};
 	} finally {
 		clearTimeout(timer);
 		input.signal?.removeEventListener("abort", cancelled);
@@ -383,15 +461,15 @@ export async function executeJevStage(
 	);
 	if (!validUsage) {
 		await store.finish(id, null).catch(() => {});
-		return basic("contract", JEV_RESERVE_NANO);
+		return basic("contract", reserveNano);
 	}
-	if (readings.some((result) => result.usage.input_tokens > JEV_INPUT_BOUND)) {
+	if (!provider && readings.some((result) => result.usage.input_tokens > JEV_INPUT_BOUND)) {
 		await store.haltPaidAdmissions().catch(() => {});
 	}
 	// Never infer zero usage from an error: each rejected 529 attempt counts as if it was billed like the identical
 	// request that succeeded. Capped at the estimate, which covers both requests at the input bound: above it, the
 	// estimate stays the recorded spend, as when a response is lost.
-	const actualNano = Math.min(
+	const actualNano = nativeCharge ?? Math.min(
 		readings.reduce(
 			(sum, result, index) =>
 				sum +
@@ -402,13 +480,18 @@ export async function executeJevStage(
 	);
 	const valid = readings.every(
 		(result, index) =>
-			result.model === JEV_MODEL &&
-			result.usage.input_tokens <= JEV_INPUT_BOUND &&
+			result.model === responseModel &&
+			(provider || result.usage.input_tokens <= JEV_INPUT_BOUND) &&
 			Object.keys(requests[index].questions).every(
 				(key) =>
 					result.answers?.[key]?.type === requests[index].questions[key].type,
 			),
 	);
+	if (actualNano > reserveNano) {
+		await store.haltPaidAdmissions().catch(() => {});
+		await store.finish(id, actualNano).catch(() => {});
+		return { ...basic("contract", actualNano), ...metadata };
+	}
 	if (valid) {
 		// Keep the estimate until durable settlement succeeds. Valid paid readings remain useful even if storage
 		// fails; a detached failure must neither reject the search nor expose request/identity data in logs.
@@ -434,12 +517,12 @@ export async function executeJevStage(
 			.finally(() => settling.delete(settlement));
 		settling.add(settlement);
 		step("finish");
-		return { kind: "ready", readings, chargedNano: actualNano };
+		return { kind: "ready", readings, chargedNano: actualNano, ...metadata };
 	}
 	try {
 		await store.finish(id, actualNano);
 	} catch {
-		return basic("storage", JEV_RESERVE_NANO);
+		return basic("storage", reserveNano);
 	}
 	step("finish");
 	return basic("contract", actualNano);
