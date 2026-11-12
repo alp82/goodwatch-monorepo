@@ -92,12 +92,14 @@ export function useDiscoverSearch({
 	// The unlock belongs to the answer it reads again (its key and when it arrived), so a fresh answer for the same words
 	// can be unlocked again. While an unlock runs, or failed with its answer still shown, nothing asks again by itself.
 	// Once nothing waits on one (the answer read, or the person left the words), the next action may unlock: an unlock
-	// canceled by leaving never answered.
+	// canceled by leaving never answered. The guard goes as soon as its answer is no longer shown, even while another
+	// search loads, so a canceled unlock never blocks a later action on the same words.
 	const answerId = completed ? `${key}@${result.dataUpdatedAt}` : null
 	const idle = !result.isFetching
 	const unlocked = useRef<string | null>(null)
 	const refetch = result.refetch
 	useEffect(() => {
+		if (unlocked.current !== answerId) unlocked.current = null
 		if (!idle) return
 		if (!withheldOnAction) {
 			unlocked.current = null

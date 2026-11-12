@@ -207,6 +207,36 @@ test("a canceled unlock: Enter on A, B before it answers, back to A by navigatio
 	assert.equal(hook().error, null)
 })
 
+test("a canceled unlock while another search is still loading: Enter on A, uncached B pending, Enter on A reads again", async (t) => {
+	// A's action request and B's request never answer until canceled; every other request answers withheld.
+	let enters = 0
+	const pending = (init: RequestInit) =>
+		new Promise<Response>((_resolve, reject) =>
+			init.signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError"))),
+		)
+	const answer = (init: RequestInit) => {
+		const body = JSON.parse(String(init.body))
+		if (body.q === "space operas") return pending(init)
+		if (body.attribution?.trigger === "enter" && enters++ === 0) return pending(init)
+		return withheld()
+	}
+	const { triggers, render, hook } = mount(t, answer, productionClient())
+	const a = { ...base, q: "heist movies" }
+	const b = { ...base, q: "space operas" }
+	await render({ ...a, attribution: { surface: "discover", trigger: "navigation" } })
+	await render({ ...a, attribution: { surface: "discover", trigger: "enter" } })
+	assert.deepEqual(triggers, ["navigation", "enter"])
+	await render({ ...b, attribution: { surface: "discover", trigger: "navigation" } })
+	assert.deepEqual(triggers, ["navigation", "enter", "navigation"])
+	assert.equal(hook().loading, true, "B is still loading")
+	// The person submits A's words again while B loads: the cached withheld A, asked by no action that answered.
+	await render({ ...a, attribution: { surface: "discover", trigger: "enter" } })
+	assert.deepEqual(triggers, ["navigation", "enter", "navigation", "enter"], "the person's Enter reads")
+	await render({ ...a, attribution: { surface: "discover", trigger: "enter" } })
+	assert.equal(triggers.length, 4, "once per answer")
+	assert.equal(hook().error, null)
+})
+
 test("an unlock that fails keeps the withheld answer and asks nothing again by itself", async (t) => {
 	const answer = (init: RequestInit) =>
 		JSON.parse(String(init.body)).attribution?.trigger === "enter" ? Promise.reject(new TypeError("offline")) : withheld()
