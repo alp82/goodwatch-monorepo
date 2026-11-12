@@ -226,3 +226,80 @@ test('real create: an answer still being processed when the app goes to the back
   assert.deepEqual(p.opened, ['room-1']);
   assert.equal(server.rooms.size, 1);
 });
+
+test('real create: a legacy server\'s configure that times out goes again by itself, as the same command, and the room opens', async () => {
+  const server = admissionServer((s, n) => {
+    if (s.path.endsWith('/rooms') && s.body.setup) return { status: 400, code: 'invalid_request' };
+    if (s.path.endsWith('/commands') && n === 1) return 'lost';
+    if (s.path.endsWith('/commands') && n === 2) return { status: 503, code: 'busy', retryable: true, retryAfter: 3 };
+    return 'ok';
+  });
+  const p = realPage(server);
+  p.resume.pick('heist');
+  await flush();
+  assert.deepEqual(p.opened, ['room-1'], `opened by itself (${p.result().error?.message ?? 'no error'})`);
+  const commands = server.posts('/commands');
+  assert.deepEqual(commands.map((c) => c.body.command?.type), ['configure', 'configure', 'configure', 'add_idea']);
+  assert.equal(new Set(commands.slice(0, 3).map((c) => c.body.commandId)).size, 1, 'every resend is the same envelope');
+  assert.equal(server.rooms.get('room-1')!.shared.screens[0].country, 'DE');
+  assert.equal(server.rooms.get('room-1')!.shared.ideas[0].text, 'heist');
+});
+
+test('real create: a recovered create whose mood changed retries its idea edit after a 503 and opens the room', async () => {
+  const net = withNavigator(false);
+  try {
+    const server = admissionServer((s, n) => {
+      if (s.path.endsWith('/rooms') && n === 1) return 'lost';
+      if (s.path.endsWith('/commands') && n === 1) return { status: 503, code: 'busy', retryable: true };
+      return 'ok';
+    });
+    const p = realPage(server);
+    p.resume.pick('heist');
+    await flush();
+    assert.equal(p.resume.phase, 'offline', 'the first create got no answer while offline (the server made the room)');
+    net.online = true;
+    p.resume.pick('noir');
+    await flush();
+    assert.deepEqual(p.opened, ['room-1'], `opened by itself (${p.result().error?.message ?? 'no error'})`);
+    const commands = server.posts('/commands');
+    assert.deepEqual(commands.map((c) => c.body.command?.type), ['edit_idea', 'edit_idea']);
+    assert.equal(commands[0].body.commandId, commands[1].body.commandId);
+    assert.equal(server.rooms.size, 1);
+    assert.equal(server.rooms.get('room-1')!.shared.ideas[0].text, 'noir');
+  } finally { net.restore(); }
+});
+
+test('real create: a setup command cut off by the background stops; back in front it goes again as the same command', async () => {
+  let p!: ReturnType<typeof realPage>;
+  const server = admissionServer((s, n) => {
+    if (s.path.endsWith('/rooms') && s.body.setup) return { status: 400, code: 'invalid_request' };
+    if (s.path.endsWith('/commands') && n === 1) { p.resume.appState('background'); return 'lost'; }
+    return 'ok';
+  });
+  p = realPage(server);
+  p.resume.pick('heist');
+  await flush();
+  assert.equal(server.posts('/commands').length, 1, 'nothing goes while away');
+  assert.equal(p.result().error?.name, 'AbortError');
+  p.resume.appState('active');
+  await flush();
+  assert.deepEqual(p.opened, ['room-1']);
+  const commands = server.posts('/commands');
+  assert.equal(commands[0].body.commandId, commands[1].body.commandId, 'the pending envelope, not a new configure');
+  assert.equal(server.posts('/rooms').filter((s) => !s.body.setup).length, 1, 'the room made stays the one room');
+  assert.equal(server.rooms.size, 1);
+});
+
+test('real create: a definitive refusal of a setup command is not retried', async () => {
+  const server = admissionServer((s) => {
+    if (s.path.endsWith('/rooms') && s.body.setup) return { status: 400, code: 'invalid_request' };
+    if (s.path.endsWith('/commands')) return { status: 403, code: 'forbidden', message: 'Not allowed.' };
+    return 'ok';
+  });
+  const p = realPage(server);
+  p.resume.pick('heist');
+  await flush();
+  assert.equal(server.posts('/commands').length, 1);
+  assert.equal(p.resume.phase, 'idle');
+  assert.deepEqual(p.opened, []);
+});

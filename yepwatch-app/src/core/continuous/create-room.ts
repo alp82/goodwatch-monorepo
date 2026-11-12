@@ -142,18 +142,38 @@ export class CreateRoom {
       this.commands.retryAt = recovery.retryAt;
     }
     const commands = this.commands;
+    // One setup command, sent until it is answered like the create (resend.ts): a slow or restarting server
+    // never leaves the page on Try again while it is in front and online. A resend is the pending envelope
+    // (same command id and sequence), so the server applies it once; the loop has already waited out the
+    // server's Retry-After, so the command queue's own manual gate doesn't hold it back again.
     const send = async (command?: RoomCommand) => {
       active();
-      try {
-        publish(await commands.send(command, admission.snapshot, (body) => api.command(access, body)));
-        this.retryAt = 0;
-      } catch (error) {
-        if (error instanceof RoomFailure && error.snapshot) publish(error.snapshot);
+      await waitOutDeadline(commands.retryAt, options.signal, abortableSleep, onTrouble);
+      let resend = false;
+      const answered = await resendUntilAnswered(async () => {
+        active();
+        // Its server wait is over by now (waited out above, or by the loop): the command goes without one.
+        commands.retryAt = 0;
+        const next = resend && commands.pending ? undefined : command;
+        resend = true;
+        try {
+          publish(await commands.send(next, admission.snapshot, (body) => api.command(access, body)));
+          this.retryAt = 0;
+        } catch (error) {
+          if (error instanceof RoomFailure && error.snapshot) publish(error.snapshot);
+          this.retryAt = commands.retryAt;
+          const recovery = await readAdmission('');
+          if (recovery) { this.request = { ...recovery, retryAt: this.retryAt }; await writeAdmission('', this.request); }
+          throw error;
+        }
+      }, { signal: options.signal, sleep: abortableSleep, onTrouble, onServerWait: async (until) => {
+        // An interrupted wait (background, relaunch) still holds when the command goes again.
+        commands.retryAt = Math.max(commands.retryAt, until);
         this.retryAt = commands.retryAt;
-        const recovery = await readAdmission('');
-        if (recovery) { this.request = { ...recovery, retryAt: this.retryAt }; await writeAdmission('', this.request); }
-        throw error;
-      }
+        if (commands.pending) await writePending(id, commands.pending, commands.retryAt, access.sessionKey);
+      } });
+      if (!answered) active();
+      if (!answered) throw new Error('Room setup was interrupted. Your request is kept.');
     };
     // Recover an uncertain configure or mood write before considering a new intent.
     if (commands.pending) await send();
