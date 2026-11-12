@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { WebSocket } from 'ws'
+import { randomBytes } from 'node:crypto'
 import { paths, type ServerRealtimeFrame } from '@goodwatch/yepwatch-contracts'
 import { createGateway, type GatewayOptions } from '../src/gateway.js'
 import { HttpAuthority } from '../src/authority.js'
@@ -160,7 +161,8 @@ test('Real stalled WebSocket reader hits send-buffer bound and cannot hold unbou
   const { api, url, bus, gateway } = await setup(t, { maxBufferedBytes: 1_100_000, auditMs: 10_000, heartbeatMs: 10_000 })
   api.state.shared.candidates = Array.from({ length: 48 }, (_, i) => ({ id: `movie-${i}`,
     identity: { kind: 'movie', tmdbId: i + 1 }, title: 'Common deck', year: 2026,
-    overview: 'x'.repeat(20_000), posterUrl: null, runtimeMinutes: 90, availability: [] }))
+    // Incompressible: frames are deflated, and the bound is about what stays queued for the socket.
+    overview: randomBytes(15_000).toString('base64'), posterUrl: null, runtimeMinutes: 90, availability: [] }))
   const c = await connect(url, api.ticket())
   await until(() => snapshots(c.frames).length === 1)
   c.ws.pause()
@@ -210,4 +212,13 @@ test('Explicit shared episode proposal is allowed; private progress fields insid
   bus.hint(2)
   await until(() => c.frames.some(f => f.type === 'degraded'))
   assert.equal(snapshots(c.frames).length, 1)
+})
+test('Snapshots are deflated for clients that offer it, and still plain for clients that do not', async t => {
+  const { api, url } = await setup(t)
+  const offering = await connect(url, api.ticket('person-1'))
+  const plain = await connect(url, api.ticket('person-2'), { perMessageDeflate: false })
+  await until(() => snapshots(offering.frames).length === 1 && snapshots(plain.frames).length === 1)
+  assert.match(offering.ws.extensions, /permessage-deflate/)
+  assert.equal(plain.ws.extensions, '')
+  assert.deepEqual(snapshots(offering.frames)[0].snapshot, snapshots(plain.frames)[0].snapshot)
 })
