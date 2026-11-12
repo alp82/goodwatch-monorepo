@@ -110,7 +110,8 @@ function panels(width: number, word: number) {
 					? { borderTopLeftRadius: 28, borderBottomLeftRadius: 28, background: `linear-gradient(135deg, ${C.amber} 0%, #f59e0b 50%, ${C.amberDeep} 100%)` }
 					: { borderTopRightRadius: 28, borderBottomRightRadius: 28, background: `linear-gradient(225deg, #f87171 0%, ${C.red} 50%, ${C.redDeep} 100%)` }),
 			},
-			text(right ? "YEP" : "NOPE", word, right ? C.ink2 : C.cream, { transform: `rotate(${right ? 90 : -90}deg)` }),
+			// flexShrink 0: the word is wider than the panel, and a shrunk box would rotate off center.
+			text(right ? "YEP" : "NOPE", word, right ? C.ink2 : C.cream, { flexShrink: 0, transform: `rotate(${right ? 90 : -90}deg)` }),
 		)
 	return [panel(false), panel(true)]
 }
