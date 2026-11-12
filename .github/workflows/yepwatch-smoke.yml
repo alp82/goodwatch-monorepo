@@ -98,21 +98,30 @@ jobs:
           start=$(date +%s)
           node run.mjs smoke --origin "$ORIGIN"
           echo "Smoke wall clock: $(( $(date +%s) - start )) s" >> "$GITHUB_STEP_SUMMARY"
+      # run.mjs writes artifacts/smoke/.sanitized only after its credential scan finished clean (it deletes the
+      # whole directory otherwise). Nothing from artifacts/smoke is published or uploaded without that marker.
       - name: Summary
         if: always()
-        run: cat yepwatch-app/e2e/artifacts/smoke/summary.md >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || echo "no summary" >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          dir=yepwatch-app/e2e/artifacts/smoke
+          if [ -f "$dir/.sanitized" ] && [ -f "$dir/summary.md" ]; then cat "$dir/summary.md" >> "$GITHUB_STEP_SUMMARY"; else echo "no summary" >> "$GITHUB_STEP_SUMMARY"; fi
       - name: Open or update the failure issue
         if: failure()
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node yepwatch-app/e2e/ci/smoke-issue.mjs fail yepwatch-app/e2e/artifacts/smoke/report.json --reason "${{ inputs.reason || github.event_name }}"
+          REASON: ${{ inputs.reason || github.event_name }}
+        run: |
+          dir=yepwatch-app/e2e/artifacts/smoke
+          # Without the marker the issue opens without report details.
+          report="$dir/report.json"; [ -f "$dir/.sanitized" ] || report=/nonexistent/report.json
+          node yepwatch-app/e2e/ci/smoke-issue.mjs fail "$report" --reason "$REASON"
       - name: Close the failure issue
-        if: success()
+        if: success() && hashFiles('yepwatch-app/e2e/artifacts/smoke/.sanitized') != ''
         env:
           GH_TOKEN: ${{ github.token }}
         run: node yepwatch-app/e2e/ci/smoke-issue.mjs pass yepwatch-app/e2e/artifacts/smoke/report.json --reason "${{ inputs.reason || github.event_name }}"
       - uses: actions/upload-artifact@v7
-        if: always()
+        if: always() && hashFiles('yepwatch-app/e2e/artifacts/smoke/.sanitized') != ''
         with:
           name: yepwatch-smoke
           path: yepwatch-app/e2e/artifacts/smoke
