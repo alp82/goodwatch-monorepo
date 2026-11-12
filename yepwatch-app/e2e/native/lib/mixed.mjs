@@ -3,16 +3,20 @@
 // API exported from e2e/native/driver.mjs for the web harness's fixtures.
 import path from 'node:path';
 import { createRequire } from 'node:module';
-import { APP_DIR, sleep } from './env.mjs';
+import { APP_DIR, NATIVE_DIR, sleep } from './env.mjs';
 import { createRoom, fillAndSubmit, freshStart, inviteCode, inviteUrl, joinFromJoinScreen, measure, pickNetflix, posterTitle, roiOf, tapAction, toStart } from './journey.mjs';
 
 const require = createRequire(path.join(APP_DIR, 'package.json'));
+// The web harness's page recorder: its visible() predicate (viewport, opacity and visibility through every
+// ancestor) is the one the browser friend's timing uses, so an entrance animating from opacity 0 is not "shown".
+const RECORDER = path.join(NATIVE_DIR, '..', 'lib', 'recorder.page.js');
 
 export class WebPeer {
   static async open({ origin, name = 'Webby', headless = true }) {
     const { chromium } = require('@playwright/test');
     const browser = await chromium.launch({ headless });
     const context = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'en-US' });
+    await context.addInitScript({ path: RECORDER });
     const page = await context.newPage();
     const peer = new WebPeer(browser, page, origin, name);
     page.on('pageerror', e => peer.errors.push(`pageerror: ${e.message}`));
@@ -81,13 +85,18 @@ export class WebPeer {
     if (!at) throw new Error(`browser: the click on ${name} produced no pointerdown`);
     return at;
   }
-  /** Starts watching (every animation frame, from inside the page) for all these test ids to show; resolves with the epoch time. */
+  /**
+   * Starts watching (every animation frame, from inside the page) for all these test ids to show, by the
+   * recorder's visible() (lib/recorder.page.js); resolves with the epoch time.
+   */
   async watchVisible(testIds, timeoutMs = 10000) {
     await this.page.evaluate(({ testIds, timeoutMs }) => {
       window.__ywSeen = null;
+      const visible = window.__yw?.visible;
+      if (!visible) throw new Error('browser: the page recorder is not installed');
       const end = performance.now() + timeoutMs;
       const tick = () => {
-        const shown = testIds.every((id) => [...document.querySelectorAll(`[data-testid="${id}"]`)].some((el) => el.offsetParent !== null));
+        const shown = testIds.every((id) => [...document.querySelectorAll(`[data-testid="${id}"]`)].some(visible));
         if (shown) { window.__ywSeen = performance.timeOrigin + performance.now(); return; }
         if (performance.now() < end) requestAnimationFrame(tick);
       };

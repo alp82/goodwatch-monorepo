@@ -40,6 +40,9 @@
     if (r.width < 1 || r.height < 1 || r.bottom < 0 || r.right < 0 || r.top > innerHeight || r.left > innerWidth) return false;
     return el.checkVisibility ? el.checkVisibility({ opacityProperty: true, visibilityProperty: true }) : true;
   };
+  // The one "visible" predicate (in the viewport, not transparent or hidden through any ancestor), also for
+  // native/lib/mixed.mjs's browser friend.
+  rec.visible = visible;
   const describe = (el) => {
     if (!el || el.nodeType !== 1) return String(el?.nodeName ?? '');
     const t = el.closest('[data-testid]');
