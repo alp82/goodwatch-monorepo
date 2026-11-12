@@ -1659,9 +1659,17 @@ export class ProposalService {
 			? lease
 			: null
 	}
-	/** A lease's renewed attachment on the room as read, or why it is refused. `session`: whether its sign-in is still active. */
+	/**
+	 * A lease's renewed attachment on the room as read, or why it is refused. `session`: whether its sign-in is still
+	 * active, checked alongside the room read. That early answer only holds while the room as read still lists the
+	 * session on its account participant (attachment requires it): Log out takes the session off every room before
+	 * it revokes it. A participant that is a guest now may have become one by that very Log out, after the early
+	 * check, so its session is checked again after the read.
+	 */
 	private async leaseView(room: ProposalRoom, lease: Lease, session?: Promise<boolean>): Promise<RealtimeAttachment | RoomError> {
 		try {
+			if (lease.sessionId && !room.participants.find((p) => p.id === lease.participantId)?.memberUserId)
+				session = this.accounts.sessionActive(lease.sessionId)
 			if (session) requireRoom(await session, "forbidden", "Session ended", 403)
 			requireRoom(
 				actor(room, lease.participantId).epoch === lease.epoch,
