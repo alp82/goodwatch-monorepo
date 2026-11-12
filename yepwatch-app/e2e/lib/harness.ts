@@ -225,7 +225,8 @@ export class Person {
    */
   network(windowMs = 35000) {
     const now = Date.now();
-    const recent = this.requests.filter((r) => r.t >= now - windowMs);
+    // Still-open requests and the latest document count however old they are.
+    const recent = this.requests.filter((r) => r.t >= now - windowMs || r.end === undefined || r.document);
     const doc = [...recent].reverse().find((r) => r.document);
     const line = (r: Person['requests'][number]) => `${r.method} ${r.url} ${r.end === undefined ? `open ${((now - r.t) / 1000).toFixed(1)} s` : `${r.error ?? r.status ?? '?'} in ${r.end - r.t} ms`} (${((now - r.t) / 1000).toFixed(1)} s ago)`;
     const notable = recent.filter((r) => r !== doc && ((r.end === undefined && now - r.t > 1000) || r.error || (r.status ?? 0) >= 400));
@@ -287,7 +288,7 @@ export class Person {
       target.click(),
     ]).catch((e) => this.journeyFailure(`pressing ${target} did not leave for GoodWatch: ${String(e).split('\n')[0]}`));
     await this.page.waitForURL((u) => u.origin === origin && !u.pathname.includes('/callback'), { timeout: 20000, waitUntil: 'load' })
-      .catch(() => this.journeyFailure(`did not come back from GoodWatch (at ${this.page.url()})`));
+      .catch(() => this.journeyFailure(`did not come back from GoodWatch (at ${new URL(this.page.url()).origin}${new URL(this.page.url()).pathname}; ${this.network()})`));
     await this.settle();
   }
   /** Browser Back, recorded as an input so the screen it closes isn't taken for a flash. */
@@ -525,8 +526,11 @@ export class Room {
         if (p.page.isClosed()) continue;
         const secret = !p.traced && await p.page.locator('input[type=password]').count().catch(() => 1) > 0;
         const aria = secret ? '(withheld: a password form is on screen)' : await p.page.locator('body').ariaSnapshot({ timeout: 3000 }).catch(() => '(unavailable)');
-        await this.info.attach(`screen ${p.name}`, { body: `[${await p.signature()}] ${p.page.url()}\n${aria}`, contentType: 'text/plain' });
-        await this.info.attach(`screenshot ${p.name}`, { body: await p.page.screenshot().catch(() => Buffer.from('')), contentType: 'image/png' });
+        // An untraced person's URL can carry an OAuth code and state (a stalled callback): origin + path only.
+        const url = p.traced ? p.page.url() : (() => { try { const u = new URL(p.page.url()); return `${u.origin}${u.pathname}`; } catch { return '(unavailable)'; } })();
+        await this.info.attach(`screen ${p.name}`, { body: `[${await p.signature()}] ${url}\n${aria}`, contentType: 'text/plain' });
+        // A sign-in form on screen shows the typed email: no screenshot of it.
+        if (!secret) await this.info.attach(`screenshot ${p.name}`, { body: await p.page.screenshot().catch(() => Buffer.from('')), contentType: 'image/png' });
       }
     }
     const traced = new Set<BrowserContext>();
