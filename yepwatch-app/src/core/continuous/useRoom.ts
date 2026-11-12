@@ -33,6 +33,7 @@ import { ACTIVITY_LIMITS } from '@goodwatch/yepwatch-contracts/proposal';
 import { continuousKey } from './keys';
 import { browserEvents, browserOffline } from './network';
 import { readSavedRoom, saveRoom } from './room-snapshot';
+import { SAVED_ROOM_GRACE_MS } from './room-snapshot-state';
 export { continuousKey } from './keys';
 /** Your rooms keeps one query per room; room snapshots update it directly. */
 export const homeRoomKey = (roomId: string) => ['home-room', roomId] as const;
@@ -82,12 +83,18 @@ export function useContinuousRoom(roomId: string) {
     () => queryClient.getQueryData<CachedRoom>(continuousKey(roomId)),
     [roomId]
   );
-  // A reload paints the room as this tab last saw it confirmed, then reads it again (stale on purpose).
-  useState(() => {
+  // A reload whose first read doesn't come back at once (the server restarts) paints the room as this tab
+  // last saw it confirmed, then reads it again (stale on purpose). A read that answers within the grace
+  // wins: a room that changed just before the reload never shows its older screen first.
+  useEffect(() => {
     if (cached()) return;
     const saved = readSavedRoom(roomId);
-    if (saved) queryClient.setQueryData<CachedRoom>(continuousKey(roomId), mergeRoom(undefined, saved), { updatedAt: 0 });
-  });
+    if (!saved) return;
+    const timer = setTimeout(() => {
+      if (!cached()) queryClient.setQueryData<CachedRoom>(continuousKey(roomId), mergeRoom(undefined, saved), { updatedAt: 0 });
+    }, SAVED_ROOM_GRACE_MS);
+    return () => clearTimeout(timer);
+  }, [roomId, cached]);
   const end = useCallback((why: 'expired' | 'access') => {
     terminalRef.current = why;
     setTerminal(why);

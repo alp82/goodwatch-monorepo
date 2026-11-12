@@ -6,6 +6,8 @@ import type { RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
  * isn't shown: the page waits for the server as before.
  */
 export const SAVED_ROOM_MAX_AGE_MS = 15 * 60_000;
+/** How long a reload waits for the server's own answer before it paints the saved room instead. */
+export const SAVED_ROOM_GRACE_MS = 300;
 
 export interface SavedRoom { v: 1; epoch: string; savedAt: number; snapshot: RoomSnapshot }
 
