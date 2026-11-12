@@ -39,13 +39,28 @@ export class MemoryDeletionStore implements DeletionStore {
     this.entries.delete(subjectKey(subject));
   }
   async purgeDue(now: number) {
+    const errors: unknown[] = [];
     for (const [key, entry] of this.entries) if (entry.purgeAfter <= now) {
       entry.phase = 'purging';
-      await this.purge(entry.subject, now);
-      this.entries.delete(key);
+      try {
+        await this.purge(entry.subject, now);
+        this.entries.delete(key);
+      } catch (error) {
+        errors.push(error);
+      }
     }
+    settled(errors);
   }
 }
+
+/** One failing request never stops the others; the caller still learns that something will retry. */
+function settled(errors: unknown[]) {
+  if (errors.length === 1) throw errors[0];
+  if (errors.length) throw Object.assign(new Error('Some YepWatch deletions will retry'), { errors });
+}
+/** A request whose erasure failed waits 2, 4, … up to 60 minutes before this instance claims it again. */
+const MAX_RETRY_MS = 60 * 60_000;
+const REMEMBERED_FAILURES = 1000;
 
 export async function provisionDeletion(sql: Sql, replicas: 0 | 2) { await sql(tableDdl(deletionTable, replicas)); }
 
@@ -53,6 +68,7 @@ export async function provisionDeletion(sql: Sql, replicas: 0 | 2) { await sql(t
 export class SqlDeletionStore implements DeletionStore {
   private sql: Sql;
   private secret: string;
+  private failures = new Map<string, number>();
   constructor(sql: Sql, secret: string) { this.sql = sql; this.secret = secret; }
   private id(subject: DeletionSubject) { return keyed(this.secret, 'deletion', subjectKey(subject)); }
   private async row(subject: DeletionSubject) {
@@ -109,10 +125,16 @@ export class SqlDeletionStore implements DeletionStore {
       cursor = rows[rows.length - 1][0];
     }
   }
+  /**
+   * Erases up to 20 due requests, earliest first. A request whose erasure fails keeps its marker and is leased out for
+   * a growing backoff, so it leaves the window and later requests are reached; the others still run, and the call
+   * rejects afterwards so the caller knows something will retry.
+   */
   async purgeDue(now: number) {
     await this.sql(`REFRESH TABLE ${deletionTable.name}`);
-    const due = (await this.sql(`SELECT id,kind,user_id,room_id,participant_id,phase,_seq_no,_primary_term,targets,lease_until FROM ${deletionTable.name} WHERE purge_after<=? ORDER BY purge_after LIMIT 20`, [now])).rows.map(r =>
+    const due = (await this.sql(`SELECT id,kind,user_id,room_id,participant_id,phase,_seq_no,_primary_term,targets,lease_until FROM ${deletionTable.name} WHERE purge_after<=? AND lease_until<=? ORDER BY purge_after LIMIT 20`, [now, now])).rows.map(r =>
       z.tuple([z.string(), z.enum(['account', 'guest']), z.string().nullable(), z.string().nullable(), z.string().nullable(), phaseSchema, z.number(), z.number(), z.array(targetSchema), z.number()]).parse(r));
+    const errors: unknown[] = [];
     for (const r of due) {
       if (r[9] > now) continue;
       const token = random();
@@ -129,12 +151,23 @@ export class SqlDeletionStore implements DeletionStore {
         await this.erase(subject, now, r[8], heartbeat);
         const proof = await this.row(subject);
         if (proof?.[6] === token) await this.sql(`DELETE FROM ${deletionTable.name} WHERE id=? AND _seq_no=? AND _primary_term=?`, [r[0], proof[3], proof[4]]);
+        this.failures.delete(r[0]);
       } catch (error) {
-        const proof = await this.row(subject);
-        if (proof?.[6] === token) await this.sql(`UPDATE ${deletionTable.name} SET lease_until=0 WHERE id=? AND _seq_no=? AND _primary_term=?`, [r[0], proof[3], proof[4]]);
-        throw error;
+        errors.push(error);
+        const failures = (this.failures.get(r[0]) ?? 0) + 1;
+        this.failures.delete(r[0]);
+        this.failures.set(r[0], failures);
+        if (this.failures.size > REMEMBERED_FAILURES) this.failures.delete(this.failures.keys().next().value!);
+        try {
+          const proof = await this.row(subject);
+          if (proof?.[6] === token) await this.sql(`UPDATE ${deletionTable.name} SET lease_until=? WHERE id=? AND _seq_no=? AND _primary_term=?`, [clock() + Math.min(2 ** failures * 60_000, MAX_RETRY_MS), r[0], proof[3], proof[4]]);
+        } catch (release) {
+          // The claim's own lease still expires; the request is retried then.
+          errors.push(release);
+        }
       }
     }
+    settled(errors);
   }
   private async erase(subject: DeletionSubject, now: number, targets: { roomId: string; participantId: string }[], heartbeat: () => Promise<void>) {
     await heartbeat();

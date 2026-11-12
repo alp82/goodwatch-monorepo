@@ -33,6 +33,18 @@ test('expired recovery cannot race the purge claim; failed erasure retries witho
   await Promise.resolve(); finish!(); await work;
   assert.equal(await store.get(subject), null);
 });
+test('one failing erasure does not strand the requests after it; its marker stays until erasure completes', async () => {
+  const erased: string[] = [];
+  const store = new MemoryDeletionStore(async subject => { if (subject.kind === 'account' && subject.userId === 'stuck') throw Error('offline'); erased.push(subject.kind === 'account' ? subject.userId : subject.participantId); });
+  await store.schedule({ kind: 'account', userId: 'first' }, 1);
+  await store.schedule({ kind: 'account', userId: 'stuck' }, 2);
+  await store.schedule({ kind: 'account', userId: 'later' }, 3);
+  await store.schedule({ kind: 'guest', roomId: 'room', participantId: 'guest' }, 4);
+  await assert.rejects(store.purgeDue(10 + RECOVERY_MS), /offline/);
+  assert.deepEqual(erased, ['first', 'later', 'guest']);
+  assert.equal((await store.get({ kind: 'account', userId: 'stuck' }))?.phase, 'purging');
+  assert.equal(await store.get({ kind: 'account', userId: 'later' }), null);
+});
 test('deleting YepWatch ends every room session, transfers hosting and fences account admissions, with explicit recovery', async () => {
   const repo = new ProposalMemoryRepository();
   const service = new ProposalService(repo, proposalFixtureCatalog, 'account-deletion-test-secret-at-least-thirty-two');
