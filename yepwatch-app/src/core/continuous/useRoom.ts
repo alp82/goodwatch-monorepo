@@ -32,7 +32,7 @@ import { authEpoch } from './account-flow';
 import { ACTIVITY_LIMITS } from '@goodwatch/yepwatch-contracts/proposal';
 import { continuousKey } from './keys';
 import { browserEvents, browserOffline } from './network';
-import { readSavedRoom, saveRoom } from './room-snapshot';
+import { confirmRoom, readSavedRoom, saveRoom, snapshotGeneration } from './room-snapshot';
 import { SAVED_ROOM_GRACE_MS } from './room-snapshot-state';
 export { continuousKey } from './keys';
 /** Your rooms keeps one query per room; room snapshots update it directly. */
@@ -86,12 +86,13 @@ export function useContinuousRoom(roomId: string) {
   // A reload whose first read doesn't come back at once (the server restarts) paints the room as this tab
   // last saw it confirmed, then reads it again (stale on purpose). A read that answers within the grace
   // wins: a room that changed just before the reload never shows its older screen first.
+  // It's read again when it paints: a sign-in change (here or in another tab) during the grace drops it.
+  // Painted, it is not this page's confirmation: it's saved again only after the server answers.
   useEffect(() => {
-    if (cached()) return;
-    const saved = readSavedRoom(roomId);
-    if (!saved) return;
+    if (cached() || !readSavedRoom(roomId)) return;
     const timer = setTimeout(() => {
-      if (!cached()) queryClient.setQueryData<CachedRoom>(continuousKey(roomId), mergeRoom(undefined, saved), { updatedAt: 0 });
+      const saved = cached() ? null : readSavedRoom(roomId);
+      if (saved) queryClient.setQueryData<CachedRoom>(continuousKey(roomId), mergeRoom(undefined, saved), { updatedAt: 0 });
     }, SAVED_ROOM_GRACE_MS);
     return () => clearTimeout(timer);
   }, [roomId, cached]);
@@ -164,9 +165,10 @@ export function useContinuousRoom(roomId: string) {
   const refetch = useCallback(async () => {
     if (!access || expired()) return;
     try {
+      const asked = snapshotGeneration();
       const incoming = await api.snapshot(access);
       apply(incoming);
-      if (!terminalRef.current) setPrivateError(false);
+      if (!terminalRef.current) { setPrivateError(false); confirmRoom(roomId, asked); }
       return incoming;
     } catch (e) {
       authority(e);
@@ -174,15 +176,17 @@ export function useContinuousRoom(roomId: string) {
       if (!terminalRef.current && !transientFailure(e)) setPrivateError(true);
       throw e;
     }
-  }, [access, expired, apply, authority]);
+  }, [access, expired, apply, authority, roomId]);
   const room = useQuery<CachedRoom>({
     queryKey: continuousKey(roomId),
     enabled: Boolean(access) && !terminal,
     queryFn: async () => {
       try {
         if (expired()) throw new RoomFailure('expired', 'This room has expired.');
+        const asked = snapshotGeneration();
         const value = await api.snapshot(access!);
         apply(value);
+        if (!terminalRef.current) confirmRoom(roomId, asked);
         if (terminalRef.current)
           throw new RoomFailure(
             terminalRef.current === 'expired' ? 'expired' : 'unauthorized',
@@ -395,10 +399,12 @@ export function useContinuousRoom(roomId: string) {
     const leaving = (command ?? queue.current.pending?.command)?.type === 'leave';
     leavingNow.current = leaving;
     try {
+      const asked = snapshotGeneration();
       const value = await queue.current.send(command, snapshot, (body) =>
         api.command(access, body), commandId
       );
       apply(value);
+      if (!terminalRef.current) confirmRoom(roomId, asked);
       // A Leave the server confirmed went through, even when the live channel brought the refusal of
       // the leaver's next read first and access already ended here.
       return leaving || !terminalRef.current;
