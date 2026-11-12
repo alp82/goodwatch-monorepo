@@ -22,7 +22,10 @@ export function resendable(error: unknown) {
 
 /** The server answered and said no (a 409, a 4xx): no resend can change it, so a cancellation doesn't hide it. */
 export function definitiveRefusal(error: unknown) {
-  return error instanceof Error && typeof (error as { status?: unknown }).status === 'number' && !resendable(error);
+  if (!(error instanceof Error) || typeof (error as { status?: unknown }).status !== 'number' || resendable(error)) return false;
+  // An answer the page cancelled while it was still being read (the app left the front mid-response) has
+  // a status but no verdict: the request is kept and goes again, after the server's wait if it named one.
+  return (error as { diagnostic?: { reason?: unknown } }).diagnostic?.reason !== 'cancelled';
 }
 
 /** One send's trouble callback that passes on only the first call (a saved wait, then a failed resend, is one outage). */
@@ -78,7 +81,12 @@ export async function resendUntilAnswered(attempt: () => Promise<void>, o: {
       // being processed (a renewed session being stored, then the app left the front): it never becomes a
       // cancellation that the next send in front repeats.
       if (definitiveRefusal(error)) throw error;
-      if (o.signal.aborted) return false;
+      // A server's wait (Retry-After) that came back as the page cancelled still holds for the next send:
+      // dropping it here sent the same request again at once when the page was back in front.
+      if (o.signal.aborted) {
+        if (serverWait(error) > 0) await o.onServerWait?.(Date.now() + resendDelay(failures, error, o.random));
+        return false;
+      }
       if (!resendable(error) || (unanswered(error) && browserOffline()) || serverWait(error) > SERVER_WAIT_MAX_MS) throw error;
       if (failures === 0) o.onTrouble?.(began);
       const delay = resendDelay(failures, error, o.random);
