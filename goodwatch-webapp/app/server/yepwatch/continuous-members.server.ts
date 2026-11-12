@@ -626,7 +626,9 @@ export class ContinuousMembers {
 		}
 		this.forget(key)
 		this.landed.set(key, { outcome, until: now + (outcome.state === "renewed" ? RENEWABLE_SESSION_MS : REFUSAL_KEPT_MS) })
-		if (outcome.state === "renewed") this.replaced.set(this.renewalKey(outcome.session), key)
+		// A verification keeps the tokens (the key maps onto itself): the session it replaced stays recorded.
+		const next = outcome.state === "renewed" ? this.renewalKey(outcome.session) : null
+		if (next && next !== key) this.replaced.set(next, key)
 	}
 	private forget(key: string) {
 		const kept = this.landed.get(key)
@@ -640,7 +642,13 @@ export class ContinuousMembers {
 	private delivered(session: MemberSession) {
 		const until = this.now() + LANDED_GRACE_MS
 		let key = this.renewalKey(session)
-		for (let hop = 0; hop < 8; hop++) {
+		// A verified session also acknowledges the verification that kept its tokens.
+		const verified = this.landed.get(key)
+		if (verified?.outcome.state === "renewed" && !session.unverified && verified.until > until &&
+			this.renewalKey(verified.outcome.session) === key) verified.until = until
+		const seen = new Set<string>()
+		while (!seen.has(key)) {
+			seen.add(key)
 			const previous = this.replaced.get(key)
 			const kept = previous && this.landed.get(previous)
 			if (!previous || !kept || kept.outcome.state !== "renewed" || this.renewalKey(kept.outcome.session) !== key) break
@@ -655,7 +663,12 @@ export class ContinuousMembers {
 	current(session: MemberSession): { session: MemberSession; moved: boolean } | null {
 		let at = session
 		let moved = false
-		for (let hop = 0; hop < 8; hop++) {
+		// To the end of the chain: every link replaced a different credential, or verified one (once).
+		const seen = new Set<string>()
+		for (;;) {
+			const step = `${this.renewalKey(at)}\0${at.unverified ? 1 : 0}`
+			if (seen.has(step)) break
+			seen.add(step)
 			const kept = this.landed.get(this.renewalKey(at))
 			if (!kept || kept.until <= this.now()) break
 			if (kept.outcome.state === "refused") return null

@@ -65,3 +65,43 @@ test("once the device sends the rotated session, the replaced one is kept only f
 	const replay = await m.account(lapsed)
 	assert.equal(replay.status.state, "guest", "a long-replaced session is GoodWatch's to refuse")
 })
+
+test("a long run of rotations the device never received leads it to the newest, never back to a spent token", async () => {
+	const { m, clock, spent, lapsed, settle } = members()
+	// Every answer that carried a rotation was lost: the device keeps sending the session it signed in with, and each
+	// rotation's own access token has lapsed again by its next request.
+	for (let i = 0; i < 12; i++) {
+		await m.account(lapsed, { background: true })
+		await settle()
+		clock.now += 301_000
+	}
+	const before = spent.length
+	const back = await m.account(lapsed, { background: true })
+	assert.equal(back.status.state, "member")
+	assert.ok(back.changed)
+	await settle()
+	assert.equal(new Set(spent).size, spent.length, `no refresh token is sent twice: ${spent.slice(before).join(",")}`)
+})
+
+test("verifying a rotated session keeps track of the session it replaced", async () => {
+	const { m, clock, lapsed, settle } = members()
+	const internals = m as unknown as { landed: Map<string, { until: number }> }
+	// GoodWatch's identity check fails once, right after the rotation: the rotated session is kept unverified.
+	const verify = (m as unknown as { issuer: MemberIssuer }).issuer.verify
+	let outage = true
+	;(m as unknown as { issuer: MemberIssuer }).issuer.verify = async (token) => {
+		if (outage) throw new RoomError("busy", "down", 503, true)
+		return verify(token)
+	}
+	await m.account(lapsed, { background: true })
+	await settle()
+	const unverified = (await m.account(lapsed, { background: true })).session!
+	await settle()
+	assert.equal(unverified.unverified, true)
+	outage = false
+	const verified = (await m.account(m.sealSession(unverified))).session!
+	assert.equal(verified.unverified, undefined)
+	await m.account(m.sealSession(verified))
+	const longest = Math.max(...[...internals.landed.values()].map((v) => v.until - clock.now))
+	assert.ok(longest <= 5 * 60_000, `every replaced session is kept only for in-flight requests (${longest} ms)`)
+})
