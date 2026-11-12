@@ -155,6 +155,8 @@ export function createReleaseRuntime(
 	repair.unref()
 	let purging = false
 	const purge = setInterval(() => {
+		// Pending ideas whose lease ran out in rooms nobody reads (bounded; same takeover as a read).
+		if (!draining && readiness().ready) void service.resumeStaleInterpretations().catch(() => {})
 		if (purging || draining || !readiness().ready) return
 		purging = true
 		void Promise.all([service.deletions.purgeDue(now()), quotas.purgeExpired()]).catch(() => console.error('YepWatch retention cleanup will retry')).finally(() => { purging = false })

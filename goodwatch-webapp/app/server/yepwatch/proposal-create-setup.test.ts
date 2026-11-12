@@ -2,19 +2,19 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 import { randomUUID } from "node:crypto"
 import { ProposalService } from "./proposal-service.server.ts"
-import { RoomError } from "./errors.ts"
+import { IndeterminateWrite, RoomError } from "./errors.ts"
 import { ProposalMemoryRepository, proposalFixtureCatalog } from "./proposal-test-support.ts"
 import { proposalAdmissionSchema, proposalCreateSchema, proposalJoinSchema } from "./proposal-validation.ts"
 import type { CreateRoomRequest, RoomCommand } from "../../../packages/yepwatch-contracts/proposal.ts"
 import { PENDING_IDEA_ATTRIBUTE } from "../../../packages/yepwatch-contracts/proposal.ts"
 import { INTERPRETATION_LEASE_MS } from "./proposal-service.server.ts"
-import type { ProposalRoom } from "./proposal-types.ts"
+import type { ProposalRepository, ProposalRoom } from "./proposal-types.ts"
 
 type Search = "ok" | "fail" | "budget" | "none"
 /**
  * A service whose repository counts writes, so "one stored write" is checkable. `hold()` makes the next searches
  * wait until `release()`; `clock` moves this fixture's time (rooms, leases); `instance()` is a second API process on
- * the same store.
+ * the same store (optionally through another repository object, e.g. a stalled one).
  */
 function fixture(options: { search?: Search } = {}) {
 	const repo = new ProposalMemoryRepository()
@@ -51,8 +51,8 @@ function fixture(options: { search?: Search } = {}) {
 			throw new RoomError("catalog_unavailable", "Mood matching is unavailable for now. You can still start without an idea.", 503, false)
 		return { prompt, attributes: [{ text: attribute, kind: "attribute" as const }], rankedKeys: [1_000_000_000_001], interpretedAt: 7 }
 	}
-	const instance = () => new ProposalService(
-		repo, catalog, "create-setup-test-secret-over-thirty-two", async (e) => { published.push(e.revision) }, now, undefined,
+	const instance = (repository: ProposalRepository = repo) => new ProposalService(
+		repository, catalog, "create-setup-test-secret-over-thirty-two", async (e) => { published.push(e.revision) }, now, undefined,
 		state.search === "none" ? undefined : interpret
 	)
 	const service = instance()
@@ -68,6 +68,46 @@ function fixture(options: { search?: Search } = {}) {
 	return {
 		repo, service, request, instance, hold, clock, state, published,
 		inserts: () => inserts, swaps: () => swaps, searches: () => searches
+	}
+}
+/**
+ * Holds every takeover claim (a compare-and-swap storing a new job on the same reservation) until `count` have
+ * arrived, so they all read the room before any stores; resolves with each claim's result.
+ */
+function takeoverBarrier(repo: ProposalMemoryRepository, count: number) {
+	const swap = repo.compareAndSwap.bind(repo)
+	const marker = (room: ProposalRoom) => room.ideas?.[0]?.attributes[0]?.key === PENDING_IDEA_ATTRIBUTE.key ? room.ideas[0].attributes[0].text.split(".") : null
+	const results: Promise<boolean>[] = []
+	let open!: () => void
+	const arrived = new Promise<void>((r) => { open = r })
+	return new Promise<boolean[]>((done) => {
+		repo.compareAndSwap = async (old, room, notify) => {
+			const [was, next] = [marker(old.room), marker(room)]
+			if (!was || !next || was[0] !== next[0] || was[1] === next[1]) return swap(old, room, notify)
+			const result = arrived.then(() => swap(old, room, notify))
+			results.push(result)
+			if (results.length === count) {
+				open()
+				repo.compareAndSwap = swap
+				void Promise.all(results).then(done)
+			}
+			return result
+		}
+	})
+}
+/** A view of `repo` whose compare-and-swaps wait while `stalled.on` (a process whose store writes hang). */
+function stalling(repo: ProposalMemoryRepository) {
+	let resume = () => {}
+	const gate = { on: false, wait: Promise.resolve() }
+	const view = Object.create(repo) as ProposalMemoryRepository
+	view.compareAndSwap = async (...args) => {
+		if (gate.on) await gate.wait
+		return repo.compareAndSwap(...args)
+	}
+	return {
+		view,
+		stall() { gate.on = true; gate.wait = new Promise((r) => { resume = r }) },
+		resume() { gate.on = false; resume() }
 	}
 }
 const stored = async (repo: ProposalMemoryRepository, id: string) => (await repo.read(id))!.room
@@ -273,17 +313,17 @@ test("a crashed instance's interpretation is taken over by any instance that rea
 	await other.read(id, a.credential)
 	await other.interpretationsIdle()
 	assert.equal(f.searches(), 1)
-	const release = f.hold()
+	f.hold()() // later searches answer; the first instance's never does
 	f.clock.offset = INTERPRETATION_LEASE_MS + 1
 	f.state.attribute = "taken over"
-	release()
-	const pendingRead = await other.read(id, a.credential)
-	assert.deepEqual(pendingRead.shared.ideas[0].attributes, [PENDING_IDEA_ATTRIBUTE], "still pending, never shown as unavailable")
-	// A third instance reading at the same moment doesn't search again: the takeover stored a new lease.
-	await other.interpretationsIdle()
+	// Two instances read at the same moment and both try to take over: both read the pending idea before either
+	// stores its claim, and exactly one claim is stored, so only one searches again.
 	const third = f.instance()
-	await third.read(id, a.credential)
-	await third.interpretationsIdle()
+	const claims = takeoverBarrier(f.repo, 2)
+	const [otherRead] = await Promise.all([other.read(id, a.credential), third.read(id, a.credential)])
+	assert.deepEqual(otherRead.shared.ideas[0].attributes, [PENDING_IDEA_ATTRIBUTE], "still pending, never shown as unavailable")
+	assert.deepEqual((await claims).sort(), [false, true], "one takeover wins")
+	await Promise.all([other.interpretationsIdle(), third.interpretationsIdle()])
 	assert.equal(f.searches(), 2)
 	const room = await stored(f.repo, id)
 	assert.deepEqual(room.ideas![0].attributes, [{ text: "taken over", kind: "attribute" }])
@@ -313,4 +353,126 @@ test("Start before the interpretation lands doesn't wait: the deck starts with t
 	assert.deepEqual(room.candidates.map((c) => c.id), cards)
 	const read = await f.service.read(id, a.credential)
 	assert.deepEqual(read.shared.ideas[0].attributes, [{ text: "heist", kind: "attribute" }])
+})
+
+test("a stale attempt never gives back a slot its takeover spent: refused at 11 s, stalled, taken over at 16 s", async () => {
+	for (const takeover of ["ok", "budget"] as const) {
+		const f = fixture({ search: "budget" })
+		const a = stalling(f.repo)
+		const first = f.instance(a.view)
+		const release = f.hold()
+		const created = await first.create(f.request({ country: "DE", idea: "space heist" }))
+		const id = created.credential.roomId
+		// Other searches spent earlier, so a second give-back would show.
+		const before = (await f.repo.read(id))!
+		await f.repo.compareAndSwap(before, { ...structuredClone(before.room), interpretationCount: 5, revision: before.room.revision + 1 }, false)
+		f.clock.offset = 11_000
+		a.stall()
+		release() // the first attempt is refused for the spend limit; storing that hangs
+		await new Promise((r) => setTimeout(r, 5))
+		f.clock.offset = INTERPRETATION_LEASE_MS + 1_000
+		f.state.search = takeover
+		const other = f.instance()
+		await other.read(id, created.credential)
+		await other.interpretationsIdle()
+		a.resume()
+		await first.interpretationsIdle()
+		const room = await stored(f.repo, id)
+		if (takeover === "ok") {
+			assert.deepEqual(room.ideas![0].attributes, [{ text: "heist", kind: "attribute" }], takeover)
+			assert.equal(room.interpretationCount, 5, "the takeover's search spent the reservation; the stale refusal gives nothing back")
+		} else {
+			assert.deepEqual(room.ideas![0].attributes, [], takeover)
+			assert.equal(room.interpretationCount, 4, "two refusals of one reservation give one slot back")
+		}
+		assert.equal(f.searches(), 2, takeover)
+	}
+})
+
+test("a refusal still gives its slot back when an edit or removal replaced the idea meanwhile", async () => {
+	for (const change of ["edit", "remove"] as const) {
+		const f = fixture({ search: "budget" })
+		const a = await f.service.create(f.request({ country: "DE" }))
+		const id = a.credential.roomId
+		const send = sender(f.service, id, a.credential)
+		const release = f.hold()
+		const ideaId = (await send({ type: "add_idea", text: "space heist" })).snapshot.shared.ideas[0].id
+		f.state.search = "ok"
+		if (change === "edit") await send({ type: "edit_idea", ideaId, text: "space opera" })
+		else await send({ type: "remove_idea", ideaId })
+		assert.equal((await stored(f.repo, id)).interpretationCount, change === "edit" ? 2 : 1, change)
+		release()
+		await f.service.interpretationsIdle()
+		const room = await stored(f.repo, id)
+		assert.equal(room.interpretationCount, change === "edit" ? 1 : 0, change)
+		assert.deepEqual(room.ideas!.map((i) => [i.text, i.attributes]), change === "edit" ? [["space opera", [{ text: "heist", kind: "attribute" }]]] : [], change)
+	}
+})
+
+test("concurrent identical creates: only the request whose insert stored the room searches, and its answer lands", async () => {
+	const f = fixture()
+	const insert = f.repo.insert.bind(f.repo)
+	let arrived = 0
+	let open!: () => void
+	const both = new Promise<void>((r) => { open = r })
+	f.repo.insert = async (room) => {
+		if (++arrived === 2) open()
+		await both
+		return insert(room)
+	}
+	const request = f.request({ country: "DE", idea: "space heist" })
+	const second = f.instance()
+	const [a, b] = await Promise.all([f.service.create(request), second.create(structuredClone(request))])
+	assert.equal(a.credential.roomId, b.credential.roomId)
+	// Had the loser searched too, its failure would clear the winner's pending idea.
+	f.state.search = "fail"
+	await Promise.all([f.service.interpretationsIdle(), second.interpretationsIdle()])
+	assert.equal(f.searches(), 1)
+	const room = await stored(f.repo, a.credential.roomId)
+	assert.deepEqual(room.ideas![0].attributes, [{ text: "heist", kind: "attribute" }])
+	assert.equal(room.interpretationCount, 1)
+})
+
+test("a create whose insert answer was lost recognizes its own stored reservation and searches once", async () => {
+	const f = fixture()
+	const insert = f.repo.insert.bind(f.repo)
+	f.repo.insert = async (room) => {
+		await insert(room)
+		throw new IndeterminateWrite("lost insert answer")
+	}
+	const a = await f.service.create(f.request({ country: "DE", idea: "space heist" }))
+	await f.service.interpretationsIdle()
+	assert.equal(f.searches(), 1)
+	assert.deepEqual((await stored(f.repo, a.credential.roomId)).ideas![0].attributes, [{ text: "heist", kind: "attribute" }])
+})
+
+test("the periodic sweep resumes a pending idea nobody reads once its lease ran out", async () => {
+	const f = fixture()
+	f.hold() // the creating instance crashes mid-search; no phone reads the room
+	const a = await f.service.create(f.request({ country: "DE", idea: "space heist" }))
+	const id = a.credential.roomId
+	f.hold()()
+	const sweeper = f.instance()
+	await sweeper.resumeStaleInterpretations()
+	await sweeper.interpretationsIdle()
+	assert.equal(f.searches(), 1, "within the lease the sweep leaves it alone")
+	f.clock.offset = INTERPRETATION_LEASE_MS + 1
+	f.state.attribute = "swept"
+	await sweeper.resumeStaleInterpretations()
+	await sweeper.interpretationsIdle()
+	assert.equal(f.searches(), 2)
+	const room = await stored(f.repo, id)
+	assert.deepEqual(room.ideas![0].attributes, [{ text: "swept", kind: "attribute" }])
+	assert.equal(room.interpretationCount, 1)
+	assert.deepEqual(await f.repo.stalePendingIdeas(f.clock.offset + Date.now(), Date.now() + f.clock.offset, 50), [], "nothing pending is left")
+})
+
+test("a pending idea's stored reservation never reaches phones", async () => {
+	const f = fixture()
+	f.hold()
+	const a = await f.service.create(f.request({ country: "DE", idea: "space heist" }))
+	const room = await stored(f.repo, a.credential.roomId)
+	assert.notEqual(room.ideas![0].attributes[0].text, PENDING_IDEA_ATTRIBUTE.text, "stored with its reservation")
+	assert.deepEqual(a.snapshot.shared.ideas[0].attributes, [PENDING_IDEA_ATTRIBUTE])
+	assert.deepEqual((await f.service.read(a.credential.roomId, a.credential)).shared.ideas[0].attributes, [PENDING_IDEA_ATTRIBUTE])
 })
