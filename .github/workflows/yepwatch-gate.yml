@@ -254,8 +254,16 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
       - name: Pull stack images in the background
+        # pull.status gets the pull's exit status (0 = every image pulled); the background preparation waits
+        # for it (native-gate.mjs --pulled), so a failed pull fails the gate instead of stalling it.
         run: |
-          (for i in valkey/valkey:8 crate:6.4.6 caddy:2.11.7; do docker pull -q "$i" & done; wait) > "$RUNNER_TEMP/pull.log" 2>&1 &
+          (
+            pids=()
+            for i in valkey/valkey:8 crate:6.4.6 caddy:2.11.7; do docker pull -q "$i" & pids+=($!); done
+            status=0
+            for p in "${pids[@]}"; do wait "$p" || status=1; done
+            echo "$status" > "$RUNNER_TEMP/pull.status.tmp" && mv "$RUNNER_TEMP/pull.status.tmp" "$RUNNER_TEMP/pull.status"
+          ) > "$RUNNER_TEMP/pull.log" 2>&1 &
       - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -325,14 +333,13 @@ jobs:
         working-directory: yepwatch-app
         run: npx playwright install chromium
       - name: Stack + APK in the background
-        # Waits for the images, then brings the stack up and builds the APK (cached base + JS repack) while
-        # the next steps download the Android caches. The gate step waits for $RUNNER_TEMP/prepare.json.
+        # Waits for the image pull (failing on a failed one), then brings the stack up and builds the APK
+        # (cached base + JS repack) while the next steps download the Android caches. Bounded below the job
+        # deadline (native-gate.mjs PULL_MS, PREPARE_MS); the gate step waits for $RUNNER_TEMP/prepare.json.
         working-directory: yepwatch-app/e2e
         run: |
-          nohup bash -c '
-            for i in valkey/valkey:8 crate:6.4.6 caddy:2.11.7; do until docker image inspect "$i" > /dev/null 2>&1; do sleep 1; done; done
-            node ci/native-gate.mjs --prepare="$RUNNER_TEMP/prepare.json"
-          ' > "$RUNNER_TEMP/prepare.log" 2>&1 &
+          nohup node ci/native-gate.mjs --prepare="$RUNNER_TEMP/prepare.json" --pulled="$RUNNER_TEMP/pull.status" \
+            > "$RUNNER_TEMP/prepare.log" 2>&1 &
       - name: Restore Android emulator + system image
         id: sdk
         uses: actions/cache@v6
@@ -367,12 +374,12 @@ jobs:
           key: yw-avd-v2-${{ steps.keys.outputs.cpu }}-emu${{ steps.keys.outputs.emulator }}-${{ hashFiles('yepwatch-app/e2e/native/lib/device.mjs') }}
       - name: Android E2E gate (cold start + mixed room)
         working-directory: yepwatch-app/e2e
+        run: node ci/native-gate.mjs --mode=subset --frames=${{ env.NATIVE_FRAMES }} --after-prepare="$RUNNER_TEMP/prepare.json"
+      - name: Background pull + stack + APK logs
+        if: always()
         run: |
-          set +e
-          node ci/native-gate.mjs --mode=subset --frames=${{ env.NATIVE_FRAMES }} --after-prepare="$RUNNER_TEMP/prepare.json"
-          code=$?
-          echo "::group::background stack + APK log"; cat "$RUNNER_TEMP/prepare.log"; echo "::endgroup::"
-          exit $code
+          echo "::group::image pull log"; cat "$RUNNER_TEMP/pull.log" 2>/dev/null; echo "::endgroup::"
+          echo "::group::background stack + APK log"; cat "$RUNNER_TEMP/prepare.log" 2>/dev/null; echo "::endgroup::"
       - name: Stop the emulator (before the AVD cache is saved)
         if: always()
         run: |
@@ -389,6 +396,8 @@ jobs:
             ${{ env.YW_E2E_RUNS }}/**/*.png
             ${{ env.YW_E2E_RUNS }}/**/logcat-*.txt
             ${{ env.YW_E2E_HOME }}/logs/*.log
+            ${{ runner.temp }}/prepare.log
+            ${{ runner.temp }}/pull.log
           retention-days: 14
           if-no-files-found: warn
       - name: Upload videos on failure
