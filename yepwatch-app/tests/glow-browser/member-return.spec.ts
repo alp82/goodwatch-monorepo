@@ -135,7 +135,8 @@ test('a lapsed sign-in keeps the name, offers a small Reconnect on the start pag
   await page.getByTestId('profile-lapsed').getByRole('button', { name: 'Reconnect GoodWatch', exact: true }).click();
   await expect.poll(() => f.account.starts).toBe(1);
   await page.waitForURL((url) => url.pathname === '/');
-  await page.getByRole('button', { name: 'Profile' }).click();
+  // Back from GoodWatch where the reconnect started: Profile is open again, now signed in.
+  await expect(page.getByRole('dialog', { name: 'Profile' })).toBeVisible();
   await expect(page.getByText('Signed in with GoodWatch', { exact: true })).toBeVisible();
   await expect(page.getByTestId('profile-lapsed')).toHaveCount(0);
 });

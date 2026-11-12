@@ -221,7 +221,8 @@ test('left swipe after reversal sends exactly the same pass as Nope and recenter
   await page.mouse.move(x, y);
   await page.mouse.down();
   await page.mouse.move(x + 90, y, { steps: 6 });
-  await page.mouse.move(x - 100, y, { steps: 12 });
+  // Past the left threshold (a third of the card), so the answer doesn't depend on how fast the pointer moved.
+  await page.mouse.move(x - box.width * 0.45, y, { steps: 12 });
   await page.mouse.up();
   await expect.poll(() => f.commands.filter((c) => c.command.type === 'vote').length).toBe(1);
   const first = f.commands.find((c) => c.command.type === 'vote')!;
@@ -232,7 +233,7 @@ test('left swipe after reversal sends exactly the same pass as Nope and recenter
   const centered = await page.getByTestId('poster').boundingBox();
   expect(Math.abs(centered!.x - box.x)).toBeLessThan(2);
 });
-test('lost command response persists exact envelope over reload and blocks new gestures until reconciliation', async ({
+test('lost command response persists exact envelope over reload; new answers queue behind it until reconciliation', async ({
   page,
 }) => {
   const f = await fixture(page);
@@ -241,7 +242,8 @@ test('lost command response persists exact envelope over reload and blocks new g
   await page.getByRole('button', { name: 'Retry', exact: true }).waitFor();
   await page.reload();
   await page.getByRole('button', { name: 'Retry', exact: true }).waitFor();
-  await expect(page.getByRole('button', { name: 'Nope', exact: true })).toBeDisabled();
+  // The next card stays live (owner decision: next card live at once); an answer would wait behind the saved one.
+  await expect(page.getByRole('button', { name: 'Nope', exact: true })).toBeEnabled();
   await page.getByRole('button', { name: 'Retry', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Nope', exact: true })).toBeEnabled();
   expect(f.commands).toHaveLength(2);

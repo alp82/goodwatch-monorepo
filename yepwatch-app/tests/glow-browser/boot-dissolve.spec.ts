@@ -23,7 +23,7 @@ async function recordFrames(page: Page) {
 }
 async function expectOneLogoInPlace(page: Page) {
   const frames = await page.evaluate(() => (window as unknown as { bootFrames: { t: number; word: number; brand: number; x: number; y: number }[] }).bootFrames);
-  expect(frames.some((f) => f.word > 0.9)).toBe(true);
+  // The word only covers loading longer than 400 ms (owner decision Q21a): a fast start shows none.
   expect(frames.at(-1)!.brand).toBeGreaterThan(0.99);
   // Never two logos at once.
   expect(frames.filter((f) => f.word > 0.02 && f.brand > 0.02)).toEqual([]);
@@ -55,7 +55,7 @@ for (const [width, height] of [[375, 667], [390, 844], [1440, 900]]) test(`boot 
   expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(true);
 });
 
-test('reduced motion shows the still word briefly, then plain fades with one logo at a time', async ({ page }) => {
+test('reduced motion: no word for a fast start, plain fades with one logo at a time', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await recordFrames(page);
   const start = Date.now();
@@ -74,7 +74,7 @@ test('a slow home page keeps the arc circling, then dissolves into the loaded ro
   await page.route('**/api/yepwatch/v1/proposal/**', async (route) => {
     const path = new URL(route.request().url()).pathname;
     if (path.endsWith('/realtime-ticket')) return route.fulfill({ status: 501, json: { error: { code: 'not_implemented', message: 'Fixture', retryable: false } } });
-    if (slow && path.endsWith('/rooms/test-room')) await new Promise((r) => setTimeout(r, 3200));
+    if (slow && path.endsWith('/rooms/test-room')) await new Promise((r) => setTimeout(r, 4500));
     return route.fulfill({ json: room });
   });
   // Visiting the room once registers it on this tab, so the home page becomes the returning rooms list.
@@ -82,10 +82,10 @@ test('a slow home page keeps the arc circling, then dissolves into the loaded ro
   await expect(page.getByRole('button', { name: 'Yep', exact: true })).toBeVisible({ timeout: 8000 });
   slow = true;
   await page.goto('/');
-  await page.waitForTimeout(2600);
+  // The word comes after 400 ms of loading; once its intro has played, the arc keeps circling.
   const boot = page.getByTestId('yepwatch-boot');
   await expect(boot).toBeVisible();
-  expect(await page.locator('.review-boot-wait').evaluate((el) => el.getAnimations().length)).toBeGreaterThan(0);
+  await expect.poll(() => page.locator('.review-boot-wait').evaluate((el) => el.getAnimations().length).catch(() => 0), { timeout: 4000 }).toBeGreaterThan(0);
   await expect(boot).toHaveCount(0, { timeout: 5000 });
   await expect(page.getByRole('button', { name: 'Anything', exact: true })).toBeVisible();
 });

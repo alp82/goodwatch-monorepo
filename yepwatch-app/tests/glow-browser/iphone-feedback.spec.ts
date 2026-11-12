@@ -143,18 +143,19 @@ test('boot reveals YepWatch once, then stays absent during navigation', async ({
 
 test('room activity and exposure do not begin behind the boot overlay', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' });
-  let roomReads = 0;
+  // The room loads under the startup cover (owner decision Q21a: the page builds unseen and appears
+  // ready), but nothing this person does (votes, exposure) is written while the cover is up.
+  let coverUp = true;
+  let writesUnderCover = 0;
   await page.route('**/api/yepwatch/v1/proposal/**', async route => {
-    roomReads++;
+    if (route.request().method() === 'POST' && route.request().url().endsWith('/commands')) { if (coverUp) writesUnderCover++; }
     await route.fulfill({ json: continuousFixture() });
   });
   await page.goto('/room/test-room');
-  await expect(page.getByTestId('yepwatch-boot')).toBeVisible();
-  await page.waitForTimeout(180);
-  expect(roomReads).toBe(0);
   await expect(page.getByTestId('yepwatch-boot')).toHaveCount(0);
+  coverUp = false;
   await expect(page.getByRole('button', { name: 'Yep', exact: true })).toBeVisible();
-  expect(roomReads).toBeGreaterThan(0);
+  expect(writesUnderCover).toBe(0);
 });
 
 for (const navigation of ['button', 'edge'] as const) test(`Tonight ${navigation} Back returns to Your rooms without changing the decision`, async ({ page }) => {
@@ -223,7 +224,7 @@ test('late poster load cannot flash the old title after choosing the next one',a
   await page.getByRole('button',{name:'Yep',exact:true}).click();await expect.poll(()=>pending.has('feedback-image-new.svg')).toBe(true);
   pending.get('feedback-image-old.svg')!();await page.waitForTimeout(100);
   await expect(page.getByTestId('poster')).toContainText('Isolated test c2');
-  const image=page.getByTestId('poster-art');await expect(image).toHaveCSS('opacity','0');
+  const image=page.getByTestId('poster').getByTestId('poster-art');await expect(image).toHaveCSS('opacity','0');
   pending.get('feedback-image-new.svg')!();await expect(image).toHaveCSS('opacity','1');
   await expect(page.getByTestId('poster')).toContainText('Isolated test c2');
 });
@@ -238,7 +239,7 @@ test('cached next poster fades in without a full-opacity flash', async ({ page }
   await page.evaluate(async src => { const img = new Image(); img.src = src; await img.decode(); }, image + '#next');
   const reloadStarted = Date.now();
   await page.reload();
-  await expect(page.getByTestId('poster-art')).toHaveCSS('opacity', '1');
+  await expect(page.getByTestId('poster').getByTestId('poster-art')).toHaveCSS('opacity', '1');
   expect(Date.now() - reloadStarted).toBeLessThan(4000);
   await page.evaluate(() => {
     (window as any).__fadeFrames = [];
@@ -253,7 +254,7 @@ test('cached next poster fades in without a full-opacity flash', async ({ page }
   });
   await page.getByRole('button', { name: 'Nope', exact: true }).click();
   await expect(page.getByTestId('poster')).toContainText('Isolated test c2');
-  await expect(page.getByTestId('poster-art')).toHaveCSS('opacity', '1');
+  await expect(page.getByTestId('poster').getByTestId('poster-art')).toHaveCSS('opacity', '1');
   await page.waitForTimeout(300);
   const frames: number[] = await page.evaluate(() => (window as any).__fadeFrames);
   expect(frames.length).toBeGreaterThan(5);

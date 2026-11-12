@@ -49,7 +49,8 @@ for (const mode of ['create','join'] as const) test(`429 ${mode} retains the sam
   await action.click(); await expect(action).toBeDisabled();
   if (mode === 'join') { await expect(page.getByText(/Retry preserves your identity/)).toBeVisible(); await expect(action).not.toHaveText(/\d/); }
   else await expect(page.getByLabel('Mood')).toHaveValue('cheer me up');
-  expect(bodies).toHaveLength(1); const first=structuredClone(bodies[0]);
+  // The saved request (and its words) show before the request goes out: wait for it to have gone.
+  await expect.poll(() => bodies.length).toBe(1); const first=structuredClone(bodies[0]);
   await page.reload(); await expect(action).toBeDisabled();
   if (mode === 'join') await expect(page.getByRole('button', { name: 'Change name', exact: true })).toBeVisible();
   if(mode==='join') await expect(page.getByLabel('Room code or invitation')).toHaveValue('fixture-invite');
@@ -86,8 +87,11 @@ test('definitive admission failure clears bootstrap so the next Create is a new 
   const action = await open(page, 'create', '');
   await action.click();
   await expect(page.getByText('Please try again.',{exact:true})).toBeVisible();
+  // Each press sends the create with its setup, then (refused, as by an older server) the plain create
+  // with the same id: two requests per press.
+  expect(bodies).toHaveLength(2); expect(bodies[1].commandId).toBe(bodies[0].commandId);
   await action.click();
-  await expect.poll(()=>bodies.length).toBe(2);expect(bodies[1].commandId).not.toBe(bodies[0].commandId);expect(bodies[1].nickname).toBe('');
+  await expect.poll(()=>bodies.length).toBe(4);expect(bodies[2].commandId).not.toBe(bodies[0].commandId);expect(bodies[2].nickname).toBe('');
 });
 
 test('terminal HTTP status takes precedence over retryable busy and never offers a pending action',async({page})=>{
@@ -171,7 +175,7 @@ test('covered entrance controls are inert until the panel closes', async ({ page
 });
 
 for (const mode of ['create', 'join'] as const) test(`Back escapes an unconfirmed ${mode} without forgetting its exact retry`, async ({ page }) => {
-  // Unanswered requests are sent again by themselves (5 more times, about half a minute) before the error shows.
+  // An unanswered request goes once more by itself, then the error shows at once (no half-minute wait).
   test.setTimeout(90_000);
   await common(page); const bodies: GuestAdmissionRequest[]=[];
   if(mode==='join') await page.route('**/proposal/rooms/test-room', route => route.fulfill({status:401,json:{error:{code:'unauthorized',message:'No existing membership',retryable:false}}}));
@@ -180,7 +184,7 @@ for (const mode of ['create', 'join'] as const) test(`Back escapes an unconfirme
   await action.click();
   await expect(action).toHaveText(mode === 'join' ? 'Joining…' : 'Saving…');
   await expect(page.getByText('Couldn’t reach YepWatch. Your request is saved. Try again.',{exact:true})).toBeVisible({ timeout: 45_000 });
-  expect(bodies).toHaveLength(6);
+  expect(bodies).toHaveLength(2);
   for (const body of bodies) expect(body).toEqual(bodies[0]);
   if (mode === 'join') {
     await page.getByRole('button',{name:'Connection details',exact:true}).click();
@@ -188,7 +192,7 @@ for (const mode of ['create', 'join'] as const) test(`Back escapes an unconfirme
     await expect(page.getByText(/No HTTP response/)).toBeVisible();
   }
   await expect(action).toBeEnabled();
-  await action.click();await expect.poll(()=>bodies.length).toBe(7);expect(bodies[6]).toEqual(bodies[0]);
+  await action.click();await expect.poll(()=>bodies.length).toBe(4);expect(bodies[3]).toEqual(bodies[0]);
   // Reload restores the pending form (ending the automatic retries), but still allows Back.
   await page.reload();
   const sent = bodies.length;
@@ -253,7 +257,8 @@ for (const leave of ['panel', 'background'] as const) test(`automatic admission 
   const action = await open(page, 'create', '');
   await action.click();
   await expect(action).toHaveText('Saving…');
-  await expect.poll(() => bodies.length).toBe(2);
+  // The first try got no answer; the second waits its backoff (about a second): leave now.
+  await expect.poll(() => bodies.length).toBe(1);
   if (leave === 'panel') {
     await page.getByRole('button', { name: 'Back', exact: true }).click();
     await expect(page.getByRole('button', { name: 'New room', exact: true })).toBeVisible();

@@ -56,8 +56,8 @@ test.describe('Back closes the sheet on top first; drafts are never lost', () =>
     await expect(page.getByTestId('room-sheet')).toBeVisible();
     await expect.poll(() => f.room.shared.constraints.kinds).toEqual(['movie']);
     await expect(page.getByTestId('matches')).toBeVisible();
-    // The header's Back: the Room sheet closes, Matches stays.
-    await button(page, 'Back').click();
+    // The header (inert under a modal sheet): a tap on it closes the Room sheet, Matches stays.
+    await page.getByTestId('header-shade').click();
     await expect(page.getByTestId('room-sheet')).toHaveCount(0);
     await expect(page.getByTestId('matches')).toBeVisible();
     // Your rooms is a sheet too.
@@ -84,10 +84,11 @@ test.describe('Back closes the sheet on top first; drafts are never lost', () =>
     await button(page, 'Room').click();
     await button(page, 'Movies and shows, change').click();
     await page.getByRole('checkbox', { name: 'Shows' }).click();
-    // Back closes the sheets one at a time (the change waits behind Start), then leaves the room before the change went out.
-    await button(page, 'Back').click();
+    // A tap on the header closes the sheets one at a time (the change waits behind Start), then Back leaves
+    // the room before the change went out.
+    await page.getByTestId('header-shade').click();
     await expect(page.getByTestId('kinds-sheet')).toHaveCount(0);
-    await button(page, 'Back').click();
+    await page.getByTestId('header-shade').click();
     await expect(page.getByTestId('room-sheet')).toHaveCount(0);
     expect(f.sent()).not.toContain('configure');
     await button(page, 'Back').click();
