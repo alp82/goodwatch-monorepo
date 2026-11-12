@@ -10,11 +10,14 @@ export const pendingKey = (id: string) => `yepwatch.v3.pending.${id.replace(/[^a
  * module directly: listing the package in the app's own dependencies would change the runtime fingerprint.
  */
 interface NativeFile { readonly exists: boolean; textSync(): string; writeSync(contents: string): void; delete(): void }
-const fs = requireNativeModule<{ documentDirectory: string | null; FileSystemFile: new (uri: string) => NativeFile }>('FileSystem');
-export const commandFiles = createCommandFiles(fs.documentDirectory ?? '', {
+interface NativeDirectory { readonly exists: boolean; create(options: { intermediates: boolean; idempotent: boolean }): void; delete(): void }
+const fs = requireNativeModule<{ documentDirectory: string | null; FileSystemFile: new (uri: string) => NativeFile; FileSystemDirectory: new (uri: string) => NativeDirectory }>('FileSystem');
+export const commandFiles = createCommandFiles(`${fs.documentDirectory ?? ''}yepwatch-outbox/`, {
   read: (uri) => { const f = new fs.FileSystemFile(uri); return f.exists ? f.textSync() : null; },
   write: (uri, contents) => new fs.FileSystemFile(uri).writeSync(contents),
   remove: (uri) => { const f = new fs.FileSystemFile(uri); if (f.exists) f.delete(); },
+  makeDir: (uri) => { const d = new fs.FileSystemDirectory(uri); if (!d.exists) d.create({ intermediates: true, idempotent: true }); },
+  removeDir: (uri) => { const d = new fs.FileSystemDirectory(uri); if (d.exists) d.delete(); },
 }, { read: (key) => SecureStore.getItemAsync(key), remove: (key) => SecureStore.deleteItemAsync(key) });
 /** The command awaiting confirmation (command-file.ts): saved whole before it is sent. */
 export async function readCommandRecovery(id: string, sessionKey?: string) {
