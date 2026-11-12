@@ -4,4 +4,5 @@ export function readSavedRoom(_roomId: string): RoomSnapshot | null { return nul
 export function saveRoom(_roomId: string, _snapshot: RoomSnapshot | null) { /* nothing kept */ }
 export function snapshotGeneration(): string | null { return null; }
 export function confirmRoom(_roomId: string, _asked: string | null) { /* nothing kept */ }
-export function replaceSignInGeneration() { /* nothing kept */ }
+export function beginSignIn() { /* nothing kept */ }
+export function settleSignIn() { /* nothing kept */ }

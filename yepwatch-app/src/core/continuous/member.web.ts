@@ -3,7 +3,7 @@ import { secureAuthorizeUrl } from './member-state';
 import { continuousApi } from './api';
 import { rememberMemberReturn, clearMemberReturn, rememberMemberHint, readMemberHintName, rememberMemberHintName, forgetMemberHintName } from './web-member-return';
 import { memberTransition } from './member-transition';
-import { replaceSignInGeneration } from './room-snapshot';
+import { beginSignIn, settleSignIn } from './room-snapshot';
 
 /** Browsers keep the sealed session in an HttpOnly cookie: nothing to read or store here. */
 export async function readSession(): Promise<string | null> { return null; }
@@ -25,8 +25,8 @@ export async function beginAccount(returnPath: string): Promise<AccountStatus | 
   const destination = secureAuthorizeUrl(result.authorizeUrl);
   rememberMemberReturn(returnPath);
   rememberMemberHint();
-  // The sign-in changes on the way back: rooms saved for a reload belong to the one before it.
-  replaceSignInGeneration();
+  // The sign-in changes on the way back: no tab saves or paints a room until this page is back.
+  beginSignIn();
   await memberTransition.leave();
   await new Promise<void>((resolve, reject) => {
     const resumed = (event: PageTransitionEvent) => {
@@ -40,6 +40,7 @@ export async function beginAccount(returnPath: string): Promise<AccountStatus | 
     try { window.location.assign(destination); }
     catch (error) {
       window.removeEventListener('pageshow', resumed);
+      settleSignIn();
       clearMemberReturn();
       memberTransition.reset();
       reject(error);

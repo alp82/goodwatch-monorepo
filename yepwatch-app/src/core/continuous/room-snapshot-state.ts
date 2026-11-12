@@ -42,18 +42,37 @@ const PREFIX = 'yepwatch.v3.room-snapshot.';
 export const AUTH_GENERATION_KEY = 'yepwatch.v3.auth-generation';
 const roomKey = (roomId: string) => `${PREFIX}${roomId.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
 const fresh = () => `${Date.now().toString(36)}.${Math.random().toString(36).slice(2)}`;
+/**
+ * A sign-in's page round trip in progress (localStorage, every tab): the old account's cookie stays valid
+ * until GoodWatch calls back, so until the page returns no tab saves or paints a room. It lapses on its own
+ * when the sign-in is never finished.
+ */
+export const SIGN_IN_TRANSITION_KEY = 'yepwatch.v3.auth-transition';
+/** In the tab that left for GoodWatch (sessionStorage): the round trip its next page settles. */
+const SIGN_IN_TAB_KEY = 'yepwatch.v3.auth-transition-tab';
+export const SIGN_IN_TRANSITION_MS = 10 * 60_000;
 
 /**
  * Saved rooms for one tab (`session`: its sessionStorage), bound to the browser's sign-in generation
  * (`shared`: localStorage). Every sign-in, Log out or account switch, in any tab, replaces the generation:
  * rooms saved under an earlier one never paint again, and nothing is saved again until the server has
- * answered a read asked under the new one. No shared storage, no saved rooms.
+ * answered a read asked under the new one. A sign-in's page round trip moves it twice (leaving, back) and
+ * stops all saving and painting in between. No shared storage, no saved rooms.
  */
 export function createSnapshotStore({ session, shared, now }: { session: KeyStore | null; shared: KeyStore | null; now: () => number }) {
   /** Per room: the generation and time of the last authorized server answer read in this page. */
   const confirmed = new Map<string, { generation: string; at: number }>();
+  const signingIn = (): boolean => {
+    try {
+      const raw = shared?.getItem(SIGN_IN_TRANSITION_KEY);
+      if (!raw) return false;
+      const { until } = JSON.parse(raw) as { until?: unknown };
+      return typeof until === 'number' && until > now() && until <= now() + SIGN_IN_TRANSITION_MS;
+    } catch { return false; }
+  };
+  /** Null while a sign-in's round trip runs in any tab: nothing is confirmed, saved or painted. */
   const generation = (): string | null => {
-    if (!shared) return null;
+    if (!shared || signingIn()) return null;
     try {
       let value = shared.getItem(AUTH_GENERATION_KEY);
       if (!value) { value = fresh(); shared.setItem(AUTH_GENERATION_KEY, value); }
@@ -69,7 +88,7 @@ export function createSnapshotStore({ session, shared, now }: { session: KeyStor
       keys.forEach((k) => session.removeItem(k));
     } catch { /* nothing kept */ }
   };
-  return {
+  const store = {
     /** The current generation, to note before asking the server (null: nothing is saved). */
     generation,
     /** The server answered a read asked under `asked`: from now on this room may be saved with this time. */
@@ -100,12 +119,39 @@ export function createSnapshotStore({ session, shared, now }: { session: KeyStor
         else session.removeItem(roomKey(roomId));
       } catch { /* Full or blocked storage: a reload just waits for the server. */ }
     },
-    /** This tab's sign-in changes (Log out, Continue with GoodWatch, a new account): a new generation for the browser. */
-    replaceGeneration() {
-      forgetLocal();
-      try { shared?.setItem(AUTH_GENERATION_KEY, fresh()); } catch { /* without shared storage nothing is saved */ }
+    /** This tab's sign-in changes (Log out, a new account): a new generation for the browser. */
+    replaceGeneration,
+    /** Continue with GoodWatch, before the page leaves: a new generation, and none at all until the page is back. */
+    beginSignIn() {
+      const id = fresh();
+      try {
+        session?.setItem(SIGN_IN_TAB_KEY, id);
+        shared?.setItem(SIGN_IN_TRANSITION_KEY, JSON.stringify({ id, until: now() + SIGN_IN_TRANSITION_MS }));
+      } catch { /* the generation below still moves */ }
+      replaceGeneration();
+    },
+    /**
+     * The page that left for GoodWatch is back (loaded again, or shown from the back/forward cache): the
+     * generation moves again, past anything read with the old cookie, before the round trip ends.
+     */
+    settleSignIn() {
+      try {
+        const id = session?.getItem(SIGN_IN_TAB_KEY);
+        if (!id) return;
+        session!.removeItem(SIGN_IN_TAB_KEY);
+        replaceGeneration();
+        const raw = shared?.getItem(SIGN_IN_TRANSITION_KEY);
+        if (raw && (JSON.parse(raw) as { id?: unknown }).id === id) shared!.removeItem(SIGN_IN_TRANSITION_KEY);
+      } catch { /* a round trip left behind lapses on its own */ }
     },
     /** Another tab replaced the generation (the storage event). */
     sharedChanged: forgetLocal,
   };
+  // A page loaded in the tab that left for GoodWatch settles that round trip before anything reads.
+  store.settleSignIn();
+  return store;
+  function replaceGeneration() {
+    forgetLocal();
+    try { shared?.setItem(AUTH_GENERATION_KEY, fresh()); } catch { /* without shared storage nothing is saved */ }
+  }
 }

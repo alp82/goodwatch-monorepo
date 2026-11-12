@@ -146,3 +146,68 @@ test('without shared storage (blocked) nothing is saved or painted', () => {
   store.save(r.shared.roomId, r);
   assert.equal(store.read(r.shared.roomId), null);
 });
+
+test('during a sign-in round trip no tab saves or paints a room, and the return replaces the generation again', () => {
+  const b = browser();
+  const leaving = b.tab();
+  const other = b.tab();
+  const r = room();
+  leaving.store.beginSignIn(); // Continue with GoodWatch: the old cookie still works until the callback
+  // The other tab reads the room with the old account's cookie and saves it.
+  other.store.confirm(r.shared.roomId, other.store.generation());
+  other.store.save(r.shared.roomId, r);
+  assert.equal(other.store.read(r.shared.roomId), null, 'nothing is painted during the round trip');
+  b.tick(5_000);
+  // The callback set the new account's cookie; the page comes back in the same tab and settles first.
+  const returned = b.tab(leaving.session);
+  b.broadcast(returned.store);
+  const reloaded = b.tab(other.session);
+  assert.equal(reloaded.store.read(r.shared.roomId), null, 'the old account\'s room never paints after the return');
+  // After the return, reads under the new sign-in are saved again in every tab.
+  reloaded.store.confirm(r.shared.roomId, reloaded.store.generation());
+  reloaded.store.save(r.shared.roomId, r);
+  assert.ok(reloaded.store.read(r.shared.roomId));
+});
+
+test('a read asked before the sign-in round trip and answered during or after it is not saved', () => {
+  const b = browser();
+  const leaving = b.tab();
+  const other = b.tab();
+  const r = room();
+  const asked = other.store.generation();
+  leaving.store.beginSignIn();
+  other.store.confirm(r.shared.roomId, asked);
+  other.store.save(r.shared.roomId, r);
+  const askedDuring = other.store.generation();
+  b.tab(leaving.session); // return
+  other.store.confirm(r.shared.roomId, askedDuring);
+  other.store.save(r.shared.roomId, r);
+  assert.equal(other.store.read(r.shared.roomId), null);
+});
+
+test('back from GoodWatch through the back/forward cache settles the round trip too', () => {
+  const b = browser();
+  const leaving = b.tab();
+  const other = b.tab();
+  const r = room();
+  leaving.store.beginSignIn();
+  other.store.confirm(r.shared.roomId, other.store.generation());
+  other.store.save(r.shared.roomId, r);
+  leaving.store.settleSignIn(); // pageshow (persisted)
+  assert.equal(b.tab(other.session).store.read(r.shared.roomId), null);
+  leaving.store.confirm(r.shared.roomId, leaving.store.generation());
+  leaving.store.save(r.shared.roomId, r);
+  assert.ok(leaving.store.read(r.shared.roomId), 'saving works again in the returned page');
+});
+
+test('a sign-in never finished stops blocking saves after its time is up', () => {
+  const b = browser();
+  const leaving = b.tab();
+  const other = b.tab();
+  const r = room();
+  leaving.store.beginSignIn();
+  b.tick(11 * 60_000);
+  other.store.confirm(r.shared.roomId, other.store.generation());
+  other.store.save(r.shared.roomId, r);
+  assert.ok(other.store.read(r.shared.roomId));
+});
