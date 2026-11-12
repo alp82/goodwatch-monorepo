@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AppState } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
+import { AppState, Platform } from 'react-native';
+import { hashKey, useQuery } from '@tanstack/react-query';
 import * as Crypto from 'expo-crypto';
 import type {
   ActivityGesture,
@@ -18,8 +18,8 @@ import { publicFailureMessage } from '../recovery';
 import { continuousRealtimeUrl } from '../config';
 import type { Connection } from '../realtime';
 import { mergeRoom, mergePublic, PersistentCommands, type CachedRoom } from './state';
-import { awaitsServer, overlayRoom, type CommandBuild, type QueuedCommand } from './optimistic';
-import { readCommandRecovery, writePending } from './storage';
+import { awaitsServer, overlayRoom, proposingCandidate, type CommandBuild, type QueuedCommand } from './optimistic';
+import { readCommandRecovery, writePending, writePendingNow } from './storage';
 import { useRetryCountdown } from './useRetryCountdown';
 import { transientFailure } from './backoff';
 import { ContinuousRealtime } from './realtime';
@@ -32,6 +32,8 @@ import { authEpoch } from './account-flow';
 import { ACTIVITY_LIMITS } from '@goodwatch/yepwatch-contracts/proposal';
 import { continuousKey } from './keys';
 import { browserEvents, browserOffline } from './network';
+import { confirmRoom, readSavedRoom, saveRoom, snapshotGeneration } from './room-snapshot';
+import { SAVED_ROOM_GRACE_MS } from './room-snapshot-state';
 export { continuousKey } from './keys';
 /** Your rooms keeps one query per room; room snapshots update it directly. */
 export const homeRoomKey = (roomId: string) => ['home-room', roomId] as const;
@@ -72,7 +74,7 @@ export function useContinuousRoom(roomId: string) {
   const ownHoldSeed = useRef<number | null>(null);
   const ownCheerSeq = useRef(0);
   const channel = useRef<ContinuousRealtime | null>(null);
-  const [commandStorage] = useState(() => sessionCommandStorage(roomId, writePending));
+  const [commandStorage] = useState(() => sessionCommandStorage(roomId, writePending, writePendingNow));
   const startedEpoch = useRef(authEpoch.current());
   const queue = useRef(
     new PersistentCommands(() => Crypto.randomUUID(), commandStorage)
@@ -81,6 +83,19 @@ export function useContinuousRoom(roomId: string) {
     () => queryClient.getQueryData<CachedRoom>(continuousKey(roomId)),
     [roomId]
   );
+  // A reload whose first read doesn't come back at once (the server restarts) paints the room as this tab
+  // last saw it confirmed, then reads it again (stale on purpose). A read that answers within the grace
+  // wins: a room that changed just before the reload never shows its older screen first.
+  // It's read again when it paints: a sign-in change (here or in another tab) during the grace drops it.
+  // Painted, it is not this page's confirmation: it's saved again only after the server answers.
+  useEffect(() => {
+    if (cached() || !readSavedRoom(roomId)) return;
+    const timer = setTimeout(() => {
+      const saved = cached() ? null : readSavedRoom(roomId);
+      if (saved) queryClient.setQueryData<CachedRoom>(continuousKey(roomId), mergeRoom(undefined, saved), { updatedAt: 0 });
+    }, SAVED_ROOM_GRACE_MS);
+    return () => clearTimeout(timer);
+  }, [roomId, cached]);
   const end = useCallback((why: 'expired' | 'access') => {
     terminalRef.current = why;
     setTerminal(why);
@@ -150,9 +165,10 @@ export function useContinuousRoom(roomId: string) {
   const refetch = useCallback(async () => {
     if (!access || expired()) return;
     try {
+      const asked = snapshotGeneration();
       const incoming = await api.snapshot(access);
       apply(incoming);
-      if (!terminalRef.current) setPrivateError(false);
+      if (!terminalRef.current) { setPrivateError(false); confirmRoom(roomId, asked); }
       return incoming;
     } catch (e) {
       authority(e);
@@ -160,15 +176,17 @@ export function useContinuousRoom(roomId: string) {
       if (!terminalRef.current && !transientFailure(e)) setPrivateError(true);
       throw e;
     }
-  }, [access, expired, apply, authority]);
+  }, [access, expired, apply, authority, roomId]);
   const room = useQuery<CachedRoom>({
     queryKey: continuousKey(roomId),
     enabled: Boolean(access) && !terminal,
     queryFn: async () => {
       try {
         if (expired()) throw new RoomFailure('expired', 'This room has expired.');
+        const asked = snapshotGeneration();
         const value = await api.snapshot(access!);
         apply(value);
+        if (!terminalRef.current) confirmRoom(roomId, asked);
         if (terminalRef.current)
           throw new RoomFailure(
             terminalRef.current === 'expired' ? 'expired' : 'unauthorized',
@@ -381,10 +399,12 @@ export function useContinuousRoom(roomId: string) {
     const leaving = (command ?? queue.current.pending?.command)?.type === 'leave';
     leavingNow.current = leaving;
     try {
+      const asked = snapshotGeneration();
       const value = await queue.current.send(command, snapshot, (body) =>
         api.command(access, body), commandId
       );
       apply(value);
+      if (!terminalRef.current) confirmRoom(roomId, asked);
       // A Leave the server confirmed went through, even when the live channel brought the refusal of
       // the leaver's next read first and access already ended here.
       return leaving || !terminalRef.current;
@@ -445,6 +465,8 @@ export function useContinuousRoom(roomId: string) {
     };
     try {
       while (outbox.current.length && (!queue.current.pending || terminalRef.current)) {
+        // Not read yet: the access effect drains again once it is.
+        if (!terminalRef.current && !accessRef.current) break;
         const entry = outbox.current[0];
         const snapshot = terminalRef.current ? undefined : cached();
         const command = snapshot ? entry.build(snapshot) : null;
@@ -484,11 +506,54 @@ export function useContinuousRoom(roomId: string) {
   useEffect(() => {
     if (terminal || !pending) void drain();
   }, [pending, terminal, drain]);
+  // Taps made before this device's access is read (a reload that painted the saved room) wait for it;
+  // without access they can't go.
+  useEffect(() => {
+    if (access) { if (!pending) void drain(); return; }
+    if (access !== null || !outbox.current.length) return;
+    const lost = outbox.current;
+    outbox.current = [];
+    setQueued([]);
+    lost.forEach((entry) => entry.settle(false));
+  }, [access, pending, drain]);
+  // The room as last confirmed, kept for a reload of this tab (room-snapshot.web.ts): saved when the page
+  // is idle a moment after a change, and right away when the page goes away.
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+    if (terminal) { saveRoom(roomId, null); return; }
+    const hash = hashKey(continuousKey(roomId));
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let idle: number | null = null;
+    const flush = () => {
+      if (timer) clearTimeout(timer);
+      if (idle !== null && 'cancelIdleCallback' in window) window.cancelIdleCallback(idle);
+      timer = null; idle = null;
+      const room = cached();
+      if (room && !terminalRef.current) saveRoom(roomId, room);
+    };
+    const later = () => {
+      timer = null;
+      if ('requestIdleCallback' in window) idle = window.requestIdleCallback(flush, { timeout: 3000 });
+      else flush();
+    };
+    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
+      if (event.type === 'updated' && event.query.queryHash === hash && !timer && idle === null) timer = setTimeout(later, 1500);
+    });
+    const hidden = () => { if (document.visibilityState === 'hidden') flush(); };
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', hidden);
+    return () => {
+      unsubscribe();
+      window.removeEventListener('pagehide', flush);
+      document.removeEventListener('visibilitychange', hidden);
+      flush();
+    };
+  }, [roomId, terminal, cached]);
   /** With a command: shown at once and queued. Without: retries the command awaiting confirmation. */
   function send(input?: RoomCommand | CommandBuild): Promise<boolean> {
     if (!input) return submit();
     const snapshot = cached();
-    if (!access || !snapshot || expired() || privateError) return Promise.resolve(false);
+    if (access === null || !snapshot || expired() || privateError) return Promise.resolve(false);
     const build: CommandBuild = typeof input === 'function' ? input : () => input;
     // Built against the room as shown: a tap behind this device's own unconfirmed commands is aimed at them.
     const command = build(overlayRoom(snapshot, queue.current.pending, outbox.current));
@@ -537,6 +602,7 @@ export function useContinuousRoom(roomId: string) {
   // Read straight from the cache: a settled command leaves the queue in the same render its result shows.
   const confirmed = cached() ?? room.data;
   const display = useMemo(() => (confirmed ? overlayRoom(confirmed, pending, queued) : undefined), [confirmed, pending, queued]);
+  const proposing = useMemo(() => (confirmed ? proposingCandidate(confirmed, pending, queued) : null), [confirmed, pending, queued]);
   const decided = room.data?.shared.phase === 'decided' ? room.data.shared.generation : null;
   return {
     room,
@@ -544,6 +610,8 @@ export function useContinuousRoom(roomId: string) {
     confirmed,
     /** The room with this device's unconfirmed commands applied: screens read this. */
     display,
+    /** The title this device's Propose is on its way for: a proposal of it shows as pending until the answer. */
+    proposing,
     /** `display` as of now (not the last render): taps aim their own-choice guards at it. */
     view: () => {
       const now = cached();

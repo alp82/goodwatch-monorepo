@@ -38,6 +38,8 @@ export interface ProposalView {
   requiredCount: number;
   mine: boolean;
   agreed: boolean;
+  /** This device proposed this title and the server hasn't said yet whose proposal the room shows. */
+  pending: boolean;
 }
 
 export interface RoomView {
@@ -87,7 +89,8 @@ export function ideasLabel(active: readonly { text: string }[]) {
 const NONE: ReadonlySet<string> = new Set();
 
 /** `seenIdeas`: friend ideas the host already acknowledged on this device (opened the Room page or switched them). */
-export function roomView(snapshot: RoomSnapshot, seenIdeas: ReadonlySet<string> = NONE): RoomView {
+/** `proposing`: the title this device's Propose is on its way for (optimistic.ts proposingCandidate). */
+export function roomView(snapshot: RoomSnapshot, seenIdeas: ReadonlySet<string> = NONE, proposing: string | null = null): RoomView {
   const { shared, own } = snapshot;
   const all: RoomPerson[] = shared.participants.map((p) => ({
     id: p.participantId,
@@ -152,6 +155,7 @@ export function roomView(snapshot: RoomSnapshot, seenIdeas: ReadonlySet<string> 
       requiredCount: shared.proposal.requiredCount,
       mine: proposalOwn && own.agreement.isProposer,
       agreed: proposalOwn && own.agreement.agreed,
+      pending: !proposalOwn && proposing === shared.proposal.candidateId,
     } : null,
     decision: candidate(shared.decision?.candidateId),
   };

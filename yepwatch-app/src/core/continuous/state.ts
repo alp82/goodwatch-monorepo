@@ -48,6 +48,11 @@ export function latestRetainedVote(snapshot: RoomSnapshot) {
 }
 export interface QueueStorage {
   write: (envelope: CommandEnvelope | null, retryAt?: number) => Promise<void>;
+  /**
+   * The same save, done by the time it returns (throws when it can't save). With it, a command goes in
+   * the tap's own task: waiting for even an already-finished save lets the screen's render run first.
+   */
+  writeNow?: (envelope: CommandEnvelope) => void;
 }
 /** Persist before sending. Reload/reconnect can retry the identical command rather than guessing its outcome. */
 export class PersistentCommands {
@@ -74,7 +79,8 @@ export class PersistentCommands {
     this.busy = true;
     try {
       if (!this.pending) {
-        await this.storage.write(envelope);
+        if (this.storage.writeNow) this.storage.writeNow(envelope);
+        else await this.storage.write(envelope);
         this.pending = envelope;
       }
       const result = await submit(envelope);

@@ -184,7 +184,7 @@ function RoomProviderContent({ id, children, renderSheet }: { id: string; childr
   const saves = useSettingsSaves({ cmd, view: confirmedView, latest, blocked: disabled || state.retrySeconds > 0, failed: saveFailed });
   const display = state.display;
   const snapshot = useMemo(() => (display ? previewDrafts(display, saves.saving) : undefined), [display, saves.saving]);
-  const view = useMemo(() => (snapshot ? roomView(snapshot, seenIdeas) : null), [snapshot, seenIdeas]);
+  const view = useMemo(() => (snapshot ? roomView(snapshot, seenIdeas, state.proposing) : null), [snapshot, seenIdeas, state.proposing]);
 
   // One rule for every connection word (core/continuous/connection-words.ts): nothing for a short outage,
   // then one small line. A hidden page reads as background, so a quick return shows nothing.

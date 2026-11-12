@@ -2,7 +2,7 @@
  * Matches, the proposal and its agreement (direction D). Privacy: nobody sees who proposed or who
  * agreed; the proposal reads "Someone proposes" (or "Your proposal"), agreement dots and "2 of 3 agree".
  */
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, type ReactNode } from 'react';
 import { Image, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import type { Candidate } from '@goodwatch/yepwatch-contracts/proposal';
@@ -73,7 +73,30 @@ function Agreed({ pr, grow = true }: { pr: ProposalView; grow?: boolean }) {
   );
 }
 
-const proposalLabel = (pr: ProposalView) => (pr.mine ? 'Your proposal' : 'Someone proposes');
+/**
+ * While this device's Propose of this title awaits its answer: where "You proposed this" will be, the same
+ * size, so nothing moves when the answer makes it yours. Nothing claims it before then: a friend may have
+ * proposed the same title at the same moment.
+ */
+function Proposing({ grow = true }: { grow?: boolean }) {
+  const { z } = useLayout();
+  return (
+    <View accessibilityLiveRegion="polite" style={{ ...(grow ? { flexGrow: 1, flexShrink: 1, flexBasis: 0 } : null), minHeight: z(54), paddingHorizontal: 18, borderRadius: 12, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: warm.line }}>
+      <View style={{ width: 18, height: 18 }} />
+      {/* As wide as "You proposed this": a card beside it doesn't move when the answer comes. */}
+      <View>
+        <View aria-hidden accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ opacity: 0 }}><GText bold size={z(17)}>You proposed this</GText></View>
+        <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, alignItems: 'center', justifyContent: 'center' }}><GText bold size={z(17)} color={glow.muted} lines={1}>Proposing…</GText></View>
+      </View>
+    </View>
+  );
+}
+/** Keeps the space of the Take back link under "You proposed this" while the proposal is pending. */
+function TakeBackSpace({ children }: { children: ReactNode }) {
+  return <View aria-hidden accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ opacity: 0 }}>{children}</View>;
+}
+
+const proposalLabel = (pr: ProposalView) => (pr.mine ? 'Your proposal' : pr.pending ? 'Proposing' : 'Someone proposes');
 
 /** Shown to everyone in the round until it's decided or set aside on this device with Keep swiping. */
 export function Proposal() {
@@ -90,6 +113,7 @@ export function Proposal() {
   const agree = <Button label="Agree" icon={<Icon name="check" size={18} color={warm.ink} />} disabled={disabled} onPress={() => void cmd.agree(true)} />;
   const keepButton = <Button secondary label="Keep swiping" onPress={keep} />;
   const takeBack = <TextLink label="Take back" color={glow.muted} disabled={disabled} onPress={() => void cmd.agree(false)} />;
+  const under = pr.agreed ? takeBack : pr.pending ? <TakeBackSpace><TextLink label="Take back" color={glow.muted} disabled onPress={() => undefined} /></TakeBackSpace> : null;
   const titleSize = wide ? z(56) : 30;
   const info = (
     <View style={{ gap: z(14), alignItems: wide ? 'flex-start' : 'center' }}>
@@ -113,15 +137,15 @@ export function Proposal() {
           <View style={{ flex: 1, maxWidth: z(560), gap: z(32), paddingTop: z(12) }}>
             {info}
             <View style={{ width: Math.min(z(420), max - pw - z(64)), gap: 8 }}>
-              <Actions>{pr.agreed ? <Agreed pr={pr} /> : agree}{keepButton}</Actions>
-              {pr.agreed ? takeBack : null}
+              <Actions>{pr.agreed ? <Agreed pr={pr} /> : pr.pending ? <Proposing /> : agree}{keepButton}</Actions>
+              {under}
             </View>
           </View>
         </View>
       </Screen>
     );
   }
-  const main = pr.agreed ? <Agreed pr={pr} /> : agree;
+  const main = pr.agreed ? <Agreed pr={pr} /> : pr.pending ? <Proposing /> : agree;
   return (
     <Screen testID="proposal" back={toRooms} width="page" footer={pinned ? <Actions>{main}</Actions> : undefined}>
       <RoomNotes />
@@ -130,7 +154,7 @@ export function Proposal() {
         {info}
         {!pinned ? <Actions style={{ alignSelf: 'stretch' }}>{main}</Actions> : null}
         <Actions style={{ alignSelf: 'stretch' }}>{keepButton}</Actions>
-        {pr.agreed ? <View style={{ alignSelf: 'center' }}>{takeBack}</View> : null}
+        {under ? <View style={{ alignSelf: 'center' }}>{under}</View> : null}
       </View>
     </Screen>
   );
@@ -143,6 +167,8 @@ function ProposalCard({ pr }: { pr: ProposalView }) {
   const c = pr.candidate;
   const agree = pr.agreed
     ? <View style={{ gap: 4, alignItems: phone ? 'flex-start' : 'center' }}><Agreed pr={pr} grow={false} /><TextLink label="Take back" color={glow.muted} disabled={disabled} onPress={() => void cmd.agree(false)} /></View>
+    : pr.pending
+    ? <View style={{ gap: 4, alignItems: phone ? 'flex-start' : 'center' }}><Proposing grow={false} /><TakeBackSpace><TextLink label="Take back" color={glow.muted} disabled onPress={() => undefined} /></TakeBackSpace></View>
     : <Press label="Agree" disabled={disabled} onPress={() => void cmd.agree(true)} style={{ minHeight: z(48), paddingHorizontal: z(28), borderRadius: R.control, flexDirection: 'row', gap: 8, backgroundColor: glow.amber }}><Icon name="check" size={18} color={warm.ink} /><GText bold size={z(16)} color={warm.ink}>Agree</GText></Press>;
   return (
     <View testID="proposal-card" style={{ flexDirection: 'row', alignItems: 'center', gap: z(18), padding: z(14), borderRadius: R.card, backgroundColor: '#fbbf240d', borderWidth: 1, borderColor: '#fbbf2470' }}>

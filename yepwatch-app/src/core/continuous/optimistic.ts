@@ -63,6 +63,20 @@ export function previewCommand<T extends RoomSnapshot>(s: T, commandId: string, 
   }
 }
 
+/**
+ * The title this device is proposing while the server hasn't answered. The server decides whether it goes
+ * through and whose it is (a friend may propose the same title at the same moment): until its answer the
+ * screen shows a proposal of this title as pending, in the space the proposer's own would take.
+ */
+export function proposingCandidate(confirmed: RoomSnapshot, pending: CommandEnvelope | null, queued: readonly QueuedCommand[]): string | null {
+  if (pending?.command.type === 'propose') return pending.command.candidateId;
+  for (const entry of queued) {
+    const command = entry.build(confirmed);
+    if (command?.type === 'propose') return command.candidateId;
+  }
+  return null;
+}
+
 /** The confirmed room plus the command awaiting confirmation and everything queued behind it. */
 export function overlayRoom<T extends RoomSnapshot>(confirmed: T, pending: CommandEnvelope | null, queued: readonly QueuedCommand[]): T {
   const unconfirmed = pending ? previewCommand(confirmed, pending.commandId, pending.command) : confirmed;

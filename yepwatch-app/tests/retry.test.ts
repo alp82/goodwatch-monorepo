@@ -91,6 +91,9 @@ test('native SecureStore admission write failures propagate on every attempt, wi
     if(name==='expo-secure-store') return {WHEN_UNLOCKED_THIS_DEVICE_ONLY:'device',setItemAsync:async(key:string,value:string)=>{writes.push({key,value});if(!allow)throw new Error('Injected SecureStore failure');}};
     if(name==='expo-crypto') return {CryptoDigestAlgorithm:{SHA256:'SHA256'},digestStringAsync:async()=> 'stable-intent-hash'};
     if(name==='./recovery-state') return {};
+    // The command outbox's file store (command-file.ts), not under test here.
+    if(name==='expo') return {requireNativeModule:()=>({documentDirectory:'',FileSystemFile:class{}})};
+    if(name==='./command-file') return {createCommandFiles:()=>({})};
     throw new Error('Unexpected native storage dependency');
   }});
   const saved={intent:'',code:'',retryAt:0,request:{contractVersion:3,commandId:'same-id',admissionSecret:'isolated-test-bootstrap',nickname:'Guest'}};

@@ -3,9 +3,11 @@ import { secureAuthorizeUrl } from './member-state';
 import { continuousApi } from './api';
 import { rememberMemberReturn, clearMemberReturn, rememberMemberHint, readMemberHintName, rememberMemberHintName, forgetMemberHintName } from './web-member-return';
 import { memberTransition } from './member-transition';
+import { beginSignIn, settleSignIn } from './room-snapshot';
 
 /** Browsers keep the sealed session in an HttpOnly cookie: nothing to read or store here. */
 export async function readSession(): Promise<string | null> { return null; }
+export function peekSession(): string | null { return null; }
 export async function saveSession(_session: string) { /* The API sets the cookie. */ }
 export async function clearSession() { /* The API clears the cookie. */ }
 /** The name of this browser's last GoodWatch sign-in ('' without one), kept until Log out. */
@@ -23,6 +25,8 @@ export async function beginAccount(returnPath: string): Promise<AccountStatus | 
   const destination = secureAuthorizeUrl(result.authorizeUrl);
   rememberMemberReturn(returnPath);
   rememberMemberHint();
+  // The sign-in changes on the way back: no tab saves or paints a room until this page is back.
+  beginSignIn();
   await memberTransition.leave();
   await new Promise<void>((resolve, reject) => {
     const resumed = (event: PageTransitionEvent) => {
@@ -36,6 +40,7 @@ export async function beginAccount(returnPath: string): Promise<AccountStatus | 
     try { window.location.assign(destination); }
     catch (error) {
       window.removeEventListener('pageshow', resumed);
+      settleSignIn();
       clearMemberReturn();
       memberTransition.reset();
       reject(error);

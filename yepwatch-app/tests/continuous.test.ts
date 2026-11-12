@@ -104,6 +104,29 @@ test('persist before HTTP, recover the exact envelope after process reload, clea
   );
   assert.equal(calls, 2);
 });
+test('a synchronous store saves the whole command before the request leaves, in the tap\'s own task', async () => {
+  const snapshot = continuousFixture();
+  const command = { type: 'vote', generation: 1, candidateId: 'c1', expectedVoteRevision: 0, value: 'pass' } as const;
+  let stored: unknown = null;
+  let sentWith: unknown = undefined;
+  const queue = new PersistentCommands(() => 'sync-id', {
+    write: async (value) => { stored = value; },
+    writeNow: (value) => { stored = value; },
+  });
+  const done = queue.send(command, snapshot, async (body) => { sentWith = structuredClone(stored); return { snapshot }; });
+  // No await yet: the save and the request both happened synchronously, the save first.
+  assert.deepEqual(sentWith, { commandId: 'sync-id', sequence: snapshot.own.nextSequence, command });
+  await done;
+  assert.equal(stored, null);
+  // A save that fails sends nothing.
+  let sent = 0;
+  const failing = new PersistentCommands(() => 'id', {
+    write: async () => { throw new Error('storage unavailable'); },
+    writeNow: () => { throw new Error('storage unavailable'); },
+  });
+  await assert.rejects(failing.send(command, snapshot, async () => { sent++; return { snapshot }; }));
+  assert.equal(sent, 0);
+});
 test('exact public parser rejects choice, identity and real pointer leaks on snapshots and activity', () => {
   for (const malformed of [null, undefined, {}, 42]) assert.equal(parseFrame(malformed), null);
   const snapshot = continuousFixture().shared;

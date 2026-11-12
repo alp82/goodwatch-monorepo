@@ -177,8 +177,9 @@ export function Switch({ on, label, onPress, disabled = false }: { on: boolean; 
     // The track stays 48 × 28; the press area around it is the full 48 × 48 touch target.
     <Pressable accessibilityRole="switch" accessibilityLabel={label} accessibilityState={{ checked: on, disabled }} aria-checked={on} aria-disabled={disabled} disabled={disabled} onPress={onPress}
       style={{ ...grow(28, 48), justifyContent: 'center', opacity: disabled ? 0.45 : 1, cursor: disabled ? 'default' : 'pointer' } as ViewStyle}>
-      <View style={{ width: 48, height: 28, borderRadius: 14, padding: 3, backgroundColor: on ? glow.amber : '#ffffff26', alignItems: on ? 'flex-end' : 'flex-start' }}>
-        <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: on ? '#201400' : glow.soft }} />
+      {/* The knob moves by transform: a switch turned on from another phone moves nothing in the layout. */}
+      <View style={{ width: 48, height: 28, borderRadius: 14, padding: 3, backgroundColor: on ? glow.amber : '#ffffff26', alignItems: 'flex-start' }}>
+        <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: on ? '#201400' : glow.soft, transform: [{ translateX: on ? 20 : 0 }] }} />
       </View>
     </Pressable>
   );
