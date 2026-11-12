@@ -264,3 +264,21 @@ test("by default a deck starts building as soon as the room has everything, and 
 	assert.ok(f.service.decks.prepared(await r.stored()))
 	f.service.decks.forget(r.id)
 })
+
+test("service picks that leave the room's services as they were don't check the deck's offers again", async () => {
+	const f = fixture({ delayMs: 60_000 })
+	let refreshes = 0
+	const refresh = f.service["catalog"].refresh ?? (async (room: ProposalRoom) => room.candidates)
+	f.service["catalog"].refresh = async (room) => { refreshes++; return refresh(room) }
+	const r = await room(f)
+	await r.send({ type: "set_services", serviceIds: [1] })
+	assert.ok(refreshes > 0, "the room's services changed")
+	await r.start()
+	const friend = await r.join("Friend")
+	refreshes = 0
+	await friend({ type: "set_services", serviceIds: [1] })
+	assert.equal(refreshes, 0, "the room still watches on the same services")
+	await friend({ type: "set_services", serviceIds: [1, 2] })
+	assert.equal(refreshes, 1, "a new service can make more cards watchable")
+	f.service.decks.forget(r.id)
+})

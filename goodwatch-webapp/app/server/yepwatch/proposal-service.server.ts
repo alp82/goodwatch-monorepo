@@ -848,7 +848,8 @@ export class ProposalService {
 						(command.type === "configure" &&
 							command.country !== undefined &&
 							command.country !== old.room.screens[0]?.country) ||
-						command.type === "leave")
+						command.type === "leave") &&
+					watchScreensChanged(old.room, room)
 				)
 					room.candidates = await this.catalog.refresh(activeRoom(room))
 				retireIneligible(
@@ -1637,4 +1638,17 @@ export class ProposalService {
 			await this.notify(id)
 		}
 	}
+}
+
+/**
+ * Whether the screens the room watches on (country, services, who is on which) differ: a refresh reads nothing else.
+ * A friend picking services the room already has leaves them as they were, and checking every card's offers again
+ * (~1 s in production) would only hold up the command and the Start queued behind it.
+ */
+function watchScreensChanged(old: ProposalRoom, next: ProposalRoom) {
+	const screens = (room: ProposalRoom) => {
+		const active = activeRoom(room)
+		return JSON.stringify([active.screens, [...new Set(active.participants.map((p) => p.screenId))].sort()])
+	}
+	return screens(old) !== screens(next)
 }
