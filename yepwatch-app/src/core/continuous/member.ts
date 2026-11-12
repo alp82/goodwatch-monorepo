@@ -13,10 +13,28 @@ const sessionKey = 'yepwatch.v3.member-session';
 const nameKey = 'yepwatch.v3.member-name';
 const secure = { keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY };
 
-/** The sealed GoodWatch session of this device (the API seals it; the app only keeps it). */
-export function readSession() { return SecureStore.getItemAsync(sessionKey); }
-export function saveSession(session: string) { return SecureStore.setItemAsync(sessionKey, session, secure); }
-export function clearSession() { return SecureStore.deleteItemAsync(sessionKey); }
+/**
+ * The sealed GoodWatch session of this device (the API seals it; the app only keeps it). Every request
+ * sends it, so it's read from the keystore once and then kept in memory: a keystore read on Android
+ * takes tens of ms and queued in front of each vote's request.
+ */
+let session: Promise<string | null> | undefined;
+let known: { value: string | null } | undefined;
+export function readSession() {
+  if (!session) {
+    const read = SecureStore.getItemAsync(sessionKey);
+    session = read;
+    read.then((value) => { if (session === read) known = { value }; }, () => { if (session === read) session = undefined; });
+  }
+  return session;
+}
+/** The session when it has been read already; undefined until then. */
+export function peekSession() { return known?.value; }
+function keep(value: string | null) { session = Promise.resolve(value); known = { value }; }
+export function saveSession(value: string) { keep(value); return SecureStore.setItemAsync(sessionKey, value, secure); }
+export function clearSession() { keep(null); return SecureStore.deleteItemAsync(sessionKey); }
+/** The stored session was erased behind this module's back (erase-device): read it again next time. */
+export function forgetSessionCache() { session = undefined; known = undefined; }
 /** The name of this device's last GoodWatch sign-in ('' without one), kept until Log out: a lapsed session shows it. */
 export function readMemberName() { return SecureStore.getItemAsync(nameKey).catch(() => null); }
 export function rememberMemberName(name: string) { return SecureStore.setItemAsync(nameKey, name, secure).catch(() => undefined); }
