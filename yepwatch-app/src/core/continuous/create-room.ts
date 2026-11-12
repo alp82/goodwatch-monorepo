@@ -114,12 +114,15 @@ export class CreateRoom {
 
   /**
    * The saved server deadline: a wait up to CREATE_SERVER_WAIT_MAX_MS is waited out (it ends at once when
-   * `signal` aborts); a longer one is the person's manual gate.
+   * `signal` aborts), and the page hears the trouble as it begins (a resumed wait is the same outage, so its
+   * connection line comes after the quiet period as before the interruption); a longer one is the person's
+   * manual gate.
    */
-  private async cooldown(signal: AbortSignal) {
+  private async cooldown(signal: AbortSignal, onTrouble?: (since: number) => void) {
     const left = this.retryAt - Date.now();
     if (left <= 0) return;
     if (left > CREATE_SERVER_WAIT_MAX_MS) throw new Error('Wait before retrying this room request.');
+    onTrouble?.(Date.now());
     await abortableSleep(left, signal);
   }
 
@@ -135,8 +138,11 @@ export class CreateRoom {
       if (options.signal.aborted || !authEpoch.isCurrent(epoch)) throw new Error('Room setup was interrupted. Your request is kept.');
     };
     active();
+    // The page hears once per save when the trouble began (a saved wait, then a failed resend, is one outage).
+    let troubled = false;
+    const onTrouble = (since: number) => { if (!troubled) { troubled = true; options.onTrouble?.(since); } };
     // Created already: a command's server wait (the create's own wait is kept with its saved request below).
-    if (this.admitted) { await this.cooldown(options.signal); active(); }
+    if (this.admitted) { await this.cooldown(options.signal, onTrouble); active(); }
     if (!this.admitted) {
       let saved = this.request ?? await readAdmission('');
       if (saved?.code) throw new Error('Finish your saved join request before creating another room.');
@@ -152,7 +158,7 @@ export class CreateRoom {
       this.request = request;
       this.retryAt = request.retryAt;
       // A server wait saved before the app left the front or was closed: wait out what is left of it.
-      await this.cooldown(options.signal);
+      await this.cooldown(options.signal, onTrouble);
       try {
         await resendUntilAnswered(async () => {
           active();
@@ -173,7 +179,7 @@ export class CreateRoom {
             await writeAdmission('', request);
             this.admitted = await api.create(request.request, options.signal);
           }
-        }, { signal: options.signal, onTrouble: options.onTrouble, onServerWait: async (until) => {
+        }, { signal: options.signal, onTrouble, onServerWait: async (until) => {
           request = { ...request, retryAt: until };
           this.request = request;
           this.retryAt = until;
