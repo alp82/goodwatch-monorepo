@@ -11,7 +11,8 @@ interface Entry {
 
 // What a participant or the room carries that a catalog page never reads: commands, sessions, sockets, answers and
 // names change these all the time during setup, and must not make a prepared deck look out of date.
-const ROOM_NOISE = ["revision", "tickets", "stream", "agreement", "interpretationCount", "history", "memberIntents", "expiresAt", "inviteHash", "hostId", "proposal", "proposalVersion", "decision", "intent"] as const
+// The roster and context versions count changes, not what changed: who is in the room and its screens are inputs below.
+const ROOM_NOISE = ["revision", "tickets", "stream", "agreement", "interpretationCount", "history", "memberIntents", "expiresAt", "inviteHash", "hostId", "proposal", "proposalVersion", "decision", "intent", "rosterVersion", "contextVersion"] as const
 const PARTICIPANT_NOISE = ["nickname", "sessions", "receipts", "nextSequence", "epoch", "ready", "tokenHash", "admissionHash", "joinedAt", "archivedAt", "leftLabel", "pick", "agreementRevision", "approvedProposalVersion", "lastVotedId", "memberGrant"] as const
 
 /**
@@ -19,13 +20,21 @@ const PARTICIPANT_NOISE = ["nickname", "sessions", "receipts", "nextSequence", "
  * and services, who is in it with their member link and seen setting, ideas, the deck so far), as a digest. Two rooms
  * with the same digest get the same first page. It leaves out only what a page never reads (ROOM_NOISE,
  * PARTICIPANT_NOISE), so anything new on a room counts as an input until it's listed there.
+ *
+ * Guests count only by the screens they watch on: a page reads a participant's screen (whose country and services
+ * are the room's) and, for a linked member, their seen titles and saved progress. So a friend joining as a guest, or
+ * picking services the room already has, leaves the deck prepared before they came up to date. Their own service
+ * picks reach the page through the room's screen, which is an input.
  */
 export function deckInputs(room: ProposalRoom): string {
 	const active = activeRoom(room) as unknown as Record<string, unknown>
 	const shape: Record<string, unknown> = { ...active }
 	for (const key of ROOM_NOISE) delete shape[key]
-	shape.participants = room.participants
-		.filter((p) => p.leftAt == null)
+	const present = room.participants.filter((p) => p.leftAt == null)
+	// How many guests watch on a screen, or who they are, never changes a page: only which screens they watch on.
+	shape.guestScreens = [...new Set(present.filter(guest).map((p) => String(p.screenId)))].sort()
+	shape.participants = present
+		.filter((p) => !guest(p))
 		.map((p) => {
 			const q: Record<string, unknown> = { ...p }
 			for (const key of PARTICIPANT_NOISE) delete q[key]
@@ -36,6 +45,10 @@ export function deckInputs(room: ProposalRoom): string {
 	return createHash("sha256").update(stable(shape)).digest("base64url")
 }
 
+/** Nothing of theirs but their screen reaches a page: no member link, grant or account. */
+const guest = (p: ProposalRoom["participants"][number]) =>
+	p.member?.state !== "linked" && !p.memberUserId && !p.memberGrant
+
 const stable = (value: unknown): string =>
 	JSON.stringify(value, (_k, v) =>
 		v && typeof v === "object" && !Array.isArray(v)
@@ -44,7 +57,7 @@ const stable = (value: unknown): string =>
 	)
 
 export interface PreparedDecksOptions {
-	/** Quiet time after the last setup change before a deck is built. */
+	/** Quiet time after the last setup change before a deck is built (none by default: Start often follows at once). */
 	delayMs?: number
 	/** A prepared deck older than this is built again: offers and the title snapshot move on. */
 	maxAgeMs?: number
@@ -69,6 +82,8 @@ export class PreparedDecks {
 	private timers = new Map<string, ReturnType<typeof setTimeout>>()
 	private queue: string[] = []
 	private running = 0
+	/** Rooms with a background build running: a change meanwhile waits in the queue and builds once after it. */
+	private building = new Set<string>()
 	private catalog: ProposalCatalog
 	private read: (roomId: string) => Promise<ProposalRoom | null>
 	private delayMs: number
@@ -83,7 +98,7 @@ export class PreparedDecks {
 	) {
 		this.catalog = catalog
 		this.read = read
-		this.delayMs = options.delayMs ?? 250
+		this.delayMs = options.delayMs ?? 0
 		this.maxAgeMs = options.maxAgeMs ?? 10 * 60_000
 		this.concurrency = options.concurrency ?? 2
 		this.maxRooms = options.maxRooms ?? 500
@@ -142,13 +157,20 @@ export class PreparedDecks {
 		return page
 	}
 	private pump() {
-		while (this.running < this.concurrency && this.queue.length) {
-			const roomId = this.queue.shift()!
+		for (let i = 0; this.running < this.concurrency && i < this.queue.length; ) {
+			const roomId = this.queue[i]
+			if (this.building.has(roomId)) {
+				i++
+				continue
+			}
+			this.queue.splice(i, 1)
 			this.running++
+			this.building.add(roomId)
 			void this.prepare(roomId)
 				.catch(() => {})
 				.finally(() => {
 					this.running--
+					this.building.delete(roomId)
 					this.pump()
 				})
 		}
