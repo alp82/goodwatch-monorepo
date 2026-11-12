@@ -12,9 +12,6 @@ import { SearchCoordination } from "./coordination.server"
 
 export const DAILY_NANO = 1_000_000_000
 export const MONTHLY_NANO = 5_000_000_000
-// A paid call settles within seconds (the reading's deadline is 1.5 s). An estimate still without a settlement after
-// this long never gets one: expireStaleEstimates settles it.
-export const STALE_ESTIMATE_MS = 15 * 60_000
 export type BasicReason =
 	| "budget"
 	| "rate"
@@ -42,7 +39,6 @@ type Interpretation = {
 	created_at: number
 }
 type Reservation = { cache_key: string; budget_at: number; amount_nano: number; attribution?: SearchAttribution }
-type Estimate = Reservation & { attempt_id: string; price_version: string | null }
 
 let lastCoordinationWarning = -Infinity
 
@@ -334,41 +330,6 @@ export class SearchStore {
 		} finally {
 			await this.coordination.release(id, row.cache_key)
 		}
-	}
-	/**
-	 * Settles this month's estimates that never got a settlement row (the provider failed or timed out, the settlement
-	 * write failed, or the process died). Without one, an estimate counts at its full reservation against the daily and
-	 * monthly limits for the rest of the period. The 'expiry' row brings it to `cost(row)`, never above the estimate,
-	 * and uses the attempt's one settlement id: a settlement or reconciliation that exists wins (ON CONFLICT), and so
-	 * does the first of several processes. A reconciliation afterwards finds the attempt settled.
-	 */
-	async expireStaleEstimates(
-		cost: (row: { price_version: string | null; amount_nano: number }) => number,
-		limit = 500,
-	): Promise<number> {
-		// Attempts with a single row before the cutoff: the estimate alone. A settlement written since then makes the
-		// insert below a no-op.
-		const lone = await this.query<{ attempt_id: string }>(
-			`SELECT attempt_id FROM doc.search_spending WHERE budget_at >= date_trunc('month', CURRENT_TIMESTAMP) AND created_at < ? GROUP BY attempt_id HAVING count(*) = 1 LIMIT ${Math.max(1, Math.floor(limit))}`,
-			[Date.now() - STALE_ESTIMATE_MS],
-		)
-		if (!lone.length) return 0
-		const estimates = await this.query<Estimate>(
-			"SELECT attempt_id, cache_key, budget_at, amount_nano, price_version, attribution FROM doc.search_spending WHERE id = ANY(?) AND event = 'estimate'",
-			[lone.map(({ attempt_id }) => `${attempt_id}:estimate`)],
-		)
-		let expired = 0
-		for (const row of estimates) {
-			const reserved = Number(row.amount_nano)
-			const settled = Math.min(reserved, Math.max(0, Math.round(cost({ price_version: row.price_version, amount_nano: reserved }))))
-			if (!Number.isSafeInteger(settled)) continue
-			const result = await this.execute(
-				"INSERT INTO doc.search_spending (id, attempt_id, cache_key, event, budget_at, created_at, amount_nano, attribution) VALUES (?, ?, ?, 'expiry', ?, CURRENT_TIMESTAMP, ?, ?) ON CONFLICT DO NOTHING",
-				[`${row.attempt_id}:settled`, row.attempt_id, row.cache_key, row.budget_at, settled - reserved, row.attribution ?? null],
-			)
-			expired += result.rowcount === 1 ? 1 : 0
-		}
-		return expired
 	}
 	async reconcileUnknown(id: string, actualNano: number, evidence: string) {
 		if (!evidence.trim() || !Number.isSafeInteger(actualNano) || actualNano < 0)

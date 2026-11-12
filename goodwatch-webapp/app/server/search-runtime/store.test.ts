@@ -41,7 +41,7 @@ registerHooks({
 })
 const { SearchStore } = await import("./store.server.ts")
 const { SearchCoordination } = await import("./coordination.server.ts")
-const { executeJevStage, expiredCost, jevReserveNano, JEV_EXPIRED_NANO, JEV_INPUT_BOUND, JEV_MODEL, JEV_PRICE_VERSION, JEV_RESERVE_NANO } = await import("./runtime.server.ts")
+const { executeJevStage, JEV_RESERVE_NANO } = await import("./runtime.server.ts")
 
 function fixture(client: () => SearchRedis | null, attribution?: SearchAttribution, conflict = false) {
 	const statements: { stmt: string; args: unknown[] }[] = []
@@ -154,7 +154,7 @@ for (const stage of ["claim", "dispatch"] as const) {
 		})
 		assert.deepEqual(outcome, {
 			kind: "basic", reason: stage === "claim" ? "coordination" : "storage",
-			message: "Showing basic search results.", chargedNano: stage === "claim" ? 0 : jevReserveNano([{ state: {}, questions: {}, model: JEV_MODEL }, { state: {}, questions: {}, model: JEV_MODEL }]),
+			message: "Showing basic search results.", chargedNano: stage === "claim" ? 0 : JEV_RESERVE_NANO,
 		})
 		assert.equal(paid.mock.callCount(), 0)
 		// A failed claim reserves nothing. A lease lost after the claim keeps its estimate, which errs on the safe side.
@@ -381,81 +381,4 @@ test("guest navigation: a cached reading still serves, a miss is basic with no p
 		assert.ok(statements.every(stmt => stmt.startsWith("SELECT")), "no estimate is written")
 	}
 	assert.equal(paid.mock.callCount(), 0)
-})
-
-test("a reading reserves its requests' bytes plus the template allowance, at most the input bound per request", async (t) => {
-	t.mock.method(SearchCoordination.prototype, "release", async () => {})
-	const request = (bytes: number) => {
-		const shell = { state: { text: "" }, questions: {} }
-		return { ...shell, state: { text: "x".repeat(bytes - Buffer.byteLength(JSON.stringify(shell))) } }
-	}
-	// The typical production pair: 12,373 + 19,585 bytes (attribute, fingerprint) for "submarine standoff with a mutiny".
-	const typical = [request(12_373), request(19_585)]
-	assert.equal(jevReserveNano(typical), (12_373 + 1024 + 19_585 + 1024) * 42)
-	assert.equal(jevReserveNano(typical), 1_428_252)
-	assert.ok(jevReserveNano(typical) < JEV_RESERVE_NANO / 3.8)
-	// Never more than the old fixed reservation, the most a reading can cost.
-	assert.equal(jevReserveNano([request(100_000), request(100_000)]), 2 * JEV_INPUT_BOUND * 42)
-	assert.equal(jevReserveNano([request(100_000), request(100_000)]), JEV_RESERVE_NANO)
-	// The claim's estimate row carries it.
-	const originalKey = process.env.TYPESAFE_API_KEY
-	process.env.TYPESAFE_API_KEY = "test-key"
-	t.after(() => { if (originalKey === undefined) delete process.env.TYPESAFE_API_KEY; else process.env.TYPESAFE_API_KEY = originalKey })
-	t.mock.method(TypeSafeClient.prototype, "systemOne", async () => { throw new Error("provider down") })
-	t.mock.method(SearchCoordination.prototype, "dispatch", async () => {})
-	const { store, statements } = fixture(() => ({ get: async () => null, eval: async () => "ok" }) as unknown as SearchRedis)
-	const outcome = await executeJevStage(store, {
-		requestText: "quiet movies", questionVersion: "test", language: { mode: "english", version: "test" },
-		requests: typical as never, visitor: { accountId: null, networkIdentity: "test" },
-	})
-	// Sized as sent: the runtime pins the model on each request.
-	const sent = jevReserveNano(typical.map(request => ({ ...request, model: JEV_MODEL })))
-	assert.equal(sent, 1_430_016)
-	assert.deepEqual(outcome, { kind: "basic", reason: "provider", message: "Showing basic search results.", chargedNano: sent })
-	const estimate = statements.find(({ stmt }) => stmt.includes("'estimate'"))!
-	assert.equal(estimate.args[5], sent)
-})
-
-test("stale estimates without a settlement are settled at a bound, once, in their own budget period", async () => {
-	const statements: { stmt: string; args: unknown[] }[] = []
-	const taken = new Set(["b:settled"]) // b got its settlement after the lone read: the insert is a no-op.
-	const store = new SearchStore(async (stmt, args = []) => {
-		statements.push({ stmt, args })
-		if (stmt.includes("GROUP BY attempt_id"))
-			return { cols: ["attempt_id"], rows: [["a"], ["b"], ["c"]], rowcount: 3 }
-		if (stmt.includes("id = ANY(?)"))
-			return {
-				cols: ["attempt_id", "cache_key", "budget_at", "amount_nano", "price_version", "attribution"],
-				rows: [
-					["a", "ka", 100, JEV_RESERVE_NANO, JEV_PRICE_VERSION, attribution],
-					["b", "kb", 200, JEV_RESERVE_NANO, JEV_PRICE_VERSION, null],
-					["c", "kc", 300, 250_000, "openrouter-nano-2026-09-21-100-400-v1", null],
-				],
-				rowcount: 3,
-			}
-		if (stmt.includes("'expiry'")) {
-			const fresh = !taken.has(args[0] as string)
-			taken.add(args[0] as string)
-			return { cols: [], rows: [], rowcount: fresh ? 1 : 0 }
-		}
-		throw new Error(`Unexpected statement ${stmt}`)
-	}, new SearchCoordination(() => null), Buffer.alloc(32, 1))
-	const before = Date.now()
-	assert.equal(await store.expireStaleEstimates(expiredCost), 2)
-	const cutoff = statements[0].args[0] as number
-	assert.ok(cutoff >= before - 15 * 60_000 && cutoff <= Date.now() - 15 * 60_000, "only estimates older than 15 minutes")
-	assert.deepEqual(statements[1].args, [["a:estimate", "b:estimate", "c:estimate"]])
-	const expiry = statements.filter(({ stmt }) => stmt.includes("'expiry'")).map(({ args }) => args)
-	assert.deepEqual(expiry, [
-		// A Jev reading counts JEV_EXPIRED_NANO (430,080) instead of its 5,505,024 reservation.
-		["a:settled", "a", "ka", 100, JEV_EXPIRED_NANO - JEV_RESERVE_NANO, attribution],
-		["b:settled", "b", "kb", 200, JEV_EXPIRED_NANO - JEV_RESERVE_NANO, null],
-		// Another price (translation) keeps its own reservation: settled at zero adjustment.
-		["c:settled", "c", "kc", 300, 0, null],
-	])
-	assert.equal(JEV_EXPIRED_NANO, 430_080)
-	// The bound never raises an estimate.
-	assert.equal(expiredCost({ price_version: JEV_PRICE_VERSION, amount_nano: 90_048 }), 90_048)
-	// A second sweep finds every attempt settled.
-	assert.equal(await store.expireStaleEstimates(expiredCost), 0)
 })
