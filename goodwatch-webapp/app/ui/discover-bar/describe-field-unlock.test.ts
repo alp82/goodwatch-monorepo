@@ -5,7 +5,7 @@ import assert from "node:assert/strict"
 import { execFileSync } from "node:child_process"
 import test from "node:test"
 
-const run = (submit: "enter" | "button") =>
+const run = (submit: string) =>
 	JSON.parse(
 		execFileSync(
 			"node_modules/.bin/vite-node",
@@ -48,3 +48,46 @@ for (const [submit, label] of [
 			"an answer to an action is never asked again",
 		)
 	})
+
+for (const [scenario, how] of [
+	["programmatic", "form.requestSubmit() with no key press or click"],
+	["untrusted", "a script's Enter keydown, requestSubmit and button.click()"],
+	[
+		"stale",
+		"an Enter that submitted nothing, then a script's submit in a later task",
+	],
+] as const)
+	test(`${how} on a link's withheld search buys no reading`, () => {
+		const r = run(scenario)
+		assert.deepEqual(r.afterLoad, ["navigation"])
+		assert.deepEqual(
+			r.afterSubmit,
+			["navigation"],
+			"no request without the person's press",
+		)
+		assert.deepEqual(r.afterSecondSubmit, ["navigation"])
+	})
+
+test("an input method's composition: a pause mid-composition sends nothing; the confirming Enter is no submit; the committed words search after a pause", () => {
+	const r = run("composition")
+	assert.deepEqual(
+		r.afterComposingPause,
+		["navigation"],
+		"unfinished composition sends nothing",
+	)
+	assert.deepEqual(
+		r.afterCommit,
+		["navigation"],
+		"the confirming Enter sends nothing",
+	)
+	assert.deepEqual(r.afterCommitPause, ["navigation", "typing_pause"])
+})
+
+test("Safari's composition order: the 229 Enter after compositionend is no Enter", () => {
+	const r = run("composition-safari")
+	assert.deepEqual(r.afterComposingPause, ["navigation"])
+	assert.ok(
+		!(r.afterCommitPause as string[]).includes("enter"),
+		`labels: ${r.afterCommitPause}`,
+	)
+})

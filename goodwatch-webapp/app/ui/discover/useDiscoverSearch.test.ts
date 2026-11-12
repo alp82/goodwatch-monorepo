@@ -23,12 +23,16 @@ type Hook = ReturnType<typeof useDiscoverSearch>
 const productionClient = () => new QueryClient({ defaultOptions: { queries: { staleTime: 60 * 1000 } } })
 
 /** Mounts the hook; `fetch` answers each request with `answer()` and records the label it carried. */
-function mount(t: { after: (fn: () => void) => void }, answer: () => Response, client = new QueryClient()) {
+function mount(
+	t: { after: (fn: () => void) => void },
+	answer: (init: RequestInit) => Response | Promise<Response>,
+	client = new QueryClient(),
+) {
 	const triggers: string[] = []
 	const original = globalThis.fetch
 	globalThis.fetch = (async (_url: unknown, init: RequestInit) => {
 		triggers.push(JSON.parse(String(init.body)).attribution?.trigger ?? "none")
-		return answer()
+		return answer(init)
 	}) as typeof fetch
 	const container = document.createElement("div")
 	document.body.append(container)
@@ -152,4 +156,64 @@ test("hydration with the production client: a cached answer from a link stays ba
 	await render({ ...base, attribution: { surface: "discover", trigger: "navigation" } })
 	await remount({ ...base, attribution: { surface: "discover", trigger: "unknown" } })
 	assert.deepEqual(triggers, ["navigation"], "an unknown label is no action")
+})
+
+test("the unlock is the cached answer's: A, Enter on A, B, A expires, a fresh withheld A by navigation, Enter on A reads once", async (t) => {
+	const client = productionClient()
+	const { triggers, render, hook } = mount(t, withheld, client)
+	const a = { ...base, q: "heist movies" }
+	const b = { ...base, q: "space operas" }
+	await render({ ...a, attribution: { surface: "discover", trigger: "navigation" } })
+	await render({ ...a, attribution: { surface: "discover", trigger: "enter" } })
+	await render({ ...b, attribution: { surface: "discover", trigger: "navigation" } })
+	assert.deepEqual(triggers, ["navigation", "enter", "navigation"])
+	// A's answer leaves the cache: its garbage collection time passed.
+	client.removeQueries({ predicate: (query) => String(query.queryKey[1]).includes("heist movies") })
+	await render({ ...a, attribution: { surface: "discover", trigger: "navigation" } })
+	assert.deepEqual(triggers, ["navigation", "enter", "navigation", "navigation"], "the fresh answer is asked by navigation")
+	assert.equal(hook().current?.readingWithheld, true)
+	await render({ ...a, attribution: { surface: "discover", trigger: "enter" } })
+	assert.deepEqual(triggers, ["navigation", "enter", "navigation", "navigation", "enter"], "Enter on the fresh answer reads")
+	await render({ ...a, attribution: { surface: "discover", trigger: "enter" } })
+	assert.equal(triggers.length, 5, "once per answer")
+	assert.equal(hook().error, null)
+})
+
+test("a canceled unlock: Enter on A, B before it answers, back to A by navigation reads nothing, Enter on A reads again", async (t) => {
+	// The action's request never answers until it is canceled; every other request answers withheld.
+	const answer = (init: RequestInit) => {
+		const trigger = JSON.parse(String(init.body)).attribution?.trigger
+		if (trigger !== "enter" || hanging++ > 0) return withheld()
+		return new Promise<Response>((_resolve, reject) =>
+			init.signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError"))),
+		)
+	}
+	let hanging = 0
+	const { triggers, render, hook } = mount(t, answer, productionClient())
+	const a = { ...base, q: "heist movies" }
+	const b = { ...base, q: "space operas" }
+	await render({ ...a, attribution: { surface: "discover", trigger: "navigation" } })
+	await render({ ...a, attribution: { surface: "discover", trigger: "enter" } })
+	assert.deepEqual(triggers, ["navigation", "enter"])
+	assert.equal(hook().loading, true)
+	await render({ ...b, attribution: { surface: "discover", trigger: "navigation" } })
+	await render({ ...a, attribution: { surface: "discover", trigger: "navigation" } })
+	assert.deepEqual(triggers, ["navigation", "enter", "navigation"], "the cached withheld A, by navigation: no request")
+	assert.equal(hook().current?.readingWithheld, true)
+	await render({ ...a, attribution: { surface: "discover", trigger: "enter" } })
+	assert.deepEqual(triggers, ["navigation", "enter", "navigation", "enter"], "the person's Enter reads")
+	await render({ ...a, attribution: { surface: "discover", trigger: "enter" } })
+	assert.equal(triggers.length, 4, "once per answer")
+	assert.equal(hook().error, null)
+})
+
+test("an unlock that fails keeps the withheld answer and asks nothing again by itself", async (t) => {
+	const answer = (init: RequestInit) =>
+		JSON.parse(String(init.body)).attribution?.trigger === "enter" ? Promise.reject(new TypeError("offline")) : withheld()
+	const { triggers, render, hook } = mount(t, answer, productionClient())
+	await render({ ...base, attribution: { surface: "discover", trigger: "navigation" } })
+	await render({ ...base, attribution: { surface: "discover", trigger: "enter" } })
+	await render({ ...base, attribution: { surface: "discover", trigger: "enter" } })
+	assert.deepEqual(triggers, ["navigation", "enter"], "no request loop on a failed unlock")
+	assert.equal(hook().current?.readingWithheld, true)
 })

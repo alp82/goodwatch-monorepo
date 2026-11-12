@@ -2,7 +2,8 @@
 // as "navigation" and the answer comes back without a reading. Enter or the Search button on the same words is the
 // person's action; it must reach the search with its label so the reading runs, once. A typing pause on the same
 // words sends nothing. The wiring is DiscoverPage's: the words and the label go into the URL's history state
-// (searchNavigationState), the label is read back with navigationSearchOrigin. SUBMIT picks "enter" or "button".
+// (searchNavigationState), the label is read back with navigationSearchOrigin. SUBMIT picks the scenario: "enter", "button", a script's submit ("programmatic", "untrusted", "stale"), or an input
+// method's composition ("composition", "composition-safari").
 // Prints the labels the requests carried.
 import { Window } from "happy-dom"
 
@@ -171,28 +172,88 @@ await typeText("heist movies")
 await settle(700)
 results.afterSamePause = [...triggers]
 
+// What the browser sends for the person's own key presses and clicks; happy-dom's events are untrusted.
+const trusted = <T extends object>(
+	event: T,
+	extra: Record<string, unknown> = {},
+) => {
+	for (const [key, value] of Object.entries({ isTrusted: true, ...extra }))
+		Object.defineProperty(event, key, { value })
+	return event as unknown as Event
+}
+const keydown = (init: Record<string, unknown> = {}, isTrusted = true) => {
+	const event = new window.KeyboardEvent("keydown", {
+		key: "Enter",
+		bubbles: true,
+	})
+	return isTrusted ? trusted(event, init) : (event as unknown as Event)
+}
+const compose = (type: "compositionstart" | "compositionend") =>
+	input.dispatchEvent(
+		new window.Event(type, { bubbles: true }) as unknown as Event,
+	)
+
+const scenario = process.env.SUBMIT ?? "enter"
 const submit = async () => {
 	await act(async () => {
-		if (process.env.SUBMIT === "button") button.click()
-		else {
-			input.dispatchEvent(
-				new window.KeyboardEvent("keydown", {
-					key: "Enter",
-					bubbles: true,
-				}) as unknown as Event,
+		if (scenario === "button")
+			button.dispatchEvent(
+				trusted(new window.MouseEvent("click", { bubbles: true })),
 			)
-			// Enter in a field submits through the form's default button (implicit submission).
+		else if (scenario === "enter") {
+			input.dispatchEvent(keydown())
+			// Enter in a field submits through a click on the form's default button (implicit submission).
+			button.dispatchEvent(
+				trusted(new window.MouseEvent("click", { bubbles: true })),
+			)
+		} else if (scenario === "programmatic") form.requestSubmit()
+		else if (scenario === "untrusted") {
+			// A script's own key press and click: no person did these.
+			input.dispatchEvent(keydown({}, false))
+			form.requestSubmit(button)
+			button.click()
+		} else if (scenario === "stale") {
+			// The person's Enter that submitted nothing, then a script's submit in a later task.
+			input.dispatchEvent(keydown())
+			await new Promise((resolve) => setTimeout(resolve, 0))
 			form.requestSubmit(button)
 		}
 	})
 	await settle()
 }
-await submit()
-results.afterSubmit = [...triggers]
-results.withheldAfterSubmit = withheld
-// The action's answer came back withheld again: a second submit is the same action, nothing reads again.
-await submit()
-results.afterSecondSubmit = [...triggers]
+if (scenario.startsWith("composition")) {
+	// An input method composes new words; a pause in the middle sends nothing.
+	await act(async () => compose("compositionstart"))
+	await typeText("とうきょう")
+	await settle(700)
+	results.afterComposingPause = [...triggers]
+	if (scenario === "composition") {
+		// Chrome: the confirming Enter comes while composing, then the committed text and compositionend.
+		await act(async () => {
+			input.dispatchEvent(keydown({ isComposing: true, keyCode: 229 }))
+		})
+		await typeText("東京")
+		await act(async () => compose("compositionend"))
+	} else {
+		// Safari: compositionend first, then the confirming Enter as key code 229; a submit after it is no Enter.
+		await typeText("東京")
+		await act(async () => compose("compositionend"))
+		await act(async () => {
+			input.dispatchEvent(keydown({ keyCode: 229 }))
+			form.requestSubmit(button)
+		})
+	}
+	results.afterCommit = [...triggers]
+	await settle(700)
+	results.afterCommitPause = [...triggers]
+} else {
+	await submit()
+	results.afterSubmit = [...triggers]
+	results.withheldAfterSubmit = withheld
+	// The action's answer came back withheld again: a second submit is the same action, nothing reads again.
+	await submit()
+	results.afterSecondSubmit = [...triggers]
+}
 
 await act(async () => root.unmount())
 process.stdout.write(`__DESCRIBE_UNLOCK__${JSON.stringify(results)}`)

@@ -88,7 +88,19 @@ export function DescribeField({
 	// What this field last sent: its answer coming back must not overwrite what is being typed.
 	const sent = useRef(typed)
 	const timer = useRef<ReturnType<typeof setTimeout>>()
-	const enter = useRef(false)
+	// The person's own Enter or Search button press, for the submit it sets off in the same task: a submit without one
+	// (form.requestSubmit from a script, an extension, an untrusted event) is no action and buys no reading.
+	const pressed = useRef<"enter" | "search_button" | null>(null)
+	const press = (how: "enter" | "search_button") => {
+		// Enter submits through a click on the Search button (implicit submission): the key it came from stays the label.
+		if (pressed.current) return
+		pressed.current = how
+		setTimeout(() => {
+			pressed.current = null
+		}, 0)
+	}
+	// An input method is composing: its unfinished text is not the person's words yet, so no typing pause runs.
+	const composing = useRef(false)
 	useEffect(() => {
 		if (typed === sent.current) return
 		clearTimeout(timer.current)
@@ -107,11 +119,16 @@ export function DescribeField({
 	const filled = text.trim().length > 0
 	const label = flatBottom && filled
 	// A typing pause on the words already sent sends nothing. Enter and the Search button always send: on the words a
-	// link brought, they are the person's action that lets a withheld reading run (useDiscoverSearch).
+	// link brought, they are the person's action that lets a withheld reading run (useDiscoverSearch). A submit no
+	// press set off is labeled navigation and, on the same words, sends nothing.
 	const send = (value: string, trigger: SearchTrigger) => {
 		clearTimeout(timer.current)
 		const same = value === sent.current
-		if (same && (trigger === "typing_pause" || !value)) return onUnsent?.(null)
+		if (
+			same &&
+			(trigger === "typing_pause" || trigger === "navigation" || !value)
+		)
+			return onUnsent?.(null)
 		sent.current = value
 		// The page keeps the search pending until the URL has these words; the URL already has the same words.
 		onUnsent?.(same ? null : value || null)
@@ -121,11 +138,17 @@ export function DescribeField({
 	const type = (value: string) => {
 		setText(value)
 		clearTimeout(timer.current)
+		if (composing.current) return onUnsent?.(null)
 		const words = value.trim()
 		if (!words) return send("", "typing_pause")
-		onUnsent?.(words.length >= MIN_CHARS && words !== sent.current ? words : null)
+		onUnsent?.(
+			words.length >= MIN_CHARS && words !== sent.current ? words : null,
+		)
 		if (words.length >= MIN_CHARS)
-			timer.current = setTimeout(() => send(words, "typing_pause"), TYPING_PAUSE_MS)
+			timer.current = setTimeout(
+				() => send(words, "typing_pause"),
+				TYPING_PAUSE_MS,
+			)
 	}
 	const run = (value: string) => {
 		setText(value)
@@ -136,9 +159,8 @@ export function DescribeField({
 			role="search"
 			onSubmit={(event) => {
 				event.preventDefault()
-				// Enter in the field submits through the Search button too (implicit submission), so the key marks it.
-				const trigger = enter.current ? "enter" : "search_button"
-				enter.current = false
+				const trigger = pressed.current ?? "navigation"
+				pressed.current = null
 				send(text.trim(), trigger)
 			}}
 			className={`relative flex items-stretch bg-white/[0.045] pl-4 ring-1 ring-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,.05)] transition focus-within:bg-white/[0.07] focus-within:ring-2 focus-within:ring-amber-400/60 lg:pl-8 ${
@@ -166,7 +188,25 @@ export function DescribeField({
 					placeholder={PLACEHOLDER}
 					onChange={(event) => type(event.target.value)}
 					onKeyDown={(event) => {
-						enter.current = event.key === "Enter" && !event.nativeEvent.isComposing
+						// The Enter that confirms a composition is no search (Safari sends it after compositionend, as 229).
+						if (
+							event.key === "Enter" &&
+							event.nativeEvent.isTrusted &&
+							!event.nativeEvent.isComposing &&
+							event.nativeEvent.keyCode !== 229 &&
+							!composing.current
+						)
+							press("enter")
+					}}
+					onCompositionStart={() => {
+						composing.current = true
+						clearTimeout(timer.current)
+						onUnsent?.(null)
+					}}
+					onCompositionEnd={(event) => {
+						composing.current = false
+						// The committed text: the typing pause starts from here.
+						type(event.currentTarget.value)
 					}}
 					className={`brand-header w-full min-w-0 border-0 bg-transparent p-0 pr-10 text-[20px] leading-tight text-white transition-transform duration-200 outline-none placeholder:text-[18px] placeholder:text-gray-500 focus:ring-0 lg:text-[25px] lg:placeholder:text-[25px] [&::-webkit-search-cancel-button]:hidden ${label ? "translate-y-2" : filled ? "translate-y-0" : "-translate-y-[13px]"} ${PRIVATE}`}
 				/>
@@ -204,6 +244,9 @@ export function DescribeField({
 				<button
 					type="submit"
 					aria-label="Search"
+					onClick={(event) => {
+						if (event.nativeEvent.isTrusted) press("search_button")
+					}}
 					className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-amber-400 font-bold text-gray-950 outline-none hover:bg-amber-300 focus-visible:ring-2 focus-visible:ring-white lg:h-auto lg:w-auto lg:px-6 lg:py-3.5"
 				>
 					<ArrowRightIcon className="h-5 w-5 lg:hidden" aria-hidden />
