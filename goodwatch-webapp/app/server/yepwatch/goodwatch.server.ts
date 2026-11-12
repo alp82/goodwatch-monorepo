@@ -6,10 +6,21 @@ import type { CatalogPort } from './types.ts'
 import { RoomError } from './errors.ts'
 import { requireCatalogSnapshot } from './catalog-startup.ts'
 import { rankedKeysCache, rankInSlices } from './ranked-keys-cache.ts'
+import { readEvery } from './read-cache.ts'
+// The service and country lists change with the daily catalog ingest, not between one command and the next.
+const CATALOG_LISTS_TTL_MS = 10 * 60_000
+const serviceNameRows = readEvery(CATALOG_LISTS_TTL_MS, async () => {
+  const { searchQuery } = await import('../combined-search/catalog.server')
+  return searchQuery<{ tmdb_id: number; name: string; logo_path: string | null }>('SELECT DISTINCT tmdb_id,name,logo_path FROM streaming_service ORDER BY name,tmdb_id')
+})
+const providerRows = readEvery(CATALOG_LISTS_TTL_MS, async () => {
+  const { searchQuery } = await import('../combined-search/catalog.server')
+  return searchQuery<ProviderCatalogRow>('SELECT DISTINCT tmdb_id,name,logo_path,order_by_country,order_default FROM streaming_service')
+})
+const countryList = readEvery(CATALOG_LISTS_TTL_MS, async () => (await import('../countries.server')).getCountries({}))
 /** Read-only adapters. Existing methods retain catalog/filter/evidence/link semantics. */
 async function serviceCatalog() {
-  const { searchQuery } = await import('../combined-search/catalog.server')
-  const rows = await searchQuery<{ tmdb_id: number; name: string; logo_path: string | null }>('SELECT DISTINCT tmdb_id,name,logo_path FROM streaming_service ORDER BY name,tmdb_id')
+  const rows = await serviceNameRows()
   // Full source choices, without the web UI’s ignored-provider list or country-dependent shortlist.
   return [...new Map(rows.map(s => [s.tmdb_id, { id: s.tmdb_id, name: s.name, logoUrl: s.logo_path ? `https://image.tmdb.org/t/p/w92${s.logo_path}` : null }])).values()]
 }
@@ -98,10 +109,8 @@ export const goodwatchReads: CatalogReads = {
 const deck = createDeckAdapter(goodwatchReads)
 export const goodwatchCatalog: CatalogPort = {
   async metadata(country) {
-    const [{ getCountries }, { MOODS }, { searchQuery }] = await Promise.all([import('../countries.server'), import('../../domain/moods'), import('../combined-search/catalog.server')])
-    const [countries, rows] = await Promise.all([getCountries({}), country
-      ? searchQuery<ProviderCatalogRow>('SELECT DISTINCT tmdb_id,name,logo_path,order_by_country,order_default FROM streaming_service')
-      : Promise.resolve([])])
+    const { MOODS } = await import('../../domain/moods')
+    const [countries, rows] = await Promise.all([countryList(), country ? providerRows() : Promise.resolve([])])
     return { countries, ...providerCatalog(rows, country), moods: MOODS.map(m => ({ id: m.key, label: m.name })) }
   },
   async searchShows(query) {
