@@ -894,15 +894,21 @@ export class ProposalService {
 			) {
 				const room = structuredClone(activeRoom(old.room))
 				if (envelope.command.type === "refill") retire(room)
+				const wantsPage = room.candidates.length < L.active && room.seenKeys.length < L.seen
+				// Seen lists are read again at Start: a deck prepared earlier never shows what a member has since seen.
+				// Fresh: a background build may have filled the seen cache before a title was marked Seen. Read
+				// alongside the deck, not after it: each is a round trip (GoodWatch, the catalog) on Start's path.
+				const seenRead = wantsPage && envelope.command.type === "start" && this.catalog.excludedKeys
+					? this.catalog.excludedKeys(room, { fresh: true })
+					: null
+				seenRead?.catch(() => {}) // Awaited below; a failed deck must not leave it unhandled.
 				// Usually prepared during setup; a Start retried after losing its compare-and-swap reuses the same build.
-				if (room.candidates.length < L.active && room.seenKeys.length < L.seen)
+				if (wantsPage)
 					page = await this.decks.page(room, {
 						seenReadFresh: envelope.command.type === "start" && Boolean(this.catalog.excludedKeys),
 					})
-				// Seen lists are read again at Start: a deck prepared earlier never shows what a member has since seen.
-				if (page && envelope.command.type === "start" && this.catalog.excludedKeys) {
-					// Fresh: a background build may have filled the seen cache before a title was marked Seen.
-					const excluded = new Set(await this.catalog.excludedKeys(room, { fresh: true }))
+				if (page && seenRead) {
+					const excluded = new Set(await seenRead)
 					const unseen = (p: NonNullable<typeof page>) =>
 						excluded.size ? { ...p, candidates: p.candidates.filter((c) => !excluded.has(titleKey(c))) } : p
 					page = unseen(page)

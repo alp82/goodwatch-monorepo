@@ -521,3 +521,32 @@ test("a reused deck left short by the member's seen titles still starts at once"
 	await f.service.decks.idle()
 	f.service.decks.forget(r.id)
 })
+
+test("Start reads the members' seen titles alongside the deck, not after it", async () => {
+	// Production smoke 2026-11-12: Start awaited the deck, then read the member's seen list from GoodWatch, so a
+	// member room's Start paid both round trips one after the other (Start POST ~150-280 ms slower than guest-only).
+	const keys = await guestKeys()
+	const f = fixture({ excluded: [keys[0]] })
+	const state = memberAwareCatalog(f)
+	const r = await room(f)
+	await r.send({ type: "set_services", serviceIds: [1] })
+	await r.join("Member")
+	await linkLatest(f, r)
+	await f.service.decks.idle()
+	f.service.decks.forget(r.id) // No prepared deck: Start builds one, and the build is held.
+	let release = () => {}
+	state.hold = new Promise<void>((resolve) => { release = resolve })
+	const reads = f.exclusionReads.length
+	const start = r.start()
+	for (let i = 0; i < 200 && !state.running; i++) await new Promise((resolve) => setTimeout(resolve, 5))
+	assert.equal(state.running, 1, "Start's deck build is running")
+	for (let i = 0; i < 20 && f.exclusionReads.length === reads; i++) await new Promise((resolve) => setTimeout(resolve, 5))
+	const freshWhileBuilding = f.exclusionReads.slice(reads).some((read) => read?.fresh)
+	release()
+	const started = await start
+	assert.ok(freshWhileBuilding, "the fresh seen read started while the deck was still building")
+	assert.equal(started.snapshot.shared.phase, "choosing")
+	assert.ok(!started.snapshot.shared.candidates.some((c) => keyOf(c) === keys[0]), "the member's seen title is left out")
+	await f.service.decks.idle()
+	f.service.decks.forget(r.id)
+})

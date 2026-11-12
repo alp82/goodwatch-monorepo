@@ -47,7 +47,8 @@ export interface MemberIssuer {
 	refresh?(input: { refreshToken: string }): Promise<MemberTokens>
 }
 export interface MemberReads {
- seen?(userId: string, accessToken?: string): Promise<string[]>
+	/** Refuses (throws) when the token doesn't belong to `userId`: ContinuousMembers.seen checks the grant with this read alone. */
+	seen?(userId: string, accessToken?: string): Promise<string[]>
 	prefill(userId: string, accessToken?: string): Promise<MemberPrefill>
 	progress?(userId: string, accessToken?: string): Promise<MemberProgressResponse>
 }
@@ -754,8 +755,16 @@ export class ContinuousMembers {
       const key = `${room.id}:${participantId}`
       const cached = this.seenCache.get(key)
       if (!options.fresh && cached?.roster === room.rosterVersion) return cached.keys
-      const userId = await this.identity(room, participantId)
-      const keys = await this.reads.seen(userId, actor(room, participantId).memberGrant!.accessToken)
+      const p = actor(room, participantId)
+      requireRoom(
+        p.memberGrant && p.memberGrant.expiresAt > this.now() && p.memberUserId,
+        "member_required",
+        "Sign in with GoodWatch again",
+        403,
+      )
+      // No separate identity check first: the read proves the grant itself (MemberReads.seen), and a second
+      // round trip to GoodWatch sat on Start's path, which reads seen titles fresh.
+      const keys = await this.reads.seen(p.memberUserId, p.memberGrant.accessToken)
       this.seenCache.set(key, {roster:room.rosterVersion,keys})
       if (this.seenCache.size > 512) this.seenCache.delete(this.seenCache.keys().next().value!)
       return keys

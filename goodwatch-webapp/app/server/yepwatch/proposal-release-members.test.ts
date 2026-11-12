@@ -85,8 +85,10 @@ test("remote GoodWatch signup/login completion retains guest actor, votes and pr
         token_type: "Bearer",
       });
     }
+    views.push(new URL(request.url).searchParams.get("view") ?? "");
     return resource(request);
   };
+  const views: string[] = [];
   const members = releaseMembers(repo, config, transport, "test-remote-members-secret-at-least32");
   const start = await members.start(id, participantId, {
     roomId: id,
@@ -138,6 +140,15 @@ test("remote GoodWatch signup/login completion retains guest actor, votes and pr
   assert.deepEqual(await members.seen(joined,participantId,{fresh:true}),["movie_1","show_2","movie_3"]);
   assert.equal(seenReads,seenBefore+3,"a fresh read asks the account again");
   assert.deepEqual(await members.seen(joined,participantId),["movie_1","show_2","movie_3"],"and refreshes the cache");
+  // Start reads seen lists fresh on its path (production smoke 2026-11-12: an identity check, then the list, made
+  // two GoodWatch round trips, 100-400 ms). The list read proves the grant itself: one request.
+  views.length=0;
+  await members.seen(joined,participantId,{fresh:true});
+  assert.deepEqual(views,["seen"],"a fresh seen read is one GoodWatch request");
+  // And it still refuses a grant that now answers for another account.
+  linkedUser="other-account";
+  await assert.rejects(members.seen(joined,participantId,{fresh:true}),(e:any)=>e.code==="unauthorized");
+  linkedUser="new-account";
   // A room linked by the previous release repairs itself on its ordinary authenticated read.
   const old = (await repo.read(id))!;
   const legacy = structuredClone(old.room); legacy.participants[0].nickname = "";
