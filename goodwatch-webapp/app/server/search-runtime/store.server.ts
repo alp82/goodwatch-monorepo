@@ -1,4 +1,4 @@
-import { attributedSearch, type SearchAttribution } from "../../domain/search-attribution.ts"
+import { attributedSearch, paidReadingAllowed, type SearchAttribution } from "../../domain/search-attribution.ts"
 import {
 	createCipheriv,
 	createDecipheriv,
@@ -25,6 +25,9 @@ export type BasicReason =
 	| "cancelled"
 	| "provider"
 	| "contract"
+	// A guest's web search without an action label (it arrived in the URL, or its label is missing or invalid): no paid
+	// reading (paidReadingAllowed). The page shows the basic results and reads again once the person acts.
+	| "navigation"
 export type Claim =
 	| { kind: "claimed"; id: string }
 	| { kind: "cached"; ciphertext: string }
@@ -171,6 +174,8 @@ export class SearchStore {
 			return { kind: "basic", reason: "budget" }
 		const scopes = await timed("claimScopes", () => scopesReady)
 		const attribution = (typeof input.attribution === "function" ? await input.attribution() : input.attribution) ?? { ...attributedSearch(undefined, null), actor_kind: "unknown" as const }
+		// Every paid call (reading or translation) is claimed here, after its cache lookup: a cached reading still serves.
+		if (!paidReadingAllowed(attribution)) return { kind: "basic", reason: "navigation" }
 		if (!scopes.length) return { kind: "basic", reason: "configuration" }
 		const id = randomUUID()
 		let admitted

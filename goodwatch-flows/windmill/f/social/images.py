@@ -200,7 +200,10 @@ def save(db, posts):
                       base64.b64encode(data).decode() if data else None, now().isoformat(), status, old.get('attempts', 0) + 1]
             db.execute(f"INSERT INTO doc.social_image ({','.join(cols)}) VALUES ({','.join('?' for _ in cols)}) ON CONFLICT (post_id) DO UPDATE SET " + ','.join(f'{c}=excluded.{c}' for c in cols[1:]), values)
             # A deletion during the fetch must not leave a newly stored copy behind.
-            db.execute('DELETE FROM doc.social_image WHERE post_id=? AND post_id NOT IN (SELECT post_id FROM doc.social_post WHERE deleted_at IS NULL)', [post['post_id']])
+            # Read only this post by primary key; a NOT IN subquery collects every live post id.
+            live = db.select('SELECT deleted_at FROM doc.social_post WHERE post_id=?', [post['post_id']])
+            if not live or live[0].get('deleted_at') is not None:
+                db.execute('DELETE FROM doc.social_image WHERE post_id=?', [post['post_id']])
         except Exception as exc:
             print('Social image skipped:', type(exc).__name__)
 

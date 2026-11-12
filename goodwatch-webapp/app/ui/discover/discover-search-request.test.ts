@@ -13,7 +13,7 @@ import {
 	stubFetch,
 } from "../search/search-test-answers.ts"
 
-const { runDiscoverSearch } = await import("./discover-search-request.ts")
+const { readsAgainOnAction, runDiscoverSearch } = await import("./discover-search-request.ts")
 
 const BUSY = "Search is busy right now. Try again in a moment."
 const UNAVAILABLE = "Search is unavailable right now. Try again in a moment."
@@ -130,4 +130,22 @@ test("Discover keeps every candidate and the shared snapshot token, not only the
 	const answer = await runDiscoverSearch("fixture", {}, false, new AbortController().signal, () => {})
 	assert.deepEqual(answer.ranked, keys)
 	assert.equal(answer.searchSet, "ab".repeat(16))
+})
+
+test("a guest's search answered without a reading reads again once acted on, never after an action", async (t) => {
+	for (const [reason, withheld] of [["navigation", true], ["budget", false], [undefined, false]] as const) {
+		stubFetch(t, () => streamAnswer({ kind: "batch", batch: { rows: [{ key: "movie:603" }], reading: [], errors: [], ...(reason ? { readingUnavailable: reason } : {}) } }))
+		const answer = await discover()
+		assert.equal(Boolean(answer.readingWithheld), withheld)
+		for (const askedAs of ["navigation", "unknown"] as const) {
+			// Still no action: the basic results stay. An action on the same words asks again.
+			assert.equal(readsAgainOnAction(answer, askedAs, "navigation"), false)
+			assert.equal(readsAgainOnAction(answer, askedAs, "unknown"), false)
+			for (const trigger of ["enter", "search_button", "typing_pause", "link", "filter_change", "retry"] as const)
+				assert.equal(readsAgainOnAction(answer, askedAs, trigger), withheld)
+		}
+		// An answer to an action is kept, whatever it says: no loop.
+		assert.equal(readsAgainOnAction(answer, "enter", "enter"), false)
+		assert.equal(readsAgainOnAction(answer, undefined, "enter"), false)
+	}
 })

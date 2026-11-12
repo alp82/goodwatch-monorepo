@@ -1,4 +1,7 @@
-/** Bounded diagnostics, never authorization or part of a reading/cache identity. */
+/**
+ * Bounded diagnostics, never part of a reading/cache identity. The labels never grant anything; the one rule read from
+ * them only takes away: a guest's web search without an action label buys no reading (paidReadingAllowed).
+ */
 export const SEARCH_SURFACES = [
 	"start",
 	"header",
@@ -85,3 +88,32 @@ export function attributedSearch(
 		reported_by: context?.reported_by ?? "unknown",
 	}
 }
+
+/** What a person does on a page to search. A guest's web search buys a reading only with one of these labels. */
+const ACTION_TRIGGERS: ReadonlySet<SearchTrigger> = new Set<SearchTrigger>([
+	"typing_pause",
+	"enter",
+	"search_button",
+	"selection",
+	"link",
+	"retry",
+	"filter_change",
+])
+
+/**
+ * A paid reading needs a person's action. A guest's web search must carry an action label (ACTION_TRIGGERS): one that
+ * only arrived in the URL (a page load with ?q= or back/forward, "navigation") or carries no valid label ("unknown":
+ * omitted, invalid, an old client) is answered with a cached reading or the basic search. Link crawlers run the page's
+ * script and would otherwise buy a reading per link. The label comes from the browser, so it can only take away: a
+ * client that claims an action is believed (a challenge for those is a separate follow-up). Members and integrations
+ * are unchanged.
+ */
+export function paidReadingAllowed(attribution: SearchAttribution): boolean {
+	return !(
+		attribution.consumer === "web" &&
+		attribution.actor_kind === "guest" &&
+		!isActionTrigger(attribution.trigger)
+	)
+}
+
+export const isActionTrigger = (trigger: SearchTrigger) => ACTION_TRIGGERS.has(trigger)
