@@ -10,6 +10,19 @@ const NOW = 1_800_000_000_000
 const PAGE = `SELECT record_id,participant_id,member_user_id FROM ${tables.participant.name} WHERE room_id=? AND record_id>? ORDER BY record_id LIMIT ?`
 type Row = { room_id: string; expires_at: number; seq: number; pending_revision?: number; corrupt?: boolean; history?: any[]; participant_id?: string; member_user_id?: string | null }
 
+/** The first `n` entries in key order that pass `keep`, without sorting the whole table (backlog tests hold 100k rows). */
+function firstN(rows: Map<string, Row>, keep: (key: string, row: Row) => boolean, n: number) {
+	const out: [string, Row][] = []
+	for (const [k, r] of rows) {
+		if (!keep(k, r) || (out.length === n && k >= out[n - 1][0])) continue
+		let i = out.length
+		while (i > 0 && out[i - 1][0] > k) i--
+		out.splice(i, 0, [k, r])
+		if (out.length > n) out.pop()
+	}
+	return out
+}
+
 /** An in-memory store answering exactly the statements the cleanup sends; anything else fails the test. */
 function store(start = NOW) {
 	let now = start
@@ -20,6 +33,21 @@ function store(start = NOW) {
 		return data.get(name)!
 	}
 	let failOn: RegExp | undefined
+	// Participant keys by room for the page read; rebuilt whenever rows were added since the last read (removed keys are
+	// skipped by the lookup), so a backlog test does not scan 100k rows per page.
+	let byRoom = new Map<string, string[]>()
+	let indexedSize = -1
+	const participantsOf = (roomId: string) => {
+		const rows = table(tables.participant.name)
+		if (rows.size > indexedSize) {
+			byRoom = new Map()
+			for (const [k, r] of rows) byRoom.set(r.room_id, [...(byRoom.get(r.room_id) ?? []), k])
+		}
+		indexedSize = rows.size
+		const keyed = new Map<string, Row>()
+		for (const k of byRoom.get(roomId) ?? []) if (rows.has(k)) keyed.set(k, rows.get(k)!)
+		return keyed
+	}
 	const sql: Sql = async (stmt, args = []) => {
 		await new Promise((r) => setImmediate(r)) // lets concurrent runners interleave statement by statement
 		statements.push({ stmt, args })
@@ -30,8 +58,8 @@ function store(start = NOW) {
 		let m: RegExpMatchArray | null
 		if (stmt === "SELECT CURRENT_TIMESTAMP") return { rows: [[now]], rowcount: 1 }
 		if (stmt === `SELECT id FROM ${ROOM} WHERE expires_at<=? AND id>? ORDER BY id LIMIT ?`) {
-			const rows = [...table(ROOM)].filter(([id, r]) => r.expires_at <= Number(args[0]) && id > String(args[1])).sort((a, b) => (a[0] < b[0] ? -1 : 1))
-			return { rows: rows.slice(0, Number(args[2])).map(([id]) => [id]), rowcount: 0 }
+			const rows = firstN(table(ROOM), (id, r) => r.expires_at <= Number(args[0]) && id > String(args[1]), Number(args[2]))
+			return { rows: rows.map(([id]) => [id]), rowcount: 0 }
 		}
 		if (stmt === `SELECT id FROM ${ROOM} WHERE id=?`) return { rows: table(ROOM).has(String(args[0])) ? [[args[0]]] : [], rowcount: 0 }
 		if (stmt === `SELECT expires_at,pending_revision,pending_agreement,_seq_no,_primary_term,invite_hash FROM ${ROOM} WHERE id=?`) {
@@ -39,8 +67,8 @@ function store(start = NOW) {
 			return { rows: r ? [[r.expires_at, r.pending_revision ?? 0, false, r.seq, 1, `${invitationTable.name}:${args[0]}`]] : [], rowcount: 0 }
 		}
 		if (stmt === PAGE) {
-			const rows = [...table(tables.participant.name)].filter(([k, r]) => r.room_id === args[0] && r.participant_id && k > String(args[1])).sort((a, b) => (a[0] < b[0] ? -1 : 1))
-			return { rows: rows.slice(0, Number(args[2])).map(([k, r]) => [k, r.participant_id, r.member_user_id ?? null]), rowcount: 0 }
+			const rows = firstN(participantsOf(String(args[0])), (k, r) => r.room_id === args[0] && !!r.participant_id && k > String(args[1]), Number(args[2]))
+			return { rows: rows.map(([k, r]) => [k, r.participant_id, r.member_user_id ?? null]), rowcount: 0 }
 		}
 		if (stmt === `DELETE FROM ${invitationTable.name} WHERE code_hash=? AND room_id=? AND expires_at<=?`) {
 			const r = table(invitationTable.name).get(String(args[0]))
@@ -55,8 +83,8 @@ function store(start = NOW) {
 			return { rows: [], rowcount: 1 }
 		}
 		if ((m = stmt.match(/^SELECT (\w+),room_id FROM (\S+) WHERE expires_at<=\? AND (\w+)>\? ORDER BY (\w+) LIMIT \?$/))) {
-			const rows = [...table(m[2])].filter(([k, r]) => r.expires_at <= Number(args[0]) && k > String(args[1])).sort((a, b) => (a[0] < b[0] ? -1 : 1))
-			return { rows: rows.slice(0, Number(args[2])).map(([k, r]) => [k, r.room_id]), rowcount: 0 }
+			const rows = firstN(table(m[2]), (k, r) => r.expires_at <= Number(args[0]) && k > String(args[1]), Number(args[2]))
+			return { rows: rows.map(([k, r]) => [k, r.room_id]), rowcount: 0 }
 		}
 		if ((m = stmt.match(/^DELETE FROM (\S+) WHERE (\w+)=ANY\(\?\) AND expires_at<=\?$/))) {
 			let n = 0
@@ -78,10 +106,8 @@ function store(start = NOW) {
 			if (!r) return null
 			if (r.corrupt) throw new Error("Room records are incomplete")
 			// The head's roster: the room's own participant record, not the historical ones a test adds beside it.
-			const participants = [...table(tables.participant.name)]
-				.filter(([k, p]) => k === `${tables.participant.name}:${id}` && p.participant_id)
-				.map(([, p]) => p)
-				.map((p) => ({ id: p.participant_id!, memberUserId: p.member_user_id ?? null }))
+			const own = table(tables.participant.name).get(`${tables.participant.name}:${id}`)
+			const participants = own?.participant_id ? [{ id: own.participant_id, memberUserId: own.member_user_id ?? null }] : []
 			return { room: { expiresAt: r.expires_at, inviteHash: `${invitationTable.name}:${id}`, history: r.history ?? [], participants }, seq: r.seq, term: 1 }
 		},
 		accountStore: {
@@ -351,6 +377,54 @@ test("room retention: the run that removes a head rechecks its people; a check o
 	assert.equal(pages()[before], "", "started over")
 	await drain(retention)
 	assert.equal(s.rowsOf("crowded"), 0)
+})
+
+/** `count` expired rooms with 65 historical participant records each beside their own: two pages per check. */
+function crowdedBacklog(s: ReturnType<typeof store>, count: number) {
+	const ids: string[] = []
+	for (let r = 0; r < count; r++) {
+		const id = `crowded-${String(r).padStart(4, "0")}`
+		ids.push(id)
+		s.room(id, NOW - 40 * DAY_MS, { history: [{ id: `decision-${id}` }] })
+		for (let i = 0; i < 65; i++)
+			s.table(tables.participant.name).set(`p:${id}:${String(i).padStart(2, "0")}`, { room_id: id, expires_at: NOW - 40 * DAY_MS, seq: 1, participant_id: `${id}-old-${i}` })
+	}
+	return ids
+}
+
+/** Runs with the store clock advancing `stepMs` per run until every head is gone; returns the runs it took. */
+async function untilHeadsGone(s: ReturnType<typeof store>, retention: RoomRetention, stepMs: number, max: number) {
+	for (let i = 1, now = NOW; i <= max; i++) {
+		await retention.run()
+		s.now = now += stepMs
+		if (!s.table(ROOM).size) return i
+	}
+	throw new Error(`Heads left after ${max} runs: ${s.table(ROOM).size}`)
+}
+
+test("room retention: a backlog of more crowded rooms than any bound finishes every check, none restarted", async () => {
+	const s = store()
+	const ids = crowdedBacklog(s, 1500)
+	const retention = new RoomRetention(s.sql, s.repository, { retentionDays: 30 })
+	// Ten slots, two pages per room: 300 runs when no check ever loses its progress.
+	const runs = await untilHeadsGone(s, retention, 60_000, 320)
+	assert.ok(runs <= 301, `took ${runs} runs`)
+	assert.equal(s.published.length, 1500)
+	const firstPages = new Map<string, number>()
+	for (const x of s.statements) if (x.stmt === PAGE && x.args[1] === "") firstPages.set(String(x.args[0]), (firstPages.get(String(x.args[0])) ?? 0) + 1)
+	for (const id of ids) assert.equal(firstPages.get(id), 1, `${id} started its check once`)
+})
+
+test("room retention: checks finish when runs are far apart, a backlog never ages them past their window", async () => {
+	const s = store()
+	// 300 rooms take 30 runs per pass over the heads: an hour apart, a pass lasts longer than a check stays valid.
+	const ids = crowdedBacklog(s, 300)
+	const retention = new RoomRetention(s.sql, s.repository, { retentionDays: 30 })
+	const runs = await untilHeadsGone(s, retention, 3_600_000, 80)
+	assert.ok(runs <= 61, `took ${runs} runs`)
+	assert.equal(s.published.length, 300)
+	const restarts = s.statements.filter((x) => x.stmt === PAGE && x.args[1] === "").length
+	assert.equal(restarts, ids.length, "every check read its first page once")
 })
 
 test("room retention: every record table gets a share of the row budget, whatever comes first", async () => {

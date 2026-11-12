@@ -58,7 +58,13 @@ function settled(errors: unknown[]) {
   if (errors.length === 1) throw errors[0];
   if (errors.length) throw Object.assign(new Error('Some YepWatch deletions will retry'), { errors });
 }
-/** A request whose erasure failed waits 2, 4, … up to 60 minutes before this instance claims it again. */
+/**
+ * A request whose erasure failed waits 2, 4, … up to 60 minutes before it is claimed again. The wait itself is the
+ * request's persisted lease_until, so every instance, and this one after a restart, honours it: no request is retried
+ * before its deadline. Only the escalation is per instance: the failure count lives in memory (the deletion table has no
+ * column for it, and adding one is DDL), so a restart, or another instance claiming the request, starts again at 2
+ * minutes. That retries a persistently failing request more often than the cap allows, never earlier than its deadline.
+ */
 const MAX_RETRY_MS = 60 * 60_000;
 const REMEMBERED_FAILURES = 1000;
 
@@ -68,6 +74,7 @@ export async function provisionDeletion(sql: Sql, replicas: 0 | 2) { await sql(t
 export class SqlDeletionStore implements DeletionStore {
   private sql: Sql;
   private secret: string;
+  /** Failures per request seen by this instance, for the backoff escalation only (see MAX_RETRY_MS). */
   private failures = new Map<string, number>();
   constructor(sql: Sql, secret: string) { this.sql = sql; this.secret = secret; }
   private id(subject: DeletionSubject) { return keyed(this.secret, 'deletion', subjectKey(subject)); }
@@ -127,7 +134,7 @@ export class SqlDeletionStore implements DeletionStore {
   }
   /**
    * Erases up to 20 due requests, earliest first. A request whose erasure fails keeps its marker and is leased out for
-   * a growing backoff, so it leaves the window and later requests are reached; the others still run, and the call
+   * a growing backoff (persisted as its lease; the growth is per instance, see MAX_RETRY_MS), so it leaves the window and later requests are reached; the others still run, and the call
    * rejects afterwards so the caller knows something will retry.
    */
   async purgeDue(now: number) {
