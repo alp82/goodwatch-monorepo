@@ -540,8 +540,19 @@ test("disconnecting an app stops its existing JWT and refresh token", async () =
 
 test("durable signing keys and grants survive a new auth instance and refresh rotates with retry recovery", async () => {
 	const issued = await grant()
+	let raced = false
 	const fresh = createGoodwatchAuth({
-		sql,
+		sql: async (statement, args = []) => {
+			if (!raced && statement.startsWith("UPDATE doc.auth_oauth_consent SET payload=?")) {
+				raced = true
+				// A competing write (for example payload re-encryption) wins the refresh's first touch.
+				await sql("UPDATE doc.auth_oauth_consent SET payload=payload WHERE id=?", [
+					args[args.length - 3],
+				])
+			}
+			return sql(statement, args)
+		},
+		encryptionSecret: "disposable-local-auth-integration-key-548",
 		storage: new ValkeyAuthStorage(() => redis),
 		mail: capturedMail,
 		baseURL: origin,
@@ -569,7 +580,9 @@ test("durable signing keys and grants survive a new auth instance and refresh ro
 	assert.equal(first.status, 200)
 	const rotated = await first.json()
 	assert.notEqual(rotated.refresh_token, issued.token.refresh_token)
-	// A refresh is use: it keeps the grant out of dead-grant eviction while the child is written.
+	// A refresh is use, even when its first touch loses: it keeps the grant out of
+	// dead-grant eviction while the child is written.
+	assert.ok(raced)
 	const consents = await memberAuth.handler(
 		new Request(`${origin}/api/auth/oauth2/get-consents`, {
 			headers: { cookie: issued.cookie },

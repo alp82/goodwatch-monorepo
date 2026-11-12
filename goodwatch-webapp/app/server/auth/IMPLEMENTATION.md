@@ -140,7 +140,8 @@ admission revokes one grant with its tokens, chosen in this order:
    its session (`referenceId`) is missing or expired, and none of its refresh
    tokens is live. A live refresh token is unexpired, not revoked, and carries the
    grant's version (or is under 15 minutes old and not versioned yet). A refresh
-   counts as use and touches `lastUsedAt` (at most once a minute): rotation revokes
+   counts as use: before rotating, the grant must show a `lastUsedAt` from the last
+   minute (a lost conditional touch rereads and retries, bounded): rotation revokes
    the parent before it writes the child, whose insert may take up to its
    15-minute write deadline, and the parent is archived out of lookups after 30 s.
 3. The least recently used grant (`max(createdAt, lastUsedAt)`) that is not its
