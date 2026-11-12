@@ -1,7 +1,8 @@
 // Production smoke: ONE room per run, three people.
 //   host    guest, throttled (fast 4G)   New room → Create room → name → Netflix          (newRoomMs, createRoomMs)
 //   friend  guest, throttled, fresh browser through the invitation link                    (inviteOpenMs, startToPeerVotingMs, voteToPeerMs)
-//   member  signed in with GoodWatch, NOT throttled, joins by the same link ("Join as …")   (unthrottled_* moments: reported, never gated)
+//   member  signed in with GoodWatch, NOT throttled, joins by the same link ("Join as …"; a nameless account types one)
+//           (unthrottled_* moments: reported, never gated)
 // Then Start → votes until a match → everyone leaves / the host archives.
 //
 // Why one room: there's no shared cap on active rooms, but a run should stay light on the shared rate windows.
@@ -54,6 +55,13 @@ async function signIn(p: Person) {
       const allow = p.page.getByRole('button', { name: /^Allow / }).first();
       if (!filled && await email.isVisible().catch(() => false)) {
         if (!MEMBER_EMAIL || !MEMBER_PASSWORD) p.journeyFailure('GoodWatch asked for a sign-in but E2E_SMOKE_MEMBER_EMAIL / E2E_SMOKE_MEMBER_PASSWORD are not set');
+        // GoodWatch's scripts start after paint, and a Sign in pressed before they run posts the bare form,
+        // which only comes back to it (routes/sign-in.tsx action). Wait until React owns the form.
+        await email.evaluate((el) => new Promise<void>((done) => {
+          const owned = () => Object.keys(el).some((k) => k.startsWith('__reactProps$'));
+          const check = () => (owned() ? done() : setTimeout(check, 25));
+          check();
+        }), undefined, { timeout: 15000 }).catch(() => p.journeyFailure('GoodWatch sign-in form never became interactive'));
         await email.fill(MEMBER_EMAIL);
         await p.page.getByLabel(/^password/i).first().fill(MEMBER_PASSWORD);
         await p.page.getByRole('button', { name: 'Sign in', exact: true }).click();
@@ -68,6 +76,16 @@ async function signIn(p: Person) {
     await p.page.waitForTimeout(150);
   }
   await p.settle();
+}
+
+/** The signed-in member's GoodWatch name as YepWatch knows it (null: the account has none). */
+async function accountName(p: Person): Promise<string | null> {
+  const status = await p.page.evaluate(async () => {
+    const r = await fetch('/api/yepwatch/v1/proposal/account', { credentials: 'include' });
+    return r.ok ? (await r.json()) as { state?: string; displayName?: string | null } : null;
+  });
+  if (status?.state !== 'member') p.journeyFailure(`signed in, but YepWatch says the account is ${status?.state ?? 'unreadable'}`);
+  return status?.displayName?.trim() || null;
 }
 
 /** Best effort, never a gate: a guest leaves through the room sheet; the host archives. */
@@ -136,12 +154,21 @@ async function journey(room: Room, people: [Person, 'leave' | 'archive'][]) {
   await pickServices(friend, ['Netflix']);
   await friend.see({ visible: ['waiting'] }, 10000, 'friend waits for the host');
 
-  // Member: unthrottled reference for the invitation open, then "Join as <GoodWatch name>".
+  // Member: unthrottled reference for the invitation open, then join as the GoodWatch name. GoodWatch's email
+  // sign-up asks for no name, so an account may have none: then the join form asks for one (the member's Join
+  // keeps its GoodWatch mark). What the account says decides which form is right, so a named member who got
+  // the nameless form still fails here.
   if (member) {
+    const goodwatchName = await accountName(member);
     await member.open(invite, { settle: false });
     const mShown = await member.firstShown(['join-screen', 'invite-head']);
     if (mShown.at) member.record('unthrottled_inviteOpenMs', mShown.at - mShown.origin, 'navigation start → join page (signed in)');
-    await member.tap(member.button(/^Join as /), { expect: { any: ['waiting', 'services-sheet'] } });
+    if (goodwatchName) {
+      await member.tap(member.button(`Join as ${goodwatchName}`), { expect: { any: ['waiting', 'services-sheet'] } });
+    } else {
+      await member.fill(member.page.getByLabel('Your name').filter({ visible: true }), 'Smoke member');
+      await member.tap(member.button('Join'), { expect: { any: ['waiting', 'services-sheet'] } });
+    }
     people.push([member, 'leave']);
     if (await member.testId('services-sheet').isVisible().catch(() => false)) await pickServices(member, ['Netflix']);
     await member.see({ visible: ['waiting'] }, 10000, 'member waits for the host');
