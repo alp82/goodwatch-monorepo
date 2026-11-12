@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-11-11T23:20:35.239554+00:00",
+  "checkedAt": "2026-11-12T08:07:21.636Z",
   "appId": "6826403019",
   "version": "1.0.0",
   "candidateBuild": "18",
@@ -51,11 +51,7 @@
     "regionalRestrictionsApply": true,
     "afghanistan": "Apple says Entertainment apps cannot be sold there; availability remains subject to regional rules"
   },
-  "ownerConfirmationsPending": [
-    "Updated Apple Developer Program License Agreement acceptance",
-    "EU trader status self-declaration",
-    "Necessary third-party catalog/artwork/trailer content permissions"
-  ],
+  "ownerConfirmationsPending": [],
   "verification": {
     "appTestsPassed": 189,
     "appTypecheck": "pass",
@@ -73,16 +69,24 @@
     "appleGalleryProcessed": 20,
     "galleryFreshReadbackPassed": true,
     "completeEnglishListingFreshReadbackPassed": true,
-    "reviewCredentialAndContactFieldsPopulated": true
+    "reviewCredentialAndContactFieldsPopulated": true,
+    "finalListingAndGalleryCheckedAt": "2026-11-12T08:07:21.636Z",
+    "ownerDeclarationTaskTypecheck": "pass",
+    "ownerDeclarationTaskLint": "pass; no warnings",
+    "finalAttachedBuildFreshApiReadback": {
+      "id": "c6b590be-1d13-40a7-aede-d9cfe0c8654c",
+      "version": "18",
+      "processingState": "VALID"
+    }
   },
-  "publicReviewSubmitted": false,
+  "publicReviewSubmitted": true,
   "build18AttachedAndReadBack": true,
   "privacyPublicationReadback": "Published a few seconds ago by Alper Ortac; no setup remains; no Data Used to Track You section",
   "readinessCheck": {
     "attemptedAddForReview": true,
-    "result": "Unable to Add for Review",
-    "onlyAppFieldReportedMissing": "Content Rights Information",
-    "publicReviewSubmitted": false,
+    "result": "Item Ready to Submit",
+    "missingAppFields": [],
+    "publicReviewSubmitted": true,
     "automaticReleaseAfterApproval": true
   },
   "androidBuild18": {
@@ -130,5 +134,49 @@
       "gitCommitHash": "11bb3e8f572a153c5e9536f8ba12a2ecdc364d30"
     }
   ],
-  "legacyPolicyClarification": "The policy explains that older app versions can use the standard YouTube player. Current build 18 and compatible player updates use privacy-enhanced embeds."
+  "legacyPolicyClarification": "The policy explains that older app versions can use the standard YouTube player. Current build 18 and compatible player updates use privacy-enhanced embeds.",
+  "versionId": "8559d593-4117-4002-ae56-2b56e96cb078",
+  "appStoreState": "WAITING_FOR_REVIEW",
+  "ownerConfirmations": {
+    "updatedAgreement": {
+      "ownerReportedAccepted": true,
+      "independentlyVerified": true,
+      "freeAppsAgreementStatus": "Active",
+      "effectiveDate": "2026-11-12",
+      "outdatedAgreementWarningCleared": true,
+      "paidAppsAgreementRequired": false
+    },
+    "traderStatus": {
+      "ownerConfirmed": "Non-trader; personal hobby outside business or professional activity; donations voluntary without paid benefits",
+      "savedNonTraderSelectionFreshlyVerified": true,
+      "appInformationDisplaysNonTrader": true,
+      "regulatoryStatus": "Active",
+      "countryRegionCount": 27
+    },
+    "thirdPartyContent": {
+      "ownerConfirmedNecessaryRights": true,
+      "declaration": "USES_THIRD_PARTY_CONTENT",
+      "appInformationFreshReadback": "Yes, this app has the necessary rights to its third-party content."
+    }
+  },
+  "initialReadinessCheck": {
+    "attemptedAddForReview": true,
+    "result": "Unable to Add for Review",
+    "onlyAppFieldReportedMissing": "Content Rights Information",
+    "publicReviewSubmitted": false,
+    "automaticReleaseAfterApproval": true
+  },
+  "reviewSubmission": {
+    "id": "771f9920-708f-4add-af1e-4ce4efcdcafa",
+    "state": "WAITING_FOR_REVIEW",
+    "submittedAt": "2026-11-12T08:06:43.896Z",
+    "platform": "IOS",
+    "version": "1.0.0",
+    "build": "18",
+    "consoleConfirmation": "1 Item Submitted",
+    "versionStateFreshApiReadback": "WAITING_FOR_REVIEW",
+    "releaseTypeFreshApiReadback": "AFTER_APPROVAL",
+    "approved": false,
+    "publiclyAvailable": false
+  }
 }
