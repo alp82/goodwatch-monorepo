@@ -292,36 +292,24 @@ test('the creator invitation survives a full navigation/reload without bearer st
   ).toBeVisible();
 });
 
-for (const error of [101, 150])
-  test(`embedding refusal ${error} uses embedded controls and closing preserves card and pick`, async ({
-    page,
-  }) => {
-    const f = await fixture(page);
-    f.room.shared.candidates[0].trailerUrl = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
-    // Isolated player fixture: external playback evidence is recorded separately against real URLs.
-    await page.route('https://www.youtube.com/iframe_api', (route) =>
-      route.fulfill({
-        contentType: 'application/javascript',
-        body: `window.YT={Player:function(id,options){const p={getPlayerState:()=>-1,isMuted:()=>false,getVolume:()=>100,playVideo:()=>{},unMute:()=>{},setVolume:()=>{}};setTimeout(()=>{options.events.onReady();options.events.onError({data:${error}})},0);return p}};onYouTubeIframeAPIReady();`,
-      })
-    );
-    await page.reload();
-    const card = await page.getByTestId('poster').innerText();
-    await page.getByRole('button', { name: 'Watch trailer', exact: true }).click();
-    await expect(
-      page.getByText('This trailer cannot play inside the app. Watch it on YouTube.', {
-        exact: true,
-      })
-    ).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Watch on YouTube', exact: true })).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Play with sound', exact: true })).toHaveCount(0);
-    // At least two periodic reports later the refusal remains actionable.
-    await page.waitForTimeout(1600);
-    await expect(page.getByRole('button', { name: 'Play with sound', exact: true })).toHaveCount(0);
-    await page.getByRole('button', { name: 'Back', exact: true }).click();
-    await expect.poll(() => page.getByTestId('poster').innerText()).toBe(card);
-    expect(f.commands).toHaveLength(0);
-  });
+test('the poster trailer opens externally without changing the card or room choices', async ({ page, context }) => {
+  await context.route('https://www.youtube.com/watch?*', route => route.fulfill({contentType:'text/html',body:'External YouTube destination'}));
+  const f = await fixture(page);
+  f.room.shared.candidates[0].trailerUrl = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+  await page.reload();
+  const card = await page.getByTestId('poster').innerText();
+  const link = page.getByRole('link', { name: 'Watch trailer on YouTube', exact: true });
+  await expect(link).toHaveAttribute('href', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+  const opened = page.waitForEvent('popup');
+  await link.click();
+  const external = await opened;
+  await expect(external).toHaveURL('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+  await external.close();
+  await expect.poll(() => page.getByTestId('poster').innerText()).toBe(card);
+  await expect(page.locator('iframe')).toHaveCount(0);
+  await expect(page.getByTestId('trailer-panel')).toHaveCount(0);
+  expect(f.commands).toHaveLength(0);
+});
 
 test('authoritative Undo survives an accepted vote followed by a full reload', async ({ page }) => {
   const f = await fixture(page);

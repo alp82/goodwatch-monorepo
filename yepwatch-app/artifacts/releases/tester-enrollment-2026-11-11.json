@@ -176,7 +176,7 @@
     "installButtonEnabled": true,
     "deviceAvailabilityText": "This app is available for your device",
     "remoteDeviceInstallTriggered": false,
-    "physicalInstallVerified": false,
+    "physicalInstallVerified": true,
     "sameAccountRequiredForGroupOptInAndPlayStore": true,
     "canonicalOptInUrl": "https://play.google.com/apps/testing/com.yepwatch.app",
     "canonicalInstallUrl": "https://play.google.com/store/apps/details?id=com.yepwatch.app",
@@ -205,6 +205,14 @@
       "appTestsPassed": 189,
       "nativeUpdateRequired": false,
       "nativeUpdateReason": "The changed installation offers are web-only. Existing native player/privacy OTA updates remain published."
+    },
+    "physicalInstallEvidence": {
+      "source": "owner confirmation in chat on 2026-11-12",
+      "device": "Google Pixel 8 Pro",
+      "androidVersion": "17",
+      "versionCode": 17,
+      "launchSucceeded": true,
+      "invitationLinkHandoffVerified": false
     }
   }
 }

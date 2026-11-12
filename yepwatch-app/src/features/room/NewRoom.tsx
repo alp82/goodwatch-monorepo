@@ -16,7 +16,7 @@ import { roomRegistry } from '../../core/continuous/room-registry';
 import { useRetryCountdown } from '../../core/continuous/useRetryCountdown';
 import { MoodComposer } from './MoodComposer';
 import { useBackAction } from '../shell/sheet-back';
-import { newRoomInFront, preloadStartPages } from './nav';
+import { newRoomInFront, openCreatedRoom, preloadStartPages } from './nav';
 
 /** The draft owns the screen until the complete create-and-save operation succeeds. */
 export function NewRoom() {
@@ -46,7 +46,7 @@ function NewRoomDraft({ account }: { account: ReturnType<typeof useAccount> }) {
   const mutation = useMutation(newRoomSave({
     flow, resume, client, draftKey, text: () => text, setText, setTroubleSince, attempt,
     identity: async () => ({ nickname: (await roomRegistry.load()).nickname ?? account.name ?? '', member: account.member }),
-    open: (id) => router.replace({ pathname: '/room/[id]', params: { id } }),
+    open: openCreatedRoom,
   }));
   useEffect(() => resume.connect({ send: mutation.mutate, abort: () => attempt.current?.abort() }), [resume, mutation.mutate, attempt]);
   const retrySeconds = useRetryCountdown(draft.data?.retryAt ?? 0);

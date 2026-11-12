@@ -5,7 +5,8 @@ stack. Gates: journey completes, flash, timing, errors, accessibility, frame pac
 
 ```sh
 cd yepwatch-app/e2e/native
-npm run e2e:native:gate     # Android share of the gate (~1.5 min warm, ~3 min from a cold machine)
+node run.mjs subset         # the deploy gate's check: cold start + one mixed room (Android host, browser friend) on one emulator
+npm run e2e:native:gate     # the two-phone Android journey (~1.5 min warm, ~3 min from a cold machine)
 npm run e2e:native:full     # everything, incl. 3 min background, mixed Android/browser rooms
 npm run e2e:native:maestro  # the two-phone journey through the YAML flows only (slow, see flows/README.md)
 ```
@@ -36,5 +37,8 @@ logcat per phone. Exit code 0 only if every gate passes.
   that fail to open the app can't reach yepwatch.com.
 - Stack processes start from `env -i` with an allowlist, loopback-only endpoints and a preload that refuses
   non-loopback sockets. No `.env` is read.
+- Next to another harness: `YW_E2E_EMU_PORTS=5574` (even ports 5556-5584) runs this harness's emulators on
+  other console ports. The driver's host forward follows the port (5570 -> 19500, 5574 -> 19502), and
+  `E2E_SLOT` picks the stack.
 - adb's emulator port scan is switched off (`ADB_LOCAL_TRANSPORT_MAX_PORT=5553`): local services on
   5555-5585 otherwise appear as offline emulators and break Maestro's device listing.

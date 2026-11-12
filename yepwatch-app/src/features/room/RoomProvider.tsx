@@ -22,6 +22,7 @@ import { deviceCountryHint } from '../../core/lobby';
 import { queryClient } from '../../core/providers';
 import { readSeenIdeas, writeSeenIdeas } from '../../core/continuous/room-local';
 import { useLobbyEntry } from '../glow/useLobbyEntry';
+import { NO_ARRIVALS, trackArrivals } from '../shell/live-beat';
 import { leaveScreen } from '../shell/sheet-back';
 import { roomCommands, roomView, type RoomCommands, type RoomView } from './model';
 import { exitRoom } from './nav';
@@ -42,6 +43,8 @@ export const isRoomSheet = (value: unknown): value is RoomSheet => typeof value 
 
 /** Proposals set aside with Keep swiping, per room and per device, for this app session. */
 const dismissed = new Map<string, number>();
+/** Each opening of a room on this device: its own live-dot beat. */
+let openings = 0;
 
 export interface RoomContextValue {
   id: string;
@@ -88,6 +91,8 @@ export interface RoomContextValue {
   renderSheet: (sheet: RoomSheet) => ReactNode;
   /** Opens another room in front of this one (Your rooms). */
   openRoom: (roomId: string) => void;
+  /** The header's live dot rings when this changes: the room opening here, then each join. */
+  liveBeat: string;
 }
 const RoomContext = createContext<RoomContextValue | null>(null);
 /** The room when the screen is inside one (the shared frame derives its header from it), else null. */
@@ -312,6 +317,13 @@ function RoomProviderContent({ id, children, renderSheet }: { id: string; childr
 
   const dismissProposal = useCallback((version: number) => { dismissed.set(id, version); setDismissed(version); }, [id]);
   const reopenProposal = useCallback(() => { dismissed.delete(id); setDismissed(null); }, [id]);
+  // Someone joining rings the live dot again; it rests otherwise (owner Q41).
+  const [opening] = useState(() => ++openings);
+  const [arrivals, setArrivals] = useState(NO_ARRIVALS);
+  if (view) {
+    const next = trackArrivals(arrivals, view.people.map((p) => p.id));
+    if (next !== arrivals) setArrivals(next);
+  }
   const invite = invitation.data;
   let inviteUrl: string | null = null;
   try { inviteUrl = invite ? appInviteUrl(invite.path) : null; } catch { inviteUrl = null; }
@@ -319,6 +331,7 @@ function RoomProviderContent({ id, children, renderSheet }: { id: string; childr
     id, state, entry, snapshot, view, cmd, latest, disabled, invite, inviteUrl, signin, memberBusy, memberLapsed: account.lapsed, linkFailed: linkFailed && wantsLink, retryLink, connectionWords, notice: notice || account.error, setNotice,
     dismissedProposal, dismissProposal, reopenProposal, setActivityView: state.setView, saves, acknowledgeIdeas,
     leaving, sheet: sheets.at(-1) ?? null, openSheet, closeSheet, closeSheets, renderSheet, openRoom,
+    liveBeat: `${id}:${opening}:${arrivals.joins}`,
   };
   return <RoomContext.Provider value={value}>{children}</RoomContext.Provider>;
 }

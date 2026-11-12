@@ -114,13 +114,17 @@ function signingKey(cacheDir) {
 
 /** Rebundle JS into an existing APK. */
 async function repackJs(baseApk, outApk, origins, logFile) {
-  const env = buildEnv(origins);
+  // Metro's transform cache lives under TMPDIR. One directory per build-time env: EXPO_PUBLIC_* values are
+  // inlined during the transform, so a cache only ever serves bundles for the origins that filled it. CI keeps
+  // it between runs (yepwatch-gate.yml), which turns a JS-only repack into an incremental bundle.
+  const metroTmp = mkdirp(path.join(HOME, 'metro', crypto.createHash('sha1').update(JSON.stringify(publicEnv(origins))).digest('hex').slice(0, 10)));
+  const env = { ...buildEnv(origins), TMPDIR: metroTmp };
   const work = mkdirp(path.join(BUILD_ROOT, 'repack'));
   fs.rmSync(work, { recursive: true, force: true }); mkdirp(path.join(work, 'assets'));
   const js = path.join(work, 'index.android.bundle.js');
   log('js: expo export:embed');
   let code = await runLogged(path.join(STAGE, 'node_modules/.bin/expo'), ['export:embed', '--platform', 'android', '--dev', 'false', '--minify', 'true',
-    '--entry-file', 'node_modules/expo-router/entry.js', '--bundle-output', js, '--assets-dest', path.join(work, 'res'), '--reset-cache'], { cwd: STAGE, env, log: logFile });
+    '--entry-file', 'node_modules/expo-router/entry.js', '--bundle-output', js, '--assets-dest', path.join(work, 'res')], { cwd: STAGE, env, log: logFile });
   if (code) throw new Error(`export:embed failed (${code}); see ${logFile}`);
   const hermesc = path.join(STAGE, 'node_modules/hermes-compiler/hermesc/linux64-bin/hermesc');
   code = await runLogged(hermesc, ['-emit-binary', '-O', '-max-diagnostic-width=80', '-out', path.join(work, 'assets/index.android.bundle'), js], { cwd: work, env, log: logFile });

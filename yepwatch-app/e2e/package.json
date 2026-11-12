@@ -8,7 +8,8 @@
     "stack:down": "node stack/down.mjs",
     "e2e:gate": "node run.mjs gate",
     "e2e:full": "node run.mjs full",
-    "e2e:smoke": "node run.mjs smoke"
+    "e2e:smoke": "node run.mjs smoke",
+    "e2e:gate:android": "node ci/native-gate.mjs --mode=subset"
   },
   "devDependencies": {
     "axe-core": "4.11.0"

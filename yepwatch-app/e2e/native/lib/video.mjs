@@ -173,7 +173,7 @@ export async function measure({ actor, targets, file, action, settleMs = 1200, a
     const windowMs = appWindowMs?.();
     const flashFrom = Number.isFinite(windowMs) ? Math.min(arr, Math.max(from, frameAt(video, anchorMs + windowMs))) : from;
     const fl = flashes(video, flashFrom, arr + 20, { allowIntermediate, saveDir: video.file.replace(/\.webm$/, '-frames') });
-    out[name] = { ok: true, ms: +ms.toFixed(0), settledMs: +settledMs.toFixed(0), anchorFrame: frameAt(video, anchorMs), firstFrame: fc, settledFrame: arr, resolutionMs: 17, clockErrMs: +(video.t0Err + (video === actorVideo || act.anchor === 'host' ? 0 : actorVideo.t0Err)).toFixed(0),
+    out[name] = { ok: true, ms: +ms.toFixed(0), settledMs: +settledMs.toFixed(0), anchorMs: Math.round(anchorMs), anchorFrame: frameAt(video, anchorMs), firstFrame: fc, settledFrame: arr, resolutionMs: 17, clockErrMs: +(video.t0Err + (video === actorVideo || act.anchor === 'host' ? 0 : actorVideo.t0Err)).toFixed(0),
       maxGapMs: maxGap(video, from, arr), flash: fl, file: video.file };
   }
   return out;

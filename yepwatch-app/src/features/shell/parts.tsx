@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState, type ReactNode, type ComponentRef } from 'react';
-import { Animated, Easing, Platform, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Animated, Platform, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useReducedMotion } from '../../components/ui';
 import { peerColor } from '../glow/model';
 import { GText, Icon, Press, glow, grow, native, type IconName } from '../glow/theme';
+import { claimLiveBeat, releaseLiveBeat } from './live-beat';
+import { playLivePulse } from './live-pulse';
 import { R } from './tokens';
 
 /** Your own avatar: amber initial once a nickname is known, a quiet outline before. */
@@ -28,19 +30,33 @@ export function FaceStack({ people, size = 24, max = 4 }: { people: { id: string
     </View>
   );
 }
-/** The pulsing green dot of an open room. */
-export function LiveDot({ size = 8 }: { size?: number }) {
+/**
+ * The green dot of an open room. It rings three times when it appears, or when `beat` changes (the
+ * room's opening and each join), then stays solid: nothing animates in between. A `beat` rings once
+ * across every header showing it; null never rings (a header under another page). Reduced motion:
+ * never rings.
+ */
+export function LiveDot({ size = 8, beat }: { size?: number; beat?: string | null }) {
   const reduced = useReducedMotion();
-  const [pulse] = useState(() => new Animated.Value(0));
+  // 0 is also where a JS-driven loop (the web) resets each ring to. At 0 the ring sits exactly under
+  // the dot and at 1 it's transparent: both read as a solid dot.
+  const [ring] = useState(() => new Animated.Value(0));
   useEffect(() => {
-    if (reduced) return;
-    const loop = Animated.loop(Animated.timing(pulse, { toValue: 1, duration: 1500, easing: Easing.out(Easing.quad), useNativeDriver: native }));
-    loop.start();
-    return () => loop.stop();
-  }, [pulse, reduced]);
+    if (reduced || beat === null || (beat !== undefined && !claimLiveBeat(beat))) {
+      ring.setValue(0); // a ring cut short here (this page went under another) doesn't stay half grown
+      return;
+    }
+    // Ended, the ring rests at scale 2.8 and opacity 0: drawn once, then nothing changes.
+    const stop = playLivePulse(ring, native);
+    return () => {
+      const ended = stop();
+      // Cut short (the header went away or went under another page): the next header may ring it.
+      if (!ended && beat !== undefined) releaseLiveBeat(beat);
+    };
+  }, [ring, reduced, beat]);
   return (
     <View accessible={false} style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
-      {!reduced && <Animated.View style={{ position: 'absolute', width: size, height: size, borderRadius: size / 2, backgroundColor: glow.green, opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.55, 0] }), transform: [{ scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 2.8] }) }] }} />}
+      {!reduced && beat !== null && <Animated.View style={{ position: 'absolute', width: size, height: size, borderRadius: size / 2, backgroundColor: glow.green, opacity: ring.interpolate({ inputRange: [0, 1], outputRange: [0.55, 0] }), transform: [{ scale: ring.interpolate({ inputRange: [0, 1], outputRange: [1, 2.8] }) }] }} />}
       <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: glow.green }} />
     </View>
   );

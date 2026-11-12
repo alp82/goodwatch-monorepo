@@ -1,17 +1,10 @@
-import { runInNewContext } from 'node:vm';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mergeRoom, mergePublic, ownCard, latestRetainedVote, PersistentCommands } from '../src/core/continuous/state';
 import { applyActivity, pruneActivity, groupActivity } from '../src/core/continuous/activity';
 import { parseFrame } from '../src/core/continuous/wire';
 import { ContinuousApi, RoomFailure } from '../src/core/continuous/api-client';
-import {
-  youtubeId,
-  reportedAudible,
-  embeddingRefused,
-  playbackMessage,
-  playerHtml,
-} from '../src/features/glow/trailer';
+import { youtubeId, externalTrailerUrl } from '../src/features/glow/trailer';
 import { presentationSize } from '../src/features/glow/model';
 import { continuousFixture, activityFixture } from './continuous-fixture';
 
@@ -224,14 +217,10 @@ test('v3 HTTP namespace, native bearer and browser cookie split are real, and ca
   await assert.rejects(pending);
   assert.equal(aborted, true);
 });
-test('canonical trailers and reported playback never turn requested audio into a false sound claim', () => {
+test('trailers validate YouTube identities and presentation fits the available space', () => {
   assert.equal(youtubeId('https://www.youtube.com/watch?v=dQw4w9WgXcQ'), 'dQw4w9WgXcQ');
   assert.equal(youtubeId('https://evil.test/watch?v=dQw4w9WgXcQ'), null);
   assert.equal(youtubeId('https://youtube.com.evil.test/embed/dQw4w9WgXcQ'), null);
-  assert.equal(reportedAudible(null), false);
-  assert.equal(reportedAudible({ state: 1, muted: true, volume: 100 }), false);
-  assert.equal(reportedAudible({ state: 2, muted: false, volume: 100 }), false);
-  assert.equal(reportedAudible({ state: 1, muted: false, volume: 100 }), true);
   for (const [w, h] of [
     [375, 400],
     [390, 570],
@@ -261,61 +250,16 @@ test('authoritative retained Undo survives reload/replay, ignores null and retir
   assert.equal(latestRetainedVote(room), undefined);
 });
 
-test('embedding refusals retain explicit YouTube recovery instead of suggesting audio permission', () => {
-  for (const error of ['101', '150']) {
-    const refused = { state: 1, muted: false, volume: 100, error };
-    assert.equal(embeddingRefused(refused), true);
-    assert.equal(reportedAudible(refused), false);
-    assert.equal(
-      playbackMessage(refused),
-      'This trailer cannot play inside the app. Watch it on YouTube.'
-    );
-    assert.doesNotMatch(playbackMessage(refused), /Play with sound/);
-  }
-  assert.equal(
-    embeddingRefused({
-      state: -1,
-      muted: true,
-      volume: 0,
-      error: 'Playback needs a tap',
-    }),
-    false
-  );
-  assert.equal(playbackMessage({ state: 1, muted: false, volume: 75 }), 'Playing · sound on');
-  const reports: { error?: string }[] = [];
-  let interval: () => void = () => {};
-  let events: { onError: (e: {data: number}) => void; onStateChange: (e: {data: number}) => void };
-  const context = {
-    parent: { postMessage: (value: {error?: string}) => reports.push(value) },
-    window: { addEventListener: () => {} },
-    document: { createElement: () => ({}), head: { appendChild: () => {} } },
-    setInterval: (fn: () => void) => { interval = fn; },
-    YT: { Player: function (_id: string, options: {events: typeof events}) {
-      events = options.events;
-      return { getPlayerState: () => -1, isMuted: () => false, getVolume: () => 100 };
-    } },
-  };
-  runInNewContext(playerHtml('dQw4w9WgXcQ', 'test').match(/<script>([\s\S]*)<\/script>/)![1], context);
-  runInNewContext('onYouTubeIframeAPIReady()', context);
-  events!.onError({data: 150});
-  interval(); interval();
-  assert.deepEqual(reports.map(r => r.error), ['150', '150', '150']);
-  events!.onStateChange({data: 1});
-  assert.equal(reports.at(-1)?.error, undefined);
-});
-
-test('trailers use an explicit privacy-enhanced player with the embedding origin', () => {
-  for (const origin of ['https://yepwatch.com', 'http://localhost:8081']) {
-    const html = playerHtml('dQw4w9WgXcQ', 'test', origin);
-    const src = html.match(/<iframe[^>]+src="([^"]+)"/)?.[1].replace(/&amp;/g, '&');
-    assert.ok(src);
-    const embed = new URL(src);
-    assert.equal(embed.origin, 'https://www.youtube-nocookie.com');
-    assert.equal(embed.pathname, '/embed/dQw4w9WgXcQ');
-    assert.equal(embed.searchParams.get('enablejsapi'), '1');
-    assert.equal(embed.searchParams.get('origin'), origin);
-    assert.match(html, /new YT\.Player\('player',\{events:/);
-  }
+test('external trailers strip embed and tracking parameters and reject other hosts or schemes', () => {
+  const expected = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+  for (const url of [
+    expected + '&autoplay=1&origin=https://example.test',
+    'https://youtu.be/dQw4w9WgXcQ?t=12',
+    'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?enablejsapi=1',
+    'https://m.youtube.com/shorts/dQw4w9WgXcQ',
+  ]) assert.equal(externalTrailerUrl(url), expected);
+  for (const url of [null, 'javascript:alert(1)', 'http://youtube.com/watch?v=dQw4w9WgXcQ', 'https://youtube.com.evil.test/watch?v=dQw4w9WgXcQ', 'https://youtube.com@evil.test/watch?v=dQw4w9WgXcQ', 'https://youtube.com/watch?v=invalid'])
+    assert.equal(externalTrailerUrl(url), null);
 });
 
 test('native member callbacks require fixed URI, retained room, unexpired local state and no duplicate parameters', async () => {

@@ -81,6 +81,14 @@ export function LiveFaces({
     </View>
   );
 }
+/**
+ * Where a face's springs count as settled: below a tenth of a dp of movement (scale and rotation over a
+ * face's size, likewise). The default 0.001 kept a hop's spring running about a second longer, on
+ * sub-pixel motion nobody sees, and every running frame delays what the room shows next on Android.
+ */
+const SETTLED_Y = { restDisplacementThreshold: 0.1, restSpeedThreshold: 2 } as const;
+const SETTLED_SCALE = { restDisplacementThreshold: 0.003, restSpeedThreshold: 0.05 } as const;
+const SETTLED_TURN = { restDisplacementThreshold: 0.01, restSpeedThreshold: 0.15 } as const;
 /** The last reduced-motion answer a face heard: a face arriving later starts from it instead of "pending". */
 let knownPreference: boolean | null = null;
 /**
@@ -157,6 +165,7 @@ function Avatar({
         toValue: 0.72,
         useNativeDriver: native,
         friction: 6,
+        ...SETTLED_SCALE,
       }).start();
     } else if (action === 'answer' || action === 'yep') {
       Animated.sequence([
@@ -170,6 +179,7 @@ function Avatar({
             toValue: 1,
             useNativeDriver: native,
             friction: 4,
+            ...SETTLED_SCALE,
           }),
           Animated.sequence([
             Animated.timing(y, {
@@ -181,6 +191,7 @@ function Avatar({
               toValue: 0,
               useNativeDriver: native,
               friction: 4,
+              ...SETTLED_Y,
             }),
           ]),
           Animated.timing(spark, {
@@ -206,6 +217,7 @@ function Avatar({
           toValue: 0,
           useNativeDriver: native,
           friction: 5,
+          ...SETTLED_TURN,
         }),
       ]).start();
     } else if (moving || action === 'handle') {
@@ -219,6 +231,7 @@ function Avatar({
           toValue: 0,
           useNativeDriver: native,
           friction: 4,
+          ...SETTLED_TURN,
         }),
       ]).start();
     }
