@@ -38,8 +38,9 @@ export function previewCommand<T extends RoomSnapshot>(s: T, commandId: string, 
       return shared({ screens, constraints: c.constraints ?? s.shared.constraints } as Partial<T['shared']>);
     }
     case 'vote': {
-      if (c.generation !== s.shared.generation) return s;
       const old = s.own.votes.find((v) => v.candidateId === c.candidateId);
+      // Only over the choice it was aimed at: a refresh may already carry it (or a newer one) before its answer.
+      if (c.generation !== s.shared.generation || (old?.revision ?? 0) !== c.expectedVoteRevision) return s;
       const votes = [...s.own.votes.filter((v) => v.candidateId !== c.candidateId), {
         candidateId: c.candidateId, value: c.value, revision: (old?.revision ?? 0) + 1,
         activeExposureMs: c.activeExposureMs ?? null, timingSource: c.activeExposureMs == null ? 'unavailable' as const : 'active_exposure' as const,
@@ -48,7 +49,8 @@ export function previewCommand<T extends RoomSnapshot>(s: T, commandId: string, 
     }
     case 'agree': {
       const { proposal } = s.shared;
-      if (!proposal || proposal.candidateId !== c.candidateId || s.own.agreement.agreed === c.agreed) return s;
+      if (!proposal || proposal.candidateId !== c.candidateId || s.own.agreement.agreed === c.agreed
+        || s.own.agreement.revision !== c.expectedOwnAgreementRevision) return s;
       const agreeCount = Math.min(proposal.requiredCount, Math.max(0, proposal.agreeCount + (c.agreed ? 1 : -1)));
       // As the server counts it: your agreement revision moves with every change, and agreeing makes your answer a Yep.
       const old = s.own.votes.find((v) => v.candidateId === c.candidateId);

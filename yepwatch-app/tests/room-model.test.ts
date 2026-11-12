@@ -263,3 +263,37 @@ test('agree then withdraw queued together: the withdrawal is aimed at the agreem
   const landed = { ...s, own: { ...s.own, agreement: { ...s.own.agreement, proposalVersion: 2, agreed: true, revision: 1 } } };
   assert.equal((entries[1].build(landed) as { expectedOwnAgreementRevision: number }).expectedOwnAgreementRevision, 1);
 });
+
+test('a refresh confirms the vote before its answer: the vote shows once and an Undo tapped then still goes out', async () => {
+  const { overlayRoom } = await import('../src/core/continuous/optimistic');
+  const vote = { type: 'vote', generation: 1, candidateId: 'c1', expectedVoteRevision: 0, value: 'watch', activeExposureMs: 900 } as const;
+  const pending = { commandId: 'v', sequence: 1, command: vote };
+  // The private refresh already carries the vote (revision 1); the command's own answer hasn't come yet.
+  const confirmed = voted('watch', 1);
+  const view = () => overlayRoom(confirmed, pending, []);
+  assert.equal(view().own.votes.find((v) => v.candidateId === 'c1')?.revision, 1, 'the confirmed vote is not counted again');
+  const { cmd, queued } = capture(() => confirmed, view);
+  await cmd.undo('c1');
+  // The vote's answer arrives (revision 1): the Undo is built against it and goes out.
+  assert.deepEqual(queued[0](confirmed), { type: 'vote', generation: 1, candidateId: 'c1', expectedVoteRevision: 1, value: null });
+});
+
+test('a vote already superseded by another device is not shown over the newer choice', async () => {
+  const { overlayRoom } = await import('../src/core/continuous/optimistic');
+  const pending = { commandId: 'v', sequence: 1, command: { type: 'vote', generation: 1, candidateId: 'c1', expectedVoteRevision: 0, value: 'watch', activeExposureMs: null } as const };
+  const confirmed = voted('pass', 2);
+  assert.deepEqual(overlayRoom(confirmed, pending, []).own.votes, confirmed.own.votes);
+});
+
+test('a refresh shows the agreement changed again before the answer: the old agreement is not shown on top', async () => {
+  const { overlayRoom } = await import('../src/core/continuous/optimistic');
+  const s = voted('watch', 1);
+  s.shared.proposal = { candidateId: 'c1', version: 2, previousCandidateId: null, agreeCount: 0, requiredCount: 2, averageYepMs: null };
+  s.shared.proposalVersion = 2;
+  // This device agreed (revision 0 → 1), then another device of yours withdrew (→ 2) before the answer.
+  s.own.agreement = { proposalVersion: 2, agreed: false, revision: 2, isProposer: false };
+  const agree = { type: 'agree', generation: 1, expectedRosterVersion: 1, expectedProposalVersion: 2, candidateId: 'c1', expectedOwnAgreementRevision: 0, agreed: true } as const;
+  const shown = overlayRoom(s, { commandId: 'a', sequence: 1, command: agree }, []);
+  assert.deepEqual(shown.own.agreement, s.own.agreement);
+  assert.equal(shown.shared.proposal?.agreeCount, 0);
+});
