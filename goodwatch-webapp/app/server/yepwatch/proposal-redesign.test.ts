@@ -581,8 +581,14 @@ test("idea switches retire cards without refreshing availability; only availabil
 	assert.equal(f.refreshes(), before + 1)
 	await f.send({ type: "set_services", serviceIds: [1, 2] })
 	await f.send({ type: "set_service_enabled", serviceIds: [2], enabled: false })
-	await f.send({ type: "leave" }, f.b)
+	assert.equal(f.refreshes(), before + 3)
+	// Availability commands that leave the room's services as they were have nothing to check.
+	await f.send({ type: "set_services", serviceIds: [1] }, f.b)
+	assert.equal(f.refreshes(), before + 3)
+	await f.send({ type: "set_services", serviceIds: [1, 3] }, f.b)
 	assert.equal(f.refreshes(), before + 4)
+	await f.send({ type: "leave" }, f.b)
+	assert.equal(f.refreshes(), before + 5, "the room loses the friend's service")
 })
 
 test("fallback cards have no idea attribution and survive idea switches while obeying eligibility filters", async () => {

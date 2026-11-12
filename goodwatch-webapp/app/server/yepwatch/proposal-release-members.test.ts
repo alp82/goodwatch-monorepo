@@ -44,8 +44,9 @@ test("remote GoodWatch signup/login completion retains guest actor, votes and pr
   const before = (await repo.read(id))!.room;
   let linkedUser = "new-account";
   let seenReads=0;
+  const seenList=["movie_1","show_2"];
   const resource = createMemberResource({
-    async seen(user){assert.equal(user,linkedUser);seenReads++;return ["movie_1","show_2"]},
+    async seen(user){assert.equal(user,linkedUser);seenReads++;return [...seenList]},
     async verify(token) {
       assert.equal(token, "fixture-grant");
       return { userId: linkedUser, expiresAt: Date.now() + 600000 };
@@ -130,6 +131,13 @@ test("remote GoodWatch signup/login completion retains guest actor, votes and pr
   assert.equal(seenReads,seenBefore+1,"session cache avoids repeat account reads");
   await members.seen({...seenRoom,rosterVersion:seenRoom.rosterVersion+1},participantId);
   assert.equal(seenReads,seenBefore+2,"joining refreshes the session cache");
+  // Marked Seen in GoodWatch during setup: the cached read still has the old list, a fresh read (Start) has the new one.
+  const joined={...seenRoom,rosterVersion:seenRoom.rosterVersion+1};
+  seenList.push("movie_3");
+  assert.deepEqual(await members.seen(joined,participantId),["movie_1","show_2"]);
+  assert.deepEqual(await members.seen(joined,participantId,{fresh:true}),["movie_1","show_2","movie_3"]);
+  assert.equal(seenReads,seenBefore+3,"a fresh read asks the account again");
+  assert.deepEqual(await members.seen(joined,participantId),["movie_1","show_2","movie_3"],"and refreshes the cache");
   // A room linked by the previous release repairs itself on its ordinary authenticated read.
   const old = (await repo.read(id))!;
   const legacy = structuredClone(old.room); legacy.participants[0].nickname = "";

@@ -213,12 +213,28 @@ export class ReleaseControl {
 			databaseTime: r.now,
 		}
 	}
+	/**
+	 * A room's creation-quota proof, read alongside the control row: it doesn't depend on it, and every command and
+	 * realtime read checks both, so reading them one after the other cost a round trip each time. The outcome is
+	 * held, not thrown, until the control row says it's needed.
+	 */
+	private quotaProof(roomId: string, expiresAt?: number) {
+		return this.quotas?.active(roomId, expiresAt).then(
+			() => null,
+			(error: unknown) => ({ error })
+		)
+	}
 	async active(room: Pick<ProposalRoom, "id" | "expiresAt">) {
+		const quota = this.quotaProof(room.id, room.expiresAt)
 		const r = await this.read()
 		if (r.now >= room.expiresAt)
 			throw new RoomError("expired", "Room expired", 410)
 		if (!r.state.rooms.some((x) => x[0] === room.id && x[2] === room.expiresAt)) {
-			if (this.quotas) return this.quotas.active(room.id, room.expiresAt)
+			if (quota) {
+				const failed = await quota
+				if (failed) throw failed.error
+				return
+			}
 			throw new RoomError(
 				"busy",
 				"Room capacity reservation unavailable",
@@ -331,11 +347,14 @@ export class ReleaseControl {
 		const op = digest(JSON.stringify([kind, roomId, actorId, inputDigest])),
 			actor = digest(`${roomId}:${actorId}`).slice(0, 32)
 		for (let i = 0; i < 8; i++) {
+			const quota = this.quotaProof(roomId)
 			const r = await this.read(),
 				state = this.clean(r)
 			if (!state.rooms.some((x) => x[0] === roomId)) {
-				if (this.quotas) await this.quotas.active(roomId)
-				else throw new RoomError("expired", "Room capacity reservation expired", 410)
+				if (quota) {
+					const failed = await quota
+					if (failed) throw failed.error
+				} else throw new RoomError("expired", "Room capacity reservation expired", 410)
 			}
 			const admitted =
 				kind !== "command"

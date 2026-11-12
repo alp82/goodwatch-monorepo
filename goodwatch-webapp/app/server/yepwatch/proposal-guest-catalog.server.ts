@@ -71,7 +71,7 @@ export function guestProposalCatalog(members?: ContinuousMembers) {
 	})
 	return {
 		...catalog,
-		async excludedKeys(room: import("./proposal-types.ts").ProposalRoom) {
+		async excludedKeys(room: import("./proposal-types.ts").ProposalRoom, options?: import("./proposal-types.ts").ExcludedKeysOptions) {
 			if (!members) return []
 			return (
 				await Promise.all(
@@ -80,7 +80,7 @@ export function guestProposalCatalog(members?: ContinuousMembers) {
 							(p) =>
 								p.leftAt == null && p.member.state === "linked" && !p.showSeen
 						)
-						.map((p) => members.seen(room, p.id))
+						.map((p) => members.seen(room, p.id, { fresh: options?.fresh }))
 				)
 			).flat()
 		}

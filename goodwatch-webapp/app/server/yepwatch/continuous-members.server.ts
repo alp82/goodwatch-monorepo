@@ -748,11 +748,12 @@ export class ContinuousMembers {
 		return this.reads.progress(userId, actor(room, participantId).memberGrant!.accessToken)
 	}
     private seenCache = new Map<string, {roster: number; keys: string[]}>()
-    async seen(room: ContinuousRoom, participantId: string): Promise<string[]> {
+    /** A member's seen title keys, kept per room roster. `fresh` (Start) reads the account again and refreshes it. */
+    async seen(room: ContinuousRoom, participantId: string, options: { fresh?: boolean } = {}): Promise<string[]> {
       if (!this.reads.seen) return []
       const key = `${room.id}:${participantId}`
       const cached = this.seenCache.get(key)
-      if (cached?.roster === room.rosterVersion) return cached.keys
+      if (!options.fresh && cached?.roster === room.rosterVersion) return cached.keys
       const userId = await this.identity(room, participantId)
       const keys = await this.reads.seen(userId, actor(room, participantId).memberGrant!.accessToken)
       this.seenCache.set(key, {roster:room.rosterVersion,keys})

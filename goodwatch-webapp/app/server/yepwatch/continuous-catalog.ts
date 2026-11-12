@@ -78,7 +78,7 @@ export function createContinuousCatalog(
 									.map((id) => 2_000_000_000_000 + id)
 									.filter((key) => ranked.includes(key))
 							: [];
-						const keys = [...new Set([...continued, ...ranked])];
+						const keys = continued.length ? [...new Set([...continued, ...ranked])] : ranked;
 						return seenKeys.size ? keys.filter((key) => !seenKeys.has(key)) : keys;
 					},
 				},

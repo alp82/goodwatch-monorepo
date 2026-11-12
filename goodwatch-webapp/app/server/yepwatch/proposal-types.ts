@@ -94,12 +94,16 @@ export type ProposalRepository = RoomRepository<ProposalRoom> & {
 	findInvite?(hash: string): Promise<string | null>
 }
 export type ProposalStored = StoredRoom<ProposalRoom>
+export interface ExcludedKeysOptions {
+	fresh?: boolean
+}
 export interface ProposalCatalog {
 	metadata: import("./continuous-types.ts").ContinuousCatalog["metadata"]
 	page(
 		room: ProposalRoom
 	): Promise<{ candidates: Candidate[]; exhausted: boolean }>
-	excludedKeys?(room: ProposalRoom): Promise<string[]>
+	/** Title keys the room's linked members have seen (and don't want shown). `fresh` reads past any session cache. */
+	excludedKeys?(room: ProposalRoom, options?: ExcludedKeysOptions): Promise<string[]>
 	refresh?(room: ProposalRoom): Promise<Candidate[]>
 	recheck(
 		room: ProposalRoom,

@@ -457,3 +457,34 @@ test("Admission rate denial returns429 Retry-After before room creation, indepen
 	assert.equal(db.state().rooms.length, 1)
 	assert.equal(db.state().admissions.length, 1)
 })
+test("with creation quotas, a check reads the room's quota proof alongside the control row and keeps its outcome", async () => {
+	const db = database()
+	let events: string[] = []
+	const sql: Sql = async (stmt, args) => {
+		const control = stmt.includes(CONTROL_TABLE) && stmt.startsWith("SELECT")
+		if (control) await new Promise((resolve) => setTimeout(resolve, 5))
+		const result = await db.sql(stmt, args)
+		if (control) events.push("control read")
+		return result
+	}
+	let valid = true
+	const quotas = {
+		limit: 10,
+		async reserve() { return 0 },
+		async count() { return 0 },
+		async active() {
+			events.push("quota proof")
+			if (!valid) throw new RoomError("busy", "Room allowance could not be confirmed", 503, true)
+		},
+	}
+	const control = new ReleaseControl(sql, DEFAULT_CONTROL, quotas)
+	const room = { id: "room-q", expiresAt: 1_900_000_000_000 }
+	await control.active(room)
+	assert.deepEqual(events, ["quota proof", "control read"], "the proof didn't wait for the control row")
+	events = []
+	await control.command(room.id, "actor", "digest-1")
+	assert.deepEqual(events.slice(0, 2), ["quota proof", "control read"])
+	valid = false
+	await assert.rejects(control.active(room), { code: "busy" })
+	await assert.rejects(control.command(room.id, "actor", "digest-2"), { code: "busy" })
+})

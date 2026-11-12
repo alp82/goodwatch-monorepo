@@ -62,7 +62,15 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
   server.headersTimeout = 5000
   server.requestTimeout = 5000
   server.keepAliveTimeout = 1000
-  const wss = new WebSocketServer({ noServer: true, perMessageDeflate: false,
+  // A proposal room's snapshot is ~58 KB of JSON and deflates to ~9 KB: on a fast 4G phone (~9 Mbit/s) each update
+  // lands ~40 ms sooner. Each message is compressed on its own (no context takeover: history resets per message, so
+  // nothing of one frame reaches another's size); small frames (activity, pong, errors) go plain. Clients that don't
+  // offer the extension get plain frames as before. maxPayload bounds inbound frames after inflating.
+  // Memory: each compressing socket keeps its own zlib streams (~330 KB measured, so ~42 MB per 128 sockets);
+  // concurrencyLimit only caps simultaneous compressions. Fine at today's room counts; tune memLevel/windowBits first
+  // if socket counts grow.
+  const wss = new WebSocketServer({ noServer: true,
+    perMessageDeflate: { threshold: 1024, serverNoContextTakeover: true, clientNoContextTakeover: true, concurrencyLimit: 4 },
     maxPayload: options.maxPayloadBytes, maxFragments: 32, maxBufferedChunks: 64, autoPong: false, clientTracking: false })
 
   function send(client: Client, frame: OutputFrame): boolean {

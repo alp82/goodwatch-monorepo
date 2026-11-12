@@ -7,10 +7,12 @@ import {
 	redesignCommands,
 	retireIneligible,
 	refreshServices,
-	attributeCandidates
+	attributeCandidates,
+	titleKey
 } from "./proposal-redesign.ts"
 import type { InterpretRoom } from "./proposal-intent.ts"
 import { activeRoom, normalizeRoomContext } from "./proposal-context.ts"
+import { PreparedDecks, type PreparedDecksOptions } from "./proposal-prepared-decks.ts"
 import { CONTINUOUS_LIMITS as L } from "./continuous-types.ts"
 import type {
 	CommandEnvelope,
@@ -79,6 +81,9 @@ export class ProposalService {
 	private guard?: ProposalOperationGuard
 	private now: () => number
 	private interpret?: InterpretRoom
+	/** First decks built during setup, so Start doesn't wait for the catalog. */
+	readonly decks: PreparedDecks
+	private knownCountries = new Set<string>()
 	private writes = new Map<string, { tail: Promise<void>; count: number }>()
 	constructor(
 		repository: ProposalRepository,
@@ -87,7 +92,8 @@ export class ProposalService {
 		publish: (event: RoomInvalidation) => Promise<void> = async () => {},
 		now: () => number = Date.now,
 		guard?: ProposalOperationGuard,
-		interpret?: InterpretRoom
+		interpret?: InterpretRoom,
+		options: { decks?: PreparedDecksOptions } = {}
 	) {
 		if (secret.length < 32) throw new Error("Room secret too short")
 		this.repository = repository
@@ -99,6 +105,10 @@ export class ProposalService {
 		this.now = now
 		this.guard = guard
 		this.interpret = interpret
+		this.decks = new PreparedDecks(catalog, async (id) => {
+			const stored = await repository.read(id)
+			return stored && stored.room.format === 2 && stored.room.flowVersion === 3 ? stored.room : null
+		}, { now, ...options.decks })
 	}
 	/** Avoid retry storms between this process's joins, votes and socket handshakes.
 	 * Database CAS remains the authority across processes and background repair.
@@ -127,7 +137,10 @@ export class ProposalService {
 		}
 	}
 	private async get(id: string): Promise<ProposalStored> {
-		const stored = await this.repository.read(id)
+		return this.live(await this.repository.read(id))
+	}
+	/** A stored room any answer may be built from: a v3 room, not expired, its capacity reservation still active. */
+	private async live(stored: ProposalStored | null): Promise<ProposalStored> {
 		requireRoom(
 			stored && stored.room.format === 2 && stored.room.flowVersion === 3,
 			"not_found",
@@ -355,17 +368,24 @@ export class ProposalService {
 		setup: RoomSetupRequest,
 		interpretation: { value?: Promise<NonNullable<ProposalRoom["intent"]> | null> }
 	): Promise<ProposalRoom> {
-		const metadata = await this.catalog.metadata(setup.country).catch(() => null)
-		if (!metadata?.countries.some((c) => c.code === setup.country)) return room
 		const host = actor(room, room.hostId)
 		const step = (from: ProposalRoom, command: RoomCommand, commandId: string) =>
 			proposalTransition(from, host.id, { commandId, sequence: 0, command }, this.now(), undefined, true)
 		let next = step(room, { type: "configure", expectedContextVersion: room.contextVersion, country: setup.country }, "setup-country")
-		if (setup.idea && this.interpret) {
-			const interpret = this.interpret
+		const search = () => {
+			if (!setup.idea || !this.interpret) return
 			const services = next.screens[0]?.serviceIds ?? []
 			// Searched once per create request, also when a lost insert makes the loop go round again.
-			interpretation.value ??= interpret(setup.idea, setup.country, services, host.memberUserId ? "member" : "guest").catch(() => null)
+			interpretation.value ??= this.interpret(setup.idea, setup.country, services, host.memberUserId ? "member" : "guest").catch(() => null)
+		}
+		// A country this process has already confirmed is searched alongside the catalog check; any other only after
+		// it, so an unknown country never spends a search.
+		if (this.knownCountries.has(setup.country)) search()
+		const metadata = await this.catalog.metadata(setup.country).catch(() => null)
+		for (const c of metadata?.countries ?? []) this.knownCountries.add(c.code)
+		if (!metadata?.countries.some((c) => c.code === setup.country)) return room
+		search()
+		if (setup.idea && interpretation.value) {
 			const interpreted = await interpretation.value
 			if (interpreted) {
 				const ideaId = keyed(this.secret, "proposal-setup-idea", room.id).slice(0, 32)
@@ -442,7 +462,7 @@ export class ProposalService {
 			const room = request.setup ? await this.withSetup(blank, request.setup, interpretation) : blank
 			try {
 				if (account) await this.accounts.remember(account.userId, { roomId: id, expiresAt: room.expiresAt })
-				await this.repository.insert(room)
+				if (await this.repository.insert(room)) this.decks.schedule(id)
 			} catch (e) {
 				if (!(e instanceof IndeterminateWrite)) throw e
 			}
@@ -641,12 +661,17 @@ export class ProposalService {
 			this.applyCommand(id, credential, envelope)
 		)
 		// Fresh availability checks must not block joins or withdrawals that invalidate them.
-		await this.notify(id)
-		await this.settle(id)
-		const committed = await this.get(id)
+		// The room notify reads after the commit answers the command, unless an agreement check has to settle first.
+		// Either way it is checked like any read: it may have expired or lost its capacity reservation meanwhile.
+		let stored = await this.notify(id)
+		if (!stored || (stored.room.phase === "choosing" && stored.room.agreement.state === "checking")) {
+			await this.settle(id)
+			stored = await this.repository.read(id)
+		}
+		const committed = (await this.live(stored)).room
 		return {
 			receipt,
-			snapshot: this.snapshot(committed.room, credential)
+			snapshot: this.snapshot(committed, credential)
 		}
 	}
 	private async applyCommand(
@@ -780,8 +805,15 @@ export class ProposalService {
 			) {
 				const room = structuredClone(activeRoom(old.room))
 				if (envelope.command.type === "refill") retire(room)
+				// Usually prepared during setup; a Start retried after losing its compare-and-swap reuses the same build.
 				if (room.candidates.length < L.active && room.seenKeys.length < L.seen)
-					page = await this.catalog.page(room)
+					page = await this.decks.page(room)
+				// Seen lists are read again at Start: a deck prepared earlier never shows what a member has since seen.
+				if (page && envelope.command.type === "start" && this.catalog.excludedKeys) {
+					// Fresh: a background build may have filled the seen cache before a title was marked Seen.
+					const excluded = new Set(await this.catalog.excludedKeys(room, { fresh: true }))
+					if (excluded.size) page = { ...page, candidates: page.candidates.filter((c) => !excluded.has(titleKey(c))) }
+				}
 			}
 			if (envelope.command.type === "restart") await this.accounts.publish(old.room.history ?? [])
 			const room = proposalTransition(
@@ -816,7 +848,8 @@ export class ProposalService {
 						(command.type === "configure" &&
 							command.country !== undefined &&
 							command.country !== old.room.screens[0]?.country) ||
-						command.type === "leave")
+						command.type === "leave") &&
+					watchScreensChanged(old.room, room)
 				)
 					room.candidates = await this.catalog.refresh(activeRoom(room))
 				retireIneligible(
@@ -851,6 +884,7 @@ export class ProposalService {
 				uncertain = true
 				continue
 			}
+			this.hintCommitted(old.room, room)
 			return {
 				commandId: envelope.commandId,
 				sequence,
@@ -1542,20 +1576,36 @@ export class ProposalService {
 			snapshot: proposalSnapshot(room, lease.participantId).shared
 		}
 	}
-	async notify(id: string) {
+	/**
+	 * Tells the gateway about a revision as soon as its compare-and-swap succeeds, without waiting for notify's read
+	 * of the room (the other phones see a vote that much sooner). notify still publishes it, a no-op for the gateway,
+	 * and acknowledges it. Not when the history changed: notify stores it on the accounts before anyone hears of it.
+	 */
+	private hintCommitted(old: ProposalRoom, room: ProposalRoom) {
+		if (room.expiresAt <= this.now()) return
+		if (JSON.stringify(room.history ?? []) !== JSON.stringify(old.history ?? [])) return
+		this.publish({ roomId: room.id, revision: room.revision }).catch(() => {
+			/* notify publishes it again; repair retries */
+		})
+	}
+	/** Publishes a committed revision once. Returns the room it read, or null when the read failed. */
+	async notify(id: string): Promise<ProposalStored | null> {
+		let stored: ProposalStored | null = null
 		try {
-			const stored = await this.repository.read(id)
+			stored = await this.repository.read(id)
+			if (stored?.room.phase === "setup") this.decks.schedule(id)
 			if (
 				!stored ||
 				!stored.pendingRevision
 			)
-				return
+				return stored
 			await this.accounts.publish(stored.room.history ?? [])
 			if (stored.room.expiresAt > this.now()) await this.publish({ roomId: id, revision: stored.room.revision })
 			await this.repository.acknowledge(id, stored.room.revision)
 		} catch {
 			/* commit remains durable; repair retries */
 		}
+		return stored
 	}
 	/** Server/operator-only revocation, never a gateway/public command. Required roster is retained. */
 	async revokeParticipant(id: string, participantId: string) {
@@ -1588,4 +1638,17 @@ export class ProposalService {
 			await this.notify(id)
 		}
 	}
+}
+
+/**
+ * Whether the screens the room watches on (country, services, who is on which) differ: a refresh reads nothing else.
+ * A friend picking services the room already has leaves them as they were, and checking every card's offers again
+ * (~1 s in production) would only hold up the command and the Start queued behind it.
+ */
+function watchScreensChanged(old: ProposalRoom, next: ProposalRoom) {
+	const screens = (room: ProposalRoom) => {
+		const active = activeRoom(room)
+		return JSON.stringify([active.screens, [...new Set(active.participants.map((p) => p.screenId))].sort()])
+	}
+	return screens(old) !== screens(next)
 }

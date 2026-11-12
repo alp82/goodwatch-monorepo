@@ -39,3 +39,56 @@ export function titleKeySet(ids: Iterable<string>): Set<number> {
 	}
 	return keys
 }
+
+/** Resolves on the next turn of the event loop, after pending I/O callbacks. */
+export const yieldToEventLoop = () => new Promise<void>((resolve) => setImmediate(resolve))
+
+/**
+ * Builds a ranking over a large universe slice by slice, yielding to the event loop between slices, so other requests
+ * run in between instead of waiting for one long synchronous pass. `rank` filters and orders one slice; it must keep or
+ * drop each title by the title alone and order by `compare`, a total order, so that merging the ranked slices equals
+ * ranking the whole universe at once.
+ */
+export async function rankInSlices(
+	universe: ArrayLike<number>,
+	rank: (slice: number[]) => Promise<readonly number[]>,
+	compare: (a: number, b: number) => number,
+	sliceSize = 8_192,
+): Promise<number[]> {
+	const lists: (readonly number[])[] = []
+	for (let start = 0; start < universe.length; start += sliceSize) {
+		const slice: number[] = []
+		for (let i = start; i < Math.min(universe.length, start + sliceSize); i++) slice.push(universe[i])
+		lists.push(await rank(slice))
+		await yieldToEventLoop()
+	}
+	// k-way merge with a binary heap of list heads; ties can't happen in a total order.
+	const heap: number[] = []
+	const at = new Int32Array(lists.length)
+	const less = (x: number, y: number) => compare(lists[x][at[x]], lists[y][at[y]]) < 0
+	const down = (i: number) => {
+		for (;;) {
+			const l = 2 * i + 1, r = l + 1
+			let m = i
+			if (l < heap.length && less(heap[l], heap[m])) m = l
+			if (r < heap.length && less(heap[r], heap[m])) m = r
+			if (m === i) return
+			;[heap[i], heap[m]] = [heap[m], heap[i]]
+			i = m
+		}
+	}
+	for (let x = 0; x < lists.length; x++) if (lists[x].length) heap.push(x)
+	for (let i = (heap.length >> 1) - 1; i >= 0; i--) down(i)
+	const merged: number[] = []
+	while (heap.length) {
+		const x = heap[0]
+		merged.push(lists[x][at[x]++])
+		if (at[x] >= lists[x].length) {
+			heap[0] = heap[heap.length - 1]
+			heap.pop()
+		}
+		if (heap.length) down(0)
+		if ((merged.length & 32_767) === 0) await yieldToEventLoop()
+	}
+	return merged
+}
