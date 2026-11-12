@@ -62,8 +62,10 @@ export const roomLabel = (hostName: string | null) => `${(hostName || 'Your frie
  * is still loading: the space is kept.
  */
 export function InviteHead({ preview }: { preview: InvitePreview | undefined }) {
-  const { phone, z } = useLayout();
-  const [width, setWidth] = useState(330);
+  const { phone, z, max } = useLayout();
+  // The join screen's column (its Screen width) from the first frame: a guess that onLayout corrects
+  // refits the headline once it shows, and the heading moves (slow network: the preview arrives first).
+  const [width, setWidth] = useState(() => Math.min(z(640), max));
   if (!preview) return <View testID="invite-head-pending" style={{ minHeight: HEAD_HEIGHT }} />;
   const kinds = preview.kinds.filter((k): k is Kind => k === 'movie' || k === 'show_start');
   const many = preview.ideas.length > 1;

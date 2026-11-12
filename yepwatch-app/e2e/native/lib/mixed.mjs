@@ -37,6 +37,10 @@ export class WebPeer {
   async join(url) {
     const p = this.page;
     await p.goto(url);
+    // As a person does: the join page once it shows (the startup cover gone). A name typed into the page
+    // still building under the cover is lost when it shows, and Join stays disabled.
+    await p.getByTestId('join-screen').waitFor({ state: 'visible', timeout: 15000 });
+    await p.getByTestId('yepwatch-boot').waitFor({ state: 'detached', timeout: 15000 });
     await p.getByLabel('Your name').fill(this.name);
     await this.button('Join').click();
     await p.getByTestId('services-sheet').waitFor();

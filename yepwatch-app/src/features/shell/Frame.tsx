@@ -105,12 +105,12 @@ export function AppFrame({ header = {}, rooms, children, footer, footerPlacement
       {backdrop}
       {/* An open sheet is modal: the header behind it is out of reach for touch, focus and screen readers,
           and a tap on it closes the sheet (as a tap on the shade does), so its Back still closes the sheet first. */}
-      <CoveredBody covered={covered || Boolean(shownSheet)} testID="covered-header" style={{ paddingTop: insets.top, backgroundColor: warm.bar, zIndex: 30 }}>
+      <CoveredBody keepView covered={covered || Boolean(shownSheet)} testID="covered-header" style={{ paddingTop: insets.top, backgroundColor: warm.bar, zIndex: 30 }}>
         <AppHeader {...header} back={back} onPill={header.onPill ?? (header.pill ? () => setRoomsOpen(true) : undefined)} onProfile={header.onProfile ?? (() => setProfileOpen(true))} />
       </CoveredBody>
       {shownSheet && !covered ? <View testID="header-shade" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: insets.top + layout.header, zIndex: 31 }}><Shade onPress={onePress(() => { closeTopSheet(); })} /></View> : null}
       <View style={{ flex: 1, minHeight: 0 }}>
-        <CoveredBody covered={covered || Boolean(shownSheet)}>
+        <CoveredBody keepView covered={covered || Boolean(shownSheet)}>
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, minHeight: 0 }}>
             {scroll ? (
               <ScrollView testID="frame-body" style={{ flex: 1 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={{ flexGrow: 1, paddingHorizontal: gutter, paddingTop: top, paddingBottom: bottom }}>

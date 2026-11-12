@@ -6,6 +6,7 @@ import { memberTransition } from './member-transition';
 
 /** Browsers keep the sealed session in an HttpOnly cookie: nothing to read or store here. */
 export async function readSession(): Promise<string | null> { return null; }
+export function peekSession(): string | null { return null; }
 export async function saveSession(_session: string) { /* The API sets the cookie. */ }
 export async function clearSession() { /* The API clears the cookie. */ }
 /** The name of this browser's last GoodWatch sign-in ('' without one), kept until Log out. */

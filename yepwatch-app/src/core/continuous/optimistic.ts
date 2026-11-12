@@ -47,6 +47,14 @@ export function previewCommand<T extends RoomSnapshot>(s: T, commandId: string, 
       }];
       return own({ votes, nextCandidateId: c.value === null ? c.candidateId : null } as Partial<T['own']>);
     }
+    // The server decides whether a proposal goes through. Once the room shows it (a friend's broadcast or
+    // a poll can bring the shared room before this device's answer), it is this device's own and agreed,
+    // as the server makes it: the screen never shows the proposer "Someone proposes" with Agree first.
+    case 'propose': {
+      const { proposal } = s.shared;
+      if (!proposal || proposal.candidateId !== c.candidateId || s.own.agreement.proposalVersion === s.shared.proposalVersion) return s;
+      return own({ agreement: { ...s.own.agreement, proposalVersion: s.shared.proposalVersion, agreed: true, isProposer: true } } as Partial<T['own']>);
+    }
     case 'agree': {
       const { proposal } = s.shared;
       if (!proposal || proposal.candidateId !== c.candidateId || s.own.agreement.agreed === c.agreed

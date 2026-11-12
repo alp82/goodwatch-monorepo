@@ -48,7 +48,7 @@ export class ContinuousApi {
   constructor(
     private readonly fetcher: typeof fetch = (url, init) => fetch(url, init),
     private readonly native = false,
-    private readonly sessions?: { read(): Promise<string | null>; save(value: string): Promise<unknown> },
+    private readonly sessions?: { read(): Promise<string | null>; save(value: string): Promise<unknown>; /** The session if already read (no wait); undefined if not yet. */ peek?(): string | null | undefined },
     private readonly creators?: { read(): Promise<string | null> }
   ) {}
   async request<T>(
@@ -61,6 +61,9 @@ export class ContinuousApi {
     timeoutMs = 15000
   ): Promise<T> {
     const asked = authEpoch.current();
+    // Known already: the request leaves in this same task (a vote's request is never queued behind the
+    // sound and animation work its tap started).
+    if (this.native && memberSession === undefined) memberSession = this.sessions?.peek?.();
     if (this.native && memberSession === undefined) memberSession = await this.sessions?.read();
     const creator = this.native && path === paths.rooms && body !== undefined ? await this.creators?.read() : null;
     const started = Date.now();

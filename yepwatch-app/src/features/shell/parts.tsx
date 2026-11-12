@@ -54,10 +54,16 @@ export function Action({ label, name, onPress, gold = false, icon, style, disabl
     </Press>
   );
 }
-/** Preserve layout under panels, while excluding covered controls from focus and touches. */
-export function CoveredBody({ covered, children, style, testID = 'covered-body' }: { covered: boolean; children: ReactNode; style?: StyleProp<ViewStyle>; testID?: string }) {
+/**
+ * Preserve layout under panels, while excluding covered controls from focus and touches.
+ * `keepView`: always its own native view. Uncovered it has no props that need one, so Fabric flattens it
+ * away and moves its children to the parent in the same commit. A screen's sheets close right before
+ * the screen leaves (Leave room, Archive room), and that move on a screen the stack is taking away made
+ * Android's mounting fail ("view already has a parent"), which tore React Native down: a black window.
+ */
+export function CoveredBody({ covered, children, style, testID = 'covered-body', keepView = false }: { covered: boolean; children: ReactNode; style?: StyleProp<ViewStyle>; testID?: string; keepView?: boolean }) {
   const attach = useCallback((node: ComponentRef<typeof View> | null) => {
     if (Platform.OS === 'web' && node) (node as unknown as HTMLElement).inert = covered;
   }, [covered]);
-  return <View ref={attach} testID={testID} pointerEvents={covered ? 'none' : 'auto'} aria-hidden={covered} importantForAccessibility={covered ? 'no-hide-descendants' : 'auto'} accessibilityElementsHidden={covered} style={style ?? { flex: 1, minHeight: 0 }}>{children}</View>;
+  return <View ref={attach} testID={testID} collapsable={!keepView} pointerEvents={covered ? 'none' : 'auto'} aria-hidden={covered} importantForAccessibility={covered ? 'no-hide-descendants' : 'auto'} accessibilityElementsHidden={covered} style={style ?? { flex: 1, minHeight: 0 }}>{children}</View>;
 }
