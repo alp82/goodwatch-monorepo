@@ -42,13 +42,34 @@ const entities: ExactEntity[] = [
 		names: ["Dark"],
 		year: 2017,
 	},
+	{
+		kind: "title",
+		id: "1000000060494",
+		label: "Like Crazy",
+		names: ["Like Crazy"],
+		year: 2011,
+	},
 ]
 const lookup = (name: string) =>
 	entities.filter((e) => e.names.some((n) => exactName(n) === name))
 const resolve = (text: string) =>
 	chooseExactSearch(text, lookup, new Set(["dark"]))
 
-test("whole exact names, aliases, cited years and explicit references resolve without guessing", () => {
+test("a bare movie title must not become a Like filter", () => {
+	const coneheads: ExactEntity = {
+		kind: "title",
+		id: "1000000009612",
+		label: "Coneheads",
+		names: ["Coneheads"],
+		year: 1993,
+	}
+	const lookup = (name: string) => (name === "coneheads" ? [coneheads] : [])
+	for (const query of ["coneheads", "Coneheads (1993)", '"Coneheads"'])
+		assert.equal(chooseExactSearch(query, lookup), null, query)
+	assert.equal(chooseExactSearch("like Coneheads", lookup)?.id, coneheads.id)
+})
+
+test("whole trope names and explicit title references resolve without guessing", () => {
 	for (const q of [
 		"Apocalypse Anarchy",
 		" apocalypse   anarchy ",
@@ -56,20 +77,29 @@ test("whole exact names, aliases, cited years and explicit references resolve wi
 	])
 		assert.equal(resolve(q)?.kind, "trope")
 	for (const q of [
-		"Arrival",
-		"arrival (2016)",
-		"Premier Contact",
 		"like Arrival",
 		"movies similar to Arrival",
-		'"Arrival"',
+		"like Premier Contact",
+		"like arrival (2016)",
+		"shows like Arrival",
+		"series similar to Arrival",
 	])
 		assert.equal(resolve(q)?.id, "1000000329865", q)
-	assert.equal(resolve("Dune 2021")?.id, "1000000431969")
-	assert.equal(resolve("Dune (1984)")?.id, "1000000000841")
+	assert.equal(resolve("like Dune 2021")?.id, "1000000431969")
+	assert.equal(resolve("similar to Dune (1984)")?.id, "1000000000841")
+	assert.equal(resolve("like Like Crazy")?.id, "1000000060494")
 })
 
 test("ambiguity, prefixes, negation and unresolved intent remain ordinary searches", () => {
 	for (const q of [
+		"Arrival",
+		"arrival (2016)",
+		"Premier Contact",
+		'"Arrival"',
+		"Dune 2021",
+		"Dune (1984)",
+		'"Dark"',
+		"Like Crazy",
 		"Dune",
 		"like Dune",
 		"Dark",
@@ -82,11 +112,6 @@ test("ambiguity, prefixes, negation and unresolved intent remain ordinary search
 		"Arrival 1990",
 	])
 		assert.equal(resolve(q), null, q)
-	assert.equal(
-		resolve('"Dark"')?.kind,
-		"title",
-		"quoting explicitly chooses the title namespace over a mood",
-	)
 	const collision = { ...entities[0], names: ["Arrival"] }
 	assert.equal(
 		chooseExactSearch("Arrival", (name) => [...lookup(name), collision]),
@@ -99,7 +124,7 @@ test("confirmed readings become shareable filters while own choices and unrelate
 		new URLSearchParams(
 			"q=Arrival&asked=Arrival&off=Arrival&page=3&sort=top&services=8",
 		),
-		resolve("Arrival")!,
+		resolve("like Arrival")!,
 	)
 	assert.equal(params.get("similar"), "1000000329865")
 	assert.equal(params.get("services"), "8")
@@ -108,7 +133,7 @@ test("confirmed readings become shareable filters while own choices and unrelate
 		assert.equal(params.has(key), false)
 	const own = exactSearchParams(
 		new URLSearchParams("similar=1000000000550&q=Arrival"),
-		resolve("Arrival")!,
+		resolve("like Arrival")!,
 	)
 	assert.equal(own.get("similar"), "1000000000550")
 })

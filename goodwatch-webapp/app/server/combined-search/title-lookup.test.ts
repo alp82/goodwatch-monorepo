@@ -97,7 +97,8 @@ Object.assign(globalThis, { titleLookupProbe: probe })
 const stagedRanking = (): (typeof probe)["staged"] => probe.staged
 
 const stubs: Record<string, string> = {
-	"/search-resolution.server.ts": `export const startExactSearchResolution=()=>{};export const resolveExactSearch=()=>null;`,
+	"/search-resolution.server.ts": `import {chooseExactSearch} from '../domain/exact-search.ts'; export const startExactSearchResolution=()=>{};export const resolveExactSearch=q=>chooseExactSearch(q,name=>name==='coneheads'?[{kind:'title',id:'1000000009612',label:'Coneheads',names:['Coneheads'],year:1993}]:[]);`,
+	"/combined-search/resolved.server.ts": `export const resolvedSearch=async()=>({rows:[{key:'show:1877',title:'Phineas and Ferb'}],metadata:[],reading:[{kind:'attribute',text:'Like Coneheads (1993)'}],searchKeys:[]});`,
 	"/combined-search/reading-retrieval.server.ts": `export const attributeRequest=()=>({}); export const fingerprintRequest=()=>({}); export const describeTitles=async(_reading,rows,options)=>{const probe=globalThis.titleLookupProbe;probe.displays.push(rows.map(row=>row.key));if(probe.displayGate){const gate=probe.displayGate;probe.displayHeld++;probe.displayTimeouts.push(options?.timeoutMs);await gate;probe.displaySettled++}return []}; export const readingFields=()=>({}); export const summarizeReading=()=>[];`,
 	"/combined-search/catalog.server.ts": `export const eligible=(metadata,_policy,discovery)=>{const probe=globalThis.titleLookupProbe;const key=metadata?metadata.media_type+':'+metadata.tmdb_id:'';probe.eligibility?.push({key,discovery});return !probe.ineligible.has(key)}; export const metadataFor=async keys=>{if(keys.includes(globalThis.titleLookupProbe.failMetadataKey))throw new Error("Catalog completion failed");if(keys.length)globalThis.titleLookupProbe.metadata.push(keys);const probe=globalThis.titleLookupProbe;if(probe.metadataGate&&keys.includes(probe.heldMetadataKey)){const gate=probe.metadataGate;probe.metadataHeld++;await gate;probe.metadataSettled++}return keys.map(key=>({media_type:key.split(':')[0],tmdb_id:Number(key.split(':')[1]),adult:false,imdb_id:globalThis.titleLookupProbe.imdb[key]??null,poster_path:null,genres:null,goodwatch_overall_score_voting_count:0,goodwatch_overall_score_normalized_percent:null}))}; export const searchQuery=async()=>{globalThis.titleLookupProbe.literals++;return []}; export const exactCatalogTitles=async q=>{if(q.includes('race fallback'))await new Promise(resolve=>setTimeout(resolve,180));return q.includes('delayed primary')?[{id:41,title:q,original:'Native name',type:'movie',year:'1980',poster:null,popularity:0}]:[]};`,
 	"/combined-search/language.server.ts": `export const prepareLanguage=async text=>{if(!globalThis.titleLookupProbe.translation)return {text,policy:{mode:'english'},chargedNano:0};globalThis.titleLookupProbe.translations++;return {text:'translated '+text,policy:{mode:'translated'},chargedNano:99}};`,
@@ -211,6 +212,38 @@ const fixture = {
 }
 const policy = { includeAdult: false, lesserKnown: false, filters: {} }
 const visitor = { accountId: null, networkIdentity: "test" }
+
+test("a recognized title returns the movie itself for both Discord and website searches", async () => {
+	page("coneheads", 1, {
+		total_pages: 1,
+		results: [{
+			...fixture,
+			id: 9612,
+			title: "Coneheads",
+			original_title: "Coneheads",
+			release_date: "1993-07-23",
+		}],
+	})
+	for (const consumer of ["discord", "web"] as const) {
+		const result = await combinedSearch(
+			"coneheads",
+			policy,
+			{
+				...visitor,
+				attribution: {
+					consumer,
+					surface: consumer === "discord" ? "discord" : "start",
+					trigger: "api",
+					reported_by: "server",
+				},
+			},
+			new AbortController().signal,
+		)
+		assert.equal(result.rows[0]?.key, "movie:9612", consumer)
+		assert.equal(result.resolution, undefined)
+		assert.ok(!result.reading.some((chip) => chip.text.startsWith("Like Coneheads")))
+	}
+})
 
 test("fast exact title retains its native name and identity", async () => {
 	page("Özgün başlık", 1, { total_pages: 1, results: [fixture] })

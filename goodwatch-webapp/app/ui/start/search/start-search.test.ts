@@ -732,8 +732,8 @@ for (const trigger of ["enter", "search_button"] as const) {
 }
 
 for (const wholeQuery of [true, false]) {
-	test(`a confirmed title becomes a Like filter and preserves ${wholeQuery ? "only own choices" : "parsed constraints"}`, async (t) => {
-		const query = wholeQuery ? "Arrival" : "Arrival on Netflix"
+	test(`an explicit title reference becomes a Like filter and preserves ${wholeQuery ? "only own choices" : "parsed constraints"}`, async (t) => {
+		const query = wholeQuery ? "like Arrival" : "like Arrival on Netflix"
 		const id = "1000000329865"
 		const net = stubFetch(
 			t,
@@ -757,11 +757,11 @@ for (const wholeQuery of [true, false]) {
 						})
 					: resultsAnswer([1], 1),
 			() => ({
-				residual: "Arrival",
-				semanticQuery: "Arrival",
+				residual: "like Arrival",
+				semanticQuery: "like Arrival",
 				params: wholeQuery
-					? "q=Arrival&moods=funny&styles=dark"
-					: "q=Arrival&services=8",
+					? "q=like+Arrival&moods=funny&styles=dark"
+					: "q=like+Arrival&services=8",
 				labels: wholeQuery ? ["Dark"] : ["Netflix"],
 				warnings: [],
 			}),

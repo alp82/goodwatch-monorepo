@@ -57,6 +57,10 @@ export function chooseExactSearch(
 		)
 			return null
 		const [found] = unique.values()
+		// Recognizing a name does not request recommendations. Leave title lookups to the ordinary search,
+		// including quoted names, aliases and years. Even a title beginning with "Like" is still its own name.
+		if (found.kind === "title" && (!reference || candidate === text))
+			return null
 		return {
 			kind: found.kind,
 			id: found.id,

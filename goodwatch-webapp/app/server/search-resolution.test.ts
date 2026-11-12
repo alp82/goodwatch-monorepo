@@ -71,11 +71,15 @@ test("the shared resolver uses canonical tropes and title aliases, with no tag n
 	})
 	assert.equal(exports.resolveExactSearch("Apocalypse Anarchy").id, url)
 	assert.equal(
-		exports.resolveExactSearch("premier contact").id,
+		exports.resolveExactSearch("like premier contact").id,
 		String(1e12 + 1),
 	)
-	assert.equal(exports.resolveExactSearch("Dune (2021)").id, String(1e12 + 3))
+	assert.equal(exports.resolveExactSearch("like Dune (2021)").id, String(1e12 + 3))
 	for (const query of [
+		"Arrival",
+		"premier contact",
+		"Dune (2021)",
+		'"Arrival"',
 		"Dune",
 		"Dark",
 		"Unscored",
