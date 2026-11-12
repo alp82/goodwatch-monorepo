@@ -462,6 +462,7 @@ export function createGoodwatchAuth(options: {
 							scopes: string[]
 							resources?: string[]
 							grantVersion: string
+							lastUsedAt?: Date | null
 						}>({
 							model: "oauthConsent",
 							where: [
@@ -489,6 +490,24 @@ export function createGoodwatchAuth(options: {
 					)
 						throw invalid()
 					if (!ctx.request) throw invalid()
+					// A refresh is use. Rotation revokes the parent token before it writes the
+					// child, so this keeps the grant out of dead-grant eviction and cleanup
+					// while the child is pending (grant-liveness.server.ts). A lost
+					// conditional touch means another request just touched it.
+					const now = new Date()
+					if (
+						!consent.lastUsedAt ||
+						now.getTime() - new Date(consent.lastUsedAt).getTime() >= 60_000
+					)
+						await ctx.context.adapter.incrementOne({
+							model: "oauthConsent",
+							where: [
+								{ field: "id", value: consent.id },
+								{ field: "lastUsedAt", value: consent.lastUsedAt ?? null },
+							],
+							increment: {},
+							set: { lastUsedAt: now },
+						})
 					refreshGrants.set(ctx.request, {
 						id: consent.id,
 						version: consent.grantVersion,

@@ -564,10 +564,21 @@ test("durable signing keys and grants survive a new auth instance and refresh ro
 				body,
 			}),
 		)
+	const refreshedAt = Date.now()
 	const first = await renew()
 	assert.equal(first.status, 200)
 	const rotated = await first.json()
 	assert.notEqual(rotated.refresh_token, issued.token.refresh_token)
+	// A refresh is use: it keeps the grant out of dead-grant eviction while the child is written.
+	const consents = await memberAuth.handler(
+		new Request(`${origin}/api/auth/oauth2/get-consents`, {
+			headers: { cookie: issued.cookie },
+		}),
+	)
+	const refreshed = (await consents.json()).find(
+		(c: { clientId: string }) => c.clientId === issued.client.client_id,
+	)
+	assert.ok(new Date(refreshed?.lastUsedAt ?? 0).getTime() >= refreshedAt)
 	const retried = await renew()
 	assert.equal(retried.status, 200)
 	const recovered = await retried.json()

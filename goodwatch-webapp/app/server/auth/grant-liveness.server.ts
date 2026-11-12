@@ -15,8 +15,10 @@ export type GrantRow = {
 
 // Mirrors reconciliation: a refresh token gets its grant version just after minting.
 const unversionedGrace = 15 * 60000
-// A rotated parent stays revoked while its child is being written.
-const rotationGrace = 60000
+// Refreshing touches the grant, then revokes the parent token before writing the child,
+// whose insert may take up to its 15-minute write deadline (plus clock skew). A grant
+// created or used this recently is live whatever its tokens show.
+const recentUseGrace = 20 * 60000
 const time = (value: unknown) =>
 	value == null ? Number.NaN : new Date(value as string).getTime()
 
@@ -35,8 +37,8 @@ export function grantActivity(grant: GrantRow) {
 }
 
 /**
- * A grant is live while its sign-in session is unexpired or one of its refresh tokens
- * can still mint access. Dead grants are what eviction and maintenance reclaim first.
+ * A grant is live while it was created or used in the last 20 minutes, its sign-in
+ * session is unexpired, or one of its refresh tokens can still mint access. Dead grants are what eviction and maintenance reclaim first.
  * Pass `clientId` and `referenceId` to check one grant; leave them out to check all of a member's.
  */
 export async function grantLiveness(
@@ -84,11 +86,7 @@ export async function grantLiveness(
 		const token = envelope.row as Record<string, unknown>
 		if (envelope.deleted !== false || token?.id !== id) continue
 		if (!(time(token.expiresAt) > now.getTime())) continue
-		if (
-			token.revoked != null &&
-			!(now.getTime() - time(token.rotatedAt) < rotationGrace)
-		)
-			continue
+		if (token.revoked != null) continue
 		let version: string | null
 		if (typeof token.grantVersion === "string") version = token.grantVersion
 		else if (now.getTime() - time(token.createdAt) < unversionedGrace)
@@ -98,6 +96,7 @@ export async function grantLiveness(
 		versions.set(grant, (versions.get(grant) ?? new Set()).add(version))
 	}
 	return (grant) => {
+		if (now.getTime() - grantActivity(grant) < recentUseGrace) return true
 		if (
 			typeof grant.referenceId === "string" &&
 			liveSessions.has(grant.referenceId)

@@ -416,7 +416,12 @@ function grantFixture(adapter: ReturnType<ReturnType<typeof crateAuthAdapter>>) 
 	let order = 0
 	return {
 		/** One app sign-in: a grant per session, live through a refresh token unless `dead`. */
-		async signIn(userId: string, clientId: string, dead = false) {
+		async signIn(
+			userId: string,
+			clientId: string,
+			dead = false,
+			lastUsedAt?: Date,
+		) {
 			const grantVersion = randomUUID()
 			const referenceId = randomUUID()
 			const grant = await adapter.create<{ id: string }>({
@@ -426,7 +431,9 @@ function grantFixture(adapter: ReturnType<ReturnType<typeof crateAuthAdapter>>) 
 					userId,
 					referenceId,
 					scopes: ["yepwatch:read", "offline_access"],
-					createdAt: new Date(start + order++),
+					// Older than the recent-use grace, which keeps any fresh grant live.
+					createdAt: new Date(start - 3600000 + order++),
+					lastUsedAt,
 					grantVersion,
 				},
 			})
@@ -468,13 +475,16 @@ test("a member's dead app grants make room before live ones", async () => {
 	const live: string[] = []
 	const dead: string[] = []
 	for (let i = 0; i < 118; i++) live.push(await grants.signIn("busy", app))
-	for (let i = 0; i < 10; i++) dead.push(await grants.signIn("busy", app, true))
+	// The oldest token-less grant was just refreshed: its new token may still be pending.
+	dead.push(await grants.signIn("busy", app, true, new Date()))
+	for (let i = 0; i < 9; i++) dead.push(await grants.signIn("busy", app, true))
 	const newest: string[] = []
 	for (let i = 0; i < 3; i++) newest.push(await grants.signIn("busy", app))
 	const held = await grants.held("busy")
 	assert.equal(held.size, 128)
-	for (const id of [...live, ...dead.slice(3), ...newest]) assert.ok(held.has(id))
-	for (const id of dead.slice(0, 3)) assert.ok(!held.has(id))
+	for (const id of [...live, dead[0], ...dead.slice(4), ...newest])
+		assert.ok(held.has(id))
+	for (const id of dead.slice(1, 4)) assert.ok(!held.has(id))
 })
 
 test("a member's lone connector survives two hundred sign-ins through another app", async () => {

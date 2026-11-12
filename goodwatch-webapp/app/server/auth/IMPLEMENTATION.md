@@ -136,10 +136,13 @@ a member who signs in through apps often reaches the 128-grant cap. At the cap,
 admission revokes one grant with its tokens, chosen in this order:
 
 1. A leftover slot whose grant row is already deleted.
-2. The oldest **dead** grant: its session (`referenceId`) is missing or expired,
-   and none of its refresh tokens is live. A live refresh token is unexpired,
-   carries the grant's version (or is under 15 minutes old and not versioned yet),
-   and is not revoked, unless it was rotated in the last minute.
+2. The oldest **dead** grant: it was not created or used in the last 20 minutes,
+   its session (`referenceId`) is missing or expired, and none of its refresh
+   tokens is live. A live refresh token is unexpired, not revoked, and carries the
+   grant's version (or is under 15 minutes old and not versioned yet). A refresh
+   counts as use and touches `lastUsedAt` (at most once a minute): rotation revokes
+   the parent before it writes the child, whose insert may take up to its
+   15-minute write deadline, and the parent is archived out of lookups after 30 s.
 3. The least recently used grant (`max(createdAt, lastUsedAt)`) that is not its
    app's most recently used grant. A member's one Claude connector therefore
    survives any number of YepWatch sign-ins.
