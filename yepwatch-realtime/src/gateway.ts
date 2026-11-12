@@ -4,8 +4,8 @@ import type { Socket } from 'node:net'
 import { WebSocket, WebSocketServer } from 'ws'
 import { paths, type RealtimeAttachment, type ServerRealtimeFrame, type SharedRoomSnapshot } from '@goodwatch/yepwatch-contracts'
 import { paths as continuousPaths, type ServerRealtimeFrame as ContinuousFrame, type SharedRoomSnapshot as ContinuousSnapshot } from '@goodwatch/yepwatch-contracts/continuous'
-import { paths as proposalPaths, type SharedRoomSnapshot as ProposalSnapshot } from '@goodwatch/yepwatch-contracts/proposal'
-import { AuthorityError, validateAttachment, validateView, validateScopedView, type Authority } from './authority.js'
+import { paths as proposalPaths, REALTIME_VIEWS_MAX, type SharedRoomSnapshot as ProposalSnapshot } from '@goodwatch/yepwatch-contracts/proposal'
+import { AuthorityError, once, validateAttachment, validateView, validateScopedView, viewsOf, type Authority } from './authority.js'
 import { continuousProjection } from './continuous-projection.js'
 import { proposalProjection } from './proposal-projection.js'
 import { cheerAllowed, type DecisionActivityScope, inspectionAllowed, proposalClientActivitySchema, proposalServerActivitySchema } from './proposal-activity.js'
@@ -73,9 +73,9 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
     perMessageDeflate: { threshold: 1024, serverNoContextTakeover: true, clientNoContextTakeover: true, concurrencyLimit: 4 },
     maxPayload: options.maxPayloadBytes, maxFragments: 32, maxBufferedChunks: 64, autoPong: false, clientTracking: false })
 
-  function send(client: Client, frame: OutputFrame): boolean {
+  /** `data`: the frame already serialized (phones sharing one snapshot). */
+  function send(client: Client, frame: OutputFrame, data = JSON.stringify(frame)): boolean {
     if (client.ws.readyState !== WebSocket.OPEN) return false
-    const data = JSON.stringify(frame)
     if (client.ws.bufferedAmount + Buffer.byteLength(data) > options.maxBufferedBytes) {
       backpressureClosures++
       close(client, 1013, 'Resync required')
@@ -136,31 +136,72 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
       void refresh(room).finally(() => { room.running = false; running--; pump() })
     }
   }
+  // An API without the batched read (an older release during a rolling deploy) answers it 404: one read per phone
+  // until then, asking again after a minute.
+  let viewsUnsupportedUntil = 0
+  /** Each client's view of the room, in order: one read of the room for all of them where the API offers it. */
+  function reads(room: Room, clients: Client[]): Promise<unknown>[] {
+    const leases = clients.map(client => client.attachment!.lease)
+    const one = (lease: string) => bounded(authority.view({ roomId: room.id, lease }))
+    const views = authority.views
+    if (!views || Date.now() < viewsUnsupportedUntil) return leases.map(one)
+    const answers: Promise<unknown>[] = []
+    for (let start = 0; start < leases.length; start += REALTIME_VIEWS_MAX) {
+      const batch = leases.slice(start, start + REALTIME_VIEWS_MAX)
+      const answer = bounded(views({ roomId: room.id, leases: batch })).then(raw => viewsOf(raw, batch.length), (error: unknown) => {
+        if (!(error instanceof AuthorityError && error.status === 404)) throw error
+        viewsUnsupportedUntil = Date.now() + 60_000
+        return null
+      })
+      answers.push(...batch.map(async (lease, i) => {
+        const views = await answer
+        if (!views) return one(lease)
+        const result = views[i]
+        if ('error' in result) throw result.error
+        return result.view
+      }))
+    }
+    return answers
+  }
   async function refresh(room: Room) {
     // Bounded retries close attach races without spinning on a hint ahead of durable state.
     for (let attempt = 0; attempt < 3 && !draining && deliveryReady(); attempt++) {
       const epoch = room.epoch
       const target = room.target
-      // Every friend's read runs at once: one person's answer reaches the sixth phone as fast as the first.
-      await Promise.all([...room.clients].map(async (client) => {
-        if (client.ws.readyState !== WebSocket.OPEN || !client.attachment) return
+      const clients = [...room.clients].filter(client => {
+        if (client.ws.readyState !== WebSocket.OPEN || !client.attachment) return false
         if (client.attachment.leaseExpiresAt <= Date.now() || client.attachment.roomExpiresAt <= Date.now()) {
-          fail(client, 'expired'); return
+          fail(client, 'expired'); return false
         }
+        return true
+      })
+      const previous = clients.map(client => client.attachment!)
+      // The phones share one snapshot (one read of the room): validated once, serialized once per frame shape.
+      const projection = once<ContinuousSnapshot | ProposalSnapshot>(continuous?.proposal ? proposalProjection : continuousProjection)
+      const frames = new WeakMap<object, Map<string, string>>()
+      // Every friend's view is read at once: one person's answer reaches the sixth phone as fast as the first.
+      const views = reads(room, clients)
+      await Promise.all(clients.map(async (client, i) => {
         try {
-          const previous = client.attachment
-          const raw = await bounded(authority.view({ roomId: room.id, lease: previous.lease }))
+          const raw = await views[i]
           if (client.ws.readyState !== WebSocket.OPEN || draining) return
-          const result = continuous ? validateScopedView<ContinuousSnapshot | ProposalSnapshot>(raw, previous, options.maxLeaseMs,
-            continuous.proposal ? proposalProjection : continuousProjection) : validateView(raw, previous, options.maxLeaseMs)
-          if (previous.leaseExpiresAt <= Date.now()) { fail(client, 'expired'); return }
+          const result = continuous ? validateScopedView<ContinuousSnapshot | ProposalSnapshot>(raw, previous[i], options.maxLeaseMs,
+            projection) : validateView(raw, previous[i], options.maxLeaseMs)
+          if (previous[i].leaseExpiresAt <= Date.now()) { fail(client, 'expired'); return }
           client.attachment = result.attachment
           expiry(client)
           // Never forward reads made across a bus outage or a concurrently newer hint.
           if (!deliveryReady() || room.epoch !== epoch || result.snapshot.revision < room.target ||
               result.snapshot.revision < client.lastRevision) { degrade(client); return }
           if (client.initial || client.degraded || result.snapshot.revision > client.lastRevision) {
-            if (send(client, { type: client.initial || client.degraded ? 'room.snapshot' : 'room.updated', snapshot: client.roomDetails ? result.snapshot : { ...result.snapshot, participants: result.snapshot.participants.filter(p => !('dropped' in p && p.dropped)).map(p => Object.fromEntries(Object.entries(p).filter(([key]) => key !== 'dropped'))) } as typeof result.snapshot })) {
+            const type = client.initial || client.degraded ? 'room.snapshot' : 'room.updated'
+            const shape = `${type}:${client.roomDetails === true}`
+            const frame = { type, snapshot: client.roomDetails ? result.snapshot : { ...result.snapshot, participants: result.snapshot.participants.filter(p => !('dropped' in p && p.dropped)).map(p => Object.fromEntries(Object.entries(p).filter(([key]) => key !== 'dropped'))) } as typeof result.snapshot } as OutputFrame
+            const shapes = frames.get(result.snapshot) ?? new Map<string, string>()
+            frames.set(result.snapshot, shapes)
+            const data = shapes.get(shape) ?? JSON.stringify(frame)
+            shapes.set(shape, data)
+            if (send(client, frame, data)) {
               client.lastRevision = result.snapshot.revision; client.initial = false; client.degraded = false
               client.participantIds = new Set(result.snapshot.participants.map(p => p.participantId))
               if ('matches' in result.snapshot) {

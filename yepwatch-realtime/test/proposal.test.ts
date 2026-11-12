@@ -235,3 +235,35 @@ test('ideas and per-person services project to every participant; private attrib
   (v:any)=>{v.proposal.proposerId='person-1'},
  ]) {const bad=structuredClone(s);mutation(bad);assert.throws(()=>proposalProjection(bad,s.roomId))}
 })
+async function oneGateway(t: test.TestContext, batched: boolean) {
+  const api = await fixture('proposal'); api.state.shared = choosing(); api.state.leaseMs = 60_000; api.state.batched = batched
+  const bus = new FakeBus(), activity = new ActivityHub().bus()
+  const gateway = createGateway(api.authority, bus, { port: 0, auditMs: 10_000 }, { activityBus: activity, proposal: true })
+  const address = await gateway.listen(); assert(address && typeof address !== 'string')
+  t.after(async () => { await gateway.close(); await api.close() })
+  const clients = await Promise.all(['person-1', 'person-2'].map(person => connect<ServerRealtimeFrame>(`ws://127.0.0.1:${address.port}${paths.realtime}`).then(client => {
+    client.ws.send(JSON.stringify({ type: 'authenticate', ticket: api.ticket(person), roomId: 'room-1', lastRevision: null })); return client
+  })))
+  await until(() => clients.every(c => c.frames.some(f => f.type === 'room.snapshot')))
+  return { api, bus, clients }
+}
+const revisions = (frames: ServerRealtimeFrame[]) => frames.flatMap(f => f.type === 'room.snapshot' || f.type === 'room.updated' ? [f.snapshot.revision] : [])
+test('A change reaches every phone on a room from one read of it, and a refused lease only closes its own phone', async t => {
+  const { api, bus, clients } = await oneGateway(t, true)
+  const reads = api.state.viewsCalls
+  assert.equal(api.state.viewCalls, 0, 'no per-phone reads')
+  api.state.shared.revision = 2; bus.hint(2)
+  await until(() => clients.every(c => revisions(c.frames).includes(2)))
+  assert.equal(api.state.viewsCalls - reads, 1, 'one read for both phones')
+  assert.deepEqual(clients[0].frames.find(f => f.type === 'room.updated'), clients[1].frames.find(f => f.type === 'room.updated'))
+  api.state.revoked = true; api.state.shared.revision = 3; bus.hint(3)
+  await until(() => clients.every(c => c.closed === 1008))
+})
+test('An API without the batched read (rolling deploy) still serves every phone, one read each', async t => {
+  const { api, bus, clients } = await oneGateway(t, false)
+  api.state.shared.revision = 2; bus.hint(2)
+  await until(() => clients.every(c => revisions(c.frames).includes(2)))
+  assert.equal(api.state.viewsCalls, 0)
+  assert.ok(api.state.viewCalls >= 4, 'each phone read its own view')
+  assert.ok(clients.every(c => c.closed === undefined))
+})
