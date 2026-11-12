@@ -413,3 +413,111 @@ test("a member bringing a service the room didn't have still waits for the deck 
 	assert.deepEqual(f.pages[1].screens[0].serviceIds, [1, 2])
 	f.service.decks.forget(r.id)
 })
+
+/** Links the room's latest participant as a signed-in member (what ContinuousMembers.applyLink writes). */
+async function linkLatest(f: ReturnType<typeof fixture>, r: Awaited<ReturnType<typeof room>>) {
+	const old = (await f.repository.read(r.id))!
+	const linked = structuredClone(old.room)
+	const member = linked.participants.at(-1)!
+	member.member = { state: "linked", prefill: { country: "DE", serviceIds: [], savedProgressAvailable: true } } as typeof member.member
+	member.memberUserId = "member-1"
+	member.memberGrant = { accessToken: "grant", expiresAt: Date.now() + 3_600_000 }
+	member.serviceIds = []
+	linked.revision++
+	assert.ok(await f.repository.compareAndSwap(old, linked, true))
+	await f.service.notify(r.id)
+}
+const keyOf = (c: { identity: { kind: string; tmdbId: number } }) => `${c.identity.kind === "movie" ? "movie" : "show"}_${c.identity.tmdbId}`
+const linkedIn = (room: ProposalRoom) => room.participants.some((p) => p.member?.state === "linked")
+/** A title only the member-aware deck reaches (the guest deck stops before it). */
+const memberOnlyKey = "movie_999"
+/** Member-aware builds wait for `hold()` and add memberOnlyKey; `running` counts member-aware builds entered. */
+function memberAwareCatalog(f: ReturnType<typeof fixture>) {
+	const state = { hold: null as Promise<void> | null, running: 0 }
+	const page = f.service["catalog"].page.bind(f.service["catalog"])
+	f.service["catalog"].page = async (room) => {
+		if (!linkedIn(room)) return page(room)
+		state.running++
+		await state.hold
+		const built = await page(room)
+		const extra = { ...structuredClone(built.candidates[0]), id: "candidate_member_only", identity: { kind: "movie", tmdbId: 999 } }
+		return { ...built, candidates: [...built.candidates, extra as (typeof built.candidates)[number]] }
+	}
+	return state
+}
+async function guestKeys() {
+	const base = fixture()
+	const b = await room(base)
+	await b.send({ type: "set_services", serviceIds: [1] })
+	return (await base.service.decks.page(await b.stored())).candidates.map(keyOf)
+}
+
+test("Start uses the finished deck even when the member's replacement build is already running", async () => {
+	const keys = await guestKeys()
+	const f = fixture({ excluded: [keys[0]] })
+	const state = memberAwareCatalog(f)
+	const r = await room(f)
+	await r.send({ type: "set_services", serviceIds: [1] })
+	await r.join("Member")
+	await f.service.decks.idle()
+	let release = () => {}
+	state.hold = new Promise<void>((resolve) => { release = resolve })
+	await linkLatest(f, r)
+	// Wait until the background build for the linked room has entered the catalog.
+	for (let i = 0; i < 200 && !state.running; i++) await new Promise((resolve) => setTimeout(resolve, 5))
+	assert.equal(state.running, 1, "the replacement build is running")
+	assert.ok(f.service.decks.prepared(await r.stored()), "the running build is for the room's current inputs")
+	const started = await Promise.race([
+		r.start(),
+		new Promise<null>((resolve) => setTimeout(() => resolve(null), 1000).unref()),
+	])
+	release()
+	assert.ok(started, "Start answered without awaiting the running replacement build")
+	assert.equal(started.snapshot.shared.phase, "choosing")
+	assert.ok(!started.snapshot.shared.candidates.some((c) => keyOf(c) === keys[0]), "the member's seen title is left out")
+	assert.ok(!started.snapshot.shared.candidates.some((c) => keyOf(c) === memberOnlyKey), "the guest deck was used")
+	await f.service.decks.idle()
+	f.service.decks.forget(r.id)
+})
+
+test("Start falls back to the member-aware deck when the member has seen every title of the reused deck", async () => {
+	const f = fixture({ excluded: await guestKeys() })
+	const state = memberAwareCatalog(f)
+	const r = await room(f)
+	await r.send({ type: "set_services", serviceIds: [1] })
+	await r.join("Member")
+	await f.service.decks.idle()
+	let release = () => {}
+	state.hold = new Promise<void>((resolve) => { release = resolve })
+	await linkLatest(f, r)
+	const start = r.start()
+	setTimeout(release, 20).unref()
+	const started = await start
+	assert.equal(started.snapshot.shared.phase, "choosing", "Start doesn't fail with no_intersection")
+	assert.deepEqual(started.snapshot.shared.candidates.map(keyOf), [memberOnlyKey], "the member-aware deck's unseen title")
+	await f.service.decks.idle()
+	f.service.decks.forget(r.id)
+})
+
+test("a reused deck left short by the member's seen titles still starts at once", async () => {
+	const keys = await guestKeys()
+	assert.ok(keys.length > 1)
+	const f = fixture({ excluded: keys.slice(1) })
+	const state = memberAwareCatalog(f)
+	const r = await room(f)
+	await r.send({ type: "set_services", serviceIds: [1] })
+	await r.join("Member")
+	await f.service.decks.idle()
+	let release = () => {}
+	state.hold = new Promise<void>((resolve) => { release = resolve })
+	await linkLatest(f, r)
+	const started = await Promise.race([
+		r.start(),
+		new Promise<null>((resolve) => setTimeout(() => resolve(null), 1000).unref()),
+	])
+	release()
+	assert.ok(started, "Start answered without awaiting the member-aware build")
+	assert.deepEqual(started.snapshot.shared.candidates.map(keyOf), [keys[0]], "one unseen card; the client refills")
+	await f.service.decks.idle()
+	f.service.decks.forget(r.id)
+})

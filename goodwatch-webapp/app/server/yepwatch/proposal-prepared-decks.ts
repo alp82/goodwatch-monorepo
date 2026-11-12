@@ -138,7 +138,8 @@ export class PreparedDecks {
 	 *
 	 * `seenReadFresh` (Start, which leaves members' seen titles out of the page itself): when the room's inputs
 	 * changed only by member links (a member signing in, or joining signed in, right before Start), the deck already
-	 * built for the room is used rather than waiting for the build the link started.
+	 * built for the room is used rather than waiting for the build the link started, even when that build is already
+	 * running. Without the option, the deck for the room's exact inputs (member-aware) is awaited or built.
 	 */
 	async page(room: ProposalRoom, options: { seenReadFresh?: boolean } = {}): Promise<Page> {
 		// Saved progress moves on without changing the room (an episode watched elsewhere): never remembered or reused.
@@ -146,16 +147,25 @@ export class PreparedDecks {
 			return this.catalog.page(structuredClone(activeRoom(room)))
 		const inputs = deckInputs(room)
 		const entry = this.entries.get(room.id)
-		if (entry && entry.inputs === inputs && this.now() - entry.builtAt < this.maxAgeMs) {
+		const current = entry && entry.inputs === inputs && this.now() - entry.builtAt < this.maxAgeMs ? entry : null
+		const settled = this.settled.get(room.id)
+		// A finished deck for the same base wins over awaiting a replacement build, even one already running for
+		// exactly these inputs (the member's link scheduled it before Start came in).
+		if (
+			options.seenReadFresh &&
+			settled &&
+			settled !== current &&
+			settled.base === deckBase(room) &&
+			this.now() - settled.builtAt < this.maxAgeMs
+		)
+			return structuredClone(await settled.page)
+		if (current) {
 			try {
-				return structuredClone(await entry.page)
+				return structuredClone(await current.page)
 			} catch {
 				// A failed background build says nothing about now: build again below.
 			}
 		}
-		const settled = this.settled.get(room.id)
-		if (options.seenReadFresh && settled && settled.base === deckBase(room) && this.now() - settled.builtAt < this.maxAgeMs)
-			return structuredClone(await settled.page)
 		return structuredClone(await this.build(room, inputs))
 	}
 	/** Whether a prepared deck (built or building) matches the room as it is now. For tests and logs. */
