@@ -1,4 +1,4 @@
-import { timed, withServerTiming } from "./server-timing.ts"
+import { timed, timedSync, withServerTiming } from "./server-timing.ts"
 import { z } from "zod"
 import { randomBytes } from 'node:crypto'
 import type { ContinuousMembers } from "./continuous-members.server.ts"
@@ -96,7 +96,7 @@ export function createProposalHandler(
 		}
 		const reply = (data: unknown, status = 200) => {
 			deliverRenewal()
-			return new Response(JSON.stringify(data), { status, headers })
+			return new Response(timedSync("json", () => JSON.stringify(data)), { status, headers })
 		}
 		const cookie = (name: string) =>
 			(request.headers.get("cookie") ?? "")

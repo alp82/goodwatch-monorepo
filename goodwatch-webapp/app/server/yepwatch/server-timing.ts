@@ -31,3 +31,15 @@ export function timed<T>(name: string, work: Promise<T>): Promise<T> {
 	work.then(done, done)
 	return work
 }
+
+/** `work`'s (synchronous) time, added to `name` on the current request. */
+export function timedSync<T>(name: string, work: () => T): T {
+	const marks = current.getStore()
+	if (!marks) return work()
+	const started = performance.now()
+	try {
+		return work()
+	} finally {
+		marks.set(name, (marks.get(name) ?? 0) + performance.now() - started)
+	}
+}

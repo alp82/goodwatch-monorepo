@@ -1,3 +1,4 @@
+import { timed, timedSync } from "./server-timing.ts"
 import { SqlAccountRooms, encodeDecision, decodeDecision } from "./proposal-account-store.ts"
 import { SqlDeletionStore } from './proposal-deletion.ts'
 import { ROOM_CONTEXT } from "./proposal-context.ts"
@@ -566,21 +567,21 @@ export class RelationalProposalRepository implements ProposalRepository {
 	) {
 		if (previous.room.id !== room.id || room.revision < previous.room.revision)
 			throw fail()
-		const plan = this.plan(
+		const plan = timedSync("plan", () => this.plan(
 			room,
 			notify
 				? Math.max(previous.pendingRevision, room.revision)
 				: previous.pendingRevision
-		)
+		))
 		// The records the previous head already references: as read with it, or planned again (rooms not read here).
-		const stored = this.stored.get(previous.room) ?? new Set(this.plan(previous.room, previous.pendingRevision).records.keys())
-		await this.ensure(
+		const stored = this.stored.get(previous.room) ?? timedSync("plan", () => new Set(this.plan(previous.room, previous.pendingRevision).records.keys()))
+		await timed("records", this.ensure(
 			[...plan.records].filter(([id]) => !stored.has(id)).map(([, r]) => r)
-		)
+		))
 		const names = columns(tables.room).filter((k) => k !== "id")
 		return (
 			(
-				await this.sql(
+				await timed("head", this.sql(
 					`UPDATE ${tables.room.name} SET ${names
 						.map((k) => `${k}=?`)
 						.join(",")} WHERE id=? AND _seq_no=? AND _primary_term=?`,
@@ -590,7 +591,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 						previous.seq,
 						previous.term
 					]
-				)
+				))
 			).rowcount === 1
 		)
 	}
