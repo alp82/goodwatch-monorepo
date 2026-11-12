@@ -82,12 +82,14 @@ export function IdeaStack() {
           ) : null)
           : many ? <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><HeroIcon name="pencil" size={z(14)} color={glow.muted} /><GText size={z(13)} color={glow.muted}>Yours</GText></View> : null;
         const text = <GText bold size={size} color={i.on ? glow.ink : '#8c8478'} style={{ letterSpacing: -size * 0.032, lineHeight: size * 1.06 }}>{i.text}</GText>;
+        // Small and non-blocking: the room goes on with the usual picks for this idea.
+        const note = i.unmatched ? <View testID="idea-unmatched"><GText size={z(13)} color={glow.muted}>Mood matching is unavailable for now.</GText></View> : null;
         const body = { flex: 1, minWidth: 0, gap: 6, alignItems: 'flex-start', justifyContent: 'flex-start' } as const;
         return (
           <IdeaRow key={i.id}
             body={i.mine
-              ? <Press label={`${i.text}, edit`} onPress={() => openPage(id, 'mood', { idea: i.id })} style={body}>{text}{meta}</Press>
-              : <View accessible accessibilityLabel={`${i.text}${i.author?.nickname ? `, from ${i.author.nickname}` : ''}${fresh ? ', new' : ''}`} style={body}>{text}{meta}</View>}
+              ? <Press label={`${i.text}, edit`} onPress={() => openPage(id, 'mood', { idea: i.id })} style={body}>{text}{meta}{note}</Press>
+              : <View accessible accessibilityLabel={`${i.text}${i.author?.nickname ? `, from ${i.author.nickname}` : ''}${fresh ? ', new' : ''}${i.unmatched ? ', mood matching is unavailable for now' : ''}`} style={body}>{text}{meta}{note}</View>}
             control={<Switch on={i.on} disabled={!view.isHost || disabled} label={`Use ${i.text}`} onPress={() => void cmd.setIdea(i.id, !i.on)} />} />
         );
       })}

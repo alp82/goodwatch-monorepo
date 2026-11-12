@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
-import { test, eventually, type Person } from '../lib/harness';
-import { createRoom, hostName, pageTap, pickServices, recordPage } from './flows';
+import { test, eventually, issuer, type Person } from '../lib/harness';
+import { createRoom, hostName, pageTap, pickServices, recordPage, start } from './flows';
 
 const roomCountry = (p: Person) => (p.latest?.screens as { country: string | null }[] | undefined)?.[0]?.country;
 
@@ -180,6 +180,45 @@ test.describe('create and set up a room', () => {
     expect(answered - first, 'the server\'s wait held').toBeGreaterThanOrEqual(10000);
     expect(samples.filter((s) => s.error), 'no error or Try again meanwhile').toEqual([]);
     expect(tries).toBe(2);
+  });
+
+  // Production 2026-11-12: GoodWatch's search spend limit was reached (503 interpretation_unavailable, budget).
+  // Owner rule: a failing dependency never blocks the user. The room opens with the idea kept but unmatched, a small
+  // note says so, and setup and Start go on with the usual ranking: no Try again, no error gate.
+  test('search over its spend limit: the room with an idea opens, sets up and starts without a tap on Try again', async ({ room }) => {
+    const host = await room.person('Alp');
+    const mood = `budget refused heist ${Math.random().toString(36).slice(2, 8)}`;
+    const second = `${mood} sequel`;
+    await issuer(`/_e2e/search-budget?prompt=${encodeURIComponent(mood)}`);
+    await issuer(`/_e2e/search-budget?prompt=${encodeURIComponent(second)}`);
+    try {
+      await host.open('/');
+      await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] } });
+      await host.fill(host.page.getByLabel('Mood'), mood);
+      const stop = await recordPage(host, 'mood-page', /Couldn|Try again|unavailable/i);
+      const sent = host.commandLog.length;
+      await host.tap(host.button('Create room'), { expect: { visible: ['room-setup'] } });
+      const samples = await stop().catch(() => null);
+      expect(samples, 'the Mood page was sampled').not.toBeNull();
+      expect(samples!.filter((s) => s.error), 'no error or Try again on the Mood page').toEqual([]);
+      // Still one round trip: the server keeps the idea, so the app sends no add_idea after the create.
+      if (room.fault === 'none') expect(host.commandLog.slice(sent).map((c) => c.path.replace(/^.*\/proposal/, '')).filter((path) => !path.endsWith('/realtime-ticket'))).toEqual(['/rooms']);
+      await eventually(() => host.latest?.ideas.map((i) => [i.text, i.on, i.attributes.length]), (v) => JSON.stringify(v) === JSON.stringify([[mood, true, 0]]), 'the idea is kept, uninterpreted', host);
+      await expect(host.page.getByTestId('idea-unmatched').filter({ visible: true })).toHaveText('Mood matching is unavailable for now.');
+      await room.point('room');
+      await host.audit('room page with an unmatched idea');
+      // Another idea while search is still refused is added too (the command path).
+      await host.tap(host.button('Add an idea'), { expect: { visible: ['mood-page'] } });
+      await host.fill(host.page.getByLabel('Mood'), second);
+      await host.tap(host.page.getByLabel('Mood'), { key: 'Enter', expect: { visible: ['room-setup'] } });
+      await eventually(() => host.latest?.ideas.map((i) => i.text), (v) => JSON.stringify(v) === JSON.stringify([mood, second]), 'the second idea is kept too', host);
+      await hostName(host, 'Alp');
+      await pickServices(host, ['Netflix'], () => host.tap(host.button('Streaming services, add'), { expect: { visible: ['services-sheet'] } }));
+      await start(host, []);
+    } finally {
+      await issuer(`/_e2e/search-budget?prompt=${encodeURIComponent(mood)}&on=0`);
+      await issuer(`/_e2e/search-budget?prompt=${encodeURIComponent(second)}&on=0`);
+    }
   });
 
   test('create room from a preset chip ("Anything goes")', async ({ room }) => {

@@ -19,6 +19,9 @@ const access = new Map(); // token -> { user, expiresAt }
 const refresh = new Map(); // token -> user
 const users = new Map(); // user -> { displayName, lapsed, serviceIds, country, accessTtlS }
 let outage = false;
+// Prompts the search role refuses as GoodWatch's spend limit does (503 interpretation_unavailable, reason budget).
+// Per prompt, so parallel tests never see each other's refusals.
+const refusedPrompts = new Set();
 const counters = { authorize: 0, token: 0, refresh: 0, resource: 0, search: 0 };
 function userOf(name) {
   if (!users.has(name)) users.set(name, { displayName: name.replace(/^member-/, '').replace(/-[0-9a-f]+$/, '') || name, lapsed: false, serviceIds: [8, 337], country: 'DE', accessTtlS: 3600 });
@@ -54,6 +57,7 @@ const issuer = http.createServer(async (req, res) => {
     if (p === '/_e2e/lapse' && user) { userOf(user).lapsed = true; for (const [t, a] of access) if (a.user === user) access.delete(t); return json(res, 200, { ok: true }); }
     if (p === '/_e2e/restore' && user) { userOf(user).lapsed = false; return json(res, 200, { ok: true }); }
     if (p === '/_e2e/user' && user) { Object.assign(userOf(user), JSON.parse((await readBody(req)) || '{}')); return json(res, 200, userOf(user)); }
+    if (p === '/_e2e/search-budget') { const prompt = url.searchParams.get('prompt') ?? ''; if (url.searchParams.get('on') === '0') refusedPrompts.delete(prompt); else refusedPrompts.add(prompt); return json(res, 200, { refused: [...refusedPrompts] }); }
     if (p === '/_e2e/outage') { outage = url.searchParams.get('on') === '1'; return json(res, 200, { outage }); }
     if (p === '/_e2e/state') return json(res, 200, { outage, counters, users: Object.fromEntries(users) });
     return json(res, 404, { error: 'unknown' });
@@ -116,6 +120,7 @@ const search = http.createServer(async (req, res) => {
   if (req.method !== 'POST' || req.headers.authorization !== `Bearer ${searchSecret}`) return json(res, 401, { error: 'unauthorized' });
   counters.search++;
   const body = JSON.parse((await readBody(req)) || '{}');
+  if (refusedPrompts.has(String(body.prompt ?? ''))) return json(res, 503, { error: 'interpretation_unavailable', reason: 'budget', retryable: false });
   json(res, 200, interpretIdea(titles, String(body.prompt ?? '')));
 });
 

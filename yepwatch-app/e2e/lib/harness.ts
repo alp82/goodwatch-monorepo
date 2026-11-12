@@ -33,7 +33,7 @@ const B = budgetsFor();
 export type Fault = 'none' | 'nows' | 'slow' | 'hidden' | 'restart' | 'twodevice' | 'rapid';
 export type Spec = { visible?: string[]; any?: string[]; hidden?: string[]; text?: string; label?: { text: string; exact?: boolean }; textChanged?: { id: string; from: string }; cardChanged?: { from: string } };
 export interface Sample { moment: string; ms: number; person: string; detail?: string }
-type Shared = { roomId: string; phase: string; ideas: { text: string; on: boolean; authorId: string }[]; participants: { participantId: string; nickname: string }[]; matches?: unknown[]; generation: number; [k: string]: unknown };
+type Shared = { roomId: string; phase: string; ideas: { text: string; on: boolean; authorId: string; attributes: unknown[] }[]; participants: { participantId: string; nickname: string }[]; matches?: unknown[]; generation: number; [k: string]: unknown };
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const DEVICES = {
