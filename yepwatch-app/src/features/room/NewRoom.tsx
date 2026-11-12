@@ -9,6 +9,7 @@ import { useLate } from '../../core/useLate';
 import { RoomFailure } from '../../core/continuous/api';
 import { ConnectionDetails } from '../rooms/ConnectionDetails';
 import { CreateRoom } from '../../core/continuous/create-room';
+import { CreateResume, createOutcome } from './create-resume';
 import { useAccount } from '../../core/continuous/account';
 import { roomRegistry } from '../../core/continuous/room-registry';
 import { useRetryCountdown } from '../../core/continuous/useRetryCountdown';
@@ -33,13 +34,10 @@ function NewRoomDraft({ account }: { account: ReturnType<typeof useAccount> }) {
   const attempt = useRef<AbortController | null>(null);
   // A slow or restarting server: the save keeps sending the same request by itself (create-room.ts). Offline:
   // an unanswered save goes again once the browser is back online. Both only while this page is in front:
-  // leaving stops them (the saved request stays for a manual retry); the app in the background pauses them
-  // until it is back.
-  const resendArmed = useRef(false);
-  const resumeArmed = useRef(false);
-  const inFlight = useRef(false);
-  const cancel = useCallback(() => { attempt.current?.abort(); resendArmed.current = false; resumeArmed.current = false; }, []);
-  useFocusEffect(useCallback(() => { newRoomInFront(true); return () => { newRoomInFront(false); cancel(); }; }, [cancel]));
+  // leaving stops them (the saved request stays for a manual retry); the app out of the front (inactive or
+  // background) pauses them until it is back (create-resume.ts).
+  const [resume] = useState(() => new CreateResume());
+  useFocusEffect(useCallback(() => { newRoomInFront(true); resume.focus(); return () => { newRoomInFront(false); resume.leave(); }; }, [resume]));
   // When the first failed attempt of this save began (null: none failed): drives the one connection line.
   const [troubleSince, setTroubleSince] = useState<number | null>(null);
   // Opened straight from an address: the room this draft becomes loads its code meanwhile.
@@ -49,49 +47,38 @@ function NewRoomDraft({ account }: { account: ReturnType<typeof useAccount> }) {
     mutationFn: async (text: string) => {
       const controller = new AbortController();
       attempt.current = controller;
-      inFlight.current = true;
       setTroubleSince(null);
-      const local = await roomRegistry.load();
-      try { return await flow.save(text, { nickname: local.nickname ?? account.name ?? '', member: account.member, signal: controller.signal, onTrouble: setTroubleSince }); }
-      catch (error) {
+      try {
+        const local = await roomRegistry.load();
+        return await flow.save(text, { nickname: local.nickname ?? account.name ?? '', member: account.member, signal: controller.signal, onTrouble: setTroubleSince });
+      } catch (error) {
         setTroubleSince(null);
         if (controller.signal.aborted) { const cancelled = new Error('Room setup was interrupted.'); cancelled.name = 'AbortError'; throw cancelled; }
         throw error;
       }
-      finally { inFlight.current = false; }
     },
-    onSuccess: (snapshot, submittedText) => {
+    onSuccess: (_snapshot, submittedText) => {
       setText(submittedText);
       client.setQueryData(draftKey, { text: submittedText, retryAt: 0 });
-      if (!attempt.current?.signal.aborted) router.replace({ pathname: '/room/[id]', params: { id: snapshot.shared.roomId } });
     },
-    onError: async (error) => {
-      resendArmed.current = !attempt.current?.signal.aborted && unanswered(error);
+    onError: async () => {
       try { client.setQueryData(draftKey, await flow.draft()); }
       catch { client.setQueryData(draftKey, { text: text ?? '', retryAt: flow.retryAt }); }
     },
+    // After onError has settled the draft: a save paused by the app leaving the front starts again here when
+    // the app came back while it was still cancelling.
+    onSettled: (snapshot, error) => {
+      if (resume.settled(createOutcome(error)) && snapshot) router.replace({ pathname: '/room/[id]', params: { id: snapshot.shared.roomId } });
+    },
   });
+  useEffect(() => resume.connect({ send: mutation.mutate, abort: () => attempt.current?.abort() }), [resume, mutation.mutate]);
   const retrySeconds = useRetryCountdown(draft.data?.retryAt ?? 0);
-  // The saved request goes again by itself as soon as the browser is back online, or the app is back in front.
-  const resend = useRef((_armed: { current: boolean }) => {});
+  useEffect(() => onBackOnline(() => resume.online()), [resume]);
   useEffect(() => {
-    resend.current = (armed) => {
-      if (!armed.current) return;
-      armed.current = false;
-      if (mutation.isError && mutation.variables !== undefined) mutation.mutate(mutation.variables);
-    };
-  });
-  useEffect(() => onBackOnline(() => resend.current(resendArmed)), []);
-  useEffect(() => {
-    const subscription = AppState.addEventListener('change', (state) => {
-      if (state === 'active') { resend.current(resumeArmed); return; }
-      const saving = inFlight.current;
-      cancel();
-      resumeArmed.current = saving;
-    });
-    return () => { subscription.remove(); cancel(); };
-  }, [cancel]);
-  const back = () => { cancel(); if (router.canGoBack()) router.back(); else router.replace('/'); };
+    const subscription = AppState.addEventListener('change', (state) => resume.appState(state));
+    return () => { subscription.remove(); resume.leave(); };
+  }, [resume]);
+  const back = () => { resume.leave(); if (router.canGoBack()) router.back(); else router.replace('/'); };
   useBackAction(back);
   const failure = mutation.error;
   const cancelled = failure?.name === 'AbortError';
@@ -105,7 +92,7 @@ function NewRoomDraft({ account }: { account: ReturnType<typeof useAccount> }) {
   // Owner rule Q24a: nothing for an outage under QUIET_OUTAGE_MS, then one small line floating over the page
   // (no layout shift, no countdown); the room still opens by itself when the answer comes.
   const reconnecting = useLateSince(saving ? troubleSince : null, QUIET_OUTAGE_MS);
-  return <MoodComposer first text={text ?? draft.data?.text ?? ''} onTextChange={setText} pick={(value) => mutation.mutate(value)} back={back}
+  return <MoodComposer first text={text ?? draft.data?.text ?? ''} onTextChange={setText} pick={(value) => resume.pick(value)} back={back}
     saving={saving} note={reconnecting ? RECONNECTING_WORDS : undefined} disabled={saving || retrySeconds > 0 || !account.ready || draft.isPending}
     error={error} details={error && failure instanceof RoomFailure && failure.diagnostic ? <ConnectionDetails diagnostic={failure.diagnostic} /> : undefined}
     action={mutation.isError ? 'Try again' : 'Create room'} />;
