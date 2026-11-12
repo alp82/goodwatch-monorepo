@@ -5,6 +5,8 @@ import type { ProposalCatalog, ProposalRoom } from "./proposal-types.ts"
 type Page = Awaited<ReturnType<ProposalCatalog["page"]>>
 interface Entry {
 	inputs: string
+	/** deckInputs with every member counted as a guest (see deckBase). */
+	base: string
 	page: Promise<Page>
 	builtAt: number
 }
@@ -27,6 +29,20 @@ const PARTICIPANT_NOISE = ["nickname", "sessions", "receipts", "nextSequence", "
  * picks reach the page through the room's screen, which is an input.
  */
 export function deckInputs(room: ProposalRoom): string {
+	return digest(room, false)
+}
+
+/**
+ * deckInputs with every member counted as a guest: what a deck reads besides members' seen titles (and saved
+ * progress, which is never prepared). A deck built for the same base is still a deck of the room once its members'
+ * seen titles are left out, which Start does with a fresh read whatever deck it uses.
+ */
+export function deckBase(room: ProposalRoom): string {
+	return digest(room, true)
+}
+
+function digest(room: ProposalRoom, membersAsGuests: boolean): string {
+	const guest = membersAsGuests ? () => true : isGuest
 	const active = activeRoom(room) as unknown as Record<string, unknown>
 	const shape: Record<string, unknown> = { ...active }
 	for (const key of ROOM_NOISE) delete shape[key]
@@ -46,7 +62,7 @@ export function deckInputs(room: ProposalRoom): string {
 }
 
 /** Nothing of theirs but their screen reaches a page: no member link, grant or account. */
-const guest = (p: ProposalRoom["participants"][number]) =>
+const isGuest = (p: ProposalRoom["participants"][number]) =>
 	p.member?.state !== "linked" && !p.memberUserId && !p.memberGrant
 
 const stable = (value: unknown): string =>
@@ -79,6 +95,8 @@ export interface PreparedDecksOptions {
  */
 export class PreparedDecks {
 	private entries = new Map<string, Entry>()
+	/** Each room's latest deck that finished building, kept while a newer build runs. */
+	private settled = new Map<string, Entry>()
 	private timers = new Map<string, ReturnType<typeof setTimeout>>()
 	private queue: string[] = []
 	private running = 0
@@ -115,16 +133,35 @@ export class PreparedDecks {
 		timer.unref?.()
 		this.timers.set(roomId, timer)
 	}
-	/** The first page for the room as it is now (see the class comment). */
-	async page(room: ProposalRoom): Promise<Page> {
+	/**
+	 * The first page for the room as it is now (see the class comment).
+	 *
+	 * `seenReadFresh` (Start, which leaves members' seen titles out of the page itself): when the room's inputs
+	 * changed only by member links (a member signing in, or joining signed in, right before Start), the deck already
+	 * built for the room is used rather than waiting for the build the link started, even when that build is already
+	 * running. Without the option, the deck for the room's exact inputs (member-aware) is awaited or built.
+	 */
+	async page(room: ProposalRoom, options: { seenReadFresh?: boolean } = {}): Promise<Page> {
 		// Saved progress moves on without changing the room (an episode watched elsewhere): never remembered or reused.
 		if (activeRoom(room).constraints.kinds.includes("show_continue"))
 			return this.catalog.page(structuredClone(activeRoom(room)))
 		const inputs = deckInputs(room)
 		const entry = this.entries.get(room.id)
-		if (entry && entry.inputs === inputs && this.now() - entry.builtAt < this.maxAgeMs) {
+		const current = entry && entry.inputs === inputs && this.now() - entry.builtAt < this.maxAgeMs ? entry : null
+		const settled = this.settled.get(room.id)
+		// A finished deck for the same base wins over awaiting a replacement build, even one already running for
+		// exactly these inputs (the member's link scheduled it before Start came in).
+		if (
+			options.seenReadFresh &&
+			settled &&
+			settled !== current &&
+			settled.base === deckBase(room) &&
+			this.now() - settled.builtAt < this.maxAgeMs
+		)
+			return structuredClone(await settled.page)
+		if (current) {
 			try {
-				return structuredClone(await entry.page)
+				return structuredClone(await current.page)
 			} catch {
 				// A failed background build says nothing about now: build again below.
 			}
@@ -142,18 +179,28 @@ export class PreparedDecks {
 	}
 	forget(roomId: string) {
 		this.entries.delete(roomId)
+		this.settled.delete(roomId)
 		clearTimeout(this.timers.get(roomId))
 		this.timers.delete(roomId)
 	}
 	private build(room: ProposalRoom, inputs: string): Promise<Page> {
 		const page = this.catalog.page(structuredClone(activeRoom(room)))
-		const entry: Entry = { inputs, page, builtAt: this.now() }
+		const entry: Entry = { inputs, base: deckBase(room), page, builtAt: this.now() }
 		this.entries.delete(room.id)
 		this.entries.set(room.id, entry)
 		while (this.entries.size > this.maxRooms) this.entries.delete(this.entries.keys().next().value!)
-		page.catch(() => {
-			if (this.entries.get(room.id) === entry) this.entries.delete(room.id)
-		})
+		page.then(
+			() => {
+				// A slower, older build never replaces a newer one that finished first.
+				if ((this.settled.get(room.id)?.builtAt ?? -Infinity) > entry.builtAt) return
+				this.settled.delete(room.id)
+				this.settled.set(room.id, entry)
+				while (this.settled.size > this.maxRooms) this.settled.delete(this.settled.keys().next().value!)
+			},
+			() => {
+				if (this.entries.get(room.id) === entry) this.entries.delete(room.id)
+			}
+		)
 		return page
 	}
 	private pump() {
@@ -179,6 +226,7 @@ export class PreparedDecks {
 		const room = await this.read(roomId)
 		if (!room || room.phase !== "setup" || room.expiresAt <= this.now()) {
 			this.entries.delete(roomId)
+			this.settled.delete(roomId)
 			return
 		}
 		if (!ready(room) || this.prepared(room)) return

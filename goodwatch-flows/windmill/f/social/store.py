@@ -113,10 +113,18 @@ class Store:
             [[p['post_id'] for p in posts]])}
         posts = [p for p in posts if p['post_id'] in active]
         authors = sorted({p['author_id'] for p in posts if p['source'] in ('bluesky', 'mastodon') and p.get('author_id')})
-        corpus = self.db.select('''SELECT p.*,q.evidence FROM doc.social_post p
-            LEFT JOIN doc.social_content_quality q ON q.post_id=p.post_id AND q.content_hash=p.content_hash
-            WHERE p.deleted_at IS NULL AND p.source IN ('bluesky','mastodon') AND p.author_id=ANY(?)
-            ORDER BY p.published_at DESC LIMIT 10001''', [authors]) if authors else []
+        corpus = self.db.select('''SELECT * FROM doc.social_post
+            WHERE deleted_at IS NULL AND source IN ('bluesky','mastodon') AND author_id=ANY(?)
+            ORDER BY published_at DESC LIMIT 10001''', [authors]) if authors else []
+        # Look up evidence by key instead of joining, which scans the whole quality table.
+        stored = {r['post_id']: r for r in self.db.select(
+            'SELECT post_id,content_hash,evidence FROM doc.social_content_quality WHERE post_id=ANY(?)',
+            [[p['post_id'] for p in corpus]])} if corpus else {}
+        for p in corpus:
+            q = stored.get(p['post_id'])
+            # Same as the former SQL join: NULL hashes never match.
+            same = q and p['content_hash'] is not None and q['content_hash'] == p['content_hash']
+            p['evidence'] = q['evidence'] if same else None
         bad_profiles = {(p['source'], p.get('author_id')): (p.get('quality_evidence') or {}).get('profile')
             for p in posts if set(quality.evaluate(p)['reasons']) & {'new_account', 'high_post_rate', 'no_profile', 'declared_bot'}}
         for p in corpus:
@@ -161,10 +169,11 @@ class Store:
             ORDER BY p.published_at DESC,p.post_id LIMIT ?""", [quality.VERSION, source, VERSION, limit])
 
     def publish(self, post, links):
+        # p.post_id=? repeats the key: Crate does not carry it across the join and would scan every post.
         rows = self.db.select('''SELECT q.* FROM doc.social_content_quality q JOIN doc.social_post p
             ON p.post_id=q.post_id AND p.content_hash=q.content_hash AND p.deleted_at IS NULL
-            WHERE q.post_id=? AND q.content_hash=? AND q.version=? AND q.status='pass' ''',
-            [post['post_id'], post['content_hash'], quality.VERSION])
+            WHERE q.post_id=? AND p.post_id=? AND q.content_hash=? AND q.version=? AND q.status='pass' ''',
+            [post['post_id'], post['post_id'], post['content_hash'], quality.VERSION])
         allowed = bool(rows) and quality.evaluate(dict(post, quality_evidence=json.loads(rows[0]['evidence'] or '{}')))['status'] == 'pass'
         if not allowed:
             links = []
