@@ -48,8 +48,13 @@ export function latestRetainedVote(snapshot: RoomSnapshot) {
 }
 export interface QueueStorage {
   write: (envelope: CommandEnvelope | null, retryAt?: number) => Promise<void>;
+  /**
+   * The same save, done by the time it returns (throws when it can't save). With it, a command goes in
+   * the tap's own task: waiting for even an already-finished save lets the screen's render run first.
+   */
+  writeNow?: (envelope: CommandEnvelope) => void;
 }
-/** Persist alongside sending. Reload/reconnect can retry the identical command rather than guessing its outcome. */
+/** Persist before sending. Reload/reconnect can retry the identical command rather than guessing its outcome. */
 export class PersistentCommands {
   pending: CommandEnvelope | null = null;
   busy = false;
@@ -73,17 +78,12 @@ export class PersistentCommands {
     if (!envelope) throw new Error('No action to retry.');
     this.busy = true;
     try {
-      // Sent first, saved right after: on Android the save is a keystore write (40-130 ms per vote, more
-      // than the request itself), and waiting for it, or issuing it first, held the request back. A reload
-      // still retries the identical command once the save is done; a command that reached the server
-      // applies once (same id) whether or not it was saved, and one lost together with the app within
-      // those milliseconds is like a tap that never happened.
-      const fresh = !this.pending;
-      this.pending = envelope;
-      const request = submit(envelope);
-      const saved = fresh ? this.storage.write(envelope).catch(() => undefined) : Promise.resolve();
-      // The save settles before anything else is written for this command (cleared or kept for a retry).
-      const result = await request.finally(() => saved);
+      if (!this.pending) {
+        if (this.storage.writeNow) this.storage.writeNow(envelope);
+        else await this.storage.write(envelope);
+        this.pending = envelope;
+      }
+      const result = await submit(envelope);
       await this.storage.write(null);
       this.pending = null;
       this.retryAt = 0;

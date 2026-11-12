@@ -5,10 +5,14 @@ const key = (id: string) => `yepwatch.v3.pending.${id}`;
 export async function readCommandRecovery(id: string, sessionKey?: string) {
   return decodeCommandRecovery(sessionStorage.getItem(key(sessionKey ? `${id}.${sessionKey}` : id)));
 }
-export async function writePending(id: string, envelope: CommandEnvelope | null, retryAt = 0, sessionKey?: string) {
+/** Saved by the time it returns (throws when the browser can't save). */
+export function writePendingNow(id: string, envelope: CommandEnvelope | null, retryAt = 0, sessionKey?: string) {
   id = sessionKey ? `${id}.${sessionKey}` : id;
   if (envelope) sessionStorage.setItem(key(id), JSON.stringify({ envelope, retryAt }));
   else sessionStorage.removeItem(key(id));
+}
+export async function writePending(id: string, envelope: CommandEnvelope | null, retryAt = 0, sessionKey?: string) {
+  writePendingNow(id, envelope, retryAt, sessionKey);
 }
 const admissionKey = (intent: string) => `yepwatch.v3.admission.${intent}`;
 /** Own pending bootstrap secret survives this tab's reload only; remove after definitive recovery.

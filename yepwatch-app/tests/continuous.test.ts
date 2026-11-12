@@ -49,7 +49,7 @@ test('only own pending answer advances own card; match inspection retains exact 
   assert.deepEqual(room.shared.matches, []);
   assert.equal(ownCard(room)?.id, 'c1');
 });
-test('persist as HTTP starts, recover the exact envelope after process reload, clear only confirmed or definitive results', async () => {
+test('persist before HTTP, recover the exact envelope after process reload, clear only confirmed or definitive results', async () => {
   const snapshot = continuousFixture();
   let stored: unknown = null;
   let calls = 0;
@@ -68,12 +68,10 @@ test('persist as HTTP starts, recover the exact envelope after process reload, c
   await assert.rejects(
     first.send(command, snapshot, async (body) => {
       calls++;
-      await Promise.resolve();
-      assert.deepEqual(stored, body, 'saved while the request is out');
+      assert.deepEqual(stored, body);
       throw new RoomFailure('outcome_unknown', 'lost');
     })
   );
-  assert.deepEqual(stored, first.pending, 'kept for a retry');
   const saved = first.pending;
   const reloaded = new PersistentCommands(() => 'must-not-use', {
     write: async (value) => {
@@ -93,36 +91,41 @@ test('persist as HTTP starts, recover the exact envelope after process reload, c
   });
   assert.equal(calls, 2);
   assert.equal(stored, null);
-  // Storage that can't save doesn't hold a command back: it goes, only without a saved copy for a reload.
   const failedStorage = new PersistentCommands(() => 'id', {
     write: async () => {
       throw new Error('storage unavailable');
     },
   });
-  await failedStorage.send(command, snapshot, async () => {
-    calls++;
-    return { snapshot };
-  }).catch(() => undefined);
-  assert.equal(calls, 3);
+  await assert.rejects(
+    failedStorage.send(command, snapshot, async () => {
+      calls++;
+      return { snapshot };
+    })
+  );
+  assert.equal(calls, 2);
 });
-test('a slow save never delays the request, and settles before the command is cleared', async () => {
+test('a synchronous store saves the whole command before the request leaves, in the tap\'s own task', async () => {
   const snapshot = continuousFixture();
-  const writes: string[] = [];
-  let release!: () => void;
-  const queue = new PersistentCommands(() => 'slow-save', {
-    write: (value) => {
-      if (!value) { writes.push('clear'); return Promise.resolve(); }
-      return new Promise<void>((resolve) => { release = () => { writes.push('saved'); resolve(); }; });
-    },
-  });
   const command = { type: 'vote', generation: 1, candidateId: 'c1', expectedVoteRevision: 0, value: 'pass' } as const;
-  let sent = false;
-  const done = queue.send(command, snapshot, async () => { sent = true; return { snapshot }; });
-  await new Promise((r) => setTimeout(r, 0));
-  assert.equal(sent, true, 'the request went while the save was still running');
-  release();
+  let stored: unknown = null;
+  let sentWith: unknown = undefined;
+  const queue = new PersistentCommands(() => 'sync-id', {
+    write: async (value) => { stored = value; },
+    writeNow: (value) => { stored = value; },
+  });
+  const done = queue.send(command, snapshot, async (body) => { sentWith = structuredClone(stored); return { snapshot }; });
+  // No await yet: the save and the request both happened synchronously, the save first.
+  assert.deepEqual(sentWith, { commandId: 'sync-id', sequence: snapshot.own.nextSequence, command });
   await done;
-  assert.deepEqual(writes, ['saved', 'clear']);
+  assert.equal(stored, null);
+  // A save that fails sends nothing.
+  let sent = 0;
+  const failing = new PersistentCommands(() => 'id', {
+    write: async () => { throw new Error('storage unavailable'); },
+    writeNow: () => { throw new Error('storage unavailable'); },
+  });
+  await assert.rejects(failing.send(command, snapshot, async () => { sent++; return { snapshot }; }));
+  assert.equal(sent, 0);
 });
 test('exact public parser rejects choice, identity and real pointer leaks on snapshots and activity', () => {
   for (const malformed of [null, undefined, {}, 42]) assert.equal(parseFrame(malformed), null);

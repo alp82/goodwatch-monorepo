@@ -19,7 +19,7 @@ import { continuousRealtimeUrl } from '../config';
 import type { Connection } from '../realtime';
 import { mergeRoom, mergePublic, PersistentCommands, type CachedRoom } from './state';
 import { awaitsServer, overlayRoom, type CommandBuild, type QueuedCommand } from './optimistic';
-import { readCommandRecovery, writePending } from './storage';
+import { readCommandRecovery, writePending, writePendingNow } from './storage';
 import { useRetryCountdown } from './useRetryCountdown';
 import { transientFailure } from './backoff';
 import { ContinuousRealtime } from './realtime';
@@ -74,7 +74,7 @@ export function useContinuousRoom(roomId: string) {
   const ownHoldSeed = useRef<number | null>(null);
   const ownCheerSeq = useRef(0);
   const channel = useRef<ContinuousRealtime | null>(null);
-  const [commandStorage] = useState(() => sessionCommandStorage(roomId, writePending));
+  const [commandStorage] = useState(() => sessionCommandStorage(roomId, writePending, writePendingNow));
   const startedEpoch = useRef(authEpoch.current());
   const queue = useRef(
     new PersistentCommands(() => Crypto.randomUUID(), commandStorage)
