@@ -5,12 +5,12 @@ import { saveAccess } from '../credentials';
 import { deviceCountryHint } from '../lobby';
 import { queryClient } from '../providers';
 import { authEpoch } from './account-flow';
-import { abortableSleep, unanswered } from './backoff';
+import { abortableSleep } from './backoff';
 import { resendUntilAnswered, troubleOnce, waitOutDeadline } from './resend';
 import { saveInvite } from './invite-store';
 import { roomRegistry } from './room-registry';
 import type { AdmissionRecovery } from './recovery-state';
-import { retainRequest, retryDeadline } from './retry';
+import { keptRequest } from './retry';
 import { continuousKey } from './keys';
 import { PersistentCommands, mergeRoom, type CachedRoom } from './state';
 import { readAdmission, readCommandRecovery, writeAdmission, writePending } from './storage';
@@ -110,9 +110,8 @@ export class CreateRoom {
           await writeAdmission('', request);
         } });
       } catch (error) {
-        // No answer at all has no server deadline: a resend (Try again, back online, back in front) may go at once.
-        this.retryAt = retainRequest(error) && !unanswered(error) ? retryDeadline(error) : 0;
-        this.request = retainRequest(error) ? { ...request, retryAt: this.retryAt } : null;
+        this.request = keptRequest(request, error);
+        this.retryAt = this.request?.retryAt ?? 0;
         await writeAdmission('', this.request);
         throw error;
       }

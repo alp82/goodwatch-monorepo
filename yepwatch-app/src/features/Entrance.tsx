@@ -18,7 +18,7 @@ import { roomRegistry } from '../core/continuous/room-registry';
 import { mergeRoom } from '../core/continuous/state';
 import { readAdmission, writeAdmission } from '../core/continuous/storage';
 import type { AdmissionRecovery } from '../core/continuous/recovery-state';
-import { retainRequest, retryDeadline } from '../core/continuous/retry';
+import { keptRequest } from '../core/continuous/retry';
 import { useRetryCountdown } from '../core/continuous/useRetryCountdown';
 import { transientFailure, unanswered } from '../core/continuous/backoff';
 import { joinUntilAnswered } from '../core/continuous/join-room';
@@ -253,8 +253,8 @@ export function Entrance({ invite, open: request, from }: {
       setDiagnostic(e instanceof ApiFailure ? e.diagnostic : undefined);
       const current = latestAdmission.current ?? saved;
       if (current) {
-        // No answer at all has no server deadline: a resend (Try again, back online) may go at once.
-        const next = retainRequest(e) ? { ...current, retryAt: unanswered(e) ? 0 : retryDeadline(e) } : null;
+        // No answer at all may go again at once; a saved server wait that stopped the join keeps its deadline.
+        const next = keptRequest(current, e);
         setAdmission(next);
         try { await writeAdmission(intent, next); }
         catch { setError('Your request is kept on this screen only: storage is unavailable. Keep it open to retry.'); }

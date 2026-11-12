@@ -1,5 +1,6 @@
 import { abortableSleep, BACKOFF_BASE_MS, BACKOFF_JITTER, QUIET_OUTAGE_MS, serverWait, transientFailure, unanswered } from './backoff';
 import { browserOffline } from './network';
+import { ServerWaitError } from './retry';
 
 /**
  * A saved admission (create or join) going again by itself while its page is in front: a slow or
@@ -58,12 +59,13 @@ export function resendDelay(failures: number, error: unknown, random: () => numb
  * What is left of a saved server deadline (`retryAt`, epoch ms) before the request may go: up to
  * SERVER_WAIT_MAX_MS is waited out (it ends at once when `signal` aborts), and the page hears the trouble as
  * it begins (a resumed wait is the same outage, so its connection line comes after the quiet period as before
- * the interruption); a longer one is the person's manual gate and throws.
+ * the interruption); a longer one is the person's manual gate and throws a ServerWaitError carrying the
+ * deadline, so the page keeps the server's wait instead of a fallback.
  */
 export async function waitOutDeadline(retryAt: number, signal: AbortSignal, sleep: (ms: number, signal?: AbortSignal) => Promise<void> = abortableSleep, onTrouble?: (since: number) => void) {
   const left = retryAt - Date.now();
   if (left <= 0) return;
-  if (left > SERVER_WAIT_MAX_MS) throw new Error('Wait before retrying this room request.');
+  if (left > SERVER_WAIT_MAX_MS) throw new ServerWaitError(retryAt);
   onTrouble?.(Date.now());
   await sleep(left, signal);
 }

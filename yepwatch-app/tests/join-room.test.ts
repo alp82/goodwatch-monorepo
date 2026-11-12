@@ -7,6 +7,8 @@ import { ResendResume, resendOutcome, sendFailure } from '../src/core/continuous
 import { admissionServer } from './admission-server';
 import { continuousFixture } from './continuous-fixture';
 import { loadIsolated } from './isolated-module';
+import * as retry from '../src/core/continuous/retry';
+import { keptRequest } from '../src/core/continuous/retry';
 
 // The real join (join-room.ts, on resend.ts) with its device and network edges replaced: a fake server that
 // seats one participant per command id + secret and checks the 12-person limit only for a new one (the real
@@ -50,6 +52,7 @@ function harness(script: Attempt, o: { offline?: boolean; seated?: number; onSle
     './keys': { continuousKey: (id: string) => ['proposal-room', id] },
     './room-registry': { roomRegistry: { setNickname: async () => undefined, restore: async () => undefined } },
     './state': state,
+    './retry': retry,
     './storage': { writeAdmission: async (_: string, value: unknown) => { admission = value; } },
   }, { './resend': new URL('../src/core/continuous/resend.ts', import.meta.url) });
   return { joinUntilAnswered, participants, sent, waits, log, saved: () => admission as Saved | null };
@@ -211,6 +214,7 @@ function realJoin(server: ReturnType<typeof admissionServer>) {
     './keys': { continuousKey: (id: string) => ['proposal-room', id] },
     './room-registry': { roomRegistry: { setNickname: async () => undefined, restore: async () => undefined } },
     './state': state,
+    './retry': retry,
     './storage': { writeAdmission: async (_: string, value: unknown) => { admission = value; } },
   }, { './resend': new URL('../src/core/continuous/resend.ts', import.meta.url) });
   const sends: number[] = [];
@@ -222,7 +226,12 @@ function realJoin(server: ReturnType<typeof admissionServer>) {
       const signal = controller.signal;
       void joinUntilAnswered((admission as Saved | null) ?? fresh(), { intent: 'INVITE1', signal }).then(
         () => resume.settled('answered'),
-        (e) => resume.settled(resendOutcome(sendFailure(e, signal.aborted, 'Joining was interrupted.'))),
+        (e) => {
+          const outcome = resendOutcome(sendFailure(e, signal.aborted, 'Joining was interrupted.'));
+          // Entrance.tsx runJoin's catch: what a failed (not cancelled) join leaves saved for the next tap.
+          if (outcome !== 'cancelled') admission = keptRequest((admission as Saved | null) ?? fresh(), e);
+          resume.settled(outcome);
+        },
       );
     },
     abort: () => controller.abort(),
@@ -274,6 +283,34 @@ test('real join: a 503 with Retry-After: 60 whose session is still being stored 
   assert.ok(p.waits[0] >= 59000, `back in front it waits out the rest first (${p.waits.join(', ')})`);
   assert.equal(server.posts('/join').length, 2);
   assert.equal(p.resume.phase, 'done');
+});
+
+test('real join: a 503 with Retry-After: 120 that lands as the app goes to the background stays a 120 s manual gate when back', async () => {
+  let storing: { resolve: () => void } | null = null;
+  let last = '';
+  const server = admissionServer((s, n) => {
+    last = s.path;
+    return s.path.endsWith('/join') && n === 1 ? { status: 503, code: 'busy', retryable: true, retryAfter: 120 } : 'ok';
+  }, { store: () => new Promise<void>((resolve) => { if (storing || !last.endsWith('/join')) return resolve(); storing = { resolve }; }) });
+  const p = realJoin(server);
+  const before = Date.now();
+  p.resume.pick('INVITE1');
+  for (let i = 0; i < 10 && !storing; i++) await new Promise((r) => setTimeout(r, 0));
+  assert.ok(storing, 'the busy answer arrived and its session is being stored');
+  p.resume.appState('background');
+  (storing as { resolve: () => void } | null)!.resolve();
+  await new Promise((r) => setTimeout(r, 10));
+  assert.equal(p.resume.phase, 'paused');
+  p.resume.appState('active');
+  await new Promise((r) => setTimeout(r, 10));
+  assert.equal(server.posts('/join').length, 1, 'nothing goes before the server allows it');
+  assert.equal(p.resume.phase, 'idle', 'the person\'s manual gate');
+  const retryAt = p.saved()?.retryAt ?? 0;
+  assert.ok(retryAt >= before + 120000, `the saved deadline is the server's, not a fallback (${retryAt - before} ms)`);
+  p.resume.pick('INVITE1');
+  await new Promise((r) => setTimeout(r, 10));
+  assert.equal(server.posts('/join').length, 1, 'a tap before the deadline still sends nothing');
+  assert.ok((p.saved()?.retryAt ?? 0) >= before + 120000, 'and the deadline stays');
 });
 
 test('real join: 200 headers whose body never comes before the 6 s wait: the same join goes again and the friend gets in', async (t) => {

@@ -184,7 +184,8 @@ function realPage(server: ReturnType<typeof admissionServer>) {
     setTroubleSince: () => undefined, attempt, identity: async () => ({ nickname: 'Alp', member: false }), open: (id) => opened.push(id),
   }));
   resume.connect({ send: (t) => { observer.mutate(t).catch(() => undefined); }, abort: () => attempt.current?.abort() });
-  return { resume, opened, waits, result: () => observer.getCurrentResult(), saved: () => admission };
+  return { resume, opened, waits, result: () => observer.getCurrentResult(), saved: () => admission,
+    draft: () => client.getQueryData<{ text: string; retryAt: number }>(['new-room-draft', 0, 'real']) };
 }
 
 test('real create: a 409 whose renewed session is still being stored when the app goes to the background is not sent again', async () => {
@@ -249,6 +250,38 @@ test('real create: a 503 with Retry-After: 60 whose session is still being store
   assert.equal(server.posts('/rooms').length, 2);
   assert.deepEqual(p.opened, ['room-1']);
 });
+
+for (const step of ['/rooms', '/commands'] as const) {
+  test(`real create: a ${step} 503 with Retry-After: 120 that lands as the app goes to the background stays a 120 s manual gate when back`, async () => {
+    let storing: Deferred<void> | null = null;
+    let last = '';
+    const server = admissionServer((s, n) => {
+      last = s.path;
+      if (step === '/commands' && s.path.endsWith('/rooms') && s.body.setup) return { status: 400, code: 'invalid_request' };
+      return s.path.endsWith(step) && n === 1 ? { status: 503, code: 'busy', retryable: true, retryAfter: 120 } : 'ok';
+    }, { store: () => { if (storing || !last.endsWith(step)) return Promise.resolve(); storing = deferred<void>(); return storing.promise; } });
+    const p = realPage(server);
+    const before = Date.now();
+    p.resume.pick('heist');
+    await flush();
+    assert.ok(storing, 'the busy answer arrived and its session is being stored');
+    p.resume.appState('background');
+    (storing as Deferred<void> | null)!.resolve();
+    await flush();
+    assert.equal(p.result().error?.name, 'AbortError', 'a pause');
+    p.resume.appState('active');
+    await flush();
+    assert.equal(server.posts(step).length, 1, 'nothing goes before the server allows it');
+    assert.equal(p.resume.phase, 'idle', 'the person\'s manual gate');
+    assert.match(p.result().error?.message ?? '', /Wait before retrying/);
+    const retryAt = p.draft()?.retryAt ?? 0;
+    assert.ok(retryAt >= before + 120000, `the countdown ends at the server's deadline, not a fallback (${retryAt - before} ms)`);
+    assert.equal(p.resume.pick('heist'), true);
+    await flush();
+    assert.equal(server.posts(step).length, 1, 'a tap before the deadline still sends nothing');
+    assert.ok((p.draft()?.retryAt ?? 0) >= before + 120000, 'and the deadline stays');
+  });
+}
 
 test('real create: 200 headers whose body never comes before the 6 s wait: the same create goes again and the room opens', async (t) => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
