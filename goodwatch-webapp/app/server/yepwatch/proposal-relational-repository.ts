@@ -37,6 +37,7 @@ interface Plan {
 	head: Row
 	records: Map<string, RecordWrite>
 }
+const recordKey = ({ entity, row }: RecordWrite) => `${entity}:${row.record_id}`
 const stable = (value: unknown): string =>
 	JSON.stringify(value, (_k, v) =>
 		v && typeof v === "object" && !Array.isArray(v)
@@ -72,6 +73,26 @@ async function parallel<T, R>(
 	)
 	return result
 }
+/** A candidate's own columns: what Start writes for each card of its deck (see prestore). */
+const candidateValues = (c: ProposalRoom["candidates"][number]): Row => ({
+	candidate_id: c.id,
+	idea_ids: c.ideaIds ?? null,
+	identity: c.identity,
+	title: c.title,
+	year: c.year,
+	overview: c.overview,
+	poster_url: c.posterUrl,
+	runtime_minutes: c.runtimeMinutes,
+	availability: c.availability.map(({ screenId: _, ...evidence }) => evidence),
+	viewing_duration: c.viewingDuration,
+	essence: c.essence ?? null,
+	effects: c.effects ?? null,
+	not_for: c.notFor ?? null,
+	backdrop_url: c.backdropUrl ?? null,
+	trailer_url: c.trailerUrl ?? null,
+	goodwatch_score: c.goodwatchScore ?? null,
+	genres: c.genres ?? null
+})
 export async function provisionRelationalRooms(sql: Sql, replicas: 0 | 2) {
 	for (const table of [...Object.values(tables), invitationTable, accountIndexTable, accountHistoryTable, revokedSessionTable, deletionTable, creationQuotaTable, creationReservationTable])
 		await sql(tableDdl(table, replicas))
@@ -99,6 +120,8 @@ export class RelationalProposalRepository implements ProposalRepository {
 	 * (hashing every candidate on every vote).
 	 */
 	private stored = new WeakMap<ProposalRoom, Set<string>>()
+	/** Records being written ahead of the head that will name them (prestore), by `entity:record_id`, until settled. */
+	private storing = new Map<string, Promise<void>>()
 	private sql: Sql
 	private secret: string
 	constructor(sql: Sql, secret: string) {
@@ -219,6 +242,20 @@ export class RelationalProposalRepository implements ProposalRepository {
 		this.remember(key, decoded)
 		return decoded
 	}
+	/** One record of the room in round `generation`, named by its content. */
+	private recordWrite(entity: Entity, room: ProposalRoom, generation: number, values: Row): RecordWrite {
+		const row = {
+			record_id: "",
+			room_id: room.id,
+			generation,
+			expires_at: room.expiresAt,
+			...values
+		}
+		row.record_id = this.recordId(entity, row)
+		// Ciphertext columns store a bounded encrypted string; plaintext is validated before encryption too.
+		parseRow(tables[entity], row)
+		return { entity, row }
+	}
 	private plan(room: ProposalRoom, pending: number): Plan {
 		if (
 			room.screens.length > 1 ||
@@ -230,18 +267,9 @@ export class RelationalProposalRepository implements ProposalRepository {
 			throw new RoomError("limit_reached", "Room state limit reached", 409)
 		const records = new Map<string, RecordWrite>()
 		const put = (entity: Entity, values: Row) => {
-			const row = {
-				record_id: "",
-				room_id: room.id,
-				generation: room.generation,
-				expires_at: room.expiresAt,
-				...values
-			}
-			row.record_id = this.recordId(entity, row)
-			// Ciphertext columns store a bounded encrypted string; plaintext is validated before encryption too.
-			parseRow(tables[entity], row)
-			records.set(`${entity}:${row.record_id}`, { entity, row })
-			return row.record_id
+			const write = this.recordWrite(entity, room, room.generation, values)
+			records.set(recordKey(write), write)
+			return write.row.record_id
 		}
 		const participants = room.participants.map((p) => {
 			const votes = Object.entries(p.votes).map(([candidateId, v]) =>
@@ -303,29 +331,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 				legacy_pick_revision: p.pick.revision
 			})
 		})
-		const candidates = room.candidates.map((c) =>
-			put("candidate", {
-				candidate_id: c.id,
-				idea_ids: c.ideaIds ?? null,
-				identity: c.identity,
-				title: c.title,
-				year: c.year,
-				overview: c.overview,
-				poster_url: c.posterUrl,
-				runtime_minutes: c.runtimeMinutes,
-				availability: c.availability.map(
-					({ screenId: _, ...evidence }) => evidence
-				),
-				viewing_duration: c.viewingDuration,
-                essence: c.essence ?? null,
-                effects: c.effects ?? null,
-                not_for: c.notFor ?? null,
-				backdrop_url: c.backdropUrl ?? null,
-				trailer_url: c.trailerUrl ?? null,
-				goodwatch_score: c.goodwatchScore ?? null,
-				genres: c.genres ?? null
-			})
-		)
+		const candidates = room.candidates.map((c) => put("candidate", candidateValues(c)))
 		const tickets = room.tickets.map((t) =>
 			put("ticket", {
 				ticket_hash: t.hash,
@@ -467,12 +473,61 @@ export class RelationalProposalRepository implements ProposalRepository {
 			throw fail()
 	}
 	/**
+	 * Makes sure the records are stored before a head names them. Records are immutable and named by their content, and
+	 * one is only ever deleted once its room expired (retention, deletion purge), so a record this process already
+	 * proved stored (remembered from a read or an acknowledged insert) is still there: it isn't sent again. A record
+	 * being written ahead right now (prestore) is awaited rather than sent twice, and written here if that write failed.
+	 * The rest are inserted (insert).
+	 */
+	private async ensure(records: RecordWrite[]) {
+		const missing = records.filter((r) => !this.cache.has(recordKey(r)))
+		const ahead = missing.filter((r) => this.storing.has(recordKey(r)))
+		await Promise.all([
+			this.insertRecords(missing.filter((r) => !this.storing.has(recordKey(r)))),
+			ahead.length
+				? (async () => {
+						await Promise.all(new Set(ahead.map((r) => this.storing.get(recordKey(r)))))
+						await this.insertRecords(ahead.filter((r) => !this.cache.has(recordKey(r))))
+				  })()
+				: undefined
+		])
+	}
+	/**
+	 * Writes the candidate records a Start of the room (in setup) would publish for these candidates, ahead of it: the
+	 * round Start opens (generation + 1), the room's fixed expiry and the same content, so the same record ids, and
+	 * Start's write finds them stored (ensure). Rows no head names are never read, so a deck that changes before Start, a
+	 * title Start leaves out (a member's seen titles) or a room that never starts leaves only unreferenced rows, removed
+	 * with the room's other records by their expiry (room retention, deletion purge). Best effort: a failure here only
+	 * means Start writes them itself.
+	 */
+	async prestore(room: ProposalRoom, candidates: ProposalRoom["candidates"]) {
+		if (room.phase !== "setup") return
+		const writes = new Map<string, RecordWrite>()
+		for (const c of candidates) {
+			const write = this.recordWrite("candidate", room, room.generation + 1, candidateValues(c))
+			const key = recordKey(write)
+			if (!this.cache.has(key) && !this.storing.has(key)) writes.set(key, write)
+		}
+		if (!writes.size) return
+		const done = this.insertRecords([...writes.values()])
+		const settled = done.then(
+			() => {},
+			() => {}
+		)
+		for (const key of writes.keys()) this.storing.set(key, settled)
+		try {
+			await done
+		} finally {
+			for (const key of writes.keys()) if (this.storing.get(key) === settled) this.storing.delete(key)
+		}
+	}
+	/**
 	 * Inserts the records with one multi-row INSERT per table, then proves them with one primary-key read per table
 	 * (Crate answers primary-key reads in real time, see records), including after lost INSERT responses. Never publish a partial set.
 	 * An INSERT that answers with every row inserted is its own proof: those rows are exactly the ones sent, so they
 	 * are remembered as a read of them would return them, and the read (a round trip on every command) is skipped.
 	 */
-	private async ensure(records: RecordWrite[]) {
+	private async insertRecords(records: RecordWrite[]) {
 		const byEntity = new Map<Entity, RecordWrite[]>()
 		for (const r of records) byEntity.set(r.entity, [...(byEntity.get(r.entity) ?? []), r])
 		await Promise.all(

@@ -172,7 +172,12 @@ export class ProposalService {
 		this.decks = new PreparedDecks(catalog, async (id) => {
 			const stored = await repository.read(id)
 			return stored && stored.room.format === 2 && stored.room.flowVersion === 3 ? stored.room : null
-		}, { now, ...options.decks })
+		}, {
+			now,
+			// Start then finds the prepared deck's cards already stored and writes only what changed.
+			...(repository.prestore ? { store: (room, page) => repository.prestore!(room, page.candidates) } : {}),
+			...options.decks,
+		})
 	}
 	/** Avoid retry storms between this process's joins, votes and socket handshakes.
 	 * Database CAS remains the authority across processes and background repair.

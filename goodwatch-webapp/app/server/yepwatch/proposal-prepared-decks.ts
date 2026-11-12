@@ -82,6 +82,11 @@ export interface PreparedDecksOptions {
 	/** Rooms whose decks are remembered (least recently used out). */
 	maxRooms?: number
 	now?: () => number
+	/**
+	 * Called with each deck a background build prepared for a room in setup, while it is still the room's latest
+	 * (repository prestore: its cards are stored ahead of Start). Awaited by the build's slot; failures are ignored.
+	 */
+	store?: (room: ProposalRoom, page: Page) => Promise<void>
 }
 
 /**
@@ -109,6 +114,7 @@ export class PreparedDecks {
 	private concurrency: number
 	private maxRooms: number
 	private now: () => number
+	private store?: (room: ProposalRoom, page: Page) => Promise<void>
 	constructor(
 		catalog: ProposalCatalog,
 		read: (roomId: string) => Promise<ProposalRoom | null>,
@@ -121,6 +127,7 @@ export class PreparedDecks {
 		this.concurrency = options.concurrency ?? 2
 		this.maxRooms = options.maxRooms ?? 500
 		this.now = options.now ?? Date.now
+		this.store = options.store
 	}
 	/** Builds the room's deck in the background once its setup has been quiet for a moment. */
 	schedule(roomId: string) {
@@ -230,7 +237,10 @@ export class PreparedDecks {
 			return
 		}
 		if (!ready(room) || this.prepared(room)) return
-		await this.build(room, deckInputs(room)).catch(() => {})
+		const inputs = deckInputs(room)
+		const page = await this.build(room, inputs).catch(() => null)
+		// Only the room's latest deck: one a newer setup change replaced would only leave rows behind.
+		if (page && this.store && this.entries.get(roomId)?.inputs === inputs) await this.store(room, page).catch(() => {})
 	}
 }
 

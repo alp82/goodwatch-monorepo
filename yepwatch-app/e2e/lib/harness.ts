@@ -29,6 +29,7 @@ export const ORIGIN = process.env.E2E_ORIGIN ?? STACK.front;
 export const CONTROL = STACK.control;
 export const ISSUER = STACK.issuer;
 const B = budgetsFor();
+const SERVER_TIMING_LOG = process.env.E2E_SERVER_TIMING_LOG;
 
 export type Fault = 'none' | 'nows' | 'slow' | 'hidden' | 'restart' | 'twodevice' | 'rapid';
 export type Spec = { visible?: string[]; any?: string[]; hidden?: string[]; text?: string; label?: { text: string; exact?: boolean }; textChanged?: { id: string; from: string }; cardChanged?: { from: string } };
@@ -124,6 +125,12 @@ export class Person {
       const p = new URL(url).pathname;
       const status = r.status();
       if (r.request().method() === 'POST' && p.includes('/proposal/')) this.commandLog.push({ t: Date.now(), status, path: p });
+      // E2E_SERVER_TIMING_LOG=<file>: each Start's Server-Timing (durations only) as one JSON line, for perf work.
+      if (SERVER_TIMING_LOG && r.request().method() === 'POST' && p.endsWith('/commands')) {
+        let type: unknown;
+        try { type = (r.request().postDataJSON() as { command?: { type?: unknown } } | null)?.command?.type; } catch { /* not JSON */ }
+        if (type === 'start') fs.appendFileSync(SERVER_TIMING_LOG, `${JSON.stringify({ t: Date.now(), status, serverTiming: r.headers()['server-timing'] ?? null })}\n`);
+      }
       const json = (r.headers()['content-type'] ?? '').includes('json');
       const body = json ? await r.json().catch(() => null) : null;
       if (status >= 400 && !this.expectedStatus.some((re) => re.test(`${status} ${p}`)) && !(this.room.faultAllowsNetworkErrors() && status >= 500))
