@@ -19,10 +19,12 @@
   handle @internal {
     respond "Not found" 404
   }
+  # Held requests try the restarted service every 100 ms: at 500 ms a phone stayed cut off up to half a second
+  # after the service was back, which pushed a 2.7 s restart past the 3 s quiet period (owner rule Q24a).
   handle /api/yepwatch/v1/proposal/realtime {
     reverse_proxy gateway:4311 {
       lb_try_duration 30s
-      lb_try_interval 500ms
+      lb_try_interval 100ms
       stream_close_delay 30s
     }
   }
@@ -34,7 +36,7 @@
     reverse_proxy api:3000 {
       # During a deploy the api restarts: hold the request and retry instead of failing it.
       lb_try_duration 30s
-      lb_try_interval 500ms
+      lb_try_interval 100ms
     }
   }
   @snapshot {
@@ -45,7 +47,7 @@
     reverse_proxy api:3000 {
       # During a deploy the api restarts: hold the request and retry instead of failing it.
       lb_try_duration 30s
-      lb_try_interval 500ms
+      lb_try_interval 100ms
     }
   }
   @admission {
@@ -56,7 +58,7 @@
     reverse_proxy api:3000 {
       # During a deploy the api restarts: hold the request and retry instead of failing it.
       lb_try_duration 30s
-      lb_try_interval 500ms
+      lb_try_interval 100ms
     }
   }
   @commands {
@@ -67,7 +69,7 @@
     reverse_proxy api:3000 {
       # During a deploy the api restarts: hold the request and retry instead of failing it.
       lb_try_duration 30s
-      lb_try_interval 500ms
+      lb_try_interval 100ms
     }
   }
   @member_callback {
@@ -78,7 +80,7 @@
     reverse_proxy api:3000 {
       # During a deploy the api restarts: hold the request and retry instead of failing it.
       lb_try_duration 30s
-      lb_try_interval 500ms
+      lb_try_interval 100ms
     }
   }
   @member_write {
@@ -89,7 +91,7 @@
     reverse_proxy api:3000 {
       # During a deploy the api restarts: hold the request and retry instead of failing it.
       lb_try_duration 30s
-      lb_try_interval 500ms
+      lb_try_interval 100ms
     }
   }
   @member_read {
@@ -100,7 +102,7 @@
     reverse_proxy api:3000 {
       # During a deploy the api restarts: hold the request and retry instead of failing it.
       lb_try_duration 30s
-      lb_try_interval 500ms
+      lb_try_interval 100ms
     }
   }
   # Link-preview card for a room invite (og:image of /r/<code>).
@@ -111,7 +113,7 @@
   handle @invite_card {
     reverse_proxy api:3000 {
       lb_try_duration 30s
-      lb_try_interval 500ms
+      lb_try_interval 100ms
     }
   }
   @unknown_api path /api /api/*
