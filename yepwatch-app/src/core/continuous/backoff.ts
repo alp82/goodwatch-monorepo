@@ -14,10 +14,16 @@ export const BACKOFF_MAX_MS = 15000;
 export const BACKOFF_JITTER = 0.3;
 /** The longest automatic wait: the capped step with full jitter. */
 export const BACKOFF_CEILING_MS = BACKOFF_MAX_MS * (1 + BACKOFF_JITTER);
-export function backoffDelay(failures: number, random: () => number = Math.random, minimum = 0): number {
-  const step = Math.min(BACKOFF_MAX_MS, BACKOFF_BASE_MS * 2 ** Math.max(0, Math.min(failures, 4)));
-  const base = Math.max(step, Number.isFinite(minimum) ? minimum : 0);
-  return Math.round(base * (1 + Math.min(1, Math.max(0, random())) * BACKOFF_JITTER));
+/**
+ * The live channel's first step. A dropped socket is redialed after 250 ms, then 500 ms, 1 s, 2 s, … up to the same
+ * 15 s, jittered the same way: a reconnect costs one round trip (a ticket over HTTP), and while the gateway restarts
+ * the front holds the new handshake until it answers, so waiting a whole second first only added to every restart.
+ */
+export const RECONNECT_BASE_MS = 250;
+export function backoffDelay(failures: number, random: () => number = Math.random, minimum = 0, first = BACKOFF_BASE_MS): number {
+  const step = Math.min(BACKOFF_MAX_MS, first * 2 ** Math.max(0, Math.min(failures, 16)));
+  const wait = Math.max(step, Number.isFinite(minimum) ? minimum : 0);
+  return Math.round(wait * (1 + Math.min(1, Math.max(0, random())) * BACKOFF_JITTER));
 }
 /**
  * How long the server asked us to wait, in ms (0 when it didn't): the Retry-After of an answered request,

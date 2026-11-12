@@ -3,7 +3,8 @@
 //   GET  /status                       children + fault state
 //   POST /restart/{api|gateway|fakes}  ?downMs=0&signal=SIGTERM|SIGKILL  stop, wait downMs, start, wait healthy
 //   POST /stop/{name}  POST /start/{name}
-//   POST /faults  {"wsBlocked":bool,"latencyMs":n,"apiLatencyMs":n,"gatewayLatencyMs":n}  (stack-wide)
+//   POST /faults  {"wsBlocked":bool,"wsStall":n,"latencyMs":n,"apiLatencyMs":n,"gatewayLatencyMs":n}  (stack-wide)
+//                 wsStall: the next n WebSocket handshakes get no answer at all (a connection lost on the way)
 //   POST /reset                        drop + re-provision the room store (API restarted around it)
 //   POST /shutdown
 import { spawn } from 'node:child_process';
@@ -67,7 +68,7 @@ const SPECS = {
 
 const children = {};
 const restarts = { api: 0, gateway: 0, fakes: 0 };
-const faults = { wsBlocked: false, apiLatencyMs: 0, gatewayLatencyMs: 0 };
+const faults = { wsBlocked: false, wsStall: 0, apiLatencyMs: 0, gatewayLatencyMs: 0 };
 
 // ---- fault proxies -----------------------------------------------------------------------------------
 // While a child is down its proxy stops listening, so Caddy sees a refused dial and holds/retries the
@@ -96,6 +97,12 @@ function openProxy(name) {
     client.once('data', (first) => {
       if (name === 'gateway' && faults.wsBlocked && /^upgrade:\s*websocket/im.test(first.toString('latin1'))) {
         client.end('HTTP/1.1 503 Service Unavailable\r\ncontent-length: 0\r\nconnection: close\r\n\r\n');
+        return;
+      }
+      // A handshake that hangs: never forwarded, never answered, never closed from this side (the browser's
+      // WebSocket stays CONNECTING until the app gives up on it).
+      if (name === 'gateway' && faults.wsStall > 0 && /^upgrade:\s*websocket/im.test(first.toString('latin1'))) {
+        faults.wsStall--;
         return;
       }
       const upstream = net.connect({ host: '127.0.0.1', port: p.target });
@@ -206,6 +213,7 @@ const control = http.createServer(async (req, res) => {
       for await (const c of req) body += c;
       const f = JSON.parse(body || '{}');
       if ('wsBlocked' in f) faults.wsBlocked = !!f.wsBlocked;
+      if ('wsStall' in f) faults.wsStall = Math.max(0, Number(f.wsStall) || 0);
       if ('latencyMs' in f) faults.apiLatencyMs = faults.gatewayLatencyMs = Number(f.latencyMs) || 0;
       if ('apiLatencyMs' in f) faults.apiLatencyMs = Number(f.apiLatencyMs) || 0;
       if ('gatewayLatencyMs' in f) faults.gatewayLatencyMs = Number(f.gatewayLatencyMs) || 0;

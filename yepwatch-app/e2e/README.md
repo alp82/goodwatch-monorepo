@@ -55,6 +55,7 @@ refuses any non-loopback socket. No `.env` file is read.
 curl -X POST localhost:18490/restart/api?downMs=1500      # or /restart/gateway, &signal=SIGKILL
 curl -X POST localhost:18490/stop/gateway ; curl -X POST localhost:18490/start/gateway
 curl -X POST localhost:18490/faults -d '{"wsBlocked":true}'   # refuse WebSocket upgrades (and drop open sockets)
+curl -X POST localhost:18490/faults -d '{"wsStall":1}'       # the next WebSocket handshake gets no answer at all
 curl -X POST localhost:18490/faults -d '{"latencyMs":150}'    # per-chunk latency on API + gateway
 curl -X POST localhost:18490/reset                            # drop + re-provision the room store
 curl localhost:18490/status

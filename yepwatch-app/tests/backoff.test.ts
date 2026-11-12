@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { abortableSleep, backoffDelay, retryTransient, serverWait, transientFailure, unanswered } from '../src/core/continuous/backoff';
+import { abortableSleep, backoffDelay, RECONNECT_BASE_MS, retryTransient, serverWait, transientFailure, unanswered } from '../src/core/continuous/backoff';
 import { RoomFailure } from '../src/core/continuous/api-client';
 
 const busy = () => new RoomFailure('busy', 'Service unavailable', 503, undefined, undefined, true, 2);
@@ -15,6 +15,13 @@ test('backoff doubles from 1 s to a 15 s cap, then adds 0-30 % jitter', () => {
   const capped = new Set(Array.from({ length: 50 }, (_, i) => backoffDelay(9, () => i / 50)));
   assert.ok(capped.size > 40);
   for (const ms of capped) assert.ok(ms >= 15000 && ms <= 19500);
+});
+
+test('the live channel starts at 250 ms and reaches the same 15 s cap; a gateway restart\'s 500 ms is its floor', () => {
+  assert.deepEqual([0, 1, 2, 3, 4, 5, 6, 40].map((n) => backoffDelay(n, () => 0, 0, RECONNECT_BASE_MS)), [250, 500, 1000, 2000, 4000, 8000, 15000, 15000]);
+  assert.equal(backoffDelay(0, () => 1, 0, RECONNECT_BASE_MS), 325);
+  assert.equal(backoffDelay(0, () => 0, 500, RECONNECT_BASE_MS), 500);
+  assert.equal(backoffDelay(0, () => 1, 500, RECONNECT_BASE_MS), 650);
 });
 
 test('a server floor replaces a shorter step, keeps its jitter, and is never undercut', () => {
