@@ -343,3 +343,73 @@ test("a Start queued behind a friend's service pick commits on its first compare
 	assert.equal((await f.repository.read(r.id))!.pendingRevision, 0, "the last notification still clears the pending revision")
 	f.service.decks.forget(r.id)
 })
+
+test("a member linking just before Start doesn't make Start wait for a new deck build", async () => {
+	// Production smoke 2026-11-12: a signed-in member joined and linked ~150 ms before the host's Start. The link
+	// made the prepared deck out of date, so Start waited for a whole new build (Start → first card 2.2-4 s against
+	// 0.26-0.43 s for guest-only rooms). A member brings nothing a deck needs but their seen titles, and Start reads
+	// those fresh and leaves them out of whatever deck it uses.
+	const base = fixture()
+	const b = await room(base)
+	await b.send({ type: "set_services", serviceIds: [1] })
+	const deck = await base.service.decks.page(await b.stored())
+	const seen = deck.candidates[0]
+	const key = `${seen.identity.kind === "movie" ? "movie" : "show"}_${seen.identity.tmdbId}`
+
+	const f = fixture({ excluded: [key] })
+	let hold: Promise<void> | null = null
+	const page = f.service["catalog"].page.bind(f.service["catalog"])
+	f.service["catalog"].page = async (room) => { await hold; return page(room) }
+	const r = await room(f)
+	await r.send({ type: "set_services", serviceIds: [1] })
+	await r.join("Member")
+	await f.service.decks.idle()
+	assert.ok(f.service.decks.prepared(await r.stored()), "the deck was ready before the member linked")
+	// The member's link lands (what ContinuousMembers.applyLink writes), then a build for it is slow.
+	let release = () => {}
+	hold = new Promise<void>((resolve) => { release = resolve })
+	const old = (await f.repository.read(r.id))!
+	const linked = structuredClone(old.room)
+	const member = linked.participants.at(-1)!
+	member.member = { state: "linked", prefill: { country: "DE", serviceIds: [], savedProgressAvailable: true } } as typeof member.member
+	member.memberUserId = "member-1"
+	member.memberGrant = { accessToken: "grant", expiresAt: Date.now() + 3_600_000 }
+	member.serviceIds = []
+	linked.revision++
+	assert.ok(await f.repository.compareAndSwap(old, linked, true))
+	await f.service.notify(r.id)
+	assert.ok(!f.service.decks.prepared(await r.stored()), "the link changed the deck inputs")
+
+	const started = await Promise.race([
+		r.start(),
+		new Promise<null>((resolve) => setTimeout(() => resolve(null), 1000).unref()),
+	])
+	release()
+	assert.ok(started, "Start answered without waiting for the build the link started")
+	assert.equal(started.snapshot.shared.phase, "choosing")
+	assert.ok(started.snapshot.shared.candidates.length > 0)
+	assert.ok(!started.snapshot.shared.candidates.some((c) => c.id === seen.id), "the member's seen title is left out")
+	await f.service.decks.idle()
+	f.service.decks.forget(r.id)
+})
+
+test("a member bringing a service the room didn't have still waits for the deck that has it", async () => {
+	const f = fixture({ delayMs: 60_000 })
+	const r = await room(f)
+	await r.send({ type: "set_services", serviceIds: [1] })
+	await f.service.decks.page(await r.stored())
+	await r.join("Member")
+	const old = (await f.repository.read(r.id))!
+	const linked = structuredClone(old.room)
+	const member = linked.participants.at(-1)!
+	member.member = { state: "linked", prefill: { country: "DE", serviceIds: [2], savedProgressAvailable: true } } as typeof member.member
+	member.memberUserId = "member-1"
+	member.memberGrant = { accessToken: "grant", expiresAt: Date.now() + 3_600_000 }
+	linked.screens[0].serviceIds = [1, 2]
+	linked.revision++
+	assert.ok(await f.repository.compareAndSwap(old, linked, true))
+	await r.start()
+	assert.equal(f.pages.length, 2, "Start built the deck for the room's new services")
+	assert.deepEqual(f.pages[1].screens[0].serviceIds, [1, 2])
+	f.service.decks.forget(r.id)
+})
