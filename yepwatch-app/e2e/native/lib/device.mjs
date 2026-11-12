@@ -16,6 +16,7 @@ const IMAGE = 'system-images;android-35;google_apis;x86_64';
  * YW_E2E_EMU_PORTS (comma list, e.g. 5574,5576) lets a second harness run its own instances next to 5570/5572. */
 export const PORTS = (process.env.YW_E2E_EMU_PORTS ?? '5570,5572').split(',').map(Number);
 if (PORTS.some(p => !Number.isInteger(p) || p % 2 || p < 5556 || p > 5584)) throw new Error(`YW_E2E_EMU_PORTS: even ports in 5556-5584, got ${PORTS}`);
+if (new Set(PORTS).size !== PORTS.length) throw new Error(`YW_E2E_EMU_PORTS: each port once, got ${PORTS}`);
 const GPU = process.env.YW_E2E_GPU ?? 'host';
 
 export const adb = (serial, ...args) => run(tools.adb, ['-s', serial, ...args], { timeout: 60000 });
@@ -90,6 +91,7 @@ export async function ensureSnapshot() {
 
 /** Boot (or reuse) `count` emulators from the snapshot. Returns serials and boot timings. */
 export async function boot(count = 1) {
+  if (PORTS.length < count) throw new Error(`${count} emulators need ${count} ports, YW_E2E_EMU_PORTS has ${PORTS.length} (${PORTS})`);
   ensureAdbServer();
   await ensureSnapshot();
   const present = devices();
