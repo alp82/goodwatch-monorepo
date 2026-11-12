@@ -39,8 +39,10 @@ export function resendable(error: unknown) {
  */
 export function definitiveRefusal(error: unknown) {
   if (!(error instanceof Error)) return false;
-  const e = error as Error & { code?: unknown; status?: unknown };
-  return typeof e.status === 'number' && e.code !== 'outcome_unknown' && !resendable(error);
+  const e = error as Error & { code?: unknown; status?: unknown; diagnostic?: { reason?: unknown } };
+  // An answer the page cancelled while it was still being read (the app left the front mid-response) has
+  // a status but no verdict: the request is kept and goes again, after the server's wait if it named one.
+  return typeof e.status === 'number' && e.code !== 'outcome_unknown' && !resendable(error) && e.diagnostic?.reason !== 'cancelled';
 }
 
 /** One send's trouble callback that passes on only the first call (a saved wait, then a failed resend, is one outage). */
@@ -101,8 +103,9 @@ export async function resendUntilAnswered(attempt: () => Promise<void>, o: {
       // being processed (a renewed session being stored, then the app left the front): it never becomes a
       // cancellation that the next send in front repeats.
       if (definitiveRefusal(error)) throw error;
+      // A server's wait (Retry-After) that came back as the page cancelled still holds for the next send,
+      // a relaunch too: dropping it here sent the same request again at once when the page was back in front.
       if (o.signal.aborted) {
-        // A server wait that landed as the app left the front holds when it is back (a relaunch too).
         if (serverWait(error) > 0) await o.onServerWait?.(Date.now() + serverWait(error));
         return false;
       }

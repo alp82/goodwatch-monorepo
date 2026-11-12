@@ -1,4 +1,4 @@
-import test from 'node:test';
+import test, { mock } from 'node:test';
 import assert from 'node:assert/strict';
 import { ContinuousRealtime, POLL_MS, type RealtimeOptions } from '../src/core/continuous/realtime';
 import type { SocketLike } from '../src/core/realtime';
@@ -24,6 +24,10 @@ class Socket implements SocketLike {
     this.onmessage?.({ data: JSON.stringify(value) } as MessageEvent);
   }
 }
+// The client computes what is left of a deadline from the clock (Date.now) and hands it to `later`. The
+// scheduler here is fake, so the clock is too: a real one ticking between setting a deadline and arming its
+// timer turned a 1000 ms wait into 999 ms under load ("Missing 1000ms timer").
+mock.timers.enable({ apis: ['Date'], now: Date.now() });
 const tick = () => new Promise<void>((r) => setImmediate(r));
 function harness(overrides: Partial<RealtimeOptions> = {}) {
   const sockets: Socket[] = [];

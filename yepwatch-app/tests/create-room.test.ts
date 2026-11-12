@@ -161,6 +161,30 @@ test('a Retry-After interrupted by the background or a relaunch is still waited 
   }
 });
 
+test('a Retry-After that comes back as the page leaves the front is still waited out when it is back', async () => {
+  // The answer arrives as the page cancels (read in full, or its body read cut off by the cancellation):
+  // either way the error carries the server's wait, and neither is a final refusal.
+  const answers = [
+    () => new RoomFailure('limit_reached', 'Wait', 429, undefined, undefined, true, 10),
+    () => new RoomFailure('outcome_unknown', 'Not confirmed', 429, undefined, undefined, false, 10, { stage: 'response', reason: 'cancelled', status: 429, elapsedMs: 3 }),
+  ];
+  for (const answer of answers) {
+  const controller = new AbortController();
+  const h = harness((_r, _s, n) => {
+    if (n === 1) { controller.abort(); throw answer(); }
+    return 'answer';
+  });
+  const before = Date.now();
+  await assert.rejects(h.flow.save('', options(controller)), /interrupted/);
+  const deadline = h.saved()?.retryAt ?? 0;
+  assert.ok(deadline >= before + 10000, `the server's deadline is saved (${deadline - before} ms)`);
+  h.log.length = 0;
+  await h.flow.save('', options());
+  assert.ok(h.log[0]?.startsWith('wait ') && Number(h.log[0].slice(5)) >= 9000, `waits before posting again (${h.log.join(', ')})`);
+  assert.deepEqual(h.log.slice(1), ['post']);
+  }
+});
+
 test('a server wait over a minute saved earlier stays a manual gate after a relaunch', async () => {
   const h = harness(() => { throw new RoomFailure('limit_reached', 'Wait', 429, undefined, undefined, true, 120); });
   await assert.rejects(h.flow.save('', options()), /Wait/);
