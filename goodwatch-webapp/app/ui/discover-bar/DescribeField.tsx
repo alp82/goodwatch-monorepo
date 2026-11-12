@@ -99,7 +99,8 @@ export function DescribeField({
 			pressed.current = null
 		}, 0)
 	}
-	// An input method is composing: its unfinished text is not the person's words yet, so no typing pause runs.
+	// An input method is composing: the Enter that confirms its text is no search. Typing pauses still run on the
+	// composing text (Android keyboards keep the last word composing until a space or suggestion).
 	const composing = useRef(false)
 	useEffect(() => {
 		if (typed === sent.current) return
@@ -138,7 +139,6 @@ export function DescribeField({
 	const type = (value: string) => {
 		setText(value)
 		clearTimeout(timer.current)
-		if (composing.current) return onUnsent?.(null)
 		const words = value.trim()
 		if (!words) return send("", "typing_pause")
 		onUnsent?.(
@@ -200,13 +200,9 @@ export function DescribeField({
 					}}
 					onCompositionStart={() => {
 						composing.current = true
-						clearTimeout(timer.current)
-						onUnsent?.(null)
 					}}
-					onCompositionEnd={(event) => {
+					onCompositionEnd={() => {
 						composing.current = false
-						// The committed text: the typing pause starts from here.
-						type(event.currentTarget.value)
 					}}
 					className={`brand-header w-full min-w-0 border-0 bg-transparent p-0 pr-10 text-[20px] leading-tight text-white transition-transform duration-200 outline-none placeholder:text-[18px] placeholder:text-gray-500 focus:ring-0 lg:text-[25px] lg:placeholder:text-[25px] [&::-webkit-search-cancel-button]:hidden ${label ? "translate-y-2" : filled ? "translate-y-0" : "-translate-y-[13px]"} ${PRIVATE}`}
 				/>

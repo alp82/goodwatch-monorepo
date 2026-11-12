@@ -68,13 +68,8 @@ for (const [scenario, how] of [
 		assert.deepEqual(r.afterSecondSubmit, ["navigation"])
 	})
 
-test("an input method's composition: a pause mid-composition sends nothing; the confirming Enter is no submit; the committed words search after a pause", () => {
+test("an input method's composition: the confirming Enter is no submit; the committed words search after a pause", () => {
 	const r = run("composition")
-	assert.deepEqual(
-		r.afterComposingPause,
-		["navigation"],
-		"unfinished composition sends nothing",
-	)
 	assert.deepEqual(
 		r.afterCommit,
 		["navigation"],
@@ -85,7 +80,6 @@ test("an input method's composition: a pause mid-composition sends nothing; the 
 
 test("Safari's composition order: the 229 Enter after compositionend is no Enter", () => {
 	const r = run("composition-safari")
-	assert.deepEqual(r.afterComposingPause, ["navigation"])
 	assert.ok(
 		!(r.afterCommitPause as string[]).includes("enter"),
 		`labels: ${r.afterCommitPause}`,

@@ -222,11 +222,9 @@ const submit = async () => {
 	await settle()
 }
 if (scenario.startsWith("composition")) {
-	// An input method composes new words; a pause in the middle sends nothing.
+	// An input method composes new words, then the person confirms them.
 	await act(async () => compose("compositionstart"))
 	await typeText("とうきょう")
-	await settle(700)
-	results.afterComposingPause = [...triggers]
 	if (scenario === "composition") {
 		// Chrome: the confirming Enter comes while composing, then the committed text and compositionend.
 		await act(async () => {
