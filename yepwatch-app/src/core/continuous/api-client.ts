@@ -27,7 +27,7 @@ import { apiUrl } from '../config';
 import { invitePreviewSchema } from './wire';
 import { parseRetryAfter } from './retry';
 import type { RoomAccess } from '../credentials';
-/** How long a room create waits for an answer before it counts as unanswered (and is kept for a resend). */
+/** How long a room create or join waits for an answer before it counts as unanswered (and is kept for a resend). */
 export const ADMISSION_TIMEOUT_MS = 6000;
 export class RoomFailure extends Error {
   constructor(
@@ -149,7 +149,7 @@ export class ContinuousApi {
   invitePreview = async (code: string): Promise<InvitePreview> =>
     invitePreviewSchema.parse(await this.request<unknown>(paths.invitePreview, { code }));
   join = (id: string, body: JoinRoomRequest, access?: RoomAccess, signal?: AbortSignal) =>
-    this.request<GuestAdmission>(paths.join(id), body, access, signal);
+    this.request<GuestAdmission>(paths.join(id), body, access, signal, undefined, ADMISSION_TIMEOUT_MS);
   snapshot = (a: RoomAccess, signal?: AbortSignal) => this.request<RoomSnapshot>(paths.snapshot(a.roomId), undefined, a, signal);
   command = (a: RoomAccess, c: CommandEnvelope) =>
     this.request<CommandResult>(paths.commands(a.roomId), c, a);

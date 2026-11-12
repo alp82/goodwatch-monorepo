@@ -1,5 +1,5 @@
 import { test, expect, eventually, ORIGIN } from '../lib/harness';
-import { inviteLink, join, pickServices, readyHost } from './flows';
+import { inviteLink, join, pickServices, readyHost, recordPage } from './flows';
 
 test.describe('invite and join', () => {
   test('public invite preview: link-preview tags and card image', async ({ room }) => {
@@ -35,6 +35,55 @@ test.describe('invite and join', () => {
     await mia.see({ visible: ['waiting'] });
     await mia.audit('friend waiting for the host');
     await expect(mia.page.getByText('Waiting for Alp to start', { exact: true })).toBeVisible();
+    await eventually(() => host.latest?.participants.length, (n) => n === 2, 'exactly two people (no duplicate join)', host);
+  });
+
+  // Like a slow create (create-room.spec.ts): two joins in a row outlast the app's 6 s wait. The join page
+  // keeps sending the same saved request (same command id and secret) and lets the friend in by itself.
+  test('a slow server: the join goes again by itself and the friend gets in without a tap', async ({ room }) => {
+    const host = await readyHost(room);
+    const invite = await inviteLink(host);
+    const mia = await room.person('Mia');
+    const answers: { participantId?: string; status: number }[] = [];
+    let first = 0;
+    let answered = 0;
+    await mia.page.route(/\/api\/yepwatch\/v1\/proposal\/rooms\/[^/]+\/join$/, async (route) => {
+      if (route.request().method() !== 'POST') return route.continue();
+      const n = answers.length + 1;
+      if (n === 1) first = Date.now();
+      // The server gets every try (and seats Mia on the first); the first two answers come after 7 s.
+      const context = mia.page.context();
+      const before = new Set((await context.cookies()).map((c) => c.name));
+      const response = await route.fetch();
+      answers.push({ status: response.status(), participantId: (await response.json().catch(() => null))?.credential?.participantId });
+      if (n <= 2) {
+        // An answer that never arrives sets no room cookie: drop what route.fetch put in the browser's jar.
+        for (const c of await context.cookies()) if (!before.has(c.name)) await context.clearCookies({ name: c.name });
+        await new Promise((r) => setTimeout(r, 7000));
+      } else answered = Date.now();
+      await route.fulfill({ response }).catch(() => undefined); // the app stopped waiting for the slow ones
+    });
+    await mia.open(invite, { settle: false });
+    await mia.see({ visible: ['join-screen', 'invite-head'] }, 15000, 'invitation join page');
+    await mia.fill(mia.page.getByLabel('Your name').filter({ visible: true }), 'Mia');
+    const stop = await recordPage(mia, 'join-screen', /Couldn|Try again|Retry joining|offline/i);
+    await mia.tap(mia.button('Join'), { expect: {} });
+    // Q24a: quiet at first, then one small floating line; never "Couldn't reach" or Retry joining.
+    await expect(mia.page.getByTestId('room-note').filter({ visible: true })).toHaveText('Reconnecting…', { timeout: 12000 });
+    await mia.see({ visible: ['services-sheet'] }, 30000, 'the friend gets in by itself');
+    const samples = await stop().catch(() => null);
+    room.noteOutage(first, answered);
+    expect(samples, 'the join page was sampled').not.toBeNull();
+    const firstNote = samples!.find((s) => s.note)?.t ?? Infinity;
+    expect(firstNote - first, 'quiet for the first 3 s of the outage').toBeGreaterThanOrEqual(3000);
+    expect(samples!.some((s) => s.t < first + 3000 && s.t > first), 'sampled during the quiet period').toBe(true);
+    expect(samples!.filter((s) => s.error), 'no error or Retry joining meanwhile').toEqual([]);
+    expect(answers.length).toBe(3);
+    expect(answers.every((a) => a.status === 200)).toBe(true);
+    expect(new Set(answers.map((a) => a.participantId)).size, 'every resend is the same seat').toBe(1);
+    expect(mia.own?.participantId).toBe(answers[0].participantId);
+    await pickServices(mia, ['Disney+']);
+    await mia.see({ visible: ['waiting'] });
     await eventually(() => host.latest?.participants.length, (n) => n === 2, 'exactly two people (no duplicate join)', host);
   });
 
