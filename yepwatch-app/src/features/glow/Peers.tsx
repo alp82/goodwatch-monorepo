@@ -1,14 +1,24 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import Svg, { Path } from 'react-native-svg';
-import { Animated, View } from 'react-native';
+import { Animated, Easing, View } from 'react-native';
 import type { PeerActivity } from '../../core/continuous/activity';
 import type { GlowPerson } from './model';
 import { peerColor } from './model';
 import { GText, Icon, native } from './theme';
 import { useReducedMotion } from '../../components/ui';
+/** Room left for "+N" after the faces (the label starts at its left edge and grows rightward). */
+const MORE_SLOT = 28;
+/** Width the faces row always takes for `max` faces and "+N": nothing next to it moves as people come and go. */
+export function liveFacesWidth(size: number, max: number) {
+  return size + (max - 1) * size * 0.72 + MORE_SLOT;
+}
 /**
  * Faces that react live: a friend's answer bounces their face, a swipe wiggles it, a press squashes
  * it. Overlapping, in the room control (the control itself is the button).
+ *
+ * The row has a fixed width (liveFacesWidth) and each face sits at left 0, placed by translateX: a
+ * person arriving, leaving or moving in the order slides the others (transform) and fades in, so the
+ * faces never change layout position (no layout shift).
  */
 export function LiveFaces({
   people,
@@ -23,10 +33,16 @@ export function LiveFaces({
   size?: number;
   max?: number;
 }) {
+  const width = liveFacesWidth(size, max);
+  const step = size * 0.72;
+  const shown = people.slice(0, max);
+  const more = people.length - shown.length;
+  // Right-aligned against the "+N" slot when there is one, else against the row's end.
+  const end = width - (more > 0 ? MORE_SLOT : 0);
   return (
-    <View accessible={false} style={{ flexDirection: 'row', alignItems: 'center' }}>
-      {people.slice(0, max).map((p, i) => (
-        <View key={p.id} style={{ marginLeft: i ? -size * 0.28 : 0 }}>
+    <View accessible={false} style={{ width, height: size }}>
+      {shown.map((p, i) => (
+        <FaceSlot key={p.id} x={end - size - (shown.length - 1 - i) * step}>
           <Avatar
             size={size}
             person={p}
@@ -55,10 +71,43 @@ export function LiveFaces({
             moving={!!activity.get(p.id)?.pointer?.pointer}
             active={activity.has(p.id)}
           />
-        </View>
+        </FaceSlot>
       ))}
-      {people.length > max && <GText size={12} color="#a3a3a3" style={{ marginLeft: 5 }}>+{people.length - max}</GText>}
+      {more > 0 && (
+        <View style={{ position: 'absolute', left: width - MORE_SLOT + 5, top: 0, height: size, justifyContent: 'center' }}>
+          <GText size={12} color="#a3a3a3">+{more}</GText>
+        </View>
+      )}
     </View>
+  );
+}
+/** One face's place in the row: moves with translateX only, fades in when it arrives. */
+function FaceSlot({ x, children }: { x: number; children: ReactNode }) {
+  const reduced = useReducedMotion();
+  const [tx] = useState(() => new Animated.Value(x));
+  const [fade] = useState(() => new Animated.Value(reduced ? 1 : 0));
+  useEffect(() => {
+    if (reduced) {
+      fade.setValue(1);
+      return;
+    }
+    const animation = Animated.timing(fade, { toValue: 1, duration: 180, useNativeDriver: native });
+    animation.start();
+    return () => animation.stop();
+  }, [fade, reduced]);
+  useEffect(() => {
+    if (reduced) {
+      tx.setValue(x);
+      return;
+    }
+    const animation = Animated.timing(tx, { toValue: x, duration: 220, easing: Easing.out(Easing.cubic), useNativeDriver: native });
+    animation.start();
+    return () => animation.stop();
+  }, [x, tx, reduced]);
+  return (
+    <Animated.View style={{ position: 'absolute', left: 0, top: 0, opacity: fade, transform: [{ translateX: tx }] }}>
+      {children}
+    </Animated.View>
   );
 }
 function Avatar({

@@ -15,7 +15,7 @@ import { useRoomFeedback } from '../feedback/RoomFeedback';
 import { groupActivity } from '../../core/continuous/activity';
 import { latestRetainedVote, ownCard } from '../../core/continuous/state';
 import { titlePresentation } from '../glow/adapter';
-import { LiveFaces } from '../glow/Peers';
+import { LiveFaces, liveFacesWidth } from '../glow/Peers';
 import { Trailer } from '../glow/Trailer';
 import { useActiveTime } from '../glow/useActiveTime';
 import { GText, Icon, Press, glow } from '../glow/theme';
@@ -205,7 +205,8 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
       <View testID="voting-bar" style={{ height: z(44), flexDirection: 'row', alignItems: 'center', gap: 10, width: rowWidth, alignSelf: 'center', zIndex: 3 }}>
         <MatchesChip />
         <View style={{ flex: 1 }} />
-        {people.length > 1 ? <LiveFaces people={people} activity={activity} localReaction={localReaction} size={z(26)} max={4} /> : null}
+        {/* Always the same width: the second person arriving moves nothing either. */}
+        {people.length > 1 ? <LiveFaces people={people} activity={activity} localReaction={localReaction} size={z(26)} max={4} /> : <View style={{ width: liveFacesWidth(z(26), 4) }} />}
         <Press label="Undo" disabled={disabled || !undoTarget} onPress={() => { if (!undoTarget) return; setYeps((list) => undoYeps(list, undoTarget.candidateId)); void cmd.undo(undoTarget.candidateId); }}
           style={{ width: z(40), height: z(36), borderRadius: 10, backgroundColor: '#ffffff0a' }}>
           <Icon name="undo" size={z(17)} color={glow.soft} />
