@@ -147,3 +147,27 @@ test("a seat logged out and relinked to another account never gets the previous 
 	assert.deepEqual(await pendingA, ["movie_1"])
 	assert.deepEqual(await forB, ["movie_9"])
 })
+
+test("a read started before a revocation can't restore the revoked grant's list after the refusal lands", async () => {
+	const { m, calls } = members()
+	const room = seat("account-a")
+	// A background deck build reads the seen list; Start then reads fresh and GoodWatch refuses the grant.
+	const older = m.seen(room, "p1")
+	const fresh = m.seen(room, "p1", { fresh: true })
+	assert.equal(calls.length, 2)
+	calls[1].reject(new RoomError("member_required", "Connect GoodWatch again", 403))
+	await assert.rejects(fresh)
+	// The older read, answered before the revocation, lands last: it supplies nothing and caches nothing.
+	calls[0].resolve(["movie_1"])
+	await assert.rejects(older, (e: unknown) => e instanceof RoomError && e.code === "member_required")
+	// The next plain read asks GoodWatch again instead of returning the revoked grant's list...
+	const next = m.seen(room, "p1")
+	assert.equal(calls.length, 3, "nothing was cached for the revoked grant")
+	// ...and when GoodWatch is down, Start's fallback has no list for this link either.
+	const start = quiet(() => m.seenOrNone(room, "p1", { fresh: true }))
+	await tick()
+	calls[2].reject(new RoomError("busy", "GoodWatch is temporarily unavailable", 503, true))
+	calls[3].reject(new RoomError("busy", "GoodWatch is temporarily unavailable", 503, true))
+	await assert.rejects(next)
+	assert.deepEqual((await start).value, [], "Start leaves the revoked grant's exclusions out")
+})

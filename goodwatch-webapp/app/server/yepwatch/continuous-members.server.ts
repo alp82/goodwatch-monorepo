@@ -759,6 +759,31 @@ export class ContinuousMembers {
 	/** The newest read per seat, shared by cached reads that find no usable entry. */
 	private seenReads = new Map<string, { roster: number; account: string; seq: number; fresh: boolean; read: Promise<string[]> }>()
 	private seenSeq = 0
+	/**
+	 * The newest settled read per seat and whether GoodWatch refused it, kept apart from `seenCache` so it
+	 * survives the entry being dropped: a read started before a newer one settled never fills the cache, and one
+	 * started before a refusal supplies nothing. Evicting a seat raises `seenFloor`, so reads that started before
+	 * an evicted settle count as superseded rather than unknown.
+	 */
+	private seenSettled = new Map<string, { seq: number; refused: boolean }>()
+	private seenFloor = 0
+	private settleSeen(key: string, seq: number, refused: boolean) {
+		const last = this.seenSettled.get(key)
+		if (last && last.seq > seq) return
+		this.seenSettled.delete(key)
+		this.seenSettled.set(key, { seq, refused })
+		if (this.seenSettled.size > 4096) {
+			const [oldest, evicted] = this.seenSettled.entries().next().value!
+			this.seenSettled.delete(oldest)
+			this.seenFloor = Math.max(this.seenFloor, evicted.seq)
+		}
+	}
+	/** Whether a newer read already settled for this seat: `refused` when that read was refused (or can't be known). */
+	private seenSupersededBy(key: string, seq: number) {
+		const last = this.seenSettled.get(key)
+		if (last) return last.seq > seq ? { refused: last.refused } : null
+		return seq <= this.seenFloor ? { refused: true } : null
+	}
 	/** The seat's current link, checked before any cache lookup; refuses a guest, an expired grant or an unlinked seat. */
 	private seenLink(room: ContinuousRoom, participantId: string) {
 		const p = actor(room, participantId)
@@ -790,8 +815,14 @@ export class ContinuousMembers {
 		// round trip to GoodWatch sat on Start's path, which reads seen titles fresh.
 		const read = this.reads.seen(link.userId, link.accessToken).then(
 			(keys) => {
+				const newer = this.seenSupersededBy(key, seq)
+				if (newer?.refused) {
+					if (this.seenCache.get(key)?.account === link.account) this.seenCache.delete(key)
+					throw new RoomError("member_required", "Sign in with GoodWatch again", 403)
+				}
+				this.settleSeen(key, seq, false)
 				const current = this.seenCache.get(key)
-				if (!current || current.seq < seq) {
+				if (!newer && (!current || current.seq < seq)) {
 					this.seenCache.delete(key)
 					this.seenCache.set(key, { roster: room.rosterVersion, account: link.account, seq, keys })
 					if (this.seenCache.size > 512) this.seenCache.delete(this.seenCache.keys().next().value!)
@@ -799,7 +830,10 @@ export class ContinuousMembers {
 				return keys
 			},
 			(e) => {
-				if (refused(e) && this.seenCache.get(key)?.account === link.account) this.seenCache.delete(key)
+				if (refused(e)) {
+					this.settleSeen(key, seq, true)
+					if (this.seenCache.get(key)?.account === link.account) this.seenCache.delete(key)
+				}
 				throw e
 			},
 		)
