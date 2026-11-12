@@ -1,7 +1,6 @@
 {
   "candidateVersion": "1.0.0",
-  "candidateBuild": "18",
-  "sourceCommit": "11bb3e8f572a153c5e9536f8ba12a2ecdc364d30",
+  "candidateBuild": "19",
   "dataTypes": {
     "Name": {
       "purposes": [
@@ -20,9 +19,7 @@
     "Coarse Location": {
       "purposes": [
         "App Functionality",
-        "Product Personalization",
-        "Analytics",
-        "Third-Party Advertising"
+        "Product Personalization"
       ],
       "linkedToUser": true,
       "usedForTracking": false
@@ -60,8 +57,7 @@
     "Device ID": {
       "purposes": [
         "App Functionality",
-        "Analytics",
-        "Third-Party Advertising"
+        "Analytics"
       ],
       "linkedToUser": true,
       "usedForTracking": false
@@ -69,17 +65,14 @@
     "Product Interaction": {
       "purposes": [
         "App Functionality",
-        "Product Personalization",
-        "Analytics",
-        "Third-Party Advertising"
+        "Product Personalization"
       ],
       "linkedToUser": true,
       "usedForTracking": false
     },
     "Advertising Data": {
       "purposes": [
-        "Analytics",
-        "Third-Party Advertising"
+        "Analytics"
       ],
       "linkedToUser": true,
       "usedForTracking": false
@@ -93,11 +86,11 @@
     }
   },
   "basis": {
-    "thirdPartyPlayer": "The explicit YouTube privacy-enhanced iframe uses youtube-nocookie.com. Per YouTube, embedded views do not personalize the viewer\u2019s YouTube experience or advertising outside YepWatch; embedded ads are non-personalized. These declarations target build 18, which embeds that player on first launch.",
+    "thirdPartyPlayer": "Trailers open in YouTube or the system browser. Build 19 and compatible updates have no embedded player or player advertising/data collection. Legacy player processing remains disclosed in the public privacy policy for older app versions.",
     "deviceId": "Aggregated disclosure is linked because YepWatch\u2019s room-allowance installation identifier identifies a guest alongside their room participation. Expo\u2019s separate random installation ID is not linked to an account, but Apple aggregates both uses into Device ID.",
     "crashData": "Expo update failures and short launch errors are used for functionality/diagnostics, without account linkage or tracking. No Expo Observe SDK is installed.",
     "contactAndSupport": "Names identify room participants; optional support and account-support correspondence can include email and customer-support data. YepWatch\u2019s GoodWatch account link does not expose the GoodWatch email or password.",
-    "coarseLocation": "Selected streaming region and Google player IP-derived general location; no location permission.",
+    "coarseLocation": "Selected streaming region only; no location permission or embedded-player location processing in build 19.",
     "roomIdeas": "Private room-authored ideas and optional search prompts are data collection. They are not a broad public UGC feed; Apple\u2019s age-questionnaire UGC definition covers broad distribution, unlike its privacy data category.",
     "publication": "Each category is saved in App Store Connect. Publish and fresh readback are tracked separately in the release record."
   },
@@ -107,5 +100,6 @@
     "https://docs.expo.dev/eas-update/store-privacy-declarations/",
     "https://support.google.com/youtube/answer/171780?hl=en",
     "https://developer.apple.com/help/app-store-connect/reference/app-information/age-ratings-values-and-definitions"
-  ]
+  ],
+  "externalTrailers": "Trailers open in YouTube or the system browser. Build 19 and compatible updates have no embedded player or player advertising/data collection. Legacy player processing remains disclosed in the public privacy policy for older app versions."
 }

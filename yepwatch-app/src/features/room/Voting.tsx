@@ -17,7 +17,6 @@ import { latestRetainedVote, ownCard } from '../../core/continuous/state';
 import { titlePresentation } from '../glow/adapter';
 import { LiveFaces } from '../glow/Peers';
 import { matchesChipFrame, votingBarFit } from '../glow/faces-row';
-import { Trailer } from '../glow/Trailer';
 import { useActiveTime } from '../glow/useActiveTime';
 import { GText, Icon, Press, glow } from '../glow/theme';
 import { useLayout } from '../shell/layout';
@@ -103,10 +102,7 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
   const { fontScale } = useWindowDimensions();
   const { phone, z } = layout;
   const reduced = useReducedMotion();
-  const [panel, setPanel] = useState<'details' | 'trailer' | null>(null);
-  /** The trailer playing inside the details' hero. */
-  const [detailsTrailer, setDetailsTrailer] = useState(false);
-  const trailerOpen = panel === 'trailer' || (panel === 'details' && detailsTrailer);
+  const [panel, setPanel] = useState<'details' | null>(null);
   // The card is placed from the stage's measured size; it isn't drawn before that (a guess would move it).
   const [area, setArea] = useState<{ width: number; height: number } | null>(null);
   const stageBox = useRef<React.ComponentRef<typeof View>>(null);
@@ -133,12 +129,11 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
   }, []));
   useBackAction(() => { if (panel) setPanel(null); else toRooms(); });
   const setActivityView = room.setActivityView;
-  useEffect(() => { if (focused) setActivityView(trailerOpen ? 'trailer' : 'voting'); }, [focused, trailerOpen, setActivityView]);
-  useEffect(() => { if (panel !== 'details') setDetailsTrailer(false); }, [panel]); // eslint-disable-line react-hooks/set-state-in-effect
+  useEffect(() => { if (focused) setActivityView('voting'); }, [focused, setActivityView]);
   // A confirmed restart discards the previous round's local state.
   const generation = snapshot?.shared.generation;
   useEffect(() => { setPanel(null); }, [generation]); // eslint-disable-line react-hooks/set-state-in-effect
-  useRoomFeedback(snapshot, trailerOpen);
+  useRoomFeedback(snapshot, false);
   const card = snapshot ? ownCard(snapshot) : undefined;
   const vote = card ? snapshot?.own.votes.find((v) => v.candidateId === card.id) : undefined;
   // Answers queue behind commands still on their way (the Start that dealt this card, the previous vote,
@@ -202,11 +197,8 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
       overlay={<>
         {panel === 'details' && title && card && (
           <Sheet testID="details-panel" page close={() => setPanel(null)}>
-            <TitleDetails key={card.id} c={card} trailer={detailsTrailer} onTrailer={setDetailsTrailer} />
+            <TitleDetails key={card.id} c={card} />
           </Sheet>
-        )}
-        {panel === 'trailer' && title?.trailerUrl && (
-          <Sheet testID="trailer-panel" close={() => setPanel(null)}><Trailer key={title.id} url={title.trailerUrl} /></Sheet>
         )}
       </>}>
       <RoomNotes />
@@ -231,7 +223,6 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
           moment={view.people.length > 1 ? moment : null} onMomentEnd={endMoment}
           onVote={choose}
           onDetails={() => setPanel('details')}
-          onTrailer={() => setPanel('trailer')}
           onGesture={(gesture) => { setLocalReaction(reaction({ gesture })); state.activity(gesture); }}
           onPointer={(pointer) => {
             state.pointer(pointer);

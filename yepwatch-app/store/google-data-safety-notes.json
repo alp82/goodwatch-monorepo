@@ -4,17 +4,10 @@
       "optional": true,
       "collect": [
         "PSL_APP_FUNCTIONALITY",
-        "PSL_PERSONALIZATION",
-        "PSL_ANALYTICS",
-        "PSL_ADVERTISING"
-      ],
-      "share": [
-        "PSL_APP_FUNCTIONALITY",
-        "PSL_ANALYTICS",
-        "PSL_ADVERTISING",
         "PSL_PERSONALIZATION"
       ],
-      "reason": "User-selected streaming country; optional YouTube trailer requests expose IP-derived general location under Google privacy practices. No device location permission is requested."
+      "share": [],
+      "reason": "User-selected streaming country for suggestions; no device location permission. Current versions do not embed YouTube or collect player IP-derived location."
     },
     "PSL_NAME": {
       "optional": true,
@@ -49,17 +42,10 @@
       "optional": false,
       "collect": [
         "PSL_APP_FUNCTIONALITY",
-        "PSL_PERSONALIZATION",
-        "PSL_ANALYTICS",
-        "PSL_ADVERTISING"
-      ],
-      "share": [
-        "PSL_APP_FUNCTIONALITY",
-        "PSL_ANALYTICS",
-        "PSL_ADVERTISING",
         "PSL_PERSONALIZATION"
       ],
-      "reason": "Room participation, votes, matches and decisions; optional YouTube playback interactions are handled by Google under its privacy policy."
+      "share": [],
+      "reason": "Room participation, votes, matches and decisions provide app functionality and personalized suggestions. Current versions do not embed YouTube or send player interactions to Google."
     },
     "PSL_IN_APP_SEARCH_HISTORY": {
       "optional": true,
@@ -93,16 +79,10 @@
         "PSL_APP_FUNCTIONALITY",
         "PSL_ANALYTICS",
         "PSL_FRAUD_PREVENTION_SECURITY",
-        "PSL_ADVERTISING",
         "PSL_PERSONALIZATION"
       ],
-      "share": [
-        "PSL_APP_FUNCTIONALITY",
-        "PSL_ANALYTICS",
-        "PSL_ADVERTISING",
-        "PSL_PERSONALIZATION"
-      ],
-      "reason": "Required random Expo installation ID and room-allowance identifier; optional YouTube player cookies/identifiers under Google privacy practices. YepWatch does not send its own room credentials or account identifier to the player."
+      "share": [],
+      "reason": "Required random Expo installation ID and room-allowance identifier for updates, installation diagnostics, room allowance and security. No advertising identifier or embedded-player identifiers."
     }
   },
   "accountCreation": [
@@ -111,7 +91,7 @@
   ],
   "accountDeletionUrl": "https://yepwatch.com/delete-account",
   "encryptedInTransit": true,
-  "thirdPartyPlayer": "Google/YouTube collection is included, rather than assuming a user-initiated-sharing exemption. Expo and interpretation processors are treated as service providers.",
+  "thirdPartyPlayer": "No embedded player in build 19 or compatible updates. Trailer links open an external app/browser on explicit user action. Its provider processes data independently outside YepWatch. Expo and interpretation processors remain service providers.",
   "sources": [
     "https://support.google.com/googleplay/android-developer/answer/10787469",
     "https://docs.expo.dev/eas-update/store-privacy-declarations/",
@@ -119,5 +99,7 @@
     "https://support.google.com/youtube/answer/132596"
   ],
   "separateDataDeletionWithoutAccountDeletion": false,
-  "selectiveDeletionReason": "The published flow deletes all YepWatch data, with a 30-day recovery window, while preserving the separate GoodWatch account. No granular partial-data deletion control is offered."
+  "selectiveDeletionReason": "The published flow deletes all YepWatch data, with a 30-day recovery window, while preserving the separate GoodWatch account. No granular partial-data deletion control is offered.",
+  "candidateBuild": "19",
+  "containsAds": false
 }
