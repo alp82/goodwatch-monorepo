@@ -122,7 +122,9 @@ class Store:
             [[p['post_id'] for p in corpus]])} if corpus else {}
         for p in corpus:
             q = stored.get(p['post_id'])
-            p['evidence'] = q['evidence'] if q and q['content_hash'] == p['content_hash'] else None
+            # Same as the former SQL join: NULL hashes never match.
+            same = q and p['content_hash'] is not None and q['content_hash'] == p['content_hash']
+            p['evidence'] = q['evidence'] if same else None
         bad_profiles = {(p['source'], p.get('author_id')): (p.get('quality_evidence') or {}).get('profile')
             for p in posts if set(quality.evaluate(p)['reasons']) & {'new_account', 'high_post_rate', 'no_profile', 'declared_bot'}}
         for p in corpus:
