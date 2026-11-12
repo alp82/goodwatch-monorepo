@@ -11,14 +11,17 @@ export const MIN_ROOM_RETENTION_DAYS = 1
 const PARTICIPANT_PAGE = 64
 /**
  * A room's identity check that started longer ago than this starts over. A purge only begins 30 days after its request,
- * so no purge can be running for an identity found free less than a day ago. Checks in progress are continued first on
- * every run, so a check reads one page per run (once a minute) and only a room with more than 1440 pages (92,160
- * participant records) could outlive its window.
+ * so no purge can be running for an identity found free less than a day ago. Checks at the front of the queue are
+ * continued on every run, so a check reads one page per run (once a minute) and only a room with more than 1440 pages
+ * (92,160 participant records) could outlive its window; such a check releases its slot and goes to the back of the
+ * queue with a backoff.
  */
 const CHECK_VALID_MS = DAY_MS
-/** A room that failed waits 2^failures runs (at most this many) before this instance tries it again. */
+/** A room that failed, or whose check outlived its window, waits 2^times runs (at most this many) before this instance tries it again. */
 const MAX_BACKOFF_RUNS = 60
 const REMEMBERED_FAILURES = 1000
+/** Checks remembered in the queue; a crowded room found beyond this starts its check over when the head scan meets it again. */
+const QUEUED_CHECKS = 1000
 
 /** What the cleanup needs from the relational repository: the committed head and the account stores. */
 export interface RetentionRepository {
@@ -83,9 +86,11 @@ export const ROOM_RECORD_TABLES: Table[] = [
  * purge can only start 30 days after its request, so a request made after this check cannot purge during the run.
  * Participant records are not bounded by the roster, so they are checked 64 per run across as many runs as needed;
  * the head's people are rechecked in the run that removes it, and a check older than a day starts over. Checks in
- * progress form a queue of at most R rooms that every run continues before it admits any new head, and new heads are
- * admitted only into the slots the queue leaves free: a backlog of crowded rooms is worked through R at a time, each
- * check finishing in as many consecutive runs as it has pages instead of losing its place to the rooms behind it.
+ * progress form a queue; every run continues the oldest R - 1 of them and always keeps at least one slot for a new head
+ * (with R = 1, runs alternate between the two), so a backlog of crowded rooms is worked through in order, each check
+ * finishing in as many consecutive runs as it has pages, and a queue of rooms that can never finish within the window
+ * cannot keep new rooms out. A check that outlives its window releases its slot and goes to the back of the queue,
+ * starting over after a backoff of 2, 4, … up to 60 runs.
  *
  * Progress: new heads and each record table are walked with a rotating primary-key cursor held by this instance, so rooms
  * that must stay (unreadable, waiting for a deletion, failing) never hide the ones behind them. The record table that
@@ -94,7 +99,7 @@ export const ROOM_RECORD_TABLES: Table[] = [
  *
  * Work per run (bounded, the runtime calls it once a minute per API instance), with R = roomsPerRun,
  * N = rowsPerStatement, T = ROOM_RECORD_TABLES.length and P = 64 participant records per room:
- * - one clock read and at most 1 + T + R scans: new heads (≤ R rows, fewer by the queued checks), one per record table (≤ N rows), and one page of
+ * - one clock read and at most 1 + T + R scans: new heads (≤ R rows, fewer by the continued checks), one per record table (≤ N rows), and one page of
  *   each examined head's participant records (≤ P rows);
  * - per head (at most R, queued checks and new heads together): its repository read (head and at most 12 participants' records) or, when that fails, one raw
  *   head read; at most 2 × (12 + P) primary-key deletion-request reads (accounts and guests of the head's people and
@@ -120,10 +125,11 @@ export class RoomRetention {
 	private runs = 0
 	private tableStart = 0
 	/**
-	 * The queue of checks in progress, oldest first, at most roomsPerRun: per room, the participant record after which its
-	 * deletion-request check continues, and when the check began.
+	 * The queue of checks in progress, oldest first: per room, the participant record after which its deletion-request
+	 * check continues, when the check began (null: starts over when next examined), the run before which it waits, and
+	 * how often its check outlived its window.
 	 */
-	private checks = new Map<string, { cursor: string; since: number }>()
+	private checks = new Map<string, { cursor: string; since: number | null; notBefore: number; expiries: number }>()
 	private failures = new Map<string, { count: number; retryAt: number }>()
 	constructor(sql: Sql, repository: RetentionRepository, options: RoomRetentionOptions) {
 		if (!Number.isFinite(options.retentionDays) || options.retentionDays < MIN_ROOM_RETENTION_DAYS)
@@ -164,9 +170,12 @@ export class RoomRetention {
 				else if (outcome === "skipped") report.skipped++
 				else if (outcome === "waiting") report.waiting++
 				else if (outcome === "checking") report.checking++
-				// Only a room still being checked keeps its place in the queue.
-				if (outcome !== "checking") this.checks.delete(id)
-				this.failures.delete(id)
+				// Only a room still being checked keeps its place in the queue. Its failure count stays until the check
+				// finishes, so a room that keeps failing on a later page backs off further each time.
+				if (outcome !== "checking") {
+					this.checks.delete(id)
+					this.failures.delete(id)
+				}
 			} catch {
 				// A failing room leaves the queue, so it never holds a slot through its backoff; its check starts over.
 				this.checks.delete(id)
@@ -177,16 +186,29 @@ export class RoomRetention {
 				if (this.failures.size > REMEMBERED_FAILURES) this.failures.delete(this.failures.keys().next().value!)
 			}
 		}
-		// Checks in progress first, oldest first, so each finishes in consecutive runs whatever the backlog behind it.
-		for (const id of [...this.checks.keys()]) await examine(id)
-		// New heads only into the slots the queue leaves free (the queue never exceeds roomsPerRun, see deletionCheck).
+		// Checks in progress first, oldest first, so each finishes in consecutive runs whatever the backlog behind it; at
+		// least one slot stays for new heads (every other run when only one room fits a run).
+		const queueSlots = this.roomsPerRun > 1 ? this.roomsPerRun - 1 : run % 2
+		for (const [id, check] of [...this.checks]) {
+			if (examined.size >= queueSlots) break
+			if (check.notBefore > run) continue
+			if (check.since !== null && now - check.since > CHECK_VALID_MS) {
+				// Outlived its window: it releases its slot and starts over behind the others, after a backoff.
+				const expiries = check.expiries + 1
+				this.checks.delete(id)
+				this.checks.set(id, { cursor: "", since: null, notBefore: run + Math.min(2 ** expiries, MAX_BACKOFF_RUNS), expiries })
+				continue
+			}
+			await examine(id)
+		}
+		// New heads into the slots left; queued rooms are continued by the queue only.
 		const limit = this.roomsPerRun - examined.size
 		if (limit > 0) {
 			const heads = (await this.sql(`SELECT id FROM ${ROOM} WHERE expires_at<=? AND id>? ORDER BY id LIMIT ?`, [cutoff, this.headCursor, limit])).rows.map((r) => String(r[0]))
 			this.headCursor = heads.length < limit ? "" : heads[heads.length - 1]
 			for (const id of heads) {
 				if (budget < 2) break
-				if (!examined.has(id)) await examine(id)
+				if (!examined.has(id) && !this.checks.has(id)) await examine(id)
 			}
 		}
 
@@ -252,8 +274,9 @@ export class RoomRetention {
 	 * head has rechecked them right before; identities from earlier pages were found free within CHECK_VALID_MS.
 	 */
 	private async deletionCheck(roomId: string, people: { id: string; memberUserId?: string | null }[], now: number): Promise<"clear" | "waiting" | "checking"> {
-		let progress = this.checks.get(roomId)
-		if (!progress || now - progress.since > CHECK_VALID_MS) progress = { cursor: "", since: now }
+		const queued = this.checks.get(roomId)
+		const progress =
+			queued && queued.since !== null && now - queued.since <= CHECK_VALID_MS ? { cursor: queued.cursor, since: queued.since } : { cursor: "", since: now }
 		const page = (
 			await this.sql(`SELECT ${tables.participant.primary},participant_id,member_user_id FROM ${PARTICIPANT} WHERE room_id=? AND ${tables.participant.primary}>? ORDER BY ${tables.participant.primary} LIMIT ?`, [
 				roomId,
@@ -270,12 +293,14 @@ export class RoomRetention {
 		let open = false
 		for (const userId of accounts) if (!open && (await this.repository.deletionStore.get({ kind: "account", userId }))) open = true
 		for (const participantId of participants) if (!open && (await this.repository.deletionStore.get({ kind: "guest", roomId, participantId }))) open = true
-		this.checks.delete(roomId)
 		// Once a request is restored the whole room is checked again from the start.
-		if (open) return "waiting"
-		if (page.length < PARTICIPANT_PAGE) return "clear"
-		// Back into the queue (at its end). Rooms are admitted only into free slots, so it stays within roomsPerRun.
-		this.checks.set(roomId, { cursor: String(page[page.length - 1][0]), since: progress.since })
+		if (open || page.length < PARTICIPANT_PAGE) {
+			this.checks.delete(roomId)
+			return open ? "waiting" : "clear"
+		}
+		// A queued room keeps its place; a new one joins at the end while the queue has room.
+		if (queued || this.checks.size < QUEUED_CHECKS)
+			this.checks.set(roomId, { cursor: String(page[page.length - 1][0]), since: progress.since, notBefore: 0, expiries: queued?.expiries ?? 0 })
 		return "checking"
 	}
 }

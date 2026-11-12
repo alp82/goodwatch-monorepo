@@ -225,7 +225,12 @@ test("room retention on disposable Crate: old rooms leave no rows in any table, 
 		if (state === "armed" && stmt.startsWith("DELETE FROM doc.yepwatch_room ") && result.rowcount === 1) state = "crash"
 		return result
 	}
-	await assert.rejects(new RoomRetention(crashing, new RelationalProposalRepository(crashing, secret), { retentionDays: 30, roomsPerRun: 1 }).run(), /Injected crash/)
+	// One head per run, so the crash right after a head removal ends the run. Room ids are random: the waiting room may
+	// sort first, so the runs walk the heads until one is removed.
+	const crasher = new RoomRetention(crashing, new RelationalProposalRepository(crashing, secret), { retentionDays: 30, roomsPerRun: 1 })
+	await assert.rejects(async () => {
+		for (let i = 0; i < 4; i++) await crasher.run()
+	}, /Injected crash/)
 	const headless = []
 	for (const id of old) if (!(await repository.read(id))) headless.push(id)
 	assert.equal(headless.length, 1)

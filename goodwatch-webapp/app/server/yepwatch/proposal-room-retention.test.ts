@@ -368,12 +368,15 @@ test("room retention: the run that removes a head rechecks its people; a check o
 	assert.equal(last.rooms, 0)
 	s.markers.clear()
 
-	// A check that began more than a day ago is not trusted: the first page is read again.
+	// A check that began more than a day ago is not trusted: it releases its slot, and after a backoff the first page is read again.
 	assert.equal((await retention.run()).checking, 1)
 	s.now = NOW + DAY_MS + 1
 	const pages = () => s.statements.filter((x) => x.stmt === PAGE && x.args[0] === "crowded").map((x) => x.args[1])
 	const before = pages().length
-	assert.equal((await retention.run()).checking, 1)
+	assert.equal((await retention.run()).checking, 0, "expired: not continued")
+	assert.equal(pages().length, before)
+	await retention.run()
+	assert.equal((await retention.run()).checking, 1, "after the backoff")
 	assert.equal(pages()[before], "", "started over")
 	await drain(retention)
 	assert.equal(s.rowsOf("crowded"), 0)
@@ -425,6 +428,58 @@ test("room retention: checks finish when runs are far apart, a backlog never age
 	assert.equal(s.published.length, 300)
 	const restarts = s.statements.filter((x) => x.stmt === PAGE && x.args[1] === "").length
 	assert.equal(restarts, ids.length, "every check read its first page once")
+})
+
+test("room retention: a full queue of checks that can never finish within their window does not keep new rooms out", async () => {
+	// Codex reproduction scaled down: ten rooms whose checks need 30 runs while a check stays valid for 20 runs.
+	const s = store()
+	const pagesPerRoom = 30
+	const crowded: string[] = []
+	for (let r = 0; r < 10; r++) {
+		const id = `crowded-${r}`
+		crowded.push(id)
+		s.room(id, NOW - 40 * DAY_MS)
+		for (let i = 0; i < 64 * pagesPerRoom; i++)
+			s.table(tables.participant.name).set(`p:${id}:${String(i).padStart(4, "0")}`, { room_id: id, expires_at: NOW - 40 * DAY_MS, seq: 1, participant_id: `${id}-old-${i}` })
+	}
+	const retention = new RoomRetention(s.sql, s.repository, { retentionDays: 30 })
+	const step = DAY_MS / 20
+	const runAt = async (i: number) => {
+		s.now = NOW + i * step
+		return retention.run()
+	}
+	let i = 0
+	// The queue fills and outlives its window.
+	for (; i < 60; i++) await runAt(i)
+	const restarts = (id: string) => s.statements.filter((x) => x.stmt === PAGE && x.args[0] === id && x.args[1] === "").length
+	assert.ok(crowded.every((id) => restarts(id) >= 2), "every check expired and started over")
+	// An eleventh room arrives after the queue is full.
+	s.room("zz-new", NOW - 31 * DAY_MS, { history: [{ id: "decision-new" }] })
+	const headScans = () => s.statements.filter((x) => x.stmt.startsWith(`SELECT id FROM ${ROOM} WHERE expires_at`)).length
+	const scansBefore = headScans()
+	// Its head goes (its records follow when the record cursors pass them, behind the crowded rooms' 19,200 records).
+	for (let end = i + 30; i < end && s.table(ROOM).has("zz-new"); i++) await runAt(i)
+	assert.ok(!s.table(ROOM).has("zz-new"), "the eleventh room is examined and removed")
+	assert.deepEqual(s.published, ["decision-new"])
+	assert.ok(headScans() - scansBefore >= 1, "the head scan keeps running")
+	for (const id of crowded) assert.equal(s.rowsOf(id), 1 + ROOM_RECORD_TABLES.length + 64 * pagesPerRoom, "crowded rooms stay")
+})
+
+test("room retention: a room that keeps failing on a later page of its check backs off further each time", async () => {
+	const s = store()
+	s.room("crowded", NOW - 40 * DAY_MS)
+	for (let i = 0; i < 100; i++)
+		s.table(tables.participant.name).set(`p:crowded:${String(i).padStart(3, "0")}`, { room_id: "crowded", expires_at: NOW - 40 * DAY_MS, seq: 1, participant_id: `old-${i}` })
+	// Every second-page read fails.
+	const sql: Sql = async (stmt, args = []) => {
+		if (stmt === PAGE && args[0] === "crowded" && args[1] !== "") throw new Error("Injected page failure")
+		return s.sql(stmt, args)
+	}
+	const retention = new RoomRetention(sql, s.repository, { retentionDays: 30 })
+	const failedRuns: number[] = []
+	for (let run = 1; run <= 40; run++) if ((await retention.run()).failed) failedRuns.push(run)
+	// Backoffs of 2, 4, 8, 16 runs, each followed by one run that reads the first page again.
+	assert.deepEqual(failedRuns, [2, 5, 10, 19, 36])
 })
 
 test("room retention: every record table gets a share of the row budget, whatever comes first", async () => {
