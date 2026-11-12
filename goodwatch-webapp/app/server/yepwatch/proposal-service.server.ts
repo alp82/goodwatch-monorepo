@@ -710,8 +710,12 @@ export class ProposalService {
 		if (room && !(room.committed.phase === "choosing" && room.committed.agreement.state === "checking") && !room.historyChanged) {
 			void this.notify(id, { yieldToQueued: true })
 			continuousLive(room.committed, this.now())
-			await this.guard?.active(room.committed)
-			return { receipt, snapshot: this.snapshot(room.committed, credential) }
+			// The capacity read is in flight while the answer's snapshot is built.
+			const capacity = this.guard?.active(room.committed)
+			capacity?.catch(() => {}) // awaited below
+			const snapshot = this.snapshot(room.committed, credential)
+			await capacity
+			return { receipt, snapshot }
 		}
 		let stored = await this.notify(id, { yieldToQueued: true })
 		if (!stored || (stored.room.phase === "choosing" && stored.room.agreement.state === "checking")) {
