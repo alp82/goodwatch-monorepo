@@ -13,6 +13,30 @@ async function createWithoutTiming(host: Person, mood: string) {
   await eventually(() => host.latest?.ideas.map((i) => i.text), (v) => JSON.stringify(v) === JSON.stringify([mood]), 'the room has exactly the one idea', host);
 }
 
+/**
+ * Samples the Mood page every 50 ms from inside the page (a one-frame line or error is caught): whether the
+ * "Reconnecting…" line is up and whether any error or Try again shows. `stop` returns the samples.
+ */
+async function recordMoodPage(host: Person) {
+  await host.page.evaluate(() => {
+    const w = window as unknown as { __moodLog?: { t: number; note: boolean; error: boolean }[]; __moodTimer?: number };
+    w.__moodLog = [];
+    const sample = () => {
+      const page = document.querySelector('[data-testid="mood-page"]');
+      if (!page) return;
+      const note = document.querySelector('[data-testid="room-note"]')?.textContent ?? '';
+      w.__moodLog!.push({ t: Date.now(), note: note.includes('Reconnecting'), error: /Couldn|Try again|offline/i.test(page.textContent ?? '') });
+    };
+    sample();
+    w.__moodTimer = window.setInterval(sample, 50);
+  });
+  return () => host.page.evaluate(() => {
+    const w = window as unknown as { __moodLog: { t: number; note: boolean; error: boolean }[]; __moodTimer: number };
+    window.clearInterval(w.__moodTimer);
+    return w.__moodLog;
+  });
+}
+
 test.describe('create and set up a room', () => {
   test('create room: start page → Mood → room page @core', async ({ room }) => {
     const host = await room.person('Alp');
@@ -77,16 +101,57 @@ test.describe('create and set up a room', () => {
     await host.open('/');
     await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] } });
     await host.fill(host.page.getByLabel('Mood'), 'slow server heist');
+    const stop = await recordMoodPage(host);
     await host.tap(host.button('Create room'), { expect: {} });
     // Q24a: quiet at first, then one small floating line; never "Couldn't reach" or Try again.
     await expect(host.page.getByTestId('room-note').filter({ visible: true })).toHaveText('Reconnecting…', { timeout: 12000 });
     await host.see({ visible: ['room-setup'] }, 30000, 'the room opens by itself');
+    const samples = await stop();
     room.noteOutage(first, answered);
+    const firstNote = samples.find((s) => s.note)?.t ?? Infinity;
+    expect(firstNote - first, 'quiet for the first 3 s of the outage').toBeGreaterThanOrEqual(3000);
+    expect(samples.some((s) => s.t < first + 3000 && s.t > first), 'sampled during the quiet period').toBe(true);
+    expect(samples.filter((s) => s.error), 'no error or Try again meanwhile').toEqual([]);
     expect(answers.length).toBe(3);
     expect(answers.every((a) => a.status === 200)).toBe(true);
     expect(new Set(answers.map((a) => a.roomId)).size).toBe(1);
     expect(host.latest?.roomId).toBe(answers[0].roomId);
     await eventually(() => host.latest?.ideas.map((i) => i.text), (v) => JSON.stringify(v) === JSON.stringify(['slow server heist']), 'the one room has its one idea', host);
+  });
+
+  // Q24a: an outage the server recovers from within 3 s shows nothing at all.
+  test('a short outage: the create goes again and the room opens with no line, error or Try again', async ({ room }) => {
+    const host = await room.person('Alp');
+    host.expectStatus(/^503 .*\/proposal\/rooms$/);
+    let tries = 0;
+    let first = 0;
+    let answered = 0;
+    await host.page.route(/\/api\/yepwatch\/v1\/proposal\/rooms$/, async (route) => {
+      if (route.request().method() !== 'POST') return route.continue();
+      if (++tries === 1) {
+        first = Date.now();
+        // Busy for a second (nothing created), then the same request goes again.
+        return route.fulfill({ status: 503, headers: { 'Retry-After': '1' }, contentType: 'application/json',
+          body: JSON.stringify({ error: { code: 'busy', message: 'Busy', retryable: true } }) });
+      }
+      const response = await route.fetch();
+      answered = Date.now();
+      await route.fulfill({ response });
+    });
+    await host.open('/');
+    await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] } });
+    await host.fill(host.page.getByLabel('Mood'), 'short outage heist');
+    const stop = await recordMoodPage(host);
+    await host.tap(host.button('Create room'), { expect: {} });
+    await host.see({ visible: ['room-setup'] }, 10000, 'the room opens by itself');
+    room.noteOutage(first, answered);
+    const samples = await stop().catch(() => null);
+    expect(tries).toBe(2);
+    expect(answered - first, 'answered within the quiet period').toBeLessThan(3000);
+    // The recorder lives in the page, which stays (the room replaces the Mood page in place).
+    expect(samples, 'the Mood page was sampled').not.toBeNull();
+    expect(samples!.filter((s) => s.note || s.error), 'nothing ever shows').toEqual([]);
+    await expect(host.page.getByTestId('room-note').filter({ visible: true })).toHaveCount(0);
   });
 
   test('create room from a preset chip ("Anything goes")', async ({ room }) => {
