@@ -25,6 +25,7 @@ import type {
 	RealtimeAttachment,
 	RealtimeTicket,
 	RealtimeViewResponse,
+	RealtimeViewsResponse,
 	RoomInvalidation,
 	InvitePreview
 } from "../../../packages/yepwatch-contracts/proposal.ts"
@@ -87,6 +88,8 @@ export class ProposalService {
 	readonly decks: PreparedDecks
 	private knownCountries = new Set<string>()
 	private writes = new Map<string, { tail: Promise<void>; count: number }>()
+	/** Rooms' expiries (fixed at creation) by id, most recently read last: lets a read check capacity alongside. */
+	private expiries = new Map<string, number>()
 	constructor(
 		repository: ProposalRepository,
 		catalog: ProposalCatalog,
@@ -139,14 +142,33 @@ export class ProposalService {
 		}
 	}
 	private async get(id: string): Promise<ProposalStored> {
-		return this.live(await this.repository.read(id))
+		return (await this.readChecked(id)).stored
 	}
 	/** A stored room any answer may be built from: a v3 room, not expired, its capacity reservation still active. */
 	private async live(stored: ProposalStored | null): Promise<ProposalStored> {
 		return (await this.checked(stored)).stored
 	}
-	/** live(), also returning what the guard's capacity check read (for the command's permit). */
-	private async checked(stored: ProposalStored | null): Promise<{ stored: ProposalStored; check: unknown }> {
+	/**
+	 * Reads the room and checks it like live(), also returning what the guard's capacity check read (for the
+	 * command's permit). A room's expiry is fixed when it is created, so once this process has read the room the
+	 * capacity check runs alongside the room read instead of after it: one store round trip on every read, vote
+	 * and realtime refresh instead of two.
+	 */
+	private async readChecked(id: string): Promise<{ stored: ProposalStored; check: unknown }> {
+		const expiresAt = this.expiries.get(id)
+		if (!this.guard || expiresAt === undefined) return this.checked(await this.repository.read(id))
+		const early = this.guard.active({ id, expiresAt }).then(
+			(check) => ({ check }),
+			(error: unknown) => ({ error })
+		)
+		const stored = await this.repository.read(id)
+		return this.checked(stored, stored?.room.expiresAt === expiresAt ? early : undefined)
+	}
+	/** live(), also returning what the guard's capacity check read. `early`: that check, already started for this room's expiry. */
+	private async checked(
+		stored: ProposalStored | null,
+		early?: Promise<{ check: unknown } | { error: unknown }>
+	): Promise<{ stored: ProposalStored; check: unknown }> {
 		requireRoom(
 			stored && stored.room.format === 2 && stored.room.flowVersion === 3,
 			"not_found",
@@ -154,8 +176,12 @@ export class ProposalService {
 			404
 		)
 		continuousLive(stored.room, this.now())
-		const check = await this.guard?.active(stored.room)
-		return { stored, check }
+		this.expiries.delete(stored.room.id)
+		this.expiries.set(stored.room.id, stored.room.expiresAt)
+		if (this.expiries.size > 4096) this.expiries.delete(this.expiries.keys().next().value!)
+		const result = early ? await early : { check: await this.guard?.active(stored.room) }
+		if ("error" in result) throw result.error
+		return { stored, check: result.check }
 	}
 	private auth(
 		room: ProposalRoom,
@@ -658,17 +684,33 @@ export class ProposalService {
 		requireRoom(p.memberUserId || p.leftAt == null, "forbidden", "You have left this room", 403)
 		return this.snapshot(room, credential)
 	}
+	/**
+	 * `allowed`: a check still running that this actor may act (a guest's deletion check), read alongside the room.
+	 * Nothing is written or answered before it passes, and its refusal wins over the command's own.
+	 */
 	async command(
 		id: string,
 		credential: ActorCredential,
-		envelope: CommandEnvelope
+		envelope: CommandEnvelope,
+		allowed: Promise<void> = Promise.resolve()
 	): Promise<CommandResult> {
-		const receipt = await this.write(id, () =>
-			this.applyCommand(id, credential, envelope)
-		)
+		const { receipt, room } = await this.write(id, () =>
+			this.applyCommand(id, credential, envelope, allowed)
+		).catch(async (e: unknown) => {
+			await allowed
+			throw e
+		})
+		await allowed
+		// The command answers with the room it committed: its read was checked (v3, live, capacity reserved) just
+		// before the compare-and-swap, and a newer revision reaches this phone over the socket like any other change.
+		// notify (publish + acknowledge) then runs on its own, unless the answer has to wait for it: a decision moved
+		// into the history is stored on the accounts first, and an agreement check settles before it answers.
 		// Fresh availability checks must not block joins or withdrawals that invalidate them.
-		// The room notify reads after the commit answers the command, unless an agreement check has to settle first.
-		// Either way it is checked like any read: it may have expired or lost its capacity reservation meanwhile.
+		if (room && !(room.committed.phase === "choosing" && room.committed.agreement.state === "checking") && !room.historyChanged) {
+			void this.notify(id, { yieldToQueued: true })
+			continuousLive(room.committed, this.now())
+			return { receipt, snapshot: this.snapshot(room.committed, credential) }
+		}
 		let stored = await this.notify(id, { yieldToQueued: true })
 		if (!stored || (stored.room.phase === "choosing" && stored.room.agreement.state === "checking")) {
 			await this.settle(id)
@@ -683,8 +725,9 @@ export class ProposalService {
 	private async applyCommand(
 		id: string,
 		credential: ActorCredential,
-		envelope: CommandEnvelope
-	): Promise<CommandResult["receipt"]> {
+		envelope: CommandEnvelope,
+		allowed: Promise<void>
+	): Promise<{ receipt: CommandResult["receipt"]; room?: { committed: ProposalRoom; historyChanged: boolean } }> {
 		const digest = hash(JSON.stringify(envelope))
 		let uncertain = false
 		let interpreted: ProposalRoom["intent"] | undefined
@@ -698,7 +741,7 @@ export class ProposalService {
 				const old = await this.get(id),
 					p = this.auth(old.room, credential)
 				const slot = this.sequenceSlot(p, credential, envelope, digest)
-				if ("replayed" in slot) return slot
+				if ("replayed" in slot) return { receipt: slot }
 				requireRoom(
 					this.commandState(p, credential).nextSequence === slot.sequence,
 					"conflict",
@@ -706,6 +749,7 @@ export class ProposalService {
 				)
 				proposalTransition(old.room, p.id, envelope, this.now())
 				requireRoom(this.interpret, "busy", "Room search is unavailable", 503)
+				await allowed
 				await this.guard?.command(id, p.id, digest)
 				const reserved = structuredClone(old.room)
 				reserved.interpretationCount = (reserved.interpretationCount ?? 0) + 1
@@ -728,14 +772,14 @@ export class ProposalService {
 			requireRoom(interpreted, "busy", "Room busy; retry this idea", 503)
 		}
 		for (let i = 0; i < 6; i++) {
-			const { stored: old, check } = await this.checked(await this.repository.read(id))
+			const { stored: old, check } = await this.readChecked(id)
 			const p = this.auth(
 				old.room,
 				credential,
 				envelope.command.type === "leave"
 			)
 			const slot = this.sequenceSlot(p, credential, envelope, digest)
-			if ("replayed" in slot) return slot
+			if ("replayed" in slot) return { receipt: slot }
 			const sequence = slot.sequence
 			requireRoom(
 				sequence >= this.commandState(p, credential).nextSequence,
@@ -764,6 +808,7 @@ export class ProposalService {
 					undefined,
 					ideaCommand
 				)
+			await allowed
 			await this.guard?.command(id, p.id, digest, check)
 			const command = envelope.command
 			if (command.type === "configure" && command.country) {
@@ -890,12 +935,9 @@ export class ProposalService {
 				uncertain = true
 				continue
 			}
-			this.hintCommitted(old.room, room)
 			return {
-				commandId: envelope.commandId,
-				sequence,
-				appliedRevision: room.revision,
-				replayed: false
+				receipt: { commandId: envelope.commandId, sequence, appliedRevision: room.revision, replayed: false },
+				room: { committed: room, historyChanged: !this.hintCommitted(old.room, room) }
 			}
 		}
 		throw new RoomError(
@@ -1557,42 +1599,95 @@ export class ProposalService {
 		throw new RoomError("busy", "Room busy; reconnect", 503, true)
 	}
 	async view(id: string, token: string): Promise<RealtimeViewResponse> {
-		const lease = verify<Lease>(this.secret, token)
-		requireRoom(
-			lease &&
-				lease.format === 3 &&
-				lease.roomId === id &&
-				lease.scope === "shared:read" &&
-				Number.isFinite(lease.expiresAt) &&
-				lease.expiresAt > this.now(),
-			"unauthorized",
-			"Invalid lease",
-			401
-		)
+		const lease = this.lease(id, token)
+		requireRoom(lease, "unauthorized", "Invalid lease", 401)
+		const session = lease.sessionId ? this.accounts.sessionActive(lease.sessionId) : undefined
+		session?.catch(() => {}) // Its failure is reported below, after the room's own checks.
 		const { room } = await this.get(id)
-		if (lease.sessionId) requireRoom(await this.accounts.sessionActive(lease.sessionId), "forbidden", "Session ended", 403)
-		requireRoom(
-			actor(room, lease.participantId).epoch === lease.epoch,
-			"forbidden",
-			"Access revoked",
-			403
+		const result = await this.leaseView(room, lease, session)
+		if (result instanceof RoomError) throw result
+		return { ...result, snapshot: proposalSnapshot(room, lease.participantId).shared }
+	}
+	/**
+	 * The gateway's refresh of every phone on a room after a change: one read of the room (and its capacity) for all
+	 * of them instead of one each, and one snapshot, which is the same for every viewer. Each lease gets what `view`
+	 * would answer for it; a room that can't be read refuses every lease the same way.
+	 */
+	async views(id: string, tokens: string[]): Promise<RealtimeViewsResponse> {
+		const leases = tokens.map((token) => this.lease(id, token))
+		const sessions = new Map<string, Promise<boolean>>()
+		for (const lease of leases)
+			if (lease?.sessionId && !sessions.has(lease.sessionId)) {
+				const active = this.accounts.sessionActive(lease.sessionId)
+				active.catch(() => {})
+				sessions.set(lease.sessionId, active)
+			}
+		const refusal = (e: unknown) => {
+			const error = e instanceof RoomError ? e : new RoomError("busy", "Service unavailable", 503, true)
+			return { error: { code: error.code, status: error.status } }
+		}
+		const invalid = refusal(new RoomError("unauthorized", "Invalid lease", 401))
+		if (!leases.some(Boolean)) return { snapshot: null, views: leases.map(() => invalid) }
+		let room: ProposalRoom
+		try {
+			room = (await this.get(id)).room
+		} catch (e) {
+			return { snapshot: null, views: leases.map((lease) => (lease ? refusal(e) : invalid)) }
+		}
+		const views = await Promise.all(
+			leases.map(async (lease) => {
+				const result = lease
+					? await this.leaseView(room, lease, lease.sessionId ? sessions.get(lease.sessionId) : undefined).catch(
+							() => new RoomError("busy", "Service unavailable", 503, true)
+						)
+					: null
+				return result === null ? invalid : result instanceof RoomError ? refusal(result) : result
+			})
 		)
-		return {
-			...this.attachment(room, lease.participantId, lease.sessionId),
-			snapshot: proposalSnapshot(room, lease.participantId).shared
+		const viewer = leases.find((lease, i) => lease && !("error" in views[i]))
+		return { snapshot: viewer ? proposalSnapshot(room, viewer.participantId).shared : null, views }
+	}
+	/** A realtime lease this service signed for the room, unexpired; null otherwise. */
+	private lease(id: string, token: string): Lease | null {
+		const lease = verify<Lease>(this.secret, token)
+		return lease &&
+			lease.format === 3 &&
+			lease.roomId === id &&
+			lease.scope === "shared:read" &&
+			Number.isFinite(lease.expiresAt) &&
+			lease.expiresAt > this.now()
+			? lease
+			: null
+	}
+	/** A lease's renewed attachment on the room as read, or why it is refused. `session`: whether its sign-in is still active. */
+	private async leaseView(room: ProposalRoom, lease: Lease, session?: Promise<boolean>): Promise<RealtimeAttachment | RoomError> {
+		try {
+			if (session) requireRoom(await session, "forbidden", "Session ended", 403)
+			requireRoom(
+				actor(room, lease.participantId).epoch === lease.epoch,
+				"forbidden",
+				"Access revoked",
+				403
+			)
+			return this.attachment(room, lease.participantId, lease.sessionId)
+		} catch (e) {
+			if (e instanceof RoomError) return e
+			throw e
 		}
 	}
 	/**
 	 * Tells the gateway about a revision as soon as its compare-and-swap succeeds, without waiting for notify's read
 	 * of the room (the other phones see a vote that much sooner). notify still publishes it, a no-op for the gateway,
 	 * and acknowledges it. Not when the history changed: notify stores it on the accounts before anyone hears of it.
+	 * Returns false then (the command's answer waits for notify too).
 	 */
-	private hintCommitted(old: ProposalRoom, room: ProposalRoom) {
-		if (room.expiresAt <= this.now()) return
-		if (JSON.stringify(room.history ?? []) !== JSON.stringify(old.history ?? [])) return
+	private hintCommitted(old: ProposalRoom, room: ProposalRoom): boolean {
+		if (JSON.stringify(room.history ?? []) !== JSON.stringify(old.history ?? [])) return false
+		if (room.expiresAt <= this.now()) return true
 		this.publish({ roomId: room.id, revision: room.revision }).catch(() => {
 			/* notify publishes it again; repair retries */
 		})
+		return true
 	}
 	/**
 	 * Publishes a committed revision once. Returns the room it read, or null when the read failed.

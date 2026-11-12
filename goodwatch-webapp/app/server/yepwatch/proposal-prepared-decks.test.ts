@@ -171,7 +171,7 @@ test("a command answer still checks the room is live after the commit", async ()
 	f.service.decks.forget(r.id)
 })
 
-test("a command answer still checks the room's capacity reservation after the commit", async () => {
+test("a command is refused, and commits nothing, once the room's capacity reservation is gone", async () => {
 	let revoked = false
 	const guard: ProposalOperationGuard = {
 		async active() { if (revoked) throw Object.assign(new Error("Room capacity unavailable"), { code: "capacity" }) },
@@ -181,13 +181,11 @@ test("a command answer still checks the room's capacity reservation after the co
 	}
 	const f = fixture({ delayMs: 60_000, guard })
 	const r = await room(f)
-	const cas = f.repository.compareAndSwap.bind(f.repository)
-	f.repository.compareAndSwap = async (old, next, notify) => {
-		const ok = await cas(old, next, notify)
-		revoked = true
-		return ok
-	}
+	await r.send({ type: "rename", nickname: "Early" } as RoomCommand) // the room is known: its check now runs alongside the read
+	const before = (await f.repository.read(r.id))!.room.revision
+	revoked = true
 	await assert.rejects(r.send({ type: "rename", nickname: "Late" } as RoomCommand), { code: "capacity" })
+	assert.equal((await f.repository.read(r.id))!.room.revision, before, "nothing committed")
 	f.service.decks.forget(r.id)
 })
 
@@ -286,9 +284,11 @@ test("service picks that leave the room's services as they were don't check the 
 test("a Start queued behind a friend's service pick commits on its first compare-and-swap", async () => {
 	const f = fixture({ delayMs: 60_000 })
 	// Like Crate, clearing pending_revision is a write: it moves the row's sequence number.
+	let cleared = () => {}
 	f.repository.acknowledge = async (id, revision) => {
 		const s = f.repository.rows.get(id)
 		if (s && s.pendingRevision <= revision) f.repository.rows.set(id, { ...s, seq: s.seq + 1, pendingRevision: 0 })
+		if (!f.repository.rows.get(id)?.pendingRevision) cleared()
 	}
 	const cas = f.repository.compareAndSwap.bind(f.repository)
 	const attempts: string[] = []
@@ -310,12 +310,15 @@ test("a Start queued behind a friend's service pick commits on its first compare
 	const mine = await f.service.read(r.id, friend)
 	const host = await f.service.read(r.id, r.credential)
 	attempts.length = 0
+	const acknowledged = new Promise<void>((resolve) => { cleared = resolve })
 	// The friend's pick and the host's Start arrive together: Start waits in the room's lane behind the pick.
 	const pick = f.service.command(r.id, friend, { commandId: randomBytes(16).toString("hex"), sequence: mine.own.nextSequence, command: { type: "set_services", serviceIds: [1] } })
 	const start = f.service.command(r.id, r.credential, { commandId: randomBytes(16).toString("hex"), sequence: host.own.nextSequence, command: { type: "start", expectedRosterVersion: host.shared.rosterVersion, expectedContextVersion: host.shared.contextVersion, expectedGeneration: host.shared.generation, hostReady: true } as RoomCommand })
 	const [, started] = await Promise.all([pick, start])
 	assert.equal(started.snapshot.shared.phase, "choosing")
 	assert.deepEqual(attempts, ["setup:true", "choosing:true"], "the pick's notification never made Start write twice")
+	// Notifications run after the answers (they answer with the room they committed).
+	await acknowledged
 	assert.equal((await f.repository.read(r.id))!.pendingRevision, 0, "the last notification still clears the pending revision")
 	f.service.decks.forget(r.id)
 })

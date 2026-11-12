@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { REALTIME_VIEWS_MAX } from "../../../packages/yepwatch-contracts/proposal.ts"
 const id = z.string().regex(/^[A-Za-z0-9_-]{1,128}$/)
 const n = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER)
 const screen = z
@@ -199,4 +200,9 @@ export const proposalPreviewSchema = z
 		country: z.string().regex(/^[A-Z]{2}$/),
 		serviceIds: z.array(z.number().int().positive()).max(100)
 	})
+	.strict()
+
+/** The gateway's one read of a room for every lease it holds on it (leases as the single view takes them). */
+export const realtimeViewsSchema = z
+	.object({ leases: z.array(z.string().min(1).max(2048)).min(1).max(REALTIME_VIEWS_MAX), roomId: id })
 	.strict()

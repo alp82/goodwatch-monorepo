@@ -306,6 +306,19 @@ export interface RealtimeViewRequest {
 export interface RealtimeViewResponse extends RealtimeAttachment {
 	snapshot: SharedRoomSnapshot
 }
+/** Every lease the gateway holds on one room, answered from one read of it (at most REALTIME_VIEWS_MAX leases). */
+export interface RealtimeViewsRequest {
+	roomId: string
+	leases: string[]
+}
+/** Per lease, in request order: its renewed attachment, or why it was refused (the status `realtimeView` answers with). */
+export type RealtimeLeaseView = RealtimeAttachment | { error: { code: string; status: number } }
+/** The shared snapshot is the same for every viewer; null when no lease was granted. */
+export interface RealtimeViewsResponse {
+	snapshot: SharedRoomSnapshot | null
+	views: RealtimeLeaseView[]
+}
+export const REALTIME_VIEWS_MAX = 24
 export type ActivityView = "voting" | "matches" | "trailer" | "away"
 export type ActivityGesture = "reach" | "handle" | "release"
 export type MatchInspection =
@@ -474,6 +487,7 @@ export const paths = {
 	realtime: `${API_PREFIX}/realtime`,
 	realtimeAttach: `${API_PREFIX}/realtime/internal/attach`,
 	realtimeView: `${API_PREFIX}/realtime/internal/view`,
+	realtimeViews: `${API_PREFIX}/realtime/internal/views`,
 	snapshot: (id: string) => room(id),
 	join: (id: string) => `${room(id)}/join`,
 	preview: (id: string) => `${room(id)}/preview`,

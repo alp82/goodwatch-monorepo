@@ -72,3 +72,18 @@ test('guest deletion rejects account participants and restores only a proven gue
   const member = await service.create(request(), who());
   await assert.rejects(service.deleteGuest(member.credential.roomId, { participantId: member.credential.participantId, token: member.credential.token, accountId: who().userId, sessionId: who().sessionId }), /account deletion/);
 });
+test("a command waits for the guest's deletion check that runs alongside its room read: refused, nothing committed, no replay", async () => {
+  const repo = new ProposalMemoryRepository();
+  const service = new ProposalService(repo, proposalFixtureCatalog, 'guest-deletion-test-secret-at-least-thirty-two');
+  const guest = await service.create(request());
+  const access = { participantId: guest.credential.participantId, token: guest.credential.token };
+  const id = guest.credential.roomId;
+  const rename = { commandId: randomBytes(16).toString('hex'), sequence: 1, command: { type: 'rename' as const, nickname: 'Sam' } };
+  const before = (await repo.read(id))!.room.revision;
+  const deleting = () => requireNotDeleting({ get: async () => ({ requestedAt: 0, purgeAfter: 1, phase: 'pending', recoveryId: 'r' }) } as never, { kind: 'guest', roomId: id, participantId: access.participantId });
+  await assert.rejects(service.command(id, access, rename, deleting()), (e: unknown) => e instanceof RoomError && e.code === 'forbidden');
+  assert.equal((await repo.read(id))!.room.revision, before, 'nothing committed');
+  const applied = await service.command(id, access, rename, Promise.resolve());
+  assert.equal(applied.receipt.replayed, false);
+  await assert.rejects(service.command(id, access, rename, deleting()), (e: unknown) => e instanceof RoomError && e.code === 'forbidden', 'a replayed receipt is not answered either');
+});

@@ -91,6 +91,12 @@ export class RelationalProposalRepository implements ProposalRepository {
 	private crypto: ReturnType<typeof codec>
 	// Only validated immutable rows. A bounded cache is an optimization, never the source of truth.
 	private cache = new Map<string, Row>()
+	/**
+	 * The records each room this repository read references (`entity:record_id`, as its head lists them). A
+	 * compare-and-swap from that room inserts only the records missing from it, without planning the old room again
+	 * (hashing every candidate on every vote).
+	 */
+	private stored = new WeakMap<ProposalRoom, Set<string>>()
 	private sql: Sql
 	private secret: string
 	constructor(sql: Sql, secret: string) {
@@ -461,6 +467,8 @@ export class RelationalProposalRepository implements ProposalRepository {
 	/**
 	 * Inserts the records with one multi-row INSERT per table, then proves them with one primary-key read per table
 	 * (Crate answers primary-key reads in real time, see records), including after lost INSERT responses. Never publish a partial set.
+	 * An INSERT that answers with every row inserted is its own proof: those rows are exactly the ones sent, so they
+	 * are remembered as a read of them would return them, and the read (a round trip on every command) is skipped.
 	 */
 	private async ensure(records: RecordWrite[]) {
 		const byEntity = new Map<Entity, RecordWrite[]>()
@@ -471,15 +479,26 @@ export class RelationalProposalRepository implements ProposalRepository {
 					const table = tables[entity],
 						names = columns(table)
 					const rows = writes.map(({ row }) => parseRow(table, this.protectedRow(entity, row, true)))
+					let inserted = 0
 					try {
-						await this.sql(
+						inserted = (await this.sql(
 							`INSERT INTO ${table.name} (${names.join(",")}) VALUES ${rows
 								.map(() => `(${names.map(() => "?").join(",")})`)
 								.join(",")} ON CONFLICT DO NOTHING`,
 							rows.flatMap((encrypted) => names.map((k) => encrypted[k]))
-						)
+						)).rowcount
 					} catch (e) {
 						if (!(e instanceof IndeterminateWrite)) throw e
+					}
+					if (inserted === rows.length) {
+						writes.forEach(({ row }, i) => {
+							// The sent row as the store returns it: every column, JSON values, then validated like a read.
+							const sent = JSON.parse(JSON.stringify(Object.fromEntries(names.map((k) => [k, rows[i][k] ?? null]))))
+							const stored = this.validateRecord(entity, sent, row.room_id, row.record_id)
+							if (stable(stored) !== stable(row)) throw fail()
+							this.remember(`${entity}:${row.record_id}`, stored)
+						})
+						return
 					}
 					for (const { row } of writes) this.cache.delete(`${entity}:${row.record_id}`)
 					const proofs = await this.records(entity, writes[0].row.room_id, writes.map(({ row }) => row.record_id))
@@ -552,9 +571,10 @@ export class RelationalProposalRepository implements ProposalRepository {
 				? Math.max(previous.pendingRevision, room.revision)
 				: previous.pendingRevision
 		)
-		const old = this.plan(previous.room, previous.pendingRevision)
+		// The records the previous head already references: as read with it, or planned again (rooms not read here).
+		const stored = this.stored.get(previous.room) ?? new Set(this.plan(previous.room, previous.pendingRevision).records.keys())
 		await this.ensure(
-			[...plan.records].filter(([id]) => !old.records.has(id)).map(([, r]) => r)
+			[...plan.records].filter(([id]) => !stored.has(id)).map(([, r]) => r)
 		)
 		const names = columns(tables.room).filter((k) => k !== "id")
 		return (
@@ -617,8 +637,15 @@ export class RelationalProposalRepository implements ProposalRepository {
 				h.pending_agreement !== (h.agreement_check.state === "checking")
 			)
 				throw fail()
-			const get = (entity: Entity, ref: string) => this.record(entity, id, ref)
-			const many = (entity: Entity, refs: string[]) => this.records(entity, id, refs)
+			const referenced = new Set<string>()
+			const get = (entity: Entity, ref: string) => {
+				referenced.add(`${entity}:${ref}`)
+				return this.record(entity, id, ref)
+			}
+			const many = (entity: Entity, refs: string[]) => {
+				for (const ref of refs) referenced.add(`${entity}:${ref}`)
+				return this.records(entity, id, refs)
+			}
 			const participants = await parallel(
 				h.participant_records as string[],
 				async (ref) => {
@@ -826,6 +853,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 				}))
 			}
 			this.validateRelations(room)
+			this.stored.set(room, referenced)
 			return {
 				room,
 				seq: z.number().int().parse(raw[names.length]),

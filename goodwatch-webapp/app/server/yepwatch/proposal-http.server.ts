@@ -19,6 +19,7 @@ import {
 	proposalJoinSchema as joinSchema,
 	proposalCommandSchema as commandSchema,
 	proposalPreviewSchema,
+	realtimeViewsSchema,
 } from "./proposal-validation.ts"
 /** This browser's GoodWatch sign-in (sealed, HttpOnly) and its short-lived sign-in intent. */
 export const MEMBER_COOKIE = "yepwatch3_member"
@@ -175,10 +176,14 @@ export function createProposalHandler(
         return value
       })
     }
-    const scopedCredential = async (roomId: string) => {
+    /** `deferDeletionCheck`: takes a guest's deletion check still running instead of waiting for it here. */
+    const scopedCredential = async (roomId: string, deferDeletionCheck?: (check: Promise<void>) => void) => {
       const c = credential(roomId)
       const a = await account(false, true)
-      if (!a && !url.pathname.endsWith('/deletion') && !url.pathname.endsWith('/restore')) await requireNotDeleting(service.deletions, { kind: 'guest', roomId, participantId: c.participantId })
+      if (!a && !url.pathname.endsWith('/deletion') && !url.pathname.endsWith('/restore')) {
+        const check = requireNotDeleting(service.deletions, { kind: 'guest', roomId, participantId: c.participantId })
+        if (deferDeletionCheck) { check.catch(() => {}); deferDeletionCheck(check) } else await check
+      }
       return a ? { ...c, accountId: a.userId, sessionId: a.sessionId } : c
     }
     const sendAdmission = async (admission: import('../../../packages/yepwatch-contracts/proposal.ts').GuestAdmission, a: import('./proposal-types.ts').RoomAccount | null, setup?: import('../../../packages/yepwatch-contracts/proposal.ts').RoomSetupRequest) => {
@@ -246,6 +251,10 @@ export function createProposalHandler(
 				if (url.pathname === paths.realtimeView) {
 					const value = parse(viewSchema, await body(request))
 					return reply(await service.view(value.roomId, value.lease))
+				}
+				if (url.pathname === paths.realtimeViews) {
+					const value = parse(realtimeViewsSchema, await body(request))
+					return reply(await service.views(value.roomId, value.leases))
 				}
 				throw new RoomError("not_found", "Endpoint unavailable", 404)
 			}
@@ -506,7 +515,9 @@ export function createProposalHandler(
           await service.archiveAccountRoom(id, (await account(true))!, value.archived)
           return reply({ ok: true })
         }
-				const actor = await scopedCredential(id)
+				// A command's deletion check runs alongside its room read (the command waits for it before any write or answer).
+				let deletionCheck: Promise<void> | undefined
+				const actor = await scopedCredential(id, request.method === "POST" && operation === "commands" ? (check) => { deletionCheck = check } : undefined)
 				if (request.method === "POST" && operation === "preview")
 					return reply(await service.preview(id, actor, parse(proposalPreviewSchema, await body(request))))
 				if (request.method === "GET" && !operation) {
@@ -546,7 +557,8 @@ export function createProposalHandler(
 						await service.command(
 							id,
 							actor,
-							parse(commandSchema, await body(request))
+							parse(commandSchema, await body(request)),
+							deletionCheck
 						)
 					)
 				if (request.method === "POST" && operation === "member/link") {
