@@ -5,44 +5,44 @@ import type { PeerActivity } from '../../core/continuous/activity';
 import type { GlowPerson } from './model';
 import { peerColor } from './model';
 import { GText, Icon, native } from './theme';
-import { useReducedMotion } from '../../components/ui';
-/** Room left for "+N" after the faces (the label starts at its left edge and grows rightward). */
-const MORE_SLOT = 28;
-/** Width the faces row always takes for `max` faces and "+N": nothing next to it moves as people come and go. */
-export function liveFacesWidth(size: number, max: number) {
-  return size + (max - 1) * size * 0.72 + MORE_SLOT;
-}
+import { useMotionPreference, useReducedMotion } from '../../components/ui';
+import { faceOffset, liveFacesWidth, moreOffset } from './faces-row';
+import { useInlineSign } from './direction';
 /**
  * Faces that react live: a friend's answer bounces their face, a swipe wiggles it, a press squashes
  * it. Overlapping, in the room control (the control itself is the button).
  *
- * The row has a fixed width (liveFacesWidth) and each face sits at left 0, placed by translateX: a
- * person arriving, leaving or moving in the order slides the others (transform) and fades in, so the
- * faces never change layout position (no layout shift).
+ * The row has a fixed width for `slots` faces and "+N" (faces-row.ts: it depends on the bar's width
+ * and the font scale, never on the people), and each face sits at the row's start edge, placed by
+ * translateX: a person arriving, leaving or moving in the order slides the others (transform) and
+ * fades in, so the faces never change layout position (no layout shift). Offsets are measured from
+ * the start edge and mirrored with the writing direction, on native and on the web alike.
  */
 export function LiveFaces({
   people,
   activity,
   localReaction,
   size = 24,
-  max = 4,
+  slots = 4,
+  fontScale = 1,
 }: {
   people: GlowPerson[];
   activity: Map<string, PeerActivity>;
   localReaction: { at: number; gesture?: string; answer?: boolean };
   size?: number;
-  max?: number;
+  slots?: number;
+  fontScale?: number;
 }) {
-  const width = liveFacesWidth(size, max);
-  const step = size * 0.72;
-  const shown = people.slice(0, max);
+  const sign = useInlineSign();
+  const width = liveFacesWidth(size, slots, fontScale);
+  const shown = people.slice(0, slots);
   const more = people.length - shown.length;
-  // Right-aligned against the "+N" slot when there is one, else against the row's end.
-  const end = width - (more > 0 ? MORE_SLOT : 0);
+  // Faces present when the row first shows are simply there; only later arrivals fade in.
+  const [first] = useState(() => new Set(people.map((p) => p.id)));
   return (
     <View accessible={false} style={{ width, height: size }}>
       {shown.map((p, i) => (
-        <FaceSlot key={p.id} x={end - size - (shown.length - 1 - i) * step}>
+        <FaceSlot key={p.id} x={sign * faceOffset(size, slots, fontScale, shown.length, i, more > 0)} arriving={!first.has(p.id)}>
           <Avatar
             size={size}
             person={p}
@@ -74,38 +74,50 @@ export function LiveFaces({
         </FaceSlot>
       ))}
       {more > 0 && (
-        <View style={{ position: 'absolute', left: width - MORE_SLOT + 5, top: 0, height: size, justifyContent: 'center' }}>
+        <View accessible accessibilityLabel={`and ${more} more`} style={{ position: 'absolute', start: moreOffset(size, slots, fontScale), top: 0, height: size, justifyContent: 'center' }}>
           <GText size={12} color="#a3a3a3">+{more}</GText>
         </View>
       )}
     </View>
   );
 }
-/** One face's place in the row: moves with translateX only, fades in when it arrives. */
-function FaceSlot({ x, children }: { x: number; children: ReactNode }) {
-  const reduced = useReducedMotion();
-  const [tx] = useState(() => new Animated.Value(x));
-  const [fade] = useState(() => new Animated.Value(reduced ? 1 : 0));
+/** The last reduced-motion answer a face heard: a face arriving later starts from it instead of "pending". */
+let knownPreference: boolean | null = null;
+/**
+ * One face's place in the row: moves with translateX only, fades in when it arrives. Nothing animates
+ * until the reduced-motion preference is known (an arriving face starts from the last known answer),
+ * so a reduced-motion user never sees the fade or the slide.
+ */
+function FaceSlot({ x, arriving, children }: { x: number; arriving: boolean; children: ReactNode }) {
+  const heard = useMotionPreference();
+  const preference = heard ?? knownPreference;
   useEffect(() => {
-    if (reduced) {
+    if (heard !== null) knownPreference = heard;
+  }, [heard]);
+  const still = preference !== false;
+  const [tx] = useState(() => new Animated.Value(x));
+  const [fade] = useState(() => new Animated.Value(arriving && preference !== true ? 0 : 1));
+  useEffect(() => {
+    if (preference === null) return;
+    if (preference) {
       fade.setValue(1);
       return;
     }
     const animation = Animated.timing(fade, { toValue: 1, duration: 180, useNativeDriver: native });
     animation.start();
     return () => animation.stop();
-  }, [fade, reduced]);
+  }, [fade, preference]);
   useEffect(() => {
-    if (reduced) {
+    if (still) {
       tx.setValue(x);
       return;
     }
     const animation = Animated.timing(tx, { toValue: x, duration: 220, easing: Easing.out(Easing.cubic), useNativeDriver: native });
     animation.start();
     return () => animation.stop();
-  }, [x, tx, reduced]);
+  }, [x, tx, still]);
   return (
-    <Animated.View style={{ position: 'absolute', left: 0, top: 0, opacity: fade, transform: [{ translateX: tx }] }}>
+    <Animated.View style={{ position: 'absolute', start: 0, top: 0, opacity: fade, transform: [{ translateX: tx }] }}>
       {children}
     </Animated.View>
   );
