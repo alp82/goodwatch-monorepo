@@ -79,13 +79,13 @@ export const ROOM_RECORD_TABLES: Table[] = [
  *
  * Work per run (bounded, the runtime calls it once a minute per API instance), with R = roomsPerRun,
  * N = rowsPerStatement and T = ROOM_RECORD_TABLES.length:
- * - 2 + T scans (clock, heads, one per record table), each returning at most R or N rows (primary key + room id);
+ * - one clock read and 1 + T scans (heads, one per record table), each returning at most R or N rows (key + room id);
  * - per head (at most R): its primary-key reads (head and at most 12 participants' records), one participant
  *   scan of that room (at most 64 rows), at most 2 × 64 primary-key deletion-request reads, the room's history
  *   publication (at most 128 decisions), one invitation and one head DELETE by primary key;
  * - per record table: at most N head reads by primary key and one DELETE naming at most N primary keys;
  * - at most rowsPerRun rows deleted in total.
- * Defaults (R 10, N 100, 1000 rows): ≤ 12 scans, ≤ 1000 primary-key head checks, ≤ 20 + 10 DELETEs, ≤ 1000 rows.
+ * Defaults (R 10, N 100, 1000 rows, T 13): ≤ 14 scans, ≤ 1300 primary-key head checks, ≤ 20 + 13 DELETEs, ≤ 1000 rows.
  *
  * Several API instances may run this at once: heads are removed with a primary-key compare-and-swap, records by
  * primary key with the expiry predicate repeated, so a second runner deletes nothing twice.
