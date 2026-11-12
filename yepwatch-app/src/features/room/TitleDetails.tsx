@@ -88,7 +88,8 @@ function TrailerBox({ url, width, height, onClose }: { url: string; width: numbe
   return (
     <View testID="details-trailer" style={{ width, height, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
       <View style={{ width: w }}><Trailer url={url} /></View>
-      <Press label="Close trailer" onPress={onClose} style={{ position: 'absolute', right: 10, top: 10, width: 40, height: 40, borderRadius: 20, backgroundColor: '#000000b0' }}>
+      <Press label="Close trailer" onPress={onClose} style={{ position: 'absolute', right: 6, top: 6 }}
+        visual={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: '#000000b0' }}>
         <Icon name="close" size={18} color={glow.ink} />
       </Press>
     </View>
