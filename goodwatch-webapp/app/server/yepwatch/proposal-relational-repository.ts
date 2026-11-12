@@ -51,6 +51,8 @@ const secretField: Partial<Record<Entity, string>> = {
 }
 const fail = () =>
 	new RoomError("busy", "Stored room is incomplete or incompatible", 503, true)
+const slices = <T>(items: T[], size: number): T[][] =>
+	Array.from({ length: Math.ceil(items.length / size) }, (_, i) => items.slice(i * size, (i + 1) * size))
 async function parallel<T, R>(
 	items: T[],
 	fn: (item: T) => Promise<R>
@@ -456,27 +458,62 @@ export class RelationalProposalRepository implements ProposalRepository {
 		)
 			throw fail()
 	}
+	/**
+	 * Inserts the records with one multi-row INSERT per table, then proves them with one primary-key read per table
+	 * (Crate answers primary-key reads in real time, see records), including after lost INSERT responses. Never publish a partial set.
+	 */
 	private async ensure(records: RecordWrite[]) {
-		await parallel(records, async ({ entity, row }) => {
-			const table = tables[entity],
-				names = columns(table)
-			const encrypted = parseRow(table, this.protectedRow(entity, row, true))
-			try {
+		const byEntity = new Map<Entity, RecordWrite[]>()
+		for (const r of records) byEntity.set(r.entity, [...(byEntity.get(r.entity) ?? []), r])
+		await Promise.all(
+			[...byEntity].flatMap(([entity, all]) =>
+				slices(all, 64).map(async (writes) => {
+					const table = tables[entity],
+						names = columns(table)
+					const rows = writes.map(({ row }) => parseRow(table, this.protectedRow(entity, row, true)))
+					try {
+						await this.sql(
+							`INSERT INTO ${table.name} (${names.join(",")}) VALUES ${rows
+								.map(() => `(${names.map(() => "?").join(",")})`)
+								.join(",")} ON CONFLICT DO NOTHING`,
+							rows.flatMap((encrypted) => names.map((k) => encrypted[k]))
+						)
+					} catch (e) {
+						if (!(e instanceof IndeterminateWrite)) throw e
+					}
+					for (const { row } of writes) this.cache.delete(`${entity}:${row.record_id}`)
+					const proofs = await this.records(entity, writes[0].row.room_id, writes.map(({ row }) => row.record_id))
+					writes.forEach(({ row }, i) => {
+						if (stable(proofs[i]) !== stable(row)) throw fail()
+					})
+				})
+			)
+		)
+	}
+	/** Records by id, in order: cached ones from memory, the others with one primary-key read. */
+	private async records(entity: Entity, roomId: string, ids: string[]): Promise<Row[]> {
+		const missing = [...new Set(ids.filter((id) => !this.cache.has(`${entity}:${id}`)))]
+		const table = tables[entity],
+			names = columns(table)
+		for (const part of slices(missing, 256)) {
+			const rows = (
 				await this.sql(
-					`INSERT INTO ${table.name} (${names.join(",")}) VALUES (${names
-						.map(() => "?")
-						.join(",")}) ON CONFLICT DO NOTHING`,
-					names.map((k) => encrypted[k])
+					// OR of key equalities, not IN: Crate plans this as a real-time primary-key Get, IN with parameters as a search.
+					`SELECT ${names.join(",")} FROM ${table.name} WHERE ${part.map(() => "record_id=?").join(" OR ")}`,
+					part
 				)
-			} catch (e) {
-				if (!(e instanceof IndeterminateWrite)) throw e
+			).rows
+			const found = new Map(rows.map((raw) => [raw[names.indexOf("record_id")], raw]))
+			for (const id of part) {
+				const raw = found.get(id)
+				if (!raw) throw fail()
+				this.remember(
+					`${entity}:${id}`,
+					this.validateRecord(entity, Object.fromEntries(names.map((k, i) => [k, raw[i]])), roomId, id)
+				)
 			}
-			// Full-key proof before publication, including lost INSERT responses. Never publish a partial set.
-			const key = `${entity}:${row.record_id}`
-			this.cache.delete(key)
-			const proof = await this.record(entity, row.room_id, row.record_id)
-			if (stable(proof) !== stable(row)) throw fail()
-		})
+		}
+		return Promise.all(ids.map((id) => this.record(entity, roomId, id)))
 	}
 	async insert(room: ProposalRoom) {
 		const plan = this.plan(room, room.revision)
@@ -581,8 +618,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 			)
 				throw fail()
 			const get = (entity: Entity, ref: string) => this.record(entity, id, ref)
-			const many = (entity: Entity, refs: string[]) =>
-				parallel(refs, (ref) => get(entity, ref))
+			const many = (entity: Entity, refs: string[]) => this.records(entity, id, refs)
 			const participants = await parallel(
 				h.participant_records as string[],
 				async (ref) => {

@@ -46,7 +46,7 @@ export function createDeckAdapter(reads: CatalogReads, options: { scanLimit?: nu
       // Keep selectedShows/progressPlans complete so a seen continuation never
       // changes identity into a new show and final checks retain saved context.
       const excluded = titleKeySet(options.excludeTitleKeys ?? [])
-      const unique = [...new Set([...continueKeys, ...allKeys])]
+      const unique = continueKeys.length ? [...new Set([...continueKeys, ...allKeys])] : allKeys
       const ordered = excluded.size ? unique.filter(key => !excluded.has(key)) : unique
       const scanLimit = options.scanLimit ?? 1200
       const results: Candidate[] = []; let scanned = 0

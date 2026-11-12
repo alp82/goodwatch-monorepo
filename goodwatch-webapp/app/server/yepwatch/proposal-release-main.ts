@@ -38,8 +38,9 @@ snapshot.configureTitleSnapshotReader({
 		return source.getBuffer(key)
 	},
 })
-const [{ guestProposalCatalog }, { searchQuery }, cache] = await Promise.all([
+const [{ guestProposalCatalog }, { warmRankings }, { searchQuery }, cache] = await Promise.all([
 	import("./proposal-guest-catalog.server.ts"),
+	import("./goodwatch.server.ts"),
 	import("../combined-search/catalog.server.ts"),
 	import("../../utils/cache.ts"),
 ])
@@ -61,6 +62,21 @@ const runtime = createReleaseRuntime(config, {
 		await searchQuery("SELECT tmdb_id FROM episode LIMIT 0")
 	},
 })
+// Each new snapshot version gets the base rankings of common and recently used room settings built in the background
+// (slice by slice, see goodwatch.server.ts), so the first room of each doesn't wait for them.
+const WARM_RANKINGS = ["US", "DE", "GB"].map((country) => ({ country, type: "all" as const, moods: [] }))
+let warmedVersion: string | undefined
+let warming = false
+const warm = setInterval(() => {
+	const version = snapshot.getTitleSnapshot()?.version
+	if (!version || version === warmedVersion || warming) return
+	warming = true
+	void warmRankings(WARM_RANKINGS)
+		.then(() => { warmedVersion = version })
+		.catch(() => {})
+		.finally(() => { warming = false })
+}, 5_000)
+warm.unref()
 const server = await releaseHttp(runtime.handler, config.host, config.port)
 void runtime.probe()
 const readyLog = setInterval(() => {
@@ -114,6 +130,7 @@ async function shutdown(signal: string) {
 		server.closeIdleConnections()
 	})
 	runtime.stop()
+	clearInterval(warm)
 	clearInterval(readyLog)
 	snapshot.stopTitleSnapshot()
 	cache.stopRedisClusterForTest()
