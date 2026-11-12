@@ -19,34 +19,45 @@ const { useDiscoverSearch } = await import("./useDiscoverSearch.ts")
 type Props = Parameters<typeof useDiscoverSearch>[0]
 type Hook = ReturnType<typeof useDiscoverSearch>
 
+/** The client root.tsx makes in the browser: answers stay fresh for a minute, so a remount reads them from the cache. */
+const productionClient = () => new QueryClient({ defaultOptions: { queries: { staleTime: 60 * 1000 } } })
+
 /** Mounts the hook; `fetch` answers each request with `answer()` and records the label it carried. */
-function mount(t: { after: (fn: () => void) => void }, answer: () => Response) {
+function mount(t: { after: (fn: () => void) => void }, answer: () => Response, client = new QueryClient()) {
 	const triggers: string[] = []
 	const original = globalThis.fetch
 	globalThis.fetch = (async (_url: unknown, init: RequestInit) => {
 		triggers.push(JSON.parse(String(init.body)).attribution?.trigger ?? "none")
 		return answer()
 	}) as typeof fetch
-	const client = new QueryClient()
 	const container = document.createElement("div")
 	document.body.append(container)
-	const root = createRoot(container)
+	let root = createRoot(container)
 	let hook!: Hook
 	function Probe(props: Props) {
 		hook = useDiscoverSearch(props)
 		return null
 	}
-	const render = async (props: Props) => {
-		await act(async () => root.render(createElement(QueryClientProvider, { client }, createElement(Probe, props))))
+	const settle = async () => {
 		// Let the stream, the query, and any effect it sets off settle.
 		for (let i = 0; i < 20; i++) await act(() => new Promise((resolve) => setTimeout(resolve, 0)))
+	}
+	const render = async (props: Props) => {
+		await act(async () => root.render(createElement(QueryClientProvider, { client }, createElement(Probe, props))))
+		await settle()
+	}
+	/** Discover leaves and comes back (a title page's tag link): a new mount on the same query cache. */
+	const remount = async (props: Props) => {
+		await act(async () => root.unmount())
+		root = createRoot(container)
+		await render(props)
 	}
 	t.after(() => {
 		root.unmount()
 		client.clear()
 		globalThis.fetch = original
 	})
-	return { triggers, render, hook: () => hook }
+	return { triggers, render, remount, hook: () => hook }
 }
 
 const withheld = () =>
@@ -97,4 +108,48 @@ test("a guest who acted gets the reading's answer without a second request", asy
 	await render({ ...base, attribution: { surface: "discover", trigger: "enter" } })
 	assert.deepEqual(triggers, ["enter"])
 	assert.equal(hook().current?.readingWithheld, undefined)
+})
+
+test("a remount on a cached withheld answer: a title tag's link reads once, back/forward reads nothing", async (t) => {
+	const { triggers, render, remount, hook } = mount(t, withheld, productionClient())
+	await render({ ...base, attribution: { surface: "discover", trigger: "navigation" } })
+	// Back to Discover by back/forward within the freshness window: the cached basic results, no request.
+	await remount({ ...base, attribution: { surface: "discover", trigger: "navigation" } })
+	assert.deepEqual(triggers, ["navigation"])
+	assert.equal(hook().current?.readingWithheld, true)
+	// The person clicks a title page's tag that links to the same search: the cached answer was asked by no action.
+	await remount({ ...base, attribution: { surface: "title_tag", trigger: "link" } })
+	assert.deepEqual(triggers, ["navigation", "link"])
+	// The answer to that action is cached as asked by one: withheld again, it is kept, on this mount and the next.
+	await render({ ...base, attribution: { surface: "title_tag", trigger: "link" } })
+	await remount({ ...base, attribution: { surface: "title_tag", trigger: "link" } })
+	await remount({ ...base, attribution: { surface: "discover", trigger: "navigation" } })
+	assert.deepEqual(triggers, ["navigation", "link"], "once per withheld answer")
+	assert.equal(hook().error, null)
+})
+
+test("A, then B, then cached A: returning by navigation reads nothing, an action on A reads once", async (t) => {
+	const { triggers, render, hook } = mount(t, withheld, productionClient())
+	const a = { ...base, q: "heist movies" }
+	const b = { ...base, q: "space operas" }
+	await render({ ...a, attribution: { surface: "discover", trigger: "navigation" } })
+	await render({ ...b, attribution: { surface: "discover", trigger: "navigation" } })
+	await render({ ...a, attribution: { surface: "discover", trigger: "navigation" } })
+	assert.deepEqual(triggers, ["navigation", "navigation"], "A comes from the cache")
+	assert.equal(hook().current?.q, "heist movies")
+	// The person presses Enter on A's words.
+	await render({ ...a, attribution: { surface: "discover", trigger: "enter" } })
+	assert.deepEqual(triggers, ["navigation", "navigation", "enter"])
+	// Back to B and forward to A again: both cached, A's answer now asked by an action.
+	await render({ ...b, attribution: { surface: "discover", trigger: "navigation" } })
+	await render({ ...a, attribution: { surface: "discover", trigger: "navigation" } })
+	await render({ ...a, attribution: { surface: "discover", trigger: "enter" } })
+	assert.deepEqual(triggers, ["navigation", "navigation", "enter"])
+})
+
+test("hydration with the production client: a cached answer from a link stays basic until the person acts", async (t) => {
+	const { triggers, render, remount } = mount(t, withheld, productionClient())
+	await render({ ...base, attribution: { surface: "discover", trigger: "navigation" } })
+	await remount({ ...base, attribution: { surface: "discover", trigger: "unknown" } })
+	assert.deepEqual(triggers, ["navigation"], "an unknown label is no action")
 })
