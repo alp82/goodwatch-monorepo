@@ -23,7 +23,8 @@ const api = (path: string) => `${origin}/api/yepwatch/v1/proposal${path}`
 function setup(options: {
 	offline?: boolean
 	lifetime?: number | (() => number)
-	refreshReply?: () => Response | Promise<Response>
+	/** GoodWatch's reply to a refresh instead of the real one; undefined (or a promise of it) issues as usual. */
+	refreshReply?: () => Response | undefined | Promise<Response | undefined>
 	/** A reply for GoodWatch's identity check instead of the real one (an outage). */
 	identityReply?: () => Response | Promise<Response> | undefined
 	/** The room catalog instead of the fixture one. */
@@ -55,7 +56,10 @@ function setup(options: {
 		if (new URL(request.url).pathname === "/api/auth/oauth2/token") {
 			const form = new URLSearchParams(await request.text())
 			calls.token.push(form)
-			if (form.get("grant_type") === "refresh_token" && options.refreshReply) return options.refreshReply()
+			if (form.get("grant_type") === "refresh_token" && options.refreshReply) {
+				const reply = await options.refreshReply()
+				if (reply) return reply
+			}
 			if (form.get("grant_type") === "refresh_token" && !refreshTokens.delete(form.get("refresh_token")!))
 				return Response.json({ error: "invalid_grant" }, { status: 400 })
 			const accessToken = `grant-${++issued}`
@@ -678,4 +682,135 @@ test("a room started while the late link lands keeps its country", async () => {
 	const room = (await env.repo.read(id))!.room
 	assert.equal(room.participants[0].member.state, "linked", "the link still lands")
 	assert.equal(room.screens[0].country, "JP", "a started room never switches to the member's DE")
+})
+
+/**
+ * A member whose GoodWatch login has lapsed, in a room they created and linked while signed in. GoodWatch holds
+ * every refresh while `hold()` is on, until `release()`; `revoke`/`down` turn the held refresh into a definitive
+ * refusal or a network failure.
+ */
+async function lapsedMember() {
+	let held: Promise<void> | null = null
+	let open = () => {}
+	const mode = { revoke: false, down: false, lifetime: 1 }
+	const env = setup({
+		offline: true,
+		lifetime: () => mode.lifetime,
+		refreshReply: async () => {
+			await held
+			if (mode.down) throw new TypeError("fetch failed")
+			if (mode.revoke) return Response.json({ error: "invalid_grant" }, { status: 400 })
+			return undefined
+		},
+	})
+	// Access tokens that last one second are already too old to use (renewed within 30 s of expiry).
+	const first = cookies((await signIn(env.handler, `${origin}/`)).callback)[MEMBER_COOKIE].value
+	const created = await env.handler(new Request(api("/rooms"), {
+		method: "POST", headers: { origin, "content-type": "application/json", cookie: `${MEMBER_COOKIE}=${first}` },
+		body: JSON.stringify({ contractVersion: 3, commandId: randomBytes(16).toString("hex"), admissionSecret: randomBytes(32).toString("base64url"), nickname: "Host", setup: { country: "JP" } }),
+	}))
+	assert.equal(created.status, 200)
+	const admission = await created.json()
+	const id = admission.credential.roomId as string
+	assert.equal(admission.snapshot.own.member.state, "linked")
+	const session = cookies(created)[MEMBER_COOKIE]?.value
+	assert.ok(session && session !== first, "a renewal that lands before the answer goes back in that answer")
+	const roomCookie = `yepwatch3_${id}=${cookies(created)[`yepwatch3_${id}`].value}`
+	let snapshot = admission.snapshot
+	const send = async (command: Record<string, unknown>, member = session) => {
+		const started = Date.now()
+		const reply = await env.handler(new Request(api(`/rooms/${id}/commands`), {
+			method: "POST", headers: { origin, "content-type": "application/json", cookie: `${roomCookie}; ${MEMBER_COOKIE}=${member}` },
+			body: JSON.stringify({ commandId: randomBytes(16).toString("hex"), sequence: snapshot.own.nextSequence, command }),
+		}))
+		const took = Date.now() - started
+		if (reply.ok) snapshot = (await reply.clone().json()).snapshot
+		return { reply, took }
+	}
+	const read = (member = session) => env.handler(new Request(api(`/rooms/${id}`), { headers: { cookie: `${roomCookie}; ${MEMBER_COOKIE}=${member}` } }))
+	const refreshes = (token: string) => env.calls.token.filter((f) => f.get("refresh_token") === token).length
+	// Every token request so far issued one grant: the session's refresh token is the latest, the next is its successor.
+	const stored = `refresh-${env.calls.token.length}`
+	const successor = `refresh-${env.calls.token.length + 1}`
+	return {
+		...env, id, session, stored, successor, roomCookie, mode, send, read, refreshes, snapshot: () => snapshot,
+		hold: () => { held = new Promise<void>((resolve) => { open = resolve }) },
+		release: async () => { open(); held = null; await new Promise((resolve) => setTimeout(resolve, 50)) },
+	}
+}
+
+test("Start with a lapsed GoodWatch login answers without waiting for the renewal; the renewal lands later and is kept", async () => {
+	const m = await lapsedMember()
+	m.hold()
+	const services = await m.send({ type: "set_services", serviceIds: [1] })
+	assert.equal(services.reply.status, 200, JSON.stringify(await services.reply.clone().json()))
+	const start = await m.send({ type: "start", expectedContextVersion: m.snapshot().shared.contextVersion, expectedRosterVersion: m.snapshot().shared.rosterVersion, expectedGeneration: m.snapshot().shared.generation, hostReady: true })
+	assert.equal(start.reply.status, 200, JSON.stringify(await start.reply.clone().json()))
+	assert.notEqual(m.snapshot().shared.phase, "setup", "started")
+	assert.ok(services.took < 1000 && start.took < 1000, `answered in ${services.took} and ${start.took} ms while GoodWatch held the renewal`)
+	assert.equal(cookies(start.reply)[MEMBER_COOKIE], undefined, "the login is left as it is while the renewal runs")
+	assert.equal(m.refreshes(m.stored), 1, "one renewal for both actions")
+	m.mode.lifetime = 300
+	await m.release()
+	// The renewal outlived both requests; the rotated login is kept and goes back with the next answer.
+	const next = await m.read()
+	assert.equal(next.status, 200)
+	const renewed = cookies(next)[MEMBER_COOKIE]?.value
+	assert.ok(renewed && renewed !== m.session, "the rotated login is sealed into the next answer")
+	assert.equal(m.refreshes(m.stored), 1, "the spent refresh token is never sent again")
+	const status = await m.handler(new Request(api("/account"), { headers: { cookie: `${MEMBER_COOKIE}=${m.session}` } }))
+	assert.deepEqual(await status.json(), { state: "member", displayName: "Alper" })
+	assert.equal(m.refreshes(m.successor), 0, "the kept renewal is current: GoodWatch isn't asked again")
+	const app = await m.handler(new Request(api("/account"), { headers: { "x-yepwatch-member": m.session, "x-yepwatch-client": "native" } }))
+	assert.ok((await app.json()).session, "an app that missed the renewal gets it too")
+})
+
+test("concurrent room actions on one lapsed login start a single renewal", async () => {
+	const m = await lapsedMember()
+	m.hold()
+	const replies = await Promise.all([m.read(), m.read(), m.send({ type: "set_services", serviceIds: [1] }).then((r) => r.reply), m.read()])
+	assert.deepEqual(replies.map((r) => r.status), [200, 200, 200, 200])
+	assert.equal(m.refreshes(m.stored), 1)
+	const status = m.handler(new Request(api("/account"), { headers: { cookie: `${MEMBER_COOKIE}=${m.session}` } }))
+	await new Promise((resolve) => setTimeout(resolve, 20))
+	assert.equal(m.refreshes(m.stored), 1, "a request that waits for the renewal joins the one running")
+	await m.release()
+	assert.equal((await (await status).json()).state, "member")
+	assert.equal(m.refreshes(m.stored), 1)
+})
+
+test("a grant revoked during a background renewal signs the device out on its next request, as before", async () => {
+	const m = await lapsedMember()
+	m.mode.revoke = true
+	m.hold()
+	const during = await m.send({ type: "set_services", serviceIds: [1] })
+	assert.equal(during.reply.status, 200, "the action runs on the YepWatch session")
+	await m.release()
+	const after = await m.send({ type: "set_services", serviceIds: [1] })
+	assert.equal(after.reply.status, 403)
+	assert.equal((await after.reply.json()).error.code, "member_required")
+	assert.equal(cookies(after.reply)[MEMBER_COOKIE].maxAge, 0, "the login is cleared")
+	const status = await m.handler(new Request(api("/account"), { headers: { cookie: `${MEMBER_COOKIE}=${m.session}` } }))
+	assert.equal((await status.json()).state, "guest")
+	assert.equal(m.refreshes(m.stored), 1, "the refusal is remembered; GoodWatch isn't asked again")
+})
+
+test("a background renewal that fails on the network keeps the stored login and tries the same refresh token again", async () => {
+	const m = await lapsedMember()
+	m.mode.down = true
+	const during = await m.send({ type: "set_services", serviceIds: [1] })
+	assert.equal(during.reply.status, 200)
+	await new Promise((resolve) => setTimeout(resolve, 50))
+	const again = await m.send({ type: "set_services", serviceIds: [1] })
+	assert.equal(again.reply.status, 200)
+	assert.equal(cookies(during.reply)[MEMBER_COOKIE], undefined, "the login is left as it is")
+	assert.equal(cookies(again.reply)[MEMBER_COOKIE], undefined)
+	await new Promise((resolve) => setTimeout(resolve, 50))
+	assert.equal(m.refreshes(m.stored), 2, "each later request tries again with the stored refresh token")
+	m.mode.down = false
+	const back = await m.handler(new Request(api("/account"), { headers: { cookie: `${MEMBER_COOKIE}=${m.session}` } }))
+	const body = await back.json()
+	assert.equal(body.state, "member")
+	assert.equal(body.unavailable, undefined)
+	assert.ok(cookies(back)[MEMBER_COOKIE]?.value, "the renewal lands once GoodWatch answers")
 })

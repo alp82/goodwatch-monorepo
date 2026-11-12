@@ -92,6 +92,13 @@ const BROWSER_STATE = "acct."
 const NATIVE_STATE = "acctn."
 const SESSION_AAD = "yepwatch-account-session-v3"
 const INTENT_AAD = "yepwatch-member-intent"
+type RenewalOutcome =
+	| { state: "renewed"; session: MemberSession }
+	| { state: "refused" }
+	| { state: "unavailable"; error: RoomError }
+/** How long a finished renewal is kept for a device that hasn't received it yet, and how many are kept at most. */
+const LANDED_MS = 24 * 3_600_000
+const LANDED_MAX = 20_000
 /** A renewable session lasts as long as the issuer's refresh grant; otherwise only as long as its access token. */
 export const RENEWABLE_SESSION_MS = 90 * 86_400_000
 export const isAccountState = (state: string) =>
@@ -585,49 +592,132 @@ export class ContinuousMembers {
 		}
 	}
 	/**
-	 * A usable session: the same one while its access token lasts, a renewed one when it can be renewed,
-	 * else null. A rotation whose identity check fails transiently still comes back renewed (the new
-	 * tokens must be kept), marked unverified; a later call verifies its access token while it lasts,
-	 * or refreshes with the rotated refresh token, never the spent one.
+	 * Renewals of a lapsed device session with GoodWatch, one per credential (access + refresh token): concurrent
+	 * requests carrying the same session share it. It is never tied to the request that started it, so a refresh
+	 * token GoodWatch has already rotated is never lost when that request finishes first.
 	 */
-	async freshSession(session: MemberSession | null): Promise<{ session: MemberSession; renewed: boolean } | null> {
-		if (!session) return null
+	private renewals = new Map<string, Promise<RenewalOutcome>>()
+	/**
+	 * What a finished renewal left for the session it replaced: the rotated session, or GoodWatch's refusal. Kept so a
+	 * device still sending the replaced session gets the rotated one (it may not have received it yet), and is never
+	 * sent to GoodWatch with its spent refresh token. A network failure keeps nothing: the stored session stays.
+	 */
+	private landed = new Map<string, { outcome: Exclude<RenewalOutcome, { state: "unavailable" }>; until: number }>()
+	private renewalKey(session: MemberSession) {
+		return createHash("sha256").update(`${session.accessToken}\0${session.refreshToken ?? ""}`).digest("base64url")
+	}
+	private land(key: string, outcome: Exclude<RenewalOutcome, { state: "unavailable" }>) {
+		const now = this.now()
+		for (const [k, v] of this.landed) if (v.until <= now || this.landed.size >= LANDED_MAX) this.landed.delete(k); else break
+		this.landed.delete(key)
+		this.landed.set(key, { outcome, until: now + LANDED_MS })
+	}
+	/**
+	 * The newest session a finished renewal left for `session` (null: GoodWatch refused it). `moved`: it differs from
+	 * the one given, so the device must be sent it.
+	 */
+	current(session: MemberSession): { session: MemberSession; moved: boolean } | null {
+		let at = session
+		let moved = false
+		for (let hop = 0; hop < 8; hop++) {
+			const kept = this.landed.get(this.renewalKey(at))
+			if (!kept || kept.until <= this.now()) break
+			if (kept.outcome.state === "refused") return null
+			const next = kept.outcome.session
+			// A verified session keeps its tokens: it maps onto itself.
+			if (next.accessToken === at.accessToken && next.refreshToken === at.refreshToken && !at.unverified) break
+			at = next
+			moved = true
+		}
+		return { session: at, moved }
+	}
+	/** Starts (or joins) the renewal of `session`; it never rejects. */
+	private renewal(session: MemberSession): Promise<RenewalOutcome> {
+		const key = this.renewalKey(session)
+		const running = this.renewals.get(key)
+		if (running) return running
+		const started = this.now()
+		const work = this.renew(session).then((outcome) => {
+			if (outcome.state !== "unavailable") this.land(key, outcome)
+			console.info(JSON.stringify({ event: "yepwatch_member_renewal", outcome: outcome.state, ms: this.now() - started }))
+			return outcome
+		}).finally(() => {
+			if (this.renewals.get(key) === work) this.renewals.delete(key)
+		})
+		this.renewals.set(key, work)
+		return work
+	}
+	/**
+	 * One renewal: a refresh while the access token is spent, else a fresh identity check. A rotation whose identity
+	 * check fails transiently still renews (the new tokens must be kept), marked unverified; a later renewal verifies
+	 * its access token while it lasts, or refreshes with the rotated refresh token, never the spent one.
+	 */
+	private async renew(session: MemberSession): Promise<RenewalOutcome> {
 		const live = session.expiresAt > this.now() + 30_000
-		if (live && !session.unverified) return { session, renewed: false }
-		if (!live && (!session.refreshToken || !this.issuer.refresh)) return null
 		let tokens: MemberTokens
 		try {
 			tokens = live ? session : await this.issuer.refresh!({ refreshToken: session.refreshToken! })
 		} catch (e) {
-			if (refused(e)) return null
-			throw unavailable(e)
+			return refused(e) ? { state: "refused" } : { state: "unavailable", error: unavailable(e) }
 		}
 		try {
-			return { session: await this.sessionFrom(tokens, session), renewed: true }
+			return { state: "renewed", session: await this.sessionFrom(tokens, session) }
 		} catch (e) {
-			if (refused(e)) return null
-			if (live) throw unavailable(e)
-			const rotated: MemberSession = {
-				...session,
-				accessToken: tokens.accessToken,
-				expiresAt: tokens.expiresAt,
-				refreshToken: tokens.refreshToken ?? session.refreshToken,
-				unverified: true,
+			if (refused(e)) return { state: "refused" }
+			if (live) return { state: "unavailable", error: unavailable(e) }
+			return {
+				state: "renewed",
+				session: {
+					...session,
+					accessToken: tokens.accessToken,
+					expiresAt: tokens.expiresAt,
+					refreshToken: tokens.refreshToken ?? session.refreshToken,
+					unverified: true,
+				},
 			}
-			return { session: rotated, renewed: true }
 		}
+	}
+	/**
+	 * A usable session: the same one while its access token lasts, a renewed one when it can be renewed, else null.
+	 *
+	 * `background` (room actions): never waits for GoodWatch. A session that needs renewing comes back as it is with
+	 * `pending`, its renewal running on its own; a renewal that already finished is used.
+	 */
+	async freshSession(
+		given: MemberSession | null,
+		options: { background?: boolean } = {},
+	): Promise<{ session: MemberSession; renewed: boolean; pending?: true } | null> {
+		if (!given) return null
+		const current = this.current(given)
+		if (!current) return null
+		const session = current.session
+		const live = session.expiresAt > this.now() + 30_000
+		if (live && !session.unverified) return { session, renewed: current.moved }
+		if (!live && (!session.refreshToken || !this.issuer.refresh)) return null
+		const renewal = this.renewal(session)
+		if (options.background) return { session, renewed: current.moved, pending: true }
+		const outcome = await renewal
+		if (outcome.state === "refused") return null
+		if (outcome.state === "unavailable") throw outcome.error
+		return { session: outcome.session, renewed: true }
 	}
 	/** How long a browser keeps the session cookie. */
 	sessionMaxAge(session: MemberSession) {
 		const until = session.refreshToken ? this.now() + RENEWABLE_SESSION_MS : session.expiresAt
 		return Math.max(0, Math.floor((until - this.now()) / 1000))
 	}
-	/** This device's sign-in, without calling GoodWatch while the session is current. */
-	async account(raw: string | null | undefined): Promise<{ status: AccountStatus; session: MemberSession | null; changed: boolean }> {
+	/**
+	 * This device's sign-in, without calling GoodWatch while the session is current. `background`: see freshSession;
+	 * `renewing` says a renewal is still running for the session returned.
+	 */
+	async account(
+		raw: string | null | undefined,
+		options: { background?: boolean } = {},
+	): Promise<{ status: AccountStatus; session: MemberSession | null; changed: boolean; renewing?: true }> {
 		const opened = this.openSession(raw)
 		let fresh
 		try {
-			fresh = await this.freshSession(opened)
+			fresh = await this.freshSession(opened, options)
 		} catch (e) {
 			// Still signed in; GoodWatch just couldn't renew it now. Keep the session untouched.
 			if (opened && e instanceof RoomError && e.code === "busy")
@@ -643,6 +733,7 @@ export class ContinuousMembers {
 			},
 			session: fresh.session,
 			changed: fresh.renewed,
+			...(fresh.pending ? { renewing: true as const } : {}),
 		}
 	}
 	/**

@@ -92,8 +92,10 @@ export function createProposalHandler(
 			headers.set("access-control-allow-origin", origin)
 			headers.set("access-control-allow-credentials", "true")
 		}
-		const reply = (data: unknown, status = 200) =>
-			new Response(JSON.stringify(data), { status, headers })
+		const reply = (data: unknown, status = 200) => {
+			deliverRenewal()
+			return new Response(JSON.stringify(data), { status, headers })
+		}
 		const cookie = (name: string) =>
 			(request.headers.get("cookie") ?? "")
 				.split(";")
@@ -158,12 +160,28 @@ export function createProposalHandler(
 		}
     let accountRead: Promise<import('./proposal-types.ts').RoomAccount | null> | undefined
     let freshMemberSession: MemberSession | null = null
+    /**
+     * Room actions (Start, votes, reads) run on the YepWatch session alone: a lapsed GoodWatch login renews in the
+     * background, never on their path. Linking a room is GoodWatch work itself: it waits for the renewal (shared).
+     */
+    const renewInline = request.method === 'POST' && /\/member\/link$/.test(url.pathname)
+    /** The session this answer stands on while its renewal runs; a renewal that lands before the answer goes with it. */
+    let renewing: MemberSession | null = null
+    const deliverRenewal = () => {
+      if (!renewing || !options.members) return
+      const landed = options.members.current(renewing)
+      renewing = null
+      // A refusal is left to the next request, which signs the device out as it always has.
+      if (!landed?.moved) return
+      const renewed = keepSession(landed.session, true)
+      if (renewed) headers.set('x-yepwatch-session', renewed)
+    }
     /** `roomScoped`: a signed-out (revoked) sign-in on a room request is no sign-in; the room credential decides. */
     const account = (required = false, roomScoped = false) => {
       accountRead ??= (async () => {
         const raw = memberSession()
         if (!raw || !options.members) return null
-        const result = await options.members.account(raw)
+        const result = await options.members.account(raw, { background: !renewInline })
         const renewed = keepSession(result.session, result.changed)
         if (renewed) headers.set('x-yepwatch-session', renewed)
         const session = result.session
@@ -174,7 +192,8 @@ export function createProposalHandler(
           if (roomScoped && session?.sessionId) return null
           throw new RoomError('member_required', 'Sign in with GoodWatch again', 403)
         }
-        if (session.unverified || result.status.unavailable) throw new RoomError('busy', 'GoodWatch is temporarily unavailable', 503, true)
+        if (renewInline && (session.unverified || result.status.unavailable)) throw new RoomError('busy', 'GoodWatch is temporarily unavailable', 503, true)
+        if (result.renewing || session.unverified) renewing = session
         freshMemberSession = session
         if (![`${paths.account}/deletion`, `${paths.account}/restore`].includes(url.pathname)) await service.requireAccountActive(session.userId)
         return { userId: session.userId, sessionId: session.sessionId,
