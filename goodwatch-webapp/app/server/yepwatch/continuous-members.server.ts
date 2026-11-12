@@ -651,6 +651,7 @@ export class ContinuousMembers {
 	 *
 	 * `admit`: whether the place may still take this link, asked before GoodWatch is read and again on every write
 	 * attempt (a link answered late must not land after Log out or Leave). Refused, nothing is written: null.
+	 * A linked answer carries the room's context version as the link left it.
 	 */
 	async linkRoom(id: string, participantId: string, raw: string | null | undefined, admit?: (room: ContinuousRoom) => boolean | Promise<boolean>) {
 		const fresh = await this.freshSession(this.openSession(raw))
@@ -674,7 +675,7 @@ export class ContinuousMembers {
 				p.memberGrant?.accessToken === session.accessToken &&
 				p.memberGrant.expiresAt > this.now()
 			)
-				return { status: { state: "linked" as const, prefill: p.member.prefill }, session, renewed: fresh.renewed }
+				return { status: { state: "linked" as const, prefill: p.member.prefill }, session, renewed: fresh.renewed, contextVersion: room.contextVersion }
 		}
 		const grant = await this.issuer.verify(session.accessToken)
 		requireRoom(grant.userId === session.userId, "unauthorized", "GoodWatch account changed", 401)
@@ -700,7 +701,7 @@ export class ContinuousMembers {
 			})
 			room.revision++
 			if (await this.repo.compareAndSwap(old, room, true))
-				return { status: { state: "linked" as const, prefill }, session, renewed: fresh.renewed }
+				return { status: { state: "linked" as const, prefill }, session, renewed: fresh.renewed, contextVersion: room.contextVersion }
 		}
 		throw new RoomError("busy", "Room busy; try again", 503, true)
 	}

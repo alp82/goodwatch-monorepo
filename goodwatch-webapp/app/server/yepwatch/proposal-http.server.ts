@@ -213,34 +213,35 @@ export function createProposalHandler(
       }
     }
     /**
-     * A new room takes the member's GoodWatch country over the device's (the country the create request carried),
-     * as the app's own country step does: only while the room is in setup and still has the create country, so a
-     * country someone chose since stays. A link answered after the admission does it then.
-     */
-    const adoptMemberCountry = async (place: Place, a: Account, setup: import('../../../packages/yepwatch-contracts/proposal.ts').RoomSetupRequest) => {
-      const scoped = { participantId: place.participantId, token: place.token, accountId: a.userId, sessionId: a.sessionId }
-      const snapshot = await service.read(place.roomId, scoped)
-      const prefill = snapshot.own.member.prefill?.country
-      if (!prefill || prefill === setup.country || snapshot.shared.screens[0]?.country !== setup.country || snapshot.shared.phase !== 'setup') return
-      try {
-        await service.command(place.roomId, scoped, { commandId: `setup-${place.participantId}`, sequence: snapshot.own.nextSequence, command: { type: 'configure', expectedContextVersion: snapshot.shared.contextVersion, country: prefill } })
-      } catch (e) {
-        if (!(e instanceof RoomError)) throw e
-      }
-    }
-    /**
      * Links a place to this request's sign-in. One link per place and session at a time: the room's own member/link
      * joins the one its admission started instead of asking GoodWatch again. False: the place no longer takes it.
+     *
+     * `created`: a new room's create country and context version. Once linked, the room takes the member's GoodWatch
+     * country over the device's, as the app's own country step does, but only if nothing changed the room's context
+     * between create and the link (the link itself moves it) or since: a country someone chose stays, and a started
+     * room keeps its own. Checked atomically with the write (adoptMemberCountry), also when the link lands late.
      */
-    const link = (place: Place, a: Account, setup?: import('../../../packages/yepwatch-contracts/proposal.ts').RoomSetupRequest) => {
+    const link = (place: Place, a: Account, created?: { country: string; contextVersion: number }) => {
       const key = `${place.roomId}\0${place.participantId}\0${a.sessionId}`
       const running = links.get(key)
       if (running) return running
       const raw = options.members!.sealSession(freshMemberSession!)
       const work = (async () => {
-        if (!(await options.members!.linkRoom(place.roomId, place.participantId, raw, linkAdmits(a, place.participantId)))) return false
+        const admits = linkAdmits(a, place.participantId)
+        let admittedVersion: number | undefined
+        const linked = await options.members!.linkRoom(place.roomId, place.participantId, raw, async (room) => {
+          const ok = await admits(room)
+          if (ok) admittedVersion = room.contextVersion
+          return ok
+        })
+        if (!linked) return false
         await service.notify(place.roomId)
-        if (setup) await adoptMemberCountry(place, a, setup)
+        const country = linked.status.prefill?.country
+        if (created && country && admittedVersion === created.contextVersion && linked.contextVersion !== undefined) {
+          const scoped = { participantId: place.participantId, token: place.token, accountId: a.userId, sessionId: a.sessionId }
+          await service.adoptMemberCountry(place.roomId, scoped, { country: created.country, contextVersion: linked.contextVersion }, country)
+            .catch((e: unknown) => { if (!(e instanceof RoomError)) throw e })
+        }
         return true
       })().finally(() => links.delete(key))
       links.set(key, work)
@@ -254,7 +255,8 @@ export function createProposalHandler(
     const sendAdmission = async (admission: import('../../../packages/yepwatch-contracts/proposal.ts').GuestAdmission, a: Account | null, setup?: import('../../../packages/yepwatch-contracts/proposal.ts').RoomSetupRequest, bounded = false) => {
       const c = admission.credential
       const linking = a && options.members && freshMemberSession
-        ? link({ roomId: c.roomId, participantId: c.participantId, token: c.token }, a, setup)
+        ? link({ roomId: c.roomId, participantId: c.participantId, token: c.token }, a,
+          setup ? { country: setup.country, contextVersion: admission.snapshot.shared.contextVersion } : undefined)
         : null
       let timer: ReturnType<typeof setTimeout> | undefined
       const linked = !linking ? false : !bounded ? await linking : await Promise.race([

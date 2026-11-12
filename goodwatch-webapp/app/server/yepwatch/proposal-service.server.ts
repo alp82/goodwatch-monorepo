@@ -1987,6 +1987,51 @@ export class ProposalService {
 		}
 		return stored
 	}
+	/**
+	 * Server-only: a new room takes its creator's GoodWatch `country` as the host's configure would, but only while
+	 * the room is still in setup, still has the country it was created with and its context is the one `expected`
+	 * names (nothing chose a country or setting since). Checked on the room each compare-and-swap writes over, so a
+	 * country the host picked meanwhile, or a Start, always wins; otherwise nothing is written. Takes no command
+	 * sequence. True when it changed the room.
+	 */
+	async adoptMemberCountry(
+		id: string,
+		credential: ActorCredential,
+		expected: { country: string; contextVersion: number },
+		country: string
+	): Promise<boolean> {
+		if (country === expected.country) return false
+		const metadata = await this.catalog.metadata(country).catch(() => null)
+		if (!metadata?.countries.some((c) => c.code === country)) return false
+		const changed = await this.write(id, async () => {
+			for (let i = 0; i < 6; i++) {
+				const old = await this.get(id)
+				const p = this.auth(old.room, credential)
+				if (
+					old.room.phase !== "setup" ||
+					old.room.hostId !== p.id ||
+					old.room.screens[0]?.country !== expected.country ||
+					old.room.contextVersion !== expected.contextVersion
+				)
+					return false
+				const command: RoomCommand = { type: "configure", expectedContextVersion: old.room.contextVersion, country }
+				const room = proposalTransition(old.room, p.id, { commandId: "member-country", sequence: 0, command }, this.now())
+				if (this.catalog.refresh && watchScreensChanged(old.room, room))
+					room.candidates = await this.catalog.refresh(activeRoom(room))
+				retireIneligible(room, new Set((await this.catalog.excludedKeys?.(room)) ?? []))
+				reconcile(room, old.room)
+				try {
+					if (await this.repository.compareAndSwap(old, room, true)) return true
+				} catch (e) {
+					// Unknown outcome: the next read shows the context moved (applied) or not (retry).
+					if (!(e instanceof IndeterminateWrite)) throw e
+				}
+			}
+			return false
+		})
+		if (changed) await this.notify(id)
+		return changed
+	}
 	/** Server/operator-only revocation, never a gateway/public command. Required roster is retained. */
 	async revokeParticipant(id: string, participantId: string) {
 		return this.write(id, () => this.revoke(id, participantId))
