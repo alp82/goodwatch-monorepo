@@ -1,12 +1,22 @@
 #!/usr/bin/env node
-// CI wrapper for the Android share of the deploy gate (`e2e:native:gate`).
+// CI wrapper for the Android share of the deploy gate (`npm run e2e:gate:android` in e2e/).
 //
-//   node e2e/ci/native-gate.mjs [--frames=report|gate]
+//   node e2e/ci/native-gate.mjs [--mode=subset|gate|full] [--frames=report|gate]
+//
+// --mode=subset (default, the deploy gate, owner decision Q28): cold start, then one mixed room with the
+// Android app as host and a browser friend (create/join, Start, vote to a match) on ONE emulator. The
+// two-phone `gate` and the `full` run stay local / pre-OTA (ota-gate.mjs).
 //
 // 1. Overlaps the three slow preparations instead of running them one after another:
-//    shared stack up (Crate/Valkey/Caddy + bundles), release APK for the stack's origins (cached base APK +
-//    JS repack), and two emulators booted from the cached snapshot.
-// 2. Runs `e2e/native/run.mjs gate` unchanged (it finds the APK cached and the emulators booted).
+//    shared stack up (Crate/Valkey/Caddy + bundles + web export), release APK for the stack's origins
+//    (cached base APK + JS repack), and the emulator(s) booted from the cached snapshot.
+//    With --prepare it does only the stack and the APK and writes the outcome to <file>; CI starts that in
+//    the background right after node_modules are restored, so the bundling overlaps the emulator, system
+//    image and AVD cache downloads. A later --after-prepare=<file> boots the emulator while it waits for it.
+//    --pulled=<status file> makes --prepare first wait for the background image pull's exit status (0 = all
+//    pulled). Both sides are bounded below the 12-min job: a failed pull or a preparation past PREPARE_MS
+//    writes a failed outcome, and the waiter gives up after WAIT_MS or as soon as the preparer died silently.
+// 2. Runs `e2e/native/run.mjs <mode>` unchanged (it finds the APK cached and the emulators booted).
 // 3. Re-judges its result.json. Every gate stays a gate except frame pacing when --frames=report (CI default):
 //    GitHub's runners have no GPU, so the emulator renders with SwiftShader and gfxinfo frame times measure
 //    the software renderer, not the app. Frame numbers are still collected, printed and kept in the report;
@@ -24,6 +34,17 @@ const e2eDir = path.resolve(here, '..');
 const nativeDir = path.join(e2eDir, 'native');
 const frames = (process.argv.find((a) => a.startsWith('--frames=')) ?? '--frames=report').slice(9);
 if (!['report', 'gate'].includes(frames)) throw new Error(`--frames must be report or gate, got ${frames}`);
+const mode = (process.argv.find((a) => a.startsWith('--mode=')) ?? '--mode=subset').slice(7);
+if (!['subset', 'gate', 'full'].includes(mode)) throw new Error(`--mode must be subset, gate or full, got ${mode}`);
+const arg = (name) => process.argv.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3);
+const prepareOut = arg('prepare');
+const afterPrepare = arg('after-prepare');
+const pulled = arg('pulled');
+// Deadlines inside the CI job's 12 min (yepwatch-gate.yml android-gate): checkout and caches take ~1-3 min
+// before the gate step, the journeys ~2 min after it.
+const PULL_MS = 4 * 60000;
+const PREPARE_MS = 7 * 60000;
+const WAIT_MS = 7.5 * 60000;
 const t0 = Date.now();
 const log = (m) => console.log(`[native-gate ${((Date.now() - t0) / 1000).toFixed(1)}s] ${m}`);
 const phases = {};
@@ -37,25 +58,79 @@ const { RUNS_DIR } = await import('../native/lib/env.mjs');
 const front = new URL(ORIGINS.front).origin;
 const origins = { api: front, ws: front.replace(/^http/, 'ws'), app: front };
 
+const children = new Set();
 function stackUp() {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [path.join(e2eDir, 'stack/up.mjs'), '--reset'], { stdio: 'inherit' });
+    children.add(child);
+    child.on('exit', () => children.delete(child));
     child.on('error', reject);
     child.on('exit', (code) => (code === 0 ? resolve() : reject(new Error(`stack up failed (${code})`))));
   });
 }
 
 let prepError = null;
+let apkInfo = null;
+const sleepMs = (ms) => new Promise((r) => setTimeout(r, ms));
+/** Waits for the background pull's exit status file; throws on a failed pull or none within PULL_MS. */
+const awaitPull = async (file) => {
+  const s = Date.now();
+  while (!fs.existsSync(file)) {
+    if (Date.now() - s > PULL_MS) throw new Error(`stack images not pulled after ${PULL_MS / 60000} min (no ${file})`);
+    await sleepMs(250);
+  }
+  const status = fs.readFileSync(file, 'utf8').trim();
+  if (status !== '0') throw new Error(`pulling the stack images failed (status ${status}; see pull.log)`);
+  log(`stack images pulled after ${((Date.now() - s) / 1000).toFixed(1)} s of waiting`);
+};
+const hostPrep = async () => {
+  if (pulled) await timed('pull', () => awaitPull(pulled));
+  await Promise.all([
+    timed('stack', stackUp),
+    timed('apk', async () => { apkInfo = await ensureApk(origins); log(`apk ${JSON.stringify(apkInfo)}`); }),
+  ]);
+};
+/** Waits for a --prepare run's outcome file (written once, at its end). */
+const alive = (pid) => { try { process.kill(pid, 0); return true; } catch (e) { return e.code === 'EPERM'; } };
+const awaitPrepared = async (file) => {
+  const s = Date.now();
+  while (!fs.existsSync(file)) {
+    if (Date.now() - s > WAIT_MS) throw new Error(`no ${file} after ${WAIT_MS / 60000} min`);
+    const pid = fs.existsSync(`${file}.pid`) ? Number(fs.readFileSync(`${file}.pid`, 'utf8')) : null;
+    if (pid && !alive(pid) && !fs.existsSync(file)) throw new Error(`the background preparation (pid ${pid}) exited without writing ${file}`);
+    await sleepMs(250);
+  }
+  const p = JSON.parse(fs.readFileSync(file, 'utf8'));
+  Object.assign(phases, p.phases, { prepareWait: Date.now() - s });
+  apkInfo = p.apk;
+  if (!p.ok) throw new Error(`background preparation failed: ${p.error}`);
+  log(`background preparation was ready after ${((Date.now() - s) / 1000).toFixed(1)} s of waiting`);
+};
+
+if (prepareOut) {
+  fs.rmSync(prepareOut, { force: true });
+  fs.writeFileSync(`${prepareOut}.pid`, String(process.pid));
+  let deadline;
+  const overdue = new Promise((_, reject) => { deadline = setTimeout(() => reject(new Error(`preparation not done after ${PREPARE_MS / 60000} min`)), PREPARE_MS); });
+  await Promise.race([hostPrep(), overdue]).catch((e) => { prepError = e; });
+  clearTimeout(deadline);
+  if (prepError) for (const child of children) child.kill('SIGTERM');
+  const out = { ok: !prepError, error: prepError ? String(prepError.stack ?? prepError) : null, phases, apk: apkInfo, ms: Date.now() - t0 };
+  fs.writeFileSync(`${prepareOut}.tmp`, JSON.stringify(out, null, 2));
+  fs.renameSync(`${prepareOut}.tmp`, prepareOut);
+  log(prepError ? `preparation failed: ${out.error}` : `prepared in ${(out.ms / 1000).toFixed(1)} s`);
+  process.exit(prepError ? 1 : 0);
+}
+
 await Promise.all([
-  timed('stack', stackUp),
-  timed('apk', async () => log(`apk ${JSON.stringify(await ensureApk(origins))}`)),
-  timed('boot', async () => log(`emulators ${JSON.stringify(await boot(2))}`)),
+  afterPrepare ? awaitPrepared(afterPrepare) : hostPrep(),
+  timed('boot', async () => log(`emulators ${JSON.stringify(await boot(mode === 'subset' ? 1 : 2))}`)),
 ]).catch((e) => { prepError = e; });
 if (prepError) { log(`preparation failed: ${prepError.stack ?? prepError}`); process.exit(1); }
 
 const before = new Set(fs.existsSync(RUNS_DIR) ? fs.readdirSync(RUNS_DIR) : []);
-const run = await timed('gate', async () => spawnSync(process.execPath, [path.join(nativeDir, 'run.mjs'), 'gate'], { cwd: nativeDir, stdio: 'inherit', env: process.env }));
-const dir = fs.readdirSync(RUNS_DIR).filter((d) => d.startsWith('gate-') && !before.has(d)).sort().pop();
+const run = await timed('gate', async () => spawnSync(process.execPath, [path.join(nativeDir, 'run.mjs'), mode], { cwd: nativeDir, stdio: 'inherit', env: process.env }));
+const dir = fs.readdirSync(RUNS_DIR).filter((d) => d.startsWith(`${mode}-`) && !before.has(d)).sort().pop();
 if (!dir) { log(`run.mjs left no result (exit ${run.status})`); process.exit(1); }
 const file = path.join(RUNS_DIR, dir, 'result.json');
 const result = JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -64,14 +139,14 @@ const result = JSON.parse(fs.readFileSync(file, 'utf8'));
 const s = result.summary ?? {};
 const gating = Object.entries(s).filter(([k]) => k !== 'scenarios' && !(k === 'frames' && frames === 'report'));
 const pass = !result.fatal && result.scenarios.every((x) => x.pass) && gating.every(([, v]) => v === 0);
-result.ci = { frames, pass, wallMs: Date.now() - t0, prepPhases: phases, runnerPass: result.pass };
+result.ci = { mode, frames, pass, wallMs: Date.now() - t0, prepPhases: phases, apk: apkInfo, runnerPass: result.pass };
 fs.writeFileSync(file, JSON.stringify(result, null, 2));
 
 const g = result.gates;
 const lines = [
-  `## Android gate: ${pass ? 'PASS' : 'FAIL'} in ${((Date.now() - t0) / 1000).toFixed(0)} s`,
+  `## Android gate (${mode}): ${pass ? 'PASS' : 'FAIL'} in ${((Date.now() - t0) / 1000).toFixed(0)} s`,
   '',
-  `Preparation (overlapped): stack ${(phases.stack / 1000).toFixed(0)} s, APK ${(phases.apk / 1000).toFixed(0)} s, emulators ${(phases.boot / 1000).toFixed(0)} s; journeys ${(phases.gate / 1000).toFixed(0)} s.`,
+  `Preparation (overlapped): stack ${(phases.stack / 1000).toFixed(0)} s, APK ${(phases.apk / 1000).toFixed(0)} s, emulators ${(phases.boot / 1000).toFixed(0)} s${phases.prepareWait != null ? ` (waited ${(phases.prepareWait / 1000).toFixed(0)} s for the background stack + APK)` : ''}; journeys ${(phases.gate / 1000).toFixed(0)} s. APK: ${apkInfo?.gradle ? 'Gradle build (native change)' : apkInfo?.repack ? 'cached base + JS repack' : 'cached'}.`,
   '',
   `Scenarios ${s.scenarios}; timing ${s.timingFails}, flash ${s.flash}, errors ${s.errors}, a11y ${s.a11y}, stuck ${s.stuck}, journey ${s.journey} failure(s).`,
   `Frame pacing: ${s.frames} over budget — ${frames === 'report' ? '**reported, not gating on CI** (no GPU: SwiftShader frame times). Enforced by ota-gate.mjs on real hardware.' : 'gating.'}`,

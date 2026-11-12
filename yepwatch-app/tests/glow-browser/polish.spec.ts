@@ -122,7 +122,11 @@ test('details show the title analysis: scores, age rating, tagline, essence chip
   await expect(d.getByTestId('details-people')).toContainText(/STARRING\s*Ralph Fiennes, Tony Revolori, Saoirse Ronan/);
   // Two actions only: no Yep/Nope, no Watch on links, no Good for cards.
   await expect(d.getByRole('link', { name: 'Full details on GoodWatch' })).toHaveAttribute('href', 'https://goodwatch.app/movie/1');
-  await expect(d.getByRole('button', { name: 'Trailer', exact: true })).toBeVisible();
+  await expect(d.getByRole('link', { name: 'Watch trailer on YouTube', exact: true })).toBeVisible();
+  const trailerAction = await d.getByRole('link', { name: 'Watch trailer on YouTube', exact: true }).boundingBox();
+  const detailsAction = await d.getByRole('link', { name: 'Full details on GoodWatch' }).boundingBox();
+  expect(trailerAction!.height).toBeGreaterThanOrEqual(48);
+  expect(trailerAction!.width).toBeCloseTo(detailsAction!.width, 0);
   await expect(d.getByRole('link', { name: /^Watch on / })).toHaveCount(0);
   await expect(d.getByRole('button', { name: /^(Yep|Nope)$/ })).toHaveCount(0);
   await expect(d.getByText(/Good for|Skip it if/)).toHaveCount(0);
@@ -131,18 +135,24 @@ test('details show the title analysis: scores, age rating, tagline, essence chip
   await shot(page, 'details-bottom');
 });
 
-test('the trailer plays inside the details hero and closes back to it', async ({ page }) => {
+test('the details trailer opens YouTube externally while the hero and room remain intact', async ({ page, context }) => {
+  await context.route('https://www.youtube.com/watch?*', route => route.fulfill({contentType:'text/html',body:'External YouTube destination'}));
   await fakeRoom(page, analysedRoom());
   await page.goto('/room/test-room');
   const d = await openDetails(page);
   const hero = d.getByTestId('details-hero');
-  await d.getByRole('button', { name: 'Trailer', exact: true }).click();
-  await expect(hero.getByTestId('details-trailer')).toBeVisible();
-  await expect(hero.locator('iframe[title="Title trailer"]')).toHaveCount(1);
+  const before = await hero.innerText();
+  const link = d.getByRole('link', { name: 'Watch trailer on YouTube', exact: true });
+  await expect(link).toHaveAttribute('href', 'https://www.youtube.com/watch?v=1Fg5iWmQjwk');
+  await expect(d.locator('iframe')).toHaveCount(0);
+  const opened = page.waitForEvent('popup');
+  await link.click();
+  const external = await opened;
+  await expect(external).toHaveURL('https://www.youtube.com/watch?v=1Fg5iWmQjwk');
+  await external.close();
+  await expect(hero).toHaveText(before, { useInnerText: true });
   await expect(page.getByTestId('trailer-panel')).toHaveCount(0);
-  await hero.getByRole('button', { name: 'Close trailer' }).click();
-  await expect(hero.getByTestId('details-trailer')).toHaveCount(0);
-  await expect(hero.getByText('The Grand Budapest Hotel', { exact: true })).toBeVisible();
+  await expect(page.locator('iframe')).toHaveCount(0);
 });
 
 test('details fill a desktop window: full-width hero, actions beside the title, Summary beside the effect lines', async ({ page }) => {
@@ -186,7 +196,7 @@ test('details hide every part whose data is missing', async ({ page }) => {
   await expect(d.getByText('Isolated test c2')).toBeVisible();
   for (const id of ['details-scores', 'details-summary', 'details-essence', 'details-highlights', 'details-effects', 'details-not-for', 'details-people', 'certification', 'score-ring', 'source-scores']) await expect(d.getByTestId(id)).toHaveCount(0);
   await expect(d.getByText('No synopsis')).toHaveCount(0);
-  await expect(d.getByRole('button', { name: 'Trailer', exact: true })).toHaveCount(0);
+  await expect(d.getByRole('link', { name: 'Watch trailer on YouTube', exact: true })).toHaveCount(0);
   await expect(d.getByRole('link', { name: 'Full details on GoodWatch' })).toBeVisible();
   await shot(page, 'details-bare');
 });

@@ -1,6 +1,9 @@
 #!/usr/bin/env node
-// Android E2E runner.  node e2e/native/run.mjs gate|full [--only=name,name] [--keep]
-// gate: the < 3 min Android share of the overall gate. full: everything, incl. long background, mixed rooms.
+// Android E2E runner.  node e2e/native/run.mjs subset|gate|full [--only=name,name] [--keep]
+// subset: the deploy gate's Android check (yepwatch-gate.yml, owner decision Q28): cold start, then one mixed room
+//   (Android host + browser friend: create/join, Start, vote to a match) on one emulator.
+// gate: the two-phone Android journey (~1.5 min warm). full: everything, incl. long background, mixed rooms;
+//   runs before each OTA (e2e/ci/ota-gate.mjs).
 // No retries: a step that fails once fails the run. Results: e2e/native/.cache/runs/<stamp>/result.json
 import fs from 'node:fs';
 import path from 'node:path';
@@ -81,7 +84,7 @@ async function main() {
   const apk = await ensureApk(stack);
   phase('apk', Date.now() - t); result.apk = apk; log('apk', apk.gradle ? 'gradle' : apk.repack ? 'repacked js' : 'cached', apk.ms, 'ms');
   t = Date.now();
-  const devs = await boot(2);
+  const devs = await boot(mode === 'subset' ? 1 : 2);
   phase('boot', Date.now() - t); result.devices = devs;
   t = Date.now();
   const ports = stackPorts(stack);
@@ -106,7 +109,13 @@ async function main() {
       action: hostAction(() => { am = A.launch(); }), appWindowMs: () => am?.totalTime, allowIntermediate: 0, settleMs: 800 });
     timing('cold start, returning -> start page usable', B.native.coldStartUsableMs, again.A, { amStartTotalTime: am.totalTime, use: 'settled' });
     if (again.A?.ok) S.coldReturningMs = again.A.settledMs;
-  });
+  }, { modes: ['gate', 'full', 'subset'] });
+
+  // ---- deploy gate: one mixed room, Android host + browser friend, to a match ----
+  await scenario('mixed-room-to-match', async () => {
+    const { mixedGateRoom } = await import('./lib/mixed.mjs');
+    await mixedGateRoom({ phone: A, stack, runDir: RUN, B, timing, audit, notStuck, journeyFail, errors: result.gates.errors, frames: result.gates.frames });
+  }, { modes: ['subset'] });
 
   // ---- create room on A, with New room / Create room timings, a11y, back priority ----
   await scenario('create-room', async () => {

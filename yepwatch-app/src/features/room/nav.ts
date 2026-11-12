@@ -43,6 +43,19 @@ export function newRoomInFront(front: boolean) {
 }
 
 /**
+ * Rooms that replace the New room page once it has created them. Their screen comes in without the stack's
+ * page transition: the page under it was this room's own draft (Saving…), so the room takes its place the
+ * frame it is drawn (the web does the same), instead of after Android's cross-fade has started.
+ * Read by the root stack's screen options: the room's own params there hold only its id.
+ */
+const arrivals = new Set<string>();
+export const arrivesInPlace = (id: string | undefined) => Boolean(id && arrivals.has(id));
+/** The New room page's answer opens its room in the page's place. */
+export function openCreatedRoom(id: string) {
+  arrivals.add(id);
+  router.replace({ pathname: '/room/[id]', params: { id } });
+}
+/**
  * Fetches the code of the pages a start-page action opens (Mood, the room) ahead of the tap. A route
  * still loading when it is opened holds its page back for React's 300 ms Suspense reveal throttle.
  */

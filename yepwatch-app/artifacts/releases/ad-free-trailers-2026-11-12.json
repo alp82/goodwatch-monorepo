@@ -1,0 +1,105 @@
+{
+  "checkedAt": "2026-11-12T17:20:58.871153+00:00",
+  "sourceCommit": "94a4236290a5c6b29c5e3461e9b8be3bce505781",
+  "version": "1.0.0",
+  "buildNumber": "19",
+  "behavior": "Validated YouTube trailer links open externally. There is no embedded trailer player or in-app video advertising. Room and voting state are preserved.",
+  "ownerAuthorization": "Open trailers externally; replace store builds and Apple pending submission. Send the approved USK review request from hello@goodwatch.app.",
+  "apple": {
+    "appId": "6826403019",
+    "versionId": "8559d593-4117-4002-ae56-2b56e96cb078",
+    "easBuildId": "aa7d7635-dc4c-42b5-b989-c54c3e33979e",
+    "easBuildState": "FINISHED",
+    "easUploadSubmissionId": "59ffac22-9fec-4e64-9ee2-ca536902e8e1",
+    "easUploadSubmissionState": "IN_QUEUE",
+    "build19Attached": false,
+    "build19SubmittedForPublicReview": false,
+    "previousBuild18ReviewId": "771f9920-708f-4add-af1e-4ce4efcdcafa",
+    "previousBuild18ReviewWithdrawnAt": "2026-11-12T16:52:42.798Z",
+    "currentPublicVersionState": "DEVELOPER_REJECTED",
+    "stateExplanation": "Owner-authorized withdrawal of build 18 for replacement; this is not an Apple review rejection.",
+    "privacy": {
+      "publishedAndReadBack": true,
+      "dataTypeCount": 10,
+      "advertisingDataRemoved": true,
+      "thirdPartyAdvertisingPurposesRemoved": true,
+      "tracking": false,
+      "rationale": "store/apple-privacy-notes.json"
+    },
+    "ageQuestionnaireAdvertising": false,
+    "ageQuestionnaireSavedAndReloadVerified": true,
+    "ageRating": "13+ in 172 regions; 16+ in Vietnam/Brazil; 12+ in Korea. No override."
+  },
+  "google": {
+    "packageName": "com.yepwatch.app",
+    "easBuildId": "86bdb10b-4f77-4426-bd00-5cb5ccfdf2df",
+    "easBuildState": "IN_QUEUE",
+    "track": "Closed testing - Alpha",
+    "trackId": "4698020847026606780",
+    "activeVersionCode": 17,
+    "replacementDraftReleaseId": "2",
+    "replacementBundleUploaded": false,
+    "containsAdsDeclaration": true,
+    "adsDeclarationPlan": "Change to No with build 19 and updated Data safety; active fresh-install bundle 17 still embeds YouTube until updated.",
+    "candidateDataSafetyRationale": "store/google-data-safety-notes.json",
+    "testerGroupPreserved": "yepwatch-testers@googlegroups.com",
+    "productionTestingGatePassed": false,
+    "ownerConfirmedPhysicalInstallAndLaunch": {
+      "device": "Google Pixel 8 Pro",
+      "androidVersion": "17",
+      "versionCode": 17,
+      "externalTrailerBehaviorConfirmed": false
+    },
+    "replacementDraftSaved": true,
+    "releaseNotesSaved": true
+  },
+  "ota": {
+    "published": true,
+    "productionIos": "01a1d0ac-07d2-7c56-863f-55958f4a78ab",
+    "productionAndroid": "01a1d0ac-07d2-765a-bb18-d8f051ae62b9",
+    "betaIos": "01a1d0ad-9a28-7822-b9b7-6c604625c449",
+    "betaPreviewAndroid": "01a1d0ae-a7cc-77ee-8041-f49b79e8d0ab",
+    "productionIosRuntime": "d170fdc5c8fc2b6651fbf0c52f6f90fded747495",
+    "productionAndroidRuntime": "8d1264ebe69b509f2f258813b92603f31603f9d5",
+    "previewAndroidRuntime": "e602b9da0532d0b6553acc72b771132638acce70",
+    "googleBundle17ChannelAndFingerprintMatch": true,
+    "actualAndroidUpdateEndpointReturnedNewManifest": true,
+    "endpointHttpStatus": 200,
+    "ownerPhoneAppliedUpdateConfirmed": false
+  },
+  "uskReview": {
+    "sentAt": "2026-11-12T17:02:50.706Z",
+    "from": "hello@goodwatch.app",
+    "to": "iarc@usk.de",
+    "subject": "Clarification / rating review for YepWatch (com.yepwatch.app)",
+    "messageId": "<yepwatch-usk-rating-review-20261112@goodwatch.app>",
+    "smtpAccepted": true,
+    "otherRecipients": [],
+    "approvedDraft": "store/iarc-rating-review-draft.md",
+    "ratingChanged": false,
+    "authorityResponseReceived": false
+  },
+  "validation": {
+    "typecheck": "pass after integration with origin/main",
+    "lint": "pass after integration with origin/main",
+    "unitTestsPassed": 294,
+    "focusedBrowserTestsPassed": 7,
+    "nativeExportsContainEmbeddedYoutubePlayer": false,
+    "yepwatchChecksCiRun": "https://github.com/alp82/goodwatch-monorepo/actions/runs/43262458641",
+    "yepwatchChecksCiState": "success",
+    "broaderGateCiState": "failed; same workflow also failed on earlier baseline commits",
+    "broaderGateFailures": [
+      "Gateway harness cannot resolve proposal-release-bus.ts",
+      "Android harness AVD config.ini missing",
+      "Web gate failures; not resolved by this trailer change"
+    ],
+    "physicalNativeExternalHandoffVerified": false,
+    "publicPrivacyPolicyReadback": "HTTP 200; updated 12 November 2026; external trailers and older embedded versions disclosed"
+  },
+  "remaining": [
+    "Wait for EAS iOS upload, then Apple build 19 processing; attach and submit the replacement public review.",
+    "Wait for Android build 19, upload its AAB to existing Alpha draft release 2, update ads/Data safety declarations and submit for review.",
+    "Verify build 19 availability and external trailer handoff on a physical phone.",
+    "Await USK's review response; the current Google USK rating remains 16+."
+  ]
+}

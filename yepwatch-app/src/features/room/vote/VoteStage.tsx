@@ -101,13 +101,13 @@ function Departing({ d, geo, onDone }: { d: Departure; geo: StageGeometry; onDon
   return (
     <View {...hidden} style={{ position: 'absolute', left: (aw - w) / 2, top: cardTop, width: w, height: h }}>
       <Poster title={d.card.title} width={w} height={h} phone={phone} z={geo.z} showText={h >= 300} x={x} y={y} pan={{}} look={d.card.look} services={d.services}
-        leaving onDetails={noop} onTrailer={noop}
+        leaving onDetails={noop}
         halo={<CardGlow {...side} />} under={<CardUnder {...side} />} over={<CardOver {...side} />} />
     </View>
   );
 }
 
-export function VoteStage({ geo, card, next, empty, disabled, keys, reduced, enter, onEntered, activity, services, moment, controls, onVote, onDetails, onTrailer, onGesture, onPointer, onMomentEnd }: {
+export function VoteStage({ geo, card, next, empty, disabled, keys, reduced, enter, onEntered, activity, services, moment, controls, onVote, onDetails, onGesture, onPointer, onMomentEnd }: {
   geo: StageGeometry;
   /** The live card: the next unanswered one, what every press answers. */
   card: StageCard | null;
@@ -130,7 +130,6 @@ export function VoteStage({ geo, card, next, empty, disabled, keys, reduced, ent
   /** Sends the vote on the card with this key at once; false when it didn't go out. */
   onVote: (yes: boolean, key: string) => Promise<boolean>;
   onDetails: () => void;
-  onTrailer: () => void;
   onGesture: (phase: GesturePhase) => void;
   onPointer: (pointer: ActivityPointer | null) => void;
   onMomentEnd: (key: string) => void;
@@ -443,7 +442,7 @@ export function VoteStage({ geo, card, next, empty, disabled, keys, reduced, ent
           <PeerStage layer="back" activity={activity} width={w} height={h} desktop={false} />
           <PointerSurface width={w} height={h} onPointer={onPointer}>
             <Poster title={card.title} width={w} height={h} phone={phone} z={geo.z} showText={h >= 300} x={x} y={y} pan={pan.panHandlers} look={card.look} services={services}
-              onDetails={onDetails} onTrailer={onTrailer}
+              onDetails={onDetails}
               halo={engaged ? <><CardGlow {...nopeCard} /><CardGlow {...yepCard} /></> : null}
               under={engaged ? <><CardUnder {...nopeCard} /><CardUnder {...yepCard} /></> : null}
               over={engaged ? <><CardOver {...nopeCard} /><CardOver {...yepCard} /></> : null} />

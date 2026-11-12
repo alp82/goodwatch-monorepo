@@ -12,6 +12,7 @@ import { MemberTransition } from '../features/shell/MemberTransition';
 import { CoveredBody } from '../features/shell/parts';
 import { installLeftoverTapGuard, leftoverTouchGuard, surfaceAppeared } from '../features/shell/fresh-surface';
 import { useFrontRoom } from '../features/shell/useFrontRoom';
+import { arrivesInPlace } from '../features/room/nav';
 installLeftoverTapGuard();
 if (Platform.OS !== 'web') {
   // The startup cover continues the system splash exactly (the Y on the same ground), so the splash can
@@ -19,10 +20,10 @@ if (Platform.OS !== 'web') {
   SplashScreen.setOptions({ duration: 0 });
   void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 }
-const arrivalRoom = ({ route }: { route: { params?: object } }) => ({
-  gestureEnabled: false,
-  ...((route.params as { arrival?: string } | undefined)?.arrival === '1' ? { animation: 'none' as const } : {}),
-});
+const arrivalRoom = ({ route }: { route: { params?: object } }) => {
+  const params = route.params as { arrival?: string; id?: string } | undefined;
+  return { gestureEnabled: false, ...(params?.arrival === '1' || arrivesInPlace(params?.id) ? { animation: 'none' as const } : {}) };
+};
 export default function Layout() {
   const [loaded, error] = useFonts({ Gabarito: require('../../assets/Gabarito-Regular.ttf'), GabaritoBold: require('../../assets/Gabarito-Bold.ttf') });
   const webFontsReady = useWebFontsReady();

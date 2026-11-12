@@ -17,7 +17,6 @@ import { latestRetainedVote, ownCard } from '../../core/continuous/state';
 import { titlePresentation } from '../glow/adapter';
 import { LiveFaces } from '../glow/Peers';
 import { matchesChipFrame, votingBarFit } from '../glow/faces-row';
-import { Trailer } from '../glow/Trailer';
 import { useActiveTime } from '../glow/useActiveTime';
 import { GText, Icon, Press, glow } from '../glow/theme';
 import { useLayout } from '../shell/layout';
@@ -76,7 +75,8 @@ function MatchesChip({ compact }: { compact: boolean }) {
   return (
     <Press label={label} disabled={!lit}
       onPress={() => { playFeedback('matches'); openPage(id, 'matches'); }}
-      style={{ height: z(36), flexShrink: 1, width: frame.width, justifyContent: frame.justifyContent, paddingHorizontal: 12, borderRadius: 10, flexDirection: 'row', gap: 6, backgroundColor: lit ? warm.amberSoft : warm.faint, borderWidth: 1, borderColor: proposal ? glow.amber : lit ? warm.amberLine : warm.line }}>
+      style={{ flexShrink: 1, width: frame.width, alignItems: 'stretch' }}
+      visual={{ height: z(36), justifyContent: frame.justifyContent, paddingHorizontal: 12, borderRadius: 10, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: lit ? warm.amberSoft : warm.faint, borderWidth: 1, borderColor: proposal ? glow.amber : lit ? warm.amberLine : warm.line }}>
       <Icon name="tickets" size={z(15)} color={lit ? glow.amber : glow.muted} />
       {shown ? <GText bold size={z(14)} lines={1} style={{ flexShrink: 1 }} color={lit ? glow.amber : glow.muted}>{shown}</GText> : null}
       {proposal ? <View accessible={false} style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: glow.amber }} /> : null}
@@ -102,11 +102,10 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
   const layout = useLayout();
   const { fontScale } = useWindowDimensions();
   const { phone, z } = layout;
+  /** The row over the stage holds the 48 × 48 touch targets of the matches chip and Undo. */
+  const barHeight = Math.max(48, z(44));
   const reduced = useReducedMotion();
-  const [panel, setPanel] = useState<'details' | 'trailer' | null>(null);
-  /** The trailer playing inside the details' hero. */
-  const [detailsTrailer, setDetailsTrailer] = useState(false);
-  const trailerOpen = panel === 'trailer' || (panel === 'details' && detailsTrailer);
+  const [panel, setPanel] = useState<'details' | null>(null);
   // The card is placed from the stage's measured size; it isn't drawn before that (a guess would move it).
   const [area, setArea] = useState<{ width: number; height: number } | null>(null);
   const stageBox = useRef<React.ComponentRef<typeof View>>(null);
@@ -133,12 +132,11 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
   }, []));
   useBackAction(() => { if (panel) setPanel(null); else toRooms(); });
   const setActivityView = room.setActivityView;
-  useEffect(() => { if (focused) setActivityView(trailerOpen ? 'trailer' : 'voting'); }, [focused, trailerOpen, setActivityView]);
-  useEffect(() => { if (panel !== 'details') setDetailsTrailer(false); }, [panel]); // eslint-disable-line react-hooks/set-state-in-effect
+  useEffect(() => { if (focused) setActivityView('voting'); }, [focused, setActivityView]);
   // A confirmed restart discards the previous round's local state.
   const generation = snapshot?.shared.generation;
   useEffect(() => { setPanel(null); }, [generation]); // eslint-disable-line react-hooks/set-state-in-effect
-  useRoomFeedback(snapshot, trailerOpen);
+  useRoomFeedback(snapshot, false);
   const card = snapshot ? ownCard(snapshot) : undefined;
   const vote = card ? snapshot?.own.votes.find((v) => v.candidateId === card.id) : undefined;
   // Answers queue behind commands still on their way (the Start that dealt this card, the previous vote,
@@ -192,7 +190,7 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
   // The bar's split depends on its width and the font scale only: people coming and going move nothing.
   const fit = votingBarFit({ rowWidth, size: z(26), fontScale, z, undo: Math.max(48, z(40)), gap: 10 });
   return (
-    <Screen testID="voting" scroll={false} back={toRooms} covered={Boolean(panel)} width="page" noteTop={(phone ? 12 : z(24)) + z(44) + 8}
+    <Screen testID="voting" scroll={false} back={toRooms} covered={Boolean(panel)} width="page" noteTop={(phone ? 12 : z(24)) + barHeight + 8}
       footer={
         <View style={{ flexDirection: 'row', gap: 12, width: phone ? '100%' : rowWidth, alignSelf: 'center' }}>
           <VoteKey yes={false} disabled={!answering || !card} onPress={() => controls.current?.commit(false)} />
@@ -202,20 +200,17 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
       overlay={<>
         {panel === 'details' && title && card && (
           <Sheet testID="details-panel" page close={() => setPanel(null)}>
-            <TitleDetails key={card.id} c={card} trailer={detailsTrailer} onTrailer={setDetailsTrailer} />
+            <TitleDetails key={card.id} c={card} />
           </Sheet>
-        )}
-        {panel === 'trailer' && title?.trailerUrl && (
-          <Sheet testID="trailer-panel" close={() => setPanel(null)}><Trailer key={title.id} url={title.trailerUrl} /></Sheet>
         )}
       </>}>
       <RoomNotes />
-      <View testID="voting-bar" style={{ height: z(44), flexDirection: 'row', alignItems: 'center', gap: 10, width: rowWidth, alignSelf: 'center', zIndex: 3 }}>
+      <View testID="voting-bar" style={{ height: barHeight, flexDirection: 'row', alignItems: 'center', gap: 10, width: rowWidth, alignSelf: 'center', zIndex: 3 }}>
         <View style={{ flex: 1, minWidth: 0, flexDirection: 'row' }}><MatchesChip compact={fit.compactChip} /></View>
         {/* Always the same width: the second person arriving moves nothing either. */}
         {people.length > 1 ? <LiveFaces people={people} activity={activity} localReaction={localReaction} size={z(26)} slots={fit.slots} fontScale={fontScale} /> : <View style={{ width: fit.facesWidth }} />}
         <Press label="Undo" disabled={disabled || !undoTarget} onPress={() => { if (!undoTarget) return; setYeps((list) => undoYeps(list, undoTarget.candidateId)); void cmd.undo(undoTarget.candidateId); }}
-          style={{ width: z(40), height: z(36), borderRadius: 10, backgroundColor: '#ffffff0a' }}>
+          visual={{ width: z(40), height: z(36), borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff0a' }}>
           <Icon name="undo" size={z(17)} color={glow.soft} />
         </Press>
       </View>
@@ -231,7 +226,6 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
           moment={view.people.length > 1 ? moment : null} onMomentEnd={endMoment}
           onVote={choose}
           onDetails={() => setPanel('details')}
-          onTrailer={() => setPanel('trailer')}
           onGesture={(gesture) => { setLocalReaction(reaction({ gesture })); state.activity(gesture); }}
           onPointer={(pointer) => {
             state.pointer(pointer);

@@ -69,6 +69,9 @@ export const startPage = {
   join: () => router.push({ pathname: '/', params: { open: 'join' } }),
 };
 
+// Web: effects that fly past the page edge (falling popcorn) must not grow the scroll area.
+const webClip = Platform.OS === 'web' ? { overflow: 'hidden' as const } : null;
+
 export function AppFrame({ header = {}, rooms, children, footer, footerPlacement = 'auto', sheet, overlay, backdrop, covered = false, scroll = true, width = 'page', gap = 0, testID, noteTop = 8 }: AppFrameProps) {
   const layout = useLayout();
   const pathname = usePathname();
@@ -113,7 +116,7 @@ export function AppFrame({ header = {}, rooms, children, footer, footerPlacement
         <CoveredBody keepView covered={covered || Boolean(shownSheet)}>
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, minHeight: 0 }}>
             {scroll ? (
-              <ScrollView testID="frame-body" style={{ flex: 1 }} keyboardShouldPersistTaps="handled" keyboardDismissMode={keyboardDismissMode} contentContainerStyle={{ flexGrow: 1, paddingHorizontal: gutter, paddingTop: top, paddingBottom: bottom }}>
+              <ScrollView testID="frame-body" style={{ flex: 1 }} keyboardShouldPersistTaps="handled" keyboardDismissMode={keyboardDismissMode} contentContainerStyle={{ flexGrow: 1, paddingHorizontal: gutter, paddingTop: top, paddingBottom: bottom, ...webClip }}>
                 <View style={{ ...column, gap }}>{content}</View>
               </ScrollView>
             ) : (
