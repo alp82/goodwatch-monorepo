@@ -23,6 +23,13 @@ import {
 } from "./proposal-validation.ts"
 /** This browser's GoodWatch sign-in (sealed, HttpOnly) and its short-lived sign-in intent. */
 export const MEMBER_COOKIE = "yepwatch3_member"
+/**
+ * How long a create, join or resume waits for its GoodWatch link before answering without it. Linking asks GoodWatch
+ * three times in a row (identity, prefill, seen), each allowed 12 s; one identity check hung the full 12 s in
+ * production (2026-11-12), so the join answered never and the app said "Reconnecting…" without an outage. The app
+ * calls an answer that takes QUIET_OUTAGE_MS (3 s) an outage: the place itself plus this wait stays well under it.
+ */
+export const MEMBER_LINK_WAIT_MS = 1500
 export const MEMBER_INTENT_COOKIE = "yepwatch3_member_intent"
 export const CREATOR_COOKIE = 'yepwatch3_creator'
 export const CREATOR_HEADER = 'x-yepwatch-creator'
@@ -186,11 +193,24 @@ export function createProposalHandler(
       }
       return a ? { ...c, accountId: a.userId, sessionId: a.sessionId } : c
     }
-    const sendAdmission = async (admission: import('../../../packages/yepwatch-contracts/proposal.ts').GuestAdmission, a: import('./proposal-types.ts').RoomAccount | null, setup?: import('../../../packages/yepwatch-contracts/proposal.ts').RoomSetupRequest) => {
+    /**
+     * `bounded`: an admission (create, join, resume) answers within MEMBER_LINK_WAIT_MS even when GoodWatch is slow
+     * to link it. The place is already made; the link goes on and lands as a room update, and the room links itself
+     * (member/link, which waits) when the answer says it isn't linked yet.
+     */
+    const sendAdmission = async (admission: import('../../../packages/yepwatch-contracts/proposal.ts').GuestAdmission, a: import('./proposal-types.ts').RoomAccount | null, setup?: import('../../../packages/yepwatch-contracts/proposal.ts').RoomSetupRequest, bounded = false) => {
       const c = admission.credential
-      if (a && options.members && freshMemberSession) {
-        await options.members.linkRoom(c.roomId, c.participantId, options.members.sealSession(freshMemberSession))
-        await service.notify(c.roomId)
+      const linking = a && options.members && freshMemberSession
+        ? options.members.linkRoom(c.roomId, c.participantId, options.members.sealSession(freshMemberSession)).then(() => service.notify(c.roomId))
+        : null
+      let timer: ReturnType<typeof setTimeout> | undefined
+      const linked = !linking || !bounded ? true : await Promise.race([
+        linking.then(() => true),
+        new Promise<false>((resolve) => { timer = setTimeout(() => resolve(false), MEMBER_LINK_WAIT_MS) }),
+      ]).finally(() => clearTimeout(timer))
+      if (!linked) linking!.catch(() => { /* The room links itself (member/link) and shows a Retry if that fails too. */ })
+      if (a && linking && linked) {
+        await linking
         const scoped = { participantId: c.participantId, token: c.token, accountId: a.userId, sessionId: a.sessionId }
         admission.snapshot = await service.read(c.roomId, scoped)
         // A new room takes the member's GoodWatch country over the device's (the country the create
@@ -487,7 +507,7 @@ export function createProposalHandler(
             const scoped = await scopedCredential(roomId)
             try {
               await service.read(roomId, scoped)
-              return sendAdmission(await service.linkAccount(roomId, scoped, a), a)
+              return sendAdmission(await service.linkAccount(roomId, scoped, a), a, undefined, true)
             } catch (e) {
               if (!(e instanceof RoomError) || !["unauthorized", "forbidden", "not_found"].includes(e.code)) throw e
             }
@@ -499,7 +519,7 @@ export function createProposalHandler(
 						? await service.resumeOrJoin(roomId, credential(roomId), join)
 						: await service.join(roomId, join)
 				}
-				return sendAdmission(admission, a, setup)
+				return sendAdmission(admission, a, setup, true)
 			}
 			if (match) {
 				const [, id, operation] = match
@@ -507,7 +527,7 @@ export function createProposalHandler(
           originCheck(!nativeRequest())
           const value = parse(z.object({ returnAfterLeave: z.boolean().optional() }).strict(), await body(request))
           const a = (await account(true))!
-          return sendAdmission(await service.resumeAccount(id, a, value.returnAfterLeave === true), a)
+          return sendAdmission(await service.resumeAccount(id, a, value.returnAfterLeave === true), a, undefined, true)
         }
         if (request.method === 'POST' && operation === 'archive') {
           originCheck(!nativeRequest())

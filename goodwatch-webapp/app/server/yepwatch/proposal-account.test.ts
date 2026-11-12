@@ -5,7 +5,7 @@ import { releaseMembers, releaseMemberConfig } from "./proposal-release-members.
 import { createMemberResource } from "./member-resource.server.ts"
 import { ProposalMemoryRepository, proposalFixtureCatalog } from "./proposal-test-support.ts"
 import { ProposalService } from "./proposal-service.server.ts"
-import { createProposalHandler, MEMBER_COOKIE, MEMBER_INTENT_COOKIE } from "./proposal-http.server.ts"
+import { createProposalHandler, MEMBER_COOKIE, MEMBER_INTENT_COOKIE, MEMBER_LINK_WAIT_MS } from "./proposal-http.server.ts"
 
 const origin = "https://yepwatch.example"
 const env = {
@@ -24,7 +24,7 @@ function setup(options: {
 	lifetime?: number | (() => number)
 	refreshReply?: () => Response | Promise<Response>
 	/** A reply for GoodWatch's identity check instead of the real one (an outage). */
-	identityReply?: () => Response | undefined
+	identityReply?: () => Response | Promise<Response> | undefined
 } = {}) {
 	const config = releaseMemberConfig(env, origin)!
 	const repo = new ProposalMemoryRepository()
@@ -60,7 +60,7 @@ function setup(options: {
 			if (options.offline) refreshTokens.add(`refresh-${issued}`)
 			return Response.json({ access_token: accessToken, expires_in: lifetime, token_type: "Bearer", ...(options.offline ? { refresh_token: `refresh-${issued}` } : {}) })
 		}
-		return options.identityReply?.() ?? resource(request)
+		return (await options.identityReply?.()) ?? resource(request)
 	}
 	const members = releaseMembers(repo, config, transport, secret)
 	const handler = createProposalHandler(service, { allowedOrigins: [origin], serviceSecret: "test-service-secret-at-least-thirty-two", members })
@@ -443,4 +443,32 @@ test("a room created with setup while signed in takes the member's GoodWatch cou
 	assert.equal(same.snapshot.own.nextSequence, 1, "nothing more is sent when the countries agree")
 	const guest = await (await create(null, "JP")).json()
 	assert.equal(guest.snapshot.shared.screens[0].country, "JP")
+})
+
+test("a join answers within the link wait while GoodWatch's identity check hangs, and the link lands afterwards", async () => {
+	// Production 2026-11-12: GoodWatch's identity check for the room link hung its full 12 s, the member's join
+	// answered never (the app gave up at 6 s, resent) and the join page said "Reconnecting…" with no outage.
+	let hold: Promise<void> | null = null
+	let release = () => {}
+	const { handler, repo } = setup({
+		identityReply: () => hold?.then(() => undefined) as Promise<Response> | undefined,
+	})
+	const host = await handler(new Request(api("/rooms"), { method: "POST", headers: { origin, "content-type": "application/json" }, body: JSON.stringify({ contractVersion: 3, commandId: randomBytes(16).toString("hex"), admissionSecret: randomBytes(32).toString("base64url"), nickname: "Host" }) }))
+	const room = await host.json(), id = room.credential.roomId
+	const session = cookies((await signIn(handler, `${origin}/`)).callback)[MEMBER_COOKIE].value
+	hold = new Promise<void>((resolve) => { release = resolve })
+	const started = Date.now()
+	const joining = await handler(new Request(api(`/rooms/${id}/join`), { method: "POST", headers: { origin, "content-type": "application/json", cookie: `${MEMBER_COOKIE}=${session}` }, body: JSON.stringify({ contractVersion: 3, commandId: randomBytes(16).toString("hex"), admissionSecret: randomBytes(32).toString("base64url"), nickname: "Alper", inviteCode: room.invite.code }) }))
+	const took = Date.now() - started
+	assert.equal(joining.status, 200)
+	assert.ok(took < MEMBER_LINK_WAIT_MS + 1000, `the join answered in ${took} ms`)
+	const joined = await joining.json()
+	assert.equal(joined.snapshot.shared.participants.length, 2, "the place is made")
+	assert.notEqual(joined.snapshot.own.member.state, "linked", "the answer says the link is still to come: the room links itself")
+	release()
+	for (let i = 0; i < 50 && (await repo.read(id))!.room.participants.find((p) => p.id === joined.credential.participantId)?.member.state !== "linked"; i++)
+		await new Promise((resolve) => setTimeout(resolve, 20))
+	const stored = (await repo.read(id))!.room.participants.find((p) => p.id === joined.credential.participantId)!
+	assert.equal(stored.member.state, "linked", "the link goes on and lands")
+	assert.deepEqual(stored.serviceIds, [8, 9], "with the account's saved services")
 })
