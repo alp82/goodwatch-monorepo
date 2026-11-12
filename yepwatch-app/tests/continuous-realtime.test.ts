@@ -1,6 +1,6 @@
 import test, { mock } from 'node:test';
 import assert from 'node:assert/strict';
-import { ContinuousRealtime, FIRST_SNAPSHOT_MS, OPEN_TIMEOUT_MS, POLL_MS, type RealtimeOptions } from '../src/core/continuous/realtime';
+import { ContinuousRealtime, FIRST_SNAPSHOT_MS, OPEN_TIMEOUT_MS, POLL_MS, SPARE_TICKET_MARGIN_MS, type RealtimeOptions } from '../src/core/continuous/realtime';
 import type { SocketLike } from '../src/core/realtime';
 import { continuousFixture, activityFixture } from './continuous-fixture';
 import { RoomFailure } from '../src/core/continuous/api-client';
@@ -687,7 +687,7 @@ test('resume keeps a running attempt and a server-named wait', async () => {
   assert.equal(h.sockets.length, 1);
   h.client.stop();
 });
-test('a handshake that never opens is dropped after 1.5 s and redialed at once with a fresh ticket', async () => {
+test('a handshake that never opens is dropped after 1.5 s and redialed at once with its unused ticket', async () => {
   const h = harness();
   h.client.start();
   await tick();
@@ -696,18 +696,88 @@ test('a handshake that never opens is dropped after 1.5 s and redialed at once w
   assert.deepEqual([...h.jobs.values()].map((j) => j.ms), [OPEN_TIMEOUT_MS]);
   h.run(OPEN_TIMEOUT_MS);
   assert.equal(hung.closed, true, 'the hung socket is abandoned');
-  assert.equal(hung.onopen, null, 'and can no longer act');
   assert.equal(h.statuses.at(-1), 'reconnecting');
   h.run(250);
   await tick();
-  assert.equal(h.tickets(), 2, 'a fresh one-use ticket');
+  // The ticket only goes out after the open: the hung socket never sent it, so the redial takes it.
+  assert.equal(h.tickets(), 1, 'no second ticket');
   const next = h.sockets[1];
   next.open();
-  assert.equal(JSON.parse(next.sent[0]).ticket, 'ticket-2');
+  assert.equal(JSON.parse(next.sent[0]).ticket, 'ticket-1');
+  assert.deepEqual(hung.sent, [], 'the abandoned socket said nothing');
   // Open: the gateway now has FIRST_SNAPSHOT_MS to authenticate and send the room.
   assert.deepEqual([...h.jobs.values()].map((j) => j.ms), [FIRST_SNAPSHOT_MS]);
   next.frame({ type: 'room.snapshot', snapshot: continuousFixture().shared });
   assert.equal(h.statuses.at(-1), 'live');
+  // Once used, a ticket is never offered again: the next drop asks for a fresh one.
+  next.onclose?.(new Event('close') as CloseEvent);
+  h.run(250);
+  await tick();
+  assert.equal(h.tickets(), 2);
+  h.client.stop();
+});
+test('a socket that cannot be cancelled while connecting (React Native on Android) is closed the moment it opens late', async () => {
+  class Uncancellable extends Socket {
+    isOpen = false;
+    override close() {
+      if (this.isOpen) this.closed = true;
+    }
+  }
+  const sockets: Uncancellable[] = [];
+  const h = harness({
+    socket: () => {
+      const s = new Uncancellable();
+      sockets.push(s);
+      return s;
+    },
+  });
+  h.client.start();
+  await tick();
+  h.run(OPEN_TIMEOUT_MS);
+  assert.equal(sockets[0].closed, false, 'the close while connecting did nothing');
+  sockets[0].isOpen = true;
+  sockets[0].open();
+  assert.equal(sockets[0].closed, true, 'closed as soon as it opened');
+  assert.deepEqual(sockets[0].sent, [], 'and never authenticated');
+  h.client.stop();
+});
+test('a refused handshake keeps its ticket for the next dial; a spare close to expiry or after stop is not used', async () => {
+  const life = 10000;
+  let tickets = 0;
+  const sockets: Socket[] = [];
+  const h = harness({
+    ticket: async () => ({ ticket: `t${++tickets}`, expiresAt: Date.now() + life, websocketPath: '/api/yepwatch/v1/proposal/realtime' }),
+    socket: () => {
+      const s = new Socket();
+      sockets.push(s);
+      return s;
+    },
+  });
+  h.client.start();
+  await tick();
+  // A browser or network that refuses WebSockets: error + close before any open.
+  sockets[0].onerror?.(new Event('error'));
+  h.run(250);
+  await tick();
+  sockets[1].onerror?.(new Event('error'));
+  h.run(500);
+  await tick();
+  assert.equal(tickets, 1, 'one ticket for three refused dials');
+  // Under SPARE_TICKET_MARGIN_MS of life left: a fresh one.
+  mock.timers.tick(10000 - SPARE_TICKET_MARGIN_MS + 1);
+  sockets[2].onerror?.(new Event('error'));
+  h.run(1000);
+  await tick();
+  assert.equal(tickets, 2, 'the spare had too little life left');
+  sockets[3].onerror?.(new Event('error'));
+  h.run(2000);
+  await tick();
+  assert.equal(tickets, 2, 'the fresh one is kept in turn');
+  sockets[4].onerror?.(new Event('error'));
+  h.client.stop();
+  h.client.start();
+  await tick();
+  assert.equal(tickets, 3, 'stop drops the spare');
   h.client.stop();
 });
 test('handshakes that keep timing out wait longer each time (1.5-3-6-10 s), and an open starts over', async () => {

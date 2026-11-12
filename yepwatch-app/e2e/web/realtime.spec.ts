@@ -4,7 +4,7 @@
 //   - a plain restart costs under 1 s;
 //   - a handshake that hangs (no answer, no error: a connection lost on the way, as on 2026-11-12 in production)
 //     is dropped after 1.5 s and redialed, so it costs about 2.3 s instead of the app's old 10 s give-up.
-import { control, test, type Person } from '../lib/harness';
+import { CONTROL, control, test, type Person } from '../lib/harness';
 import { readyHost } from './flows';
 
 /** Epoch ms of every room snapshot frame this person's page receives. */
@@ -44,7 +44,10 @@ test.describe('live channel after a gateway restart', () => {
       await control('/restart/gateway?downMs=0');
       const back = Date.now();
       const live = await firstAfter(received, at, 20000);
+      // The stall must have been hit (it looks at the first chunk of each connection), or this measured nothing.
+      const left = ((await (await fetch(`${CONTROL}/status`)).json()) as { faults: { wsStall: number } }).faults.wsStall;
       await control('/faults', { wsStall: 0 });
+      if (left !== 0) host.journeyFailure(`the hung-handshake fault was never hit (${left} left)`);
       room.noteOutage(at, live ?? Date.now());
       if (!live) host.journeyFailure('no room snapshot within 20 s of the gateway restart');
       const ms = live! - back;
