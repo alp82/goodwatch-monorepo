@@ -1,6 +1,6 @@
 /**
  * A card's details as a full page in the shared container: a short hero right under the header (the backdrop subdued
- * behind poster, facts, title, genres and scores), two big actions (Trailer, which plays inside the hero's own box,
+ * behind poster, facts, title, genres and scores), two big actions (Trailer, which opens YouTube,
  * and Full details on GoodWatch), then the Summary (tagline, synopsis, essence chips) beside GoodWatch's effect lines
  * in its print colors, "Not for …" and the credits. Every part whose data is missing stays out.
  */
@@ -12,8 +12,8 @@ import type { Candidate } from '@goodwatch/yepwatch-contracts/proposal';
 import { titlePresentation } from '../glow/adapter';
 import { credits, effectLines, gwScore, highlightChips, sourceScores, text } from '../glow/score-format';
 import { ScoreRing, SourceChips } from '../glow/scores';
-import { GText, Icon, Press, glow } from '../glow/theme';
-import { Trailer } from '../glow/Trailer';
+import { GText, Icon, glow } from '../glow/theme';
+import { TrailerLink } from '../glow/TrailerLink';
 import { goodwatchTitleUrl } from '../glow/watch-links';
 import { useLayout, type Layout } from '../shell/layout';
 import { GoodWatchMark } from '../shell/marks';
@@ -60,15 +60,14 @@ function Scores({ c, z, ring }: { c: Candidate; z: Z; ring: number }) {
 const actionStyle = (z: Z) => ({ flexGrow: 1, flexShrink: 1, flexBasis: 0, minHeight: z(64), borderRadius: 14, paddingHorizontal: z(18), flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: z(10), backgroundColor: '#ffffff12', borderWidth: 1, borderColor: '#ffffff33' }) as const;
 
 /** Trailer (when there is one) and Full details on GoodWatch: two big, equal actions. */
-function Actions({ c, z, trailer, onTrailer, stack }: { c: Candidate; z: Z; trailer: boolean; onTrailer: ((open: boolean) => void) | null; stack: boolean }) {
+function Actions({ c, z, stack }: { c: Candidate; z: Z; stack: boolean }) {
   return (
     <View testID="details-actions" style={{ flexDirection: stack ? 'column' : 'row', gap: z(12), width: '100%' }}>
-      {onTrailer ? (
-        <Press label={trailer ? 'Close trailer' : 'Trailer'} onPress={() => onTrailer(!trailer)} style={actionStyle(z)}>
-          <Icon name={trailer ? 'close' : 'play'} size={z(22)} color={glow.amber} />
-          <GText bold size={z(19)} lines={1}>{trailer ? 'Close trailer' : 'Trailer'}</GText>
-        </Press>
-      ) : null}
+      <TrailerLink url={c.trailerUrl ?? null} style={actionStyle(z)}>
+        <Icon name="play" size={z(22)} color={glow.amber} />
+        <GText bold size={z(19)} lines={1}>Trailer</GText>
+        <Icon name="external" size={z(17)} color={glow.amber} />
+      </TrailerLink>
       <Link href={goodwatchTitleUrl(c.identity) as `https://${string}`} target="_blank" rel="noopener noreferrer" asChild>
         <Pressable {...externalAttrs} accessibilityRole="link" accessibilityLabel="Full details on GoodWatch" style={actionStyle(z)}>
           <GoodWatchMark size={z(26)} />
@@ -76,22 +75,6 @@ function Actions({ c, z, trailer, onTrailer, stack }: { c: Candidate; z: Z; trai
           <Icon name="external" size={z(17)} color={glow.amber} />
         </Pressable>
       </Link>
-    </View>
-  );
-}
-
-/** Room under the video for the player's status line (autoplay blocked, embedding refused). */
-const TRAILER_STATUS = 16 + 44;
-/** The trailer in the hero's own box (no layout jump), letterboxed to 16:9. */
-function TrailerBox({ url, width, height, onClose }: { url: string; width: number; height: number; onClose: () => void }) {
-  const w = Math.max(0, Math.min(width, (height - TRAILER_STATUS) * (16 / 9)));
-  return (
-    <View testID="details-trailer" style={{ width, height, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-      <View style={{ width: w }}><Trailer url={url} /></View>
-      <Press label="Close trailer" onPress={onClose} style={{ position: 'absolute', right: 6, top: 6 }}
-        visual={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: '#000000b0' }}>
-        <Icon name="close" size={18} color={glow.ink} />
-      </Press>
     </View>
   );
 }
@@ -168,24 +151,15 @@ function People({ c, z }: { c: Candidate; z: Z }) {
   );
 }
 
-/**
- * `trailer` / `onTrailer`: whether the trailer plays in the hero, owned by the screen (it mutes the room's sounds and
- * tells the room you're watching it).
- */
-export function TitleDetails({ c, trailer, onTrailer }: { c: Candidate; trailer: boolean; onTrailer: (open: boolean) => void }) {
+/** Title details keep their place while a trailer opens outside YepWatch. */
+export function TitleDetails({ c }: { c: Candidate }) {
   const { z, phone, wide, width, max } = useLayout();
-  const [heroH, setHeroH] = useState(0);
   const t = titlePresentation(c);
-  const trailerUrl = t.trailerUrl;
-  const playing = trailer && Boolean(trailerUrl);
-  const toggle = trailerUrl ? onTrailer : null;
   const bleed = (width - max) / 2;
   // The frame's own top padding: the hero starts right under the header.
   const padTop = phone ? 22 : z(40);
   const posterW = phone ? 104 : z(wide ? 220 : 180);
   const titleSize = phone ? (t.title.length > 22 ? 28 : 34) : z(t.title.length > 22 ? 52 : 68);
-  // At least 16:9 on phones, where the hero is short.
-  const trailerH = phone ? Math.max(heroH, Math.round(width * 0.5625) + TRAILER_STATUS) : Math.max(heroH, z(420));
   const factLine = facts(c).join(' · ');
   const genres = t.genres.map((g) => g.replace('Sci-Fi & Fantasy', 'Sci-fi')).join(' · ');
   const tagline = text(c.tagline);
@@ -201,28 +175,26 @@ export function TitleDetails({ c, trailer, onTrailer }: { c: Candidate; trailer:
       {!phone ? <View style={{ marginTop: z(4) }}><Scores c={c} z={z} ring={z(52)} /></View> : null}
     </View>
   );
-  const actions = (stack: boolean) => <Actions c={c} z={z} trailer={playing} onTrailer={toggle} stack={stack} />;
+  const actions = (stack: boolean) => <Actions c={c} z={z} stack={stack} />;
   const posterUri = t.posterUrl && phone ? t.posterUrl.replace('/w500/', '/w342/') : t.posterUrl;
   const backdropUri = t.backdropUrl && phone ? t.backdropUrl.replace('/w1280/', '/w780/') : t.backdropUrl;
   return (
     <>
       <View testID="details-hero" style={{ marginTop: -padTop, marginLeft: -bleed, width }}>
-        {playing && trailerUrl ? <TrailerBox url={trailerUrl} width={width} height={trailerH} onClose={() => onTrailer(false)} /> : (
-          <View onLayout={(e) => setHeroH(Math.round(e.nativeEvent.layout.height))} style={{ overflow: 'hidden' }}>
-            {backdropUri ? <Image source={{ uri: backdropUri }} accessible={false} resizeMode="cover" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, opacity: 0.38 }} /> : null}
-            <LinearGradient start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} colors={['#070707f2', '#070707b3', '#07070740']} locations={[0, 0.5, 1]} style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }} />
-            <LinearGradient colors={['#07070700', '#070707d9', glow.bg]} locations={[0.3, 0.85, 1]} style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }} />
-            <View style={{ marginLeft: bleed, width: max, paddingTop: phone ? 20 : z(36), paddingBottom: phone ? 18 : z(36), flexDirection: 'row', alignItems: phone ? 'flex-end' : 'center', gap: phone ? 14 : z(36) }}>
-              {posterUri ? (
-                <View style={{ width: posterW, height: posterW * 1.5, borderRadius: phone ? 10 : 14, overflow: 'hidden', borderWidth: 1, borderColor: '#ffffff24', backgroundColor: '#1a1610' }}>
-                  <Image source={{ uri: posterUri }} accessibilityLabel={`${t.title} poster`} style={{ width: '100%', height: '100%' }} />
-                </View>
-              ) : null}
-              {info}
-              {wide ? <View style={{ width: z(380) }}>{actions(true)}</View> : null}
-            </View>
+        <View style={{ overflow: 'hidden' }}>
+          {backdropUri ? <Image source={{ uri: backdropUri }} accessible={false} resizeMode="cover" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, opacity: 0.38 }} /> : null}
+          <LinearGradient start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} colors={['#070707f2', '#070707b3', '#07070740']} locations={[0, 0.5, 1]} style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }} />
+          <LinearGradient colors={['#07070700', '#070707d9', glow.bg]} locations={[0.3, 0.85, 1]} style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }} />
+          <View style={{ marginLeft: bleed, width: max, paddingTop: phone ? 20 : z(36), paddingBottom: phone ? 18 : z(36), flexDirection: 'row', alignItems: phone ? 'flex-end' : 'center', gap: phone ? 14 : z(36) }}>
+            {posterUri ? (
+              <View style={{ width: posterW, height: posterW * 1.5, borderRadius: phone ? 10 : 14, overflow: 'hidden', borderWidth: 1, borderColor: '#ffffff24', backgroundColor: '#1a1610' }}>
+                <Image source={{ uri: posterUri }} accessibilityLabel={`${t.title} poster`} style={{ width: '100%', height: '100%' }} />
+              </View>
+            ) : null}
+            {info}
+            {wide ? <View style={{ width: z(380) }}>{actions(true)}</View> : null}
           </View>
-        )}
+        </View>
       </View>
       <View style={{ gap: phone ? 26 : z(44), marginTop: phone ? 16 : z(32) }}>
         {phone ? <Scores c={c} z={z} ring={46} /> : null}
