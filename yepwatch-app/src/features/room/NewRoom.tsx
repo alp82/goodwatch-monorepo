@@ -65,7 +65,9 @@ function NewRoomDraft({ account }: { account: ReturnType<typeof useAccount> }) {
   const error = mutation.isError && !cancelled ? offline ? (offlineLate ? OFFLINE_WORDS : undefined) : transientFailure(failure) ? 'Couldn’t reach YepWatch. Your request is saved. Try again.' : failure instanceof RoomFailure && failure.code !== 'catalog_unavailable'
     ? failure.message : 'Couldn’t save this mood. Try again; your text is kept.' : undefined;
   // Saved: the button keeps saying Saving… until the room replaces this screen (no frame of Create room again).
-  const saving = mutation.isPending || mutation.isSuccess;
+  // Paused (the app left the front mid-save, e.g. iOS inactive under Control Center): it goes again by itself
+  // when back, so no frame of Try again meanwhile.
+  const saving = mutation.isPending || mutation.isSuccess || (cancelled && resume.phase === 'paused');
   // Owner rule Q24a: nothing for an outage under QUIET_OUTAGE_MS, then one small line floating over the page
   // (no layout shift, no countdown); the room still opens by itself when the answer comes.
   const reconnecting = useLateSince(saving ? troubleSince : null, QUIET_OUTAGE_MS);
