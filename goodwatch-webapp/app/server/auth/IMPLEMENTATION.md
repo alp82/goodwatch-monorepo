@@ -106,7 +106,7 @@ limits and offsets remain supported; an explicit limit equal to the configured
 factory default also returns the complete population. Populations over the safety
 bound refuse mutation rather than silently truncate. The #565 runtime enables
 per-actor CAS admission, with 20 browser sessions per member (oldest revoked),
-128 app grants per member (one per app sign-in session; oldest revoked with its tokens)
+128 app grants per member (one per app sign-in session; see "Grant eviction")
 and separate member/client issuance allowances. Users and accounts have no global
 cap. Maintenance streams independently bounded pages and returns slots per row.
 The runtime limits DCR by trusted IP and collects unused clients and only
@@ -128,6 +128,37 @@ one) without the receipt is therefore no proof: the adapter rereads up to ten
 times with short backoff (about 1.1 s in total), then fails indeterminate. This
 was the cause of the intermittent indeterminate outcome in the 24-way refresh
 race; it never replays the write and never accepts a lagging read as proof.
+
+## Grant eviction
+
+Every app sign-in makes its own grant (`consentReferenceId` is the session id), so
+a member who signs in through apps often reaches the 128-grant cap. At the cap,
+admission revokes one grant with its tokens, chosen in this order:
+
+1. A leftover slot whose grant row is already deleted.
+2. The oldest **dead** grant: its session (`referenceId`) is missing or expired,
+   and none of its refresh tokens is live. A live refresh token is unexpired,
+   carries the grant's version (or is under 15 minutes old and not versioned yet),
+   and is not revoked, unless it was rotated in the last minute.
+3. The least recently used grant (`max(createdAt, lastUsedAt)`) that is not its
+   app's most recently used grant. A member's one Claude connector therefore
+   survives any number of YepWatch sign-ins.
+4. The least recently used grant (only when all 128 belong to different apps).
+
+Slots whose row is not written yet are never chosen. Choosing reads the member's
+grants by primary key and refreshes the session and refresh token tables first.
+When two sign-ins pick the same victim, the loser rereads the ledger and tries
+again (up to four misses with jittered backoff) instead of reporting
+"capacity exhausted"; session eviction shares this path. A ledger CAS that
+reports 0 rows rereads lagging copies, bounded, as row mutations do.
+
+Maintenance reconciliation also removes dead grants whose last write and use are
+over an hour old, returning their slots, so members rarely reach the cap.
+
+Repeated sign-ins through the same app keep separate grants on purpose. One grant
+per member and app would need a session-independent `consentReferenceId`, and
+re-consent replaces the grant version: every other device's refresh tokens for
+that app would stop working.
 
 ## Running and CI
 

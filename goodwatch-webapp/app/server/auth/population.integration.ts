@@ -9,11 +9,12 @@ const sql = maintenanceDatabase()
 
 async function clean() {
 	await sql(
-		"REFRESH TABLE doc.auth_capacity, doc.auth_session, doc.auth_oauth_consent, doc.auth_jwks",
+		"REFRESH TABLE doc.auth_capacity, doc.auth_session, doc.auth_oauth_consent, doc.auth_oauth_refresh_token, doc.auth_jwks",
 	)
 	await sql("DELETE FROM doc.auth_capacity")
 	await sql("DELETE FROM doc.auth_session")
 	await sql("DELETE FROM doc.auth_oauth_consent")
+	await sql("DELETE FROM doc.auth_oauth_refresh_token")
 	await sql("DELETE FROM doc.auth_jwks")
 }
 
@@ -384,6 +385,250 @@ test("a member's newest app grants evict the oldest instead of failing sign-in",
 			where: [{ field: "id", value: other.id }],
 		}),
 	)
+})
+
+// The app's grant schema: a version that fences tokens, and when an app last used the grant.
+const grantOptions = {
+	...authTestOptions,
+	plugins: [
+		...(authTestOptions.plugins ?? []),
+		{
+			id: "grant-fixture",
+			schema: {
+				oauthConsent: {
+					fields: {
+						grantVersion: { type: "string" as const, required: false },
+						lastUsedAt: { type: "date" as const, required: false },
+					},
+				},
+				oauthRefreshToken: {
+					fields: {
+						grantVersion: { type: "string" as const, required: false },
+					},
+				},
+			},
+		},
+	],
+}
+
+function grantFixture(adapter: ReturnType<ReturnType<typeof crateAuthAdapter>>) {
+	const start = Date.now()
+	let order = 0
+	return {
+		/** One app sign-in: a grant per session, live through a refresh token unless `dead`. */
+		async signIn(userId: string, clientId: string, dead = false) {
+			const grantVersion = randomUUID()
+			const referenceId = randomUUID()
+			const grant = await adapter.create<{ id: string }>({
+				model: "oauthConsent",
+				data: {
+					clientId,
+					userId,
+					referenceId,
+					scopes: ["yepwatch:read", "offline_access"],
+					createdAt: new Date(start + order++),
+					grantVersion,
+				},
+			})
+			if (!dead)
+				await adapter.create({
+					model: "oauthRefreshToken",
+					data: {
+						token: randomUUID(),
+						clientId,
+						userId,
+						referenceId,
+						grantVersion,
+						scopes: ["yepwatch:read", "offline_access"],
+						createdAt: new Date(),
+						expiresAt: new Date(Date.now() + 86400000),
+					},
+				})
+			return grant.id
+		},
+		async held(userId: string) {
+			return new Set(
+				(
+					await adapter.findMany<{ id: string }>({
+						model: "oauthConsent",
+						where: [{ field: "userId", value: userId }],
+					})
+				).map((row) => row.id),
+			)
+		},
+	}
+}
+
+test("a member's dead app grants make room before live ones", async () => {
+	await clean()
+	const grants = grantFixture(
+		crateAuthAdapter({ sql, populationBounds: true })(grantOptions),
+	)
+	const app = randomUUID()
+	const live: string[] = []
+	const dead: string[] = []
+	for (let i = 0; i < 118; i++) live.push(await grants.signIn("busy", app))
+	for (let i = 0; i < 10; i++) dead.push(await grants.signIn("busy", app, true))
+	const newest: string[] = []
+	for (let i = 0; i < 3; i++) newest.push(await grants.signIn("busy", app))
+	const held = await grants.held("busy")
+	assert.equal(held.size, 128)
+	for (const id of [...live, ...dead.slice(3), ...newest]) assert.ok(held.has(id))
+	for (const id of dead.slice(0, 3)) assert.ok(!held.has(id))
+})
+
+test("a member's lone connector survives two hundred sign-ins through another app", async () => {
+	await clean()
+	const grants = grantFixture(
+		crateAuthAdapter({ sql, populationBounds: true })(grantOptions),
+	)
+	const connector = await grants.signIn("busy", randomUUID())
+	const app = randomUUID()
+	const signIns: string[] = []
+	for (let i = 0; i < 200; i++) signIns.push(await grants.signIn("busy", app))
+	assert.deepEqual(
+		await grants.held("busy"),
+		new Set([connector, ...signIns.slice(-127)]),
+	)
+})
+
+test("concurrent sign-ins at a member's cap all make room", async () => {
+	await clean()
+	const adapter = crateAuthAdapter({ sql, populationBounds: true })(grantOptions)
+	const grants = grantFixture(adapter)
+	const app = randomUUID()
+	for (let i = 0; i < 128; i++) await grants.signIn("busy", app, i % 2 === 0)
+	const signIns = await Promise.allSettled(
+		Array.from({ length: 8 }, () => grants.signIn("busy", app)),
+	)
+	assert.deepEqual(
+		signIns.filter((outcome) => outcome.status === "rejected"),
+		[],
+	)
+	assert.equal((await grants.held("busy")).size, 128)
+	const sessions = await Promise.allSettled(
+		Array.from({ length: 28 }, () =>
+			adapter.create({
+				model: "session",
+				data: {
+					userId: "busy",
+					token: randomUUID(),
+					expiresAt: new Date(Date.now() + 86400000),
+				},
+			}),
+		),
+	)
+	assert.deepEqual(
+		sessions.filter((outcome) => outcome.status === "rejected"),
+		[],
+	)
+	assert.equal(
+		(
+			await adapter.findMany({
+				model: "session",
+				where: [{ field: "userId", value: "busy" }],
+			})
+		).length,
+		20,
+	)
+})
+
+test("maintenance reclaims dead app grants and keeps live ones", async () => {
+	await clean()
+	const { reconcileAuthRows } = await import("./maintenance.server.ts")
+	const adapter = crateAuthAdapter({ sql, populationBounds: true })(grantOptions)
+	const grants = grantFixture(adapter)
+	const user = await adapter.create<{ id: string }>({
+		model: "user",
+		data: {
+			email: `${randomUUID()}@example.test`,
+			name: "Member",
+			emailVerified: true,
+		},
+	})
+	const app = randomUUID()
+	await adapter.create({ model: "oauthClient", data: { clientId: app, name: "App" } })
+	const viaToken = await grants.signIn(user.id, app)
+	const dead = await grants.signIn(user.id, app, true)
+	const session = await adapter.create<{ id: string }>({
+		model: "session",
+		data: {
+			userId: user.id,
+			token: randomUUID(),
+			expiresAt: new Date(Date.now() + 86400000),
+		},
+	})
+	const viaSession = (
+		await adapter.create<{ id: string }>({
+			model: "oauthConsent",
+			data: {
+				clientId: app,
+				userId: user.id,
+				referenceId: session.id,
+				scopes: ["yepwatch:read"],
+				grantVersion: randomUUID(),
+			},
+		})
+	).id
+	const revokedReference = randomUUID()
+	const revoked = (
+		await adapter.create<{ id: string }>({
+			model: "oauthConsent",
+			data: {
+				clientId: app,
+				userId: user.id,
+				referenceId: revokedReference,
+				scopes: ["yepwatch:read", "offline_access"],
+				grantVersion: "current",
+			},
+		})
+	).id
+	for (const token of [
+		{ grantVersion: "current", revoked: new Date() },
+		{ grantVersion: "superseded" },
+	])
+		await adapter.create({
+			model: "oauthRefreshToken",
+			data: {
+				token: randomUUID(),
+				clientId: app,
+				userId: user.id,
+				referenceId: revokedReference,
+				scopes: ["yepwatch:read", "offline_access"],
+				createdAt: new Date(),
+				expiresAt: new Date(Date.now() + 86400000),
+				...token,
+			},
+		})
+	const reconcile = (now?: Date) =>
+		reconcileAuthRows({
+			sql,
+			encryptionSecret: "disposable-local-auth-integration-key-548",
+			model: "oauthConsent",
+			now,
+		})
+	// Fresh sign-ins may still be minting their tokens.
+	assert.equal((await reconcile()).removed, 0)
+	assert.equal((await reconcile(new Date(Date.now() + 2 * 3600000))).removed, 2)
+	const held = await grants.held(user.id)
+	assert.deepEqual(held, new Set([viaToken, viaSession]))
+	assert.ok(!held.has(dead) && !held.has(revoked))
+	// Reclaimed grants return their slots.
+	const { readCapacity, authCapacityBucket, authActorBounds } = await import(
+		"./population.server.ts"
+	)
+	const { authPayloadCodec } = await import("./payload-codec.server.ts")
+	const ledger = await readCapacity(
+		sql,
+		authPayloadCodec("disposable-local-auth-integration-key-548"),
+		authCapacityBucket(
+			"oauthConsent",
+			viaToken,
+			authActorBounds("oauthConsent"),
+			user.id,
+		),
+	)
+	assert.equal(Object.keys(ledger?.ledger.slots ?? {}).length, 2)
 })
 
 test("empty actor ledgers are physically purged after thirty days", async () => {

@@ -29,7 +29,7 @@ within a minute.
 | Job | Behavior |
 | --- | --- |
 | Email claims | Gives new reservations 15 minutes. Keeps a live owner's current address. Otherwise fences the user version, or inserts a missing-user barrier tied to the abandoned operation, before conditionally releasing the unchanged claim. |
-| Orphan reconciliation | Collects marked new-system unconfirmed signups after 48 hours from insertion/latest confirmation and releases their unchanged email claim; collects never-authorized clients after 24 hours, including partial DCR/CIMD registration leftovers; removes sessions/accounts of deleted users, obsolete browser credential versions, consents/tokens of missing or disabled clients, client-resource associations with missing parents, and tokens outside their current grant. Offline grants survive browser sign-out. Unbound refresh minting gets 15 minutes before collection. |
+| Orphan reconciliation | Collects marked new-system unconfirmed signups after 48 hours from insertion/latest confirmation and releases their unchanged email claim; collects never-authorized clients after 24 hours, including partial DCR/CIMD registration leftovers; removes sessions/accounts of deleted users, obsolete browser credential versions, consents/tokens of missing or disabled clients, client-resource associations with missing parents, and tokens outside their current grant. Offline grants survive browser sign-out while a refresh token is live; a grant with neither a live session nor a live refresh token is collected an hour after its last write or use. Unbound refresh minting gets 15 minutes before collection. |
 | Garbage collection | Expires sessions, verifications, OAuth tokens and client assertions; archives rotated refresh parents after their retry window; retires signing keys after verification grace; collects receipts after 24 hours; purges deleted rows after 30 days; repairs both the deleted flag and lookup hints from authenticated state. |
 | Capacity reconciliation | Keeps live and recent pending reservations. Before freeing a missing, deleted or archived row's slot, writes an admission-generation fence. A paused create cannot use that freed slot later. Missing rows get 15 minutes. Empty actor ledgers are physically purged after 30 days. |
 | Payload key rotation | Rewrites both encrypted columns under the active payload key with CAS, preserving logical data, indexes, claims, admission fences and receipt ownership. Competing changes are skipped and retried in later passes. |
@@ -99,7 +99,7 @@ its insert attempt, so removing its quota does not let a paused create undo unli
 | --- | --- | --- |
 | Browser sessions | Member | 20; a new session revokes the oldest reservation's session and removes its Valkey entry |
 | OAuth access/refresh tokens | Member | 1,024 per model |
-| OAuth consents / owned clients | Member | 128 per model |
+| OAuth consents / owned clients | Member | 128 per model (consents evict a dead grant first, then the least recently used one that is not its app's newest; see the adapter IMPLEMENTATION.md) |
 | Client resources / client assertions with an owner | Client | 128 per model |
 | Verification rows | Identifier | 128 |
 

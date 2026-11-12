@@ -17,6 +17,11 @@ import {
 	authPayloadCodec,
 } from "./payload-codec.server.ts"
 import {
+	type GrantRow,
+	grantActivity,
+	grantLiveness,
+} from "./grant-liveness.server.ts"
+import {
 	type AuthAdmission,
 	authActorBounds,
 	authCapacityBucket,
@@ -49,6 +54,7 @@ type Envelope = {
 	admissionFence?: number
 }
 type Receipt = { operation: string; baseSeq: number; at?: string }
+const deadGrantGrace = 3600000
 
 const quarantined = counter(
 	"goodwatch_auth_maintenance_quarantined_total",
@@ -1011,6 +1017,33 @@ export async function reconcileAuthRows(
 						new Date(session.envelope.row.expiresAt).getTime() <= now.getTime()
 				}
 			}
+			// A dead grant (no live session, no live refresh token) only holds a member's grant slot.
+			// The hour of grace covers a sign-in whose tokens are still being minted.
+			if (
+				model === "oauthConsent" &&
+				!orphan &&
+				typeof row.userId === "string" &&
+				typeof row.clientId === "string" &&
+				now.getTime() -
+					Math.max(
+						grantActivity(row as GrantRow),
+						new Date(current.receipts.at(-1)?.at ?? now).getTime(),
+					) >=
+					deadGrantGrace
+			)
+				orphan = !(
+					await grantLiveness(
+						sql,
+						codec,
+						{
+							userId: row.userId,
+							clientId: row.clientId,
+							referenceId:
+								typeof row.referenceId === "string" ? row.referenceId : null,
+						},
+						now,
+					)
+				)(row as GrantRow)
 			if (!orphan) continue
 			if (await remove(model, id, current)) {
 				report.removed++
