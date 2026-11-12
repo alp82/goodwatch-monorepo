@@ -1,5 +1,7 @@
 import { createServer } from "node:http"
 import { Readable } from "node:stream"
+/** Longer than Caddy's 2 min idle timeout for upstream connections (reverse_proxy transport default). */
+export const RELEASE_KEEP_ALIVE_MS = 130_000
 /** Dedicated container listener; no request-body/path/credentials logging and no trusting a forwarded Host. */
 export function releaseHttp(
 	handler: (request: Request) => Promise<Response>,
@@ -46,6 +48,10 @@ export function releaseHttp(
 		}
 	})
 	server.requestTimeout = 30000
+	// Caddy keeps idle upstream connections for 2 min and reuses them; Node closes its side after keepAliveTimeout
+	// (+1 s buffer). A POST Caddy writes into a socket Node is just closing fails as 502 (EOF) and isn't retried, so
+	// the API keeps idle connections longer than Caddy does: Caddy is always the side that closes them.
+	server.keepAliveTimeout = RELEASE_KEEP_ALIVE_MS
 	server.headersTimeout = 10000
 	return new Promise<typeof server>((resolve, reject) => {
 		server.once("error", reject)

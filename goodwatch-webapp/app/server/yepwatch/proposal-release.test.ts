@@ -19,7 +19,7 @@ import {
 	checkReleaseStore,
 	provisionReleaseStore,
 } from "./proposal-release-store.ts"
-import { releaseHttp } from "./proposal-release-http.ts"
+import { releaseHttp, RELEASE_KEEP_ALIVE_MS } from "./proposal-release-http.ts"
 import { CONTINUOUS_LIMITS } from "./continuous-types.ts"
 import type { Sql } from "./repository.server.ts"
 import type { ProposalCatalog } from "./proposal-types.ts"
@@ -246,6 +246,17 @@ test("Container listener uses configured bind/port and preserves Secure HttpOnly
 		const response = await fetch(`http://127.0.0.1:${port}/`)
 		assert.equal(response.status, 200)
 		assert.match(response.headers.get("set-cookie")!, /HttpOnly; Secure/)
+	} finally {
+		await new Promise<void>((resolve) => server.close(() => resolve()))
+	}
+})
+test("Container listener outlives Caddy's 2 min idle upstream connections, so Caddy never reuses a socket the API is closing", async () => {
+	const server = await releaseHttp(async () => new Response("{}"), "127.0.0.1", 0)
+	try {
+		// Caddy's reverse_proxy keeps idle upstream connections for 2 min; a POST written into one the API closes at
+		// that moment comes back as 502 (EOF). The API must hold idle connections longer, so Caddy closes them.
+		assert.equal(server.keepAliveTimeout, RELEASE_KEEP_ALIVE_MS)
+		assert.ok(server.keepAliveTimeout > 120_000)
 	} finally {
 		await new Promise<void>((resolve) => server.close(() => resolve()))
 	}
