@@ -102,6 +102,9 @@ export class PreparedDecks {
 	}
 	/** The first page for the room as it is now (see the class comment). */
 	async page(room: ProposalRoom): Promise<Page> {
+		// Saved progress moves on without changing the room (an episode watched elsewhere): never remembered or reused.
+		if (activeRoom(room).constraints.kinds.includes("show_continue"))
+			return this.catalog.page(structuredClone(activeRoom(room)))
 		const inputs = deckInputs(room)
 		const entry = this.entries.get(room.id)
 		if (entry && entry.inputs === inputs && this.now() - entry.builtAt < this.maxAgeMs) {

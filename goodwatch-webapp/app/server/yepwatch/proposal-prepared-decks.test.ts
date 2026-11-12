@@ -2,27 +2,28 @@ import { test } from "node:test"
 import assert from "node:assert/strict"
 import { randomBytes } from "node:crypto"
 import type { RoomCommand } from "../../../packages/yepwatch-contracts/proposal.ts"
-import { ProposalService } from "./proposal-service.server.ts"
+import { ProposalService, type ProposalOperationGuard } from "./proposal-service.server.ts"
 import { deckInputs } from "./proposal-prepared-decks.ts"
 import { ProposalMemoryRepository, proposalFixtureCatalog } from "./proposal-test-support.ts"
-import type { ProposalCatalog, ProposalRoom } from "./proposal-types.ts"
+import type { ExcludedKeysOptions, ProposalCatalog, ProposalRoom } from "./proposal-types.ts"
 
 const secret = "prepared-decks-test-secret-at-least-32-chars"
-function fixture(options: { delayMs?: number; excluded?: string[] } = {}) {
+function fixture(options: { delayMs?: number; excluded?: string[]; now?: () => number; guard?: ProposalOperationGuard } = {}) {
 	const repository = new ProposalMemoryRepository()
 	const pages: ProposalRoom[] = []
+	const exclusionReads: (ExcludedKeysOptions | undefined)[] = []
 	const catalog: ProposalCatalog = {
 		...proposalFixtureCatalog,
 		async page(room) {
 			pages.push(structuredClone(room))
 			return proposalFixtureCatalog.page(room)
 		},
-		...(options.excluded ? { excludedKeys: async () => options.excluded! } : {}),
+		...(options.excluded ? { excludedKeys: async (_room, read) => { exclusionReads.push(read); return options.excluded! } } : {}),
 	}
-	const service = new ProposalService(repository, catalog, secret, async () => {}, Date.now, undefined, undefined, {
+	const service = new ProposalService(repository, catalog, secret, async () => {}, options.now ?? Date.now, options.guard, undefined, {
 		decks: { delayMs: options.delayMs ?? 1 },
 	})
-	return { repository, service, pages }
+	return { repository, service, pages, exclusionReads }
 }
 async function room(f: ReturnType<typeof fixture>) {
 	const host = await f.service.create({
@@ -121,4 +122,53 @@ test("a member's seen titles are left out at Start, also from a deck prepared ea
 	const started = await r.start()
 	assert.equal(f.pages.length, 1)
 	assert.ok(!started.snapshot.shared.candidates.some((c) => c.id === seen.id))
+	assert.deepEqual(f.exclusionReads.at(-1), { fresh: true }, "Start reads seen lists past any cache the background build filled")
+})
+
+test("saved progress decks are never remembered: each page reads progress again", async () => {
+	const f = fixture({ delayMs: 60_000 })
+	const r = await room(f)
+	await r.send({ type: "set_services", serviceIds: [1] })
+	const continuing = structuredClone(await r.stored())
+	continuing.constraints.kinds = ["show_continue"]
+	await f.service.decks.page(continuing)
+	assert.ok(!f.service.decks.prepared(continuing), "not kept under its inputs")
+	await f.service.decks.page(continuing)
+	assert.equal(f.pages.length, 2, "a second page with the same inputs asks the catalog again")
+	f.service.decks.forget(r.id)
+})
+
+test("a command answer still checks the room is live after the commit", async () => {
+	let now = Date.now()
+	const f = fixture({ delayMs: 60_000, now: () => now })
+	const r = await room(f)
+	const expiresAt = (await r.stored()).expiresAt
+	const cas = f.repository.compareAndSwap.bind(f.repository)
+	f.repository.compareAndSwap = async (old, next, notify) => {
+		const ok = await cas(old, next, notify)
+		now = expiresAt + 1 // The room expires while the rename commits.
+		return ok
+	}
+	await assert.rejects(r.send({ type: "rename", nickname: "Late" } as RoomCommand), { code: "expired" })
+	f.service.decks.forget(r.id)
+})
+
+test("a command answer still checks the room's capacity reservation after the commit", async () => {
+	let revoked = false
+	const guard: ProposalOperationGuard = {
+		async active() { if (revoked) throw Object.assign(new Error("Room capacity unavailable"), { code: "capacity" }) },
+		async create() { return Date.now() + 3_600_000 },
+		async join() {},
+		async command() {},
+	}
+	const f = fixture({ delayMs: 60_000, guard })
+	const r = await room(f)
+	const cas = f.repository.compareAndSwap.bind(f.repository)
+	f.repository.compareAndSwap = async (old, next, notify) => {
+		const ok = await cas(old, next, notify)
+		revoked = true
+		return ok
+	}
+	await assert.rejects(r.send({ type: "rename", nickname: "Late" } as RoomCommand), { code: "capacity" })
+	f.service.decks.forget(r.id)
 })

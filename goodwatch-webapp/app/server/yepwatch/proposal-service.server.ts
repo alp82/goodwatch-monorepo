@@ -137,7 +137,10 @@ export class ProposalService {
 		}
 	}
 	private async get(id: string): Promise<ProposalStored> {
-		const stored = await this.repository.read(id)
+		return this.live(await this.repository.read(id))
+	}
+	/** A stored room any answer may be built from: a v3 room, not expired, its capacity reservation still active. */
+	private async live(stored: ProposalStored | null): Promise<ProposalStored> {
 		requireRoom(
 			stored && stored.room.format === 2 && stored.room.flowVersion === 3,
 			"not_found",
@@ -658,13 +661,14 @@ export class ProposalService {
 			this.applyCommand(id, credential, envelope)
 		)
 		// Fresh availability checks must not block joins or withdrawals that invalidate them.
-		// The room notify reads after the commit answers the command, unless an agreement check has to settle first:
-		// the command's own read already checked the room and its capacity reservation.
-		let committed = (await this.notify(id))?.room
-		if (!committed || committed.format !== 2 || committed.flowVersion !== 3 || (committed.phase === "choosing" && committed.agreement.state === "checking")) {
+		// The room notify reads after the commit answers the command, unless an agreement check has to settle first.
+		// Either way it is checked like any read: it may have expired or lost its capacity reservation meanwhile.
+		let stored = await this.notify(id)
+		if (!stored || (stored.room.phase === "choosing" && stored.room.agreement.state === "checking")) {
 			await this.settle(id)
-			committed = (await this.get(id)).room
+			stored = await this.repository.read(id)
 		}
+		const committed = (await this.live(stored)).room
 		return {
 			receipt,
 			snapshot: this.snapshot(committed, credential)
@@ -806,7 +810,8 @@ export class ProposalService {
 					page = await this.decks.page(room)
 				// Seen lists are read again at Start: a deck prepared earlier never shows what a member has since seen.
 				if (page && envelope.command.type === "start" && this.catalog.excludedKeys) {
-					const excluded = new Set(await this.catalog.excludedKeys(room))
+					// Fresh: a background build may have filled the seen cache before a title was marked Seen.
+					const excluded = new Set(await this.catalog.excludedKeys(room, { fresh: true }))
 					if (excluded.size) page = { ...page, candidates: page.candidates.filter((c) => !excluded.has(titleKey(c))) }
 				}
 			}
