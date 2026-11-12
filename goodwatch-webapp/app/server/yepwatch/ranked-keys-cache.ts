@@ -31,11 +31,11 @@ export function rankedKeysCache(maxEntries = 16) {
 export function titleKeySet(ids: Iterable<string>): Set<number> {
 	const keys = new Set<number>()
 	for (const id of ids) {
-		const at = id.indexOf("_")
-		const kind = id.slice(0, at)
-		const tmdbId = Number(id.slice(at + 1))
-		if ((kind === "movie" || kind === "show") && Number.isSafeInteger(tmdbId))
-			keys.add((kind === "movie" ? 1_000_000_000_000 : 2_000_000_000_000) + tmdbId)
+		// Canonical ids only (no "007", "1e3", " 7"), below 1e12 so movie and show keys never collide.
+		const match = /^(movie|show)_([1-9][0-9]{0,11})$/.exec(id)
+		if (!match) continue
+		const tmdbId = Number(match[2])
+		if (tmdbId < 1_000_000_000_000) keys.add((match[1] === "movie" ? 1_000_000_000_000 : 2_000_000_000_000) + tmdbId)
 	}
 	return keys
 }

@@ -47,3 +47,8 @@ test("idea lanes interleave over the base without copying it, skipping seen and 
 	assert.deepEqual(roomIntentKeys(room, base), [m(5), m(6), m(1), m(3), m(4)])
 	assert.deepEqual(roomIntentKeys({ seenKeys: [], ideas: [] } as never, base), base)
 })
+
+test("titleKeySet takes canonical ids below 1e12 only, so movie and show keys never collide", () => {
+	const keys = titleKeySet(["movie_7", "show_7", "movie_999999999999", "movie_1000000000007", "movie_007", "movie_1e3", "show_ 7", "person_7", "movie_"])
+	assert.deepEqual([...keys].sort((a, b) => a - b), [1_000_000_000_007, 1_999_999_999_999, 2_000_000_000_007])
+})
