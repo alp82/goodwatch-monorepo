@@ -32,17 +32,35 @@ export function moreOffset(size: number, slots: number, fontScale: number) {
   return liveFacesWidth(size, slots, fontScale) - moreSlot(fontScale) + 5;
 }
 
+/** The proposal dot after the label: 7 px wide, after the chip's 6 px gap. */
+export const PROPOSAL_DOT = 7;
+const CHIP_GAP = 6;
+const CHIP_EDGE = 12 + 1;
+
 /**
  * Width of the Matches chip for a label of `chars` characters: 12 px padding each side, 1 px border,
- * the 15 px icon, a 6 px gap and bold 14 px text (Gabarito, about 0.56 em per character).
+ * the 15 px icon, a 6 px gap, bold 14 px text (Gabarito, about 0.56 em per character) and the
+ * proposal dot with its gap. The dot's room is always kept: a proposal arriving or leaving never
+ * squeezes the label.
  */
 export function matchesChipWidth(z: (n: number) => number, fontScale: number, chars: number) {
-  return 24 + 2 + z(15) + 6 + Math.ceil(z(14) * Math.max(1, fontScale) * 0.56 * chars);
+  return 2 * CHIP_EDGE + z(15) + CHIP_GAP + Math.ceil(z(14) * Math.max(1, fontScale) * 0.56 * chars) + CHIP_GAP + PROPOSAL_DOT;
 }
 
 /** The longest full label the chip plans for ("10 matches") and its compact form (the count only, "10"). */
-const FULL_LABEL = 10;
-const COMPACT_LABEL = 2;
+export const FULL_LABEL = 10;
+export const COMPACT_LABEL = 2;
+
+/**
+ * The Matches chip's box. Compact, it has a fixed width with room for a two-digit count and the
+ * dot, and its content starts at the start edge: the icon stays put when the first match adds the
+ * count or a proposal adds the dot. Full, it sizes to its label.
+ */
+export function matchesChipFrame(z: (n: number) => number, fontScale: number, compact: boolean) {
+  return compact
+    ? { width: matchesChipWidth(z, fontScale, COMPACT_LABEL), justifyContent: 'flex-start' as const }
+    : { width: undefined, justifyContent: 'center' as const };
+}
 
 export interface VotingBarFit {
   /** Face slots the row reserves (1 to MAX_FACES); people beyond them are counted in "+N". */

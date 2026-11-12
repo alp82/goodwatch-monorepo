@@ -123,13 +123,13 @@ test('at 320 px the voting bar fits with 2 and 6 people, and people joining neve
   await host.page.getByTestId('voting-bar').filter({ visible: true }).screenshot({ path: room.info.outputPath('bar-320-2-people.png') });
   const before = { host: (await shifts(host)).length, mia: (await shifts(mia)).length };
 
-  // Four more arrive during voting: three face slots at 320 px, the rest in "+N".
+  // Four more arrive during voting: two face slots at 320 px (the chip keeps the proposal dot's room), the rest in "+N".
   for (const name of ['Sam', 'Lea', 'Kai', 'Noa']) await joinLate(await room.person(name), invite, name);
   for (const p of [host, mia]) {
-    const b = await eventually(() => bar(p), (v) => v.more?.label === 'and 3 more', `${p.name}: three faces and "and 3 more"`, p);
+    const b = await eventually(() => bar(p), (v) => v.more?.label === 'and 4 more', `${p.name}: two faces and "and 4 more"`, p);
     fits(b, `${p.name}, 6 people`);
-    expect(b.faces).toHaveLength(3);
-    expect(b.more!.text).toBe('+3');
+    expect(b.faces).toHaveLength(2);
+    expect(b.more!.text).toBe('+4');
   }
   await host.page.getByTestId('voting-bar').filter({ visible: true }).screenshot({ path: room.info.outputPath('bar-320-6-people.png') });
   await host.page.waitForTimeout(500);

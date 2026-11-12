@@ -16,7 +16,7 @@ import { groupActivity } from '../../core/continuous/activity';
 import { latestRetainedVote, ownCard } from '../../core/continuous/state';
 import { titlePresentation } from '../glow/adapter';
 import { LiveFaces } from '../glow/Peers';
-import { votingBarFit } from '../glow/faces-row';
+import { matchesChipFrame, votingBarFit } from '../glow/faces-row';
 import { Trailer } from '../glow/Trailer';
 import { useActiveTime } from '../glow/useActiveTime';
 import { GText, Icon, Press, glow } from '../glow/theme';
@@ -61,11 +61,13 @@ function VoteKey({ yes, disabled, onPress }: { yes: boolean; disabled: boolean; 
 }
 
 /** Matches so far; amber while there's a proposal. Opens Matches, where a proposal set aside with Keep swiping waits as a card. */
-/** `compact`: the icon and the count only (narrow phones at a large font scale); the name stays in full. */
+/** `compact`: the icon and the count only (narrow phones at a large font scale) in a fixed box, so the first match moves nothing; the name stays in full. */
 function MatchesChip({ compact }: { compact: boolean }) {
   const { id, view } = useRoom();
   const { z } = useLayout();
+  const { fontScale } = useWindowDimensions();
   if (!view) return null;
+  const frame = matchesChipFrame(z, fontScale, compact);
   const found = view.matches.length;
   const proposal = view.proposal;
   const label = found ? `${found} ${found === 1 ? 'match' : 'matches'}` : 'Matches';
@@ -74,7 +76,7 @@ function MatchesChip({ compact }: { compact: boolean }) {
   return (
     <Press label={label} disabled={!lit}
       onPress={() => { playFeedback('matches'); openPage(id, 'matches'); }}
-      style={{ height: z(36), flexShrink: 1, paddingHorizontal: 12, borderRadius: 10, flexDirection: 'row', gap: 6, backgroundColor: lit ? warm.amberSoft : warm.faint, borderWidth: 1, borderColor: proposal ? glow.amber : lit ? warm.amberLine : warm.line }}>
+      style={{ height: z(36), flexShrink: 1, width: frame.width, justifyContent: frame.justifyContent, paddingHorizontal: 12, borderRadius: 10, flexDirection: 'row', gap: 6, backgroundColor: lit ? warm.amberSoft : warm.faint, borderWidth: 1, borderColor: proposal ? glow.amber : lit ? warm.amberLine : warm.line }}>
       <Icon name="tickets" size={z(15)} color={lit ? glow.amber : glow.muted} />
       {shown ? <GText bold size={z(14)} lines={1} style={{ flexShrink: 1 }} color={lit ? glow.amber : glow.muted}>{shown}</GText> : null}
       {proposal ? <View accessible={false} style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: glow.amber }} /> : null}

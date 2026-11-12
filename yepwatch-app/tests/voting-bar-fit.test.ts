@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { faceOffset, liveFacesWidth, matchesChipWidth, moreOffset, moreSlot, votingBarFit } from '../src/features/glow/faces-row';
+import { COMPACT_LABEL, FULL_LABEL, PROPOSAL_DOT, faceOffset, liveFacesWidth, matchesChipFrame, matchesChipWidth, moreOffset, moreSlot, votingBarFit } from '../src/features/glow/faces-row';
 import { layoutFor } from '../src/features/shell/scale';
 
 const UNDO = 48, GAP = 10;
@@ -13,9 +13,9 @@ function bar(width: number, fontScale = 1) {
   return { ...fit, rowWidth, used: chip + GAP + fit.facesWidth + GAP + Math.max(UNDO, z(40)) };
 }
 
-test('at 320 px the bar keeps "10 matches", three face slots and Undo inside its width', () => {
+test('at 320 px the bar keeps "10 matches" with the proposal dot, two face slots and Undo inside its width', () => {
   const b = bar(320);
-  assert.equal(b.slots, 3);
+  assert.equal(b.slots, 2);
   assert.equal(b.compactChip, false);
   assert.ok(b.used <= b.rowWidth, `bar needs ${b.used} of ${b.rowWidth}`);
 });
@@ -51,4 +51,25 @@ test('faces end against "+N" inside the fixed row, whatever the count', () => {
     }
     assert.ok(moreOffset(26, slots, fs) + 22 * fs <= width + 1e-9, '"+99" fits its slot');
   }
+});
+
+test('the chip always keeps room for the proposal dot, so "10 matches" stays whole with a proposal', () => {
+  for (const w of [300, 320, 360]) for (const fs of [1, 1.3, 2]) {
+    const { z } = layoutFor(w, 800);
+    const b = bar(w, fs);
+    const chars = b.compactChip ? COMPACT_LABEL : FULL_LABEL;
+    const text = Math.ceil(z(14) * Math.max(1, fs) * 0.56 * chars);
+    const needed = 2 * (12 + 1) + z(15) + 6 + text + 6 + PROPOSAL_DOT;
+    assert.ok(matchesChipWidth(z, fs, chars) >= needed, `${w} px @${fs}: chip ${matchesChipWidth(z, fs, chars)} < ${needed}`);
+    assert.ok(b.used <= b.rowWidth, `${w} px @${fs}: bar needs ${b.used} of ${b.rowWidth}`);
+  }
+});
+
+test('the compact chip has a fixed, start-aligned box: the first match and a proposal move nothing', () => {
+  const { z } = layoutFor(320, 800);
+  const frame = matchesChipFrame(z, 2, true);
+  assert.equal(frame.justifyContent, 'flex-start', 'icon pinned to the start edge, not centered');
+  assert.equal(frame.width, matchesChipWidth(z, 2, COMPACT_LABEL), 'same width with no count, "1", "10" and the dot');
+  assert.ok(frame.width >= 48, 'at least the touch target, so the minimum width never re-centers it');
+  assert.equal(matchesChipFrame(z, 1, false).width, undefined, 'the full chip sizes to its label');
 });
