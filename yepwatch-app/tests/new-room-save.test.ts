@@ -3,13 +3,19 @@ import assert from 'node:assert/strict';
 import { MutationObserver, QueryClient } from '@tanstack/query-core';
 import type { RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
 import { ResendResume } from '../src/core/continuous/resend-resume';
-import { newRoomSave } from '../src/features/room/new-room-save';
+import { newRoomSave, type NewRoomSaveDeps } from '../src/features/room/new-room-save';
 import { RoomFailure } from '../src/core/continuous/api-client';
+import * as backoff from '../src/core/continuous/backoff';
+import * as network from '../src/core/continuous/network';
+import * as retry from '../src/core/continuous/retry';
+import * as state from '../src/core/continuous/state';
 import { continuousFixture } from './continuous-fixture';
+import { admissionServer } from './admission-server';
+import { loadIsolated } from './isolated-module';
 
 // The New room page's own save (new-room-save.ts: the mutation options NewRoom.tsx passes to useMutation)
 // run by React Query's real MutationObserver, with the page's ResendResume wired as NewRoom wires it. Only
-// CreateRoom is fake: each save and each draft refresh waits until the test settles it.
+// CreateRoom is fake here (the real one runs further down): each save and each draft refresh waits until the test settles it.
 type Deferred<T> = { promise: Promise<T>; resolve: (v: T) => void; reject: (e: unknown) => void };
 function deferred<T>(): Deferred<T> {
   let resolve!: (v: T) => void, reject!: (e: unknown) => void;
@@ -138,4 +144,85 @@ test('the app goes to the background during an unanswered save: back in front, t
   await flush();
   assert.equal(p.saves.length, 2);
   assert.equal(p.saves[1].text, 'heist');
+});
+
+// The same page code with the real CreateRoom (create-room.ts, on resend.ts) over the real ContinuousApi and
+// a fake server (admission-server.ts): only device storage, the clock's waits and the network are fake.
+type RealFlow = new () => NewRoomSaveDeps['flow'];
+function realPage(server: ReturnType<typeof admissionServer>) {
+  let admission: unknown = null;
+  const pending = new Map<string, unknown>();
+  const waits: number[] = [];
+  let uuid = 0;
+  const { CreateRoom } = loadIsolated<{ CreateRoom: RealFlow }>(new URL('../src/core/continuous/create-room.ts', import.meta.url), {
+    'expo-crypto': { getRandomBytesAsync: async () => new Uint8Array(32).fill(7), randomUUID: () => `uuid-${++uuid}` },
+    './api': { continuousApi: server.api, RoomFailure },
+    '../credentials': { saveAccess: async () => undefined },
+    '../lobby': { deviceCountryHint: () => 'DE' },
+    '../providers': { queryClient: { setQueryData: () => undefined } },
+    './account-flow': { authEpoch: { current: () => 1, isCurrent: () => true } },
+    './backoff': { ...backoff, abortableSleep: async (ms: number) => { waits.push(ms); } },
+    './network': network,
+    './invite-store': { saveInvite: async () => undefined },
+    './room-registry': { roomRegistry: { remember: async () => undefined, setNickname: async () => undefined } },
+    './retry': retry,
+    './keys': { continuousKey: (id: string) => ['proposal-room', id] },
+    './state': state,
+    './storage': {
+      readAdmission: async () => admission, writeAdmission: async (_: string, value: unknown) => { admission = value; },
+      readCommandRecovery: async (id: string) => ({ envelope: pending.get(id) ?? null, retryAt: 0 }),
+      writePending: async (id: string, envelope: unknown) => { pending.set(id, envelope); },
+    },
+  }, { './resend': new URL('../src/core/continuous/resend.ts', import.meta.url) });
+  const opened: string[] = [];
+  const client = new QueryClient();
+  const resume = new ResendResume<string>();
+  const attempt = { current: null as AbortController | null };
+  let text = 'heist';
+  const observer = new MutationObserver(client, newRoomSave({
+    flow: new CreateRoom(), resume, client, draftKey: ['new-room-draft', 0, 'real'], text: () => text, setText: (t) => { text = t; },
+    setTroubleSince: () => undefined, attempt, identity: async () => ({ nickname: 'Alp', member: false }), open: (id) => opened.push(id),
+  }));
+  resume.connect({ send: (t) => { observer.mutate(t).catch(() => undefined); }, abort: () => attempt.current?.abort() });
+  return { resume, opened, waits, result: () => observer.getCurrentResult(), saved: () => admission };
+}
+
+test('real create: a 409 whose renewed session is still being stored when the app goes to the background is not sent again', async () => {
+  let storing: Deferred<void> | null = null;
+  const server = admissionServer(() => ({ status: 409, code: 'limit_reached', message: 'You can create up to 3 rooms at a time.' }), {
+    store: () => { storing = deferred<void>(); return storing.promise; },
+  });
+  const p = realPage(server);
+  p.resume.pick('heist');
+  await flush();
+  assert.ok(storing, 'the refusal arrived and its session is being stored');
+  p.resume.appState('background');
+  (storing as Deferred<void> | null)!.resolve();
+  await flush();
+  p.resume.appState('active');
+  await flush();
+  assert.equal(server.posts('/rooms').length, 1, 'no second create');
+  assert.equal(p.resume.phase, 'idle');
+  const error = p.result().error;
+  assert.ok(error instanceof RoomFailure && error.status === 409, `the refusal stays on the page (${error?.name}: ${error?.message})`);
+  assert.equal(p.saved(), null, 'the refused request is dropped');
+});
+
+test('real create: an answer still being processed when the app goes to the background goes again once back (no refusal to keep)', async () => {
+  let storing: Deferred<void> | null = null;
+  const server = admissionServer((_s, n) => (n === 1 ? { status: 503, code: 'busy', retryable: true } : 'ok'), {
+    store: () => { if (storing) return Promise.resolve(); storing = deferred<void>(); return storing.promise; },
+  });
+  const p = realPage(server);
+  p.resume.pick('heist');
+  await flush();
+  p.resume.appState('background');
+  (storing as Deferred<void> | null)!.resolve();
+  await flush();
+  assert.equal(p.result().error?.name, 'AbortError', 'a busy answer cut off by the background is a pause');
+  p.resume.appState('active');
+  await flush();
+  assert.equal(server.posts('/rooms').length, 2);
+  assert.deepEqual(p.opened, ['room-1']);
+  assert.equal(server.rooms.size, 1);
 });

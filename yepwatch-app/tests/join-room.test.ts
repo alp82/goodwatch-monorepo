@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import * as backoff from '../src/core/continuous/backoff';
 import * as state from '../src/core/continuous/state';
 import { RoomFailure } from '../src/core/continuous/api-client';
-import { ResendResume, resendOutcome } from '../src/core/continuous/resend-resume';
+import { ResendResume, resendOutcome, sendFailure } from '../src/core/continuous/resend-resume';
+import { admissionServer } from './admission-server';
 import { continuousFixture } from './continuous-fixture';
 import { loadIsolated } from './isolated-module';
 
@@ -192,4 +193,59 @@ test('the app leaving the front pauses the join; back in front the same request 
   assert.deepEqual(opened, ['room-1'], 'the room opens without a tap');
   assert.equal(new Set(h.sent.map((r) => r.commandId)).size, 1);
   assert.equal(seatsFor(h), 1);
+});
+
+// The real join over the real ContinuousApi and a fake server (admission-server.ts), with the join page's own
+// failure classification (Entrance.tsx runJoin: sendFailure, then ResendResume.settled).
+function realJoin(server: ReturnType<typeof admissionServer>) {
+  let admission: unknown = null;
+  const { joinUntilAnswered } = loadIsolated<{ joinUntilAnswered: Join }>(new URL('../src/core/continuous/join-room.ts', import.meta.url), {
+    './api': { continuousApi: server.api, RoomFailure },
+    '../credentials': { loadAccess: async () => null, nativeClient: true, saveAccess: async () => undefined },
+    '../invites': { inviteIntent: (code: string) => `/r/${code}` },
+    '../providers': { queryClient: { setQueryData: () => undefined } },
+    './backoff': { ...backoff, abortableSleep: async () => undefined },
+    './network': { browserOffline: () => false },
+    './invite-store': { saveInvite: async () => undefined },
+    './keys': { continuousKey: (id: string) => ['proposal-room', id] },
+    './room-registry': { roomRegistry: { setNickname: async () => undefined, restore: async () => undefined } },
+    './state': state,
+    './storage': { writeAdmission: async (_: string, value: unknown) => { admission = value; } },
+  }, { './resend': new URL('../src/core/continuous/resend.ts', import.meta.url) });
+  const sends: number[] = [];
+  let controller = new AbortController();
+  const resume: ResendResume<string> = new ResendResume<string>({
+    send: () => {
+      sends.push(sends.length + 1);
+      controller = new AbortController();
+      const signal = controller.signal;
+      void joinUntilAnswered((admission as Saved | null) ?? fresh(), { intent: 'INVITE1', signal }).then(
+        () => resume.settled('answered'),
+        (e) => resume.settled(resendOutcome(sendFailure(e, signal.aborted, 'Joining was interrupted.'))),
+      );
+    },
+    abort: () => controller.abort(),
+  });
+  return { resume, sends };
+}
+
+test('real join: a full room\'s 409 whose renewed session is still being stored when the app goes to the background is not sent again', async () => {
+  let storing: { resolve: () => void } | null = null;
+  let last = '';
+  const server = admissionServer((s) => { last = s.path; return s.path.endsWith('/join') ? { status: 409, code: 'limit_reached', message: 'Room is full' } : 'ok'; }, {
+    // Only the join's answer is slow to store (the invitation's resolve before it isn't).
+    store: () => new Promise<void>((resolve) => { if (storing || !last.endsWith('/join')) return resolve(); storing = { resolve }; }),
+  });
+  const p = realJoin(server);
+  p.resume.pick('INVITE1');
+  for (let i = 0; i < 10 && !storing; i++) await new Promise((r) => setTimeout(r, 0));
+  assert.ok(storing, 'the refusal arrived and its session is being stored');
+  p.resume.appState('background');
+  (storing as { resolve: () => void } | null)!.resolve();
+  await new Promise((r) => setTimeout(r, 10));
+  p.resume.appState('active');
+  await new Promise((r) => setTimeout(r, 10));
+  assert.equal(server.posts('/join').length, 1, 'no second join');
+  assert.deepEqual(p.sends, [1]);
+  assert.equal(p.resume.phase, 'idle');
 });
