@@ -1056,10 +1056,6 @@ export class ProposalService {
 					undefined,
 					reserved
 				)
-			// A Start's fresh read of its members' seen titles (a GoodWatch round trip, no catalog work) goes out
-			// alongside the permit checks; nothing is written or answered before they pass.
-			const seenEarly = this.seenAtStart(old.room, envelope)
-			seenEarly?.catch(() => {}) // Awaited below, or dropped with a refused command.
 			await timed("allowed", allowed)
 			await (this.guard && timed("guard", this.guard.command(id, p.id, digest, check)))
 			const command = envelope.command
@@ -1111,8 +1107,11 @@ export class ProposalService {
 				const wantsPage = room.candidates.length < L.active && room.seenKeys.length < L.seen
 				// Seen lists are read again at Start: a deck prepared earlier never shows what a member has since seen.
 				// Fresh: never joins a background build's read that started before a title was marked Seen. Read
-				// alongside the permit checks and the deck (seenAtStart): each is a round trip on Start's path.
-				const seenRead = wantsPage ? seenEarly : null
+				// alongside the deck, not after it: each is a round trip (GoodWatch, the catalog) on Start's path.
+				const seenRead = wantsPage && envelope.command.type === "start" && this.catalog.excludedKeys
+					? timed("seen", this.catalog.excludedKeys(room, { fresh: true }))
+					: null
+				seenRead?.catch(() => {}) // Awaited below; a failed deck must not leave it unhandled.
 				// Best effort (members time-box and log their own reads): a failed read starts without those exclusions.
 				// Usually prepared during setup; a Start retried after losing its compare-and-swap reuses the same build.
 				if (wantsPage)
@@ -1209,13 +1208,6 @@ export class ProposalService {
 			503,
 			true
 		)
-	}
-	/** A Start's fresh seen read for the room's deck (see applyCommand), or null when the Start takes no page. */
-	private seenAtStart(stored: ProposalRoom, envelope: CommandEnvelope) {
-		if (envelope.command.type !== "start" || !this.catalog.excludedKeys) return null
-		const room = activeRoom(stored)
-		if (!(room.candidates.length < L.active && room.seenKeys.length < L.seen)) return null
-		return timed("seen", this.catalog.excludedKeys(structuredClone(room), { fresh: true }))
 	}
 	/**
 	 * A command already applied replays its receipt. A sequence another command already took on this session
