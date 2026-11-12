@@ -19,9 +19,11 @@ function harness(script: Attempt, o: { offline?: boolean; onSleep?: (ms: number)
   const rooms = new Map<string, string>();
   const sent: Request[] = [];
   const waits: number[] = [];
+  const log: string[] = [];
   let admission: unknown = null;
   const create = async (request: Request, signal?: AbortSignal) => {
     sent.push({ commandId: request.commandId, admissionSecret: request.admissionSecret });
+    log.push('post');
     const outcome = await script(request, signal, sent.length);
     // The server makes the room whether or not its answer reaches the phone.
     const key = `${request.commandId}:${request.admissionSecret}`;
@@ -44,7 +46,7 @@ function harness(script: Attempt, o: { offline?: boolean; onSleep?: (ms: number)
       case '../lobby': return { deviceCountryHint: () => 'DE' };
       case '../providers': return { queryClient: { setQueryData: () => undefined } };
       case './account-flow': return { authEpoch: { current: () => 1, isCurrent: () => true } };
-      case './backoff': return { ...backoff, abortableSleep: async (ms: number) => { waits.push(ms); o.onSleep?.(ms); } };
+      case './backoff': return { ...backoff, abortableSleep: async (ms: number) => { waits.push(ms); log.push(`wait ${ms}`); o.onSleep?.(ms); } };
       case './network': return { browserOffline: () => o.offline === true };
       case './invite-store': return { saveInvite: async () => undefined };
       case './room-registry': return { roomRegistry: { remember: async () => undefined, setNickname: async () => undefined } };
@@ -58,7 +60,8 @@ function harness(script: Attempt, o: { offline?: boolean; onSleep?: (ms: number)
       default: throw new Error(`Unexpected dependency ${name}`);
     }
   } });
-  return { flow: new exports.CreateRoom!(), rooms, sent, waits, saved: () => admission };
+  // A relaunch: a new CreateRoom over the same storage and server.
+  return { flow: new exports.CreateRoom!(), relaunch: () => new exports.CreateRoom!(), rooms, sent, waits, log, saved: () => admission as { retryAt: number } | null };
 }
 const options = (controller = new AbortController(), onTrouble?: (since: number) => void) => ({ nickname: '', member: false, signal: controller.signal, onTrouble });
 
@@ -139,4 +142,35 @@ test('offline in a browser: says so at once (the page resends on the online even
   await assert.rejects(h.flow.save('', options()), (e: unknown) => backoff.unanswered(e));
   assert.equal(h.sent.length, 1);
   assert.ok(h.saved());
+});
+
+test('a Retry-After interrupted by the background or a relaunch is still waited out before the create goes again', async () => {
+  for (const again of ['resume', 'relaunch'] as const) {
+    const controller = new AbortController();
+    let interrupted = false;
+    const h = harness((_r, _s, n) => {
+      if (n === 1) throw new RoomFailure('limit_reached', 'Wait', 429, undefined, undefined, true, 60);
+      return 'answer';
+    }, { onSleep: () => { if (!interrupted) { interrupted = true; controller.abort(); } } });
+    const before = Date.now();
+    await assert.rejects(h.flow.save('', options(controller)), /interrupted/);
+    assert.equal(h.sent.length, 1);
+    const deadline = h.saved()?.retryAt ?? 0;
+    assert.ok(deadline >= before + 60000 && deadline <= Date.now() + 61000, `${again}: the server's deadline is saved before waiting (${deadline - before} ms)`);
+    const flow = again === 'resume' ? h.flow : h.relaunch();
+    h.log.length = 0;
+    const snapshot = await flow.save('', options());
+    assert.equal(snapshot.shared.roomId, 'room-1');
+    assert.equal(h.log[0]?.startsWith('wait '), true, `${again}: waits before posting (${h.log.join(', ')})`);
+    assert.ok(Number(h.log[0].slice(5)) >= 59000, `${again}: waits the rest of the minute (${h.log[0]})`);
+    assert.deepEqual(h.log.slice(1), ['post']);
+    assert.equal(h.rooms.size, 1);
+  }
+});
+
+test('a server wait over a minute saved earlier stays a manual gate after a relaunch', async () => {
+  const h = harness(() => { throw new RoomFailure('limit_reached', 'Wait', 429, undefined, undefined, true, 120); });
+  await assert.rejects(h.flow.save('', options()), /Wait/);
+  await assert.rejects(h.relaunch().save('', options()), /Wait before retrying/);
+  assert.equal(h.sent.length, 1);
 });
