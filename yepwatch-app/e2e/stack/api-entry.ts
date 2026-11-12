@@ -181,6 +181,7 @@ const config = {
 	probeMs: 1000,
 	shutdownDelayMs: 0,
 	drainMs: 500,
+	roomRetentionDays: 30,
 }
 const bus = createReleaseBus(config)
 bus.on("error", () => {})
