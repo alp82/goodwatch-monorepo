@@ -128,6 +128,7 @@ export const proposalCommandSchema = z
 			z
 				.object({
 					type: z.literal("start"),
+					expectedGeneration: n.optional(),
 					expectedRosterVersion: n,
 					expectedContextVersion: n,
 					hostReady: z.boolean().optional()
@@ -184,7 +185,7 @@ export const proposalCommandSchema = z
 					expectedProposalVersion: n
 				})
 				.strict(),
-			z.object({ type: z.literal("restart"), expectedRevision: n }).strict(),
+			z.object({ type: z.literal("restart"), expectedRevision: n, expectedGeneration: n.optional() }).strict(),
 			z
 				.object({ type: z.literal("resume_voting"), expectedRevision: n })
 				.strict()

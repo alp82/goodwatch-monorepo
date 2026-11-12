@@ -1,4 +1,4 @@
-import type { AccountStatus, MemberStatusResponse } from '@goodwatch/yepwatch-contracts/proposal';
+import type { AccountStatus, MemberStatusResponse, RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
 import type { RoomAccess } from '../credentials';
 import { RoomFailure } from './api-client';
 import { accountView, type AuthEpoch, type DeviceAccount } from './account-flow';
@@ -26,6 +26,35 @@ export interface DeviceAccountDeps {
   bump(): void;
   /** This API has no account endpoint (older server): the device stays a guest. */
   unsupported(error: unknown): boolean;
+  /** Log out: takes the account's data out of every room this device shows, at once (withoutAccount). */
+  forgetAccount?(): void;
+}
+
+/**
+ * A room as this device shows it once its sign-in ended: the seat stays (name, votes, host role), the
+ * GoodWatch link, prefill and seen titles go, as the server makes the place a guest one on Log out.
+ */
+export function withoutAccount<T extends RoomSnapshot>(room: T): T {
+  return { ...room, own: { ...room.own, showSeen: false, member: { state: 'guest', prefill: null } } };
+}
+
+interface RoomEntry { roomId: string; nickname: string; expiresAt: number }
+/**
+ * After Log out: every room the server kept for this device as a guest goes on the device's own room list
+ * (also rooms Your rooms hadn't loaded yet); the rooms shown before Log out (`provisional`, remembered so
+ * the list never empties) that it didn't keep leave it. An older server without `keptRooms` leaves them.
+ */
+export async function settleLogoutRooms(provisional: readonly RoomEntry[], result: unknown,
+  registry: { remember(entry: RoomEntry): Promise<unknown>; forget(roomId: string): Promise<unknown> }) {
+  const raw = (result as { keptRooms?: unknown } | undefined)?.keptRooms;
+  if (!Array.isArray(raw)) return;
+  const kept = raw.filter((r): r is RoomEntry => typeof r?.roomId === 'string' && typeof r.expiresAt === 'number')
+    .map((r) => ({ roomId: r.roomId, nickname: typeof r.nickname === 'string' ? r.nickname : '', expiresAt: r.expiresAt }));
+  const ids = new Set(kept.map((r) => r.roomId));
+  await Promise.all([
+    ...kept.map((r) => registry.remember(r).catch(() => undefined)),
+    ...provisional.filter((r) => !ids.has(r.roomId)).map((r) => registry.forget(r.roomId).catch(() => undefined)),
+  ]);
 }
 
 const guestStatus: AccountStatus = { state: 'guest', displayName: null };
@@ -109,6 +138,8 @@ export function createDeviceAccount(deps: DeviceAccountDeps) {
       const before = deps.cache.get();
       deps.cache.set(guestAccount);
       epoch.advance();
+      // No account data stays on screen, even when Log out fails (the room reads bring it back then).
+      deps.forgetAccount?.();
       let result: unknown;
       try {
         result = await deps.api.accountLogout(await store.readSession());

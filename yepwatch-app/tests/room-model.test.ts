@@ -111,7 +111,7 @@ test('commands carry the redesigned names and the latest versions', async () => 
     { type: 'configure', expectedContextVersion: 7, country: 'DE' },
     { type: 'rename', nickname: 'Alp' },
     { type: 'set_show_seen', show: true },
-    { type: 'start', expectedRosterVersion: 1, expectedContextVersion: 7, hostReady: true },
+    { type: 'start', expectedGeneration: 1, expectedRosterVersion: 1, expectedContextVersion: 7, hostReady: true },
   ]);
 });
 
@@ -180,4 +180,86 @@ test('a queued tap keeps what it was aimed at: a new proposal or round drops it,
   const replaced = { ...s, shared: { ...s.shared, proposalVersion: 3, proposal: { ...s.shared.proposal!, candidateId: 'b', version: 3 } } };
   assert.equal(agree(replaced), null, 'never agrees to a title nobody tapped');
   assert.equal(vote({ ...s, shared: { ...s.shared, generation: s.shared.generation + 1 } }), null);
+});
+
+/** A choosing room where this device already voted on c1 (revision 1). */
+function voted(value: 'watch' | 'pass' | null = 'pass', revision = 1): RoomSnapshot {
+  const s = room();
+  s.shared.phase = 'choosing';
+  s.own.votes = [{ candidateId: 'c1', value, revision, activeExposureMs: null, timingSource: 'unavailable' }];
+  return s;
+}
+const capture = (s: () => RoomSnapshot, view?: () => RoomSnapshot) => {
+  const queued: ((snapshot: RoomSnapshot) => RoomCommand | null)[] = [];
+  const cmd = roomCommands(async (c) => { if (typeof c === 'function') queued.push(c); return true; }, s, view);
+  return { cmd, queued };
+};
+
+test('a vote keeps the revision it was tapped on: a newer choice from another device is never overwritten', async () => {
+  const tapped = voted(null, 0);
+  const { cmd, queued } = capture(() => tapped);
+  await cmd.vote('c1', false, null);
+  // Another device of yours changed this card to Yep meanwhile: the 409 brings revision 1.
+  const fresh = voted('watch', 1);
+  assert.equal(queued[0](fresh), null, 'the delayed Nope resolves to the newer Yep instead of overwriting it');
+  assert.deepEqual(queued[0](tapped), { type: 'vote', generation: 1, candidateId: 'c1', expectedVoteRevision: 0, value: 'pass', activeExposureMs: null });
+});
+
+test('Undo keeps the revision it was tapped on', async () => {
+  const tapped = voted('pass', 1);
+  const { cmd, queued } = capture(() => tapped);
+  await cmd.undo('c1');
+  assert.equal(queued[0](voted('watch', 2)), null, 'an Undo never takes back a choice made later on another device');
+  assert.equal((queued[0](tapped) as { expectedVoteRevision: number }).expectedVoteRevision, 1);
+});
+
+test('agreement withdrawal keeps the agreement revision it was tapped on', async () => {
+  const s = voted('watch', 1);
+  s.shared.proposal = { candidateId: 'c1', version: 2, previousCandidateId: null, agreeCount: 1, requiredCount: 2, averageYepMs: null };
+  s.shared.proposalVersion = 2;
+  s.own.agreement = { proposalVersion: 2, agreed: true, revision: 3, isProposer: false };
+  const { cmd, queued } = capture(() => s);
+  await cmd.agree(false);
+  // Another device withdrew and agreed again meanwhile.
+  const fresh = { ...s, own: { ...s.own, agreement: { ...s.own.agreement, revision: 5 } } };
+  assert.equal(queued[0](fresh), null);
+  assert.equal((queued[0](s) as { expectedOwnAgreementRevision: number }).expectedOwnAgreementRevision, 3);
+});
+
+test('a vote and its Undo queued together: the Undo is aimed at the vote this device just made', async () => {
+  const confirmed = voted(null, 0);
+  // What the person sees: the confirmed room with the unconfirmed vote on top.
+  let view: RoomSnapshot = confirmed;
+  const { cmd, queued } = capture(() => confirmed, () => view);
+  await cmd.vote('c1', true, 900);
+  view = voted('watch', 1);
+  await cmd.undo('c1');
+  // The vote landed: the confirmed room now has revision 1, and the Undo goes out against it.
+  assert.equal((queued[1](voted('watch', 1)) as { expectedVoteRevision: number }).expectedVoteRevision, 1);
+});
+
+test('Start and Start again name the round they were pressed in; a later round drops them', async () => {
+  const s = room();
+  s.shared.generation = 4;
+  const { cmd, queued } = capture(() => s);
+  await cmd.start();
+  await cmd.restart();
+  assert.equal((queued[0](s) as { expectedGeneration?: number }).expectedGeneration, 4);
+  assert.equal((queued[1](s) as { expectedGeneration?: number }).expectedGeneration, 4);
+  const later = { ...s, shared: { ...s.shared, generation: 5 } };
+  assert.equal(queued[0](later), null);
+  assert.equal(queued[1](later), null);
+});
+
+test('agree then withdraw queued together: the withdrawal is aimed at the agreement this device just made', async () => {
+  const { overlayRoom } = await import('../src/core/continuous/optimistic');
+  const s = voted('watch', 1);
+  s.shared.proposal = { candidateId: 'c1', version: 2, previousCandidateId: null, agreeCount: 0, requiredCount: 2, averageYepMs: null };
+  s.shared.proposalVersion = 2;
+  const entries: { commandId: string; build: (snapshot: RoomSnapshot) => RoomCommand | null }[] = [];
+  const cmd = roomCommands(async (c) => { if (typeof c === 'function') entries.push({ commandId: String(entries.length), build: c }); return true; }, () => s, () => overlayRoom(s, null, entries));
+  await cmd.agree(true);
+  await cmd.agree(false);
+  const landed = { ...s, own: { ...s.own, agreement: { ...s.own.agreement, proposalVersion: 2, agreed: true, revision: 1 } } };
+  assert.equal((entries[1].build(landed) as { expectedOwnAgreementRevision: number }).expectedOwnAgreementRevision, 1);
 });

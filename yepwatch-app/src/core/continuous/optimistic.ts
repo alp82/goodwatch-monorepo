@@ -50,7 +50,12 @@ export function previewCommand<T extends RoomSnapshot>(s: T, commandId: string, 
       const { proposal } = s.shared;
       if (!proposal || proposal.candidateId !== c.candidateId || s.own.agreement.agreed === c.agreed) return s;
       const agreeCount = Math.min(proposal.requiredCount, Math.max(0, proposal.agreeCount + (c.agreed ? 1 : -1)));
-      return { ...s, shared: { ...s.shared, proposal: { ...proposal, agreeCount } }, own: { ...s.own, agreement: { ...s.own.agreement, agreed: c.agreed } } };
+      // As the server counts it: your agreement revision moves with every change, and agreeing makes your answer a Yep.
+      const old = s.own.votes.find((v) => v.candidateId === c.candidateId);
+      const votes = c.agreed && old?.value !== 'watch'
+        ? [...s.own.votes.filter((v) => v.candidateId !== c.candidateId), { candidateId: c.candidateId, value: 'watch' as const, revision: (old?.revision ?? 0) + 1, activeExposureMs: null, timingSource: 'implied' as const }]
+        : s.own.votes;
+      return { ...s, shared: { ...s.shared, proposal: { ...proposal, agreeCount } }, own: { ...s.own, votes, agreement: { ...s.own.agreement, agreed: c.agreed, revision: s.own.agreement.revision + 1 } } };
     }
     default: return s;
   }

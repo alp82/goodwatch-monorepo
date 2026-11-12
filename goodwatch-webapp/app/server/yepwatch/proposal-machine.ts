@@ -304,12 +304,17 @@ export function staleRefill(room: ProposalRoom, envelope: CommandEnvelope) {
  * Commands that commute with whatever else changed the room since the sender's view: a friend's
  * services, ideas, settings, joins or leaves never make Start, a setting, a proposal, an agreement or
  * Start again fail. Their version fences are taken as the room's current ones. Fences that guard a real
- * conflict stay: the round (generation), the proposal, your own vote and agreement revisions.
+ * conflict stay: the round (generation), the proposal, your own vote and agreement revisions. Start and
+ * Start again commute only when they name the round they were pressed in (`expectedGeneration`): it is
+ * their only fence against a delayed press landing in a later round. Installed bundles that don't send it
+ * keep their strict version fences.
  */
 export function commute(room: ProposalRoom, envelope: CommandEnvelope): CommandEnvelope {
 	const c = envelope.command
 	switch (c.type) {
 		case "start":
+			if (c.expectedGeneration === undefined) return envelope
+			requireRoom(c.expectedGeneration === room.generation, "conflict", "The round changed")
 			return { ...envelope, command: { ...c, expectedRosterVersion: room.rosterVersion, expectedContextVersion: room.contextVersion } }
 		case "configure":
 		case "assign_screen":
@@ -319,6 +324,8 @@ export function commute(room: ProposalRoom, envelope: CommandEnvelope): CommandE
 		case "agree":
 			return { ...envelope, command: { ...c, expectedRosterVersion: room.rosterVersion } }
 		case "restart":
+			if (c.expectedGeneration === undefined) return envelope
+			requireRoom(c.expectedGeneration === room.generation, "conflict", "The round changed")
 			return { ...envelope, command: { ...c, expectedRevision: room.revision } }
 		default:
 			return envelope

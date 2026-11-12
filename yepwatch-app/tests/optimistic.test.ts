@@ -75,6 +75,8 @@ test('agreeing counts once, even when a broadcast already counted it', () => {
   const shown = previewCommand(s, 'c', agree);
   assert.equal(shown.shared.proposal?.agreeCount, 2);
   assert.equal(shown.own.agreement.agreed, true);
+  assert.equal(shown.own.agreement.revision, 1, 'the revision moves as the server moves it, so a withdrawal queued behind aims at it');
+  assert.equal(shown.own.votes.find((v) => v.candidateId === 'x')?.value, 'watch', 'agreeing makes your answer a Yep');
   assert.equal(previewCommand(shown, 'c', agree), shown);
   s.shared.proposal!.agreeCount = 2;
   assert.equal(previewCommand(s, 'c', agree).shared.proposal?.agreeCount, 2, 'never above the room');

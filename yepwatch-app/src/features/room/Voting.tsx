@@ -4,11 +4,12 @@
  * no card count: the deck refills in the background, and an empty deck shows "Finding more…",
  * never an end.
  */
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Platform, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { fixturesEnabled } from '../../core/config';
 import { useReducedMotion } from '../../components/ui';
+import { BootPhase } from '../home/boot-phase';
 import { playFeedback } from '../feedback/sounds';
 import { useRoomFeedback } from '../feedback/RoomFeedback';
 import { groupActivity } from '../../core/continuous/activity';
@@ -141,8 +142,12 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
   // A sheet over the card (the room's or the header's Your rooms): no answers, and the time doesn't count as seeing the title.
   const covered = useSheetOpen();
   const answering = !disabled && !covered;
+  // Under the startup cover the page is built but unseen: its time doesn't count as seeing a card, and the
+  // arrow keys (window-wide, so the cover's inert and pointer blocking don't stop them) wait until the
+  // page takes input like taps do.
+  const boot = useContext(BootPhase);
   const activeTime = useActiveTime(id, snapshot && card ? `${snapshot.shared.generation}:${card.id}:${vote?.revision ?? 0}` : null,
-    Boolean(card) && focused && !panel && answering && !state.terminal && snapshot?.shared.phase === 'choosing');
+    Boolean(card) && focused && !panel && answering && boot !== 'boot' && !state.terminal && snapshot?.shared.phase === 'choosing');
   const endMoment = useCallback((key: string) => setMoment((m) => (m?.key === key ? null : m)), []);
   if (!snapshot || !view) return null;
   const { shared } = snapshot;
@@ -209,7 +214,7 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
       {/* A page on top hides this one (zero size on the web): keep the last real size. */}
       <View ref={stageBox} onLayout={(e) => { const { width, height } = e.nativeEvent.layout; if (width > 0 && height > 0) setArea((a) => (a && a.width === width && a.height === height ? a : { width, height })); }}
         style={{ flex: 1, minHeight: 80, zIndex: 2 }}>
-        {geo ? <VoteStage geo={geo} controls={controls} reduced={reduced} enter={entering} onEntered={onEntered} disabled={!answering} keys={focused && !panel && answering}
+        {geo ? <VoteStage geo={geo} controls={controls} reduced={reduced} enter={entering} onEntered={onEntered} disabled={!answering} keys={focused && !panel && answering && boot === 'ready'}
           card={card && title && look ? { key: `${shared.generation}:${card.id}`, title, look } : null}
           next={nextCard ? titlePresentation(nextCard) : null}
           empty={<FindingMore style={{ flex: 1 }} />}
