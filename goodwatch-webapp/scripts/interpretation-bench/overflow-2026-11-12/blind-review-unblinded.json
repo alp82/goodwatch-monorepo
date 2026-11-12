@@ -1,0 +1,346 @@
+{
+  "kind": "blinded AI-assisted intent review, not human acceptance",
+  "cases": 42,
+  "preferred": {
+    "jev": 24,
+    "tie": 13,
+    "uncertain": 4,
+    "perplexity-pplx-decider-flash-v1.2": 1
+  },
+  "materialCases": {
+    "perplexity-pplx-decider-flash-v1.2": 32,
+    "jev": 12
+  },
+  "details": [
+    {
+      "id": "scary",
+      "preferred": "jev",
+      "issues": {
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Avoids hopefulness and situational comedy and excludes Date night although scary stories can have hopeful endings, comedy, or be date-night choices."
+        ]
+      }
+    },
+    {
+      "id": "romantic",
+      "preferred": "jev",
+      "issues": {
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Strongly avoids bleakness, scare and warfare, narrowing a generic romance request away from tragic, wartime or horror romances."
+        ]
+      }
+    },
+    {
+      "id": "slow-burn",
+      "preferred": "jev",
+      "issues": {
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Strongly avoids scare, violence and several comedy forms despite a slow-burn mystery being compatible with those styles."
+        ]
+      }
+    },
+    {
+      "id": "fast-action",
+      "preferred": "jev",
+      "issues": {
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Requires Movie although the query does not choose movies over shows."
+        ]
+      }
+    },
+    {
+      "id": "wholesome",
+      "preferred": "jev",
+      "issues": {
+        "jev": [
+          "Excludes the Adults audience signal although an adult-targeted story can be wholesome and hopeful."
+        ],
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Excludes the Adults audience signal although an adult-targeted story can be wholesome and hopeful.",
+          "Adds strong aversion to complexity, satire/parody, absurdist humor and eccentricity, which the query does not rule out."
+        ]
+      }
+    },
+    {
+      "id": "submarine",
+      "preferred": "jev",
+      "issues": {
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Requires Movie although the request does not choose a media type.",
+          "Avoids contemporary realism even though a submarine standoff and mutiny can be realistic."
+        ]
+      }
+    },
+    {
+      "id": "not-scary",
+      "preferred": "jev",
+      "issues": {
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Excludes Adults and requires Comfort watch from an exclusion of scary content.",
+          "Avoids adrenaline strongly, although non-scary energetic action or comedy remains compatible."
+        ],
+        "jev": [
+          "Excludes Adults from an exclusion of scary content."
+        ]
+      }
+    },
+    {
+      "id": "no-violence",
+      "preferred": "jev",
+      "issues": {
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Excludes Adults although lack of violence does not imply a child-targeted movie.",
+          "Keeps the negated term violence as an unqualified concrete term."
+        ],
+        "jev": [
+          "Keeps the negated term violence as an unqualified concrete term."
+        ]
+      }
+    },
+    {
+      "id": "not-romantic",
+      "preferred": "jev",
+      "issues": {
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Excludes Pure escapism even though escapist viewing can be entirely non-romantic."
+        ]
+      }
+    },
+    {
+      "id": "dark-not-gory",
+      "preferred": "tie",
+      "issues": {
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Keeps the explicitly negated term violence as an unqualified concrete term."
+        ],
+        "jev": [
+          "Keeps the explicitly negated term violence as an unqualified concrete term."
+        ]
+      }
+    },
+    {
+      "id": "no-anime",
+      "preferred": "tie",
+      "issues": {
+        "jev": [
+          "Excludes all Animated titles and requires Live action even though the query excludes anime only; non-anime animation should remain eligible."
+        ],
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Excludes all Animated titles and requires Live action even though the query excludes anime only; non-anime animation should remain eligible."
+        ]
+      }
+    },
+    {
+      "id": "comfort",
+      "preferred": "uncertain",
+      "issues": {
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Adds aversion to sports, politics and eccentricity that a cozy comfort request does not entail."
+        ],
+        "jev": [
+          "Adds aversion to novelty, making familiarity a requirement-like preference even though new comforting stories are allowed."
+        ]
+      }
+    },
+    {
+      "id": "background",
+      "preferred": "jev",
+      "issues": {
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Introduces a preference for music composition/music centrality and aversion to world immersion, selecting a musical interpretation of background viewing that the query never requests."
+        ]
+      }
+    },
+    {
+      "id": "kids",
+      "preferred": "jev",
+      "issues": {
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Excludes Intergenerational viewing although animation made for kids can also work across generations."
+        ]
+      }
+    },
+    {
+      "id": "adult",
+      "preferred": "perplexity-pplx-decider-flash-v1.2",
+      "issues": {
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Excludes Public viewing safe even though adult-targeted material need not be unsuitable for public viewing."
+        ],
+        "jev": [
+          "Excludes Public viewing safe even though adult-targeted material need not be unsuitable for public viewing.",
+          "Adds eroticism affinity and a stronger anti-wholesome preference from an audience-age request."
+        ]
+      }
+    },
+    {
+      "id": "neutral-type",
+      "preferred": "tie",
+      "issues": {
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Adds a strong ambiguity preference to a media-type-only query."
+        ],
+        "jev": [
+          "Adds a showbiz preference to a media-type-only query."
+        ]
+      }
+    },
+    {
+      "id": "title-literal",
+      "preferred": "tie",
+      "issues": {
+        "jev": [
+          "Treats knight from the known film title as an independent concrete motif, risking a literal-knight interpretation."
+        ],
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Treats knight from the known film title as an independent concrete motif, risking a literal-knight interpretation."
+        ]
+      }
+    },
+    {
+      "id": "named-director",
+      "preferred": "jev",
+      "issues": {
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Requires Movie from a person-name query without an explicit movie-versus-show choice."
+        ]
+      }
+    },
+    {
+      "id": "composition",
+      "preferred": "jev",
+      "issues": {
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Requires Movie even though the composed query does not choose movies over shows."
+        ]
+      }
+    },
+    {
+      "id": "prompt-injection",
+      "preferred": "jev",
+      "issues": {
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Uses output, word and banana from an instruction-injection sentence as concrete retrieval terms, polluting the requested scary-movie intent."
+        ]
+      }
+    },
+    {
+      "id": "de-1",
+      "preferred": "jev",
+      "issues": {
+        "jev": [
+          "Keeps gewalt from ohne Gewalt (without violence) as an unqualified concrete term."
+        ],
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Keeps ohne (without), gewalt (violence), and generic film as concrete terms, losing the negative phrase relationship."
+        ]
+      }
+    },
+    {
+      "id": "de-2",
+      "preferred": "jev",
+      "issues": {
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Excludes Adults from a request for a suspenseful series that is not frightening."
+        ]
+      }
+    },
+    {
+      "id": "de-3",
+      "preferred": "jev",
+      "issues": {
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Strongly avoids physical/situational comedy despite slow, thoughtful films being compatible with philosophical comedy."
+        ]
+      }
+    },
+    {
+      "id": "es-1",
+      "preferred": "jev",
+      "issues": {
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Keeps pel, sin (without), and violencia as concrete terms, including a word fragment and a negated subject.",
+          "Excludes Adults from a romantic-movie-without-violence request."
+        ]
+      }
+    },
+    {
+      "id": "es-2",
+      "preferred": "jev",
+      "issues": {
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Excludes Adults and requires Comfort watch from a mystery-series request that only excludes frightening content."
+        ]
+      }
+    },
+    {
+      "id": "es-3",
+      "preferred": "jev",
+      "issues": {
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Avoids physical/situational comedy despite the request only specifying slow pace and philosophy."
+        ]
+      }
+    },
+    {
+      "id": "fr-1",
+      "preferred": "jev",
+      "issues": {
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Keeps violence from sans violence (without violence) as an unqualified concrete term."
+        ]
+      }
+    },
+    {
+      "id": "fr-2",
+      "preferred": "jev",
+      "issues": {
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Excludes Adults from a mysterious-series request that only excludes frightening content."
+        ]
+      }
+    },
+    {
+      "id": "fr-3",
+      "preferred": "uncertain",
+      "issues": {
+        "jev": [
+          "Adds a strong spiritual affinity, although philosophical does not necessarily mean spiritual or religious."
+        ],
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Adds aversion to physical/situational comedy, although slow philosophical films can be comic."
+        ]
+      }
+    },
+    {
+      "id": "tr-1",
+      "preferred": "jev",
+      "issues": {
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Excludes Adults even though a romantic movie without violence can target adult viewers."
+        ]
+      }
+    },
+    {
+      "id": "tr-2",
+      "preferred": "jev",
+      "issues": {
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Excludes Adults and requires Comfort watch from a mysterious-series request with no frightening content."
+        ]
+      }
+    },
+    {
+      "id": "tr-3",
+      "preferred": "uncertain",
+      "issues": {
+        "jev": [
+          "Adds a strong spiritual affinity to a slow philosophical-film request without a spiritual theme."
+        ],
+        "perplexity-pplx-decider-flash-v1.2": [
+          "Adds aversion to physical/situational comedy to a slow philosophical-film request without excluding comedy."
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "at": "2026-11-12T17:17:44.042Z",
+  "models": 11,
+  "challengers": 10,
+  "fullCasesEach": 42,
+  "totalAttempts": 2047,
+  "validAttempts": 2040,
+  "failedAttempts": 7,
+  "httpCalls": 4921,
+  "executedSourceFilesMatched": 30,
+  "productionContractUnchanged": true,
+  "probabilityValidationPassed": true,
+  "paidCreditConsumptionUsd": 0.45359532200000086,
+  "withinLocalCashGuard": true,
+  "blindReviewsChecked": 3
+}

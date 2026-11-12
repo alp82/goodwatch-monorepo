@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-12T17:05:29.522Z",
+  "reportedBenchmarkChargesUsd": 0.45359532200000086,
+  "sharedKeyDailyIncreaseUsd": 0.453595322,
+  "absoluteDifferenceUsd": 8.326672684688674e-16,
+  "keyLimitsChanged": false,
+  "notes": "The daily key counter was zero before execution; it is shared with other consumers. Agreement is an aggregate cross-check, not an independent invoice or a per-request refund authorization."
+}

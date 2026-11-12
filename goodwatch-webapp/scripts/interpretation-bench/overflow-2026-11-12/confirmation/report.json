@@ -1,0 +1,485 @@
+{
+  "status": "repeated interpreter development benchmark; provisional assertion quality, not human relevance acceptance",
+  "summaries": [
+    {
+      "concurrency": 1,
+      "model": "perplexity-pplx-decider-flash-v1.2",
+      "attempts": 126,
+      "quality": 0.9329365079365081,
+      "exactCaseRate": 0.8333333333333334,
+      "p50Ms": 1248.5168309999863,
+      "p95Ms": 2020.1186909999233,
+      "speed": 0.4261219952142894,
+      "equalWeightScore": 0.6795292515753988,
+      "errorRate": 0,
+      "criticalMisses": 0,
+      "deadlineMisses": 8,
+      "binaryBrier": 0.04045045773168297,
+      "choiceBrier": 0.09188766330666161,
+      "costPer1000Fresh": 0.09304904761904764,
+      "monthlyUsd": 0.09304904761904764,
+      "costKnown": true,
+      "screeningPass": false,
+      "bySlice": {
+        "explicit": {
+          "cases": 6,
+          "quality": 0.8333333333333333,
+          "errors": 0,
+          "p95Ms": 1459.4301870000781
+        },
+        "concrete": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 1468.8811550000682
+        },
+        "negation": {
+          "cases": 7,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 2173.582199000055
+        },
+        "viewing": {
+          "cases": 6,
+          "quality": 0.9166666666666666,
+          "errors": 0,
+          "p95Ms": 1726.7330679999432
+        },
+        "neutral": {
+          "cases": 1,
+          "quality": 0.8333333333333334,
+          "errors": 0,
+          "p95Ms": 1334.9122690000804
+        },
+        "title": {
+          "cases": 3,
+          "quality": 0.6166666666666667,
+          "errors": 0,
+          "p95Ms": 3872.9798570000567
+        },
+        "typos": {
+          "cases": 1,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 3435.5349179999903
+        },
+        "composition": {
+          "cases": 2,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 1310.7498069999274
+        },
+        "adversarial": {
+          "cases": 1,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 2020.1186909999233
+        },
+        "multilingual": {
+          "cases": 12,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 1397.8931139999768
+        }
+      },
+      "byLanguage": {
+        "en": {
+          "cases": 30,
+          "quality": 0.9061111111111111,
+          "errors": 0,
+          "p95Ms": 2121.7989610000513
+        },
+        "de": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 1380.1114260000031
+        },
+        "es": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 1296.8344499999657
+        },
+        "fr": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 1394.882038999931
+        },
+        "tr": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 4578.55190099997
+        }
+      },
+      "providers": [
+        "Perplexity,Perplexity"
+      ],
+      "unreviewedPredictions": 1233
+    },
+    {
+      "concurrency": 4,
+      "model": "perplexity-pplx-decider-flash-v1.2",
+      "attempts": 126,
+      "quality": 0.9329365079365081,
+      "exactCaseRate": 0.8333333333333334,
+      "p50Ms": 1174.7040590000106,
+      "p95Ms": 1808.0865459999768,
+      "speed": 0.45343432801470923,
+      "equalWeightScore": 0.6931854179756086,
+      "errorRate": 0,
+      "criticalMisses": 0,
+      "deadlineMisses": 10,
+      "binaryBrier": 0.04045045773168297,
+      "choiceBrier": 0.09188766330666161,
+      "costPer1000Fresh": 0.09304904761904763,
+      "monthlyUsd": 0.09304904761904763,
+      "costKnown": true,
+      "screeningPass": false,
+      "bySlice": {
+        "explicit": {
+          "cases": 6,
+          "quality": 0.8333333333333333,
+          "errors": 0,
+          "p95Ms": 2139.0695249999408
+        },
+        "concrete": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 1938.6275550000137
+        },
+        "negation": {
+          "cases": 7,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 1414.7850630000466
+        },
+        "viewing": {
+          "cases": 6,
+          "quality": 0.9166666666666666,
+          "errors": 0,
+          "p95Ms": 1928.8253580000019
+        },
+        "neutral": {
+          "cases": 1,
+          "quality": 0.8333333333333334,
+          "errors": 0,
+          "p95Ms": 2160.8208370000357
+        },
+        "title": {
+          "cases": 3,
+          "quality": 0.6166666666666667,
+          "errors": 0,
+          "p95Ms": 1323.1600350000663
+        },
+        "typos": {
+          "cases": 1,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 1231.7019599999767
+        },
+        "adversarial": {
+          "cases": 1,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 1523.7008630000055
+        },
+        "composition": {
+          "cases": 2,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 2691.679744999972
+        },
+        "multilingual": {
+          "cases": 12,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 1808.0865459999768
+        }
+      },
+      "byLanguage": {
+        "en": {
+          "cases": 30,
+          "quality": 0.9061111111111109,
+          "errors": 0,
+          "p95Ms": 1928.8253580000019
+        },
+        "de": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 1257.7129420000128
+        },
+        "es": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 1930.161022999906
+        },
+        "fr": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 1337.030788000091
+        },
+        "tr": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 1808.0865459999768
+        }
+      },
+      "providers": [
+        "Perplexity,Perplexity"
+      ],
+      "unreviewedPredictions": 1233
+    },
+    {
+      "concurrency": 1,
+      "model": "liquid-d1.1",
+      "attempts": 126,
+      "quality": 0.9027777777777777,
+      "exactCaseRate": 0.7857142857142857,
+      "p50Ms": 746.417601000052,
+      "p95Ms": 1005.1813479999837,
+      "speed": 0.5987590484008385,
+      "equalWeightScore": 0.7507684130893081,
+      "errorRate": 0,
+      "criticalMisses": 0,
+      "deadlineMisses": 2,
+      "binaryBrier": 0.056138734113142894,
+      "choiceBrier": 0.10679639923900666,
+      "costPer1000Fresh": 0.16302190476190473,
+      "monthlyUsd": 0.16302190476190473,
+      "costKnown": true,
+      "screeningPass": true,
+      "bySlice": {
+        "explicit": {
+          "cases": 6,
+          "quality": 0.7962962962962963,
+          "errors": 0,
+          "p95Ms": 861.3397429999895
+        },
+        "concrete": {
+          "cases": 3,
+          "quality": 0.9629629629629631,
+          "errors": 0,
+          "p95Ms": 872.8059509999584
+        },
+        "negation": {
+          "cases": 7,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 959.0549139999785
+        },
+        "viewing": {
+          "cases": 6,
+          "quality": 0.9166666666666666,
+          "errors": 0,
+          "p95Ms": 6713.838349000085
+        },
+        "neutral": {
+          "cases": 1,
+          "quality": 0.8333333333333334,
+          "errors": 0,
+          "p95Ms": 661.4875339999562
+        },
+        "title": {
+          "cases": 3,
+          "quality": 0.3055555555555556,
+          "errors": 0,
+          "p95Ms": 1503.1324960000347
+        },
+        "typos": {
+          "cases": 1,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 886.2779340000125
+        },
+        "composition": {
+          "cases": 2,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 955.1725159999914
+        },
+        "adversarial": {
+          "cases": 1,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 819.7640270000556
+        },
+        "multilingual": {
+          "cases": 12,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 971.8972150000045
+        }
+      },
+      "byLanguage": {
+        "en": {
+          "cases": 30,
+          "quality": 0.8638888888888889,
+          "errors": 0,
+          "p95Ms": 1141.9142139999894
+        },
+        "de": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 1005.1813479999837
+        },
+        "es": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 971.8972150000045
+        },
+        "fr": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 811.1869009999791
+        },
+        "tr": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 935.0994680000003
+        }
+      },
+      "providers": [
+        "Liquid,Liquid"
+      ],
+      "unreviewedPredictions": 1495
+    },
+    {
+      "concurrency": 4,
+      "model": "liquid-d1.1",
+      "attempts": 126,
+      "quality": 0.9068783068783068,
+      "exactCaseRate": 0.8015873015873016,
+      "p50Ms": 653.0778449999634,
+      "p95Ms": 905.7949960000115,
+      "speed": 0.6234945215589737,
+      "equalWeightScore": 0.7651864142186402,
+      "errorRate": 0,
+      "criticalMisses": 0,
+      "deadlineMisses": 2,
+      "binaryBrier": 0.056005902561544946,
+      "choiceBrier": 0.10367141578381121,
+      "costPer1000Fresh": 0.1630219047619047,
+      "monthlyUsd": 0.1630219047619047,
+      "costKnown": true,
+      "screeningPass": true,
+      "bySlice": {
+        "explicit": {
+          "cases": 6,
+          "quality": 0.8148148148148147,
+          "errors": 0,
+          "p95Ms": 2360.395817999961
+        },
+        "concrete": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 1698.0747170000104
+        },
+        "negation": {
+          "cases": 7,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 951.2572609999916
+        },
+        "viewing": {
+          "cases": 6,
+          "quality": 0.9166666666666666,
+          "errors": 0,
+          "p95Ms": 905.7949960000115
+        },
+        "title": {
+          "cases": 3,
+          "quality": 0.2888888888888889,
+          "errors": 0,
+          "p95Ms": 1069.3695950000547
+        },
+        "neutral": {
+          "cases": 1,
+          "quality": 0.8333333333333334,
+          "errors": 0,
+          "p95Ms": 892.1565079999855
+        },
+        "adversarial": {
+          "cases": 1,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 1028.432788999984
+        },
+        "typos": {
+          "cases": 1,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 728.7171230000677
+        },
+        "composition": {
+          "cases": 2,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 898.8785089999437
+        },
+        "multilingual": {
+          "cases": 12,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 789.6867520000087
+        }
+      },
+      "byLanguage": {
+        "en": {
+          "cases": 30,
+          "quality": 0.8696296296296294,
+          "errors": 0,
+          "p95Ms": 1007.4234559999313
+        },
+        "de": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 758.0511639999459
+        },
+        "es": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 789.6867520000087
+        },
+        "fr": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 742.9848520000232
+        },
+        "tr": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 790.783948999946
+        }
+      },
+      "providers": [
+        "Liquid,Liquid"
+      ],
+      "unreviewedPredictions": 1487
+    }
+  ],
+  "budget": {
+    "limitUsd": 0.322763292,
+    "reservationPerReadingUsd": 0.01,
+    "knownActualUsd": 0.05401848,
+    "unknownHeldUsd": 0,
+    "inFlightReservedUsd": 0
+  },
+  "completedAt": "2026-11-12T17:04:22.519Z"
+}

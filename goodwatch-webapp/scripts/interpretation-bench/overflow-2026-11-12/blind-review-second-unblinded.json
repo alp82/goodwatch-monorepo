@@ -1,0 +1,282 @@
+{
+  "kind": "second blinded AI-assisted intent review, not human acceptance",
+  "cases": 42,
+  "preferred": {
+    "tie": 20,
+    "jev": 17,
+    "uncertain": 1,
+    "liquid-d1.1": 4
+  },
+  "materialCases": {
+    "liquid-d1.1": 24,
+    "jev": 11
+  },
+  "details": [
+    {
+      "id": "romantic",
+      "preferred": "jev",
+      "issues": {
+        "liquid-d1.1": [
+          "Adds a marked aversion to bleakness, biasing a generic romance request against tragic or unhappy romances."
+        ]
+      }
+    },
+    {
+      "id": "fast-action",
+      "preferred": "jev",
+      "issues": {
+        "liquid-d1.1": [
+          "Adds an aversion to philosophical material although fast, adrenaline-heavy action can also be philosophical."
+        ]
+      }
+    },
+    {
+      "id": "wholesome",
+      "preferred": "uncertain",
+      "issues": {
+        "jev": [
+          "Excludes Adults although adult-targeted stories can be wholesome and hopeful."
+        ],
+        "liquid-d1.1": [
+          "Requires Family movie night/Public viewing safe from a tone request that does not specify audience or occasion."
+        ]
+      }
+    },
+    {
+      "id": "wit",
+      "preferred": "jev",
+      "issues": {
+        "liquid-d1.1": [
+          "Avoids cringe humor despite witty dialogue and wordplay being compatible with deliberately embarrassing comedy."
+        ]
+      }
+    },
+    {
+      "id": "space",
+      "preferred": "jev",
+      "issues": {
+        "liquid-d1.1": [
+          "Requires Pure escapism although spaceships and robots can be used in serious, reflective or realistic science fiction."
+        ]
+      }
+    },
+    {
+      "id": "chess",
+      "preferred": "jev",
+      "issues": {
+        "liquid-d1.1": [
+          "Avoids fantasy and crime even though the requested chess-prodigy rivalry does not exclude either surrounding story context."
+        ]
+      }
+    },
+    {
+      "id": "not-scary",
+      "preferred": "liquid-d1.1",
+      "issues": {
+        "jev": [
+          "Excludes Adults although avoiding frightening content does not specify a child-oriented audience."
+        ]
+      }
+    },
+    {
+      "id": "no-violence",
+      "preferred": "liquid-d1.1",
+      "issues": {
+        "liquid-d1.1": [
+          "Keeps the negated term violence as an unqualified concrete term."
+        ],
+        "jev": [
+          "Keeps the negated term violence as an unqualified concrete term.",
+          "Requires Public viewing safe although a nonviolent movie can still be inappropriate for public viewing."
+        ]
+      }
+    },
+    {
+      "id": "dark-not-gory",
+      "preferred": "jev",
+      "issues": {
+        "liquid-d1.1": [
+          "Keeps the explicitly negated term violence as an unqualified concrete term."
+        ]
+      }
+    },
+    {
+      "id": "no-anime",
+      "preferred": "tie",
+      "issues": {
+        "liquid-d1.1": [
+          "Requires Live action although excluding anime should still permit non-anime animation."
+        ],
+        "jev": [
+          "Excludes all Animated titles and requires Live action although the request excludes anime only."
+        ]
+      }
+    },
+    {
+      "id": "comfort",
+      "preferred": "jev",
+      "issues": {
+        "liquid-d1.1": [
+          "Adds strong aversions to crime and political themes, which can reject cozy mysteries or other comforting stories despite their low-intensity treatment."
+        ]
+      }
+    },
+    {
+      "id": "background",
+      "preferred": "jev",
+      "issues": {
+        "liquid-d1.1": [
+          "Avoids character depth, equating background suitability with shallow characterization even though familiar, character-rich episodic shows can be drop-in friendly."
+        ]
+      }
+    },
+    {
+      "id": "binge",
+      "preferred": "liquid-d1.1",
+      "issues": {
+        "jev": [
+          "Avoids slow burn even though a slow-burn series can be highly binge-friendly."
+        ]
+      }
+    },
+    {
+      "id": "kids",
+      "preferred": "jev",
+      "issues": {
+        "liquid-d1.1": [
+          "Avoids character depth although animation made for kids can have rich characters."
+        ]
+      }
+    },
+    {
+      "id": "family",
+      "preferred": "jev",
+      "issues": {
+        "liquid-d1.1": [
+          "Strongly prefers family dynamics, conflating a movie for family viewers with a movie whose subject is family relationships."
+        ]
+      }
+    },
+    {
+      "id": "adult",
+      "preferred": "liquid-d1.1",
+      "issues": {
+        "liquid-d1.1": [
+          "Adds eroticism affinity from an adult-audience request that does not ask for sexual content."
+        ],
+        "jev": [
+          "Adds eroticism affinity from an adult-audience request that does not ask for sexual content.",
+          "Avoids wholesome material and excludes Public viewing safe although neither follows from adults/not kids."
+        ]
+      }
+    },
+    {
+      "id": "neutral-type",
+      "preferred": "tie",
+      "issues": {
+        "jev": [
+          "Adds a showbiz preference to a media-type-only query."
+        ],
+        "liquid-d1.1": [
+          "Adds acting, cinematography and showbiz preferences to a media-type-only query."
+        ]
+      }
+    },
+    {
+      "id": "title-literal",
+      "preferred": "tie",
+      "issues": {
+        "jev": [
+          "Treats knight from the known film title as an independent concrete subject."
+        ],
+        "liquid-d1.1": [
+          "Treats knight from the known film title as an independent concrete subject."
+        ]
+      }
+    },
+    {
+      "id": "ambiguous-title",
+      "preferred": "jev",
+      "issues": {
+        "liquid-d1.1": [
+          "Requires Movie and Pure escapism from Alien although the query could refer to a general subject or a different media type, and not necessarily an escapist treatment."
+        ]
+      }
+    },
+    {
+      "id": "long-query",
+      "preferred": "jev",
+      "issues": {
+        "liquid-d1.1": [
+          "Adds a Teens exclusion to a whole-family request with no ages specified, an extra soft audience restriction."
+        ]
+      }
+    },
+    {
+      "id": "prompt-injection",
+      "preferred": "jev",
+      "issues": {
+        "liquid-d1.1": [
+          "Extracts banana from the injected command as a concrete retrieval term, polluting the scary-movie intent."
+        ]
+      }
+    },
+    {
+      "id": "de-1",
+      "preferred": "tie",
+      "issues": {
+        "liquid-d1.1": [
+          "Keeps gewalt from ohne Gewalt (without violence) as an unqualified concrete term."
+        ],
+        "jev": [
+          "Keeps gewalt from ohne Gewalt (without violence) as an unqualified concrete term."
+        ]
+      }
+    },
+    {
+      "id": "de-3",
+      "preferred": "jev",
+      "issues": {
+        "liquid-d1.1": [
+          "Adds aversions to comedy/irony, violence, scare and pastiche that a slow, thoughtful movie does not inherently exclude."
+        ]
+      }
+    },
+    {
+      "id": "es-3",
+      "preferred": "jev",
+      "issues": {
+        "liquid-d1.1": [
+          "Emits cula, a fragment of pelicula/película, as a concrete subject.",
+          "Adds aversions to comedy/irony and violence that slow philosophical viewing does not itself exclude."
+        ]
+      }
+    },
+    {
+      "id": "fr-3",
+      "preferred": "jev",
+      "issues": {
+        "liquid-d1.1": [
+          "Adds a spiritual affinity not explicitly requested by philosophical.",
+          "Adds comedy/irony and violence aversions that a slow philosophical movie need not satisfy."
+        ],
+        "jev": [
+          "Adds a spiritual affinity not explicitly requested by philosophical."
+        ]
+      }
+    },
+    {
+      "id": "tr-3",
+      "preferred": "jev",
+      "issues": {
+        "liquid-d1.1": [
+          "Adds a spiritual affinity not explicitly requested by philosophical.",
+          "Avoids comedy/irony and violence even though a slow philosophical film can include them."
+        ],
+        "jev": [
+          "Adds a spiritual affinity not explicitly requested by philosophical."
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "startedAt": "2026-11-12T17:00:07.398Z",
+  "models": [
+    {
+      "id": "perplexity-pplx-decider-flash-v1.2",
+      "kind": "openrouter-decisions",
+      "model": "perplexity/pplx-decider-flash-v1.2",
+      "responseModel": "perplexity/pplx-decider-flash-v1.2-20261016",
+      "providers": [
+        "perplexity"
+      ],
+      "inputPerMillion": 0.01,
+      "outputPerMillion": 0,
+      "contextTokens": 262144,
+      "cataloguePrice": {
+        "prompt": "0.00000001",
+        "completion": "0"
+      },
+      "providerStatus": 0,
+      "source": "https://openrouter.ai/api/v1/models/perplexity/pplx-decider-flash-v1.2/endpoints"
+    },
+    {
+      "id": "liquid-d1.1",
+      "kind": "openrouter-decisions",
+      "model": "liquid/d1.1",
+      "responseModel": "liquid/d1.1-20261027",
+      "providers": [
+        "liquid"
+      ],
+      "inputPerMillion": 0.02,
+      "outputPerMillion": 0,
+      "contextTokens": 65536,
+      "cataloguePrice": {
+        "prompt": "0.00000002",
+        "completion": "0",
+        "input_cache_read": "0.00000002"
+      },
+      "providerStatus": 0,
+      "source": "https://openrouter.ai/api/v1/models/liquid/d1.1/endpoints",
+      "maxQuestions": 128,
+      "profile": "native-batch128"
+    }
+  ],
+  "priorCashExposureUsd": 0.6772367079999997,
+  "budget": {
+    "limitUsd": 0.322763292,
+    "reservationPerReadingUsd": 0.01,
+    "knownActualUsd": 0,
+    "unknownHeldUsd": 0,
+    "inFlightReservedUsd": 0
+  },
+  "sourceHashes": {
+    "bench.mjs": "cb9324d007ba3d578d93dc64a29b9c18593cf113b41857be33629d19557b2f19",
+    "bench.test.mjs": "93512434e8c6d9b6f19acac833d69bf854aa93db030ecad4ef770e26495028d3",
+    "contract.mjs": "cef6e74642197f5e44c6c3a6c4a202a2dd9dd67f005575467d49f81c824d4982",
+    "export-replay.mjs": "ada814b5a1d2b9ab8df897d7531c4be916948966a2e6ed3006786d47add61ab5",
+    "overflow-confirm.mjs": "c030993ee0c04cfc1be9a5d5f86d014b2006782172ebcd715ded45a6b3a20c7a",
+    "overflow-report.mjs": "0523d45e4381d839bc83a929419eff54315fc854693e645aea6aee14f2f99e3f",
+    "overflow-run.mjs": "942309b5fbca25bd6818a75ad638d71f61546460fdd7e087ddd27481a778fd5d",
+    "overflow-run.test.mjs": "806f9ebdb4130a8cf5e2535d456f67ce3b23bd84572160147f86f856b6adb001",
+    "production.mjs": "6d6ea52ba4a122418dfe57840787819474584143b9e3e2025182eaf636f7d70d"
+  },
+  "productionSourceHashes": {
+    "packages/yepwatch-contracts/fingerprint.ts": "811beb6f3f7680e173de9d3185ee44dbe8f076e219b0e57716f1c3bf8226fdcd",
+    "app/ui/fingerprint/fingerprintMeta.ts": "ed8c0bfc208795113b09fdbb11e8a823b0746c7884465dd91992a3c4a95c4981",
+    "app/server/utils/fingerprint.ts": "bc42b46bbfc565f3b507202fcfa59cc587a71c36a6b339161e6d3dc86695bcb7",
+    "app/server/combined-search/reading-retrieval.server.ts": "60e3f2191674cc1ceb9aa809c4c2f538e7803fc15ee03bd80e8bbfe064151dcb",
+    "app/server/search-runtime/runtime.server.ts": "9b19c47b343f4647e888b40ea4cac8438193fe0cf485ef6f46262a224b1ea448",
+    "app/server/combined-search/search.server.ts": "82587f2fb1e6629d81eee04d69634e136e325b0414615093400fdee602fd6d01"
+  },
+  "suiteHash": "0882c43f2c80e5a0b583a49aea5fe4d9b0fe43f49402620fd6d1ff23c52a6c78",
+  "note": "Two additional c1 repetitions join the existing 42-case screen; three c4 repetitions are separate. $0.01 per-reading reservations are engineering estimates informed by complete 42-case observed costs, not provider-enforced caps. No automatic retries/fallbacks."
+}

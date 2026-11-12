@@ -1,0 +1,807 @@
+{
+  "status": "development benchmark; provisional assertions, no blind relevance acceptance or production switch",
+  "completedAt": "2026-11-12T17:00:05.713Z",
+  "admission": [
+    {
+      "model": "jev",
+      "status": "ok",
+      "costUsd": 0.00031462199999999997,
+      "errors": [
+        null,
+        null
+      ]
+    },
+    {
+      "model": "scaledown-classify-1",
+      "status": "ok",
+      "costUsd": 0.00181824,
+      "errors": [
+        null,
+        null
+      ]
+    },
+    {
+      "model": "nace-ai-drex-max",
+      "status": "ok",
+      "costUsd": 0.00111864,
+      "errors": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "morph-reflex",
+      "status": "ok",
+      "costUsd": 0.00040425000000000004,
+      "errors": [
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "liquid-d1-ultra",
+      "status": "ok",
+      "costUsd": 0.000324618,
+      "errors": [
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "summaries": [
+    {
+      "concurrency": 1,
+      "model": "jev",
+      "attempts": 126,
+      "quality": 0.926984126984127,
+      "exactCaseRate": 0.8095238095238095,
+      "p50Ms": 236.07096899999306,
+      "p95Ms": 298.543347000028,
+      "speed": 0.8340082559044247,
+      "equalWeightScore": 0.8804961914442759,
+      "errorRate": 0,
+      "criticalMisses": 0,
+      "deadlineMisses": 0,
+      "binaryBrier": 0.0398840476190476,
+      "choiceBrier": 0.06458199233716475,
+      "costPer1000Fresh": 0.33287500000000014,
+      "monthlyUsd": 0.33287500000000014,
+      "costKnown": true,
+      "screeningPass": true,
+      "bySlice": {
+        "explicit": {
+          "cases": 6,
+          "quality": 0.8333333333333333,
+          "errors": 0,
+          "p95Ms": 316.3675069999881
+        },
+        "concrete": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 310.01543699996546
+        },
+        "negation": {
+          "cases": 7,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 275.06359399994835
+        },
+        "viewing": {
+          "cases": 6,
+          "quality": 0.9166666666666666,
+          "errors": 0,
+          "p95Ms": 298.543347000028
+        },
+        "neutral": {
+          "cases": 1,
+          "quality": 0.8333333333333334,
+          "errors": 0,
+          "p95Ms": 278.8621120000025
+        },
+        "title": {
+          "cases": 3,
+          "quality": 0.5333333333333334,
+          "errors": 0,
+          "p95Ms": 284.7225089999847
+        },
+        "typos": {
+          "cases": 1,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 256.54106700000193
+        },
+        "composition": {
+          "cases": 2,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 254.3340259999968
+        },
+        "adversarial": {
+          "cases": 1,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 257.6112440000288
+        },
+        "multilingual": {
+          "cases": 12,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 306.2584170000009
+        }
+      },
+      "byLanguage": {
+        "en": {
+          "cases": 30,
+          "quality": 0.8977777777777778,
+          "errors": 0,
+          "p95Ms": 293.70881599991117
+        },
+        "de": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 286.0948900000658
+        },
+        "es": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 319.89221100000213
+        },
+        "fr": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 306.2584170000009
+        },
+        "tr": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 248.1713030000683
+        }
+      },
+      "providers": [
+        "typesafe"
+      ],
+      "unreviewedPredictions": 998,
+      "overflowCostRatioToJevList": 1,
+      "overflowCashPer1000": null,
+      "sameDecoderScreeningPass": true
+    },
+    {
+      "concurrency": 4,
+      "model": "jev",
+      "attempts": 126,
+      "quality": 0.9190476190476191,
+      "exactCaseRate": 0.7857142857142857,
+      "p50Ms": 246.015550000011,
+      "p95Ms": 307.3025849999394,
+      "speed": 0.8299661675081653,
+      "equalWeightScore": 0.8745068932778922,
+      "errorRate": 0,
+      "criticalMisses": 0,
+      "deadlineMisses": 0,
+      "binaryBrier": 0.04026707936507935,
+      "choiceBrier": 0.06832720306513411,
+      "costPer1000Fresh": 0.33287500000000003,
+      "monthlyUsd": 0.33287500000000003,
+      "costKnown": true,
+      "screeningPass": true,
+      "bySlice": {
+        "explicit": {
+          "cases": 6,
+          "quality": 0.8333333333333333,
+          "errors": 0,
+          "p95Ms": 327.0533929999219
+        },
+        "concrete": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 286.4798530000262
+        },
+        "negation": {
+          "cases": 7,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 303.38206800003536
+        },
+        "viewing": {
+          "cases": 6,
+          "quality": 0.9166666666666666,
+          "errors": 0,
+          "p95Ms": 323.4326309999451
+        },
+        "neutral": {
+          "cases": 1,
+          "quality": 0.8333333333333334,
+          "errors": 0,
+          "p95Ms": 234.18221100000665
+        },
+        "title": {
+          "cases": 3,
+          "quality": 0.5333333333333333,
+          "errors": 0,
+          "p95Ms": 308.52800700010266
+        },
+        "typos": {
+          "cases": 1,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 290.55261699995026
+        },
+        "composition": {
+          "cases": 2,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 341.3001820000354
+        },
+        "adversarial": {
+          "cases": 1,
+          "quality": 0.6666666666666666,
+          "errors": 0,
+          "p95Ms": 289.5345719999168
+        },
+        "multilingual": {
+          "cases": 12,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 304.36969600000884
+        }
+      },
+      "byLanguage": {
+        "en": {
+          "cases": 30,
+          "quality": 0.8866666666666666,
+          "errors": 0,
+          "p95Ms": 308.52800700010266
+        },
+        "de": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 369.0759819999803
+        },
+        "es": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 257.09307900001295
+        },
+        "fr": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 278.40992200002074
+        },
+        "tr": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 304.36969600000884
+        }
+      },
+      "providers": [
+        "typesafe"
+      ],
+      "unreviewedPredictions": 1008,
+      "overflowCostRatioToJevList": 1,
+      "overflowCashPer1000": null,
+      "sameDecoderScreeningPass": true
+    },
+    {
+      "concurrency": 1,
+      "model": "scaledown-classify-1",
+      "attempts": 42,
+      "quality": 0.9484126984126983,
+      "exactCaseRate": 0.8333333333333334,
+      "p50Ms": 4359.7960789999925,
+      "p95Ms": 10858.753158,
+      "speed": 0.12137146691282756,
+      "equalWeightScore": 0.5348920826627629,
+      "errorRate": 0,
+      "criticalMisses": 1,
+      "deadlineMisses": 42,
+      "binaryBrier": 0.055215804011181764,
+      "choiceBrier": 0.10115299894437844,
+      "costPer1000Fresh": 1.9017095238095243,
+      "monthlyUsd": 1.9017095238095243,
+      "costKnown": true,
+      "screeningPass": false,
+      "bySlice": {
+        "explicit": {
+          "cases": 6,
+          "quality": 0.9444444444444443,
+          "errors": 0,
+          "p95Ms": 12190.817405000002
+        },
+        "concrete": {
+          "cases": 3,
+          "quality": 0.8888888888888888,
+          "errors": 0,
+          "p95Ms": 6012.812312000009
+        },
+        "negation": {
+          "cases": 7,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 7426.870733000003
+        },
+        "viewing": {
+          "cases": 6,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 4447.250530999998
+        },
+        "neutral": {
+          "cases": 1,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 6638.271869999997
+        },
+        "title": {
+          "cases": 3,
+          "quality": 0.8333333333333334,
+          "errors": 0,
+          "p95Ms": 5947.206311999995
+        },
+        "typos": {
+          "cases": 1,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 2724.2750479999813
+        },
+        "composition": {
+          "cases": 2,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 3334.218531999999
+        },
+        "adversarial": {
+          "cases": 1,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 4379.046089999989
+        },
+        "multilingual": {
+          "cases": 12,
+          "quality": 0.9166666666666665,
+          "errors": 0,
+          "p95Ms": 6723.863226000016
+        }
+      },
+      "byLanguage": {
+        "en": {
+          "cases": 30,
+          "quality": 0.961111111111111,
+          "errors": 0,
+          "p95Ms": 12093.24233300001
+        },
+        "de": {
+          "cases": 3,
+          "quality": 0.8888888888888888,
+          "errors": 0,
+          "p95Ms": 6048.048161999992
+        },
+        "es": {
+          "cases": 3,
+          "quality": 0.8888888888888888,
+          "errors": 0,
+          "p95Ms": 5914.128815999982
+        },
+        "fr": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 4572.095608000003
+        },
+        "tr": {
+          "cases": 3,
+          "quality": 0.8888888888888888,
+          "errors": 0,
+          "p95Ms": 6723.863226000016
+        }
+      },
+      "providers": [
+        "ScaleDown,ScaleDown"
+      ],
+      "unreviewedPredictions": 126,
+      "overflowCostRatioToJevList": 5.712983924324517,
+      "overflowCashPer1000": 1.9017095238095243,
+      "sameDecoderScreeningPass": false
+    },
+    {
+      "concurrency": 1,
+      "model": "nace-ai-drex-max",
+      "attempts": 42,
+      "quality": 0.9281746031746032,
+      "exactCaseRate": 0.8095238095238095,
+      "p50Ms": 4481.512187999964,
+      "p95Ms": 9917.747878000024,
+      "speed": 0.13137441954645313,
+      "equalWeightScore": 0.5297745113605281,
+      "errorRate": 0,
+      "criticalMisses": 0,
+      "deadlineMisses": 42,
+      "binaryBrier": 0.03967655742672048,
+      "choiceBrier": 0.055191715132614685,
+      "costPer1000Fresh": 1.1578814285714283,
+      "monthlyUsd": 1.1578814285714283,
+      "costKnown": true,
+      "screeningPass": false,
+      "bySlice": {
+        "explicit": {
+          "cases": 6,
+          "quality": 0.8333333333333334,
+          "errors": 0,
+          "p95Ms": 11846.67361899998
+        },
+        "concrete": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 7635.935505999951
+        },
+        "negation": {
+          "cases": 7,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 9917.747878000024
+        },
+        "viewing": {
+          "cases": 6,
+          "quality": 0.9166666666666666,
+          "errors": 0,
+          "p95Ms": 9395.957192999951
+        },
+        "neutral": {
+          "cases": 1,
+          "quality": 0.8333333333333334,
+          "errors": 0,
+          "p95Ms": 3995.529902999988
+        },
+        "title": {
+          "cases": 3,
+          "quality": 0.5499999999999999,
+          "errors": 0,
+          "p95Ms": 6364.912849000015
+        },
+        "typos": {
+          "cases": 1,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 5488.299224000017
+        },
+        "composition": {
+          "cases": 2,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 4345.705185999977
+        },
+        "adversarial": {
+          "cases": 1,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 3750.3014069999917
+        },
+        "multilingual": {
+          "cases": 12,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 11137.01343000005
+        }
+      },
+      "byLanguage": {
+        "en": {
+          "cases": 30,
+          "quality": 0.8994444444444444,
+          "errors": 0,
+          "p95Ms": 9917.747878000024
+        },
+        "de": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 6762.933473000012
+        },
+        "es": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 11137.01343000005
+        },
+        "fr": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 7041.819137999963
+        },
+        "tr": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 4481.512187999964
+        }
+      },
+      "providers": [
+        "DeepInfra,DeepInfra"
+      ],
+      "unreviewedPredictions": 290,
+      "overflowCostRatioToJevList": 3.47842712300842,
+      "overflowCashPer1000": 1.1578814285714283,
+      "sameDecoderScreeningPass": false
+    },
+    {
+      "concurrency": 1,
+      "model": "morph-reflex",
+      "attempts": 42,
+      "quality": 0.8972222222222221,
+      "exactCaseRate": 0.7142857142857143,
+      "p50Ms": 2122.268597999995,
+      "p95Ms": 2468.433267000015,
+      "speed": 0.3779829214903097,
+      "equalWeightScore": 0.6376025718562659,
+      "errorRate": 0,
+      "criticalMisses": 0,
+      "deadlineMisses": 42,
+      "binaryBrier": 0.07915972107605292,
+      "choiceBrier": 0.04652883711176419,
+      "costPer1000Fresh": 0.42152999999999996,
+      "monthlyUsd": 0.42152999999999996,
+      "costKnown": true,
+      "screeningPass": false,
+      "bySlice": {
+        "explicit": {
+          "cases": 6,
+          "quality": 0.7916666666666666,
+          "errors": 0,
+          "p95Ms": 2157.8051790000172
+        },
+        "concrete": {
+          "cases": 3,
+          "quality": 0.7777777777777777,
+          "errors": 0,
+          "p95Ms": 2152.5120439999737
+        },
+        "negation": {
+          "cases": 7,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 2208.420892999973
+        },
+        "viewing": {
+          "cases": 6,
+          "quality": 0.9166666666666666,
+          "errors": 0,
+          "p95Ms": 2882.9077870000037
+        },
+        "neutral": {
+          "cases": 1,
+          "quality": 0.8333333333333334,
+          "errors": 0,
+          "p95Ms": 2028.4280990000116
+        },
+        "title": {
+          "cases": 3,
+          "quality": 0.5333333333333333,
+          "errors": 0,
+          "p95Ms": 2205.1657530000084
+        },
+        "typos": {
+          "cases": 1,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 2128.13094599999
+        },
+        "composition": {
+          "cases": 2,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 2717.7437269999646
+        },
+        "adversarial": {
+          "cases": 1,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 2115.207088999916
+        },
+        "multilingual": {
+          "cases": 12,
+          "quality": 0.9722222222222222,
+          "errors": 0,
+          "p95Ms": 2468.433267000015
+        }
+      },
+      "byLanguage": {
+        "en": {
+          "cases": 30,
+          "quality": 0.8672222222222223,
+          "errors": 0,
+          "p95Ms": 2717.7437269999646
+        },
+        "de": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 2150.6225729999132
+        },
+        "es": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 2468.433267000015
+        },
+        "fr": {
+          "cases": 3,
+          "quality": 0.8888888888888888,
+          "errors": 0,
+          "p95Ms": 2150.581404000055
+        },
+        "tr": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 2287.7693549999967
+        }
+      },
+      "providers": [
+        "Morph,Morph"
+      ],
+      "unreviewedPredictions": 506,
+      "overflowCostRatioToJevList": 1.2663312054074345,
+      "overflowCashPer1000": 0.42152999999999996,
+      "sameDecoderScreeningPass": false
+    },
+    {
+      "concurrency": 1,
+      "model": "liquid-d1-ultra",
+      "attempts": 42,
+      "quality": 0.926984126984127,
+      "exactCaseRate": 0.8095238095238095,
+      "p50Ms": 709.9653539999854,
+      "p95Ms": 1491.0954469999997,
+      "speed": 0.5014885103397372,
+      "equalWeightScore": 0.714236318661932,
+      "errorRate": 0,
+      "criticalMisses": 0,
+      "deadlineMisses": 2,
+      "binaryBrier": 0.034736519946012276,
+      "choiceBrier": 0.03920459495806374,
+      "costPer1000Fresh": 0.342346,
+      "monthlyUsd": 0.342346,
+      "costKnown": true,
+      "screeningPass": true,
+      "bySlice": {
+        "explicit": {
+          "cases": 6,
+          "quality": 0.8333333333333334,
+          "errors": 0,
+          "p95Ms": 1390.3198100000154
+        },
+        "concrete": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 1195.7134000000078
+        },
+        "negation": {
+          "cases": 7,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 998.4284460000927
+        },
+        "viewing": {
+          "cases": 6,
+          "quality": 0.9166666666666666,
+          "errors": 0,
+          "p95Ms": 1567.3050659999717
+        },
+        "neutral": {
+          "cases": 1,
+          "quality": 0.8333333333333334,
+          "errors": 0,
+          "p95Ms": 745.5367280000355
+        },
+        "title": {
+          "cases": 3,
+          "quality": 0.5333333333333333,
+          "errors": 0,
+          "p95Ms": 637.6224650000222
+        },
+        "typos": {
+          "cases": 1,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 586.5541440000525
+        },
+        "composition": {
+          "cases": 2,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 1310.5117300000275
+        },
+        "adversarial": {
+          "cases": 1,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 600.9866589999292
+        },
+        "multilingual": {
+          "cases": 12,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 1662.003945000004
+        }
+      },
+      "byLanguage": {
+        "en": {
+          "cases": 30,
+          "quality": 0.8977777777777778,
+          "errors": 0,
+          "p95Ms": 1419.0570049999515
+        },
+        "de": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 738.4527899998939
+        },
+        "es": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 1491.0954469999997
+        },
+        "fr": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 1662.003945000004
+        },
+        "tr": {
+          "cases": 3,
+          "quality": 1,
+          "errors": 0,
+          "p95Ms": 913.8795960000716
+        }
+      },
+      "providers": [
+        "Liquid,Liquid"
+      ],
+      "unreviewedPredictions": 315,
+      "overflowCostRatioToJevList": 1.028452121667292,
+      "overflowCashPer1000": 0.342346,
+      "sameDecoderScreeningPass": true
+    }
+  ],
+  "budget": {
+    "limitUsd": 0.487014652,
+    "reservationPerReadingUsd": 0.02,
+    "knownActualUsd": 0.16425136,
+    "unknownHeldUsd": 0,
+    "inFlightReservedUsd": 0
+  },
+  "measuredFreshInterpretations": 420,
+  "freeTypeSafeUsdPerCycle": 5,
+  "renewalDay": 17,
+  "overflowOnly": true,
+  "benchmarkCash": "OpenRouter calls consume paid credit; direct JEV control consumes existing free allowance",
+  "finalists": [
+    "jev"
+  ]
+}

@@ -1,0 +1,402 @@
+{
+  "review": "identity-blinded AI-assisted semantic review",
+  "date": "2026-11-12",
+  "scope": "42 paired interpretation outputs; A/B identities independently randomized for every query; no identities, timing, trial logs or model mappings inspected",
+  "limitations": [
+    "Provisional intent judgements, not human acceptance.",
+    "No retrieved titles or ranked-result outcomes were available.",
+    "Soft attribute labels do not establish hard filter enforcement.",
+    "Concrete lists show no polarity or downstream routing; flagged negative-term risks require pipeline confirmation.",
+    "No model identity or aggregate winner is inferred here."
+  ],
+  "cases": [
+    {
+      "id": "scary",
+      "preferred": "B",
+      "materialA": [
+        "Avoids hopefulness and situational comedy and excludes Date night although scary stories can have hopeful endings, comedy, or be date-night choices."
+      ],
+      "materialB": [],
+      "note": "Both strongly preserve scare and tension. B adds some violence affinity, a plausible horror association rather than an explicit violence demand; A makes broader unrequested aversions."
+    },
+    {
+      "id": "romantic",
+      "preferred": "A",
+      "materialA": [],
+      "materialB": [
+        "Strongly avoids bleakness, scare and warfare, narrowing a generic romance request away from tragic, wartime or horror romances."
+      ],
+      "note": "Both correctly require a movie and strongly want romance. A adds plausible romantic occasion signals; neither the occasion nor an upbeat ending was explicitly requested."
+    },
+    {
+      "id": "slow-burn",
+      "preferred": "A",
+      "materialA": [],
+      "materialB": [
+        "Strongly avoids scare, violence and several comedy forms despite a slow-burn mystery being compatible with those styles."
+      ],
+      "note": "Both retain mystery, intrigue, slow burn and lower pace. A crime affinity is a plausible genre association; B makes unrelated genre aversions more forceful."
+    },
+    {
+      "id": "fast-action",
+      "preferred": "B",
+      "materialA": [
+        "Requires Movie although the query does not choose movies over shows."
+      ],
+      "materialB": [],
+      "note": "Both retain fast pace and adrenaline. Editing, spectacle and violence affinities are plausible action associations; the unsupported hard media constraint is the decisive difference."
+    },
+    {
+      "id": "wholesome",
+      "preferred": "A",
+      "materialA": [
+        "Excludes the Adults audience signal although an adult-targeted story can be wholesome and hopeful."
+      ],
+      "materialB": [
+        "Excludes the Adults audience signal although an adult-targeted story can be wholesome and hopeful.",
+        "Adds strong aversion to complexity, satire/parody, absurdist humor and eccentricity, which the query does not rule out."
+      ],
+      "note": "Both strongly capture wholesome and hope. Avoiding bleakness or grotesque material is reasonable nuance; broad intellectual/comedic aversions go further."
+    },
+    {
+      "id": "wit",
+      "preferred": "tie",
+      "materialA": [],
+      "materialB": [],
+      "note": "Both preserve wit, dialogue quality and dialogue centrality. A includes the abstract/generic term dialogue as concrete; B adds mild satire/irony. These differences alone do not establish material harm."
+    },
+    {
+      "id": "space",
+      "preferred": "tie",
+      "materialA": [],
+      "materialB": [],
+      "note": "Both retain both requested concrete motifs. Futurism, wonder, spectacle and technology/humanity are plausible related traits; neither adds a hard restriction."
+    },
+    {
+      "id": "submarine",
+      "preferred": "B",
+      "materialA": [
+        "Requires Movie although the request does not choose a media type.",
+        "Avoids contemporary realism even though a submarine standoff and mutiny can be realistic."
+      ],
+      "materialB": [],
+      "note": "Both retain submarine, standoff and mutiny, with plausible tension/warfare/intrigue. A introduces an unsupported media limit and realism aversion."
+    },
+    {
+      "id": "chess",
+      "preferred": "tie",
+      "materialA": [],
+      "materialB": [],
+      "note": "Both preserve chess, prodigy and rivalry. A biographical affinity and B slow-burn affinity are additional hypotheses, not established requirements; neither clearly dominates without ranked results."
+    },
+    {
+      "id": "not-scary",
+      "preferred": "B",
+      "materialA": [
+        "Excludes Adults and requires Comfort watch from an exclusion of scary content.",
+        "Avoids adrenaline strongly, although non-scary energetic action or comedy remains compatible."
+      ],
+      "materialB": [
+        "Excludes Adults from an exclusion of scary content."
+      ],
+      "note": "Both correctly avoid scare. The shared audience inference is unsupported; B makes fewer distinct assumptions about the desired viewing experience."
+    },
+    {
+      "id": "no-violence",
+      "preferred": "B",
+      "materialA": [
+        "Excludes Adults although lack of violence does not imply a child-targeted movie.",
+        "Keeps the negated term violence as an unqualified concrete term."
+      ],
+      "materialB": [
+        "Keeps the negated term violence as an unqualified concrete term."
+      ],
+      "note": "Both retain the explicit movie type and negative violence direction. Concrete terms expose no polarity here, so possible positive retrieval from violence needs downstream confirmation; movie is also generic concrete noise in A."
+    },
+    {
+      "id": "not-romantic",
+      "preferred": "B",
+      "materialA": [
+        "Excludes Pure escapism even though escapist viewing can be entirely non-romantic."
+      ],
+      "materialB": [],
+      "note": "Both strongly avoid romance. Date/partner associations are extra context assumptions, but A adds a separate, unsupported anti-escapism preference."
+    },
+    {
+      "id": "not-slow",
+      "preferred": "tie",
+      "materialA": [],
+      "materialB": [],
+      "note": "Both preserve the explicit fast-pace preference and slow-burn exclusion. Adrenaline and editing are plausible related signals; neither introduces a hard identity restriction."
+    },
+    {
+      "id": "dark-not-gory",
+      "preferred": "tie",
+      "materialA": [
+        "Keeps the explicitly negated term violence as an unqualified concrete term."
+      ],
+      "materialB": [
+        "Keeps the explicitly negated term violence as an unqualified concrete term."
+      ],
+      "note": "Both preserve wanted dark humor and explicitly avoided violence. The concrete list has no polarity or downstream routing here, so possible positive retrieval from violence requires confirmation. Kids exclusion in B is a plausible maturity association, not a decisive difference."
+    },
+    {
+      "id": "no-animation",
+      "preferred": "tie",
+      "materialA": [],
+      "materialB": [],
+      "note": "Both correctly require live action and exclude animation/anime for this explicit no-animation query. Tiny acting-weight differences are immaterial."
+    },
+    {
+      "id": "no-anime",
+      "preferred": "tie",
+      "materialA": [
+        "Excludes all Animated titles and requires Live action even though the query excludes anime only; non-anime animation should remain eligible."
+      ],
+      "materialB": [
+        "Excludes all Animated titles and requires Live action even though the query excludes anime only; non-anime animation should remain eligible."
+      ],
+      "note": "Both preserve show type and the anime exclusion, but share the same broader hard identity error. Small unrelated weights do not justify preferring either."
+    },
+    {
+      "id": "comfort",
+      "preferred": "uncertain",
+      "materialA": [
+        "Adds aversion to sports, politics and eccentricity that a cozy comfort request does not entail."
+      ],
+      "materialB": [
+        "Adds aversion to novelty, making familiarity a requirement-like preference even though new comforting stories are allowed."
+      ],
+      "note": "Both preserve comfort with plausible lower scare/tension and wholesome affinities. Their additional soft biases differ; no ranked outcomes establish which harms this query more. A concrete watch token is also generic noise."
+    },
+    {
+      "id": "background",
+      "preferred": "B",
+      "materialA": [
+        "Introduces a preference for music composition/music centrality and aversion to world immersion, selecting a musical interpretation of background viewing that the query never requests."
+      ],
+      "materialB": [],
+      "note": "Both correctly mark Background watch and Drop-in friendly. B mainly lowers attention-demanding traits; A adds a distinct content preference rather than only viewing suitability."
+    },
+    {
+      "id": "binge",
+      "preferred": "tie",
+      "materialA": [],
+      "materialB": [],
+      "note": "Both correctly require a series and Binge-friendly. Rewatchability, pace and structure are plausible but not necessary associations; A background-watch exclusion and B showbiz affinity are unrequested minor extras, not decisive here."
+    },
+    {
+      "id": "kids",
+      "preferred": "B",
+      "materialA": [
+        "Excludes Intergenerational viewing although animation made for kids can also work across generations."
+      ],
+      "materialB": [],
+      "note": "Both correctly retain animation and a kids audience. B gives fewer strong aversions to philosophical/psychological complexity; these subjects can exist in child-friendly animation, but the clearest error is A intergenerational exclusion."
+    },
+    {
+      "id": "family",
+      "preferred": "tie",
+      "materialA": [],
+      "materialB": [],
+      "note": "Both preserve Movie, Family movie night and Intergenerational viewing. Family-suitability safety preferences are reasonable; B is more restrictive in tone, but the input provides no ages or result evidence to decide that difference is materially worse."
+    },
+    {
+      "id": "adult",
+      "preferred": "A",
+      "materialA": [
+        "Excludes Public viewing safe even though adult-targeted material need not be unsuitable for public viewing."
+      ],
+      "materialB": [
+        "Excludes Public viewing safe even though adult-targeted material need not be unsuitable for public viewing.",
+        "Adds eroticism affinity and a stronger anti-wholesome preference from an audience-age request."
+      ],
+      "note": "Both retain adults and not-kids intent. The request does not ask for sexual content or an unwholesome tone; A still shares the unsupported public-viewing assumption."
+    },
+    {
+      "id": "neutral-type",
+      "preferred": "tie",
+      "materialA": [
+        "Adds a strong ambiguity preference to a media-type-only query."
+      ],
+      "materialB": [
+        "Adds a showbiz preference to a media-type-only query."
+      ],
+      "note": "Both correctly select movies. Neither unrelated taste signal is supported, and their different vector directions cannot be ranked fairly without results."
+    },
+    {
+      "id": "title-literal",
+      "preferred": "tie",
+      "materialA": [
+        "Treats knight from the known film title as an independent concrete motif, risking a literal-knight interpretation."
+      ],
+      "materialB": [
+        "Treats knight from the known film title as an independent concrete motif, risking a literal-knight interpretation."
+      ],
+      "note": "Both infer broadly plausible traits of the named film. The review input does not expose separate title resolution, so this flags the concrete reading rather than asserting that the full pipeline fails to resolve the title."
+    },
+    {
+      "id": "named-director",
+      "preferred": "B",
+      "materialA": [
+        "Requires Movie from a person-name query without an explicit movie-versus-show choice."
+      ],
+      "materialB": [],
+      "note": "Both infer plausible stylistic associations with the named director. A adds a hard media limit; separate person resolution is not visible in this review input."
+    },
+    {
+      "id": "ambiguous-title",
+      "preferred": "uncertain",
+      "materialA": [],
+      "materialB": [],
+      "note": "Alien can denote the film or a general motif. A leans toward wonder/spectacle and B toward horror; both retain alien. Without intended referent or visible entity resolution, preferring either would invent intent."
+    },
+    {
+      "id": "typo",
+      "preferred": "tie",
+      "materialA": [],
+      "materialB": [],
+      "note": "Both recover scary and no violence despite spelling mistakes, preserve the negative violence direction, and add plausible tension/uncanny associations."
+    },
+    {
+      "id": "composition",
+      "preferred": "A",
+      "materialA": [],
+      "materialB": [
+        "Requires Movie even though the composed query does not choose movies over shows."
+      ],
+      "note": "Both preserve psychological mystery, slow burn, and explicit violence/romance exclusions. The unsupported hard movie restriction is the substantive difference."
+    },
+    {
+      "id": "long-query",
+      "preferred": "tie",
+      "materialA": [],
+      "materialB": [],
+      "note": "Both preserve the complete requested movie/animation/family/wonder/hope/wit composition and all three explicit exclusions. A partner-watch exclusion is extra context; B concrete witty is an abstract lexical extra. Neither alone establishes a material preference."
+    },
+    {
+      "id": "prompt-injection",
+      "preferred": "A",
+      "materialA": [],
+      "materialB": [
+        "Uses output, word and banana from an instruction-injection sentence as concrete retrieval terms, polluting the requested scary-movie intent."
+      ],
+      "note": "Both maintain typed scary-movie interpretations rather than obeying the instruction to output banana. B nevertheless promotes the irrelevant command content into the semantic reading."
+    },
+    {
+      "id": "de-1",
+      "preferred": "A",
+      "materialA": [
+        "Keeps gewalt from ohne Gewalt (without violence) as an unqualified concrete term."
+      ],
+      "materialB": [
+        "Keeps ohne (without), gewalt (violence), and generic film as concrete terms, losing the negative phrase relationship."
+      ],
+      "note": "Both understand romantic movie without violence in their main weights and media attributes. A date-night and B partner-watch signals are plausible romantic associations; B has more misleading lexical material. Concrete-polarity effects require downstream confirmation."
+    },
+    {
+      "id": "de-2",
+      "preferred": "B",
+      "materialA": [
+        "Excludes Adults from a request for a suspenseful series that is not frightening."
+      ],
+      "materialB": [],
+      "note": "Both retain series, suspense/intrigue and no scare. A adds an unsupported audience exclusion and generic serie concrete token; B preserves the distinction between suspense and horror more cleanly."
+    },
+    {
+      "id": "de-3",
+      "preferred": "A",
+      "materialA": [],
+      "materialB": [
+        "Strongly avoids physical/situational comedy despite slow, thoughtful films being compatible with philosophical comedy."
+      ],
+      "note": "Both correctly read slow pace and thoughtfulness and require movies. B also emits generic film as concrete; A mild melancholy/psychological depth is plausible nuance."
+    },
+    {
+      "id": "es-1",
+      "preferred": "B",
+      "materialA": [
+        "Keeps pel, sin (without), and violencia as concrete terms, including a word fragment and a negated subject.",
+        "Excludes Adults from a romantic-movie-without-violence request."
+      ],
+      "materialB": [],
+      "note": "Both main readings preserve romance, movie type and negative violence. B avoids the misleading Spanish lexical fragments and the unrequested audience exclusion."
+    },
+    {
+      "id": "es-2",
+      "preferred": "B",
+      "materialA": [
+        "Excludes Adults and requires Comfort watch from a mystery-series request that only excludes frightening content."
+      ],
+      "materialB": [],
+      "note": "Both preserve series, mystery and no scare. Not frightening does not require a comforting or child-oriented mystery; B avoids those additional audience/context assumptions."
+    },
+    {
+      "id": "es-3",
+      "preferred": "B",
+      "materialA": [
+        "Avoids physical/situational comedy despite the request only specifying slow pace and philosophy."
+      ],
+      "materialB": [],
+      "note": "Both preserve philosophical movie and slow pace. B spirituality and educational affinities are additional related hypotheses rather than hard requirements; A introduces a broader comic-style aversion."
+    },
+    {
+      "id": "fr-1",
+      "preferred": "A",
+      "materialA": [],
+      "materialB": [
+        "Keeps violence from sans violence (without violence) as an unqualified concrete term."
+      ],
+      "note": "Both preserve romantic movie and violence exclusion. B generic film is also concrete noise. A date-night signal is a plausible romantic association rather than an explicit viewing occasion."
+    },
+    {
+      "id": "fr-2",
+      "preferred": "B",
+      "materialA": [
+        "Excludes Adults from a mysterious-series request that only excludes frightening content."
+      ],
+      "materialB": [],
+      "note": "Both preserve series, mystery and no scare. B ambiguity is stronger and could oversteer toward ambiguous plots, but remains related to the stated mystery preference; A audience-age assumption is less grounded."
+    },
+    {
+      "id": "fr-3",
+      "preferred": "uncertain",
+      "materialA": [
+        "Adds a strong spiritual affinity, although philosophical does not necessarily mean spiritual or religious."
+      ],
+      "materialB": [
+        "Adds aversion to physical/situational comedy, although slow philosophical films can be comic."
+      ],
+      "note": "Both preserve slow philosophical movie intent. Their unrelated soft steering differs and no ranked outcomes establish which causes greater harm; neither should be declared clearly superior from these vectors alone."
+    },
+    {
+      "id": "tr-1",
+      "preferred": "A",
+      "materialA": [],
+      "materialB": [
+        "Excludes Adults even though a romantic movie without violence can target adult viewers."
+      ],
+      "note": "Both understand the Turkish romance/without-violence/movie composition. B generic film concrete token is minor noise; A date/partner signals are plausible but not explicitly requested."
+    },
+    {
+      "id": "tr-2",
+      "preferred": "B",
+      "materialA": [
+        "Excludes Adults and requires Comfort watch from a mysterious-series request with no frightening content."
+      ],
+      "materialB": [],
+      "note": "Both retain series, mystery and no scare. B ambiguity affinity is related nuance; A adds demographic and comfort assumptions absent from the Turkish query."
+    },
+    {
+      "id": "tr-3",
+      "preferred": "uncertain",
+      "materialA": [
+        "Adds a strong spiritual affinity to a slow philosophical-film request without a spiritual theme."
+      ],
+      "materialB": [
+        "Adds aversion to physical/situational comedy to a slow philosophical-film request without excluding comedy."
+      ],
+      "note": "Both preserve slow pace, philosophy and movie type. B also emits generic film as concrete; the competing soft biases need actual result review to distinguish their practical impact."
+    }
+  ]
+}

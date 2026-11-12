@@ -1,0 +1,51 @@
+import{readFileSync,writeFileSync,existsSync}from'node:fs'
+import{summarize}from'./bench.mjs'
+const artifact=new URL('./overflow-2026-11-12/',import.meta.url)
+const json=p=>JSON.parse(readFileSync(new URL(p,artifact)))
+const config=json('config.json'),suite=JSON.parse(readFileSync(new URL('./cases.json',import.meta.url)))
+const runs=['run','adapted','remainder','confirmation'].filter(p=>existsSync(new URL(p+'/trials.jsonl',artifact)))
+const rows=runs.flatMap(run=>readFileSync(new URL(run+'/trials.jsonl',artifact),'utf8').trim().split('\n').map(s=>({...JSON.parse(s),run})))
+const modelRows=[]
+for(const model of config.models){
+ const complete=runs.map(run=>({run,rows:rows.filter(r=>r.run===run&&r.model===model.id&&r.phase==='screen'&&!r.warmup)})).filter(g=>new Set(g.rows.map(r=>r.caseId)).size===suite.cases.length)
+ const chosen=model.id==='jev'?complete.find(g=>g.run==='run'):complete.at(-1)
+ if(!chosen){modelRows.push({model:model.id,status:'no complete 42-case cohort',attempts:rows.filter(r=>r.model===model.id).length});continue}
+ let c1=[...chosen.rows,...rows.filter(r=>r.model===model.id&&r.concurrency===1&&!r.warmup&&r.phase==='confirmation'&&r.run===chosen.run)]
+ if(['perplexity-pplx-decider-flash-v1.2','liquid-d1.1'].includes(model.id))c1.push(...rows.filter(r=>r.model===model.id&&r.run==='confirmation'&&r.concurrency===1&&!r.warmup))
+ let c4=rows.filter(r=>r.model===model.id&&r.concurrency===4&&!r.warmup&&r.run===(model.id==='jev'?'run':chosen.run))
+ if(['perplexity-pplx-decider-flash-v1.2','liquid-d1.1'].includes(model.id))c4=rows.filter(r=>r.model===model.id&&r.run==='confirmation'&&r.concurrency===4&&!r.warmup)
+ const first=summarize(chosen.rows,model,config.gates,1000,0),s=summarize(c1,model,config.gates,1000,0),load=c4.length?summarize(c4,model,config.gates,1000,0):null
+ const missed=chosen.rows.flatMap(r=>(r.assessment?.checks??[]).filter(c=>!c.pass).map(c=>({r,c}))),weightMisses=missed.filter(x=>x.c.key.startsWith('weight:'))
+ const correctOrdering=weightMisses.filter(({r,c})=>{const key=c.key.slice(7),expected=suite.cases.find(x=>x.id===r.caseId).expect.weights[key];return expected!==0&&Math.sign(r.raw[1].answers['want:'+key].noul-r.raw[1].answers['avoid:'+key].noul)===expected}).length
+ const actualCfg=existsSync(new URL(chosen.run+'/manifest.json',artifact))?json(chosen.run+'/manifest.json').config?.models?.find(m=>m.id===model.id):null
+ modelRows.push({model:model.id,status:'complete',profile:actualCfg?.profile??'native-original-state',screenRun:chosen.run,uniqueCases:42,c1Readings:c1.length,c4Readings:c4.length,quality:s.quality,exactCaseRate:s.exactCaseRate,p50Ms:s.p50Ms,p95Ms:s.p95Ms,c4p95Ms:load?.p95Ms??null,equalWeightScore:s.equalWeightScore,errors:s.errorRate,c4Errors:load?.errorRate??null,criticalMisses:s.criticalMisses,c4CriticalMisses:load?.criticalMisses??null,screeningPass:s.screeningPass,c4ScreeningPass:load?.screeningPass??null,costPer1000UniqueQueries:first.costPer1000Fresh,repeatedCostPer1000:s.costPer1000Fresh,binaryBrier:s.binaryBrier,choiceBrier:s.choiceBrier,unreviewedPredictionsPerReading:s.unreviewedPredictions/c1.length,byLanguage:s.byLanguage,missedWeightChecks:weightMisses.length,missedWeightsWithCorrectRawDirection:correctOrdering,failures:chosen.rows.filter(r=>r.status!=='ok').map(r=>({id:r.caseId,status:r.status})),checks:chosen.rows.reduce((n,r)=>n+(r.assessment?.checks.length??0),0)})
+}
+const control=modelRows.find(r=>r.model==='jev')
+for(const row of modelRows){if(row.status==='complete'){row.costRatioToJevList=row.costPer1000UniqueQueries/control.costPer1000UniqueQueries;row.rateSavingsObserved=1-row.costRatioToJevList;row.halfPriceGate=row.costRatioToJevList<=.5}}
+const openrouter=rows.filter(r=>r.model!=='jev'),direct=rows.filter(r=>r.model==='jev')
+const cash=openrouter.reduce((s,r)=>s+(r.costUsd??r.knownPartialUsd??0),0),freeUsage=direct.reduce((s,r)=>s+(r.costUsd??r.knownPartialUsd??0),0)
+const unknown=openrouter.filter(r=>r.costUsd===null).map(r=>({id:r.id,run:r.run,knownPartialUsd:r.knownPartialUsd,http:r.httpStatuses}))
+const report={status:'Completed native interpreter development benchmark. Assertion scores and AI-assisted review do not establish human or ranked-result quality parity.',models:modelRows,measuredReadings:rows.filter(r=>!r.warmup).length,totalReadings:rows.length,totalHttpCalls:rows.reduce((n,r)=>n+r.httpStatuses.length,0),openrouterKnownCashUsd:cash,typeSafeFreeAllowanceUsageUsd:freeUsage,unknownChargeReadings:unknown,localCashBudgetUsd:1,freeTypeSafeCreditPerCycleUsd:5,renewalDay:17,runs,blindedReviews:['blind-review-unblinded.json','blind-review-second-unblinded.json'].filter(p=>existsSync(new URL(p,artifact))).map(p=>({file:p,...json(p)})),candidatesPassingCheapC1:modelRows.filter(r=>r.model!=='jev'&&r.screeningPass&&r.halfPriceGate).map(r=>r.model),productionChanges:false}
+writeFileSync(new URL('comparison.json',artifact),JSON.stringify(report,null,2)+'\n')
+const pct=x=>(100*x).toFixed(1)+'%',ms=x=>x===null?'—':Math.round(x).toLocaleString('en-US'),usd=x=>x===null?'unknown':'$'+x.toFixed(3)
+let md='# OpenRouter decision-model overflow benchmark\n\n'
+md+='Measured November 12, 2026. Ten native hosted challengers plus direct production JEV 1.13.0. No production routing or provider key limits changed.\n\n'
+md+='## Measured results\n\nQuality is the provisional production-decoder assertion score; explicit exclusion checks remain separate gates. All complete cohorts contain the same 42 author-written development queries in five languages, using every production question. A high score does not measure all extra predictions or ranked-result relevance.\n\n'
+md+='| Model | Check score | C1 p95 ms | C4 p95 ms | Explicit exclusion misses C1 | $/1k unique readings | Readings C1/C4 |\n| --- | ---: | ---: | ---: | ---: | ---: | ---: |\n'
+for(const r of modelRows)md+=r.status==='complete'?`| ${r.model} | ${pct(r.quality)} | ${ms(r.p95Ms)} | ${ms(r.c4p95Ms)} | ${r.criticalMisses} | ${usd(r.costPer1000UniqueQueries)} | ${r.c1Readings}/${r.c4Readings} |\n`:`| ${r.model} | ${r.status} | — | — | — | — | — |\n`
+md+='\nThe cost column uses the first complete 42-query cohort for that serving profile, not the cheaper of repeated/cached trials. C1 percentiles use repeated readings where available; C4 is a separate closed-loop load test with four simultaneous complete readings. Timing includes every required HTTP chunk and workstation-to-provider network time, rather than production end-to-end search latency.\n\n'
+md+='## Actual budget\n\n'
+md+=`Provider-reported known OpenRouter charges, including failed attempts with a known billed half: **$${cash.toFixed(6)}**. Direct JEV control consumed **$${freeUsage.toFixed(6)} of the existing free TypeSafe allowance**; it is not additional cash cost. ${unknown.length} failed/partial readings have an unreported half; their conservative reservations remain recorded rather than pretending they cost zero. The combined local cash guard was $1, with no change to the shared provider key limit.\n\n`
+md+='The owner has $5 free TypeSafe usage per cycle renewing on the 17th. Covered JEV requests remain $0 out of pocket. OpenRouter costs apply only to additional paid overflow; a smaller list-price ratio does not beat free covered requests.\n\n'
+md+='## Protocol and limitations\n\n'
+md+='- Production questionnaires, option identities, rubric text and decoder stayed fixed. Generic chat generation, one-hot projections, question dropping, silent truncation, automatic retries and provider fallback were excluded. Model IDs, canonical response versions, one provider per model, and rate ceilings were checked or pinned.\n'
+md+='- Liquid required 128-question batches; Morph used 64; Drex Max needed 16 and serialized HTTP calls. Classify-1 received the same object state encoded as JSON text and null phrase-criterion explanations represented by their existing option label. These are explicitly identified serving profiles, with original compatibility failures retained. Chunked requests used at most two HTTP calls at a time per interpretation, except Drex\'s serial profile.\n'
+md+='- Native SDK/model caches can warm; no application reading cache was used. Repeated-state cost is stored separately. No private production search queries or database access were used. Provider output tokens were free on the admitted routes.\n'
+md+='- The initial diagnostic repeat selection ranked the weighted score before applying all quality gates, adding repeats for Joey and Elephant. Their failing quality/exclusion results remain visible. Subsequent selection applies gates first; additional dedicated repeats cover Flash and d1.1. More repeats never qualify an otherwise inaccurate model.\n'
+md+='- Proposed screening gates: >=90% provisional check score, p95 <=1,500 ms, <=1% errors and zero explicit exclusion misses. The quality/speed score is equally weighted: `0.5*quality + 0.5*1500/(1500+p95Ms)`. A >=50% observed unit-cost reduction is a separate economic gate. These are development gates, not a user-approved quality regression margin.\n'
+md+='- Case assertions are partial and public, and the cohort is small. There is no sealed private holdout, model-specific calibration acceptance, blind human review, matched ranked-title evaluation or production canary. The supplementary blinded review is AI-assisted and inspects interpretations, not actual search results.\n'
+md+='- Original/adapted/serial configurations, source snapshots, manifests, cost ledgers and raw native distributions are retained. New adapter cohorts have their own identities. Partial cohorts are never promoted to 42-case quality measurements.\n\n'
+md+='## Follow-up decision\n\n'
+md+=`The measured cheap C1 candidates are: ${report.candidatesPassingCheapC1.join(', ')||'none'}. C4 results and the blinded semantic reviews must be read alongside this gate. This report does not automatically enable overflow routing or claim JEV quality is preserved.\n`
+writeFileSync(new URL('README.md',artifact),md)
+console.log(JSON.stringify({models:modelRows.map(r=>({model:r.model,status:r.status,quality:r.quality,p95:r.p95Ms,c4:r.c4p95Ms,cost:r.costPer1000UniqueQueries})),knownCash:cash,typeSafeFreeUsage:freeUsage,unreported:unknown.length},null,2))

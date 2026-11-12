@@ -1,0 +1,80 @@
+{
+  "budget": {
+    "limitUsd": 0.493867756,
+    "reservationPerReadingUsd": 0.04,
+    "knownActualUsd": 0.025662220000000003,
+    "unknownHeldUsd": 0.08,
+    "inFlightReservedUsd": 0
+  },
+  "admission": [
+    {
+      "model": "jev",
+      "status": "ok",
+      "costUsd": 0.00031462199999999997,
+      "errors": [
+        null,
+        null
+      ]
+    },
+    {
+      "model": "liquid-d1.1",
+      "status": "ok",
+      "costUsd": 0.00015458,
+      "errors": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "scaledown-classify-1",
+      "status": "ok",
+      "costUsd": 0.00181824,
+      "errors": [
+        null,
+        null
+      ]
+    },
+    {
+      "model": "nace-ai-drex-max",
+      "status": "provider-error",
+      "costUsd": null,
+      "errors": [
+        null,
+        null,
+        null,
+        "HTTP 429: {\"detail\":\"Model busy, retry later\"}",
+        null,
+        null,
+        null,
+        "HTTP 429: {\"detail\":\"Model busy, retry later\"}",
+        "HTTP 429: {\"detail\":\"Model busy, retry later\"}",
+        "HTTP 429: {\"detail\":\"Model busy, retry later\"}",
+        "HTTP 429: {\"detail\":\"Model busy, retry later\"}",
+        "HTTP 429: {\"detail\":\"Model busy, retry later\"}"
+      ]
+    },
+    {
+      "model": "morph-reflex",
+      "status": "ok",
+      "costUsd": 0.00040425000000000004,
+      "errors": [
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "model": "liquid-d1-ultra",
+      "status": "ok",
+      "costUsd": 0.000324618,
+      "errors": [
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "completed": 92
+}

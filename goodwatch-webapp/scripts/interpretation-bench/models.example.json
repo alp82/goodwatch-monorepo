@@ -1,0 +1,291 @@
+{
+  "gates": {
+    "minQuality": 0.9,
+    "maxP95Ms": 1500,
+    "maxErrorRate": 0.01,
+    "maxCostRatio": 0.5
+  },
+  "models": [
+    {
+      "id": "jev",
+      "kind": "jev",
+      "model": "jev-1.13.0",
+      "inputPerMillion": 0.042
+    },
+    {
+      "id": "watt-flash-0.1",
+      "kind": "decision-local",
+      "model": "watt-flash-0.1",
+      "baseUrl": "http://127.0.0.1:8942/v1",
+      "monthlyUsd": 0,
+      "hardware": "UNMEASURED: requires source/runtime admission and a pinned model server on the actual VPS",
+      "source": "https://huggingface.co/zaitlabs/watt-flash-0.1",
+      "revision": "d49a3a880b0201b325f2d2299d4c36ffc8735477",
+      "admission": "native-sdk-admitted-pending-runtime"
+    },
+    {
+      "id": "liquid-d1-omni-600m",
+      "kind": "decision-local",
+      "model": "liquid-d1-omni-600m",
+      "baseUrl": "http://127.0.0.1:8942/v1",
+      "monthlyUsd": 0,
+      "hardware": "UNMEASURED: requires source/runtime admission and a pinned model server on the actual VPS",
+      "source": "https://huggingface.co/LiquidAI/d1-omni-600M",
+      "revision": "02b55d7076f15129e59ab3f94783f32c4b088674",
+      "admission": "native-sdk-admitted-pending-runtime"
+    },
+    {
+      "id": "quyet-1-0-small-en",
+      "kind": "decision-local",
+      "model": "quyet-1-0-small-en",
+      "baseUrl": "http://127.0.0.1:8942/v1",
+      "monthlyUsd": 0,
+      "hardware": "UNMEASURED: requires source/runtime admission and a pinned model server on the actual VPS",
+      "source": "https://huggingface.co/chinhnc/Quyet-1.0-Small-EN",
+      "revision": "dffa4c30695e959d3f0f43f6d5847e026014e52d",
+      "admission": "native-sdk-admitted-pending-runtime"
+    },
+    {
+      "id": "quyet-1-0-small",
+      "kind": "decision-local",
+      "model": "quyet-1-0-small",
+      "baseUrl": "http://127.0.0.1:8942/v1",
+      "monthlyUsd": 0,
+      "hardware": "UNMEASURED: requires source/runtime admission and a pinned model server on the actual VPS",
+      "source": "https://huggingface.co/chinhnc/Quyet-1.0-Small",
+      "revision": "f007dfeb4874f0f3b3a3cc0a63f4d4192164c1c2",
+      "admission": "native-sdk-admitted-pending-runtime"
+    },
+    {
+      "id": "quyet-1-0-tiny",
+      "kind": "decision-local",
+      "model": "quyet-1-0-tiny",
+      "baseUrl": "http://127.0.0.1:8942/v1",
+      "monthlyUsd": 0,
+      "hardware": "UNMEASURED: requires source/runtime admission and a pinned model server on the actual VPS",
+      "source": "https://huggingface.co/chinhnc/Quyet-1.0-Tiny",
+      "revision": "fba8ca9292a705e21b14a4c5150e79a4ddcc8db3",
+      "admission": "native-sdk-admitted-pending-runtime"
+    },
+    {
+      "id": "watersheep",
+      "kind": "decision-local",
+      "model": "watersheep",
+      "baseUrl": "http://127.0.0.1:8942/v1",
+      "monthlyUsd": 0,
+      "hardware": "UNMEASURED: requires source/runtime admission and a pinned model server on the actual VPS",
+      "source": "https://huggingface.co/samratduttaofficial/WaterSheep",
+      "revision": "236de6496b530d37e36a8ac63ff8412e92940f6e",
+      "admission": "native-sdk-admitted-pending-runtime"
+    },
+    {
+      "id": "openjev-verdict-1.4",
+      "kind": "decision-local",
+      "model": "openjev-verdict-1.4",
+      "baseUrl": "http://127.0.0.1:8942/v1",
+      "monthlyUsd": 0,
+      "hardware": "UNMEASURED: requires source/runtime admission and a pinned model server on the actual VPS",
+      "source": "https://huggingface.co/heman10x/rlcd-modernbert-151m",
+      "revision": "8af2496eb63c7fa66d7d234e1f62629380030eb4",
+      "admission": "source-audit-pending"
+    },
+    {
+      "id": "openjev-verdict",
+      "kind": "decision-local",
+      "model": "openjev-verdict",
+      "baseUrl": "http://127.0.0.1:8942/v1",
+      "monthlyUsd": 0,
+      "hardware": "UNMEASURED: requires source/runtime admission and a pinned model server on the actual VPS",
+      "source": "https://github.com/Heman10x-NGU/openJev-verdict-2.0",
+      "revision": null,
+      "admission": "source-audit-pending"
+    },
+    {
+      "id": "verdict-small",
+      "kind": "decision-local",
+      "model": "verdict-small",
+      "baseUrl": "http://127.0.0.1:8942/v1",
+      "monthlyUsd": 0,
+      "hardware": "UNMEASURED: requires source/runtime admission and a pinned model server on the actual VPS",
+      "source": "https://github.com/Manavarya09/verdict",
+      "revision": "085a41e0ea269f00483dd202a286cfb68f7aa63a",
+      "admission": "native-sdk-admitted-pending-runtime"
+    },
+    {
+      "id": "tacet-sonata",
+      "kind": "decision-local",
+      "model": "tacet-sonata",
+      "baseUrl": "http://127.0.0.1:8942/v1",
+      "monthlyUsd": 0,
+      "hardware": "UNMEASURED: requires source/runtime admission and a pinned model server on the actual VPS",
+      "source": "https://huggingface.co/codepawl/tacet-sonata",
+      "revision": null,
+      "admission": "blocked-source-access"
+    },
+    {
+      "id": "laya-typed-decisions",
+      "kind": "decision-local",
+      "model": "laya-typed-decisions",
+      "baseUrl": "http://127.0.0.1:8942/v1",
+      "monthlyUsd": 0,
+      "hardware": "UNMEASURED: requires source/runtime admission and a pinned model server on the actual VPS",
+      "source": "https://huggingface.co/convaiinnovations/laya/tree/1c5edc17a7acd8701df6fc341c0d179f1c62c982/typed-decisions",
+      "revision": "e929ae5cf69bc34259cd2f95c9e91145b818b1f0",
+      "admission": "native-sdk-admitted-pending-runtime"
+    },
+    {
+      "id": "laya-multilingual",
+      "kind": "decision-local",
+      "model": "laya-multilingual",
+      "baseUrl": "http://127.0.0.1:8942/v1",
+      "monthlyUsd": 0,
+      "hardware": "UNMEASURED: requires source/runtime admission and a pinned model server on the actual VPS",
+      "source": "https://huggingface.co/convaiinnovations/laya/tree/1c5edc17a7acd8701df6fc341c0d179f1c62c982/multilingual",
+      "revision": "1720e3e3357cfe1e281542e223f8273b0890ca34",
+      "admission": "native-sdk-admitted-pending-runtime"
+    },
+    {
+      "id": "laya",
+      "kind": "decision-local",
+      "model": "laya",
+      "baseUrl": "http://127.0.0.1:8942/v1",
+      "monthlyUsd": 0,
+      "hardware": "UNMEASURED: requires source/runtime admission and a pinned model server on the actual VPS",
+      "source": "https://huggingface.co/convaiinnovations/laya",
+      "revision": "85cc74ddae6109077ebe2853a9b3077fb6606a78",
+      "admission": "native-sdk-admitted-pending-runtime"
+    },
+    {
+      "id": "mirror",
+      "kind": "decision-local",
+      "model": "mirror",
+      "baseUrl": "http://127.0.0.1:8942/v1",
+      "monthlyUsd": 0,
+      "hardware": "UNMEASURED: requires source/runtime admission and a pinned model server on the actual VPS",
+      "source": "https://github.com/Bluusun/Decision-API",
+      "revision": null,
+      "admission": "blocked-source-access"
+    },
+    {
+      "id": "opendecision",
+      "kind": "decision-local",
+      "model": "opendecision",
+      "baseUrl": "http://127.0.0.1:8942/v1",
+      "monthlyUsd": 0,
+      "hardware": "UNMEASURED: requires source/runtime admission and a pinned model server on the actual VPS",
+      "source": "https://github.com/deepanwadhwa/OpenDecision",
+      "revision": "a51e07b524299e309dd2b88d48b0cfa2bd9ec598",
+      "admission": "native-sdk-admitted-pending-runtime"
+    },
+    {
+      "id": "lev-350m",
+      "kind": "decision-local",
+      "model": "lev-350m",
+      "baseUrl": "http://127.0.0.1:8942/v1",
+      "monthlyUsd": 0,
+      "hardware": "UNMEASURED: requires source/runtime admission and a pinned model server on the actual VPS",
+      "source": "https://github.com/franckverrot/lev",
+      "revision": "ab08ad8b8f346994d983152917e114224f6adac7",
+      "admission": "native-sdk-admitted-pending-runtime"
+    },
+    {
+      "id": "kev-0.5b",
+      "kind": "decision-local",
+      "model": "kev-0.5b",
+      "baseUrl": "http://127.0.0.1:8942/v1",
+      "monthlyUsd": 0,
+      "hardware": "UNMEASURED: requires source/runtime admission and a pinned model server on the actual VPS",
+      "source": "https://github.com/jaredpalmer/kev",
+      "revision": null,
+      "admission": "source-audit-pending"
+    },
+    {
+      "id": "simplejev-qwen3.5-0.8b",
+      "kind": "decision-local",
+      "model": "simplejev-qwen3.5-0.8b",
+      "baseUrl": "http://127.0.0.1:8942/v1",
+      "monthlyUsd": 0,
+      "hardware": "UNMEASURED: requires source/runtime admission and a pinned model server on the actual VPS",
+      "source": "https://github.com/featherless-ai/simple-jev",
+      "revision": null,
+      "admission": "source-audit-pending"
+    },
+    {
+      "id": "mghafiri-qwen3.5-0.8b-decision-model",
+      "kind": "decision-local",
+      "model": "mghafiri-qwen3.5-0.8b-decision-model",
+      "baseUrl": "http://127.0.0.1:8942/v1",
+      "monthlyUsd": 0,
+      "hardware": "UNMEASURED: requires source/runtime admission and a pinned model server on the actual VPS",
+      "source": "https://huggingface.co/mghafiri/qwen3.5-0.8B-decision-model",
+      "revision": "4a9939034a27006b4b62ad5aed65a90b82d0d350",
+      "admission": "native-sdk-admitted-pending-runtime"
+    },
+    {
+      "id": "deem-0.8-v1",
+      "kind": "decision-local",
+      "model": "deem-0.8-v1",
+      "baseUrl": "http://127.0.0.1:8942/v1",
+      "monthlyUsd": 0,
+      "hardware": "UNMEASURED: requires source/runtime admission and a pinned model server on the actual VPS",
+      "source": "https://huggingface.co/LibertAIDAI/deem-0.8-v1",
+      "revision": "8cbabbb2c4a7ef13c6b43f0ef3ae4157983c6d21",
+      "admission": "source-audit-pending"
+    },
+    {
+      "id": "smalljev",
+      "kind": "decision-local",
+      "model": "smalljev",
+      "baseUrl": "http://127.0.0.1:8942/v1",
+      "monthlyUsd": 0,
+      "hardware": "UNMEASURED: requires source/runtime admission and a pinned model server on the actual VPS",
+      "source": "https://github.com/isHeSatoshi/smalljev",
+      "revision": null,
+      "admission": "source-audit-pending"
+    },
+    {
+      "id": "jul-fast",
+      "kind": "decision-local",
+      "model": "jul-fast",
+      "baseUrl": "http://127.0.0.1:8942/v1",
+      "monthlyUsd": 0,
+      "hardware": "UNMEASURED: requires source/runtime admission and a pinned model server on the actual VPS",
+      "source": "https://huggingface.co/usejul/jul-decision-minicpm5-2b",
+      "revision": "f556a6936089693ea68bfed3080c637e4853a3ff",
+      "admission": "source-audit-pending"
+    },
+    {
+      "id": "open-jev-zefan-2b",
+      "kind": "decision-local",
+      "model": "open-jev-zefan-2b",
+      "baseUrl": "http://127.0.0.1:8942/v1",
+      "monthlyUsd": 0,
+      "hardware": "UNMEASURED: requires source/runtime admission and a pinned model server on the actual VPS",
+      "source": "https://github.com/Zefan-Cai/Open-Jev",
+      "revision": null,
+      "admission": "source-audit-pending"
+    },
+    {
+      "id": "h2o-lightning-4b",
+      "kind": "decision-local",
+      "model": "h2o-lightning-4b",
+      "baseUrl": "http://127.0.0.1:8942/v1",
+      "monthlyUsd": 0,
+      "hardware": "UNMEASURED: requires source/runtime admission and a pinned model server on the actual VPS",
+      "source": "https://huggingface.co/h2oai/h2o-lightning-4b",
+      "revision": "659fc412de8486dbc2477b0d1cb4121e97e72471",
+      "admission": "blocked-hardware"
+    },
+    {
+      "id": "opendecision-deberta",
+      "kind": "decision-local",
+      "model": "opendecision-deberta",
+      "baseUrl": "http://127.0.0.1:8942/v1",
+      "monthlyUsd": 0,
+      "hardware": "UNMEASURED: fill actual native model/server provenance",
+      "source": "https://github.com/deepanwadhwa/OpenDecision",
+      "revision": "cf44676c28ba7312e5c5f8f8d2c22b3e0c9cdae2",
+      "admission": "native-sdk-admitted-pending-runtime"
+    }
+  ]
+}

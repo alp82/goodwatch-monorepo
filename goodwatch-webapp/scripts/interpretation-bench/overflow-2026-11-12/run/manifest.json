@@ -1,0 +1,269 @@
+{
+  "cases": 42,
+  "models": [
+    "jev",
+    "perplexity-pplx-decider-v1.2",
+    "perplexity-pplx-decider-flash-v1.2",
+    "liquid-d1.1",
+    "respan-span-02",
+    "baseten-joey-1",
+    "baseten-elephant-1",
+    "scaledown-classify-1",
+    "nace-ai-drex-max",
+    "morph-reflex",
+    "liquid-d1-ultra"
+  ],
+  "budget": {
+    "limitUsd": 1,
+    "reservationPerReadingUsd": 0.04,
+    "knownActualUsd": 0,
+    "unknownHeldUsd": 0,
+    "inFlightReservedUsd": 0
+  },
+  "screen": "one warmup plus 42 cases at c1 per admitted model",
+  "confirmation": "three total repetitions c1 and c4 for control and up to three strongest challengers",
+  "quality": "provisional author assertions; not human-reviewed or a blind holdout",
+  "freeTypeSafeUsdPerCycle": 5,
+  "renewalDay": 17,
+  "weights": {
+    "quality": 0.5,
+    "speed": 0.5
+  },
+  "deadlineMs": 1500,
+  "startedAt": "2026-11-12T16:38:57.253Z",
+  "commit": "a47f54d877d74e171097f12734d3092f525a7bc6",
+  "sourceHashes": {
+    "packages/yepwatch-contracts/fingerprint.ts": "811beb6f3f7680e173de9d3185ee44dbe8f076e219b0e57716f1c3bf8226fdcd",
+    "app/ui/fingerprint/fingerprintMeta.ts": "ed8c0bfc208795113b09fdbb11e8a823b0746c7884465dd91992a3c4a95c4981",
+    "app/server/utils/fingerprint.ts": "bc42b46bbfc565f3b507202fcfa59cc587a71c36a6b339161e6d3dc86695bcb7",
+    "app/server/combined-search/reading-retrieval.server.ts": "60e3f2191674cc1ceb9aa809c4c2f538e7803fc15ee03bd80e8bbfe064151dcb",
+    "app/server/search-runtime/runtime.server.ts": "9b19c47b343f4647e888b40ea4cac8438193fe0cf485ef6f46262a224b1ea448",
+    "app/server/combined-search/search.server.ts": "82587f2fb1e6629d81eee04d69634e136e325b0414615093400fdee602fd6d01"
+  },
+  "benchmarkSourceHashes": {
+    "bench.mjs": "cb9324d007ba3d578d93dc64a29b9c18593cf113b41857be33629d19557b2f19",
+    "bench.test.mjs": "93512434e8c6d9b6f19acac833d69bf854aa93db030ecad4ef770e26495028d3",
+    "contract.mjs": "cef6e74642197f5e44c6c3a6c4a202a2dd9dd67f005575467d49f81c824d4982",
+    "export-replay.mjs": "ada814b5a1d2b9ab8df897d7531c4be916948966a2e6ed3006786d47add61ab5",
+    "overflow-run.mjs": "fe2385913ee3240df1915a43bb1ee75f492c76f3e409c7939783fea101ba8b2d",
+    "overflow-run.test.mjs": "a3d63d236769e48211054946bbfa3e54953ee71ba6988407e43b9547cd02bcb9",
+    "production.mjs": "6d6ea52ba4a122418dfe57840787819474584143b9e3e2025182eaf636f7d70d"
+  },
+  "configHash": "5d87a581f40c2c322cb66116308a6876f817f24d8a87ff65765b01317ec51277",
+  "suiteHash": "0882c43f2c80e5a0b583a49aea5fe4d9b0fe43f49402620fd6d1ff23c52a6c78",
+  "config": {
+    "version": 1,
+    "selectedAt": "2026-11-12T16:36:09.068Z",
+    "budgetUsd": 1,
+    "reservationPerReadingUsd": 0.04,
+    "unknownChargePolicy": "retain reservation; no retry or fallback",
+    "freeTypeSafeUsdPerCycle": 5,
+    "cycleRenewalDay": 17,
+    "gates": {
+      "minQuality": 0.9,
+      "maxP95Ms": 1500,
+      "maxErrorRate": 0.01,
+      "maxCostRatio": 0.5
+    },
+    "models": [
+      {
+        "id": "jev",
+        "kind": "jev",
+        "model": "jev-1.13.0",
+        "inputPerMillion": 0.042
+      },
+      {
+        "id": "perplexity-pplx-decider-v1.2",
+        "kind": "openrouter-decisions",
+        "model": "perplexity/pplx-decider-v1.2",
+        "responseModel": "perplexity/pplx-decider-v1.2-20261016",
+        "providers": [
+          "perplexity"
+        ],
+        "inputPerMillion": 0.02,
+        "outputPerMillion": 0,
+        "contextTokens": 262144,
+        "cataloguePrice": {
+          "prompt": "0.00000002",
+          "completion": "0"
+        },
+        "providerStatus": 0,
+        "source": "https://openrouter.ai/api/v1/models/perplexity/pplx-decider-v1.2/endpoints"
+      },
+      {
+        "id": "perplexity-pplx-decider-flash-v1.2",
+        "kind": "openrouter-decisions",
+        "model": "perplexity/pplx-decider-flash-v1.2",
+        "responseModel": "perplexity/pplx-decider-flash-v1.2-20261016",
+        "providers": [
+          "perplexity"
+        ],
+        "inputPerMillion": 0.01,
+        "outputPerMillion": 0,
+        "contextTokens": 262144,
+        "cataloguePrice": {
+          "prompt": "0.00000001",
+          "completion": "0"
+        },
+        "providerStatus": 0,
+        "source": "https://openrouter.ai/api/v1/models/perplexity/pplx-decider-flash-v1.2/endpoints"
+      },
+      {
+        "id": "liquid-d1.1",
+        "kind": "openrouter-decisions",
+        "model": "liquid/d1.1",
+        "responseModel": "liquid/d1.1-20261027",
+        "providers": [
+          "liquid"
+        ],
+        "inputPerMillion": 0.02,
+        "outputPerMillion": 0,
+        "contextTokens": 65536,
+        "cataloguePrice": {
+          "prompt": "0.00000002",
+          "completion": "0",
+          "input_cache_read": "0.00000002"
+        },
+        "providerStatus": 0,
+        "source": "https://openrouter.ai/api/v1/models/liquid/d1.1/endpoints"
+      },
+      {
+        "id": "respan-span-02",
+        "kind": "openrouter-decisions",
+        "model": "respan/span-02",
+        "responseModel": "respan/span-02-20261015",
+        "providers": [
+          "respan"
+        ],
+        "inputPerMillion": 0.01,
+        "outputPerMillion": 0,
+        "contextTokens": 131072,
+        "cataloguePrice": {
+          "prompt": "0.00000001",
+          "completion": "0"
+        },
+        "providerStatus": 0,
+        "source": "https://openrouter.ai/api/v1/models/respan/span-02/endpoints"
+      },
+      {
+        "id": "baseten-joey-1",
+        "kind": "openrouter-decisions",
+        "model": "baseten/joey-1",
+        "responseModel": "baseten/joey-1-20261029",
+        "providers": [
+          "baseten"
+        ],
+        "inputPerMillion": 0.01,
+        "outputPerMillion": 0,
+        "contextTokens": 16384,
+        "cataloguePrice": {
+          "prompt": "0.00000001",
+          "completion": "0"
+        },
+        "providerStatus": 0,
+        "source": "https://openrouter.ai/api/v1/models/baseten/joey-1/endpoints"
+      },
+      {
+        "id": "baseten-elephant-1",
+        "kind": "openrouter-decisions",
+        "model": "baseten/elephant-1",
+        "responseModel": "baseten/elephant-1-20261021",
+        "providers": [
+          "baseten"
+        ],
+        "inputPerMillion": 0.035,
+        "outputPerMillion": 0,
+        "contextTokens": 16384,
+        "cataloguePrice": {
+          "prompt": "0.000000035",
+          "completion": "0"
+        },
+        "providerStatus": 0,
+        "source": "https://openrouter.ai/api/v1/models/baseten/elephant-1/endpoints"
+      },
+      {
+        "id": "scaledown-classify-1",
+        "kind": "openrouter-decisions",
+        "model": "scaledown/classify-1",
+        "responseModel": "scaledown/classify-1-20260928",
+        "providers": [
+          "scaledown"
+        ],
+        "inputPerMillion": 0.04,
+        "outputPerMillion": 0,
+        "contextTokens": 1000000,
+        "cataloguePrice": {
+          "prompt": "0.00000004",
+          "completion": "0"
+        },
+        "providerStatus": 0,
+        "source": "https://openrouter.ai/api/v1/models/scaledown/classify-1/endpoints"
+      },
+      {
+        "id": "nace-ai-drex-max",
+        "kind": "openrouter-decisions",
+        "model": "nace-ai/drex-max",
+        "responseModel": "nace-ai/drex-max-20261016",
+        "providers": [
+          "deepinfra/us"
+        ],
+        "inputPerMillion": 0.06,
+        "outputPerMillion": 0,
+        "contextTokens": 262144,
+        "cataloguePrice": {
+          "prompt": "0.00000006",
+          "completion": "0",
+          "input_cache_read": "0.00000006"
+        },
+        "providerStatus": 0,
+        "source": "https://openrouter.ai/api/v1/models/nace-ai/drex-max/endpoints"
+      },
+      {
+        "id": "morph-reflex",
+        "kind": "openrouter-decisions",
+        "model": "morph/reflex",
+        "responseModel": "morph/reflex-20261103",
+        "providers": [
+          "morph/bf16"
+        ],
+        "inputPerMillion": 0.041999999999999996,
+        "outputPerMillion": 0,
+        "contextTokens": 65536,
+        "cataloguePrice": {
+          "prompt": "0.000000042",
+          "completion": "0",
+          "input_cache_read": "0.000000002"
+        },
+        "providerStatus": 0,
+        "source": "https://openrouter.ai/api/v1/models/morph/reflex/endpoints"
+      },
+      {
+        "id": "liquid-d1-ultra",
+        "kind": "openrouter-decisions",
+        "model": "liquid/d1-ultra",
+        "responseModel": "liquid/d1-ultra-20261015",
+        "providers": [
+          "liquid"
+        ],
+        "inputPerMillion": 0.041999999999999996,
+        "outputPerMillion": 0,
+        "contextTokens": 32768,
+        "cataloguePrice": {
+          "prompt": "0.000000042",
+          "completion": "0",
+          "input_cache_read": "0.000000042"
+        },
+        "providerStatus": 0,
+        "source": "https://openrouter.ai/api/v1/models/liquid/d1-ultra/endpoints"
+      }
+    ]
+  },
+  "keyLimit": {
+    "sufficientBeforeRun": true,
+    "changed": false
+  },
+  "budgetNote": "$1 is a local stop/reservation policy, not a provider-enforced per-run maximum. Reservations are conservative engineering estimates, not verified provider billing bounds. The shared key limit is unchanged.",
+  "redactions": [
+    "Shared key cap and remaining balance retained privately; not part of model results."
+  ]
+}

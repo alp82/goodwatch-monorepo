@@ -1,0 +1,409 @@
+{
+  "review": "Third identity-blinded AI-assisted semantic review",
+  "date": "2026-11-12",
+  "scope": "42 new paired observations; A/B randomized independently per query; only blind-review-third-input.json read for response evidence",
+  "limitations": [
+    "Provisional intent judgements, not human or production quality acceptance.",
+    "No identities, mappings, unblinded files, logs, metrics or other response evidence inspected.",
+    "No ranked-result outcomes, raw probabilities, complete attribute definitions or downstream concrete routing were supplied.",
+    "Soft weights/attributes are not assumed to impose hard eligibility.",
+    "Related traits and obvious implications were permitted; response length and label count were not scored."
+  ],
+  "cases": [
+    {
+      "id": "scary",
+      "preferred": "B",
+      "materialA": [
+        "Adds aversions to direction and social commentary although scary content can have both."
+      ],
+      "materialB": [],
+      "note": "Both strongly preserve scare and plausible tension/uncanny associations. The independent craft/theme aversions in A, rather than its label count, drive the preference."
+    },
+    {
+      "id": "romantic",
+      "preferred": "tie",
+      "materialA": [],
+      "materialB": [],
+      "note": "Both preserve movie type and romance with the same plausible date/partner signals. Small wholesome/pathos differences do not establish a material preference."
+    },
+    {
+      "id": "slow-burn",
+      "preferred": "A",
+      "materialA": [],
+      "materialB": [
+        "Avoids world immersion, direction, music, visual style and social/class/technology themes that a slow-burn mystery need not exclude."
+      ],
+      "note": "Both retain mystery and slow-burn/low-pace intent. A intrigue/structure/crime associations are plausible; B adds unrelated negative steering."
+    },
+    {
+      "id": "fast-action",
+      "preferred": "B",
+      "materialA": [
+        "Avoids world immersion, narrative structure, direction and technology/humanity, independently narrowing a pace/adrenaline request."
+      ],
+      "materialB": [],
+      "note": "Both retain pace/adrenaline and no slow burn. B action/editing/spectacle associations are plausible; A unrelated craft/theme aversions are not implied."
+    },
+    {
+      "id": "wholesome",
+      "preferred": "A",
+      "materialA": [
+        "Excludes Adults although adult-targeted stories can be wholesome and hopeful."
+      ],
+      "materialB": [
+        "Avoids surrealism, immersion, visual style and music composition even though wholesome hope is compatible with those forms."
+      ],
+      "note": "Both retain wholesome/hopeful intent. A shares an audience assumption, but B adds multiple independent form/content aversions beyond reasonable anti-bleakness nuance."
+    },
+    {
+      "id": "wit",
+      "preferred": "B",
+      "materialA": [
+        "Strongly avoids world immersion although immersive stories can have witty dialogue and wordplay."
+      ],
+      "materialB": [],
+      "note": "Both preserve wit and dialogue quality; B dialogue centrality and satire/irony are plausible related traits."
+    },
+    {
+      "id": "space",
+      "preferred": "A",
+      "materialA": [],
+      "materialB": [
+        "Avoids narrative structure, editing, cinematography and class/capitalism themes despite a request only naming spaceships and robots."
+      ],
+      "note": "Both retain both concrete motifs. Futurism, wonder and technology are plausible; the additional craft/theme suppression in B is not."
+    },
+    {
+      "id": "submarine",
+      "preferred": "A",
+      "materialA": [],
+      "materialB": [
+        "Adds broad unrelated aversions including coming of age, family dynamics, narrative structure, direction and editing."
+      ],
+      "note": "Both preserve submarine/standoff/mutiny and plausible tension/warfare. B unrelated story/theme/style exclusions can remove compatible treatments."
+    },
+    {
+      "id": "chess",
+      "preferred": "B",
+      "materialA": [
+        "Omits rivalry from the concrete terms despite its explicit role in the request.",
+        "Avoids unrelated genres and craft dimensions including fantasy, surrealism, showbiz, direction and cinematography."
+      ],
+      "materialB": [],
+      "note": "Both retain chess/prodigy and psychological tension; B also keeps rivalry. Biography/sports associations alone are plausible, but A broader negative steering is not stated."
+    },
+    {
+      "id": "not-scary",
+      "preferred": "A",
+      "materialA": [
+        "Excludes Adults although avoiding scare does not specify an audience age."
+      ],
+      "materialB": [
+        "Avoids music, world immersion, visual style, family dynamics, character depth and other unrelated traits from a no-scare request."
+      ],
+      "note": "Both preserve the explicit scare exclusion. A audience signal is unsupported; B independent negative steering is substantially broader."
+    },
+    {
+      "id": "no-violence",
+      "preferred": "A",
+      "materialA": [
+        "Keeps negated violence as an unqualified concrete term."
+      ],
+      "materialB": [
+        "Avoids immersion, music, visual style, sound, cinematography and unrelated story themes beyond violence."
+      ],
+      "note": "Both preserve movie type and negative violence. A concrete polarity is unobserved downstream; B unrelated negative weights are a separate interpretation risk."
+    },
+    {
+      "id": "not-romantic",
+      "preferred": "A",
+      "materialA": [],
+      "materialB": [
+        "Avoids sound centrality and world immersion although neither follows from excluding romance."
+      ],
+      "note": "Both strongly avoid romance and use the same date/partner occasion signals. B adds independent presentation preferences."
+    },
+    {
+      "id": "not-slow",
+      "preferred": "A",
+      "materialA": [],
+      "materialB": [
+        "No explicit positive fast_pace weight is present despite the query explicitly asking for fast pace.",
+        "Avoids direction, music, immersion, cinematography and visual style without a basis in the query."
+      ],
+      "note": "B correctly avoids slow burn and wants adrenaline, but that is not the complete explicit fast-pace preference; A preserves both requested directions without unrelated craft aversions."
+    },
+    {
+      "id": "dark-not-gory",
+      "preferred": "B",
+      "materialA": [
+        "Avoids narrative structure, character depth, realism, immersion, cinematography and several unrelated forms/themes."
+      ],
+      "materialB": [
+        "Keeps negated violence as an unqualified concrete term."
+      ],
+      "note": "Both preserve dark humor and no violence. B concrete-polarity risk requires pipeline confirmation; A unrelated aversions are a larger distinct semantic concern."
+    },
+    {
+      "id": "no-animation",
+      "preferred": "A",
+      "materialA": [],
+      "materialB": [
+        "Adds an aversion to direction despite a query that only specifies live action/no animation."
+      ],
+      "note": "Both hard identity boundaries are correct. A mild acting affinity is related to live action; B separate negative craft signal is not requested."
+    },
+    {
+      "id": "no-anime",
+      "preferred": "A",
+      "materialA": [],
+      "materialB": [
+        "Excludes all Animated titles and requires Live action although non-anime animation should remain allowed."
+      ],
+      "note": "A correctly limits the identity exclusion to anime and keeps show type. Its small unrelated character-depth weight is minor noise; B hard boundary removes an entire permitted category."
+    },
+    {
+      "id": "comfort",
+      "preferred": "B",
+      "materialA": [
+        "Strongly avoids crime, intrigue, psychological/philosophical themes, narrative structure and music, excluding compatible cozy mysteries or thoughtful comforting stories."
+      ],
+      "materialB": [],
+      "note": "Both retain comfort and plausible low-intensity/wholesome associations. The issue in A is which additional dimensions it suppresses, not its longer list."
+    },
+    {
+      "id": "background",
+      "preferred": "B",
+      "materialA": [
+        "Adds broad aversions to music, coming of age, pathos, spirituality, philosophical/class themes and other content dimensions unrelated to attention demands."
+      ],
+      "materialB": [],
+      "note": "Both correctly mark Background watch and Drop-in friendly. B mainly lowers attention-demanding traits; A additionally imposes an unrequested content/form profile."
+    },
+    {
+      "id": "binge",
+      "preferred": "tie",
+      "materialA": [],
+      "materialB": [],
+      "note": "Both preserve series type and Binge-friendly. B pace/structure/intrigue associations are plausible, while its showbiz affinity is minor noise; A terseness is not itself better."
+    },
+    {
+      "id": "kids",
+      "preferred": "A",
+      "materialA": [],
+      "materialB": [
+        "Avoids narrative structure, direction, immersive worlds and philosophical/psychological themes, equating child suitability with a broad lack of depth/form."
+      ],
+      "note": "Both preserve animation and a kids audience. Safety/wholesome associations are reasonable, but B additional creative/intellectual aversions go beyond suitability."
+    },
+    {
+      "id": "family",
+      "preferred": "B",
+      "materialA": [
+        "Avoids narrative structure, visual style, immersion, cinematography and music although family-suitable films may excel on those dimensions."
+      ],
+      "materialB": [],
+      "note": "Both retain movie and intergenerational family intent. B safety-related tone associations are plausible; A independent presentation aversions are not required."
+    },
+    {
+      "id": "adult",
+      "preferred": "uncertain",
+      "materialA": [
+        "Avoids wholesome material, dialogue centrality and cinematography from an adult-audience request."
+      ],
+      "materialB": [
+        "Avoids wholesome material, adds eroticism and excludes Public viewing safe although adult targeting does not imply those properties."
+      ],
+      "note": "Both preserve adults/not kids. They add different unsupported content/form profiles, and the supplied vectors do not establish which harms the actual result list more."
+    },
+    {
+      "id": "neutral-type",
+      "preferred": "tie",
+      "materialA": [
+        "Adds showbiz to a media-type-only query."
+      ],
+      "materialB": [
+        "Adds a technology/humanity aversion to a media-type-only query."
+      ],
+      "note": "Both correctly select movies. Neither additional taste direction is stated; B magnitude is smaller, but no result evidence establishes practical superiority across different axes."
+    },
+    {
+      "id": "title-literal",
+      "preferred": "tie",
+      "materialA": [
+        "Keeps knight from a known film title as an independent concrete motif."
+      ],
+      "materialB": [
+        "Keeps knight from a known film title as an independent concrete motif."
+      ],
+      "note": "Both otherwise characterize the named film plausibly. A more detailed film profile is not automatically wrong; separate title resolution and the downstream treatment of knight are not exposed."
+    },
+    {
+      "id": "named-director",
+      "preferred": "A",
+      "materialA": [],
+      "materialB": [
+        "Adds a Movie-only media restriction to a person-name query without an explicit media choice.",
+        "Avoids family dynamics, class/capitalism and other themes that the person name does not exclude."
+      ],
+      "note": "Both infer stylistic associations. A avoids the hard media narrowing and unrequested theme aversions; person resolution is not visible."
+    },
+    {
+      "id": "ambiguous-title",
+      "preferred": "A",
+      "materialA": [],
+      "materialB": [
+        "Avoids coming of age, sports, showbiz, editing, music and other dimensions despite the unresolved Alien referent."
+      ],
+      "note": "Both retain alien and plausible science-fiction/horror associations. A does less unrelated narrowing; the intended film-versus-motif meaning remains uncertain."
+    },
+    {
+      "id": "typo",
+      "preferred": "A",
+      "materialA": [],
+      "materialB": [
+        "Avoids immersion, music, cinematography, visual style, narrative structure, character depth and unrelated themes from scary-but-nonviolent intent."
+      ],
+      "note": "Both recover scary and no violence despite misspellings. A preserves those directions with plausible near traits; B adds independent negative preferences."
+    },
+    {
+      "id": "composition",
+      "preferred": "B",
+      "materialA": [
+        "Avoids immersion, direction, music, narrative structure, editing and class themes despite the composed psychological-mystery request."
+      ],
+      "materialB": [],
+      "note": "Both preserve all explicit core preferences and violence/romance exclusions. A unrelated negative steering can suppress compatible well-structured or immersive treatments."
+    },
+    {
+      "id": "long-query",
+      "preferred": "B",
+      "materialA": [
+        "Avoids narrative structure, cinematography, world immersion and direction even though the requested family/wonder/wit composition is compatible with those features."
+      ],
+      "materialB": [],
+      "note": "Both preserve every main explicit movie/animation/family/wonder/hope/wit preference and all three exclusions. The distinction is the unrelated craft aversions, not a core-intent miss."
+    },
+    {
+      "id": "prompt-injection",
+      "preferred": "tie",
+      "materialA": [],
+      "materialB": [],
+      "note": "Both retain typed scary-movie interpretations and omit the injected banana/output command from concrete terms. B explicit Movie requirement and A TV-show exclusion both support the stated media intent; soft-context differences are not decisive."
+    },
+    {
+      "id": "de-1",
+      "preferred": "A",
+      "materialA": [
+        "Keeps gewalt from ohne Gewalt as an unqualified concrete term."
+      ],
+      "materialB": [
+        "Avoids world immersion, narrative structure and character depth although romance without violence does not exclude them."
+      ],
+      "note": "Both correctly interpret German romantic movie without violence. A concrete-polarity risk needs downstream confirmation; B separate negative content/form profile is unsupported."
+    },
+    {
+      "id": "de-2",
+      "preferred": "A",
+      "materialA": [],
+      "materialB": [
+        "Avoids immersion, music, cinematography, editing, direction, character depth and unrelated themes despite a suspenseful, non-frightening series request."
+      ],
+      "note": "Both correctly distinguish suspense from scare and preserve series type. B craft/theme aversions are unrelated to that distinction."
+    },
+    {
+      "id": "de-3",
+      "preferred": "A",
+      "materialA": [],
+      "materialB": [
+        "Avoids immersive, psychedelic, grotesque and technology-themed treatments although a slow thoughtful movie can use them."
+      ],
+      "note": "Both retain slow pace, thoughtfulness and movie type. A associated melancholy/depth is plausible; B stronger unrelated style/content avoidance is the main risk."
+    },
+    {
+      "id": "es-1",
+      "preferred": "B",
+      "materialA": [
+        "Avoids world immersion although a romantic film without violence can still be immersive."
+      ],
+      "materialB": [],
+      "note": "Both correctly retain romance, negative violence, movie type and plausible date/partner context. The extra negative immersion direction is not entailed."
+    },
+    {
+      "id": "es-2",
+      "preferred": "A",
+      "materialA": [],
+      "materialB": [
+        "Avoids immersion, music, cinematography, character depth, narrative structure, family themes and other unrelated dimensions from mystery-without-scare intent."
+      ],
+      "note": "Both correctly preserve Spanish series/mystery/no-scare meaning; B broad extra aversions are independent of those requirements."
+    },
+    {
+      "id": "es-3",
+      "preferred": "A",
+      "materialA": [],
+      "materialB": [
+        "Avoids immersion, cinematography, direction, intrigue and sports although slow philosophical films need not avoid those dimensions."
+      ],
+      "note": "Both capture slow philosophical movie intent. A spiritual/educational/psychological associations are related hypotheses rather than hard restrictions; B unrelated negative profile is clearer harm risk."
+    },
+    {
+      "id": "fr-1",
+      "preferred": "A",
+      "materialA": [],
+      "materialB": [
+        "Avoids immersion, character depth and showbiz from romantic-movie-without-violence intent."
+      ],
+      "note": "Both preserve the French query and explicit media type. A plausible wholesome/date association does not impose the additional independent aversions seen in B."
+    },
+    {
+      "id": "fr-2",
+      "preferred": "B",
+      "materialA": [
+        "Avoids music, cinematography, immersion, acting, direction, narrative structure and many unrelated themes while otherwise understanding mystery without scare."
+      ],
+      "materialB": [],
+      "note": "Both preserve French series/mystery/no-scare meaning. B stronger ambiguity is related nuance; A independent creative/content exclusions are the decisive issue."
+    },
+    {
+      "id": "fr-3",
+      "preferred": "B",
+      "materialA": [
+        "Avoids immersion, character depth, narrative structure, cinematography and direction although slow philosophical films can have them."
+      ],
+      "materialB": [
+        "Strong spiritual affinity may oversteer philosophical toward a distinct spiritual/religious topic."
+      ],
+      "note": "Both preserve slow philosophical movie intent. B spiritual steer deserves result review, but A adds broader independent aversions; neither is declared error-free."
+    },
+    {
+      "id": "tr-1",
+      "preferred": "A",
+      "materialA": [],
+      "materialB": [
+        "Avoids world immersion although nonviolent romance need not be non-immersive."
+      ],
+      "note": "Both correctly retain Turkish romance/without-violence/movie intent and the same plausible occasion signals."
+    },
+    {
+      "id": "tr-2",
+      "preferred": "A",
+      "materialA": [],
+      "materialB": [
+        "Avoids immersion, cinematography, editing, direction, family/class/social themes and other dimensions beyond the stated no-scare restriction."
+      ],
+      "note": "Both preserve Turkish mystery-series/no-scare meaning. B unrelated negative profile is not implied by avoiding frightening content."
+    },
+    {
+      "id": "tr-3",
+      "preferred": "B",
+      "materialA": [
+        "Avoids immersion, cinematography, direction, warfare and other content dimensions although slow philosophical viewing does not exclude them."
+      ],
+      "materialB": [
+        "Strong spiritual affinity may oversteer philosophical toward a distinct spiritual/religious topic."
+      ],
+      "note": "Both preserve slow philosophical film intent. The spiritual association in B is an extra hypothesis, but A broader negative craft/content steering is less grounded."
+    }
+  ]
+}

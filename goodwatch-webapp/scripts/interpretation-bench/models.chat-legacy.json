@@ -1,0 +1,65 @@
+{
+  "gates": {
+    "minQuality": 0.9,
+    "maxP95Ms": 1500,
+    "maxErrorRate": 0.01,
+    "maxCostRatio": 0.5
+  },
+  "models": [
+    {
+      "id": "jev",
+      "kind": "jev",
+      "model": "jev-1.13.0",
+      "inputPerMillion": 0.042
+    },
+    {
+      "id": "local-qwen-06b",
+      "kind": "local",
+      "model": "qwen3-0.6b",
+      "baseUrl": "http://127.0.0.1:8081/v1",
+      "maxOutputTokens": 512,
+      "monthlyUsd": 0,
+      "hardware": "UNMEASURED: replace with VPS CPU/RAM, CPU quota, model SHA256, quantization and llama.cpp build"
+    },
+    {
+      "id": "local-qwen-17b",
+      "kind": "local",
+      "model": "qwen3-1.7b",
+      "baseUrl": "http://127.0.0.1:8082/v1",
+      "maxOutputTokens": 512,
+      "monthlyUsd": 0,
+      "hardware": "UNMEASURED: replace with VPS CPU/RAM, CPU quota, model SHA256, quantization and llama.cpp build"
+    },
+    {
+      "id": "or-mistral-nemo",
+      "kind": "openrouter",
+      "model": "mistralai/mistral-nemo",
+      "inputPerMillion": 0.029,
+      "outputPerMillion": 0.03,
+      "contextTokens": 131072,
+      "maxOutputTokens": 512,
+      "providers": [
+        "deepinfra"
+      ]
+    },
+    {
+      "id": "or-ling-tiny",
+      "kind": "openrouter",
+      "model": "inclusionai/ling-3.0-tiny",
+      "inputPerMillion": 0.015,
+      "outputPerMillion": 0.045,
+      "contextTokens": 262144,
+      "maxOutputTokens": 512,
+      "disableReasoning": true
+    },
+    {
+      "id": "or-gemma-4b",
+      "kind": "openrouter",
+      "model": "google/gemma-3-4b-it",
+      "inputPerMillion": 0.05,
+      "outputPerMillion": 0.1,
+      "contextTokens": 131072,
+      "maxOutputTokens": 512
+    }
+  ]
+}

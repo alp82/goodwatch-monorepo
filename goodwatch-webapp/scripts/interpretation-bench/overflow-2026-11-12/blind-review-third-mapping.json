@@ -1,0 +1,170 @@
+{
+  "scary": {
+    "A": "perplexity-pplx-decider-v1.2",
+    "B": "jev"
+  },
+  "romantic": {
+    "A": "jev",
+    "B": "perplexity-pplx-decider-v1.2"
+  },
+  "slow-burn": {
+    "A": "jev",
+    "B": "perplexity-pplx-decider-v1.2"
+  },
+  "fast-action": {
+    "A": "perplexity-pplx-decider-v1.2",
+    "B": "jev"
+  },
+  "wholesome": {
+    "A": "jev",
+    "B": "perplexity-pplx-decider-v1.2"
+  },
+  "wit": {
+    "A": "perplexity-pplx-decider-v1.2",
+    "B": "jev"
+  },
+  "space": {
+    "A": "jev",
+    "B": "perplexity-pplx-decider-v1.2"
+  },
+  "submarine": {
+    "A": "jev",
+    "B": "perplexity-pplx-decider-v1.2"
+  },
+  "chess": {
+    "A": "perplexity-pplx-decider-v1.2",
+    "B": "jev"
+  },
+  "not-scary": {
+    "A": "jev",
+    "B": "perplexity-pplx-decider-v1.2"
+  },
+  "no-violence": {
+    "A": "jev",
+    "B": "perplexity-pplx-decider-v1.2"
+  },
+  "not-romantic": {
+    "A": "jev",
+    "B": "perplexity-pplx-decider-v1.2"
+  },
+  "not-slow": {
+    "A": "jev",
+    "B": "perplexity-pplx-decider-v1.2"
+  },
+  "dark-not-gory": {
+    "A": "perplexity-pplx-decider-v1.2",
+    "B": "jev"
+  },
+  "no-animation": {
+    "A": "jev",
+    "B": "perplexity-pplx-decider-v1.2"
+  },
+  "no-anime": {
+    "A": "perplexity-pplx-decider-v1.2",
+    "B": "jev"
+  },
+  "comfort": {
+    "A": "perplexity-pplx-decider-v1.2",
+    "B": "jev"
+  },
+  "background": {
+    "A": "perplexity-pplx-decider-v1.2",
+    "B": "jev"
+  },
+  "binge": {
+    "A": "perplexity-pplx-decider-v1.2",
+    "B": "jev"
+  },
+  "kids": {
+    "A": "jev",
+    "B": "perplexity-pplx-decider-v1.2"
+  },
+  "family": {
+    "A": "perplexity-pplx-decider-v1.2",
+    "B": "jev"
+  },
+  "adult": {
+    "A": "perplexity-pplx-decider-v1.2",
+    "B": "jev"
+  },
+  "neutral-type": {
+    "A": "jev",
+    "B": "perplexity-pplx-decider-v1.2"
+  },
+  "title-literal": {
+    "A": "perplexity-pplx-decider-v1.2",
+    "B": "jev"
+  },
+  "named-director": {
+    "A": "jev",
+    "B": "perplexity-pplx-decider-v1.2"
+  },
+  "ambiguous-title": {
+    "A": "jev",
+    "B": "perplexity-pplx-decider-v1.2"
+  },
+  "typo": {
+    "A": "jev",
+    "B": "perplexity-pplx-decider-v1.2"
+  },
+  "composition": {
+    "A": "perplexity-pplx-decider-v1.2",
+    "B": "jev"
+  },
+  "long-query": {
+    "A": "perplexity-pplx-decider-v1.2",
+    "B": "jev"
+  },
+  "prompt-injection": {
+    "A": "jev",
+    "B": "perplexity-pplx-decider-v1.2"
+  },
+  "de-1": {
+    "A": "jev",
+    "B": "perplexity-pplx-decider-v1.2"
+  },
+  "de-2": {
+    "A": "jev",
+    "B": "perplexity-pplx-decider-v1.2"
+  },
+  "de-3": {
+    "A": "jev",
+    "B": "perplexity-pplx-decider-v1.2"
+  },
+  "es-1": {
+    "A": "perplexity-pplx-decider-v1.2",
+    "B": "jev"
+  },
+  "es-2": {
+    "A": "jev",
+    "B": "perplexity-pplx-decider-v1.2"
+  },
+  "es-3": {
+    "A": "jev",
+    "B": "perplexity-pplx-decider-v1.2"
+  },
+  "fr-1": {
+    "A": "jev",
+    "B": "perplexity-pplx-decider-v1.2"
+  },
+  "fr-2": {
+    "A": "perplexity-pplx-decider-v1.2",
+    "B": "jev"
+  },
+  "fr-3": {
+    "A": "perplexity-pplx-decider-v1.2",
+    "B": "jev"
+  },
+  "tr-1": {
+    "A": "jev",
+    "B": "perplexity-pplx-decider-v1.2"
+  },
+  "tr-2": {
+    "A": "jev",
+    "B": "perplexity-pplx-decider-v1.2"
+  },
+  "tr-3": {
+    "A": "perplexity-pplx-decider-v1.2",
+    "B": "jev"
+  }
+}

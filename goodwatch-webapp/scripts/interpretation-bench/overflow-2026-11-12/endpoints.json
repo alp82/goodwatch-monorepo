@@ -1,0 +1,587 @@
+{
+  "perplexity/pplx-decider-v1.2": {
+    "data": {
+      "id": "perplexity/pplx-decider-v1.2",
+      "name": "Perplexity: Decider V1.2",
+      "created": 1792183495,
+      "description": "Decider V1.2 is a new 27B checkpoint of Perplexity's decision model, succeeding [Decider V1.1 27B](/perplexity/pplx-decider-v1.1-27b) with the same API contract. Instead of generating text, it reads content passed as `state`...",
+      "architecture": {
+        "tokenizer": "Other",
+        "instruct_type": null,
+        "modality": "text+image->decisions",
+        "input_modalities": [
+          "text",
+          "image"
+        ],
+        "output_modalities": [
+          "decisions"
+        ]
+      },
+      "endpoints": [
+        {
+          "name": "Perplexity | perplexity/pplx-decider-v1.2-20261016",
+          "model_id": "perplexity/pplx-decider-v1.2",
+          "model_name": "Perplexity: Decider V1.2",
+          "context_length": 262144,
+          "pricing": {
+            "prompt": "0.00000002",
+            "completion": "0",
+            "discount": 0
+          },
+          "provider_name": "Perplexity",
+          "tag": "perplexity",
+          "service_tier": null,
+          "quantization": "unknown",
+          "max_completion_tokens": 235929,
+          "max_prompt_tokens": null,
+          "supported_parameters": [],
+          "supports_tool_choice": {
+            "none": true,
+            "auto": true,
+            "required": true,
+            "function": true
+          },
+          "status": 0,
+          "uptime_last_30m": 100,
+          "uptime_last_5m": 100,
+          "uptime_last_1d": 100,
+          "supports_implicit_caching": false,
+          "native_tools": {},
+          "supports_voice_cloning": false,
+          "supports_multiple_audio_references": false,
+          "supports_image_reference": false,
+          "supports_diarization": false,
+          "latency_last_30m": null,
+          "throughput_last_30m": null
+        }
+      ]
+    }
+  },
+  "perplexity/pplx-decider-flash-v1.2": {
+    "data": {
+      "id": "perplexity/pplx-decider-flash-v1.2",
+      "name": "Perplexity: Decider Flash V1.2",
+      "created": 1792183496,
+      "description": "Decider Flash V1.2 is a 4B-parameter decision model from Perplexity, a smaller, lower-cost sibling of [Decider V1.2](/perplexity/pplx-decider-v1.2) with the same API contract. Instead of generating text, it reads content passed...",
+      "architecture": {
+        "tokenizer": "Other",
+        "instruct_type": null,
+        "modality": "text+image->decisions",
+        "input_modalities": [
+          "text",
+          "image"
+        ],
+        "output_modalities": [
+          "decisions"
+        ]
+      },
+      "endpoints": [
+        {
+          "name": "Perplexity | perplexity/pplx-decider-flash-v1.2-20261016",
+          "model_id": "perplexity/pplx-decider-flash-v1.2",
+          "model_name": "Perplexity: Decider Flash V1.2",
+          "context_length": 262144,
+          "pricing": {
+            "prompt": "0.00000001",
+            "completion": "0",
+            "discount": 0
+          },
+          "provider_name": "Perplexity",
+          "tag": "perplexity",
+          "service_tier": null,
+          "quantization": "unknown",
+          "max_completion_tokens": 235929,
+          "max_prompt_tokens": null,
+          "supported_parameters": [],
+          "supports_tool_choice": {
+            "none": true,
+            "auto": true,
+            "required": true,
+            "function": true
+          },
+          "status": 0,
+          "uptime_last_30m": 100,
+          "uptime_last_5m": 100,
+          "uptime_last_1d": 100,
+          "supports_implicit_caching": false,
+          "native_tools": {},
+          "supports_voice_cloning": false,
+          "supports_multiple_audio_references": false,
+          "supports_image_reference": false,
+          "supports_diarization": false,
+          "latency_last_30m": null,
+          "throughput_last_30m": null
+        }
+      ]
+    }
+  },
+  "liquid/d1.1": {
+    "data": {
+      "id": "liquid/d1.1",
+      "name": "LiquidAI: d1.1",
+      "created": 1793131325,
+      "description": "d1.1 is Liquid AI's structured decision model, served as a System One endpoint and the successor to d1. Send a state along with typed questions, and it returns a choice,...",
+      "architecture": {
+        "tokenizer": "Other",
+        "instruct_type": null,
+        "modality": "text+image->decisions",
+        "input_modalities": [
+          "text",
+          "image"
+        ],
+        "output_modalities": [
+          "decisions"
+        ]
+      },
+      "endpoints": [
+        {
+          "name": "Liquid | liquid/d1.1-20261027",
+          "model_id": "liquid/d1.1",
+          "model_name": "LiquidAI: d1.1",
+          "context_length": 65536,
+          "pricing": {
+            "prompt": "0.00000002",
+            "completion": "0",
+            "input_cache_read": "0.00000002",
+            "discount": 0
+          },
+          "provider_name": "Liquid",
+          "tag": "liquid",
+          "service_tier": null,
+          "quantization": "unknown",
+          "max_completion_tokens": 58982,
+          "max_prompt_tokens": null,
+          "supported_parameters": [],
+          "supports_tool_choice": {
+            "none": true,
+            "auto": true,
+            "required": true,
+            "function": true
+          },
+          "status": 0,
+          "uptime_last_30m": 100,
+          "uptime_last_5m": 100,
+          "uptime_last_1d": 100,
+          "supports_implicit_caching": true,
+          "native_tools": {},
+          "supports_voice_cloning": false,
+          "supports_multiple_audio_references": false,
+          "supports_image_reference": false,
+          "supports_diarization": false,
+          "latency_last_30m": null,
+          "throughput_last_30m": null
+        }
+      ]
+    }
+  },
+  "respan/span-02": {
+    "data": {
+      "id": "respan/span-02",
+      "name": "Respan: Span-02",
+      "created": 1792108973,
+      "description": "Span-02 is an open-weight decision model from Respan. It reads a state of text and images and answers the questions you define about it: picking one of several options, a...",
+      "architecture": {
+        "tokenizer": "Other",
+        "instruct_type": null,
+        "modality": "text+image->decisions",
+        "input_modalities": [
+          "text",
+          "image"
+        ],
+        "output_modalities": [
+          "decisions"
+        ]
+      },
+      "endpoints": [
+        {
+          "name": "Respan | respan/span-02-20261015",
+          "model_id": "respan/span-02",
+          "model_name": "Respan: Span-02",
+          "context_length": 131072,
+          "pricing": {
+            "prompt": "0.00000001",
+            "completion": "0",
+            "discount": 0
+          },
+          "provider_name": "Respan",
+          "tag": "respan",
+          "service_tier": null,
+          "quantization": "unknown",
+          "max_completion_tokens": 117964,
+          "max_prompt_tokens": null,
+          "supported_parameters": [],
+          "supports_tool_choice": {
+            "none": true,
+            "auto": true,
+            "required": true,
+            "function": true
+          },
+          "status": 0,
+          "uptime_last_30m": 100,
+          "uptime_last_5m": 100,
+          "uptime_last_1d": 99.72222222222223,
+          "supports_implicit_caching": false,
+          "native_tools": {},
+          "supports_voice_cloning": false,
+          "supports_multiple_audio_references": false,
+          "supports_image_reference": false,
+          "supports_diarization": false,
+          "latency_last_30m": null,
+          "throughput_last_30m": null
+        }
+      ]
+    }
+  },
+  "baseten/joey-1": {
+    "data": {
+      "id": "baseten/joey-1",
+      "name": "Baseten: Joey 1",
+      "created": 1793301887,
+      "description": "Joey 1 is a 2B decision model from Base Labs, Baseten's research team, built on Qwen3.5-2B. Given a state (text or JSON) and typed questions (yes/no, multiple choice, or ordinal...",
+      "architecture": {
+        "tokenizer": "Other",
+        "instruct_type": null,
+        "modality": "text+image->decisions",
+        "input_modalities": [
+          "text",
+          "image"
+        ],
+        "output_modalities": [
+          "decisions"
+        ]
+      },
+      "endpoints": [
+        {
+          "name": "BaseTen | baseten/joey-1-20261029",
+          "model_id": "baseten/joey-1",
+          "model_name": "Baseten: Joey 1",
+          "context_length": 16384,
+          "pricing": {
+            "prompt": "0.00000001",
+            "completion": "0",
+            "discount": 0
+          },
+          "provider_name": "BaseTen",
+          "tag": "baseten",
+          "service_tier": null,
+          "quantization": "unknown",
+          "max_completion_tokens": 14745,
+          "max_prompt_tokens": null,
+          "supported_parameters": [],
+          "supports_tool_choice": {
+            "none": true,
+            "auto": true,
+            "required": true,
+            "function": true
+          },
+          "status": 0,
+          "uptime_last_30m": 100,
+          "uptime_last_5m": 100,
+          "uptime_last_1d": 97.85310734463278,
+          "supports_implicit_caching": false,
+          "native_tools": {},
+          "supports_voice_cloning": false,
+          "supports_multiple_audio_references": false,
+          "supports_image_reference": false,
+          "supports_diarization": false,
+          "latency_last_30m": null,
+          "throughput_last_30m": null
+        }
+      ]
+    }
+  },
+  "baseten/elephant-1": {
+    "data": {
+      "id": "baseten/elephant-1",
+      "name": "Baseten: Elephant 1",
+      "created": 1792622577,
+      "description": "Elephant 1 is a 9B decision model from Base Labs, Baseten's research team, built on Qwen3.5-9B. Given a state (text or JSON) and typed questions (yes/no, multiple choice, or ordinal...",
+      "architecture": {
+        "tokenizer": "Other",
+        "instruct_type": null,
+        "modality": "text+image->decisions",
+        "input_modalities": [
+          "text",
+          "image"
+        ],
+        "output_modalities": [
+          "decisions"
+        ]
+      },
+      "endpoints": [
+        {
+          "name": "BaseTen | baseten/elephant-1-20261021",
+          "model_id": "baseten/elephant-1",
+          "model_name": "Baseten: Elephant 1",
+          "context_length": 16384,
+          "pricing": {
+            "prompt": "0.000000035",
+            "completion": "0",
+            "discount": 0
+          },
+          "provider_name": "BaseTen",
+          "tag": "baseten",
+          "service_tier": null,
+          "quantization": "unknown",
+          "max_completion_tokens": 14745,
+          "max_prompt_tokens": null,
+          "supported_parameters": [],
+          "supports_tool_choice": {
+            "none": true,
+            "auto": true,
+            "required": true,
+            "function": true
+          },
+          "status": 0,
+          "uptime_last_30m": 100,
+          "uptime_last_5m": 100,
+          "uptime_last_1d": 98.45440494590417,
+          "supports_implicit_caching": false,
+          "native_tools": {},
+          "supports_voice_cloning": false,
+          "supports_multiple_audio_references": false,
+          "supports_image_reference": false,
+          "supports_diarization": false,
+          "latency_last_30m": null,
+          "throughput_last_30m": null
+        }
+      ]
+    }
+  },
+  "scaledown/classify-1": {
+    "data": {
+      "id": "scaledown/classify-1",
+      "name": "ScaleDown: Classify-1",
+      "created": 1791893334,
+      "description": "Classify-1 is a structured decision model from ScaleDown, served through OpenRouter's Decisions API. It scores text or a document against caller-defined choice, yes/no, and ordered-scale questions and returns calibrated probabilities...",
+      "architecture": {
+        "tokenizer": "Other",
+        "instruct_type": null,
+        "modality": "text+image+file->decisions",
+        "input_modalities": [
+          "text",
+          "image",
+          "file"
+        ],
+        "output_modalities": [
+          "decisions"
+        ]
+      },
+      "endpoints": [
+        {
+          "name": "ScaleDown | scaledown/classify-1-20260928",
+          "model_id": "scaledown/classify-1",
+          "model_name": "ScaleDown: Classify-1",
+          "context_length": 1000000,
+          "pricing": {
+            "prompt": "0.00000004",
+            "completion": "0",
+            "discount": 0.2
+          },
+          "provider_name": "ScaleDown",
+          "tag": "scaledown",
+          "service_tier": null,
+          "quantization": "unknown",
+          "max_completion_tokens": 900000,
+          "max_prompt_tokens": null,
+          "supported_parameters": [],
+          "supports_tool_choice": {
+            "none": true,
+            "auto": true,
+            "required": true,
+            "function": true
+          },
+          "status": 0,
+          "uptime_last_30m": 100,
+          "uptime_last_5m": null,
+          "uptime_last_1d": 99.14529914529915,
+          "supports_implicit_caching": false,
+          "native_tools": {},
+          "supports_voice_cloning": false,
+          "supports_multiple_audio_references": false,
+          "supports_image_reference": false,
+          "supports_diarization": false,
+          "latency_last_30m": null,
+          "throughput_last_30m": null
+        }
+      ]
+    }
+  },
+  "nace-ai/drex-max": {
+    "data": {
+      "id": "nace-ai/drex-max",
+      "name": "Nace.AI: Drex Max",
+      "created": 1792607412,
+      "description": "Drex Max is the largest decision model from Nace.AI, the successor to [Drex v2.0](https://openrouter.ai/nace-ai/drex-v2.0). Given a state (text, JSON, or up to four images) and typed questions (yes/no, multiple choice,...",
+      "architecture": {
+        "tokenizer": "Other",
+        "instruct_type": null,
+        "modality": "text+image->decisions",
+        "input_modalities": [
+          "text",
+          "image"
+        ],
+        "output_modalities": [
+          "decisions"
+        ]
+      },
+      "endpoints": [
+        {
+          "name": "DeepInfra | nace-ai/drex-max-20261016",
+          "model_id": "nace-ai/drex-max",
+          "model_name": "Nace.AI: Drex Max",
+          "context_length": 262144,
+          "pricing": {
+            "prompt": "0.00000006",
+            "completion": "0",
+            "input_cache_read": "0.00000006",
+            "discount": 0.5
+          },
+          "provider_name": "DeepInfra",
+          "tag": "deepinfra/us",
+          "service_tier": null,
+          "quantization": "unknown",
+          "max_completion_tokens": 235929,
+          "max_prompt_tokens": null,
+          "supported_parameters": [],
+          "supports_tool_choice": {
+            "none": true,
+            "auto": true,
+            "required": true,
+            "function": true
+          },
+          "status": 0,
+          "uptime_last_30m": 100,
+          "uptime_last_5m": 100,
+          "uptime_last_1d": 100,
+          "supports_implicit_caching": true,
+          "native_tools": {},
+          "supports_voice_cloning": false,
+          "supports_multiple_audio_references": false,
+          "supports_image_reference": false,
+          "supports_diarization": false,
+          "latency_last_30m": null,
+          "throughput_last_30m": null
+        }
+      ]
+    }
+  },
+  "morph/reflex": {
+    "data": {
+      "id": "morph/reflex",
+      "name": "Morph: Reflex",
+      "created": 1793741446,
+      "description": "Morph's decision model. Answers typed choice, noul and score questions about a state. The state is prefix-cached across requests, so repeat questions on the same state bill at the cached-input...",
+      "architecture": {
+        "tokenizer": "Other",
+        "instruct_type": null,
+        "modality": "text+image->decisions",
+        "input_modalities": [
+          "text",
+          "image"
+        ],
+        "output_modalities": [
+          "decisions"
+        ]
+      },
+      "endpoints": [
+        {
+          "name": "Morph | morph/reflex-20261103",
+          "model_id": "morph/reflex",
+          "model_name": "Morph: Reflex",
+          "context_length": 65536,
+          "pricing": {
+            "prompt": "0.000000042",
+            "completion": "0",
+            "input_cache_read": "0.000000002",
+            "discount": 0
+          },
+          "provider_name": "Morph",
+          "tag": "morph/bf16",
+          "service_tier": null,
+          "quantization": "bf16",
+          "max_completion_tokens": 58982,
+          "max_prompt_tokens": null,
+          "supported_parameters": [],
+          "supports_tool_choice": {
+            "none": true,
+            "auto": true,
+            "required": true,
+            "function": true
+          },
+          "status": 0,
+          "uptime_last_30m": 100,
+          "uptime_last_5m": 100,
+          "uptime_last_1d": 95.58998808104887,
+          "supports_implicit_caching": true,
+          "native_tools": {},
+          "supports_voice_cloning": false,
+          "supports_multiple_audio_references": false,
+          "supports_image_reference": false,
+          "supports_diarization": false,
+          "latency_last_30m": null,
+          "throughput_last_30m": null
+        }
+      ]
+    }
+  },
+  "liquid/d1-ultra": {
+    "data": {
+      "id": "liquid/d1-ultra",
+      "name": "LiquidAI: d1-ultra",
+      "created": 1792108354,
+      "description": "d1-ultra is Liquid AI's largest decision model, served as a System One endpoint. Send a state of text and images along with typed questions, and it returns a choice, a...",
+      "architecture": {
+        "tokenizer": "Other",
+        "instruct_type": null,
+        "modality": "text+image->decisions",
+        "input_modalities": [
+          "text",
+          "image"
+        ],
+        "output_modalities": [
+          "decisions"
+        ]
+      },
+      "endpoints": [
+        {
+          "name": "Liquid | liquid/d1-ultra-20261015",
+          "model_id": "liquid/d1-ultra",
+          "model_name": "LiquidAI: d1-ultra",
+          "context_length": 32768,
+          "pricing": {
+            "prompt": "0.000000042",
+            "completion": "0",
+            "input_cache_read": "0.000000042",
+            "discount": 0
+          },
+          "provider_name": "Liquid",
+          "tag": "liquid",
+          "service_tier": null,
+          "quantization": "unknown",
+          "max_completion_tokens": 29491,
+          "max_prompt_tokens": null,
+          "supported_parameters": [],
+          "supports_tool_choice": {
+            "none": true,
+            "auto": true,
+            "required": true,
+            "function": true
+          },
+          "status": 0,
+          "uptime_last_30m": 100,
+          "uptime_last_5m": 100,
+          "uptime_last_1d": 100,
+          "supports_implicit_caching": true,
+          "native_tools": {},
+          "supports_voice_cloning": false,
+          "supports_multiple_audio_references": false,
+          "supports_image_reference": false,
+          "supports_diarization": false,
+          "latency_last_30m": null,
+          "throughput_last_30m": null
+        }
+      ]
+    }
+  }
+}

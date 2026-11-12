@@ -1,0 +1,170 @@
+{
+  "scary": {
+    "A": "jev",
+    "B": "liquid-d1.1"
+  },
+  "romantic": {
+    "A": "jev",
+    "B": "liquid-d1.1"
+  },
+  "slow-burn": {
+    "A": "liquid-d1.1",
+    "B": "jev"
+  },
+  "fast-action": {
+    "A": "jev",
+    "B": "liquid-d1.1"
+  },
+  "wholesome": {
+    "A": "jev",
+    "B": "liquid-d1.1"
+  },
+  "wit": {
+    "A": "liquid-d1.1",
+    "B": "jev"
+  },
+  "space": {
+    "A": "liquid-d1.1",
+    "B": "jev"
+  },
+  "submarine": {
+    "A": "jev",
+    "B": "liquid-d1.1"
+  },
+  "chess": {
+    "A": "jev",
+    "B": "liquid-d1.1"
+  },
+  "not-scary": {
+    "A": "liquid-d1.1",
+    "B": "jev"
+  },
+  "no-violence": {
+    "A": "liquid-d1.1",
+    "B": "jev"
+  },
+  "not-romantic": {
+    "A": "jev",
+    "B": "liquid-d1.1"
+  },
+  "not-slow": {
+    "A": "jev",
+    "B": "liquid-d1.1"
+  },
+  "dark-not-gory": {
+    "A": "jev",
+    "B": "liquid-d1.1"
+  },
+  "no-animation": {
+    "A": "jev",
+    "B": "liquid-d1.1"
+  },
+  "no-anime": {
+    "A": "liquid-d1.1",
+    "B": "jev"
+  },
+  "comfort": {
+    "A": "liquid-d1.1",
+    "B": "jev"
+  },
+  "background": {
+    "A": "jev",
+    "B": "liquid-d1.1"
+  },
+  "binge": {
+    "A": "jev",
+    "B": "liquid-d1.1"
+  },
+  "kids": {
+    "A": "liquid-d1.1",
+    "B": "jev"
+  },
+  "family": {
+    "A": "jev",
+    "B": "liquid-d1.1"
+  },
+  "adult": {
+    "A": "liquid-d1.1",
+    "B": "jev"
+  },
+  "neutral-type": {
+    "A": "jev",
+    "B": "liquid-d1.1"
+  },
+  "title-literal": {
+    "A": "jev",
+    "B": "liquid-d1.1"
+  },
+  "named-director": {
+    "A": "liquid-d1.1",
+    "B": "jev"
+  },
+  "ambiguous-title": {
+    "A": "liquid-d1.1",
+    "B": "jev"
+  },
+  "typo": {
+    "A": "liquid-d1.1",
+    "B": "jev"
+  },
+  "composition": {
+    "A": "liquid-d1.1",
+    "B": "jev"
+  },
+  "long-query": {
+    "A": "liquid-d1.1",
+    "B": "jev"
+  },
+  "prompt-injection": {
+    "A": "liquid-d1.1",
+    "B": "jev"
+  },
+  "de-1": {
+    "A": "liquid-d1.1",
+    "B": "jev"
+  },
+  "de-2": {
+    "A": "liquid-d1.1",
+    "B": "jev"
+  },
+  "de-3": {
+    "A": "liquid-d1.1",
+    "B": "jev"
+  },
+  "es-1": {
+    "A": "liquid-d1.1",
+    "B": "jev"
+  },
+  "es-2": {
+    "A": "liquid-d1.1",
+    "B": "jev"
+  },
+  "es-3": {
+    "A": "liquid-d1.1",
+    "B": "jev"
+  },
+  "fr-1": {
+    "A": "jev",
+    "B": "liquid-d1.1"
+  },
+  "fr-2": {
+    "A": "liquid-d1.1",
+    "B": "jev"
+  },
+  "fr-3": {
+    "A": "liquid-d1.1",
+    "B": "jev"
+  },
+  "tr-1": {
+    "A": "jev",
+    "B": "liquid-d1.1"
+  },
+  "tr-2": {
+    "A": "jev",
+    "B": "liquid-d1.1"
+  },
+  "tr-3": {
+    "A": "liquid-d1.1",
+    "B": "jev"
+  }
+}

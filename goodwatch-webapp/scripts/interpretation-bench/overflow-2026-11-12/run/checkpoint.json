@@ -1,0 +1,111 @@
+{
+  "budget": {
+    "limitUsd": 1,
+    "reservationPerReadingUsd": 0.04,
+    "knownActualUsd": 0.3061322440000001,
+    "unknownHeldUsd": 0.2,
+    "inFlightReservedUsd": 0
+  },
+  "admission": [
+    {
+      "model": "jev",
+      "status": "ok",
+      "costUsd": 0.00031462199999999997,
+      "errors": [
+        null,
+        null
+      ]
+    },
+    {
+      "model": "perplexity-pplx-decider-v1.2",
+      "status": "ok",
+      "costUsd": 0.00017800000000000002,
+      "errors": [
+        null,
+        null
+      ]
+    },
+    {
+      "model": "perplexity-pplx-decider-flash-v1.2",
+      "status": "ok",
+      "costUsd": 0.00008900000000000001,
+      "errors": [
+        null,
+        null
+      ]
+    },
+    {
+      "model": "liquid-d1.1",
+      "status": "provider-error",
+      "costUsd": null,
+      "errors": [
+        null,
+        "HTTP 422: {\"error\":{\"message\":\"A request accepts at most 128 questions.\",\"type\":\"invalid_request_error\",\"param\":\"questions\",\"code\":null}}"
+      ]
+    },
+    {
+      "model": "respan-span-02",
+      "status": "ok",
+      "costUsd": 0.00028039,
+      "errors": [
+        null,
+        null
+      ]
+    },
+    {
+      "model": "baseten-joey-1",
+      "status": "ok",
+      "costUsd": 0.00013324,
+      "errors": [
+        null,
+        null
+      ]
+    },
+    {
+      "model": "baseten-elephant-1",
+      "status": "ok",
+      "costUsd": 0.00046634,
+      "errors": [
+        null,
+        null
+      ]
+    },
+    {
+      "model": "scaledown-classify-1",
+      "status": "provider-error",
+      "costUsd": null,
+      "errors": [
+        "ScaleDown state must be a string, a single image_url or file part, an array of text and at most one image_url or file part, or an object with only text, document, and document_mime_type, including text or document",
+        "ScaleDown state must be a string, a single image_url or file part, an array of text and at most one image_url or file part, or an object with only text, document, and document_mime_type, including text or document"
+      ]
+    },
+    {
+      "model": "nace-ai-drex-max",
+      "status": "provider-error",
+      "costUsd": null,
+      "errors": [
+        "HTTP 422: {\"detail\":\"questions must be an object of 1..16 questions\"}",
+        "HTTP 422: {\"detail\":[{\"type\":\"too_long\",\"loc\":[\"body\",\"questions\"],\"msg\":\"Dictionary should have at most 64 items after validation, not 148\",\"input\":{\"want:adrenaline\":{\"type\":\"noul\",\"instructions\":\"Does `request` ask for \\\"Adrenaline\\\" (Hi"
+      ]
+    },
+    {
+      "model": "morph-reflex",
+      "status": "provider-error",
+      "costUsd": null,
+      "errors": [
+        null,
+        "HTTP 422: {\"detail\":[{\"loc\":[\"body\"],\"msg\":\"question count exceeds the configured decision request limit\",\"type\":\"invalid_request_error\"}]}"
+      ]
+    },
+    {
+      "model": "liquid-d1-ultra",
+      "status": "provider-error",
+      "costUsd": null,
+      "errors": [
+        null,
+        "HTTP 422: {\"error\":{\"message\":\"A request accepts at most 128 questions.\",\"type\":\"invalid_request_error\",\"param\":\"questions\",\"code\":null}}"
+      ]
+    }
+  ],
+  "completed": 1107
+}
