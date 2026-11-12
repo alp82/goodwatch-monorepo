@@ -94,9 +94,10 @@ export type ProposalRepository = RoomRepository<ProposalRoom> & {
 	findInvite?(hash: string): Promise<string | null>
 	/**
 	 * Ids of live rooms (expiring after `now`) whose current ideas include one still pending with a lease from
-	 * before `leaseBefore`, at most `limit`, ordered by room id. A search, not a typed read: callers read each room.
+	 * before `leaseBefore`, at most `limit`, ordered by room id and after `after` (a keyset cursor; "" from the
+	 * start). A search, not a typed read: callers read each room.
 	 */
-	stalePendingIdeas?(leaseBefore: number, now: number, limit: number): Promise<string[]>
+	stalePendingIdeas?(leaseBefore: number, now: number, limit: number, after?: string): Promise<string[]>
 }
 export type ProposalStored = StoredRoom<ProposalRoom>
 export interface ExcludedKeysOptions {

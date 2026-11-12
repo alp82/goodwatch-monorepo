@@ -70,9 +70,9 @@ export class ProposalMemoryRepository implements ProposalRepository {
 	async read(id: string) {
 		return structuredClone(this.rows.get(id) ?? null)
 	}
-	async stalePendingIdeas(leaseBefore: number, now: number, limit: number) {
+	async stalePendingIdeas(leaseBefore: number, now: number, limit: number, after = "") {
 		return [...this.rows.values()]
-			.filter(({ room }) => room.expiresAt > now && (room.ideas ?? []).some((i) => ideaPending(i) && i.interpretedAt < leaseBefore))
+			.filter(({ room }) => room.id > after && room.expiresAt > now && (room.ideas ?? []).some((i) => ideaPending(i) && i.interpretedAt < leaseBefore))
 			.map(({ room }) => room.id)
 			.sort()
 			.slice(0, limit)

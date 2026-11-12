@@ -512,6 +512,7 @@ test(
 		assert.deepEqual(await repo.stalePendingIdeas(now() - 15_000, now(), 50), [], "within the lease")
 		offset = 16_000
 		assert.deepEqual(await repo.stalePendingIdeas(now() - 15_000, now(), 50), [pending.credential.roomId])
+		assert.deepEqual(await repo.stalePendingIdeas(now() - 15_000, now(), 50, pending.credential.roomId), [], "a cursor continues after its room")
 		assert.notEqual(plain.credential.roomId, pending.credential.roomId)
 		const expiresAt = (await repo.read(pending.credential.roomId))!.room.expiresAt
 		assert.deepEqual(await repo.stalePendingIdeas(now() - 15_000, expiresAt + 1, 50), [], "expired rooms are left out")

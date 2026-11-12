@@ -490,7 +490,7 @@ test("proposal and matches withdraw when their only service or idea is switched 
 	assert.equal(next.proposal, null)
 	assert.equal(proposalSnapshot(next, next.hostId).shared.matches.length, 0)
 })
-test("failed interpretations consume the budget and keep the idea uninterpreted; a spend-limit refusal is refunded; idea count is capped at eight", async () => {
+test("failed interpretations, spend-limit refusals included, consume the budget and keep the idea uninterpreted; idea count is capped at eight", async () => {
 	const f = await fixture()
 	const failing = (error: Error) => new ProposalService(
 		f.repo,
@@ -518,7 +518,7 @@ test("failed interpretations consume the budget and keep the idea uninterpreted;
 	let room = (await f.repo.read(f.id))!.room
 	assert.equal(room.interpretationCount, 1)
 	assert.deepEqual(room.ideas![0].rankedKeys, [])
-	// GoodWatch's spend limit refused before any search: the idea is kept, the room's budget is not spent.
+	// GoodWatch's spend limit refused: the idea is kept uninterpreted, and its reserved slot stays spent.
 	const limited = failing(new RoomError("catalog_unavailable", "Mood matching is unavailable for now. You can still start without an idea.", 503, false))
 	s = (await limited.command(f.id, f.a.credential, {
 		commandId: "budget",
@@ -530,7 +530,7 @@ test("failed interpretations consume the budget and keep the idea uninterpreted;
 	s = await limited.read(f.id, f.a.credential)
 	assert.deepEqual(s.shared.ideas.map((i) => [i.text, i.attributes]), [["Budget refused", []]])
 	room = (await f.repo.read(f.id))!.room
-	assert.equal(room.interpretationCount, 1)
+	assert.equal(room.interpretationCount, 2)
 	for (let i = 0; i < 7; i++)
 		await f.send({ type: "add_idea", text: `Idea ${i}` })
 	await assert.rejects(f.send({ type: "add_idea", text: "Ninth idea" }), {
@@ -551,7 +551,7 @@ const limitedService = (repo: ProposalMemoryRepository) => new ProposalService(
 		throw spendLimit()
 	}
 )
-test("a spend-limit refusal handled twice at once refunds both reservations and stores one idea", async () => {
+test("a spend-limit refusal of a command handled twice at once reserves one slot and stores one idea", async () => {
 	const f = await fixture()
 	const s = await f.service.read(f.id, f.a.credential)
 	const envelope = {
@@ -565,10 +565,10 @@ test("a spend-limit refusal handled twice at once refunds both reservations and 
 	assert.ok(results.some((r) => r.status === "fulfilled"))
 	await Promise.all(instances.map((i) => i.interpretationsIdle()))
 	const room = (await f.repo.read(f.id))!.room
-	assert.equal(room.interpretationCount, 0)
-	assert.deepEqual(room.ideas!.map((i) => i.text), ["Twice refused"])
+	assert.equal(room.interpretationCount, 1)
+	assert.deepEqual(room.ideas!.map((i) => [i.text, i.attributes]), [["Twice refused", []]])
 })
-test("a spend-limit refusal is refunded even when the idea's publication fails", async () => {
+test("an idea command whose publication fails reserves no slot", async () => {
 	const f = await fixture()
 	const cas = f.repo.compareAndSwap.bind(f.repo)
 	f.repo.compareAndSwap = async (old, room, notify) => {

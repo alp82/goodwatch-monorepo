@@ -11,7 +11,7 @@ import {
 	attributeCandidates,
 	titleKey
 } from "./proposal-redesign.ts"
-import type { InterpretRoom } from "./proposal-intent.ts"
+import { SearchBusy, type InterpretRoom } from "./proposal-intent.ts"
 import { activeRoom, normalizeRoomContext } from "./proposal-context.ts"
 import { PreparedDecks, type PreparedDecksOptions } from "./proposal-prepared-decks.ts"
 import { CONTINUOUS_LIMITS as L } from "./continuous-types.ts"
@@ -79,38 +79,44 @@ export interface ProposalOperationGuard {
 type Interpretation = NonNullable<ProposalRoom["intent"]>
 type StoredIdea = NonNullable<ProposalRoom["ideas"]>[number]
 /**
- * An idea stored pending, and the attempt whose answer may land on it. `reservation` names the one search slot
- * the idea command reserved: it stays the same across takeovers, and an edit gives the idea a new one. `job` names
- * this attempt (the lease's owner); a takeover stores a new job. Both are random, never timestamps. `lease` is when
- * the attempt claimed the idea (its `interpretedAt`).
+ * An idea stored pending, and the attempt whose answer may land on it. `job` (random, never a timestamp) names
+ * the attempt holding the idea's lease: a takeover stores a new job, and so does an edit. Only the holder lands a
+ * result. `lease` is when the attempt claimed the idea (its `interpretedAt`).
  */
 interface PendingIdea {
 	ideaId: string
 	text: string
-	reservation: string
 	job: string
 	lease: number
 }
 /**
  * How long a pending idea's search may run before any process may take it over: the search times out after
- * 12 s, so a lease this old means the process running it crashed or restarted.
+ * 12 s, so a lease this old means the process running it crashed, restarted or never got to it.
  */
 export const INTERPRETATION_LEASE_MS = 15_000
+/**
+ * A queued attempt starts on the lease its command stored only this soon after; later it claims a fresh lease
+ * first, so the search (12 s at most) still ends inside the lease.
+ */
+const LEASE_START_GRACE_MS = 2_000
+/** Background searches one API process runs at once: GoodWatch search admits about 4 in flight per instance. */
+export const INTERPRETATION_CONCURRENCY = 3
+/** Retry backoff of a room whose background interpretation failed in a way that may pass (overload, store errors). */
+const RETRY_BASE_MS = 30_000
+const RETRY_MAX_MS = 15 * 60_000
 const token = () => random().slice(0, 22)
 /**
- * Stores the pending marker with its reservation and job in the attribute's text (the key stays
- * PENDING_IDEA_ATTRIBUTE's, so a store query finds pending ideas by it). Snapshots show PENDING_IDEA_ATTRIBUTE itself.
+ * Stores the pending marker with its job in the attribute's text (the key stays PENDING_IDEA_ATTRIBUTE's, so a
+ * store query finds pending ideas by it). Snapshots show PENDING_IDEA_ATTRIBUTE itself.
  */
 function markPending(idea: StoredIdea, pending: PendingIdea) {
-	idea.attributes = [{ ...PENDING_IDEA_ATTRIBUTE, text: `${pending.reservation}.${pending.job}` }]
+	idea.attributes = [{ ...PENDING_IDEA_ATTRIBUTE, text: pending.job }]
 	idea.rankedKeys = []
 	idea.interpretedAt = pending.lease
 }
-/** The reservation and job a pending idea holds; null when it isn't pending. */
+/** The job holding a pending idea's lease; null when it isn't pending. */
 function heldBy(idea: StoredIdea | undefined) {
-	if (!idea || !ideaPending(idea)) return null
-	const [reservation = "", job = ""] = idea.attributes[0].text.split(".")
-	return { reservation, job }
+	return idea && ideaPending(idea) ? idea.attributes[0].text : null
 }
 export class ProposalService {
 	readonly deletions: DeletionStore
@@ -124,8 +130,14 @@ export class ProposalService {
 	private interpret?: InterpretRoom
 	/** First decks built during setup, so Start doesn't wait for the catalog. */
 	readonly decks: PreparedDecks
-	/** Interpretations this process is running or landing, by `${roomId}:${ideaId}`. */
+	/** Interpretations this process has queued, running or landing, by `${roomId}:${ideaId}`. */
 	private interpreting = new Map<string, Promise<void>>()
+	/** Background searches running now, at most `concurrency`; `waiting` are queued for a slot. */
+	private searching = 0
+	private waiting: (() => void)[] = []
+	private concurrency: number
+	/** Rooms whose background interpretation failed lately: failures in a row and when to retry, oldest first. */
+	private retries = new Map<string, { failures: number; at: number }>()
 	private writes = new Map<string, { tail: Promise<void>; count: number }>()
 	/** Rooms' expiries (fixed at creation) by id, most recently read last: lets a read check capacity alongside. */
 	private expiries = new Map<string, number>()
@@ -137,7 +149,7 @@ export class ProposalService {
 		now: () => number = Date.now,
 		guard?: ProposalOperationGuard,
 		interpret?: InterpretRoom,
-		options: { decks?: PreparedDecksOptions } = {}
+		options: { decks?: PreparedDecksOptions; interpretations?: number } = {}
 	) {
 		if (secret.length < 32) throw new Error("Room secret too short")
 		this.repository = repository
@@ -149,6 +161,7 @@ export class ProposalService {
 		this.now = now
 		this.guard = guard
 		this.interpret = interpret
+		this.concurrency = options.interpretations ?? INTERPRETATION_CONCURRENCY
 		this.decks = new PreparedDecks(catalog, async (id) => {
 			const stored = await repository.read(id)
 			return stored && stored.room.format === 2 && stored.room.flowVersion === 3 ? stored.room : null
@@ -246,134 +259,162 @@ export class ProposalService {
 		return p
 	}
 	/**
-	 * Lands a pending idea's search on the room as an ordinary committed revision (published, so phones update and
-	 * the prepared deck is built again for the new ranked titles): its attributes and ranked titles when search
-	 * answered, no attributes when it failed (the app's "Mood matching is unavailable" note). Only the attempt that
-	 * owns the idea (same reservation and job) lands, which also settles the reservation: the idea stops being
-	 * pending in the same compare-and-swap, so a reservation is settled once whichever process holds it.
+	 * Interprets a pending idea in the background: queued behind this process's bounded search slots
+	 * (INTERPRETATION_CONCURRENCY), it claims the idea's lease only when it starts, searches, and lands the answer
+	 * as an ordinary committed revision (published, so phones update and the prepared deck is built again): its
+	 * attributes and ranked titles, or no attributes when search failed for good (the app's "Mood matching is
+	 * unavailable" note). Only the attempt holding the lease (same job) lands. GoodWatch search busy or rate
+	 * limited keeps the idea pending: a later read or sweep retries it after its lease and the room's backoff.
+	 * The search slot was spent when the idea command reserved it, whatever the outcome.
 	 *
-	 * A refusal for GoodWatch's spend limit ran no search and gives its slot back; any other failure keeps it spent.
-	 * The slot is given back only by the attempt that held the reservation last: the owner settling it, or, when an
-	 * edit or removal replaced the reservation, the attempt whose lease was still running when it read the room. A
-	 * takeover only happens after a lease runs out, so no other attempt can have held that reservation since; an
-	 * attempt whose lease ran out never gives a slot back (a takeover may have spent or settled it).
+	 * `known`: the attempt a command or create just stored; without it, a takeover of a lease that ran out.
 	 */
-	private landInterpretation(id: string, pending: PendingIdea, search: Promise<Interpretation>) {
-		const key = `${id}:${pending.ideaId}`
-		const work = (async () => {
+	private interpretInBackground(id: string, ideaId: string, known?: PendingIdea) {
+		const key = `${id}:${ideaId}`
+		const work = this.interpretationSlot(async () => {
+			const claimed = await this.claimInterpretation(id, ideaId, known)
+			if (!claimed) return
+			const { room, pending } = claimed
+			const author = room.participants.find((p) => p.id === room.ideas?.find((i) => i.id === ideaId)?.authorId)
 			let result: Interpretation | null = null
-			let refund = false
 			try {
-				result = await search
+				result = await this.interpret!(
+					pending.text,
+					room.screens[0]?.country ?? "US",
+					room.screens[0]?.serviceIds ?? [],
+					author?.memberUserId ? "member" : "guest"
+				)
 			} catch (error) {
-				refund = error instanceof RoomError && error.code === "catalog_unavailable"
+				if (error instanceof SearchBusy) throw error
 			}
-			const landed = await this.write(id, async () => {
-				for (let attempt = 0; attempt < 6; attempt++) {
-					const old = await this.repository.read(id)
-					const readAt = this.now()
-					if (!old || old.room.flowVersion !== 3 || old.room.expiresAt <= readAt) return false
-					const room = structuredClone(old.room)
-					const idea = room.ideas?.find((i) => i.id === pending.ideaId)
-					const held = heldBy(idea)
-					const ours = held?.reservation === pending.reservation && held.job === pending.job
-					const replaced = held?.reservation !== pending.reservation && readAt < pending.lease + INTERPRETATION_LEASE_MS
-					if (ours && result) {
-						idea!.attributes = structuredClone(result.attributes)
-						idea!.rankedKeys = [...result.rankedKeys]
-						idea!.interpretedAt = result.interpretedAt
-						attributeCandidates(room)
-					} else if (ours) {
-						idea!.attributes = []
-						idea!.rankedKeys = []
-						idea!.interpretedAt = readAt
-					} else if (!(refund && replaced)) return false
-					if (refund) room.interpretationCount = Math.max(0, (room.interpretationCount ?? 0) - 1)
-					room.revision++
-					try {
-						if (await this.repository.compareAndSwap(old, room, true)) return true
-					} catch (e) {
-						if (!(e instanceof IndeterminateWrite)) throw e
-						return true
-					}
-				}
-				return false
-			})
-			if (landed) await this.notify(id)
-		})()
+			if (await this.landInterpretation(id, pending, result)) await this.notify(id)
+			this.retries.delete(id)
+		})
 			.catch(() => {
-				/* the idea stays pending; a read or the sweep after its lease takes it over */
+				// The idea stays pending; a read or the sweep takes it over after its lease and this room's backoff.
+				this.backOff(id)
 			})
 			.finally(() => {
 				if (this.interpreting.get(key) === work) this.interpreting.delete(key)
 			})
 		this.interpreting.set(key, work)
 	}
-	/** Starts the search of a pending idea this process owns (stored, committed), and lands it in the background. */
-	private interpretIdea(id: string, room: ProposalRoom, pending: PendingIdea) {
-		const author = room.participants.find((p) => p.id === room.ideas?.find((i) => i.id === pending.ideaId)?.authorId)
-		const search = this.interpret!(
-			pending.text,
-			room.screens[0]?.country ?? "US",
-			room.screens[0]?.serviceIds ?? [],
-			author?.memberUserId ? "member" : "guest"
-		)
-		search.catch(() => {}) // handled where it lands
-		this.landInterpretation(id, pending, search)
-	}
-	/**
-	 * A pending idea whose lease ran out lost the process searching for it (crash, restart, deploy). Any process
-	 * that reads the room takes it over: it stores a new job and lease (so only one process searches again) and
-	 * searches once more on the reservation already made.
-	 */
-	private resumeInterpretations(room: ProposalRoom) {
-		if (!this.interpret) return
-		for (const idea of room.ideas ?? []) {
-			const key = `${room.id}:${idea.id}`
-			if (!ideaPending(idea) || this.now() - idea.interpretedAt < INTERPRETATION_LEASE_MS || this.interpreting.has(key))
-				continue
-			const work = this.takeOver(room.id, idea.id)
-				.catch(() => {})
-				.finally(() => {
-					if (this.interpreting.get(key) === work) this.interpreting.delete(key)
-				})
-			this.interpreting.set(key, work)
+	/** Runs `work` once one of this process's background search slots is free. */
+	private async interpretationSlot<T>(work: () => Promise<T>): Promise<T> {
+		if (this.searching >= this.concurrency) await new Promise<void>((r) => this.waiting.push(r))
+		else this.searching++
+		try {
+			return await work()
+		} finally {
+			const next = this.waiting.shift()
+			if (next) next() // hands its slot straight on
+			else this.searching--
 		}
 	}
-	private async takeOver(id: string, ideaId: string) {
-		const claimed = await this.write(id, async () => {
+	/**
+	 * The lease an attempt starting now searches under: the one its command stored if that is still held and fresh,
+	 * else a new job and lease stored for it, when the idea is still that attempt's or its lease ran out. Null when
+	 * the idea isn't pending any more or another attempt holds a running lease (an edit's, another process's).
+	 */
+	private async claimInterpretation(id: string, ideaId: string, known?: PendingIdea) {
+		return this.write(id, async () => {
 			for (let attempt = 0; attempt < 6; attempt++) {
 				const old = await this.repository.read(id)
-				if (!old || old.room.flowVersion !== 3 || old.room.expiresAt <= this.now()) return null
-				const room = structuredClone(old.room)
-				const idea = room.ideas?.find((i) => i.id === ideaId)
+				const now = this.now()
+				if (!old || old.room.flowVersion !== 3 || old.room.expiresAt <= now) return null
+				const idea = old.room.ideas?.find((i) => i.id === ideaId)
 				const held = heldBy(idea)
-				if (!held || this.now() - idea!.interpretedAt < INTERPRETATION_LEASE_MS) return null
-				const pending: PendingIdea = { ideaId, text: idea!.text, reservation: held.reservation, job: token(), lease: this.now() }
-				markPending(idea!, pending)
+				if (!held) return null
+				const ours = held === known?.job
+				if (ours && now - known.lease < LEASE_START_GRACE_MS) return { room: old.room, pending: known }
+				if (!ours && now - idea!.interpretedAt < INTERPRETATION_LEASE_MS) return null
+				const room = structuredClone(old.room)
+				const pending: PendingIdea = { ideaId, text: idea!.text, job: token(), lease: now }
+				markPending(room.ideas!.find((i) => i.id === ideaId)!, pending)
 				room.revision++
 				// An unknown write may have stored the lease or not: either way another reader takes over later.
-				if (await this.repository.compareAndSwap(old, room, true)) return { room, pending }
+				if (await this.repository.compareAndSwap(old, room, true)) {
+					void this.notify(id).catch(() => {})
+					return { room, pending }
+				}
 			}
 			return null
 		})
-		if (!claimed) return
-		this.interpreting.delete(`${id}:${ideaId}`)
-		this.interpretIdea(id, claimed.room, claimed.pending)
-		await this.notify(id)
+	}
+	/** Stores a finished search on its idea when `pending` still holds it. True when a revision was committed. */
+	private async landInterpretation(id: string, pending: PendingIdea, result: Interpretation | null) {
+		return this.write(id, async () => {
+			for (let attempt = 0; attempt < 6; attempt++) {
+				const old = await this.repository.read(id)
+				const readAt = this.now()
+				if (!old || old.room.flowVersion !== 3 || old.room.expiresAt <= readAt) return false
+				const room = structuredClone(old.room)
+				const idea = room.ideas?.find((i) => i.id === pending.ideaId)
+				if (heldBy(idea) !== pending.job) return false
+				idea!.attributes = result ? structuredClone(result.attributes) : []
+				idea!.rankedKeys = result ? [...result.rankedKeys] : []
+				idea!.interpretedAt = result ? result.interpretedAt : readAt
+				if (result) attributeCandidates(room)
+				room.revision++
+				try {
+					if (await this.repository.compareAndSwap(old, room, true)) return true
+				} catch (e) {
+					if (!(e instanceof IndeterminateWrite)) throw e
+					return true
+				}
+			}
+			return false
+		})
+	}
+	/** Holds a room's background retries back, doubling per failure in a row. */
+	private backOff(id: string) {
+		const failures = (this.retries.get(id)?.failures ?? 0) + 1
+		this.retries.delete(id)
+		this.retries.set(id, { failures, at: this.now() + Math.min(RETRY_MAX_MS, RETRY_BASE_MS * 2 ** (failures - 1)) })
+		if (this.retries.size > 4096) this.retries.delete(this.retries.keys().next().value!)
+	}
+	private retrying(id: string) {
+		return (this.retries.get(id)?.at ?? 0) > this.now()
+	}
+	/**
+	 * A pending idea whose lease ran out lost the attempt searching for it (crash, restart, deploy, overload). Any
+	 * process that reads the room queues a takeover, unless the room is backing off after a failure here.
+	 */
+	private resumeInterpretations(room: ProposalRoom) {
+		if (!this.interpret || this.retrying(room.id)) return
+		for (const idea of room.ideas ?? [])
+			if (
+				ideaPending(idea) &&
+				this.now() - idea.interpretedAt >= INTERPRETATION_LEASE_MS &&
+				!this.interpreting.has(`${room.id}:${idea.id}`)
+			)
+				this.interpretInBackground(room.id, idea.id)
 	}
 	private sweeping = false
+	/** Where the next sweep continues: the last room id the previous one visited ("" from the start). */
+	private sweepCursor = ""
 	/**
 	 * Takes over pending ideas whose lease ran out in live rooms nobody reads (a crash with no phone connected),
-	 * through the same path a read takes. Bounded: at most `limit` rooms per sweep. The API's once-a-minute loop runs it.
+	 * through the same path a read takes. Bounded: at most `limit` rooms per sweep, continuing after the last room
+	 * the previous sweep visited and wrapping around, so rooms that keep failing never hold the others back; a room
+	 * backing off is passed over. Searches are queued, not awaited. The API's once-a-minute loop runs it.
 	 */
 	async resumeStaleInterpretations(limit = 50) {
-		if (!this.interpret || !this.repository.stalePendingIdeas || this.sweeping) return
+		const stale = this.repository.stalePendingIdeas?.bind(this.repository)
+		if (!this.interpret || !stale || this.sweeping) return
 		this.sweeping = true
 		try {
 			const now = this.now()
-			for (const id of await this.repository.stalePendingIdeas(now - INTERPRETATION_LEASE_MS, now, limit))
-				await this.get(id).catch(() => {})
+			const from = this.sweepCursor
+			const ids = await stale(now - INTERPRETATION_LEASE_MS, now, limit, from)
+			if (ids.length < limit && from)
+				for (const id of await stale(now - INTERPRETATION_LEASE_MS, now, limit - ids.length, ""))
+					if (id <= from && !ids.includes(id)) ids.push(id)
+			this.sweepCursor = ids.length < limit ? "" : ids.at(-1)!
+			for (const id of ids) {
+				if (this.retrying(id)) continue
+				await this.get(id).catch(() => this.backOff(id))
+			}
 		} finally {
 			this.sweeping = false
 		}
@@ -570,9 +611,9 @@ export class ProposalService {
 	/**
 	 * The first setup a create request carries (country, first idea), applied to the new room before it
 	 * is first stored, as the host's configure and add_idea would. An unknown country is left out (the app's
-	 * own commands set it afterwards). The idea is stored pending with this request's reservation; create starts
-	 * its search once the room is stored, never waits for it, and the interpretation lands later
-	 * (landInterpretation); search unavailable leaves it uninterpreted.
+	 * own commands set it afterwards). The idea is stored pending under this request's job and reserves one of
+	 * the room's searches; create queues its search once the room is stored, never waits for it, and the
+	 * interpretation lands later (interpretInBackground); search unavailable leaves it uninterpreted.
 	 */
 	private async withSetup(
 		room: ProposalRoom,
@@ -593,9 +634,9 @@ export class ProposalService {
 			// The idea reserves one of the room's searches, as add_idea does; with no search configured, none.
 			next = step(next, { type: "add_idea", text: setup.idea }, ideaId, !this.interpret)
 			if (this.interpret) {
-				// One reservation for every attempt of this create request, so a lost insert's retry stores the same one
-				// and recognizes it as its own. A concurrent identical request draws another and never owns this room.
-				interpretation.pending ??= { ideaId, text: setup.idea, reservation: token(), job: token(), lease: this.now() }
+				// One job for every attempt of this create request, so a lost insert's retry stores the same one and
+				// recognizes it as its own. A concurrent identical request draws another and never owns this room.
+				interpretation.pending ??= { ideaId, text: setup.idea, job: token(), lease: this.now() }
 				markPending(next.ideas!.find((i) => i.id === ideaId)!, interpretation.pending)
 			}
 		}
@@ -608,7 +649,7 @@ export class ProposalService {
 		if (account) await this.requireAccountActive(account.userId);
 		const interpretation: { pending?: PendingIdea } = {}
 		// The idea's search starts only once this request owns the stored room: its insert succeeded, or a lost
-		// insert's retry finds the room holding this request's reservation.
+		// insert's retry finds the room holding this request's job.
 		let uncertain = false
 		const id = keyed(
 			this.secret,
@@ -620,8 +661,8 @@ export class ProposalService {
 			if (existing) {
 				const pending = interpretation.pending
 				if (uncertain && pending) {
-					const held = heldBy(existing.room.ideas?.find((idea) => idea.id === pending.ideaId))
-					if (held?.reservation === pending.reservation && held.job === pending.job) this.interpretIdea(id, existing.room, pending)
+					if (heldBy(existing.room.ideas?.find((idea) => idea.id === pending.ideaId)) === pending.job)
+						this.interpretInBackground(id, pending.ideaId, pending)
 				}
 				continuousLive(existing.room, this.now())
 				await this.guard?.active(existing.room)
@@ -676,7 +717,7 @@ export class ProposalService {
 				if (account) await this.accounts.remember(account.userId, { roomId: id, expiresAt: room.expiresAt })
 				if (await this.repository.insert(room)) {
 					this.decks.schedule(id)
-					if (interpretation.pending) this.interpretIdea(id, room, interpretation.pending)
+					if (interpretation.pending) this.interpretInBackground(id, interpretation.pending.ideaId, interpretation.pending)
 				}
 			} catch (e) {
 				if (!(e instanceof IndeterminateWrite)) throw e
@@ -1035,7 +1076,7 @@ export class ProposalService {
 						i.id ===
 						(command.type === "add_idea" ? envelope.commandId : command.ideaId)
 				)!
-				pending = { ideaId: idea.id, text: idea.text, reservation: token(), job: token(), lease: this.now() }
+				pending = { ideaId: idea.id, text: idea.text, job: token(), lease: this.now() }
 				markPending(idea, pending)
 			}
 			if (
@@ -1087,7 +1128,7 @@ export class ProposalService {
 				uncertain = true
 				continue
 			}
-			if (pending) this.interpretIdea(id, room, pending)
+			if (pending) this.interpretInBackground(id, pending.ideaId, pending)
 			return {
 				receipt: { commandId: envelope.commandId, sequence, appliedRevision: room.revision, replayed: false },
 				room: { committed: room, historyChanged: !this.hintCommitted(old.room, room) }
