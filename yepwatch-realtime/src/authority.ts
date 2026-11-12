@@ -1,13 +1,17 @@
+import { z } from 'zod'
 import { paths, type RealtimeAttachRequest, type RealtimeAttachment, type RealtimeViewRequest } from '@goodwatch/yepwatch-contracts'
 import { attachmentSchema, sharedProjection } from './projection.js'
 
 export class AuthorityError extends Error {
-  constructor(public readonly terminal: boolean) { super('Authority unavailable') }
+  /** `status`: the API's HTTP status, when it answered with one. */
+  constructor(public readonly terminal: boolean, public readonly status?: number) { super('Authority unavailable') }
 }
 export interface Authority {
   close?(): void
   attach(request: RealtimeAttachRequest): Promise<RealtimeAttachment>
   view(request: RealtimeViewRequest): Promise<unknown>
+  /** Every lease held on one room, answered from one read of it (proposal API only; 404 from an API without it). */
+  views?(request: { roomId: string; leases: string[] }): Promise<unknown>
 }
 export function validateAttachment(input: unknown, roomId: string, maxLeaseMs: number): RealtimeAttachment {
   const result = attachmentSchema.parse(input)
@@ -36,11 +40,43 @@ export function validateScopedView<S extends { expiresAt: number; phase: string;
   return { attachment, snapshot: shared }
 }
 
+const refusal = z.strictObject({ error: z.strictObject({ code: z.string().max(64), status: z.number().int().min(400).max(599) }) })
+const viewsSchema = z.strictObject({ snapshot: z.unknown(), views: z.array(z.union([refusal, z.record(z.string(), z.unknown())])) })
+/**
+ * A batched views answer for `count` leases, per lease in order: its view (attachment and the shared snapshot, for
+ * validateScopedView like a single view) or the refusal a single view would have thrown.
+ */
+export function viewsOf(input: unknown, count: number): ({ view: unknown } | { error: AuthorityError })[] {
+  const parsed = viewsSchema.safeParse(input)
+  if (!parsed.success || parsed.data.views.length !== count) throw new AuthorityError(false)
+  const { snapshot, views } = parsed.data
+  return views.map(view => {
+    const refused = refusal.safeParse(view)
+    return refused.success
+      ? { error: new AuthorityError([400, 401, 403, 404, 410].includes(refused.data.error.status), refused.data.error.status) }
+      : { view: { ...view, snapshot } }
+  })
+}
+/** A projection that validates each snapshot object once (phones answered from one read share it). */
+export function once<S>(projection: (input: unknown, roomId: string) => S): (input: unknown, roomId: string) => S {
+  const seen = new WeakMap<object, { value: S } | { error: unknown }>()
+  return (input, roomId) => {
+    if (!input || typeof input !== 'object') return projection(input, roomId)
+    let result = seen.get(input)
+    if (!result) {
+      try { result = { value: projection(input, roomId) } } catch (error) { result = { error } }
+      seen.set(input, result)
+    }
+    if ('error' in result) throw result.error
+    return result.value
+  }
+}
+
 export class HttpAuthority implements Authority {
   private shutdown = new AbortController()
   close() { this.shutdown.abort() }
   constructor(private base: string, private secret: string, private timeoutMs = 3000, private maxBytes = 2_000_000,
-    private routes: { realtimeAttach: string; realtimeView: string } = paths) {
+    private routes: { realtimeAttach: string; realtimeView: string; realtimeViews?: string } = paths) {
     const url = new URL(base)
     if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.search || url.hash || url.pathname !== '/') throw new Error('Invalid API origin')
     if (secret.length < 32) throw new Error('Service credential must contain at least 32 characters')
@@ -54,7 +90,7 @@ export class HttpAuthority implements Authority {
       })
       if (!response.ok) {
         await response.body?.cancel()
-        throw new AuthorityError([400, 401, 403, 404, 410].includes(response.status))
+        throw new AuthorityError([400, 401, 403, 404, 410].includes(response.status), response.status)
       }
       if (!response.headers.get('content-type')?.includes('application/json')) { await response.body?.cancel(); throw new AuthorityError(false) }
       const reader = response.body?.getReader()
@@ -79,4 +115,8 @@ export class HttpAuthority implements Authority {
     return attachmentSchema.parse(await this.post(this.routes.realtimeAttach, request))
   }
   view(request: RealtimeViewRequest) { return this.post(this.routes.realtimeView, request) }
+  get views() {
+    const path = this.routes.realtimeViews
+    return path ? (request: { roomId: string; leases: string[] }) => this.post(path, request) : undefined
+  }
 }

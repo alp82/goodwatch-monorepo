@@ -41,7 +41,19 @@ export class SqlCreationQuotas implements CreationQuotaStore {
     if (!Number.isSafeInteger(now)) throw busy()
     return { reservations: parsed.reservations, expiresAt: parsed.expires_at, seq: Number(row[names.length]), term: Number(row[names.length + 1]), now }
   }
+  /**
+   * A room's reservation row is written once and only deleted after it expires, so once read it is kept here and
+   * a room's proof is one read of its owner's row (still read every time: the reservation must stay in it).
+   */
+  private reservations = new Map<string, Record<string, any>>()
   private async proof(roomId: string) {
+    const cached = this.reservations.get(roomId)
+    if (cached) {
+      const owner = await this.read(cached.creator_digest)
+      if (owner && cached.expires_at <= owner.now) throw new RoomError('expired', 'Room expired', 410)
+      if (!owner?.reservations.some(r => r.room_id === roomId && r.admission_digest === cached.admission_digest && r.expires_at === cached.expires_at)) throw busy()
+      return cached
+    }
     const names = columns(reservationTable)
     const row = (await this.sql(`SELECT ${names.join(',')},CURRENT_TIMESTAMP FROM ${reservationTable.name} WHERE room_id=?`, [roomId])).rows[0]
     if (!row) return null
@@ -51,6 +63,8 @@ export class SqlCreationQuotas implements CreationQuotaStore {
     if (proof.expires_at <= now) throw new RoomError('expired', 'Room expired', 410)
     const owner = await this.read(proof.creator_digest)
     if (!owner?.reservations.some(r => r.room_id === roomId && r.admission_digest === proof.admission_digest && r.expires_at === proof.expires_at)) throw busy()
+    this.reservations.set(roomId, proof)
+    if (this.reservations.size > 4096) this.reservations.delete(this.reservations.keys().next().value!)
     return proof
   }
   async active(roomId: string, expectedExpiry?: number) {

@@ -417,3 +417,38 @@ test("an unprojected committed decision is repaired even after the live room has
 	assert.equal((await repo.accountStore.history(phone.userId)).length, 1);
 	assert.equal((await repo.read(id))!.pendingRevision, 0);
 });
+
+test("the gateway's one read for all of a room's phones answers each lease as its own view would", async () => {
+	const repo = new ProposalMemoryRepository(),
+		service = new ProposalService(repo, proposalFixtureCatalog, secret);
+	const phone = account("phone"),
+		pc = account("pc");
+	const a = await service.create(request(), phone),
+		id = a.credential.roomId;
+	const b = await service.resumeAccount(id, pc);
+	const guest = await service.join(id, { ...request("Sam"), inviteCode: a.invite.code });
+	await choosing(service, a, phone);
+	const lease = async (admission: GuestAdmission, who?: RoomAccount) =>
+		(await service.attach(id, (await service.ticket(id, credential(admission, who))).ticket)).lease;
+	const leases = [await lease(a, phone), await lease(b, pc), await lease(guest)];
+	let reads = 0;
+	const read = repo.read.bind(repo);
+	repo.read = (roomId) => { reads++; return read(roomId); };
+	const batch = await service.views(id, [...leases, "not-a-lease"]);
+	assert.equal(reads, 1, "one read of the room for every lease");
+	const singles = await Promise.all(leases.map((l) => service.view(id, l)));
+	assert.deepEqual(batch.snapshot, singles[0].snapshot, "the shared snapshot is the same for every viewer");
+	for (const single of singles) assert.deepEqual(single.snapshot, batch.snapshot);
+	batch.views.slice(0, 3).forEach((v, i) => {
+		assert.ok(!("error" in v));
+		assert.equal(v.participantId, singles[i].participantId);
+		assert.equal(v.capabilityEpoch, singles[i].capabilityEpoch);
+	});
+	assert.deepEqual(batch.views[3], { error: { code: "unauthorized", status: 401 } });
+	await service.logoutAccount(phone);
+	const after = await service.views(id, leases);
+	assert.deepEqual(after.views[0], { error: { code: "forbidden", status: 403 } }, "a signed-out login's lease is refused like its single view");
+	assert.ok(!("error" in after.views[1]) && !("error" in after.views[2]), "the other phones keep theirs");
+	const missing = await service.views("x".repeat(32), [leases[2]]);
+	assert.deepEqual(missing, { snapshot: null, views: [{ error: { code: "unauthorized", status: 401 } }] }, "a lease for another room");
+});
