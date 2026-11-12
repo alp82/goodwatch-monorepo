@@ -145,25 +145,28 @@ export class SqlDeletionStore implements DeletionStore {
     related.push(...targets.map(t => pairSchema.parse([t.roomId, t.participantId])));
     const participants = new Set<string>(related.map(r => r[1]));
     // Personal names are removed from shared durable history while other people's chosen titles survive.
-    await this.sql(`REFRESH TABLE ${accountHistoryTable.name}`);
     const filters = [...(subject.kind === 'account' ? ['?=ANY(account_ids)'] : []), ...[...participants].map(() => '?=ANY(participant_ids)')];
     const identities = [...(subject.kind === 'account' ? [subject.userId] : []), ...participants];
-    let cursor = '';
-    for (; filters.length;) {
-      await heartbeat();
-      const rows = (await this.sql(`SELECT id,people,participant_ids,account_ids,_seq_no,_primary_term FROM ${accountHistoryTable.name} WHERE id>? AND (${filters.join(' OR ')}) ORDER BY id LIMIT 100`, [cursor, ...identities])).rows.map(r => historySchema.parse(r));
-      if (!rows.length) break;
-      for (const row of rows) {
-        const affected = row[2].some((id: string) => participants.has(id)) || (subject.kind === 'account' && row[3].includes(subject.userId));
-        if (!affected) continue;
-        const keep = row[2].map((id: string, i: number) => participants.has(id) ? -1 : i).filter((i: number) => i >= 0);
-        const accounts = subject.kind === 'account' ? row[3].filter((id: string) => id !== subject.userId) : row[3];
-        const result = await this.sql(`UPDATE ${accountHistoryTable.name} SET people=?,participant_ids=?,account_ids=?,room_label=? WHERE id=? AND _seq_no=? AND _primary_term=?`,
-          [keep.map((i: number) => row[1][i]), keep.map((i: number) => row[2][i]), accounts, 'Past room', row[0], row[4], row[5]]);
-        if (result.rowcount !== 1) throw new RoomError('busy', 'History deletion will retry.', 503, true);
+    const scrub = async () => {
+      await this.sql(`REFRESH TABLE ${accountHistoryTable.name}`);
+      let cursor = '';
+      for (; filters.length;) {
+        await heartbeat();
+        const rows = (await this.sql(`SELECT id,people,participant_ids,account_ids,_seq_no,_primary_term FROM ${accountHistoryTable.name} WHERE id>? AND (${filters.join(' OR ')}) ORDER BY id LIMIT 100`, [cursor, ...identities])).rows.map(r => historySchema.parse(r));
+        if (!rows.length) break;
+        for (const row of rows) {
+          const affected = row[2].some((id: string) => participants.has(id)) || (subject.kind === 'account' && row[3].includes(subject.userId));
+          if (!affected) continue;
+          const keep = row[2].map((id: string, i: number) => participants.has(id) ? -1 : i).filter((i: number) => i >= 0);
+          const accounts = subject.kind === 'account' ? row[3].filter((id: string) => id !== subject.userId) : row[3];
+          const result = await this.sql(`UPDATE ${accountHistoryTable.name} SET people=?,participant_ids=?,account_ids=?,room_label=? WHERE id=? AND _seq_no=? AND _primary_term=?`,
+            [keep.map((i: number) => row[1][i]), keep.map((i: number) => row[2][i]), accounts, 'Past room', row[0], row[4], row[5]]);
+          if (result.rowcount !== 1) throw new RoomError('busy', 'History deletion will retry.', 503, true);
+        }
+        cursor = rows[rows.length - 1][0];
       }
-      cursor = rows[rows.length - 1][0];
-    }
+    };
+    await scrub();
     // No live room versions are reclaimed. Every associated room must have expired before any row is erased.
     const roomIds = [...new Set<string>(related.map(r => r[0]))];
     for (const id of roomIds) {
@@ -180,6 +183,10 @@ export class SqlDeletionStore implements DeletionStore {
       await this.sql(`DELETE FROM ${tables.room.name} WHERE id=? AND expires_at<=?`, [id, now]);
       if ((await this.sql(`SELECT id FROM ${tables.room.name} WHERE id=?`, [id])).rows.length) throw new RoomError('busy', 'Room deletion will retry.', 503, true);
     }
+    // A publisher (notify, repair, room retention) that read a head before it went may have inserted a decision after
+    // the first pass. With the heads gone no new one can start, so a second pass catches all but a publication still in
+    // flight at this moment (see docs/adr/yepwatch-account-deletion.md).
+    if (roomIds.length) await scrub();
     await heartbeat();
     if (subject.kind === 'account') await this.sql(`DELETE FROM ${accountIndexTable.name} WHERE id=?`, [keyed(this.secret, 'account-rooms', subject.userId)]);
   }
