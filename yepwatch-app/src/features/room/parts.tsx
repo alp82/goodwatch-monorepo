@@ -88,7 +88,7 @@ export function IdeaStack() {
         return (
           <IdeaRow key={i.id}
             body={i.mine
-              ? <Press label={`${i.text}, edit`} onPress={() => openPage(id, 'mood', { idea: i.id })} style={body}>{text}{meta}{note}</Press>
+              ? <Press label={`${i.text}, edit${i.unmatched ? ', mood matching is unavailable for now' : ''}`} onPress={() => openPage(id, 'mood', { idea: i.id })} style={body}>{text}{meta}{note}</Press>
               : <View accessible accessibilityLabel={`${i.text}${i.author?.nickname ? `, from ${i.author.nickname}` : ''}${fresh ? ', new' : ''}${i.unmatched ? ', mood matching is unavailable for now' : ''}`} style={body}>{text}{meta}{note}</View>}
             control={<Switch on={i.on} disabled={!view.isHost || disabled} label={`Use ${i.text}`} onPress={() => void cmd.setIdea(i.id, !i.on)} />} />
         );

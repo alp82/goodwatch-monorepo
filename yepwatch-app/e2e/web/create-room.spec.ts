@@ -205,6 +205,8 @@ test.describe('create and set up a room', () => {
       if (room.fault === 'none') expect(host.commandLog.slice(sent).map((c) => c.path.replace(/^.*\/proposal/, '')).filter((path) => !path.endsWith('/realtime-ticket'))).toEqual(['/rooms']);
       await eventually(() => host.latest?.ideas.map((i) => [i.text, i.on, i.attributes.length]), (v) => JSON.stringify(v) === JSON.stringify([[mood, true, 0]]), 'the idea is kept, uninterpreted', host);
       await expect(host.page.getByTestId('idea-unmatched').filter({ visible: true })).toHaveText('Mood matching is unavailable for now.');
+      // The author's own edit button says so too: the note is inside it, so its accessible name carries it.
+      await expect(host.button(`${mood}, edit, mood matching is unavailable for now`)).toBeVisible();
       await room.point('room');
       await host.audit('room page with an unmatched idea');
       // Another idea while search is still refused is added too (the command path).
