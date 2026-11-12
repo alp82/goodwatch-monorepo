@@ -157,6 +157,9 @@ export async function action({ request }: ActionFunctionArgs) {
 				};
 				let completed = false;
 				try {
+					// A guest's search labeled "navigation" (it arrived in the URL) gets a cached reading or the basic search,
+					// never a paid reading: the store refuses the claim (domain paidReadingAllowed). A client that fakes an action
+					// label still buys one; a challenge for guests is the follow-up.
 					await combinedSearch(
 						q,
 						{

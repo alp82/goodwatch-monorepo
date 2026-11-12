@@ -6,7 +6,7 @@ import { mediaLanguageUrl } from "~/utils/media-presentation"
 // list in memory, so a change of Not seen yet, moods, the sort, or For you never searches again; only the query and the
 // eligibility (type, one genre, Released, services) do. The last list stays while the next one loads.
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
 import type { ReadCount } from "~/server/combined-search/search.server"
 import {
@@ -14,7 +14,7 @@ import {
 	searchFiltersKey,
 } from "~/server/combined-search/search-filters"
 import { selectReading } from "~/ui/search/search-partial"
-import { type DiscoverSearchResult, runDiscoverSearch } from "./discover-search-request"
+import { type DiscoverSearchResult, readsAgainOnAction, runDiscoverSearch } from "./discover-search-request"
 
 export type { DiscoverSearchResult } from "./discover-search-request"
 
@@ -81,6 +81,18 @@ export function useDiscoverSearch({
 	})
 	const partial = provisional?.key === key ? provisional.result : null
 	const completed = q !== null && !result.isPlaceholderData ? (result.data ?? null) : null
+	// A guest who opened a link got the basic results; Enter or the search button on the same words is an action, so
+	// the same search runs again and may read. Editing the words or a filter searches anew anyway.
+	// Once per key: an answer that is withheld again is kept.
+	const readAgain = readsAgainOnAction(completed, attribution.trigger) && !result.isFetching
+	const readAgainFor = useRef<string | null>(null)
+	const refetch = result.refetch
+	useEffect(() => {
+		if (!readAgain || readAgainFor.current === key) return
+		readAgainFor.current = key
+		nextTrigger.current = attribution.trigger
+		refetch()
+	}, [readAgain, key, attribution.trigger, refetch])
 	// A completed answer always wins, so a kept partial list can never cover it.
 	const current =
 		completed ?? (partial && (result.isFetching || result.isError) ? partial : null)

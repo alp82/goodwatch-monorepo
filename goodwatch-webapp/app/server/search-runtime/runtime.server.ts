@@ -23,7 +23,36 @@ export const JEV_DEADLINE_MS = 1500;
 export const JEV_INPUT_BOUND = 65_536;
 export const JEV_NANO_PER_TOKEN = 42; // $0.042 per million input tokens; output free.
 export const JEV_PRICE_VERSION = "typesafe-public-2026-09-21-42nano-v1";
+// The most a reading can cost: both requests at the input bound (5,505,024 nano). Readings reserve less (jevReserveNano).
 export const JEV_RESERVE_NANO = 2 * JEV_INPUT_BOUND * JEV_NANO_PER_TOKEN;
+// What the model adds around a request (instructions, separators), in tokens, beyond one token per byte of the
+// request. The fingerprint request's fixed part is about 330 tokens including its state
+// (docs/prototypes/search-arena/results/baseline-cost-latency.md).
+export const JEV_TEMPLATE_TOKENS = 1024;
+/**
+ * The estimate a reading reserves: per request, its serialized UTF-8 bytes plus JEV_TEMPLATE_TOKENS, at most the input
+ * bound. A tokenizer makes at most one token per byte of text it reads; measured readings use 3.6 (attribute) to 4.4
+ * (fingerprint) bytes per token, so whatever the model adds per question has a margin of more than three times. A
+ * reading that still costs more halts paid readings in finish, as before. A typical search's requests are about
+ * 12,400 + 19,600 bytes: 34,000 tokens, 1.43M nano, against 8,000 real tokens (339k nano) and the old fixed 5.5M.
+ */
+export function jevReserveNano(requests: readonly SystemOneRequest[]): number {
+	return (
+		requests.reduce(
+			(tokens, request) =>
+				tokens +
+				Math.min(
+					JEV_INPUT_BOUND,
+					Buffer.byteLength(JSON.stringify(request), "utf8") + JEV_TEMPLATE_TOKENS,
+				),
+			0,
+		) * JEV_NANO_PER_TOKEN
+	);
+}
+// A reading whose estimate was never settled (the provider failed or timed out, the settlement write failed, or the
+// process died) counts at most this much once STALE_ESTIMATE_MS have passed: 2 × 5,120 tokens, a full reading of the
+// longest search (12 content words, about 9,000 tokens; a typical one is 8,000).
+export const JEV_EXPIRED_NANO = 2 * 5_120 * JEV_NANO_PER_TOKEN;
 export const BASIC_SEARCH_MESSAGE = "Showing basic search results.";
 // HTTP 529: TypeSafe is overloaded and asks callers to retry after a short delay. A request that gets a 529 is sent
 // again after each of these delays, inside the same deadline, claim and spending estimate.
@@ -157,7 +186,24 @@ export async function runJevStage(input: JevStageInput): Promise<JevOutcome> {
 	} catch {
 		return basic("configuration");
 	}
+	expireStaleEstimatesSoon(store);
 	return executeJevStage(store, input);
+}
+
+// At most once per interval per process, detached: estimates without a settlement stop counting at full size.
+const EXPIRY_EVERY_MS = 5 * 60_000;
+let lastExpiry = -Infinity;
+function expireStaleEstimatesSoon(store: SearchStore) {
+	const now = performance.now();
+	if (now - lastExpiry < EXPIRY_EVERY_MS) return;
+	lastExpiry = now;
+	store.expireStaleEstimates(expiredCost).catch(() => {});
+}
+/** What an estimate that never got a settlement counts once stale: a Jev reading at most JEV_EXPIRED_NANO. */
+export function expiredCost(row: { price_version: string | null; amount_nano: number }): number {
+	return row.price_version === JEV_PRICE_VERSION
+		? Math.min(row.amount_nano, JEV_EXPIRED_NANO)
+		: row.amount_nano;
 }
 
 // Explicit store parameter supports isolated maintenance/ad hoc verification.
@@ -186,6 +232,7 @@ export async function executeJevStage(
 	// Copy only known fields: callers cannot sneak an alternate model or transport options in.
 	let requests: [SystemOneRequest, SystemOneRequest];
 	let cacheKey: string;
+	let reserve: number;
 	let checks: ReturnType<SearchStore["claimChecks"]> | undefined;
 	const contract = `d4+/${JEV_MODEL}/${input.questionVersion}/${input.language.mode}/${input.language.version}`;
 	try {
@@ -201,6 +248,7 @@ export async function executeJevStage(
 			)
 		)
 			return basic("input");
+		reserve = jevReserveNano(requests);
 		cacheKey = store.digest(
 			canonical({
 				contract,
@@ -251,7 +299,7 @@ export async function executeJevStage(
 			// The account scope waits for the session check; the spending checks don't.
 			scopes,
 			timings: input.timings,
-			reserveNano: JEV_RESERVE_NANO,
+			reserveNano: reserve,
 			priceVersion: JEV_PRICE_VERSION,
 			admissionAttemptId: input.admissionAttemptId,
 		});
@@ -295,7 +343,7 @@ export async function executeJevStage(
 	try {
 		await store.dispatch(id, cacheKey);
 	} catch {
-		return basic("storage", JEV_RESERVE_NANO);
+		return basic("storage", reserve);
 	}
 	step("dispatch");
 	const controller = new AbortController();
@@ -369,7 +417,7 @@ export async function executeJevStage(
 				: input.signal?.aborted
 					? "cancelled"
 					: "provider",
-			JEV_RESERVE_NANO,
+			reserve,
 		);
 	} finally {
 		clearTimeout(timer);
@@ -383,14 +431,14 @@ export async function executeJevStage(
 	);
 	if (!validUsage) {
 		await store.finish(id, null).catch(() => {});
-		return basic("contract", JEV_RESERVE_NANO);
+		return basic("contract", reserve);
 	}
 	if (readings.some((result) => result.usage.input_tokens > JEV_INPUT_BOUND)) {
 		await store.haltPaidAdmissions().catch(() => {});
 	}
 	// Never infer zero usage from an error: each rejected 529 attempt counts as if it was billed like the identical
-	// request that succeeded. Capped at the estimate, which covers both requests at the input bound: above it, the
-	// estimate stays the recorded spend, as when a response is lost.
+	// request that succeeded. Capped at the estimate, which covers both requests' bytes: above it, the estimate stays
+	// the recorded spend, as when a response is lost.
 	const actualNano = Math.min(
 		readings.reduce(
 			(sum, result, index) =>
@@ -398,7 +446,7 @@ export async function executeJevStage(
 				result.usage.input_tokens * JEV_NANO_PER_TOKEN * (1 + overloaded[index]),
 			0,
 		),
-		overloaded.some(Boolean) ? JEV_RESERVE_NANO : Number.POSITIVE_INFINITY,
+		overloaded.some(Boolean) ? reserve : Number.POSITIVE_INFINITY,
 	);
 	const valid = readings.every(
 		(result, index) =>
@@ -439,7 +487,7 @@ export async function executeJevStage(
 	try {
 		await store.finish(id, actualNano);
 	} catch {
-		return basic("storage", JEV_RESERVE_NANO);
+		return basic("storage", reserve);
 	}
 	step("finish");
 	return basic("contract", actualNano);
