@@ -39,13 +39,34 @@ export class MemoryDeletionStore implements DeletionStore {
     this.entries.delete(subjectKey(subject));
   }
   async purgeDue(now: number) {
+    const errors: unknown[] = [];
     for (const [key, entry] of this.entries) if (entry.purgeAfter <= now) {
       entry.phase = 'purging';
-      await this.purge(entry.subject, now);
-      this.entries.delete(key);
+      try {
+        await this.purge(entry.subject, now);
+        this.entries.delete(key);
+      } catch (error) {
+        errors.push(error);
+      }
     }
+    settled(errors);
   }
 }
+
+/** One failing request never stops the others; the caller still learns that something will retry. */
+function settled(errors: unknown[]) {
+  if (errors.length === 1) throw errors[0];
+  if (errors.length) throw Object.assign(new Error('Some YepWatch deletions will retry'), { errors });
+}
+/**
+ * A request whose erasure failed waits 2, 4, … up to 60 minutes before it is claimed again. The wait itself is the
+ * request's persisted lease_until, so every instance, and this one after a restart, honours it: no request is retried
+ * before its deadline. Only the escalation is per instance: the failure count lives in memory (the deletion table has no
+ * column for it, and adding one is DDL), so a restart, or another instance claiming the request, starts again at 2
+ * minutes. That retries a persistently failing request more often than the cap allows, never earlier than its deadline.
+ */
+const MAX_RETRY_MS = 60 * 60_000;
+const REMEMBERED_FAILURES = 1000;
 
 export async function provisionDeletion(sql: Sql, replicas: 0 | 2) { await sql(tableDdl(deletionTable, replicas)); }
 
@@ -53,6 +74,8 @@ export async function provisionDeletion(sql: Sql, replicas: 0 | 2) { await sql(t
 export class SqlDeletionStore implements DeletionStore {
   private sql: Sql;
   private secret: string;
+  /** Failures per request seen by this instance, for the backoff escalation only (see MAX_RETRY_MS). */
+  private failures = new Map<string, number>();
   constructor(sql: Sql, secret: string) { this.sql = sql; this.secret = secret; }
   private id(subject: DeletionSubject) { return keyed(this.secret, 'deletion', subjectKey(subject)); }
   private async row(subject: DeletionSubject) {
@@ -109,10 +132,16 @@ export class SqlDeletionStore implements DeletionStore {
       cursor = rows[rows.length - 1][0];
     }
   }
+  /**
+   * Erases up to 20 due requests, earliest first. A request whose erasure fails keeps its marker and is leased out for
+   * a growing backoff (persisted as its lease; the growth is per instance, see MAX_RETRY_MS), so it leaves the window and later requests are reached; the others still run, and the call
+   * rejects afterwards so the caller knows something will retry.
+   */
   async purgeDue(now: number) {
     await this.sql(`REFRESH TABLE ${deletionTable.name}`);
-    const due = (await this.sql(`SELECT id,kind,user_id,room_id,participant_id,phase,_seq_no,_primary_term,targets,lease_until FROM ${deletionTable.name} WHERE purge_after<=? ORDER BY purge_after LIMIT 20`, [now])).rows.map(r =>
+    const due = (await this.sql(`SELECT id,kind,user_id,room_id,participant_id,phase,_seq_no,_primary_term,targets,lease_until FROM ${deletionTable.name} WHERE purge_after<=? AND lease_until<=? ORDER BY purge_after LIMIT 20`, [now, now])).rows.map(r =>
       z.tuple([z.string(), z.enum(['account', 'guest']), z.string().nullable(), z.string().nullable(), z.string().nullable(), phaseSchema, z.number(), z.number(), z.array(targetSchema), z.number()]).parse(r));
+    const errors: unknown[] = [];
     for (const r of due) {
       if (r[9] > now) continue;
       const token = random();
@@ -129,12 +158,23 @@ export class SqlDeletionStore implements DeletionStore {
         await this.erase(subject, now, r[8], heartbeat);
         const proof = await this.row(subject);
         if (proof?.[6] === token) await this.sql(`DELETE FROM ${deletionTable.name} WHERE id=? AND _seq_no=? AND _primary_term=?`, [r[0], proof[3], proof[4]]);
+        this.failures.delete(r[0]);
       } catch (error) {
-        const proof = await this.row(subject);
-        if (proof?.[6] === token) await this.sql(`UPDATE ${deletionTable.name} SET lease_until=0 WHERE id=? AND _seq_no=? AND _primary_term=?`, [r[0], proof[3], proof[4]]);
-        throw error;
+        errors.push(error);
+        const failures = (this.failures.get(r[0]) ?? 0) + 1;
+        this.failures.delete(r[0]);
+        this.failures.set(r[0], failures);
+        if (this.failures.size > REMEMBERED_FAILURES) this.failures.delete(this.failures.keys().next().value!);
+        try {
+          const proof = await this.row(subject);
+          if (proof?.[6] === token) await this.sql(`UPDATE ${deletionTable.name} SET lease_until=? WHERE id=? AND _seq_no=? AND _primary_term=?`, [clock() + Math.min(2 ** failures * 60_000, MAX_RETRY_MS), r[0], proof[3], proof[4]]);
+        } catch (release) {
+          // The claim's own lease still expires; the request is retried then.
+          errors.push(release);
+        }
       }
     }
+    settled(errors);
   }
   private async erase(subject: DeletionSubject, now: number, targets: { roomId: string; participantId: string }[], heartbeat: () => Promise<void>) {
     await heartbeat();
@@ -145,25 +185,28 @@ export class SqlDeletionStore implements DeletionStore {
     related.push(...targets.map(t => pairSchema.parse([t.roomId, t.participantId])));
     const participants = new Set<string>(related.map(r => r[1]));
     // Personal names are removed from shared durable history while other people's chosen titles survive.
-    await this.sql(`REFRESH TABLE ${accountHistoryTable.name}`);
     const filters = [...(subject.kind === 'account' ? ['?=ANY(account_ids)'] : []), ...[...participants].map(() => '?=ANY(participant_ids)')];
     const identities = [...(subject.kind === 'account' ? [subject.userId] : []), ...participants];
-    let cursor = '';
-    for (; filters.length;) {
-      await heartbeat();
-      const rows = (await this.sql(`SELECT id,people,participant_ids,account_ids,_seq_no,_primary_term FROM ${accountHistoryTable.name} WHERE id>? AND (${filters.join(' OR ')}) ORDER BY id LIMIT 100`, [cursor, ...identities])).rows.map(r => historySchema.parse(r));
-      if (!rows.length) break;
-      for (const row of rows) {
-        const affected = row[2].some((id: string) => participants.has(id)) || (subject.kind === 'account' && row[3].includes(subject.userId));
-        if (!affected) continue;
-        const keep = row[2].map((id: string, i: number) => participants.has(id) ? -1 : i).filter((i: number) => i >= 0);
-        const accounts = subject.kind === 'account' ? row[3].filter((id: string) => id !== subject.userId) : row[3];
-        const result = await this.sql(`UPDATE ${accountHistoryTable.name} SET people=?,participant_ids=?,account_ids=?,room_label=? WHERE id=? AND _seq_no=? AND _primary_term=?`,
-          [keep.map((i: number) => row[1][i]), keep.map((i: number) => row[2][i]), accounts, 'Past room', row[0], row[4], row[5]]);
-        if (result.rowcount !== 1) throw new RoomError('busy', 'History deletion will retry.', 503, true);
+    const scrub = async () => {
+      await this.sql(`REFRESH TABLE ${accountHistoryTable.name}`);
+      let cursor = '';
+      for (; filters.length;) {
+        await heartbeat();
+        const rows = (await this.sql(`SELECT id,people,participant_ids,account_ids,_seq_no,_primary_term FROM ${accountHistoryTable.name} WHERE id>? AND (${filters.join(' OR ')}) ORDER BY id LIMIT 100`, [cursor, ...identities])).rows.map(r => historySchema.parse(r));
+        if (!rows.length) break;
+        for (const row of rows) {
+          const affected = row[2].some((id: string) => participants.has(id)) || (subject.kind === 'account' && row[3].includes(subject.userId));
+          if (!affected) continue;
+          const keep = row[2].map((id: string, i: number) => participants.has(id) ? -1 : i).filter((i: number) => i >= 0);
+          const accounts = subject.kind === 'account' ? row[3].filter((id: string) => id !== subject.userId) : row[3];
+          const result = await this.sql(`UPDATE ${accountHistoryTable.name} SET people=?,participant_ids=?,account_ids=?,room_label=? WHERE id=? AND _seq_no=? AND _primary_term=?`,
+            [keep.map((i: number) => row[1][i]), keep.map((i: number) => row[2][i]), accounts, 'Past room', row[0], row[4], row[5]]);
+          if (result.rowcount !== 1) throw new RoomError('busy', 'History deletion will retry.', 503, true);
+        }
+        cursor = rows[rows.length - 1][0];
       }
-      cursor = rows[rows.length - 1][0];
-    }
+    };
+    await scrub();
     // No live room versions are reclaimed. Every associated room must have expired before any row is erased.
     const roomIds = [...new Set<string>(related.map(r => r[0]))];
     for (const id of roomIds) {
@@ -180,6 +223,10 @@ export class SqlDeletionStore implements DeletionStore {
       await this.sql(`DELETE FROM ${tables.room.name} WHERE id=? AND expires_at<=?`, [id, now]);
       if ((await this.sql(`SELECT id FROM ${tables.room.name} WHERE id=?`, [id])).rows.length) throw new RoomError('busy', 'Room deletion will retry.', 503, true);
     }
+    // A publisher (notify, repair, room retention) that read a head before it went may have inserted a decision after
+    // the first pass. With the heads gone no new one can start, so a second pass catches all but a publication still in
+    // flight at this moment (see docs/adr/yepwatch-account-deletion.md).
+    if (roomIds.length) await scrub();
     await heartbeat();
     if (subject.kind === 'account') await this.sql(`DELETE FROM ${accountIndexTable.name} WHERE id=?`, [keyed(this.secret, 'account-rooms', subject.userId)]);
   }

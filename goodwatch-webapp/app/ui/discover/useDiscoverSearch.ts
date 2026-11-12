@@ -42,8 +42,6 @@ export function useDiscoverSearch({
 	} | null>(null)
 	const [provisional, setProvisional] = useState<{ key: string; result: DiscoverSearchResult } | null>(null)
 	const nextTrigger = useRef<SearchTrigger | null>(null)
-	// The label this key's last request carried.
-	const askedAs = useRef<{ key: string; trigger: SearchTrigger } | null>(null)
 	const generation = useRef(0)
 	const liveKey = useRef("")
 	const { locale } = useLocale()
@@ -59,7 +57,6 @@ export function useDiscoverSearch({
 			// itself stay "navigation", which buys a guest no reading.
 			const trigger = nextTrigger.current ?? attribution.trigger
 			nextTrigger.current = null
-			askedAs.current = { key, trigger }
 			const attempt = ++generation.current
 			// Another search's partial list goes; this search's own stays through a retry, until its next packet or its
 			// completed answer.
@@ -75,7 +72,8 @@ export function useDiscoverSearch({
 			// The completed answer replaces its partial list for good.
 			if (generation.current === attempt)
 				setProvisional((old) => (old?.key === key ? null : old))
-			return answer
+			// The label goes into the cache with the answer, so a later mount of this key knows how it was asked.
+			return { ...answer, askedAs: trigger }
 		},
 		enabled: enabled && q !== null,
 		placeholderData: keepPreviousData,
@@ -86,19 +84,32 @@ export function useDiscoverSearch({
 	const partial = provisional?.key === key ? provisional.result : null
 	const completed = q !== null && !result.isPlaceholderData ? (result.data ?? null) : null
 	// A guest who opened a link got the basic results; an action on the same words (Enter, the search button, a sort
-	// or filter that keeps the key) runs the same search again, which may read. Editing the words or a filter searches
-	// anew anyway. Once per key: an answer that is withheld again is kept.
-	const readAgain =
-		readsAgainOnAction(completed, askedAs.current?.key === key ? askedAs.current.trigger : undefined, attribution.trigger) &&
-		!result.isFetching
-	const readAgainFor = useRef<string | null>(null)
+	// or filter that keeps the key, a title tag's link to a cached search) runs the same search again, which may read.
+	// Editing the words or a filter searches anew anyway. The cached answer carries the label it was asked with, so this
+	// holds across remounts and returns to a key the cache still has; the answer to the action is cached as asked by an
+	// action, so an answer that is withheld again is kept.
+	const withheldOnAction = readsAgainOnAction(completed, completed?.askedAs, attribution.trigger)
+	// The unlock belongs to the answer it reads again (its key and when it arrived), so a fresh answer for the same words
+	// can be unlocked again. While an unlock runs, or failed with its answer still shown, nothing asks again by itself.
+	// Once nothing waits on one (the answer read, or the person left the words), the next action may unlock: an unlock
+	// canceled by leaving never answered. The guard goes as soon as its answer is no longer shown, even while another
+	// search loads, so a canceled unlock never blocks a later action on the same words.
+	const answerId = completed ? `${key}@${result.dataUpdatedAt}` : null
+	const idle = !result.isFetching
+	const unlocked = useRef<string | null>(null)
 	const refetch = result.refetch
 	useEffect(() => {
-		if (!readAgain || readAgainFor.current === key) return
-		readAgainFor.current = key
+		if (unlocked.current !== answerId) unlocked.current = null
+		if (!idle) return
+		if (!withheldOnAction) {
+			unlocked.current = null
+			return
+		}
+		if (unlocked.current === answerId) return
+		unlocked.current = answerId
 		nextTrigger.current = attribution.trigger
 		refetch()
-	}, [readAgain, key, attribution.trigger, refetch])
+	}, [withheldOnAction, idle, answerId, attribution.trigger, refetch])
 	// A completed answer always wins, so a kept partial list can never cover it.
 	const current =
 		completed ?? (partial && (result.isFetching || result.isError) ? partial : null)

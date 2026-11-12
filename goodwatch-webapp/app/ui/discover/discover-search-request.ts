@@ -34,6 +34,11 @@ export interface DiscoverSearchResult {
 	pendingRanking?: boolean
 	/** A guest's search without an action label: basic results, no reading bought (domain paidReadingAllowed). */
 	readingWithheld?: boolean
+	/**
+	 * The label the request for this answer carried, kept with it in the query cache: a remount or a return to the key
+	 * within the cache's freshness gets the cached answer without a request, and still knows whether an action asked it.
+	 */
+	askedAs?: SearchTrigger
 }
 
 /**

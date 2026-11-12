@@ -1,6 +1,6 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { roomSearch, roomIntentKeys } from "./proposal-intent.ts"
+import { roomSearch, roomIntentKeys, SearchBusy } from "./proposal-intent.ts"
 import { createContinuousCatalog } from "./continuous-catalog.ts"
 import { proposalCatalog } from "./proposal-catalog.server.ts"
 import { ProposalService } from "./proposal-service.server.ts"
@@ -47,6 +47,16 @@ test("Jev interpretation uses its own service authorization and rejects a failed
 			retryable: true,
 		})
 	}
+})
+test("search busy or rate limited (Retry-After) is a SearchBusy; other failures are not", async () => {
+	const answer = (response: Response) => roomSearch({ YEPWATCH_SEARCH_SECRET: "a".repeat(32) }, async () => response)!(intent.prompt, "DE", [8])
+	for (const response of [
+		Response.json({ error: "Search is busy right now. Try again in a moment." }, { status: 503, headers: { "Retry-After": "2" } }),
+		Response.json({ error: "Too many searches" }, { status: 429, headers: { "Retry-After": "5" } }),
+	])
+		await assert.rejects(answer(response), (e) => e instanceof SearchBusy)
+	await assert.rejects(answer(Response.json({ error: "Search is unavailable." }, { status: 503 })), (e) => !(e instanceof SearchBusy))
+	await assert.rejects(answer(Response.json({ error: "interpretation_unavailable", reason: "budget" }, { status: 503, headers: { "Retry-After": "60" } })), { code: "catalog_unavailable" })
 })
 test("Published prompt ranking changes actual cards, keeps availability checks, and cannot reinsert seen or ineligible titles", async () => {
 	let checked: number[] = []

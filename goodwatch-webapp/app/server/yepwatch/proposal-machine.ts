@@ -22,6 +22,7 @@ import {
 	matches as baseMatches
 } from "./continuous-machine.ts"
 import { actor as baseActor, continuousLive } from "./continuous-machine.ts"
+import { PENDING_IDEA_ATTRIBUTE, ideaPending } from "../../../packages/yepwatch-contracts/proposal.ts"
 import { projectCandidate } from "./machine.ts"
 import { requireRoom, memberProgressRequired } from "./errors.ts"
 import { CONTINUOUS_LIMITS as L } from "./continuous-types.ts"
@@ -199,8 +200,9 @@ export function proposalSnapshot(
 	const shared: SharedRoomSnapshot = {
 		...legacy.shared,
 		contractVersion: 3,
-		ideas: (room.ideas ?? []).map(
-			({ rankedKeys: _, interpretedAt: __, ...idea }) => structuredClone(idea)
+		// A pending idea's stored marker carries its search reservation: phones see only the marker itself.
+		ideas: (room.ideas ?? []).map(({ rankedKeys: _, interpretedAt: __, ...idea }) =>
+			ideaPending(idea) ? { ...structuredClone(idea), attributes: [{ ...PENDING_IDEA_ATTRIBUTE }] } : structuredClone(idea)
 		),
 		disabledServiceIds: [...(room.disabledServiceIds ?? [])],
 		participants: legacy.shared.participants.map((person) => ({
