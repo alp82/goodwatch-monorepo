@@ -50,7 +50,8 @@ async function baseKeys(combo: RankingCombo): Promise<readonly number[]> {
     const popular = compareRows(snapshot.columns, 'popular')
     // Full snapshot universe avoids inheriting Discover’s separate minimum-vote catalog gate.
     return rankInSlices(snapshot.columns.pointIds, async slice =>
-      (await filterTitles({ universe: slice, state, sort: 'popular', forYou: null, taste: null, viewer, keep })).keys,
+      // Every slice filters the snapshot the ranking started with, whatever loads meanwhile.
+      (await filterTitles({ universe: slice, state, sort: 'popular', forYou: null, taste: null, viewer, keep, snapshot })).keys,
       (a, b) => popular(snapshot.rowOf(a), snapshot.rowOf(b)))
   })
 }

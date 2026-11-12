@@ -162,6 +162,11 @@ export interface FilterInput {
 	 * it leaves out (YepWatch's presentable titles).
 	 */
 	keep?: (key: TitleKey) => boolean
+	/**
+	 * The snapshot to filter, instead of the one loaded now: a caller filtering in parts (YepWatch's sliced ranking)
+	 * pins one, so a reload between parts can't mix two versions.
+	 */
+	snapshot?: TitleSnapshot
 }
 
 export class SnapshotNotLoaded extends Error {
@@ -172,7 +177,7 @@ export class SnapshotNotLoaded extends Error {
 }
 
 export async function filterTitles(input: FilterInput): Promise<FilterResult> {
-	const snapshot = getTitleSnapshot()
+	const snapshot = input.snapshot ?? getTitleSnapshot()
 	if (!snapshot) throw new SnapshotNotLoaded()
 	const { state } = input
 	const viewer = state.streamingCountry
@@ -298,7 +303,7 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 		new Set([...viewer.seen, ...viewer.skipped]),
 		snapshot,
 	)
-	const ladder = viewerLadder(input.viewer, state)
+	const ladder = viewerLadder(input.viewer, state, snapshot)
 	const sets = (list: { option: string; keys: Set<TitleKey> }[]) =>
 		list.map(({ option, keys }) => ({
 			option,
@@ -323,7 +328,13 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 		hours: state.hours,
 		votes: state.votes,
 		popularityRank: state.popularityRank,
-		popularityRanks: popularityRanks(snapshot),
+		// A full catalog scan and sort on a new snapshot: only when the rank filter or its counts read it.
+		popularityRanks:
+			input.popularityCounts ||
+			state.popularityRank?.min !== undefined ||
+			state.popularityRank?.max !== undefined
+				? popularityRanks(snapshot)
+				: undefined,
 		rows,
 		keys,
 		services:
@@ -495,8 +506,9 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 export function viewerLadder(
 	viewer: ViewerContext,
 	state: Pick<FilterState, "ratingCountry" | "streamingCountry"> = {},
+	snapshot: TitleSnapshot | null = getTitleSnapshot(),
 ): FilterResult["ladder"] {
-	return ladderFor(getTitleSnapshot()?.columns.ratings, viewer.country, state)
+	return ladderFor(snapshot?.columns.ratings, viewer.country, state)
 }
 
 /** The universe's snapshot rows and keys in the plain order of the sort. */
