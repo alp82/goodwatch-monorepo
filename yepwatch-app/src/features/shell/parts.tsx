@@ -38,11 +38,14 @@ export function FaceStack({ people, size = 24, max = 4 }: { people: { id: string
  */
 export function LiveDot({ size = 8, beat }: { size?: number; beat?: string | null }) {
   const reduced = useReducedMotion();
-  // At rest (1) the ring is invisible: a header whose beat already rang shows the solid dot only.
-  const [ring] = useState(() => new Animated.Value(1));
+  // 0 is also where a JS-driven loop (the web) resets each ring to. At 0 the ring sits exactly under
+  // the dot and at 1 it's transparent: both read as a solid dot.
+  const [ring] = useState(() => new Animated.Value(0));
   useEffect(() => {
-    if (reduced || beat === null) return;
-    if (beat !== undefined && !claimLiveBeat(beat)) return;
+    if (reduced || beat === null || (beat !== undefined && !claimLiveBeat(beat))) {
+      ring.setValue(0); // a ring cut short here (this page went under another) doesn't stay half grown
+      return;
+    }
     // Ended, the ring rests at scale 2.8 and opacity 0: drawn once, then nothing changes.
     const stop = playLivePulse(ring, native);
     return () => {
