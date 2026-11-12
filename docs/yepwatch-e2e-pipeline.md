@@ -19,10 +19,65 @@ code and contracts, or shared webapp server code the API bundle compiles in. Job
   the hermetic stack up itself (Crate, Valkey and Caddy in Docker; API and gateway bundles; web export with a
   cached Metro transform cache). **web-gate-verdict** merges the shard reports (`e2e/ci/merge-reports.mjs`) and
   recomputes timing p95 over all samples. It fails when a shard didn't report.
-- **android-gate**: `node e2e/ci/native-gate.mjs`. It brings the stack up, builds the APK and boots two
-  emulators at the same time, then runs `e2e/native/run.mjs gate` unchanged. Cached: node_modules, the
-  emulator and system image, Maestro, the AVD with its snapshot (keyed by CPU model and emulator build), and
-  the Gradle-built base APK (keyed by the harness's native key). A JS-only change only repacks the bundle.
+- **android-gate** (owner decision Q28): one emulator, `node e2e/ci/native-gate.mjs --mode=subset`
+  (`npm run e2e:gate:android` in `yepwatch-app/e2e`). It checks the Android cold start (first visit and
+  returning, 1.5 s each), then one mixed room: the Android app phone creates the room, a browser phone
+  (Playwright Chromium) joins through the invitation link, the phone starts, and both vote until there is a
+  match. Hard gates: journey, flash (video of each measured transition), timing, errors (logcat plus the
+  browser's console and page errors) and a11y (labels and 48 dp targets on each Android screen on the way).
+  Frame pacing is reported only (see below). No retries. The two-phone `gate` and the `full` Android run stay
+  in the pre-OTA gate (`ota-gate.mjs`, `e2e/native/run.mjs full`).
+
+  Timings measured on the phone (video, ±17 ms): New room → Mood 300 ms, Create room → room 300 ms, Start →
+  first card 200 ms, the browser's Yep → match on the phone 100 ms (anchor: the browser's `pointerdown` time,
+  as in the web harness). Start on the phone → voting in the browser (200 ms) is timed inside the page
+  against the phone's touch frame. Budgets come from `e2e/budgets.mjs`.
+
+  How it fits in the 4 minutes:
+  - It runs in parallel with the web shards and the checks.
+  - Right after node_modules are restored, a background step runs `native-gate.mjs --prepare=…`. It
+    brings the stack up and builds the APK while the next steps download the emulator, system image and AVD
+    caches. The gate step boots the emulator from the snapshot and waits for the preparation
+    (`--after-prepare=…`).
+  - Caches:
+
+    | Cache | Key |
+    |---|---|
+    | node_modules | lockfiles + webapp patches (shared with the web shards) |
+    | Base APK (Gradle) | `yw-apk-base-<native key>` (lockfile, app config, plugins, assets, non-code files under `src/`; `e2e/native/lib/build.mjs` `nativeKey()`) |
+    | Gradle | `yw-gradle-<app lockfile>`, restored only when the base APK misses |
+    | Metro (web export + APK bundle) | `yw-metro-android-<app lockfile>-<sha>`, restore prefix without the sha |
+    | Emulator + system image | `yw-sdk-…-api35-google_apis-x86_64-v1` |
+    | Maestro | `yw-maestro-<version>` |
+    | AVD + snapshot | `yw-avd-v2-<CPU digest>-emu<emulator build>-<hash of lib/device.mjs>` (without `default_boot`) |
+    | Playwright Chromium | `yw-pw-<Playwright version>` |
+
+  - With a JS-only change, the cached base APK is reused. Only `index.android.bundle` is rebuilt
+    (`expo export:embed` + `hermesc`, with the persisted Metro cache), swapped into the APK and re-signed.
+    The Metro cache for the APK lives in one directory per build-time env (`$YW_E2E_HOME/metro/<hash>`).
+    `EXPO_PUBLIC_*` values are inlined during the transform, so a cache only ever serves the origins it was
+    filled for. A native-key change means a Gradle build (several minutes on a runner). That push goes over
+    4 minutes, and it needs a store build anyway.
+
+  Measured locally (2026-11-12, 32-core host, warm caches, stack stopped, web export and APK deleted
+  before each run, like a fresh runner):
+
+  | Step | Local |
+  |---|---|
+  | Stack up (web export from a warm Metro cache, API + gateway bundles, Crate/Valkey/Caddy) | 8-10 s |
+  | APK: JS repack into the cached base, cold Metro cache / warm | 20 s / 11-13 s |
+  | Emulator boot from the snapshot (1 instance, host GPU) | 3-8 s (16 s with the first run's cold page cache) |
+  | APK install + driver start | 1.5-3 s |
+  | Cold start, both launches | 7.5-8 s |
+  | Mixed room to a match | 36-39 s |
+  | `native-gate.mjs` wall clock (prepare in the background, then gate) | 57-64 s |
+
+  CI estimate, not measured yet: about 15 s for checkout and setup, then 30-40 s for node_modules and the
+  small caches. The background stack and APK take 60-90 s on 4 vCPUs. They overlap with about 40-60 s of
+  emulator, system image and AVD downloads (about 3 GB packed). Booting from the snapshot under SwiftShader
+  takes 15-30 s. The journeys take 70-95 s (1.5-2x local under SwiftShader). That puts the job at
+  **about 3.3-4 min**, close to the budget. If it runs over, cut cache bytes first: a smaller AVD RAM size
+  makes a smaller snapshot. A bigger runner also helps. Don't drop gates.
 - **deploy** (needs all of the above): `e2e/ci/coolify-deploy.mjs` runs `POST /api/v1/deploy?uuid=…&force=false`.
   On the installed Coolify 4.5.3, `GET /deploy` only answers "use POST". The script then polls
   `GET /api/v1/deployments/<uuid>` until the status is `finished`, `failed` or `cancelled-by-user`. It waits
@@ -41,8 +96,9 @@ GitHub's runners have no GPU.
 - **Web: frame pacing is enforced** (60 fps, no frame over 20 ms during interactions). Each shard runs one
   test at a time on an otherwise idle 4-vCPU machine.
 - **Android: frame pacing is reported, not gating.** `NATIVE_FRAMES: report` in the workflow. The emulator
-  renders with SwiftShader, so `gfxinfo` frame times measure the software renderer, not the app. The numbers
-  still appear in the job summary and in `result.json`. The pre-OTA gate enforces them on a real GPU.
+  renders with SwiftShader, so `gfxinfo` frame times measure the software renderer, not the app. The
+  deploy gate's mixed room has no swipe frame scenario. `NATIVE_FRAMES: report` matters only if the job runs
+  `--mode=gate` or `full`. The pre-OTA gate enforces frame pacing on a real GPU.
 
 Both switches are workflow env values (`WEB_FRAMES`, `NATIVE_FRAMES`). A 4-core local simulation doubled the
 web frame-gate failures compared with the same tests on free cores. If CI frame failures turn out to come from

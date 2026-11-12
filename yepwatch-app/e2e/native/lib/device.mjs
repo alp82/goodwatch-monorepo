@@ -12,8 +12,10 @@ import { PACKAGE } from './build.mjs';
 export const AVD = process.env.YW_E2E_AVD ?? 'yw-e2e';
 export const SNAPSHOT = 'yw-base-v2';
 const IMAGE = 'system-images;android-35;google_apis;x86_64';
-/** Console ports (serial emulator-<port>); even numbers in 5554..5682. Kept inside 5555-5585: Maestro (dadb) only treats emulators in that range as connected. */
-export const PORTS = [5570, 5572];
+/** Console ports (serial emulator-<port>); even numbers in 5554..5682. Kept inside 5555-5585: Maestro (dadb) only treats emulators in that range as connected.
+ * YW_E2E_EMU_PORTS (comma list, e.g. 5574,5576) lets a second harness run its own instances next to 5570/5572. */
+export const PORTS = (process.env.YW_E2E_EMU_PORTS ?? '5570,5572').split(',').map(Number);
+if (PORTS.some(p => !Number.isInteger(p) || p % 2 || p < 5556 || p > 5584)) throw new Error(`YW_E2E_EMU_PORTS: even ports in 5556-5584, got ${PORTS}`);
 const GPU = process.env.YW_E2E_GPU ?? 'host';
 
 export const adb = (serial, ...args) => run(tools.adb, ['-s', serial, ...args], { timeout: 60000 });

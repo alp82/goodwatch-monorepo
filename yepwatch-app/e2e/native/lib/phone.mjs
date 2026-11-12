@@ -59,7 +59,10 @@ const label = sel => (typeof sel === 'string' || sel instanceof RegExp ? String(
 
 export class Phone {
   constructor(serial, index = 0, name = serial) {
-    this.serial = serial; this.name = name; this.port = 19500 + index; this.client = null; this.steps = [];
+    // Host port for the driver's adb forward, unique per emulator (5570 -> 19500, 5572 -> 19501, 5574 -> 19502 …)
+    // so harnesses on different emulators never re-point each other's forward.
+    const emu = Number(serial.match(/^emulator-(\d+)$/)?.[1]);
+    this.serial = serial; this.name = name; this.port = emu ? 19500 + (emu - 5570) / 2 : 19500 + index; this.client = null; this.steps = [];
   }
   adb(...args) { return run(tools.adb, ['-s', this.serial, ...args], { timeout: 60000 }); }
   sh(cmd) { return this.adb('shell', cmd); }
