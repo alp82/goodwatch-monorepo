@@ -551,3 +551,120 @@ test("the sweep moves past rooms that keep failing: more than 50 stale rooms, th
 	await sweeper.resumeStaleInterpretations()
 	assert.equal(brokenReads, 100, "and retried after their backoff")
 })
+
+/** True for a compare-and-swap that lands an answer on the room's pending idea (pending before, not after). */
+const landing = (old: ProposalRoom, room: ProposalRoom) =>
+	old.ideas?.some((i) => i.attributes[0]?.key === PENDING_IDEA_ATTRIBUTE.key &&
+		room.ideas?.find((n) => n.id === i.id)?.attributes[0]?.key !== PENDING_IDEA_ATTRIBUTE.key) ?? false
+
+test("a landing that never stores (outcome unknown, or every compare-and-swap lost) backs off: no search every lease", async () => {
+	for (const outcome of ["unknown", "lost"] as const) {
+		const f = fixture()
+		const swap = f.repo.compareAndSwap.bind(f.repo)
+		f.repo.compareAndSwap = async (old, room, notify) => {
+			if (!landing(old.room, room)) return swap(old, room, notify)
+			if (outcome === "unknown") throw new IndeterminateWrite("answer lost, nothing stored")
+			return false
+		}
+		const a = await f.service.create(f.request({ country: "DE", idea: "space heist" }))
+		const id = a.credential.roomId
+		await f.service.interpretationsIdle()
+		assert.equal((await stored(f.repo, id)).ideas![0].attributes[0].key, PENDING_IDEA_ATTRIBUTE.key, outcome)
+		const at = async (ms: number) => {
+			f.clock.offset = ms
+			await f.service.read(id, a.credential)
+			await f.service.interpretationsIdle()
+			return f.searches()
+		}
+		// Backoff 30 s after the first failure, 60 s after the second (was: a search every lease, 16/32/48/64 s).
+		assert.deepEqual([await at(16_000), await at(32_000), await at(48_000), await at(64_000)], [1, 2, 2, 2], outcome)
+		assert.equal(await at(93_000), 3, outcome)
+	}
+})
+
+test("a landing whose write outcome is unknown but stored counts as committed: published, backoff cleared", async () => {
+	const f = fixture({ search: "busy" })
+	const a = await f.service.create(f.request({ country: "DE", idea: "space heist" }))
+	const id = a.credential.roomId
+	await f.service.interpretationsIdle() // busy: backing off 30 s
+	const swap = f.repo.compareAndSwap.bind(f.repo)
+	let lost = 0
+	f.repo.compareAndSwap = async (old, room, notify) => {
+		if (!landing(old.room, room) || lost++) return swap(old, room, notify)
+		await swap(old, room, notify)
+		throw new IndeterminateWrite("stored, answer lost")
+	}
+	f.state.search = "ok"
+	f.clock.offset = 31_000
+	f.published.length = 0
+	await f.service.read(id, a.credential)
+	await f.service.interpretationsIdle()
+	let room = await stored(f.repo, id)
+	assert.deepEqual(room.ideas![0].attributes, [{ text: "heist", kind: "attribute" }])
+	assert.equal(lost, 1, "verified by reading, not written twice")
+	assert.ok(f.published.includes(room.revision), "phones hear about it")
+	// The backoff was cleared: the next failure backs off 30 s again, not 60 s.
+	f.state.search = "busy"
+	await sender(f.service, id, a.credential)({ type: "edit_idea", ideaId: room.ideas![0].id, text: "space opera" })
+	await f.service.interpretationsIdle()
+	f.state.search = "ok"
+	f.clock.offset = 31_000 + 31_000
+	await f.service.read(id, a.credential)
+	await f.service.interpretationsIdle()
+	room = await stored(f.repo, id)
+	assert.deepEqual(room.ideas!.map((i) => [i.text, i.attributes]), [["space opera", [{ text: "heist", kind: "attribute" }]]])
+})
+
+test("a stale search finishing after an edit's busy answer never clears the edit's backoff", async () => {
+	const f = fixture()
+	const a = await f.service.create(f.request({ country: "DE" }))
+	const id = a.credential.roomId
+	const send = sender(f.service, id, a.credential)
+	const releaseFirst = f.hold()
+	const ideaId = (await send({ type: "add_idea", text: "space heist" })).snapshot.shared.ideas[0].id
+	f.state.search = "busy"
+	const releaseEdit = f.hold()
+	await send({ type: "edit_idea", ideaId, text: "space opera" })
+	releaseEdit() // the edit's search: busy, the room backs off
+	await new Promise((r) => setTimeout(r, 5))
+	f.state.search = "ok"
+	releaseFirst() // the stale search answers; it can't land (the edit holds the idea)
+	// The edit's attempt replaced the stale one under the idea's key, so interpretationsIdle doesn't wait for it.
+	await new Promise((r) => setTimeout(r, 20))
+	await f.service.interpretationsIdle()
+	assert.equal(f.searches(), 2)
+	assert.equal((await stored(f.repo, id)).ideas![0].attributes[0].key, PENDING_IDEA_ATTRIBUTE.key)
+	f.clock.offset = INTERPRETATION_LEASE_MS + 1
+	await f.service.read(id, a.credential)
+	await f.service.interpretationsIdle()
+	assert.equal(f.searches(), 2, "still backing off after the edit's failure")
+	f.clock.offset = 31_000
+	await f.service.read(id, a.credential)
+	await f.service.interpretationsIdle()
+	assert.equal(f.searches(), 3)
+	assert.deepEqual((await stored(f.repo, id)).ideas!.map((i) => [i.text, i.attributes]), [["space opera", [{ text: "heist", kind: "attribute" }]]])
+})
+
+test("eight stale pending ideas in one room under overload: one retry cycle, queued takeovers wait for the backoff", async () => {
+	const f = fixture()
+	f.hold() // the first process hangs on every search it starts
+	const a = await f.service.create(f.request({ country: "DE", idea: "idea 0" }))
+	const id = a.credential.roomId
+	const send = sender(f.service, id, a.credential)
+	for (let i = 1; i < 8; i++) await send({ type: "add_idea", text: `idea ${i}` })
+	const hung = f.searches()
+	f.hold()()
+	f.state.search = "busy"
+	const other = f.instance()
+	f.clock.offset = INTERPRETATION_LEASE_MS + 1
+	await other.read(id, a.credential)
+	await other.interpretationsIdle()
+	assert.equal(f.searches() - hung, INTERPRETATION_CONCURRENCY, "queued takeovers see the backoff when they start")
+	// The concurrent failures counted as one: the room retries after 30 s, not 15 minutes.
+	f.state.search = "ok"
+	f.clock.offset += 31_000
+	await other.read(id, a.credential)
+	await other.interpretationsIdle()
+	assert.equal(f.searches() - hung, INTERPRETATION_CONCURRENCY + 8)
+	for (const idea of (await stored(f.repo, id)).ideas!) assert.deepEqual(idea.attributes, [{ text: "heist", kind: "attribute" }])
+})

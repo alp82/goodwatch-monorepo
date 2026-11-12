@@ -136,8 +136,14 @@ export class ProposalService {
 	private searching = 0
 	private waiting: (() => void)[] = []
 	private concurrency: number
-	/** Rooms whose background interpretation failed lately: failures in a row and when to retry, oldest first. */
-	private retries = new Map<string, { failures: number; at: number }>()
+	/**
+	 * Rooms whose background interpretation failed lately, oldest first: retry cycles failed in a row, when to retry,
+	 * and `recorded`, this process's attempt clock when the failure was recorded. An attempt that started before then
+	 * belongs to the same cycle: its failure doesn't count again, and its success doesn't clear the newer failure.
+	 */
+	private retries = new Map<string, { failures: number; at: number; recorded: number }>()
+	/** Orders attempt starts and recorded failures in this process. */
+	private attemptClock = 0
 	private writes = new Map<string, { tail: Promise<void>; count: number }>()
 	/** Rooms' expiries (fixed at creation) by id, most recently read last: lets a read check capacity alongside. */
 	private expiries = new Map<string, number>()
@@ -265,39 +271,54 @@ export class ProposalService {
 	 * attributes and ranked titles, or no attributes when search failed for good (the app's "Mood matching is
 	 * unavailable" note). Only the attempt holding the lease (same job) lands. GoodWatch search busy or rate
 	 * limited keeps the idea pending: a later read or sweep retries it after its lease and the room's backoff.
-	 * The search slot was spent when the idea command reserved it, whatever the outcome.
+	 * The search slot was spent when the idea command reserved it, whatever the outcome. A takeover queued behind
+	 * the slots checks the room's backoff again when it starts. Only a committed landing clears the backoff, and only
+	 * one recorded before this attempt started; an answer that can't land (superseded) leaves it alone, and a landing
+	 * that failed backs off.
 	 *
 	 * `known`: the attempt a command or create just stored; without it, a takeover of a lease that ran out.
 	 */
 	private interpretInBackground(id: string, ideaId: string, known?: PendingIdea) {
 		const key = `${id}:${ideaId}`
 		const work = this.interpretationSlot(async () => {
-			const claimed = await this.claimInterpretation(id, ideaId, known)
-			if (!claimed) return
-			const { room, pending } = claimed
-			const author = room.participants.find((p) => p.id === room.ideas?.find((i) => i.id === ideaId)?.authorId)
-			let result: Interpretation | null = null
+			const started = ++this.attemptClock
+			// Queued while another attempt in this room failed: wait for the backoff like any takeover.
+			if (!known && this.retrying(id)) return
+			// Recorded before the slot passes on, so the next queued attempt already sees this backoff.
+			let landed: Awaited<ReturnType<typeof this.interpretation>>
 			try {
-				result = await this.interpret!(
-					pending.text,
-					room.screens[0]?.country ?? "US",
-					room.screens[0]?.serviceIds ?? [],
-					author?.memberUserId ? "member" : "guest"
-				)
-			} catch (error) {
-				if (error instanceof SearchBusy) throw error
-			}
-			if (await this.landInterpretation(id, pending, result)) await this.notify(id)
-			this.retries.delete(id)
-		})
-			.catch(() => {
+				landed = await this.interpretation(id, ideaId, known)
+			} catch {
 				// The idea stays pending; a read or the sweep takes it over after its lease and this room's backoff.
-				this.backOff(id)
-			})
-			.finally(() => {
-				if (this.interpreting.get(key) === work) this.interpreting.delete(key)
-			})
+				return this.backOff(id, started)
+			}
+			if (landed === "failed") this.backOff(id, started)
+			if (landed !== "committed") return
+			this.recovered(id, started)
+			await this.notify(id)
+		}).finally(() => {
+			if (this.interpreting.get(key) === work) this.interpreting.delete(key)
+		})
 		this.interpreting.set(key, work)
+	}
+	/** One attempt: claims the idea's lease, searches and lands the answer. Null when it didn't claim the idea. */
+	private async interpretation(id: string, ideaId: string, known?: PendingIdea) {
+		const claimed = await this.claimInterpretation(id, ideaId, known)
+		if (!claimed) return null
+		const { room, pending } = claimed
+		const author = room.participants.find((p) => p.id === room.ideas?.find((i) => i.id === ideaId)?.authorId)
+		let result: Interpretation | null = null
+		try {
+			result = await this.interpret!(
+				pending.text,
+				room.screens[0]?.country ?? "US",
+				room.screens[0]?.serviceIds ?? [],
+				author?.memberUserId ? "member" : "guest"
+			)
+		} catch (error) {
+			if (error instanceof SearchBusy) throw error
+		}
+		return this.landInterpretation(id, pending, result)
 	}
 	/** Runs `work` once one of this process's background search slots is free. */
 	private async interpretationSlot<T>(work: () => Promise<T>): Promise<T> {
@@ -341,37 +362,69 @@ export class ProposalService {
 			return null
 		})
 	}
-	/** Stores a finished search on its idea when `pending` still holds it. True when a revision was committed. */
-	private async landInterpretation(id: string, pending: PendingIdea, result: Interpretation | null) {
+	/**
+	 * Stores a finished search on its idea when `pending` still holds it. `committed`: this answer is stored.
+	 * `superseded`: it can't land any more (an edit, removal or takeover holds the idea, or the room ended).
+	 * `failed`: it may still land later; the idea stays pending (compare-and-swaps lost every time). A write whose
+	 * outcome is unknown is checked by reading the room again, never assumed stored.
+	 */
+	private async landInterpretation(
+		id: string,
+		pending: PendingIdea,
+		result: Interpretation | null
+	): Promise<"committed" | "superseded" | "failed"> {
 		return this.write(id, async () => {
+			let unknown: Pick<StoredIdea, "attributes" | "rankedKeys" | "interpretedAt"> | null = null
 			for (let attempt = 0; attempt < 6; attempt++) {
 				const old = await this.repository.read(id)
 				const readAt = this.now()
-				if (!old || old.room.flowVersion !== 3 || old.room.expiresAt <= readAt) return false
+				const current = old?.room.ideas?.find((i) => i.id === pending.ideaId)
+				if (unknown && current && heldBy(current) !== pending.job)
+					return current.interpretedAt === unknown.interpretedAt &&
+						JSON.stringify([current.attributes, current.rankedKeys]) ===
+							JSON.stringify([unknown.attributes, unknown.rankedKeys])
+						? "committed"
+						: "superseded"
+				if (!old || old.room.flowVersion !== 3 || old.room.expiresAt <= readAt) return "superseded"
+				if (heldBy(current) !== pending.job) return "superseded"
 				const room = structuredClone(old.room)
-				const idea = room.ideas?.find((i) => i.id === pending.ideaId)
-				if (heldBy(idea) !== pending.job) return false
-				idea!.attributes = result ? structuredClone(result.attributes) : []
-				idea!.rankedKeys = result ? [...result.rankedKeys] : []
-				idea!.interpretedAt = result ? result.interpretedAt : readAt
+				const idea = room.ideas!.find((i) => i.id === pending.ideaId)!
+				idea.attributes = result ? structuredClone(result.attributes) : []
+				idea.rankedKeys = result ? [...result.rankedKeys] : []
+				idea.interpretedAt = result ? result.interpretedAt : readAt
 				if (result) attributeCandidates(room)
 				room.revision++
 				try {
-					if (await this.repository.compareAndSwap(old, room, true)) return true
+					if (await this.repository.compareAndSwap(old, room, true)) return "committed"
 				} catch (e) {
 					if (!(e instanceof IndeterminateWrite)) throw e
-					return true
+					// Stored or not: the next read tells (still held by this job means not stored).
+					unknown = { attributes: idea.attributes, rankedKeys: idea.rankedKeys, interpretedAt: idea.interpretedAt }
 				}
 			}
-			return false
+			return "failed"
 		})
 	}
-	/** Holds a room's background retries back, doubling per failure in a row. */
-	private backOff(id: string) {
-		const failures = (this.retries.get(id)?.failures ?? 0) + 1
+	/**
+	 * Holds a room's background retries back, doubling per failed retry cycle. `started`: when the failed attempt
+	 * started; a failure already recorded since then is the same cycle (concurrent attempts in one room) and counts once.
+	 */
+	private backOff(id: string, started = Infinity) {
+		const previous = this.retries.get(id)
+		if (previous && previous.recorded > started) return
+		const failures = (previous?.failures ?? 0) + 1
 		this.retries.delete(id)
-		this.retries.set(id, { failures, at: this.now() + Math.min(RETRY_MAX_MS, RETRY_BASE_MS * 2 ** (failures - 1)) })
+		this.retries.set(id, {
+			failures,
+			at: this.now() + Math.min(RETRY_MAX_MS, RETRY_BASE_MS * 2 ** (failures - 1)),
+			recorded: ++this.attemptClock
+		})
 		if (this.retries.size > 4096) this.retries.delete(this.retries.keys().next().value!)
+	}
+	/** An attempt that started at `started` landed: clears the room's backoff unless a newer failure recorded it. */
+	private recovered(id: string, started: number) {
+		const previous = this.retries.get(id)
+		if (previous && previous.recorded < started) this.retries.delete(id)
 	}
 	private retrying(id: string) {
 		return (this.retries.get(id)?.at ?? 0) > this.now()
