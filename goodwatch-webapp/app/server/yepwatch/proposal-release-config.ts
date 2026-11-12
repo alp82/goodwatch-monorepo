@@ -1,5 +1,6 @@
 import { releaseMemberConfig } from "./proposal-release-members.ts"
 import { readFile } from "node:fs/promises"
+import { DEFAULT_ROOM_RETENTION_DAYS, MIN_ROOM_RETENTION_DAYS } from "./proposal-room-retention.ts"
 export type Env = Record<string, string | undefined>
 const secretNames = [
 	"YEPWATCH_PROPOSAL_SECRET",
@@ -128,6 +129,8 @@ export function releaseConfig(env: Env) {
 	return {
 		...releaseStoreConfig(env),
 		control: releaseControlConfig(env),
+		// Days after expiry before a room's rows are deleted; never less than one.
+		roomRetentionDays: integer(env, "YEPWATCH_PROPOSAL_ROOM_RETENTION_DAYS", DEFAULT_ROOM_RETENTION_DAYS, MIN_ROOM_RETENTION_DAYS, 3650),
 		publicOrigin: publicUrl.origin,
 		member: releaseMemberConfig(env, publicUrl.origin),
 		gatewaySecret,

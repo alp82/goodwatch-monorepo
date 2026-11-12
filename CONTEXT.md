@@ -414,7 +414,7 @@ The established extent of known entries, recipients and results for an explicitl
 
 ## YepWatch rooms
 
-A YepWatch room shares one country and up to eight authored ideas. The host controls which ideas and services are enabled; present people contribute their own services to the room's union. A person without a service pick still counts for voting and agreement. Jev interprets each added/edited idea once, and the deck interleaves ideas with popularity fallback. Settings edits preserve the round's answers. Explicit Leave removes someone from the active group and transfers hosting if necessary; a disconnected participant still counts. See [the room-ideas decision](docs/adr/yepwatch-room-ideas.md).
+A YepWatch room shares one country and up to eight authored ideas. The host controls which ideas and services are enabled; present people contribute their own services to the room's union. A person without a service pick still counts for voting and agreement. Each added/edited idea reserves one Jev search from the room's 24 (spent whatever the outcome); that one reservation may take several attempts when an instance crashes or GoodWatch is busy, and only the attempt holding the idea's lease lands its interpretation. The deck interleaves ideas with popularity fallback. Settings edits preserve the round's answers. Explicit Leave removes someone from the active group and transfers hosting if necessary; a disconnected participant still counts. See [the room-ideas decision](docs/adr/yepwatch-room-ideas.md).
 
 **Room participant**: A person's place in one YepWatch room, including their votes, agreement and services. A signed-in GoodWatch account has one participant per room, shared by all its devices; a guest's place belongs to their saved device credential.
 

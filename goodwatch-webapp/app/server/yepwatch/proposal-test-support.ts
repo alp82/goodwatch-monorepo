@@ -1,4 +1,5 @@
 import { MemoryAccountRooms } from "./proposal-account-store.ts"
+import { ideaPending } from "../../../packages/yepwatch-contracts/proposal.ts"
 import { continuousFixtureCatalog } from "./continuous-test-support.ts"
 import type {
 	ProposalRepository,
@@ -68,6 +69,13 @@ export class ProposalMemoryRepository implements ProposalRepository {
 	ambiguousNext = false
 	async read(id: string) {
 		return structuredClone(this.rows.get(id) ?? null)
+	}
+	async stalePendingIdeas(leaseBefore: number, now: number, limit: number, after = "") {
+		return [...this.rows.values()]
+			.filter(({ room }) => room.id > after && room.expiresAt > now && (room.ideas ?? []).some((i) => ideaPending(i) && i.interpretedAt < leaseBefore))
+			.map(({ room }) => room.id)
+			.sort()
+			.slice(0, limit)
 	}
 	async insert(room: ProposalRoom) {
 		if (this.rows.has(room.id)) return false
