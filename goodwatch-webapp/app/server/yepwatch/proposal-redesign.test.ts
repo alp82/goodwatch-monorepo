@@ -23,6 +23,7 @@ import {
 } from "./proposal-validation.ts"
 import { applyRoomRedesign } from "./migrations/apply-room-redesign.ts"
 import type { RoomCommand } from "../../../packages/yepwatch-contracts/proposal.ts"
+import { PENDING_IDEA_ATTRIBUTE } from "../../../packages/yepwatch-contracts/proposal.ts"
 import type { ProposalRoom } from "./proposal-types.ts"
 
 /** A room as the app makes it: created, configured with a country, joined by a friend. */
@@ -504,12 +505,15 @@ test("failed interpretations consume the budget and keep the idea uninterpreted;
 	)
 	const broken = failing(new Error("search unavailable"))
 	let s = await broken.read(f.id, f.a.credential)
-	// A failing search never refuses the idea: it is stored without attributes or ranked keys.
+	// A failing search never refuses the idea: it answers pending, then lands without attributes or ranked keys.
 	s = (await broken.command(f.id, f.a.credential, {
 		commandId: "failure",
 		sequence: s.own.nextSequence,
 		command: { type: "add_idea", text: "Fail search" }
 	})).snapshot
+	assert.deepEqual(s.shared.ideas.map((i) => [i.text, i.attributes]), [["Fail search", [PENDING_IDEA_ATTRIBUTE]]])
+	await broken.interpretationsIdle()
+	s = await broken.read(f.id, f.a.credential)
 	assert.deepEqual(s.shared.ideas.map((i) => [i.text, i.attributes]), [["Fail search", []]])
 	let room = (await f.repo.read(f.id))!.room
 	assert.equal(room.interpretationCount, 1)
@@ -521,6 +525,9 @@ test("failed interpretations consume the budget and keep the idea uninterpreted;
 		sequence: s.own.nextSequence,
 		command: { type: "edit_idea", ideaId: s.shared.ideas[0].id, text: "Budget refused" }
 	})).snapshot
+	assert.deepEqual(s.shared.ideas.map((i) => [i.text, i.attributes]), [["Budget refused", [PENDING_IDEA_ATTRIBUTE]]])
+	await limited.interpretationsIdle()
+	s = await limited.read(f.id, f.a.credential)
 	assert.deepEqual(s.shared.ideas.map((i) => [i.text, i.attributes]), [["Budget refused", []]])
 	room = (await f.repo.read(f.id))!.room
 	assert.equal(room.interpretationCount, 1)
@@ -553,11 +560,10 @@ test("a spend-limit refusal handled twice at once refunds both reservations and 
 		command: { type: "add_idea" as const, text: "Twice refused" }
 	}
 	// Two API instances answer the same command: one publishes, the other replays its receipt.
-	const results = await Promise.allSettled([
-		limitedService(f.repo).command(f.id, f.a.credential, envelope),
-		limitedService(f.repo).command(f.id, f.a.credential, envelope)
-	])
+	const instances = [limitedService(f.repo), limitedService(f.repo)]
+	const results = await Promise.allSettled(instances.map((i) => i.command(f.id, f.a.credential, envelope)))
 	assert.ok(results.some((r) => r.status === "fulfilled"))
+	await Promise.all(instances.map((i) => i.interpretationsIdle()))
 	const room = (await f.repo.read(f.id))!.room
 	assert.equal(room.interpretationCount, 0)
 	assert.deepEqual(room.ideas!.map((i) => i.text), ["Twice refused"])

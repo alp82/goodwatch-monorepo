@@ -3,6 +3,7 @@ import { MemoryDeletionStore, requireNotDeleting, type DeletionStore } from './p
 import type { AccountRoomsStore, RoomAccount } from "./proposal-types.ts"
 import type { AccountHome } from "../../../packages/yepwatch-contracts/proposal.ts"
 import type { RoomCommand } from "../../../packages/yepwatch-contracts/proposal.ts"
+import { PENDING_IDEA_ATTRIBUTE, ideaPending } from "../../../packages/yepwatch-contracts/proposal.ts"
 import {
 	redesignCommands,
 	retireIneligible,
@@ -75,6 +76,28 @@ export interface ProposalOperationGuard {
 	/** `checked`: what `active` just resolved to for this room, so the guard can start from what it read. */
 	command(roomId: string, actorId: string, commandDigest: string, checked?: unknown): Promise<void>
 }
+type Interpretation = NonNullable<ProposalRoom["intent"]>
+/** An idea stored pending, and the lease (its `interpretedAt`) of the search whose answer may land on it. */
+interface PendingIdea {
+	ideaId: string
+	text: string
+	lease: number
+}
+interface CreateInterpretation {
+	value?: Promise<Interpretation>
+	lease?: number
+	pending?: PendingIdea
+}
+/**
+ * How long a pending idea's search may run before any process may take it over: the search times out after
+ * 12 s, so a lease this old means the process running it crashed or restarted.
+ */
+export const INTERPRETATION_LEASE_MS = 15_000
+function markPending(idea: NonNullable<ProposalRoom["ideas"]>[number], lease: number) {
+	idea.attributes = [{ ...PENDING_IDEA_ATTRIBUTE }]
+	idea.rankedKeys = []
+	idea.interpretedAt = lease
+}
 export class ProposalService {
 	readonly deletions: DeletionStore
 	readonly accounts: AccountRoomsStore
@@ -88,6 +111,8 @@ export class ProposalService {
 	/** First decks built during setup, so Start doesn't wait for the catalog. */
 	readonly decks: PreparedDecks
 	private knownCountries = new Set<string>()
+	/** Interpretations this process is running or landing, by `${roomId}:${ideaId}`. */
+	private interpreting = new Map<string, Promise<void>>()
 	private writes = new Map<string, { tail: Promise<void>; count: number }>()
 	/** Rooms' expiries (fixed at creation) by id, most recently read last: lets a read check capacity alongside. */
 	private expiries = new Map<string, number>()
@@ -177,6 +202,7 @@ export class ProposalService {
 			404
 		)
 		continuousLive(stored.room, this.now())
+		this.resumeInterpretations(stored.room)
 		this.expiries.delete(stored.room.id)
 		this.expiries.set(stored.room.id, stored.room.expiresAt)
 		if (this.expiries.size > 4096) this.expiries.delete(this.expiries.keys().next().value!)
@@ -205,6 +231,118 @@ export class ProposalService {
 			401
 		)
 		return p
+	}
+	/**
+	 * Lands a pending idea's search on the room as an ordinary committed revision (published, so phones update and
+	 * the prepared deck is built again for the new ranked titles): its attributes and ranked titles when search
+	 * answered, no attributes when it failed (the app's "Mood matching is unavailable" note). It lands only on the
+	 * same idea, text and lease it was started for: an edit, removal or takeover since then wins. A refusal for
+	 * GoodWatch's spend limit ran no search and gives its reserved slot back; any other failure keeps it spent.
+	 */
+	private landInterpretation(id: string, pending: PendingIdea, search: Promise<Interpretation>) {
+		const key = `${id}:${pending.ideaId}`
+		const work = (async () => {
+			let result: Interpretation | null = null
+			let refund = false
+			try {
+				result = await search
+			} catch (error) {
+				refund = error instanceof RoomError && error.code === "catalog_unavailable"
+			}
+			const landed = await this.write(id, async () => {
+				for (let attempt = 0; attempt < 6; attempt++) {
+					const old = await this.repository.read(id)
+					if (!old || old.room.flowVersion !== 3 || old.room.expiresAt <= this.now()) return false
+					const room = structuredClone(old.room)
+					const idea = room.ideas?.find((i) => i.id === pending.ideaId)
+					const ours = idea && ideaPending(idea) && idea.interpretedAt === pending.lease && idea.text === pending.text
+					if (!ours && !refund) return false
+					if (refund) room.interpretationCount = Math.max(0, (room.interpretationCount ?? 0) - 1)
+					if (ours && result) {
+						idea.attributes = structuredClone(result.attributes)
+						idea.rankedKeys = [...result.rankedKeys]
+						idea.interpretedAt = result.interpretedAt
+						attributeCandidates(room)
+					} else if (ours) {
+						idea.attributes = []
+						idea.rankedKeys = []
+						idea.interpretedAt = this.now()
+					}
+					room.revision++
+					try {
+						if (await this.repository.compareAndSwap(old, room, true)) return true
+					} catch (e) {
+						if (!(e instanceof IndeterminateWrite)) throw e
+						return true
+					}
+				}
+				return false
+			})
+			if (landed) await this.notify(id)
+		})()
+			.catch(() => {
+				/* the idea stays pending; a read after its lease takes it over */
+			})
+			.finally(() => {
+				if (this.interpreting.get(key) === work) this.interpreting.delete(key)
+			})
+		this.interpreting.set(key, work)
+	}
+	/** Starts a pending idea's search on the room as committed, and lands it in the background. */
+	private interpretIdea(id: string, room: ProposalRoom, pending: PendingIdea) {
+		const author = room.participants.find((p) => p.id === room.ideas?.find((i) => i.id === pending.ideaId)?.authorId)
+		const search = this.interpret!(
+			pending.text,
+			room.screens[0]?.country ?? "US",
+			room.screens[0]?.serviceIds ?? [],
+			author?.memberUserId ? "member" : "guest"
+		)
+		search.catch(() => {}) // handled where it lands
+		this.landInterpretation(id, pending, search)
+	}
+	/**
+	 * A pending idea whose lease ran out lost the process searching for it (crash, restart, deploy). Any process
+	 * that reads the room takes it over: it stores a new lease (so only one process searches again) and searches
+	 * once more on the slot already reserved.
+	 */
+	private resumeInterpretations(room: ProposalRoom) {
+		if (!this.interpret) return
+		for (const idea of room.ideas ?? []) {
+			const key = `${room.id}:${idea.id}`
+			if (!ideaPending(idea) || this.now() - idea.interpretedAt < INTERPRETATION_LEASE_MS || this.interpreting.has(key))
+				continue
+			const work = this.takeOver(room.id, idea.id)
+				.catch(() => {})
+				.finally(() => {
+					if (this.interpreting.get(key) === work) this.interpreting.delete(key)
+				})
+			this.interpreting.set(key, work)
+		}
+	}
+	private async takeOver(id: string, ideaId: string) {
+		const claimed = await this.write(id, async () => {
+			for (let attempt = 0; attempt < 6; attempt++) {
+				const old = await this.repository.read(id)
+				if (!old || old.room.flowVersion !== 3 || old.room.expiresAt <= this.now()) return null
+				const room = structuredClone(old.room)
+				const idea = room.ideas?.find((i) => i.id === ideaId)
+				if (!idea || !ideaPending(idea) || this.now() - idea.interpretedAt < INTERPRETATION_LEASE_MS) return null
+				const pending = { ideaId, text: idea.text, lease: this.now() }
+				idea.interpretedAt = pending.lease
+				room.revision++
+				// An unknown write may have stored the lease or not: either way another reader takes over later.
+				if (await this.repository.compareAndSwap(old, room, true)) return { room, pending }
+			}
+			return null
+		})
+		if (!claimed) return
+		this.interpreting.delete(`${id}:${ideaId}`)
+		this.interpretIdea(id, claimed.room, claimed.pending)
+		await this.notify(id)
+	}
+	/** Resolves once this process runs no interpretation in the background. For tests. */
+	async interpretationsIdle(): Promise<void> {
+		while (this.interpreting.size) await Promise.allSettled([...this.interpreting.values()])
 	}
 	/** Private draft interpretation; only the durable search budget changes, never ideas or command sequence. */
 	async preview(
@@ -394,22 +532,25 @@ export class ProposalService {
 	/**
 	 * The first setup a create request carries (country, first idea), applied to the new room before it
 	 * is first stored, as the host's configure and add_idea would. An unknown country is left out (the app's
-	 * own commands set it afterwards); search unavailable only leaves the idea uninterpreted.
+	 * own commands set it afterwards). The idea's search starts here but the room never waits for it: the idea
+	 * is stored pending and its interpretation lands later (landInterpretation); search unavailable leaves it
+	 * uninterpreted.
 	 */
 	private async withSetup(
 		room: ProposalRoom,
 		setup: RoomSetupRequest,
-		interpretation: { value?: Promise<NonNullable<ProposalRoom["intent"]> | null> }
+		interpretation: CreateInterpretation
 	): Promise<ProposalRoom> {
 		const host = actor(room, room.hostId)
-		const step = (from: ProposalRoom, command: RoomCommand, commandId: string) =>
-			proposalTransition(from, host.id, { commandId, sequence: 0, command }, this.now(), undefined, true)
+		const step = (from: ProposalRoom, command: RoomCommand, commandId: string, reserved = true) =>
+			proposalTransition(from, host.id, { commandId, sequence: 0, command }, this.now(), undefined, reserved)
 		let next = step(room, { type: "configure", expectedContextVersion: room.contextVersion, country: setup.country }, "setup-country")
 		const search = () => {
-			if (!setup.idea || !this.interpret) return
+			if (!setup.idea || !this.interpret || interpretation.value) return
 			const services = next.screens[0]?.serviceIds ?? []
 			// Searched once per create request, also when a lost insert makes the loop go round again.
-			interpretation.value ??= this.interpret(setup.idea, setup.country, services, host.memberUserId ? "member" : "guest").catch(() => null)
+			interpretation.value = this.interpret(setup.idea, setup.country, services, host.memberUserId ? "member" : "guest")
+			interpretation.value.catch(() => {}) // handled where it lands
 		}
 		// A country this process has already confirmed is searched alongside the catalog check; any other only after
 		// it, so an unknown country never spends a search.
@@ -421,17 +562,14 @@ export class ProposalService {
 		if (setup.idea) {
 			// The idea is kept also when search is unavailable (budget, outage, timeout, none configured): it opens
 			// uninterpreted, the deck uses the normal ranking, and the app never has to send it again as a command.
-			const interpreted = interpretation.value ? await interpretation.value : null
 			const ideaId = keyed(this.secret, "proposal-setup-idea", room.id).slice(0, 32)
-			next = step(next, { type: "add_idea", text: setup.idea }, ideaId)
-			if (interpreted) {
-				const idea = next.ideas!.find((i) => i.id === ideaId)!
-				idea.attributes = structuredClone(interpreted.attributes)
-				idea.rankedKeys = [...interpreted.rankedKeys]
-				idea.interpretedAt = interpreted.interpretedAt
-				// Only a search that answered spends the room's budget, as before.
-				next.interpretationCount = (next.interpretationCount ?? 0) + 1
-				attributeCandidates(next)
+			// A running search reserves one of the room's searches, as add_idea does.
+			next = step(next, { type: "add_idea", text: setup.idea }, ideaId, !interpretation.value)
+			if (interpretation.value) {
+				// One lease for every attempt of this create, so a lost insert's retry stores the same one.
+				interpretation.lease ??= this.now()
+				markPending(next.ideas!.find((i) => i.id === ideaId)!, interpretation.lease)
+				interpretation.pending = { ideaId, text: setup.idea, lease: interpretation.lease }
 			}
 		}
 		if (this.catalog.refresh) next.candidates = await this.catalog.refresh(activeRoom(next))
@@ -441,7 +579,8 @@ export class ProposalService {
 	}
 	async create(request: CreateRoomRequest, account?: RoomAccount, guestCreatorId?: string) {
 		if (account) await this.requireAccountActive(account.userId);
-		const interpretation: { value?: Promise<NonNullable<ProposalRoom["intent"]> | null> } = {}
+		const interpretation: CreateInterpretation = {}
+		let landing = false
 		const id = keyed(
 			this.secret,
 			"proposal-room",
@@ -503,6 +642,12 @@ export class ProposalService {
 				if (await this.repository.insert(room)) this.decks.schedule(id)
 			} catch (e) {
 				if (!(e instanceof IndeterminateWrite)) throw e
+			} finally {
+				// Once per create: it lands only on the stored room's pending idea with this lease.
+				if (interpretation.pending && interpretation.value && !landing) {
+					landing = true
+					this.landInterpretation(id, interpretation.pending, interpretation.value)
+				}
 			}
 		}
 		throw new RoomError(
@@ -734,22 +879,6 @@ export class ProposalService {
 			snapshot: this.snapshot(committed, credential)
 		}
 	}
-	/** Gives back one reserved search slot: once per reservation, never below zero; an unknown write keeps it spent. */
-	private async refundInterpretation(id: string) {
-		for (let attempt = 0; attempt < 6; attempt++) {
-			const old = await this.get(id)
-			if (!old.room.interpretationCount) return
-			const room = structuredClone(old.room)
-			room.interpretationCount = old.room.interpretationCount - 1
-			room.revision++
-			try {
-				if (await this.repository.compareAndSwap(old, room, true)) return
-			} catch (e) {
-				if (!(e instanceof IndeterminateWrite)) throw e
-				return
-			}
-		}
-	}
 	private async applyCommand(
 		id: string,
 		credential: ActorCredential,
@@ -758,57 +887,10 @@ export class ProposalService {
 	): Promise<{ receipt: CommandResult["receipt"]; room?: { committed: ProposalRoom; historyChanged: boolean } }> {
 		const digest = hash(JSON.stringify(envelope))
 		let uncertain = false
-		let interpreted: ProposalRoom["intent"] | undefined
-		const ideaCommand =
-			envelope.command.type === "add_idea" ||
-			envelope.command.type === "edit_idea"
-		// Search unavailable never refuses an idea: it is stored uninterpreted (normal ranking, no ranked keys).
-		let searchFailed = false
-		let budgetRefused = false
-		if (ideaCommand && this.interpret) {
-			// Reserve the lifetime spend before search; failed searches also spend a slot, except a refusal for
-			// GoodWatch's spend limit, which never ran a search: that reservation is given back right away, before
-			// publication, so a replayed, duplicated or failed command still settles its own slot.
-			// Search runs once here, outside the command-publication retry loop.
-			for (let attempt = 0; attempt < 6; attempt++) {
-				const old = await this.get(id),
-					p = this.auth(old.room, credential)
-				const slot = this.sequenceSlot(p, credential, envelope, digest)
-				if ("replayed" in slot) return { receipt: slot }
-				requireRoom(
-					this.commandState(p, credential).nextSequence === slot.sequence,
-					"conflict",
-					"Commands must be sent in order"
-				)
-				proposalTransition(old.room, p.id, envelope, this.now())
-				await allowed
-				await this.guard?.command(id, p.id, digest)
-				const reserved = structuredClone(old.room)
-				reserved.interpretationCount = (reserved.interpretationCount ?? 0) + 1
-				reserved.revision++
-				// An ambiguous reservation never starts search: retry may spend another slot but cannot exceed 24.
-				if (!(await this.repository.compareAndSwap(old, reserved, true)))
-					continue
-				const c = envelope.command as Extract<
-					RoomCommand,
-					{ type: "add_idea" | "edit_idea" }
-				>
-				try {
-					interpreted = await this.interpret(
-						c.text,
-						old.room.screens[0]?.country ?? "US",
-						old.room.screens[0]?.serviceIds ?? [],
-						p.memberUserId ? "member" : "guest"
-					)
-				} catch (error) {
-					searchFailed = true
-					budgetRefused = error instanceof RoomError && error.code === "catalog_unavailable"
-				}
-				if (budgetRefused) await this.refundInterpretation(id)
-				break
-			}
-			requireRoom(interpreted || searchFailed, "busy", "Room busy; retry this idea", 503)
-		}
+		// An idea command answers without waiting for search: the idea is stored pending, its search reserves one of
+		// the room's searches in the same commit and starts once it is stored, and the interpretation lands later.
+		// With no search configured nothing is reserved and the idea stays uninterpreted (normal ranking).
+		const reserved = !this.interpret
 		for (let i = 0; i < 6; i++) {
 			const { stored: old, check } = await this.readChecked(id)
 			const p = this.auth(
@@ -844,7 +926,7 @@ export class ProposalService {
 					envelope,
 					this.now(),
 					undefined,
-					ideaCommand
+					reserved
 				)
 			await allowed
 			await this.guard?.command(id, p.id, digest, check)
@@ -911,20 +993,18 @@ export class ProposalService {
 				envelope,
 				this.now(),
 				page,
-				ideaCommand
+				reserved
 			)
-			if (command.type === "add_idea" || command.type === "edit_idea") {
+			let pending: PendingIdea | undefined
+			if ((command.type === "add_idea" || command.type === "edit_idea") && this.interpret) {
 				const idea = room.ideas!.find(
 					(i) =>
 						i.id ===
 						(command.type === "add_idea" ? envelope.commandId : command.ideaId)
 				)!
-				if (interpreted) {
-					idea.attributes = structuredClone(interpreted.attributes)
-					idea.rankedKeys = [...interpreted.rankedKeys]
-					idea.interpretedAt = interpreted.interpretedAt
-					attributeCandidates(room)
-				}
+				const lease = this.now()
+				markPending(idea, lease)
+				pending = { ideaId: idea.id, text: idea.text, lease }
 			}
 			if (
 				redesignCommands.has(command.type) ||
@@ -975,6 +1055,7 @@ export class ProposalService {
 				uncertain = true
 				continue
 			}
+			if (pending) this.interpretIdea(id, room, pending)
 			return {
 				receipt: { commandId: envelope.commandId, sequence, appliedRevision: room.revision, replayed: false },
 				room: { committed: room, historyChanged: !this.hintCommitted(old.room, room) }
