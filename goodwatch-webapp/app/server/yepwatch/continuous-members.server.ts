@@ -643,8 +643,11 @@ export class ContinuousMembers {
 	/**
 	 * Links your participant in a room to this device's sign-in: rooms you create, join or open while
 	 * signed in. The live grant is checked with GoodWatch before it is copied into the room.
+	 *
+	 * `admit`: whether the place may still take this link, asked before GoodWatch is read and again on every write
+	 * attempt (a link answered late must not land after Log out or Leave). Refused, nothing is written: null.
 	 */
-	async linkRoom(id: string, participantId: string, raw: string | null | undefined) {
+	async linkRoom(id: string, participantId: string, raw: string | null | undefined, admit?: (room: ContinuousRoom) => boolean | Promise<boolean>) {
 		const fresh = await this.freshSession(this.openSession(raw))
 		requireRoom(fresh, "member_required", "Sign in with GoodWatch again", 403)
 		const session = fresh.session
@@ -653,6 +656,7 @@ export class ContinuousMembers {
 			return { status: { state: "unavailable" as const, prefill: null }, session, renewed: fresh.renewed }
 		{
 			const { room } = await this.get(id)
+			if (admit && !(await admit(room))) return null
 			const p = actor(room, participantId)
 			requireRoom(
 				!p.memberUserId || p.memberUserId === session.userId,
@@ -673,6 +677,7 @@ export class ContinuousMembers {
 		const seen = await this.reads.seen?.(grant.userId, session.accessToken)
 		for (let attempt = 0; attempt < 6; attempt++) {
 			const old = await this.get(id)
+			if (admit && !(await admit(old.room))) return null
 			const room = structuredClone(old.room)
 			const p = actor(room, participantId)
 			requireRoom(
