@@ -15,8 +15,9 @@ export const EARLY_INVITE_MAX_AGE_MS = 15_000;
 
 /**
  * The page's own answer for this request, or null: same origin, a path the page asked for, the exact body it sent,
- * not yet taken, and fresh. A request the page's answer failed goes out again through `fetcher`; the caller's
- * abort ends the wait as an aborted fetch would.
+ * not yet taken, and fresh. The answer is read whole before it is handed over (the page's request has no abort of
+ * its own), so the caller's abort or timeout ends the wait for its headers and its body alike. A page request that
+ * failed goes out again through `fetcher`.
  */
 export function takeEarlyInvite(
   early: EarlyInvite | undefined,
@@ -44,8 +45,16 @@ export function takeEarlyInvite(
     if (signal?.aborted) return aborted();
     signal?.addEventListener('abort', aborted, { once: true });
     answer
+      .then(whole)
       .catch(() => fetcher(url, init))
       .then(resolve, reject)
       .finally(() => signal?.removeEventListener('abort', aborted));
   });
+}
+
+/** The same answer with its body already read. */
+async function whole(response: Response): Promise<Response> {
+  const text = await response.text();
+  const empty = [101, 204, 205, 304].includes(response.status);
+  return new Response(empty ? null : text, { status: response.status, statusText: response.statusText, headers: response.headers });
 }

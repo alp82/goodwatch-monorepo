@@ -20,7 +20,7 @@ test('the app\'s first request for the invitation takes the page\'s answer, once
   const answer = Response.json({ roomId: 'room' });
   const e = early({ [paths.resolveInvite]: Promise.resolve(answer) });
   const taken = takeEarlyInvite(e, ORIGIN, 2000, `${ORIGIN}${paths.resolveInvite}`, post('T8TBD4'), never);
-  assert.equal(await taken, answer);
+  assert.deepEqual(await (await taken)!.json(), { roomId: 'room' });
   assert.equal(takeEarlyInvite(e, ORIGIN, 2000, `${ORIGIN}${paths.resolveInvite}`, post('T8TBD4'), never), null);
 });
 
@@ -47,4 +47,21 @@ test('a page request that failed goes out again; the caller\'s abort ends the wa
   const waiting = takeEarlyInvite(pending, ORIGIN, 2000, `${ORIGIN}${paths.invitePreview}`, post('T8TBD4', controller.signal), never)!;
   controller.abort();
   await assert.rejects(waiting);
+});
+
+test('an answer whose body stalls still ends with the caller\'s abort', async () => {
+  const stalled = new Response(new ReadableStream({ start(c) { c.enqueue(new TextEncoder().encode('{"roomId"')); } }), { status: 200 });
+  const controller = new AbortController();
+  const e = early({ [paths.resolveInvite]: Promise.resolve(stalled) });
+  const waiting = takeEarlyInvite(e, ORIGIN, 2000, `${ORIGIN}${paths.resolveInvite}`, post('T8TBD4', controller.signal), never)!;
+  setTimeout(() => controller.abort(), 20);
+  await assert.rejects(waiting);
+});
+
+test('the handed-over answer keeps its status, headers and body', async () => {
+  const e = early({ [paths.invitePreview]: Promise.resolve(Response.json({ error: { code: 'not_found' } }, { status: 404, headers: { 'x-yepwatch-session': 'renewed' } })) });
+  const r = await takeEarlyInvite(e, ORIGIN, 2000, `${ORIGIN}${paths.invitePreview}`, post('T8TBD4'), never)!;
+  assert.equal(r.status, 404);
+  assert.equal(r.headers.get('x-yepwatch-session'), 'renewed');
+  assert.deepEqual(await r.json(), { error: { code: 'not_found' } });
 });

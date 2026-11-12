@@ -1125,7 +1125,7 @@ export class ProposalService {
 					page = unseen(page)
 					// The deck reused across a member's link may hold only titles they've seen; the member-aware deck
 					// reaches past them. A short page still starts: the client refills at two unanswered cards.
-					if (!page.candidates.length) page = unseen(await this.decks.page(room))
+					if (!page.candidates.length) page = unseen(await timed("deck", this.decks.page(room)))
 				}
 			}
 			if (envelope.command.type === "restart") await this.accounts.publish(old.room.history ?? [])
