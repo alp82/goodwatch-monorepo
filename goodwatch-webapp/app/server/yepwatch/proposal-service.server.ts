@@ -902,13 +902,14 @@ export class ProposalService {
 					? this.catalog.excludedKeys(room, { fresh: true })
 					: null
 				seenRead?.catch(() => {}) // Awaited below; a failed deck must not leave it unhandled.
+				// Best effort (members time-box and log their own reads): a failed read starts without those exclusions.
 				// Usually prepared during setup; a Start retried after losing its compare-and-swap reuses the same build.
 				if (wantsPage)
 					page = await this.decks.page(room, {
 						seenReadFresh: envelope.command.type === "start" && Boolean(this.catalog.excludedKeys),
 					})
 				if (page && seenRead) {
-					const excluded = new Set(await seenRead)
+					const excluded = new Set(await seenRead.catch(() => [] as string[]))
 					const unseen = (p: NonNullable<typeof page>) =>
 						excluded.size ? { ...p, candidates: p.candidates.filter((c) => !excluded.has(titleKey(c))) } : p
 					page = unseen(page)

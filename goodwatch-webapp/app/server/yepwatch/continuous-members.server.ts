@@ -59,6 +59,8 @@ export interface MemberFlowConfig {
 	nativeReturnUris?: string[]
 	/** Seals device sessions and browser sign-in intents. Without it, account sign-in is unavailable. */
 	sessionSecret?: string
+	/** How long a deck build or Start waits for one member's seen list before going on without it (default 300 ms). */
+	seenReadTimeoutMs?: number
 }
 /** One device's GoodWatch sign-in, sealed by the server: browsers keep it in an HttpOnly cookie, apps in secure storage. */
 export interface MemberSession {
@@ -748,27 +750,92 @@ export class ContinuousMembers {
 		)
 		return this.reads.progress(userId, actor(room, participantId).memberGrant!.accessToken)
 	}
-    private seenCache = new Map<string, {roster: number; keys: string[]}>()
-    /** A member's seen title keys, kept per room roster. `fresh` (Start) reads the account again and refreshes it. */
-    async seen(room: ContinuousRoom, participantId: string, options: { fresh?: boolean } = {}): Promise<string[]> {
-      if (!this.reads.seen) return []
-      const key = `${room.id}:${participantId}`
-      const cached = this.seenCache.get(key)
-      if (!options.fresh && cached?.roster === room.rosterVersion) return cached.keys
-      const p = actor(room, participantId)
-      requireRoom(
-        p.memberGrant && p.memberGrant.expiresAt > this.now() && p.memberUserId,
-        "member_required",
-        "Sign in with GoodWatch again",
-        403,
-      )
-      // No separate identity check first: the read proves the grant itself (MemberReads.seen), and a second
-      // round trip to GoodWatch sat on Start's path, which reads seen titles fresh.
-      const keys = await this.reads.seen(p.memberUserId, p.memberGrant.accessToken)
-      this.seenCache.set(key, {roster:room.rosterVersion,keys})
-      if (this.seenCache.size > 512) this.seenCache.delete(this.seenCache.keys().next().value!)
-      return keys
-    }
+	/**
+	 * Seen lists per room seat, bound to the linked account and its grant: a seat that logs out and is linked
+	 * again (to any account) never reads the previous link's list. `seq` orders reads by when they started, so
+	 * a slower, older read can't overwrite a fresher one.
+	 */
+	private seenCache = new Map<string, { roster: number; account: string; seq: number; keys: string[] }>()
+	/** The newest read per seat, shared by cached reads that find no usable entry. */
+	private seenReads = new Map<string, { roster: number; account: string; seq: number; fresh: boolean; read: Promise<string[]> }>()
+	private seenSeq = 0
+	/** The seat's current link, checked before any cache lookup; refuses a guest, an expired grant or an unlinked seat. */
+	private seenLink(room: ContinuousRoom, participantId: string) {
+		const p = actor(room, participantId)
+		requireRoom(
+			p.memberGrant && p.memberGrant.expiresAt > this.now() && p.memberUserId,
+			"member_required",
+			"Sign in with GoodWatch again",
+			403,
+		)
+		return {
+			userId: p.memberUserId,
+			accessToken: p.memberGrant.accessToken,
+			account: `${p.memberUserId}\0${createHash("sha256").update(p.memberGrant.accessToken).digest("base64url")}`,
+		}
+	}
+	/** A member's seen title keys, kept per room roster. `fresh` (Start) reads the account again and refreshes it. */
+	async seen(room: ContinuousRoom, participantId: string, options: { fresh?: boolean } = {}): Promise<string[]> {
+		if (!this.reads.seen) return []
+		const link = this.seenLink(room, participantId)
+		const key = `${room.id}:${participantId}`
+		const cached = this.seenCache.get(key)
+		if (cached && cached.account !== link.account) this.seenCache.delete(key) // Logged out, relinked: not this link's list.
+		else if (!options.fresh && cached?.roster === room.rosterVersion) return cached.keys
+		const pending = this.seenReads.get(key)
+		if (!options.fresh && pending?.account === link.account && (pending.fresh || pending.roster === room.rosterVersion))
+			return pending.read
+		const seq = ++this.seenSeq
+		// No separate identity check first: the read proves the grant itself (MemberReads.seen), and a second
+		// round trip to GoodWatch sat on Start's path, which reads seen titles fresh.
+		const read = this.reads.seen(link.userId, link.accessToken).then(
+			(keys) => {
+				const current = this.seenCache.get(key)
+				if (!current || current.seq < seq) {
+					this.seenCache.delete(key)
+					this.seenCache.set(key, { roster: room.rosterVersion, account: link.account, seq, keys })
+					if (this.seenCache.size > 512) this.seenCache.delete(this.seenCache.keys().next().value!)
+				}
+				return keys
+			},
+			(e) => {
+				if (refused(e) && this.seenCache.get(key)?.account === link.account) this.seenCache.delete(key)
+				throw e
+			},
+		)
+		const settled = () => { if (this.seenReads.get(key)?.seq === seq) this.seenReads.delete(key) }
+		read.then(settled, settled)
+		this.seenReads.set(key, { roster: room.rosterVersion, account: link.account, seq, fresh: Boolean(options.fresh), read })
+		return read
+	}
+	/**
+	 * `seen` for building decks and Start: never fails the room. A refused grant, a GoodWatch outage or a read
+	 * slower than `seenReadTimeoutMs` leaves this member's seen titles out (logged). An outage or a timeout keeps
+	 * the list last read for this same link, if any; nothing is ever taken from another link.
+	 */
+	async seenOrNone(room: ContinuousRoom, participantId: string, options: { fresh?: boolean } = {}): Promise<string[]> {
+		let timer: ReturnType<typeof setTimeout> | undefined
+		const timedOut = new Error("seen read timed out")
+		try {
+			return await Promise.race([
+				this.seen(room, participantId, options),
+				new Promise<never>((_, reject) => { timer = setTimeout(() => reject(timedOut), this.config.seenReadTimeoutMs ?? 300) }),
+			])
+		} catch (e) {
+			const reason = e === timedOut ? "timeout" : refused(e) ? "refused" : "unavailable"
+			console.warn(JSON.stringify({ event: "yepwatch_member_seen_skipped", reason, fresh: Boolean(options.fresh) }))
+			if (reason === "refused") return []
+			try {
+				const link = this.seenLink(room, participantId)
+				const cached = this.seenCache.get(`${room.id}:${participantId}`)
+				return cached?.account === link.account ? cached.keys : []
+			} catch {
+				return []
+			}
+		} finally {
+			clearTimeout(timer)
+		}
+	}
 	async ownProgress(id: string, participantId: string) {
 		return this.progress((await this.get(id)).room, participantId)
 	}

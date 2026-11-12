@@ -8,7 +8,7 @@ import { ProposalMemoryRepository, proposalFixtureCatalog } from "./proposal-tes
 import type { ExcludedKeysOptions, ProposalCatalog, ProposalRoom } from "./proposal-types.ts"
 
 const secret = "prepared-decks-test-secret-at-least-32-chars"
-function fixture(options: { delayMs?: number | "default"; excluded?: string[]; now?: () => number; guard?: ProposalOperationGuard } = {}) {
+function fixture(options: { delayMs?: number | "default"; excluded?: string[]; failFreshSeen?: boolean; now?: () => number; guard?: ProposalOperationGuard } = {}) {
 	const repository = new ProposalMemoryRepository()
 	const pages: ProposalRoom[] = []
 	const exclusionReads: (ExcludedKeysOptions | undefined)[] = []
@@ -22,7 +22,11 @@ function fixture(options: { delayMs?: number | "default"; excluded?: string[]; n
 			pages.push(structuredClone(room))
 			return proposalFixtureCatalog.page(room)
 		},
-		...(options.excluded ? { excludedKeys: async (_room, read) => { exclusionReads.push(read); return options.excluded! } } : {}),
+		...(options.excluded ? { excludedKeys: async (_room, read) => {
+			exclusionReads.push(read)
+			if (options.failFreshSeen && read?.fresh) throw new Error("GoodWatch is down")
+			return options.excluded!
+		} } : {}),
 	}
 	const service = new ProposalService(repository, catalog, secret, async () => {}, options.now ?? Date.now, options.guard, undefined, {
 		decks: options.delayMs === "default" ? {} : { delayMs: options.delayMs ?? 1 },
@@ -548,5 +552,18 @@ test("Start reads the members' seen titles alongside the deck, not after it", as
 	assert.equal(started.snapshot.shared.phase, "choosing")
 	assert.ok(!started.snapshot.shared.candidates.some((c) => keyOf(c) === keys[0]), "the member's seen title is left out")
 	await f.service.decks.idle()
+	f.service.decks.forget(r.id)
+})
+
+test("Start still starts when the members' seen read fails", async () => {
+	// Members time-box and log their own reads (ContinuousMembers.seenOrNone); any other failure must not fail Start.
+	const f = fixture({ excluded: [], failFreshSeen: true })
+	const r = await room(f)
+	await r.send({ type: "set_services", serviceIds: [1] })
+	await f.service.decks.idle()
+	const started = await r.start()
+	assert.deepEqual(f.exclusionReads.at(-1), { fresh: true })
+	assert.equal(started.snapshot.shared.phase, "choosing")
+	assert.ok(started.snapshot.shared.candidates.length > 0)
 	f.service.decks.forget(r.id)
 })
