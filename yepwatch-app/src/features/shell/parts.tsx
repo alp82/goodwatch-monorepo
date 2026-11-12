@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState, type ReactNode, type ComponentRef } from 'react';
-import { Animated, Easing, Platform, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Animated, Platform, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useReducedMotion } from '../../components/ui';
 import { peerColor } from '../glow/model';
 import { GText, Icon, Press, glow, grow, native, type IconName } from '../glow/theme';
+import { claimLiveBeat, releaseLiveBeat } from './live-beat';
+import { playLivePulse } from './live-pulse';
 import { R } from './tokens';
 
 /** Your own avatar: amber initial once a nickname is known, a quiet outline before. */
@@ -28,19 +30,29 @@ export function FaceStack({ people, size = 24, max = 4 }: { people: { id: string
     </View>
   );
 }
-/** The pulsing green dot of an open room. */
-export function LiveDot({ size = 8 }: { size?: number }) {
+/**
+ * The green dot of an open room. It rings three times when it appears, or when `beat` changes (the
+ * room's opening and each join), then stays solid: nothing animates in between. A `beat` rings once
+ * across every header showing it. Reduced motion: never rings.
+ */
+export function LiveDot({ size = 8, beat }: { size?: number; beat?: string }) {
   const reduced = useReducedMotion();
-  const [pulse] = useState(() => new Animated.Value(0));
+  // At rest (1) the ring is invisible: a header whose beat already rang shows the solid dot only.
+  const [ring] = useState(() => new Animated.Value(1));
   useEffect(() => {
     if (reduced) return;
-    const loop = Animated.loop(Animated.timing(pulse, { toValue: 1, duration: 1500, easing: Easing.out(Easing.quad), useNativeDriver: native }));
-    loop.start();
-    return () => loop.stop();
-  }, [pulse, reduced]);
+    if (beat !== undefined && !claimLiveBeat(beat)) return;
+    let ended = false;
+    // Ended, the ring rests at scale 2.8 and opacity 0: drawn once, then nothing changes.
+    const stop = playLivePulse(ring, native, () => { ended = true; });
+    return () => {
+      stop();
+      if (!ended && beat !== undefined) releaseLiveBeat(beat);
+    };
+  }, [ring, reduced, beat]);
   return (
     <View accessible={false} style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
-      {!reduced && <Animated.View style={{ position: 'absolute', width: size, height: size, borderRadius: size / 2, backgroundColor: glow.green, opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.55, 0] }), transform: [{ scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 2.8] }) }] }} />}
+      {!reduced && <Animated.View style={{ position: 'absolute', width: size, height: size, borderRadius: size / 2, backgroundColor: glow.green, opacity: ring.interpolate({ inputRange: [0, 1], outputRange: [0.55, 0] }), transform: [{ scale: ring.interpolate({ inputRange: [0, 1], outputRange: [1, 2.8] }) }] }} />}
       <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: glow.green }} />
     </View>
   );

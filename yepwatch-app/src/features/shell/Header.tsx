@@ -21,6 +21,8 @@ export interface HeaderPill {
   state: 'live' | 'decided' | 'new' | 'rooms';
   /** New suggestions waiting for the host. */
   fresh?: number;
+  /** The live dot rings three times when this changes (the room opening, someone joining), then rests. */
+  beat?: string;
 }
 /** Who the avatar is. Members get a small GoodWatch mark. */
 export interface HeaderMe { name: string | null; member: boolean }
@@ -70,7 +72,7 @@ export function RoomPill({ pill, onPress }: { pill: HeaderPill; onPress?: () => 
     <Press label={`${pill.label}${fresh ? `, ${fresh} new` : ''}, switch room`} onPress={onPress ?? (() => undefined)} disabled={!onPress}
       style={{ ...grow(Math.max(44, z(40))), maxWidth: phone ? undefined : z(420), flexShrink: 1, minWidth: 0, alignItems: 'stretch' }}
       visual={{ height: Math.max(44, z(40)), minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 14, paddingRight: 10, borderRadius: 12, backgroundColor: '#ffffff0a', borderWidth: 1, borderColor: fresh ? '#fbbf2499' : pill.state === 'live' ? '#ffffff22' : warm.line }}>
-      {pill.state === 'live' || pill.state === 'rooms' ? <LiveDot /> : pill.state === 'decided' ? <Icon name="tickets" size={z(15)} color={glow.amber} /> : <Plus size={z(15)} color={glow.amber} />}
+      {pill.state === 'live' || pill.state === 'rooms' ? <LiveDot beat={pill.beat} /> : pill.state === 'decided' ? <Icon name="tickets" size={z(15)} color={glow.amber} /> : <Plus size={z(15)} color={glow.amber} />}
       <GText bold size={z(15)} lines={1} style={{ flexShrink: 1 }}>{pill.label}</GText>
       {fresh ? <View style={{ minWidth: 18, height: 18, paddingHorizontal: 5, borderRadius: 9, backgroundColor: glow.amber, alignItems: 'center', justifyContent: 'center' }}><GText bold size={11} color={warm.ink}>{fresh}</GText></View> : null}
       <View ref={chevron}><Chevron size={z(16)} color={glow.muted} /></View>

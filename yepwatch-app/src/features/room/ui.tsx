@@ -84,7 +84,7 @@ export function Screen({ back, right, children, footer, footerPlacement, overlay
   // A sheet open over this screen (the room's or Your rooms): browser Back, the router's back and the iOS swipe close it first.
   const sheetOpen = useSheetOpen();
   useSheetsHoldNavigation(focused && sheetOpen, () => { closeSheets?.(); closeTopSheet(); });
-  const derived: HeaderPill | null = view ? { label: view.label, state: view.phase === 'decided' ? 'decided' : 'live', fresh: view.newSuggestions } : null;
+  const derived: HeaderPill | null = view ? { label: view.label, state: view.phase === 'decided' ? 'decided' : 'live', fresh: view.newSuggestions, beat: room?.liveBeat } : null;
   const current = view && roomId && room ? { roomId, label: view.label, decided: view.phase === 'decided', openRoomPage: () => room.openSheet('room') } : undefined;
   const roomSheet = room && view && focused && room.sheet ? room.renderSheet(room.sheet) : null;
   const scrollGap = gap ?? (scroll ? 22 : 12);
