@@ -78,6 +78,7 @@ function SynopsisText({ media }: { media: Media }) {
 }
 
 // Every essence tag, as a quiet chip with an accent dot; on hover the dot lights and an arrow says it opens a search.
+// nofollow: a search page per tag is no page for crawlers.
 function EssenceTags({ tags }: { tags: string[] }) {
 	if (!tags.length) return null
 	return (
@@ -87,6 +88,7 @@ function EssenceTags({ tags }: { tags: string[] }) {
 					<Link
 						to={discoverQueryPath(tag)}
 						state={searchNavigationState(tag, "title_tag", "link")}
+						rel="nofollow"
 						prefetch="intent"
 						title={`Search Discover for “${tag}”`}
 						className="group flex items-center gap-2 rounded-lg bg-gradient-to-b from-white/[0.07] to-white/[0.025] py-1.5 pr-3 pl-2.5 text-[15px] leading-5 text-gray-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-white/[0.08] ring-inset transition-colors hover:from-amber-300/[0.12] hover:to-amber-300/[0.04] hover:text-white hover:ring-amber-300/30"
