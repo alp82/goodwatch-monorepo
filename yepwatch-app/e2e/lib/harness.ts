@@ -138,6 +138,9 @@ export class Person {
       const sig = (window as unknown as { __yw?: { signature(): string } }).__yw?.signature() ?? '';
       return !sig.includes('yepwatch-boot') && /landing|home-rooms|mood-page|room-setup|waiting|voting|matches|proposal|tonight|join-screen|room-status/.test(sig);
     }, undefined, { timeout, polling: 50 }).catch(() => this.journeyFailure('no screen came up after the startup word'));
+    // A person looks at the page before pressing: a press within its first 250 ms would make the page
+    // itself count as a flash (between the startup and the next screen), which no person would see.
+    await sleep(300);
   }
   async reload() {
     await this.harvest();
