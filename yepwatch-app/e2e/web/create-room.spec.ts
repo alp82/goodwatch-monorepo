@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
 import { test, eventually, type Person } from '../lib/harness';
-import { createRoom, hostName, pickServices } from './flows';
+import { createRoom, hostName, pickServices, recordPage } from './flows';
 
 const roomCountry = (p: Person) => (p.latest?.screens as { country: string | null }[] | undefined)?.[0]?.country;
 
@@ -11,30 +11,6 @@ async function createWithoutTiming(host: Person, mood: string) {
   await host.fill(host.page.getByLabel('Mood'), mood);
   await host.tap(host.button('Create room'), { expect: { visible: ['room-setup'] } });
   await eventually(() => host.latest?.ideas.map((i) => i.text), (v) => JSON.stringify(v) === JSON.stringify([mood]), 'the room has exactly the one idea', host);
-}
-
-/**
- * Samples the Mood page every 50 ms from inside the page (a one-frame line or error is caught): whether the
- * "Reconnecting…" line is up and whether any error or Try again shows. `stop` returns the samples.
- */
-async function recordMoodPage(host: Person) {
-  await host.page.evaluate(() => {
-    const w = window as unknown as { __moodLog?: { t: number; note: boolean; error: boolean }[]; __moodTimer?: number };
-    w.__moodLog = [];
-    const sample = () => {
-      const page = document.querySelector('[data-testid="mood-page"]');
-      if (!page) return;
-      const note = document.querySelector('[data-testid="room-note"]')?.textContent ?? '';
-      w.__moodLog!.push({ t: Date.now(), note: note.includes('Reconnecting'), error: /Couldn|Try again|offline/i.test(page.textContent ?? '') });
-    };
-    sample();
-    w.__moodTimer = window.setInterval(sample, 50);
-  });
-  return () => host.page.evaluate(() => {
-    const w = window as unknown as { __moodLog: { t: number; note: boolean; error: boolean }[]; __moodTimer: number };
-    window.clearInterval(w.__moodTimer);
-    return w.__moodLog;
-  });
 }
 
 test.describe('create and set up a room', () => {
@@ -101,7 +77,7 @@ test.describe('create and set up a room', () => {
     await host.open('/');
     await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] } });
     await host.fill(host.page.getByLabel('Mood'), 'slow server heist');
-    const stop = await recordMoodPage(host);
+    const stop = await recordPage(host, 'mood-page', /Couldn|Try again|offline/i);
     await host.tap(host.button('Create room'), { expect: {} });
     // Q24a: quiet at first, then one small floating line; never "Couldn't reach" or Try again.
     await expect(host.page.getByTestId('room-note').filter({ visible: true })).toHaveText('Reconnecting…', { timeout: 12000 });
@@ -141,7 +117,7 @@ test.describe('create and set up a room', () => {
     await host.open('/');
     await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] } });
     await host.fill(host.page.getByLabel('Mood'), 'short outage heist');
-    const stop = await recordMoodPage(host);
+    const stop = await recordPage(host, 'mood-page', /Couldn|Try again|offline/i);
     await host.tap(host.button('Create room'), { expect: {} });
     await host.see({ visible: ['room-setup'] }, 10000, 'the room opens by itself');
     room.noteOutage(first, answered);

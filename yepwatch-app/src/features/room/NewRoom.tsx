@@ -5,11 +5,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { transientFailure, unanswered } from '../../core/continuous/backoff';
 import { browserOffline, onBackOnline } from '../../core/continuous/network';
 import { OFFLINE_WORDS, QUIET_OUTAGE_MS, RECONNECTING_WORDS } from '../../core/continuous/connection-words';
-import { useLate } from '../../core/useLate';
+import { useLate, useLateSince } from '../../core/useLate';
 import { RoomFailure } from '../../core/continuous/api';
 import { ConnectionDetails } from '../rooms/ConnectionDetails';
 import { CreateRoom } from '../../core/continuous/create-room';
-import { CreateResume, createOutcome } from './create-resume';
+import { ResendResume, resendOutcome } from '../../core/continuous/resend-resume';
 import { useAccount } from '../../core/continuous/account';
 import { roomRegistry } from '../../core/continuous/room-registry';
 import { useRetryCountdown } from '../../core/continuous/useRetryCountdown';
@@ -35,8 +35,8 @@ function NewRoomDraft({ account }: { account: ReturnType<typeof useAccount> }) {
   // A slow or restarting server: the save keeps sending the same request by itself (create-room.ts). Offline:
   // an unanswered save goes again once the browser is back online. Both only while this page is in front:
   // leaving stops them (the saved request stays for a manual retry); the app out of the front (inactive or
-  // background) pauses them until it is back (create-resume.ts).
-  const [resume] = useState(() => new CreateResume());
+  // background) pauses them until it is back (resend-resume.ts).
+  const [resume] = useState(() => new ResendResume<string>());
   useFocusEffect(useCallback(() => { newRoomInFront(true); resume.focus(); return () => { newRoomInFront(false); resume.leave(); }; }, [resume]));
   // When the first failed attempt of this save began (null: none failed): drives the one connection line.
   const [troubleSince, setTroubleSince] = useState<number | null>(null);
@@ -68,7 +68,7 @@ function NewRoomDraft({ account }: { account: ReturnType<typeof useAccount> }) {
     // After onError has settled the draft: a save paused by the app leaving the front starts again here when
     // the app came back while it was still cancelling.
     onSettled: (snapshot, error) => {
-      if (resume.settled(createOutcome(error)) && snapshot) router.replace({ pathname: '/room/[id]', params: { id: snapshot.shared.roomId } });
+      if (resume.settled(resendOutcome(error)) && snapshot) router.replace({ pathname: '/room/[id]', params: { id: snapshot.shared.roomId } });
     },
   });
   useEffect(() => resume.connect({ send: mutation.mutate, abort: () => attempt.current?.abort() }), [resume, mutation.mutate]);
@@ -98,13 +98,3 @@ function NewRoomDraft({ account }: { account: ReturnType<typeof useAccount> }) {
     action={mutation.isError ? 'Try again' : 'Create room'} />;
 }
 
-/** True once `ms` have passed since `since` (null: not counting). */
-function useLateSince(since: number | null, ms: number) {
-  const [late, setLate] = useState(false);
-  useEffect(() => {
-    if (since === null) return;
-    const timer = setTimeout(() => setLate(true), Math.max(0, since + ms - Date.now()));
-    return () => { clearTimeout(timer); setLate(false); };
-  }, [since, ms]);
-  return since !== null && late;
-}

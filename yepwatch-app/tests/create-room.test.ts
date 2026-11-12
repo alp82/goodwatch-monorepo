@@ -1,13 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { runInNewContext } from 'node:vm';
-import ts from 'typescript';
 import * as backoff from '../src/core/continuous/backoff';
 import * as retry from '../src/core/continuous/retry';
 import * as state from '../src/core/continuous/state';
 import { RoomFailure } from '../src/core/continuous/api-client';
 import { continuousFixture } from './continuous-fixture';
+import { loadIsolated } from './isolated-module';
 
 // The real CreateRoom (create-room.ts) with its device and network edges replaced: a fake server that
 // creates one room per command id + secret (the real one's idempotency), in-memory storage, instant waits.
@@ -34,32 +32,27 @@ function harness(script: Attempt, o: { offline?: boolean; onSleep?: (ms: number)
     snapshot.shared.roomId = roomId;
     return { credential: { roomId, participantId: 'host', token: 't', expiresAt: Date.now() + 3600000, sessionKey: 'k' }, invite: { code: 'c', url: 'u' }, snapshot };
   };
-  const source = readFileSync(new URL('../src/core/continuous/create-room.ts', import.meta.url), 'utf8');
-  const code = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
-  const exports: { CreateRoom?: new () => { save(text: string, options: { nickname: string; member: boolean; signal: AbortSignal; onTrouble?: (since: number) => void }): Promise<{ shared: { roomId: string } }> } } = {};
+  type Flow = new () => { save(text: string, options: { nickname: string; member: boolean; signal: AbortSignal; onTrouble?: (since: number) => void }): Promise<{ shared: { roomId: string } }> };
   let uuid = 0;
-  runInNewContext(code, { exports, Date, Math, Promise, Error, Array, console, setTimeout, clearTimeout, require: (name: string) => {
-    switch (name) {
-      case 'expo-crypto': return { getRandomBytesAsync: async () => new Uint8Array(32).fill(7), randomUUID: () => `uuid-${++uuid}` };
-      case './api': return { continuousApi: { create, command: async () => { throw new Error('no commands expected'); } }, RoomFailure };
-      case '../credentials': return { saveAccess: async () => undefined };
-      case '../lobby': return { deviceCountryHint: () => 'DE' };
-      case '../providers': return { queryClient: { setQueryData: () => undefined } };
-      case './account-flow': return { authEpoch: { current: () => 1, isCurrent: () => true } };
-      case './backoff': return { ...backoff, abortableSleep: async (ms: number) => { waits.push(ms); log.push(`wait ${ms}`); o.onSleep?.(ms); } };
-      case './network': return { browserOffline: () => o.offline === true };
-      case './invite-store': return { saveInvite: async () => undefined };
-      case './room-registry': return { roomRegistry: { remember: async () => undefined, setNickname: async () => undefined } };
-      case './retry': return retry;
-      case './keys': return { continuousKey: (id: string) => ['proposal-room', id] };
-      case './state': return state;
-      case './storage': return {
-        readAdmission: async () => admission, writeAdmission: async (_: string, value: unknown) => { admission = value; },
-        readCommandRecovery: async () => ({ envelope: null, retryAt: 0 }), writePending: async () => undefined,
-      };
-      default: throw new Error(`Unexpected dependency ${name}`);
-    }
-  } });
+  const exports = loadIsolated<{ CreateRoom?: Flow }>(new URL('../src/core/continuous/create-room.ts', import.meta.url), {
+    'expo-crypto': { getRandomBytesAsync: async () => new Uint8Array(32).fill(7), randomUUID: () => `uuid-${++uuid}` },
+    './api': { continuousApi: { create, command: async () => { throw new Error('no commands expected'); } }, RoomFailure },
+    '../credentials': { saveAccess: async () => undefined },
+    '../lobby': { deviceCountryHint: () => 'DE' },
+    '../providers': { queryClient: { setQueryData: () => undefined } },
+    './account-flow': { authEpoch: { current: () => 1, isCurrent: () => true } },
+    './backoff': { ...backoff, abortableSleep: async (ms: number) => { waits.push(ms); log.push(`wait ${ms}`); o.onSleep?.(ms); } },
+    './network': { browserOffline: () => o.offline === true },
+    './invite-store': { saveInvite: async () => undefined },
+    './room-registry': { roomRegistry: { remember: async () => undefined, setNickname: async () => undefined } },
+    './retry': retry,
+    './keys': { continuousKey: (id: string) => ['proposal-room', id] },
+    './state': state,
+    './storage': {
+      readAdmission: async () => admission, writeAdmission: async (_: string, value: unknown) => { admission = value; },
+      readCommandRecovery: async () => ({ envelope: null, retryAt: 0 }), writePending: async () => undefined,
+    },
+  }, { './resend': new URL('../src/core/continuous/resend.ts', import.meta.url) });
   // A relaunch: a new CreateRoom over the same storage and server.
   return { flow: new exports.CreateRoom!(), relaunch: () => new exports.CreateRoom!(), rooms, sent, waits, log, saved: () => admission as { retryAt: number } | null };
 }

@@ -5,8 +5,8 @@ import { saveAccess } from '../credentials';
 import { deviceCountryHint } from '../lobby';
 import { queryClient } from '../providers';
 import { authEpoch } from './account-flow';
-import { abortableSleep, BACKOFF_BASE_MS, BACKOFF_JITTER, serverWait, transientFailure, unanswered } from './backoff';
-import { browserOffline } from './network';
+import { abortableSleep, unanswered } from './backoff';
+import { resendUntilAnswered, waitOutDeadline } from './resend';
 import { saveInvite } from './invite-store';
 import { roomRegistry } from './room-registry';
 import type { AdmissionRecovery } from './recovery-state';
@@ -14,67 +14,6 @@ import { retainRequest, retryDeadline } from './retry';
 import { continuousKey } from './keys';
 import { PersistentCommands, mergeRoom, type CachedRoom } from './state';
 import { readAdmission, readCommandRecovery, writeAdmission, writePending } from './storage';
-
-/**
- * Joins (Entrance): offline, or a second try that also got no answer: show it now instead of backing off
- * for half a minute. The saved request stays and goes again (same id and secret) when the device is back.
- * Creates don't stop on a slow server: resendUntilAnswered below.
- */
-export function stopWaiting(error: unknown, tries: number) {
-  return unanswered(error) && (browserOffline() || tries >= 1);
-}
-
-/** Longest wait between automatic create resends while the New room page is in front. */
-export const CREATE_RESEND_MAX_MS = 5000;
-/** A server wait (Retry-After) up to this is waited out by itself; a longer one is shown as a manual gate. */
-export const CREATE_SERVER_WAIT_MAX_MS = 60000;
-
-/** A create that may go again by itself (same command id and secret, so never a second room). */
-export function resendable(error: unknown) {
-  if (transientFailure(error)) return true;
-  // A rate limit that names its wait: wait it out, then send the same request.
-  const e = error as Error & { status?: unknown; retryable?: unknown };
-  return error instanceof Error && Number(e.status) === 429 && e.retryable === true;
-}
-
-/** 1 s, 2 s, 4 s, then 5 s between resends (minus up to 30 % jitter), never shorter than the server's wait. */
-export function resendDelay(failures: number, error: unknown, random: () => number = Math.random) {
-  const step = Math.min(CREATE_RESEND_MAX_MS, BACKOFF_BASE_MS * 2 ** Math.max(0, Math.min(failures, 8)));
-  return Math.round(Math.max(step * (1 - Math.min(1, Math.max(0, random())) * BACKOFF_JITTER), serverWait(error)));
-}
-
-/**
- * Sends the saved create until it is answered: a slow or restarting server never strands the person on
- * the Mood page. Stops (resolves false) when `signal` aborts (the page left the front, the app went to the
- * background); throws a final refusal, an offline browser (it resends on the online event) and a server
- * wait longer than CREATE_SERVER_WAIT_MAX_MS. `onTrouble` hears once when the first attempt that failed began.
- * `onServerWait` hears the absolute end of a server's wait (Retry-After) before it is waited out, so an
- * interrupted wait (background, relaunch) still holds when the create goes again.
- */
-export async function resendUntilAnswered(attempt: () => Promise<void>, o: {
-  signal: AbortSignal;
-  onTrouble?: (since: number) => void;
-  onServerWait?: (until: number) => Promise<void>;
-  sleep?: (ms: number, signal?: AbortSignal) => Promise<void>;
-  random?: () => number;
-}): Promise<boolean> {
-  const sleep = o.sleep ?? abortableSleep;
-  for (let failures = 0; ; failures++) {
-    if (o.signal.aborted) return false;
-    const began = Date.now();
-    try {
-      await attempt();
-      return true;
-    } catch (error) {
-      if (o.signal.aborted) return false;
-      if (!resendable(error) || (unanswered(error) && browserOffline()) || serverWait(error) > CREATE_SERVER_WAIT_MAX_MS) throw error;
-      if (failures === 0) o.onTrouble?.(began);
-      const delay = resendDelay(failures, error, o.random);
-      if (serverWait(error) > 0) await o.onServerWait?.(Date.now() + delay);
-      await sleep(delay, o.signal);
-    }
-  }
-}
 
 /**
  * The setup the create request carries, so the room page is one round trip: the room country
@@ -112,17 +51,6 @@ export class CreateRoom {
     return { text: saved?.mood ?? '', retryAt: saved?.retryAt ?? 0 };
   }
 
-  /**
-   * The saved server deadline: a wait up to CREATE_SERVER_WAIT_MAX_MS is waited out (it ends at once when
-   * `signal` aborts); a longer one is the person's manual gate.
-   */
-  private async cooldown(signal: AbortSignal) {
-    const left = this.retryAt - Date.now();
-    if (left <= 0) return;
-    if (left > CREATE_SERVER_WAIT_MAX_MS) throw new Error('Wait before retrying this room request.');
-    await abortableSleep(left, signal);
-  }
-
   save(text: string, options: SaveOptions): Promise<RoomSnapshot> {
     if (this.inFlight) return this.inFlight;
     this.inFlight = this.run(text, options).finally(() => { this.inFlight = null; });
@@ -136,7 +64,7 @@ export class CreateRoom {
     };
     active();
     // Created already: a command's server wait (the create's own wait is kept with its saved request below).
-    if (this.admitted) { await this.cooldown(options.signal); active(); }
+    if (this.admitted) { await waitOutDeadline(this.retryAt, options.signal, abortableSleep); active(); }
     if (!this.admitted) {
       let saved = this.request ?? await readAdmission('');
       if (saved?.code) throw new Error('Finish your saved join request before creating another room.');
@@ -152,7 +80,7 @@ export class CreateRoom {
       this.request = request;
       this.retryAt = request.retryAt;
       // A server wait saved before the app left the front or was closed: wait out what is left of it.
-      await this.cooldown(options.signal);
+      await waitOutDeadline(this.retryAt, options.signal, abortableSleep);
       try {
         await resendUntilAnswered(async () => {
           active();
@@ -173,7 +101,7 @@ export class CreateRoom {
             await writeAdmission('', request);
             this.admitted = await api.create(request.request, options.signal);
           }
-        }, { signal: options.signal, onTrouble: options.onTrouble, onServerWait: async (until) => {
+        }, { signal: options.signal, sleep: abortableSleep, onTrouble: options.onTrouble, onServerWait: async (until) => {
           request = { ...request, retryAt: until };
           this.request = request;
           this.retryAt = until;

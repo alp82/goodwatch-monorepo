@@ -1,23 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { CreateResume, createOutcome } from '../src/features/room/create-resume';
+import { ResendResume, resendOutcome } from '../src/core/continuous/resend-resume';
 import { RoomFailure } from '../src/core/continuous/api-client';
 
-// The New room page's wiring (NewRoom.tsx) around CreateResume, with React Query's mutation replaced by a
+// The New room page's wiring (NewRoom.tsx) around ResendResume, with React Query's mutation replaced by a
 // fake that keeps its timing: a save runs until answered or aborted, an abort settles only when the test
 // lets it (the real save first finishes its storage write), and settlement reaches the page after onError.
 function page() {
   const sends: string[] = [];
   const opened: boolean[] = [];
   let current: { controller: AbortController; finish: (error: unknown) => Promise<void> } | null = null;
-  const resume: CreateResume = new CreateResume({
+  const resume: ResendResume<string> = new ResendResume<string>({
     send: (text) => {
       sends.push(text);
       const controller = new AbortController();
       const run = { controller, finish: async (error: unknown) => {
         if (current === run) current = null;
         await Promise.resolve(); // async onError (draft refresh) before onSettled
-        opened.push(resume.settled(createOutcome(error)));
+        opened.push(resume.settled(resendOutcome(error)));
       } };
       current = run;
     },

@@ -3,7 +3,7 @@ import { Animated, Easing, Platform, TextInput, View, type TextStyle } from 'rea
 import { useReducedMotion } from '../../components/ui';
 import { useLayout } from '../shell/layout';
 import { warm } from '../shell/tokens';
-import { useFrameNote } from '../shell/floating-note';
+import { BusyNote } from '../shell/floating-note';
 import { GText, Icon, Press, glow, grow, native } from '../glow/theme';
 import { IDEA_LIMITS } from './model';
 import { CHAR_EM, webField } from './parts';
@@ -86,7 +86,7 @@ export function MoodComposer({ initialText = '', text: controlledText, first = f
   return (
     <Screen testID="mood-page" back={back} pill={first ? { label: 'New room', state: 'new' } : undefined} width={col} gap={0}
       footer={pinned ? create : undefined}>
-      {note ? <FloatingLine text={note} /> : null}
+      {note ? <BusyNote text={note} /> : null}
       <View style={{ gap: phone ? 30 : z(44), alignItems: 'center' }}>
         <View style={{ width: '100%', alignItems: 'center' }}>
           <View style={{ width: '100%' }}>
@@ -134,8 +134,3 @@ export function MoodComposer({ initialText = '', text: controlledText, first = f
   );
 }
 
-/** The frame's one connection line while mounted (with a spinner: the app is already trying again). */
-function FloatingLine({ text }: { text: string }) {
-  useFrameNote({ text, busy: true });
-  return null;
-}

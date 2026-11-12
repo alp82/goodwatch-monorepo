@@ -99,3 +99,29 @@ export async function voteUntilMatch(people: Person[], rounds = 15) {
   }
   return eventually(() => people[0].latest?.matches?.length ?? 0, (n) => n > 0, 'the room has a match', people[0], 15000);
 }
+
+/**
+ * Samples a page (by test id) every 50 ms from inside it (a one-frame line or error is caught): whether the
+ * "Reconnecting…" line is up and whether the page shows `error` (an error or a retry button). `stop` returns
+ * the samples.
+ */
+export async function recordPage(p: Person, testId: string, error: RegExp) {
+  await p.page.evaluate(({ testId, source, flags }) => {
+    const w = window as unknown as { __pageLog?: { t: number; note: boolean; error: boolean }[]; __pageTimer?: number };
+    const errorText = new RegExp(source, flags);
+    w.__pageLog = [];
+    const sample = () => {
+      const page = document.querySelector(`[data-testid="${testId}"]`);
+      if (!page) return;
+      const note = document.querySelector('[data-testid="room-note"]')?.textContent ?? '';
+      w.__pageLog!.push({ t: Date.now(), note: note.includes('Reconnecting'), error: errorText.test(page.textContent ?? '') });
+    };
+    sample();
+    w.__pageTimer = window.setInterval(sample, 50);
+  }, { testId, source: error.source, flags: error.flags });
+  return () => p.page.evaluate(() => {
+    const w = window as unknown as { __pageLog: { t: number; note: boolean; error: boolean }[]; __pageTimer: number };
+    window.clearInterval(w.__pageTimer);
+    return w.__pageLog;
+  });
+}

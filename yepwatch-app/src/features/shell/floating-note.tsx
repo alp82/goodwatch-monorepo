@@ -51,6 +51,12 @@ export function useFrameNote(note: FrameNote | null) {
   return Boolean(slot);
 }
 
+/** The frame's one connection line while mounted, with a spinner (the app is already trying again). */
+export function BusyNote({ text }: { text: string }) {
+  useFrameNote({ text, busy: true });
+  return null;
+}
+
 /** One quiet line: spinner, words, its action, Dismiss. */
 export function NoteLine({ note, onDismiss }: { note: FrameNote; onDismiss?: () => void }) {
   const { text, action, busy } = note;
