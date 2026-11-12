@@ -88,16 +88,16 @@ Triggers:
 
 ### Room capacity
 
-Production allows `YEPWATCH_PROPOSAL_MAX_ACTIVE_ROOMS` = 20 active rooms. Each room reserves its slot for
-its whole 6 h life (`proposal-release-control.ts`). Archiving or leaving does not free the slot. So every
-smoke run occupies 1 of the 20 slots for 6 hours: with the schedule, deploys and OTAs, that is typically 2 to
-5 slots.
+There is no shared cap on active rooms (removed 2026-11-12). Each person, an account or a guest
+installation/browser, may have 10 rooms they created active at a time (`YEPWATCH_PROPOSAL_ROOMS_PER_PERSON`,
+`proposal-creation-quota.ts`); a room holds its creator's slot for its whole 6 h life, and archiving or
+leaving does not free it. The smoke host is a fresh guest browser, so each run uses its own allowance and
+never competes with real users. The shared limit left is the rate window: 20 room creations or joins a
+minute across all users.
 
 No code in the repository computes room statistics. The release control counts reservations, and
 `operator.mjs inventory` counts all rows. If you count rooms elsewhere, exclude names starting with `e2e smoke `.
 
-Owner decision: either free a room's reservation when its last participant leaves or archives it (a server
-change that also helps real users), or raise the cap by the smoke's worst case.
 
 ### Running it
 

@@ -41,8 +41,8 @@ production Caddy route table, the invite link-card renderer. Substitutes (all lo
   code (`createContinuousCatalog`, `proposalCatalog`, idea interleaving) instead of the GoodWatch title
   snapshot + catalog SQL; posters are local SVGs; no scores enrichment, trailers or backdrops.
 - GoodWatch issuer, member resource and search role: `stack/fakes.mjs`, reached over real HTTP.
-- release limits at the storage schema maxima (100 active rooms, 120 admissions and 2400 commands a
-  minute; production runs 20/20/600); the full tier resets the store between phases to stay under 100.
+- release limits at the storage schema maxima (120 admissions and 2400 commands a minute; production runs
+  20/600); neither has a shared cap on active rooms. The full tier resets the store between phases.
 - gateway connection caps raised (`stack/gateway-entry.ts`): every browser arrives from 127.0.0.1.
 
 Safety: every server starts from an empty environment plus an allowlist; endpoints must be loopback and

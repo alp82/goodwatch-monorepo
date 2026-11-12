@@ -1,6 +1,6 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { randomBytes } from "node:crypto"
+import { createHash, randomBytes } from "node:crypto"
 import {
 	ReleaseControl,
 	CONTROL_COLUMNS,
@@ -15,6 +15,7 @@ import {
 import { CONTINUOUS_LIMITS } from "./continuous-types.ts"
 import { ProposalService } from "./proposal-service.server.ts"
 import {
+	MemoryCreationQuotas,
 	ProposalMemoryRepository,
 	proposalFixtureCatalog,
 } from "./proposal-test-support.ts"
@@ -33,6 +34,10 @@ const who = (a: Awaited<ReturnType<ProposalService["create"]>>) => ({
 	participantId: a.credential.participantId,
 	token: a.credential.token,
 })
+/** A control over `db` with in-memory personal allowances on the same clock. */
+function guarded(db: ReturnType<typeof database>, policy = DEFAULT_CONTROL, quotas = new MemoryCreationQuotas(db.now)) {
+	return new ReleaseControl(db.sql, policy, quotas)
+}
 function database(policy = DEFAULT_CONTROL) {
 	let state = {
 			format: 1,
@@ -99,6 +104,9 @@ function database(policy = DEFAULT_CONTROL) {
 			now += ms
 		},
 		state: () => structuredClone(state),
+		setFingerprint: (fingerprint: string) => {
+			state = { ...state, fingerprint }
+		},
 		loseAndHideProof: () => {
 			lost = true
 			failAfterUpdate = true
@@ -114,56 +122,63 @@ function database(policy = DEFAULT_CONTROL) {
 		},
 	}
 }
-test("Global reservation cap across independent instances; repeated denial has no writes, identity changes conflict, restart preserves original expiry", async () => {
-	const policy = { ...DEFAULT_CONTROL, rooms: 2 },
+test("No shared room cap: 25 creators across independent instances; identity changes conflict, restart preserves original expiry", async () => {
+	const policy = { ...DEFAULT_CONTROL, admissions: 120 },
 		db = database(policy),
-		a = new ReleaseControl(db.sql, policy),
-		b = new ReleaseControl(db.sql, policy)
-	const expiry = await a.create("room-a", "digest-a")
-	await b.create("room-b", "digest-b")
-	const before = db.state()
-	for (let i = 0; i < 4; i++)
-		await assert.rejects(
-			b.create("room-c", "digest-c"),
-			(e: BudgetError) => e.status === 503 && e.retryAfterSeconds > 0
-		)
-	assert.deepEqual(db.state(), before)
-	await assert.rejects(a.create("room-a", "changed"), /retry changed/)
+		quotas = new MemoryCreationQuotas(db.now),
+		a = guarded(db, policy, quotas),
+		b = guarded(db, policy, quotas)
+	const expiry = await a.create("room-0", "digest-0", "person-0")
+	for (let i = 1; i < 25; i++) await (i % 2 ? b : a).create(`room-${i}`, `digest-${i}`, `person-${i}`)
+	assert.equal(await quotas.count(), 25)
+	assert.equal(db.state().rooms.length, 0, "the control row keeps no room reservations")
+	await assert.rejects(a.create("room-0", "changed", "person-0"), /retry changed/)
 	db.advance(60_000)
-	assert.equal(
-		await new ReleaseControl(db.sql, policy).create("room-a", "digest-a"),
-		expiry
-	)
+	assert.equal(await guarded(db, policy, quotas).create("room-0", "digest-0", "person-0"), expiry)
 	db.advance(CONTINUOUS_LIMITS.roomMs)
 	await assert.rejects(
-		a.active({ id: "room-a", expiresAt: expiry }),
+		a.active({ id: "room-0", expiresAt: expiry }),
 		(e: RoomError) => e.status === 410
 	)
-	await b.create("room-c", "digest-c")
-	assert.equal(db.state().rooms.length, 1)
 })
-test("Concurrent capacity grants and original window fencing use CAS, never process-local counters", async () => {
-	const policy = { ...DEFAULT_CONTROL, rooms: 3 },
-		db = database(policy)
+test("Concurrent creations land and original window fencing uses CAS, never process-local counters", async () => {
+	const policy = { ...DEFAULT_CONTROL, admissions: 120 },
+		db = database(policy),
+		quotas = new MemoryCreationQuotas(db.now)
+	// Each permit retries a lost compare-and-swap up to 8 times, so 8 simultaneous writers all land.
 	const outcomes = await Promise.allSettled(
-		Array.from({ length: 10 }, (_, i) =>
-			new ReleaseControl(db.sql, policy).create(`room-${i}`, `digest-${i}`)
+		Array.from({ length: 8 }, (_, i) =>
+			guarded(db, policy, quotas).create(`room-${i}`, `digest-${i}`, `person-${i}`)
 		)
 	)
-	assert.equal(outcomes.filter((x) => x.status === "fulfilled").length, 3)
-	assert.equal(db.state().rooms.length, 3)
+	assert.equal(outcomes.filter((x) => x.status === "fulfilled").length, 8)
+	assert.equal(db.state().admissions.length, 8)
+	assert.equal(await quotas.count(), 8)
 	const db2 = database()
 	db2.delayNextCas()
-	await new ReleaseControl(db2.sql, DEFAULT_CONTROL).create("late", "d")
+	await guarded(db2).create("late", "d", "person")
 	assert.equal(db2.state().window, Math.floor(db2.now() / 60_000))
 	assert.equal(db2.state().admissions.length, 1)
 })
+test("A control row provisioned under any old shared room cap still validates; changed budgets are refused", async () => {
+	const db = database()
+	await guarded(db).check()
+	// The stored format: [format, window, room lifetime, shared room cap, admissions, commands, actor commands].
+	const p = DEFAULT_CONTROL
+	for (const cap of [3, 20, 100]) {
+		db.setFingerprint(createHash("sha256").update(JSON.stringify([1, 60_000, CONTINUOUS_LIMITS.roomMs, cap, p.admissions, p.commands, p.actorCommands])).digest("hex"))
+		await guarded(db).check()
+		if (cap === 20) assert.equal(db.state().fingerprint, controlFingerprint(p), "new rows record the old default")
+	}
+	await assert.rejects(guarded(db, { ...DEFAULT_CONTROL, admissions: 21 }).check(), /configuration mismatch/)
+})
 test("Global admission/command and per-actor budgets remain bounded; exact permits recover lost acknowledgement and windows reset on SQL time", async () => {
-	const policy = { rooms: 5, admissions: 2, commands: 3, actorCommands: 2 },
+	const policy = { admissions: 2, commands: 3, actorCommands: 2 },
 		db = database(policy),
-		control = new ReleaseControl(db.sql, policy)
+		quotas = new MemoryCreationQuotas(db.now),
+		control = guarded(db, policy, quotas)
 	db.lose()
-	const expiry = await control.create("r", "d")
+	const expiry = await control.create("r", "d", "person")
 	await control.join("r", "a", "join-a")
 	await control.join("r", "a", "join-a")
 	await assert.rejects(
@@ -187,20 +202,20 @@ test("Global admission/command and per-actor budgets remain bounded; exact permi
 		)
 	assert.deepEqual(db.state(), before)
 	db.advance(60_000)
-	await new ReleaseControl(db.sql, policy).command("r", "a", "cmd-d")
+	await guarded(db, policy, quotas).command("r", "a", "cmd-d")
 	assert.equal(db.state().commands.length, 1)
-	assert.equal(db.state().rooms[0][2], expiry)
+	assert.equal(quotas.rooms.get("r")?.expiresAt, expiry)
 	await assert.rejects(
-		new ReleaseControl(db.sql, { ...policy, rooms: 6 }).check(),
+		guarded(db, { ...policy, commands: 4 }, quotas).check(),
 		/configuration mismatch/
 	)
 	db.advance(-120_000)
 	await assert.rejects(control.command("r", "a", "other"), /clock window/)
 })
 test("Service guard charges only authenticated valid new commands; retained receipts and exact lost-ack admission replay work at exhausted budgets", async () => {
-	const policy = { rooms: 1, admissions: 1, commands: 2, actorCommands: 2 },
+	const policy = { admissions: 1, commands: 2, actorCommands: 2 },
 		db = database(policy),
-		guard = new ReleaseControl(db.sql, policy),
+		guard = guarded(db, policy),
 		repo = new ProposalMemoryRepository()
 	const service = new ProposalService(
 		repo,
@@ -279,38 +294,41 @@ test("Service guard charges only authenticated valid new commands; retained rece
 	await service.command(id, who(a), first)
 	assert.equal((await service.read(id, who(a))).shared.revision, revision)
 })
-test("Capacity HTTP response is explicitly retryable and Retry-After is present; repeated denied admissions cannot grow bookkeeping", async () => {
-	const policy = { ...DEFAULT_CONTROL, rooms: 1 },
-		db = database(policy),
+test("Creating more rooms than the removed shared cap (25 over HTTP) succeeds; only the admission rate window paces them", async () => {
+	const db = database(),
+		repo = new ProposalMemoryRepository(),
+		quotas = new MemoryCreationQuotas(db.now),
 		service = new ProposalService(
-			new ProposalMemoryRepository(),
+			repo,
 			proposalFixtureCatalog,
 			secret,
 			async () => {},
 			db.now,
-			new ReleaseControl(db.sql, policy)
+			guarded(db, DEFAULT_CONTROL, quotas)
 		)
-	await service.create(admission())
 	const handler = createProposalHandler(service, {
 		serviceSecret: secret,
 		allowedOrigins: ["https://yepwatch.com"],
 	})
-	const before = db.state()
-	const response = await handler(
-		new Request("http://api" + paths.rooms, {
-			method: "POST",
-			headers: {
-				"content-type": "application/json",
-				origin: "https://yepwatch.com",
-				"x-yepwatch-client": "native",
-			},
-			body: JSON.stringify(admission()),
-		})
-	)
-	assert.equal(response.status, 503)
-	assert.ok(Number(response.headers.get("retry-after")) > 0)
-	assert.equal((await response.json()).error.retryable, true)
-	assert.deepEqual(db.state(), before)
+	for (let i = 0; i < 25; i++) {
+		// The admission budget (20 a minute) is a separate abuse control: the 21st creation waits for the next window.
+		if (i === DEFAULT_CONTROL.admissions) db.advance(60_000)
+		const response = await handler(
+			new Request("http://api" + paths.rooms, {
+				method: "POST",
+				headers: {
+					"content-type": "application/json",
+					origin: "https://yepwatch.com",
+					"x-yepwatch-client": "native",
+				},
+				body: JSON.stringify(admission()),
+			})
+		)
+		assert.equal(response.status, 200, `room ${i + 1}`)
+	}
+	assert.equal(repo.rows.size, 25)
+	assert.equal(await quotas.count(), 25)
+	assert.equal(db.state().rooms.length, 0)
 })
 test("Missing control record cannot be initialized over room history and configuration changes are never implicit", async () => {
 	let inserts = 0
@@ -325,11 +343,11 @@ test("Missing control record cannot be initialized over room history and configu
 	assert.equal(inserts, 0)
 })
 
-test("Uncertain capacity acknowledgement never reaches room insertion without authoritative permit proof; original expiry is recovered", async () => {
-	const db = database({ ...DEFAULT_CONTROL, rooms: 1 }),
-		policy = { ...DEFAULT_CONTROL, rooms: 1 },
+test("Uncertain admission acknowledgement never reaches room insertion without authoritative permit proof; original expiry is recovered", async () => {
+	const db = database(),
 		repo = new ProposalMemoryRepository(),
-		guard = new ReleaseControl(db.sql, policy)
+		quotas = new MemoryCreationQuotas(db.now),
+		guard = guarded(db, DEFAULT_CONTROL, quotas)
 	const service = new ProposalService(
 		repo,
 		proposalFixtureCatalog,
@@ -342,21 +360,21 @@ test("Uncertain capacity acknowledgement never reaches room insertion without au
 	db.loseAndHideProof()
 	await assert.rejects(service.create(input), /Read unavailable/)
 	assert.equal(repo.rows.size, 0)
-	const originalExpiry = db.state().rooms[0][2]
-	db.advance(120000)
-	await assert.rejects(
-		service.create(admission()),
-		(e: RoomError) => e.status === 503
-	)
+	assert.equal(await quotas.count(), 0, "no reservation before the admission is proven")
+	assert.equal(db.state().admissions.length, 1)
 	const recovered = await service.create(input)
-	assert.equal(recovered.credential.expiresAt, originalExpiry)
+	assert.equal(db.state().admissions.length, 1, "the exact retry finds its grant")
+	assert.equal(recovered.credential.expiresAt, [...quotas.rooms.values()][0].expiresAt)
 	assert.equal(repo.rows.size, 1)
+	// A retry after the room exists returns the room's original expiry.
+	db.advance(120000)
+	assert.equal((await service.create(input)).credential.expiresAt, recovered.credential.expiresAt)
 })
 test("Denied valid Start performs zero catalog work; expired receipt eviction cannot repeat a domain effect after budget-window eviction", async () => {
 	const policy = { ...DEFAULT_CONTROL, commands: 120, actorCommands: 120 },
 		db = database(policy),
 		repo = new ProposalMemoryRepository(),
-		guard = new ReleaseControl(db.sql, policy)
+		guard = guarded(db, policy)
 	let scans = 0
 	const service = new ProposalService(
 		repo,
@@ -424,17 +442,18 @@ test("Denied valid Start performs zero catalog work; expired receipt eviction ca
 	assert.equal(scans, 0)
 })
 
-test("Admission rate denial returns429 Retry-After before room creation, independent of room capacity", async () => {
-	const policy = { ...DEFAULT_CONTROL, rooms: 2, admissions: 1 },
+test("Admission rate denial returns429 Retry-After before room creation and writes no allowance rows", async () => {
+	const policy = { ...DEFAULT_CONTROL, admissions: 1 },
 		db = database(policy),
-		repo = new ProposalMemoryRepository()
+		repo = new ProposalMemoryRepository(),
+		quotas = new MemoryCreationQuotas(db.now)
 	const service = new ProposalService(
 		repo,
 		proposalFixtureCatalog,
 		secret,
 		async () => {},
 		db.now,
-		new ReleaseControl(db.sql, policy)
+		guarded(db, policy, quotas)
 	)
 	await service.create(admission())
 	const handler = createProposalHandler(service, {
@@ -456,7 +475,7 @@ test("Admission rate denial returns429 Retry-After before room creation, indepen
 		assert.ok(Number(response.headers.get("retry-after")) > 0)
 	}
 	assert.equal(repo.rows.size, 1)
-	assert.equal(db.state().rooms.length, 1)
+	assert.equal(await quotas.count(), 1)
 	assert.equal(db.state().admissions.length, 1)
 })
 test("with creation quotas, a check reads the room's quota proof alongside the control row and keeps its outcome", async () => {

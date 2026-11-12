@@ -9,42 +9,52 @@ import { RoomError, IndeterminateWrite } from "./errors.ts"
 import type { Sql } from "./repository.server.ts"
 import { CONTINUOUS_LIMITS } from "./continuous-types.ts"
 import type { ProposalRoom } from "./proposal-types.ts"
-import type { CreationQuotaStore } from './proposal-creation-quota.ts'
+import { SqlCreationQuotas, type CreationQuotaStore } from './proposal-creation-quota.ts'
 export const CONTROL_TABLE = "doc.yepwatch_control"
 const ID = "proposal3",
 	WINDOW_MS = 60_000
 export interface ControlPolicy {
-	rooms: number
 	roomsPerPerson?: number
 	admissions: number
 	commands: number
 	actorCommands: number
 }
 export const DEFAULT_CONTROL: ControlPolicy = {
-	rooms: 20,
 	admissions: 20,
 	commands: 600,
 	actorCommands: 60,
 }
 const digest = (s: string) => createHash("sha256").update(s).digest("hex")
-export function controlFingerprint(p: ControlPolicy) {
+/**
+ * The removed shared active-room cap (owner 2026-11-12) is still part of the stored fingerprint: rows provisioned
+ * with it keep validating without an operator reconciliation. New rows record 20, its old default.
+ */
+const LEGACY_ROOM_CAP = 20
+function fingerprint(p: ControlPolicy, legacyRoomCap: number) {
 	return digest(
 		JSON.stringify([
 			1,
 			WINDOW_MS,
 			CONTINUOUS_LIMITS.roomMs,
-			p.rooms,
+			legacyRoomCap,
 			p.admissions,
 			p.commands,
 			p.actorCommands,
 		])
 	)
 }
+export function controlFingerprint(p: ControlPolicy) {
+	return fingerprint(p, LEGACY_ROOM_CAP)
+}
+/** Every fingerprint a row may carry for this policy: the old cap was configurable from 1 to 100. */
+function acceptedFingerprints(p: ControlPolicy) {
+	return new Set(Array.from({ length: 100 }, (_, i) => fingerprint(p, i + 1)))
+}
 export interface Control {
 	format: 1
 	fingerprint: string
 	window: number
-	/** Room ID, complete original admission digest, fixed expiry. No choices/credentials. */
+	/** Reservations of the removed shared room cap. Nothing adds any; kept because the row schema has the column. */
 	rooms: [string, string, number][]
 	admissions: string[]
 	/** Logical command digest, hashed authenticated actor identity. */
@@ -146,16 +156,18 @@ export async function provisionControl(
 			CONTROL_COLUMNS.map((k) => row[k])
 		)
 	}
-	await new ReleaseControl(sql, policy).check()
+	await new ReleaseControl(sql, policy, new SqlCreationQuotas(sql, policy.roomsPerPerson)).check()
 }
 export class ReleaseControl {
 	private sql: Sql
-	private readonly quotas?: CreationQuotaStore
+	private readonly quotas: CreationQuotaStore
+	private readonly fingerprints: Set<string>
 	readonly policy: ControlPolicy
-	constructor(sql: Sql, policy: ControlPolicy, quotas?: CreationQuotaStore) {
+	constructor(sql: Sql, policy: ControlPolicy, quotas: CreationQuotaStore) {
 		this.sql = sql
 		this.policy = policy
 		this.quotas = quotas
+		this.fingerprints = acceptedFingerprints(policy)
 	}
 	private async read(): Promise<Read> {
 		const row = (
@@ -182,7 +194,7 @@ export class ReleaseControl {
 		)
 		if (
 			state.format !== 1 ||
-			state.fingerprint !== controlFingerprint(this.policy)
+			!this.fingerprints.has(state.fingerprint)
 		)
 			throw new RoomError(
 				"busy",
@@ -192,7 +204,6 @@ export class ReleaseControl {
 			)
 		if (
 			!Array.isArray(state.rooms) ||
-			state.rooms.length > this.policy.rooms ||
 			!Array.isArray(state.commands) ||
 			state.commands.length > this.policy.commands ||
 			!Array.isArray(state.admissions) ||
@@ -215,9 +226,8 @@ export class ReleaseControl {
 	async summary() {
 		const r = await this.read()
 		return {
-			activeReservations: r.state.rooms.filter((x) => x[2] > r.now).length + (await this.quotas?.count() ?? 0),
-			maximumRooms: this.quotas ? null : this.policy.rooms,
-			roomsPerPerson: this.quotas?.limit ?? null,
+			activeReservations: await this.quotas.count(),
+			roomsPerPerson: this.quotas.limit,
 			window: r.state.window,
 			admissionGrants: r.state.admissions.length,
 			commandGrants: r.state.commands.length,
@@ -227,16 +237,16 @@ export class ReleaseControl {
 	/**
 	 * A room's creation-quota proof, read alongside the control row: it doesn't depend on it, and every command and
 	 * realtime read checks both, so reading them one after the other cost a round trip each time. The outcome is
-	 * held, not thrown, until the control row says it's needed.
+	 * held, not thrown, until the control row has been read.
 	 */
 	private quotaProof(roomId: string, expiresAt?: number) {
-		return this.quotas?.active(roomId, expiresAt).then(
+		return this.quotas.active(roomId, expiresAt).then(
 			() => null,
 			(error: unknown) => ({ error })
 		)
 	}
 	/**
-	 * Whether the room is live and holds its capacity (a reservation in the control row, or its creation quota).
+	 * Whether the room is live and holds its creator's allowance reservation.
 	 * Returns what it read: a command for this room passes it to `command`, whose permit then starts from it.
 	 */
 	async active(room: Pick<ProposalRoom, "id" | "expiresAt">): Promise<unknown> {
@@ -244,17 +254,8 @@ export class ReleaseControl {
 		const r = await this.read()
 		if (r.now >= room.expiresAt)
 			throw new RoomError("expired", "Room expired", 410)
-		if (!r.state.rooms.some((x) => x[0] === room.id && x[2] === room.expiresAt)) {
-			if (!quota)
-				throw new RoomError(
-					"busy",
-					"Room capacity reservation unavailable",
-					503,
-					true
-				)
-			const failed = await quota
-			if (failed) throw failed.error
-		}
+		const failed = await quota
+		if (failed) throw failed.error
 		const check: Check = { ...r, roomId: room.id }
 		checks.add(check)
 		return check
@@ -305,55 +306,13 @@ export class ReleaseControl {
 			throw e
 		}
 	}
-	async create(roomId: string, admissionDigest: string, creatorDigest?: string) {
-		if (this.quotas && creatorDigest) {
-			const expiry = await this.quotas.reserve(roomId, admissionDigest, creatorDigest)
-			await this.permit('create', roomId, creatorDigest, admissionDigest)
-			return expiry
-		}
-		const op = digest(`create:${roomId}:${admissionDigest}`)
-		for (let i = 0; i < 8; i++) {
-			const r = await this.read(),
-				state = this.clean(r),
-				prior = state.rooms.find((x) => x[0] === roomId)
-			if (prior) {
-				if (prior[1] !== admissionDigest)
-					throw new RoomError("conflict", "Admission retry changed")
-				return prior[2]
-			}
-			if (state.rooms.length >= this.policy.rooms)
-				throw new BudgetError(
-					"Active room capacity reached; retry after an existing room expires",
-					(Math.min(...state.rooms.map((x) => x[2])) - r.now) / 1000,
-					503
-				)
-			this.admissionBudget(state, r.now)
-			const expiry = r.now + CONTINUOUS_LIMITS.roomMs
-			state.rooms.push([roomId, admissionDigest, expiry])
-			state.admissions.push(op)
-			const updateStarted = Date.now()
-			const written = await this.update(r, state)
-			if (!written) continue
-			// RETURNING carries the statement's start time: an UPDATE acknowledged after the window rolled over
-			// could confirm against the old window, so read back whenever the statement may have crossed it.
-			const elapsed = Date.now() - updateStarted
-			const proof =
-				written === UNCERTAIN || Math.floor((written.now + elapsed) / WINDOW_MS) !== state.window
-					? await this.read()
-					: written
-			if (
-				proof.now < expiry &&
-				proof.state.rooms.some(
-					(x) => x[0] === roomId && x[1] === admissionDigest && x[2] === expiry
-				)
-			)
-				return expiry
-		}
-		throw new BudgetError(
-			"Capacity outcome uncertain; retain the exact admission for retry",
-			1,
-			503
-		)
+	/**
+	 * Charges the shared admission budget, then reserves the room in its creator's allowance. A denied admission
+	 * writes no allowance rows; an exact retry finds its grant and its reservation again.
+	 */
+	async create(roomId: string, admissionDigest: string, creatorDigest: string) {
+		await this.permit("create", roomId, creatorDigest, admissionDigest)
+		return this.quotas.reserve(roomId, admissionDigest, creatorDigest)
 	}
 	private admissionBudget(state: Control, now: number) {
 		if (state.admissions.length >= this.policy.admissions)
@@ -388,15 +347,12 @@ export class ReleaseControl {
 		for (let i = 0; i < 8; i++) {
 			const fresh = reuse
 			reuse = null
-			const quota = fresh ? undefined : this.quotaProof(roomId)
+			// A room being created has no reservation yet; every other permit proves the room's.
+			const quota = fresh || kind === "create" ? undefined : this.quotaProof(roomId)
 			const r = fresh ?? (await this.read()),
 				state = this.clean(r)
-			if (!fresh && !state.rooms.some((x) => x[0] === roomId)) {
-				if (quota) {
-					const failed = await quota
-					if (failed) throw failed.error
-				} else throw new RoomError("expired", "Room capacity reservation expired", 410)
-			}
+			const failed = await quota
+			if (failed) throw failed.error
 			const admitted =
 				kind !== "command"
 					? state.admissions.includes(op)

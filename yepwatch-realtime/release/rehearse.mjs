@@ -34,7 +34,7 @@ assert(/^yepwatch-preview-r[1-9][0-9]*\.apk$/.test(apkName ?? ''), 'Explicit ver
 const rateCompatibility = args.get('--rate-compatibility') === '1'
 assert(!args.has('--rate-compatibility') || rateCompatibility, 'Use --rate-compatibility 1 only for a separate disposable phase')
 const controls = {
-  YEPWATCH_PROPOSAL_MAX_ACTIVE_ROOMS: '20', YEPWATCH_PROPOSAL_ADMISSIONS_PER_MINUTE: '20',
+  YEPWATCH_PROPOSAL_ADMISSIONS_PER_MINUTE: '20',
   YEPWATCH_PROPOSAL_COMMANDS_PER_MINUTE: '600', YEPWATCH_PROPOSAL_ACTOR_COMMANDS_PER_MINUTE: rateCompatibility ? '1' : '60',
 }
 const metadata = {

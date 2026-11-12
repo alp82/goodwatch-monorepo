@@ -47,10 +47,10 @@ loopback(need("YEPWATCH_SEARCH_URL"))
 const valkeyPort = Number(need("E2E_VALKEY_PORT"))
 const secret = need("E2E_ROOM_SECRET")
 const keyId = need("E2E_KEY_ID")
-// Production runs 20/20/600/60. The harness uses the storage schema's maxima (100 active rooms, 120
-// admissions and 2400 commands a minute): a release-policy knob, raised so parallel suites aren't throttled.
-// e2e/run.mjs resets the store between phases so a tier never holds more than 100 rooms.
-const control = { rooms: 100, admissions: 120, commands: 2400, actorCommands: 120 }
+// Production runs 20/600/60 (admissions, commands, actor commands a minute) and 10 rooms per person, with no
+// shared cap on active rooms. The harness uses the storage schema's maxima (120 admissions and 2400 commands a
+// minute): a release-policy knob, raised so parallel suites aren't throttled.
+const control = { admissions: 120, commands: 2400, actorCommands: 120 }
 const sql = crateSql(crateOrigin, "crate", "")
 
 async function provision() {

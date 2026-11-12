@@ -1,6 +1,8 @@
 # YepWatch personal room creation allowance
 
-Owner-approved 2026-11-11: replace the shared 20-room capacity with 10 rooms created at a time per person. Joining other people's rooms does not consume this allowance.
+Owner-approved 2026-11-11: replace the shared 20-room capacity with 10 rooms created at a time per person.
+
+Update 2026-11-12 (owner): the shared cap is removed entirely, including the legacy admission path without a creator. Every room reserves its creator's allowance; a caller with no creator identity gets an allowance of its own. The control row keeps its fingerprint (any former cap value 1-100 still validates) and its now-unwritten room reservation column. The shared per-minute admission budget is charged before the allowance, so a denied admission writes no allowance rows. Joining other people's rooms does not consume this allowance.
 
 Creation attribution is separate from current hosting. An account uses one allowance across devices and login sessions. A guest uses a random installation identifier in protected native storage, or an HttpOnly browser cookie. Signing in uses the verified account identifier; a request cannot choose someone else's account. Guest identifiers are not authentication grants. Different guest installations or clearing browser storage create different guest allowances; no IP fingerprint is used. Previously created guest rooms are not retroactively assigned to a newly signed-in account.
 

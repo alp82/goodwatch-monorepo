@@ -115,7 +115,7 @@ YEPWATCH_PROPOSAL_PUBLIC_ORIGIN=https://yepwatch.com
 YEPWATCH_PROPOSAL_CRATEDB_ORIGIN=PRIVATE_ROOM_CRATE_HTTP_ORIGIN
 YEPWATCH_PROPOSAL_CRATEDB_USERNAME=ROOM_ONLY_RUNTIME_ROLE
 YEPWATCH_PROPOSAL_KEY_ID=STABLE_OWNER_SELECTED_KEY_ID
-YEPWATCH_PROPOSAL_MAX_ACTIVE_ROOMS=20
+YEPWATCH_PROPOSAL_ROOMS_PER_PERSON=10
 YEPWATCH_PROPOSAL_ADMISSIONS_PER_MINUTE=20
 YEPWATCH_PROPOSAL_COMMANDS_PER_MINUTE=600
 YEPWATCH_PROPOSAL_ACTOR_COMMANDS_PER_MINUTE=60
@@ -255,7 +255,7 @@ these packaging and ordinary functional checks.
 | Capability | Current scope and acceptance needed |
 | --- | --- |
 | Room state and transport | Durable Crate/API state, ticket/lease authorization, bounded sockets and repair are implemented; r3 and checked R4 connected release proofs passed, plus real R4 rate/cooldown/manual-retry compatibility. |
-| Admission and commands | Checked R4 `e96519f5` adds SQL-clock durable global active-room reservations and logical admission/command/actor grants. Defaults20 rooms,20 admissions/minute,600 commands/minute,60 actor commands/minute. These are not comprehensive raw HTTP/read/metadata/IP protection; exact retries can bypass new logical-operation charges. No unrestricted public-service abuse/capacity claim follows. |
+| Admission and commands | Checked R4 `e96519f5` added SQL-clock durable global active-room reservations (replaced by 10 rooms per person on 2026-11-11; the shared room cap was removed on 2026-11-12) and logical admission/command/actor grants. Defaults 20 admissions/minute,600 commands/minute,60 actor commands/minute. These are not comprehensive raw HTTP/read/metadata/IP protection; exact retries can bypass new logical-operation charges. No unrestricted public-service abuse/capacity claim follows. |
 | Expiry and physical cleanup | Logical room expiry does not physically delete encrypted records. Automated physical cleanup is unfinished; owner needs an explicit retention, storage monitoring and cleanup plan before sustained use. No automatic purge is enabled here. |
 | Keys | Stable-key compatibility and restart/rollback are supported. Full key rotation/re-encryption is unfinished. Owner must retain the current key securely and accept that ordinary rollback cannot rotate it; compromise recovery requires a separate plan. |
 | Service access | Apex/API/APK are public if this router is activated. A service-wide invite-only access boundary is not implemented. Root must choose whether to add one or explicitly accept a publicly reachable supervised trial. |

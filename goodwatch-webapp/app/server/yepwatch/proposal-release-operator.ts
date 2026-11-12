@@ -14,6 +14,8 @@ import {
 	revokedSessionTable,
 	deletionTable,
 	storageTables,
+	creationQuotaTable,
+	creationReservationTable,
 } from "./proposal-storage-schema.ts"
 import {
 	provisionControl,
@@ -188,7 +190,8 @@ if (command === 'provision-creation-quota') {
 			globallyConsistentOnlyWithWritersStopped: true,
 		})
 		const definitions = [
-			...[accountIndexTable, accountHistoryTable, revokedSessionTable, deletionTable].map(t => ({ name: t.name, primary: t.primary, names: columns(t) })),
+			// Every room proves its creator's allowance reservation: a restore without them leaves rooms unusable.
+			...[accountIndexTable, accountHistoryTable, revokedSessionTable, deletionTable, creationQuotaTable, creationReservationTable].map(t => ({ name: t.name, primary: t.primary, names: columns(t) })),
 			...Object.values(tables)
 				.filter((t) => t.name !== RELEASE_TABLE)
 				.map((t) => ({ name: t.name, primary: t.primary, names: columns(t) })),
