@@ -73,8 +73,8 @@ export async function waitOutDeadline(retryAt: number, signal: AbortSignal, slee
  * the front, the app went to the background); throws a final refusal (also one that came as it aborted), an offline browser (the page resends
  * on the online event) and a server wait longer than SERVER_WAIT_MAX_MS. `onTrouble` hears once when the
  * first attempt that failed began. `onServerWait` hears the absolute end of a server's wait (Retry-After)
- * before it is waited out, so an interrupted wait (background, relaunch) still holds when the request goes
- * again.
+ * before it is waited out, and also when the answer lands as `signal` aborts, so an interrupted wait
+ * (background, relaunch) still holds when the request goes again.
  */
 export async function resendUntilAnswered(attempt: () => Promise<void>, o: {
   signal: AbortSignal;
@@ -95,7 +95,11 @@ export async function resendUntilAnswered(attempt: () => Promise<void>, o: {
       // being processed (a renewed session being stored, then the app left the front): it never becomes a
       // cancellation that the next send in front repeats.
       if (definitiveRefusal(error)) throw error;
-      if (o.signal.aborted) return false;
+      if (o.signal.aborted) {
+        // A server wait that landed as the app left the front holds when it is back (a relaunch too).
+        if (serverWait(error) > 0) await o.onServerWait?.(Date.now() + serverWait(error));
+        return false;
+      }
       if (!resendable(error) || (unanswered(error) && browserOffline()) || serverWait(error) > SERVER_WAIT_MAX_MS) throw error;
       if (failures === 0) o.onTrouble?.(began);
       const delay = resendDelay(failures, error, o.random);

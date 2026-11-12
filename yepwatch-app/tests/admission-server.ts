@@ -40,7 +40,7 @@ export function admissionServer(script: (seen: Seen, n: number) => Reply | Promi
     const answer = await script(entry, seen.filter((s) => s.path === path).length);
     if (init?.signal?.aborted) throw Object.assign(new Error('Aborted'), { name: 'AbortError' });
     if (typeof answer === 'object')
-      return reply(answer.status, { error: { code: answer.code, message: answer.message ?? answer.code, retryable: answer.retryable === true } });
+      return reply(answer.status, { error: { code: answer.code, message: answer.message ?? answer.code, retryable: answer.retryable === true } }, { retryAfter: answer.retryAfter });
     let result: unknown;
     if (path === paths.rooms) {
       const key = `${body.commandId}:${body.admissionSecret}`;

@@ -227,6 +227,29 @@ test('real create: an answer still being processed when the app goes to the back
   assert.equal(server.rooms.size, 1);
 });
 
+test('real create: a 503 with Retry-After: 60 whose session is still being stored when the app goes to the background keeps its wait', async () => {
+  let storing: Deferred<void> | null = null;
+  const server = admissionServer((_s, n) => (n === 1 ? { status: 503, code: 'busy', retryable: true, retryAfter: 60 } : 'ok'), {
+    store: () => { if (storing) return Promise.resolve(); storing = deferred<void>(); return storing.promise; },
+  });
+  const p = realPage(server);
+  const before = Date.now();
+  p.resume.pick('heist');
+  await flush();
+  assert.ok(storing, 'the busy answer arrived and its session is being stored');
+  p.resume.appState('background');
+  (storing as Deferred<void> | null)!.resolve();
+  await flush();
+  assert.equal(p.result().error?.name, 'AbortError', 'a pause');
+  const saved = p.saved() as { retryAt: number } | null;
+  assert.ok(saved && saved.retryAt >= before + 60000, `the server's deadline is saved (${(saved?.retryAt ?? 0) - before} ms)`);
+  p.resume.appState('active');
+  await flush();
+  assert.ok(p.waits[0] >= 59000, `back in front it waits out the rest first (${p.waits.join(', ')})`);
+  assert.equal(server.posts('/rooms').length, 2);
+  assert.deepEqual(p.opened, ['room-1']);
+});
+
 test('real create: 200 headers whose body never comes before the 6 s wait: the same create goes again and the room opens', async (t) => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
   const settle = async () => { for (let i = 0; i < 30; i++) { t.mock.timers.tick(0); await new Promise((r) => setImmediate(r)); } };
@@ -265,6 +288,7 @@ test('real create: a legacy server\'s configure that times out goes again by its
   assert.deepEqual(p.opened, ['room-1'], `opened by itself (${p.result().error?.message ?? 'no error'})`);
   const commands = server.posts('/commands');
   assert.deepEqual(commands.map((c) => c.body.command?.type), ['configure', 'configure', 'configure', 'add_idea']);
+  assert.ok(p.waits.some((ms) => ms >= 3000), `the 503's Retry-After: 3 is waited out (${p.waits.join(', ')})`);
   assert.equal(new Set(commands.slice(0, 3).map((c) => c.body.commandId)).size, 1, 'every resend is the same envelope');
   assert.equal(server.rooms.get('room-1')!.shared.screens[0].country, 'DE');
   assert.equal(server.rooms.get('room-1')!.shared.ideas[0].text, 'heist');

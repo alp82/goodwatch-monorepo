@@ -199,12 +199,13 @@ test('the app leaving the front pauses the join; back in front the same request 
 // failure classification (Entrance.tsx runJoin: sendFailure, then ResendResume.settled).
 function realJoin(server: ReturnType<typeof admissionServer>) {
   let admission: unknown = null;
+  const waits: number[] = [];
   const { joinUntilAnswered } = loadIsolated<{ joinUntilAnswered: Join }>(new URL('../src/core/continuous/join-room.ts', import.meta.url), {
     './api': { continuousApi: server.api, RoomFailure },
     '../credentials': { loadAccess: async () => null, nativeClient: true, saveAccess: async () => undefined },
     '../invites': { inviteIntent: (code: string) => `/r/${code}` },
     '../providers': { queryClient: { setQueryData: () => undefined } },
-    './backoff': { ...backoff, abortableSleep: async () => undefined },
+    './backoff': { ...backoff, abortableSleep: async (ms: number) => { waits.push(ms); } },
     './network': { browserOffline: () => false },
     './invite-store': { saveInvite: async () => undefined },
     './keys': { continuousKey: (id: string) => ['proposal-room', id] },
@@ -226,7 +227,7 @@ function realJoin(server: ReturnType<typeof admissionServer>) {
     },
     abort: () => controller.abort(),
   });
-  return { resume, sends };
+  return { resume, sends, waits, saved: () => admission as Saved | null };
 }
 
 test('real join: a full room\'s 409 whose renewed session is still being stored when the app goes to the background is not sent again', async () => {
@@ -248,6 +249,31 @@ test('real join: a full room\'s 409 whose renewed session is still being stored 
   assert.equal(server.posts('/join').length, 1, 'no second join');
   assert.deepEqual(p.sends, [1]);
   assert.equal(p.resume.phase, 'idle');
+});
+
+test('real join: a 503 with Retry-After: 60 whose session is still being stored when the app goes to the background keeps its wait', async () => {
+  let storing: { resolve: () => void } | null = null;
+  let last = '';
+  const server = admissionServer((s, n) => {
+    last = s.path;
+    return s.path.endsWith('/join') && n === 1 ? { status: 503, code: 'busy', retryable: true, retryAfter: 60 } : 'ok';
+  }, { store: () => new Promise<void>((resolve) => { if (storing || !last.endsWith('/join')) return resolve(); storing = { resolve }; }) });
+  const p = realJoin(server);
+  const before = Date.now();
+  p.resume.pick('INVITE1');
+  for (let i = 0; i < 10 && !storing; i++) await new Promise((r) => setTimeout(r, 0));
+  assert.ok(storing, 'the busy answer arrived and its session is being stored');
+  p.resume.appState('background');
+  (storing as { resolve: () => void } | null)!.resolve();
+  await new Promise((r) => setTimeout(r, 10));
+  assert.equal(p.resume.phase, 'paused');
+  const saved = p.saved();
+  assert.ok(saved && saved.retryAt >= before + 60000, `the server's deadline is saved (${(saved?.retryAt ?? 0) - before} ms)`);
+  p.resume.appState('active');
+  await new Promise((r) => setTimeout(r, 10));
+  assert.ok(p.waits[0] >= 59000, `back in front it waits out the rest first (${p.waits.join(', ')})`);
+  assert.equal(server.posts('/join').length, 2);
+  assert.equal(p.resume.phase, 'done');
 });
 
 test('real join: 200 headers whose body never comes before the 6 s wait: the same join goes again and the friend gets in', async (t) => {
