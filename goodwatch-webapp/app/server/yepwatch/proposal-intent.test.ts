@@ -203,3 +203,22 @@ test("room search accepts extra fields from the search role and stores only text
 	assert.deepEqual(intent.rankedKeys, [2000000001400])
 	assert.equal(Object.hasOwn(intent, "extra"), false)
 })
+
+test("a room's ranking asked for its first keys is the head of the whole ranking", () => {
+	let seed = 7
+	const rand = (n: number) => ((seed = (seed * 1103515245 + 12345) % 2 ** 31) % n)
+	const base = Array.from({ length: 3000 }, (_, i) => (i % 3 ? 1e12 : 2e12) + i)
+	const id = (key: number) => `${key >= 2e12 ? "show" : "movie"}_${key % 1e12}`
+	for (let round = 0; round < 200; round++) {
+		const ideas = Array.from({ length: rand(4) }, (_, i) => ({
+			on: rand(5) > 0,
+			// Some idea titles aren't in the base ranking (another country or kind).
+			rankedKeys: Array.from({ length: rand(60) }, () => (rand(10) ? base[rand(base.length)] : 3e12 + rand(100))),
+			id: `i${i}`,
+		}))
+		const room = { ideas, seenKeys: Array.from({ length: rand(50) }, () => id(base[rand(400)])) } as unknown as Parameters<typeof roomIntentKeys>[0]
+		const whole = roomIntentKeys(room, base)
+		const limit = rand(4) ? rand(1500) + 1 : 5000
+		assert.deepEqual(roomIntentKeys(room, base, limit), whole.slice(0, limit), `round ${round}, limit ${limit}`)
+	}
+})

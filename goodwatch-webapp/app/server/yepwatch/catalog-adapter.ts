@@ -7,7 +7,11 @@ import { titleKeySet } from './ranked-keys-cache.ts'
 export interface CatalogDisplay { key: number; tmdbId: number; mediaType: 'movie' | 'show'; title: string; year: number | null; overview: string | null; posterUrl: string | null; runtimeMinutes: number | null; backdropUrl?: string | null; trailerUrl?: string | null; goodwatchScore?: number | null; genres?: string[] }
 /** Reads adapt existing GoodWatch methods. New room selection logic lives here; no account/catalog writes. */
 export interface CatalogReads {
-  rankedKeys(room: Room): Promise<number[]>
+  /**
+   * The room's ranked title keys, unique. `limit`: only the first `limit` are read, so a ranking built from the whole
+   * title snapshot (200k+ keys) may stop there; without it, the whole ranking.
+   */
+  rankedKeys(room: Room, limit?: number): Promise<number[]>
   displays(keys: number[]): Promise<Map<number, CatalogDisplay>>
   episodes(showId: number): Promise<EpisodeChoice[]>
   availability(titles: CatalogDisplay[], screens: ScreenContext[], fresh: boolean): Promise<Map<number, ScreenAvailability[]>>
@@ -39,16 +43,23 @@ export function createDeckAdapter(reads: CatalogReads, options: { scanLimit?: nu
         if (room.constraints.kinds.length === 1 && !selectedShows.size) throw new RoomError('needs_progress', 'No shared saved next episode is available; reconcile progress in GoodWatch or choose movies and new shows')
       }
       const continuationOnly = room.constraints.kinds.length === 1 && room.constraints.kinds[0] === 'show_continue'
-      const allKeys = continuationOnly && !room.constraints.moods.length ? [] : [...new Set(await reads.rankedKeys(room))]
-      // Selected continuation shows are looked up by canonical key even without analysis in the recommendation snapshot.
-      const continueKeys = [...selectedShows].map(id => 2_000_000_000_000 + id).filter(key => !room.constraints.moods.length || allKeys.includes(key))
-      // Exclude at the shared page boundary, including prepended continuation keys.
-      // Keep selectedShows/progressPlans complete so a seen continuation never
-      // changes identity into a new show and final checks retain saved context.
       const excluded = titleKeySet(options.excludeTitleKeys ?? [])
-      const unique = continueKeys.length ? [...new Set([...continueKeys, ...allKeys])] : allKeys
-      const ordered = excluded.size ? unique.filter(key => !excluded.has(key)) : unique
       const scanLimit = options.scanLimit ?? 1200
+      // The scan reads at most scanLimit keys, and one more tells it the pool goes on. Building, deduplicating and
+      // filtering the whole 200k+ key ranking for that held the event loop ~300 ms in production at the start of every
+      // deck build; continuation shows need the whole ranking (a mood keeps only those in it).
+      const pool = async (limit?: number) => {
+        const allKeys = continuationOnly && !room.constraints.moods.length ? [] : [...new Set(await reads.rankedKeys(room, limit))]
+        // Selected continuation shows are looked up by canonical key even without analysis in the recommendation snapshot.
+        const continueKeys = [...selectedShows].map(id => 2_000_000_000_000 + id).filter(key => !room.constraints.moods.length || allKeys.includes(key))
+        // Exclude at the shared page boundary, including prepended continuation keys.
+        // Keep selectedShows/progressPlans complete so a seen continuation never
+        // changes identity into a new show and final checks retain saved context.
+        const unique = continueKeys.length ? [...new Set([...continueKeys, ...allKeys])] : allKeys
+        return excluded.size ? unique.filter(key => !excluded.has(key)) : unique
+      }
+      const bounded = !selectedShows.size
+      const ordered = await pool(bounded ? scanLimit + 1 + excluded.size : undefined)
       const results: Candidate[] = []; let scanned = 0
       let uncertainTitles = 0; let noMatchTitles = 0; let missingMetadataTitles = 0; let missingEpisodeTitles = 0
       const screenCounts = screens.map(s => ({ screenId: s.id, country: s.country!, serviceIds: [...s.serviceIds], watchable: 0, noMatch: 0, unknown: 0 }))
@@ -119,7 +130,8 @@ export function createDeckAdapter(reads: CatalogReads, options: { scanLimit?: nu
       if (!incomplete) reasons.push(ordered.length ? 'verified_no_intersection' : 'filtered_catalog_empty')
       const details: DeckFailureDetails = { type: 'deck', reason: reasons[0], reasons,
         actions: incomplete ? ['retry', 'review_screen_services', 'review_constraints'] : ['review_screen_services', 'review_constraints'],
-        scannedTitles: scanned, poolSize: ordered.length, scanComplete: !budgetReason,
+        // Only a failed deck reports the whole pool's size: count it then.
+        scannedTitles: scanned, poolSize: bounded && ordered.length > scanLimit ? (await pool()).length : ordered.length, scanComplete: !budgetReason,
         uncertainTitles, noMatchTitles, missingMetadataTitles, missingEpisodeTitles, screens: screenCounts }
       const messages: Record<DeckFailureReason, string> = {
         availability_unknown: 'Current offers could not be verified for the selected screens and services. Review your screen services or retry; no settings were changed.',

@@ -46,7 +46,8 @@ export function createContinuousCatalog(
 	reads: CatalogReads,
 	metadata: CatalogPort["metadata"],
 	options: {
-		rank?: (room: ContinuousRoom, keys: number[]) => Promise<number[]>;
+		/** Orders the room's base ranking. `limit`: only the first `limit` keys are read (see CatalogReads). */
+		rank?: (room: ContinuousRoom, keys: number[], limit?: number) => Promise<number[]>;
 		savedContinuations?: (
 			room: ContinuousRoom,
 		) => Promise<ReadonlyMap<number, EpisodeIdentity>>;
@@ -70,9 +71,12 @@ export function createContinuousCatalog(
 			const adapter = createDeckAdapter(
 				{
 					...reads,
-					rankedKeys: async (old) => {
+					rankedKeys: async (old, limit) => {
 						const base = await reads.rankedKeys(old);
-						const ranked = options.rank ? await options.rank(room, base) : base;
+						// Saved continuations are looked up in the whole ranking; seen keys are dropped below.
+						const need = limit === undefined || saved ? undefined : limit + seenKeys.size;
+						const full = options.rank ? await options.rank(room, base, need) : base;
+						const ranked = need !== undefined && full.length > need ? full.slice(0, need) : full;
 						const continued = saved
 							? [...saved.keys()]
 									.map((id) => 2_000_000_000_000 + id)

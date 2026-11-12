@@ -13,7 +13,7 @@ export function guestProposalCatalog(members?: ContinuousMembers) {
 		goodwatchReads,
 		goodwatchCatalog.metadata,
 		{
-			rank: async (room, base) => {
+			rank: async (room, base, limit) => {
 				const excluded = titleKeySet(
 					(
 						await Promise.all(
@@ -28,9 +28,11 @@ export function guestProposalCatalog(members?: ContinuousMembers) {
 						)
 					).flat()
 				)
+				// Seen titles are filtered out after: read that many more.
 				const keys = roomIntentKeys(
 					room as import("./proposal-types.ts").ProposalRoom,
-					base
+					base,
+					limit === undefined ? undefined : limit + excluded.size
 				)
 				return excluded.size ? keys.filter((key) => !excluded.has(key)) : keys
 			},

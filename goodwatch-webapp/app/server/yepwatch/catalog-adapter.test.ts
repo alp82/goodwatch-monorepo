@@ -135,3 +135,23 @@ test('starting a show deck overlaps bounded episode reads and preserves ranked c
   assert.ok(peak > 1, 'independent show episode reads must overlap')
   assert.ok(peak <= 6, 'episode reads must remain bounded')
 })
+test('A deck reads only the head of a long ranking it can scan, and a failed deck still reports the whole pool', async () => {
+  const r = await room(); r.constraints.kinds = ['movie']
+  const ranking = Array.from({ length: 50_000 }, (_, i) => 1_000_000_000_000 + i + 1)
+  const asked: (number | undefined)[] = []
+  const port = reads()
+  port.rankedKeys = async (_room, limit) => { asked.push(limit); return limit === undefined ? ranking : ranking.slice(0, limit) }
+  port.displays = async keys => new Map(keys.map(key => [key, { ...movie, key, tmdbId: key - 1_000_000_000_000 }]))
+  const seen = new Set(['movie_1', 'movie_2'])
+  const candidates = await createDeckAdapter(port, { scanLimit: 100, limit: 5, excludeTitleKeys: seen }).candidates(r)
+  assert.deepEqual(candidates.map(c => c.identity.tmdbId), [3, 4, 5, 6, 7], 'the same cards as from the whole ranking')
+  assert.deepEqual(asked, [103], 'scan limit, one more to know the pool goes on, and the excluded titles')
+  asked.length = 0
+  port.availability = async (titles, screens) => new Map(titles.map(t => [t.key, screens.map(s => ({ screenId: s.id, state: 'no_match', scope: 'title', checkedAt: null, offers: [] }))]))
+  await assert.rejects(createDeckAdapter(port, { scanLimit: 100, excludeTitleKeys: seen }).candidates(r), error => {
+    const details = (error as { details: { reason: string; poolSize: number; scannedTitles: number } }).details
+    assert.equal(details.reason, 'scan_limit'); assert.equal(details.scannedTitles, 100); assert.equal(details.poolSize, 49_998)
+    return true
+  })
+  assert.deepEqual(asked, [103, undefined])
+})

@@ -105,17 +105,36 @@ export function roomSearch(
 	}
 }
 
-/** Interleave the remaining idea lanes; each lane falls back to base popularity. */
+/**
+ * Interleave the remaining idea lanes; each lane falls back to base popularity.
+ * `limit`: only the first `limit` keys are wanted (a deck scans ~1200), the same as the head of the whole result.
+ */
 export function roomIntentKeys(
 	room: Pick<ProposalRoom, "ideas" | "seenKeys">,
-	base: number[]
+	base: number[],
+	limit = Infinity
 ) {
-	// The base is the whole ranked snapshot (200k+ titles): no per-title strings or per-lane copies of it.
+	// The base is the whole ranked snapshot (200k+ titles): no per-title strings, per-lane copies or sets of it.
 	const seen = titleKeySet(room.seenKeys ?? [])
-	const eligible = seen.size ? base.filter((key) => !seen.has(key)) : base
 	const ideas = (room.ideas ?? []).filter((i) => i.on)
+	// Past its own head a lane passes only keys it takes or skips as already taken: never more than `limit` of them
+	// before the result is full.
+	let eligible = base
+	if (seen.size || limit < base.length) {
+		eligible = []
+		for (const key of base) {
+			if (eligible.length >= limit) break
+			if (!seen.has(key)) eligible.push(key)
+		}
+	}
 	if (!ideas.length) return eligible
-	const allowed = new Set(eligible)
+	// Idea titles count only when they're eligible: in the base ranking and not seen.
+	const ideaKeys = new Set(ideas.flatMap((i) => i.rankedKeys))
+	const allowed = new Set<number>()
+	for (const key of base) {
+		if (ideaKeys.has(key) && !seen.has(key)) allowed.add(key)
+		if (allowed.size === ideaKeys.size) break
+	}
 	// A lane is its idea's ranked titles, then the eligible popularity order; titles already taken are skipped.
 	const lanes = ideas.map((i) => i.rankedKeys.filter((k) => allowed.has(k)))
 	const at = (lane: number, cursor: number) => {
@@ -136,6 +155,7 @@ export function roomIntentKeys(
 				used.add(key)
 				result.push(key)
 				changed = true
+				if (result.length >= limit) return result
 			}
 		}
 		if (!changed) return result
