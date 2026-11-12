@@ -56,6 +56,39 @@ test.describe('create and set up a room', () => {
     expect(roomCountry(host)).toMatch(/^[A-Z]{2}$/);
   });
 
+  // Production 2026-11-12: two creates in a row took longer than the app's 6 s wait (slow store writes).
+  // The page keeps sending the same saved request (same command id and secret) and opens the room itself.
+  test('a slow server: the create goes again by itself and the room opens without a tap', async ({ room }) => {
+    const host = await room.person('Alp');
+    const answers: { roomId?: string; status: number }[] = [];
+    let first = 0;
+    let answered = 0;
+    await host.page.route(/\/api\/yepwatch\/v1\/proposal\/rooms$/, async (route) => {
+      if (route.request().method() !== 'POST') return route.continue();
+      const n = answers.length + 1;
+      if (n === 1) first = Date.now();
+      // The server gets every try (and makes the room on the first); the first two answers come after 7 s.
+      const response = await route.fetch();
+      answers.push({ status: response.status(), roomId: (await response.json().catch(() => null))?.credential?.roomId });
+      if (n <= 2) await new Promise((r) => setTimeout(r, 7000));
+      else answered = Date.now();
+      await route.fulfill({ response }).catch(() => undefined); // the app stopped waiting for the slow ones
+    });
+    await host.open('/');
+    await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] } });
+    await host.fill(host.page.getByLabel('Mood'), 'slow server heist');
+    await host.tap(host.button('Create room'), { expect: {} });
+    // Q24a: quiet at first, then one small floating line; never "Couldn't reach" or Try again.
+    await expect(host.page.getByTestId('room-note').filter({ visible: true })).toHaveText('Reconnecting…', { timeout: 12000 });
+    await host.see({ visible: ['room-setup'] }, 30000, 'the room opens by itself');
+    room.noteOutage(first, answered);
+    expect(answers.length).toBe(3);
+    expect(answers.every((a) => a.status === 200)).toBe(true);
+    expect(new Set(answers.map((a) => a.roomId)).size).toBe(1);
+    expect(host.latest?.roomId).toBe(answers[0].roomId);
+    await eventually(() => host.latest?.ideas.map((i) => i.text), (v) => JSON.stringify(v) === JSON.stringify(['slow server heist']), 'the one room has its one idea', host);
+  });
+
   test('create room from a preset chip ("Anything goes")', async ({ room }) => {
     const host = await room.person('Alp');
     await host.open('/');

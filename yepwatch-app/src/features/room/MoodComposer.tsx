@@ -3,6 +3,7 @@ import { Animated, Easing, Platform, TextInput, View, type TextStyle } from 'rea
 import { useReducedMotion } from '../../components/ui';
 import { useLayout } from '../shell/layout';
 import { warm } from '../shell/tokens';
+import { useFrameNote } from '../shell/floating-note';
 import { GText, Icon, Press, glow, grow, native } from '../glow/theme';
 import { IDEA_LIMITS } from './model';
 import { CHAR_EM, webField } from './parts';
@@ -33,10 +34,12 @@ function typedSize(text: string, col: number, phone: boolean, z: (n: number) => 
 }
 
 /** The editor is local: room creation and saves never prevent typing or picking a preset. */
-export function MoodComposer({ initialText = '', text: controlledText, first = false, action = 'Create room', editing = false, disabled = false, saving = false, error, details, pick, back, onTextChange }: {
+export function MoodComposer({ initialText = '', text: controlledText, first = false, action = 'Create room', editing = false, disabled = false, saving = false, error, note, details, pick, back, onTextChange }: {
   initialText?: string; first?: boolean; action?: string; editing?: boolean; disabled?: boolean;
   text?: string;
   saving?: boolean; error?: string; details?: ReactNode;
+  /** A connection line floating over the page (the page never moves for it). */
+  note?: string;
   pick: (text: string) => void; back?: () => void; onTextChange?: (text: string) => void;
 }) {
   const { phone, max, z } = useLayout();
@@ -83,6 +86,7 @@ export function MoodComposer({ initialText = '', text: controlledText, first = f
   return (
     <Screen testID="mood-page" back={back} pill={first ? { label: 'New room', state: 'new' } : undefined} width={col} gap={0}
       footer={pinned ? create : undefined}>
+      {note ? <FloatingLine text={note} /> : null}
       <View style={{ gap: phone ? 30 : z(44), alignItems: 'center' }}>
         <View style={{ width: '100%', alignItems: 'center' }}>
           <View style={{ width: '100%' }}>
@@ -128,4 +132,10 @@ export function MoodComposer({ initialText = '', text: controlledText, first = f
       </View>
     </Screen>
   );
+}
+
+/** The frame's one connection line while mounted (with a spinner: the app is already trying again). */
+function FloatingLine({ text }: { text: string }) {
+  useFrameNote({ text, busy: true });
+  return null;
 }

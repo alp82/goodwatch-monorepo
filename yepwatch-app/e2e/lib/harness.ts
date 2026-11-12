@@ -430,6 +430,8 @@ export class Room {
         return;
     }
   }
+  /** An outage a journey makes itself (e.g. a request held past the app's wait), [start, end] in epoch ms. */
+  noteOutage(start: number, end: number) { this.offlineWindows.push([start, end]); }
   /** Stack-side outages so far, [start, end] in epoch ms: server restarts and offline spells. */
   outages(): [number, number][] {
     return [...this.restartLog.map((r) => [r.at, r.back] as [number, number]), ...this.offlineWindows];

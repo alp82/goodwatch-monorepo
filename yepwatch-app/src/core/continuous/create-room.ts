@@ -5,7 +5,7 @@ import { saveAccess } from '../credentials';
 import { deviceCountryHint } from '../lobby';
 import { queryClient } from '../providers';
 import { authEpoch } from './account-flow';
-import { retryTransient, unanswered } from './backoff';
+import { abortableSleep, BACKOFF_BASE_MS, BACKOFF_JITTER, serverWait, transientFailure, unanswered } from './backoff';
 import { browserOffline } from './network';
 import { saveInvite } from './invite-store';
 import { roomRegistry } from './room-registry';
@@ -16,11 +16,59 @@ import { PersistentCommands, mergeRoom, type CachedRoom } from './state';
 import { readAdmission, readCommandRecovery, writeAdmission, writePending } from './storage';
 
 /**
- * Offline, or a second try that also got no answer: show it now instead of backing off for half a
- * minute. The saved request stays and goes again (same id and secret) when the device is back.
+ * Joins (Entrance): offline, or a second try that also got no answer: show it now instead of backing off
+ * for half a minute. The saved request stays and goes again (same id and secret) when the device is back.
+ * Creates don't stop on a slow server: resendUntilAnswered below.
  */
 export function stopWaiting(error: unknown, tries: number) {
   return unanswered(error) && (browserOffline() || tries >= 1);
+}
+
+/** Longest wait between automatic create resends while the New room page is in front. */
+export const CREATE_RESEND_MAX_MS = 5000;
+/** A server wait (Retry-After) up to this is waited out by itself; a longer one is shown as a manual gate. */
+export const CREATE_SERVER_WAIT_MAX_MS = 60000;
+
+/** A create that may go again by itself (same command id and secret, so never a second room). */
+export function resendable(error: unknown) {
+  if (transientFailure(error)) return true;
+  // A rate limit that names its wait: wait it out, then send the same request.
+  const e = error as Error & { status?: unknown; retryable?: unknown };
+  return error instanceof Error && Number(e.status) === 429 && e.retryable === true;
+}
+
+/** 1 s, 2 s, 4 s, then 5 s between resends (minus up to 30 % jitter), never shorter than the server's wait. */
+export function resendDelay(failures: number, error: unknown, random: () => number = Math.random) {
+  const step = Math.min(CREATE_RESEND_MAX_MS, BACKOFF_BASE_MS * 2 ** Math.max(0, Math.min(failures, 8)));
+  return Math.round(Math.max(step * (1 - Math.min(1, Math.max(0, random())) * BACKOFF_JITTER), serverWait(error)));
+}
+
+/**
+ * Sends the saved create until it is answered: a slow or restarting server never strands the person on
+ * the Mood page. Stops (resolves false) when `signal` aborts (the page left the front, the app went to the
+ * background); throws a final refusal, an offline browser (it resends on the online event) and a server
+ * wait longer than CREATE_SERVER_WAIT_MAX_MS. `onTrouble` hears once when the first attempt that failed began.
+ */
+export async function resendUntilAnswered(attempt: () => Promise<void>, o: {
+  signal: AbortSignal;
+  onTrouble?: (since: number) => void;
+  sleep?: (ms: number, signal?: AbortSignal) => Promise<void>;
+  random?: () => number;
+}): Promise<boolean> {
+  const sleep = o.sleep ?? abortableSleep;
+  for (let failures = 0; ; failures++) {
+    if (o.signal.aborted) return false;
+    const began = Date.now();
+    try {
+      await attempt();
+      return true;
+    } catch (error) {
+      if (o.signal.aborted) return false;
+      if (!resendable(error) || (unanswered(error) && browserOffline()) || serverWait(error) > CREATE_SERVER_WAIT_MAX_MS) throw error;
+      if (failures === 0) o.onTrouble?.(began);
+      await sleep(resendDelay(failures, error, o.random), o.signal);
+    }
+  }
 }
 
 /**
@@ -38,6 +86,14 @@ function refusedSetup(error: unknown) {
   return error instanceof RoomFailure && error.code === 'invalid_request' && error.status === 400;
 }
 
+interface SaveOptions {
+  nickname: string;
+  member: boolean;
+  signal: AbortSignal;
+  /** The create is going again by itself: when the first attempt that failed began. */
+  onTrouble?: (since: number) => void;
+}
+
 /** One room per draft, including retries and reloads. Navigation belongs to the successful caller. */
 export class CreateRoom {
   private request: AdmissionRecovery | null = null;
@@ -51,13 +107,13 @@ export class CreateRoom {
     return { text: saved?.mood ?? '', retryAt: saved?.retryAt ?? 0 };
   }
 
-  save(text: string, options: { nickname: string; member: boolean; signal: AbortSignal }): Promise<RoomSnapshot> {
+  save(text: string, options: SaveOptions): Promise<RoomSnapshot> {
     if (this.inFlight) return this.inFlight;
     this.inFlight = this.run(text, options).finally(() => { this.inFlight = null; });
     return this.inFlight;
   }
 
-  private async run(text: string, options: { nickname: string; member: boolean; signal: AbortSignal }): Promise<RoomSnapshot> {
+  private async run(text: string, options: SaveOptions): Promise<RoomSnapshot> {
     const epoch = authEpoch.current();
     const active = () => {
       if (options.signal.aborted || !authEpoch.isCurrent(epoch)) throw new Error('Room setup was interrupted. Your request is kept.');
@@ -80,7 +136,7 @@ export class CreateRoom {
       this.retryAt = request.retryAt;
       if (Date.now() < this.retryAt) throw new Error('Wait before retrying this room request.');
       try {
-        await retryTransient(async () => {
+        await resendUntilAnswered(async () => {
           active();
           // Persist before every possible POST, including after a previous storage failure.
           await writeAdmission('', request);
@@ -96,9 +152,9 @@ export class CreateRoom {
             await writeAdmission('', request);
             this.admitted = await api.create(request.request, options.signal);
           }
-        }, { retries: 5, retryAt: retryDeadline, signal: options.signal, giveUp: stopWaiting });
+        }, { signal: options.signal, onTrouble: options.onTrouble });
       } catch (error) {
-        // No answer at all has no server deadline: a resend (Try again, back online) may go at once.
+        // No answer at all has no server deadline: a resend (Try again, back online, back in front) may go at once.
         this.retryAt = retainRequest(error) && !unanswered(error) ? retryDeadline(error) : 0;
         this.request = retainRequest(error) ? { ...request, retryAt: this.retryAt } : null;
         await writeAdmission('', this.request);
