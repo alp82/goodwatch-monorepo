@@ -119,8 +119,10 @@ export function createDeckAdapter(reads: CatalogReads, options: { scanLimit?: nu
           }
         }
       }
-      if (results.length) { options.onComplete?.(!budgetReason && !uncertainTitles && !missingEpisodeTitles && !missingMetadataTitles); return results }
+      // Unscanned keys mean the budget ended the scan, also when some titles were found (a bounded pool can end
+      // the loop on a 40-key step past the scan limit).
       if (scanned < ordered.length && !budgetReason) budgetReason = scanned >= scanLimit ? 'scan_limit' : 'deadline'
+      if (results.length) { options.onComplete?.(!budgetReason && !uncertainTitles && !missingEpisodeTitles && !missingMetadataTitles); return results }
       const reasons: DeckFailureReason[] = []
       if (budgetReason) reasons.push(budgetReason)
       if (uncertainTitles) reasons.push('availability_unknown')

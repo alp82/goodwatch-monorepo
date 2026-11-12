@@ -331,9 +331,16 @@ export class ReleaseControl {
 			const expiry = r.now + CONTINUOUS_LIMITS.roomMs
 			state.rooms.push([roomId, admissionDigest, expiry])
 			state.admissions.push(op)
+			const updateStarted = Date.now()
 			const written = await this.update(r, state)
 			if (!written) continue
-			const proof = written === UNCERTAIN ? await this.read() : written
+			// RETURNING carries the statement's start time: an UPDATE acknowledged after the window rolled over
+			// could confirm against the old window, so read back whenever the statement may have crossed it.
+			const elapsed = Date.now() - updateStarted
+			const proof =
+				written === UNCERTAIN || Math.floor((written.now + elapsed) / WINDOW_MS) !== state.window
+					? await this.read()
+					: written
 			if (
 				proof.now < expiry &&
 				proof.state.rooms.some(
@@ -410,9 +417,16 @@ export class ReleaseControl {
 					)
 				state.commands.push([op, actor])
 			}
+			const updateStarted = Date.now()
 			const written = await this.update(r, state)
 			if (!written) continue
-			const proof = written === UNCERTAIN ? await this.read() : written
+			// RETURNING carries the statement's start time: an UPDATE acknowledged after the window rolled over
+			// could confirm against the old window, so read back whenever the statement may have crossed it.
+			const elapsed = Date.now() - updateStarted
+			const proof =
+				written === UNCERTAIN || Math.floor((written.now + elapsed) / WINDOW_MS) !== state.window
+					? await this.read()
+					: written
 			// Never confirm an old window using a later window. New authorization remains subject to domain receipts/sequence/CAS.
 			if (
 				proof.state.window !== state.window ||
