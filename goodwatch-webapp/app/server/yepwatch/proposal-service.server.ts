@@ -65,7 +65,7 @@ interface Lease {
 /** Optional release-only guard; legacy runtimes retain existing behavior. */
 export interface ProposalOperationGuard {
 	active(room: Pick<ProposalRoom, "id" | "expiresAt">): Promise<void>
-	create(roomId: string, admissionDigest: string): Promise<number>
+	create(roomId: string, admissionDigest: string, creatorDigest?: string): Promise<number>
 	join(roomId: string, actorId: string, admissionDigest: string): Promise<void>
 	command(roomId: string, actorId: string, commandDigest: string): Promise<void>
 }
@@ -383,7 +383,7 @@ export class ProposalService {
 		reconcile(next, room)
 		return next
 	}
-	async create(request: CreateRoomRequest, account?: RoomAccount) {
+	async create(request: CreateRoomRequest, account?: RoomAccount, guestCreatorId?: string) {
 		if (account) await this.requireAccountActive(account.userId);
 		const interpretation: { value?: Promise<NonNullable<ProposalRoom["intent"]> | null> } = {}
 		const id = keyed(
@@ -398,8 +398,11 @@ export class ProposalService {
 				await this.guard?.active(existing.room)
 				return this.admission(existing.room, request, account)
 			}
+			const creatorDigest = account
+				? keyed(this.secret, 'room-creator', `account:${account.userId}`)
+				: guestCreatorId ? keyed(this.secret, 'room-creator', `guest:${guestCreatorId}`) : undefined
 			const expiresAt =
-				(await this.guard?.create(id, hash(JSON.stringify(request)))) ??
+				(await this.guard?.create(id, hash(JSON.stringify(request)), creatorDigest)) ??
 				this.now() + L.roomMs
 			const invitation = await this.reserveInvite(id, expiresAt)
 			const p = this.member(id, request)

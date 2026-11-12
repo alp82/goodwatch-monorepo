@@ -1,0 +1,134 @@
+{
+  "checkedAt": "2026-11-11T23:20:35.239554+00:00",
+  "appId": "6826403019",
+  "version": "1.0.0",
+  "candidateBuild": "18",
+  "sourceCommit": "11bb3e8f572a153c5e9536f8ba12a2ecdc364d30",
+  "iosEasBuildId": "deb9968d-db24-4996-ad12-005ea7f20b7d",
+  "androidEasBuildId": "a7f123d8-e6ff-4537-9db6-10ff203d2239",
+  "iosBinaryUploadSubmissionId": "b2526789-993e-49ff-b754-29f7e158ce6c",
+  "iosBinaryUploadFinished": true,
+  "appleBuildId": "c6b590be-1d13-40a7-aede-d9cfe0c8654c",
+  "appleProcessingState": "VALID",
+  "privacyDataTypesSaved": 11,
+  "privacyPublished": true,
+  "privacyNotes": "store/apple-privacy-notes.json",
+  "ageRating": {
+    "calculated": "13+",
+    "saved": true,
+    "override": false,
+    "ageGateAdded": false,
+    "privateRoomIdeasCommunicateWithInvitedMembers": true,
+    "broadUGCFeed": false,
+    "socialMedia": false,
+    "advertising": true,
+    "medicalOrWellness": false,
+    "gamblingOrContests": false,
+    "catalogAndBriefTrailersIncluded": true,
+    "graphicSexualContent": false,
+    "prolongedGraphicViolence": false,
+    "rationale": "YepWatch shows catalog summaries/posters and brief embedded promotional trailers, not full movies or prolonged graphic scenes. YouTube redirects age-restricted embeds outside third-party players. Frequency is infrequent for mature themes and brief violence; this is not an assertion that the underlying movies have no adult content.",
+    "modernRegions": {
+      "13+": 172,
+      "16+": [
+        "Vietnam",
+        "Brazil"
+      ],
+      "12+": [
+        "Korea, Republic of"
+      ]
+    },
+    "olderOperatingSystems": "Global 12+ with regional exceptions",
+    "categoryFreshReadback": "ENTERTAINMENT"
+  },
+  "category": "Entertainment",
+  "pricing": {
+    "baseCountry": "United States",
+    "basePrice": "0.00 USD",
+    "comparableCountryRegionCount": 175,
+    "availabilityRequested": 175,
+    "savedAndFreshlyReadBack": true,
+    "regionalRestrictionsApply": true,
+    "afghanistan": "Apple says Entertainment apps cannot be sold there; availability remains subject to regional rules"
+  },
+  "ownerConfirmationsPending": [
+    "Updated Apple Developer Program License Agreement acceptance",
+    "EU trader status self-declaration",
+    "Necessary third-party catalog/artwork/trailer content permissions"
+  ],
+  "verification": {
+    "appTestsPassed": 189,
+    "appTypecheck": "pass",
+    "appLint": "pass; pre-existing unused View warning",
+    "realYoutubePlaybackAndPause": {
+      "embedOrigin": "https://www.youtube-nocookie.com",
+      "apiConnected": true,
+      "state": 1,
+      "error": null,
+      "played": true,
+      "pauseConfirmed": true
+    },
+    "ci": "https://github.com/alp82/goodwatch-monorepo/actions/runs/43116048092",
+    "ciConclusion": "success",
+    "appleGalleryProcessed": 20,
+    "galleryFreshReadbackPassed": true,
+    "completeEnglishListingFreshReadbackPassed": true,
+    "reviewCredentialAndContactFieldsPopulated": true
+  },
+  "publicReviewSubmitted": false,
+  "build18AttachedAndReadBack": true,
+  "privacyPublicationReadback": "Published a few seconds ago by Alper Ortac; no setup remains; no Data Used to Track You section",
+  "readinessCheck": {
+    "attemptedAddForReview": true,
+    "result": "Unable to Add for Review",
+    "onlyAppFieldReportedMissing": "Content Rights Information",
+    "publicReviewSubmitted": false,
+    "automaticReleaseAfterApproval": true
+  },
+  "androidBuild18": {
+    "easBuildId": "a7f123d8-e6ff-4537-9db6-10ff203d2239",
+    "status": "FINISHED",
+    "appVersion": "1.0.0",
+    "buildNumber": "18",
+    "sha256": "ae0390a1cdba0725b528d38ca6cc64a4e872aa88893386b5220b59df0c3519c5",
+    "bytes": 71949154,
+    "playUploadPending": true,
+    "reason": "Google approved bundle 17 and the Alpha closed test is active. The compatible player fix is published via the production update channel. Bundle 18 is prepared for the next Play upload.",
+    "existingPlayBuild17AvailableToSelectedTesters": true
+  },
+  "nativeUpdates": [
+    {
+      "id": "01a1cce4-0d1a-7fe3-9885-6ddfb6945680",
+      "group": "8c8caa69-7b09-4137-97ab-4e9978ed16f1",
+      "branch": "production",
+      "runtimeVersion": "d170fdc5c8fc2b6651fbf0c52f6f90fded747495",
+      "platform": "ios",
+      "gitCommitHash": "11bb3e8f572a153c5e9536f8ba12a2ecdc364d30"
+    },
+    {
+      "id": "01a1cce4-0d1a-7b53-8d63-987a4618f8b3",
+      "group": "70a37fa9-64cc-4f96-9c28-3fca61dfb3aa",
+      "branch": "production",
+      "runtimeVersion": "8d1264ebe69b509f2f258813b92603f31603f9d5",
+      "platform": "android",
+      "gitCommitHash": "11bb3e8f572a153c5e9536f8ba12a2ecdc364d30"
+    },
+    {
+      "id": "01a1cce5-b4ed-7b51-93a0-a80dab966693",
+      "group": "16527978-d893-4602-9fae-00f5b5494c48",
+      "branch": "beta",
+      "runtimeVersion": "d170fdc5c8fc2b6651fbf0c52f6f90fded747495",
+      "platform": "ios",
+      "gitCommitHash": "11bb3e8f572a153c5e9536f8ba12a2ecdc364d30"
+    },
+    {
+      "id": "01a1cce7-28b7-7422-b642-98e4533819ae",
+      "group": "ed55de19-217e-4838-84b0-59f5062496f3",
+      "branch": "beta-preview",
+      "runtimeVersion": "e602b9da0532d0b6553acc72b771132638acce70",
+      "platform": "android",
+      "gitCommitHash": "11bb3e8f572a153c5e9536f8ba12a2ecdc364d30"
+    }
+  ],
+  "legacyPolicyClarification": "The policy explains that older app versions can use the standard YouTube player. Current build 18 and compatible player updates use privacy-enhanced embeds."
+}

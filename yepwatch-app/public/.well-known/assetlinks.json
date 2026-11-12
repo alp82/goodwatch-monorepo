@@ -10,5 +10,17 @@
         "7A:4B:9F:AA:19:4C:06:82:22:94:0E:BE:16:61:AB:6F:8F:D3:D7:14:78:5A:15:BF:76:D2:33:52:A9:75:2D:1D"
       ]
     }
+  },
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.yepwatch.app",
+      "sha256_cert_fingerprints": [
+        "34:DA:C0:65:64:76:03:62:B1:3F:0A:09:47:33:DD:BF:20:AC:72:B1:41:02:C2:0A:7F:4C:74:83:3B:A2:26:85"
+      ]
+    }
   }
 ]

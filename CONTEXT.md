@@ -13,6 +13,12 @@ Finding movies and TV shows the person wants to watch, without requiring availab
 **Search invocation**:
 A request that reaches the combined search, whether started by a typing pause, explicit submission, navigation or an API consumer. Its attribution separates the trigger, surface, consumer and verified actor type. Paid interpretation attempts retain the attribution of the request that started them; later cache users have their own invocation. Attribution never changes search or reading cache identity. See [search invocation attribution](docs/search-invocation-attribution.md).
 
+**Trope filter**:
+Titles documented as containing a particular TV Tropes concept, identified by its canonical URL across alternate names and redirected references. It is distinct from an essence tag or a fingerprint preference.
+
+**Like filter**:
+Titles similar to a referenced movie or show. The reference records no library rating or taste signal.
+
 **Watchability check**:
 The follow-up assessment of where a title of interest can be watched in the person's country and on their services.
 
@@ -413,6 +419,8 @@ A YepWatch room shares one country and up to eight authored ideas. The host cont
 **Room participant**: A person's place in one YepWatch room, including their votes, agreement and services. A signed-in GoodWatch account has one participant per room, shared by all its devices; a guest's place belongs to their saved device credential.
 
 **Your rooms**: The person's active rooms, shared across devices when signed in to GoodWatch and remembered on the device for guests. Owned rooms are the rooms where the person is currently host; leaving transfers hosting and leaves the room on every device.
+
+**Room creation allowance**: Ten unexpired rooms created per signed-in account, or per guest installation/browser. Joining another room does not consume it. Creation attribution is separate from current hosting; leaving or transferring hosting does not release the six-hour reservation. See [the personal allowance decision](docs/adr/yepwatch-personal-room-allowance.md).
 
 **Decision history**: The confirmed choices of rooms the person participated in. A signed-in person's history is shared across devices and survives a new round or room expiry; a choice does not record a GoodWatch Watch or change Seen or taste.
 

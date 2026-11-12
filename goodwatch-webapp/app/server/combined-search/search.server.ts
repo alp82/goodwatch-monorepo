@@ -1,3 +1,4 @@
+import { resolveExactSearch, startExactSearchResolution } from "../search-resolution.server";
 import { randomUUID } from "node:crypto";
 import { attributedSearch } from "../../domain/search-attribution";
 import { peopleSearchFilters } from "./people-filter.server";
@@ -92,6 +93,7 @@ export interface ReadCount {
 
 // A page instance loads none of it (see role.server.ts).
 if (runsSearch()) {
+	startExactSearchResolution();
 	// The index loads at server start; query models load only when the storage key allows readings.
 	startSearchRanking({ queryModels: readingsConfigured() });
 	// The names a search can find inside a phrase load at server start too.
@@ -101,6 +103,7 @@ if (runsSearch()) {
 }
 
 export interface SearchBatch {
+	resolution?: import("../../domain/exact-search").ExactSearch;
 	q: string;
 	rows: Row[];
 	/** Frozen candidate keys for Discover; cards are fetched separately, 40 at a time. */
@@ -716,11 +719,52 @@ export async function combinedSearch(
 	} = {},
 ): Promise<SearchBatch> {
 	visitor = { ...visitor, attribution: { consumer: "unknown", surface: "unknown", trigger: "unknown", reported_by: "unknown", ...visitor.attribution, search_id: randomUUID() } };
+	Promise.resolve(visitor.accountId).catch(() => {});
+	const exactStarted = Date.now()
+	const wholeExact = resolveExactSearch(options.named ?? query)
+	const exact = wholeExact ?? resolveExactSearch(query)
+	if (exact) {
+		const { resolvedSearch } = await import("./resolved.server")
+		const found = await resolvedSearch(exact, eligibility, signal, options.rows)
+		onReading?.(found.reading)
+		const elapsedMs = Date.now() - exactStarted
+		const batch: SearchBatch = {
+			...found,
+			resolution: { ...exact, wholeQuery: Boolean(wholeExact) },
+			q: query,
+			errors: [],
+			mode: "resolved",
+			elapsedMs,
+			chargedNano: 0,
+			people: [],
+			creditScope: null,
+			pendingTitleLookup: false,
+			pendingRanking: false,
+		}
+		const delivered = await options.onComplete?.(batch)
+		if (signal.aborted) throw new Error("Search interrupted")
+		if (delivered !== false)
+			setImmediate(() => {
+				Promise.resolve(visitor.accountId).then(
+					(accountId) =>
+						recordSearchHistory({
+							text: query,
+							accountId,
+							attribution: attributedSearch(visitor.attribution, accountId),
+							elapsedMs,
+							chargedNano: 0,
+							outcome: "resolved",
+							rankerVersion: `exact-${exact.kind}-v1`,
+							stageMs: { resolution: elapsedMs, total: elapsedMs },
+						}),
+					() => {},
+				)
+			})
+		return batch
+	}
 	const started = Date.now(),
 		errors: string[] = [];
 	let chargedNano = 0;
-	// Awaited before the paid call and the history row; this keeps an early rejection from counting as unhandled.
-	Promise.resolve(visitor.accountId).catch(() => {});
 	// Milliseconds per stage, in order: the people step, the language step, the Jev reading, the wait for the title
 	// lookup that runs alongside, the ranking (with its Qdrant time and its own stages), and the display (catalog
 	// metadata, display fields and the blend).
@@ -740,7 +784,11 @@ export async function combinedSearch(
 	const people = explicitPeople ? { ...inferredPeople, scope: null } : inferredPeople;
 	lap("people");
 	const q = people.scope?.text ?? query;
-	const explicitFilters = explicitPeople ? await peopleSearchFilters(eligibility.filters, signal) : eligibility.filters;
+	let explicitFilters = explicitPeople ? await peopleSearchFilters(eligibility.filters, signal) : eligibility.filters;
+	if (explicitFilters?.trope) {
+		const { tropeTitles } = await import("../title-filter/id-sets.server");
+		explicitFilters = withTitleScope(explicitFilters, [...await tropeTitles(explicitFilters.trope)].map(key => `${key >= 2e12 ? "show" : "movie"}:${key % 1e12}`));
+	}
 	const scopedFilters = withTitleScope(explicitFilters, people.scope?.titles);
 	const policy: Eligibility = scopedFilters === eligibility.filters ? eligibility : { ...eligibility, filters: scopedFilters };
 

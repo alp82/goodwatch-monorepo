@@ -1,4 +1,5 @@
-import { type Entry, discover, excerpt } from "./matching.server"
+import { tropeDiscoverPath } from "~/domain/trope-filter"
+import { type Entry, excerpt } from "./matching.server"
 
 type CatalogRow = [name: string, url: string, description: string | null]
 const fold = (name: string) =>
@@ -86,7 +87,7 @@ export function tropeEntries(
 				sub: [excerpt(description), `${count.toLocaleString("en-US")} titles`]
 					.filter(Boolean)
 					.join(" · "),
-				href: discover({ q: label }),
+				href: tropeDiscoverPath(url),
 			},
 		}
 	})

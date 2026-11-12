@@ -9,11 +9,13 @@ import { RoomError, IndeterminateWrite } from "./errors.ts"
 import type { Sql } from "./repository.server.ts"
 import { CONTINUOUS_LIMITS } from "./continuous-types.ts"
 import type { ProposalRoom } from "./proposal-types.ts"
+import type { CreationQuotaStore } from './proposal-creation-quota.ts'
 export const CONTROL_TABLE = "doc.yepwatch_control"
 const ID = "proposal3",
 	WINDOW_MS = 60_000
 export interface ControlPolicy {
 	rooms: number
+	roomsPerPerson?: number
 	admissions: number
 	commands: number
 	actorCommands: number
@@ -141,10 +143,12 @@ export async function provisionControl(
 }
 export class ReleaseControl {
 	private sql: Sql
+	private readonly quotas?: CreationQuotaStore
 	readonly policy: ControlPolicy
-	constructor(sql: Sql, policy: ControlPolicy) {
+	constructor(sql: Sql, policy: ControlPolicy, quotas?: CreationQuotaStore) {
 		this.sql = sql
 		this.policy = policy
+		this.quotas = quotas
 	}
 	private async read(): Promise<Read> {
 		const row = (
@@ -200,8 +204,9 @@ export class ReleaseControl {
 	async summary() {
 		const r = await this.read()
 		return {
-			activeReservations: r.state.rooms.filter((x) => x[2] > r.now).length,
-			maximumRooms: this.policy.rooms,
+			activeReservations: r.state.rooms.filter((x) => x[2] > r.now).length + (await this.quotas?.count() ?? 0),
+			maximumRooms: this.quotas ? null : this.policy.rooms,
+			roomsPerPerson: this.quotas?.limit ?? null,
 			window: r.state.window,
 			admissionGrants: r.state.admissions.length,
 			commandGrants: r.state.commands.length,
@@ -212,13 +217,15 @@ export class ReleaseControl {
 		const r = await this.read()
 		if (r.now >= room.expiresAt)
 			throw new RoomError("expired", "Room expired", 410)
-		if (!r.state.rooms.some((x) => x[0] === room.id && x[2] === room.expiresAt))
+		if (!r.state.rooms.some((x) => x[0] === room.id && x[2] === room.expiresAt)) {
+			if (this.quotas) return this.quotas.active(room.id, room.expiresAt)
 			throw new RoomError(
 				"busy",
 				"Room capacity reservation unavailable",
 				503,
 				true
 			)
+		}
 	}
 	private clean(r: Read) {
 		const s = structuredClone(r.state)
@@ -260,7 +267,12 @@ export class ReleaseControl {
 			throw e
 		}
 	}
-	async create(roomId: string, admissionDigest: string) {
+	async create(roomId: string, admissionDigest: string, creatorDigest?: string) {
+		if (this.quotas && creatorDigest) {
+			const expiry = await this.quotas.reserve(roomId, admissionDigest, creatorDigest)
+			await this.permit('create', roomId, creatorDigest, admissionDigest)
+			return expiry
+		}
 		const op = digest(`create:${roomId}:${admissionDigest}`)
 		for (let i = 0; i < 8; i++) {
 			const r = await this.read(),
@@ -311,7 +323,7 @@ export class ReleaseControl {
 		await this.permit("command", roomId, actorId, commandDigest)
 	}
 	private async permit(
-		kind: "join" | "command",
+		kind: "create" | "join" | "command",
 		roomId: string,
 		actorId: string,
 		inputDigest: string
@@ -321,14 +333,16 @@ export class ReleaseControl {
 		for (let i = 0; i < 8; i++) {
 			const r = await this.read(),
 				state = this.clean(r)
-			if (!state.rooms.some((x) => x[0] === roomId))
-				throw new RoomError("expired", "Room capacity reservation expired", 410)
+			if (!state.rooms.some((x) => x[0] === roomId)) {
+				if (this.quotas) await this.quotas.active(roomId)
+				else throw new RoomError("expired", "Room capacity reservation expired", 410)
+			}
 			const admitted =
-				kind === "join"
+				kind !== "command"
 					? state.admissions.includes(op)
 					: state.commands.some((x) => x[0] === op && x[1] === actor)
 			if (admitted) return
-			if (kind === "join") {
+			if (kind !== "command") {
 				this.admissionBudget(state, r.now)
 				state.admissions.push(op)
 			} else {
@@ -352,7 +366,7 @@ export class ReleaseControl {
 			)
 				continue
 			if (
-				kind === "join"
+				kind !== "command"
 					? proof.state.admissions.includes(op)
 					: proof.state.commands.some((x) => x[0] === op && x[1] === actor)
 			)

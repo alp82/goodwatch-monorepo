@@ -1,3 +1,4 @@
+import { tropeLabel } from "~/domain/trope-filter"
 import { MOODS } from "~/domain/moods"
 import { THEMES, STYLES } from "~/domain/themes-styles"
 const tagNames: Record<string, Record<string, string>> = {
@@ -239,6 +240,7 @@ export function tokens(
 		else if (key === "ratingCountry")
 			add("Age ratings", countries[value] ?? value)
 		else if (key === "restOfWorld") add("Origin", "Rest of world")
+		else if (key === "trope") add("Trope", tropeLabel(value))
 		else if (["similar", "people", "loved", "disliked"].includes(key))
 			add(
 				(

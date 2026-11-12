@@ -48,7 +48,8 @@ export class ContinuousApi {
   constructor(
     private readonly fetcher: typeof fetch = (url, init) => fetch(url, init),
     private readonly native = false,
-    private readonly sessions?: { read(): Promise<string | null>; save(value: string): Promise<unknown> }
+    private readonly sessions?: { read(): Promise<string | null>; save(value: string): Promise<unknown> },
+    private readonly creators?: { read(): Promise<string | null> }
   ) {}
   async request<T>(
     path: string,
@@ -61,6 +62,7 @@ export class ContinuousApi {
   ): Promise<T> {
     const asked = authEpoch.current();
     if (this.native && memberSession === undefined) memberSession = await this.sessions?.read();
+    const creator = this.native && path === paths.rooms && body !== undefined ? await this.creators?.read() : null;
     const started = Date.now();
     let stage: ConnectionStage = 'address';
     let timedOut = false;
@@ -73,6 +75,7 @@ export class ContinuousApi {
     const headers: Record<string, string> = { Accept: 'application/json' };
     if (body !== undefined) headers['Content-Type'] = 'application/json';
     if (this.native) headers['X-YepWatch-Client'] = 'native';
+    if (creator) headers['X-YepWatch-Creator'] = creator;
     if (this.native && memberSession) headers[MEMBER_SESSION_HEADER] = memberSession;
     if (this.native && access) {
       headers.Authorization = `Bearer ${access.token}`;

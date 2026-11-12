@@ -80,6 +80,37 @@ async function cachedKeys(
 	return new Set(await pending)
 }
 
+/** Canonical URL membership, independent of alias/link text. Empty results stay empty. */
+export function tropeTitles(url: string): Promise<Set<TitleKey>> {
+	return cachedKeys("trope", url, async () => {
+		const aliases = await query<{ reference_url: string }>(
+			"SELECT reference_url FROM trope_catalog_reference WHERE canonical_url = ? LIMIT 10001",
+			[url],
+		)
+		if (aliases.length > 10000)
+			throw new Error("Trope references exceed supported limit")
+		const urls = [
+			...new Set([
+				url,
+				url.replace("https://", "http://"),
+				url.replace("://tvtropes.org", "://www.tvtropes.org"),
+				url.replace("https://tvtropes.org", "http://www.tvtropes.org"),
+				...aliases.map((r) => r.reference_url),
+			]),
+		]
+		const rows = await query<{
+			media_type: "movie" | "show"
+			media_tmdb_id: number
+		}>(
+			`SELECT media_type,media_tmdb_id FROM trope WHERE url IN (${urls.map(() => "?").join(",")}) GROUP BY media_type,media_tmdb_id LIMIT 100001`,
+			urls,
+		)
+		if (rows.length > 100000)
+			throw new Error("Trope membership exceeds supported limit")
+		return rows.map((r) => titleKey(r.media_type, r.media_tmdb_id))
+	})
+}
+
 /** Titles similar to one title: the similar-titles recommend path over Discover's eligible titles. */
 export function similarTitles(seed: TitleKey): Promise<Set<TitleKey>> {
 	return cachedKeys("similar", seed, async () => {

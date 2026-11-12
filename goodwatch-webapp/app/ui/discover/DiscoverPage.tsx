@@ -1,3 +1,4 @@
+import { exactSearchParams } from "~/domain/exact-search"
 // Discover, browsing and searching on one page: the static title, the controls in Easy or Advanced (DiscoverControls,
 // with the panel or phone sheet the filter bar opens), and the grid of title cards, loaded 40 at a time as the person scrolls. The grid
 // is never replaced between browsing and searching: titles in both lists glide to their new places.
@@ -236,6 +237,20 @@ export function DiscoverPage({
 		enabled: guest !== undefined && reading.plan !== null,
 		preferences,
 	})
+	// A confirmed whole-name reading becomes an ordinary filter, without keeping a semantic query alive.
+	useEffect(() => {
+		const exact = search.current?.resolution
+		if (!exact || !q) return
+		setParams(
+			(previous) => {
+				const base = new URLSearchParams(previous)
+				if (!exact.wholeQuery && plan)
+					for (const [key, value] of plan.filters) base.set(key, value)
+				return exactSearchParams(base, exact)
+			},
+			{ replace: true, preventScrollReset: true },
+		)
+	}, [search.current?.resolution, q, setParams, plan])
 	// The words name a title: read again with only the person's own filters.
 	const namesTitle = Boolean(search.current?.namedTitle) && plan !== null && plan.branch !== "title"
 	useEffect(() => {

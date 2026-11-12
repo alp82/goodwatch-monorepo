@@ -1,3 +1,4 @@
+import { tropeLabel } from "~/domain/trope-filter"
 import { GUEST, ratePath } from "../../domain/member-paths.ts"
 import {
 	BUDGET_PRESETS,
@@ -267,6 +268,7 @@ export const FILTER_ACCENTS: Record<FilterName, { dot: string; bar: string }> =
 		minScore: { dot: "bg-lime-400", bar: "bg-lime-500" },
 		minMatch: { dot: "bg-amber-400", bar: "bg-amber-500" },
 		released: { dot: "bg-cyan-400", bar: "bg-cyan-500" },
+		trope: { dot: "bg-rose-400", bar: "bg-rose-500" },
 		similarTo: { dot: "bg-rose-400", bar: "bg-rose-500" },
 		loved: { dot: "bg-emerald-300", bar: "bg-emerald-500" },
 		disliked: { dot: "bg-red-400", bar: "bg-red-500" },
@@ -365,6 +367,8 @@ export function recoveryLabel(
 			return `${n} with lower source scores`
 		case "scoreGap":
 			return `${n} without critics vs audiences`
+		case "trope":
+			return `${n} without this trope`
 		case "similarTo":
 			return `${n} less similar`
 		case "loved":
@@ -803,6 +807,10 @@ export function activeChips(
 					remove: (s) => ({ ...s, [group]: without(s[group], key) }),
 				})
 	}
+	if (state.trope) chips.push({
+  key: `trope-${state.trope}`, group: "trope", label: `Trope: ${tropeLabel(state.trope)}`,
+  remove: s => ({ ...s, trope: undefined }),
+ })
 	for (const key of state.similarTo ?? [])
 		chips.push({
 			key: `similar-${key}`,

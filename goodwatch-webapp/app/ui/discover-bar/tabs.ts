@@ -114,6 +114,7 @@ export const GROUP_PLACES: Record<
 > = {
 	// Search: one list, Like this, people, More like, Less like, type.
 	similarTo: { subTab: "titles", line: 0 },
+	trope: { subTab: "titles", line: 0 },
 	people: { subTab: "people", line: 0 },
 	loved: { subTab: "titles", line: 0 },
 	disliked: { subTab: "titles", line: 0 },

@@ -435,6 +435,23 @@ export const controlTable: Table = {
 	}
 }
 
+/** Room-creation allowance, separate from transferable hosting and room membership. */
+export const creationQuotaTable: Table = {
+	name: "doc.yepwatch_creation_quota",
+	primary: "creator_digest",
+	fields: {
+		creator_digest: text(64),
+		format: integer(1),
+		expires_at: integer(),
+		reservations: array(object({ room_id: text(128), admission_digest: text(128), expires_at: integer() }), 100),
+	},
+}
+export const creationReservationTable: Table = {
+	name: "doc.yepwatch_creation_reservation",
+	primary: "room_id",
+	fields: { room_id: text(128), creator_digest: text(64), admission_digest: text(128), expires_at: integer() },
+}
+
 export const runtimeTable: Table = {
 	name: "doc.yepwatch_runtime",
 	primary: "id",
@@ -453,6 +470,8 @@ export const invitationTable: Table = {
 	fields: { code_hash: text(64), room_id: text(128), expires_at: integer() }
 }
 export const storageTables: Table[] = [
+	creationQuotaTable,
+	creationReservationTable,
 	deletionTable,
 	accountIndexTable,
 	accountHistoryTable,

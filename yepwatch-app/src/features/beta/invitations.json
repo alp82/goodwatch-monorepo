@@ -1,5 +1,5 @@
 {
-  "android": null,
+  "android": "https://yepwatch.com/android-test.html",
   "ios": "https://testflight.apple.com/join/V2gzwSFA",
   "androidApk": "https://expo.dev/accounts/alperortac/projects/yepwatch/builds/92acdd61-87f4-49ae-9c38-bea4881b5837"
 }

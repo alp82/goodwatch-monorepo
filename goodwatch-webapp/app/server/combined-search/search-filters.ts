@@ -1,7 +1,9 @@
+import { tropeUrl } from "../../domain/trope-filter.ts";
 // One definition of the Search chip filters, shared by the route, retrieval and the browser.
 // No server-only imports: the client builds and applies the same object.
 export interface SearchFilters {
 	type?: "movie" | "show";
+	trope?: string;
 	// The type filter's anime choice: only anime, or none of it. A title whose is_anime is unknown is not anime.
 	anime?: "only" | "none";
 	// Genre names as stored in Crate and Qdrant ("Comedy"). A title must have all of them.
@@ -31,6 +33,8 @@ export const parseSearchFilters = (input: unknown): SearchFilters => {
 	if (!input || typeof input !== "object" || Array.isArray(input)) return {};
 	const raw = input as Record<string, unknown>;
 	const filters: SearchFilters = {};
+	const trope = tropeUrl(raw.trope);
+	if (trope) filters.trope = trope;
 	if (raw.type === "movie" || raw.type === "show") filters.type = raw.type;
 	if (raw.anime === "only" || raw.anime === "none") filters.anime = raw.anime;
 	if (Array.isArray(raw.people)) {
@@ -79,6 +83,7 @@ export const parseSearchFilters = (input: unknown): SearchFilters => {
 export const searchFiltersKey = (filters: SearchFilters | undefined) => {
 	if (!filters) return "";
 	const parts: string[] = [];
+	if (filters.trope) parts.push(`trope=${filters.trope}`);
 	if (filters.type) parts.push(`t=${filters.type}`);
 	if (filters.anime) parts.push(`a=${filters.anime}`);
 	if (filters.genres?.length) parts.push(`g=${[...filters.genres].sort().join(",")}`);

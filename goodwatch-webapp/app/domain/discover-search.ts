@@ -56,6 +56,7 @@ export function searchEligibility(
 	now = new Date(),
 ): SearchFilters {
 	const filters: SearchFilters = {}
+	if (state.trope) filters.trope = state.trope
 	if (state.type !== "all") filters.type = state.type
 	if (state.anime !== "any") filters.anime = state.anime
 	if (state.people?.length)

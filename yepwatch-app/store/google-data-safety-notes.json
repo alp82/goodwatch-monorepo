@@ -1,0 +1,123 @@
+{
+  "dataTypes": {
+    "PSL_APPROX_LOCATION": {
+      "optional": true,
+      "collect": [
+        "PSL_APP_FUNCTIONALITY",
+        "PSL_PERSONALIZATION",
+        "PSL_ANALYTICS",
+        "PSL_ADVERTISING"
+      ],
+      "share": [
+        "PSL_APP_FUNCTIONALITY",
+        "PSL_ANALYTICS",
+        "PSL_ADVERTISING",
+        "PSL_PERSONALIZATION"
+      ],
+      "reason": "User-selected streaming country; optional YouTube trailer requests expose IP-derived general location under Google privacy practices. No device location permission is requested."
+    },
+    "PSL_NAME": {
+      "optional": true,
+      "collect": [
+        "PSL_APP_FUNCTIONALITY",
+        "PSL_ACCOUNT_MANAGEMENT"
+      ],
+      "share": [],
+      "reason": "Chosen nickname or optional GoodWatch display name. Guests can use the default name."
+    },
+    "PSL_EMAIL": {
+      "optional": true,
+      "collect": [
+        "PSL_APP_FUNCTIONALITY",
+        "PSL_DEVELOPER_COMMUNICATIONS",
+        "PSL_ACCOUNT_MANAGEMENT"
+      ],
+      "share": [],
+      "reason": "Optional support correspondence and account-support requests. GoodWatch handles authentication email on its own website; YepWatch does not receive it in the account link."
+    },
+    "PSL_USER_ACCOUNT": {
+      "optional": false,
+      "collect": [
+        "PSL_APP_FUNCTIONALITY",
+        "PSL_ACCOUNT_MANAGEMENT",
+        "PSL_FRAUD_PREVENTION_SECURITY"
+      ],
+      "share": [],
+      "reason": "Room participant identifiers and optional verified GoodWatch account identifiers identify the correct membership and protect room access."
+    },
+    "PSL_USER_INTERACTION": {
+      "optional": false,
+      "collect": [
+        "PSL_APP_FUNCTIONALITY",
+        "PSL_PERSONALIZATION",
+        "PSL_ANALYTICS",
+        "PSL_ADVERTISING"
+      ],
+      "share": [
+        "PSL_APP_FUNCTIONALITY",
+        "PSL_ANALYTICS",
+        "PSL_ADVERTISING",
+        "PSL_PERSONALIZATION"
+      ],
+      "reason": "Room participation, votes, matches and decisions; optional YouTube playback interactions are handled by Google under its privacy policy."
+    },
+    "PSL_IN_APP_SEARCH_HISTORY": {
+      "optional": true,
+      "collect": [
+        "PSL_APP_FUNCTIONALITY",
+        "PSL_PERSONALIZATION"
+      ],
+      "share": [],
+      "reason": "Optional viewing-idea/search prompts used to obtain catalog suggestions."
+    },
+    "PSL_USER_GENERATED_CONTENT": {
+      "optional": true,
+      "collect": [
+        "PSL_APP_FUNCTIONALITY",
+        "PSL_PERSONALIZATION"
+      ],
+      "share": [],
+      "reason": "Optional room-authored viewing ideas; interpretation processors act as service providers. Sharing ideas with the invited room is an intentional user action."
+    },
+    "PSL_CRASH_LOGS": {
+      "optional": false,
+      "collect": [
+        "PSL_ANALYTICS"
+      ],
+      "share": [],
+      "reason": "Expo Update failed-update identifiers and short launch-error reports, as documented by Expo."
+    },
+    "PSL_DEVICE_ID": {
+      "optional": false,
+      "collect": [
+        "PSL_APP_FUNCTIONALITY",
+        "PSL_ANALYTICS",
+        "PSL_FRAUD_PREVENTION_SECURITY",
+        "PSL_ADVERTISING",
+        "PSL_PERSONALIZATION"
+      ],
+      "share": [
+        "PSL_APP_FUNCTIONALITY",
+        "PSL_ANALYTICS",
+        "PSL_ADVERTISING",
+        "PSL_PERSONALIZATION"
+      ],
+      "reason": "Required random Expo installation ID and room-allowance identifier; optional YouTube player cookies/identifiers under Google privacy practices. YepWatch does not send its own room credentials or account identifier to the player."
+    }
+  },
+  "accountCreation": [
+    "Username and password",
+    "OAuth"
+  ],
+  "accountDeletionUrl": "https://yepwatch.com/delete-account",
+  "encryptedInTransit": true,
+  "thirdPartyPlayer": "Google/YouTube collection is included, rather than assuming a user-initiated-sharing exemption. Expo and interpretation processors are treated as service providers.",
+  "sources": [
+    "https://support.google.com/googleplay/android-developer/answer/10787469",
+    "https://docs.expo.dev/eas-update/store-privacy-declarations/",
+    "https://policies.google.com/privacy",
+    "https://support.google.com/youtube/answer/132596"
+  ],
+  "separateDataDeletionWithoutAccountDeletion": false,
+  "selectiveDeletionReason": "The published flow deletes all YepWatch data, with a 30-day recovery window, while preserving the separate GoodWatch account. No granular partial-data deletion control is offered."
+}
