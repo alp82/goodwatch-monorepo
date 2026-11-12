@@ -39,7 +39,11 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const DEVICES = {
   phone: { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 },
   desktop: { viewport: { width: 1440, height: 900 }, isMobile: false, hasTouch: false, deviceScaleFactor: 1 },
+  // Small phones: iPhone SE (1st gen) and a common small Android screen.
+  se: { viewport: { width: 320, height: 568 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 },
+  android: { viewport: { width: 360, height: 640 }, isMobile: true, hasTouch: true, deviceScaleFactor: 3 },
 } as const;
+export type Device = keyof typeof DEVICES;
 
 export class Person {
   readonly recordings: Recording[] = [];
@@ -57,7 +61,7 @@ export class Person {
   /** False for a person who types real credentials: no trace, and no failure aria snapshot of a password form. */
   traced = true;
 
-  constructor(readonly room: Room, readonly name: string, readonly context: BrowserContext, public page: Page, readonly device: 'phone' | 'desktop') {
+  constructor(readonly room: Room, readonly name: string, readonly context: BrowserContext, public page: Page, readonly device: Device) {
     this.watch(page);
   }
 
@@ -307,7 +311,7 @@ export class Room {
   /** `trace: false` keeps this person out of Playwright tracing and E2E_VIDEO: a trace stores typed values, request
    * bodies and cookies, so a person who signs in with real credentials (the production smoke member) is never traced
    * or recorded. */
-  async person(name: string, opts: { device?: 'phone' | 'desktop'; member?: string; locale?: string; context?: BrowserContext; trace?: boolean } = {}) {
+  async person(name: string, opts: { device?: Device; member?: string; locale?: string; context?: BrowserContext; trace?: boolean } = {}) {
     const device = opts.device ?? 'phone';
     const context = opts.context ?? await this.browser.newContext({
       ...DEVICES[device],

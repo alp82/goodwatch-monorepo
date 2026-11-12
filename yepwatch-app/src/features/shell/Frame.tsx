@@ -15,7 +15,7 @@ import type { HomeRoom } from '../rooms/home-model';
 import { HomeProfileSheet } from '../rooms/panels';
 import { HomeRoomsSheet, YourRoomsSheet, type CurrentRoom, type RoomsSheetActions } from '../rooms/RoomsSheet';
 import { AppHeader, type AppHeaderProps } from './Header';
-import { useLayout } from './layout';
+import { keyboardDismissMode, useLayout } from './layout';
 import { CoveredBody } from './parts';
 import { FloatingNote, NoteLayerProvider, useNoteLayer } from './floating-note';
 import { Shade } from './Sheet';
@@ -113,7 +113,7 @@ export function AppFrame({ header = {}, rooms, children, footer, footerPlacement
         <CoveredBody keepView covered={covered || Boolean(shownSheet)}>
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, minHeight: 0 }}>
             {scroll ? (
-              <ScrollView testID="frame-body" style={{ flex: 1 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={{ flexGrow: 1, paddingHorizontal: gutter, paddingTop: top, paddingBottom: bottom }}>
+              <ScrollView testID="frame-body" style={{ flex: 1 }} keyboardShouldPersistTaps="handled" keyboardDismissMode={keyboardDismissMode} contentContainerStyle={{ flexGrow: 1, paddingHorizontal: gutter, paddingTop: top, paddingBottom: bottom }}>
                 <View style={{ ...column, gap }}>{content}</View>
               </ScrollView>
             ) : (

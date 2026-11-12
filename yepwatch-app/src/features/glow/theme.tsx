@@ -199,6 +199,23 @@ export function Press({
   );
 }
 
+/**
+ * Space toggles a checkbox or switch (WAI-ARIA keyboard pattern). react-native-web's Pressable presses
+ * on Space only for buttons, so on the web a focused checkbox or switch answers Enter alone. Spread it
+ * on the Pressable that carries the checkbox or switch role.
+ */
+export function spaceToggles(onPress: () => void, disabled = false) {
+  if (native) return null;
+  return {
+    onKeyDown: (e: { key?: string; repeat?: boolean; preventDefault(): void; nativeEvent?: { key?: string; repeat?: boolean } }) => {
+      const key = e.key ?? e.nativeEvent?.key;
+      if (key !== ' ' && key !== 'Spacebar') return;
+      e.preventDefault(); // no page scroll
+      if (!disabled && !(e.repeat ?? e.nativeEvent?.repeat)) onPress();
+    },
+  };
+}
+
 /** The smallest touch target (WCAG 2.2 target size, Android's 48 dp). */
 export const TARGET = 48;
 /**

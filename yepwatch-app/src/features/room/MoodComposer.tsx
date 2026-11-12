@@ -112,7 +112,9 @@ export function MoodComposer({ initialText = '', text: controlledText, first = f
               <View onLayout={(e) => setTypedWidth(e.nativeEvent.layout.width)}><GText bold size={size} style={font}>{own || ' '}</GText></View>
             </View>
           </View>
-          <Animated.View testID="mood-underline" style={{ width: underline, height: 3, borderRadius: 1.5, marginTop: 8, backgroundColor: focus || own ? glow.amber : '#ffffff1f', opacity: line }} />
+          {/* Full column wide, drawn to the words' width by scale: the width measured after the first frame
+              never moves anything in the layout (on narrow phones it grows once the placeholder is measured). */}
+          <Animated.View testID="mood-underline" style={{ width: col, transform: [{ scaleX: underline / col }], height: 3, borderRadius: 1.5, marginTop: 8, backgroundColor: focus || own ? glow.amber : '#ffffff1f', opacity: line }} />
         </View>
         <View style={{ gap: z(14), alignItems: 'center', alignSelf: 'stretch' }}>
           <GText size={z(14)} color={glow.muted}>or try</GText>

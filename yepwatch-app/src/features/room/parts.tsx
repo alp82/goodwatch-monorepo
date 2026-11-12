@@ -7,7 +7,7 @@ import { FaceStack } from '../shell/parts';
 import { useGlide } from '../shell/glide';
 import { useLayout } from '../shell/layout';
 import { R, warm } from '../shell/tokens';
-import { GText, Icon, Press, glow, grow } from '../glow/theme';
+import { GText, Icon, Press, glow, grow, spaceToggles } from '../glow/theme';
 import type { Kind } from './model';
 import { openPage } from './nav';
 import { useRoom } from './RoomProvider';
@@ -228,7 +228,7 @@ export function ServiceGrid({ all, loading, selected, toggle }: { all: ServiceCh
           const on = pickedIn(s, selected);
           return (
             <View key={s.id} style={cell}>
-              <Pressable accessibilityRole="checkbox" accessibilityLabel={s.name} accessibilityState={{ checked: on }} aria-checked={on} onPress={() => toggle(s)}
+              <Pressable accessibilityRole="checkbox" accessibilityLabel={s.name} accessibilityState={{ checked: on }} aria-checked={on} onPress={() => toggle(s)} {...spaceToggles(() => toggle(s))}
                 style={({ pressed }) => ({ ...tile, borderColor: on ? glow.amber : warm.line, backgroundColor: on ? warm.amberSoft : warm.faint, opacity: pressed ? 0.7 : 1 })}>
                 <View style={{ opacity: on || !selected.length ? 1 : 0.55 }}>
                   {s.logoUrl ? <Image source={{ uri: s.logoUrl }} accessible={false} style={{ width: logo, height: logo, borderRadius: logo * 0.22 }} />
@@ -283,9 +283,10 @@ export function KindsPick({ kinds, set, disabled = false }: { kinds: Kind[]; set
     <View style={{ flexDirection: 'row', gap: 10 }}>
       {(['movie', 'show_start'] as const).map((k) => {
         const on = kinds.includes(k);
+        const flip = () => set(on ? kinds.filter((x) => x !== k) : [...kinds, k]);
         return (
           <Pressable key={k} accessibilityRole="checkbox" accessibilityLabel={k === 'movie' ? 'Movies' : 'Shows'} accessibilityState={{ checked: on, disabled }} aria-checked={on} aria-disabled={disabled} disabled={disabled}
-            onPress={() => set(on ? kinds.filter((x) => x !== k) : [...kinds, k])}
+            onPress={flip} {...spaceToggles(flip, disabled)}
             style={{ flex: 1, height: 120, gap: 10, borderRadius: R.card, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: on ? glow.amber : warm.line, backgroundColor: on ? warm.amberSoft : warm.faint, opacity: disabled && !on ? 0.6 : 1 }}>
             <KindIcons kinds={[k]} size={32} color={on ? glow.amber : glow.soft} />
             <GText bold size={18}>{k === 'movie' ? 'Movies' : 'Shows'}</GText>
