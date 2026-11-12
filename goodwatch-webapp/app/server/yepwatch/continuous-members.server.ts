@@ -96,9 +96,15 @@ type RenewalOutcome =
 	| { state: "renewed"; session: MemberSession }
 	| { state: "refused" }
 	| { state: "unavailable"; error: RoomError }
-/** How long a finished renewal is kept for a device that hasn't received it yet, and how many are kept at most. */
-const LANDED_MS = 24 * 3_600_000
-const LANDED_MAX = 20_000
+/**
+ * A rotated session is kept for its device until the device shows it has it (sends it, or one renewed from it),
+ * then for LANDED_GRACE_MS more for requests still in flight with the replaced one. Undelivered, it is kept as long
+ * as its refresh grant can last (RENEWABLE_SESSION_MS). A refusal is kept a day: forgetting one only means GoodWatch
+ * refuses again. LANDED_MAX bounds memory; only undelivered rotations count against it in practice.
+ */
+const LANDED_GRACE_MS = 5 * 60_000
+const REFUSAL_KEPT_MS = 24 * 3_600_000
+const LANDED_MAX = 50_000
 /** A renewable session lasts as long as the issuer's refresh grant; otherwise only as long as its access token. */
 export const RENEWABLE_SESSION_MS = 90 * 86_400_000
 export const isAccountState = (state: string) =>
@@ -603,14 +609,44 @@ export class ContinuousMembers {
 	 * sent to GoodWatch with its spent refresh token. A network failure keeps nothing: the stored session stays.
 	 */
 	private landed = new Map<string, { outcome: Exclude<RenewalOutcome, { state: "unavailable" }>; until: number }>()
+	/** The renewal key of a rotated session -> the key of the session it replaced (see `delivered`). */
+	private replaced = new Map<string, string>()
 	private renewalKey(session: MemberSession) {
 		return createHash("sha256").update(`${session.accessToken}\0${session.refreshToken ?? ""}`).digest("base64url")
 	}
 	private land(key: string, outcome: Exclude<RenewalOutcome, { state: "unavailable" }>) {
 		const now = this.now()
-		for (const [k, v] of this.landed) if (v.until <= now || this.landed.size >= LANDED_MAX) this.landed.delete(k); else break
+		if (this.landed.size >= LANDED_MAX) {
+			for (const [k, v] of this.landed) if (v.until <= now) this.forget(k)
+			for (const [k] of this.landed) {
+				if (this.landed.size < LANDED_MAX) break
+				this.forget(k)
+				console.warn(JSON.stringify({ event: "yepwatch_member_renewal_evicted" }))
+			}
+		}
+		this.forget(key)
+		this.landed.set(key, { outcome, until: now + (outcome.state === "renewed" ? RENEWABLE_SESSION_MS : REFUSAL_KEPT_MS) })
+		if (outcome.state === "renewed") this.replaced.set(this.renewalKey(outcome.session), key)
+	}
+	private forget(key: string) {
+		const kept = this.landed.get(key)
+		if (kept?.outcome.state === "renewed") {
+			const next = this.renewalKey(kept.outcome.session)
+			if (this.replaced.get(next) === key) this.replaced.delete(next)
+		}
 		this.landed.delete(key)
-		this.landed.set(key, { outcome, until: now + LANDED_MS })
+	}
+	/** The device sent `session`: the rotations that led to it have reached it, and only in-flight requests need them. */
+	private delivered(session: MemberSession) {
+		const until = this.now() + LANDED_GRACE_MS
+		let key = this.renewalKey(session)
+		for (let hop = 0; hop < 8; hop++) {
+			const previous = this.replaced.get(key)
+			const kept = previous && this.landed.get(previous)
+			if (!previous || !kept || kept.outcome.state !== "renewed" || this.renewalKey(kept.outcome.session) !== key) break
+			if (kept.until > until) kept.until = until
+			key = previous
+		}
 	}
 	/**
 	 * The newest session a finished renewal left for `session` (null: GoodWatch refused it). `moved`: it differs from
@@ -715,6 +751,7 @@ export class ContinuousMembers {
 		options: { background?: boolean } = {},
 	): Promise<{ status: AccountStatus; session: MemberSession | null; changed: boolean; renewing?: true }> {
 		const opened = this.openSession(raw)
+		if (opened) this.delivered(opened)
 		let fresh
 		try {
 			fresh = await this.freshSession(opened, options)

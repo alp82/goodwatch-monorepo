@@ -161,10 +161,13 @@ export function createProposalHandler(
     let accountRead: Promise<import('./proposal-types.ts').RoomAccount | null> | undefined
     let freshMemberSession: MemberSession | null = null
     /**
-     * Room actions (Start, votes, reads) run on the YepWatch session alone: a lapsed GoodWatch login renews in the
-     * background, never on their path. Linking a room is GoodWatch work itself: it waits for the renewal (shared).
+     * Room actions (create, join, Start, votes, reads) run on the YepWatch session alone: a lapsed GoodWatch login
+     * renews in the background, never on their path. Everything else waits for the renewal (joining a running one):
+     * account pages, deleting or restoring an account or a place (a revoked grant must not reach them), and linking a
+     * room, which is GoodWatch work itself.
      */
-    const renewInline = request.method === 'POST' && /\/member\/link$/.test(url.pathname)
+    const renewInline = !(url.pathname === paths.rooms || (url.pathname.startsWith(`${paths.rooms}/`) &&
+      !/\/(member\/link|deletion|restore)$/.test(url.pathname)))
     /** The session this answer stands on while its renewal runs; a renewal that lands before the answer goes with it. */
     let renewing: MemberSession | null = null
     const deliverRenewal = () => {

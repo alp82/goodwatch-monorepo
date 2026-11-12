@@ -814,3 +814,15 @@ test("a background renewal that fails on the network keeps the stored login and 
 	assert.equal(body.unavailable, undefined)
 	assert.ok(cookies(back)[MEMBER_COOKIE]?.value, "the renewal lands once GoodWatch answers")
 })
+
+test("deleting an account waits for the renewal: a grant revoked meanwhile deletes nothing", async () => {
+	const m = await lapsedMember()
+	m.mode.revoke = true
+	const deletion = await m.handler(new Request(api("/account/deletion"), {
+		method: "POST", headers: { origin, "content-type": "application/json", cookie: `${MEMBER_COOKIE}=${m.session}` },
+		body: JSON.stringify({ confirm: "DELETE" }),
+	}))
+	assert.equal(deletion.status, 403)
+	assert.equal((await deletion.json()).error.code, "member_required")
+	assert.equal(await m.service.deletions.get({ kind: "account", userId: "account-1" }), null)
+})
