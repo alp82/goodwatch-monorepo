@@ -52,7 +52,8 @@ function database(policy = DEFAULT_CONTROL) {
 		lost = false,
 		failProof = false,
 		late = false,
-		failAfterUpdate = false
+		failAfterUpdate = false,
+		beforeCas: (() => void) | null = null
 	const sql: Sql = async (stmt, args = []) => {
 		if (stmt.startsWith("SELECT " + CONTROL_COLUMNS.join(","))) {
 			if (failProof) {
@@ -69,6 +70,11 @@ function database(policy = DEFAULT_CONTROL) {
 			if (late) {
 				now = Number(args[0])
 				late = false
+			}
+			if (beforeCas) {
+				const write = beforeCas
+				beforeCas = null
+				write()
 			}
 			if (args.at(-2) !== seq || args.at(-1) !== 1)
 				return { rows: [], rowcount: 0 }
@@ -110,6 +116,13 @@ function database(policy = DEFAULT_CONTROL) {
 		/** A reservation written by the removed shared cap before an upgrade. */
 		addLegacyRoom: (roomId: string, admissionDigest: string, expiresAt: number) => {
 			state = { ...state, rooms: [...state.rooms, [roomId, admissionDigest, expiresAt]] }
+		},
+		/** An instance on the shared-cap code writes a legacy reservation between our read and our compare-and-swap. */
+		oldWriterBeforeNextCas: (roomId: string, admissionDigest: string, expiresAt: number) => {
+			beforeCas = () => {
+				state = { ...state, rooms: [...state.rooms, [roomId, admissionDigest, expiresAt]] }
+				seq++
+			}
 		},
 		loseAndHideProof: () => {
 			lost = true
@@ -414,6 +427,23 @@ test("Rooms holding a legacy shared-cap reservation stay readable, joinable and 
 	db.advance(held.expiresAt - db.now())
 	await assert.rejects(service.read(id, who(host)), (e: RoomError) => e.status === 410)
 	await assert.rejects(guard.join(id, "late", "late-join"), (e: RoomError) => e.status === 503)
+})
+test("A legacy reservation written by an old instance between a creation's read and its CAS is honored on the reread", async () => {
+	const db = database(),
+		quotas = new MemoryCreationQuotas(db.now),
+		guard = guarded(db, DEFAULT_CONTROL, quotas),
+		expiry = db.now() + 1_000_000
+	// Exact retry: the original expiry, no grant, no allowance reservation.
+	db.oldWriterBeforeNextCas("mixed-exact", "digest", expiry)
+	assert.equal(await guard.create("mixed-exact", "digest", "creator"), expiry)
+	assert.equal(db.state().admissions.length, 0)
+	assert.equal(await quotas.count(), 0)
+	// Changed retry: conflicts, again with nothing charged or reserved.
+	db.oldWriterBeforeNextCas("mixed-changed", "original", expiry)
+	await assert.rejects(guard.create("mixed-changed", "changed", "creator"), /retry changed/)
+	assert.equal(db.state().admissions.length, 0)
+	assert.equal(await quotas.count(), 0)
+	assert.deepEqual(db.state().rooms.map((x) => x[0]), ["mixed-exact", "mixed-changed"])
 })
 test("Missing control record cannot be initialized over room history and configuration changes are never implicit", async () => {
 	let inserts = 0

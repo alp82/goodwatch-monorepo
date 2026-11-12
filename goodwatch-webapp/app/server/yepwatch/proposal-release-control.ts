@@ -334,17 +334,33 @@ export class ReleaseControl {
 			(error: unknown) => ({ error })
 		)
 		const r = await this.read()
-		const legacy = this.legacy(r, roomId)
-		if (legacy) {
-			if (legacy[1] !== admissionDigest) throw new RoomError("conflict", "Admission retry changed")
-			return legacy[2]
-		}
+		const legacyExpiry = this.legacyCreation(r, roomId, admissionDigest)
+		if (legacyExpiry !== undefined) return legacyExpiry
 		const refused = await eligibility
 		if (refused) throw refused.error
 		const check: Check = { ...r, roomId }
 		checks.add(check)
-		await this.permit("create", roomId, creatorDigest, admissionDigest, check)
+		const raced = await this.permit("create", roomId, creatorDigest, admissionDigest, check)
+		if (raced !== undefined) return raced
 		return this.quotas.reserve(roomId, admissionDigest, creatorDigest)
+	}
+	/**
+	 * A creation permit checks for a legacy reservation on every read it builds a compare-and-swap on, not only on
+	 * the first: an instance still running the shared-cap code could have written one after `create` read the row
+	 * (its CAS then fails ours). An exact retry gets the legacy expiry, a changed one conflicts.
+	 *
+	 * What stays open is an old writer adding its reservation after our CAS landed; closing that would need fencing
+	 * old writers. It doesn't arise for HTTP: the old code (0a7028684^) wrote a control-row reservation only when
+	 * `create` got no creator digest or no allowance store (proposal-release-control.ts:308-332). Its release
+	 * runtime always passed the store (proposal-release-runtime.ts:45-46), and its only HTTP create
+	 * (proposal-http.server.ts:464) passed an account or guestCreator(), which returns an identifier or throws
+	 * (proposal-http.server.ts:101-110); the service turned either into a creator digest
+	 * (proposal-service.server.ts:427-431). So old HTTP writers reserved allowances and never wrote legacy rows.
+	 */
+	private legacyCreation(r: Read, roomId: string, admissionDigest: string) {
+		const legacy = this.legacy(r, roomId)
+		if (legacy && legacy[1] !== admissionDigest) throw new RoomError("conflict", "Admission retry changed")
+		return legacy?.[2]
 	}
 	private admissionBudget(state: Control, now: number) {
 		if (state.admissions.length >= this.policy.admissions)
@@ -366,7 +382,7 @@ export class ReleaseControl {
 		actorId: string,
 		inputDigest: string,
 		checked?: unknown
-	) {
+	): Promise<number | undefined> {
 		const op = digest(JSON.stringify([kind, roomId, actorId, inputDigest])),
 			actor = digest(`${roomId}:${actorId}`).slice(0, 32)
 		// The room's capacity was just proven by `active` from this very read: the first try starts from it (a
@@ -384,6 +400,10 @@ export class ReleaseControl {
 			const quota = fresh || kind === "create" ? undefined : this.quotaProof(roomId)
 			const r = fresh ?? (await this.read()),
 				state = this.clean(r)
+			if (kind === "create") {
+				const legacyExpiry = this.legacyCreation(r, roomId, inputDigest)
+				if (legacyExpiry !== undefined) return legacyExpiry
+			}
 			if (quota && !state.rooms.some((x) => x[0] === roomId)) {
 				const failed = await quota
 				if (failed) throw failed.error
@@ -392,7 +412,7 @@ export class ReleaseControl {
 				kind !== "command"
 					? state.admissions.includes(op)
 					: state.commands.some((x) => x[0] === op && x[1] === actor)
-			if (admitted) return
+			if (admitted) return undefined
 			if (kind !== "command") {
 				this.admissionBudget(state, r.now)
 				state.admissions.push(op)
@@ -429,7 +449,7 @@ export class ReleaseControl {
 					? proof.state.admissions.includes(op)
 					: proof.state.commands.some((x) => x[0] === op && x[1] === actor)
 			)
-				return
+				return undefined
 		}
 		throw new BudgetError(
 			"Operation budget outcome uncertain; retain pending request for retry",
