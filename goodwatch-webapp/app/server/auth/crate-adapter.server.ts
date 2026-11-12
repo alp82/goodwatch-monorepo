@@ -324,9 +324,11 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 				}
 				throw new AuthMutationConflictError()
 			}
-			/** Fence one member's admitted row and return its slot. False: someone else changed it first. */
-			const evictSlot = async (model: string, slot: AuthSlot, bucket: string, userId: unknown) => {
-				const oldest = await stored(model, slot.id)
+			/**
+			 * Fence the version of one member's admitted row that was chosen and return its slot.
+			 * False: someone else changed the row first, so the caller chooses again.
+			 */
+			const evictSlot = async (model: string, slot: AuthSlot, oldest: Stored | null, bucket: string, userId: unknown) => {
 				if (!oldest || oldest.envelope.admission?.generation !== slot.generation || (!oldest.deleted && oldest.row.userId !== userId)) return false
 				if (!oldest.deleted && !(await mutate(model, oldest, {}, true))) return false
 				await releaseAuthAdmission(sql, codec, slot.id, { bucket, generation: slot.generation })
@@ -337,8 +339,8 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 			 * a leftover slot, else the oldest dead grant, else the least recently used grant that is
 			 * not its app's most recently used one, else the least recently used grant.
 			 */
-			const grantVictim = async (slots: AuthSlot[], userId: string): Promise<AuthSlot | undefined> => {
-				const grants: { slot: AuthSlot; grant: Row }[] = []
+			const grantVictim = async (slots: AuthSlot[], userId: string): Promise<{ slot: AuthSlot; chosen: Stored } | undefined> => {
+				const grants: { slot: AuthSlot; chosen: Stored; grant: Row }[] = []
 				for (let i = 0; i < slots.length; i += 16) {
 					const page = slots.slice(i, i + 16)
 					// An unreadable grant is never a candidate; it cannot block the sign-in either.
@@ -346,16 +348,16 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 					for (const [j, current] of rows.entries()) {
 						// A missing row is a pending insert; a re-admitted row is not this slot's.
 						if (!current || current.envelope.admission?.generation !== page[j].generation) continue
-						if (current.deleted) return page[j]
-						if (current.row.userId === userId) grants.push({ slot: page[j], grant: current.row })
+						if (current.deleted) return { slot: page[j], chosen: current }
+						if (current.row.userId === userId) grants.push({ slot: page[j], chosen: current, grant: current.row })
 					}
 				}
 				const live = await grantLiveness(sql, codec, { userId })
 				const dead = grants.find(({ grant }) => !live(grant as GrantRow))
-				if (dead) return dead.slot
+				if (dead) return dead
 				const byUse = [...grants].sort((a, b) => grantActivity(a.grant as GrantRow) - grantActivity(b.grant as GrantRow) || a.slot.createdAt.localeCompare(b.slot.createdAt) || a.slot.generation - b.slot.generation)
 				const newestPerApp = new Map(byUse.map(entry => [entry.grant.clientId, entry]))
-				return (byUse.find(entry => newestPerApp.get(entry.grant.clientId) !== entry) ?? byUse[0])?.slot
+				return byUse.find(entry => newestPerApp.get(entry.grant.clientId) !== entry) ?? byUse[0]
 			}
 			const requireCompleted = async (model: string, row: Stored, where: CleanedWhere[], update: Row, deleting = false) => Boolean(await assign(model, row, where, update, deleting))
 			const adapter: CustomAdapter = {
@@ -375,10 +377,10 @@ export function crateAuthAdapter({ sql, testOnlyConformance = false, maxEnumerat
 					const admission = bounds && actor !== undefined && !testOnlyConformance ? await admitAuthRow(sql, codec, model, row.id, populationBounds === true ? authActorBounds(model) : bounds, actor,
 							// A member's newest sessions win. Each sign-in through an app makes a grant per session
 							// (consentReferenceId), so without eviction a member's 129th app sign-in would fail forever.
-							model === "session" && populationBounds === true ? (slots, bucket) => evictSlot(model, slots[0], bucket, row.userId)
+							model === "session" && populationBounds === true ? async (slots, bucket) => evictSlot(model, slots[0], await stored(model, slots[0].id), bucket, row.userId)
 							: model === "oauthConsent" && populationBounds === true ? async (slots, bucket) => {
 								const victim = await grantVictim(slots, String(row.userId))
-								return victim ? evictSlot(model, victim, bucket, row.userId) : false
+								return victim ? evictSlot(model, victim.slot, victim.chosen, bucket, row.userId) : false
 							} : undefined) : undefined
 					const operation = randomUUID()
 					try {

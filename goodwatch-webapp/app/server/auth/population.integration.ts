@@ -629,6 +629,44 @@ test("maintenance reclaims dead app grants and keeps live ones", async () => {
 		),
 	)
 	assert.equal(Object.keys(ledger?.ledger.slots ?? {}).length, 2)
+	// Receipts are compacted a day after the last write; dead grants stay collectable.
+	const { collectAuthGarbage } = await import("./maintenance.server.ts")
+	const later = await grants.signIn(user.id, app, true)
+	const dayAfter = new Date(Date.now() + 25 * 3600000)
+	await collectAuthGarbage({
+		sql,
+		encryptionSecret: "disposable-local-auth-integration-key-548",
+		model: "oauthConsent",
+		now: dayAfter,
+	})
+	// By then the session and refresh token have expired too: every grant is dead.
+	assert.equal((await reconcile(dayAfter)).removed, 3)
+	assert.deepEqual(await grants.held(user.id), new Set())
+	assert.ok(later)
+})
+
+test("a full member ledger refuses admission when nothing can be evicted", async () => {
+	await clean()
+	const { admitAuthRow, readCapacity } = await import("./population.server.ts")
+	const { authPayloadCodec } = await import("./payload-codec.server.ts")
+	const codec = authPayloadCodec("disposable-local-auth-integration-key-548")
+	const bounds = { buckets: 1, limitPerBucket: 3 }
+	const admitted = []
+	for (let i = 0; i < 3; i++)
+		admitted.push(
+			await admitAuthRow(sql, codec, "oauthConsent", randomUUID(), bounds, "busy"),
+		)
+	let attempts = 0
+	await assert.rejects(
+		admitAuthRow(sql, codec, "oauthConsent", randomUUID(), bounds, "busy", async () => {
+			attempts++
+			return false
+		}),
+		/capacity exhausted/,
+	)
+	assert.ok(attempts > 1)
+	const ledger = await readCapacity(sql, codec, admitted[0].bucket)
+	assert.equal(Object.keys(ledger?.ledger.slots ?? {}).length, 3)
 })
 
 test("empty actor ledgers are physically purged after thirty days", async () => {

@@ -147,13 +147,17 @@ admission revokes one grant with its tokens, chosen in this order:
 
 Slots whose row is not written yet are never chosen. Choosing reads the member's
 grants by primary key and refreshes the session and refresh token tables first.
-When two sign-ins pick the same victim, the loser rereads the ledger and tries
-again (up to four misses with jittered backoff) instead of reporting
-"capacity exhausted"; session eviction shares this path. A ledger CAS that
+Eviction CAS-deletes the exact version it chose, so a grant used or re-consented
+meanwhile survives and the choice starts over. When two sign-ins pick the same
+victim, the loser rereads the ledger and chooses again instead of reporting
+"capacity exhausted"; session eviction shares this path. Only misses on an
+unchanged ledger count (four, with jittered backoff); admission never proceeds
+past a full ledger. A ledger CAS that
 reports 0 rows rereads lagging copies, bounded, as row mutations do.
 
 Maintenance reconciliation also removes dead grants whose last write and use are
-over an hour old, returning their slots, so members rarely reach the cap.
+over an hour old (a grant whose receipts were compacted counts as written over a
+day ago), returning their slots, so members rarely reach the cap.
 
 Repeated sign-ins through the same app keep separate grants on purpose. One grant
 per member and app would need a session-independent `consentReferenceId`, and

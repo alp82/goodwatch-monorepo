@@ -1027,7 +1027,8 @@ export async function reconcileAuthRows(
 				now.getTime() -
 					Math.max(
 						grantActivity(row as GrantRow),
-						new Date(current.receipts.at(-1)?.at ?? now).getTime(),
+						// Receipts are pruned 24 hours after a write, well past the grace.
+						new Date(current.receipts.at(-1)?.at ?? 0).getTime() || 0,
 					) >=
 					deadGrantGrace
 			)

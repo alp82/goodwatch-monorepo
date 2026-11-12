@@ -169,6 +169,7 @@ export async function admitAuthRow(
 	const bucket = authCapacityBucket(model, id, bounds, actor)
 	const aad = `doc.auth_capacity:${bucket}`
 	let evictionMisses = 0
+	let missedAt: unknown
 	for (let attempt = 0; attempt < 64; attempt++) {
 		const current = await readCapacity(sql, codec, bucket)
 		if (
@@ -200,12 +201,18 @@ export async function admitAuthRow(
 				)
 			if (await evict(slots, bucket)) continue
 			// A concurrent admission may have fenced the same victim first; its release
-			// shows up on a fresh read of the ledger.
+			// shows up on a fresh read of the ledger. Only misses on an unchanged ledger
+			// count: a ledger that keeps changing is other sign-ins making room.
+			if (missedAt !== current.seq) {
+				missedAt = current.seq
+				evictionMisses = 0
+			}
 			if (++evictionMisses > 4)
 				throw new Error("Auth population capacity exhausted")
 			await new Promise((resolve) =>
 				setTimeout(resolve, 10 * 2 ** evictionMisses * Math.random()),
 			)
+			continue
 		}
 		const generation = (current?.ledger.nextGeneration ?? 0) + 1
 		if (!Number.isSafeInteger(generation))
