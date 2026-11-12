@@ -33,26 +33,27 @@ export function FaceStack({ people, size = 24, max = 4 }: { people: { id: string
 /**
  * The green dot of an open room. It rings three times when it appears, or when `beat` changes (the
  * room's opening and each join), then stays solid: nothing animates in between. A `beat` rings once
- * across every header showing it. Reduced motion: never rings.
+ * across every header showing it; null never rings (a header under another page). Reduced motion:
+ * never rings.
  */
-export function LiveDot({ size = 8, beat }: { size?: number; beat?: string }) {
+export function LiveDot({ size = 8, beat }: { size?: number; beat?: string | null }) {
   const reduced = useReducedMotion();
   // At rest (1) the ring is invisible: a header whose beat already rang shows the solid dot only.
   const [ring] = useState(() => new Animated.Value(1));
   useEffect(() => {
-    if (reduced) return;
+    if (reduced || beat === null) return;
     if (beat !== undefined && !claimLiveBeat(beat)) return;
-    let ended = false;
     // Ended, the ring rests at scale 2.8 and opacity 0: drawn once, then nothing changes.
-    const stop = playLivePulse(ring, native, () => { ended = true; });
+    const stop = playLivePulse(ring, native);
     return () => {
-      stop();
+      const ended = stop();
+      // Cut short (the header went away or went under another page): the next header may ring it.
       if (!ended && beat !== undefined) releaseLiveBeat(beat);
     };
   }, [ring, reduced, beat]);
   return (
     <View accessible={false} style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
-      {!reduced && <Animated.View style={{ position: 'absolute', width: size, height: size, borderRadius: size / 2, backgroundColor: glow.green, opacity: ring.interpolate({ inputRange: [0, 1], outputRange: [0.55, 0] }), transform: [{ scale: ring.interpolate({ inputRange: [0, 1], outputRange: [1, 2.8] }) }] }} />}
+      {!reduced && beat !== null && <Animated.View style={{ position: 'absolute', width: size, height: size, borderRadius: size / 2, backgroundColor: glow.green, opacity: ring.interpolate({ inputRange: [0, 1], outputRange: [0.55, 0] }), transform: [{ scale: ring.interpolate({ inputRange: [0, 1], outputRange: [1, 2.8] }) }] }} />}
       <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: glow.green }} />
     </View>
   );

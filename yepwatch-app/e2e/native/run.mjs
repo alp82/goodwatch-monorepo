@@ -114,7 +114,7 @@ async function main() {
   // ---- deploy gate: one mixed room, Android host + browser friend, to a match ----
   await scenario('mixed-room-to-match', async () => {
     const { mixedGateRoom } = await import('./lib/mixed.mjs');
-    await mixedGateRoom({ phone: A, stack, runDir: RUN, B, timing, audit, notStuck, journeyFail, errors: result.gates.errors });
+    await mixedGateRoom({ phone: A, stack, runDir: RUN, B, timing, audit, notStuck, journeyFail, errors: result.gates.errors, frames: result.gates.frames });
   }, { modes: ['subset'] });
 
   // ---- create room on A, with New room / Create room timings, a11y, back priority ----

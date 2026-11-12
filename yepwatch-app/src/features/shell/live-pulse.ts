@@ -10,14 +10,19 @@ export const LIVE_PULSE = { rings: 3, ms: 1500 } as const;
 /**
  * Plays the rings on `ring` (0 → 1 per ring, transform and opacity only) as one finite loop: with the
  * native driver the loop runs on the UI thread and ends there, nothing keeps ticking after the third.
- * `done` runs once the third ring ends. Returns stop (no `done` then).
+ * Returns stop, which says whether the rings had ended by then. Time decides that: a native loop never
+ * calls its start callback (React Native hands the native side the iterations, not the callback).
  */
-export function playLivePulse(ring: Animated.Value, useNativeDriver: boolean, done: () => void): () => void {
+export function playLivePulse(ring: Animated.Value, useNativeDriver: boolean, now: () => number = Date.now): () => boolean {
   ring.setValue(0);
   const rings = Animated.loop(
     Animated.timing(ring, { toValue: 1, duration: LIVE_PULSE.ms, easing: Easing.out(Easing.quad), useNativeDriver }),
     { iterations: LIVE_PULSE.rings },
   );
-  rings.start(({ finished }) => { if (finished) done(); });
-  return () => rings.stop();
+  const started = now();
+  rings.start();
+  return () => {
+    rings.stop();
+    return now() - started >= LIVE_PULSE.rings * LIVE_PULSE.ms;
+  };
 }

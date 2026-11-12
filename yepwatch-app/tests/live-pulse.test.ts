@@ -11,7 +11,7 @@ function fakeAnimated() {
     timing: (_value: unknown, config: { toValue: number; useNativeDriver: boolean }) => { calls.timing = config; return {}; },
     loop: (_animation: unknown, config: { iterations?: number }) => {
       calls.loop = config;
-      return { start: (end: End) => { calls.end = end; }, stop: () => { calls.stopped++; } };
+      return { start: (end?: End) => { calls.end = end; }, stop: () => { calls.stopped++; } };
     },
   };
   const Easing = { out: (f: unknown) => f, quad: () => 0 };
@@ -21,27 +21,26 @@ function fakeAnimated() {
   return { calls, playLivePulse, LIVE_PULSE, ring: ring as never };
 }
 
-test('the live dot rings exactly three times as one finite native loop, then ends', () => {
+test('the live dot rings exactly three times as one finite native loop', () => {
   const { calls, playLivePulse, LIVE_PULSE, ring } = fakeAnimated();
-  let done = 0;
-  playLivePulse(ring, true, () => done++);
+  playLivePulse(ring, true);
   assert.equal(LIVE_PULSE.rings, 3);
   assert.equal(calls.loop?.iterations, 3, 'a finite loop: no iterations means forever');
   assert.equal(calls.timing?.useNativeDriver, true);
   assert.equal(calls.timing?.toValue, 1);
   assert.deepEqual([...calls.values], [0], 'each start begins from the first ring');
-  calls.end?.({ finished: true });
-  assert.equal(done, 1);
 });
 
-test('a stopped ring (a join restarting it, the header leaving) does not count as ended', () => {
-  const { calls, playLivePulse, ring } = fakeAnimated();
-  let done = 0;
-  const stop = playLivePulse(ring, false, () => done++);
-  stop();
-  calls.end?.({ finished: false });
+test('whether the rings ended is told by time, not by the loop callback (a native loop never calls it)', () => {
+  const { calls, playLivePulse, LIVE_PULSE, ring } = fakeAnimated();
+  let clock = 1000;
+  const cut = playLivePulse(ring, true, () => clock);
+  clock += LIVE_PULSE.rings * LIVE_PULSE.ms - 1;
+  assert.equal(cut(), false, 'stopped during the third ring');
   assert.equal(calls.stopped, 1);
-  assert.equal(done, 0);
+  const full = playLivePulse(ring, true, () => clock);
+  clock += LIVE_PULSE.rings * LIVE_PULSE.ms;
+  assert.equal(full(), true);
 });
 
 test('the room opening is not a join; someone new, or someone coming back, is', () => {

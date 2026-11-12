@@ -4,6 +4,7 @@
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { APP_DIR, NATIVE_DIR, sleep } from './env.mjs';
+import { gfxFrames, gfxReset } from './gates.mjs';
 import { createRoom, fillAndSubmit, freshStart, inviteCode, inviteUrl, joinFromJoinScreen, measure, pickNetflix, posterTitle, roiOf, tapAction, toStart } from './journey.mjs';
 
 const require = createRequire(path.join(APP_DIR, 'package.json'));
@@ -161,7 +162,7 @@ export { inviteUrl, tapAction };
  * transitions, a11y of each screen on the way, no blocking words. The browser's console and page errors
  * count as errors. The browser's own timing, flash and a11y gates are the web gate's (same app, same stack).
  */
-export async function mixedGateRoom({ phone: A, stack, runDir, B, timing, audit, notStuck, journeyFail, errors }) {
+export async function mixedGateRoom({ phone: A, stack, runDir, B, timing, audit, notStuck, journeyFail, errors, frames }) {
   const vid = name => path.join(runDir, 'video', `${name}.webm`);
   const opening = WebPeer.open({ origin: stack.app, name: 'Webby' }); // Chromium starts while the phone creates the room
   opening.catch(() => {});
@@ -209,12 +210,17 @@ export async function mixedGateRoom({ phone: A, stack, runDir, B, timing, audit,
     // browser's Yep makes the match. Measured: that browser Yep -> the match on the phone.
     await A.waitFor('poster', { timeout: 8000 });
     const yeps = new Set();
+    // Frame pacing while the phone votes (its Yep effects animate): the subset's frame gate has samples.
+    gfxReset(A);
     for (let i = 0; i < 4; i++) {
       const t = await posterTitle(A);
       if (!t) { journeyFail('empty deck', `no card on the phone at vote ${i + 1}`, A); break; }
       yeps.add(t); await A.tap('Yep');
       const end = Date.now() + 3000; while (Date.now() < end && (await posterTitle(A)) === t) await sleep(60);
     }
+    const gfx = gfxFrames(A);
+    const sampled = (gfx.summary.count ?? 0) > 0;
+    frames.push({ name: 'voting Yeps (Android host)', budgetMs: B.native.frameMaxMs, ...gfx.summary, pass: sampled && gfx.summary.over20 === 0, ...(sampled ? {} : { error: 'no frames sampled' }) });
     for (let i = 0; i < 12 && !yeps.has(await web.card()); i++) {
       const t = await web.card(); await web.button('Nope').click();
       const end = Date.now() + 3000; while (Date.now() < end && (await web.card()) === t) await sleep(40);

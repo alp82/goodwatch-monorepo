@@ -21,8 +21,8 @@ export interface HeaderPill {
   state: 'live' | 'decided' | 'new' | 'rooms';
   /** New suggestions waiting for the host. */
   fresh?: number;
-  /** The live dot rings three times when this changes (the room opening, someone joining), then rests. */
-  beat?: string;
+  /** The live dot rings three times when this changes (the room opening, someone joining), then rests; null: never (a page under another). */
+  beat?: string | null;
 }
 /** Who the avatar is. Members get a small GoodWatch mark. */
 export interface HeaderMe { name: string | null; member: boolean }
