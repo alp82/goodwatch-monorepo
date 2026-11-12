@@ -1105,7 +1105,7 @@ export class ProposalService {
 				if (envelope.command.type === "refill") retire(room)
 				const wantsPage = room.candidates.length < L.active && room.seenKeys.length < L.seen
 				// Seen lists are read again at Start: a deck prepared earlier never shows what a member has since seen.
-				// Fresh: a background build may have filled the seen cache before a title was marked Seen. Read
+				// Fresh: never joins a background build's read that started before a title was marked Seen. Read
 				// alongside the deck, not after it: each is a round trip (GoodWatch, the catalog) on Start's path.
 				const seenRead = wantsPage && envelope.command.type === "start" && this.catalog.excludedKeys
 					? this.catalog.excludedKeys(room, { fresh: true })

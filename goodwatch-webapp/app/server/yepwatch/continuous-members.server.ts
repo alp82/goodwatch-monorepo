@@ -22,6 +22,8 @@ import type {
 } from "./continuous-types.ts"
 /** Only a definitive refusal (revoked grant, another account) ends a device session. */
 const refused = (e: unknown) => e instanceof RoomError && ["unauthorized", "member_required"].includes(e.code)
+/** GoodWatch reads abort after 12 s (proposal-release-members.ts); an in-flight seen read is never shared longer. */
+const SEEN_TRANSPORT_TIMEOUT_MS = 12_000
 /** Throttled, down, unreachable, a garbled reply: the session is kept for a later try. */
 const unavailable = (e: unknown) =>
 	e instanceof RoomError && e.code === "busy" ? e : new RoomError("busy", "GoodWatch is temporarily unavailable; try again", 503, true)
@@ -751,40 +753,12 @@ export class ContinuousMembers {
 		return this.reads.progress(userId, actor(room, participantId).memberGrant!.accessToken)
 	}
 	/**
-	 * Seen lists per room seat, bound to the linked account and its grant: a seat that logs out and is linked
-	 * again (to any account) never reads the previous link's list. `seq` orders reads by when they started, so
-	 * a slower, older read can't overwrite a fresher one.
+	 * Seen reads in flight per room seat, bound to the linked account and its grant: concurrent reads for the same
+	 * link share one GoodWatch request. Nothing is kept once it settles, so every later read asks GoodWatch again and
+	 * a revoked grant, a relinked seat or another account never gets a list read earlier.
 	 */
-	private seenCache = new Map<string, { roster: number; account: string; seq: number; keys: string[] }>()
-	/** The newest read per seat, shared by cached reads that find no usable entry. */
-	private seenReads = new Map<string, { roster: number; account: string; seq: number; fresh: boolean; read: Promise<string[]> }>()
-	private seenSeq = 0
-	/**
-	 * The newest settled read per seat and whether GoodWatch refused it, kept apart from `seenCache` so it
-	 * survives the entry being dropped: a read started before a newer one settled never fills the cache, and one
-	 * started before a refusal supplies nothing. Evicting a seat raises `seenFloor`, so reads that started before
-	 * an evicted settle count as superseded rather than unknown.
-	 */
-	private seenSettled = new Map<string, { seq: number; refused: boolean }>()
-	private seenFloor = 0
-	private settleSeen(key: string, seq: number, refused: boolean) {
-		const last = this.seenSettled.get(key)
-		if (last && last.seq > seq) return
-		this.seenSettled.delete(key)
-		this.seenSettled.set(key, { seq, refused })
-		if (this.seenSettled.size > 4096) {
-			const [oldest, evicted] = this.seenSettled.entries().next().value!
-			this.seenSettled.delete(oldest)
-			this.seenFloor = Math.max(this.seenFloor, evicted.seq)
-		}
-	}
-	/** Whether a newer read already settled for this seat: `refused` when that read was refused (or can't be known). */
-	private seenSupersededBy(key: string, seq: number) {
-		const last = this.seenSettled.get(key)
-		if (last) return last.seq > seq ? { refused: last.refused } : null
-		return seq <= this.seenFloor ? { refused: true } : null
-	}
-	/** The seat's current link, checked before any cache lookup; refuses a guest, an expired grant or an unlinked seat. */
+	private seenReads = new Map<string, { fresh: boolean; read: Promise<string[]> }>()
+	/** The seat's current link; refuses a guest, an expired grant or an unlinked seat. */
 	private seenLink(room: ContinuousRoom, participantId: string) {
 		const p = actor(room, participantId)
 		requireRoom(
@@ -799,53 +773,35 @@ export class ContinuousMembers {
 			account: `${p.memberUserId}\0${createHash("sha256").update(p.memberGrant.accessToken).digest("base64url")}`,
 		}
 	}
-	/** A member's seen title keys, kept per room roster. `fresh` (Start) reads the account again and refreshes it. */
+	/**
+	 * A member's seen title keys, read from GoodWatch. `fresh` (Start) never joins a read that started earlier, so a
+	 * title marked Seen since then is in the list; other reads share any read in flight for the same link.
+	 */
 	async seen(room: ContinuousRoom, participantId: string, options: { fresh?: boolean } = {}): Promise<string[]> {
 		if (!this.reads.seen) return []
 		const link = this.seenLink(room, participantId)
-		const key = `${room.id}:${participantId}`
-		const cached = this.seenCache.get(key)
-		if (cached && cached.account !== link.account) this.seenCache.delete(key) // Logged out, relinked: not this link's list.
-		else if (!options.fresh && cached?.roster === room.rosterVersion) return cached.keys
+		const key = `${room.id}\0${participantId}\0${link.account}`
 		const pending = this.seenReads.get(key)
-		if (!options.fresh && pending?.account === link.account && (pending.fresh || pending.roster === room.rosterVersion))
-			return pending.read
-		const seq = ++this.seenSeq
+		if (pending && (pending.fresh || !options.fresh)) return pending.read
 		// No separate identity check first: the read proves the grant itself (MemberReads.seen), and a second
-		// round trip to GoodWatch sat on Start's path, which reads seen titles fresh.
-		const read = this.reads.seen(link.userId, link.accessToken).then(
-			(keys) => {
-				const newer = this.seenSupersededBy(key, seq)
-				if (newer?.refused) {
-					if (this.seenCache.get(key)?.account === link.account) this.seenCache.delete(key)
-					throw new RoomError("member_required", "Sign in with GoodWatch again", 403)
-				}
-				this.settleSeen(key, seq, false)
-				const current = this.seenCache.get(key)
-				if (!newer && (!current || current.seq < seq)) {
-					this.seenCache.delete(key)
-					this.seenCache.set(key, { roster: room.rosterVersion, account: link.account, seq, keys })
-					if (this.seenCache.size > 512) this.seenCache.delete(this.seenCache.keys().next().value!)
-				}
-				return keys
-			},
-			(e) => {
-				if (refused(e)) {
-					this.settleSeen(key, seq, true)
-					if (this.seenCache.get(key)?.account === link.account) this.seenCache.delete(key)
-				}
-				throw e
-			},
-		)
-		const settled = () => { if (this.seenReads.get(key)?.seq === seq) this.seenReads.delete(key) }
-		read.then(settled, settled)
-		this.seenReads.set(key, { roster: room.rosterVersion, account: link.account, seq, fresh: Boolean(options.fresh), read })
+		// round trip to GoodWatch sat on Start's path.
+		const read = this.reads.seen(link.userId, link.accessToken)
+		const entry = { fresh: Boolean(options.fresh), read }
+		// Dropped when it settles, or after the transport's own timeout if a reader never settles.
+		const forget = () => {
+			clearTimeout(timer)
+			if (this.seenReads.get(key) === entry) this.seenReads.delete(key)
+		}
+		const timer = setTimeout(forget, SEEN_TRANSPORT_TIMEOUT_MS)
+		timer.unref?.()
+		read.then(forget, forget)
+		this.seenReads.set(key, entry)
 		return read
 	}
 	/**
 	 * `seen` for building decks and Start: never fails the room. A refused grant, a GoodWatch outage or a read
-	 * slower than `seenReadTimeoutMs` leaves this member's seen titles out (logged). An outage or a timeout keeps
-	 * the list last read for this same link, if any; nothing is ever taken from another link.
+	 * slower than `seenReadTimeoutMs` leaves this member's seen titles out (logged); nothing is taken from an
+	 * earlier read or another link.
 	 */
 	async seenOrNone(room: ContinuousRoom, participantId: string, options: { fresh?: boolean } = {}): Promise<string[]> {
 		let timer: ReturnType<typeof setTimeout> | undefined
@@ -858,14 +814,7 @@ export class ContinuousMembers {
 		} catch (e) {
 			const reason = e === timedOut ? "timeout" : refused(e) ? "refused" : "unavailable"
 			console.warn(JSON.stringify({ event: "yepwatch_member_seen_skipped", reason, fresh: Boolean(options.fresh) }))
-			if (reason === "refused") return []
-			try {
-				const link = this.seenLink(room, participantId)
-				const cached = this.seenCache.get(`${room.id}:${participantId}`)
-				return cached?.account === link.account ? cached.keys : []
-			} catch {
-				return []
-			}
+			return []
 		} finally {
 			clearTimeout(timer)
 		}

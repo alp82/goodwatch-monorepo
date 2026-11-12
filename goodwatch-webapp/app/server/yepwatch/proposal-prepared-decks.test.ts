@@ -144,7 +144,7 @@ test("a member's seen titles are left out at Start, also from a deck prepared ea
 	const started = await r.start()
 	assert.equal(f.pages.length, 1)
 	assert.ok(!started.snapshot.shared.candidates.some((c) => c.id === seen.id))
-	assert.deepEqual(f.exclusionReads.at(-1), { fresh: true }, "Start reads seen lists past any cache the background build filled")
+	assert.deepEqual(f.exclusionReads.at(-1), { fresh: true }, "Start reads seen lists fresh, never joining an earlier background read")
 })
 
 test("saved progress decks are never remembered: each page reads progress again", async () => {

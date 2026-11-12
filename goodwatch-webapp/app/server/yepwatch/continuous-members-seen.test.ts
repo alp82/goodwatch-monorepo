@@ -39,45 +39,48 @@ function quiet<T>(run: () => Promise<T>) {
 	return run().finally(() => { console.warn = warn }).then((value) => ({ value, logged }))
 }
 
-test("an older seen read finishing after Start's fresh read doesn't overwrite it; later refills use the fresh list", async () => {
+test("concurrent reads for one link share a request; nothing is kept once it settles", async () => {
 	const { m, calls } = members()
 	const room = seat("account-a")
-	// A background deck build reads the seen list (cached read)...
+	// A background deck build reads the seen list; a second plain read meanwhile shares it.
 	const older = m.seen(room, "p1")
-	// ...a cached read meanwhile shares it instead of asking GoodWatch again...
 	const shared = m.seen(room, "p1")
 	assert.equal(calls.length, 1)
-	// ...then Start reads fresh, after the member marked a title Seen.
+	// Start reads fresh: it never joins the earlier read, which may predate a title marked Seen.
 	const fresh = m.seen(room, "p1", { fresh: true })
 	assert.equal(calls.length, 2)
-	// A cached read now shares the in-flight fresh read.
+	// A plain read now shares the in-flight fresh read.
 	const sharesFresh = m.seen(room, "p1")
 	assert.equal(calls.length, 2)
 	calls[1].resolve(["movie_1", "movie_2"])
 	assert.deepEqual(await fresh, ["movie_1", "movie_2"])
 	assert.deepEqual(await sharesFresh, ["movie_1", "movie_2"])
-	calls[0].resolve(["movie_1"]) // The older read lands last.
+	calls[0].resolve(["movie_1"])
 	assert.deepEqual(await older, ["movie_1"])
 	assert.deepEqual(await shared, ["movie_1"])
-	// A refill's exclusions come from the cache: the fresh list, without another GoodWatch read.
-	assert.deepEqual(await m.seen(room, "p1"), ["movie_1", "movie_2"])
-	assert.deepEqual(await m.seenOrNone(room, "p1"), ["movie_1", "movie_2"])
-	assert.equal(calls.length, 2)
+	// Settled: the next read (a refill) asks GoodWatch again.
+	const refill = m.seen(room, "p1")
+	assert.equal(calls.length, 3)
+	calls[2].resolve(["movie_1", "movie_2", "movie_3"])
+	assert.deepEqual(await refill, ["movie_1", "movie_2", "movie_3"])
 })
 
 test("a failed seen read leaves the member's exclusions out instead of failing Start or the deck", async () => {
 	const { m, calls } = members()
 	const room = seat("account-a")
+	const ok = m.seen(room, "p1")
+	calls[0].resolve(["movie_1"])
+	await ok
 	const result = quiet(() => m.seenOrNone(room, "p1", { fresh: true }))
 	await tick()
-	calls[0].reject(new RoomError("busy", "GoodWatch is temporarily unavailable; your room is saved", 503, true))
+	calls[1].reject(new RoomError("busy", "GoodWatch is temporarily unavailable; your room is saved", 503, true))
 	const { value, logged } = await result
-	assert.deepEqual(value, [])
+	assert.deepEqual(value, [], "no earlier list stands in for a failed read")
 	assert.match(logged.join("\n"), /yepwatch_member_seen_skipped.*"reason":"unavailable"/)
 	assert.ok(!logged.join("\n").includes("account-a"), "the log names no account or grant")
 })
 
-test("a slow seen read is cut off at the bound; the late answer still fills the cache for later refills", async () => {
+test("a slow seen read is cut off at the bound and leaves the exclusions out; the late answer isn't kept", async () => {
 	const { m, calls } = members({ timeoutMs: 30 })
 	const room = seat("account-a")
 	const began = performance.now()
@@ -88,14 +91,28 @@ test("a slow seen read is cut off at the bound; the late answer still fills the 
 	assert.match(logged.join("\n"), /"reason":"timeout"/)
 	calls[0].resolve(["movie_7"])
 	await tick()
-	assert.deepEqual(await m.seenOrNone(room, "p1"), ["movie_7"])
-	assert.equal(calls.length, 1)
-	// A later timeout keeps this same link's last list rather than none.
+	const next = m.seenOrNone(room, "p1")
+	assert.equal(calls.length, 2, "the late answer wasn't kept: the next read asks again")
+	calls[1].resolve(["movie_7", "movie_8"])
+	assert.deepEqual(await next, ["movie_7", "movie_8"])
+	// Another timeout leaves the exclusions out rather than reusing the last list.
 	const again = await quiet(() => m.seenOrNone(room, "p1", { fresh: true }))
-	assert.deepEqual(again.value, ["movie_7"])
+	assert.deepEqual(again.value, [])
 })
 
-test("a revoked grant leaves the member's exclusions out and drops their cached list", async () => {
+test("an in-flight read that never settles stops being shared after the transport timeout", async (t) => {
+	t.mock.timers.enable({ apis: ["setTimeout"] })
+	const { m, calls } = members()
+	const room = seat("account-a")
+	void m.seen(room, "p1")
+	void m.seen(room, "p1")
+	assert.equal(calls.length, 1)
+	t.mock.timers.tick(12_000)
+	void m.seen(room, "p1")
+	assert.equal(calls.length, 2, "the stuck read was dropped from the in-flight map")
+})
+
+test("a revoked grant leaves the member's exclusions out", async () => {
 	const { m, calls } = members()
 	const room = seat("account-a")
 	const first = m.seen(room, "p1")
@@ -108,47 +125,12 @@ test("a revoked grant leaves the member's exclusions out and drops their cached 
 	assert.deepEqual(value, [])
 	assert.match(logged.join("\n"), /"reason":"refused"/)
 	const next = m.seen(room, "p1")
-	assert.equal(calls.length, 3, "the revoked link's cached list isn't used again")
+	assert.equal(calls.length, 3, "the revoked link's earlier list isn't used again")
 	calls[2].reject(new RoomError("member_required", "Connect GoodWatch again", 403))
 	await assert.rejects(next)
 })
 
-test("a seat logged out and relinked to another account never gets the previous account's seen list", async () => {
-	const { m, calls } = members()
-	const linkedA = seat("account-a")
-	const a = m.seen(linkedA, "p1")
-	calls[0].resolve(["movie_1", "show_2"])
-	await a
-	// Log out: the seat stays as a guest; the roster version doesn't change.
-	const guest = seat(null)
-	await assert.rejects(m.seen(guest, "p1"), (e: RoomError) => e.code === "member_required")
-	assert.deepEqual((await quiet(() => m.seenOrNone(guest, "p1"))).value, [])
-	assert.equal(calls.length, 1)
-	// Relinked to another account, same seat and roster version: B's own list is read.
-	const linkedB = seat("account-b")
-	const b = m.seen(linkedB, "p1")
-	assert.equal(calls.length, 2)
-	assert.equal(calls[1].userId, "account-b")
-	assert.equal(calls[1].token, "account-b-grant")
-	calls[1].resolve(["movie_9"])
-	assert.deepEqual(await b, ["movie_9"])
-	// And a failing read for B never falls back to A's list.
-	const failing = quiet(() => m.seenOrNone(seat("account-b", "account-b-grant-2"), "p1", { fresh: true }))
-	await tick()
-	calls[2].reject(new RoomError("busy", "down", 503, true))
-	assert.deepEqual((await failing).value, [])
-	// An in-flight read for A isn't shared with B either.
-	const relinkedA = seat("account-a")
-	const pendingA = m.seen(relinkedA, "p1", { fresh: true })
-	const forB = m.seen(linkedB, "p1")
-	assert.equal(calls.length, 5)
-	assert.equal(calls[4].userId, "account-b")
-	calls[3].resolve(["movie_1"]); calls[4].resolve(["movie_9"])
-	assert.deepEqual(await pendingA, ["movie_1"])
-	assert.deepEqual(await forB, ["movie_9"])
-})
-
-test("a read started before a revocation can't restore the revoked grant's list after the refusal lands", async () => {
+test("a refusal followed by a delayed success from an earlier read never gives later reads the revoked list", async () => {
 	const { m, calls } = members()
 	const room = seat("account-a")
 	// A background deck build reads the seen list; Start then reads fresh and GoodWatch refuses the grant.
@@ -157,17 +139,42 @@ test("a read started before a revocation can't restore the revoked grant's list 
 	assert.equal(calls.length, 2)
 	calls[1].reject(new RoomError("member_required", "Connect GoodWatch again", 403))
 	await assert.rejects(fresh)
-	// The older read, answered before the revocation, lands last: it supplies nothing and caches nothing.
+	// The older read, answered before the revocation, lands last.
 	calls[0].resolve(["movie_1"])
-	await assert.rejects(older, (e: unknown) => e instanceof RoomError && e.code === "member_required")
-	// The next plain read asks GoodWatch again instead of returning the revoked grant's list...
-	const next = m.seen(room, "p1")
-	assert.equal(calls.length, 3, "nothing was cached for the revoked grant")
-	// ...and when GoodWatch is down, Start's fallback has no list for this link either.
+	await older
+	// Later reads ask GoodWatch again; refused, or with GoodWatch down, they have no list for this link.
+	const next = quiet(() => m.seenOrNone(room, "p1"))
 	const start = quiet(() => m.seenOrNone(room, "p1", { fresh: true }))
 	await tick()
-	calls[2].reject(new RoomError("busy", "GoodWatch is temporarily unavailable", 503, true))
+	assert.equal(calls.length, 4, "neither later read was answered from the earlier read")
+	calls[2].reject(new RoomError("member_required", "Connect GoodWatch again", 403))
 	calls[3].reject(new RoomError("busy", "GoodWatch is temporarily unavailable", 503, true))
-	await assert.rejects(next)
+	assert.deepEqual((await next).value, [])
 	assert.deepEqual((await start).value, [], "Start leaves the revoked grant's exclusions out")
+})
+
+test("a seat logged out and relinked to another account never gets the previous account's seen list", async () => {
+	const { m, calls } = members()
+	const linkedA = seat("account-a")
+	const a = m.seen(linkedA, "p1")
+	// Log out while A's read is in flight: the seat stays as a guest; the roster version doesn't change.
+	const guest = seat(null)
+	await assert.rejects(m.seen(guest, "p1"), (e: RoomError) => e.code === "member_required")
+	assert.deepEqual((await quiet(() => m.seenOrNone(guest, "p1"))).value, [])
+	assert.equal(calls.length, 1)
+	// Relinked to another account, same seat and roster version, with A's read still in flight: B's own list is read.
+	const linkedB = seat("account-b")
+	const b = m.seen(linkedB, "p1")
+	assert.equal(calls.length, 2)
+	assert.equal(calls[1].userId, "account-b")
+	assert.equal(calls[1].token, "account-b-grant")
+	calls[0].resolve(["movie_1", "show_2"])
+	calls[1].resolve(["movie_9"])
+	assert.deepEqual(await a, ["movie_1", "show_2"])
+	assert.deepEqual(await b, ["movie_9"])
+	// A failing read for B never falls back to A's list.
+	const failing = quiet(() => m.seenOrNone(seat("account-b", "account-b-grant-2"), "p1", { fresh: true }))
+	await tick()
+	calls[2].reject(new RoomError("busy", "down", 503, true))
+	assert.deepEqual((await failing).value, [])
 })
