@@ -15,13 +15,13 @@ export function createAvailabilityAdapter(reads: EvidenceReads, now: () => numbe
   return async (titles: CatalogDisplay[], screens: ScreenContext[], fresh: boolean) => {
     const countries = [...new Set(screens.map(s => s.country!))]
     const scopes = titles.flatMap(t => countries.map(country => ({ mediaType: t.mediaType, tmdbId: t.tmdbId, country })))
-    const [names, links] = await Promise.all([reads.names(), reads.links?.(scopes) ?? []])
     const byCountry = new Map<string, Map<string, unknown>>()
-    await Promise.all(countries.map(async country => {
+    // Names, direct links and evidence are independent reads: one round of Crate latency, not two.
+    const [names, links] = await Promise.all([reads.names(), reads.links?.(scopes) ?? [], ...countries.map(async country => {
       const scopes = titles.map(t => ({ mediaType: t.mediaType, tmdbId: t.tmdbId, country }))
       const evidence = fresh ? new Map(await Promise.all(scopes.map(async scope => [`${scope.mediaType}-${scope.tmdbId}`, await reads.fresh(scope)] as const))) : await reads.batch(scopes)
       byCountry.set(country, evidence)
-    }))
+    })])
     const result = new Map<number, ScreenAvailability[]>()
     for (const title of titles) result.set(title.key, screens.map(screen => {
       const serviceIds = [...new Set(screen.serviceIds.flatMap(providerFamily))]

@@ -7,6 +7,7 @@ import {
 	type ContinuousRoom,
 } from "./continuous-types.ts";
 import { RoomError } from "./errors.ts";
+import { titleKeySet } from "./ranked-keys-cache.ts";
 /** Structural adapter only; existing GoodWatch filters/evidence/episode rules remain authoritative. */
 export function catalogRoom(room: ContinuousRoom): Room {
 	return {
@@ -55,6 +56,7 @@ export function createContinuousCatalog(
 		metadata,
 		async page(room) {
 			const seen = new Set(room.seenKeys);
+			const seenKeys = titleKeySet(seen);
 			let complete = false;
 			const saved = room.constraints.kinds.includes("show_continue")
 				? await options.savedContinuations?.(room)
@@ -76,12 +78,8 @@ export function createContinuousCatalog(
 									.map((id) => 2_000_000_000_000 + id)
 									.filter((key) => ranked.includes(key))
 							: [];
-						return [...new Set([...continued, ...ranked])].filter(
-							(key) =>
-								!seen.has(
-									`${key >= 2_000_000_000_000 ? "show" : "movie"}_${key % 1_000_000_000_000}`,
-								),
-						);
+						const keys = [...new Set([...continued, ...ranked])];
+						return seenKeys.size ? keys.filter((key) => !seenKeys.has(key)) : keys;
 					},
 				},
 				{

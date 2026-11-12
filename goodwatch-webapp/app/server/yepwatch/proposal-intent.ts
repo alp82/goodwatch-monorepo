@@ -1,5 +1,6 @@
 import { z } from "zod"
 import { RoomError } from "./errors.ts"
+import { titleKeySet } from "./ranked-keys-cache.ts"
 import type { ProposalRoom } from "./proposal-types.ts"
 export const roomIntentSchema = z
 	.object({
@@ -109,31 +110,29 @@ export function roomIntentKeys(
 	room: Pick<ProposalRoom, "ideas" | "seenKeys">,
 	base: number[]
 ) {
-	const seen = new Set(room.seenKeys ?? [])
-	const eligible = base.filter(
-		(key) =>
-			!seen.has(
-				`${key >= 2_000_000_000_000 ? "show" : "movie"}_${
-					key % 1_000_000_000_000
-				}`
-			)
-	)
-	const allowed = new Set(eligible)
+	// The base is the whole ranked snapshot (200k+ titles): no per-title strings or per-lane copies of it.
+	const seen = titleKeySet(room.seenKeys ?? [])
+	const eligible = seen.size ? base.filter((key) => !seen.has(key)) : base
 	const ideas = (room.ideas ?? []).filter((i) => i.on)
 	if (!ideas.length) return eligible
-	const lanes = ideas.map((i) => [
-		...new Set([...i.rankedKeys.filter((k) => allowed.has(k)), ...eligible])
-	])
+	const allowed = new Set(eligible)
+	// A lane is its idea's ranked titles, then the eligible popularity order; titles already taken are skipped.
+	const lanes = ideas.map((i) => i.rankedKeys.filter((k) => allowed.has(k)))
+	const at = (lane: number, cursor: number) => {
+		const head = lanes[lane]
+		return cursor < head.length ? head[cursor] : eligible[cursor - head.length]
+	}
+	const ends = lanes.map((head) => head.length + eligible.length)
 	const result: number[] = [],
 		used = new Set<number>()
 	const cursors = lanes.map(() => 0)
 	for (;;) {
 		let changed = false
 		for (let i = 0; i < lanes.length; i++) {
-			while (cursors[i] < lanes[i].length && used.has(lanes[i][cursors[i]]))
+			while (cursors[i] < ends[i] && used.has(at(i, cursors[i])))
 				cursors[i]++
-			if (cursors[i] < lanes[i].length) {
-				const key = lanes[i][cursors[i]++]
+			if (cursors[i] < ends[i]) {
+				const key = at(i, cursors[i]++)
 				used.add(key)
 				result.push(key)
 				changed = true

@@ -5,6 +5,7 @@ import { createDeckAdapter, type CatalogReads } from './catalog-adapter.ts'
 import type { CatalogPort } from './types.ts'
 import { RoomError } from './errors.ts'
 import { requireCatalogSnapshot } from './catalog-startup.ts'
+import { rankedKeysCache } from './ranked-keys-cache.ts'
 /** Read-only adapters. Existing methods retain catalog/filter/evidence/link semantics. */
 async function serviceCatalog() {
   const { searchQuery } = await import('../combined-search/catalog.server')
@@ -23,6 +24,7 @@ async function episodes(showId: number) {
       ...(label ? { displaySeason: label.displaySeason, displayNumber: label.displayNumber, presentationVersion: presentation!.version } : {}) }
   })
 }
+const baseRanking = rankedKeysCache()
 export const goodwatchReads: CatalogReads = {
   async rankedKeys(room) {
     const [{ filterTitles }, { defaultFilterState }, { getTitleSnapshot, presentableAt }, { isMoodKey }] = await Promise.all([import('../title-filter/index.server'), import('../../domain/filter-state'), import('../title-snapshot/index.server'), import('../../domain/moods')])
@@ -34,11 +36,13 @@ export const goodwatchReads: CatalogReads = {
     const country = room.screens.find(s => room.participants.some(p => p.screenId === s.id))?.country
     if (!country) throw new RoomError('needs_context', 'Confirm viewing screens')
     const viewer: ViewerContext = { viewer: { kind: 'guest', progress: { interactions: [], country } }, country, services: [], seen: new Set(), ratings: new Map(), wishlist: new Map(), skipped: new Set(), notInterested: new Set(), hidden: new Set(), forYou: false }
-    // Full snapshot universe avoids inheriting Discover’s separate minimum-vote catalog gate.
-    const result = await filterTitles({ universe: snapshot.columns.pointIds, state, sort: 'popular', forYou: null, taste: null, viewer,
-      keep: key => { const row = snapshot.rowOf(key); return row >= 0 && presentableAt(snapshot.columns, row) && !snapshot.factsAt(row).adult } })
-    const offset = result.keys.length ? (room.roundVersion * 20) % result.keys.length : 0
-    return [...result.keys.slice(offset), ...result.keys.slice(0, offset)]
+    // Full snapshot universe avoids inheriting Discover’s separate minimum-vote catalog gate. Building it blocks the
+    // event loop for seconds on the production host, so it is kept per snapshot version, country, kinds and moods.
+    const keys = await baseRanking(JSON.stringify([snapshot.version, country, state.type, [...state.moods].sort()]), async () =>
+      (await filterTitles({ universe: snapshot.columns.pointIds, state, sort: 'popular', forYou: null, taste: null, viewer,
+        keep: key => { const row = snapshot.rowOf(key); return row >= 0 && presentableAt(snapshot.columns, row) && !snapshot.factsAt(row).adult } })).keys)
+    const offset = keys.length ? (room.roundVersion * 20) % keys.length : 0
+    return [...keys.slice(offset), ...keys.slice(0, offset)]
   },
   async displays(keys) {
     const { getDisplayFields } = await import('../title-cards.server')

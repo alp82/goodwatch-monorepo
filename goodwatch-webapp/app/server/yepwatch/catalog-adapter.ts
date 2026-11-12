@@ -3,6 +3,7 @@ import type { Candidate } from '../../../packages/yepwatch-contracts/continuous.
 import { RoomError, requireRoom } from './errors.ts'
 import { continuationProposal } from './progress.ts'
 import { LIMITS, type Room } from './types.ts'
+import { titleKeySet } from './ranked-keys-cache.ts'
 export interface CatalogDisplay { key: number; tmdbId: number; mediaType: 'movie' | 'show'; title: string; year: number | null; overview: string | null; posterUrl: string | null; runtimeMinutes: number | null; backdropUrl?: string | null; trailerUrl?: string | null; goodwatchScore?: number | null; genres?: string[] }
 /** Reads adapt existing GoodWatch methods. New room selection logic lives here; no account/catalog writes. */
 export interface CatalogReads {
@@ -44,7 +45,9 @@ export function createDeckAdapter(reads: CatalogReads, options: { scanLimit?: nu
       // Exclude at the shared page boundary, including prepended continuation keys.
       // Keep selectedShows/progressPlans complete so a seen continuation never
       // changes identity into a new show and final checks retain saved context.
-      const ordered = [...new Set([...continueKeys, ...allKeys])].filter(key => !options.excludeTitleKeys?.has(`${key >= 2_000_000_000_000 ? 'show' : 'movie'}_${key % 1_000_000_000_000}`))
+      const excluded = titleKeySet(options.excludeTitleKeys ?? [])
+      const unique = [...new Set([...continueKeys, ...allKeys])]
+      const ordered = excluded.size ? unique.filter(key => !excluded.has(key)) : unique
       const scanLimit = options.scanLimit ?? 1200
       const results: Candidate[] = []; let scanned = 0
       let uncertainTitles = 0; let noMatchTitles = 0; let missingMetadataTitles = 0; let missingEpisodeTitles = 0

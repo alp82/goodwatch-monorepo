@@ -6,6 +6,7 @@ import { enrichContinuousCandidates } from "./continuous-presentation.server.ts"
 import { proposalCatalog } from "./proposal-catalog.server.ts"
 import type { ContinuousMembers } from "./continuous-members.server.ts"
 import { sharedSavedContinuations } from "./continuous-saved-progress.ts"
+import { titleKeySet } from "./ranked-keys-cache.ts"
 /** Full catalog/evidence reads, with optional remote saved progress; no issuer or local fixtures. */
 export function guestProposalCatalog(members?: ContinuousMembers) {
 	const base = createContinuousCatalog(
@@ -13,7 +14,7 @@ export function guestProposalCatalog(members?: ContinuousMembers) {
 		goodwatchCatalog.metadata,
 		{
 			rank: async (room, base) => {
-				const excluded = new Set(
+				const excluded = titleKeySet(
 					(
 						await Promise.all(
 							room.participants
@@ -27,17 +28,11 @@ export function guestProposalCatalog(members?: ContinuousMembers) {
 						)
 					).flat()
 				)
-				return roomIntentKeys(
+				const keys = roomIntentKeys(
 					room as import("./proposal-types.ts").ProposalRoom,
 					base
-				).filter(
-					(key) =>
-						!excluded.has(
-							`${key >= 2_000_000_000_000 ? "show" : "movie"}_${
-								key % 1_000_000_000_000
-							}`
-						)
 				)
+				return excluded.size ? keys.filter((key) => !excluded.has(key)) : keys
 			},
 			...(members
 				? {
