@@ -91,6 +91,8 @@ export function finishAccount(raw: string): Promise<AccountStatus> {
   result.catch(() => { if (finishing?.result === result) finishing = null; });
   return result;
 }
+/** The return link this device is redeeming or last redeemed, if any. */
+export function accountRedeeming(): Promise<AccountStatus> | null { return finishing?.result ?? null; }
 let exchanging: Promise<string> | null = null;
 let exchangingUrl: string | null = null;
 let completed: { callback: string; roomId: string } | null = null;
