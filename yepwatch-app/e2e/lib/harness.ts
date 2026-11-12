@@ -304,15 +304,17 @@ export class Room {
     return this.fault === 'restart' || this.fault === 'slow' || this.fault === 'nows' || this.fault === 'hidden';
   }
 
-  /** `trace: false` keeps this person out of Playwright tracing: a trace stores typed values, request bodies and
-   * cookies, so a person who signs in with real credentials (the production smoke member) is never traced. */
+  /** `trace: false` keeps this person out of Playwright tracing and E2E_VIDEO: a trace stores typed values, request
+   * bodies and cookies, so a person who signs in with real credentials (the production smoke member) is never traced
+   * or recorded. */
   async person(name: string, opts: { device?: 'phone' | 'desktop'; member?: string; locale?: string; context?: BrowserContext; trace?: boolean } = {}) {
     const device = opts.device ?? 'phone';
     const context = opts.context ?? await this.browser.newContext({
       ...DEVICES[device],
       locale: opts.locale ?? 'de-DE',
       timezoneId: 'Europe/Berlin',
-      recordVideo: process.env.E2E_VIDEO === '1' ? { dir: this.info.outputPath(`video-${name}`), size: DEVICES[device].viewport } : undefined,
+      // Never recorded when untraced: the video would show the sign-in pages and account of real credentials.
+      recordVideo: process.env.E2E_VIDEO === '1' && opts.trace !== false ? { dir: this.info.outputPath(`video-${name}`), size: DEVICES[device].viewport } : undefined,
     });
     if (!opts.context) {
       await context.addInitScript({ path: RECORDER });

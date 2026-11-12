@@ -25,6 +25,21 @@ const local = /^http:\/\/(127\.0\.0\.1|localhost)[:/]/.test(ORIGIN ?? '');
 /** Smoke rooms are recognisable in the store and in History: "e2e smoke 2026-11-11T21:04". */
 const MARK = `e2e smoke ${new Date().toISOString().slice(0, 16)}`;
 
+/**
+ * Runs a step that hands Playwright a credential. Playwright's action errors quote the value (`fill("…")` in the
+ * call log), and a failed test's error lands in error-context.md and report-raw.json, which CI uploads. So a
+ * failure comes out as a new error naming only the step, without the original as its cause.
+ */
+async function secretly(what: string, run: () => Promise<unknown>) {
+  let failed = false;
+  try {
+    await run();
+  } catch {
+    failed = true;
+  }
+  if (failed) throw new Error(`${what} failed (the original error is withheld: it may quote the credential)`);
+}
+
 /** Lifts the harness's fast-4G emulation for one person (unthrottled reference numbers). */
 async function unthrottle(p: Person) {
   const cdp = await p.cdpSession();
@@ -63,8 +78,8 @@ async function signIn(p: Person) {
           const check = () => (owned() ? done() : setTimeout(check, 25));
           check();
         }), undefined, { timeout: 15000 }).catch(() => p.journeyFailure('GoodWatch sign-in form never became interactive'));
-        await email.fill(MEMBER_EMAIL);
-        await p.page.getByLabel(/^password/i).first().fill(MEMBER_PASSWORD);
+        await secretly('typing the smoke member\'s email', () => email.fill(MEMBER_EMAIL));
+        await secretly('typing the smoke member\'s password', () => p.page.getByLabel(/^password/i).first().fill(MEMBER_PASSWORD));
         await p.page.getByRole('button', { name: 'Sign in', exact: true }).click();
         filled = true;
       } else if (await allow.isVisible().catch(() => false)) {

@@ -18,13 +18,27 @@ interface Row {
   screens: Record<string, string>;
 }
 
+// Values that must never reach a persisted diagnostic (the production smoke member's credentials). Playwright
+// quotes an action's value in its errors (fill("…")), so errors, screens and gates are redacted before writing.
+const SECRETS = [process.env.E2E_SMOKE_MEMBER_PASSWORD, process.env.E2E_SMOKE_MEMBER_EMAIL].filter((v): v is string => !!v && v.length >= 4);
+export function redact(text: string): string {
+  let out = text;
+  for (const secret of SECRETS) {
+    out = out.split(secret).join('[redacted]');
+    // JSON-escaped form (a quote or backslash in the value).
+    const escaped = JSON.stringify(secret).slice(1, -1);
+    if (escaped !== secret) out = out.split(escaped).join('[redacted]');
+  }
+  return out;
+}
+
 export default class GateReporter implements Reporter {
   private rows: Row[] = [];
   onTestEnd(test: TestCase, result: TestResult) {
     const read = (name: string) => {
       const a = result.attachments.find((x) => x.name === name);
       if (!a?.body) return [];
-      try { return JSON.parse(a.body.toString('utf8')); } catch { return []; }
+      try { return JSON.parse(redact(a.body.toString('utf8'))); } catch { return []; }
     };
     const project = test.parent.project()?.name ?? '';
     this.rows.push({
@@ -33,11 +47,11 @@ export default class GateReporter implements Reporter {
       fault: project,
       status: result.status,
       durationMs: result.duration,
-      error: result.error?.message?.replace(/\u001b\[[0-9;]*m/g, '').slice(0, 2000) ?? null,
+      error: result.error?.message == null ? null : redact(result.error.message.replace(/\u001b\[[0-9;]*m/g, '')).slice(0, 2000),
       gates: read('gates'),
       timings: read('timings'),
       artifacts: result.attachments.filter((a) => a.path).map((a) => a.path!),
-      screens: Object.fromEntries(result.attachments.filter((a) => a.name.startsWith('screen ') && a.contentType === 'text/plain' && a.body).map((a) => [a.name.slice(7), a.body!.toString('utf8').slice(0, 4000)])),
+      screens: Object.fromEntries(result.attachments.filter((a) => a.name.startsWith('screen ') && a.contentType === 'text/plain' && a.body).map((a) => [a.name.slice(7), redact(a.body!.toString('utf8')).slice(0, 4000)])),
     });
   }
   onEnd(result: FullResult) {

@@ -35,8 +35,44 @@ function phase(name, args, env) {
     stdio: 'inherit',
     env: { ...process.env, CI: '1', E2E_REPORT: report, E2E_OUT: path.join(out, `results-${name}`), ...env },
   });
-  if (!fs.existsSync(report)) throw new Error(`phase ${name} produced no report (exit ${r.status})`);
+  if (!fs.existsSync(report)) {
+    scrubSecrets();
+    throw new Error(`phase ${name} produced no report (exit ${r.status})`);
+  }
   return JSON.parse(fs.readFileSync(report, 'utf8'));
+}
+
+// ---- credentials never leave in artifacts ----------------------------------------------------------------
+// CI uploads artifacts/<tier>. The smoke member's password can't be in them: the member is never traced or
+// recorded, Playwright's failure aria snapshot is off (PLAYWRIGHT_NO_COPY_PROMPT, playwright/lib/index.js
+// _takePageSnapshot), credential steps throw sanitized errors and the reporter redacts. This is the last check:
+// any artifact still holding it is redacted (text) or deleted (binary, or a zip that can't be read), and
+// the run fails. Only file paths are printed, never the password.
+const SECRETS = [process.env.E2E_SMOKE_MEMBER_PASSWORD].filter((v) => v && v.length >= 4);
+let leaked = 0;
+function scrubSecrets() {
+  if (!SECRETS.length || !fs.existsSync(out)) return;
+  const needles = SECRETS.flatMap((v) => [...new Set([v, JSON.stringify(v).slice(1, -1), encodeURIComponent(v)])]).map((v) => Buffer.from(v));
+  const holds = (buf) => needles.some((n) => buf.includes(n));
+  const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((d) => (d.isDirectory() ? walk(path.join(dir, d.name)) : [path.join(dir, d.name)]));
+  for (const file of walk(out)) {
+    const buf = fs.readFileSync(file);
+    let hit = holds(buf);
+    if (!hit && /\.zip$/i.test(file)) {
+      // Traces are deflated: look inside. Unreadable → treated as holding it.
+      const r = spawnSync('unzip', ['-p', file], { maxBuffer: 1 << 30 });
+      hit = r.status !== 0 || !r.stdout || holds(r.stdout);
+    }
+    if (!hit) continue;
+    leaked++;
+    const text = /\.(json|md|txt|log|html|yml|yaml)$/i.test(file);
+    if (text) {
+      let body = buf.toString('utf8');
+      for (const n of needles) body = body.split(n.toString('utf8')).join('[redacted]');
+      fs.writeFileSync(file, body);
+    } else fs.rmSync(file, { force: true });
+    console.error(`[e2e] an artifact held a smoke credential and was ${text ? 'redacted' : 'deleted'}: ${path.relative(here, file)}`);
+  }
 }
 
 const phases = [];
@@ -52,6 +88,8 @@ if (tier === 'smoke') {
   }
   phases.push(phase('smoke', ['--config', 'playwright.smoke.config.ts'], {
     E2E_TARGET: origin ? 'production' : 'local', ...(origin ? { E2E_ORIGIN: origin } : {}), E2E_WORKERS: '4',
+    // No failure aria snapshot in error-context.md: it would hold the member's typed form values.
+    PLAYWRIGHT_NO_COPY_PROMPT: '1',
   }));
 } else {
   const up = spawnSync(process.execPath, [path.join(here, 'stack/up.mjs'), '--reset'], { stdio: 'inherit' });
@@ -143,4 +181,6 @@ for (const [gate, list] of byGate) {
 }
 fs.writeFileSync(path.join(out, 'summary.md'), `${lines.join('\n')}\n`);
 log(`done in ${(wallClockMs / 1000).toFixed(0)} s → ${path.relative(process.cwd(), path.join(out, 'summary.md'))}, report.json`);
-process.exit(failures.length || report.failed ? 1 : 0);
+scrubSecrets();
+if (leaked) console.error(`[e2e] ${leaked} artifact(s) held a smoke credential: failing the run`);
+process.exit(failures.length || report.failed || leaked ? 1 : 0);

@@ -91,6 +91,9 @@ jobs:
         env:
           E2E_SMOKE_MEMBER_EMAIL: ${{ secrets.YEPWATCH_SMOKE_MEMBER_EMAIL }}
           E2E_SMOKE_MEMBER_PASSWORD: ${{ secrets.YEPWATCH_SMOKE_MEMBER_PASSWORD }}
+          # Playwright's failure aria snapshot (error-context.md) would hold typed form values. run.mjs sets it
+          # too and scrubs artifacts/smoke for the credentials before this job uploads it.
+          PLAYWRIGHT_NO_COPY_PROMPT: "1"
         run: |
           start=$(date +%s)
           node run.mjs smoke --origin "$ORIGIN"
