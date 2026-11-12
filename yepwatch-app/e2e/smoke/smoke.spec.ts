@@ -12,6 +12,7 @@
 // Member sign-in:
 //   - production: E2E_SMOKE_MEMBER_EMAIL / E2E_SMOKE_MEMBER_PASSWORD (a dedicated GoodWatch account) fill the
 //     real GoodWatch sign-in form; the one-time consent was given by hand (docs/yepwatch-e2e-pipeline.md).
+//     The member's browser is never traced there (lib/harness.ts person({ trace: false })).
 //   - local stack (--origin http://127.0.0.1:…): the fake issuer signs a throwaway account in.
 import { randomBytes } from 'node:crypto';
 import { test, eventually, issuer, ISSUER, ORIGIN, type Person, type Room } from '../lib/harness';
@@ -129,7 +130,9 @@ async function journey(room: Room, people: [Person, 'leave' | 'archive'][]) {
   let member: Person | null = null;
   if (!GUEST_ONLY) {
     const memberAccount = `smoke-member-${randomBytes(3).toString('hex')}`;
-    member = await room.person('Smoke member', local ? { member: memberAccount } : {});
+    // Never traced against a real origin: a trace keeps the typed password, the sign-in POST body and the
+    // session cookies, and CI uploads the run's artifacts (.github/workflows/yepwatch-smoke.yml).
+    member = await room.person('Smoke member', local ? { member: memberAccount } : { trace: false });
     await unthrottle(member);
     if (local) {
       if (!ISSUER) member.journeyFailure('local smoke needs the stack (no issuer in .stack.json)');
