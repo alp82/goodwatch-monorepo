@@ -70,13 +70,6 @@
       "linkedToUser": true,
       "usedForTracking": false
     },
-    "Advertising Data": {
-      "purposes": [
-        "Analytics"
-      ],
-      "linkedToUser": true,
-      "usedForTracking": false
-    },
     "Crash Data": {
       "purposes": [
         "App Functionality"
