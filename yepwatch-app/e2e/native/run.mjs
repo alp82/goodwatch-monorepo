@@ -337,7 +337,7 @@ async function main() {
     await A.waitFor('New room', { timeout: 8000 });
     await A.tap(/^Decided, |History/, { timeout: 5000 }).catch(() => journeyFail('archive', 'no History entry on the start page after archiving'));
     if (await A.has('history-panel')) { await audit(A, 'history'); await A.tap(/^Restore/).catch(() => journeyFail('archive', 'no Restore in History')); }
-  }, { modes: ['full'] });
+  }); // gate too: Leave and Archive once tore React Native down on Android (black window)
 
   await scenario('mixed-android-host-web-guest', async () => {
     const { mixedHostAndroid } = await import('./lib/mixed.mjs');
