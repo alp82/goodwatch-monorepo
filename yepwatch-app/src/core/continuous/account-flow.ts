@@ -59,13 +59,27 @@ export const accountFlow = createAccountFlow();
  */
 export function createAuthEpoch() {
   let value = 0;
+  let changing = 0;
   const listeners = new Set<() => void>();
+  const advance = () => {
+    value++;
+    listeners.forEach((l) => l());
+  };
   return {
     current: () => value,
     isCurrent: (epoch: number) => epoch === value,
-    advance() {
-      value++;
-      listeners.forEach((l) => l());
+    advance,
+    /** No sign-in change (Log out) is running: an answer now belongs to the current sign-in. */
+    settled: () => changing === 0,
+    /** A sign-in change starts (Log out): answers asked before it are outdated, and answers until `end` too. */
+    begin() {
+      changing++;
+      advance();
+    },
+    /** The sign-in change ended: what is read from now on belongs to the new sign-in. */
+    end() {
+      changing--;
+      advance();
     },
     subscribe(listener: () => void) {
       listeners.add(listener);

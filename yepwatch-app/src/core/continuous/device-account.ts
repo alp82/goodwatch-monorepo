@@ -129,7 +129,8 @@ export function createDeviceAccount(deps: DeviceAccountDeps) {
     },
     /**
      * Ends this device's GoodWatch sign-in. The epoch moves before (answers in flight are outdated)
-     * and after (a read that started during Log out saw the old session) the session is cleared.
+     * and after (a read that started during Log out saw the old session) the session is cleared, and
+     * no answer but Log out's own counts in between (the server may still answer as the account).
      */
     async signOut() {
       // Guest at once, before the epoch moves: its listeners drop the account reads, and nothing may read
@@ -137,7 +138,7 @@ export function createDeviceAccount(deps: DeviceAccountDeps) {
       // Log out puts the sign-in back.
       const before = deps.cache.get();
       deps.cache.set(guestAccount);
-      epoch.advance();
+      epoch.begin();
       // No account data stays on screen, even when Log out fails (the room reads bring it back then).
       deps.forgetAccount?.();
       let result: unknown;
@@ -146,11 +147,13 @@ export function createDeviceAccount(deps: DeviceAccountDeps) {
         await store.clearSession();
         await store.forgetMemberName();
         deps.hint.forget();
+        // Again once the session is gone, before the fresh reads: nothing of the account is left anywhere.
+        deps.forgetAccount?.();
       } catch (e) {
         if (before) deps.cache.set(before);
         throw e;
       } finally {
-        epoch.advance();
+        epoch.end();
       }
       deps.bump();
       return result;

@@ -192,3 +192,37 @@ test('Log out keeps every room the server kept, even ones Your rooms never loade
   await settleLogoutRooms([{ roomId: 'shown', nickname: 'Al', expiresAt: 5 }], { state: 'guest' }, registry);
   assert.deepEqual(forgotten, []);
 });
+
+test('a room answer that comes while Log out runs is refused, and the rooms are scrubbed again once the session is gone', async () => {
+  // The real auth epoch and API client: the room refresh Log out's epoch move starts answers before the
+  // server has ended the sign-in, still carrying the account's prefill.
+  const { authEpoch } = await import('../src/core/continuous/account-flow');
+  const { ContinuousApi } = await import('../src/core/continuous/api-client');
+  const store = { session: 'alice-1' as string | null, name: 'Alice' as string | null };
+  const logout = deferred<unknown>();
+  const scrubs: (string | null)[] = [];
+  const account = createDeviceAccount({
+    guestOnly: false, nativeClient: true, epoch: authEpoch,
+    api: { account: async () => ({ state: 'guest', displayName: null }), memberLink: async () => ({ state: 'guest', prefill: null }), accountLogout: () => logout.promise },
+    store: {
+      async readSession() { return store.session; }, async saveSession(s) { store.session = s; }, async clearSession() { store.session = null; },
+      async readMemberName() { return store.name; }, async rememberMemberName(n) { store.name = n; }, async forgetMemberName() { store.name = null; },
+    },
+    hint: { has: () => true, remember() {}, forget() {} },
+    cache: { get: () => undefined, set() {} },
+    bump() {}, unsupported: () => false,
+    forgetAccount() { scrubs.push(store.session); },
+  });
+  let finish!: (response: Response) => void;
+  const client = new ContinuousApi((() => new Promise<Response>(resolve => { finish = resolve; })) as typeof fetch, true,
+    { read: async () => store.session, save: async () => undefined });
+  const out = account.signOut();
+  // The refresh starts after the epoch moved and answers before Log out does.
+  const reading = client.snapshot({ roomId: 'room', participantId: 'alex', token: 'room-capability', expiresAt: 1 });
+  await tick();
+  finish(Response.json({ shared: {}, own: { member: { state: 'linked', prefill: { country: 'DE', serviceIds: [8], savedProgressAvailable: true } } } }));
+  await assert.rejects(reading, (e: Error & { code?: string }) => e.code === 'outcome_unknown', 'the member answer is not applied');
+  logout.resolve({ state: 'guest', displayName: null });
+  await out;
+  assert.equal(scrubs.at(-1), null, 'the last scrub runs after the session is cleared, before the fresh reads');
+});

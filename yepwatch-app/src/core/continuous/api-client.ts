@@ -92,15 +92,17 @@ export class ContinuousApi {
         signal: controller.signal,
       });
       stage = 'response';
+      // While Log out runs, the server may still answer as the account: only Log out's own answer counts.
+      const outdated = () => !authEpoch.isCurrent(asked) || (!authEpoch.settled() && path !== paths.accountLogout);
       const renewed = response.headers.get('x-yepwatch-session');
-      if (renewed && authEpoch.isCurrent(asked)) await this.sessions?.save(renewed);
+      if (renewed && !outdated()) await this.sessions?.save(renewed);
       const result = await response.json();
       // An answer asked under an earlier sign-in is outdated: it may carry that account's data (a room's
       // GoodWatch link, prefill, seen titles) after Log out. An account answer is refused. A room answer
       // (same room credential before and after: the server keeps the place) is dropped quietly, like one
       // that never came: the room reads again under the current sign-in, a saved command goes again under
       // its same id. A live-channel ticket carries no account data and stays.
-      if (!authEpoch.isCurrent(asked)) {
+      if (outdated()) {
         if (!access) throw new RoomFailure('unauthorized', 'Sign-in changed. Open the room again.', 401);
         if (path !== paths.realtimeTicket(access.roomId))
           throw new RoomFailure('outcome_unknown', 'Sign-in changed while the room answered.', undefined, undefined, undefined, false, 1);

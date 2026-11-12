@@ -39,11 +39,13 @@ const device = createDeviceAccount({
   },
 });
 // Log out or a new sign-in: an account answer still in flight belongs to the earlier sign-in. Rooms stay
-// on screen (Log out keeps this device in them as a guest; a sign-in links the same place) and read again.
+// on screen (Log out keeps this device in them as a guest; a sign-in links the same place) and read again
+// once the change has ended (an answer while Log out runs is refused).
 authEpoch.subscribe(() => {
   void queryClient.cancelQueries({ queryKey: accountKey });
   void queryClient.cancelQueries({ queryKey: ['account-home'] });
   queryClient.removeQueries({ queryKey: ['account-home'] });
+  if (!authEpoch.settled()) return;
   for (const key of ['proposal-room', 'home-room']) void queryClient.invalidateQueries({ queryKey: [key] });
 });
 
