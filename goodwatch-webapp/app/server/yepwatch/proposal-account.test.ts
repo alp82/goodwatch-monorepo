@@ -4,8 +4,9 @@ import { randomBytes, createHash } from "node:crypto"
 import { releaseMembers, releaseMemberConfig } from "./proposal-release-members.ts"
 import { createMemberResource } from "./member-resource.server.ts"
 import { ProposalMemoryRepository, proposalFixtureCatalog } from "./proposal-test-support.ts"
+import type { RoomCommand } from "../../../packages/yepwatch-contracts/proposal.ts"
 import { ProposalService } from "./proposal-service.server.ts"
-import { createProposalHandler, MEMBER_COOKIE, MEMBER_INTENT_COOKIE } from "./proposal-http.server.ts"
+import { createProposalHandler, MEMBER_COOKIE, MEMBER_INTENT_COOKIE, MEMBER_LINK_WAIT_MS } from "./proposal-http.server.ts"
 
 const origin = "https://yepwatch.example"
 const env = {
@@ -24,13 +25,16 @@ function setup(options: {
 	lifetime?: number | (() => number)
 	refreshReply?: () => Response | Promise<Response>
 	/** A reply for GoodWatch's identity check instead of the real one (an outage). */
-	identityReply?: () => Response | undefined
+	identityReply?: () => Response | Promise<Response> | undefined
+	/** The room catalog instead of the fixture one. */
+	catalog?: typeof proposalFixtureCatalog
 } = {}) {
 	const config = releaseMemberConfig(env, origin)!
 	const repo = new ProposalMemoryRepository()
-	const service = new ProposalService(repo, proposalFixtureCatalog, secret)
+	const service = new ProposalService(repo, options.catalog ?? proposalFixtureCatalog, secret)
 	const grants = new Map<string, number>()
-	const calls = { token: [] as URLSearchParams[], verify: 0 }
+	/** `goodwatch`: every account read sent to GoodWatch (identity, prefill, seen), not token requests. */
+	const calls = { token: [] as URLSearchParams[], verify: 0, goodwatch: 0 }
 	/** Refresh tokens rotate: each one redeems once, then GoodWatch refuses it (invalid_grant). */
 	const refreshTokens = new Set<string>()
 	let issued = 0
@@ -60,7 +64,8 @@ function setup(options: {
 			if (options.offline) refreshTokens.add(`refresh-${issued}`)
 			return Response.json({ access_token: accessToken, expires_in: lifetime, token_type: "Bearer", ...(options.offline ? { refresh_token: `refresh-${issued}` } : {}) })
 		}
-		return options.identityReply?.() ?? resource(request)
+		calls.goodwatch++
+		return (await options.identityReply?.()) ?? resource(request)
 	}
 	const members = releaseMembers(repo, config, transport, secret)
 	const handler = createProposalHandler(service, { allowedOrigins: [origin], serviceSecret: "test-service-secret-at-least-thirty-two", members })
@@ -443,4 +448,234 @@ test("a room created with setup while signed in takes the member's GoodWatch cou
 	assert.equal(same.snapshot.own.nextSequence, 1, "nothing more is sent when the countries agree")
 	const guest = await (await create(null, "JP")).json()
 	assert.equal(guest.snapshot.shared.screens[0].country, "JP")
+})
+
+test("a join answers within the link wait while GoodWatch's identity check hangs, and the link lands afterwards", async () => {
+	// Production 2026-11-12: GoodWatch's identity check for the room link hung its full 12 s, the member's join
+	// answered never (the app gave up at 6 s, resent) and the join page said "Reconnecting…" with no outage.
+	let hold: Promise<void> | null = null
+	let release = () => {}
+	const { handler, repo } = setup({
+		identityReply: () => hold?.then(() => undefined) as Promise<Response> | undefined,
+	})
+	const host = await handler(new Request(api("/rooms"), { method: "POST", headers: { origin, "content-type": "application/json" }, body: JSON.stringify({ contractVersion: 3, commandId: randomBytes(16).toString("hex"), admissionSecret: randomBytes(32).toString("base64url"), nickname: "Host" }) }))
+	const room = await host.json(), id = room.credential.roomId
+	const session = cookies((await signIn(handler, `${origin}/`)).callback)[MEMBER_COOKIE].value
+	hold = new Promise<void>((resolve) => { release = resolve })
+	const started = Date.now()
+	const joining = await handler(new Request(api(`/rooms/${id}/join`), { method: "POST", headers: { origin, "content-type": "application/json", cookie: `${MEMBER_COOKIE}=${session}` }, body: JSON.stringify({ contractVersion: 3, commandId: randomBytes(16).toString("hex"), admissionSecret: randomBytes(32).toString("base64url"), nickname: "Alper", inviteCode: room.invite.code }) }))
+	const took = Date.now() - started
+	assert.equal(joining.status, 200)
+	assert.ok(took < MEMBER_LINK_WAIT_MS + 1000, `the join answered in ${took} ms`)
+	const joined = await joining.json()
+	assert.equal(joined.snapshot.shared.participants.length, 2, "the place is made")
+	assert.notEqual(joined.snapshot.own.member.state, "linked", "the answer says the link is still to come: the room links itself")
+	release()
+	for (let i = 0; i < 50 && (await repo.read(id))!.room.participants.find((p) => p.id === joined.credential.participantId)?.member.state !== "linked"; i++)
+		await new Promise((resolve) => setTimeout(resolve, 20))
+	const stored = (await repo.read(id))!.room.participants.find((p) => p.id === joined.credential.participantId)!
+	assert.equal(stored.member.state, "linked", "the link goes on and lands")
+	assert.deepEqual(stored.serviceIds, [8, 9], "with the account's saved services")
+})
+
+/** GoodWatch answers account reads only once `release` is called; until then a member's link waits. */
+function slowGoodWatch(failAfterRelease = false, catalog?: typeof proposalFixtureCatalog) {
+	let hold: Promise<void> | null = null
+	let release = () => {}
+	const env = setup({
+		identityReply: () => hold?.then(() => failAfterRelease ? new Response("down", { status: 500 }) : undefined) as Promise<Response> | undefined,
+		catalog,
+	})
+	const json = (body: unknown, cookie?: string) => ({ method: "POST", headers: { origin, "content-type": "application/json", ...(cookie ? { cookie } : {}) }, body: JSON.stringify(body) })
+	const admission = () => ({ contractVersion: 3, commandId: randomBytes(16).toString("hex"), admissionSecret: randomBytes(32).toString("base64url") })
+	return {
+		...env,
+		json,
+		admission,
+		hold: () => { hold = new Promise<void>((resolve) => { release = resolve }) },
+		release: async () => { release(); await new Promise((resolve) => setTimeout(resolve, 100)) },
+		/** A host's room, and the member's join that answers while GoodWatch still holds the link. */
+		async memberJoins() {
+			const host = await (await env.handler(new Request(api("/rooms"), json({ ...admission(), nickname: "Host" })))).json()
+			const id = host.credential.roomId as string
+			const session = cookies((await signIn(env.handler, `${origin}/`)).callback)[MEMBER_COOKIE].value
+			this.hold()
+			const joining = await env.handler(new Request(api(`/rooms/${id}/join`), json({ ...admission(), nickname: "Alper", inviteCode: host.invite.code }, `${MEMBER_COOKIE}=${session}`)))
+			assert.equal(joining.status, 200)
+			const joined = await joining.json()
+			assert.notEqual(joined.snapshot.own.member.state, "linked", "the answer came before the link")
+			const roomCookie = `yepwatch3_${id}=${cookies(joining)[`yepwatch3_${id}`].value}`
+			return { id, joined, session, roomCookie, both: `${roomCookie}; ${MEMBER_COOKIE}=${session}` }
+		},
+	}
+}
+
+test("a link GoodWatch answers after Log out restores nothing: the device stays in the room as a guest", async () => {
+	const env = slowGoodWatch()
+	const { id, joined, roomCookie, both } = await env.memberJoins()
+	const out = await env.handler(new Request(api("/account/logout"), env.json({}, both)))
+	assert.equal(out.status, 200)
+	await env.release()
+	const stored = (await env.repo.read(id))!.room.participants.find((p) => p.id === joined.credential.participantId)!
+	assert.equal(stored.memberUserId, null, "the late link doesn't bring the account back")
+	assert.equal(stored.memberGrant, undefined, "nor its grant")
+	assert.equal(stored.member.state, "guest")
+	assert.equal(stored.member.prefill, null, "nor its prefill")
+	const kept = await env.handler(new Request(api(`/rooms/${id}`), { headers: { cookie: roomCookie } }))
+	assert.equal(kept.status, 200, "the retained guest credential keeps working")
+	assert.equal((await kept.json()).own.member.state, "guest")
+})
+
+test("a link GoodWatch answers after Leave changes nothing in the room", async () => {
+	const env = slowGoodWatch()
+	const { id, joined, both } = await env.memberJoins()
+	const left = await env.handler(new Request(api(`/rooms/${id}/commands`), env.json({ commandId: randomBytes(16).toString("hex"), sequence: joined.snapshot.own.nextSequence, command: { type: "leave" } }, both)))
+	assert.equal(left.status, 200)
+	const before = structuredClone((await env.repo.read(id))!.room)
+	await env.release()
+	const after = (await env.repo.read(id))!.room
+	assert.deepEqual(after, before, "no grant, prefill or seen titles land on the left place, and no candidate is retired")
+	assert.equal(after.participants.find((p) => p.id === joined.credential.participantId)!.memberGrant, undefined)
+})
+
+test("the room's own member/link joins the link its admission started instead of asking GoodWatch again", async () => {
+	const env = slowGoodWatch()
+	const { id, joined, both } = await env.memberJoins()
+	const asked = env.calls.goodwatch
+	const linking = env.handler(new Request(api(`/rooms/${id}/member/link`), env.json({}, both)))
+	await new Promise((resolve) => setTimeout(resolve, 50))
+	await env.release()
+	const linked = await linking
+	assert.equal(linked.status, 200)
+	assert.equal((await linked.json()).state, "linked")
+	// One link asks GoodWatch three times (identity, prefill, seen); the first identity read was already sent.
+	assert.equal(env.calls.goodwatch - asked, 2, "one set of GoodWatch reads for both")
+	assert.equal((await env.repo.read(id))!.room.participants.find((p) => p.id === joined.credential.participantId)!.member.state, "linked")
+})
+
+test("a link that fails after the admission answered is logged without credentials", async (t) => {
+	const env = slowGoodWatch(true)
+	const warn = t.mock.method(console, "warn", () => {})
+	const { id, joined, session, roomCookie } = await env.memberJoins()
+	await env.release()
+	const lines = warn.mock.calls.map((c) => String(c.arguments[0])).filter((l) => l.includes("yepwatch_member_link_late_failure"))
+	assert.equal(lines.length, 1)
+	const line = JSON.parse(lines[0])
+	assert.equal(line.roomId, id)
+	assert.equal(line.participantId, joined.credential.participantId)
+	assert.match(line.error, /^RoomError:/)
+	assert.equal([session, roomCookie.split("=")[1].split(".")[1], "grant-"].some((secret) => lines[0].includes(secret)), false)
+})
+
+test("a room created while GoodWatch is slow takes the member's country once the late link lands", async () => {
+	const env = slowGoodWatch()
+	const session = cookies((await signIn(env.handler, `${origin}/`)).callback)[MEMBER_COOKIE].value
+	env.hold()
+	const created = await env.handler(new Request(api("/rooms"), env.json({ ...env.admission(), nickname: "", setup: { country: "JP" } }, `${MEMBER_COOKIE}=${session}`)))
+	assert.equal(created.status, 200)
+	const admission = await created.json()
+	const id = admission.credential.roomId
+	assert.equal(admission.snapshot.shared.screens[0].country, "JP", "answered before the link")
+	await env.release()
+	const room = (await env.repo.read(id))!.room
+	assert.equal(room.participants[0].member.state, "linked")
+	assert.equal(room.screens[0].country, "DE", "the late link brings the member's GoodWatch country")
+})
+
+/** A signed-in create answered while GoodWatch still holds the link, and the creator's command sender. */
+async function slowCreate(env: ReturnType<typeof slowGoodWatch>, country: string, catalog = proposalFixtureCatalog) {
+	const session = cookies((await signIn(env.handler, `${origin}/`)).callback)[MEMBER_COOKIE].value
+	env.hold()
+	const created = await env.handler(new Request(api("/rooms"), env.json({ ...env.admission(), nickname: "Host", setup: { country } }, `${MEMBER_COOKIE}=${session}`)))
+	assert.equal(created.status, 200)
+	const admission = await created.json()
+	const id = admission.credential.roomId as string
+	assert.notEqual(admission.snapshot.own.member.state, "linked", "the answer came before the link")
+	const both = `yepwatch3_${id}=${cookies(created)[`yepwatch3_${id}`].value}; ${MEMBER_COOKIE}=${session}`
+	let snapshot = admission.snapshot
+	const send = async (command: Record<string, unknown>) => {
+		const reply = await env.handler(new Request(api(`/rooms/${id}/commands`), env.json({ commandId: randomBytes(16).toString("hex"), sequence: snapshot.own.nextSequence, command }, both)))
+		assert.equal(reply.status, 200, JSON.stringify(await reply.clone().json()))
+		snapshot = (await reply.json()).snapshot
+		return snapshot
+	}
+	/** The same command through another API instance (its own write lane), as a second server would take it. */
+	const other = new ProposalService(env.repo, catalog, secret)
+	const [participantId, token] = cookies(created)[`yepwatch3_${id}`].value.split(".")
+	const sendElsewhere = async (command: RoomCommand) => {
+		const sessionId = (await env.repo.read(id))!.room.participants[0].sessions![0].id
+		const result = await other.command(id, { participantId, token, accountId: "account-1", sessionId },
+			{ commandId: randomBytes(16).toString("hex"), sequence: snapshot.own.nextSequence, command })
+		snapshot = result.snapshot
+		return snapshot
+	}
+	return { id, admission, send, sendElsewhere, snapshot: () => snapshot }
+}
+
+/**
+ * Runs `change` right after the first room read once the late link is stored and announced: the caller of that read
+ * (the create country step) then holds a room the change has already replaced.
+ */
+function raceAfterLink(env: ReturnType<typeof slowGoodWatch>, change: () => Promise<unknown>) {
+	const notify = env.service.notify.bind(env.service)
+	const read = env.repo.read.bind(env.repo)
+	let armed = false
+	let done = false
+	env.service.notify = async (id, options) => {
+		const stored = await notify(id, options)
+		if (!done && (await read(id))?.room.participants[0].member.state === "linked") armed = true
+		return stored
+	}
+	env.repo.read = async (id) => {
+		const stored = await read(id)
+		if (armed) {
+			armed = false
+			done = true
+			await change()
+		}
+		return stored
+	}
+	return () => assert.ok(done, "the change raced the country step")
+}
+
+/** The fixture catalog, also selling in the United States. */
+const withUS: typeof proposalFixtureCatalog = {
+	...proposalFixtureCatalog,
+	async metadata(country) {
+		const m = await proposalFixtureCatalog.metadata(country)
+		return { ...m, countries: [...m.countries, { code: "US", name: "United States" }] }
+	},
+}
+
+test("a country the creator chooses while the late link lands stays: the link doesn't bring GoodWatch's", async () => {
+	const env = slowGoodWatch(false, withUS)
+	const { id, sendElsewhere, snapshot } = await slowCreate(env, "JP", withUS)
+	const raced = raceAfterLink(env, () => sendElsewhere({ type: "configure", expectedContextVersion: snapshot().shared.contextVersion, country: "US" }))
+	await env.release()
+	raced()
+	const room = (await env.repo.read(id))!.room
+	assert.equal(room.participants[0].member.state, "linked", "the link still lands")
+	assert.equal(room.screens[0].country, "US", "the creator's own choice wins over the member's DE")
+})
+
+test("a creator who changed the country and back before the late link lands keeps it", async () => {
+	const env = slowGoodWatch()
+	const { id, send, snapshot } = await slowCreate(env, "JP")
+	await send({ type: "configure", expectedContextVersion: snapshot().shared.contextVersion, country: "DE" })
+	await send({ type: "configure", expectedContextVersion: snapshot().shared.contextVersion, country: "JP" })
+	await env.release()
+	assert.equal((await env.repo.read(id))!.room.screens[0].country, "JP", "a chosen JP is not the create country left alone")
+})
+
+test("a room started while the late link lands keeps its country", async () => {
+	const env = slowGoodWatch()
+	const { id, send, sendElsewhere, snapshot } = await slowCreate(env, "JP")
+	await send({ type: "set_services", serviceIds: [1] })
+	const raced = raceAfterLink(env, () => sendElsewhere({ type: "start", expectedContextVersion: snapshot().shared.contextVersion, expectedRosterVersion: snapshot().shared.rosterVersion, expectedGeneration: snapshot().shared.generation, hostReady: true }))
+	await env.release()
+	raced()
+	assert.notEqual(snapshot().shared.phase, "setup", "started")
+	const room = (await env.repo.read(id))!.room
+	assert.equal(room.participants[0].member.state, "linked", "the link still lands")
+	assert.equal(room.screens[0].country, "JP", "a started room never switches to the member's DE")
 })

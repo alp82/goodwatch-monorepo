@@ -42,7 +42,9 @@ export function flashes(rec: Recording, person: string, allow: string[] = []): G
       if (cur.has(m)) continue;
       const from = since.get(m)!;
       const life = s.t - from;
-      const touched = rec.inputs.some((x) => x.t >= from - 1 && x.t <= s.t);
+      // States carry their frame's start time (rAF), inputs their event time: a press handled in the very
+      // frame that ends the marker can be stamped a few ms after that frame. Its first changed frame says so.
+      const touched = rec.inputs.some((x) => x.t >= from - 1 && (x.t <= s.t || x.feedbackAt === s.t));
       if (life < B.flashMaxMs && !touched && !SHORT_OK.has(m) && !allow.includes(m) && i > 0) {
         const before = rec.states.filter((x) => x.t < from).at(-1)?.sig ?? '(start)';
         out.push({ gate: 'flash', person, detail: `"${m}" showed for ${Math.round(life)} ms (${before} → … → ${s.sig || '(nothing)'})`, measured: Math.round(life), budget: `≥ ${B.flashMaxMs} ms or never`, at: from });

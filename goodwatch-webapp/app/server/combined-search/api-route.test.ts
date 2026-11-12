@@ -295,3 +295,36 @@ test("browser source labels cannot claim an API consumer or a different actor", 
 		})
 	}
 })
+
+test("a guest's omitted or invalid label reaches the search as unknown, which buys no reading; a member's still may", async () => {
+	const { attributedSearch, paidReadingAllowed } = await import("../../domain/search-attribution.ts")
+	for (const [label, userId, trigger, paid] of [
+		[undefined, null, "unknown", false],
+		["enter", null, "unknown", false],
+		[{ surface: "discover", trigger: "crawl" }, null, "unknown", false],
+		[{ surface: "discover", trigger: "api" }, null, "unknown", false],
+		[{ surface: "discover", trigger: "navigation" }, null, "navigation", false],
+		[{ surface: "discover", trigger: "enter" }, null, "enter", true],
+		[undefined, "verified-member", "unknown", true],
+	] as const) {
+		reset()
+		state.userId = userId
+		let viewer: any
+		state.run = async (_q, _policy, visitor) => {
+			viewer = visitor
+			return { rows: [], pendingTitleLookup: false }
+		}
+		const response = await search(new Request("http://localhost:3107/api/combined-search", {
+			method: "POST",
+			headers: { Origin: "http://localhost:3107", "Content-Type": "application/json" },
+			body: JSON.stringify({ q: "quiet movies", ...(label === undefined ? {} : { attribution: label }) }),
+		}))
+		// The basic search still answers: a withheld reading is no error.
+		assert.equal(response.status, 200)
+		await response.text()
+		assert.equal(viewer.attribution.consumer, "web")
+		assert.equal(viewer.attribution.trigger, trigger)
+		// What the store's claim reads (runtime.server.ts and language.server.ts build it this way).
+		assert.equal(paidReadingAllowed(attributedSearch(viewer.attribution, await viewer.accountId)), paid)
+	}
+})

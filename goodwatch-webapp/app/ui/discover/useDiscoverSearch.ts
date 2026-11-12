@@ -6,7 +6,7 @@ import { mediaLanguageUrl } from "~/utils/media-presentation"
 // list in memory, so a change of Not seen yet, moods, the sort, or For you never searches again; only the query and the
 // eligibility (type, one genre, Released, services) do. The last list stays while the next one loads.
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
 import type { ReadCount } from "~/server/combined-search/search.server"
 import {
@@ -14,7 +14,7 @@ import {
 	searchFiltersKey,
 } from "~/server/combined-search/search-filters"
 import { selectReading } from "~/ui/search/search-partial"
-import { type DiscoverSearchResult, runDiscoverSearch } from "./discover-search-request"
+import { type DiscoverSearchResult, readsAgainOnAction, runDiscoverSearch } from "./discover-search-request"
 
 export type { DiscoverSearchResult } from "./discover-search-request"
 
@@ -42,7 +42,6 @@ export function useDiscoverSearch({
 	} | null>(null)
 	const [provisional, setProvisional] = useState<{ key: string; result: DiscoverSearchResult } | null>(null)
 	const nextTrigger = useRef<SearchTrigger | null>(null)
-	const previousAttempt = useRef<{ q: string | null; key: string } | null>(null)
 	const generation = useRef(0)
 	const liveKey = useRef("")
 	const { locale } = useLocale()
@@ -53,9 +52,11 @@ export function useDiscoverSearch({
 	const result = useQuery({
 		queryKey: ["discover-search", key],
 		queryFn: async ({ signal }) => {
-			const trigger = nextTrigger.current ?? (previousAttempt.current?.q === q && previousAttempt.current.key !== key ? "filter_change" : attribution.trigger)
+			// The label is the page's (history state, set only by the person's own action, filter changes included) or a
+			// retry's. Nothing is inferred from the key: back/forward to another filter entry and changes the page makes by
+			// itself stay "navigation", which buys a guest no reading.
+			const trigger = nextTrigger.current ?? attribution.trigger
 			nextTrigger.current = null
-			previousAttempt.current = { q, key }
 			const attempt = ++generation.current
 			// Another search's partial list goes; this search's own stays through a retry, until its next packet or its
 			// completed answer.
@@ -71,7 +72,8 @@ export function useDiscoverSearch({
 			// The completed answer replaces its partial list for good.
 			if (generation.current === attempt)
 				setProvisional((old) => (old?.key === key ? null : old))
-			return answer
+			// The label goes into the cache with the answer, so a later mount of this key knows how it was asked.
+			return { ...answer, askedAs: trigger }
 		},
 		enabled: enabled && q !== null,
 		placeholderData: keepPreviousData,
@@ -81,6 +83,33 @@ export function useDiscoverSearch({
 	})
 	const partial = provisional?.key === key ? provisional.result : null
 	const completed = q !== null && !result.isPlaceholderData ? (result.data ?? null) : null
+	// A guest who opened a link got the basic results; an action on the same words (Enter, the search button, a sort
+	// or filter that keeps the key, a title tag's link to a cached search) runs the same search again, which may read.
+	// Editing the words or a filter searches anew anyway. The cached answer carries the label it was asked with, so this
+	// holds across remounts and returns to a key the cache still has; the answer to the action is cached as asked by an
+	// action, so an answer that is withheld again is kept.
+	const withheldOnAction = readsAgainOnAction(completed, completed?.askedAs, attribution.trigger)
+	// The unlock belongs to the answer it reads again (its key and when it arrived), so a fresh answer for the same words
+	// can be unlocked again. While an unlock runs, or failed with its answer still shown, nothing asks again by itself.
+	// Once nothing waits on one (the answer read, or the person left the words), the next action may unlock: an unlock
+	// canceled by leaving never answered. The guard goes as soon as its answer is no longer shown, even while another
+	// search loads, so a canceled unlock never blocks a later action on the same words.
+	const answerId = completed ? `${key}@${result.dataUpdatedAt}` : null
+	const idle = !result.isFetching
+	const unlocked = useRef<string | null>(null)
+	const refetch = result.refetch
+	useEffect(() => {
+		if (unlocked.current !== answerId) unlocked.current = null
+		if (!idle) return
+		if (!withheldOnAction) {
+			unlocked.current = null
+			return
+		}
+		if (unlocked.current === answerId) return
+		unlocked.current = answerId
+		nextTrigger.current = attribution.trigger
+		refetch()
+	}, [withheldOnAction, idle, answerId, attribution.trigger, refetch])
 	// A completed answer always wins, so a kept partial list can never cover it.
 	const current =
 		completed ?? (partial && (result.isFetching || result.isError) ? partial : null)

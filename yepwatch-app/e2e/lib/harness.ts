@@ -39,7 +39,11 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const DEVICES = {
   phone: { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 },
   desktop: { viewport: { width: 1440, height: 900 }, isMobile: false, hasTouch: false, deviceScaleFactor: 1 },
+  // Small phones: iPhone SE (1st gen) and a common small Android screen.
+  se: { viewport: { width: 320, height: 568 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 },
+  android: { viewport: { width: 360, height: 640 }, isMobile: true, hasTouch: true, deviceScaleFactor: 3 },
 } as const;
+export type Device = keyof typeof DEVICES;
 
 export class Person {
   readonly recordings: Recording[] = [];
@@ -54,8 +58,10 @@ export class Person {
   private cdp: CDPSession | null = null;
   readonly frames = { received: 0, invalid: 0 };
   readonly commandLog: { t: number; status: number; path: string }[] = [];
+  /** False for a person who types real credentials: no trace, and no failure aria snapshot of a password form. */
+  traced = true;
 
-  constructor(readonly room: Room, readonly name: string, readonly context: BrowserContext, public page: Page, readonly device: 'phone' | 'desktop') {
+  constructor(readonly room: Room, readonly name: string, readonly context: BrowserContext, public page: Page, readonly device: Device) {
     this.watch(page);
   }
 
@@ -302,17 +308,21 @@ export class Room {
     return this.fault === 'restart' || this.fault === 'slow' || this.fault === 'nows' || this.fault === 'hidden';
   }
 
-  async person(name: string, opts: { device?: 'phone' | 'desktop'; member?: string; locale?: string; context?: BrowserContext } = {}) {
+  /** `trace: false` keeps this person out of Playwright tracing and E2E_VIDEO: a trace stores typed values, request
+   * bodies and cookies, so a person who signs in with real credentials (the production smoke member) is never traced
+   * or recorded. */
+  async person(name: string, opts: { device?: Device; member?: string; locale?: string; context?: BrowserContext; trace?: boolean } = {}) {
     const device = opts.device ?? 'phone';
     const context = opts.context ?? await this.browser.newContext({
       ...DEVICES[device],
       locale: opts.locale ?? 'de-DE',
       timezoneId: 'Europe/Berlin',
-      recordVideo: process.env.E2E_VIDEO === '1' ? { dir: this.info.outputPath(`video-${name}`), size: DEVICES[device].viewport } : undefined,
+      // Never recorded when untraced: the video would show the sign-in pages and account of real credentials.
+      recordVideo: process.env.E2E_VIDEO === '1' && opts.trace !== false ? { dir: this.info.outputPath(`video-${name}`), size: DEVICES[device].viewport } : undefined,
     });
     if (!opts.context) {
       await context.addInitScript({ path: RECORDER });
-      if (process.env.E2E_TRACE !== '0') await context.tracing.start({ screenshots: true, snapshots: true, title: `${this.info.title} — ${name}` }).catch(() => {});
+      if (process.env.E2E_TRACE !== '0' && opts.trace !== false) await context.tracing.start({ screenshots: true, snapshots: true, title: `${this.info.title} — ${name}` }).catch(() => {});
       // Signed in to (local) GoodWatch: its authorize step comes straight back, as for a returning member.
       if (opts.member) await context.addCookies([{ name: 'gw_e2e_member', value: encodeURIComponent(opts.member), domain: '127.0.0.1', path: '/api/auth/', httpOnly: true, secure: false, sameSite: 'Lax' }]);
       // Hidden-tab fault: a controllable page clock so "minutes away" takes seconds (time still flows).
@@ -324,6 +334,7 @@ export class Room {
     }
     const page = await context.newPage();
     const p = new Person(this, name, context, page, device);
+    if (opts.trace === false) p.traced = false;
     if (this.fault === 'nows') {
       const cdp = await p.cdpSession();
       await cdp.send('Network.enable');
@@ -466,7 +477,8 @@ export class Room {
     if (unique.length || this.info.status !== this.info.expectedStatus) {
       for (const p of this.people) {
         if (p.page.isClosed()) continue;
-        const aria = await p.page.locator('body').ariaSnapshot({ timeout: 3000 }).catch(() => '(unavailable)');
+        const secret = !p.traced && await p.page.locator('input[type=password]').count().catch(() => 1) > 0;
+        const aria = secret ? '(withheld: a password form is on screen)' : await p.page.locator('body').ariaSnapshot({ timeout: 3000 }).catch(() => '(unavailable)');
         await this.info.attach(`screen ${p.name}`, { body: `[${await p.signature()}] ${p.page.url()}\n${aria}`, contentType: 'text/plain' });
         await this.info.attach(`screenshot ${p.name}`, { body: await p.page.screenshot().catch(() => Buffer.from('')), contentType: 'image/png' });
       }
@@ -475,11 +487,11 @@ export class Room {
     for (const p of this.people) {
       if (traced.has(p.context)) continue;
       traced.add(p.context);
-      const failed = unique.length > 0 || this.info.status !== this.info.expectedStatus;
+      const keep = unique.length > 0 || this.info.status !== this.info.expectedStatus || process.env.E2E_TRACE === 'keep';
       if (process.env.E2E_TRACE !== '0') {
         const file = this.info.outputPath(`trace-${p.name.replace(/\W+/g, '_')}.zip`);
-        await p.context.tracing.stop(failed ? { path: file } : undefined).catch(() => {});
-        if (failed && fs.existsSync(file)) await this.info.attach(`trace ${p.name}`, { path: file, contentType: 'application/zip' });
+        await p.context.tracing.stop(keep ? { path: file } : undefined).catch(() => {});
+        if (keep && fs.existsSync(file)) await this.info.attach(`trace ${p.name}`, { path: file, contentType: 'application/zip' });
       }
       await p.context.close().catch(() => {});
     }

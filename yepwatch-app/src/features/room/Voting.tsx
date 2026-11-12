@@ -5,7 +5,7 @@
  * never an end.
  */
 import { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Platform, View } from 'react-native';
+import { Platform, View, useWindowDimensions } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { fixturesEnabled } from '../../core/config';
 import { useReducedMotion } from '../../components/ui';
@@ -16,6 +16,7 @@ import { groupActivity } from '../../core/continuous/activity';
 import { latestRetainedVote, ownCard } from '../../core/continuous/state';
 import { titlePresentation } from '../glow/adapter';
 import { LiveFaces } from '../glow/Peers';
+import { matchesChipFrame, votingBarFit } from '../glow/faces-row';
 import { Trailer } from '../glow/Trailer';
 import { useActiveTime } from '../glow/useActiveTime';
 import { GText, Icon, Press, glow } from '../glow/theme';
@@ -60,20 +61,25 @@ function VoteKey({ yes, disabled, onPress }: { yes: boolean; disabled: boolean; 
 }
 
 /** Matches so far; amber while there's a proposal. Opens Matches, where a proposal set aside with Keep swiping waits as a card. */
-function MatchesChip() {
+/** `compact`: the icon and the count only (narrow phones at a large font scale) in a fixed box, so the first match moves nothing; the name stays in full. */
+function MatchesChip({ compact }: { compact: boolean }) {
   const { id, view } = useRoom();
   const { z } = useLayout();
+  const { fontScale } = useWindowDimensions();
   if (!view) return null;
+  const frame = matchesChipFrame(z, fontScale, compact);
   const found = view.matches.length;
   const proposal = view.proposal;
   const label = found ? `${found} ${found === 1 ? 'match' : 'matches'}` : 'Matches';
   const lit = Boolean(found || proposal);
+  const shown = compact ? (found ? String(found) : '') : label;
   return (
     <Press label={label} disabled={!lit}
       onPress={() => { playFeedback('matches'); openPage(id, 'matches'); }}
-      visual={{ height: z(36), paddingHorizontal: 12, borderRadius: 10, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: lit ? warm.amberSoft : warm.faint, borderWidth: 1, borderColor: proposal ? glow.amber : lit ? warm.amberLine : warm.line }}>
+      style={{ flexShrink: 1, width: frame.width, alignItems: 'stretch' }}
+      visual={{ height: z(36), justifyContent: frame.justifyContent, paddingHorizontal: 12, borderRadius: 10, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: lit ? warm.amberSoft : warm.faint, borderWidth: 1, borderColor: proposal ? glow.amber : lit ? warm.amberLine : warm.line }}>
       <Icon name="tickets" size={z(15)} color={lit ? glow.amber : glow.muted} />
-      <GText bold size={z(14)} color={lit ? glow.amber : glow.muted}>{label}</GText>
+      {shown ? <GText bold size={z(14)} lines={1} style={{ flexShrink: 1 }} color={lit ? glow.amber : glow.muted}>{shown}</GText> : null}
       {proposal ? <View accessible={false} style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: glow.amber }} /> : null}
     </Press>
   );
@@ -95,6 +101,7 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
   const room = useRoom();
   const { id, state, snapshot, view, cmd, entry } = room;
   const layout = useLayout();
+  const { fontScale } = useWindowDimensions();
   const { phone, z } = layout;
   /** The row over the stage holds the 48 × 48 touch targets of the matches chip and Undo. */
   const barHeight = Math.max(48, z(44));
@@ -185,6 +192,8 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
   }
   const offered = card ? servicesIn(all, offeredOn(card, view.enabledServiceIds)) : [];
   const people = view.people.map((p) => ({ id: p.id, nickname: p.nickname || '?', self: p.self }));
+  // The bar's split depends on its width and the font scale only: people coming and going move nothing.
+  const fit = votingBarFit({ rowWidth, size: z(26), fontScale, z, undo: Math.max(48, z(40)), gap: 10 });
   return (
     <Screen testID="voting" scroll={false} back={toRooms} covered={Boolean(panel)} width="page" noteTop={(phone ? 12 : z(24)) + barHeight + 8}
       footer={
@@ -205,9 +214,9 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
       </>}>
       <RoomNotes />
       <View testID="voting-bar" style={{ height: barHeight, flexDirection: 'row', alignItems: 'center', gap: 10, width: rowWidth, alignSelf: 'center', zIndex: 3 }}>
-        <MatchesChip />
-        <View style={{ flex: 1 }} />
-        {people.length > 1 ? <LiveFaces people={people} activity={activity} localReaction={localReaction} size={z(26)} max={4} /> : null}
+        <View style={{ flex: 1, minWidth: 0, flexDirection: 'row' }}><MatchesChip compact={fit.compactChip} /></View>
+        {/* Always the same width: the second person arriving moves nothing either. */}
+        {people.length > 1 ? <LiveFaces people={people} activity={activity} localReaction={localReaction} size={z(26)} slots={fit.slots} fontScale={fontScale} /> : <View style={{ width: fit.facesWidth }} />}
         <Press label="Undo" disabled={disabled || !undoTarget} onPress={() => { if (!undoTarget) return; setYeps((list) => undoYeps(list, undoTarget.candidateId)); void cmd.undo(undoTarget.candidateId); }}
           visual={{ width: z(40), height: z(36), borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff0a' }}>
           <Icon name="undo" size={z(17)} color={glow.soft} />

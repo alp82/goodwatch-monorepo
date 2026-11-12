@@ -17,7 +17,7 @@ import { useSheetsHoldNavigation } from '../shell/sheet-back';
 import { useFreshSurface } from '../shell/fresh-surface';
 import { closeTopSheet, useSheetOpen } from '../shell/sheet-stack';
 import { warm } from '../shell/tokens';
-import { GText, Press, glow, grow } from '../glow/theme';
+import { GText, Press, glow, grow, spaceToggles } from '../glow/theme';
 import { useOptionalRoom } from './RoomProvider';
 import type { Kind } from './model';
 import { rankServices, type ServiceChoice } from './services';
@@ -175,7 +175,7 @@ export function Note({ children, action, busy = false }: { children: ReactNode; 
 export function Switch({ on, label, onPress, disabled = false }: { on: boolean; label: string; onPress: () => void; disabled?: boolean }) {
   return (
     // The track stays 48 × 28; the press area around it is the full 48 × 48 touch target.
-    <Pressable accessibilityRole="switch" accessibilityLabel={label} accessibilityState={{ checked: on, disabled }} aria-checked={on} aria-disabled={disabled} disabled={disabled} onPress={onPress}
+    <Pressable accessibilityRole="switch" accessibilityLabel={label} accessibilityState={{ checked: on, disabled }} aria-checked={on} aria-disabled={disabled} disabled={disabled} onPress={onPress} {...spaceToggles(onPress, disabled)}
       style={{ ...grow(28, 48), justifyContent: 'center', opacity: disabled ? 0.45 : 1, cursor: disabled ? 'default' : 'pointer' } as ViewStyle}>
       {/* The knob moves by transform: a switch turned on from another phone moves nothing in the layout. */}
       <View style={{ width: 48, height: 28, borderRadius: 14, padding: 3, backgroundColor: on ? glow.amber : '#ffffff26', alignItems: 'flex-start' }}>

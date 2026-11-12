@@ -466,3 +466,64 @@ test(
 		)
 	}
 )
+
+test(
+	"typed relational store: the sweep finds only live rooms whose current idea is pending past its lease",
+	{ skip: !enabled, timeout: 180000 },
+	async (t) => {
+		const name = `yepwatch-relational-sweep-test-${process.pid}`
+		docker("run", "-d", "--name", name, "-p", "127.0.0.1::4200", "-e", "CRATE_HEAP_SIZE=512m", "crate:6.4.6", "crate", "-Cdiscovery.type=single-node", "-Ccluster.name=" + name)
+		t.after(() => {
+			docker("rm", "-f", name)
+		})
+		const port = docker("port", name, "4200/tcp").split(":").at(-1)
+		const sql = crateSql(`http://127.0.0.1:${port}`, "crate", "")
+		for (let i = 0; ; i++) {
+			try {
+				await sql("SELECT 1")
+				break
+			} catch (e) {
+				if (i > 100) throw e
+				await new Promise((r) => setTimeout(r, 300))
+			}
+		}
+		await provisionReleaseStore(sql, 0, "typed-test", secret)
+		await provisionControl(sql, DEFAULT_CONTROL, 0)
+		const repo = new RelationalProposalRepository(sql, secret)
+		let offset = 0
+		const now = () => Date.now() + offset
+		let answer = false
+		const interpret = (prompt: string) =>
+			answer
+				? Promise.resolve({ prompt, attributes: [{ text: "heist", kind: "attribute" as const }], rankedKeys: [1], interpretedAt: 7 })
+				: new Promise<never>(() => {}) // the creating instance "crashes" mid-search
+		const catalog = {
+			...proposalFixtureCatalog,
+			async metadata() {
+				return { countries: [{ code: "DE", name: "Germany" }], services: [{ id: 1, name: "1", logoUrl: null }], moods: [] }
+			},
+		}
+		const service = new ProposalService(repo, catalog, secret, undefined, now, undefined, interpret)
+		const create = (idea?: string) => service.create({ ...request("Host"), setup: { country: "DE", ...(idea ? { idea } : {}) } })
+		const pending = await create("space heist")
+		const plain = await create()
+		const refresh = () => sql(`REFRESH TABLE ${tables.idea.name}, ${tables.room.name}`)
+		await refresh()
+		assert.deepEqual(await repo.stalePendingIdeas(now() - 15_000, now(), 50), [], "within the lease")
+		offset = 16_000
+		assert.deepEqual(await repo.stalePendingIdeas(now() - 15_000, now(), 50), [pending.credential.roomId])
+		assert.deepEqual(await repo.stalePendingIdeas(now() - 15_000, now(), 50, pending.credential.roomId), [], "a cursor continues after its room")
+		assert.notEqual(plain.credential.roomId, pending.credential.roomId)
+		const expiresAt = (await repo.read(pending.credential.roomId))!.room.expiresAt
+		assert.deepEqual(await repo.stalePendingIdeas(now() - 15_000, expiresAt + 1, 50), [], "expired rooms are left out")
+		answer = true
+		const sweeper = new ProposalService(repo, catalog, secret, undefined, now, undefined, interpret)
+		await sweeper.resumeStaleInterpretations()
+		await sweeper.interpretationsIdle()
+		await refresh()
+		// The old pending idea row stays stored (rows are immutable), but the room's head no longer lists it.
+		assert.deepEqual(await repo.stalePendingIdeas(now() - 15_000, now(), 50), [])
+		const room = (await repo.read(pending.credential.roomId))!.room
+		assert.deepEqual(room.ideas![0].attributes, [{ text: "heist", kind: "attribute" }])
+	}
+)

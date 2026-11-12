@@ -22,6 +22,8 @@ import type {
 } from "./continuous-types.ts"
 /** Only a definitive refusal (revoked grant, another account) ends a device session. */
 const refused = (e: unknown) => e instanceof RoomError && ["unauthorized", "member_required"].includes(e.code)
+/** GoodWatch reads abort after 12 s (proposal-release-members.ts); an in-flight seen read is never shared longer. */
+const SEEN_TRANSPORT_TIMEOUT_MS = 12_000
 /** Throttled, down, unreachable, a garbled reply: the session is kept for a later try. */
 const unavailable = (e: unknown) =>
 	e instanceof RoomError && e.code === "busy" ? e : new RoomError("busy", "GoodWatch is temporarily unavailable; try again", 503, true)
@@ -47,7 +49,8 @@ export interface MemberIssuer {
 	refresh?(input: { refreshToken: string }): Promise<MemberTokens>
 }
 export interface MemberReads {
- seen?(userId: string, accessToken?: string): Promise<string[]>
+	/** Refuses (throws) when the token doesn't belong to `userId`: ContinuousMembers.seen checks the grant with this read alone. */
+	seen?(userId: string, accessToken?: string): Promise<string[]>
 	prefill(userId: string, accessToken?: string): Promise<MemberPrefill>
 	progress?(userId: string, accessToken?: string): Promise<MemberProgressResponse>
 }
@@ -58,6 +61,8 @@ export interface MemberFlowConfig {
 	nativeReturnUris?: string[]
 	/** Seals device sessions and browser sign-in intents. Without it, account sign-in is unavailable. */
 	sessionSecret?: string
+	/** How long a deck build or Start waits for one member's seen list before going on without it (default 300 ms). */
+	seenReadTimeoutMs?: number
 }
 /** One device's GoodWatch sign-in, sealed by the server: browsers keep it in an HttpOnly cookie, apps in secure storage. */
 export interface MemberSession {
@@ -643,8 +648,12 @@ export class ContinuousMembers {
 	/**
 	 * Links your participant in a room to this device's sign-in: rooms you create, join or open while
 	 * signed in. The live grant is checked with GoodWatch before it is copied into the room.
+	 *
+	 * `admit`: whether the place may still take this link, asked before GoodWatch is read and again on every write
+	 * attempt (a link answered late must not land after Log out or Leave). Refused, nothing is written: null.
+	 * A linked answer carries the room's context version as the link left it.
 	 */
-	async linkRoom(id: string, participantId: string, raw: string | null | undefined) {
+	async linkRoom(id: string, participantId: string, raw: string | null | undefined, admit?: (room: ContinuousRoom) => boolean | Promise<boolean>) {
 		const fresh = await this.freshSession(this.openSession(raw))
 		requireRoom(fresh, "member_required", "Sign in with GoodWatch again", 403)
 		const session = fresh.session
@@ -653,6 +662,7 @@ export class ContinuousMembers {
 			return { status: { state: "unavailable" as const, prefill: null }, session, renewed: fresh.renewed }
 		{
 			const { room } = await this.get(id)
+			if (admit && !(await admit(room))) return null
 			const p = actor(room, participantId)
 			requireRoom(
 				!p.memberUserId || p.memberUserId === session.userId,
@@ -665,7 +675,7 @@ export class ContinuousMembers {
 				p.memberGrant?.accessToken === session.accessToken &&
 				p.memberGrant.expiresAt > this.now()
 			)
-				return { status: { state: "linked" as const, prefill: p.member.prefill }, session, renewed: fresh.renewed }
+				return { status: { state: "linked" as const, prefill: p.member.prefill }, session, renewed: fresh.renewed, contextVersion: room.contextVersion }
 		}
 		const grant = await this.issuer.verify(session.accessToken)
 		requireRoom(grant.userId === session.userId, "unauthorized", "GoodWatch account changed", 401)
@@ -673,6 +683,7 @@ export class ContinuousMembers {
 		const seen = await this.reads.seen?.(grant.userId, session.accessToken)
 		for (let attempt = 0; attempt < 6; attempt++) {
 			const old = await this.get(id)
+			if (admit && !(await admit(old.room))) return null
 			const room = structuredClone(old.room)
 			const p = actor(room, participantId)
 			requireRoom(
@@ -690,7 +701,7 @@ export class ContinuousMembers {
 			})
 			room.revision++
 			if (await this.repo.compareAndSwap(old, room, true))
-				return { status: { state: "linked" as const, prefill }, session, renewed: fresh.renewed }
+				return { status: { state: "linked" as const, prefill }, session, renewed: fresh.renewed, contextVersion: room.contextVersion }
 		}
 		throw new RoomError("busy", "Room busy; try again", 503, true)
 	}
@@ -747,19 +758,73 @@ export class ContinuousMembers {
 		)
 		return this.reads.progress(userId, actor(room, participantId).memberGrant!.accessToken)
 	}
-    private seenCache = new Map<string, {roster: number; keys: string[]}>()
-    /** A member's seen title keys, kept per room roster. `fresh` (Start) reads the account again and refreshes it. */
-    async seen(room: ContinuousRoom, participantId: string, options: { fresh?: boolean } = {}): Promise<string[]> {
-      if (!this.reads.seen) return []
-      const key = `${room.id}:${participantId}`
-      const cached = this.seenCache.get(key)
-      if (!options.fresh && cached?.roster === room.rosterVersion) return cached.keys
-      const userId = await this.identity(room, participantId)
-      const keys = await this.reads.seen(userId, actor(room, participantId).memberGrant!.accessToken)
-      this.seenCache.set(key, {roster:room.rosterVersion,keys})
-      if (this.seenCache.size > 512) this.seenCache.delete(this.seenCache.keys().next().value!)
-      return keys
-    }
+	/**
+	 * Seen reads in flight per room seat, bound to the linked account and its grant: concurrent reads for the same
+	 * link share one GoodWatch request. Nothing is kept once it settles, so every later read asks GoodWatch again and
+	 * a revoked grant, a relinked seat or another account never gets a list read earlier.
+	 */
+	private seenReads = new Map<string, { fresh: boolean; read: Promise<string[]> }>()
+	/** The seat's current link; refuses a guest, an expired grant or an unlinked seat. */
+	private seenLink(room: ContinuousRoom, participantId: string) {
+		const p = actor(room, participantId)
+		requireRoom(
+			p.memberGrant && p.memberGrant.expiresAt > this.now() && p.memberUserId,
+			"member_required",
+			"Sign in with GoodWatch again",
+			403,
+		)
+		return {
+			userId: p.memberUserId,
+			accessToken: p.memberGrant.accessToken,
+			account: `${p.memberUserId}\0${createHash("sha256").update(p.memberGrant.accessToken).digest("base64url")}`,
+		}
+	}
+	/**
+	 * A member's seen title keys, read from GoodWatch. `fresh` (Start) never joins a read that started earlier, so a
+	 * title marked Seen since then is in the list; other reads share any read in flight for the same link.
+	 */
+	async seen(room: ContinuousRoom, participantId: string, options: { fresh?: boolean } = {}): Promise<string[]> {
+		if (!this.reads.seen) return []
+		const link = this.seenLink(room, participantId)
+		const key = `${room.id}\0${participantId}\0${link.account}`
+		const pending = this.seenReads.get(key)
+		if (pending && (pending.fresh || !options.fresh)) return pending.read
+		// No separate identity check first: the read proves the grant itself (MemberReads.seen), and a second
+		// round trip to GoodWatch sat on Start's path.
+		const read = this.reads.seen(link.userId, link.accessToken)
+		const entry = { fresh: Boolean(options.fresh), read }
+		// Dropped when it settles, or after the transport's own timeout if a reader never settles.
+		const forget = () => {
+			clearTimeout(timer)
+			if (this.seenReads.get(key) === entry) this.seenReads.delete(key)
+		}
+		const timer = setTimeout(forget, SEEN_TRANSPORT_TIMEOUT_MS)
+		timer.unref?.()
+		read.then(forget, forget)
+		this.seenReads.set(key, entry)
+		return read
+	}
+	/**
+	 * `seen` for building decks and Start: never fails the room. A refused grant, a GoodWatch outage or a read
+	 * slower than `seenReadTimeoutMs` leaves this member's seen titles out (logged); nothing is taken from an
+	 * earlier read or another link.
+	 */
+	async seenOrNone(room: ContinuousRoom, participantId: string, options: { fresh?: boolean } = {}): Promise<string[]> {
+		let timer: ReturnType<typeof setTimeout> | undefined
+		const timedOut = new Error("seen read timed out")
+		try {
+			return await Promise.race([
+				this.seen(room, participantId, options),
+				new Promise<never>((_, reject) => { timer = setTimeout(() => reject(timedOut), this.config.seenReadTimeoutMs ?? 300) }),
+			])
+		} catch (e) {
+			const reason = e === timedOut ? "timeout" : refused(e) ? "refused" : "unavailable"
+			console.warn(JSON.stringify({ event: "yepwatch_member_seen_skipped", reason, fresh: Boolean(options.fresh) }))
+			return []
+		} finally {
+			clearTimeout(timer)
+		}
+	}
 	async ownProgress(id: string, participantId: string) {
 		return this.progress((await this.get(id)).room, participantId)
 	}

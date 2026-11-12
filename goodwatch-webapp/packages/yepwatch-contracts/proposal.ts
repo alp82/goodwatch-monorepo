@@ -83,6 +83,15 @@ export interface RoomDescription {
   attributes: { text: string; kind: "attribute" | "excluded" | "want" | "avoid" | "phrase"; key?: string }[]
 }
 export interface RoomIdea { id: string; text: string; authorId: string; on: boolean; attributes: RoomDescription["attributes"] }
+/**
+ * The one attribute of an idea whose search is still running: create, add_idea and edit_idea answer before
+ * GoodWatch has interpreted the idea. Installed apps read an idea without attributes as "mood matching is
+ * unavailable", so a pending idea never looks empty; the attributes arrive (or the list empties if search
+ * failed) with a later revision. It fits every strict idea schema already shipped.
+ */
+export const PENDING_IDEA_ATTRIBUTE = { text: "Matching the mood", kind: "phrase", key: "yepwatch:pending" } as const
+export const ideaPending = (idea: Pick<RoomIdea, "attributes">) =>
+	idea.attributes.length === 1 && idea.attributes[0].key === PENDING_IDEA_ATTRIBUTE.key
 export interface SharedRoomSnapshot {
   ideas: RoomIdea[]
   disabledServiceIds: number[]

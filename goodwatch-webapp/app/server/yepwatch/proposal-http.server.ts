@@ -23,6 +23,13 @@ import {
 } from "./proposal-validation.ts"
 /** This browser's GoodWatch sign-in (sealed, HttpOnly) and its short-lived sign-in intent. */
 export const MEMBER_COOKIE = "yepwatch3_member"
+/**
+ * How long a create, join or resume waits for its GoodWatch link before answering without it. Linking asks GoodWatch
+ * three times in a row (identity, prefill, seen), each allowed 12 s; one identity check hung the full 12 s in
+ * production (2026-11-12), so the join answered never and the app said "Reconnecting…" without an outage. The app
+ * calls an answer that takes QUIET_OUTAGE_MS (3 s) an outage: the place itself plus this wait stays well under it.
+ */
+export const MEMBER_LINK_WAIT_MS = 1500
 export const MEMBER_INTENT_COOKIE = "yepwatch3_member_intent"
 export const CREATOR_COOKIE = 'yepwatch3_creator'
 export const CREATOR_HEADER = 'x-yepwatch-creator'
@@ -69,6 +76,8 @@ export function createProposalHandler(
 			"Gateway service secret must contain at least 32 characters"
 		)
 	const allowed = new Set(options.allowedOrigins)
+	/** GoodWatch links in flight, per place and sign-in session (see `link`). */
+	const links = new Map<string, Promise<boolean>>()
 	return async (request: Request): Promise<Response> => {
 		const url = new URL(request.url)
 		const origin = request.headers.get("origin")
@@ -186,24 +195,82 @@ export function createProposalHandler(
       }
       return a ? { ...c, accountId: a.userId, sessionId: a.sessionId } : c
     }
-    const sendAdmission = async (admission: import('../../../packages/yepwatch-contracts/proposal.ts').GuestAdmission, a: import('./proposal-types.ts').RoomAccount | null, setup?: import('../../../packages/yepwatch-contracts/proposal.ts').RoomSetupRequest) => {
+    type Account = import('./proposal-types.ts').RoomAccount
+    type Place = { roomId: string; participantId: string; token: string }
+    /**
+     * Whether this place may still take the link of `a`: the same account on a session attached to the place and
+     * not logged out, the place neither left nor revoked, and in the epoch it had when the link began (Leave and
+     * returning move it). Asked again on every write attempt: a link GoodWatch answers late lands only if it still fits.
+     */
+    const linkAdmits = (a: Account, participantId: string) => {
+      let epoch: number | undefined
+      return async (room: import('./continuous-types.ts').ContinuousRoom) => {
+        const p = (room as import('./proposal-types.ts').ProposalRoom).participants.find((x) => x.id === participantId)
+        if (!p || p.revoked || p.leftAt != null || p.memberUserId !== a.userId) return false
+        if (!(p.sessions ?? []).some((s) => s.id === a.sessionId && s.expiresAt > Date.now())) return false
+        epoch ??= p.epoch
+        return p.epoch === epoch && (await service.accounts.sessionActive(a.sessionId))
+      }
+    }
+    /**
+     * Links a place to this request's sign-in. One link per place and session at a time: the room's own member/link
+     * joins the one its admission started instead of asking GoodWatch again. False: the place no longer takes it.
+     *
+     * `created`: a new room's create country and context version. Once linked, the room takes the member's GoodWatch
+     * country over the device's, as the app's own country step does, but only if nothing changed the room's context
+     * between create and the link (the link itself moves it) or since: a country someone chose stays, and a started
+     * room keeps its own. Checked atomically with the write (adoptMemberCountry), also when the link lands late.
+     */
+    const link = (place: Place, a: Account, created?: { country: string; contextVersion: number }) => {
+      const key = `${place.roomId}\0${place.participantId}\0${a.sessionId}`
+      const running = links.get(key)
+      if (running) return running
+      const raw = options.members!.sealSession(freshMemberSession!)
+      const work = (async () => {
+        const admits = linkAdmits(a, place.participantId)
+        let admittedVersion: number | undefined
+        const linked = await options.members!.linkRoom(place.roomId, place.participantId, raw, async (room) => {
+          const ok = await admits(room)
+          if (ok) admittedVersion = room.contextVersion
+          return ok
+        })
+        if (!linked) return false
+        await service.notify(place.roomId)
+        const country = linked.status.prefill?.country
+        if (created && country && admittedVersion === created.contextVersion && linked.contextVersion !== undefined) {
+          const scoped = { participantId: place.participantId, token: place.token, accountId: a.userId, sessionId: a.sessionId }
+          await service.adoptMemberCountry(place.roomId, scoped, { country: created.country, contextVersion: linked.contextVersion }, country)
+            .catch((e: unknown) => { if (!(e instanceof RoomError)) throw e })
+        }
+        return true
+      })().finally(() => links.delete(key))
+      links.set(key, work)
+      return work
+    }
+    /**
+     * `bounded`: an admission (create, join, resume) answers within MEMBER_LINK_WAIT_MS even when GoodWatch is slow
+     * to link it. The place is already made; the link goes on and lands as a room update, and the room links itself
+     * (member/link, which joins it) when the answer says it isn't linked yet.
+     */
+    const sendAdmission = async (admission: import('../../../packages/yepwatch-contracts/proposal.ts').GuestAdmission, a: Account | null, setup?: import('../../../packages/yepwatch-contracts/proposal.ts').RoomSetupRequest, bounded = false) => {
       const c = admission.credential
-      if (a && options.members && freshMemberSession) {
-        await options.members.linkRoom(c.roomId, c.participantId, options.members.sealSession(freshMemberSession))
-        await service.notify(c.roomId)
+      const linking = a && options.members && freshMemberSession
+        ? link({ roomId: c.roomId, participantId: c.participantId, token: c.token }, a,
+          setup ? { country: setup.country, contextVersion: admission.snapshot.shared.contextVersion } : undefined)
+        : null
+      let timer: ReturnType<typeof setTimeout> | undefined
+      const linked = !linking ? false : !bounded ? await linking : await Promise.race([
+        linking,
+        new Promise<undefined>((resolve) => { timer = setTimeout(() => resolve(undefined), MEMBER_LINK_WAIT_MS) }),
+      ]).finally(() => clearTimeout(timer))
+      if (linking && linked === undefined) linking.catch((e: unknown) => {
+        // The room links itself (member/link) and shows a Retry if that fails too. Never the credential or grant.
+        console.warn(JSON.stringify({ event: 'yepwatch_member_link_late_failure', roomId: c.roomId, participantId: c.participantId,
+          error: e instanceof RoomError ? `RoomError:${e.code}` : e instanceof Error ? e.constructor.name : typeof e }))
+      })
+      if (a && linked) {
         const scoped = { participantId: c.participantId, token: c.token, accountId: a.userId, sessionId: a.sessionId }
         admission.snapshot = await service.read(c.roomId, scoped)
-        // A new room takes the member's GoodWatch country over the device's (the country the create
-        // request carried), as the app's own country step does. Only before anything else was sent.
-        const snapshot = admission.snapshot
-        const prefill = snapshot.own.member.prefill?.country
-        if (setup && prefill && prefill !== setup.country && snapshot.shared.screens[0]?.country === setup.country && snapshot.own.nextSequence === 1 && snapshot.shared.phase === 'setup') {
-          try {
-            admission.snapshot = (await service.command(c.roomId, scoped, { commandId: `setup-${c.participantId}`, sequence: 1, command: { type: 'configure', expectedContextVersion: snapshot.shared.contextVersion, country: prefill } })).snapshot
-          } catch (e) {
-            if (!(e instanceof RoomError)) throw e
-          }
-        }
       }
       if (request.headers.get('x-yepwatch-client') !== 'native') {
         setCookie(`yepwatch3_${c.roomId}`, `${c.participantId}.${c.token}`, Math.floor((c.expiresAt - Date.now()) / 1000))
@@ -487,7 +554,7 @@ export function createProposalHandler(
             const scoped = await scopedCredential(roomId)
             try {
               await service.read(roomId, scoped)
-              return sendAdmission(await service.linkAccount(roomId, scoped, a), a)
+              return sendAdmission(await service.linkAccount(roomId, scoped, a), a, undefined, true)
             } catch (e) {
               if (!(e instanceof RoomError) || !["unauthorized", "forbidden", "not_found"].includes(e.code)) throw e
             }
@@ -499,7 +566,7 @@ export function createProposalHandler(
 						? await service.resumeOrJoin(roomId, credential(roomId), join)
 						: await service.join(roomId, join)
 				}
-				return sendAdmission(admission, a, setup)
+				return sendAdmission(admission, a, setup, true)
 			}
 			if (match) {
 				const [, id, operation] = match
@@ -507,7 +574,7 @@ export function createProposalHandler(
           originCheck(!nativeRequest())
           const value = parse(z.object({ returnAfterLeave: z.boolean().optional() }).strict(), await body(request))
           const a = (await account(true))!
-          return sendAdmission(await service.resumeAccount(id, a, value.returnAfterLeave === true), a)
+          return sendAdmission(await service.resumeAccount(id, a, value.returnAfterLeave === true), a, undefined, true)
         }
         if (request.method === 'POST' && operation === 'archive') {
           originCheck(!nativeRequest())

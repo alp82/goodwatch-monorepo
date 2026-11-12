@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useReducedMotion } from '../../components/ui';
 import { EdgeBack } from '../glow/EdgeBack';
 import { GText, Icon, Press, glow, native, onePress } from '../glow/theme';
-import { useLayout } from './layout';
+import { keyboardDismissMode, useLayout } from './layout';
 import { closeTopSheet, isTopSheet, registerSheet } from './sheet-stack';
 import { R, warm } from './tokens';
 import { useFreshSurface } from './fresh-surface';
@@ -92,7 +92,7 @@ export function Sheet({ title, onClose, children, actions, testID, width = 680 }
             <GText bold size={z(22)} lines={1} style={{ flex: 1, letterSpacing: -0.5 }}>{title}</GText>
             <Press label="Close" onPress={onClose} style={{ width: 48, height: 48, borderRadius: R.control }}><Icon name="close" size={20} color={glow.soft} /></Press>
           </View>
-          <ScrollView style={{ flexGrow: 0, flexShrink: 1 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" onScrollBeginDrag={Keyboard.dismiss}
+          <ScrollView style={{ flexGrow: 0, flexShrink: 1 }} keyboardShouldPersistTaps="handled" keyboardDismissMode={keyboardDismissMode} onScrollBeginDrag={Keyboard.dismiss}
             contentContainerStyle={{ paddingHorizontal: z(20), paddingTop: 8, paddingBottom: actions ? 16 : 20 + (phone ? insets.bottom : 0), gap: 18 }}>
             {children}
           </ScrollView>

@@ -1,32 +1,48 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import Svg, { Path } from 'react-native-svg';
-import { Animated, View } from 'react-native';
+import { Animated, Easing, View } from 'react-native';
 import type { PeerActivity } from '../../core/continuous/activity';
 import type { GlowPerson } from './model';
 import { peerColor } from './model';
 import { GText, Icon, native } from './theme';
-import { useReducedMotion } from '../../components/ui';
+import { useMotionPreference, useReducedMotion } from '../../components/ui';
+import { faceOffset, liveFacesWidth, moreOffset } from './faces-row';
+import { useInlineSign } from './direction';
 /**
  * Faces that react live: a friend's answer bounces their face, a swipe wiggles it, a press squashes
  * it. Overlapping, in the room control (the control itself is the button).
+ *
+ * The row has a fixed width for `slots` faces and "+N" (faces-row.ts: it depends on the bar's width
+ * and the font scale, never on the people), and each face sits at the row's start edge, placed by
+ * translateX: a person arriving, leaving or moving in the order slides the others (transform) and
+ * fades in, so the faces never change layout position (no layout shift). Offsets are measured from
+ * the start edge and mirrored with the writing direction, on native and on the web alike.
  */
 export function LiveFaces({
   people,
   activity,
   localReaction,
   size = 24,
-  max = 4,
+  slots = 4,
+  fontScale = 1,
 }: {
   people: GlowPerson[];
   activity: Map<string, PeerActivity>;
   localReaction: { at: number; gesture?: string; answer?: boolean };
   size?: number;
-  max?: number;
+  slots?: number;
+  fontScale?: number;
 }) {
+  const sign = useInlineSign();
+  const width = liveFacesWidth(size, slots, fontScale);
+  const shown = people.slice(0, slots);
+  const more = people.length - shown.length;
+  // Faces present when the row first shows are simply there; only later arrivals fade in.
+  const [first] = useState(() => new Set(people.map((p) => p.id)));
   return (
-    <View accessible={false} style={{ flexDirection: 'row', alignItems: 'center' }}>
-      {people.slice(0, max).map((p, i) => (
-        <View key={p.id} style={{ marginLeft: i ? -size * 0.28 : 0 }}>
+    <View accessible={false} style={{ width, height: size }}>
+      {shown.map((p, i) => (
+        <FaceSlot key={p.id} x={sign * faceOffset(size, slots, fontScale, shown.length, i, more > 0)} arriving={!first.has(p.id)}>
           <Avatar
             size={size}
             person={p}
@@ -55,9 +71,13 @@ export function LiveFaces({
             moving={!!activity.get(p.id)?.pointer?.pointer}
             active={activity.has(p.id)}
           />
-        </View>
+        </FaceSlot>
       ))}
-      {people.length > max && <GText size={12} color="#a3a3a3" style={{ marginLeft: 5 }}>+{people.length - max}</GText>}
+      {more > 0 && (
+        <View accessible accessibilityLabel={`and ${more} more`} style={{ position: 'absolute', start: moreOffset(size, slots, fontScale), top: 0, height: size, justifyContent: 'center' }}>
+          <GText size={12} color="#a3a3a3">+{more}</GText>
+        </View>
+      )}
     </View>
   );
 }
@@ -69,6 +89,47 @@ export function LiveFaces({
 const SETTLED_Y = { restDisplacementThreshold: 0.1, restSpeedThreshold: 2 } as const;
 const SETTLED_SCALE = { restDisplacementThreshold: 0.003, restSpeedThreshold: 0.05 } as const;
 const SETTLED_TURN = { restDisplacementThreshold: 0.01, restSpeedThreshold: 0.15 } as const;
+/** The last reduced-motion answer a face heard: a face arriving later starts from it instead of "pending". */
+let knownPreference: boolean | null = null;
+/**
+ * One face's place in the row: moves with translateX only, fades in when it arrives. Nothing animates
+ * until the reduced-motion preference is known (an arriving face starts from the last known answer),
+ * so a reduced-motion user never sees the fade or the slide.
+ */
+function FaceSlot({ x, arriving, children }: { x: number; arriving: boolean; children: ReactNode }) {
+  const heard = useMotionPreference();
+  const preference = heard ?? knownPreference;
+  useEffect(() => {
+    if (heard !== null) knownPreference = heard;
+  }, [heard]);
+  const still = preference !== false;
+  const [tx] = useState(() => new Animated.Value(x));
+  const [fade] = useState(() => new Animated.Value(arriving && preference !== true ? 0 : 1));
+  useEffect(() => {
+    if (preference === null) return;
+    if (preference) {
+      fade.setValue(1);
+      return;
+    }
+    const animation = Animated.timing(fade, { toValue: 1, duration: 180, useNativeDriver: native });
+    animation.start();
+    return () => animation.stop();
+  }, [fade, preference]);
+  useEffect(() => {
+    if (still) {
+      tx.setValue(x);
+      return;
+    }
+    const animation = Animated.timing(tx, { toValue: x, duration: 220, easing: Easing.out(Easing.cubic), useNativeDriver: native });
+    animation.start();
+    return () => animation.stop();
+  }, [x, tx, still]);
+  return (
+    <Animated.View style={{ position: 'absolute', start: 0, top: 0, opacity: fade, transform: [{ translateX: tx }] }}>
+      {children}
+    </Animated.View>
+  );
+}
 function Avatar({
   size,
   person,
