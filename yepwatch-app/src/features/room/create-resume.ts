@@ -1,4 +1,4 @@
-import { unanswered } from '../../core/continuous/backoff';
+import { transientFailure, unanswered } from '../../core/continuous/backoff';
 import { browserOffline } from '../../core/continuous/network';
 
 /** How one save of the New room page ended. */
@@ -12,11 +12,37 @@ export type CreateOutcome = 'answered' | 'cancelled' | 'offline' | 'failed';
  */
 export type CreatePhase = 'idle' | 'running' | 'paused' | 'offline' | 'left' | 'done';
 
-/** A save's error, as the page sees it. */
+/** Outcomes fixed when the save failed (saveFailure), not when it settled after the page's cleanup. */
+const failedAs = new WeakMap<object, CreateOutcome>();
+
+/** A save's error, as the page sees it: the outcome saveFailure fixed, else classified now. */
 export function createOutcome(error: unknown): CreateOutcome {
   if (error == null) return 'answered';
+  if (typeof error === 'object' && failedAs.has(error)) return failedAs.get(error)!;
   if (error instanceof Error && error.name === 'AbortError') return 'cancelled';
   return unanswered(error) && browserOffline() ? 'offline' : 'failed';
+}
+
+/** The server answered and said no (a 409, a 4xx): no resend can change it, so a cancellation doesn't hide it. */
+export function definitiveRefusal(error: unknown) {
+  return error instanceof Error && typeof (error as { status?: unknown }).status === 'number' && !transientFailure(error) &&
+    !(Number((error as { status?: unknown }).status) === 429 && (error as { retryable?: unknown }).retryable === true);
+}
+
+/**
+ * The error a save fails with, as the page keeps it, classified the moment it failed: cancelled (`aborted`:
+ * the page or the app left the front) unless the server had already refused it for good, so a refusal whose
+ * cleanup the background interrupted isn't sent again; an unanswered failure stays offline when the browser
+ * is back before the page's cleanup settled (CreateResume.settled then starts it).
+ */
+export function saveFailure(error: unknown, aborted: boolean): Error {
+  let failure: Error;
+  if (aborted && !definitiveRefusal(error)) {
+    failure = new Error('Room setup was interrupted.');
+    failure.name = 'AbortError';
+  } else failure = error instanceof Error ? error : new Error(String(error));
+  failedAs.set(failure, createOutcome(failure));
+  return failure;
 }
 
 interface CreateWiring { send: (text: string) => void; abort: () => void }
@@ -85,7 +111,12 @@ export class CreateResume {
       if (this.front) this.go();
       return false;
     }
-    this.phase = outcome === 'offline' ? this.front ? 'offline' : 'paused' : 'idle';
+    if (outcome !== 'offline') { this.phase = 'idle'; return false; }
+    // Unanswered while offline. The online event may have come during the page's cleanup (ignored while
+    // running): back online by now, it goes again once.
+    if (!this.front) this.phase = 'paused';
+    else if (browserOffline()) this.phase = 'offline';
+    else this.go();
     return false;
   }
 
