@@ -663,7 +663,7 @@ export class ProposalService {
 		// Fresh availability checks must not block joins or withdrawals that invalidate them.
 		// The room notify reads after the commit answers the command, unless an agreement check has to settle first.
 		// Either way it is checked like any read: it may have expired or lost its capacity reservation meanwhile.
-		let stored = await this.notify(id)
+		let stored = await this.notify(id, { yieldToQueued: true })
 		if (!stored || (stored.room.phase === "choosing" && stored.room.agreement.state === "checking")) {
 			await this.settle(id)
 			stored = await this.repository.read(id)
@@ -1588,8 +1588,17 @@ export class ProposalService {
 			/* notify publishes it again; repair retries */
 		})
 	}
-	/** Publishes a committed revision once. Returns the room it read, or null when the read failed. */
-	async notify(id: string): Promise<ProposalStored | null> {
+	/**
+	 * Publishes a committed revision once. Returns the room it read, or null when the read failed.
+	 *
+	 * `yieldToQueued` (a command's notify, which runs after it left the room's lane): when another write already waits
+	 * in the lane, the revision is published but not acknowledged. Clearing pending_revision is a write too, and moves
+	 * the row's sequence number: landing between the queued write's read and its compare-and-swap, it made that write
+	 * (a Start right behind a friend's service pick, the next vote) fail and start over. The queued write keeps the
+	 * revision pending in its own commit and its own notify acknowledges both; if it commits nothing, repair publishes
+	 * the revision once more, which the gateway ignores.
+	 */
+	async notify(id: string, options: { yieldToQueued?: boolean } = {}): Promise<ProposalStored | null> {
 		let stored: ProposalStored | null = null
 		try {
 			stored = await this.repository.read(id)
@@ -1601,6 +1610,7 @@ export class ProposalService {
 				return stored
 			await this.accounts.publish(stored.room.history ?? [])
 			if (stored.room.expiresAt > this.now()) await this.publish({ roomId: id, revision: stored.room.revision })
+			if (options.yieldToQueued && this.writes.has(id)) return stored
 			await this.repository.acknowledge(id, stored.room.revision)
 		} catch {
 			/* commit remains durable; repair retries */

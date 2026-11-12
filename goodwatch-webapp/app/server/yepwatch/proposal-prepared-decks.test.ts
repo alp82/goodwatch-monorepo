@@ -61,7 +61,7 @@ async function room(f: ReturnType<typeof fixture>) {
 			return f.service.command(id, own, { commandId: randomBytes(16).toString("hex"), sequence: s.own.nextSequence, command })
 		}
 	}
-	return { id, credential, send, start, join, stored: async () => (await f.repository.read(id))!.room }
+	return { id, credential, invite: host.invite.code, send, start, join, stored: async () => (await f.repository.read(id))!.room }
 }
 
 test("the first deck is built during setup and Start uses it without asking the catalog again", async () => {
@@ -280,5 +280,42 @@ test("service picks that leave the room's services as they were don't check the 
 	assert.equal(refreshes, 0, "the room still watches on the same services")
 	await friend({ type: "set_services", serviceIds: [1, 2] })
 	assert.equal(refreshes, 1, "a new service can make more cards watchable")
+	f.service.decks.forget(r.id)
+})
+
+test("a Start queued behind a friend's service pick commits on its first compare-and-swap", async () => {
+	const f = fixture({ delayMs: 60_000 })
+	// Like Crate, clearing pending_revision is a write: it moves the row's sequence number.
+	f.repository.acknowledge = async (id, revision) => {
+		const s = f.repository.rows.get(id)
+		if (s && s.pendingRevision <= revision) f.repository.rows.set(id, { ...s, seq: s.seq + 1, pendingRevision: 0 })
+	}
+	const cas = f.repository.compareAndSwap.bind(f.repository)
+	const attempts: string[] = []
+	f.repository.compareAndSwap = async (old, next, notify) => {
+		const ok = await cas(old, next, notify)
+		attempts.push(`${next.phase}:${ok}`)
+		return ok
+	}
+	const r = await room(f)
+	await r.send({ type: "set_services", serviceIds: [1] })
+	const joined = await f.service.join(r.id, {
+		contractVersion: 3,
+		commandId: randomBytes(16).toString("hex"),
+		admissionSecret: randomBytes(32).toString("base64url"),
+		nickname: "Friend",
+		inviteCode: r.invite,
+	} as Parameters<ProposalService["join"]>[1])
+	const friend = { participantId: joined.credential.participantId, token: joined.credential.token }
+	const mine = await f.service.read(r.id, friend)
+	const host = await f.service.read(r.id, r.credential)
+	attempts.length = 0
+	// The friend's pick and the host's Start arrive together: Start waits in the room's lane behind the pick.
+	const pick = f.service.command(r.id, friend, { commandId: randomBytes(16).toString("hex"), sequence: mine.own.nextSequence, command: { type: "set_services", serviceIds: [1] } })
+	const start = f.service.command(r.id, r.credential, { commandId: randomBytes(16).toString("hex"), sequence: host.own.nextSequence, command: { type: "start", expectedRosterVersion: host.shared.rosterVersion, expectedContextVersion: host.shared.contextVersion, expectedGeneration: host.shared.generation, hostReady: true } as RoomCommand })
+	const [, started] = await Promise.all([pick, start])
+	assert.equal(started.snapshot.shared.phase, "choosing")
+	assert.deepEqual(attempts, ["setup:true", "choosing:true"], "the pick's notification never made Start write twice")
+	assert.equal((await f.repository.read(r.id))!.pendingRevision, 0, "the last notification still clears the pending revision")
 	f.service.decks.forget(r.id)
 })
