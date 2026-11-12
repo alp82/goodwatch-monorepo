@@ -14,6 +14,7 @@ import {
 	secondaryFilterCount,
 	sortFromParams,
 } from "~/domain/filter-state"
+import { filterChangeState } from "~/ui/search/search-attribution"
 
 export interface FilterStateBinding {
 	state: FilterState
@@ -56,6 +57,9 @@ export function useFilterState({
 }): FilterStateBinding {
 	const [params, setParams] = useSearchParams()
 	const urlKey = params.toString()
+	// Read at write time, so the setters stay the same across URL changes.
+	const latestParams = useRef(params)
+	latestParams.current = params
 	const defaultsKey = `${defaults.onMyServices}-${defaults.notSeenYet}`
 
 	// Parsed again only when the URL or the defaults change.
@@ -98,7 +102,8 @@ export function useFilterState({
 					also?.(out)
 					return out
 				},
-				{ replace: true, preventScrollReset: true },
+				// The person changed a filter: a search it starts is a "filter_change" (search-attribution.ts).
+				{ replace: true, preventScrollReset: true, state: filterChangeState(latestParams.current) },
 			)
 		},
 		[setParams, defaults, searching],

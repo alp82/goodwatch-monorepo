@@ -80,6 +80,25 @@ class Images(unittest.TestCase):
             images.save(DB(active=False), [{'post_id': 'p'}])
             source.assert_not_called()
 
+    def test_post_deleted_during_download_removes_the_new_image_by_key(self):
+        class Racing(DB):
+            def __init__(self, after):
+                super().__init__()
+                self.after, self.reads = after, []
+            def select(self, sql, args=None):
+                self.reads.append(sql)
+                if sql.startswith('SELECT deleted_at FROM doc.social_post'):
+                    return self.after
+                return super().select(sql, args)
+        post = {'post_id': 'p', 'source': 'rss', 'url': 'https://example.com'}
+        for after, removed in [([{'deleted_at': None}], False), ([{'deleted_at': now()}], True), ([], True)]:
+            db = Racing(after)
+            with patch.object(images, 'source_image', return_value=None):
+                images.save(db, [post])
+            self.assertTrue(db.writes[0][0].startswith('INSERT INTO doc.social_image'))
+            self.assertEqual(('DELETE FROM doc.social_image WHERE post_id=?', ['p']) in db.writes, removed)
+            self.assertFalse(any('NOT IN' in sql for sql in db.reads + [s for s, _ in db.writes]))
+
     def test_cleanup_and_remove_order(self):
         db = DB()
         Store(db).retain()
