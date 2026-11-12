@@ -19,7 +19,7 @@ For a command:
 
 1. Read one room head by full primary key and follow its exact record IDs. All record reads also use full primary keys, so search refresh timing is not part of correctness.
 2. Validate the command against that consistent state.
-3. Insert only changed domain records, then prove each insert through a full-key read. An ambiguous insert is usable only after proof.
+3. Insert only changed domain records, then prove each insert through a full-key read. An ambiguous insert is usable only after proof. One exception: an `INSERT ... ON CONFLICT DO NOTHING` whose acknowledgement reports every row inserted (row count equal to the rows sent) is its own proof. Those rows are exactly the ones sent, so the repository remembers them as a read would return them and skips the read (a round trip on every command). A conflict, a partial row count, or an uncertain acknowledgement (timeout, lost response) still proves every row of that insert through an explicit full-key read.
 4. Publish all changes with one `_seq_no`/`_primary_term` compare-and-swap of the room head. A competing writer retries against the new head.
 5. Save the command receipt in the same publication. A lost acknowledgement recovers the published receipt, without applying the action twice.
 
