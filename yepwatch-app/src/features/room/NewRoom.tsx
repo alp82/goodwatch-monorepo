@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useState } from 'react';
 import { AppState } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -9,7 +9,8 @@ import { useLate, useLateSince } from '../../core/useLate';
 import { RoomFailure } from '../../core/continuous/api';
 import { ConnectionDetails } from '../rooms/ConnectionDetails';
 import { CreateRoom } from '../../core/continuous/create-room';
-import { ResendResume, resendOutcome } from '../../core/continuous/resend-resume';
+import { ResendResume } from '../../core/continuous/resend-resume';
+import { newRoomSave } from './new-room-save';
 import { useAccount } from '../../core/continuous/account';
 import { roomRegistry } from '../../core/continuous/room-registry';
 import { useRetryCountdown } from '../../core/continuous/useRetryCountdown';
@@ -31,7 +32,7 @@ function NewRoomDraft({ account }: { account: ReturnType<typeof useAccount> }) {
   const draftKey = ['new-room-draft', account.generation, instance] as const;
   // Local and offline-aware: neither waits for React Query's online state (a paused create sat on Saving…).
   const draft = useQuery({ queryKey: draftKey, queryFn: () => flow.draft(), networkMode: 'always' });
-  const attempt = useRef<AbortController | null>(null);
+  const [attempt] = useState(() => ({ current: null as AbortController | null }));
   // A slow or restarting server: the save keeps sending the same request by itself (create-room.ts). Offline:
   // an unanswered save goes again once the browser is back online. Both only while this page is in front:
   // leaving stops them (the saved request stays for a manual retry); the app out of the front (inactive or
@@ -42,36 +43,12 @@ function NewRoomDraft({ account }: { account: ReturnType<typeof useAccount> }) {
   const [troubleSince, setTroubleSince] = useState<number | null>(null);
   // Opened straight from an address: the room this draft becomes loads its code meanwhile.
   useEffect(preloadStartPages, []);
-  const mutation = useMutation({
-    networkMode: 'always',
-    mutationFn: async (text: string) => {
-      const controller = new AbortController();
-      attempt.current = controller;
-      setTroubleSince(null);
-      try {
-        const local = await roomRegistry.load();
-        return await flow.save(text, { nickname: local.nickname ?? account.name ?? '', member: account.member, signal: controller.signal, onTrouble: setTroubleSince });
-      } catch (error) {
-        setTroubleSince(null);
-        if (controller.signal.aborted) { const cancelled = new Error('Room setup was interrupted.'); cancelled.name = 'AbortError'; throw cancelled; }
-        throw error;
-      }
-    },
-    onSuccess: (_snapshot, submittedText) => {
-      setText(submittedText);
-      client.setQueryData(draftKey, { text: submittedText, retryAt: 0 });
-    },
-    onError: async () => {
-      try { client.setQueryData(draftKey, await flow.draft()); }
-      catch { client.setQueryData(draftKey, { text: text ?? '', retryAt: flow.retryAt }); }
-    },
-    // After onError has settled the draft: a save paused by the app leaving the front starts again here when
-    // the app came back while it was still cancelling.
-    onSettled: (snapshot, error) => {
-      if (resume.settled(resendOutcome(error)) && snapshot) router.replace({ pathname: '/room/[id]', params: { id: snapshot.shared.roomId } });
-    },
-  });
-  useEffect(() => resume.connect({ send: mutation.mutate, abort: () => attempt.current?.abort() }), [resume, mutation.mutate]);
+  const mutation = useMutation(newRoomSave({
+    flow, resume, client, draftKey, text: () => text, setText, setTroubleSince, attempt,
+    identity: async () => ({ nickname: (await roomRegistry.load()).nickname ?? account.name ?? '', member: account.member }),
+    open: (id) => router.replace({ pathname: '/room/[id]', params: { id } }),
+  }));
+  useEffect(() => resume.connect({ send: mutation.mutate, abort: () => attempt.current?.abort() }), [resume, mutation.mutate, attempt]);
   const retrySeconds = useRetryCountdown(draft.data?.retryAt ?? 0);
   useEffect(() => onBackOnline(() => resume.online()), [resume]);
   useEffect(() => {
@@ -88,7 +65,9 @@ function NewRoomDraft({ account }: { account: ReturnType<typeof useAccount> }) {
   const error = mutation.isError && !cancelled ? offline ? (offlineLate ? OFFLINE_WORDS : undefined) : transientFailure(failure) ? 'Couldn’t reach YepWatch. Your request is saved. Try again.' : failure instanceof RoomFailure && failure.code !== 'catalog_unavailable'
     ? failure.message : 'Couldn’t save this mood. Try again; your text is kept.' : undefined;
   // Saved: the button keeps saying Saving… until the room replaces this screen (no frame of Create room again).
-  const saving = mutation.isPending || mutation.isSuccess;
+  // Paused (the app left the front mid-save, e.g. iOS inactive under Control Center): it goes again by itself
+  // when back, so no frame of Try again meanwhile.
+  const saving = mutation.isPending || mutation.isSuccess || (cancelled && resume.phase === 'paused');
   // Owner rule Q24a: nothing for an outage under QUIET_OUTAGE_MS, then one small line floating over the page
   // (no layout shift, no countdown); the room still opens by itself when the answer comes.
   const reconnecting = useLateSince(saving ? troubleSince : null, QUIET_OUTAGE_MS);

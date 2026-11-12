@@ -22,7 +22,7 @@ import { retainRequest, retryDeadline } from '../core/continuous/retry';
 import { useRetryCountdown } from '../core/continuous/useRetryCountdown';
 import { transientFailure, unanswered } from '../core/continuous/backoff';
 import { joinUntilAnswered } from '../core/continuous/join-room';
-import { ResendResume, resendOutcome, type ResendOutcome } from '../core/continuous/resend-resume';
+import { ResendResume, resendOutcome, sendFailure, type ResendOutcome } from '../core/continuous/resend-resume';
 import { browserOffline, onBackOnline } from '../core/continuous/network';
 import { OFFLINE_WORDS, QUIET_OUTAGE_MS, RECONNECTING_WORDS } from '../core/continuous/connection-words';
 import { useLate, useLateSince } from '../core/useLate';
@@ -245,8 +245,9 @@ export function Entrance({ invite, open: request, from }: {
       outcome = 'answered';
     } catch (e) {
       // Cancelled (the screen went away, the app left the front): the request saved before the submit stays.
-      if (signal.aborted) { outcome = 'cancelled'; return; }
-      outcome = resendOutcome(e);
+      // Classified now (a refusal the server already gave stays one although the page cancelled meanwhile).
+      outcome = resendOutcome(sendFailure(e, signal.aborted, 'Joining was interrupted.'));
+      if (outcome === 'cancelled') return;
       setError(unanswered(e) && browserOffline() ? OFFLINE_WORDS
         : transientFailure(e) ? 'Couldn’t reach YepWatch. Your request is saved. Try again.' : e instanceof Error ? e.message : 'Could not join this room.');
       setDiagnostic(e instanceof ApiFailure ? e.diagnostic : undefined);
@@ -279,7 +280,10 @@ export function Entrance({ invite, open: request, from }: {
   // (no layout shift, no countdown); the room still opens by itself when the answer comes.
   const reconnecting = useLateSince(busy ? troubleSince : null, QUIET_OUTAGE_MS);
   const reconnectLine = reconnecting ? <BusyNote text={RECONNECTING_WORDS} /> : null;
-  const locked = busy || account.busy || checkingInvite || recoveryBlocked || restoring || restoreFailed || retrySeconds > 0;
+  // Paused (the app left the front mid-join, e.g. iOS inactive under Control Center): it goes again by itself
+  // when back, so no frame of Join or Retry joining meanwhile.
+  const joining = busy || (resume.phase === 'paused' && !error);
+  const locked = joining || account.busy || checkingInvite || recoveryBlocked || restoring || restoreFailed || retrySeconds > 0;
   // A panel asked for from another screen (a room's header) closes back to that screen.
   const requestedFrom = useRef(Boolean(request && request !== 'new'));
   const closePanel = useCallback(() => {
@@ -344,7 +348,7 @@ export function Entrance({ invite, open: request, from }: {
   const pending = admission?.code ? 'join' : null;
   const shown: PanelKind | null = panel ?? (recoveryDismissed ? null : pending ?? (restoreFailed || recoveryBlocked ? 'join' : null));
   // No countdowns (connection-words.ts): the saved request waits out the server's pause behind a disabled button.
-  const actionLabel = (first: string, again: string) => (busy ? 'Joining…' : admission ? again : first);
+  const actionLabel = (first: string, again: string) => (joining ? 'Joining…' : admission ? again : first);
   const notices = (
     <>
       {reconnectLine}
@@ -365,7 +369,7 @@ export function Entrance({ invite, open: request, from }: {
   // second press lands on Join again, not on whatever the locked form would put there.
   if (shown === 'join') return (
     <JoinScreen invite={Boolean(invite)} head={invite && preview !== null ? <InviteHead preview={preview} /> : null} checking={checkingInvite}
-      nickname={admission ? admission.request.nickname || null : known} nameLocked={Boolean(admission?.request.nickname) && !busy} member={account.member} lapsed={account.lapsed} me={me}
+      nickname={admission ? admission.request.nickname || null : known} nameLocked={Boolean(admission?.request.nickname) && !joining} member={account.member} lapsed={account.lapsed} me={me}
       initialCode={admission?.code || code} action={actionLabel('Join', 'Retry joining')} busy={locked} error={shownError || account.error}
       back={closePanel} editName={openProfile}
       /* Back on this invitation (or the code you typed) as yourself, ready to join. */

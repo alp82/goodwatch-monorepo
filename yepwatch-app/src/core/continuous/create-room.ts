@@ -6,7 +6,7 @@ import { deviceCountryHint } from '../lobby';
 import { queryClient } from '../providers';
 import { authEpoch } from './account-flow';
 import { abortableSleep, unanswered } from './backoff';
-import { resendUntilAnswered, waitOutDeadline } from './resend';
+import { resendUntilAnswered, troubleOnce, waitOutDeadline } from './resend';
 import { saveInvite } from './invite-store';
 import { roomRegistry } from './room-registry';
 import type { AdmissionRecovery } from './recovery-state';
@@ -63,8 +63,10 @@ export class CreateRoom {
       if (options.signal.aborted || !authEpoch.isCurrent(epoch)) throw new Error('Room setup was interrupted. Your request is kept.');
     };
     active();
+    // The page hears once per save when the trouble began (a saved wait, then a failed resend, is one outage).
+    const onTrouble = troubleOnce(options.onTrouble);
     // Created already: a command's server wait (the create's own wait is kept with its saved request below).
-    if (this.admitted) { await waitOutDeadline(this.retryAt, options.signal, abortableSleep); active(); }
+    if (this.admitted) { await waitOutDeadline(this.retryAt, options.signal, abortableSleep, onTrouble); active(); }
     if (!this.admitted) {
       let saved = this.request ?? await readAdmission('');
       if (saved?.code) throw new Error('Finish your saved join request before creating another room.');
@@ -80,7 +82,7 @@ export class CreateRoom {
       this.request = request;
       this.retryAt = request.retryAt;
       // A server wait saved before the app left the front or was closed: wait out what is left of it.
-      await waitOutDeadline(this.retryAt, options.signal, abortableSleep);
+      await waitOutDeadline(this.retryAt, options.signal, abortableSleep, onTrouble);
       try {
         await resendUntilAnswered(async () => {
           active();
@@ -101,7 +103,7 @@ export class CreateRoom {
             await writeAdmission('', request);
             this.admitted = await api.create(request.request, options.signal);
           }
-        }, { signal: options.signal, sleep: abortableSleep, onTrouble: options.onTrouble, onServerWait: async (until) => {
+        }, { signal: options.signal, sleep: abortableSleep, onTrouble, onServerWait: async (until) => {
           request = { ...request, retryAt: until };
           this.request = request;
           this.retryAt = until;

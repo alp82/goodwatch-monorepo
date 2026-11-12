@@ -20,6 +20,17 @@ export function resendable(error: unknown) {
   return error instanceof Error && Number(e.status) === 429 && e.retryable === true;
 }
 
+/** The server answered and said no (a 409, a 4xx): no resend can change it, so a cancellation doesn't hide it. */
+export function definitiveRefusal(error: unknown) {
+  return error instanceof Error && typeof (error as { status?: unknown }).status === 'number' && !resendable(error);
+}
+
+/** One send's trouble callback that passes on only the first call (a saved wait, then a failed resend, is one outage). */
+export function troubleOnce(onTrouble?: (since: number) => void) {
+  let troubled = false;
+  return (since: number) => { if (!troubled) { troubled = true; onTrouble?.(since); } };
+}
+
 /** 1 s, 2 s, 4 s, then 5 s between resends (minus up to 30 % jitter), never shorter than the server's wait. */
 export function resendDelay(failures: number, error: unknown, random: () => number = Math.random) {
   const step = Math.min(RESEND_MAX_MS, BACKOFF_BASE_MS * 2 ** Math.max(0, Math.min(failures, 8)));
@@ -28,13 +39,15 @@ export function resendDelay(failures: number, error: unknown, random: () => numb
 
 /**
  * What is left of a saved server deadline (`retryAt`, epoch ms) before the request may go: up to
- * SERVER_WAIT_MAX_MS is waited out (it ends at once when `signal` aborts); a longer one is the person's
- * manual gate and throws.
+ * SERVER_WAIT_MAX_MS is waited out (it ends at once when `signal` aborts), and the page hears the trouble as
+ * it begins (a resumed wait is the same outage, so its connection line comes after the quiet period as before
+ * the interruption); a longer one is the person's manual gate and throws.
  */
-export async function waitOutDeadline(retryAt: number, signal: AbortSignal, sleep: (ms: number, signal?: AbortSignal) => Promise<void> = abortableSleep) {
+export async function waitOutDeadline(retryAt: number, signal: AbortSignal, sleep: (ms: number, signal?: AbortSignal) => Promise<void> = abortableSleep, onTrouble?: (since: number) => void) {
   const left = retryAt - Date.now();
   if (left <= 0) return;
   if (left > SERVER_WAIT_MAX_MS) throw new Error('Wait before retrying this room request.');
+  onTrouble?.(Date.now());
   await sleep(left, signal);
 }
 

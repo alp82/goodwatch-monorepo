@@ -6,7 +6,7 @@ import { abortableSleep } from './backoff';
 import { saveInvite } from './invite-store';
 import { continuousKey } from './keys';
 import type { AdmissionRecovery } from './recovery-state';
-import { resendUntilAnswered, waitOutDeadline } from './resend';
+import { resendUntilAnswered, troubleOnce, waitOutDeadline } from './resend';
 import { roomRegistry } from './room-registry';
 import { mergeRoom } from './state';
 import { writeAdmission } from './storage';
@@ -85,15 +85,17 @@ async function admitOnce(saved: AdmissionRecovery, o: JoinOptions): Promise<stri
  */
 export async function joinUntilAnswered(saved: AdmissionRecovery, o: JoinOptions): Promise<string> {
   let request = saved;
+  // The page hears once per join when the trouble began (a saved wait, then a failed resend, is one outage).
+  const onTrouble = troubleOnce(o.onTrouble);
   // A server wait saved before the app left the front or was closed: wait out what is left of it.
-  await waitOutDeadline(request.retryAt, o.signal, abortableSleep);
+  await waitOutDeadline(request.retryAt, o.signal, abortableSleep, onTrouble);
   let roomId: string | null = null;
   const answered = await resendUntilAnswered(async () => {
     if (o.signal.aborted) throw interrupted();
     // The server's wait is over by now (or never was): the saved request goes without one.
     if (request.retryAt) request = { ...request, retryAt: 0 };
     roomId = await admitOnce(request, o);
-  }, { signal: o.signal, sleep: abortableSleep, onTrouble: o.onTrouble, onServerWait: async (until) => {
+  }, { signal: o.signal, sleep: abortableSleep, onTrouble, onServerWait: async (until) => {
     request = { ...request, retryAt: until };
     o.onSaved?.(request);
     await writeAdmission(o.intent, request);

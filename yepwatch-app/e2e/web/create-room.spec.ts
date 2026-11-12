@@ -130,6 +130,52 @@ test.describe('create and set up a room', () => {
     await expect(host.page.getByTestId('room-note').filter({ visible: true })).toHaveCount(0);
   });
 
+  // A server wait resumed after the app was away is the same outage: quiet first, then "Reconnecting…".
+  test('a Retry-After resumed after the background: the line comes after the quiet period and the room opens', async ({ room }) => {
+    const host = await room.person('Alp');
+    host.expectStatus(/^429 .*\/proposal\/rooms$/);
+    let tries = 0;
+    let first = 0;
+    let answered = 0;
+    await host.page.route(/\/api\/yepwatch\/v1\/proposal\/rooms$/, async (route) => {
+      if (route.request().method() !== 'POST') return route.continue();
+      if (++tries === 1) {
+        first = Date.now();
+        return route.fulfill({ status: 429, headers: { 'Retry-After': '10' }, contentType: 'application/json',
+          body: JSON.stringify({ error: { code: 'rate_limited', message: 'Slow down', retryable: true } }) });
+      }
+      const response = await route.fetch();
+      answered = Date.now();
+      await route.fulfill({ response });
+    });
+    const visibility = (state: 'hidden' | 'visible') => host.page.evaluate((s) => {
+      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => s });
+      Object.defineProperty(document, 'hidden', { configurable: true, get: () => s === 'hidden' });
+      document.dispatchEvent(new Event('visibilitychange'));
+    }, state);
+    await host.open('/');
+    await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] } });
+    await host.fill(host.page.getByLabel('Mood'), 'rate limited heist');
+    const stop = await recordMoodPage(host);
+    await host.tap(host.button('Create room'), { expect: {} });
+    await expect.poll(() => tries).toBe(1);
+    // Away before the quiet period ends, back a second later: the saved wait resumes.
+    await visibility('hidden');
+    await new Promise((r) => setTimeout(r, 1000));
+    const back = Date.now();
+    await visibility('visible');
+    await expect(host.page.getByTestId('room-note').filter({ visible: true })).toHaveText('Reconnecting…', { timeout: 8000 });
+    await host.see({ visible: ['room-setup'] }, 15000, 'the room opens by itself after the wait');
+    room.noteOutage(first, answered);
+    const samples = (await stop().catch(() => null)) ?? [];
+    expect(samples.some((s) => s.note), 'the line was sampled').toBe(true);
+    const firstNote = samples.find((s) => s.note)?.t ?? Infinity;
+    expect(firstNote - back, 'quiet for the first 3 s after the wait resumed').toBeGreaterThanOrEqual(3000);
+    expect(answered - first, 'the server\'s wait held').toBeGreaterThanOrEqual(10000);
+    expect(samples.filter((s) => s.error), 'no error or Try again meanwhile').toEqual([]);
+    expect(tries).toBe(2);
+  });
+
   test('create room from a preset chip ("Anything goes")', async ({ room }) => {
     const host = await room.person('Alp');
     await host.open('/');

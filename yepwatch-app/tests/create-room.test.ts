@@ -167,3 +167,22 @@ test('a server wait over a minute saved earlier stays a manual gate after a rela
   await assert.rejects(h.relaunch().save('', options()), /Wait before retrying/);
   assert.equal(h.sent.length, 1);
 });
+
+test('resuming a saved Retry-After tells the page the trouble began, once, as the wait starts', async () => {
+  for (const after of ['answer', 'lost'] as const) {
+    const controller = new AbortController();
+    let interrupted = false;
+    const h = harness((_r, _s, n) => {
+      if (n === 1) throw new RoomFailure('limit_reached', 'Wait', 429, undefined, undefined, true, 30);
+      return after === 'lost' && n === 2 ? 'lost' : 'answer';
+    }, { onSleep: () => { if (!interrupted) { interrupted = true; controller.abort(); } } });
+    await assert.rejects(h.flow.save('', options(controller)), /interrupted/);
+    const troubles: { since: number; waitsBefore: number }[] = [];
+    const before = Date.now();
+    h.log.length = 0;
+    await h.flow.save('', options(undefined, (since) => troubles.push({ since, waitsBefore: h.log.filter((l) => l.startsWith('wait')).length })));
+    assert.equal(troubles.length, 1, `${after}: heard once (a failed resend after the wait is the same outage)`);
+    assert.ok(troubles[0].since >= before && troubles[0].since <= Date.now(), `${after}: the resumed wait begins the trouble now`);
+    assert.equal(troubles[0].waitsBefore, 0, `${after}: heard as the saved wait starts, not after it`);
+  }
+});

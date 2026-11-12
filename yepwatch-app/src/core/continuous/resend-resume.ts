@@ -1,5 +1,6 @@
 import { unanswered } from './backoff';
 import { browserOffline } from './network';
+import { definitiveRefusal } from './resend';
 
 /** How one send of a saved admission (New room's create, a join) ended. */
 export type ResendOutcome = 'answered' | 'cancelled' | 'offline' | 'failed';
@@ -12,11 +13,31 @@ export type ResendOutcome = 'answered' | 'cancelled' | 'offline' | 'failed';
  */
 export type ResendPhase = 'idle' | 'running' | 'paused' | 'offline' | 'left' | 'done';
 
-/** A send's error, as the page sees it. */
+/** Outcomes fixed when the send failed (sendFailure), not when it settled after the page's cleanup. */
+const failedAs = new WeakMap<object, ResendOutcome>();
+
+/** A send's error, as the page sees it: the outcome sendFailure fixed, else classified now. */
 export function resendOutcome(error: unknown): ResendOutcome {
   if (error == null) return 'answered';
+  if (typeof error === 'object' && failedAs.has(error)) return failedAs.get(error)!;
   if (error instanceof Error && error.name === 'AbortError') return 'cancelled';
   return unanswered(error) && browserOffline() ? 'offline' : 'failed';
+}
+
+/**
+ * The error a send fails with, as the page keeps it, classified the moment it failed: cancelled (`aborted`:
+ * the page or the app left the front) unless the server had already refused it for good, so a refusal whose
+ * cleanup the background interrupted isn't sent again; an unanswered failure stays offline when the browser
+ * is back before the page's cleanup settled (ResendResume.settled then starts it).
+ */
+export function sendFailure(error: unknown, aborted: boolean, cancelledWords = 'Room setup was interrupted.'): Error {
+  let failure: Error;
+  if (aborted && !definitiveRefusal(error)) {
+    failure = new Error(cancelledWords);
+    failure.name = 'AbortError';
+  } else failure = error instanceof Error ? error : new Error(String(error));
+  failedAs.set(failure, resendOutcome(failure));
+  return failure;
 }
 
 interface ResendWiring<T> { send: (value: T) => void; abort: () => void }
@@ -86,7 +107,12 @@ export class ResendResume<T> {
       if (this.front) this.go();
       return false;
     }
-    this.phase = outcome === 'offline' ? this.front ? 'offline' : 'paused' : 'idle';
+    if (outcome !== 'offline') { this.phase = 'idle'; return false; }
+    // Unanswered while offline. The online event may have come during the page's cleanup (ignored while
+    // running): back online by now, it goes again once.
+    if (!this.front) this.phase = 'paused';
+    else if (browserOffline()) this.phase = 'offline';
+    else this.go();
     return false;
   }
 
