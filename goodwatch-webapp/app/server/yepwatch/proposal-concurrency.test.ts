@@ -261,3 +261,25 @@ test(
 		}
 	},
 )
+
+test("the gateway hears of a committed command before notify reads the room back", async () => {
+	const repository = new ProposalMemoryRepository()
+	const events: string[] = []
+	const service = new ProposalService(repository, proposalFixtureCatalog, "early-hint-test-secret-at-least-32-chars", async (e) => {
+		events.push(`publish ${e.revision}`)
+	})
+	const host = await service.create({ ...admission("Host"), setup: { country: "DE" } })
+	const id = host.credential.roomId
+	const own = credential(host)
+	const s = await service.read(id, own)
+	const read = repository.read.bind(repository)
+	repository.read = async (roomId) => {
+		events.push("read")
+		return read(roomId)
+	}
+	const done = await service.command(id, own, { commandId: randomBytes(16).toString("hex"), sequence: s.own.nextSequence, command: { type: "set_services", serviceIds: [1] } as RoomCommand })
+	const revision = done.receipt.appliedRevision
+	const lastRead = events.lastIndexOf("read")
+	assert.ok(events.indexOf(`publish ${revision}`) >= 0 && events.indexOf(`publish ${revision}`) < lastRead, events.join(", "))
+	service.decks.forget(id)
+})

@@ -883,6 +883,7 @@ export class ProposalService {
 				uncertain = true
 				continue
 			}
+			this.hintCommitted(old.room, room)
 			return {
 				commandId: envelope.commandId,
 				sequence,
@@ -1573,6 +1574,18 @@ export class ProposalService {
 			...this.attachment(room, lease.participantId, lease.sessionId),
 			snapshot: proposalSnapshot(room, lease.participantId).shared
 		}
+	}
+	/**
+	 * Tells the gateway about a revision as soon as its compare-and-swap succeeds, without waiting for notify's read
+	 * of the room (the other phones see a vote that much sooner). notify still publishes it, a no-op for the gateway,
+	 * and acknowledges it. Not when the history changed: notify stores it on the accounts before anyone hears of it.
+	 */
+	private hintCommitted(old: ProposalRoom, room: ProposalRoom) {
+		if (room.expiresAt <= this.now()) return
+		if (JSON.stringify(room.history ?? []) !== JSON.stringify(old.history ?? [])) return
+		this.publish({ roomId: room.id, revision: room.revision }).catch(() => {
+			/* notify publishes it again; repair retries */
+		})
 	}
 	/** Publishes a committed revision once. Returns the room it read, or null when the read failed. */
 	async notify(id: string): Promise<ProposalStored | null> {
