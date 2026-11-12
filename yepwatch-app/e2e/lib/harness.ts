@@ -60,6 +60,12 @@ export class Person {
   readonly commandLog: { t: number; status: number; path: string }[] = [];
   /** False for a person who types real credentials: no trace, and no failure aria snapshot of a password form. */
   traced = true;
+  /**
+   * Every request this person's pages made, as origin + path only (never a query: OAuth codes and states travel
+   * there) with its timing and outcome. Kept for failure messages, so an untraced person's stall still names the
+   * request it hung on.
+   */
+  readonly requests: { method: string; url: string; document: boolean; t: number; end?: number; status?: number; error?: string }[] = [];
 
   constructor(readonly room: Room, readonly name: string, readonly context: BrowserContext, public page: Page, readonly device: Device) {
     this.watch(page);
@@ -68,6 +74,33 @@ export class Person {
   // ---- collectors -------------------------------------------------------------------------------------
   watch(page: Page) {
     const fail = (detail: string) => this.failures.push({ gate: 'errors', person: this.name, detail, at: Date.now() });
+    const ledger = new WeakMap<object, Person['requests'][number]>();
+    page.on('request', (r) => {
+      let url: string;
+      try {
+        const u = new URL(r.url());
+        if (!/^https?:$/.test(u.protocol)) return;
+        url = `${u.origin}${u.pathname}`;
+      } catch {
+        return;
+      }
+      const entry = { method: r.method(), url, document: r.isNavigationRequest() && r.frame() === page.mainFrame(), t: Date.now() };
+      ledger.set(r, entry);
+      this.requests.push(entry);
+      if (this.requests.length > 400) this.requests.splice(0, this.requests.length - 400);
+    });
+    page.on('requestfinished', async (r) => {
+      const e = ledger.get(r);
+      if (!e) return;
+      e.end = Date.now();
+      e.status = (await r.response().catch(() => null))?.status();
+    });
+    page.on('requestfailed', (r) => {
+      const e = ledger.get(r);
+      if (!e) return;
+      e.end = Date.now();
+      e.error = r.failure()?.errorText ?? 'failed';
+    });
     page.on('console', (m) => {
       const type = m.type();
       if (type !== 'error' && type !== 'warning') return;
@@ -143,7 +176,7 @@ export class Person {
     await this.page.waitForFunction(() => {
       const sig = (window as unknown as { __yw?: { signature(): string } }).__yw?.signature() ?? '';
       return !sig.includes('yepwatch-boot') && /landing|home-rooms|mood-page|room-setup|waiting|voting|matches|proposal|tonight|join-screen|room-status/.test(sig);
-    }, undefined, { timeout, polling: 50 }).catch(() => this.journeyFailure('no screen came up after the startup word'));
+    }, undefined, { timeout, polling: 50 }).catch(async () => this.journeyFailure(`no screen came up after the startup word (now: ${await this.signature()}; ${this.network()})`));
     // A person looks at the page before pressing: a press within its first 250 ms would make the page
     // itself count as a flash (between the startup and the next screen), which no person would see.
     await sleep(300);
@@ -185,6 +218,19 @@ export class Person {
   }
   record(moment: string, ms: number, detail?: string) {
     this.samples.push({ moment, ms: Math.round(ms * 10) / 10, person: this.name, detail });
+  }
+  /**
+   * The requests that explain a stall, for a failure message: still open after 1 s, failed or answered >= 400 in
+   * the last `windowMs`, and the latest main-frame document. Origin + path only.
+   */
+  network(windowMs = 35000) {
+    const now = Date.now();
+    const recent = this.requests.filter((r) => r.t >= now - windowMs);
+    const doc = [...recent].reverse().find((r) => r.document);
+    const line = (r: Person['requests'][number]) => `${r.method} ${r.url} ${r.end === undefined ? `open ${((now - r.t) / 1000).toFixed(1)} s` : `${r.error ?? r.status ?? '?'} in ${r.end - r.t} ms`} (${((now - r.t) / 1000).toFixed(1)} s ago)`;
+    const notable = recent.filter((r) => r !== doc && ((r.end === undefined && now - r.t > 1000) || r.error || (r.status ?? 0) >= 400));
+    const parts = [...(doc ? [`document ${line(doc)}`] : []), ...notable.slice(-5).map(line)];
+    return parts.length ? `network: ${parts.join('; ')}` : 'network: nothing open or failed';
   }
   journeyFailure(detail: string) {
     this.failures.push({ gate: 'journey', person: this.name, detail, at: Date.now() });

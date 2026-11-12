@@ -40,6 +40,11 @@ services:
     tmpfs: ["/tmp:uid=1000,gid=1000,mode=0700,size=128m"]
     environment:
       SOURCE_COMMIT: ${SOURCE_COMMIT:-unknown}
+      # No serving delay on SIGTERM. The delay is for a load balancer that keeps sending requests while it notices
+      # readiness went red; here nothing can: Coolify removes the front first and starts the new containers only
+      # after every old one is gone, so each second of delay was a second of yepwatch.com down on every deploy
+      # (8.7 s of a ~14 s outage on 2026-11-12). In-flight requests still drain (YEPWATCH_PROPOSAL_DRAIN_MS).
+      YEPWATCH_PROPOSAL_SHUTDOWN_DELAY_MS: "0"
       YEPWATCH_PROPOSAL_PUBLIC_ORIGIN: https://yepwatch.com
       YEPWATCH_PROPOSAL_ALLOWED_ORIGINS: https://yepwatch.com
       YEPWATCH_PROPOSAL_SECRET: ${YEPWATCH_ROOM_KEY:?Set a stable random room key of at least 32 characters}

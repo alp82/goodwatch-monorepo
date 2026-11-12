@@ -24,6 +24,9 @@ api, gateway = services['api']['environment'], services['gateway']['environment'
 assert api['REDIS_USER'] == api['YEPWATCH_PROPOSAL_REDIS_USER'] == gateway['YEPWATCH_VALKEY_USER'] == 'existing-user'
 assert api['REDIS_PASS'] == api['YEPWATCH_PROPOSAL_REDIS_PASSWORD'] == gateway['YEPWATCH_VALKEY_PASSWORD'] == 'test-existing-redis'
 assert 'environment' not in services['front']
+# Coolify removes the old containers (front first) before it starts any new one: an api stop delay only lengthens
+# the outage of every deploy.
+assert api['YEPWATCH_PROPOSAL_SHUTDOWN_DELAY_MS'] == '0'
 assert 'CRATE_PASS' not in gateway
 for name, service in services.items():
     build = service['build']
@@ -38,4 +41,4 @@ assert separate.returncode == 0, separate.stderr
 api = json.loads(separate.stdout)['services']['api']['environment']
 assert api['REDIS_USER'] == 'reader' and api['REDIS_PASS'] == 'test-reader'
 assert api['YEPWATCH_PROPOSAL_REDIS_USER'] == 'existing-user'
-print('PASS: required secrets, three repository targets, shared/independent Redis credentials, runtime-only secrets and proxy-only ports')
+print('PASS: required secrets, three repository targets, shared/independent Redis credentials, runtime-only secrets and proxy-only ports, no api stop delay')

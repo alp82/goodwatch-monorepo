@@ -10,7 +10,8 @@
 // ~40 commands, far under the 20 creates/joins a minute.
 //
 // Member sign-in:
-//   - production: E2E_SMOKE_MEMBER_EMAIL / E2E_SMOKE_MEMBER_PASSWORD (a dedicated GoodWatch account) fill the
+//   - production: E2E_SMOKE_MEMBER_EMAIL / E2E_SMOKE_MEMBER_PASSWORD (a dedicated GoodWatch account; run.mjs reads
+//     them from ~/.config/yepwatch/smoke-member.json when unset) fill the
 //     real GoodWatch sign-in form; the one-time consent was given by hand (docs/yepwatch-e2e-pipeline.md).
 //     The member's browser is never traced there (lib/harness.ts person({ trace: false })).
 //   - local stack (--origin http://127.0.0.1:…): the fake issuer signs a throwaway account in.
@@ -58,14 +59,14 @@ async function signIn(p: Person) {
   await Promise.all([
     p.page.waitForEvent('framenavigated', { predicate: (f) => f === p.page.mainFrame(), timeout: 15000 }),
     p.button('Continue with GoodWatch').first().click(),
-  ]).catch((e) => p.journeyFailure(`Continue with GoodWatch did not navigate: ${String(e).split('\n')[0]}`));
+  ]).catch((e) => p.journeyFailure(`Continue with GoodWatch did not navigate: ${String(e).split('\n')[0]} (${p.network()})`));
   const here = () => new URL(p.page.url());
   const back = async () => here().origin === origin && !here().pathname.includes('/callback')
     && await p.page.getByTestId('avatar-goodwatch-mark').first().isVisible().catch(() => false);
   const deadline = Date.now() + 30000;
   let filled = false;
   while (!(await back())) {
-    if (Date.now() > deadline) p.journeyFailure(`GoodWatch sign-in did not come back signed in (at ${here().origin}${here().pathname})`);
+    if (Date.now() > deadline) p.journeyFailure(`GoodWatch sign-in did not come back signed in (at ${here().origin}${here().pathname}; ${p.network()})`);
     if (here().origin !== origin) {
       const email = p.page.getByLabel(/^email/i).first();
       const allow = p.page.getByRole('button', { name: /^Allow / }).first();

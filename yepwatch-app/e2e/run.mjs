@@ -9,6 +9,7 @@
 import { Buffer } from 'node:buffer';
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { budgetsFor } from './budgets.mjs';
@@ -55,6 +56,27 @@ function phase(name, args, env) {
 // and it runs however the run ends: any artifact still holding it is redacted (text) or deleted (binary, or a
 // zip that can't be read), and the run fails. A second pass must then find nothing; if it does, or either pass
 // can't finish, the whole artifacts directory is deleted. Only file paths are printed, never the password.
+// Locally the smoke member comes from ~/.config/yepwatch/smoke-member.json ({ "email", "password" }) when the env
+// pair isn't set (CI sets it from secrets). It goes on into the Playwright run through the same env, so the
+// reporter's redaction and the scan below cover it exactly as in CI. Nothing about it is printed.
+if (tier === 'smoke' && !process.env.E2E_SMOKE_MEMBER_EMAIL && !process.env.E2E_SMOKE_MEMBER_PASSWORD) {
+  const file = path.join(os.homedir(), '.config', 'yepwatch', 'smoke-member.json');
+  if (fs.existsSync(file)) {
+    let member = null;
+    try {
+      member = JSON.parse(fs.readFileSync(file, 'utf8'));
+    } catch {
+      member = null;
+    }
+    if (typeof member?.email !== 'string' || !member.email || typeof member?.password !== 'string' || !member.password) {
+      console.error(`[e2e] ${file} needs string "email" and "password" fields`);
+      process.exit(1);
+    }
+    process.env.E2E_SMOKE_MEMBER_EMAIL = member.email;
+    process.env.E2E_SMOKE_MEMBER_PASSWORD = member.password;
+    log(`smoke member from ${file.replace(os.homedir(), '~')}`);
+  }
+}
 const SECRETS = [process.env.E2E_SMOKE_MEMBER_PASSWORD].filter((v) => v && v.length >= 4);
 let leaked = 0;
 function scanSecrets(redact) {

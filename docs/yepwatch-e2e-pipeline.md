@@ -163,7 +163,15 @@ cd yepwatch-app/e2e
 node stack/up.mjs && node run.mjs smoke --origin http://127.0.0.1:18480
 # production, by hand (once, after review):
 E2E_SMOKE_MEMBER_EMAIL=… E2E_SMOKE_MEMBER_PASSWORD=… node run.mjs smoke --origin https://yepwatch.com
+# or, with neither variable set, from ~/.config/yepwatch/smoke-member.json ({"email": "…", "password": "…"}):
+node run.mjs smoke --origin https://yepwatch.com
 ```
+
+The smoke member is never traced. When a member step fails, the failure names the requests it hung on (origin and
+path only, no query): `network: document GET https://yepwatch.com/api/…/member/callback open 30.0 s …`.
+
+A run that overlaps a YepWatch deploy fails: Coolify removes the old containers before it starts new ones, so
+yepwatch.com answers nothing for a few seconds. Check `application_deployment_queues` before calling a failure flaky.
 
 ## Pre-OTA gate (`e2e/ci/ota-gate.mjs`)
 
