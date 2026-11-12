@@ -18,6 +18,7 @@ import { cardTitle, inviteLink, pickServices, readyHost } from '../web/flows';
 
 const MEMBER_EMAIL = process.env.E2E_SMOKE_MEMBER_EMAIL ?? '';
 const MEMBER_PASSWORD = process.env.E2E_SMOKE_MEMBER_PASSWORD ?? '';
+const GUEST_ONLY = process.env.E2E_SMOKE_GUEST_ONLY === '1';
 const local = /^http:\/\/(127\.0\.0\.1|localhost)[:/]/.test(ORIGIN ?? '');
 /** Smoke rooms are recognisable in the store and in History: "e2e smoke 2026-11-11T21:04". */
 const MARK = `e2e smoke ${new Date().toISOString().slice(0, 16)}`;
@@ -106,14 +107,18 @@ test('smoke: guest room, friend by link, member by link, start, vote to a match,
 
 async function journey(room: Room, people: [Person, 'leave' | 'archive'][]) {
   // Member first: sign-in is the slowest, least predictable step; fail fast before a room exists.
-  const memberAccount = `smoke-member-${randomBytes(3).toString('hex')}`;
-  const member = await room.person('Smoke member', local ? { member: memberAccount } : {});
-  await unthrottle(member);
-  if (local) {
-    if (!ISSUER) member.journeyFailure('local smoke needs the stack (no issuer in .stack.json)');
-    await issuer(`/_e2e/user?user=${encodeURIComponent(memberAccount)}`, { displayName: 'Smoke member' });
+  // E2E_SMOKE_GUEST_ONLY=1 skips the member (until the production test account exists).
+  let member: Person | null = null;
+  if (!GUEST_ONLY) {
+    const memberAccount = `smoke-member-${randomBytes(3).toString('hex')}`;
+    member = await room.person('Smoke member', local ? { member: memberAccount } : {});
+    await unthrottle(member);
+    if (local) {
+      if (!ISSUER) member.journeyFailure('local smoke needs the stack (no issuer in .stack.json)');
+      await issuer(`/_e2e/user?user=${encodeURIComponent(memberAccount)}`, { displayName: 'Smoke member' });
+    }
+    await signIn(member);
   }
-  await signIn(member);
 
   const host = await readyHost(room, 'Smoke host', MARK); // newRoomMs, createRoomMs
   people.push([host, 'archive']);
@@ -132,20 +137,23 @@ async function journey(room: Room, people: [Person, 'leave' | 'archive'][]) {
   await friend.see({ visible: ['waiting'] }, 10000, 'friend waits for the host');
 
   // Member: unthrottled reference for the invitation open, then "Join as <GoodWatch name>".
-  await member.open(invite, { settle: false });
-  const mShown = await member.firstShown(['join-screen', 'invite-head']);
-  if (mShown.at) member.record('unthrottled_inviteOpenMs', mShown.at - mShown.origin, 'navigation start → join page (signed in)');
-  await member.tap(member.button(/^Join as /), { expect: { any: ['waiting', 'services-sheet'] } });
-  people.push([member, 'leave']);
-  if (await member.testId('services-sheet').isVisible().catch(() => false)) await pickServices(member, ['Netflix']);
-  await member.see({ visible: ['waiting'] }, 10000, 'member waits for the host');
-  await eventually(() => host.latest?.participants.length, (n) => n === 3, 'host sees three people', host);
+  if (member) {
+    await member.open(invite, { settle: false });
+    const mShown = await member.firstShown(['join-screen', 'invite-head']);
+    if (mShown.at) member.record('unthrottled_inviteOpenMs', mShown.at - mShown.origin, 'navigation start → join page (signed in)');
+    await member.tap(member.button(/^Join as /), { expect: { any: ['waiting', 'services-sheet'] } });
+    people.push([member, 'leave']);
+    if (await member.testId('services-sheet').isVisible().catch(() => false)) await pickServices(member, ['Netflix']);
+    await member.see({ visible: ['waiting'] }, 10000, 'member waits for the host');
+  }
+  const expected = member ? 3 : 2;
+  await eventually(() => host.latest?.participants.length, (n) => n === expected, `host sees ${expected} people`, host);
 
   // Start: first card for the host (gated) and on both other phones.
   await host.tap(host.button('Start'), {
     expect: { visible: ['voting', 'poster'] },
     moment: 'startToFirstCardMs',
-    observers: [[friend, { visible: ['voting', 'poster'] }, 'startToPeerVotingMs'], [member, { visible: ['voting', 'poster'] }, 'unthrottled_startToPeerVotingMs']],
+    observers: [[friend, { visible: ['voting', 'poster'] }, 'startToPeerVotingMs'], ...(member ? [[member, { visible: ['voting', 'poster'] }, 'unthrottled_startToPeerVotingMs'] as const] : [])],
     timeout: 20000,
   });
 
@@ -153,7 +161,7 @@ async function journey(room: Room, people: [Person, 'leave' | 'archive'][]) {
   // At most 8 rounds = 24 votes: far under the 60 commands per person a minute.
   const match = { label: { text: '^1 match$' } };
   for (let i = 0; i < 8 && !(host.latest?.matches?.length); i++) {
-    for (const p of [host, member]) {
+    for (const p of member ? [host, member] : [host]) {
       await p.page.waitForTimeout(400);
       const before = await cardTitle(p);
       await p.tap(p.button('Yep'), { expect: { cardChanged: { from: before } }, moment: 'swipeNextCardMs', repeatable: true, timeout: 10000 });
@@ -163,7 +171,7 @@ async function journey(room: Room, people: [Person, 'leave' | 'archive'][]) {
     await friend.tap(friend.button('Yep'), {
       repeatable: true, soft: true, timeout: 2500, moment: 'swipeNextCardMs',
       expect: { cardChanged: { from: before } },
-      observers: [[host, match, 'voteToPeerMs'], [member, match, 'unthrottled_voteToPeerMs']] as [Person, typeof match, string][],
+      observers: [[host, match, 'voteToPeerMs'], ...(member ? [[member, match, 'unthrottled_voteToPeerMs']] : [])] as [Person, typeof match, string][],
     });
   }
   await eventually(() => host.latest?.matches?.length ?? 0, (n) => n > 0, 'the room has a match', host, 15000);
