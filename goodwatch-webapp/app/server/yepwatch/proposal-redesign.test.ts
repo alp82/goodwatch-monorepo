@@ -532,6 +532,57 @@ test("failed interpretations consume the budget and keep the idea uninterpreted;
 	assert.equal(f.searches(), 7)
 })
 
+const spendLimit = () => new RoomError("catalog_unavailable", "Mood matching is unavailable for now. You can still start without an idea.", 503, false)
+const limitedService = (repo: ProposalMemoryRepository) => new ProposalService(
+	repo,
+	proposalFixtureCatalog,
+	"redesign-test-secret-over-thirty-two",
+	undefined,
+	Date.now,
+	undefined,
+	async () => {
+		throw spendLimit()
+	}
+)
+test("a spend-limit refusal handled twice at once refunds both reservations and stores one idea", async () => {
+	const f = await fixture()
+	const s = await f.service.read(f.id, f.a.credential)
+	const envelope = {
+		commandId: randomUUID(),
+		sequence: s.own.nextSequence,
+		command: { type: "add_idea" as const, text: "Twice refused" }
+	}
+	// Two API instances answer the same command: one publishes, the other replays its receipt.
+	const results = await Promise.allSettled([
+		limitedService(f.repo).command(f.id, f.a.credential, envelope),
+		limitedService(f.repo).command(f.id, f.a.credential, envelope)
+	])
+	assert.ok(results.some((r) => r.status === "fulfilled"))
+	const room = (await f.repo.read(f.id))!.room
+	assert.equal(room.interpretationCount, 0)
+	assert.deepEqual(room.ideas!.map((i) => i.text), ["Twice refused"])
+})
+test("a spend-limit refusal is refunded even when the idea's publication fails", async () => {
+	const f = await fixture()
+	const cas = f.repo.compareAndSwap.bind(f.repo)
+	f.repo.compareAndSwap = async (old, room, notify) => {
+		if (room.ideas?.some((i) => i.text === "Never stored")) throw new Error("store down")
+		return cas(old, room, notify)
+	}
+	const s = await f.service.read(f.id, f.a.credential)
+	await assert.rejects(
+		limitedService(f.repo).command(f.id, f.a.credential, {
+			commandId: randomUUID(),
+			sequence: s.own.nextSequence,
+			command: { type: "add_idea", text: "Never stored" }
+		}),
+		/store down/
+	)
+	const room = (await f.repo.read(f.id))!.room
+	assert.equal(room.interpretationCount, 0)
+	assert.deepEqual(room.ideas ?? [], [])
+})
+
 test("readiness probes every new nullable column and the immutable idea table", async () => {
 	const { checkRelationalRooms } = await import(
 		"./proposal-relational-repository.ts"

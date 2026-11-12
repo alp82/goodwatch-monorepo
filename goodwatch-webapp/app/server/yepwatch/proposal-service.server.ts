@@ -734,6 +734,22 @@ export class ProposalService {
 			snapshot: this.snapshot(committed, credential)
 		}
 	}
+	/** Gives back one reserved search slot: once per reservation, never below zero; an unknown write keeps it spent. */
+	private async refundInterpretation(id: string) {
+		for (let attempt = 0; attempt < 6; attempt++) {
+			const old = await this.get(id)
+			if (!old.room.interpretationCount) return
+			const room = structuredClone(old.room)
+			room.interpretationCount = old.room.interpretationCount - 1
+			room.revision++
+			try {
+				if (await this.repository.compareAndSwap(old, room, true)) return
+			} catch (e) {
+				if (!(e instanceof IndeterminateWrite)) throw e
+				return
+			}
+		}
+	}
 	private async applyCommand(
 		id: string,
 		credential: ActorCredential,
@@ -751,7 +767,8 @@ export class ProposalService {
 		let budgetRefused = false
 		if (ideaCommand && this.interpret) {
 			// Reserve the lifetime spend before search; failed searches also spend a slot, except a refusal for
-			// GoodWatch's spend limit, which never ran a search (refunded when the idea is stored).
+			// GoodWatch's spend limit, which never ran a search: that reservation is given back right away, before
+			// publication, so a replayed, duplicated or failed command still settles its own slot.
 			// Search runs once here, outside the command-publication retry loop.
 			for (let attempt = 0; attempt < 6; attempt++) {
 				const old = await this.get(id),
@@ -787,6 +804,7 @@ export class ProposalService {
 					searchFailed = true
 					budgetRefused = error instanceof RoomError && error.code === "catalog_unavailable"
 				}
+				if (budgetRefused) await this.refundInterpretation(id)
 				break
 			}
 			requireRoom(interpreted || searchFailed, "busy", "Room busy; retry this idea", 503)
@@ -907,9 +925,6 @@ export class ProposalService {
 					idea.interpretedAt = interpreted.interpretedAt
 					attributeCandidates(room)
 				}
-				// The transition left it uninterpreted (no attributes or ranked keys).
-				if (budgetRefused)
-					room.interpretationCount = Math.max(0, (room.interpretationCount ?? 0) - 1)
 			}
 			if (
 				redesignCommands.has(command.type) ||
