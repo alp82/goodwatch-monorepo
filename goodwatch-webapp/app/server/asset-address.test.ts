@@ -105,6 +105,30 @@ test("static host comparison is exact and case insensitive, including the port",
 	assert.equal(isStaticHost("", ""), false)
 })
 
+test("a static host without a port also matches any port and a trailing dot", () => {
+	for (const header of [
+		"static.example.com:443",
+		"static.example.com:80",
+		"static.example.com:8443",
+		"static.example.com:0443",
+		"static.example.com:",
+		"static.example.com.",
+		"STATIC.example.com.:443",
+	])
+		assert.equal(isStaticHost(header, "static.example.com"), true, header)
+	for (const header of [
+		"static.example.com:443x",
+		"static.example.com..",
+		"static.example.com.evil",
+		"xstatic.example.com",
+	])
+		assert.equal(isStaticHost(header, "static.example.com"), false, header)
+	assert.equal(
+		isStaticHost("static.example.com.:3112", "static.example.com:3112"),
+		true,
+	)
+})
+
 test("auto switches immediately on its first success and requires three consecutive failures", () => {
 	const lines: string[] = []
 	const address = createAssetAddress({

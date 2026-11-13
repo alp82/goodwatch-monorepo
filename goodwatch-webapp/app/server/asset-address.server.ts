@@ -199,11 +199,20 @@ export function currentAssetBase(): string {
 	return singleton.address.base()
 }
 
+// A Host header can name any port or end in a dot and still reach the static router: the proxy matches the hostname
+// without them and passes the header on unchanged. When the static host is configured without a port (production),
+// those forms count as the static host too, so that they get files only like the plain name.
+const ANY_PORT = /:\d*$/
+const TRAILING_DOT = /\.(?=:\d*$|$)/
+
 export function isStaticHost(
 	hostHeader: string | undefined,
 	host = singleton.settings.host,
 ): boolean {
-	return !!host && hostHeader?.toLowerCase() === host
+	if (!host || !hostHeader) return false
+	let header = hostHeader.toLowerCase().replace(TRAILING_DOT, "")
+	if (!host.includes(":")) header = header.replace(ANY_PORT, "")
+	return header === host
 }
 
 export const startAssetProbe = singleton.start

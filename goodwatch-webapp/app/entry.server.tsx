@@ -24,6 +24,7 @@ import {
 } from "~/server/asset-address.server"
 import { applyCachePolicy } from "~/server/cache-identity.server"
 import { startEarlyHints } from "~/server/early-hints.server"
+import { startEdgeClientAddress } from "~/server/edge-client-address.server"
 import { startFingerprintPopulation } from "~/server/fingerprint-population.server"
 import { HtmlStream } from "~/server/html-stream.server"
 import { startPlexConnectionCleanup } from "~/server/imports/plex-connect-runtime.server"
@@ -69,6 +70,9 @@ registerSessionUserObserver(identifyProductUser)
 capLogLines()
 logProcessRole()
 startCrateDiagnostics()
+// Behind Cloudflare, the visitor's address goes back into X-Real-Ip and X-Forwarded-For before any request listener
+// reads them (see edge-client-address.server.ts).
+startEdgeClientAddress()
 startLifecycle()
 startTmdbConnectionCleanup()
 startImportResolutionReconciler()

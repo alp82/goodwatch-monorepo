@@ -1,11 +1,11 @@
 ---
-status: proposed
+status: accepted
 ---
 
 # Proxy the site through Cloudflare after accepting the outage dependency
 
 Proposed on October 29, 2026 for [#784](https://github.com/alp82/goodwatch-monorepo/issues/784).
-The owner must accept this decision before changing the site's DNS record. No infrastructure changed.
+Accepted by the owner on November 13, 2026. The staged cut-over is in [cloudflare-proxy-cutover.md](../cloudflare-proxy-cutover.md).
 
 ## Context
 
