@@ -1,9 +1,11 @@
 // Stubs and probes for test-yepwatch-front.sh. No dependencies (Node 24: fetch and WebSocket are global).
 //   node test-yepwatch-front.mjs api            YepWatch api stand-in on :3000, answers with what it received
+//                                               (503 for READY_AFTER_MS after start, like the real api's startup)
 //   node test-yepwatch-front.mjs gateway        WebSocket echo on :4311, pings every 20 s like the real gateway
 //   node test-yepwatch-front.mjs check          one request of each kind, prints JSON
 //   node test-yepwatch-front.mjs loop SECONDS   GET page, GET health, POST preview every 200 ms, prints a summary
-//                                               (ORIGIN, KINDS and STOP_FILE: see verify-yepwatch-front-deploy.sh)
+//                                               (ORIGIN, KINDS, INTERVAL_MS, EXPECT_POST, STOP_FILE: see
+//                                               verify-yepwatch-front-deploy.sh)
 //   node test-yepwatch-front.mjs ws SECONDS     one WebSocket that echoes every second and reconnects, prints a summary
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -18,7 +20,10 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const print = (value) => console.log(JSON.stringify(value));
 
 if (mode === 'api') {
+  // Like the real api: listening at once, but 503 "starting" until it is ready (READY_AFTER_MS).
+  const readyAt = Date.now() + Number(process.env.READY_AFTER_MS ?? 0);
   http.createServer((req, res) => {
+    if (Date.now() < readyAt) { res.statusCode = 503; res.end('{"error":{"code":"busy","retryable":true}}'); return; }
     let size = 0;
     req.on('data', (chunk) => { size += chunk.length; });
     req.on('end', () => {
@@ -99,12 +104,14 @@ if (mode === 'loop') {
   const stop = () => process.env.STOP_FILE && fs.existsSync(process.env.STOP_FILE);
   while (Date.now() < end && !stop()) {
     for (const kind of kinds) pending.push(request(kind).then((r) => results.push({ ...r, at: Date.now() })));
-    await sleep(200);
+    await sleep(Number(process.env.INTERVAL_MS ?? 200));
   }
   await Promise.all(pending);
   const statuses = {};
   for (const r of results) statuses[`${r.kind} ${r.status}${r.error ? ` ${r.error}` : ''}`] = (statuses[`${r.kind} ${r.status}${r.error ? ` ${r.error}` : ''}`] ?? 0) + 1;
-  const bad = results.filter((r) => r.status !== 200 || (r.kind === 'post' && r.json?.size !== BODY.length));
+  // EXPECT_POST=4xx: production answers the invalid code with a stable 4xx, and only a 5xx or no answer is a failure.
+  const postOk = (r) => (process.env.EXPECT_POST === '4xx' ? r.status >= 400 && r.status < 500 : r.status === 200 && r.json?.size === BODY.length);
+  const bad = results.filter((r) => (r.kind === 'post' ? !postOk(r) : r.status !== 200));
   const xff = [...new Set(results.map((r) => r.json?.xff).filter(Boolean))];
   print({ requests: results.length, failed: bad.length, statuses, maxMs: Math.max(...results.map((r) => r.ms)), xff, lastXff: results.filter((r) => r.json?.xff).sort((a, b) => a.at - b.at).at(-1)?.json.xff ?? null, firstFailures: bad.slice(0, 5), failures: bad.map((r) => ({ at: new Date(r.at).toISOString(), kind: r.kind, status: r.status, ms: r.ms, error: r.error })) });
 }

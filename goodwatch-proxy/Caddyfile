@@ -83,13 +83,14 @@ a.seen.is {
 # Always-on hold for yepwatch.com (docs/yepwatch-zero-downtime-front.md). abio's Traefik ends TLS and sends
 # yepwatch.com here (Coolify dynamic file yepwatch-front.yaml, source goodwatch-proxy/traefik/). While a deploy
 # replaces the YepWatch containers, the front's published port refuses connections; Caddy holds each request and
-# tries again every 100 ms for up to 30 s. A refused connection never reached the app, so retrying it is safe for
-# every method, WebSocket upgrades included; a request that did reach the front is retried only when it is a GET.
+# tries again every 100 ms for up to 60 s (the front starts only once api and gateway are ready: about 20 s after the
+# old containers begin to stop). A refused connection never reached the app, so retrying it is safe for every method,
+# WebSocket upgrades included; a request that did reach the front is retried only when it is a GET.
 :8480 {
 	@yepwatch host yepwatch.com
 	handle @yepwatch {
 		reverse_proxy 10.0.0.21:18480 {
-			lb_try_duration 30s
+			lb_try_duration 60s
 			lb_try_interval 100ms
 			# A reload of this Caddyfile (for any site) must not cut every open room's WebSocket at once.
 			stream_close_delay 30m

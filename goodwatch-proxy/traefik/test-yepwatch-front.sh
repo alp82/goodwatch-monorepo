@@ -14,13 +14,14 @@
 # idle timeout, a deploy (front, api and gateway stopped for GAP seconds) under request and WebSocket load with zero
 # failed requests and a first-try WebSocket reconnect, and failover around a stopped hold Caddy and back.
 #
-# Usage: ./test-yepwatch-front.sh    Needs Docker. Env: GAP (default 6) seconds of deploy gap, WS_SECONDS (default
-# 200) lifetime of the long-lived WebSocket. Containers and the network are named yw-front-test-* (PREFIX) and removed.
+# Usage: ./test-yepwatch-front.sh    Needs Docker. Env: GAP (default 6) seconds between stop and start, READY_MS (default
+# 3000) of api startup 503s, WS_SECONDS (default 200) lifetime of the long-lived WebSocket. Containers and the network are named yw-front-test-* (PREFIX) and removed.
 set -euo pipefail
 here=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 repo=$(cd -- "$here/../.." && pwd)
 prefix=${PREFIX:-yw-front-test}
 gap=${GAP:-6}
+ready_ms=${READY_MS:-3000}
 ws_seconds=${WS_SECONDS:-200}
 node_image=${NODE_IMAGE:-node:24-bookworm-slim}
 caddy_image=${CADDY_IMAGE:-caddy:2.11.7@sha256:3095ad245c353e3bdb27a38f22a095c1cfa9e295ab21c0214c3e72b0e2960525}
@@ -68,11 +69,15 @@ docker run -d --name "$prefix-traefik" --network "container:$prefix-abio" -v "$w
   --entrypoints.http.address=:80 --entrypoints.https.address=:443 --providers.file.directory=/dynamic/ --providers.file.watch=true \
   --certificatesresolvers.letsencrypt.acme.httpchallenge=true --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=http \
   --certificatesresolvers.letsencrypt.acme.storage=/tmp/acme.json --certificatesresolvers.letsencrypt.acme.caserver=https://127.0.0.1:9/directory >/dev/null
-for stub in api gateway; do
-  docker run -d --name "$prefix-$stub" --network "container:$prefix-abio" -v "$here/test-yepwatch-front.mjs:/t.mjs:ro" \
-    "$node_image" node /t.mjs "$stub" >/dev/null
-done
-docker run -d --name "$prefix-front" --network "container:$prefix-abio" \
+# The api answers 503 for its first READY_AFTER_MS, like the real one; its health check gates the front's start, as
+# depends_on service_healthy does in yepwatch-app/compose.yaml.
+docker run -d --name "$prefix-api" --network "container:$prefix-abio" -v "$here/test-yepwatch-front.mjs:/t.mjs:ro" \
+  -e READY_AFTER_MS="$ready_ms" --health-interval 5s --health-start-period 60s --health-start-interval 1s --health-retries 24 \
+  --health-cmd "node -e \"fetch('http://127.0.0.1:3000/api/yepwatch/v1/proposal/health/ready').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))\"" \
+  "$node_image" node /t.mjs api >/dev/null
+docker run -d --name "$prefix-gateway" --network "container:$prefix-abio" -v "$here/test-yepwatch-front.mjs:/t.mjs:ro" \
+  "$node_image" node /t.mjs gateway >/dev/null
+docker create --name "$prefix-front" --network "container:$prefix-abio" \
   -v "$work/front.Caddyfile:/etc/caddy/Caddyfile:ro" -v "$work/srv:/srv:ro" "$caddy_image" \
   caddy run --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null
 docker run -d --name "$prefix-hold" --network "$prefix-private" --ip "$net.11" \
@@ -80,12 +85,15 @@ docker run -d --name "$prefix-hold" --network "$prefix-private" --ip "$net.11" \
 
 probe() { docker run --rm --network "$prefix-private" --add-host "yepwatch.com:$net.21" -e NODE_TLS_REJECT_UNAUTHORIZED=0 \
   -v "$here/test-yepwatch-front.mjs:/t.mjs:ro" "$node_image" node --no-warnings /t.mjs "$@"; }
-deploy() { # Coolify: remove every old container, then start the new ones.
+healthy() { until [[ $(docker inspect -f '{{.State.Health.Status}}' "$prefix-api") == healthy ]]; do sleep 0.2; done; }
+deploy() { # Coolify: remove every old container, then start the new ones; the front once the api is healthy.
   docker stop -t 10 "$prefix-front" "$prefix-gateway" "$prefix-api" >/dev/null
   sleep "$gap"
-  docker start "$prefix-api" "$prefix-gateway" "$prefix-front" >/dev/null
+  docker start "$prefix-api" "$prefix-gateway" >/dev/null
+  healthy
+  docker start "$prefix-front" >/dev/null
 }
-sleep 4
+healthy; docker start "$prefix-front" >/dev/null; sleep 2
 
 echo "--- plain requests"
 basic=$(probe check)
@@ -107,18 +115,18 @@ long=$(cat "$work/ws-long.json")
 check "long WebSocket opened once" "$(json 'v.opens+" open, "+v.failedAttempts+" failed"' <<<"$long")" "1 open, 0 failed"
 check "long WebSocket kept echoing" "$(json 'v.maxEchoGapMs<2500' <<<"$long")" true
 
-echo "--- deploy: front, api and gateway gone for ${gap}s"
-probe loop $((gap + 14)) > "$work/loop.json" & loop_pid=$!
-probe ws $((gap + 14)) > "$work/ws.json" & ws_pid=$!
+echo "--- deploy: front, api and gateway gone for ${gap}s, then ${ready_ms} ms of api startup 503s"
+probe loop $((gap + ready_ms / 1000 + 14)) > "$work/loop.json" & loop_pid=$!
+probe ws $((gap + ready_ms / 1000 + 14)) > "$work/ws.json" & ws_pid=$!
 sleep 4; deploy
 wait $loop_pid $ws_pid
 loop=$(cat "$work/loop.json"); ws=$(cat "$work/ws.json")
 echo "      requests: $(json 'v.requests+" requests, max "+v.maxMs+" ms, "+JSON.stringify(v.statuses)' <<<"$loop")"
 check "failed requests during the deploy" "$(json 'v.failed' <<<"$loop")" 0
-check "longest held request under gap + 2 s" "$(json "v.maxMs < ($gap + 2) * 1000" <<<"$loop")" true
+check "longest held request under gap + readiness + 3 s" "$(json "v.maxMs < ($gap + 3) * 1000 + $ready_ms" <<<"$loop")" true
 echo "      websocket: $ws"
 check "WebSocket reconnected on its first try" "$(json 'v.reconnects>=1 && v.failedAttempts===0' <<<"$ws")" true
-check "WebSocket echo gap under gap + 3 s" "$(json "v.maxEchoGapMs < ($gap + 3) * 1000" <<<"$ws")" true
+check "WebSocket echo gap under gap + readiness + 4 s" "$(json "v.maxEchoGapMs < ($gap + 4) * 1000 + $ready_ms" <<<"$ws")" true
 
 echo "--- failover: hold Caddy stopped, then back"
 docker stop -t 1 "$prefix-hold" >/dev/null
@@ -134,7 +142,7 @@ check "back on the hold" "$(json 'v.failed+" "+v.lastXff' <<<"$up")" "0 $net.11"
 
 echo "--- deploy while the hold is down behaves as before the change (information only)"
 docker stop -t 1 "$prefix-hold" >/dev/null; sleep 4
-probe loop $((gap + 8)) > "$work/loop-direct.json" & pid=$!
+probe loop $((gap + ready_ms / 1000 + 8)) > "$work/loop-direct.json" & pid=$!
 sleep 2; deploy; wait $pid
 echo "      $(json 'v.failed+" failed of "+v.requests+": "+JSON.stringify(v.statuses)' <<<"$(cat "$work/loop-direct.json")")"
 

@@ -40,6 +40,12 @@ for name, service in services.items():
 # The always-on hold (docs/yepwatch-zero-downtime-front.md) reaches the front at one fixed private address.
 front_ports = services['front']['ports']
 assert [(p['host_ip'], p['published'], p['target'], p.get('protocol', 'tcp')) for p in front_ports] == [('10.0.0.21', '18480', 8080, 'tcp')], front_ports
+# The front opens its port only when the api and gateway are ready, and readiness is polled every second.
+assert {k: v['condition'] for k, v in services['front']['depends_on'].items()} == {'api': 'service_healthy', 'gateway': 'service_healthy'}, services['front']['depends_on']
+for name in ('api', 'gateway'):
+    check = services[name]['healthcheck']
+    assert check['start_interval'] == '1s' and check['start_period'] in ('1m0s', '30s'), check
+    assert services[name]['expose'][0] in ' '.join(check['test']), check
 local = render(dict(values, YEPWATCH_FRONT_ADDRESS='127.0.0.1'))
 assert local.returncode == 0, local.stderr
 assert json.loads(local.stdout)['services']['front']['ports'][0]['host_ip'] == '127.0.0.1'

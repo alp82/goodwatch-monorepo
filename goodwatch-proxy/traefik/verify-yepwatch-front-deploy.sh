@@ -7,9 +7,16 @@
 #   2. Waits for the next YepWatch deployment to start (Coolify queue, read-only SQL). It never starts one: press
 #      Redeploy in Coolify, or push to a watch path, when it says so.
 #   3. While the deployment runs: `node run.mjs smoke --origin https://yepwatch.com` back to back (yepwatch-app/e2e),
-#      and a GET loop (page + health every 200 ms) from this machine for the whole time.
-#   4. Reads the swap window ("Removing old containers." to "New container started.") from the deployment log and
-#      passes when no smoke run and no loop request failed, and at least one smoke run covered the swap.
+#      and a request loop from this machine for the whole time: GET page, GET health and POST invite preview with an
+#      invalid code (expects a stable 4xx; it charges no admission), every 500 ms.
+#   4. Reads the swap window ("Removing old containers." to "New container started.") from the deployment log.
+#      PASS needs all of: the deployment finished; no loop request failed (no 5xx, no connection error) and none
+#      took longer than the swap plus 5 s; every smoke run wrote a fresh report with tests, none failed, and no
+#      `errors` (failed request, HTTP error, console or WebSocket error) or `journey` gate failure; at least one
+#      smoke run spanned the whole swap. Timing, a11y, layout and frame gates are reported, not judged: held
+#      requests are meant to be slow during the swap.
+#   Limit: in production, WebSocket reconnects are checked only inside the smoke journeys (a WebSocket error there
+#   is an `errors` failure). The first-try reconnect through the hold is proven by test-yepwatch-front.sh.
 #
 # Usage: ./verify-yepwatch-front-deploy.sh [--no-wait]   (--no-wait: a deployment is already running)
 # Needs: SSH to root@10.0.0.10 (Coolify DB), 10.0.0.21 (abio) and 10.0.0.11 (pgnode01); yepwatch-app/e2e installed
@@ -63,16 +70,17 @@ echo "      deployment #$id is running"
 
 echo "--- smoke runs and GET loop until the deployment has finished"
 stop_file=$out/.stop; rm -f "$stop_file"
-ORIGIN=$origin KINDS=page,health STOP_FILE=$stop_file node --no-warnings "$here/test-yepwatch-front.mjs" loop 3600 > "$out/loop.json" &
+ORIGIN=$origin KINDS=page,health,post INTERVAL_MS=500 EXPECT_POST=4xx STOP_FILE=$stop_file node --no-warnings "$here/test-yepwatch-front.mjs" loop 3600 > "$out/loop.json" &
 loop_pid=$!
 trap 'touch "$stop_file"' EXIT
 : > "$out/runs.tsv"
 finished_after=0
 for ((run = 1; run <= max_runs; run++)); do
+  rm -f "$e2e/artifacts/smoke/report.json"
   started=$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)
   (cd "$e2e" && node run.mjs smoke --origin "$origin") > "$out/smoke-$run.log" 2>&1 && code=0 || code=$?
   ended=$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)
-  cp "$e2e/artifacts/smoke/report.json" "$out/smoke-$run.json" 2>/dev/null || echo '{}' > "$out/smoke-$run.json"
+  cp "$e2e/artifacts/smoke/report.json" "$out/smoke-$run.json" 2>/dev/null || echo '{"missing":true}' > "$out/smoke-$run.json"
   printf '%s\t%s\t%s\t%s\n' "$run" "$started" "$ended" "$code" >> "$out/runs.tsv"
   echo "      smoke $run: exit $code ($started → $ended)"
   IFS='|' read -r _ state <<<"$(sql "select id, status from application_deployment_queues where id = $id")"
@@ -93,27 +101,40 @@ const log = JSON.parse(fs.readFileSync(`${out}/.deploy-log.json`, 'utf8') || '[]
 fs.rmSync(`${out}/.deploy-log.json`); // The log stays in Coolify; only the two timestamps are kept here.
 const at = (text) => log.find((e) => (e.output ?? '').includes(text))?.timestamp;
 const swapFrom = at('Removing old containers.'), swapTo = at('New container started.');
+const swapMs = swapFrom && swapTo ? Date.parse(swapTo) - Date.parse(swapFrom) : null;
+const JUDGED = new Set(['errors', 'journey']); // Other gates (timing, a11y, layout-shift, frames, flash, ...) are reported only.
 const runs = fs.readFileSync(`${out}/runs.tsv`, 'utf8').trim().split('\n').filter(Boolean).map((line) => {
   const [run, started, ended, code] = line.split('\t');
   const report = JSON.parse(fs.readFileSync(`${out}/smoke-${run}.json`, 'utf8'));
   const failures = report.failures ?? [];
-  const requests = failures.filter((f) => f.gate === 'errors' && /^(request failed|HTTP [45]\d\d)/.test(f.detail));
-  const covers = swapFrom && swapTo && Date.parse(started) <= Date.parse(swapFrom) + 1000 && Date.parse(ended) >= Date.parse(swapTo);
-  const overlaps = swapFrom && swapTo && Date.parse(started) <= Date.parse(swapTo) && Date.parse(ended) >= Date.parse(swapFrom);
-  return { run, started, ended, code, tests: report.tests, failedTests: report.failed, failedRequests: requests.map((f) => `${f.journey}: ${f.detail}`),
-    otherGateFailures: failures.filter((f) => !requests.includes(f)).map((f) => `${f.gate}: ${f.detail}`.slice(0, 200)), covers, overlaps };
+  const judged = failures.filter((f) => JUDGED.has(f.gate));
+  const problems = [];
+  if (report.missing) problems.push('no report.json (the smoke run ended before writing one)');
+  else {
+    if (!(Date.parse(report.startedAt) >= Date.parse(started) - 2000)) problems.push(`stale report (started ${report.startedAt})`);
+    if (!(report.tests > 0)) problems.push('no tests ran');
+    if (report.failed !== 0) problems.push(`${report.failed} test(s) failed`);
+  }
+  for (const f of judged) problems.push(`${f.gate}: ${f.journey}: ${String(f.detail).slice(0, 240)}`);
+  const covers = Boolean(swapFrom && swapTo && Date.parse(started) <= Date.parse(swapFrom) && Date.parse(ended) >= Date.parse(swapTo));
+  return { run, started, ended, code, tests: report.tests ?? 0, failedTests: report.failed ?? null, problems,
+    reportedOnly: failures.filter((f) => !JUDGED.has(f.gate)).map((f) => `${f.gate}: ${String(f.detail).slice(0, 200)}`), covers };
 });
 const loop = JSON.parse(fs.readFileSync(`${out}/loop.json`, 'utf8'));
-const failedRequests = runs.reduce((n, r) => n + r.failedRequests.length, 0) + loop.failed;
+const loopSlow = swapMs === null || loop.maxMs > swapMs + 5000;
 const covered = runs.some((r) => r.covers);
-const verdict = { deployment: state, swap: { from: swapFrom ?? null, to: swapTo ?? null }, loop: { requests: loop.requests, failed: loop.failed, maxMs: loop.maxMs, statuses: loop.statuses, failures: loop.failures },
-  runs, failedRequests, smokeCoveredSwap: covered, pass: state === 'finished' && failedRequests === 0 && covered };
+const pass = state === 'finished' && swapMs !== null && loop.requests > 0 && loop.failed === 0 && !loopSlow && runs.length > 0 && runs.every((r) => r.problems.length === 0) && covered;
+const verdict = { deployment: state, swap: { from: swapFrom ?? null, to: swapTo ?? null, ms: swapMs },
+  loop: { requests: loop.requests, failed: loop.failed, maxMs: loop.maxMs, statuses: loop.statuses, failures: loop.failures }, runs, smokeCoveredSwap: covered, pass };
 fs.writeFileSync(`${out}/verdict.json`, JSON.stringify(verdict, null, 1));
-console.log(`swap ${swapFrom} → ${swapTo}`);
-console.log(`GET loop: ${loop.requests} requests, ${loop.failed} failed, longest ${loop.maxMs} ms ${JSON.stringify(loop.statuses)}`);
-for (const r of runs) console.log(`smoke ${r.run}: ${r.tests} tests, ${r.failedTests} failed, ${r.failedRequests.length} failed requests${r.covers ? ', covered the whole swap' : r.overlaps ? ', overlapped part of the swap' : ''}${r.otherGateFailures.length ? `; other gates: ${r.otherGateFailures.length}` : ''}`);
-for (const r of runs) for (const f of r.failedRequests) console.log(`  FAILED REQUEST smoke ${r.run}: ${f}`);
-if (!covered) console.log('No smoke run covered the whole swap: run again (the GET loop result still counts).');
-console.log(verdict.pass ? 'PASS  zero failed requests through the deploy' : 'FAIL  see verdict.json');
+console.log(`deployment ${state}; swap ${swapFrom} → ${swapTo} (${swapMs} ms)`);
+console.log(`loop: ${loop.requests} requests, ${loop.failed} failed, longest ${loop.maxMs} ms${loopSlow ? ' (over swap + 5 s)' : ''} ${JSON.stringify(loop.statuses)}`);
+for (const f of (loop.failures ?? []).slice(0, 10)) console.log(`  FAILED loop ${f.at} ${f.kind} ${f.status} ${f.error ?? ''} ${f.ms} ms`);
+for (const r of runs) {
+  console.log(`smoke ${r.run} (exit ${r.code}): ${r.tests} tests, ${r.failedTests} failed${r.covers ? ', spanned the whole swap' : ''}; reported only: ${r.reportedOnly.length}`);
+  for (const p of r.problems) console.log(`  FAILED smoke ${r.run}: ${p}`);
+}
+if (!covered) console.log('No smoke run spanned the whole swap: run it again with the next deploy.');
+console.log(pass ? 'PASS  zero failed requests through the deploy' : 'FAIL  see verdict.json');
 process.exit(verdict.pass ? 0 : 1);
 NODE

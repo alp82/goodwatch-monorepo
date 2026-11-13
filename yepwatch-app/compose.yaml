@@ -29,11 +29,13 @@ services:
     ports: ["${YEPWATCH_FRONT_ADDRESS:-10.0.0.21}:18480:8080"]
     mem_limit: 128m
     tmpfs: ["/tmp:uid=1000,gid=1000,mode=0700,size=32m"]
-    # Starts with the others: Caddy holds requests until api/gateway answer (lb_try_duration), so a
-    # deploy shows a short wait instead of errors.
+    # Starts only once api and gateway are ready. Until then the published port refuses connections and the hold in
+    # goodwatch-proxy keeps every request waiting; started earlier, the front would pass the api's startup 503s
+    # ("YepWatch is starting") through, because neither Caddy retries a response. A later api or gateway restart
+    # is held by the front itself (lb_try_duration in its Caddyfile).
     depends_on:
-      api: {condition: service_started}
-      gateway: {condition: service_started}
+      api: {condition: service_healthy}
+      gateway: {condition: service_healthy}
   api:
     <<: *common
     build:
@@ -41,6 +43,15 @@ services:
       dockerfile: yepwatch-realtime/release/Dockerfile.repository
       target: api
     expose: ["3000"]
+    # The image's check, polled every second while starting (start_interval) so the front starts within about a
+    # second of readiness: each second here is a second every request waits during a deploy.
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/api/yepwatch/v1/proposal/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 4s
+      start_period: 60s
+      start_interval: 1s
+      retries: 24
     mem_limit: 3g
     tmpfs: ["/tmp:uid=1000,gid=1000,mode=0700,size=128m"]
     environment:
@@ -89,6 +100,13 @@ services:
       dockerfile: yepwatch-realtime/release/Dockerfile.repository
       target: gateway
     expose: ["4311"]
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:4311/api/yepwatch/v1/proposal/realtime/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      start_period: 30s
+      start_interval: 1s
+      retries: 12
     mem_limit: 512m
     tmpfs: ["/tmp:uid=1000,gid=1000,mode=0700,size=32m"]
     environment:
