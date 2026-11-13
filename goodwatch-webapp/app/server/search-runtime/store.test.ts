@@ -244,7 +244,8 @@ for (const failed of ["control", "account"] as const) {
 		assert.equal((await pending).kind, "basic")
 		assert.equal(timings.claim, 21)
 		assert.equal(timings[failed === "control" ? "claimControl" : "claimAccount"], 21)
-		if (failed === "account") assert.equal(timings.claimScopes, 21)
+		// The attribution (from the account) is read before the scopes, so a rejected account ends the claim there.
+		if (failed === "account") assert.equal(timings.claimScopes, undefined)
 		assert.equal(paid.mock.callCount(), 0)
 	})
 }
@@ -269,6 +270,16 @@ for (const blocked of ["halted", "day", "month"] as const) {
 		assert.deepEqual(await store.claim({ ...claim, checks }), { kind: "basic", reason: "budget" })
 		assert.equal(statements.length, 2)
 		assert.ok(statements.every(stmt => stmt.startsWith("SELECT")))
+	})
+
+	// The refusal comes first, so search_history tells a refused guest navigation apart from a budget block.
+	test(`${blocked}: a guest navigation is refused as navigation, not budget`, async () => {
+		const store = new SearchStore(async stmt => {
+			if (stmt.startsWith("SELECT halted")) return { cols: ["halted"], rows: [[blocked === "halted"]], rowcount: 1 }
+			return { cols: ["now", "day", "month"], rows: [[1000, blocked === "day" ? 1_000_000_000 : 0, blocked === "month" ? 5_000_000_000 : 0]], rowcount: 1 }
+		}, new SearchCoordination(() => { throw new Error("Unexpected admission") }), Buffer.alloc(32, 1))
+		const guest: SearchAttribution = { ...attribution, surface: "discover", trigger: "navigation" }
+		assert.deepEqual(await store.claim({ ...claim, checks: store.claimChecks(), attribution: async () => guest }), { kind: "basic", reason: "navigation" })
 	})
 }
 
