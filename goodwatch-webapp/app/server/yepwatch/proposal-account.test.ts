@@ -552,8 +552,8 @@ test("the room's own member/link joins the link its admission started instead of
 	const linked = await linking
 	assert.equal(linked.status, 200)
 	assert.equal((await linked.json()).state, "linked")
-	// One link asks GoodWatch three times (identity, prefill, seen); the first identity read was already sent.
-	assert.equal(env.calls.goodwatch - asked, 2, "one set of GoodWatch reads for both")
+	// One link asks GoodWatch three times at once (identity, prefill, seen), all sent before the admission answered.
+	assert.equal(env.calls.goodwatch - asked, 0, "one set of GoodWatch reads for both")
 	assert.equal((await env.repo.read(id))!.room.participants.find((p) => p.id === joined.credential.participantId)!.member.state, "linked")
 })
 

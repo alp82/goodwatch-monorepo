@@ -15,6 +15,7 @@ import type {
 	AccountStatus,
 } from "../../../packages/yepwatch-contracts/proposal.ts"
 import { RoomError, requireRoom } from "./errors.ts"
+import { timed } from "./server-timing.ts"
 import { actor, continuousLive } from "./continuous-machine.ts"
 import type {
 	ContinuousRepository,
@@ -378,11 +379,13 @@ export class ContinuousMembers {
 			redirectUri: this.config.callbackUrl,
 		})
 		const { grant, prefill, seen, seenStarted } = await this.checked(tokens.accessToken, tokens.expiresAt, async () => {
-			const grant = await this.issuer.verify(tokens.accessToken)
-			const prefill = await this.reads.prefill(grant.userId, tokens.accessToken)
+			const grant = await timed("verify", this.issuer.verify(tokens.accessToken))
+			// Both reads at once, once the grant names the account.
 			const seenStarted = this.seenStart()
-			const seen = await this.reads.seen?.(grant.userId, tokens.accessToken)
-			return { grant, prefill, seen, seenStarted }
+			const prefilling = timed("prefill", this.reads.prefill(grant.userId, tokens.accessToken))
+			const seeing = this.reads.seen ? timed("seen", this.reads.seen(grant.userId, tokens.accessToken)) : undefined
+			seeing?.catch(() => {}) // awaited below, after the prefill's own refusal
+			return { grant, prefill: await prefilling, seen: await seeing, seenStarted }
 		})
 		for (let attempt = 0; attempt < 6; attempt++) {
 			const old = await this.get(id)
@@ -847,13 +850,19 @@ export class ContinuousMembers {
 				return { status: { state: "linked" as const, prefill: p.member.prefill }, session, renewed: fresh.renewed, contextVersion: room.contextVersion }
 			}
 		}
+		// The grant check and both reads go to GoodWatch together: the session already names the account, and each
+		// read is checked against it again (GoodWatch answers with the token's account). Nothing read is used before
+		// the grant check passes, and its refusal comes first.
 		const { grant, prefill, seen, seenStarted } = await this.checked(session.accessToken, session.expiresAt, async () => {
-			const grant = await this.issuer.verify(session.accessToken)
-			requireRoom(grant.userId === session.userId, "unauthorized", "GoodWatch account changed", 401)
-			const prefill = await this.reads.prefill(grant.userId, session.accessToken)
 			const seenStarted = this.seenStart()
-			const seen = await this.reads.seen?.(grant.userId, session.accessToken)
-			return { grant, prefill, seen, seenStarted }
+			const verifying = timed("verify", this.issuer.verify(session.accessToken))
+			const prefilling = timed("prefill", this.reads.prefill(session.userId, session.accessToken))
+			const seeing = this.reads.seen ? timed("seen", this.reads.seen(session.userId, session.accessToken)) : undefined
+			prefilling.catch(() => {}) // awaited below, after the grant check
+			seeing?.catch(() => {})
+			const grant = await verifying
+			requireRoom(grant.userId === session.userId, "unauthorized", "GoodWatch account changed", 401)
+			return { grant, prefill: await prefilling, seen: await seeing, seenStarted }
 		})
 		for (let attempt = 0; attempt < 6; attempt++) {
 			const old = await this.get(id)

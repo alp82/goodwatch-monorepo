@@ -288,10 +288,10 @@ export function createProposalHandler(
           setup ? { country: setup.country, contextVersion: admission.snapshot.shared.contextVersion } : undefined)
         : null
       let timer: ReturnType<typeof setTimeout> | undefined
-      const linked = !linking ? false : !bounded ? await linking : await Promise.race([
+      const linked = !linking ? false : !bounded ? await timed("link", linking) : await timed("link", Promise.race([
         linking,
         new Promise<undefined>((resolve) => { timer = setTimeout(() => resolve(undefined), MEMBER_LINK_WAIT_MS) }),
-      ]).finally(() => clearTimeout(timer))
+      ])).finally(() => clearTimeout(timer))
       if (linking && linked === undefined) linking.catch((e: unknown) => {
         // The room links itself (member/link) and shows a Retry if that fails too. Never the credential or grant.
         console.warn(JSON.stringify({ event: 'yepwatch_member_link_late_failure', roomId: c.roomId, participantId: c.participantId,
