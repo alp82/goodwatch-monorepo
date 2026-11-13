@@ -55,6 +55,69 @@ export function candidateTropes(
 	}))
 }
 
+/** At most this many association rows in one read; a batch with more is read in halves. */
+export const ASSOCIATION_LIMIT = 60_000
+
+/**
+ * A batch's associations in one read, without ORDER BY and OFFSET: sorted, paged reads made Crate sort every
+ * matching row again for each page, and they were the heaviest statement on the cluster (November 2026). The rows
+ * are put in order here (see associationOrder).
+ */
+async function readAssociations(
+	read: CatalogRead,
+	kind: "movie" | "show",
+	ids: number[],
+): Promise<Association[]> {
+	const rows = await read<Association>(
+		`SELECT media_tmdb_id, name, url, coalesce(content_length, 0) AS length
+     FROM trope WHERE media_type = ? AND media_tmdb_id IN (${ids.map(() => "?").join(",")})
+     LIMIT ${ASSOCIATION_LIMIT}`,
+		[kind, ...ids],
+	)
+	if (rows.length < ASSOCIATION_LIMIT) return rows
+	if (ids.length === 1)
+		throw new Error(
+			`Trope recommendations: ${kind} ${ids[0]} has ${ASSOCIATION_LIMIT}+ trope rows`,
+		)
+	const half = Math.ceil(ids.length / 2)
+	return [
+		...(await readAssociations(read, kind, ids.slice(0, half))),
+		...(await readAssociations(read, kind, ids.slice(half))),
+	]
+}
+
+/** Crate's byte order of UTF-8 text, which is code point order (UTF-16 units differ above the surrogates). */
+function compareText(a: string, b: string) {
+	if (a === b) return 0
+	for (let i = 0; ; ) {
+		const x = a.codePointAt(i)
+		const y = b.codePointAt(i)
+		if (x === undefined || y === undefined)
+			return x === undefined ? (y === undefined ? 0 : -1) : 1
+		if (x !== y) return x - y
+		i += x > 0xffff ? 2 : 1
+	}
+}
+
+/**
+ * The order the build depends on: a title's first row names its identity, and references keep the order of rows.
+ * The same as Crate's `ORDER BY media_tmdb_id, name, url, length`, where a missing URL sorts last.
+ */
+export function associationOrder(a: Association, b: Association) {
+	return (
+		Number(a.media_tmdb_id) - Number(b.media_tmdb_id) ||
+		compareText(a.name, b.name) ||
+		(a.url === b.url
+			? 0
+			: a.url === null
+				? 1
+				: b.url === null
+					? -1
+					: compareText(a.url, b.url)) ||
+		(Number(a.length) || 0) - (Number(b.length) || 0)
+	)
+}
+
 export async function buildCandidateIndex(
 	read: CatalogRead,
 	resolve: (urls: string[]) => Promise<TropePageReferences>,
@@ -91,20 +154,15 @@ export async function buildCandidateIndex(
 		for (let start = 0; start < titles.length; start += 200) {
 			const batch = titles.slice(start, start + 200)
 			const rows: Association[] = []
-			for (let offset = 0; ; offset += 10000) {
-				const page = await read<Association>(
-					`SELECT media_tmdb_id, name, url, coalesce(content_length, 0) AS length
-     FROM trope WHERE media_type = ? AND media_tmdb_id IN (${batch.map(() => "?").join(",")})
-     ORDER BY media_tmdb_id, name, url, length LIMIT 10000 OFFSET ${offset}`,
-					[kind, ...batch.map((t) => t.tmdb_id)],
-				)
-				for (const row of page) {
-					if (slice.due()) await slice.pause()
-					row.name = intern(row.name)
-					if (row.url) row.url = intern(row.url)
-					rows.push(row)
-				}
-				if (page.length < 10000) break
+			for (const row of await readAssociations(
+				read,
+				kind,
+				batch.map((t) => t.tmdb_id),
+			)) {
+				if (slice.due()) await slice.pause()
+				row.name = intern(row.name)
+				if (row.url) row.url = intern(row.url)
+				rows.push(row)
 			}
 			for (const row of rows) if (row.url) urls.add(row.url)
 			const byTitle = new Map<number, Association[]>()
@@ -127,7 +185,7 @@ export async function buildCandidateIndex(
 						href: titlePath(kind, Number(t.tmdb_id), t.title ?? ""),
 					},
 					names: (t.tropes ?? []).map(intern),
-					rows: byTitle.get(Number(t.tmdb_id)) ?? [],
+					rows: (byTitle.get(Number(t.tmdb_id)) ?? []).sort(associationOrder),
 				})
 			}
 		}

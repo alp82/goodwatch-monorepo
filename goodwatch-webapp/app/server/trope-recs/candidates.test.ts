@@ -3,7 +3,12 @@ import { test } from "node:test"
 import type { CatalogRead } from "../profile/tropes-data.ts"
 import { defining } from "../profile/tropes-model.ts"
 import { timeSlice } from "../time-slice.ts"
-import { buildCandidateIndex, candidateTropes } from "./candidates.ts"
+import {
+	ASSOCIATION_LIMIT,
+	associationOrder,
+	buildCandidateIndex,
+	candidateTropes,
+} from "./candidates.ts"
 const url = (s: string) => `https://tvtropes.org/pmwiki/pmwiki.php/Main/${s}`
 
 test("candidate identities use the profile resolver; aliases merge with max excerpt length and no frequency threshold", () => {
@@ -25,7 +30,7 @@ test("candidate identities use the profile resolver; aliases merge with max exce
 	assert.equal(tropes[2].id, 'label:["Missing",""]')
 })
 
-test("shared candidate build uses popular eligible movies and shows, paginates associations without loading content", async () => {
+test("shared candidate build uses popular eligible movies and shows, one unordered association read per batch, without content", async () => {
 	const statements: string[] = []
 	const read: CatalogRead = async <T extends {}>(
 		sql: string,
@@ -54,16 +59,11 @@ test("shared candidate build uses popular eligible movies and shows, paginates a
 			] as unknown as T[]
 		}
 		assert.equal(params[1], 1)
-		if (/OFFSET 0$/.test(sql))
-			return Array.from({ length: 10000 }, () => ({
-				media_tmdb_id: 1,
-				name: "A",
-				url: url("A"),
-				length: 100,
-			})) as unknown as T[]
-		assert.match(sql, /OFFSET 10000$/)
+		assert.doesNotMatch(sql, /ORDER BY|OFFSET/)
+		assert.match(sql, /LIMIT 60000$/)
 		return [
 			{ media_tmdb_id: 1, name: "B", url: url("B"), length: 200 },
+			{ media_tmdb_id: 1, name: "A", url: url("A"), length: 100 },
 		] as unknown as T[]
 	}
 	let resolves = 0
@@ -82,11 +82,76 @@ test("shared candidate build uses popular eligible movies and shows, paginates a
 	)
 	assert.equal(titles.titles[0].tropes.length, 2)
 	assert.equal(titles.titles[0].gwScore, 72.2)
-	assert.equal(statements.length, 6)
+	assert.equal(statements.length, 4)
 	assert.equal(resolves, 1)
+	// Rows are put in name order before the build reads them, as the sorted query returned them.
 	assert.deepEqual(titles.tropes, [url("A"), url("B")])
 	assert.deepEqual(titles.titles[0].tropes, titles.titles[1].tropes)
 	assert.deepEqual(Object.keys(titles.titles[0].tropes[0]).sort(), ["d", "i"])
+})
+
+test("a batch whose associations reach the row limit is read again in halves", async () => {
+	const batches: number[][] = []
+	const read: CatalogRead = async <T extends {}>(
+		sql: string,
+		params: (string | number | Date)[],
+	): Promise<T[]> => {
+		if (sql.includes("FROM show")) return []
+		if (sql.includes("FROM movie"))
+			return [1, 2, 3].map((id) => ({
+				tmdb_id: id,
+				title: "Title",
+				release_year: 2000,
+				poster_path: "/p",
+				gw: 80,
+				popularity: 1,
+				tropes: ["A"],
+			})) as unknown as T[]
+		const ids = params.slice(1).map(Number)
+		batches.push(ids)
+		const rows = ids.includes(1)
+			? ASSOCIATION_LIMIT * (ids.length === 1 ? 0.5 : 1)
+			: 1
+		return Array.from({ length: rows }, (_, k) => ({
+			media_tmdb_id: ids[k % ids.length],
+			name: "A",
+			url: url("A"),
+			length: k,
+		})) as unknown as T[]
+	}
+	const index = await buildCandidateIndex(
+		read,
+		async () => ({}),
+		() => "/",
+	)
+	assert.deepEqual(batches, [[1, 2, 3], [1, 2], [1], [2], [3]])
+	assert.equal(index.titles.length, 3)
+})
+
+test("association order matches Crate's: ID, name and URL in code point order, missing URL last, then length", () => {
+	const rows = [
+		{ media_tmdb_id: 2, name: "A", url: url("A"), length: 1 },
+		{ media_tmdb_id: 1, name: "B", url: null, length: 1 },
+		{ media_tmdb_id: 1, name: "B", url: url("B"), length: 5 },
+		{ media_tmdb_id: 1, name: "B", url: url("B"), length: 2 },
+		{ media_tmdb_id: 1, name: "\u{1F600}", url: null, length: 0 },
+		{ media_tmdb_id: 1, name: "\uFF21", url: null, length: 0 },
+		{ media_tmdb_id: 1, name: "A", url: url("A"), length: 0 },
+	]
+	assert.deepEqual(
+		[...rows]
+			.sort(associationOrder)
+			.map((r) => [r.media_tmdb_id, r.name, r.length]),
+		[
+			[1, "A", 0],
+			[1, "B", 2],
+			[1, "B", 5],
+			[1, "B", 1],
+			[1, "\uFF21", 0],
+			[1, "\u{1F600}", 0],
+			[2, "A", 1],
+		],
+	)
 })
 
 test("one union resolution spans 200-title batches, with shared numeric alias and unresolved identities", async () => {

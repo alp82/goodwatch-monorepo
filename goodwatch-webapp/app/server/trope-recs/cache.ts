@@ -1,6 +1,11 @@
-/** One shared generation per process. Cold reads return pending; stale reads retain the last complete index. */
+export const INDEX_TTL_MS = 3_600_000
+
+/**
+ * One shared generation per process. Cold reads return pending; stale reads retain the last complete index. A build
+ * returns its generation with the time it was built, which is earlier for a stored copy; it expires an hour after that.
+ */
 export function sharedIndex<T>(
-	build: () => Promise<T>,
+	build: () => Promise<{ value: T; builtAt: number }>,
 	now = Date.now,
 	onError: (error: unknown) => void = () => {},
 	random = Math.random,
@@ -13,11 +18,11 @@ export function sharedIndex<T>(
 	return () => {
 		if (now() >= expires && now() >= retryAt && !pending) {
 			pending = build()
-				.then((value) => {
-					current = { value, version: now() }
+				.then(({ value, builtAt }) => {
+					current = { value, version: builtAt }
 					failures = 0
 					retryAt = 0
-					expires = now() + 3_600_000
+					expires = builtAt + INDEX_TTL_MS
 				})
 				.catch((error) => {
 					const delay = Math.min(900_000, 30_000 * 2 ** Math.min(failures++, 5))

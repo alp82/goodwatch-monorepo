@@ -12,33 +12,49 @@
 import { createHash } from "node:crypto"
 import { DEFAULT_VISIBILITY } from "~/domain/profile"
 import { readProfileCatalog } from "~/server/profile/catalog.server"
+import { loadProfileTropes } from "~/server/profile/tropes.server"
+import { processRole } from "~/server/role.server"
+import { getUserData } from "~/server/userData.server"
+import type { MediaKey } from "~/types/user-data"
+import { cached, getRedisCluster } from "~/utils/cache"
+import { titlePath } from "~/utils/helpers"
 import {
 	readCandidateCatalog,
 	resolveCandidateReferences,
 } from "./build-reader.server"
-import { processRole } from "~/server/role.server"
-import { loadProfileTropes } from "~/server/profile/tropes.server"
-import { getUserData } from "~/server/userData.server"
-import { cached } from "~/utils/cache"
-import { titlePath } from "~/utils/helpers"
-import type { MediaKey } from "~/types/user-data"
+import { INDEX_TTL_MS, resultCache, sharedIndex, warmIndex } from "./cache"
 import { buildCandidateIndex } from "./candidates"
-import { sharedIndex, resultCache, warmIndex } from "./cache"
 import {
 	type Kind,
 	type Recommendation,
-	memberTropes,
 	memberExclusions,
+	memberTropes,
 	rankRecommendations,
 } from "./ranking"
+import { loadOrBuild, storedIndex } from "./stored-index"
 
+// Restarts read the last generation from Valkey; only a stale or missing copy is built again (stored-index.ts).
+const store = storedIndex({ redis: getRedisCluster })
+/** The Redis client connects while the server build loads; a process without Redis gives up after 10 seconds. */
+async function redisConnected() {
+	const deadline = Date.now() + 10_000
+	while (!getRedisCluster() && Date.now() < deadline)
+		await new Promise((resolve) => setTimeout(resolve, 250))
+}
 const index = sharedIndex(
-	() =>
-		buildCandidateIndex(
-			readCandidateCatalog,
-			resolveCandidateReferences,
-			titlePath,
-		),
+	async () => {
+		await redisConnected()
+		return loadOrBuild(
+			store,
+			() =>
+				buildCandidateIndex(
+					readCandidateCatalog,
+					resolveCandidateReferences,
+					titlePath,
+				),
+			{ maxAgeMs: INDEX_TTL_MS },
+		)
+	},
 	Date.now,
 	() =>
 		console.error(

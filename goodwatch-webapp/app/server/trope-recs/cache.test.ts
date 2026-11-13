@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { sharedIndex, resultCache, warmIndex } from "./cache.ts"
+import { resultCache, sharedIndex, warmIndex } from "./cache.ts"
 const settle = () => new Promise((resolve) => setImmediate(resolve))
 
 test("shared index deduplicates cold/stale builds and replaces only complete generations", async () => {
@@ -10,8 +10,8 @@ test("shared index deduplicates cold/stale builds and replaces only complete gen
 	const read = sharedIndex(
 		() => {
 			calls++
-			return new Promise<string>((resolve) => {
-				finish = resolve
+			return new Promise<{ value: string; builtAt: number }>((resolve) => {
+				finish = (value) => resolve({ value, builtAt: now })
 			})
 		},
 		() => now,
@@ -51,6 +51,26 @@ test("failed shared build backs off and retries without caching failure", async 
 	await settle()
 })
 
+test("a stored generation expires an hour after it was built, not after it was loaded", async () => {
+	let now = 10_000_000,
+		calls = 0
+	const read = sharedIndex(
+		async () => {
+			calls++
+			return { value: calls, builtAt: calls === 1 ? now - 3_000_000 : now }
+		},
+		() => now,
+	)
+	read()
+	await settle()
+	assert.equal(read().current?.version, 7_000_000)
+	now += 600_000
+	read()
+	assert.equal(calls, 2)
+	await settle()
+	assert.equal(read().current?.value, 2)
+})
+
 test("member results expire and memory is bounded", () => {
 	let now = 1
 	const cache = resultCache<number>(() => now)
@@ -71,7 +91,7 @@ test("repeated failures exponentially back off with jitter, cap, and reset after
 		async () => {
 			calls++
 			if (fails) throw Error("unavailable")
-			return calls
+			return { value: calls, builtAt: now }
 		},
 		() => now,
 		() => {},
