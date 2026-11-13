@@ -2,7 +2,11 @@
 
 Accessed 2026-11-12. Scope: official OpenRouter controls for a dedicated Liquid d1.1 overflow key and TypeSafe's published exhaustion errors. Read-only documentation research; no inference, key creation, settings mutation or dashboard authentication.
 
-## Owner-approved configuration
+## Owner adjustment on 2026-11-13
+
+The owner chose to keep the dedicated key's assigned **$1/day guardrail**, with **$5/month enforced by the application's `OPENROUTER_DECISION_MODELS_MONTHLY_BUDGET_USD` setting**. A separate provider-side monthly limit is not required for this rollout. The monthly key setup below records the earlier proposal; current setup and its nontransactional monthly accounting limits are in [search-overflow.md](../search-overflow.md).
+
+## Original monthly-cap configuration
 
 Use a dedicated ordinary OpenRouter inference key named `goodwatch-openrouter-decision-models`, with `limit: 5` and `limit_reset: "monthly"`. These are supported API fields: the limit is USD of OpenRouter credit usage, and the reset options are daily, weekly, monthly or no reset. API key creation returns the secret only once. [Create API key reference](https://openrouter.ai/docs/api/api-reference/api-keys/create-a-new-api-key.md)
 
@@ -10,7 +14,7 @@ For a restriction enforced by OpenRouter, assign a guardrail directly to that ke
 
 An application's fixed model or a preset expresses its intended route but does not itself restrict what the credential may request. OpenRouter documents guardrail model allowlists as the enforcement mechanism; presets can be skipped or overridden. Exact model slugs are required. [Official spend-control setup](https://openrouter.ai/blog/tutorials/team-spend-controls-setup/)
 
-## User setup
+## Original monthly-cap setup
 
 1. Open the [API keys dashboard](https://openrouter.ai/settings/keys), in the account/workspace whose credits should fund GoodWatch. Create a dedicated ordinary inference key using the name, $5 limit and monthly reset above. This URL redirects to sign-in when unauthenticated; the current signed-in field labels were not inspected.
 2. Open that workspace's Guardrails page, create `goodwatch-openrouter-decision-models`, allow only `liquid/d1.1`, save, and explicitly assign it to the new key. Check the eligibility preview. A separate $5 monthly guardrail budget may also be set; individual key budgets continue to apply independently. [Guardrails guide](https://openrouter.ai/docs/guides/features/guardrails)

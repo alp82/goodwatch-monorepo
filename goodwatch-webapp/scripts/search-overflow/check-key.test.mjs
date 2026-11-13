@@ -33,7 +33,7 @@ for (const bad of [
 	{ limit: 10 },
 	{ limit: 0 },
 	{ limit_reset: null },
-	{ limit_reset: "daily" },
+	{ limit_reset: "weekly" },
 ]) {
 	test("reject unsafe key metadata " + JSON.stringify(bad), async () => {
 		await assert.rejects(
@@ -83,11 +83,11 @@ test("a monthly guardrail assigned directly to the key supplies its separate cap
 for (const budget of [
 	{ scope: "workspace", limit_usd: 1, reset_interval: "monthly" },
 	{ scope: "member", limit_usd: 1, reset_interval: "monthly" },
-	{ scope: "api_key", limit_usd: 1, reset_interval: "daily" },
+	{ scope: "api_key", limit_usd: 1, reset_interval: "weekly" },
 	{ scope: "api_key", limit_usd: 5, reset_interval: "monthly" },
 	{ scope: "api_key", limit_usd: 0, reset_interval: "monthly" },
 ]) {
-	test("shared, daily or over-cap budget cannot replace the key monthly cap: " +
+	test("shared, unsupported or over-cap budget is rejected: " +
 		JSON.stringify(budget), async () => {
 		await assert.rejects(
 			checkOverflowKey(env, async () =>
@@ -104,3 +104,29 @@ for (const budget of [
 		);
 	});
 }
+
+test("owner-approved daily guardrail and application monthly budget remain distinct", async () => {
+	const result = await checkOverflowKey(
+		{ ...env, OPENROUTER_DECISION_MODELS_MONTHLY_BUDGET_USD: "5" },
+		async () =>
+			Response.json({
+				data: {
+					...data,
+					limit: null,
+					limit_reset: null,
+					budgets: [
+						{
+							scope: "api_key",
+							limit_usd: 1,
+							reset_interval: "daily",
+							remaining_usd: 0.9,
+						},
+					],
+				},
+			}),
+	);
+	assert.equal(result.limit, 1);
+	assert.equal(result.limitReset, "daily");
+	assert.equal(result.applicationMonthlyBudget, 5);
+	assert.equal(result.limitSource, "key-guardrail");
+});

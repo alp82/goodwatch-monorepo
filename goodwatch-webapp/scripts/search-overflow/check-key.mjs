@@ -27,34 +27,37 @@ export async function checkOverflowKey(env = process.env, fetcher = fetch) {
 	const withinCap = (value) =>
 		Number.isFinite(value) && value > 0 && value <= cap;
 	// Guardrails assigned to a key appear in budgets, independently of the legacy key-limit fields.
-	// Workspace/member limits are shared and cannot stand in for this key's separate monthly allowance.
+	// Workspace/member limits are shared and cannot stand in for this key's own provider cap.
 	const candidates = [];
-	if (data.limit_reset === "monthly" && withinCap(data.limit))
+	if (["daily", "monthly"].includes(data.limit_reset) && withinCap(data.limit))
 		candidates.push({
 			limit: data.limit,
 			remaining: data.limit_remaining,
 			source: "key",
+			reset: data.limit_reset,
 		});
 	for (const budget of Array.isArray(data.budgets) ? data.budgets : []) {
 		if (
 			budget?.scope === "api_key" &&
-			budget.reset_interval === "monthly" &&
+			["daily", "monthly"].includes(budget.reset_interval) &&
 			withinCap(budget.limit_usd)
 		)
 			candidates.push({
 				limit: budget.limit_usd,
 				remaining: budget.remaining_usd,
 				source: "key-guardrail",
+				reset: budget.reset_interval,
 			});
 	}
 	const selected = candidates.sort((a, b) => a.limit - b.limit)[0];
 	if (!selected)
 		throw Error(
-			"Expected a positive monthly cap bound to this key, no greater than the application budget",
+			"Expected a positive daily or monthly provider cap bound to this key, no greater than the application monthly budget",
 		);
 	return {
 		limit: selected.limit,
-		limitReset: "monthly",
+		limitReset: selected.reset,
+		applicationMonthlyBudget: cap,
 		limitSource: selected.source,
 		remaining: selected.remaining,
 		usage: data.usage,
@@ -71,7 +74,7 @@ if (
 		(result) => console.log(JSON.stringify(result, null, 2)),
 		() => {
 			console.error(
-				"Overflow key check failed. Verify the dedicated key, its monthly limit and the configured application budget.",
+				"Overflow key check failed. Verify the dedicated key, its provider cap and the configured application monthly budget.",
 			);
 			process.exitCode = 1;
 		},

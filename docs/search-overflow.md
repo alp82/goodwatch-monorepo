@@ -8,8 +8,8 @@ The choice follows the [ten-model benchmark](benchmarks/search-interpretation-op
 
 ## OpenRouter setup
 
-1. In [API keys](https://openrouter.ai/settings/keys), create a new ordinary inference key named `goodwatch-openrouter-decision-models`. Owner-approved overflow limit: **$5**, reset **monthly**. Keep existing application keys separate.
-2. In the workspace's **Guardrails** page, create a guardrail allowing only `liquid/d1.1`, save it and explicitly assign it to this key in its API Keys section. Check eligibility. The guardrail may also supply the dedicated **$5 monthly** budget if the key has no direct limit; choose monthly rather than daily. A preset alone does not enforce a model restriction. [Official guardrail instructions](https://openrouter.ai/docs/guides/features/guardrails)
+1. In [API keys](https://openrouter.ai/settings/keys), create a new ordinary inference key named `goodwatch-openrouter-decision-models`. Owner-approved application overflow budget: **$5/month**. The owner chose a separate **$1/day OpenRouter guardrail** on 2026-11-13. Keep existing application keys separate.
+2. In the workspace's **Guardrails** page, create a guardrail allowing only `liquid/d1.1`, save it and explicitly assign it to this key in its API Keys section. Check eligibility. Set its budget to **$1 with a daily reset**, as approved by the owner. The application separately tracks the $5 monthly allowance. A preset alone does not enforce a model restriction. [Official guardrail instructions](https://openrouter.ai/docs/guides/features/guardrails)
 3. Store the new secret privately on both search roles (the protected `goodwatch-search/.env` on the search host). Do not put it in the browser or paste it into chat. The running application needs no management key.
 
 ```dotenv
@@ -17,7 +17,7 @@ OPENROUTER_DECISION_MODELS_API_KEY=<new dedicated inference key>
 OPENROUTER_DECISION_MODELS_MONTHLY_BUDGET_USD=5
 ```
 
-The application and key limits should match. OpenRouter's monthly counter follows the UTC calendar month, independently of TypeSafe's 17th-day cycle. Empty key, absent/invalid budget or a zero budget disables overflow; the shared `OPENROUTER_API_KEY` is never used for this reader. The shipped example defaults to zero.
+The two controls have different windows: OpenRouter enforces the key's $1 daily guardrail; the application's $5 overflow budget follows UTC calendar months, independently of TypeSafe's 17th-day cycle. Empty key, absent/invalid budget or a zero budget disables overflow; the shared `OPENROUTER_API_KEY` is never used for this reader. The shipped example defaults to zero.
 
 With the two variables available in the process environment, run the read-only check from `goodwatch-webapp`:
 
@@ -25,7 +25,7 @@ With the two variables available in the process environment, run the read-only c
 node scripts/search-overflow/check-key.mjs
 ```
 
-It calls only OpenRouter's current-key metadata endpoint, verifies an ordinary key with a positive monthly limit no greater than the configured application cap, supplied by its direct limit or an `api_key`-scoped guardrail budget, and prints budget metadata without the credential. Confirm model restriction assignment in the dashboard separately. [Current-key reference](https://openrouter.ai/docs/api/api-reference/api-keys/get-current-api-key.md)
+It calls only OpenRouter's current-key metadata endpoint, verifies an ordinary key with a positive daily or monthly provider cap no greater than the configured application monthly budget, supplied by its direct limit or an `api_key`-scoped guardrail budget. It reports the provider reset period and the application monthly budget separately, and prints budget metadata without the credential. Confirm model restriction assignment in the dashboard separately. [Current-key reference](https://openrouter.ai/docs/api/api-reference/api-keys/get-current-api-key.md)
 
 The $5 cap is inference credit usage, not a promised $5 card transaction. Credit purchases and their fees are separate. Details and source limitations: [key setup research](research/search-overflow-key-setup-2026-11-12.md).
 
@@ -37,7 +37,7 @@ Both search replicas share the existing Redis admission limits, trusted identity
 
 Before each fresh Liquid reading, admission reserves **$0.01** against its own cap. Successful readings settle to the sum of OpenRouter's reported `usage.cost`, rounded up to nanodollars. Lost, partial, failed or unpriced responses retain the whole estimate until verified reconciliation. Complete invalid native responses with known costs settle those costs and are not cached. Unexpected charges above the estimate halt new paid search admissions.
 
-The estimate is deliberately conservative and is not a proved upper billing bound. The ledger uses nontransactional, eventually indexed Crate reads, so concurrent admissions can exceed its cutoff. The dedicated capped OpenRouter key is an independent enforcement layer; OpenRouter's reviewed docs do not establish a strict concurrent-request overshoot bound either. Do not describe either layer as an atomic zero-overshoot guarantee.
+The estimate is deliberately conservative and is not a proved upper billing bound. The ledger uses nontransactional, eventually indexed Crate reads, so concurrent admissions can exceed its cutoff. The dedicated OpenRouter guardrail independently limits daily spend; the $5 monthly allowance is enforced by application accounting alone. OpenRouter's reviewed docs do not establish a strict concurrent-request overshoot bound either. Do not describe either layer as an atomic zero-overshoot guarantee.
 
 The transport pins `liquid/d1.1` to Liquid, disables provider fallbacks and filters route rates at $0.020/M input, free output and no request fee. This rate filter is not a request-cost ceiling. It preserves original structured state, sends every question in batches of at most 128 (currently three HTTP requests per reading, at most two active), and validates the canonical model, provider, complete answers, native probabilities and truncation indicators. No generated JSON, retries or one-hot approximation are involved. The 1,500 ms reading deadline includes all batches and response-body parsing; timeout/cancellation serves basic search and retains the estimate.
 
