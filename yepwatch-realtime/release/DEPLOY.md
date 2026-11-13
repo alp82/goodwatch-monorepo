@@ -81,7 +81,7 @@ GRANT DQL ON TABLE
 
 Full DDL: [schema.sql](../../goodwatch-webapp/app/server/yepwatch/schema.sql). These catalog grants need an ordinary functional check with the actual restricted role before public activation.
 
-5. Provision `yepwatch_messaging` consistently on **every existing Redis cluster node**, with its own password, only the two Pub/Sub channels and connection/discovery commands listed in [SHARED-SERVICES.md](SHARED-SERVICES.md#redis). No key access. Catalog snapshot access remains a separate API-only read credential. No Redis data migration is needed.
+5. Provision `yepwatch_messaging` consistently on **every existing Redis cluster node**, with its own password, only the two Pub/Sub channels, connection/discovery commands and the API's realtime-ticket keys and scripts listed in [SHARED-SERVICES.md](SHARED-SERVICES.md#redis). No other key access. Catalog snapshot access remains a separate API-only read credential. No Redis data migration is needed.
 
 ## 3. Update GoodWatch for signup
 

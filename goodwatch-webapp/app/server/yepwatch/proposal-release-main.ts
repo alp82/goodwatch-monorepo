@@ -48,12 +48,16 @@ assertNoSharedCatalogWriter(cache.getRedisCluster)
 const bus = createReleaseBus(config)
 bus.on("error", () => {})
 void bus.connect().catch(() => {}) // A missing bus keeps readiness red and reconnects; no startup room writes.
+const tickets = createReleaseBus(config, { once: true })
+tickets.on("error", () => {})
+void tickets.connect().catch(() => {})
 snapshot.startTitleSnapshot()
 const runtime = createReleaseRuntime(config, {
 	sql: crateSql(config.origin, config.username, config.password),
 	catalog: guestProposalCatalog(),
 	memberCatalog: guestProposalCatalog,
 	bus,
+	tickets,
 	snapshot: snapshot.getTitleSnapshot,
 	async catalogProbe() {
 		assertNoSharedCatalogWriter(cache.getRedisCluster)
@@ -143,6 +147,7 @@ async function shutdown(signal: string) {
 	cache.stopRedisClusterForTest()
 	source.disconnect()
 	bus.disconnect()
+	tickets.disconnect()
 	console.info(JSON.stringify({ event: "yepwatch_release_stopped" }))
 	process.exit(0)
 }

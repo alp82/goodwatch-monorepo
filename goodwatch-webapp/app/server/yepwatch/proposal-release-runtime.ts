@@ -26,11 +26,16 @@ export interface ReleaseDependencies {
 	memberCatalog?: (members: ContinuousMembers) => ProposalCatalog
 	snapshot(): { count: number; version: string } | null
 	catalogProbe(): Promise<void>
-	/** The messaging connection: revision hints, and the realtime tickets (ValkeyTicketStore). */
-	bus: ScriptClient & {
+	/** The messaging connection: revision hints. */
+	bus: {
 		ping(): Promise<unknown>
 		publish(channel: string, value: string): Promise<unknown>
 	}
+	/**
+	 * The realtime tickets' connection (ValkeyTicketStore), one that never resends a command whose answer was lost:
+	 * a replayed consume would turn an uncertain one into "unauthorized". Its scripts are part of readiness.
+	 */
+	tickets: ScriptClient
 	now?: () => number
 }
 /** No guest identities, fixtures, DDL or fail-open readiness. Normal handler behavior stays in its existing module. */
@@ -45,6 +50,7 @@ export function createReleaseRuntime(
 		: undefined
 	if (members && !deps.memberCatalog)
 		throw new Error("Member catalog adapter required")
+	const tickets = new ValkeyTicketStore(deps.tickets)
 	const quotas = new SqlCreationQuotas(deps.sql, config.control.roomsPerPerson ?? 10)
 	const control = new ReleaseControl(deps.sql, config.control, quotas)
 	const service = new ProposalService(
@@ -57,7 +63,7 @@ export function createReleaseRuntime(
 		Date.now,
 		control,
 		roomSearch(process.env),
-		{ tickets: new ValkeyTicketStore(deps.bus) }
+		{ tickets }
 	)
 	const handle = createProposalHandler(service, {
 		serviceSecret: config.gatewaySecret,
@@ -86,7 +92,7 @@ export function createReleaseRuntime(
 				deps.catalogProbe(),
 				checkReleaseStore(deps.sql, config.keyId, config.secret),
 				control.check(),
-				deps.bus.ping(),
+				Promise.all([deps.bus.ping(), tickets.check()]),
 			])
 			for (const [i, key] of (
 				Object.keys(checks) as (keyof typeof checks)[]

@@ -4,6 +4,7 @@ import {
 } from "../../../packages/yepwatch-contracts/proposal.ts"
 import { createProposalHandler } from "./proposal-http.server.ts"
 import { ProposalService } from "./proposal-service.server.ts"
+import { ValkeyTicketStore } from "./proposal-tickets.ts"
 import { proposalCatalog } from "./proposal-catalog.server.ts"
 import {
 	configuredContinuousMembers,
@@ -66,6 +67,20 @@ export async function proposalRuntimeHandler(request: Request) {
 				const redis = getRedisCluster()
 				if (!redis) throw new Error("Revision bus unavailable")
 				await redis.publish(REVISION_CHANNEL, JSON.stringify(event))
+			},
+			Date.now,
+			undefined,
+			undefined,
+			{
+				// Tickets in the shared cluster, never per process: the gateway's attach may reach another instance.
+				tickets: new ValkeyTicketStore({
+					async eval(script, keys, ...args) {
+						const { getRedisCluster } = await import("../../utils/cache")
+						const redis = getRedisCluster()
+						if (!redis) throw new Error("Ticket store unavailable")
+						return redis.eval(script, keys, ...args)
+					},
+				}),
 			}
 		)
 		handler = createProposalHandler(service, {

@@ -94,6 +94,20 @@ test("a ticket of someone who left, or whose capability moved on, no longer atta
 	await assert.rejects(r.service.attach(r.id, revoked.ticket), { code: "forbidden" })
 })
 
+test("tickets of an earlier capability (before leaving and coming back) don't use up the new one's allowance", async () => {
+	const store = new MemoryTicketStore()
+	const now = Date.now()
+	for (let i = 0; i < 4; i++) assert.equal(await store.issue("r", `old${i}`, { participantId: "p", epoch: 1, expiresAt: now + 30_000 }, 4, now), true)
+	assert.equal(await store.issue("r", "old4", { participantId: "p", epoch: 1, expiresAt: now + 30_000 }, 4, now), false)
+	assert.equal(await store.issue("r", "new0", { participantId: "p", epoch: 2, expiresAt: now + 30_000 }, 4, now), true)
+	const r = await room()
+	for (let i = 0; i < 4; i++) await r.service.ticket(r.id, credential(r.b))
+	await r.send(r.b, { type: "leave" } as RoomCommand)
+	const back = await r.service.resumeOrJoin(r.id, credential(r.b), { ...admission("B"), inviteCode: r.a.invite.code })
+	const fresh = await r.service.ticket(r.id, { participantId: back.credential.participantId, token: back.credential.token })
+	assert.equal((await r.service.attach(r.id, fresh.ticket)).participantId, back.credential.participantId)
+})
+
 test("an expired ticket does not attach", async () => {
 	let now = Date.now()
 	const repo = new ProposalMemoryRepository()
@@ -183,6 +197,13 @@ test("Valkey ticket store: one use, per-participant limit, rooms apart, expiry",
 	await new Promise((resolve) => setTimeout(resolve, 120))
 	assert.equal(await store.consume("room-a", "h6", Date.now()), null, "expired")
 	assert.equal(await store.issue("room-a", "h7", record("p3"), 1, now + 1000), true, "expired ones no longer count")
+	// An earlier epoch's tickets don't count against the current one.
+	assert.equal(await store.issue("room-c", "e1", { ...record("p1"), epoch: 1 }, 1, now), true)
+	assert.equal(await store.issue("room-c", "e2", { ...record("p1"), epoch: 2 }, 1, now), true)
+	assert.equal(await store.issue("room-c", "e3", { ...record("p1"), epoch: 2 }, 1, now), false)
+	assert.deepEqual(await store.consume("room-c", "e2", now), record("p1"))
+	assert.equal(await store.issue("room-c", "e3", { ...record("p1"), epoch: 2 }, 1, now), true, "consuming freed the place")
+	await store.check()
 	const concurrent = await Promise.all(Array.from({ length: 8 }, () => store.consume("room-a", "h2", now)))
 	assert.equal(concurrent.filter(Boolean).length, 1, "exactly one concurrent consume wins")
 	// A memory store follows the same rules.

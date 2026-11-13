@@ -24,6 +24,8 @@ export interface TicketStore {
 	issue(roomId: string, hash: string, record: TicketRecord, limit: number, now: number): Promise<boolean>
 	/** The ticket's record, removed in the same step; null when unknown, consumed already or expired. */
 	consume(roomId: string, hash: string, now: number): Promise<TicketRecord | null>
+	/** Throws unless the store answers (and lets this process run its scripts): part of readiness. */
+	check?(): Promise<void>
 }
 
 /** One process only: tests and local runners. */
@@ -31,7 +33,10 @@ export class MemoryTicketStore implements TicketStore {
 	private tickets = new Map<string, TicketRecord & { roomId: string }>()
 	async issue(roomId: string, hash: string, record: TicketRecord, limit: number, now: number) {
 		for (const [key, t] of this.tickets) if (t.expiresAt <= now) this.tickets.delete(key)
-		const held = [...this.tickets.values()].filter((t) => t.roomId === roomId && t.participantId === record.participantId)
+		// Tickets of an earlier capability epoch can never attach again: they don't count.
+		const held = [...this.tickets.values()].filter(
+			(t) => t.roomId === roomId && t.participantId === record.participantId && t.epoch === record.epoch
+		)
 		if (held.length >= limit) return false
 		this.tickets.set(hash, { ...record, roomId })
 		return true
@@ -52,7 +57,9 @@ export interface ScriptClient {
 }
 /**
  * Both keys carry the room in a hash tag, so one script touches one cluster slot. `held` is a sorted set of the
- * room's live tickets (`participantId:hash`, scored by expiry) that counts a participant's outstanding tickets.
+ * room's live tickets (`participantId:epoch:hash`, scored by expiry) that counts a participant's outstanding
+ * tickets in its current capability epoch (an earlier epoch's tickets can never attach, so they don't count).
+ * Scripts run once: the client must not resend a command whose answer was lost (see the release bus).
  */
 const ISSUE = `
 redis.call('ZREMRANGEBYSCORE', KEYS[2], '-inf', ARGV[1])
@@ -69,7 +76,8 @@ return 1
 const CONSUME = `
 local value = redis.call('GETDEL', KEYS[1])
 if not value then return false end
-redis.call('ZREM', KEYS[2], cjson.decode(value).participantId .. ':' .. ARGV[1])
+local record = cjson.decode(value)
+redis.call('ZREM', KEYS[2], record.participantId .. ':' .. record.epoch .. ':' .. ARGV[1])
 return value
 `
 const ticketKey = (roomId: string, hash: string) => `yepwatch:ticket:{${roomId}}:${hash}`
@@ -91,12 +99,15 @@ export class ValkeyTicketStore implements TicketStore {
 			now,
 			record.expiresAt,
 			ttl,
-			`${record.participantId}:${hash}`,
-			`${record.participantId}:`,
+			`${record.participantId}:${record.epoch}:${hash}`,
+			`${record.participantId}:${record.epoch}:`,
 			limit,
 			JSON.stringify(record)
 		)
 		return Number(issued) === 1
+	}
+	async check() {
+		await this.client.eval(CONSUME, 2, ticketKey("readiness", "none"), heldKey("readiness"), "none")
 	}
 	async consume(roomId: string, hash: string, now: number) {
 		const raw = await this.client.eval(CONSUME, 2, ticketKey(roomId, hash), heldKey(roomId), hash)

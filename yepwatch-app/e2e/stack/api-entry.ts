@@ -180,11 +180,15 @@ const config = {
 const bus = createReleaseBus(config)
 bus.on("error", () => {})
 void bus.connect().catch(() => {})
+const tickets = createReleaseBus(config, { once: true })
+tickets.on("error", () => {})
+void tickets.connect().catch(() => {})
 const runtime = createReleaseRuntime(config as Parameters<typeof createReleaseRuntime>[0], {
 	sql,
 	catalog: fixtureCatalog(),
 	memberCatalog: (members) => fixtureCatalog(members),
 	bus,
+	tickets,
 	snapshot: () => ({ count: TITLES.length, version: "e2e-fixture" }),
 	async catalogProbe() {},
 })
