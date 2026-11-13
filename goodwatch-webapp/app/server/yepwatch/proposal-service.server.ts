@@ -16,7 +16,7 @@ import {
 } from "./proposal-redesign.ts"
 import { SearchBusy, type InterpretRoom } from "./proposal-intent.ts"
 import { activeRoom, normalizeRoomContext } from "./proposal-context.ts"
-import { PreparedDecks, type PreparedDecksOptions } from "./proposal-prepared-decks.ts"
+import { PreparedDecks, refillInputs, type PreparedDecksOptions } from "./proposal-prepared-decks.ts"
 import { CONTINUOUS_LIMITS as L } from "./continuous-types.ts"
 import type {
 	CommandEnvelope,
@@ -148,6 +148,15 @@ export function revisionMessage(event: RoomInvalidation | RoomCommitted): string
 function heldBy(idea: StoredIdea | undefined) {
 	return idea && ideaPending(idea) ? idea.attributes[0].text : null
 }
+/** A refill's page built before the command took the room's lane (ProposalService.refillPage). */
+type RefillPage = {
+	/** refillInputs of the room it was built for. */
+	inputs: string
+	/** The cards that room held: a page built for at least as many is never too long for the room now. */
+	cards: number
+	page: Awaited<ReturnType<ProposalCatalog["page"]>>
+}
+
 export class ProposalService {
 	readonly deletions: DeletionStore
 	readonly accounts: AccountRoomsStore
@@ -162,6 +171,8 @@ export class ProposalService {
 	private interpret?: InterpretRoom
 	/** First decks built during setup, so Start doesn't wait for the catalog. */
 	readonly decks: PreparedDecks
+	/** Refill pages being built ahead of their commands' lane (refillPage), by room, sender and command. */
+	private refills = new Map<string, Promise<RefillPage>>()
 	/** Interpretations this process has queued, running or landing, by `${roomId}:${ideaId}`. */
 	private interpreting = new Map<string, Promise<void>>()
 	/** Background searches running now, at most `concurrency`; `waiting` are queued for a slot. */
@@ -1113,8 +1124,11 @@ export class ProposalService {
 			await actorCredential
 			await pendingEnvelope
 		}
+		// A refill's page is built before the room's lane is taken: votes keep landing while the catalog is read
+		// (about a second in production), instead of waiting behind it.
+		const refill = await this.refillPage(id, actorCredential, pendingEnvelope, allowed)
 		const written = this.write(id, () =>
-			this.applyCommand(id, actorCredential, pendingEnvelope, allowed)
+			this.applyCommand(id, actorCredential, pendingEnvelope, allowed, refill)
 		).catch(async (e: unknown) => {
 			await actorCredential
 			await pendingEnvelope
@@ -1156,11 +1170,59 @@ export class ProposalService {
 			snapshot: this.snapshot(committed, credential)
 		}
 	}
-	private async applyCommand(
+	/**
+	 * A refill's next page, built from the room as it is before the command takes the room's lane. Only for a refill
+	 * the room would take: its sender is in the room, it is the sender's next command (not a replay), it passes the
+	 * command's own checks, and the command budget charged it (the charge is per command, so the one in the lane is
+	 * free). Undefined otherwise, or when the room wants no page; any failure is left to the command itself, which then
+	 * builds in its lane as before. Applied only to a room whose refill inputs are still the ones it was built for and
+	 * that holds no more cards than it did (refillInputs).
+	 */
+	private async refillPage(
 		id: string,
 		actorCredential: Promise<ActorCredential>,
 		pendingEnvelope: Promise<CommandEnvelope>,
 		allowed: Promise<unknown>
+	): Promise<RefillPage | undefined> {
+		try {
+			const envelope = await pendingEnvelope
+			if (envelope.command.type !== "refill") return undefined
+			const credential = await actorCredential
+			await allowed
+			const stored = await this.repository.read(id)
+			if (!stored || stored.room.phase !== "choosing" || staleRefill(stored.room, envelope)) return undefined
+			const p = this.auth(stored.room, credential)
+			if (p.leftAt != null || envelope.command.generation !== stored.room.generation) return undefined
+			const digest = hash(JSON.stringify(envelope))
+			const slot = this.sequenceSlot(p, credential, envelope, digest)
+			if ("replayed" in slot || slot.sequence !== this.commandState(p, credential).nextSequence) return undefined
+			preflight(stored.room, p.id, envelope, this.now())
+			const room = structuredClone(activeRoom(stored.room))
+			retire(room)
+			if (!(room.candidates.length < L.active && room.seenKeys.length < L.seen)) return undefined
+			// The same command sent again while its page is built (a resend) waits for that build: one build per command.
+			const key = JSON.stringify([id, p.id, envelope.commandId, digest])
+			let build = this.refills.get(key)
+			if (!build) {
+				build = (async () => {
+					await this.guard?.command(id, p.id, digest)
+					return { inputs: refillInputs(room), cards: room.candidates.length, page: await timed("deck", this.decks.page(room)) }
+				})()
+				this.refills.set(key, build)
+				const done = () => { if (this.refills.get(key) === build) this.refills.delete(key) }
+				build.then(done, done)
+			}
+			return await build
+		} catch {
+			return undefined
+		}
+	}
+	private async applyCommand(
+		id: string,
+		actorCredential: Promise<ActorCredential>,
+		pendingEnvelope: Promise<CommandEnvelope>,
+		allowed: Promise<unknown>,
+		refill?: RefillPage
 	): Promise<{ receipt: CommandResult["receipt"]; room?: { committed: ProposalRoom; published: Promise<boolean> | null } }> {
 		// The first read starts now, alongside the request's own checks; what it read is checked once they passed.
 		if (refused(actorCredential)) await actorCredential
@@ -1271,7 +1333,9 @@ export class ProposalService {
 				seenRead?.catch(() => {}) // Awaited below; a failed deck must not leave it unhandled.
 				// Best effort (members time-box and log their own reads): a failed read starts without those exclusions.
 				// Usually prepared during setup; a Start retried after losing its compare-and-swap reuses the same build.
-				if (wantsPage)
+				if (wantsPage && envelope.command.type === "refill" && refill && refillInputs(room) === refill.inputs && room.candidates.length <= refill.cards)
+					page = structuredClone(refill.page)
+				else if (wantsPage)
 					page = await timed("deck", this.decks.page(room, {
 						seenReadFresh: envelope.command.type === "start" && Boolean(this.catalog.excludedKeys),
 					}))

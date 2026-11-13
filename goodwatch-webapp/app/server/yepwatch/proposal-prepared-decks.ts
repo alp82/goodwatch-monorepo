@@ -42,6 +42,20 @@ export function deckBase(room: ProposalRoom): string {
 	return digest(room, true)
 }
 
+/**
+ * deckInputs of a room as a refill reads it, without its cards and answers: votes land between the moment a refill's
+ * page is built (before the room's write lane is taken, so votes don't wait for it) and the moment it is applied. A
+ * page built for a room with the same refill inputs is still one of the room: its titles were none of the room's seen
+ * titles (`seenKeys`, which only a new page changes), and it was built for at least as many cards as the room has (a
+ * vote only ever retires cards), so it is never longer than a page built now would be.
+ */
+export function refillInputs(room: ProposalRoom): string {
+	const shape = structuredClone(room)
+	shape.candidates = []
+	for (const p of shape.participants) p.votes = {}
+	return digest(shape, false)
+}
+
 function digest(room: ProposalRoom, membersAsGuests: boolean): string {
 	const guest = membersAsGuests ? () => true : isGuest
 	const active = activeRoom(room) as unknown as Record<string, unknown>
