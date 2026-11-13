@@ -15,6 +15,9 @@
 // work the gesture started is done: `afterInteraction.quietMs` without a further interaction, long task, finished
 // request or paint. A visitor who never pauses gets them `afterInteraction.maxWaitMs` after the first interaction.
 // Rule 2 still applies during that wait, and rules 3 and 4 end with the first interaction.
+//
+// With `interactionOnly`, only rule 1 loads the tools: a page that nobody uses never loads them, hidden or quiet.
+// Pages that a browser loads with a filtered person page as its address use it (see `landsOnFilteredPersonPage`).
 
 export interface LoadTriggerEnv {
 	/** `document.readyState === "complete"`. */
@@ -46,6 +49,8 @@ export interface LoadTriggerOptions {
 	maxWaitMs: number
 	/** Wait for a pause after the first interaction, instead of running at once. See the rule above. */
 	afterInteraction?: { quietMs: number; maxWaitMs: number }
+	/** Only an interaction loads the tools. See the rule above. */
+	interactionOnly?: boolean
 }
 
 /** What made the tools load. Sent nowhere; tests and debugging read it. */
@@ -72,7 +77,7 @@ const listenerOptions = (type: string): AddEventListenerOptions => ({
 export function whenPageIsInteractive(
 	run: (reason: LoadReason) => void,
 	env: LoadTriggerEnv,
-	{ quietMs, maxWaitMs, afterInteraction }: LoadTriggerOptions,
+	{ quietMs, maxWaitMs, afterInteraction, interactionOnly }: LoadTriggerOptions,
 ): () => void {
 	let done = false
 	// The visitor has used the page, and the tools wait for a pause.
@@ -127,7 +132,7 @@ export function whenPageIsInteractive(
 		restartQuietTime()
 	}
 	const onVisibility = () => {
-		if (env.isHidden()) fire("hidden")
+		if (env.isHidden() && (interacted || !interactionOnly)) fire("hidden")
 	}
 	const onLoad = () => {
 		env.removeEventListener("load", onLoad)
@@ -137,20 +142,40 @@ export function whenPageIsInteractive(
 		restartQuietTime()
 	}
 
-	if (env.isHidden()) {
+	const cancel = () => {
+		if (done) return
+		done = true
+		cleanup()
+	}
+	if (env.isHidden() && !interactionOnly) {
 		fire("hidden")
 		return () => {}
 	}
 	for (const type of INTERACTION_EVENTS)
 		env.addEventListener(type, onInteraction, listenerOptions(type))
 	env.addEventListener("visibilitychange", onVisibility)
+	if (interactionOnly) return cancel
 	if (env.isLoaded()) onLoad()
 	else env.addEventListener("load", onLoad)
 
-	return () => {
-		if (done) return
-		done = true
-		cleanup()
+	return cancel
+}
+
+const PERSON_PAGE = /^\/person\/[^/]+\/?$/
+
+/**
+ * Whether the browser loaded a person page with filters (`/person/1-name?genre=Drama&decade=1990`). Visitors open
+ * those by changing filters on the page, which loads no document. A document loaded at such an address has, so far,
+ * been automation: a browser that runs scripts, on a new profile and a new address for every URL, that leaves after a
+ * few seconds without a scroll or a tap. Analytics counted every one as a new visitor. The server sends any other query
+ * on a person page to the canonical address first, so a campaign parameter doesn't count as a filter.
+ */
+export function landsOnFilteredPersonPage(href: string): boolean {
+	try {
+		const url = new URL(href)
+		return PERSON_PAGE.test(url.pathname) && url.search.length > 1
+	} catch {
+		return false
 	}
 }
 
