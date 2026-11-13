@@ -26,6 +26,7 @@ class MemoryStore:
         self.values = {}
         self.ledger = {}
         self.released = False
+        self.reads = []
 
     def initialize(self) -> None:
         pass
@@ -46,7 +47,17 @@ class MemoryStore:
         self.values[key] = copy.deepcopy(value)
 
     def jobs(self, pipeline):
+        self.reads.append(("all", pipeline, len(self.ledger.get(pipeline, {}))))
         return copy.deepcopy(self.ledger.get(pipeline, {}))
+
+    def recent_jobs(self, pipeline, boundary, keys):
+        rows = {
+            identity: copy.deepcopy(job)
+            for identity, job in self.ledger.get(pipeline, {}).items()
+            if identity >= boundary or identity in keys
+        }
+        self.reads.append(("recent", pipeline, len(rows)))
+        return rows
 
     def save_jobs(self, pipeline, jobs):
         self.ledger.setdefault(pipeline, {}).update(

@@ -90,6 +90,20 @@ class MonitoringStore:
         jobs = [json.loads(row["payload"]) for row in rows]
         return {job["id"]: job for job in jobs}
 
+    def recent_jobs(
+        self, pipeline: str, boundary: str, keys: list[str]
+    ) -> dict[str, dict[str, Any]]:
+        """Rows with ids from `boundary` on, and the rows with ids in `keys`."""
+        sql = """SELECT payload FROM workflow_monitoring
+            WHERE kind = 'job' AND pipeline = ? AND (monitor_key >= ?"""
+        args: list[Any] = [pipeline, "job:" + boundary]
+        if keys:
+            sql += " OR monitor_key = ANY(?)"
+            args.append(["job:" + key for key in keys])
+        rows = self.db.select(sql + ")", tuple(args))
+        jobs = [json.loads(row["payload"]) for row in rows]
+        return {job["id"]: job for job in jobs}
+
     def save_jobs(self, pipeline: str, jobs: list[dict[str, Any]]) -> None:
         if not jobs:
             return

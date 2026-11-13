@@ -2,6 +2,7 @@
 
 from bisect import bisect_left, bisect_right
 from collections import Counter
+import copy
 import hashlib
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -76,13 +77,143 @@ def scheduled_occurrences(
     raise ValueError("Coverage window exceeds bounded cron occurrence limit")
 
 
+NEUTRAL_OUTCOMES = {"overlap", "no_work", "external_deferred", "running", "cancelled"}
+
+
+def empty_history() -> dict[str, Any]:
+    """Root totals and the newest-root facts an assessment needs, without the rows."""
+    return {
+        "root_count": 0,
+        "outcomes": {},
+        "unknown_parent_count": 0,
+        "material_child_failure_count": 0,
+        "tolerable_external_failure_count": 0,
+        "material_outcome_failure_count": 0,
+        "last_useful": None,
+        "latest": None,
+        "last_terminal": None,
+        "last_meaningful": None,
+        # Newest meaningful root that wasn't a failure, and the failures after it.
+        "last_ok": None,
+        "failing": [],
+        "missing_descendants": [],
+    }
+
+
+def is_relevant(job: dict[str, Any], now: datetime, observation_start: datetime) -> bool:
+    start = timestamp(job.get("started_at"))
+    end = timestamp(job.get("completed_at"))
+    return bool(
+        (end and observation_start <= end <= now)
+        or (
+            start
+            and start <= now
+            and (job.get("running") or start >= observation_start)
+        )
+    )
+
+
+def root_order(
+    job: dict[str, Any], observation_start: datetime
+) -> tuple[datetime, str]:
+    """Roots sort by completion (or start) time; the id breaks ties."""
+    return (
+        timestamp(job.get("completed_at") or job.get("started_at"))
+        or observation_start,
+        str(job["id"]),
+    )
+
+
+def _newer(order: tuple[datetime, str], entry: dict[str, Any] | None) -> bool:
+    return entry is None or order > (timestamp(entry["at"]), entry["id"])
+
+
+def fold_history(
+    history: dict[str, Any],
+    jobs: Any,
+    now: datetime,
+    observation_start: datetime,
+) -> dict[str, Any]:
+    """Add jobs to a root history in place.
+
+    Folding rows in any order, in one call or many, gives the same history as
+    folding them all at once, so old rows can be folded once and stored.
+    """
+    for job in jobs:
+        if not is_relevant(job, now, observation_start):
+            continue
+        if not job.get("parent_resolved"):
+            history["unknown_parent_count"] += 1
+            continue
+        if job.get("parent_job") is not None:
+            continue
+        kind = classify_outcome(job)
+        order = root_order(job, observation_start)
+        entry = {"at": order[0].isoformat(), "id": order[1]}
+        history["root_count"] += 1
+        history["outcomes"][kind] = history["outcomes"].get(kind, 0) + 1
+        history["material_child_failure_count"] += len(
+            job.get("material_child_failures", [])
+        )
+        history["material_outcome_failure_count"] += len(
+            job.get("material_outcome_failures", [])
+        )
+        history["tolerable_external_failure_count"] += job.get(
+            "tolerable_external_failure_count", 0
+        )
+        if _newer(order, history["latest"]):
+            history["latest"] = entry
+        if kind == "useful" and _newer(order, history["last_useful"]):
+            history["last_useful"] = entry
+        if kind != "running" and _newer(order, history["last_terminal"]):
+            history["last_terminal"] = {**entry, "cancelled": kind == "cancelled"}
+        if kind not in NEUTRAL_OUTCOMES:
+            if _newer(order, history["last_meaningful"]):
+                history["last_meaningful"] = {
+                    **entry,
+                    "failure": kind == "failure",
+                    "material_child_failures": bool(job.get("material_child_failures")),
+                    "material_outcome_failures": bool(
+                        job.get("material_outcome_failures")
+                    ),
+                }
+            failing = bool(
+                kind == "failure"
+                or job.get("material_child_failures")
+                or job.get("material_outcome_failures")
+            )
+            if _newer(order, history["last_ok"]):
+                if failing:
+                    history["failing"].append(entry)
+                else:
+                    history["last_ok"] = entry
+                    history["failing"] = [
+                        value for value in history["failing"]
+                        if (timestamp(value["at"]), value["id"]) > order
+                    ]
+        if job.get("missing_descendants"):
+            history["missing_descendants"].append({
+                "started_at": job.get("started_at"),
+                "completed_at": job.get("completed_at"),
+                "running": bool(job.get("running")),
+            })
+    return history
+
+
 def assess_pipeline(
     schedule: dict[str, Any],
     jobs: list[dict[str, Any]],
     now: datetime,
     observation_start: datetime,
     thresholds: dict[str, Any],
+    folded: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    """Assess a pipeline from its ledger rows.
+
+    `folded` is the stored history of rows no longer passed in (see
+    fold_history). Folded rows are complete and too old for slot coverage, so
+    only their totals and newest-root facts matter.
+    """
     unique = {}
     for job in jobs:
         previous = unique.get(str(job["id"]))
@@ -95,30 +226,23 @@ def assess_pipeline(
             bool(previous.get("completed_at")),
         ):
             unique[str(job["id"])] = job
-    relevant = []
-    for job in unique.values():
-        start = timestamp(job.get("started_at"))
-        end = timestamp(job.get("completed_at"))
-        if (end and observation_start <= end <= now) or (
-            start
-            and start <= now
-            and (job.get("running") or start >= observation_start)
-        ):
-            relevant.append(job)
-    unknown = sum(not job.get("parent_resolved") for job in relevant)
+    relevant = [
+        job for job in unique.values()
+        if is_relevant(job, now, observation_start)
+    ]
     roots = [
         job
         for job in relevant
         if job.get("parent_resolved") and job.get("parent_job") is None
     ]
-    roots.sort(
-        key=lambda job: (
-            timestamp(job.get("completed_at") or job.get("started_at"))
-            or observation_start
-        )
+    roots.sort(key=lambda job: root_order(job, observation_start))
+    history = fold_history(
+        copy.deepcopy(folded) if folded else empty_history(), relevant, now,
+        observation_start,
     )
-    outcomes = Counter(classify_outcome(job) for job in roots)
-    useful = [job for job in roots if classify_outcome(job) == "useful"]
+    outcomes = Counter(history["outcomes"])
+    unknown = history["unknown_parent_count"]
+    last_meaningful = history["last_meaningful"]
     cron_error = False
     coverage_start = observation_start
     try:
@@ -137,55 +261,30 @@ def assess_pipeline(
     causes: list[str] = []
     grace = float(thresholds["grace_seconds"])
     runtime = float(thresholds["runtime_seconds"])
-    material_count = sum(
-        len(job.get("material_child_failures", [])) for job in roots
-    )
+    material_count = history["material_child_failure_count"]
     last_useful = (
-        timestamp(
-            useful[-1].get("completed_at") or useful[-1].get("started_at")
-        )
-        if useful
-        else None
+        timestamp(history["last_useful"]["at"]) if history["last_useful"] else None
     )
     for job in roots:
         started = timestamp(job.get("started_at"))
         age = (now - started).total_seconds() if started else 0
         if job.get("running") and age > runtime:
             causes.append("excessive_runtime")
-        if job.get("missing_descendants") and (
-            not job.get("running") or age > grace
-        ):
+    for job in history["missing_descendants"]:
+        started = timestamp(job.get("started_at"))
+        age = (now - started).total_seconds() if started else 0
+        if not job.get("running") or age > grace:
             if (
                 job.get("running")
                 or not last_useful
                 or (timestamp(job.get("completed_at")) or now) >= last_useful
             ):
                 causes.append("missing_descendants")
-    meaningful = [
-        job
-        for job in roots
-        if classify_outcome(job)
-        not in {
-            "overlap",
-            "no_work",
-            "external_deferred",
-            "running",
-            "cancelled",
-        }
-    ]
-    if meaningful and meaningful[-1].get("material_child_failures"):
+    if last_meaningful and last_meaningful["material_child_failures"]:
         causes.append("material_child_failures")
-    if meaningful and meaningful[-1].get("material_outcome_failures"):
+    if last_meaningful and last_meaningful["material_outcome_failures"]:
         causes.append("material_outcome_failures")
-    consecutive = 0
-    for job in reversed(meaningful):
-        if (
-            classify_outcome(job) != "failure"
-            and not job.get("material_child_failures")
-            and not job.get("material_outcome_failures")
-        ):
-            break
-        consecutive += 1
+    consecutive = len(history["failing"])
     if consecutive >= int(thresholds["consecutive_failures"]):
         causes.append("consecutive_failures")
     matched: list[set[str]] = [set() for _ in due]
@@ -232,16 +331,15 @@ def assess_pipeline(
     ):
         causes.append("missing_execution")
     unhealthy_evidence = causes or (
-        meaningful and classify_outcome(meaningful[-1]) == "failure"
+        last_meaningful and last_meaningful["failure"]
     )
     if unhealthy_evidence and (
         now - (last_useful or observation_start)
     ).total_seconds() > float(thresholds["progress_seconds"]):
         causes.append("lack_of_progress")
-    terminal = [job for job in roots if classify_outcome(job) != "running"]
     # Cancellation ends execution, but cannot prove that failed work recovered.
     inconclusive = bool(
-        (terminal and classify_outcome(terminal[-1]) == "cancelled")
+        (history["last_terminal"] and history["last_terminal"]["cancelled"])
         or cron_error
         or unknown
         or outcomes["success_unknown"]
@@ -255,27 +353,27 @@ def assess_pipeline(
         else "unknown"
         if inconclusive
         else "healthy",
-        "root_count": len(roots),
+        "root_count": history["root_count"],
         "outcomes": dict(outcomes),
         "unknown_parent_count": unknown,
         "causes": sorted(set(causes)),
         "due_count": len(due),
         "next_due": next_due.isoformat() if next_due else None,
         "last_useful_at": last_useful.isoformat() if last_useful else None,
-        "latest_job_id": str(roots[-1]["id"]) if roots else None,
+        "latest_job_id": history["latest"]["id"] if history["latest"] else None,
         "attention_job_id": next(
             (str(job["id"]) for job in reversed(roots)
              if job.get("running") and timestamp(job.get("started_at"))
              and (now - timestamp(job["started_at"])).total_seconds() > runtime),
-            str(meaningful[-1]["id"]) if meaningful and consecutive else None,
+            last_meaningful["id"] if last_meaningful and consecutive else None,
         ),
         "material_child_failure_count": material_count,
-        "tolerable_external_failure_count": sum(
-            job.get("tolerable_external_failure_count", 0) for job in roots
-        ),
-        "material_outcome_failure_count": sum(
-            len(job.get("material_outcome_failures", [])) for job in roots
-        ),
+        "tolerable_external_failure_count": history[
+            "tolerable_external_failure_count"
+        ],
+        "material_outcome_failure_count": history[
+            "material_outcome_failure_count"
+        ],
         "consecutive_failures": consecutive,
         "missing_due_count": missing,
         "coverage": coverage,

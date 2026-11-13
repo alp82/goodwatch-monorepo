@@ -14,7 +14,8 @@ from f.monitoring.collection import observe_execution
 from f.monitoring.backlog_health import assess_backlogs
 from f.monitoring.cluster_health import assess_cluster
 from f.monitoring.health import (assess_pipeline, assess_upstream, apply_upstream_cause,
-                                 schedule_cadence, timestamp)
+                                 empty_history, fold_history, schedule_cadence,
+                                 timestamp)
 from f.monitoring.incidents import record_incident
 
 OBSERVATION_START = datetime(2026, 9, 9, 21, 1, 10, tzinfo=timezone.utc)
@@ -85,6 +86,153 @@ NEWEST_RUNS = 3
 # descendants Windmill no longer has) once took the whole budget of every
 # poll. They are now refreshed this many per poll, least recently first.
 STALE_REFRESH_LIMIT = 40
+
+
+# Complete rows of frequent schedules are folded into a stored history
+# (`history:<path>`) once they're older than slot coverage looks back (48 hours),
+# so a poll reads two days of rows instead of every row since 2026-09-09.
+FOLD_AFTER = timedelta(hours=49)
+HISTORY_VERSION = 1
+
+
+def boundary_id(at: datetime) -> str:
+    """The smallest Windmill job id created at `at`.
+
+    Windmill job ids are ULIDs: the first 48 bits are the creation time in
+    milliseconds, so ids sort by creation time.
+    """
+    stamp = f"{int(at.timestamp() * 1000):012x}"
+    return f"{stamp[:8]}-{stamp[8:]}-0000-0000-000000000000"
+
+
+def folds_history(schedule: dict[str, Any], now: datetime) -> bool:
+    # Daily schedules keep slot coverage since the observation start, so they
+    # keep every row. They have about one row a day.
+    try:
+        return schedule_cadence(schedule, now) < 23 * 3600
+    except (ValueError, KeyError):
+        return False
+
+
+def is_unresolved(job: dict[str, Any]) -> bool:
+    return bool(
+        not job.get("parent_resolved")
+        or job.get("evidence_incomplete")
+        or job.get("unresolved_descendants")
+    )
+
+
+def load_ledger(
+    store: Any, schedule: dict[str, Any], now: datetime
+) -> tuple[dict[str, dict[str, Any]], dict[str, Any] | None]:
+    """The rows a poll reads, and the schedule's stored history."""
+    path = schedule["path"]
+    history = store.get("history:" + path)
+    if not history or history.get("version") != HISTORY_VERSION:
+        return store.jobs(path), None
+    # A schedule whose next interval is a day or more (a weekday cron over the
+    # weekend) gets slot coverage since the observation start, so this poll
+    # reads every row and assesses them without the history.
+    if not folds_history(schedule, now):
+        return store.jobs(path), history
+    # Below the boundary a poll only saves rows of pending or unobserved ids,
+    # so these reads also find rows saved by a poll that died before it wrote
+    # the history.
+    return store.recent_jobs(
+        path, history["boundary"],
+        sorted(set(history["pending"]) | set(history["unobserved"])),
+    ), history
+
+
+def is_folded(identity: str, history: dict[str, Any] | None) -> bool:
+    """Whether a run's row was folded into the history."""
+    return bool(
+        history
+        and identity < history["boundary"]
+        and identity not in history["pending"]
+        and identity not in history["unobserved"]
+    )
+
+
+def is_gone(
+    identity: str, job: dict[str, Any], plan: dict[str, Any], now: datetime
+) -> bool:
+    """An incomplete row of a run Windmill no longer has, finished before slot
+    coverage starts. Refreshing it could only replace it with a lookup error,
+    so it's kept as observed."""
+    end = timestamp(job.get("completed_at") or job.get("started_at"))
+    return bool(
+        plan["oldest_listed"]
+        and identity < plan["oldest_listed"]
+        and identity not in plan["ids"]
+        and identity not in plan["queued"]
+        and not job.get("running")
+        and (job.get("success") is not None or job.get("lookup_error"))
+        and (end is None or end < now - FOLD_AFTER)
+    )
+
+
+def fold_ledger(plan: dict[str, Any], now: datetime) -> dict[str, Any]:
+    """Move complete rows older than FOLD_AFTER from the plan into its history.
+
+    Every id below the history's boundary is folded, `pending` (an incomplete
+    or recent row, read by id each poll) or `unobserved` (a listed run never
+    resolved, read by id in case a poll saved it and died). A row Windmill no
+    longer lists (it keeps about 14 days) is folded even when incomplete.
+    """
+    stored = plan["history"]
+    history = stored or {
+        "version": HISTORY_VERSION,
+        "boundary": "",
+        "pending": [],
+        "unobserved": [],
+        "history": empty_history(),
+        "unresolved_count": 0,
+        "publication_failures": [],
+    }
+    ledger = plan["jobs"]
+    # Rows this poll has: read, or saved after being resolved.
+    have = set(ledger)
+    if plan["inventory_ok"]:
+        boundary = max(history["boundary"], boundary_id(now - FOLD_AFTER))
+        # Queued runs not yet due count too: their ids can be older than the
+        # boundary by the time they run.
+        unobserved = [
+            identity for identity in plan["ids"] | plan["queued"]
+            if identity < boundary and identity not in have
+            and not is_folded(identity, stored)
+        ]
+    else:
+        # Without the list of runs, runs newer than the boundary that were
+        # never observed are unknown, so the boundary stays.
+        boundary = history["boundary"]
+        unobserved = []
+    # One a poll saved and died, that this read missed, is still read by id.
+    unobserved = sorted(
+        set(unobserved) | {i for i in history["unobserved"] if i not in have}
+    )
+    # A pending row a read missed (not yet visible) stays pending.
+    pending = [i for i in history["pending"] if i not in have]
+    cutoff = now - FOLD_AFTER
+    for identity, job in sorted(ledger.items()):
+        if identity >= boundary:
+            break
+        end = timestamp(job.get("completed_at") or job.get("started_at"))
+        complete = not needs_refresh(job) and (end is None or end < cutoff)
+        if not (complete or is_gone(identity, job, plan, now)):
+            pending.append(identity)
+            continue
+        fold_history(history["history"], [job], now, OBSERVATION_START)
+        history["unresolved_count"] += is_unresolved(job)
+        if isinstance(job.get("publication_failure"), dict):
+            history["publication_failures"].append(job["publication_failure"])
+        del ledger[identity]
+        plan["folded_ids"].add(identity)
+    history.update(
+        boundary=boundary, pending=sorted(pending), unobserved=unobserved
+    )
+    plan["history"] = history
+    return history
 
 
 def needs_refresh(job: dict[str, Any]) -> bool:
@@ -176,8 +324,13 @@ def poll(
         backfill: list[tuple[str, str]] = []
         for schedule in schedules:
             path = schedule["path"]
-            ledger = store.jobs(path)
+            ledger, stored = load_ledger(store, schedule, now)
+            folds = folds_history(schedule, now)
+            # Assessed with the history only when the ledger leaves out its rows.
+            history = stored if folds else None
             failed = queue_failed
+            inventory_ok = False
+            oldest_listed = None
             try:
                 identifiers = bounded_api(
                     "jobs/list_filtered_uuids?"
@@ -193,6 +346,10 @@ def poll(
                     raise ValueError("Invalid inventory response")
                 failed |= len(identifiers) > 100000
                 identifiers = set(str(value) for value in identifiers[:100000])
+                # Runs still queued or running are listed only by the queue.
+                inventory_ok = len(identifiers) < 100000 and not queue_failed
+                if identifiers and inventory_ok:
+                    oldest_listed = min(identifiers)
             except Exception:
                 identifiers = set()
                 failed = True
@@ -208,18 +365,37 @@ def poll(
                 )
             }
             identifiers.update(queue_ids)
+            # Listed runs that were folded away are complete.
+            folded_ids = {
+                identity for identity in identifiers
+                if is_folded(identity, stored) and identity not in ledger
+            }
             plans[path] = {
                 "schedule": schedule,
                 "jobs": ledger,
                 "ids": identifiers,
                 "incomplete": failed,
+                "history": history,
+                "folded_ids": folded_ids,
+                "inventory_ok": inventory_ok,
+                "oldest_listed": oldest_listed,
+                "queued": {
+                    str(j["id"]) for j in queued
+                    if j.get("schedule_path") == path
+                },
             }
             # Windmill job ids sort by creation time.
             ordered = sorted(identifiers | set(ledger), reverse=True)
             latest = set(ordered[:NEWEST_RUNS])
             for identity in ordered:
                 old = ledger.get(identity)
+                # Folded rows don't change, also when this poll reads them all.
+                if is_folded(identity, stored):
+                    continue
                 if old is not None and not needs_refresh(old):
+                    continue
+                if (old is not None and folds
+                        and is_gone(identity, old, plans[path], now)):
                     continue
                 if identity in queue_ids or (
                     old
@@ -278,6 +454,12 @@ def poll(
                         infrastructure["windmill_api"] = "degraded"
                 for path, batch in batches.items():
                     store.save_jobs(path, batch)
+        # After the poll's last row write. If the poll dies before this, the
+        # next poll reads its rows by id (pending, unobserved) or by boundary.
+        for path, plan in plans.items():
+            if folds_history(plan["schedule"], now):
+                history = fold_ledger(plan, now)
+                store.put("history:" + path, "history", path, history)
         backlog_result = None
         backlog_now = now
         if backlog_collector:
@@ -290,8 +472,14 @@ def poll(
                     for plan in plans.values()
                     for job in plan["jobs"].values()
                 }
+                folded_failures = [
+                    {"publication_failure": failure}
+                    for plan in plans.values() if plan["history"]
+                    for failure in plan["history"]["publication_failures"]
+                ]
                 snapshots = backlog_collector(
-                    store, list(normalized.values()), now, remaining
+                    store, list(normalized.values()) + folded_failures, now,
+                    remaining,
                 )
                 infrastructure["backlogs"] = (
                     "ok"
@@ -344,14 +532,10 @@ def poll(
         reports = []
         for path, plan in plans.items():
             ledger = plan["jobs"]
-            uninspected = len(plan["ids"] - set(ledger))
-            unresolved = sum(
-                not job.get("parent_resolved")
-                or bool(
-                    job.get("evidence_incomplete")
-                    or job.get("unresolved_descendants")
-                )
-                for job in ledger.values()
+            history = plan["history"]
+            uninspected = len(plan["ids"] - set(ledger) - plan["folded_ids"])
+            unresolved = sum(is_unresolved(job) for job in ledger.values()) + (
+                history["unresolved_count"] if history else 0
             )
             incomplete = bool(plan["incomplete"] or uninspected or unresolved)
             schedule = {**plan["schedule"], "history_incomplete": incomplete}
@@ -361,6 +545,7 @@ def poll(
                 now,
                 OBSERVATION_START,
                 pipeline_thresholds(schedule, now),
+                history["history"] if history else None,
             )
             report.update(
                 inventory_candidate_count=len(plan["ids"]),

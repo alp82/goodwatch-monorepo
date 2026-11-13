@@ -10,16 +10,28 @@ Reports distinguish useful success, no eligible work, overlap skips, failures, c
 
 Cron evaluation accepts five, six, and seven fields in the schedule's timezone, with seconds first for Windmill's six/seven-field form. All eight daily pipelines retain coverage since shutdown. Frequent schedules retain full ledger outcome counts but limit slot computation to the latest 48 hours and expose truncation; their returned slot details show the latest 20 entries. Reports identify uninspected candidates, unresolved observations, missing daily paths, and incomplete history explicitly. Initial backfill is not a clean bill of health.
 
-Collection uses eight readers, at most 800 root resolutions and 50 descendants per root, and a 220-second collection/notification admission budget. API requests have a 10-second timeout. The Windmill job timeout is 300 seconds; a ten-minute Crate lease prevents overlapping checkers. Slow or truncated history remains unknown and is revisited. The ledger does not delete history automatically.
+Collection uses eight readers, at most 800 root resolutions and 50 descendants per root, and a 220-second collection/notification admission budget. API requests have a 10-second timeout. The Windmill job timeout is 300 seconds; a ten-minute Crate lease prevents overlapping checkers. Slow or truncated history remains unknown and is revisited. The ledger does not delete history automatically, but a poll no longer reads all of it (see [Folded history](#folded-history)).
 
 Resolution order per poll, so that old rows can't starve recent runs:
 
 1. Runs in the queue, and ledger rows still marked running or without a result, while Windmill still lists the job.
 2. Each schedule's 3 newest runs (`NEWEST_RUNS`) that are new or incomplete.
-3. At most 40 older incomplete ledger rows (`STALE_REFRESH_LIMIT`), least recently refreshed first. Each saved row carries `refreshed_at`. Before October 17, 2026, about 10,000 rows that never complete took every poll's whole budget. They are flows with more than 50 descendants, descendants Windmill no longer has, or jobs that were deleted. Only 5 of about 2,480 tmdb_episodes runs had been inspected.
+3. At most 40 older incomplete ledger rows (`STALE_REFRESH_LIMIT`), least recently refreshed first. Rows Windmill no longer lists are folded and aren't refreshed. Each saved row carries `refreshed_at`. Before October 17, 2026, about 10,000 rows that never complete took every poll's whole budget. They are flows with more than 50 descendants, descendants Windmill no longer has, or jobs that were deleted. Only 5 of about 2,480 tmdb_episodes runs had been inspected.
 4. New runs of the daily paths, then all other new runs, newest first.
 
 `latest-report` has the size of each tier in `resolution_candidates`. Most frequent pipelines still report `unknown`, because their backfill since the observation start is not finished. A schedule's due slots start at its `edited_at`: slots from before it was created or last edited are never missing.
+
+## Folded history
+
+Until November 2026 every poll read every job row since the observation start: 685,000 rows, 357 seconds of Crate time an hour, with one pipeline at 195,000 rows. Now each schedule with a cadence under 23 hours keeps a history row `history:<schedule path>` (kind `history`) in `workflow_monitoring`. A poll folds rows into it and then reads only the rest:
+
+- A complete row folds once it finished more than 49 hours ago (`FOLD_AFTER`). Slot coverage only looks back 48 hours, so only its totals and newest-root facts still count.
+- An incomplete row folds once its id is older than the oldest run Windmill lists for the schedule. Windmill keeps about 14 days of jobs, so refreshing such a row could only replace it with a `lookup_error` stub; it is no longer refreshed and folds as last observed.
+- The history stores what the report needs from folded rows: root and outcome counts, failure counts, the newest root, last useful run, last meaningful run and the failure streak after the last success (`fold_history` in `health.py`), plus folded `unresolved_count` and `publication_failure` entries for the backlog check. Folding in any order gives the same report as reading every row; `test_monitor_history.py` checks that.
+- Ids below the history's `boundary` (49 hours before the last fold) are folded, `pending` (incomplete or recent rows, read by id every poll), or `unobserved` (listed by Windmill but never resolved, so still backfill, also read by id). The boundary only moves when the run and queue lists were read in full. A pending row that a read misses stays pending.
+- Below the boundary a poll only saves rows of pending or unobserved ids, and planning never refreshes a folded row. The history is written after the poll's last row write, so rows from a poll that died before writing it are read and folded by the next poll, not lost or counted twice.
+
+Daily schedules keep every row, because their slot coverage goes back to the observation start. A poll where a schedule's next interval is 23 hours or more (a weekday cron over the weekend) reads every row and leaves the history as it is. Roots with the same time are ordered by id. A history row with a different `version` is ignored and rebuilt from all rows, so deleting folded job rows is only safe while the history rows stay.
 
 ## Thresholds and incidents
 
