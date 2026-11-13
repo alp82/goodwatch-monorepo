@@ -18,6 +18,13 @@ const providerRows = readEvery(CATALOG_LISTS_TTL_MS, async () => {
   return searchQuery<ProviderCatalogRow>('SELECT DISTINCT tmdb_id,name,logo_path,order_by_country,order_default FROM streaming_service')
 })
 const countryList = readEvery(CATALOG_LISTS_TTL_MS, async () => (await import('../countries.server')).getCountries({}))
+/**
+ * Reads the country and service lists before the first room needs them. Cold, they were most of a new room's setup
+ * (265-387 ms on the first create after a deploy, against ~7 ms warm); afterwards they refresh in the background.
+ */
+export async function warmCatalogLists() {
+  await Promise.all([countryList(), providerRows(), serviceNameRows()])
+}
 /** Read-only adapters. Existing methods retain catalog/filter/evidence/link semantics. */
 async function serviceCatalog() {
   const rows = await serviceNameRows()

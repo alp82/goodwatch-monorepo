@@ -41,7 +41,7 @@ snapshot.configureTitleSnapshotReader({
 		return source.getBuffer(key)
 	},
 })
-const [{ guestProposalCatalog }, { warmRankings }, { searchQuery }, cache] = await Promise.all([
+const [{ guestProposalCatalog }, { warmRankings, warmCatalogLists }, { searchQuery }, cache] = await Promise.all([
 	import("./proposal-guest-catalog.server.ts"),
 	import("./goodwatch.server.ts"),
 	import("../combined-search/catalog.server.ts"),
@@ -95,10 +95,14 @@ warm.unref()
 // after start). During a deploy the front, and goodwatch-proxy's hold in front of it, then see a refused connection
 // and keep each request waiting (lb_try_duration) instead of passing "YepWatch is starting" 503s on to phones.
 // The Docker health check fails until then, within its start period.
+// The country and service lists every new room's setup reads, read while the release initializes, so the first room
+// after a deploy is as quick as the next (best effort: a failed read is read again by the first room that needs it).
+const lists = warmCatalogLists().catch(() => {})
 while (!runtime.initialized()) {
 	await runtime.probe()
 	if (!runtime.initialized()) await new Promise((resolve) => setTimeout(resolve, 500))
 }
+await Promise.race([lists, new Promise((resolve) => setTimeout(resolve, 5000))])
 const server = await releaseHttp(runtime.handler, config.host, config.port)
 const readyLog = setInterval(() => {
 	if (!runtime.readiness().ready) return
