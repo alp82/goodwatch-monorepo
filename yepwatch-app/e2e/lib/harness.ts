@@ -146,6 +146,11 @@ export class Person {
       }
     });
     page.on('websocket', (ws) => {
+      // When it was dialed and whether it ever opened (the app's first frame out is its authenticate, sent on open),
+      // so a socket error says which socket it was: one closed while still connecting, or one that dropped later.
+      const dialedAt = Date.now();
+      let openedAt = 0;
+      ws.on('framesent', () => { openedAt ||= Date.now(); });
       ws.on('framereceived', (f) => {
         this.frames.received++;
         const payload = typeof f.payload === 'string' ? f.payload : f.payload.toString('utf8');
@@ -157,7 +162,15 @@ export class Person {
         }
         if ((parsed.type === 'room.updated' || parsed.type === 'room.snapshot') && (!this.latest || parsed.snapshot.revision >= (this.latest.revision as number))) this.latest = parsed.snapshot as unknown as Shared;
       });
-      ws.on('socketerror', (e) => { if (!this.room.faultAllowsNetworkErrors()) fail(`websocket error: ${e}`); });
+      ws.on('socketerror', (e) => {
+        if (this.room.faultAllowsNetworkErrors()) return;
+        const at = Date.now();
+        const when = openedAt ? `opened ${openedAt - dialedAt} ms after its dial, failed ${at - openedAt} ms later` : `never opened, failed ${at - dialedAt} ms after its dial`;
+        // Recorded at once (a closed page answers nothing); the screen it happened on is added when the page tells.
+        const failure = { gate: 'errors' as const, person: this.name, detail: `websocket error: ${e} (${when})`, at };
+        this.failures.push(failure);
+        void this.signature().then((sig) => { failure.detail = `websocket error: ${e} (${when}; screen: ${sig})`; }, () => {});
+      });
     });
   }
   /** Statuses this journey provokes on purpose, e.g. /^404 .*\/invites\/preview/. */
