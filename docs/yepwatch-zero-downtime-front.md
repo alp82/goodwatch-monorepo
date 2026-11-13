@@ -6,6 +6,18 @@ Question: can the Caddy in `goodwatch-proxy/` be the always-on front that holds 
 
 **Short answer.** For yepwatch.com: yes, after two fixes. Its Caddy has to move from 2.8.4 to 2.11.7, because 2.8.4 answers 502 to a held POST. And the YepWatch front needs a fixed address on abio, a published port on the private network. For goodwatch.app: no, not now. goodwatch.app already has an always-on front with health checks, abio's Traefik with `goodwatch-balance.yaml`. Its 503s on November 12 between 19:11 and 19:15 UTC didn't come from a container swap. Both instances were overloaded after the deploy. A front that holds requests would only make those queues longer.
 
+## Implemented (November 13, 2026)
+
+The owner chose B with goodwatch-proxy (option a). Three things changed from the proposal below, after a production probe and three Codex reviews:
+
+- **abio drops, it doesn't refuse.** While no front runs, abio's UFW drops connections to the unpublished port (it allows only listed ports), so a dial times out instead of being refused. Caddy's default dial timeout is 3 s; the hold uses `dial_timeout 500ms`, so a held request goes through within about half a second of the port opening.
+- **The fallback goes to `front:8080` on the YepWatch app network**, not to the published port: coolify-proxy is a container, and UFW drops container-to-host traffic except for listed ports. `front` must stay unique among the networks coolify-proxy is attached to (only `csq2euofkojrcfzyxwrjxwym` has one today). An unresolvable `front` only fails requests while the fallback is in use; it doesn't break the router.
+- **The api opens its port only once it is initialized** (`proposal-release-main.ts`). Before, it listened at once and answered "YepWatch is starting" 503s for about 9.5 s after every start; neither Caddy retries a response, so those reached phones. A refused connection to `api:3000` is held by the front like any other. A compose `service_healthy` gate was tried and dropped: an api that never gets healthy would leave the front never started.
+
+The canonical files: `goodwatch-proxy/Caddyfile` (the `:8480` site), `goodwatch-proxy/docker-compose.yml`, `goodwatch-proxy/traefik/yepwatch-front.yaml` (what the owner pastes into Coolify), `yepwatch-app/compose.yaml` (published port). Tests: `goodwatch-proxy/traefik/test-yepwatch-front.sh` (local, throwaway containers: held GET/POST through a deploy with a dropped port and a late api, a WebSocket that outlives Traefik's idle timeout and a hold reload, first-try reconnect, failover and back) and `verify-yepwatch-front-deploy.sh` (production, during a real deploy, after the switch).
+
+State on November 13: pgnode01 runs `caddy:2.11.7` with the `:8480` site on `10.0.0.11:8480` (backup of the old files in `/root/backups/goodwatch-proxy-<time>/`, old image tagged `caddy:2.8.4-before-yepwatch-hold`). The compose change was pushed with `[skip cd]` and goes live with the next YepWatch deploy. Until then the hold has nothing to reach (`10.0.0.21:18480` isn't published) and answers 502 after 30 s, so the Traefik file must wait for that deploy.
+
 ## Traffic today
 
 ### yepwatch.com
@@ -71,14 +83,14 @@ A front that holds requests in front of two saturated instances makes the queue 
 client ─▶ abio Traefik (TLS as today; file router yepwatch-front.yaml, priority 1000)
             └─ failover service
                  main:     goodwatch-proxy Caddy  10.0.0.11:8480 ──hold up to 30 s──▶ 10.0.0.21:18480 ─▶ front:8080
-                 fallback: 10.0.0.21:18480 directly (only when the Caddy on .11 fails its health check)
+                 fallback: front:8080 on the app network (only when the Caddy on .11 fails its health check)
 ```
 
 Why this shape:
 
 - **Reuses goodwatch-proxy, with no DNS or TLS change.** abio's Traefik keeps the certificate. A router in a dynamic configuration file keeps the certificate renewing and doesn't disappear with the container. Rollback means deleting the file, and it takes effect at once, the same as `goodwatch-balance.yaml`.
-- **The front gets an address that survives the swap.** The front publishes 8080 on abio's private address at a fixed port. While no front container runs, a connection to that port is refused. Caddy treats that as a dial error and retries every 100 ms for any method, because the request never reached an upstream. Docker DNS aliases can't do the same job across hosts. Within abio, Traefik answers a missing alias with 502, and Caddy doesn't retry on a status code.
-- **pgnode01 doesn't become a single point of failure.** Traefik's `failover` service (file provider only, present in 2.10.7) health-checks the Caddy on .11. When that Caddy or its host is down, Traefik sends traffic straight to the front port. Deploys then behave as they do today, and nothing worse happens.
+- **The front gets an address that survives the swap.** The front publishes 8080 on abio's private address at a fixed port. While no front container runs, a connection to that port fails (abio's firewall drops it). Caddy treats that as a dial error and retries every 100 ms for any method, because the request never reached an upstream. Docker DNS aliases can't do the same job across hosts. Within abio, Traefik answers a missing alias with 502, and Caddy doesn't retry on a status code.
+- **pgnode01 doesn't become a single point of failure.** Traefik's `failover` service (file provider only, present in 2.10.7) health-checks the Caddy on .11. When that Caddy or its host is down, Traefik sends traffic straight to the front. Deploys then behave as they do today, and nothing worse happens.
 
 ### 1. Repository: `yepwatch-app/compose.yaml` (push from a thread)
 
@@ -109,42 +121,9 @@ First commit the live drift (public-IP port bindings, Kuma allowlist) to the rep
       - "10.0.0.11:8480:8480/tcp"
 ```
 
-```caddyfile
-# goodwatch-proxy/Caddyfile, at the top (global options)
-{
-	servers :8480 {
-		# abio's proxy sets X-Forwarded-For / X-Real-Ip; keep them.
-		trusted_proxies static 10.0.0.21/32
-	}
-}
+The site as committed: the global `servers :8480 { trusted_proxies static 10.0.0.21/32 }` block and the `:8480` site at the end of `goodwatch-proxy/Caddyfile` (hold of 30 s, retry every 100 ms, `dial_timeout 500ms`, `stream_close_delay 30m`, `/edge-health` for Traefik, 404 for any other host).
 
-# … existing sites …
-
-# Always-on hold for yepwatch.com (docs/yepwatch-zero-downtime-front.md). abio's proxy ends TLS and sends the
-# requests here. While a deploy replaces the YepWatch containers, the front's port refuses connections; Caddy
-# holds each request and tries every 100 ms for up to 30 s. A refused connection never reached the app, so
-# retrying it is safe for every method; a request that did reach it is retried only when it is a GET.
-:8480 {
-	@yepwatch host yepwatch.com
-	handle @yepwatch {
-		reverse_proxy 10.0.0.21:18480 {
-			lb_try_duration 30s
-			lb_try_interval 100ms
-			# A reload of this Caddyfile (for any site) must not cut every open room's WebSocket at once.
-			stream_close_delay 30m
-		}
-	}
-	# abio's failover health check (any Host other than yepwatch.com).
-	handle /edge-health {
-		respond "ok" 200
-	}
-	handle {
-		respond "Not found" 404
-	}
-}
-```
-
-No `encode`: the front compresses its own responses. No active health check on the front: with one upstream, the request goes through within 100 ms of the port opening, not at the next check (measured below).
+No `encode`: the front compresses its own responses. No active health check on the front: with one upstream, the request goes through within about half a second of the port opening (100 ms retry plus the 500 ms dial timeout, because abio drops rather than refuses), not at the next check (measured below).
 
 Applying it recreates the `caddy` container (new port, new image), which restarts every public site on .11 for about a second. The certificates in the `caddy_data` volume stay. Use `docker compose up -d --pull never caddy` after pulling the pinned image, because `caddy:latest` must not move on its own.
 
@@ -154,45 +133,7 @@ Applying it recreates the `caddy` container (new port, new image), which restart
 
 Servers > abio > Proxy > Dynamic Configurations > + Add, file name `yepwatch-front.yaml`. It belongs next to the other files in `goodwatch-proxy/traefik/`, with a test like `test-local.sh`.
 
-```yaml
-http:
-  routers:
-    yw-front-https:
-      entryPoints: [https]
-      rule: Host(`yepwatch.com`)
-      priority: 1000
-      service: yw-front
-      tls:
-        certResolver: letsencrypt
-    yw-front-http:
-      entryPoints: [http]
-      rule: Host(`yepwatch.com`)
-      priority: 1000
-      middlewares: [yw-front-redirect-to-https]
-      service: yw-front
-  middlewares:
-    yw-front-redirect-to-https:
-      redirectScheme: {scheme: https, permanent: true}
-  services:
-    yw-front:
-      failover:
-        service: yw-front-hold
-        fallback: yw-front-direct
-    yw-front-hold:
-      loadBalancer:
-        passHostHeader: true
-        healthCheck:
-          path: /edge-health
-          interval: 2s
-          timeout: 1s
-        servers:
-          - url: http://10.0.0.11:8480
-    yw-front-direct:
-      loadBalancer:
-        passHostHeader: true
-        servers:
-          - url: http://10.0.0.21:18480
-```
+The file as committed: `goodwatch-proxy/traefik/yepwatch-front.yaml`. Routers `yw-front-https` and `yw-front-http` for Host yepwatch.com at priority 1000, TLS with the `letsencrypt` resolver, failover service `yw-front` (main `yw-front-hold` = `http://10.0.0.11:8480` with a 2 s `/edge-health` check, fallback `yw-front-direct` = `http://front:8080`).
 
 Priority 1000 beats Coolify's label routers (rule length, about 45), and ACME HTTP challenges still go to Traefik's own challenge router. Coolify's `gzip-sse` middleware is left out on purpose. Delete the file and Coolify's routers take over again.
 
@@ -200,11 +141,11 @@ Priority 1000 beats Coolify's label routers (rule length, about 45), and ACME HT
 
 | Step | Who |
 | --- | --- |
-| Compose port, compose test, optional `trusted_proxies` in the front Caddyfile | Repository, push (YepWatch auto-deploys) |
-| Commit the live goodwatch-proxy drift, then the new site, port and image pin | Repository, push |
-| Apply on .11: `git` update of the checkout (it has local changes), pull `caddy:2.11.7`, recreate `caddy` | Owner, or a session the owner approves (server change) |
-| Add `yepwatch-front.yaml` on abio | Owner, Coolify UI |
-| Smoke loop through one deploy (below) | Thread, read-only |
+| Compose port, compose test (the optional front `trusted_proxies` was left out) | Pushed with `[skip cd]`; live with the next YepWatch deploy |
+| Commit the live goodwatch-proxy drift, then the new site, port and image pin | Pushed |
+| Apply on .11: the two goodwatch-proxy files copied in (not a `git` update: the checkout has unrelated local changes), `caddy:2.11.7` pulled, `caddy` recreated | Done November 13 |
+| Add `yepwatch-front.yaml` on abio, after a YepWatch deploy published the port | Owner, Coolify UI |
+| `verify-yepwatch-front-deploy.sh` through one deploy | Thread, read-only, after the owner's step |
 
 Order: compose first (the published port changes nothing until something uses it), then .11, then the Traefik file.
 
@@ -218,10 +159,10 @@ Order: compose first (the published port changes nothing until something uses it
 
 ## Expected outage per deploy after the change
 
-- **No failed requests.** A request that arrives while the containers swap waits instead of getting Traefik's 404. The wait is at most the gap, about 7 s today, plus up to 100 ms. Once the new front runs, the front's own hold takes over for the api and the gateway, as it does today.
+- **No failed requests.** A request that arrives while the containers swap waits instead of getting Traefik's 404. A page waits at most the gap (about 8.5 s from "Removing old containers." to the new front) plus half a second. An api request also waits for the api's initialization, about 9.5 s more: up to about 18 s in all. The app's HTTP client gives up after 15 s (create and join after 6 s) and resends its saved idempotent requests, so a long wait shows as a retry, not an error. Shortening the api's start is the next lever.
 - **WebSockets** still drop once per deploy, because the gateway process restarts. The client's reconnect is held until the new gateway answers, so the client sees a reconnect without an error. Native clients already resend saved idempotent requests (`yepwatch-app/src/core/continuous/resend.ts`).
 - The wait itself can only go away with two stacks side by side (blue/green), which Coolify's compose deploys don't offer.
-- If a deploy breaks the front for good, requests wait 30 s and then get 503 ("no upstreams available"), instead of a quick 404.
+- If a deploy breaks the front for good, requests wait 30 s and then get 502, instead of a quick 404. The same happens if the Traefik file is active while `10.0.0.21:18480` isn't published.
 
 ## Verification
 
@@ -232,7 +173,7 @@ Order: compose first (the published port changes nothing until something uses it
    - `POST https://yepwatch.com/api/yepwatch/v1/proposal/invites/preview` with an invalid code: expect a stable 4xx and never a 5xx
    - one WebSocket client on `/api/yepwatch/v1/proposal/realtime` that reconnects and logs each gap.
 
-   Start a deploy (a push to a watch path, or Redeploy in Coolify). Pass: no connection errors, no 404/502/503, the longest duration at most the gap plus 1 s, and every WebSocket reconnect succeeding on its first try. The deploy's timing comes from Coolify's queue (`application_deployment_queues`, read-only).
+   Implemented as `goodwatch-proxy/traefik/verify-yepwatch-front-deploy.sh` (production smoke back to back plus a GET/POST loop; the production WebSocket is covered only inside the smoke journeys). Start a deploy (a push to a watch path, or Redeploy in Coolify). Pass: no connection errors, no 404/502/503, the longest duration at most the swap plus the api's initialization (the script allows 15 s, `INIT_BUDGET_MS`), and every WebSocket reconnect succeeding on its first try. The deploy's timing comes from Coolify's queue (`application_deployment_queues`, read-only).
 3. **Failover:** after .11 is in place, stop nothing in production. Test failover with the local rehearsal below. Watch the health-check lines of `yw-front-hold` in abio's Traefik log once.
 4. Add a Kuma monitor for `http://10.0.0.11:8480/edge-health`, so that running on the fallback doesn't go unnoticed.
 
@@ -251,7 +192,7 @@ Order: compose first (the published port changes nothing until something uses it
 
 ## Rollback
 
-Delete `yepwatch-front.yaml` in Coolify, and Coolify's label routers take over at once. The published port and the .11 site can stay; nothing uses them without the file.
+Delete `yepwatch-front.yaml` in Coolify, and Coolify's label routers take over at once. The published port and the .11 site can stay; nothing uses them without the file. To undo the .11 change as well: copy `Caddyfile` and `docker-compose.yml` back from `/root/backups/goodwatch-proxy-<time>/` and run `docker compose up -d caddy` in `/root/goodwatch/goodwatch-monorepo/goodwatch-proxy` (the old image is kept as `caddy:2.8.4-before-yepwatch-hold`; set it as `image:` if needed).
 
 ## Measured locally (November 13, 2026)
 

@@ -85,7 +85,13 @@ docker run -d --name "$prefix-hold" --network "$prefix-private" --ip "$net.11" \
 
 probe() { docker run --rm --network "$prefix-private" --add-host "yepwatch.com:$net.21" -e NODE_TLS_REJECT_UNAUTHORIZED=0 \
   -v "$here/test-yepwatch-front.mjs:/t.mjs:ro" "$node_image" node --no-warnings /t.mjs "$@"; }
-firewall() { docker exec "$prefix-firewall" iptables "$1" INPUT -p tcp --dport 18480 -j DROP; }
+# Owner: this test; purpose: simulate the unpublished front port (abio's firewall drops it). Lives only in the throwaway
+# "abio" network namespace. The comment match is used where the kernel has it (xt_comment), else the rule goes without.
+firewall() {
+  local rule=(INPUT -p tcp --dport 18480 -j DROP) note=(-m comment --comment "yw-front-test: simulate the unpublished front port")
+  docker exec "$prefix-firewall" iptables "$1" "${rule[@]:0:5}" "${note[@]}" "${rule[@]:5}" 2>/dev/null \
+    || docker exec "$prefix-firewall" iptables "$1" "${rule[@]}"
+}
 deploy() { # Coolify: remove every old container, then start the new ones.
   docker stop -t 10 "$prefix-front" "$prefix-gateway" "$prefix-api" >/dev/null
   firewall -I

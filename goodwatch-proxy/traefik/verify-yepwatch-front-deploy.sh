@@ -11,7 +11,7 @@
 #      invalid code (expects the api's JSON 404; it charges no admission), every 500 ms.
 #   4. Reads the swap window ("Removing old containers." to "New container started.") from the deployment log.
 #      PASS needs all of: the deployment finished; no loop request failed (no 5xx, no connection error) and none
-#      took longer than the swap plus 5 s; every smoke run wrote a fresh report with tests, no test crashed or timed
+#      took longer than the swap plus the api's initialization (INIT_BUDGET_MS, default 15000); every smoke run wrote a fresh report with tests, no test crashed or timed
 #      out, and no `errors` (failed request, HTTP error, console or WebSocket error) or `journey` gate failure; at least one
 #      smoke run spanned the whole swap. Timing, a11y, layout and frame gates are reported, not judged: held
 #      requests are meant to be slow during the swap.
@@ -128,14 +128,17 @@ const runs = fs.readFileSync(`${out}/runs.tsv`, 'utf8').trim().split('\n').filte
     reportedOnly: failures.filter((f) => !JUDGED.has(f.gate)).map((f) => `${f.gate}: ${String(f.detail).slice(0, 200)}`), covers };
 });
 const loop = JSON.parse(fs.readFileSync(`${out}/loop.json`, 'utf8'));
-const loopSlow = swapMs === null || loop.maxMs > swapMs + 5000;
+// The api opens its port only once initialized (about 9.5 s after "New container started."): a held request may wait
+// the swap plus that. INIT_BUDGET_MS (default 15000) bounds the initialization.
+const initBudget = Number(process.env.INIT_BUDGET_MS ?? 15000);
+const loopSlow = swapMs === null || loop.maxMs > swapMs + initBudget;
 const covered = runs.some((r) => r.covers);
 const pass = state === 'finished' && swapMs !== null && loop.requests > 0 && loop.failed === 0 && !loopSlow && runs.length > 0 && runs.every((r) => r.problems.length === 0) && covered;
 const verdict = { deployment: state, swap: { from: swapFrom ?? null, to: swapTo ?? null, ms: swapMs },
   loop: { requests: loop.requests, failed: loop.failed, maxMs: loop.maxMs, statuses: loop.statuses, failures: loop.failures }, runs, smokeCoveredSwap: covered, pass };
 fs.writeFileSync(`${out}/verdict.json`, JSON.stringify(verdict, null, 1));
 console.log(`deployment ${state}; swap ${swapFrom} → ${swapTo} (${swapMs} ms)`);
-console.log(`loop: ${loop.requests} requests, ${loop.failed} failed, longest ${loop.maxMs} ms${loopSlow ? ' (over swap + 5 s)' : ''} ${JSON.stringify(loop.statuses)}`);
+console.log(`loop: ${loop.requests} requests, ${loop.failed} failed, longest ${loop.maxMs} ms${loopSlow ? ` (over swap + ${initBudget} ms)` : ''} ${JSON.stringify(loop.statuses)}`);
 for (const f of (loop.failures ?? []).slice(0, 10)) console.log(`  FAILED loop ${f.at} ${f.kind} ${f.status} ${f.error ?? ''} ${f.ms} ms`);
 for (const r of runs) {
   console.log(`smoke ${r.run} (exit ${r.code}): ${r.tests} tests, ${r.failedTests} failed${r.covers ? ', spanned the whole swap' : ''}; reported only: ${r.reportedOnly.length}`);
