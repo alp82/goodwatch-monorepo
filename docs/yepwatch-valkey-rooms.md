@@ -111,7 +111,7 @@ receipts, retries and the in-process per-room lane stay as they are (the lane no
 One zset, `{yw}:jobs`: `room:<id>` and JSON jobs `{k:"acct"|"hist"}`; the score is when the job is due.
 
 - Commits add `room:<id>` with `ZADD NX`, so a burst of votes becomes one or two Crate writes. The worker runs in the
-  API: kicked after each commit, and every second over due jobs. `ywClaim` leases due jobs (score = now + 30 s, the
+  API: kicked 200 ms after a commit (off the answer path, one run per burst), and every second over due jobs. `ywClaim` leases due jobs (score = now + 30 s, the
   fencing token); `ywDone`/`ywRetry` act only while the lease is still the caller's. Failures back off
   `min(1 s × 2^tries, 5 min)`.
 - **Room copy.** Read the room (`v`, body). If `s >= v`, done. Before its first head (`cs` empty) copy the room's

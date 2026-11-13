@@ -70,7 +70,7 @@ export function createReleaseRuntime(
 			accounts: new ValkeyAccountRooms(rooms, crateRepository.accountStore, config.secret),
 			deletions,
 			retentionDays: config.roomRetentionDays,
-			onCommit: () => void history?.kick(),
+			onCommit: () => history?.kickSoon(),
 		})
 		history = new HistorySync({
 			redis: rooms,

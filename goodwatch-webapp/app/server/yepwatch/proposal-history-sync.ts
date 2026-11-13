@@ -77,11 +77,26 @@ export class HistorySync {
 	/** Stops the loops and waits for the jobs in hand (leases expire for anything cut short). */
 	async stop() {
 		this.stopped = true
+		if (this.soon) clearTimeout(this.soon)
+		this.soon = null
 		for (const t of this.timers) clearInterval(t)
 		this.timers = []
 		await Promise.allSettled([this.running, this.maintaining])
 	}
-	/** Runs due jobs now (a commit just queued one); a run already going runs once more. */
+	private soon: ReturnType<typeof setTimeout> | null = null
+	/**
+	 * After a commit: runs due jobs shortly, off the command's answer (a copy plans the room on this thread, which
+	 * would hold up the answer's revision publish), and once for a burst of votes.
+	 */
+	kickSoon(delayMs = 200) {
+		if (this.soon || this.stopped) return
+		this.soon = setTimeout(() => {
+			this.soon = null
+			void this.kick().catch(() => {})
+		}, delayMs)
+		this.soon.unref?.()
+	}
+	/** Runs due jobs now; a run already going runs once more. */
 	kick() {
 		if (this.stopped) return this.running ?? Promise.resolve()
 		if (this.running) {
