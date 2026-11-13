@@ -93,8 +93,8 @@ crawl and backfill schedules to stop recurring source requests; the seed/mapping
 and hints, and the general ratings publisher can remain enabled.
 Do not clear a source block to retry through a challenge.
 
-The owner requested reports once daily at 07:45 Europe/Berlin in the existing Ghostex conversation. The user systemd timer replaced the original Ghostex interval
-automation runs the read-only `goodwatch-flows/scripts/letterboxd_status.py` helper and posts the current MongoDB
+The owner requested reports once daily at 07:45 Europe/Berlin in the existing Ghostex conversation.
+The user systemd timer runs the read-only `goodwatch-flows/scripts/letterboxd_status.py` helper and posts the current MongoDB
 and CrateDB counts, changes since the previous report, and source block/publishing lag. The local baseline is
 `~/.local/state/goodwatch/letterboxd-report-state.json`; it contains counts only. Delivery is attached to the
 durable conversation and uses the local Ghostex host and its existing Windmill profile. This is separate from
