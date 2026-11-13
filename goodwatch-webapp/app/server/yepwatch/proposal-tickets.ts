@@ -120,11 +120,11 @@ export class ValkeyTicketStore implements TicketStore {
 		)
 		return Number(issued) === 1
 	}
-	/** Issues and consumes a one-second ticket of its own: every command the scripts use, under this user's ACL. */
+	/** Issues and consumes a ten-second ticket of its own: every command the scripts use, under this user's ACL. */
 	async check() {
 		const now = Date.now()
 		const room = `readiness-${randomUUID()}`
-		const record = { participantId: "readiness", epoch: 0, expiresAt: now + 1000 }
+		const record = { participantId: "readiness", epoch: 0, expiresAt: now + 10_000 }
 		if (!(await this.issue(room, "check", record, 1, now))) throw new Error("Ticket store refused its check ticket")
 		if (!(await this.consume(room, "check", now))) throw new Error("Ticket store lost its check ticket")
 	}
