@@ -1,5 +1,5 @@
 /** /room/<id>: the screen for where the room is (setup, choosing, a proposal, Tonight); `?sheet=` opens one of its sheets. */
-import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { showsProposal, type RoomView } from './model';
 import { toRooms } from './nav';
@@ -31,7 +31,7 @@ function useRoundEntry(view: RoomView | null) {
 }
 
 export function RoomHome() {
-  const { state, view, entry, dismissedProposal, memberBusy, openSheet, leaving } = useRoom();
+  const { state, view, entry, dismissedProposal, openSheet, leaving } = useRoom();
   const params = useLocalSearchParams<{ signin?: string; fresh?: string; sheet?: string }>();
   // An address with a sheet (/room/<id>/services and the like): open it over the room, once.
   useEffect(() => {
@@ -43,15 +43,6 @@ export function RoomHome() {
   useEffect(() => {
     if (params.signin || params.fresh) router.setParams({ signin: undefined, fresh: undefined });
   }, [params.signin, params.fresh]);
-  const [servicesOffered, setServicesOffered] = useState(false);
-  // Guests who just joined pick their services first: the room opens with Your services over it,
-  // from its first paint.
-  const picksServices = Boolean(view && !view.isHost && !view.member && view.myServiceIds === null && view.phase !== 'decided');
-  useLayoutEffect(() => {
-    if (!picksServices || servicesOffered || memberBusy) return;
-    setServicesOffered(true); // eslint-disable-line react-hooks/set-state-in-effect
-    openSheet('services');
-  }, [picksServices, servicesOffered, memberBusy, openSheet]);
   const round = useRoundEntry(view);
   const setup = view?.phase === 'setup' || (view?.phase === 'choosing' && !view.me.inRound);
   useBackAction(toRooms, setup);

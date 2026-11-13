@@ -3,7 +3,7 @@
  * share this one connection). Owns the room's side effects: registry, GoodWatch link, protocol
  * entry, background refill, this device's "Keep swiping" choice, and the room's open sheets.
  */
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useDeferredValue, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigation } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import type { ActivityView } from '@goodwatch/yepwatch-contracts/proposal';
@@ -24,7 +24,7 @@ import { readSeenIdeas, writeSeenIdeas } from '../../core/continuous/room-local'
 import { useLobbyEntry } from '../glow/useLobbyEntry';
 import { NO_ARRIVALS, trackArrivals } from '../shell/live-beat';
 import { leaveScreen } from '../shell/sheet-back';
-import { roomCommands, roomView, type RoomCommands, type RoomView } from './model';
+import { roomCommands, roomView, showsProposal, type RoomCommands, type RoomView } from './model';
 import { exitRoom } from './nav';
 import { RefillGate } from './refill';
 import { RoomLinkGate, linkOutcome } from './link-gate';
@@ -255,6 +255,15 @@ function RoomProviderContent({ id, children, renderSheet }: { id: string; childr
   // Until the account is known and the first link attempt has settled, the room doesn't ask for a country or services.
   const linking = !guestOnly && (!account.ready || (wantsLink && linked !== linkKey));
   const memberBusy = account.busy || linking;
+  // Guests who just joined pick their services first: the room opens with Your services over it, from its
+  // first paint. Decided while rendering (React redoes this render before its children), so the room and the
+  // sheet mount in the same render; opening it from an effect cost a second, synchronous render of the room.
+  const [servicesOffered, setServicesOffered] = useState(false);
+  const picksServices = Boolean(view && !view.isHost && !view.member && view.myServiceIds === null && view.phase !== 'decided');
+  if (picksServices && !servicesOffered && !memberBusy) {
+    setServicesOffered(true);
+    setSheets((list) => (list.at(-1) === 'services' ? list : [...list.filter((s) => s !== 'services'), 'services']));
+  }
   // Back from GoodWatch in this room: the cover lifts once the room is on screen.
   useEffect(() => { if (view) memberTransition.arrived(); }, [view]);
   // At startup the app shows once the room can show itself (or say why it can't), never its empty opening frame.
@@ -333,5 +342,22 @@ function RoomProviderContent({ id, children, renderSheet }: { id: string; childr
     leaving, sheet: sheets.at(-1) ?? null, openSheet, closeSheet, closeSheets, renderSheet, openRoom,
     liveBeat: `${id}:${opening}:${arrivals.joins}`,
   };
-  return <RoomContext.Provider value={value}>{children}</RoomContext.Provider>;
+  // A change of screen (the round starts: voting replaces the room; a proposal, Tonight, the room's status)
+  // mounts a whole new screen. The room's snapshots arrive through the query cache, whose updates React
+  // renders synchronously, so that mount was one long task (~20-50 ms) on every phone in the room. The new
+  // screen renders as a deferred value instead: in slices between frames, then one commit, every consumer
+  // seeing the same room. Everything else (a vote, a tap, a friend's change) stays urgent, and so do the room's
+  // first screen (the startup cover lifts on it) and leaving (the start page replaces the room right after):
+  // a deferred screen would show the one before it for a frame.
+  const screen = screenOf(view, state, entry, dismissedProposal);
+  const deferred = useDeferredValue(value);
+  const before = useDeferredValue(screen);
+  const shown = leaving || before === 'none' || before === screen ? value : deferred;
+  return <RoomContext.Provider value={shown}>{children}</RoomContext.Provider>;
+}
+
+/** Which screen the room shows (RoomHome): a change of it mounts a new screen. */
+function screenOf(view: RoomView | null, state: RoomContextValue['state'], entry: RoomContextValue['entry'], dismissedProposal: number | null) {
+  if (!view) return 'none';
+  return `${view.phase}:${view.me.inRound}:${entry.required}:${showsProposal(view, dismissedProposal)}:${Boolean(state.terminal) || state.access === null}`;
 }

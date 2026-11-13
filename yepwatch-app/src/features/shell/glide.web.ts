@@ -18,8 +18,17 @@ export function useGlide({ axis = 'y', enabled = true }: { axis?: 'x' | 'y'; ena
   useLayoutEffect(() => {
     const el = ref.current;
     if (!enabled || !el || typeof el.animate !== 'function') { last.current = null; return; }
-    const at = axis === 'y' ? el.offsetTop : el.offsetLeft;
-    const before = last.current?.el === el ? last.current.at : at;
+    const read = () => (axis === 'y' ? el.offsetTop : el.offsetLeft);
+    if (last.current?.el !== el) {
+      // Just mounted: nothing to glide from. Its first place is read after that frame's own layout, not forced
+      // in the middle of the commit that mounts a whole screen (the rest of the commit changes the DOM again,
+      // so the browser would lay the page out twice).
+      last.current = { el, at: Number.NaN };
+      const frame = requestAnimationFrame(() => { if (last.current?.el === el && Number.isNaN(last.current.at)) last.current = { el, at: read() }; });
+      return () => cancelAnimationFrame(frame);
+    }
+    const at = read();
+    const before = Number.isNaN(last.current.at) ? at : last.current.at;
     last.current = { el, at };
     const delta = at - before;
     if (!delta || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;

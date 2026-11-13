@@ -261,10 +261,16 @@ export function Entrance({ invite, open: request, from }: {
       }
     } finally {
       if (attempt.current === controller) attempt.current = null;
-      setBusy(false);
       setTroubleSince(null);
       // Nothing opens once the person has left: the room waits in Your rooms.
-      if (resume.settled(outcome) && roomId) router.replace({ pathname: '/room/[id]', params: { id: roomId } });
+      if (resume.settled(outcome) && roomId) {
+        // The room's whole page mounts here (a guest's services sheet with it). As a transition React renders it
+        // in slices between frames instead of one long task, and this page stays as it is (joining) until the
+        // room replaces it in one commit.
+        router.replace({ pathname: '/room/[id]', params: { id: roomId } }, { inTransition: true });
+      } else {
+        setBusy(false);
+      }
     }
   }
   const joinRef = useRef<typeof runJoin | null>(null);
@@ -363,7 +369,10 @@ export function Entrance({ invite, open: request, from }: {
   const openProfile = () => { setError(''); setPanel('profile'); };
   // Back on the start page: a guest start page from before isn't shown again until the device's rooms
   // are read anew (a room made meanwhile turns it into Your rooms).
-  if (!home.ready || restoring || memberOf || (!returning && !home.settled)) return <AppFrame header={{ me, onProfile: openProfile, profileQuiet: true }}>{null}</AppFrame>;
+  // A join on its way keeps its screen: the device's rooms are read anew as it lands (its name, the room), and
+  // the room replaces this page a moment later in one commit.
+  const joinLanding = busy && shown === 'join';
+  if (!joinLanding && (!home.ready || restoring || memberOf || (!returning && !home.settled))) return <AppFrame header={{ me, onProfile: openProfile, profileQuiet: true }}>{null}</AppFrame>;
   // Joining is its own screen, like the room's pages: the start page doesn't render underneath.
   // While a join is on its way the form keeps its layout (the saved name locks only once it's back), so a
   // second press lands on Join again, not on whatever the locked form would put there.
