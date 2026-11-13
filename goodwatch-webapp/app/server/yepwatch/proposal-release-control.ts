@@ -329,11 +329,12 @@ export class ReleaseControl {
 	 * gets that room's original expiry and creates nothing.
 	 *
 	 * `proceed`: whether the room still needs creating (the caller's existence read, running alongside). The reads
-	 * here run alongside it; nothing is written, and null is returned, unless it resolves true.
+	 * here run alongside it; nothing is written, and null is returned, unless it resolves true. `deferProof`: see
+	 * CreationQuotaStore.reserve (the room's proof row is handed over, not awaited).
 	 */
 	create(roomId: string, admissionDigest: string, creatorDigest: string): Promise<number>
-	create(roomId: string, admissionDigest: string, creatorDigest: string, proceed?: Promise<boolean>): Promise<number | null>
-	async create(roomId: string, admissionDigest: string, creatorDigest: string, proceed?: Promise<boolean>): Promise<number | null> {
+	create(roomId: string, admissionDigest: string, creatorDigest: string, proceed?: Promise<boolean>, deferProof?: (proof: Promise<void>) => void): Promise<number | null>
+	async create(roomId: string, admissionDigest: string, creatorDigest: string, proceed?: Promise<boolean>, deferProof?: (proof: Promise<void>) => void): Promise<number | null> {
 		const eligibility = this.quotas.eligible(roomId, admissionDigest, creatorDigest).then(
 			(seen) => ({ seen }),
 			(error: unknown) => ({ error })
@@ -354,7 +355,7 @@ export class ReleaseControl {
 		checks.add(check)
 		const raced = await this.permit("create", roomId, creatorDigest, admissionDigest, check)
 		if (raced !== undefined) return raced
-		return this.quotas.reserve(roomId, admissionDigest, creatorDigest, eligible.seen, r.now)
+		return this.quotas.reserve(roomId, admissionDigest, creatorDigest, eligible.seen, r.now, deferProof)
 	}
 	/**
 	 * A creation permit checks for a legacy reservation on every read it builds a compare-and-swap on, not only on

@@ -78,7 +78,14 @@ export interface ProposalOperationGuard {
 	 * room still needs creating (its existence read). The guard may read alongside it, but writes nothing until it
 	 * resolves true, and resolves null without writing when it resolves false.
 	 */
-	create(roomId: string, admissionDigest: string, creatorDigest: string, proceed?: Promise<boolean>): Promise<number | null>
+	create(
+		roomId: string,
+		admissionDigest: string,
+		creatorDigest: string,
+		proceed?: Promise<boolean>,
+		/** Receives a last capacity write the guard didn't wait for; the room is stored only once it settled. */
+		deferProof?: (proof: Promise<void>) => void
+	): Promise<number | null>
 	join(roomId: string, actorId: string, admissionDigest: string): Promise<void>
 	/** `checked`: what `active` just resolved to for this room, so the guard can start from what it read. */
 	command(roomId: string, actorId: string, commandDigest: string, checked?: unknown): Promise<void>
@@ -733,9 +740,10 @@ export class ProposalService {
 	 * The store is asked as little as possible, one step after another only where an answer is needed: the
 	 * existence read and the guard's own reads run together; the guard's writes start only once the read says
 	 * there is no room yet (an exact retry charges nothing); then the invite reservation, the setup (catalog only,
-	 * never for a refused create) with the room's records, and the account's room list run together; the head
-	 * goes last, so nothing names the room before its invite and records are stored. A room whose head insert was acknowledged is answered from
-	 * what was stored, without reading it back. Crate has no transactions: a failure before the head leaves only
+	 * never for a refused create) with the room's records, the account's room list and the guard's last write (the
+	 * room's capacity proof) run together; the head goes last, so nothing names the room before its invite,
+	 * records and proof are stored. A room whose head insert was acknowledged is answered from what was stored,
+	 * without reading it back. Crate has no transactions: a failure before the head leaves only
 	 * rows nothing names (an invite mapping, records, a reservation), which an exact retry reuses and expiry
 	 * removes; a lost acknowledgement of any write is resolved by the retry's existence read.
 	 */
@@ -761,8 +769,12 @@ export class ProposalService {
 			const existingRead = timed("read", this.repository.read(id))
 			const absent = existingRead.then((existing) => !existing, () => false)
 			const proceed = accountActive ? Promise.all([absent, accountActive]).then(([go]) => go, () => false) : absent
+			let proof: Promise<void> | undefined
 			const reserving = this.guard
-				? timed("guard", this.guard.create(id, hash(JSON.stringify(request)), creatorDigest, proceed))
+				? timed("guard", this.guard.create(id, hash(JSON.stringify(request)), creatorDigest, proceed, (p) => {
+						proof = timed("proof", p)
+						proof.catch(() => {}) // awaited below, before the head
+					}))
 				: undefined
 			reserving?.catch(() => {}) // awaited below, or settles on its own once `proceed` says no
 			const existing = await existingRead
@@ -788,6 +800,7 @@ export class ProposalService {
 				timed("invite", this.reserveInvite(id, expiresAt)),
 				build(expiresAt),
 				account && timed("account", this.accounts.remember(account.userId, { roomId: id, expiresAt })),
+				proof,
 			])
 			// An invite reserved earlier for this room with another expiry (no guard: an uncertain earlier attempt)
 			// fixes the room's expiry.

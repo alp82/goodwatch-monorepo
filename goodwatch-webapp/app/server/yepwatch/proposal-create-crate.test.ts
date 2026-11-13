@@ -73,8 +73,13 @@ test(
 		await provisionReleaseStore(sql, 0, "create-test", secret)
 		const policy = { ...DEFAULT_CONTROL, admissions: 120 }
 		await provisionControl(sql, policy, 0)
-		let loseHead = false
+		let loseHead = false,
+			dropProof = false
 		const flaky: Sql = async (stmt, args) => {
+			if (dropProof && stmt.startsWith("INSERT INTO doc.yepwatch_creation_reservation ")) {
+				dropProof = false
+				throw new IndeterminateWrite("proof insert lost before it landed")
+			}
 			const result = await sql(stmt, args)
 			if (loseHead && stmt.startsWith("INSERT INTO doc.yepwatch_room ")) {
 				loseHead = false
@@ -100,7 +105,7 @@ test(
 			const log = r.take()
 			const depth = sequentialDepth(log)
 			t.diagnostic(`${label}: ${log.length} statements, ${depth} in sequence`)
-			assert.ok(depth <= 7, `${label}: ${depth} statements in sequence:\n${log.map((l) => l.stmt.slice(0, 70)).join("\n")}`)
+			assert.ok(depth <= 5, `${label}: ${depth} statements in sequence:\n${log.map((l) => l.stmt.slice(0, 70)).join("\n")}`)
 			assert.equal(log.filter((l) => l.stmt.startsWith("SELECT") && l.stmt.includes("FROM doc.yepwatch_room ")).length, 1, "one room read")
 			assert.equal(log.filter((l) => l.stmt.includes("doc.yepwatch_invitation")).length, 1, "the invite is written once and not read back")
 			assert.equal(log.filter((l) => l.stmt === "SELECT CURRENT_TIMESTAMP").length, 0)
@@ -126,6 +131,20 @@ test(
 		const lost = await a.create(admission(), undefined, "creator-2")
 		const read = await service().read(lost.credential.roomId, { participantId: lost.credential.participantId, token: lost.credential.token })
 		assert.equal(read.shared.roomId, lost.credential.roomId)
+		// The room's capacity proof is written alongside the invite and records: when it didn't land, nothing names
+		// the room, the create fails retryably, and the same request then finishes it.
+		const rooms = async () => {
+			await sql("REFRESH TABLE doc.yepwatch_room")
+			return Number((await sql("SELECT count(*) FROM doc.yepwatch_room")).rows[0][0])
+		}
+		const before = await rooms()
+		dropProof = true
+		const unproven = admission()
+		await assert.rejects(a.create(unproven, undefined, "creator-3"), { code: "busy" })
+		assert.equal(await rooms(), before, "no room head without its proof")
+		const finished = await a.create(unproven, undefined, "creator-3")
+		assert.equal((await sql("SELECT count(*) FROM doc.yepwatch_room WHERE id=?", [finished.credential.roomId])).rows[0][0], 1)
+		assert.equal((await sql("SELECT count(*) FROM doc.yepwatch_creation_reservation WHERE room_id=?", [finished.credential.roomId])).rows[0][0], 1)
 		// Every room holds its creator's allowance: the eleventh of one creator is refused.
 		for (let i = 0; i < 7; i++) await a.create(admission(), undefined, "creator-1")
 		await assert.rejects(a.create(admission(), undefined, "creator-1"), { code: "limit_reached" })

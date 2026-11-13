@@ -11,7 +11,7 @@ export interface CreationQuotaStore {
    * `seen`: what `eligible` resolved to for this room and creator just before, so the first attempt starts from what
    * it read. `now`: the store clock read alongside it, for a creator without an allowance row yet.
    */
-  reserve(roomId: string, admissionDigest: string, creatorDigest: string, seen?: unknown, now?: number): Promise<number>
+  reserve(roomId: string, admissionDigest: string, creatorDigest: string, seen?: unknown, now?: number, deferProof?: (proof: Promise<void>) => void): Promise<number>
   /**
    * Read only: throws what `reserve` would refuse with now (a full allowance, a changed retry), without writing.
    * Passing is no promise: `reserve` stays the authoritative compare-and-swap. Resolves to what it read, for `reserve`.
@@ -98,7 +98,12 @@ export class SqlCreationQuotas implements CreationQuotaStore {
     if (live.length >= this.limit) throw allowanceFull(this.limit)
     return seen
   }
-  async reserve(roomId: string, admissionDigest: string, creator: string, seen?: unknown, clock?: number) {
+  /**
+   * `deferProof`: answers once the allowance holds the reservation, and hands over the room's proof row write
+   * (written, or found already written for this admission) instead of waiting for it. The caller must see it
+   * settle before anything names the room: a room without its proof fails every capacity check.
+   */
+  async reserve(roomId: string, admissionDigest: string, creator: string, seen?: unknown, clock?: number, deferProof?: (proof: Promise<void>) => void) {
     const known = typeof seen === 'object' && seen !== null && seenReads.has(seen as Seen) &&
       (seen as Seen).roomId === roomId && (seen as Seen).creator === creator ? seen as Seen : null
     if (known) seenReads.delete(known)
@@ -135,6 +140,11 @@ export class SqlCreationQuotas implements CreationQuotaStore {
           if (!confirmed?.reservations.some(r => r.room_id === roomId && r.admission_digest === admissionDigest && r.expires_at === reservation!.expires_at)) continue
         }
       }
+      if (deferProof) {
+        const expiresAt = reservation.expires_at
+        deferProof(this.prove(roomId, creator, admissionDigest, expiresAt))
+        return expiresAt
+      }
       let proven = false
       try {
         proven = (await this.sql(`INSERT INTO ${reservationTable.name} (room_id,creator_digest,admission_digest,expires_at) VALUES (?,?,?,?) ON CONFLICT DO NOTHING`, [roomId, creator, admissionDigest, reservation.expires_at])).rowcount === 1
@@ -150,6 +160,22 @@ export class SqlCreationQuotas implements CreationQuotaStore {
       if (confirmed) throw new RoomError('conflict', 'Admission retry changed', 409)
     }
     throw busy()
+  }
+  /** Writes the room's proof row, or finds it written for this admission and expiry; never retried here. */
+  private async prove(roomId: string, creator: string, admissionDigest: string, expiresAt: number) {
+    let proven = false
+    try {
+      proven = (await this.sql(`INSERT INTO ${reservationTable.name} (room_id,creator_digest,admission_digest,expires_at) VALUES (?,?,?,?) ON CONFLICT DO NOTHING`, [roomId, creator, admissionDigest, expiresAt])).rowcount === 1
+    } catch (error) { if (!(error instanceof IndeterminateWrite)) throw error }
+    if (proven) {
+      this.reservations.set(roomId, parseRow(reservationTable, { room_id: roomId, creator_digest: creator, admission_digest: admissionDigest, expires_at: expiresAt }))
+      if (this.reservations.size > 4096) this.reservations.delete(this.reservations.keys().next().value!)
+      return
+    }
+    const confirmed = await this.proof(roomId)
+    if (confirmed && confirmed.admission_digest !== admissionDigest) throw new RoomError('conflict', 'Admission retry changed', 409)
+    // A lost insert that didn't land, or a proof of another expiry: the same request retried finishes it.
+    if (confirmed?.expires_at !== expiresAt) throw busy()
   }
   async count() { return Number((await this.sql(`SELECT count(*) FROM ${reservationTable.name} WHERE expires_at>CURRENT_TIMESTAMP`)).rows[0]?.[0] ?? 0) }
   /** Search finds candidates only; a current primary-key read and CAS protect a newly renewed allowance. */
