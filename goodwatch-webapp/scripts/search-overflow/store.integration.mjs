@@ -49,7 +49,7 @@ const output = await build({
 		},
 	],
 })
-const { SearchStore, JEV_BUDGET } = await import(
+const { SearchStore, JEV_BUDGET, monthlyCapNano } = await import(
 	"data:text/javascript;base64," +
 		Buffer.from(output.outputFiles[0].text).toString("base64")
 )
@@ -142,8 +142,11 @@ test("real Crate migration, cycle boundaries, independent pools, settlement and 
 		)
 		assert.equal(result.rows[0][0], Date.parse(start))
 	}
+	// The JEV cap that applies today: a one-off raise for a cycle can lift it above MONTHLY_NANO.
+	const jevCap = monthlyCapNano(JEV_BUDGET, Date.now())
 	await sql(
-		"INSERT INTO doc.search_spending (id,budget_at,amount_nano,budget_pool) VALUES ('legacy',CURRENT_TIMESTAMP,5000000000,NULL),('other',CURRENT_TIMESTAMP,300000000,'openrouter-overflow')",
+		"INSERT INTO doc.search_spending (id,budget_at,amount_nano,budget_pool) VALUES ('legacy',CURRENT_TIMESTAMP,?,NULL),('other',CURRENT_TIMESTAMP,300000000,'openrouter-overflow')",
+		[jevCap],
 	)
 	await sql("REFRESH TABLE doc.search_spending,doc.search_control")
 	assert.deepEqual(await primary.claim(input), {
@@ -162,7 +165,7 @@ test("real Crate migration, cycle boundaries, independent pools, settlement and 
 		"SELECT coalesce(budget_pool,'jev'),sum(amount_nano) FROM doc.search_spending GROUP BY 1 ORDER BY 1",
 	)
 	assert.deepEqual(total.rows, [
-		["jev", 5000000000],
+		["jev", jevCap],
 		["openrouter-overflow", 300163000],
 	])
 	await overflow.history({

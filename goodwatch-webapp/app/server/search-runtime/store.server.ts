@@ -51,6 +51,16 @@ export type SearchBudget = {
 }
 export const JEV_BUDGET: SearchBudget = { pool: "jev", dailyNano: DAILY_NANO, monthlyNano: MONTHLY_NANO, resetDay: 17 }
 
+// One-off raises of the JEV cycle cap, by UTC cycle [from, until). The owner added $2 to the cycle that holds
+// November 1-16, 2026 (Q47, 2026-11-13); the cycle from November 17 is back to MONTHLY_NANO.
+const JEV_CYCLE_RAISES = [{ from: Date.UTC(2026, 9, 17), until: Date.UTC(2026, 10, 17), nano: 2_000_000_000 }]
+
+// The cycle cap at `now` (epoch ms, Crate's clock): the budget's own, plus a raise for that JEV cycle.
+export function monthlyCapNano(budget: SearchBudget, now: number) {
+	if (budget.pool !== "jev") return budget.monthlyNano
+	return budget.monthlyNano + JEV_CYCLE_RAISES.reduce((sum, raise) => now >= raise.from && now < raise.until ? sum + raise.nano : sum, 0)
+}
+
 export function productionStore(budget: SearchBudget = JEV_BUDGET) {
 	const key = process.env.SEARCH_STORAGE_KEY
 	if (!readingsConfigured())
@@ -190,7 +200,7 @@ export class SearchStore {
 		const now = Number(spend.now)
 		if (![now, Number(spend.day), Number(spend.month)].every(Number.isSafeInteger))
 			return { kind: "basic", reason: "storage" }
-		if (Number(spend.month) + input.reserveNano > this.budget.monthlyNano)
+		if (Number(spend.month) + input.reserveNano > monthlyCapNano(this.budget, now))
 			return { kind: "basic", reason: "budget", ...(this.budget.pool === "jev" ? { overflowEligible: true as const } : {}) }
 		if (Number(spend.day) + input.reserveNano > this.budget.dailyNano)
 			return { kind: "basic", reason: "budget" }

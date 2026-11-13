@@ -39,7 +39,7 @@ registerHooks({
 		}
 	},
 })
-const { SearchStore } = await import("./store.server.ts")
+const { SearchStore, monthlyCapNano, JEV_BUDGET, MONTHLY_NANO } = await import("./store.server.ts")
 const { SearchCoordination } = await import("./coordination.server.ts")
 const { executeJevStage, JEV_RESERVE_NANO } = await import("./runtime.server.ts")
 
@@ -436,3 +436,24 @@ for (const failure of ["budget", "navigation", "account"] as const) {
 		assert.ok(statements.every(s => s.stmt.startsWith("SELECT")));
 	});
 }
+
+test("the JEV cycle cap is $2 higher only for the cycle holding November 1-16, 2026", () => {
+	const overflow = { pool: "openrouter-overflow" as const, dailyNano: 1e9, monthlyNano: 1e9, resetDay: 1 as const }
+	assert.equal(monthlyCapNano(JEV_BUDGET, Date.UTC(2026, 9, 16, 23, 59, 59, 999)), MONTHLY_NANO)
+	assert.equal(monthlyCapNano(JEV_BUDGET, Date.UTC(2026, 9, 17)), MONTHLY_NANO + 2e9)
+	assert.equal(monthlyCapNano(JEV_BUDGET, Date.UTC(2026, 10, 13, 8, 40)), MONTHLY_NANO + 2e9)
+	assert.equal(monthlyCapNano(JEV_BUDGET, Date.UTC(2026, 10, 16, 23, 59, 59, 999)), MONTHLY_NANO + 2e9)
+	assert.equal(monthlyCapNano(JEV_BUDGET, Date.UTC(2026, 10, 17)), MONTHLY_NANO)
+	assert.equal(monthlyCapNano(JEV_BUDGET, Date.UTC(2026, 11, 13)), MONTHLY_NANO)
+	assert.equal(monthlyCapNano(overflow, Date.UTC(2026, 10, 13)), 1e9)
+})
+
+test("claim admits a JEV reading above the usual cap within the raised cycle, and refuses it after", async (t) => {
+	t.mock.method(SearchCoordination.prototype, "release", async () => {})
+	t.mock.method(SearchCoordination.prototype, "cache", async () => {})
+	const spent = (now: number) => Promise.resolve([[{ halted: false }], [{ now, day: 0, month: 4_995_000_000 }]]) as ReturnType<InstanceType<typeof SearchStore>["claimChecks"]>
+	const raised = fixture(() => ({ eval: async () => "ok" }) as unknown as SearchRedis, attribution)
+	assert.equal((await raised.store.claim({ ...claim, attribution, checks: spent(Date.UTC(2026, 10, 13, 8, 40)) })).kind, "claimed")
+	const after = fixture(() => { throw new Error("Unexpected Redis admission") }, attribution)
+	assert.deepEqual(await after.store.claim({ ...claim, attribution, checks: spent(Date.UTC(2026, 10, 17)) }), { kind: "basic", reason: "budget", overflowEligible: true })
+})
