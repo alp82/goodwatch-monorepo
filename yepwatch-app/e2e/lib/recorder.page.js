@@ -171,7 +171,7 @@
   try {
     new PerformanceObserver((list) => {
       for (const e of list.getEntries()) {
-        rec.loafs.push({ t: performance.timeOrigin + e.startTime, duration: Math.round(e.duration), blocking: Math.round(e.blockingDuration || 0), scripts: (e.scripts || []).slice(0, 3).map((s) => `${s.invokerType}:${s.invoker} ${Math.round(s.duration)}ms ${(s.sourceURL || '').split('/').pop()}:${s.sourceFunctionName || ''}`) });
+        rec.loafs.push({ t: performance.timeOrigin + e.startTime, duration: Math.round(e.duration), blocking: Math.round(e.blockingDuration || 0), scripts: [...(e.scripts || [])].sort((a, b) => b.duration - a.duration).slice(0, 3).map((s) => `${s.invokerType}:${s.invoker} ${Math.round(s.duration)}ms ${(s.sourceURL || '').split('/').pop()}:${s.sourceFunctionName || ''}`) });
         if (rec.loafs.length > 300) rec.loafs.shift();
       }
     }).observe({ type: 'long-animation-frame', buffered: true });

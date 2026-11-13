@@ -134,9 +134,22 @@ export function frameGaps(rec: Recording, person: string, windows: [number, numb
   const bad = rec.frames.over20.filter(([t, gap]) => gap > B.frameMaxMs && windows.some(([a, b]) => t >= a && t <= b)
     && !harness.some(([a, b]) => t - gap < b && t > a));
   if (!bad.length) return [];
-  const worst = Math.max(...bad.map(([, g]) => g));
-  const loaf = rec.loafs.filter((l) => l.duration > 50).sort((a, b) => b.duration - a.duration)[0];
-  return [{ gate: 'frames', person, detail: `${bad.length} frames over ${B.frameMaxMs} ms during interactions (worst ${worst} ms)${loaf ? `; longest animation frame ${loaf.duration} ms: ${loaf.scripts.join(', ')}` : ''}`, measured: worst, budget: B.frameMaxMs }];
+  // Named: the worst frame that failed (the first of equals), what was pressed before it, and the scripts of
+  // the long animation frame that overlaps it. Not the recording's longest animation frame, which is usually
+  // the page load outside every interaction window.
+  const [t, worst] = bad.reduce((a, b) => (b[1] > a[1] ? b : a));
+  return [{ gate: 'frames', person, detail: `${bad.length} frames over ${B.frameMaxMs} ms during interactions (worst ${worst} ms, ${describeFrame(rec, t, worst)})`, measured: worst, budget: B.frameMaxMs, at: t }];
+}
+
+/** Where a slow frame (ending at `t` after `gap` ms) sits: after which press, and which scripts ran in it. */
+export function describeFrame(rec: Pick<Recording, 'inputs' | 'loafs'>, t: number, gap: number) {
+  const input = rec.inputs.filter((i) => i.t <= t).at(-1);
+  const after = input ? `${Math.round(t - gap - input.t)} ms after ${input.type} on ${input.target}` : 'before any press';
+  // Long animation frames are only reported from 50 ms; a shorter one has no script attribution.
+  const overlap = (l: Recording['loafs'][number]) => Math.min(t, l.t + l.duration) - Math.max(t - gap, l.t);
+  const loaf = rec.loafs.filter((l) => overlap(l) > 0).sort((a, b) => overlap(b) - overlap(a) || b.duration - a.duration)[0];
+  if (!loaf) return `${after}; no long animation frame (≥ 50 ms) overlaps it, so no script attribution`;
+  return `${after}; its animation frame ${loaf.duration} ms (blocking ${loaf.blocking} ms): ${loaf.scripts.length ? loaf.scripts.join(', ') : 'no script attributed (rendering/style/layout)'}`;
 }
 
 export function deadButtons(rec: Recording, person: string): GateFailure[] {

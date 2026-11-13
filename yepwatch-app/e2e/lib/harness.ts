@@ -17,6 +17,7 @@ import { fileURLToPath } from 'node:url';
 import { budgetsFor } from '../budgets.mjs';
 import { parseFrame, sharedSchema } from '../../src/core/continuous/wire';
 import { audit } from './a11y';
+import { serverTimingLine } from './server-timing';
 import { blockingWords, connectionWords, deadButtons, flashes, frameGaps, layoutShifts, type GateFailure, type Recording } from './gates';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -125,16 +126,14 @@ export class Person {
       const p = new URL(url).pathname;
       const status = r.status();
       if (r.request().method() === 'POST' && p.includes('/proposal/')) this.commandLog.push({ t: Date.now(), status, path: p });
-      // E2E_SERVER_TIMING_LOG=<file>: the Server-Timing (durations only) of each create, join, realtime ticket and
-      // command as one JSON line, for perf work. `kind`: create, join, ticket or the command's type.
-      if (SERVER_TIMING_LOG && r.request().method() === 'POST' && p.includes('/proposal/rooms')) {
-        let kind: unknown = p.endsWith('/proposal/rooms') ? 'create' : p.endsWith('/join') ? 'join' : p.endsWith('/realtime-ticket') ? 'ticket' : null;
-        if (p.endsWith('/commands'))
-          try { kind = (r.request().postDataJSON() as { command?: { type?: unknown } } | null)?.command?.type; } catch { /* not JSON */ }
-        if (kind) fs.appendFileSync(SERVER_TIMING_LOG, `${JSON.stringify({ t: Date.now(), kind, status, serverTiming: r.headers()['server-timing'] ?? null })}\n`);
-      }
       const json = (r.headers()['content-type'] ?? '').includes('json');
       const body = json ? await r.json().catch(() => null) : null;
+      // E2E_SERVER_TIMING_LOG=<file>: the Server-Timing (durations only) of each create, join, realtime ticket and
+      // command as one JSON line, for perf work (lib/server-timing.ts; a command's replayed answer is left out).
+      if (SERVER_TIMING_LOG && r.request().method() === 'POST') {
+        const line = serverTimingLine(p, r.request().postData(), status, body, r.headers()['server-timing']);
+        if (line) fs.appendFileSync(SERVER_TIMING_LOG, `${line}\n`);
+      }
       if (status >= 400 && !this.expectedStatus.some((re) => re.test(`${status} ${p}`)) && !(this.room.faultAllowsNetworkErrors() && status >= 500))
         fail(`HTTP ${status} ${r.request().method()} ${p}${body?.error ? ` (${body.error.code}: ${String(body.error.message).slice(0, 80)})` : ''}`);
       if (!json) return;
@@ -591,3 +590,4 @@ export async function issuer(pathname: string, body?: unknown) {
   const r = await fetch(`${ISSUER}${pathname}`, { method: 'POST', body: body ? JSON.stringify(body) : undefined });
   return r.json();
 }
+

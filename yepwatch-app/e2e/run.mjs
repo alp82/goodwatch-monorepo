@@ -13,6 +13,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { budgetsFor } from './budgets.mjs';
+import { WINDOW_RUNS, historyLine, readHistory, timingStats } from './lib/timing-window.mjs';
 import { ORIGINS } from './stack/config.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -194,19 +195,42 @@ function runTier() {
     if (!samples.has(s.moment)) samples.set(s.moment, []);
     samples.get(s.moment).push({ ...s, journey: t.journey, fault: t.fault });
   }
-  const pct = (vals, p) => { const s = [...vals].sort((a, b) => a - b); return s[Math.min(s.length - 1, Math.ceil((p / 100) * s.length) - 1)]; };
+  // Timing budgets apply to clean runs; fault runs are reported but not judged against them.
+  const cleanOf = (moment, list) => list.filter((s) => s.fault === 'none' || s.fault === 'smoke' || tier === 'smoke' || moment === 'restartQueuedLandMs');
+  const own = Object.fromEntries([...samples].map(([moment, list]) => [moment, cleanOf(moment, list).map((s) => s.ms)]));
+  // Smoke: a moment one run samples fewer than 20 times (create and Start: one room per run) takes its p95 over
+  // this run plus earlier runs against the same origin (lib/timing-window.mjs). The history holds numbers only.
+  const historyOrigin = tier === 'smoke' ? (originArg ?? ORIGINS.front) : null;
+  const historyFile = process.env.E2E_SMOKE_HISTORY || path.join(here, 'artifacts', 'smoke-history.jsonl');
+  let history = [];
+  if (historyOrigin && fs.existsSync(historyFile)) history = readHistory(fs.readFileSync(historyFile, 'utf8'), historyOrigin);
+  const stats = timingStats(own, history, Boolean(historyOrigin));
   const timing = {};
   for (const [moment, list] of samples) {
-    // Timing budgets apply to clean runs; fault runs are reported but not judged against them.
-    const clean = list.filter((s) => s.fault === 'none' || s.fault === 'smoke' || tier === 'smoke' || moment === 'restartQueuedLandMs');
-    const values = clean.map((s) => s.ms);
+    const clean = cleanOf(moment, list);
+    const st = stats[moment];
     const budget = B[moment];
-    const p95 = values.length ? pct(values, 95) : null;
-    timing[moment] = { samples: values.length, p50: values.length ? pct(values, 50) : null, p95, max: values.length ? Math.max(...values) : null, budget: budget ?? null, pass: budget === undefined || p95 === null || p95 <= budget };
-    if (budget !== undefined && p95 !== null && p95 > budget) {
+    const pass = budget === undefined || st.p95 === null || st.p95 <= budget;
+    timing[moment] = { samples: st.samples, runSamples: st.own, runs: st.runs, p50: st.p50, p95: st.p95, max: st.max, budget: budget ?? null, pass };
+    if (!pass) {
       const worst = [...clean].sort((a, b) => b.ms - a.ms)[0];
-      failures.push({ journey: `(all, worst: ${worst.journey})`, fault: worst.fault, gate: 'timing', person: worst.person, detail: `${moment} p95 ${p95} ms over ${values.length} samples (p50 ${timing[moment].p50} ms, max ${timing[moment].max} ms; worst at ${worst.detail ?? ''})`, measured: p95, budget, artifacts: [] });
+      const over = st.runs > 1 ? `${st.samples} samples from the last ${st.runs} runs (this run: ${st.own}${worst ? `, worst ${worst.ms} ms` : ''})` : `${st.samples} samples`;
+      failures.push({ journey: `(all, worst: ${worst?.journey ?? 'earlier runs'})`, fault: worst?.fault ?? 'smoke', gate: 'timing', person: worst?.person ?? '', detail: `${moment} p95 ${st.p95} ms over ${over} (p50 ${st.p50} ms, max ${st.max} ms${worst ? `; worst this run at ${worst.detail ?? ''}` : ''})`, measured: st.p95, budget, artifacts: [] });
     }
+  }
+  if (historyOrigin) {
+    // Kept per origin, newest WINDOW_RUNS runs each; written whatever the run's outcome (its samples are real).
+    const keep = fs.existsSync(historyFile) ? fs.readFileSync(historyFile, 'utf8').split('\n').filter(Boolean) : [];
+    const lines = [...keep, historyLine(historyOrigin, own)];
+    const byOrigin = new Map();
+    for (const line of lines) {
+      let o = '';
+      try { o = JSON.parse(line).origin ?? ''; } catch { continue; }
+      if (!byOrigin.has(o)) byOrigin.set(o, []);
+      byOrigin.get(o).push(line);
+    }
+    fs.mkdirSync(path.dirname(historyFile), { recursive: true });
+    fs.writeFileSync(historyFile, `${[...byOrigin.values()].flatMap((l) => l.slice(-WINDOW_RUNS)).join('\n')}\n`);
   }
   const wallClockMs = Date.now() - t0;
   const report = {
@@ -223,8 +247,9 @@ function runTier() {
     byGate.get(f.gate).push(f);
   }
   const lines = [`# YepWatch E2E ${tier}: ${report.failed}/${report.tests} tests failed, ${failures.length} gate failures, ${(wallClockMs / 1000).toFixed(0)} s wall clock`, ''];
-  lines.push('## Timing (p95 vs budget, clean runs)', '', '| moment | samples | p50 | p95 | budget | |', '|---|---|---|---|---|---|');
-  for (const [m, v] of Object.entries(timing)) lines.push(`| ${m} | ${v.samples} | ${v.p50 ?? '-'} | ${v.p95 ?? '-'} | ${v.budget ?? '-'} | ${v.pass ? 'ok' : 'FAIL'} |`);
+  lines.push('## Timing (p95 vs budget, clean runs)', '', '| moment | samples | runs | p50 | p95 | budget | |', '|---|---|---|---|---|---|---|');
+  for (const [m, v] of Object.entries(timing)) lines.push(`| ${m} | ${v.samples}${v.runs > 1 ? ` (${v.runSamples} this run)` : ''} | ${v.runs} | ${v.p50 ?? '-'} | ${v.p95 ?? '-'} | ${v.budget ?? '-'} | ${v.pass ? 'ok' : 'FAIL'} |`);
+  if (historyOrigin) lines.push('', `Moments with fewer than 20 samples in this run take their p95 over the newest earlier runs against this origin as well (up to ${WINDOW_RUNS} runs or 20 samples): ${path.relative(here, historyFile)}.`);
   for (const [gate, list] of byGate) {
     lines.push('', `## ${gate} (${list.length})`, '');
     // Same detail across journeys/faults → one line with counts.

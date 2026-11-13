@@ -3,11 +3,12 @@
 //   friend  guest, throttled, fresh browser through the invitation link                    (inviteOpenMs, startToPeerVotingMs, voteToPeerMs)
 //   member  signed in with GoodWatch, NOT throttled, joins by the same link ("Join as …"; a nameless account types one)
 //           (unthrottled_* moments: reported, never gated)
-// Then Start → votes until a match → everyone leaves / the host archives.
+// Then Start → 20 rounds of Yep from everyone (each a match: vote → peer sampled 20 times) → everyone leaves /
+// the host archives. Create and Start happen once: run.mjs takes their p95 over this and earlier runs.
 //
 // Why one room: there's no shared cap on active rooms, but a run should stay light on the shared rate windows.
 // A run costs 1 room (the guest host's own allowance of 10, held for the room's 6 h life) + 2 admissions +
-// ~40 commands, far under the 20 creates/joins a minute.
+// ~80 commands, far under the 20 creates/joins and 600 commands a minute.
 //
 // Member sign-in:
 //   - production: E2E_SMOKE_MEMBER_EMAIL / E2E_SMOKE_MEMBER_PASSWORD (a dedicated GoodWatch account; run.mjs reads
@@ -22,6 +23,8 @@ import { cardTitle, inviteLink, pickServices, readyHost } from '../web/flows';
 const MEMBER_EMAIL = process.env.E2E_SMOKE_MEMBER_EMAIL ?? '';
 const MEMBER_PASSWORD = process.env.E2E_SMOKE_MEMBER_PASSWORD ?? '';
 const GUEST_ONLY = process.env.E2E_SMOKE_GUEST_ONLY === '1';
+/** Voting rounds: one vote → peer sample each (run.mjs takes a p95 from one run at 20 samples). */
+const VOTE_ROUNDS = 20;
 const local = /^http:\/\/(127\.0\.0\.1|localhost)[:/]/.test(ORIGIN ?? '');
 /** Smoke rooms are recognisable in the store and in History: "e2e smoke 2026-11-11T21:04". */
 const MARK = `e2e smoke ${new Date().toISOString().slice(0, 16)}`;
@@ -105,6 +108,15 @@ async function accountName(p: Person): Promise<string | null> {
   return status?.displayName?.trim() || null;
 }
 
+/** The match count the host's chip shows now ("2 matches"; "Matches" before the first). */
+async function shownMatches(p: Person) {
+  return p.page.evaluate(() => {
+    const yw = (window as unknown as { __yw: { visible(el: Element): boolean } }).__yw;
+    const chip = [...document.querySelectorAll('[aria-label]')].find((e) => /^\d+ match(es)?$/.test(e.getAttribute('aria-label') ?? '') && yw.visible(e));
+    return chip ? Number.parseInt(chip.getAttribute('aria-label')!, 10) : 0;
+  });
+}
+
 /** Best effort, never a gate: a guest leaves through the room sheet; the host archives. */
 async function tidy(p: Person, how: 'leave' | 'archive') {
   try {
@@ -130,7 +142,7 @@ async function tidy(p: Person, how: 'leave' | 'archive') {
 }
 
 test('smoke: guest room, friend by link, member by link, start, vote to a match, leave', async ({ room }) => {
-  test.setTimeout(85_000);
+  test.setTimeout(150_000);
   const people: [Person, 'leave' | 'archive'][] = [];
   try {
     await journey(room, people);
@@ -207,10 +219,13 @@ async function journey(room: Room, people: [Person, 'leave' | 'archive'][]) {
     timeout: 20000,
   });
 
-  // Yep from everyone until a match; the friend's Yep is the one timed to the host's (and member's) match chip.
-  // At most 8 rounds = 24 votes: far under the 60 commands per person a minute.
-  const match = { label: { text: '^1 match$' } };
-  for (let i = 0; i < 8 && !(host.latest?.matches?.length); i++) {
+  // Yep from everyone, round after round: everyone has the same card, so the friend's Yep (the last) makes it
+  // a match, timed until the host's (and member's) match chip counts it. VOTE_ROUNDS rounds give vote → peer a
+  // real p95 from this run alone (20 samples; run.mjs). 3 people × 20 votes in ~45 s: under the 60 commands
+  // per person a minute. A round whose card was no match for everyone (the deck refilled between votes) is
+  // no sample; the run needs a match at the end either way.
+  const chip = (n: number) => ({ label: { text: `^${n} ${n === 1 ? 'match' : 'matches'}$` } });
+  for (let i = 0; i < VOTE_ROUNDS; i++) {
     for (const p of member ? [host, member] : [host]) {
       await p.page.waitForTimeout(400);
       const before = await cardTitle(p);
@@ -218,10 +233,12 @@ async function journey(room: Room, people: [Person, 'leave' | 'archive'][]) {
     }
     await friend.page.waitForTimeout(400);
     const before = await cardTitle(friend);
+    // From the chip on the host's screen (not the snapshot, which can run ahead of or behind the paint).
+    const next = chip(await shownMatches(host) + 1);
     await friend.tap(friend.button('Yep'), {
       repeatable: true, soft: true, timeout: 2500, moment: 'swipeNextCardMs',
       expect: { cardChanged: { from: before } },
-      observers: [[host, match, 'voteToPeerMs'], ...(member ? [[member, match, 'unthrottled_voteToPeerMs']] : [])] as [Person, typeof match, string][],
+      observers: [[host, next, 'voteToPeerMs'], ...(member ? [[member, next, 'unthrottled_voteToPeerMs']] : [])] as [Person, typeof next, string][],
     });
   }
   await eventually(() => host.latest?.matches?.length ?? 0, (n) => n > 0, 'the room has a match', host, 15000);
