@@ -142,14 +142,16 @@ export class RelationalProposalRepository implements ProposalRepository {
 	}
 	async rememberInvite(hash: string, roomId: string, expiresAt: number) {
 		try {
-			await this.sql(
+			// An acknowledged insert of the row is its own proof: the mapping is exactly the one sent.
+			if ((await this.sql(
 				`INSERT INTO ${invitationTable.name} (code_hash,room_id,expires_at) VALUES (?,?,?) ON CONFLICT DO NOTHING`,
 				[hash, roomId, expiresAt]
-			)
+			)).rowcount === 1) return expiresAt
 		} catch (e) {
 			if (!(e instanceof IndeterminateWrite)) throw e
 		}
-		// Prove the immutable mapping by primary key, including a lost INSERT response.
+		// Prove the immutable mapping by primary key: one already there (a retry, or another room's), or a lost
+		// INSERT response.
 		const row = (
 			await this.sql(
 				`SELECT room_id,expires_at FROM ${invitationTable.name} WHERE code_hash=?`,
@@ -591,9 +593,12 @@ export class RelationalProposalRepository implements ProposalRepository {
 		}
 		return Promise.all(ids.map((id) => this.record(entity, roomId, id)))
 	}
+	async storeRecords(room: ProposalRoom) {
+		await this.ensure([...this.plan(room, room.revision).records.values()])
+	}
 	async insert(room: ProposalRoom) {
 		const plan = this.plan(room, room.revision)
-		await this.ensure([...plan.records.values()])
+		await timed("records", this.ensure([...plan.records.values()]))
 		const names = columns(tables.room)
 		// The database clock fences a delayed admission independently of the API clock.
 		const expressions = names.map((k) =>
@@ -606,12 +611,12 @@ export class RelationalProposalRepository implements ProposalRepository {
 		)
 		return (
 			(
-				await this.sql(
+				await timed("head", this.sql(
 					`INSERT INTO ${tables.room.name} (${names.join(
 						","
 					)}) VALUES (${expressions.join(",")}) ON CONFLICT DO NOTHING`,
 					args
-				)
+				))
 			).rowcount === 1
 		)
 	}

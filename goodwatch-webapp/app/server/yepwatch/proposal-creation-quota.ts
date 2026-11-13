@@ -7,12 +7,16 @@ interface Reservation { room_id: string; admission_digest: string; expires_at: n
 interface Quota { reservations: Reservation[]; seq: number; term: number; now: number; expiresAt: number }
 export interface CreationQuotaStore {
   readonly limit: number
-  reserve(roomId: string, admissionDigest: string, creatorDigest: string): Promise<number>
+  /**
+   * `seen`: what `eligible` resolved to for this room and creator just before, so the first attempt starts from what
+   * it read. `now`: the store clock read alongside it, for a creator without an allowance row yet.
+   */
+  reserve(roomId: string, admissionDigest: string, creatorDigest: string, seen?: unknown, now?: number): Promise<number>
   /**
    * Read only: throws what `reserve` would refuse with now (a full allowance, a changed retry), without writing.
-   * Passing is no promise: `reserve` stays the authoritative compare-and-swap.
+   * Passing is no promise: `reserve` stays the authoritative compare-and-swap. Resolves to what it read, for `reserve`.
    */
-  eligible(roomId: string, admissionDigest: string, creatorDigest: string): Promise<void>
+  eligible(roomId: string, admissionDigest: string, creatorDigest: string): Promise<unknown>
   active(roomId: string, expectedExpiry?: number): Promise<void>
   count(): Promise<number>
 }
@@ -22,6 +26,9 @@ export async function provisionCreationQuotas(sql: Sql, replicas: 0 | 2) {
   for (const table of [quotaTable, reservationTable]) await sql(tableDdl(table, replicas))
 }
 
+/** What `eligible` read for a room and its creator: `reserve`'s first attempt starts from it instead of reading again. */
+interface Seen { roomId: string; creator: string; prior: Record<string, any> | null; current: Quota | null }
+const seenReads = new WeakSet<Seen>()
 /** Each person has an independent CAS row. The fixed room proof recovers uncertain acknowledgements. */
 export class SqlCreationQuotas implements CreationQuotaStore {
   private readonly sql: Sql
@@ -72,31 +79,39 @@ export class SqlCreationQuotas implements CreationQuotaStore {
     if (!proof || (expectedExpiry !== undefined && expectedExpiry !== proof.expires_at)) throw busy()
   }
   async eligible(roomId: string, admissionDigest: string, creator: string) {
-    const prior = await this.proof(roomId)
+    // The room's proof and its creator's row are read together: a new room has no proof, so both are needed.
+    const [prior, current] = await Promise.all([this.proof(roomId), this.read(creator)])
+    const seen: Seen = { roomId, creator, prior, current }
+    seenReads.add(seen)
     if (prior) {
       if (prior.admission_digest !== admissionDigest) throw new RoomError('conflict', 'Admission retry changed', 409)
-      return
+      return seen
     }
-    const current = await this.read(creator)
-    if (!current) return
+    if (!current) return seen
     const live = current.reservations.filter(r => r.expires_at > current.now)
     const own = live.find(r => r.room_id === roomId)
     if (own) {
       // A reservation whose room proof isn't written yet: `reserve` finishes it.
       if (own.admission_digest !== admissionDigest) throw new RoomError('conflict', 'Admission retry changed', 409)
-      return
+      return seen
     }
     if (live.length >= this.limit) throw allowanceFull(this.limit)
+    return seen
   }
-  async reserve(roomId: string, admissionDigest: string, creator: string) {
-    const prior = await this.proof(roomId)
+  async reserve(roomId: string, admissionDigest: string, creator: string, seen?: unknown, clock?: number) {
+    const known = typeof seen === 'object' && seen !== null && seenReads.has(seen as Seen) &&
+      (seen as Seen).roomId === roomId && (seen as Seen).creator === creator ? seen as Seen : null
+    if (known) seenReads.delete(known)
+    const prior = known ? known.prior : await this.proof(roomId)
     if (prior) {
       if (prior.admission_digest !== admissionDigest) throw new RoomError('conflict', 'Admission retry changed', 409)
       return prior.expires_at
     }
     for (let attempt = 0; attempt < 12; attempt++) {
-      const current = await this.read(creator)
-      const now = current?.now ?? Number((await this.sql('SELECT CURRENT_TIMESTAMP')).rows[0]?.[0])
+      // The first attempt starts from what `eligible` read; a compare-and-swap lost to a newer row reads again.
+      const first = attempt === 0 && known !== null
+      const current = first ? known.current : await this.read(creator)
+      const now = current?.now ?? (first && clock !== undefined ? clock : Number((await this.sql('SELECT CURRENT_TIMESTAMP')).rows[0]?.[0]))
       if (!Number.isSafeInteger(now)) throw busy()
       const reservations = (current?.reservations ?? []).filter(r => r.expires_at > now)
       let reservation = reservations.find(r => r.room_id === roomId)
@@ -106,18 +121,30 @@ export class SqlCreationQuotas implements CreationQuotaStore {
         reservation = { room_id: roomId, admission_digest: admissionDigest, expires_at: now + CONTINUOUS_LIMITS.roomMs }
         reservations.push(reservation)
         const expiresAt = Math.max(...reservations.map(r => r.expires_at))
+        // An acknowledged compare-and-swap (or insert) is its own proof; only a lost acknowledgement is read back.
+        let landed = false
         try {
           const result = current
             ? await this.sql(`UPDATE ${quotaTable.name} SET reservations=?,expires_at=? WHERE creator_digest=? AND _seq_no=? AND _primary_term=?`, [reservations, expiresAt, creator, current.seq, current.term])
             : await this.sql(`INSERT INTO ${quotaTable.name} (creator_digest,format,expires_at,reservations) VALUES (?,?,?,?) ON CONFLICT DO NOTHING`, [creator, 1, expiresAt, reservations])
           if (result.rowcount !== 1) continue
+          landed = true
         } catch (error) { if (!(error instanceof IndeterminateWrite)) throw error }
-        const confirmed = await this.read(creator)
-        if (!confirmed?.reservations.some(r => r.room_id === roomId && r.admission_digest === admissionDigest && r.expires_at === reservation!.expires_at)) continue
+        if (!landed) {
+          const confirmed = await this.read(creator)
+          if (!confirmed?.reservations.some(r => r.room_id === roomId && r.admission_digest === admissionDigest && r.expires_at === reservation!.expires_at)) continue
+        }
       }
+      let proven = false
       try {
-        await this.sql(`INSERT INTO ${reservationTable.name} (room_id,creator_digest,admission_digest,expires_at) VALUES (?,?,?,?) ON CONFLICT DO NOTHING`, [roomId, creator, admissionDigest, reservation.expires_at])
+        proven = (await this.sql(`INSERT INTO ${reservationTable.name} (room_id,creator_digest,admission_digest,expires_at) VALUES (?,?,?,?) ON CONFLICT DO NOTHING`, [roomId, creator, admissionDigest, reservation.expires_at])).rowcount === 1
       } catch (error) { if (!(error instanceof IndeterminateWrite)) throw error }
+      if (proven) {
+        // The proof row is exactly the one sent (written once, deleted only after expiry): kept as a read of it would be.
+        this.reservations.set(roomId, parseRow(reservationTable, { room_id: roomId, creator_digest: creator, admission_digest: admissionDigest, expires_at: reservation.expires_at }))
+        if (this.reservations.size > 4096) this.reservations.delete(this.reservations.keys().next().value!)
+        return reservation.expires_at
+      }
       const confirmed = await this.proof(roomId)
       if (confirmed?.admission_digest === admissionDigest) return confirmed.expires_at
       if (confirmed) throw new RoomError('conflict', 'Admission retry changed', 409)

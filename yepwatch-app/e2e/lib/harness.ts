@@ -125,11 +125,13 @@ export class Person {
       const p = new URL(url).pathname;
       const status = r.status();
       if (r.request().method() === 'POST' && p.includes('/proposal/')) this.commandLog.push({ t: Date.now(), status, path: p });
-      // E2E_SERVER_TIMING_LOG=<file>: each Start's Server-Timing (durations only) as one JSON line, for perf work.
-      if (SERVER_TIMING_LOG && r.request().method() === 'POST' && p.endsWith('/commands')) {
-        let type: unknown;
-        try { type = (r.request().postDataJSON() as { command?: { type?: unknown } } | null)?.command?.type; } catch { /* not JSON */ }
-        if (type === 'start') fs.appendFileSync(SERVER_TIMING_LOG, `${JSON.stringify({ t: Date.now(), status, serverTiming: r.headers()['server-timing'] ?? null })}\n`);
+      // E2E_SERVER_TIMING_LOG=<file>: the Server-Timing (durations only) of each create, join, realtime ticket and
+      // command as one JSON line, for perf work. `kind`: create, join, ticket or the command's type.
+      if (SERVER_TIMING_LOG && r.request().method() === 'POST' && p.includes('/proposal/rooms')) {
+        let kind: unknown = p.endsWith('/proposal/rooms') ? 'create' : p.endsWith('/join') ? 'join' : p.endsWith('/realtime-ticket') ? 'ticket' : null;
+        if (p.endsWith('/commands'))
+          try { kind = (r.request().postDataJSON() as { command?: { type?: unknown } } | null)?.command?.type; } catch { /* not JSON */ }
+        if (kind) fs.appendFileSync(SERVER_TIMING_LOG, `${JSON.stringify({ t: Date.now(), kind, status, serverTiming: r.headers()['server-timing'] ?? null })}\n`);
       }
       const json = (r.headers()['content-type'] ?? '').includes('json');
       const body = json ? await r.json().catch(() => null) : null;

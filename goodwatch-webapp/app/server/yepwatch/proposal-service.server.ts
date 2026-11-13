@@ -1,4 +1,5 @@
-import { timed, timedSync } from "./server-timing.ts"
+import { mark, timed, timedSync } from "./server-timing.ts"
+import { MemoryTicketStore, type TicketStore } from "./proposal-tickets.ts"
 import { ExclusionKeepAlive } from "./proposal-member-exclusions.ts"
 import { MemoryAccountRooms } from "./proposal-account-store.ts"
 import { MemoryDeletionStore, requireNotDeleting, type DeletionStore } from './proposal-deletion.ts'
@@ -72,8 +73,12 @@ interface Lease {
 export interface ProposalOperationGuard {
 	/** Throws unless the room is live and holds its capacity. What it resolves to may be passed to `command`. */
 	active(room: Pick<ProposalRoom, "id" | "expiresAt">): Promise<unknown>
-	/** Reserves the room in its creator's allowance; there is no shared cap on active rooms. */
-	create(roomId: string, admissionDigest: string, creatorDigest: string): Promise<number>
+	/**
+	 * Reserves the room in its creator's allowance; there is no shared cap on active rooms. `proceed`: whether the
+	 * room still needs creating (its existence read). The guard may read alongside it, but writes nothing until it
+	 * resolves true, and resolves null without writing when it resolves false.
+	 */
+	create(roomId: string, admissionDigest: string, creatorDigest: string, proceed?: Promise<boolean>): Promise<number | null>
 	join(roomId: string, actorId: string, admissionDigest: string): Promise<void>
 	/** `checked`: what `active` just resolved to for this room, so the guard can start from what it read. */
 	command(roomId: string, actorId: string, commandDigest: string, checked?: unknown): Promise<void>
@@ -125,6 +130,8 @@ export class ProposalService {
 	readonly accounts: AccountRoomsStore
 	readonly repository: ProposalRepository
 	readonly catalog: ProposalCatalog
+	/** Realtime tickets, kept outside the room so they never take the room's write lane. */
+	readonly tickets: TicketStore
 	private secret: string
 	private publish: (event: RoomInvalidation) => Promise<void>
 	private guard?: ProposalOperationGuard
@@ -159,13 +166,14 @@ export class ProposalService {
 		now: () => number = Date.now,
 		guard?: ProposalOperationGuard,
 		interpret?: InterpretRoom,
-		options: { decks?: PreparedDecksOptions; interpretations?: number } = {}
+		options: { decks?: PreparedDecksOptions; interpretations?: number; tickets?: TicketStore } = {}
 	) {
 		if (secret.length < 32) throw new Error("Room secret too short")
 		this.repository = repository
 		this.accounts = repository.accountStore ?? new MemoryAccountRooms()
 		this.deletions = repository.deletionStore ?? new MemoryDeletionStore()
 		this.catalog = catalog
+		this.tickets = options.tickets ?? new MemoryTicketStore()
 		this.secret = secret
 		this.publish = publish
 		this.now = now
@@ -195,6 +203,7 @@ export class ProposalService {
 		if (lane.count >= 32)
 			throw new RoomError("busy", "Room busy; retry shortly", 503, true)
 		const queuedAt = Date.now()
+		const waitStarted = performance.now()
 		const previous = lane.tail
 		let release!: () => void
 		lane.tail = new Promise<void>((resolve) => {
@@ -204,6 +213,8 @@ export class ProposalService {
 		this.writes.set(id, lane)
 		try {
 			await previous
+			// Time spent behind this room's earlier writes (a vote behind a Start, a Start behind a join).
+			mark("lane", performance.now() - waitStarted)
 			if (Date.now() - queuedAt >= 10000)
 				throw new RoomError("busy", "Room busy; retry shortly", 503, true)
 			return await work()
@@ -634,7 +645,11 @@ export class ProposalService {
 			"conflict",
 			"Admission retry changed"
 		)
-		const code = await this.roomInvite(room)
+		return this.guestAdmitted(room, request, await this.roomInvite(room))
+	}
+	/** A guest's admission to `room` under its invite `code`. */
+	private guestAdmitted(room: ProposalRoom, request: GuestAdmissionRequest, code: string): GuestAdmission {
+		const p = this.identity(room.id, request)
 		return {
 			credential: {
 				sessionKey: hash(p.token),
@@ -712,8 +727,22 @@ export class ProposalService {
 		reconcile(next, room)
 		return next
 	}
+	/**
+	 * Creates the room, or answers for the one this request (same command and admission secret) already created.
+	 *
+	 * The store is asked as little as possible, one step after another only where an answer is needed: the
+	 * existence read and the guard's own reads run together; the guard's writes start only once the read says
+	 * there is no room yet (an exact retry charges nothing); then the invite reservation, the setup (catalog only,
+	 * never for a refused create) with the room's records, and the account's room list run together; the head
+	 * goes last, so nothing names the room before its invite and records are stored. A room whose head insert was acknowledged is answered from
+	 * what was stored, without reading it back. Crate has no transactions: a failure before the head leaves only
+	 * rows nothing names (an invite mapping, records, a reservation), which an exact retry reuses and expiry
+	 * removes; a lost acknowledgement of any write is resolved by the retry's existence read.
+	 */
 	async create(request: CreateRoomRequest, account?: RoomAccount, guestCreatorId?: string) {
-		if (account) await this.requireAccountActive(account.userId);
+		// The account check is a read: it runs alongside the others, and gates every write.
+		const accountActive = account ? this.requireAccountActive(account.userId) : undefined
+		accountActive?.catch(() => {}) // awaited below
 		const interpretation: { pending?: PendingIdea } = {}
 		// The idea's search starts only once this request owns the stored room: its insert succeeded, or a lost
 		// insert's retry finds the room holding this request's job.
@@ -723,8 +752,21 @@ export class ProposalService {
 			"proposal-room",
 			JSON.stringify([request.commandId, request.admissionSecret])
 		).slice(0, 32)
+		// A caller without any creator identity (HTTP always sends one) gets an allowance of its own, like a
+		// browser without the creator cookie.
+		const creatorDigest = keyed(this.secret, 'room-creator', account
+			? `account:${account.userId}`
+			: guestCreatorId ? `guest:${guestCreatorId}` : `room:${id}`)
 		for (let i = 0; i < 4; i++) {
-			const existing = await this.repository.read(id)
+			const existingRead = timed("read", this.repository.read(id))
+			const absent = existingRead.then((existing) => !existing, () => false)
+			const proceed = accountActive ? Promise.all([absent, accountActive]).then(([go]) => go, () => false) : absent
+			const reserving = this.guard
+				? timed("guard", this.guard.create(id, hash(JSON.stringify(request)), creatorDigest, proceed))
+				: undefined
+			reserving?.catch(() => {}) // awaited below, or settles on its own once `proceed` says no
+			const existing = await existingRead
+			await accountActive
 			if (existing) {
 				const pending = interpretation.pending
 				if (uncertain && pending) {
@@ -735,56 +777,33 @@ export class ProposalService {
 				await this.guard?.active(existing.room)
 				return this.admission(existing.room, request, account)
 			}
-			// A caller without any creator identity (HTTP always sends one) gets an allowance of its own, like a
-			// browser without the creator cookie.
-			const creatorDigest = keyed(this.secret, 'room-creator', account
-				? `account:${account.userId}`
-				: guestCreatorId ? `guest:${guestCreatorId}` : `room:${id}`)
-			const expiresAt =
-				(await this.guard?.create(id, hash(JSON.stringify(request)), creatorDigest)) ??
-				this.now() + L.roomMs
-			const invitation = await this.reserveInvite(id, expiresAt)
-			const p = this.member(id, request)
-			p.joinedAt = this.now()
-			if (account) this.connectAccount(id, p, account, invitation.expiresAt)
-			const blank: ProposalRoom = {
-				format: 2,
-				flowVersion: 3,
-				ideas: [],
-				disabledServiceIds: [],
-				interpretationCount: 0,
-				proposalVersion: 0,
-				proposal: null,
-				id,
-				hostId: p.id,
-				revision: 1,
-				expiresAt: invitation.expiresAt,
-				inviteHash: hash(invitation.code),
-				phase: "setup",
-				rosterVersion: 1,
-				contextVersion: 1,
-				generation: 0,
-				participants: [p],
-				screens: [],
-				constraints: {
-					kinds: ["movie", "show_start"],
-					maxMinutes: null,
-					moods: []
-				},
-				candidates: [],
-				seenKeys: [],
-				stream: { version: 0, state: "ready", reason: null },
-				agreement: { version: 0, state: "none", error: null },
-				decision: null,
-				tickets: []
+			const expiresAt = (await reserving) ?? this.now() + L.roomMs
+			// The invite, the room (set up, then its records stored) and the account's room list, together.
+			const build = async (expiry: number) => {
+				const room = await timed("setup", this.newRoom(id, request, account, interpretation, expiry))
+				if (this.repository.storeRecords) await timed("records", this.repository.storeRecords(room))
+				return room
 			}
-			const room = request.setup ? await this.withSetup(blank, request.setup, interpretation) : blank
+			const [invitation, built] = await Promise.all([
+				timed("invite", this.reserveInvite(id, expiresAt)),
+				build(expiresAt),
+				account && timed("account", this.accounts.remember(account.userId, { roomId: id, expiresAt })),
+			])
+			// An invite reserved earlier for this room with another expiry (no guard: an uncertain earlier attempt)
+			// fixes the room's expiry.
+			const room = invitation.expiresAt === expiresAt ? built : await build(invitation.expiresAt)
+			if (account && room.expiresAt !== expiresAt) await this.accounts.remember(account.userId, { roomId: id, expiresAt: room.expiresAt })
+			room.inviteHash = hash(invitation.code)
 			uncertain = false
 			try {
-				if (account) await this.accounts.remember(account.userId, { roomId: id, expiresAt: room.expiresAt })
-				if (await this.repository.insert(room)) {
+				if (await timed("insert", this.repository.insert(room))) {
 					this.decks.schedule(id)
 					if (interpretation.pending) this.interpretInBackground(id, interpretation.pending.ideaId, interpretation.pending)
+					this.remember(room)
+					const p = actor(room, room.hostId)
+					return account
+						? this.admitted(room, this.accountCredential(id, p.id, account), invitation.code)
+						: this.guestAdmitted(room, request, invitation.code)
 				}
 			} catch (e) {
 				if (!(e instanceof IndeterminateWrite)) throw e
@@ -797,6 +816,56 @@ export class ProposalService {
 			503,
 			true
 		)
+	}
+	/** A new room for this create request, expiring at `expiresAt`, its first setup applied; its invite is set before it is stored. */
+	private async newRoom(
+		id: string,
+		request: CreateRoomRequest,
+		account: RoomAccount | undefined,
+		interpretation: { pending?: PendingIdea },
+		expiresAt: number
+	): Promise<ProposalRoom> {
+		const p = this.member(id, request)
+		p.joinedAt = this.now()
+		if (account) this.connectAccount(id, p, account, expiresAt)
+		const blank: ProposalRoom = {
+			format: 2,
+			flowVersion: 3,
+			ideas: [],
+			disabledServiceIds: [],
+			interpretationCount: 0,
+			proposalVersion: 0,
+			proposal: null,
+			id,
+			hostId: p.id,
+			revision: 1,
+			expiresAt,
+			inviteHash: "",
+			phase: "setup",
+			rosterVersion: 1,
+			contextVersion: 1,
+			generation: 0,
+			participants: [p],
+			screens: [],
+			constraints: {
+				kinds: ["movie", "show_start"],
+				maxMinutes: null,
+				moods: []
+			},
+			candidates: [],
+			seenKeys: [],
+			stream: { version: 0, state: "ready", reason: null },
+			agreement: { version: 0, state: "none", error: null },
+			decision: null,
+			tickets: []
+		}
+		return request.setup ? this.withSetup(blank, request.setup, interpretation) : blank
+	}
+	/** Notes a room's fixed expiry, as a read of it would (readChecked then checks capacity alongside the read). */
+	private remember(room: ProposalRoom) {
+		this.expiries.delete(room.id)
+		this.expiries.set(room.id, room.expiresAt)
+		if (this.expiries.size > 4096) this.expiries.delete(this.expiries.keys().next().value!)
 	}
 	async resolveInvite(code: string) {
 		const room = await this.invitedRoom(code)
@@ -955,13 +1024,17 @@ export class ProposalService {
 		credential: ActorCredential
 	): Promise<GuestAdmission> {
 		const { room } = await this.get(id)
+		this.auth(room, credential)
+		return this.admitted(room, credential, await this.roomInvite(room))
+	}
+	/** An admission recovered (or, for an account, made) with `credential`, under the room's invite `code`. */
+	private admitted(room: ProposalRoom, credential: ActorCredential, code: string): GuestAdmission {
 		const p = this.auth(room, credential)
-		const code = await this.roomInvite(room)
 		return {
 			recovered: true,
 			credential: {
 				sessionKey: hash(credential.token),
-				roomId: id,
+				roomId: room.id,
 				participantId: p.id,
 				token: credential.token,
 				expiresAt: room.expiresAt
@@ -1761,53 +1834,32 @@ export class ProposalService {
 			return
 		}
 	}
+	/**
+	 * A one-use realtime ticket. It is kept in the ticket store, not the room: issuing one reads the room (to
+	 * authenticate) and writes nothing to it, so it never waits in the room's write lane or makes a vote wait there.
+	 */
 	async ticket(
 		id: string,
 		credential: ActorCredential
 	): Promise<RealtimeTicket> {
-		return this.write(id, () => this.issueTicket(id, credential))
-	}
-	private async issueTicket(
-		id: string,
-		credential: ActorCredential
-	): Promise<RealtimeTicket> {
-		for (let i = 0; i < 6; i++) {
-			const old = await this.get(id)
-			const p = this.auth(old.room, credential)
-			const room = structuredClone(old.room)
-			room.tickets = room.tickets.filter((t) => t.expiresAt > this.now())
-			requireRoom(
-				room.tickets.filter((t) => t.participantId === p.id).length < L.tickets,
-				"limit_reached",
-				"Too many connection tickets"
-			)
-			const ticket = random()
-			const expiresAt = Math.min(this.now() + 30_000, room.expiresAt)
-			room.tickets.push({
-				...(credential.sessionId ? { sessionId: credential.sessionId } : {}),
-				hash: hash(ticket),
-				participantId: p.id,
-				epoch: p.epoch,
-				expiresAt
-			})
-			try {
-				if (await this.repository.compareAndSwap(old, room, false))
-					return {
-						ticket,
-						expiresAt,
-						websocketPath: "/api/yepwatch/v1/proposal/realtime"
-					}
-			} catch (e) {
-				if (!(e instanceof IndeterminateWrite)) throw e
-				throw new RoomError(
-					"outcome_unknown",
-					"Ticket issue uncertain; backoff and request fresh ticket",
-					503,
-					true
-				)
-			}
+		const { room } = await timed("read", this.get(id))
+		const p = this.auth(room, credential)
+		const ticket = random()
+		const now = this.now()
+		const expiresAt = Math.min(now + 30_000, room.expiresAt)
+		const issued = await timed("ticket", this.tickets.issue(id, hash(ticket), {
+			participantId: p.id,
+			epoch: p.epoch,
+			expiresAt,
+			...(credential.sessionId ? { sessionId: credential.sessionId } : {}),
+			...(p.memberUserId ? { member: true } : {}),
+		}, L.tickets, now))
+		requireRoom(issued, "limit_reached", "Too many connection tickets")
+		return {
+			ticket,
+			expiresAt,
+			websocketPath: "/api/yepwatch/v1/proposal/realtime"
 		}
-		throw new RoomError("busy", "Room busy; retry ticket issue", 503, true)
 	}
 	private attachment(room: ProposalRoom, id: string, sessionId?: string): RealtimeAttachment {
 		const p = actor(room, id)
@@ -1833,9 +1885,39 @@ export class ProposalService {
 			scope: "shared:read"
 		}
 	}
+	/**
+	 * Consumes a ticket on WebSocket attach, outside the room's write lane: the store hands it out once, then a
+	 * fresh read of the room (after the consume, so a departure or revocation committed before it is seen) decides
+	 * whether its participant may still attach: same capability epoch, still in the room, and for a member place
+	 * the ticket's session still on it and still signed in. A ticket issued into the room itself (before tickets
+	 * moved out of it) is consumed from the room as before.
+	 */
 	async attach(id: string, ticket: string) {
-		return this.write(id, () => this.consumeTicket(id, ticket))
+		const digest = hash(ticket)
+		const t = await this.tickets.consume(id, digest, this.now())
+		if (!t) {
+			const legacy = await this.get(id).then(
+				({ room }) => room.tickets.some((x) => equal(x.hash, digest)),
+				() => false
+			)
+			requireRoom(legacy, "unauthorized", "Ticket expired or consumed", 401)
+			return this.write(id, () => this.consumeTicket(id, ticket))
+		}
+		// The sign-in check runs alongside the room read. Its early answer only holds while the room as read still
+		// lists the session on the account place (Log out takes it off every room before revoking it); otherwise
+		// it is asked again after the read, as leaseView does.
+		let session = t.sessionId ? this.accounts.sessionActive(t.sessionId) : undefined
+		session?.catch(() => {}) // Its failure is reported below, after the room's own checks.
+		const { room } = await this.get(id)
+		const p = actor(room, t.participantId)
+		requireRoom(p.epoch === t.epoch, "forbidden", "Access revoked", 403)
+		if (t.member)
+			requireRoom((p.sessions ?? []).some((s) => s.id === t.sessionId && s.expiresAt > this.now()), "forbidden", "Session ended", 403)
+		if (t.sessionId && !p.memberUserId) session = this.accounts.sessionActive(t.sessionId)
+		if (session) requireRoom(await session, "forbidden", "Session ended", 403)
+		return this.attachment(room, t.participantId, t.sessionId)
 	}
+	/** A ticket stored in the room by an earlier release: removed from the room by compare-and-swap. */
 	private async consumeTicket(id: string, ticket: string) {
 		for (let i = 0; i < 6; i++) {
 			const old = await this.get(id)
@@ -2101,3 +2183,4 @@ function watchScreensChanged(old: ProposalRoom, next: ProposalRoom) {
 	}
 	return screens(old) !== screens(next)
 }
+

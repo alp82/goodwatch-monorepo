@@ -58,7 +58,8 @@ jobs:
             app/server/yepwatch/proposal-release-control.test.ts \
             app/server/yepwatch/proposal-release-control-crate.test.ts \
             app/server/yepwatch/proposal-relational-crate.test.ts \
-            app/server/yepwatch/proposal-creation-quota.test.ts
+            app/server/yepwatch/proposal-creation-quota.test.ts \
+            app/server/yepwatch/proposal-create-crate.test.ts
           node app/server/yepwatch/write-storage-schema.mjs
           git diff --exit-code -- app/server/yepwatch/schema.sql
       - name: Validate Coolify configuration

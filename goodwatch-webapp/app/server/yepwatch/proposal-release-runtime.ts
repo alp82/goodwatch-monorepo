@@ -10,6 +10,7 @@ import {
 } from "../../../packages/yepwatch-contracts/proposal.ts"
 import { createProposalHandler } from "./proposal-http.server.ts"
 import { ProposalService } from "./proposal-service.server.ts"
+import { ValkeyTicketStore, type ScriptClient } from "./proposal-tickets.ts"
 import type { Sql } from "./repository.server.ts"
 import { RelationalProposalRepository } from "./proposal-relational-repository.ts"
 import { checkReleaseStore } from "./proposal-release-store.ts"
@@ -25,7 +26,8 @@ export interface ReleaseDependencies {
 	memberCatalog?: (members: ContinuousMembers) => ProposalCatalog
 	snapshot(): { count: number; version: string } | null
 	catalogProbe(): Promise<void>
-	bus: {
+	/** The messaging connection: revision hints, and the realtime tickets (ValkeyTicketStore). */
+	bus: ScriptClient & {
 		ping(): Promise<unknown>
 		publish(channel: string, value: string): Promise<unknown>
 	}
@@ -54,7 +56,8 @@ export function createReleaseRuntime(
 		},
 		Date.now,
 		control,
-		roomSearch(process.env)
+		roomSearch(process.env),
+		{ tickets: new ValkeyTicketStore(deps.bus) }
 	)
 	const handle = createProposalHandler(service, {
 		serviceSecret: config.gatewaySecret,

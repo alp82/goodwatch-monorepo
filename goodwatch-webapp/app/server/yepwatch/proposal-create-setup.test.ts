@@ -74,8 +74,12 @@ function fixture(options: { search?: Search } = {}) {
 		held = { promise, resolve }
 		return () => { held = null; resolve() }
 	}
+	/** Until `n` searches have started: create answers once the room is stored, its search starts right after. */
+	const searched = async (n: number) => {
+		for (let i = 0; searches < n && i < 100; i++) await new Promise((r) => setImmediate(r))
+	}
 	return {
-		repo, service, request, instance, hold, clock, state, published,
+		repo, service, request, instance, hold, clock, state, published, searched,
 		inserts: () => inserts, swaps: () => swaps, searches: () => searches, maxInFlight: () => maxInFlight
 	}
 }
@@ -143,6 +147,7 @@ test("one create with setup stores a room with its country and first idea in one
 	const f = fixture()
 	const release = f.hold()
 	const a = await f.service.create(f.request({ country: "DE", idea: "space heist" }))
+	await f.searched(1)
 	const s = a.snapshot.shared
 	assert.equal(s.screens[0]?.country, "DE")
 	assert.deepEqual(s.ideas.map((i) => [i.text, i.authorId, i.on]), [["space heist", a.snapshot.own.participantId, true]])
@@ -370,6 +375,7 @@ test("a stale attempt's late answer never lands over its takeover's: answered at
 	const release = f.hold()
 	f.state.attribute = "stale"
 	const created = await first.create(f.request({ country: "DE", idea: "space heist" }))
+	await f.searched(1)
 	const id = created.credential.roomId
 	f.clock.offset = 11_000
 	a.stall()
@@ -490,6 +496,7 @@ test("the periodic sweep resumes a pending idea nobody reads once its lease ran 
 	const f = fixture()
 	f.hold() // the creating instance crashes mid-search; no phone reads the room
 	const a = await f.service.create(f.request({ country: "DE", idea: "space heist" }))
+	await f.searched(1)
 	const id = a.credential.roomId
 	f.hold()()
 	const sweeper = f.instance()

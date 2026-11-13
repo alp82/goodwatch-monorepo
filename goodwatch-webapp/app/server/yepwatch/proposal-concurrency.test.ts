@@ -231,18 +231,20 @@ test(
 			}
 			return cas(old, room, notify)
 		}
-		const first = service.ticket(a.credential.roomId, credential(a))
+		// Renames are room writes: they take the room's write lane (realtime tickets no longer do).
+		const rename = (who: typeof a, sequence: number, token = who.credential.token) =>
+			service.command(who.credential.roomId, { ...credential(who), token }, {
+				commandId: randomBytes(12).toString("hex"),
+				sequence,
+				command: { type: "rename", nickname: "Renamed" } as RoomCommand,
+			})
+		const first = rename(a, 1)
 		await reached
 		try {
-			await service.ticket(b.credential.roomId, credential(b))
-			const denied = Array.from({ length: 31 }, () =>
-				service.ticket(a.credential.roomId, {
-					...credential(a),
-					token: "invalid",
-				}),
-			)
+			await rename(b, 1)
+			const denied = Array.from({ length: 31 }, () => rename(a, 2, "invalid"))
 			const settled = Promise.allSettled(denied)
-			await assert.rejects(service.ticket(a.credential.roomId, credential(a)), {
+			await assert.rejects(rename(a, 2), {
 				code: "busy",
 			})
 			release()
@@ -255,7 +257,7 @@ test(
 						result.reason.code === "unauthorized",
 				),
 			)
-			await service.ticket(a.credential.roomId, credential(a))
+			await rename(a, 2)
 		} finally {
 			release()
 		}

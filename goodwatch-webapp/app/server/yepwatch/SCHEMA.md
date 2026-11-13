@@ -17,7 +17,7 @@ All names below are in the `doc` schema. Every immutable domain record has `reco
 | `yepwatch_decision` | Candidate ID, agreement-check version, decision time, strictly typed availability evidence |
 | `yepwatch_candidate` | Candidate ID, typed movie/show/episode identity, title/year, summary, poster/backdrop/trailer URLs, score/genres/runtime, typed availability and viewing duration |
 | `yepwatch_command_receipt` | Participant ID, command ID, sequence, request digest and accepted room revision |
-| `yepwatch_ticket` | Ticket hash, participant ID, optional login session ID, participant epoch and ticket expiry |
+| `yepwatch_ticket` | Ticket hash, participant ID, optional login session ID, participant epoch and ticket expiry. Only rooms written before 2026-11-13 reference any: realtime tickets now live in Valkey (`proposal-tickets.ts`), outside the room |
 | `yepwatch_member_grant` | Participant ID, encrypted access token and grant expiry |
 | `yepwatch_member_intent` | State hash, participant ID, epoch, client/return URI, PKCE challenge and encrypted verifier, connection status, code hash and intent expiry |
 | `yepwatch_idea` | Authored room idea, enabled state and immutable interpretation |

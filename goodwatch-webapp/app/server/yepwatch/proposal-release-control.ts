@@ -327,22 +327,34 @@ export class ReleaseControl {
 	 * rows. Only a creator racing themselves for their last slot can spend a grant on a refused reservation. An exact
 	 * retry finds its grant and its reservation again; an exact retry of a room created under the removed shared cap
 	 * gets that room's original expiry and creates nothing.
+	 *
+	 * `proceed`: whether the room still needs creating (the caller's existence read, running alongside). The reads
+	 * here run alongside it; nothing is written, and null is returned, unless it resolves true.
 	 */
-	async create(roomId: string, admissionDigest: string, creatorDigest: string) {
+	create(roomId: string, admissionDigest: string, creatorDigest: string): Promise<number>
+	create(roomId: string, admissionDigest: string, creatorDigest: string, proceed?: Promise<boolean>): Promise<number | null>
+	async create(roomId: string, admissionDigest: string, creatorDigest: string, proceed?: Promise<boolean>): Promise<number | null> {
 		const eligibility = this.quotas.eligible(roomId, admissionDigest, creatorDigest).then(
-			() => null,
+			(seen) => ({ seen }),
 			(error: unknown) => ({ error })
 		)
-		const r = await this.read()
+		const read = this.read().then(
+			(r) => ({ r }),
+			(error: unknown) => ({ error })
+		)
+		if (proceed && !(await proceed)) return null
+		const control = await read
+		if ("error" in control) throw control.error
+		const r = control.r
 		const legacyExpiry = this.legacyCreation(r, roomId, admissionDigest)
 		if (legacyExpiry !== undefined) return legacyExpiry
-		const refused = await eligibility
-		if (refused) throw refused.error
+		const eligible = await eligibility
+		if ("error" in eligible) throw eligible.error
 		const check: Check = { ...r, roomId }
 		checks.add(check)
 		const raced = await this.permit("create", roomId, creatorDigest, admissionDigest, check)
 		if (raced !== undefined) return raced
-		return this.quotas.reserve(roomId, admissionDigest, creatorDigest)
+		return this.quotas.reserve(roomId, admissionDigest, creatorDigest, eligible.seen, r.now)
 	}
 	/**
 	 * A creation permit checks for a legacy reservation on every read it builds a compare-and-swap on, not only on

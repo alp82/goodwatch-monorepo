@@ -98,6 +98,12 @@ export type ProposalRepository = RoomRepository<ProposalRoom> & {
 	 */
 	prestore?(room: ProposalRoom, candidates: ProposalRoom["candidates"]): Promise<void>
 	/**
+	 * Stores the records a new room's head will name, ahead of its insert (which then writes only the head), so a
+	 * create can write them alongside its other writes. Rows no head names are removed with the room's other records
+	 * by their expiry, as for prestore.
+	 */
+	storeRecords?(room: ProposalRoom): Promise<void>
+	/**
 	 * Ids of live rooms (expiring after `now`) whose current ideas include one still pending with a lease from
 	 * before `leaseBefore`, at most `limit`, ordered by room id and after `after` (a keyset cursor; "" from the
 	 * start). A search, not a typed read: callers read each room.

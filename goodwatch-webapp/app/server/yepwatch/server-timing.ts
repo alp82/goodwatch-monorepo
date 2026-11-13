@@ -43,3 +43,9 @@ export function timedSync<T>(name: string, work: () => T): T {
 		marks.set(name, (marks.get(name) ?? 0) + performance.now() - started)
 	}
 }
+
+/** A duration measured elsewhere (`ms`), added to `name` on the current request. */
+export function mark(name: string, ms: number) {
+	const marks = current.getStore()
+	if (marks) marks.set(name, (marks.get(name) ?? 0) + ms)
+}

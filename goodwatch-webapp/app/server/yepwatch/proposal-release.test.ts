@@ -160,6 +160,7 @@ test("Readiness stays red indefinitely without loaded snapshot; probes recover a
 				if (!busOk) throw Error("temporary")
 			},
 			publish: async () => {},
+			eval: async () => null,
 		},
 	})
 	try {
