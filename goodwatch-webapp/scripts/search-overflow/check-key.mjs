@@ -1,8 +1,8 @@
 import { pathToFileURL } from "node:url"
 
 export async function checkOverflowKey(env = process.env, fetcher = fetch) {
-	const key = env.SEARCH_OVERFLOW_OPENROUTER_API_KEY?.trim()
-	const amount = env.SEARCH_OVERFLOW_MONTHLY_BUDGET_USD ?? ""
+	const key = env.OPENROUTER_DECISION_MODELS_API_KEY?.trim()
+	const amount = env.OPENROUTER_DECISION_MODELS_MONTHLY_BUDGET_USD ?? ""
 	const cap = Number(amount)
 	if (
 		!key ||

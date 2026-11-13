@@ -193,8 +193,8 @@ export async function readLiquid(
 export function overflowConfiguration():
 	| { apiKey: string; monthlyNano: number }
 	| undefined {
-	const apiKey = process.env.SEARCH_OVERFLOW_OPENROUTER_API_KEY?.trim();
-	const amount = process.env.SEARCH_OVERFLOW_MONTHLY_BUDGET_USD ?? "";
+	const apiKey = process.env.OPENROUTER_DECISION_MODELS_API_KEY?.trim();
+	const amount = process.env.OPENROUTER_DECISION_MODELS_MONTHLY_BUDGET_USD ?? "";
 	if (!apiKey || !/^\d+(\.\d{1,9})?$/.test(amount)) return;
 	const [dollars, fraction = ""] = amount.split(".");
 	const nano =

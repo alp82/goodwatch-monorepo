@@ -47,11 +47,11 @@ test("overflow requires its own key and positive precise budget, never the share
 	t.after(() => {
 		process.env = previous;
 	});
-	delete process.env.SEARCH_OVERFLOW_OPENROUTER_API_KEY;
+	delete process.env.OPENROUTER_DECISION_MODELS_API_KEY;
 	process.env.OPENROUTER_API_KEY = "shared-test";
-	process.env.SEARCH_OVERFLOW_MONTHLY_BUDGET_USD = "1";
+	process.env.OPENROUTER_DECISION_MODELS_MONTHLY_BUDGET_USD = "1";
 	assert.equal(overflowConfiguration(), undefined);
-	process.env.SEARCH_OVERFLOW_OPENROUTER_API_KEY = "dedicated-test";
+	process.env.OPENROUTER_DECISION_MODELS_API_KEY = "dedicated-test";
 	for (const invalid of [
 		"",
 		"0",
@@ -62,10 +62,10 @@ test("overflow requires its own key and positive precise budget, never the share
 		"1.0000000001",
 		"99999999999999999",
 	]) {
-		process.env.SEARCH_OVERFLOW_MONTHLY_BUDGET_USD = invalid;
+		process.env.OPENROUTER_DECISION_MODELS_MONTHLY_BUDGET_USD = invalid;
 		assert.equal(overflowConfiguration(), undefined, invalid);
 	}
-	process.env.SEARCH_OVERFLOW_MONTHLY_BUDGET_USD = "1.000000001";
+	process.env.OPENROUTER_DECISION_MODELS_MONTHLY_BUDGET_USD = "1.000000001";
 	assert.deepEqual(overflowConfiguration(), {
 		apiKey: "dedicated-test",
 		monthlyNano: 1_000_000_001,

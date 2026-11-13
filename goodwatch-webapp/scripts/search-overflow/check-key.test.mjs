@@ -2,8 +2,8 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import { checkOverflowKey } from "./check-key.mjs"
 const env = {
-	SEARCH_OVERFLOW_OPENROUTER_API_KEY: "private-test-key",
-	SEARCH_OVERFLOW_MONTHLY_BUDGET_USD: "1",
+	OPENROUTER_DECISION_MODELS_API_KEY: "private-test-key",
+	OPENROUTER_DECISION_MODELS_MONTHLY_BUDGET_USD: "1",
 }
 const data = {
 	is_management_key: false,
@@ -23,7 +23,7 @@ test("read-only key check verifies the cap without printing the credential", asy
 	})
 	assert.equal(result.limit, 1)
 	assert.equal(
-		JSON.stringify(result).includes(env.SEARCH_OVERFLOW_OPENROUTER_API_KEY),
+		JSON.stringify(result).includes(env.OPENROUTER_DECISION_MODELS_API_KEY),
 		false,
 	)
 })

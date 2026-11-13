@@ -8,13 +8,13 @@ The choice follows the [ten-model benchmark](benchmarks/search-interpretation-op
 
 ## OpenRouter setup
 
-1. In [API keys](https://openrouter.ai/settings/keys), create a new ordinary inference key named `goodwatch-search-overflow`. Owner-approved overflow limit: **$5**, reset **monthly**. Keep existing application keys separate.
+1. In [API keys](https://openrouter.ai/settings/keys), create a new ordinary inference key named `goodwatch-openrouter-decision-models`. Owner-approved overflow limit: **$5**, reset **monthly**. Keep existing application keys separate.
 2. In the workspace's **Guardrails** page, create a guardrail allowing only `liquid/d1.1`, save it and explicitly assign it to this key in its API Keys section. Check eligibility. A preset alone does not enforce a model restriction. [Official guardrail instructions](https://openrouter.ai/docs/guides/features/guardrails)
 3. Store the new secret privately on both search roles (the protected `goodwatch-search/.env` on the search host). Do not put it in the browser or paste it into chat. The running application needs no management key.
 
 ```dotenv
-SEARCH_OVERFLOW_OPENROUTER_API_KEY=<new dedicated inference key>
-SEARCH_OVERFLOW_MONTHLY_BUDGET_USD=5
+OPENROUTER_DECISION_MODELS_API_KEY=<new dedicated inference key>
+OPENROUTER_DECISION_MODELS_MONTHLY_BUDGET_USD=5
 ```
 
 The application and key limits should match. OpenRouter's monthly counter follows the UTC calendar month, independently of TypeSafe's 17th-day cycle. Empty key, absent/invalid budget or a zero budget disables overflow; the shared `OPENROUTER_API_KEY` is never used for this reader. The shipped example defaults to zero.
