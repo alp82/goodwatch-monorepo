@@ -164,7 +164,14 @@ export class SearchStore {
 					input.timings[name] = Math.round((performance.now() - started) * 10) / 10
 			}
 		}
-		const [[control], [spend]] = await (input.checks ?? this.claimChecks(input.timings))
+		const checks = input.checks ?? this.claimChecks(input.timings)
+		// Handled at the await below; this keeps a rejection from counting as unhandled when the claim ends earlier.
+		checks.catch(() => {})
+		const attribution = (typeof input.attribution === "function" ? await input.attribution() : input.attribution) ?? { ...attributedSearch(undefined, null), actor_kind: "unknown" as const }
+		// Every paid call (reading or translation) is claimed here, after its cache lookup: a cached reading still serves.
+		// The refusal comes before the budget, so a refused search is recorded as "navigation" even while the budget is out.
+		if (!paidReadingAllowed(attribution)) return { kind: "basic", reason: "navigation" }
+		const [[control], [spend]] = await checks
 		if (!control || control.halted) return { kind: "basic", reason: "budget" }
 		const now = Number(spend.now)
 		if (
@@ -173,9 +180,6 @@ export class SearchStore {
 		)
 			return { kind: "basic", reason: "budget" }
 		const scopes = await timed("claimScopes", () => scopesReady)
-		const attribution = (typeof input.attribution === "function" ? await input.attribution() : input.attribution) ?? { ...attributedSearch(undefined, null), actor_kind: "unknown" as const }
-		// Every paid call (reading or translation) is claimed here, after its cache lookup: a cached reading still serves.
-		if (!paidReadingAllowed(attribution)) return { kind: "basic", reason: "navigation" }
 		if (!scopes.length) return { kind: "basic", reason: "configuration" }
 		const id = randomUUID()
 		let admitted
