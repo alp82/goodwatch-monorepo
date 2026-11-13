@@ -3,7 +3,7 @@ import assert from "node:assert/strict"
 import { randomUUID } from "node:crypto"
 import type { RoomCommand, RoomCommitted, RoomInvalidation, GuestAdmission } from "../../../packages/yepwatch-contracts/proposal.ts"
 import { paths } from "../../../packages/yepwatch-contracts/proposal.ts"
-import { ProposalService } from "./proposal-service.server.ts"
+import { ProposalService, revisionMessage } from "./proposal-service.server.ts"
 import { ProposalMemoryRepository, proposalFixtureCatalog } from "./proposal-test-support.ts"
 import { createProposalHandler } from "./proposal-http.server.ts"
 
@@ -133,4 +133,29 @@ test("a vote's Server-Timing names its publish", async () => {
 	const header = response.headers.get("server-timing") ?? ""
 	for (const name of ["body", "read", "preflight", "transition", "write", "publish", "snapshot"])
 		assert.match(header, new RegExp(`(^|, )${name};dur=`), `${name} in ${header}`)
+})
+
+test("a committed room is serialized once: the bus message is the JSON its size was checked on", async () => {
+	const r = await started()
+	const messages: string[] = []
+	;(r.service as unknown as { publish: (e: RoomInvalidation | RoomCommitted) => Promise<void> }).publish = async (event) => {
+		messages.push(revisionMessage(event))
+	}
+	const stringify = JSON.stringify
+	let committedSerializations = 0
+	JSON.stringify = ((value: unknown, ...rest: unknown[]) => {
+		if (value && typeof value === "object" && "snapshot" in value && "viewers" in value) committedSerializations++
+		return (stringify as (...args: unknown[]) => string)(value, ...rest)
+	}) as typeof JSON.stringify
+	let result
+	try {
+		result = await r.vote(r.b)
+		await new Promise((resolve) => setTimeout(resolve, 20))
+	} finally {
+		JSON.stringify = stringify
+	}
+	const committed = messages.map((m) => JSON.parse(m)).filter((e) => e.revision === result.receipt.appliedRevision)
+	assert.equal(committed.length, 2)
+	assert.ok(isCommitted(committed[0]))
+	assert.equal(committedSerializations, 1, "the size check and the bus message share one JSON.stringify")
 })

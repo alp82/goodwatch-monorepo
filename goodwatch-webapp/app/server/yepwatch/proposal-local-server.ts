@@ -1,7 +1,7 @@
 /** Explicit isolated runner: never use retained services or production room writes. */
 import { REVISION_CHANNEL } from "../../../packages/yepwatch-contracts/proposal.ts"
 import { createProposalHandler } from "./proposal-http.server.ts"
-import { ProposalService } from "./proposal-service.server.ts"
+import { ProposalService, revisionMessage } from "./proposal-service.server.ts"
 import { ProposalMemoryRepository } from "./proposal-test-support.ts"
 import { localFixture } from "./proposal-local-fixture.ts"
 import {
@@ -61,7 +61,7 @@ const service = new ProposalService(
 	secret,
 	async (event) => {
 		if (!redis) throw new Error("Bus absent")
-		await redis.publish(REVISION_CHANNEL, JSON.stringify(event))
+		await redis.publish(REVISION_CHANNEL, revisionMessage(event))
 	},
 	Date.now,
 	undefined,

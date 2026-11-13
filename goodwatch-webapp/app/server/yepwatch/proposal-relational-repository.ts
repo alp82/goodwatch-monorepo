@@ -177,6 +177,21 @@ export class RelationalProposalRepository implements ProposalRepository {
 		const { record_id: _, ...values } = row
 		return keyed(this.secret, `yepwatch-row:${entity}`, stable(values))
 	}
+	/**
+	 * Record ids this repository planned, by entity and the row's JSON: the same JSON is the same content, so the same
+	 * id. A vote's write plans every record of the room again and nearly all are unchanged. Bounded; only a speed-up.
+	 */
+	private planned = new Map<string, string>()
+	private plannedId(entity: Entity, row: Row) {
+		const key = `${entity}\0${JSON.stringify(row)}`
+		let id = this.planned.get(key)
+		if (id === undefined) {
+			id = this.recordId(entity, row)
+			this.planned.set(key, id)
+			if (this.planned.size > 4096) this.planned.delete(this.planned.keys().next().value!)
+		}
+		return id
+	}
 	private protectedRow(entity: Entity, row: Row, encrypt: boolean): Row {
 		const field = secretField[entity]
 		if (!field || row[field] === null) return row
@@ -253,7 +268,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 			expires_at: room.expiresAt,
 			...values
 		}
-		row.record_id = this.recordId(entity, row)
+		row.record_id = this.plannedId(entity, row)
 		// Ciphertext columns store a bounded encrypted string; plaintext is validated before encryption too.
 		parseRow(tables[entity], row)
 		return { entity, row }

@@ -190,6 +190,11 @@ export function createProposalHandler(
         const renewed = keepSession(result.session, result.changed)
         if (renewed) headers.set('x-yepwatch-session', renewed)
         const session = result.session
+        // The account's deletion check reads alongside the session check; a refused session still answers first.
+        const active = session?.sessionId && ![`${paths.account}/deletion`, `${paths.account}/restore`].includes(url.pathname)
+          ? service.requireAccountActive(session.userId)
+          : undefined
+        active?.catch(() => {}) // awaited below
         if (!session?.sessionId || !(await service.accounts.sessionActive(session.sessionId))) {
           if (!nativeRequest()) setCookie(MEMBER_COOKIE, '', 0)
           // Log out keeps this device's room places as guests: a read racing the logout (its cookie not yet
@@ -200,7 +205,7 @@ export function createProposalHandler(
         if (renewInline && (session.unverified || result.status.unavailable)) throw new RoomError('busy', 'GoodWatch is temporarily unavailable', 503, true)
         if (result.renewing || session.unverified) renewing = session
         freshMemberSession = session
-        if (![`${paths.account}/deletion`, `${paths.account}/restore`].includes(url.pathname)) await service.requireAccountActive(session.userId)
+        await active
         return { userId: session.userId, sessionId: session.sessionId,
           expiresAt: Date.now() + options.members.sessionMaxAge(session) * 1000 }
       })()
@@ -606,9 +611,16 @@ export function createProposalHandler(
           await service.archiveAccountRoom(id, (await account(true))!, value.archived)
           return reply({ ok: true })
         }
-				// A command's deletion check runs alongside its room read (the command waits for it before any write or answer).
-				let deletionCheck: Promise<void> | undefined
-				const actor = await timed("auth", scopedCredential(id, request.method === "POST" && operation === "commands" ? (check) => { deletionCheck = timed("deletion", check) } : undefined))
+				if (request.method === "POST" && operation === "commands") {
+					// The sign-in and its checks (session, deletion) run alongside the body, and then the command's room read.
+					// Their refusals still answer in that order and before the command's own, and nothing is written before
+					// they pass (ProposalService.command).
+					let deletionCheck: Promise<void> | undefined
+					const actor = timed("auth", scopedCredential(id, (check) => { deletionCheck = timed("deletion", check) }))
+					const envelope = timed("body", body(request).then((value) => parse(commandSchema, value)))
+					return reply(await service.command(id, actor, envelope, actor.then(() => deletionCheck)))
+				}
+				const actor = await timed("auth", scopedCredential(id))
 				if (request.method === "POST" && operation === "preview")
 					return reply(await service.preview(id, actor, parse(proposalPreviewSchema, await body(request))))
 				if (request.method === "GET" && !operation) {
@@ -643,15 +655,6 @@ export function createProposalHandler(
 							: own.own.member
 					)
 				}
-				if (request.method === "POST" && operation === "commands")
-					return reply(
-						await service.command(
-							id,
-							actor,
-							await timed("body", body(request).then((value) => parse(commandSchema, value))),
-							deletionCheck
-						)
-					)
 				if (request.method === "POST" && operation === "member/link") {
 					if (!options.members)
 						throw new RoomError("not_implemented", "GoodWatch sign-in not configured", 501)

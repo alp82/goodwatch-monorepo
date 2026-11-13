@@ -3,7 +3,7 @@ import {
 	paths,
 } from "../../../packages/yepwatch-contracts/proposal.ts"
 import { createProposalHandler } from "./proposal-http.server.ts"
-import { ProposalService } from "./proposal-service.server.ts"
+import { ProposalService, revisionMessage } from "./proposal-service.server.ts"
 import { ValkeyTicketStore } from "./proposal-tickets.ts"
 import { proposalCatalog } from "./proposal-catalog.server.ts"
 import {
@@ -66,7 +66,7 @@ export async function proposalRuntimeHandler(request: Request) {
 				const { getRedisCluster } = await import("../../utils/cache")
 				const redis = getRedisCluster()
 				if (!redis) throw new Error("Revision bus unavailable")
-				await redis.publish(REVISION_CHANNEL, JSON.stringify(event))
+				await redis.publish(REVISION_CHANNEL, revisionMessage(event))
 			},
 			Date.now,
 			undefined,

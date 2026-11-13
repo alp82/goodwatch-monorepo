@@ -9,7 +9,7 @@ import {
 	REVISION_CHANNEL,
 } from "../../../packages/yepwatch-contracts/proposal.ts"
 import { createProposalHandler } from "./proposal-http.server.ts"
-import { ProposalService } from "./proposal-service.server.ts"
+import { ProposalService, revisionMessage } from "./proposal-service.server.ts"
 import type { TicketStore } from "./proposal-tickets.ts"
 import type { CommandBudget } from "./proposal-command-budget.ts"
 import type { Sql } from "./repository.server.ts"
@@ -61,7 +61,7 @@ export function createReleaseRuntime(
 		members ? deps.memberCatalog!(members) : deps.catalog,
 		config.secret,
 		async (event) => {
-			await deps.bus.publish(REVISION_CHANNEL, JSON.stringify(event))
+			await deps.bus.publish(REVISION_CHANNEL, revisionMessage(event))
 		},
 		Date.now,
 		control,

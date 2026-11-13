@@ -129,6 +129,21 @@ function markPending(idea: StoredIdea, pending: PendingIdea) {
 	idea.rankedKeys = []
 	idea.interpretedAt = pending.lease
 }
+const refusals = new WeakSet<Promise<unknown>>()
+/** `promise`, remembering when it was refused (refused()). */
+function settles<T>(promise: Promise<T>): Promise<T> {
+	promise.catch(() => refusals.add(promise))
+	return promise
+}
+/** Whether a promise passed through settles() was already refused. */
+const refused = (promise: Promise<unknown>) => refusals.has(promise)
+const revisionMessages = new WeakMap<object, string>()
+/** The bus message for a revision event: its JSON, made once per event (the size check and the publish share it). */
+export function revisionMessage(event: RoomInvalidation | RoomCommitted): string {
+	let message = revisionMessages.get(event)
+	if (message === undefined) revisionMessages.set(event, (message = JSON.stringify(event)))
+	return message
+}
 /** The job holding a pending idea's lease; null when it isn't pending. */
 function heldBy(idea: StoredIdea | undefined) {
 	return idea && ideaPending(idea) ? idea.attributes[0].text : null
@@ -246,14 +261,19 @@ export class ProposalService {
 	 * and realtime refresh instead of two.
 	 */
 	private async readChecked(id: string): Promise<{ stored: ProposalStored; check: unknown }> {
+		const { stored, early } = await this.readStored(id)
+		return this.checked(stored, early)
+	}
+	/** readChecked's store reads (the room, and its capacity check when this process knows its expiry), unchecked. */
+	private async readStored(id: string) {
 		const expiresAt = this.expiries.get(id)
-		if (!this.guard || expiresAt === undefined) return this.checked(await this.repository.read(id))
+		if (!this.guard || expiresAt === undefined) return { stored: await this.repository.read(id) }
 		const early = this.guard.active({ id, expiresAt }).then(
 			(check) => ({ check }),
 			(error: unknown) => ({ error })
 		)
 		const stored = await this.repository.read(id)
-		return this.checked(stored, stored?.room.expiresAt === expiresAt ? early : undefined)
+		return { stored, early: stored?.room.expiresAt === expiresAt ? early : undefined }
 	}
 	/** live(), also returning what the guard's capacity check read. `early`: that check, already started for this room's expiry. */
 	private async checked(
@@ -1070,22 +1090,43 @@ export class ProposalService {
 		return this.snapshot(room, credential)
 	}
 	/**
-	 * `allowed`: a check still running that this actor may act (a guest's deletion check), read alongside the room.
-	 * Nothing is written or answered before it passes, and its refusal wins over the command's own.
+	 * `credential` and `envelope` may still be on their way (the sign-in and its checks, the body): once the body is in,
+	 * the room is read alongside the sign-in, and checked only once both are in hand. `allowed`: a check still running
+	 * that this actor may act (a guest's deletion check), read alongside the room. Nothing is written or answered before
+	 * they pass, and their refusals win, in that order (credential, envelope, allowed), over the command's own.
 	 */
 	async command(
 		id: string,
-		credential: ActorCredential,
-		envelope: CommandEnvelope,
-		allowed: Promise<void> = Promise.resolve()
+		credential: ActorCredential | Promise<ActorCredential>,
+		envelope: CommandEnvelope | Promise<CommandEnvelope>,
+		allowed: Promise<unknown> = Promise.resolve()
 	): Promise<CommandResult> {
-		const { receipt, room } = await this.write(id, () =>
-			this.applyCommand(id, credential, envelope, allowed)
+		const actorCredential = settles(Promise.resolve(credential))
+		const pendingEnvelope = settles(Promise.resolve(envelope))
+		for (const p of [actorCredential, pendingEnvelope, allowed]) p.catch(() => {}) // awaited below
+		// The room's lane is taken once the body is in: a client that never finishes sending one holds up only itself.
+		// A refused sign-in answers without waiting for the body, as it did before the body was read.
+		const bodyIn = pendingEnvelope.then(() => {}, () => {})
+		await Promise.race([bodyIn, actorCredential.then(() => bodyIn)])
+		// A refused body never takes a place in the lane: it answers once the sign-in did (whose refusal comes first).
+		if (refused(pendingEnvelope)) {
+			await actorCredential
+			await pendingEnvelope
+		}
+		const written = this.write(id, () =>
+			this.applyCommand(id, actorCredential, pendingEnvelope, allowed)
 		).catch(async (e: unknown) => {
+			await actorCredential
+			await pendingEnvelope
 			await allowed
 			throw e
 		})
+		written.catch(() => {}) // awaited below
+		// A sign-in refused while the command waits behind the room's other writes answers at once; the queued work
+		// then stops at the same refusal before it reads anything.
+		const { receipt, room } = await Promise.race([written, actorCredential.then(() => written)])
 		await allowed
+		credential = await actorCredential
 		// The command answers with the room it committed: its read was checked (v3, live, capacity reserved) just
 		// before the compare-and-swap, and a newer revision reaches this phone over the socket like any other change.
 		// Its expiry and capacity reservation are checked again after the commit, as any read would.
@@ -1117,10 +1158,16 @@ export class ProposalService {
 	}
 	private async applyCommand(
 		id: string,
-		credential: ActorCredential,
-		envelope: CommandEnvelope,
-		allowed: Promise<void>
+		actorCredential: Promise<ActorCredential>,
+		pendingEnvelope: Promise<CommandEnvelope>,
+		allowed: Promise<unknown>
 	): Promise<{ receipt: CommandResult["receipt"]; room?: { committed: ProposalRoom; published: Promise<boolean> | null } }> {
+		// The first read starts now, alongside the request's own checks; what it read is checked once they passed.
+		if (refused(actorCredential)) await actorCredential
+		const first = this.readStored(id)
+		first.catch(() => {}) // awaited below
+		const credential = await actorCredential
+		const envelope = await pendingEnvelope
 		const digest = hash(JSON.stringify(envelope))
 		let uncertain = false
 		// An idea command answers without waiting for search: the idea is stored pending, its search reserves one of
@@ -1128,12 +1175,19 @@ export class ProposalService {
 		// With no search configured nothing is reserved and the idea stays uninterpreted (normal ranking).
 		const reserved = !this.interpret
 		for (let i = 0; i < 6; i++) {
-			const { stored: old, check } = await timed("read", this.readChecked(id))
-			const p = this.auth(
-				old.room,
-				credential,
-				envelope.command.type === "leave"
-			)
+			let { stored: old, check } = await timed("read", i
+				? this.readChecked(id)
+				: first.then(({ stored, early }) => this.checked(stored, early)))
+			let p: ProposalParticipant
+			try {
+				p = this.auth(old.room, credential, envelope.command.type === "leave")
+			} catch (e) {
+				if (i || !(e instanceof RoomError)) throw e
+				// The first read ran alongside the sign-in and may predate what it saw (a Log out turns the place into a
+				// guest's before it ends the session): a refusal is decided on a read taken after it, as before.
+				;({ stored: old, check } = await timed("read", this.readChecked(id)))
+				p = this.auth(old.room, credential, envelope.command.type === "leave")
+			}
 			const slot = this.sequenceSlot(p, credential, envelope, digest)
 			if ("replayed" in slot) return { receipt: slot }
 			const sequence = slot.sequence
@@ -2105,7 +2159,7 @@ export class ProposalService {
 			snapshot: proposalSnapshot(room, viewers[0].id).shared,
 			viewers: viewers.map((p) => ({ participantId: p.id, capabilityEpoch: p.epoch })),
 		}
-		return Buffer.byteLength(JSON.stringify(event)) <= REVISION_MESSAGE_MAX ? event : hint
+		return Buffer.byteLength(revisionMessage(event)) <= REVISION_MESSAGE_MAX ? event : hint
 	}
 	/**
 	 * Publishes a committed revision once. Returns the room it read, or null when it was handed the committed room

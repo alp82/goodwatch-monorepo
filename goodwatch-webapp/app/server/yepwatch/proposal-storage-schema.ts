@@ -387,8 +387,12 @@ export const entityNames = Object.keys(tables).filter(
 export function columns(table: Table) {
 	return Object.keys(table.fields)
 }
+/** Each table's row schema, built once: building it costs more than a parse (every record of every write). */
+const rowSchemas = new WeakMap<Table, Field["schema"]>()
 export function parseRow(table: Table, row: unknown): Record<string, any> {
-	return object(table.fields).schema.parse(row)
+	let schema = rowSchemas.get(table)
+	if (!schema) rowSchemas.set(table, (schema = object(table.fields).schema))
+	return schema.parse(row)
 }
 export function tableDdl(table: Table, replicas: 0 | 2) {
 	const fields = Object.entries(table.fields).map(
