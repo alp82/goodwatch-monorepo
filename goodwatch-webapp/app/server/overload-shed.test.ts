@@ -94,6 +94,12 @@ test("APIs, data requests, writes, health, share cards and crawler files are nev
 		"/site.webmanifest",
 		"/health/ready",
 		"/health/live",
+		// Files: the static handler passes some of them on to the app.
+		"/assets/entry.client-BxYz12.js",
+		"/build/client/assets/root-abc.css",
+		"/apple-touch-icon.png",
+		"/fonts/anton.woff2",
+		"/locales/en.json?v=3",
 	])
 		assert.equal(isSheddable(page(url)), false, url)
 	assert.equal(isSheddable(page("/movie/1-x", {}, "POST")), false)
@@ -260,4 +266,45 @@ test("on a real server: the busy page goes to the anonymous request while the ap
 	assert.equal((await fetchAs("/health/live")).status, 200)
 	await fetchAs("/release", { cookie: "gw_browser=1" })
 	assert.equal((await slow).status, 200)
+	await new Promise((resolve) => setTimeout(resolve, 20))
+	assert.equal(inFlightLimit.state.inFlight, 0)
+})
+
+test("a request whose client left before it was handed on is neither served nor counted", async () => {
+	const shedder = createShedder({ limits: { lagMs: 10_000, inFlight: 1 } })
+	let served = 0
+	const late = createServer(() => {
+		served++
+	})
+	putShedderFirst(late, shedder)
+	// Like the page cache: an outer wrapper that hands the request on after a wait.
+	const inner = late.listeners("request")
+	late.removeAllListeners("request")
+	late.on("request", (request, response) => {
+		setTimeout(() => {
+			for (const listener of inner)
+				Reflect.apply(listener, late, [request, response])
+		}, 100)
+	})
+	await new Promise<void>((resolve) => late.listen(0, "127.0.0.1", resolve))
+	const address = `http://127.0.0.1:${(late.address() as AddressInfo).port}`
+	try {
+		for (let i = 0; i < 3; i++) {
+			const abort = new AbortController()
+			const gone = fetch(`${address}/movie/${i}-x`, {
+				headers: { cookie: "gw_browser=1" },
+				signal: abort.signal,
+			}).catch(() => null)
+			await new Promise((resolve) => setTimeout(resolve, 20))
+			abort.abort()
+			await gone
+		}
+		await new Promise((resolve) => setTimeout(resolve, 200))
+		assert.equal(served, 0)
+		assert.equal(shedder.state.inFlight, 0)
+		assert.equal(shedder.shouldShed(page("/movie/9-z")), false)
+	} finally {
+		late.closeAllConnections()
+		late.close()
+	}
 })
