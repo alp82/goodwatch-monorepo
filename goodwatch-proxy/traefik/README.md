@@ -23,3 +23,10 @@ throwaway containers.
     Claude-User, Perplexity-User), because one shared bucket would throttle every user of that assistant.
   - To add a name, extend the alternation in the rule. Keep it free of backslashes (Coolify rewrites them) and check
     that no Googlebot or Bingbot string contains it; `test-local.sh` section 2c checks both lists.
+
+## yepwatch.com hold (owner Q48, 2026-11-13)
+
+`yepwatch-front.yaml` on abio sends yepwatch.com through the hold in `../Caddyfile` (`:8480` on pgnode01), which keeps
+requests waiting while a YepWatch deploy has no front running; fallback straight to the front. Design and state:
+`docs/yepwatch-zero-downtime-front.md`. `test-yepwatch-front.sh` tests it locally; `verify-yepwatch-front-deploy.sh`
+checks a real deploy once the file is active. Add the file only after a YepWatch deploy published `10.0.0.21:18480`.
