@@ -37,9 +37,8 @@ const clusterNodes: ClusterNode[] = [
 	},
 ]
 // Redis answers in 30 to 40 microseconds; values reach about 1 MB (snapshot chunks 4 MB).
-// Only a stalled event loop or Redis reaches this limit. Routine event loop stalls are
-// 100 to 330 ms about once a minute; this is three times the largest routine stall.
-// Startup stalls reach 2.4 s; a lookup cut there falls through to the target.
+// Only a slow or silent Redis reaches this limit: a reply that arrived while the event loop
+// was stalled is read before the deadline fires (see redisDeadline).
 // The limit can be raised (REDIS_COMMAND_TIMEOUT_MS) for a dev server far from the cluster (65 ms away
 // over the VPN, the snapshot's 4 MB chunks take longer than a second, so it never loads and Explorer answers 503).
 export const REDIS_COMMAND_TIMEOUT_MS =
@@ -47,7 +46,8 @@ export const REDIS_COMMAND_TIMEOUT_MS =
 
 // The guard bounds commands across the cluster queue and redirection loop. A node's
 // first failure opens its breaker; later commands bypass it while detached probes
-// check recovery. Node commandTimeout also bounds individual connection attempts.
+// check recovery. The node commandTimeout bounds the commands without an owner (cluster
+// commands, readiness checks); a command with an owner has the guard's deadline instead.
 // Keep the offline queue for nodes connecting on demand. ioredis ends a closed
 // cluster instead of reconnecting it; our lifecycle disconnects it before replacing
 // it, with a 1-second exponential backoff capped at 30 seconds.
@@ -82,6 +82,22 @@ export const redisOptions: ClusterOptions = {
 let commandTimeoutMs = REDIS_COMMAND_TIMEOUT_MS
 export function setRedisCommandTimeoutForTest(ms: number | null): void {
 	commandTimeoutMs = ms ?? REDIS_COMMAND_TIMEOUT_MS
+}
+
+// A deadline that an event loop stall can't trip on its own. After a stall Node runs the timers that came due before it
+// reads the sockets, so a reply that arrived during the stall would lose to its own timeout, and the breaker would mark
+// a healthy node down for every caller, sign-in included (2026-11-13: a 2-second stall failed an OAuth authorize). So
+// the expiry waits for one pass of the poll phase, which setImmediate runs after, and the caller checks there whether
+// the answer came in. A node that really is silent still fails at the deadline.
+function redisDeadline(expire: () => void): () => void {
+	let immediate: ReturnType<typeof setImmediate> | undefined
+	const timer = setTimeout(() => {
+		immediate = setImmediate(expire)
+	}, commandTimeoutMs)
+	return () => {
+		clearTimeout(timer)
+		if (immediate) clearImmediate(immediate)
+	}
 }
 
 const breakerEvents = counter(
@@ -153,22 +169,25 @@ export class GuardedCluster extends Redis.Cluster {
 		let timedOut = false
 		const failure = () =>
 			probe ? breakers.probeFailed(owner) : breakers.failure(owner)
-		const timer = setTimeout(() => {
+		// The guard's deadline replaces the node's commandTimeout for this command: ioredis's timer would fire first
+		// after a stall and reject a reply that is already waiting to be read.
+		command.setTimeout = () => {}
+		const cancel = redisDeadline(() => {
 			if (settled) return
 			timedOut = true
 			failure()
 			command.reject(new Error("Command timed out"))
-		}, commandTimeoutMs)
+		})
 		command.promise
 			.then(
 				() => {
 					settled = true
-					clearTimeout(timer)
+					cancel()
 					breakers.success(owner)
 				},
 				(error: unknown) => {
 					settled = true
-					clearTimeout(timer)
+					cancel()
 					if (timedOut || error instanceof RedisNodeDownError) return
 					if (isRedisNodeFailure(error)) failure()
 					else breakers.success(owner)
@@ -186,17 +205,16 @@ export class GuardedCluster extends Redis.Cluster {
 
 export function withRedisDeadline<T>(operation: Promise<T>): Promise<T> {
 	return new Promise((resolve, reject) => {
-		const timer = setTimeout(
-			() => reject(new Error("Redis command timed out")),
-			commandTimeoutMs,
+		const cancel = redisDeadline(() =>
+			reject(new Error("Redis command timed out")),
 		)
 		operation.then(
 			(value) => {
-				clearTimeout(timer)
+				cancel()
 				resolve(value)
 			},
 			(error) => {
-				clearTimeout(timer)
+				cancel()
 				reject(error)
 			},
 		)

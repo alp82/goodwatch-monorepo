@@ -1,5 +1,6 @@
 import assert from "node:assert/strict"
 import { EventEmitter } from "node:events"
+import { type AddressInfo, type Socket, createServer, connect } from "node:net"
 import { afterEach, beforeEach, test } from "node:test"
 // Load CommonJS dependencies before the alias hook rewrites relative imports.
 import { Command } from "ioredis"
@@ -20,6 +21,7 @@ const {
 	startRedisClusterForTest,
 	stopRedisClusterForTest,
 	isRedisNodeFailure,
+	withRedisDeadline,
 } = await import("./cache.ts")
 const { RedisNodeDownError } = await import("./redis-breaker.ts")
 const { renderMetrics, resetMetricsForTest } = await import(
@@ -385,6 +387,94 @@ test("direct silent commands use the configured deadline and ignore late rejecti
 	metric(
 		'goodwatch_redis_breaker_events_total{node="fake-a:1",event="opened"} 1',
 	)
+})
+
+// A connected socket pair in this process. Bytes written to `server` wait in the kernel until the event loop reads
+// them on `client`, as a Valkey reply does while the loop is stalled.
+async function socketPair() {
+	const listener = createServer()
+	await new Promise<void>((resolve) => listener.listen(0, "127.0.0.1", resolve))
+	const accepted = new Promise<Socket>((resolve) =>
+		listener.once("connection", resolve),
+	)
+	const client = connect((listener.address() as AddressInfo).port, "127.0.0.1")
+	await new Promise((resolve) => client.once("connect", resolve))
+	const server = await accepted
+	return {
+		client,
+		server,
+		close() {
+			client.destroy()
+			server.destroy()
+			listener.close()
+		},
+	}
+}
+// Blocks the event loop, as a long synchronous render does.
+function stall(ms: number) {
+	const until = performance.now() + ms
+	while (performance.now() < until) {}
+}
+
+test("a reply that arrived while the event loop was stalled wins over its own deadline", async () => {
+	setRedisCommandTimeoutForTest(30)
+	const pair = await socketPair()
+	try {
+		class SocketCluster extends FakeCluster {
+			protected dispatch(command: Command): unknown {
+				this.commands.push(command)
+				pair.client.once("data", (data) => command.resolve(String(data)))
+				pair.server.write("OK")
+				return command.promise
+			}
+		}
+		const cluster = new SocketCluster()
+		const key = cacheEntryKey("guard", paramsFor(owners[0])[0])
+		const answer = cluster.get(key)
+		stall(120)
+		assert.equal(await answer, "OK")
+		assert.deepEqual(redisBreakerStates().filter((state) => state.open), [])
+	} finally {
+		pair.close()
+	}
+})
+
+test("an owned command keeps only the guard's deadline, not the node's own timer", () => {
+	const cluster = new FakeCluster()
+	cluster.mode = "silent"
+	const key = cacheEntryKey("guard", paramsFor(owners[0])[0])
+	cluster.get(key).catch(() => {})
+	const [command] = cluster.commands
+	command.setTimeout(5)
+	assert.equal(
+		(command as unknown as { _commandTimeoutTimer?: unknown })
+			._commandTimeoutTimer,
+		undefined,
+	)
+	command.resolve(null)
+})
+
+test("withRedisDeadline lets a reply that arrived during a stall through", async () => {
+	setRedisCommandTimeoutForTest(30)
+	const pair = await socketPair()
+	try {
+		const reply = new Promise<string>((resolve) =>
+			pair.client.once("data", (data) => resolve(String(data))),
+		)
+		pair.server.write("OK")
+		const answer = withRedisDeadline(reply)
+		stall(120)
+		assert.equal(await answer, "OK")
+	} finally {
+		pair.close()
+	}
+})
+
+test("withRedisDeadline still rejects an operation that never answers", async () => {
+	setRedisCommandTimeoutForTest(20)
+	await assert.rejects(withRedisDeadline(new Promise(() => {})), {
+		message: "Redis command timed out",
+	})
 })
 
 test("reconnect backoff doubles, caps at 30 seconds, resets at ready, and cancels on stop", async (t) => {
