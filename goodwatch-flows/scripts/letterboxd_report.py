@@ -1,11 +1,41 @@
 """Deliver count reports into the Ghostex conversation and its notification bell."""
 import argparse
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 from pathlib import Path
 import subprocess
 import sys
 from zoneinfo import ZoneInfo
+
+
+def progress_lines(snapshot, previous):
+    mongo = snapshot["mongo"]
+    total = mongo["queued"]
+    if not total:
+        return ["Progress: no titles queued; first sweep complete."]
+    lines = [f"Progress: {100 * mongo['scored'] / total:.1f}% scored (Mongo), "
+             f"{100 * snapshot['crate']['scored'] / total:.1f}% scored (Crate); "
+             f"{100 * mongo['attempted'] / total:.1f}% attempted (Mongo queue denominator)."]
+    remaining = max(0, total - mongo["attempted"])
+    if not remaining:
+        return lines + ["First sweep: complete."]
+    if snapshot.get("source_block"):
+        return lines + ["First-sweep ETA: unavailable while source is blocked."]
+    current = datetime.fromisoformat(snapshot["checked_at"])
+    prior_attempted = (previous or {}).get("mongo", {}).get("attempted")
+    if prior_attempted is None:
+        return lines + ["First-sweep ETA: unavailable until the next report establishes an attempt rate."]
+    elapsed = (current - datetime.fromisoformat(previous["checked_at"])).total_seconds()
+    added = mongo["attempted"] - prior_attempted
+    if elapsed <= 0 or added <= 0:
+        return lines + ["First-sweep ETA: unavailable; no measured forward progress."]
+    days = remaining / (added / elapsed) / 86400
+    if days > 36500:
+        return lines + ["First-sweep ETA: unavailable; measured attempt rate is too low."]
+    finish = (current + timedelta(days=days)).astimezone(ZoneInfo("Europe/Berlin"))
+    return lines + [f"First-sweep ETA: about {days:.1f} days ({finish:%Y-%m-%d}), "
+                    f"at {added / elapsed * 86400:,.0f} new attempts/day since the last delivered report; "
+                    "assumes steady throughput and the current queue size."]
 
 
 def notify(cli, session_id, title, body):
@@ -68,6 +98,7 @@ def report(cli, session_id, state_file, chat_ref=None, snapshot=None):
         f"Mongo: {mongo['scored']:,} scored; {mongo['attempted']:,}/{mongo['queued']:,} attempted.",
         f"Crate: {crate['scored']:,} scored, {crate['with_vote_count']:,} with votes; {crate['with_url']:,} URLs.",
     ]
+    lines.extend(progress_lines(snapshot, previous))
     if previous:
         delta = {key: snapshot[key]["scored"] - previous[key]["scored"] for key in ("mongo", "crate")}
         snapshot["since_previous"] = {"checked_at": previous["checked_at"], "scored": delta}
