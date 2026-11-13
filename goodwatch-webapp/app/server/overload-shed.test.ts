@@ -2,7 +2,7 @@
 import assert from "node:assert/strict"
 import { type Server, createServer } from "node:http"
 import type { AddressInfo } from "node:net"
-import { after, before, test } from "node:test"
+import { test } from "node:test"
 import {
 	HOLD_MS,
 	RETRY_AFTER_SECONDS,
@@ -213,13 +213,12 @@ test("the report counts what was shed and resets", () => {
 	assert.equal(shedder.takeReport(), null)
 })
 
-let server: Server
-let base: string
-let inFlightLimit: ReturnType<typeof createShedder>
-before(async () => {
-	inFlightLimit = createShedder({ limits: { lagMs: 10_000, inFlight: 1 } })
+// A real server whose app holds "/slow" until "/release". Set up per test, so that the pure tests above run where
+// listening is not allowed.
+async function heldServer() {
+	const shedder = createShedder({ limits: { lagMs: 10_000, inFlight: 1 } })
 	let release: () => void = () => {}
-	server = createServer((request, response) => {
+	const server = createServer((request, response) => {
 		if (request.url === "/slow") {
 			release = () => response.end("slow page")
 			return
@@ -230,13 +229,21 @@ before(async () => {
 		}
 		response.end(`app ${request.url}`)
 	})
-	putShedderFirst(server, inFlightLimit)
-	await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve))
-	base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`
-})
-after(() => server.close())
+	putShedderFirst(server, shedder)
+	await new Promise<void>((resolve, reject) => {
+		server.once("error", reject)
+		server.listen(0, "127.0.0.1", resolve)
+	})
+	const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`
+	return { shedder, server, base }
+}
 
-test("on a real server: the busy page goes to the anonymous request while the app is full, the rest is served", async () => {
+test("on a real server: the busy page goes to the anonymous request while the app is full, the rest is served", async (t) => {
+	const { shedder: inFlightLimit, server, base } = await heldServer()
+	t.after(() => {
+		server.closeAllConnections()
+		server.close()
+	})
 	const fetchAs = (path: string, headers: Record<string, string> = {}) =>
 		fetch(base + path, { headers: { "user-agent": SAFARI, ...headers } })
 	assert.equal(await (await fetchAs("/movie/1-x")).text(), "app /movie/1-x")
@@ -286,7 +293,10 @@ test("a request whose client left before it was handed on is neither served nor 
 				Reflect.apply(listener, late, [request, response])
 		}, 100)
 	})
-	await new Promise<void>((resolve) => late.listen(0, "127.0.0.1", resolve))
+	await new Promise<void>((resolve, reject) => {
+		late.once("error", reject)
+		late.listen(0, "127.0.0.1", resolve)
+	})
 	const address = `http://127.0.0.1:${(late.address() as AddressInfo).port}`
 	try {
 		for (let i = 0; i < 3; i++) {
