@@ -17,7 +17,7 @@ function seat(userId: string | null, token = `${userId}-grant`) {
 	} as unknown as ContinuousRoom
 }
 type Call = { userId: string; token?: string; resolve: (keys: string[]) => void; reject: (e: unknown) => void }
-function members(options: { timeoutMs?: number; copyMaxAgeMs?: number; now?: () => number } = {}) {
+function members(options: { timeoutMs?: number; copyMaxAgeMs?: number; now?: () => number; verify?: MemberIssuer["verify"] } = {}) {
 	const calls: Call[] = []
 	const reads: MemberReads = {
 		seen: (userId, token) => new Promise((resolve, reject) => calls.push({ userId, token, resolve, reject })),
@@ -25,7 +25,7 @@ function members(options: { timeoutMs?: number; copyMaxAgeMs?: number; now?: () 
 	}
 	const m = new ContinuousMembers(
 		{} as ContinuousRepository,
-		{} as MemberIssuer,
+		{ verify: options.verify } as MemberIssuer,
 		reads,
 		{ callbackUrl: "", browserOrigins: [], nativeReturnUri: "", seenReadTimeoutMs: options.timeoutMs ?? 1000, seenCopyMaxAgeMs: options.copyMaxAgeMs },
 		options.now,
@@ -222,13 +222,15 @@ test("without a copy (a restarted server, another instance) Start reads fresh, b
 	assert.equal(calls.length, 2)
 })
 
-test("without a copy and with GoodWatch slow, Start goes on without the member's exclusions within the bound", async () => {
+test("without a copy and with GoodWatch slow, Start goes on without the member's exclusions at the bound", async (t) => {
+	t.mock.timers.enable({ apis: ["setTimeout"] })
 	const { m, calls } = members({ timeoutMs: 30 })
 	const room = seat("account-a")
-	const began = performance.now()
-	const { value } = await quiet(() => m.seenStored(room, "p1"))
+	const start = quiet(() => m.seenStored(room, "p1"))
+	await tick()
+	t.mock.timers.tick(30)
+	const { value } = await start
 	assert.deepEqual(value, [])
-	assert.ok(performance.now() - began < 200)
 	// The late answer is still the link's copy: the next Start (a restart of the room) uses it.
 	calls[0].resolve(["movie_7"])
 	await tick()
@@ -354,4 +356,38 @@ test("a room change reads the list again only when the copy is missing or 10 s o
 	await tick()
 	assert.deepEqual((await quiet(() => m.seenStored(room, "p1"))).value, [])
 	assert.equal(calls.length, 3)
+})
+
+test("a refusal on any read with a grant ends its copies in every room and seat", async () => {
+	let refuse = false
+	const { m, calls } = members({ verify: async () => { if (refuse) throw new RoomError("member_required", "Connect GoodWatch again", 403); return { userId: "account-a", expiresAt: Date.now() + 600_000 } } })
+	const roomA = seat("account-a")
+	const roomB = { ...seat("account-a"), id: "room-2" } as ContinuousRoom
+	await copied(m, calls, roomA, ["movie_1"])
+	await copied(m, calls, roomB, ["movie_2"])
+	// GoodWatch refuses the grant on an identity check (the room's member status) in room A.
+	refuse = true
+	await assert.rejects(m.identity(roomA, "p1"))
+	for (const room of [roomA, roomB]) assert.deepEqual((await quiet(() => m.seenStored(room, "p1"))).value, [])
+	assert.equal(calls.length, 2, "nothing asked GoodWatch for the refused grant")
+	// A seen read with that grant landing later stores nothing either.
+	const late = m.seen(roomB, "p1")
+	calls[2].resolve(["movie_3"])
+	await late
+	await tick()
+	assert.deepEqual((await quiet(() => m.seenStored(roomB, "p1"))).value, [])
+})
+
+test("a copy taken without reading is the copy or nothing, and a refusal since ends it", async () => {
+	const { m, calls } = members()
+	const room = seat("account-a")
+	assert.deepEqual(await m.seenStored(room, "p1", { read: false }), [], "no copy: nothing, and no read")
+	assert.equal(calls.length, 0)
+	await copied(m, calls, room, ["movie_1"])
+	assert.deepEqual(await m.seenStored(room, "p1", { read: false }), ["movie_1"])
+	const refusedRead = m.seen(room, "p1")
+	calls[1].reject(new RoomError("member_required", "Connect GoodWatch again", 403))
+	await assert.rejects(refusedRead)
+	assert.deepEqual(await m.seenStored(room, "p1", { read: false }), [])
+	assert.equal(calls.length, 2)
 })

@@ -111,6 +111,8 @@ export interface ExcludedKeysOptions {
 	 * a fresh read when a member has no recent copy.
 	 */
 	stored?: boolean
+	/** With `stored`: false leaves a member without a copy out instead of reading GoodWatch. */
+	readMissing?: boolean
 }
 export interface ProposalCatalog {
 	metadata: import("./continuous-types.ts").ContinuousCatalog["metadata"]

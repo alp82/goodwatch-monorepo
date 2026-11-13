@@ -146,7 +146,7 @@ test("a member's seen titles are left out at Start, also from a deck prepared ea
 	const started = await r.start()
 	assert.equal(f.pages.length, 1)
 	assert.ok(!started.snapshot.shared.candidates.some((c) => c.id === seen.id))
-	assert.deepEqual(f.exclusionReads.at(-1), { stored: true }, "Start leaves out the members' stored seen titles")
+	assert.deepEqual(f.exclusionReads.slice(-2), [{ stored: true }, { stored: true, readMissing: false }], "Start leaves out the members' stored seen titles, checked again once the deck is in hand")
 })
 
 test("saved progress decks are never remembered: each page reads progress again", async () => {
@@ -564,7 +564,7 @@ test("Start still starts when the members' seen read fails", async () => {
 	await r.send({ type: "set_services", serviceIds: [1] })
 	await f.service.decks.idle()
 	const started = await r.start()
-	assert.deepEqual(f.exclusionReads.at(-1), { stored: true })
+	assert.deepEqual(f.exclusionReads.slice(-2), [{ stored: true }, { stored: true, readMissing: false }])
 	assert.equal(started.snapshot.shared.phase, "choosing")
 	assert.ok(started.snapshot.shared.candidates.length > 0)
 	f.service.decks.forget(r.id)

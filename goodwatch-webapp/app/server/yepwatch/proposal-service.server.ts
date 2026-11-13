@@ -1124,7 +1124,10 @@ export class ProposalService {
 						seenReadFresh: envelope.command.type === "start" && Boolean(this.catalog.excludedKeys),
 					}))
 				if (page && seenRead) {
-					const excluded = new Set(await seenRead.catch(() => [] as string[]))
+					await seenRead.catch(() => [] as string[])
+					// Taken again once the deck is in hand, from the copies alone (Start's own read above stored a missing
+					// one): a deck build reads GoodWatch, and a grant GoodWatch refused meanwhile no longer counts.
+					const excluded = new Set(await this.catalog.excludedKeys!(room, { stored: true, readMissing: false }).catch(() => [] as string[]))
 					const unseen = (p: NonNullable<typeof page>) =>
 						excluded.size ? { ...p, candidates: p.candidates.filter((c) => !excluded.has(titleKey(c))) } : p
 					page = unseen(page)

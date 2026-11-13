@@ -11,7 +11,7 @@ export function memberExclusions(members: ContinuousMembers) {
 		async excludedKeys(room: ProposalRoom, options?: ExcludedKeysOptions) {
 			return (
 				await Promise.all(
-					excluding(room).map((p) => (options?.stored ? members.seenStored(room, p.id) : members.seenOrNone(room, p.id)))
+					excluding(room).map((p) => (options?.stored ? members.seenStored(room, p.id, { read: options.readMissing !== false }) : members.seenOrNone(room, p.id)))
 				)
 			).flat()
 		},
