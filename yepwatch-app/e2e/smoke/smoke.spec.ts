@@ -233,14 +233,18 @@ async function journey(room: Room, people: [Person, 'leave' | 'archive'][]) {
     }
     await friend.page.waitForTimeout(400);
     const before = await cardTitle(friend);
-    // The host's chip has caught up with the room (a late match from a round before can't count for this vote),
-    // then the next count is read from the chip itself (not the snapshot, which can run ahead of the paint).
-    for (const end = Date.now() + 3000; Date.now() < end && await shownMatches(host) !== (host.latest?.matches?.length ?? 0);) await host.page.waitForTimeout(50);
+    // A round is a sample only once the host's chip shows every match the room has (a late match from a round
+    // before can't count for this vote; the harness also drops an observation already true before the press).
+    // The next count is read from the chip itself (not the snapshot, which can run ahead of the paint). Not in
+    // step within 3 s: the round is voted but not sampled.
+    const settled = async () => await shownMatches(host) === (host.latest?.matches?.length ?? -1);
+    let inStep = false;
+    for (const end = Date.now() + 3000; !(inStep = await settled()) && Date.now() < end;) await host.page.waitForTimeout(50);
     const next = chip(await shownMatches(host) + 1);
     await friend.tap(friend.button('Yep'), {
       repeatable: true, soft: true, timeout: 2500, moment: 'swipeNextCardMs',
       expect: { cardChanged: { from: before } },
-      observers: [[host, next, 'voteToPeerMs'], ...(member ? [[member, next, 'unthrottled_voteToPeerMs']] : [])] as [Person, typeof next, string][],
+      observers: inStep ? [[host, next, 'voteToPeerMs'], ...(member ? [[member, next, 'unthrottled_voteToPeerMs']] : [])] as [Person, typeof next, string][] : [],
     });
   }
   await eventually(() => host.latest?.matches?.length ?? 0, (n) => n > 0, 'the room has a match', host, 15000);
