@@ -586,7 +586,12 @@ export class ProposalService {
 	private legacyInvite(id: string) {
 		return `${id}.${keyed(this.secret, "proposal-invite", id)}`
 	}
-	private async reserveInvite(id: string, expiresAt: number) {
+	/**
+	 * `exact`: the expiry is fixed (the guard's reservation, which the room's capacity proof carries): a code this
+	 * room reserved earlier with another expiry (an attempt whose proof never landed, under another creator) is
+	 * passed over like another room's, so the room's invite and capacity always agree.
+	 */
+	private async reserveInvite(id: string, expiresAt: number, exact = false) {
 		if (!this.repository.rememberInvite || !this.repository.findInvite)
 			return { code: this.legacyInvite(id), expiresAt }
 		for (let attempt = 0; attempt < INVITE_ATTEMPTS; attempt++) {
@@ -596,7 +601,7 @@ export class ProposalService {
 				id,
 				expiresAt
 			)
-			if (reserved !== null) return { code, expiresAt: reserved }
+			if (reserved !== null && (!exact || reserved === expiresAt)) return { code, expiresAt: reserved }
 		}
 		throw new RoomError(
 			"busy",
@@ -789,7 +794,8 @@ export class ProposalService {
 				await this.guard?.active(existing.room)
 				return this.admission(existing.room, request, account)
 			}
-			const expiresAt = (await reserving) ?? this.now() + L.roomMs
+			const reserved = await reserving
+			const expiresAt = reserved ?? this.now() + L.roomMs
 			// The invite, the room (set up, then its records stored) and the account's room list, together.
 			const build = async (expiry: number) => {
 				const room = await timed("setup", this.newRoom(id, request, account, interpretation, expiry))
@@ -797,13 +803,13 @@ export class ProposalService {
 				return room
 			}
 			const [invitation, built] = await Promise.all([
-				timed("invite", this.reserveInvite(id, expiresAt)),
+				timed("invite", this.reserveInvite(id, expiresAt, reserved != null)),
 				build(expiresAt),
 				account && timed("account", this.accounts.remember(account.userId, { roomId: id, expiresAt })),
 				proof,
 			])
-			// An invite reserved earlier for this room with another expiry (no guard: an uncertain earlier attempt)
-			// fixes the room's expiry.
+			// Without a guard, an invite reserved earlier for this room with another expiry (an uncertain earlier
+			// attempt) fixes the room's expiry; with one, the reservation's expiry always wins (reserveInvite).
 			const room = invitation.expiresAt === expiresAt ? built : await build(invitation.expiresAt)
 			if (account && room.expiresAt !== expiresAt) await this.accounts.remember(account.userId, { roomId: id, expiresAt: room.expiresAt })
 			room.inviteHash = hash(invitation.code)

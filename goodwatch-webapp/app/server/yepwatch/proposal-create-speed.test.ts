@@ -133,3 +133,30 @@ test("create answers with Server-Timing marks for its steps", async () => {
 	for (const mark of ["read", "guard", "setup", "invite", "insert", "total"])
 		assert.match(header, new RegExp(`(^|, )${mark};dur=`), `${mark} in ${header}`)
 })
+
+test("an invite this room reserved earlier with another expiry is passed over: the room keeps its reservation's expiry", async () => {
+	const repo = new CountingRepository()
+	let expiry = Date.now() + 3_600_000
+	const guard: ProposalOperationGuard = {
+		async active(room) {
+			if (room.expiresAt !== expiry) throw new Error("capacity proof and room disagree")
+		},
+		async create() {
+			return expiry
+		},
+		async join() {},
+		async command() {},
+	}
+	const service = new ProposalService(repo, proposalFixtureCatalog, secret, undefined, Date.now, guard)
+	const request = admission()
+	// An earlier attempt of this request reserved the first code with its own expiry, then stopped short of the room.
+	const first = await service.create(request)
+	repo.rows.delete(first.credential.roomId)
+	expiry += 60_000
+	const created = await service.create(request)
+	assert.equal(created.credential.expiresAt, expiry)
+	assert.notEqual(created.invite.code, first.invite.code)
+	const read = await service.read(created.credential.roomId, { participantId: created.credential.participantId, token: created.credential.token })
+	assert.equal(read.shared.roomId, created.credential.roomId)
+	assert.equal((await service.resolveInvite(created.invite.code)).roomId, created.credential.roomId)
+})
