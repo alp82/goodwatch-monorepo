@@ -3,7 +3,8 @@
 Staged plan to put `goodwatch.app` and `www.goodwatch.app` behind Cloudflare's proxy. Decision:
 [ADR 0013](adr/0013-proxy-site-through-cloudflare.md), accepted by the owner on November 13, 2026. This is its
 phase 2 from [edge-cache-cloudflare.md](research/edge-cache-cloudflare.md): proxy with caching off, no Worker.
-Written on November 13, 2026. The Cloudflare zone was only read; no record or zone setting was changed.
+Written on November 13, 2026, when the Cloudflare zone was only read. Zone settings were applied later the same day;
+see [Status](#status). DNS records are unchanged.
 
 Why now: over 99% of requests are anonymous, many from crawlers that pretend to be browsers or search engines
 ([overload-shed.server.ts](../goodwatch-webapp/app/server/overload-shed.server.ts)). Cloudflare can drop spoofed
@@ -11,6 +12,68 @@ search engines and AI training crawlers before they reach abio, which the origin
 
 Out of scope: `yepwatch.com`. It isn't a zone in this Cloudflare account, and its move behind a Caddy front on
 pgnode01 is a separate change. See [stage 6](#stage-6-later-yepwatchcom).
+
+## Status
+
+Updated November 13, 2026, about 14:05 UTC. Owner decisions: agents do every part of the cut-over outside Coolify
+(Q56); AI training crawlers are blocked, AI search and user-triggered fetchers are allowed (Q57). The owner sets
+`goodwatch.app` and `www.goodwatch.app` to proxied, later. Both are still DNS-only.
+
+| Step | State |
+| --- | --- |
+| 0.1 webapp with `edge-client-address.server.ts` | done: both instances run 6fcec94a3 |
+| 0.2 key in the webapp's Coolify environment | **open (owner)**: both instances still log `EDGE_ORIGIN_KEYS has no key` |
+| 0.2 key in the search roles' `.env` on vector1 | done (one shared `.env`, backed up first) |
+| 0.2b search roles redeployed | done: both roles on 6fcec94a3, no `has no key` line, `/mcp` answers 401 with the expected `WWW-Authenticate` |
+| 0.3, 0.4 trusted-header names, Traefik `forwardedHeaders` | **open (owner)** |
+| 0.5 baseline | open (agent, before the flip) |
+| 1.1 SSL Full (strict) | done (was Full) |
+| 1.2 Minimum TLS 1.2 | done (was 1.0) |
+| 1.3 Always Use HTTPS | checked: off |
+| 1.4 origin key transform rule | **created disabled with a placeholder value. Owner: paste the key as the value, then enable** (agents can't pass the key to the zone without putting it in a logged call) |
+| 1.5 configuration rule | done |
+| 1.6 cache bypass rule, Browser Cache TTL | done (TTL was 4 hours, now respect existing headers) |
+| 1.7 fake search engines rule | done, plan expression unchanged |
+| 1.8 rate limiting rule | deferred, as planned |
+| 1.9 AI crawlers | done, see below |
+| 2 access log header | **open (owner)** |
+| IP Access Rule from 2014 | left alone: user scope allow (whitelist) for one address, no notes. Owner: confirm or remove |
+
+`static.goodwatch.app` answered 200 for a cached file, a cache-busted file (origin fetch) and `robots.txt` after every
+change, with its own `Cache-Control` intact.
+
+AI crawlers (Q57), as applied:
+
+- **AI Crawler and Agent access policies** (bot management): Training **block**; Search and Agents stay **allowed**.
+  Requests with the user agents of GPTBot, CCBot, ClaudeBot and Bytespider get 403 on the proxied host.
+- That policy didn't block `meta-externalagent`, so a second WAF custom rule, "AI training crawlers", blocks these
+  user agents zone-wide (case-insensitive): GPTBot, CCBot, ClaudeBot, anthropic-ai, Claude-Web, Bytespider,
+  meta-externalagent, FacebookBot, cohere-ai, cohere-training-data-crawler, Diffbot, omgilibot,
+  Google-CloudVertexBot, AI2Bot, Timpibot, ImagesiftBot, MistralAI-Training, Amazonbot. `facebookexternalhit` (link
+  previews) isn't matched. The custom rules now use 2 of 5.
+- OAI-SearchBot, ChatGPT-User, Claude-User, Claude-SearchBot, PerplexityBot, Perplexity-User, a browser and
+  Googlebot (as a user agent on the static host, outside the fake search engine rule's hosts) get 200.
+- **Bot Preference Sync is off** (it was on). With it on, the training block made Cloudflare prepend its own section to
+  `robots.txt` on proxied hosts: a Content-Signal line and Disallow for about 40 agents, among them Baiduspider,
+  PetalBot and GoogleOther. That would change the app's `robots.txt` after the flip. With it off, `robots.txt` through
+  Cloudflare is byte-identical to the origin's.
+- `Google-Extended` isn't a crawler, only a `robots.txt` token that Googlebot honors, so no edge rule can block it.
+  To opt out of Google's training, the app's `robots.txt` needs a `User-agent: Google-Extended` / `Disallow: /`
+  group. Not done yet.
+- Managed robots.txt, AI Labyrinth, Bot Fight Mode and JS detections stay off.
+
+Undo values for every change are kept outside the repository. In short: SSL back to Full, Minimum TLS back to 1.0,
+Browser Cache TTL back to 14400, Training back to `disabled`, Bot Preference Sync back to on, and delete the rules.
+
+Before the flip, the owner still needs to:
+
+1. Add `EDGE_ORIGIN_KEYS` to the webapp application in Coolify and redeploy. The startup logs must stop saying
+   `EDGE_ORIGIN_KEYS has no key`.
+2. Paste the same key into the disabled transform rule "goodwatch origin key" (**Rules > Transform Rules > Modify
+   Request Header**) and enable it. Then `goodwatch_edge_client_address_total{outcome="cloudflare"}` rises on the
+   instances from static requests, and `unkeyed` stops rising.
+3. Steps 0.3 and 0.4 (header names, no `forwardedHeaders` on abio), and stage 2 (or accept the gap in the access log).
+4. Decide on the 2014 IP allow rule.
 
 ## Rules for this rollout
 
