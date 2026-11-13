@@ -126,13 +126,19 @@
     header Cache-Control "public, max-age=300"
     file_server
   }
+  # Immutable files ship precompressed at the highest levels (yepwatch-app/scripts/invite-page.cjs): ~25% fewer
+  # bytes than on-the-fly zstd on the way to a fresh browser's first screen. Files without them are encoded as before.
   handle /_expo/* {
     header Cache-Control "public, max-age=31536000, immutable"
-    file_server
+    file_server {
+      precompressed br zstd gzip
+    }
   }
   handle /assets/* {
     header Cache-Control "public, max-age=31536000, immutable"
-    file_server
+    file_server {
+      precompressed br zstd gzip
+    }
   }
   handle /downloads/* {
     @apk path *.apk

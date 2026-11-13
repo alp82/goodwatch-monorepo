@@ -24,6 +24,7 @@ import { matchingIdeaIds } from "~/server/yepwatch/proposal-redesign.ts"
 import { providerCatalog, type ProviderCatalogRow } from "~/server/yepwatch/provider-catalog.ts"
 import { fixtureEpisodes } from "~/server/yepwatch/test-support.ts"
 import type { ContinuousMembers } from "~/server/yepwatch/continuous-members.server.ts"
+import { memberExclusions } from "~/server/yepwatch/proposal-member-exclusions.ts"
 import type { ProposalCatalog, ProposalRoom } from "~/server/yepwatch/proposal-types.ts"
 import { paths } from "../../../goodwatch-webapp/packages/yepwatch-contracts/proposal.ts"
 import { COUNTRIES, PROVIDERS, fixtureTitles, servicesOf } from "./fixture-titles.mjs"
@@ -126,19 +127,12 @@ async function metadata(country?: string | null) {
 }
 const keyName = (key: number) => `${key >= 2_000_000_000_000 ? "show" : "movie"}_${key % 1_000_000_000_000}`
 function fixtureCatalog(members?: ContinuousMembers): ProposalCatalog {
-	const seenOf = async (room: ProposalRoom) =>
-		members
-			? (
-					await Promise.all(
-						room.participants
-							.filter((p) => p.leftAt == null && p.member.state === "linked" && !p.showSeen)
-							.map((p) => members.seen(room, p.id))
-					)
-			  ).flat()
-			: []
+	// Members' seen titles as production reads them (proposal-guest-catalog.server.ts): best effort in deck builds,
+	// the stored copy at Start, refreshed by room changes in setup.
+	const exclusions = members ? memberExclusions(members) : null
 	const base = createContinuousCatalog(reads, metadata, {
 		rank: async (room, keys) => {
-			const excluded = new Set(await seenOf(room as ProposalRoom))
+			const excluded = new Set(exclusions ? await exclusions.excludedKeys(room as ProposalRoom) : [])
 			return roomIntentKeys(room as ProposalRoom, keys).filter((k) => !excluded.has(keyName(k)))
 		},
 	})
@@ -149,7 +143,7 @@ function fixtureCatalog(members?: ContinuousMembers): ProposalCatalog {
 			const page = await catalog.page(room)
 			return { ...page, candidates: page.candidates.map((c) => ({ ...c, ideaIds: matchingIdeaIds(room, c) })) }
 		},
-		excludedKeys: seenOf,
+		...(exclusions ?? { excludedKeys: async () => [] }),
 	}
 }
 

@@ -93,8 +93,8 @@ crawl and backfill schedules to stop recurring source requests; the seed/mapping
 and hints, and the general ratings publisher can remain enabled.
 Do not clear a source block to retry through a challenge.
 
-The owner also requested reports every two hours in the existing Ghostex conversation. A Ghostex interval
-automation runs the read-only `goodwatch-flows/scripts/letterboxd_status.py` helper and posts the current MongoDB
+The owner requested reports once daily at 07:45 Europe/Berlin in the existing Ghostex conversation.
+The user systemd timer runs the read-only `goodwatch-flows/scripts/letterboxd_status.py` helper and posts the current MongoDB
 and CrateDB counts, changes since the previous report, and source block/publishing lag. The local baseline is
 `~/.local/state/goodwatch/letterboxd-report-state.json`; it contains counts only. Delivery is attached to the
 durable conversation and uses the local Ghostex host and its existing Windmill profile. This is separate from
@@ -110,3 +110,5 @@ Offline checks:
 goodwatch-flows/.venv/bin/python -m unittest discover -s goodwatch-flows/tests -p 'test_letterboxd*.py'
 goodwatch-flows/.venv/bin/python -m unittest discover -s goodwatch-flows/tests -p 'test_ratings_publication.py'
 ```
+
+Daily reports include Mongo and Crate scored percentages and the attempted percentage, all against the current Mongo queue size. The first-sweep ETA uses the increase in distinct attempted titles divided by actual elapsed time since the previous delivered report. It assumes steady throughput and the current queue size; new titles and interruptions can move the finish date. A missing baseline, no progress, or an active source block produces an unavailable ETA instead.

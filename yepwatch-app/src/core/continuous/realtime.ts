@@ -12,7 +12,7 @@ import {
 import type { SocketLike, Connection } from '../realtime';
 import { RoomFailure } from './api-client';
 import { parseFrame } from './wire';
-import { backoffDelay, serverWait } from './backoff';
+import { backoffDelay, RECONNECT_BASE_MS, serverWait } from './backoff';
 type Timer = ReturnType<typeof setTimeout> | number;
 export interface RealtimeOptions {
   roomId: string;
@@ -38,6 +38,18 @@ export interface ReconnectState {
   /** Epoch ms of the next automatic attempt; 0 when none is waiting. */
   retryAt: number;
 }
+/**
+ * A WebSocket that hasn't opened by then is taken for a connection lost on the way: no answer and no error, the
+ * browser would keep it connecting for as long as the network lets it (a lost SYN alone retries at 1 s, 3 s, 7 s).
+ * It is dropped and a new one dialed (a new connection, a new route through every NAT on the way). Each handshake
+ * that timed out in a row doubles the next one's wait up to OPEN_TIMEOUT_MAX_MS, so a slow network still gets through.
+ */
+export const OPEN_TIMEOUT_MS = 1500;
+export const OPEN_TIMEOUT_MAX_MS = 10000;
+/** After the socket opened: authentication and the gateway's first room snapshot. */
+export const FIRST_SNAPSHOT_MS = 10000;
+/** A spare ticket is used for the next dial only while this much of its life is left (clocks differ a little). */
+export const SPARE_TICKET_MARGIN_MS = 5000;
 /** Failed live attempts in a row before room reads over HTTP take over until the channel connects. */
 export const POLL_AFTER_FAILURES = 2;
 export const POLL_MS = 5000;
@@ -56,6 +68,14 @@ export class ContinuousRealtime {
   private renewal?: Timer;
   private repairTimer?: Timer;
   private failures = 0;
+  /** Handshakes in a row that never opened (OPEN_TIMEOUT_MS). */
+  private openTimeouts = 0;
+  /**
+   * The ticket of the last socket that failed before it opened. The ticket only goes out in the authenticate frame,
+   * after the open, so it is still unused: the next dial takes it instead of asking for another (the API keeps at
+   * most 4 unused tickets per person for 30 s, and each costs a round trip).
+   */
+  private spare?: RealtimeTicket;
   /** Epoch ms before which no new reconnect may start: the server named a wait (Retry-After, retryAfterMs). */
   private serverRetryAt = 0;
   /** Failed room reads in a row, shared by the resync read and the HTTP fallback. */
@@ -94,7 +114,10 @@ export class ContinuousRealtime {
     if (this.socket) {
       const old = this.socket;
       this.socket = undefined;
-      old.onclose = old.onerror = old.onopen = old.onmessage = null;
+      old.onclose = old.onerror = old.onmessage = null;
+      // A socket closed while still connecting can open anyway (React Native on Android can't cancel one): it is
+      // closed the moment it does, before it says anything.
+      old.onopen = () => old.close();
       old.close();
     }
   }
@@ -108,6 +131,7 @@ export class ContinuousRealtime {
   stop() {
     this.active = false;
     this.dirty = false;
+    this.spare = undefined;
     ++this.epoch;
     this.stopPolling();
     this.detach();
@@ -315,7 +339,7 @@ export class ContinuousRealtime {
     if (!this.active || epoch !== this.epoch) return;
     this.detach();
     if (!this.polling) this.o.status('reconnecting');
-    const ms = backoffDelay(this.failures++, this.o.random ?? Math.random, minimum);
+    const ms = backoffDelay(this.failures++, this.o.random ?? Math.random, minimum, RECONNECT_BASE_MS);
     this.serverRetryAt = minimum > 0 ? Date.now() + minimum : 0;
     if (this.failures >= POLL_AFTER_FAILURES && this.pollTimer === undefined) this.poll();
     this.report(false, Date.now() + ms);
@@ -346,14 +370,30 @@ export class ContinuousRealtime {
     if (!this.polling) this.o.status(this.failures ? 'reconnecting' : 'connecting');
     this.report(true);
     try {
-      const ticket = await this.o.ticket();
+      const spare = this.spare;
+      this.spare = undefined;
+      const ticket = spare && spare.expiresAt - Date.now() > SPARE_TICKET_MARGIN_MS ? spare : await this.o.ticket();
       if (!this.active || epoch !== this.epoch) return;
       if (ticket.websocketPath !== paths.realtime)
         throw new RoomFailure('invalid_request', 'Unexpected realtime destination.');
       const socket = this.o.socket(ticket.websocketPath);
       this.socket = socket;
-      this.watchdog = this.later(() => this.retry(epoch), 10000);
-      socket.onopen = () =>
+      let opened = false;
+      // Failed before it opened: the ticket never left this device.
+      const unopened = () => {
+        if (!opened && this.active && epoch === this.epoch && socket === this.socket) this.spare = ticket;
+      };
+      this.watchdog = this.later(() => {
+        unopened();
+        this.openTimeouts++;
+        this.retry(epoch);
+      }, Math.min(OPEN_TIMEOUT_MAX_MS, OPEN_TIMEOUT_MS * 2 ** this.openTimeouts));
+      socket.onopen = () => {
+        if (!this.active || epoch !== this.epoch || socket !== this.socket) return;
+        opened = true;
+        this.openTimeouts = 0;
+        this.clear(this.watchdog);
+        this.watchdog = this.later(() => this.retry(epoch), FIRST_SNAPSHOT_MS);
         socket.send(
           JSON.stringify({
             type: 'authenticate',
@@ -365,6 +405,7 @@ export class ContinuousRealtime {
             roomDetails: true,
           })
         );
+      };
       socket.onmessage = (event) => {
         if (!this.active || epoch !== this.epoch || socket !== this.socket) return;
         const frame = parseFrame(event.data);
@@ -428,7 +469,10 @@ export class ContinuousRealtime {
           } else this.retry(epoch);
         }
       };
-      socket.onerror = socket.onclose = () => this.retry(epoch);
+      socket.onerror = socket.onclose = () => {
+        unopened();
+        this.retry(epoch);
+      };
     } catch (e) {
       if (!this.active || epoch !== this.epoch) return;
       if (

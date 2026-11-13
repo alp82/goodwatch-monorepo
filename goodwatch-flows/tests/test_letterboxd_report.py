@@ -34,6 +34,30 @@ class ReportTests(unittest.TestCase):
             body = run.call_args.args[0][-1]
             self.assertIn("Mongo +20; Crate +25", body)
             self.assertIn("17:41 CET", body)
+            self.assertIn("12.0% scored (Mongo)", body)
+            self.assertIn("13.0% attempted", body)
+
+    def test_eta_uses_distinct_attempt_growth_and_actual_elapsed_time(self):
+        previous = {"checked_at": "2026-10-30T16:41:00+00:00", "mongo": {"attempted": 30}}
+        lines = "\n".join(letterboxd_report.progress_lines(self.snapshot(), previous))
+        self.assertIn("11.5% scored (Crate)", lines)
+        self.assertIn("17.4 days (2026-11-19)", lines)
+        self.assertIn("50 new attempts/day", lines)
+
+    def test_eta_unavailable_without_progress_or_during_block(self):
+        previous = {"checked_at": "2026-10-31T16:41:00+00:00", "mongo": {"attempted": 130}}
+        lines = letterboxd_report.progress_lines(self.snapshot(), previous)
+        self.assertIn("no measured forward progress", lines[-1])
+        snapshot = self.snapshot()
+        snapshot["source_block"] = {"reason": "rate limit"}
+        self.assertIn("source is blocked", letterboxd_report.progress_lines(snapshot, previous)[-1])
+
+    def test_completed_and_empty_queues_have_no_eta(self):
+        snapshot = self.snapshot()
+        snapshot["mongo"]["attempted"] = 1000
+        self.assertEqual(letterboxd_report.progress_lines(snapshot, None)[-1], "First sweep: complete.")
+        snapshot["mongo"]["queued"] = 0
+        self.assertIn("no titles queued", letterboxd_report.progress_lines(snapshot, None)[0])
 
     def test_a_bell_receipt_without_chat_delivery_does_not_advance_baseline(self):
         with TemporaryDirectory() as directory:

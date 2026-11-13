@@ -32,6 +32,7 @@ import { startTmdbConnectionCleanup } from "~/server/imports/tmdb-connect-runtim
 import { startLifecycle } from "~/server/lifecycle.server"
 import { capLogLines } from "~/server/log-cap.server"
 import { protectMediaResponse } from "~/server/media-read-health.server"
+import { startOverloadShedder } from "~/server/overload-shed.server"
 import { routeLabelFor } from "~/server/metrics/http.server"
 import { startMetrics } from "~/server/metrics/index.server"
 import { startNewPagesRefresh } from "~/server/new-on-services.server"
@@ -81,6 +82,10 @@ if (processRole() !== "search") startFingerprintPopulation()
 startHotOnSocialsWarmup()
 // The title pages' "What's new on" links read the links of the /new pages that this keeps loaded (#489).
 if (processRole() !== "search") startNewPagesRefresh()
+// While the process is overloaded, anonymous page requests from clients that never ran the site's scripts get a short
+// busy page (see overload-shed.server.ts). Started before the page cache, so that a stored page is still answered, and
+// after the lifecycle, whose health answers stay inside it.
+startOverloadShedder()
 // The page cache answers repeated anonymous pages before Express (see page-cache.server.ts). It starts before the
 // static files, so that the static handler is the outer one and its requests never reach the cache. The first call
 // of the route labeler starts loading the route list for the cache's metrics.

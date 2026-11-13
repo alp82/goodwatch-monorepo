@@ -11,6 +11,7 @@ import type { authPayloadCodec } from "./payload-codec.server.ts"
 type Codec = ReturnType<typeof authPayloadCodec>
 export type AuthPopulationBounds = { buckets: number; limitPerBucket: number }
 export type AuthAdmission = { bucket: string; generation: number }
+export type AuthSlot = { id: string; generation: number; createdAt: string }
 export type CapacityLedger = {
 	id: string
 	emptySince?: string
@@ -152,7 +153,10 @@ export async function releaseAuthAdmission(
 	throw new Error("Auth population release contention")
 }
 
-/** Reserve before insertion. Slots include pending writes and are reclaimed only after row fencing. */
+/**
+ * Reserve before insertion. Slots include pending writes and are reclaimed only after row fencing.
+ * At the limit, `evict` gets the bucket's slots oldest first and reports whether it made room.
+ */
 export async function admitAuthRow(
 	sql: AuthSql,
 	codec: Codec,
@@ -160,10 +164,12 @@ export async function admitAuthRow(
 	id: string,
 	bounds: AuthPopulationBounds,
 	actor: string,
-	evict?: (id: string, admission: AuthAdmission) => Promise<boolean>,
+	evict?: (slots: AuthSlot[], bucket: string) => Promise<boolean>,
 ): Promise<AuthAdmission> {
 	const bucket = authCapacityBucket(model, id, bounds, actor)
 	const aad = `doc.auth_capacity:${bucket}`
+	let evictionMisses = 0
+	let missedAt: unknown
 	for (let attempt = 0; attempt < 64; attempt++) {
 		const current = await readCapacity(sql, codec, bucket)
 		if (
@@ -181,18 +187,32 @@ export async function admitAuthRow(
 			current &&
 			Object.keys(current.ledger.slots).length >= bounds.limitPerBucket
 		) {
-			const oldest = Object.entries(current.ledger.slots).sort(
-				(a, b) =>
-					a[1].createdAt.localeCompare(b[1].createdAt) ||
-					a[1].generation - b[1].generation,
-			)[0]
-			if (
-				evict &&
-				oldest &&
-				(await evict(oldest[0], { bucket, generation: oldest[1].generation }))
+			if (!evict) throw new Error("Auth population capacity exhausted")
+			const slots = Object.entries(current.ledger.slots)
+				.map(([slot, { generation, createdAt }]) => ({
+					id: slot,
+					generation,
+					createdAt,
+				}))
+				.sort(
+					(a, b) =>
+						a.createdAt.localeCompare(b.createdAt) ||
+						a.generation - b.generation,
+				)
+			if (await evict(slots, bucket)) continue
+			// A concurrent admission may have fenced the same victim first; its release
+			// shows up on a fresh read of the ledger. Only misses on an unchanged ledger
+			// count: a ledger that keeps changing is other sign-ins making room.
+			if (missedAt !== current.seq) {
+				missedAt = current.seq
+				evictionMisses = 0
+			}
+			if (++evictionMisses > 4)
+				throw new Error("Auth population capacity exhausted")
+			await new Promise((resolve) =>
+				setTimeout(resolve, 10 * 2 ** evictionMisses * Math.random()),
 			)
-				continue
-			throw new Error("Auth population capacity exhausted")
+			continue
 		}
 		const generation = (current?.ledger.nextGeneration ?? 0) + 1
 		if (!Number.isSafeInteger(generation))
@@ -237,7 +257,23 @@ export async function admitAuthRow(
 			throw new IndeterminateAuthWriteError()
 		}
 		if (result.rowcount === 1) return { bucket, generation }
-		const recovered = await readCapacity(sql, codec, bucket)
+		let recovered = await readCapacity(sql, codec, bucket)
+		// The read may come from a copy that has not applied the version that refused our
+		// write yet (as in the adapter's row mutations): read again, bounded.
+		for (
+			let lag = 0;
+			lag < 10 &&
+			current &&
+			recovered &&
+			Number(recovered.seq) <= Number(current.seq) &&
+			recovered.ledger.slots[id] === undefined;
+			lag++
+		) {
+			await new Promise((resolve) =>
+				setTimeout(resolve, Math.min(5 * 2 ** lag, 200)),
+			)
+			recovered = await readCapacity(sql, codec, bucket)
+		}
 		if (recovered?.ledger.slots[id] !== undefined)
 			return { bucket, generation: recovered.ledger.slots[id].generation }
 		// Reserving an identity is idempotent; a proven conflict can start over.

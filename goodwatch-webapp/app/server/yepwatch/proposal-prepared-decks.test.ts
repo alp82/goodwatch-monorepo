@@ -5,11 +5,12 @@ import type { RoomCommand } from "../../../packages/yepwatch-contracts/proposal.
 import { ProposalService, type ProposalOperationGuard } from "./proposal-service.server.ts"
 import { deckInputs } from "./proposal-prepared-decks.ts"
 import { ProposalMemoryRepository, proposalFixtureCatalog } from "./proposal-test-support.ts"
-import type { ExcludedKeysOptions, ProposalCatalog, ProposalRoom } from "./proposal-types.ts"
+import type { ExcludedKeysOptions, ProposalCatalog, ProposalRepository, ProposalRoom } from "./proposal-types.ts"
 
 const secret = "prepared-decks-test-secret-at-least-32-chars"
-function fixture(options: { delayMs?: number | "default"; excluded?: string[]; failFreshSeen?: boolean; now?: () => number; guard?: ProposalOperationGuard } = {}) {
+function fixture(options: { delayMs?: number | "default"; excluded?: string[]; failFreshSeen?: boolean; now?: () => number; guard?: ProposalOperationGuard; prestore?: ProposalRepository["prestore"]; page?: (room: ProposalRoom) => Promise<void> } = {}) {
 	const repository = new ProposalMemoryRepository()
+	if (options.prestore) Object.assign(repository, { prestore: options.prestore })
 	const pages: ProposalRoom[] = []
 	const exclusionReads: (ExcludedKeysOptions | undefined)[] = []
 	const catalog: ProposalCatalog = {
@@ -20,11 +21,12 @@ function fixture(options: { delayMs?: number | "default"; excluded?: string[]; f
 		},
 		async page(room) {
 			pages.push(structuredClone(room))
+			await options.page?.(room)
 			return proposalFixtureCatalog.page(room)
 		},
 		...(options.excluded ? { excludedKeys: async (_room, read) => {
 			exclusionReads.push(read)
-			if (options.failFreshSeen && read?.fresh) throw new Error("GoodWatch is down")
+			if (options.failFreshSeen && read?.stored) throw new Error("GoodWatch is down")
 			return options.excluded!
 		} } : {}),
 	}
@@ -144,7 +146,7 @@ test("a member's seen titles are left out at Start, also from a deck prepared ea
 	const started = await r.start()
 	assert.equal(f.pages.length, 1)
 	assert.ok(!started.snapshot.shared.candidates.some((c) => c.id === seen.id))
-	assert.deepEqual(f.exclusionReads.at(-1), { fresh: true }, "Start reads seen lists fresh, never joining an earlier background read")
+	assert.deepEqual(f.exclusionReads.slice(-2), [{ stored: true }, { stored: true, readMissing: false }], "Start leaves out the members' stored seen titles, checked again once the deck is in hand")
 })
 
 test("saved progress decks are never remembered: each page reads progress again", async () => {
@@ -545,10 +547,10 @@ test("Start reads the members' seen titles alongside the deck, not after it", as
 	for (let i = 0; i < 200 && !state.running; i++) await new Promise((resolve) => setTimeout(resolve, 5))
 	assert.equal(state.running, 1, "Start's deck build is running")
 	for (let i = 0; i < 20 && f.exclusionReads.length === reads; i++) await new Promise((resolve) => setTimeout(resolve, 5))
-	const freshWhileBuilding = f.exclusionReads.slice(reads).some((read) => read?.fresh)
+	const freshWhileBuilding = f.exclusionReads.slice(reads).some((read) => read?.stored)
 	release()
 	const started = await start
-	assert.ok(freshWhileBuilding, "the fresh seen read started while the deck was still building")
+	assert.ok(freshWhileBuilding, "Start's seen read started while the deck was still building")
 	assert.equal(started.snapshot.shared.phase, "choosing")
 	assert.ok(!started.snapshot.shared.candidates.some((c) => keyOf(c) === keys[0]), "the member's seen title is left out")
 	await f.service.decks.idle()
@@ -562,8 +564,58 @@ test("Start still starts when the members' seen read fails", async () => {
 	await r.send({ type: "set_services", serviceIds: [1] })
 	await f.service.decks.idle()
 	const started = await r.start()
-	assert.deepEqual(f.exclusionReads.at(-1), { fresh: true })
+	assert.deepEqual(f.exclusionReads.slice(-2), [{ stored: true }, { stored: true, readMissing: false }])
 	assert.equal(started.snapshot.shared.phase, "choosing")
 	assert.ok(started.snapshot.shared.candidates.length > 0)
 	f.service.decks.forget(r.id)
+})
+
+test("a deck prepared during setup is handed to the repository to store its cards ahead of Start", async () => {
+	const stored: { room: ProposalRoom; ids: string[] }[] = []
+	const f = fixture({ prestore: async (room, candidates) => void stored.push({ room: structuredClone(room), ids: candidates.map((c) => c.id) }) })
+	const r = await room(f)
+	await r.send({ type: "set_services", serviceIds: [1] })
+	await f.service.decks.idle()
+	assert.equal(stored.length, 1, "the background build's deck, once")
+	assert.equal(stored[0].room.phase, "setup")
+	const deck = await f.service.decks.page(await r.stored())
+	assert.deepEqual(stored[0].ids, deck.candidates.map((c) => c.id))
+	const started = await r.start()
+	assert.equal(stored.length, 1, "Start itself stores nothing ahead")
+	assert.deepEqual(started.snapshot.shared.candidates.map((c) => c.id), stored[0].ids)
+})
+
+test("a prepared deck a newer setup change replaced while it built is not stored ahead", async () => {
+	let release!: () => void
+	const gate = new Promise<void>((resolve) => (release = resolve))
+	const stored: string[][] = []
+	let builds = 0
+	const f = fixture({
+		prestore: async (_room, candidates) => void stored.push(candidates.map((c) => c.id)),
+		page: async () => {
+			if (!builds++) await gate // the background build waits; the replacement below doesn't
+		},
+	})
+	const r = await room(f)
+	await r.send({ type: "set_services", serviceIds: [1] })
+	while (!builds) await new Promise((resolve) => setTimeout(resolve, 1))
+	// The room's deck for other inputs is built meanwhile (as Start does for a room whose setup moved on).
+	const moved = structuredClone(await r.stored())
+	moved.constraints.kinds = ["movie"]
+	await f.service.decks.page(moved)
+	release()
+	await f.service.decks.idle()
+	assert.deepEqual(stored, [], "the superseded deck left no rows behind")
+	f.service.decks.forget(r.id)
+})
+
+test("a failing store ahead never fails the prepared deck or Start", async () => {
+	const f = fixture({ prestore: async () => { throw new Error("store unavailable") } })
+	const r = await room(f)
+	await r.send({ type: "set_services", serviceIds: [1] })
+	await f.service.decks.idle()
+	assert.ok(f.service.decks.prepared(await r.stored()))
+	const started = await r.start()
+	assert.equal(f.pages.length, 1)
+	assert.equal(started.snapshot.shared.phase, "choosing")
 })

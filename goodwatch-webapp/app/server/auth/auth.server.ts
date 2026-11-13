@@ -462,6 +462,7 @@ export function createGoodwatchAuth(options: {
 							scopes: string[]
 							resources?: string[]
 							grantVersion: string
+							lastUsedAt?: Date | null
 						}>({
 							model: "oauthConsent",
 							where: [
@@ -489,6 +490,41 @@ export function createGoodwatchAuth(options: {
 					)
 						throw invalid()
 					if (!ctx.request) throw invalid()
+					// A refresh is use. Rotation revokes the parent token before it writes the
+					// child, so a recent touch keeps the grant out of dead-grant eviction and
+					// cleanup while the child is pending (grant-liveness.server.ts). No
+					// rotation starts until the grant shows a use from the last minute.
+					let lastUsedAt = consent.lastUsedAt
+					for (let attempt = 0; ; attempt++) {
+						const now = new Date()
+						if (
+							lastUsedAt &&
+							now.getTime() - new Date(lastUsedAt).getTime() < 60_000
+						)
+							break
+						if (attempt === 8) throw new Error("Grant use could not be recorded")
+						if (
+							await ctx.context.adapter.incrementOne({
+								model: "oauthConsent",
+								where: [
+									{ field: "id", value: consent.id },
+									{ field: "lastUsedAt", value: lastUsedAt ?? null },
+								],
+								increment: {},
+								set: { lastUsedAt: now },
+							})
+						)
+							break
+						const current = await ctx.context.adapter.findOne<{
+							grantVersion: string
+							lastUsedAt?: Date | null
+						}>({
+							model: "oauthConsent",
+							where: [{ field: "id", value: consent.id }],
+						})
+						if (current?.grantVersion !== consent.grantVersion) throw invalid()
+						lastUsedAt = current.lastUsedAt
+					}
 					refreshGrants.set(ctx.request, {
 						id: consent.id,
 						version: consent.grantVersion,

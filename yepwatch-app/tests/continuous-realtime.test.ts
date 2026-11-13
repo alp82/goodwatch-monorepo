@@ -1,6 +1,6 @@
 import test, { mock } from 'node:test';
 import assert from 'node:assert/strict';
-import { ContinuousRealtime, POLL_MS, type RealtimeOptions } from '../src/core/continuous/realtime';
+import { ContinuousRealtime, FIRST_SNAPSHOT_MS, OPEN_TIMEOUT_MS, POLL_MS, SPARE_TICKET_MARGIN_MS, type RealtimeOptions } from '../src/core/continuous/realtime';
 import type { SocketLike } from '../src/core/realtime';
 import { continuousFixture, activityFixture } from './continuous-fixture';
 import { RoomFailure } from '../src/core/continuous/api-client';
@@ -162,8 +162,8 @@ test('a restarting gateway clears peer activity; reconnect rotates one-use ticke
   const count = s.sent.length;
   h.client.sendActivity('trailer');
   assert.equal(s.sent.length, count);
-  // The server's 500 ms is a floor; the first backoff step is 1 s.
-  h.run(1000);
+  // The server's 500 ms replaces the shorter first step (250 ms): back within a second of the restart.
+  h.run(500);
   await tick();
   const next = h.sockets[1];
   next.open();
@@ -294,9 +294,9 @@ test('decision cheers go out as one matches frame, are rate limited, and the 3 s
   assert.equal(JSON.parse(s.sent.at(-1)!).cheer.kind, 'release');
 });
 
-test('server restart: busy and network ticket failures back off 1-2-4-8-15 s, report each wait, and reconnect with a resync read', async () => {
+test('server restart: busy and network ticket failures back off 0.25-0.5-1-2-4-8-15 s, report each wait, and reconnect with a resync read', async () => {
   let reads = 0;
-  let failing = 6;
+  let failing = 8;
   const states: { attempting: boolean; retryAt: number }[] = [];
   const h = harness({
     ticket: async () => {
@@ -313,7 +313,7 @@ test('server restart: busy and network ticket failures back off 1-2-4-8-15 s, re
   });
   h.client.start();
   await tick();
-  for (const ms of [1000, 2000, 4000, 8000, 15000, 15000]) {
+  for (const ms of [250, 500, 1000, 2000, 4000, 8000, 15000, 15000]) {
     assert.equal(h.statuses.at(-1), 'reconnecting');
     assert.equal(states.at(-1)?.attempting, false);
     assert.ok(states.at(-1)!.retryAt > Date.now(), 'the wait is announced');
@@ -321,7 +321,7 @@ test('server restart: busy and network ticket failures back off 1-2-4-8-15 s, re
     await tick();
   }
   const s = h.sockets[0];
-  assert.ok(s, 'reconnected after six failures');
+  assert.ok(s, 'reconnected after eight failures');
   assert.equal(states.at(-1)?.attempting, true);
   s.open();
   s.frame({ type: 'room.snapshot', snapshot: continuousFixture().shared });
@@ -329,9 +329,9 @@ test('server restart: busy and network ticket failures back off 1-2-4-8-15 s, re
   assert.equal(h.statuses.at(-1), 'live');
   assert.deepEqual(states.at(-1), { attempting: false, retryAt: 0 });
   assert.equal(reads, 1, 'the snapshot is read again after reconnecting');
-  // Success resets the backoff: the next drop waits 1 s again.
+  // Success resets the backoff: the next drop waits 250 ms again.
   s.onclose?.(new Event('close') as CloseEvent);
-  assert.ok([...h.jobs.values()].some((j) => j.ms === 1000));
+  assert.ok([...h.jobs.values()].some((j) => j.ms === 250));
   h.client.stop();
 });
 test('never gives up: after many failures it keeps trying every 15 s at most', async () => {
@@ -523,12 +523,12 @@ test('a refused authenticate frame reconnects with a fresh ticket; only the tick
   await tick();
   assert.equal(errors.length, 0, 'a refused socket is not lost access');
   assert.equal(h.statuses.at(-1), 'reconnecting');
-  h.run(1000);
+  h.run(250);
   await tick();
   assert.equal(h.sockets.length, 2, 'reconnected with a fresh ticket');
   refuse = true;
   h.sockets[1].frame({ type: 'error', code: 'forbidden' });
-  h.run(2000);
+  h.run(500);
   await tick();
   assert.equal(errors[0]?.code, 'unauthorized', 'the ticket endpoint decides');
   assert.equal(h.statuses.at(-1), 'unavailable');
@@ -544,14 +544,14 @@ test('resume (back online, back in front) connects at once with a fresh backoff 
   });
   h.client.start();
   await tick();
-  h.run(1000);
+  h.run(250);
   await tick();
-  h.run(2000);
+  h.run(500);
   await tick();
-  assert.ok([...h.jobs.values()].some((j) => j.ms === 4000), 'offline attempts back off');
+  assert.ok([...h.jobs.values()].some((j) => j.ms === 1000), 'offline attempts back off');
   h.client.resume();
   await tick();
-  assert.equal([...h.jobs.values()].some((j) => j.ms === 4000), false, 'the long wait is dropped');
+  assert.equal([...h.jobs.values()].some((j) => j.ms === 1000), false, 'the long wait is dropped');
   assert.equal(h.sockets.length, 1, 'connected right away');
   h.sockets[0].frame({ type: 'room.snapshot', snapshot: continuousFixture().shared });
   assert.equal(h.statuses.at(-1), 'live');
@@ -685,5 +685,127 @@ test('resume keeps a running attempt and a server-named wait', async () => {
   (hold as unknown as () => void)();
   await tick();
   assert.equal(h.sockets.length, 1);
+  h.client.stop();
+});
+test('a handshake that never opens is dropped after 1.5 s and redialed at once with its unused ticket', async () => {
+  const h = harness();
+  h.client.start();
+  await tick();
+  const hung = h.sockets[0];
+  // No open, no error, no close: a connection lost on the way. The 10 s wait was for the gateway's answer.
+  assert.deepEqual([...h.jobs.values()].map((j) => j.ms), [OPEN_TIMEOUT_MS]);
+  h.run(OPEN_TIMEOUT_MS);
+  assert.equal(hung.closed, true, 'the hung socket is abandoned');
+  assert.equal(h.statuses.at(-1), 'reconnecting');
+  h.run(250);
+  await tick();
+  // The ticket only goes out after the open: the hung socket never sent it, so the redial takes it.
+  assert.equal(h.tickets(), 1, 'no second ticket');
+  const next = h.sockets[1];
+  next.open();
+  assert.equal(JSON.parse(next.sent[0]).ticket, 'ticket-1');
+  assert.deepEqual(hung.sent, [], 'the abandoned socket said nothing');
+  // Open: the gateway now has FIRST_SNAPSHOT_MS to authenticate and send the room.
+  assert.deepEqual([...h.jobs.values()].map((j) => j.ms), [FIRST_SNAPSHOT_MS]);
+  next.frame({ type: 'room.snapshot', snapshot: continuousFixture().shared });
+  assert.equal(h.statuses.at(-1), 'live');
+  // Once used, a ticket is never offered again: the next drop asks for a fresh one.
+  next.onclose?.(new Event('close') as CloseEvent);
+  h.run(250);
+  await tick();
+  assert.equal(h.tickets(), 2);
+  h.client.stop();
+});
+test('a socket that cannot be cancelled while connecting (React Native on Android) is closed the moment it opens late', async () => {
+  class Uncancellable extends Socket {
+    isOpen = false;
+    override close() {
+      if (this.isOpen) this.closed = true;
+    }
+  }
+  const sockets: Uncancellable[] = [];
+  const h = harness({
+    socket: () => {
+      const s = new Uncancellable();
+      sockets.push(s);
+      return s;
+    },
+  });
+  h.client.start();
+  await tick();
+  h.run(OPEN_TIMEOUT_MS);
+  assert.equal(sockets[0].closed, false, 'the close while connecting did nothing');
+  sockets[0].isOpen = true;
+  sockets[0].open();
+  assert.equal(sockets[0].closed, true, 'closed as soon as it opened');
+  assert.deepEqual(sockets[0].sent, [], 'and never authenticated');
+  h.client.stop();
+});
+test('a refused handshake keeps its ticket for the next dial; a spare close to expiry or after stop is not used', async () => {
+  const life = 10000;
+  let tickets = 0;
+  const sockets: Socket[] = [];
+  const h = harness({
+    ticket: async () => ({ ticket: `t${++tickets}`, expiresAt: Date.now() + life, websocketPath: '/api/yepwatch/v1/proposal/realtime' }),
+    socket: () => {
+      const s = new Socket();
+      sockets.push(s);
+      return s;
+    },
+  });
+  h.client.start();
+  await tick();
+  // A browser or network that refuses WebSockets: error + close before any open.
+  sockets[0].onerror?.(new Event('error'));
+  h.run(250);
+  await tick();
+  sockets[1].onerror?.(new Event('error'));
+  h.run(500);
+  await tick();
+  assert.equal(tickets, 1, 'one ticket for three refused dials');
+  // Under SPARE_TICKET_MARGIN_MS of life left: a fresh one.
+  mock.timers.tick(10000 - SPARE_TICKET_MARGIN_MS + 1);
+  sockets[2].onerror?.(new Event('error'));
+  h.run(1000);
+  await tick();
+  assert.equal(tickets, 2, 'the spare had too little life left');
+  sockets[3].onerror?.(new Event('error'));
+  h.run(2000);
+  await tick();
+  assert.equal(tickets, 2, 'the fresh one is kept in turn');
+  sockets[4].onerror?.(new Event('error'));
+  h.client.stop();
+  h.client.start();
+  await tick();
+  assert.equal(tickets, 3, 'stop drops the spare');
+  h.client.stop();
+});
+test('handshakes that keep timing out wait longer each time (1.5-3-6-10 s), and an open starts over', async () => {
+  const h = harness();
+  h.client.start();
+  await tick();
+  for (const [open, wait] of [[1500, 250], [3000, 500], [6000, 1000], [10000, 2000], [10000, 4000]]) {
+    h.run(open);
+    h.run(wait);
+    await tick();
+  }
+  const s = h.sockets.at(-1)!;
+  s.open();
+  s.frame({ type: 'room.snapshot', snapshot: continuousFixture().shared });
+  s.onclose?.(new Event('close') as CloseEvent);
+  h.run(250);
+  await tick();
+  assert.ok([...h.jobs.values()].some((j) => j.ms === OPEN_TIMEOUT_MS), 'after an open the next handshake gets 1.5 s again');
+  h.client.stop();
+});
+test('a socket that opened but sends nothing is given up after FIRST_SNAPSHOT_MS, not the open timeout', async () => {
+  const h = harness();
+  h.client.start();
+  await tick();
+  h.sockets[0].open();
+  assert.equal([...h.jobs.values()].some((j) => j.ms === OPEN_TIMEOUT_MS), false);
+  h.run(FIRST_SNAPSHOT_MS);
+  assert.equal(h.sockets[0].closed, true);
+  assert.equal(h.statuses.at(-1), 'reconnecting');
   h.client.stop();
 });
