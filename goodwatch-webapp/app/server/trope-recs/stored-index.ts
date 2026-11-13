@@ -7,10 +7,13 @@
 // - One value is gzip of: a 4-byte length, the JSON of everything but the associations, then the associations as
 //   typed arrays (per title an end offset, then every trope position and every definingness). It is split into
 //   chunks of at most 1 MB; the meta key names the chunks and is written last, so a reader sees a complete generation.
-// - A build claims a lock first, so two processes of an overlapping deploy don't both build.
+// - A build claims a lock first, so two processes of an overlapping deploy don't both build. The builder releases it
+//   when it is done or failed; a waiter tries to claim it again on every poll, so a builder that died is replaced
+//   when its lock expires.
 // - Every failure here is reported and treated as "no stored copy": the process builds as it did before.
 //
 // This module takes its Redis client and its clock as arguments, so it runs in tests.
+import { randomUUID } from "node:crypto"
 import { promisify } from "node:util"
 import { gunzip, gzip } from "node:zlib"
 import type { MediaKey } from "../../types/user-data.ts"
@@ -36,7 +39,16 @@ export interface StoredIndexRedis {
 		seconds: number,
 		mode: "NX",
 	): Promise<unknown>
+	eval(
+		script: string,
+		keys: number,
+		key: string,
+		token: string,
+	): Promise<unknown>
 }
+/** Deletes the lock only while it still holds this claim's token. */
+const RELEASE =
+	"if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) end return 0"
 interface Meta {
 	builtAt: number
 	id: string
@@ -186,22 +198,29 @@ export function storedIndex(deps: {
 				report(error)
 			}
 		},
-		/** True when this process may build: it took the lock, or Valkey can't say that another process holds it. */
-		async claim(): Promise<boolean> {
+		/**
+		 * A claim when this process may build: it took the lock (the claim then holds its token), or Valkey can't say
+		 * that another process holds it. Null while another process holds the lock.
+		 */
+		async claim(): Promise<{ token?: string } | null> {
 			const redis = deps.redis()
-			if (!redis) return true
+			if (!redis) return {}
+			const token = randomUUID()
 			try {
-				const taken = await redis.set(
-					LOCK_KEY,
-					String(now()),
-					"EX",
-					LOCK_SECONDS,
-					"NX",
-				)
-				return taken === "OK"
+				const taken = await redis.set(LOCK_KEY, token, "EX", LOCK_SECONDS, "NX")
+				return taken === "OK" ? { token } : null
 			} catch (error) {
 				report(error)
-				return true
+				return {}
+			}
+		},
+		async release(claim: { token?: string }) {
+			const redis = deps.redis()
+			if (!redis || !claim.token) return
+			try {
+				await redis.eval(RELEASE, 1, LOCK_KEY, claim.token)
+			} catch (error) {
+				report(error)
 			}
 		},
 	}
@@ -211,7 +230,8 @@ type Store = ReturnType<typeof storedIndex>
 
 /**
  * The fresh stored generation when there is one; otherwise a build, which is stored afterwards. While another process
- * holds the lock this waits for its copy, and builds itself only when none arrives within the lock's lifetime.
+ * holds the lock this waits for its copy and tries to claim the lock again on every poll; past twice the lock's
+ * lifetime it builds without the lock.
  */
 export async function loadOrBuild(
 	store: Store,
@@ -232,16 +252,24 @@ export async function loadOrBuild(
 		stored && now() - stored.builtAt < maxAgeMs ? stored : null
 	const found = fresh(await store.load())
 	if (found) return found
-	if (!(await store.claim())) {
-		const giveUp = now() + LOCK_SECONDS * 1000
-		while (now() < giveUp) {
-			await wait(pollMs)
-			const arrived = fresh(await store.load())
-			if (arrived) return arrived
+	const giveUp = now() + 2 * LOCK_SECONDS * 1000
+	let claim = await store.claim()
+	while (!claim) {
+		if (now() >= giveUp) {
+			claim = {}
+			break
 		}
+		await wait(pollMs)
+		const arrived = fresh(await store.load())
+		if (arrived) return arrived
+		claim = await store.claim()
 	}
-	const value = await build()
-	const builtAt = now()
-	await store.save(value, builtAt)
-	return { value, builtAt }
+	try {
+		const value = await build()
+		const builtAt = now()
+		await store.save(value, builtAt)
+		return { value, builtAt }
+	} finally {
+		await store.release(claim)
+	}
 }

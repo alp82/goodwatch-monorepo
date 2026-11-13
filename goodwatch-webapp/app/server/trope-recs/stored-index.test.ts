@@ -53,6 +53,11 @@ function memoryRedis() {
 			values.set(key, value)
 			return "OK"
 		},
+		async eval(_script, _keys, key, token) {
+			if (values.get(key) !== token) return 0
+			values.delete(key)
+			return 1
+		},
 	}
 	return redis
 }
@@ -89,7 +94,7 @@ test("a stored index larger than one chunk loads whole; a missing chunk reads as
 test("without Valkey there is no copy and every process may build", async () => {
 	const store = storedIndex({ redis: () => null })
 	assert.equal(await store.load(), null)
-	assert.equal(await store.claim(), true)
+	assert.deepEqual(await store.claim(), {})
 	const failing = storedIndex({
 		redis: () => ({
 			...memoryRedis(),
@@ -103,7 +108,7 @@ test("without Valkey there is no copy and every process may build", async () => 
 		onError: () => {},
 	})
 	assert.equal(await failing.load(), null)
-	assert.equal(await failing.claim(), true)
+	assert.deepEqual(await failing.claim(), {})
 })
 
 test("a fresh stored copy is used without building; a stale one is rebuilt and stored", async () => {
@@ -130,45 +135,129 @@ test("a fresh stored copy is used without building; a stale one is rebuilt and s
 	assert.equal(second.builtAt, 10_000_000)
 	assert.deepEqual(second.value, sample())
 	now += 1
-	redis.values.delete("trope-recs:index:v1:lock")
 	await loadOrBuild(store, build, { maxAgeMs: 3_600_000, now: () => now })
 	assert.equal(builds, 2)
 })
 
-test("while another process holds the lock, its copy is awaited; with none arriving the process builds itself", async () => {
+test("while another process holds the lock, its copy is awaited", async () => {
 	const redis = memoryRedis()
 	const store = storedIndex({ redis: () => redis })
 	const other = storedIndex({ redis: () => redis })
 	let now = 10_000_000
-	assert.equal(await other.claim(), true)
+	assert.ok((await other.claim())?.token)
 	let builds = 0
-	const build = async () => {
-		builds++
-		return sample()
-	}
 	let waits = 0
-	const arrived = await loadOrBuild(store, build, {
-		maxAgeMs: 3_600_000,
-		now: () => now,
-		wait: async (ms) => {
-			now += ms
-			if (++waits === 2) await other.save(sample(1), now)
+	const arrived = await loadOrBuild(
+		store,
+		async () => {
+			builds++
+			return sample()
 		},
-	})
+		{
+			maxAgeMs: 3_600_000,
+			now: () => now,
+			wait: async (ms) => {
+				now += ms
+				if (++waits === 2) await other.save(sample(1), now)
+			},
+		},
+	)
 	assert.equal(builds, 0)
 	assert.equal(arrived.value.titles.length, 1)
+})
 
-	redis.values.clear()
-	assert.equal(await other.claim(), true)
-	waits = 0
-	await loadOrBuild(store, build, {
+test("a waiter takes over once the other process's lock is gone, and only one waiter builds", async () => {
+	const redis = memoryRedis()
+	const other = storedIndex({ redis: () => redis })
+	let now = 10_000_000
+	assert.ok((await other.claim())?.token)
+	let builds = 0
+	let running = 0
+	const releaseAt = 3
+	let waits = 0
+	const wait = async (ms: number) => {
+		now += ms
+		// The other process died: its lock expires.
+		if (++waits === releaseAt) redis.values.delete("trope-recs:index:v1:lock")
+		await new Promise((resolve) => setImmediate(resolve))
+	}
+	const build = async () => {
+		builds++
+		running++
+		assert.equal(running, 1)
+		await new Promise((resolve) => setImmediate(resolve))
+		running--
+		return sample()
+	}
+	const options = { maxAgeMs: 3_600_000, now: () => now, wait }
+	const results = await Promise.all([
+		loadOrBuild(storedIndex({ redis: () => redis }), build, options),
+		loadOrBuild(storedIndex({ redis: () => redis }), build, options),
+		loadOrBuild(storedIndex({ redis: () => redis }), build, options),
+	])
+	assert.equal(builds, 1)
+	for (const result of results) assert.equal(result.value.titles.length, 3)
+	assert.equal(redis.values.has("trope-recs:index:v1:lock"), false)
+})
+
+test("a failed build releases its lock, so the retry builds at once", async () => {
+	const redis = memoryRedis()
+	const store = storedIndex({ redis: () => redis })
+	const now = 10_000_000
+	let waits = 0
+	const options = {
 		maxAgeMs: 3_600_000,
 		now: () => now,
-		wait: async (ms) => {
+		wait: async () => {
 			waits++
-			now += ms
 		},
-	})
+	}
+	await assert.rejects(
+		loadOrBuild(
+			store,
+			async () => {
+				throw Error("Crate unavailable")
+			},
+			options,
+		),
+	)
+	assert.equal(redis.values.has("trope-recs:index:v1:lock"), false)
+	await loadOrBuild(store, async () => sample(), options)
+	assert.equal(waits, 0)
+})
+
+test("a release never removes another process's lock", async () => {
+	const redis = memoryRedis()
+	const store = storedIndex({ redis: () => redis })
+	const claim = await store.claim()
+	assert.ok(claim?.token)
+	redis.values.set("trope-recs:index:v1:lock", "someone-else")
+	await store.release(claim)
+	assert.equal(redis.values.get("trope-recs:index:v1:lock"), "someone-else")
+})
+
+test("past twice the lock's lifetime a waiter builds without the lock", async () => {
+	const redis = memoryRedis()
+	const store = storedIndex({ redis: () => redis })
+	redis.set = async () => null
+	let now = 10_000_000
+	let waits = 0
+	let builds = 0
+	await loadOrBuild(
+		store,
+		async () => {
+			builds++
+			return sample()
+		},
+		{
+			maxAgeMs: 3_600_000,
+			now: () => now,
+			wait: async (ms) => {
+				waits++
+				now += ms
+			},
+		},
+	)
 	assert.equal(builds, 1)
-	assert.equal(waits, (LOCK_SECONDS * 1000) / 15_000)
+	assert.equal(waits, (2 * LOCK_SECONDS * 1000) / 15_000)
 })
