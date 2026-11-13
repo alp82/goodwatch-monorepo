@@ -9,6 +9,8 @@ import { MovieTvCard } from "~/ui/MovieTvCard"
 import { TmdbImage } from "~/ui/TmdbImage"
 import { CAPTION, Reveal, fmt } from "~/ui/details/page-ui"
 import { DescriptionOpening } from "~/ui/profile/tropes/Opening"
+import { titlePath } from "~/utils/helpers"
+import { canonicalMediaTitle } from "~/utils/media-presentation"
 import type { SizeRule } from "~/utils/tmdb-image"
 import {
 	PosterStack,
@@ -35,7 +37,10 @@ const ALSO_IN_SIZES: Record<"wide" | "narrow" | "rail", SizeRule[]> = {
 	],
 }
 
-/** "Also in": the site's poster cards of other titles with the trope, loaded when asked (`enabled`). */
+/**
+ * "Also in": the site's poster cards of other titles with the trope, loaded when asked (`enabled`). Each poster goes to
+ * that title's tropes page, so a reader stays on tropes from title to title.
+ */
 export function AlsoIn({
 	t,
 	skip,
@@ -91,6 +96,7 @@ export function AlsoIn({
 										details={x}
 										mediaType={x.type}
 										posterSizes={ALSO_IN_SIZES[sizes]}
+										href={`${titlePath(x.type, x.tmdb_id, canonicalMediaTitle(x))}/tropes`}
 									/>
 								</Reveal>
 							</li>

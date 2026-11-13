@@ -151,6 +151,8 @@ interface MovieTvCardProps {
 	 * click or a tap on the poster.
 	 */
 	onOpen?: () => void
+	/** Where the poster goes instead of the title page (a page about one side of titles links to that side's page). */
+	href?: string
 	/** The service the title is new on for the viewer (#489), by id: its logo leads, ringed. */
 	newOn?: number | null
 	/** The page shows the viewer's score already (their own Scores tier): the pill shows GoodWatch's instead. */
@@ -192,6 +194,7 @@ export function MovieTvCard({
 	skipOffscreen = false,
 	actions: actionsOn = "bottom",
 	onOpen,
+	href: hrefOverride,
 	newOn,
 	skipScore = false,
 	hidden,
@@ -227,7 +230,9 @@ export function MovieTvCard({
 
 	const award = useAwardMark(mediaType, details.tmdb_id)
 
-	const href = `/${mediaType}/${details.tmdb_id}-${titleToDashed(canonicalMediaTitle(details))}`
+	const href =
+		hrefOverride ??
+		`/${mediaType}/${details.tmdb_id}-${titleToDashed(canonicalMediaTitle(details))}`
 	// The card's place in the title quick view: a card with the page's own view, without actions, hidden or under its
 	// Not interested cover opens its own way.
 	const quickView = useTitleQuickView()
