@@ -46,6 +46,7 @@ import {
 import { startProcessStats } from "~/server/process-stats.server"
 import { withoutRelatedMapMarkup } from "~/server/related-map-handoff"
 import { logProcessRole, processRole } from "~/server/role.server"
+import { startStallProfiler } from "~/server/stall-profiler.server"
 import { startStaticFiles } from "~/server/static-files.server"
 import { startHotOnSocialsWarmup } from "~/server/talked-about-now/startup.server"
 import { startTitleSnapshot } from "~/server/title-snapshot/index.server"
@@ -68,6 +69,8 @@ registerSessionUserObserver(identifyProductUser)
 // search role never serves a page, so it never reaches the root loader, and its metrics port stayed closed. The log
 // cap starts here for every role, so that it also covers the lines of the start.
 capLogLines()
+// What holds the event loop when it stalls in the first minutes (see stall-profiler.server.ts).
+startStallProfiler()
 logProcessRole()
 startCrateDiagnostics()
 // Behind Cloudflare, the visitor's address goes back into X-Real-Ip and X-Forwarded-For before any request listener
