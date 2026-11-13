@@ -182,6 +182,8 @@ export function createReleaseRuntime(
 		service,
 		probe,
 		readiness,
+		/** True once a probe found the snapshot loaded and every dependency answering; it never turns false again. */
+		initialized: () => initialized,
 		drain() {
 			draining = true
 		},

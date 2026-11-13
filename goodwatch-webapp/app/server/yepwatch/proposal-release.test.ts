@@ -179,12 +179,16 @@ test("Readiness stays red indefinitely without loaded snapshot; probes recover a
 		)
 		assert.equal(admission.status, 503)
 		assert.equal(writes, 0)
+		// The release's listener waits for this (proposal-release-main.ts).
+		assert.equal(runtime.initialized(), false)
 		count = 255293
 		await runtime.probe()
 		assert.equal(runtime.readiness().ready, true)
+		assert.equal(runtime.initialized(), true)
 		catalogOk = false
 		await runtime.probe()
 		assert.equal(runtime.readiness().ready, false)
+		assert.equal(runtime.initialized(), true)
 		assert.equal(
 			(await runtime.handler(new Request("http://api" + RELEASE_HEALTH.live)))
 				.status,

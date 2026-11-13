@@ -77,8 +77,15 @@ const warm = setInterval(() => {
 		.finally(() => { warming = false })
 }, 5_000)
 warm.unref()
+// The listener opens only once the release is initialized (snapshot loaded, every dependency answered, about 9 s
+// after start). During a deploy the front, and goodwatch-proxy's hold in front of it, then see a refused connection
+// and keep each request waiting (lb_try_duration) instead of passing "YepWatch is starting" 503s on to phones.
+// The Docker health check fails until then, within its start period.
+while (!runtime.initialized()) {
+	await runtime.probe()
+	if (!runtime.initialized()) await new Promise((resolve) => setTimeout(resolve, 500))
+}
 const server = await releaseHttp(runtime.handler, config.host, config.port)
-void runtime.probe()
 const readyLog = setInterval(() => {
 	if (!runtime.readiness().ready) return
 	console.info(

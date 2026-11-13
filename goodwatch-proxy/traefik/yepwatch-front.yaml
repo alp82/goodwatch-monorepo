@@ -4,7 +4,7 @@
 #
 # TLS stays here (certResolver letsencrypt, the resolver Coolify's labels use). Main path: the goodwatch-proxy Caddy
 # on 10.0.0.11:8480 holds requests while a deploy has no front running. Fallback, only while that Caddy fails its
-# health check: the front's published port on abio directly, which behaves like deploys before the hold.
+# health check: the front directly, which behaves like deploys before the hold.
 # Coolify's gzip-sse middleware is left out on purpose: the front compresses its own responses.
 # Test: goodwatch-proxy/traefik/test-yepwatch-front.sh
 http:
@@ -40,8 +40,11 @@ http:
           timeout: 1s
         servers:
           - url: http://10.0.0.11:8480
+    # The front by its service name on the YepWatch app network (coolify-proxy is attached to it). Not the published
+    # port: abio's firewall drops connections from containers to the host's own ports. `front` must stay unique
+    # among the networks coolify-proxy is on (2026-11-13: only csq2euofkojrcfzyxwrjxwym has one).
     yw-front-direct:
       loadBalancer:
         passHostHeader: true
         servers:
-          - url: http://10.0.0.21:18480
+          - url: http://front:8080

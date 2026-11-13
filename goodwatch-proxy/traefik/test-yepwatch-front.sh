@@ -5,17 +5,18 @@
 # that stands in for the private network; 10.0.0.x in the files becomes $net.x there, nothing else changes:
 #   client ──TLS──▶ "abio" ($net.21): Traefik 2.10.7 with yepwatch-front.yaml
 #                     ├─ main:     "pgnode01" ($net.11:8480): Caddy 2.11.7, the global options + :8480 site of ../Caddyfile
-#                     │              └─▶ $net.21:18480
-#                     └─ fallback: $net.21:18480
-#                   front on $net.21:18480: Caddy 2.11.7 with the real yepwatch-realtime/release/Caddyfile, in front of
-#                   stub api (:3000) and stub gateway (WebSocket, :4311). Everything on "abio" shares one network
-#                   namespace, so a stopped front refuses connections on 18480, as the published port does on abio.
+#                     │              └─▶ $net.21:18480 (the front's published port)
+#                     └─ fallback: front:8080 (the app network)
+#                   front: Caddy 2.11.7 with the real yepwatch-realtime/release/Caddyfile on :8080 and :18480, in front
+#                   of stub api (:3000, opens its port only after READY_MS, like the real one) and stub gateway
+#                   (WebSocket, :4311). Everything on "abio" shares one network namespace. While the front is stopped,
+#                   an iptables rule drops connections to 18480, as abio's firewall does once Docker unpublishes it.
 # Cases: plain requests and the HTTP redirect, a WebSocket that lives through a reload of the hold Caddy and Traefik's
 # idle timeout, a deploy (front, api and gateway stopped for GAP seconds) under request and WebSocket load with zero
 # failed requests and a first-try WebSocket reconnect, and failover around a stopped hold Caddy and back.
 #
 # Usage: ./test-yepwatch-front.sh    Needs Docker. Env: GAP (default 6) seconds between stop and start, READY_MS (default
-# 3000) of api startup 503s, WS_SECONDS (default 200) lifetime of the long-lived WebSocket. Containers and the network are named yw-front-test-* (PREFIX) and removed.
+# 3000) until the api opens its port, WS_SECONDS (default 200) lifetime of the long-lived WebSocket. Containers and the network are named yw-front-test-* (PREFIX) and removed.
 set -euo pipefail
 here=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 repo=$(cd -- "$here/../.." && pwd)
@@ -24,6 +25,7 @@ gap=${GAP:-6}
 ready_ms=${READY_MS:-3000}
 ws_seconds=${WS_SECONDS:-200}
 node_image=${NODE_IMAGE:-node:24-bookworm-slim}
+alpine_image=${ALPINE_IMAGE:-alpine:3.23}
 caddy_image=${CADDY_IMAGE:-caddy:2.11.7@sha256:3095ad245c353e3bdb27a38f22a095c1cfa9e295ab21c0214c3e72b0e2960525}
 traefik_image=${TRAEFIK_IMAGE:-traefik:v2.10.7}
 work=$(mktemp -d)
@@ -59,25 +61,23 @@ awk 'BEGIN{depth=0; keep=0}
 grep -q '^:8480 {' "$work/hold.Caddyfile" || { echo "FAIL  no :8480 site in goodwatch-proxy/Caddyfile"; exit 1; }
 sed "s/10\.0\.0\./$net./g" "$here/yepwatch-front.yaml" > "$work/dynamic/yepwatch-front.yaml"
 # The real front, listening where Docker publishes it on abio.
-sed 's/^:8080 {/:18480 {/' "$repo/yepwatch-realtime/release/Caddyfile" > "$work/front.Caddyfile"
+sed 's/^:8080 {/:8080, :18480 {/' "$repo/yepwatch-realtime/release/Caddyfile" > "$work/front.Caddyfile"
 echo '<!doctype html><title>YepWatch test</title>' > "$work/srv/index.html"
 chmod -R a+rX "$work"
 
 docker run -d --name "$prefix-abio" --network "$prefix-private" --ip "$net.21" \
-  --add-host api:127.0.0.1 --add-host gateway:127.0.0.1 "$node_image" sleep infinity >/dev/null
+  --add-host api:127.0.0.1 --add-host gateway:127.0.0.1 --add-host front:127.0.0.1 "$node_image" sleep infinity >/dev/null
+docker run -d --name "$prefix-firewall" --network "container:$prefix-abio" --cap-add NET_ADMIN "$alpine_image" \
+  sh -c 'apk add -q --no-cache iptables >/dev/null && touch /ready && sleep infinity' >/dev/null
 docker run -d --name "$prefix-traefik" --network "container:$prefix-abio" -v "$work/dynamic:/dynamic:ro" "$traefik_image" \
   --entrypoints.http.address=:80 --entrypoints.https.address=:443 --providers.file.directory=/dynamic/ --providers.file.watch=true \
   --certificatesresolvers.letsencrypt.acme.httpchallenge=true --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=http \
   --certificatesresolvers.letsencrypt.acme.storage=/tmp/acme.json --certificatesresolvers.letsencrypt.acme.caserver=https://127.0.0.1:9/directory >/dev/null
-# The api answers 503 for its first READY_AFTER_MS, like the real one; its health check gates the front's start, as
-# depends_on service_healthy does in yepwatch-app/compose.yaml.
 docker run -d --name "$prefix-api" --network "container:$prefix-abio" -v "$here/test-yepwatch-front.mjs:/t.mjs:ro" \
-  -e READY_AFTER_MS="$ready_ms" --health-interval 5s --health-start-period 60s --health-start-interval 1s --health-retries 24 \
-  --health-cmd "node -e \"fetch('http://127.0.0.1:3000/api/yepwatch/v1/proposal/health/ready').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))\"" \
-  "$node_image" node /t.mjs api >/dev/null
+  -e READY_AFTER_MS="$ready_ms" "$node_image" node /t.mjs api >/dev/null
 docker run -d --name "$prefix-gateway" --network "container:$prefix-abio" -v "$here/test-yepwatch-front.mjs:/t.mjs:ro" \
   "$node_image" node /t.mjs gateway >/dev/null
-docker create --name "$prefix-front" --network "container:$prefix-abio" \
+docker run -d --name "$prefix-front" --network "container:$prefix-abio" \
   -v "$work/front.Caddyfile:/etc/caddy/Caddyfile:ro" -v "$work/srv:/srv:ro" "$caddy_image" \
   caddy run --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null
 docker run -d --name "$prefix-hold" --network "$prefix-private" --ip "$net.11" \
@@ -85,15 +85,16 @@ docker run -d --name "$prefix-hold" --network "$prefix-private" --ip "$net.11" \
 
 probe() { docker run --rm --network "$prefix-private" --add-host "yepwatch.com:$net.21" -e NODE_TLS_REJECT_UNAUTHORIZED=0 \
   -v "$here/test-yepwatch-front.mjs:/t.mjs:ro" "$node_image" node --no-warnings /t.mjs "$@"; }
-healthy() { until [[ $(docker inspect -f '{{.State.Health.Status}}' "$prefix-api") == healthy ]]; do sleep 0.2; done; }
-deploy() { # Coolify: remove every old container, then start the new ones; the front once the api is healthy.
+firewall() { docker exec "$prefix-firewall" iptables "$1" INPUT -p tcp --dport 18480 -j DROP; }
+deploy() { # Coolify: remove every old container, then start the new ones.
   docker stop -t 10 "$prefix-front" "$prefix-gateway" "$prefix-api" >/dev/null
+  firewall -I
   sleep "$gap"
   docker start "$prefix-api" "$prefix-gateway" >/dev/null
-  healthy
+  firewall -D
   docker start "$prefix-front" >/dev/null
 }
-healthy; docker start "$prefix-front" >/dev/null; sleep 2
+until docker exec "$prefix-firewall" test -f /ready 2>/dev/null; do sleep 0.5; done; sleep $((ready_ms / 1000 + 2))
 
 echo "--- plain requests"
 basic=$(probe check)
@@ -115,7 +116,7 @@ long=$(cat "$work/ws-long.json")
 check "long WebSocket opened once" "$(json 'v.opens+" open, "+v.failedAttempts+" failed"' <<<"$long")" "1 open, 0 failed"
 check "long WebSocket kept echoing" "$(json 'v.maxEchoGapMs<2500' <<<"$long")" true
 
-echo "--- deploy: front, api and gateway gone for ${gap}s, then ${ready_ms} ms of api startup 503s"
+echo "--- deploy: front, api and gateway gone for ${gap}s (port dropped), then ${ready_ms} ms until the api listens"
 probe loop $((gap + ready_ms / 1000 + 14)) > "$work/loop.json" & loop_pid=$!
 probe ws $((gap + ready_ms / 1000 + 14)) > "$work/ws.json" & ws_pid=$!
 sleep 4; deploy
@@ -134,7 +135,7 @@ sleep 4 # Traefik's health check: every 2 s, 1 s timeout.
 down=$(probe loop 5)
 echo "      $(json 'JSON.stringify(v.statuses)' <<<"$down")"
 check "fallback serves every request" "$(json 'v.failed' <<<"$down")" 0
-check "fallback goes straight to the front" "$(json 'v.lastXff' <<<"$down")" "$net.21"
+check "fallback goes straight to the front" "$(json 'v.lastXff' <<<"$down")" 127.0.0.1
 docker start "$prefix-hold" >/dev/null
 sleep 5
 up=$(probe loop 3)

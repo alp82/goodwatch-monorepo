@@ -1,6 +1,6 @@
 // Stubs and probes for test-yepwatch-front.sh. No dependencies (Node 24: fetch and WebSocket are global).
 //   node test-yepwatch-front.mjs api            YepWatch api stand-in on :3000, answers with what it received
-//                                               (503 for READY_AFTER_MS after start, like the real api's startup)
+//                                               (its port opens READY_AFTER_MS after start, like the real api's)
 //   node test-yepwatch-front.mjs gateway        WebSocket echo on :4311, pings every 20 s like the real gateway
 //   node test-yepwatch-front.mjs check          one request of each kind, prints JSON
 //   node test-yepwatch-front.mjs loop SECONDS   GET page, GET health, POST preview every 200 ms, prints a summary
@@ -20,17 +20,16 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const print = (value) => console.log(JSON.stringify(value));
 
 if (mode === 'api') {
-  // Like the real api: listening at once, but 503 "starting" until it is ready (READY_AFTER_MS).
-  const readyAt = Date.now() + Number(process.env.READY_AFTER_MS ?? 0);
-  http.createServer((req, res) => {
-    if (Date.now() < readyAt) { res.statusCode = 503; res.end('{"error":{"code":"busy","retryable":true}}'); return; }
+  // Like the real api (proposal-release-main.ts): the port opens only once it is initialized (READY_AFTER_MS).
+  const server = http.createServer((req, res) => {
     let size = 0;
     req.on('data', (chunk) => { size += chunk.length; });
     req.on('end', () => {
       res.setHeader('content-type', 'application/json');
       res.end(JSON.stringify({ method: req.method, path: req.url, size, xff: req.headers['x-forwarded-for'] ?? null }));
     });
-  }).listen(3000);
+  });
+  setTimeout(() => server.listen(3000), Number(process.env.READY_AFTER_MS ?? 0));
   process.on('SIGTERM', () => process.exit(0));
 }
 
@@ -109,8 +108,10 @@ if (mode === 'loop') {
   await Promise.all(pending);
   const statuses = {};
   for (const r of results) statuses[`${r.kind} ${r.status}${r.error ? ` ${r.error}` : ''}`] = (statuses[`${r.kind} ${r.status}${r.error ? ` ${r.error}` : ''}`] ?? 0) + 1;
-  // EXPECT_POST=4xx: production answers the invalid code with a stable 4xx, and only a 5xx or no answer is a failure.
-  const postOk = (r) => (process.env.EXPECT_POST === '4xx' ? r.status >= 400 && r.status < 500 : r.status === 200 && r.json?.size === BODY.length);
+  // EXPECT_POST=4xx: production answers the invalid code with the api's JSON 404; anything else is a failure.
+  const postOk = (r) => (process.env.EXPECT_POST === '4xx'
+    ? r.status === 404 && typeof r.json?.error?.code === 'string' // the api's own answer to an unknown code
+    : r.status === 200 && r.json?.size === BODY.length);
   const bad = results.filter((r) => (r.kind === 'post' ? !postOk(r) : r.status !== 200));
   const xff = [...new Set(results.map((r) => r.json?.xff).filter(Boolean))];
   print({ requests: results.length, failed: bad.length, statuses, maxMs: Math.max(...results.map((r) => r.ms)), xff, lastXff: results.filter((r) => r.json?.xff).sort((a, b) => a.at - b.at).at(-1)?.json.xff ?? null, firstFailures: bad.slice(0, 5), failures: bad.map((r) => ({ at: new Date(r.at).toISOString(), kind: r.kind, status: r.status, ms: r.ms, error: r.error })) });

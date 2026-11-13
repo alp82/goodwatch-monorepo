@@ -8,11 +8,11 @@
 #      Redeploy in Coolify, or push to a watch path, when it says so.
 #   3. While the deployment runs: `node run.mjs smoke --origin https://yepwatch.com` back to back (yepwatch-app/e2e),
 #      and a request loop from this machine for the whole time: GET page, GET health and POST invite preview with an
-#      invalid code (expects a stable 4xx; it charges no admission), every 500 ms.
+#      invalid code (expects the api's JSON 404; it charges no admission), every 500 ms.
 #   4. Reads the swap window ("Removing old containers." to "New container started.") from the deployment log.
 #      PASS needs all of: the deployment finished; no loop request failed (no 5xx, no connection error) and none
-#      took longer than the swap plus 5 s; every smoke run wrote a fresh report with tests, none failed, and no
-#      `errors` (failed request, HTTP error, console or WebSocket error) or `journey` gate failure; at least one
+#      took longer than the swap plus 5 s; every smoke run wrote a fresh report with tests, no test crashed or timed
+#      out, and no `errors` (failed request, HTTP error, console or WebSocket error) or `journey` gate failure; at least one
 #      smoke run spanned the whole swap. Timing, a11y, layout and frame gates are reported, not judged: held
 #      requests are meant to be slow during the swap.
 #   Limit: in production, WebSocket reconnects are checked only inside the smoke journeys (a WebSocket error there
@@ -113,7 +113,14 @@ const runs = fs.readFileSync(`${out}/runs.tsv`, 'utf8').trim().split('\n').filte
   else {
     if (!(Date.parse(report.startedAt) >= Date.parse(started) - 2000)) problems.push(`stale report (started ${report.startedAt})`);
     if (!(report.tests > 0)) problems.push('no tests ran');
-    if (report.failed !== 0) problems.push(`${report.failed} test(s) failed`);
+    // A test the harness failed only for reported-only gates (it throws "N gate failure(s)") still counts as clean;
+    // a crash, a timeout or any other error doesn't.
+    for (const t of report.results ?? []) {
+      if (t.status === 'passed' || t.status === 'skipped') continue;
+      const onlyReported = t.status === 'failed' && /gate failure\(s\)/.test(String(t.error ?? '').split('\n')[0])
+        && (t.gates ?? []).length > 0 && t.gates.every((g) => !JUDGED.has(g.gate));
+      if (!onlyReported) problems.push(`test ${t.journey} [${t.fault}] ${t.status}: ${String(t.error ?? '').split('\n')[0].slice(0, 200)}`);
+    }
   }
   for (const f of judged) problems.push(`${f.gate}: ${f.journey}: ${String(f.detail).slice(0, 240)}`);
   const covers = Boolean(swapFrom && swapTo && Date.parse(started) <= Date.parse(swapFrom) && Date.parse(ended) >= Date.parse(swapTo));
