@@ -10,8 +10,11 @@ services:
     container_name: caddy
     restart: always
     ports:
-      - "80:80"
-      - "443:443"
+      # Keep the private address available for private/docker-compose.yml.
+      - "128.140.87.34:80:80/tcp"
+      - "128.140.87.34:443:443/tcp"
+      - "[2a01:4f8:c17:d25::1]:80:80/tcp"
+      - "[2a01:4f8:c17:d25::1]:443:443/tcp"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data

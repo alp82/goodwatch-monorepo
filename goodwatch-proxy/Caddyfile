@@ -16,7 +16,24 @@ a.goodwatch.app {
   }
 }
 status.goodwatch.app {
-  reverse_proxy http://10.0.0.10:4801
+  @home {
+    method GET HEAD
+    path /
+  }
+  handle @home {
+    redir * /status/services 302
+  }
+  # Public Kuma page only. Administration (including Socket.IO) is private.
+  @public_status {
+    method GET HEAD
+    path /status/services /status/services/ /api/status-page/services /api/status-page/heartbeat/services /api/status-page/services/manifest.json /assets/* /upload/* /favicon.ico /icon.svg /icon.png /icon-192x192.png /icon-512x512.png /apple-touch-icon.png /apple-touch-icon-precomposed.png /manifest.json
+  }
+  handle @public_status {
+    reverse_proxy http://10.0.0.10:4801
+  }
+  handle {
+    respond "Not found" 404
+  }
 }
 windmill.goodwatch.app {
   reverse_proxy http://10.0.0.10:9000
