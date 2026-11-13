@@ -6,7 +6,11 @@
 // The line also says how long the garbage collector held the process in the minute and its longest single pause, by
 // kind. After the deploys of November 13, 2026 every instance stopped for 20 to 35 seconds three to four minutes after
 // its start, while its heap fell from about 700 MB to 400 MB; these numbers say whether the collector is that stop.
-import { PerformanceObserver, monitorEventLoopDelay } from "node:perf_hooks"
+import {
+	constants,
+	PerformanceObserver,
+	monitorEventLoopDelay,
+} from "node:perf_hooks"
 import { reportFilteredViews } from "~/server/crawlers.server"
 import { onShutdown } from "~/server/lifecycle.server"
 import { queryEncoderState } from "~/server/search-ranking/query-encoder.server"
@@ -23,10 +27,10 @@ export function startProcessStats(): void {
 	const mb = (bytes: number) => Math.round(bytes / 1024 / 1024)
 	const gc = { totalMs: 0, longestMs: 0, longestKind: "" }
 	const KINDS: Record<number, string> = {
-		1: "minor",
-		2: "major",
-		4: "incremental",
-		8: "weak callbacks",
+		[constants.NODE_PERFORMANCE_GC_MINOR]: "minor",
+		[constants.NODE_PERFORMANCE_GC_MAJOR]: "major",
+		[constants.NODE_PERFORMANCE_GC_INCREMENTAL]: "incremental",
+		[constants.NODE_PERFORMANCE_GC_WEAKCB]: "weak callbacks",
 	}
 	const collections = new PerformanceObserver((list) => {
 		for (const entry of list.getEntries()) {
@@ -45,8 +49,9 @@ export function startProcessStats(): void {
 		console.info(
 			`Process: rss ${mb(memory.rss)} MB, heap ${mb(memory.heapUsed)} of ${mb(memory.heapTotal)} MB, external ${mb(memory.external)} MB, ` +
 				`longest event loop stall ${Math.round(loopDelay.max / 1e6)} ms, ` +
-				`garbage collection ${Math.round(gc.totalMs)} ms (longest ${Math.round(gc.longestMs)} ms${gc.longestKind ? ` ${gc.longestKind}` : ""}), ` +
-				`query encoder ${encoder.ready ? "ready" : "not ready"} with ${encoder.pending} waiting, up ${Math.round(process.uptime() / 60)} min`,
+				`query encoder ${encoder.ready ? "ready" : "not ready"} with ${encoder.pending} waiting, up ${Math.round(process.uptime() / 60)} min, ` +
+				// Last, so that tools that show the start of the line still see the fields before it.
+				`garbage collection ${Math.round(gc.totalMs)} ms (longest ${Math.round(gc.longestMs)} ms${gc.longestKind ? ` ${gc.longestKind}` : ""})`,
 		)
 		loopDelay.reset()
 		gc.totalMs = 0
