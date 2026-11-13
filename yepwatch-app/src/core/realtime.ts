@@ -7,6 +7,8 @@ export type Connection = 'connecting' | 'live' | 'polling' | 'reconnecting' | 'b
 export interface SocketLike {
   onopen: ((event: Event) => void) | null; onmessage: ((event: MessageEvent) => void) | null; onclose: ((event: CloseEvent) => void) | null; onerror: ((event: Event) => void) | null;
   send(data: string): void; close(): void;
+  /** WebSocket's: 0 while still connecting. */
+  readonly readyState?: number;
 }
 type Timer = number | ReturnType<typeof setTimeout>;
 export interface RealtimeOptions {

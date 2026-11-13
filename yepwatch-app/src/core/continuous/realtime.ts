@@ -68,6 +68,8 @@ export class ContinuousRealtime {
   private renewal?: Timer;
   private repairTimer?: Timer;
   private failures = 0;
+  /** When the current socket's handshake times out (epoch ms). */
+  private openDeadline = 0;
   /** Handshakes in a row that never opened (OPEN_TIMEOUT_MS). */
   private openTimeouts = 0;
   /**
@@ -104,7 +106,8 @@ export class ContinuousRealtime {
   private clear(timer?: Timer) {
     if (timer !== undefined) (this.o.cancel ?? clearTimeout)(timer);
   }
-  private detach() {
+  /** `hung`: its socket's handshake never answered (OPEN_TIMEOUT_MS), so it is cut off now. */
+  private detach(hung = false) {
     for (const timer of [this.retryTimer, this.ping, this.watchdog, this.renewal, this.repairTimer])
       this.clear(timer);
     this.retryTimer = this.ping = this.watchdog = this.renewal = this.repairTimer = undefined;
@@ -115,10 +118,18 @@ export class ContinuousRealtime {
       const old = this.socket;
       this.socket = undefined;
       old.onclose = old.onerror = old.onmessage = null;
-      // A socket closed while still connecting can open anyway (React Native on Android can't cancel one): it is
-      // closed the moment it does, before it says anything.
+      // A socket still connecting is closed the moment it opens, before it says anything (React Native on Android
+      // can't cancel one anyway). Closing it now would have the browser report a connection that failed ("closed
+      // before the connection is established") for a socket this channel only replaced or stopped. Only a handshake
+      // that hung is cut off at once: the browser connects one WebSocket per host at a time, so the redial would
+      // wait behind it.
       old.onopen = () => old.close();
-      old.close();
+      if (hung || old.readyState !== 0) old.close();
+      else {
+        // Its open timeout still holds: one that hangs would make every later dial wait behind it.
+        const deadline = this.later(() => { if (old.readyState === 0) old.close(); }, Math.max(0, this.openDeadline - Date.now()));
+        old.onopen = () => { this.clear(deadline); old.close(); };
+      }
     }
   }
   start() {
@@ -335,9 +346,9 @@ export class ContinuousRealtime {
     this.pollTimer = undefined;
     this.polling = false;
   }
-  private retry(epoch: number, minimum = 0) {
+  private retry(epoch: number, minimum = 0, hung = false) {
     if (!this.active || epoch !== this.epoch) return;
-    this.detach();
+    this.detach(hung);
     if (!this.polling) this.o.status('reconnecting');
     const ms = backoffDelay(this.failures++, this.o.random ?? Math.random, minimum, RECONNECT_BASE_MS);
     this.serverRetryAt = minimum > 0 ? Date.now() + minimum : 0;
@@ -383,11 +394,13 @@ export class ContinuousRealtime {
       const unopened = () => {
         if (!opened && this.active && epoch === this.epoch && socket === this.socket) this.spare = ticket;
       };
+      const openWait = Math.min(OPEN_TIMEOUT_MAX_MS, OPEN_TIMEOUT_MS * 2 ** this.openTimeouts);
+      this.openDeadline = Date.now() + openWait;
       this.watchdog = this.later(() => {
         unopened();
         this.openTimeouts++;
-        this.retry(epoch);
-      }, Math.min(OPEN_TIMEOUT_MAX_MS, OPEN_TIMEOUT_MS * 2 ** this.openTimeouts));
+        this.retry(epoch, 0, true);
+      }, openWait);
       socket.onopen = () => {
         if (!this.active || epoch !== this.epoch || socket !== this.socket) return;
         opened = true;

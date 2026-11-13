@@ -741,6 +741,69 @@ test('a socket that cannot be cancelled while connecting (React Native on Androi
   assert.deepEqual(sockets[0].sent, [], 'and never authenticated');
   h.client.stop();
 });
+test('a channel stopped or replaced while its socket connects closes that socket once it opens, not while it connects', async () => {
+  class Connecting extends Socket {
+    readyState = 0;
+    override open() {
+      this.readyState = 1;
+      super.open();
+    }
+    hangs = false;
+    override close() {
+      // A browser reports "closed before the connection is established" for this: only for a hung handshake.
+      if (!this.hangs) assert.notEqual(this.readyState, 0, 'closed while still connecting');
+      this.readyState = 3;
+      super.close();
+    }
+  }
+  const sockets: Connecting[] = [];
+  const h = harness({
+    socket: () => {
+      const s = new Connecting();
+      sockets.push(s);
+      return s;
+    },
+  });
+  h.client.start();
+  await tick();
+  // Started again (back in front) while the first socket still connects: a new socket, the old one left to open.
+  h.client.start();
+  await tick();
+  assert.equal(sockets.length, 2);
+  assert.equal(sockets[0].closed, false);
+  sockets[0].open();
+  assert.equal(sockets[0].closed, true, 'closed the moment it opened');
+  assert.deepEqual(sockets[0].sent, [], 'without a word');
+  h.client.stop();
+  sockets[1].open();
+  assert.equal(sockets[1].closed, true);
+  assert.deepEqual(sockets[1].sent, []);
+  // A replaced socket that never opens still gives up at its own open timeout: later dials would wait behind it.
+  const stuck = harness({
+    socket: () => {
+      const s = new Connecting();
+      s.hangs = true;
+      sockets.push(s);
+      return s;
+    },
+  });
+  stuck.client.start();
+  await tick();
+  const first = sockets.at(-1)!;
+  stuck.client.start();
+  await tick();
+  assert.equal(first.closed, false);
+  stuck.run(OPEN_TIMEOUT_MS); // the first socket's deadline
+  assert.equal(first.closed, true, 'closed at its open timeout');
+  stuck.client.stop();
+  // A hung handshake is still cut off at once: the browser would make the redial wait behind it.
+  const hung = harness();
+  hung.client.start();
+  await tick();
+  hung.run(OPEN_TIMEOUT_MS);
+  assert.equal(hung.sockets[0].closed, true);
+  hung.client.stop();
+});
 test('a refused handshake keeps its ticket for the next dial; a spare close to expiry or after stop is not used', async () => {
   const life = 10000;
   let tickets = 0;
