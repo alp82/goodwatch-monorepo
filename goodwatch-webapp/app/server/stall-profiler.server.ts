@@ -3,7 +3,7 @@
 //
 // - V8's sampling profiler runs from the process start for STALL_PROFILER_MINUTES, through the inspector of this
 //   process, in windows of WINDOW_MS. Between two windows it hands over the samples and starts again (see below for
-//   why that is cheap).
+//   why it doesn't restart the profiler).
 // - A timer every TICK_MS notes how late it ran. A tick at least STALL_PROFILER_MS late is a stall; the samples taken
 //   during it say what ran. The first MAX_STALL_LINES stalls get a "Stall profile:" line each, the first
 //   MAX_STALL_FILES of them also a .cpuprofile file of their window (in STALL_PROFILER_DIR, by default the temp
@@ -14,7 +14,10 @@
 //   is in the summary line as rotateMaxMs), and once at the end the stop of the whole profile. Nothing runs after
 //   the profiling period.
 //
-// Settings: STALL_PROFILER=off turns it off; STALL_PROFILER_MS (default 1000), STALL_PROFILER_MINUTES (default 20),
+// - It runs only with STALL_PROFILER=on. In production its hand-over of a window took up to 125 ms and the analysis
+//   up to 140 ms more, every 15 s (November 13, 2026), which is itself a stall in the minutes it measures.
+//
+// Settings: STALL_PROFILER=on turns it on; STALL_PROFILER_MS (default 1000), STALL_PROFILER_MINUTES (default 20),
 // STALL_PROFILER_DIR.
 import { mkdir, writeFile } from "node:fs/promises"
 import { Session } from "node:inspector"
@@ -319,7 +322,7 @@ let started = false
 
 /** Starts the profiler for the first minutes of the process, once. */
 export function startStallProfiler(): void {
-	if (started || process.env.STALL_PROFILER === "off") return
+	if (started || process.env.STALL_PROFILER !== "on") return
 	started = true
 	const thresholdMs = setting("STALL_PROFILER_MS", 1000)
 	const untilMs = Date.now() + setting("STALL_PROFILER_MINUTES", 20) * 60_000
@@ -328,9 +331,10 @@ export function startStallProfiler(): void {
 	// Starting V8's profiler while no profile runs walks the whole heap for the code in it: 350 to 500 ms with a few
 	// hundred MB of heap, measured locally, and the inspector's own profile pays it on every start. So the inspector's
 	// profile (the anchor) runs for the whole period and is never read, and the windows are `console.profile`
-	// profiles of the same session beside it: each starts and ends in about a millisecond, and its samples arrive as
-	// an event during `console.profileEnd`. The anchor starts before the server listens; reading it at the end of the
-	// period is the profiler's one costly step after that.
+	// profiles of the same session beside it, which start and end without that walk. Each window's samples arrive as
+	// an event during `console.profileEnd`: about a millisecond locally on an idle process, up to 125 ms in production
+	// under load, where the analysis added up to 140 ms. The anchor starts before the server listens and ends
+	// without being read.
 	const session = new Session()
 	const disconnect = () => {
 		try {

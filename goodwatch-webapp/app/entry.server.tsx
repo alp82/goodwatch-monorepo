@@ -70,7 +70,7 @@ registerSessionUserObserver(identifyProductUser)
 // search role never serves a page, so it never reaches the root loader, and its metrics port stayed closed. The log
 // cap starts here for every role, so that it also covers the lines of the start.
 capLogLines()
-// What holds the event loop when it stalls in the first minutes (see stall-profiler.server.ts).
+// With STALL_PROFILER=on: what holds the event loop when it stalls in the first minutes (see stall-profiler.server.ts).
 startStallProfiler()
 logProcessRole()
 startCrateDiagnostics()
