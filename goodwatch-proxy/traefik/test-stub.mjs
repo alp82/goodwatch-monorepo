@@ -6,6 +6,7 @@
 // the tests look at. Two request headers ask for a special answer:
 // - X-Stub-Busy: the search role's busy answer, 503 with Retry-After.
 // - X-Stub-Stream: two lines, the second one 600 ms after the first, like the search response.
+// - X-Stub-Slow: the usual body, after that many milliseconds (for the in-flight limit).
 import { createServer } from "node:http"
 
 const name = process.env.NAME
@@ -28,6 +29,7 @@ const server = createServer(async (request, response) => {
 		response.write('{"kind":"reading"}\n')
 		return setTimeout(() => response.end('{"kind":"batch"}\n'), 600)
 	}
+	if (request.headers["x-stub-slow"]) await new Promise(resolve => setTimeout(resolve, Number(request.headers["x-stub-slow"])))
 	const body = JSON.stringify({
 		instance: name,
 		host: request.headers.host,

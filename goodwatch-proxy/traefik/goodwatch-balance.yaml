@@ -41,6 +41,18 @@
 #   redirect-to-https@docker): those disappear while no container runs on abio, and a router with a missing
 #   middleware answers 404.
 #
+# - Limits (owner Q49, 2026-11-13; see README.md here):
+#   - gw-webapp-in-flight lets at most 120 requests be open at once on the anonymous router (gw-webapp-https) and on
+#     the crawler router. Each router counts on its own (Traefik builds a middleware per router), all clients
+#     together (the criterion is the host), and answers 429 above it. Members keep no proxy limit: the page
+#     instances' own overload shedder covers them.
+#   - Named crawlers (AI crawlers, Epochal-Search, SEO scrapers) match gw-webapp-crawler-https by their User-Agent,
+#     priority 1050: above the member router (1001), below the search router (1100, which has its own guest gate).
+#     Its gw-webapp-crawler-rate allows 60 requests a minute with bursts of 30, per User-Agent string, because a
+#     crawler spreads over many addresses but keeps its name; above it the answer is 429. Googlebot, Bingbot,
+#     link-preview fetchers (facebookexternalhit, Twitterbot, Slackbot, Discordbot) and user-triggered AI fetches
+#     (ChatGPT-User, Claude-User, Perplexity-User) don't match. The expression has no backslash, for Coolify.
+#
 # Test it before installing it: ./test-local.sh in this directory.
 http:
   routers:
@@ -50,6 +62,20 @@ http:
       rule: Host(`goodwatch.app`)
       priority: 1000
       middlewares:
+        - gw-webapp-in-flight
+        - gw-webapp-retry
+      service: gw-webapp
+      tls:
+        certResolver: letsencrypt
+    # Named crawlers, by User-Agent: rate-limited per User-Agent string, then the same path as anonymous visitors.
+    gw-webapp-crawler-https:
+      entryPoints:
+        - https
+      rule: Host(`goodwatch.app`) && HeadersRegexp(`User-Agent`, `(?i)(GPTBot|OAI-SearchBot|ClaudeBot|Claude-SearchBot|anthropic-ai|CCBot|PerplexityBot|Bytespider|Amazonbot|meta-externalagent|FacebookBot|Diffbot|cohere-ai|cohere-training|AI2Bot|YouBot|Timpibot|ImagesiftBot|omgili|PanguBot|Kangaroo Bot|img2dataset|Scrapy|Epochal-Search|AhrefsBot|SemrushBot|MJ12bot|DotBot|BLEXBot|DataForSeoBot|serpstatbot|Barkrowler|PetalBot|MegaIndex|SeekportBot|ZoominfoBot)`)
+      priority: 1050
+      middlewares:
+        - gw-webapp-crawler-rate
+        - gw-webapp-in-flight
         - gw-webapp-retry
       service: gw-webapp
       tls:
@@ -100,6 +126,20 @@ http:
       retry:
         attempts: 2
         initialInterval: 100ms
+    # At most 120 open requests per router, all clients together; 429 above it.
+    gw-webapp-in-flight:
+      inFlightReq:
+        amount: 120
+        sourceCriterion:
+          requestHost: true
+    # Per User-Agent string: 60 requests a minute on average, bursts of 30; 429 above it.
+    gw-webapp-crawler-rate:
+      rateLimit:
+        average: 60
+        period: 1m
+        burst: 30
+        sourceCriterion:
+          requestHeaderName: User-Agent
 
   services:
     # Anonymous visitors, crawlers, and everything else without the auth cookie: no cookie from the proxy.

@@ -178,7 +178,7 @@ Agents don't change Coolify settings, DNS, the proxy's configuration, or firewal
 
 | File | Proxy | Effect |
 | --- | --- | --- |
-| `goodwatch-balance.yaml` | abio | Balances the site across both page instances, with the readiness check, the retry, and the sticky cookie for members. Deleting it leaves abio's instance alone |
+| `goodwatch-balance.yaml` | abio | Balances the site across both page instances, with the readiness check, the retry, the sticky cookie for members, the in-flight cap and the crawler rate limit ([limits](../goodwatch-proxy/traefik/README.md)). Deleting it leaves abio's instance alone |
 | `goodwatch-instance.yaml` | vector1 | Lets abio's proxy reach the page instance on vector1 |
 | `goodwatch-search.yaml` | abio | Sends the two search paths to vector1. Deleting it sends them back to the page instances |
 | `goodwatch-search-instance.yaml` | vector1 | Balances across the two search roles. Install it before the file on abio, and delete it after that one |

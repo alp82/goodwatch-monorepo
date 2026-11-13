@@ -142,6 +142,40 @@ done
 check 'a signed-out visitor with a leftover sticky cookie alternates' "$(count -H "Cookie: $cookie")" 'abio=5 vector1=5'
 check 'and gets no cookie' "$(set_cookie / -H "Cookie: $cookie")" ''
 
+echo '== 2c. Limits: crawler rate per User-Agent, at most 120 open anonymous requests'
+# statuses N [curl arguments]: the statuses of N requests sent one after another, as "200=31 429=14".
+statuses() { local n=$1; shift; for _ in $(seq "$n"); do get / -o /dev/null -w '%{http_code}\n' "$@" || echo 000; done | sort | uniq -c | awk '{printf "%s%s=%s", sep, $2, $1; sep=" "} END {print ""}'; }
+limited() { statuses 45 -A "$1" | grep -c '429='; }
+chrome='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36'
+for agent in "$chrome" \
+  'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)' \
+  'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)' \
+  'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Chrome/149.0.0.0 Safari/537.36' \
+  'Mozilla/5.0 (compatible; Google-InspectionTool/1.0;)' \
+  'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm) Chrome/149.0.0.0 Safari/537.36' \
+  'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)' 'Twitterbot/1.0' \
+  'Slackbot-LinkExpanding 1.0 (+https://api.slack.com/robots)' 'Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)' \
+  'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot' \
+  'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Claude-User/1.0; +Claude-User@anthropic.com)' \
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.2 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)' \
+  'DuckDuckBot/1.1; (+http://duckduckgo.com/duckduckbot.html)'; do
+  check "not limited: ${agent:0:70}" "$(limited "$agent")" '0'
+done
+for agent in 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; GPTBot/1.2; +https://openai.com/gptbot)' \
+  'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; ClaudeBot/1.0; +claudebot@anthropic.com)' \
+  "$chrome (compatible; Epochal-Search/1.0; +https://crawler.epochal.com)" \
+  'Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)' 'CCBot/2.0 (https://commoncrawl.org/faq/)' \
+  'Mozilla/5.0 (Linux; Android 5.0) AppleWebKit/537.36 (KHTML, like Gecko) Mobile Safari/537.36 (compatible; Bytespider; spider-feedback@bytedance.com)'; do
+  check "limited: ${agent:0:70}" "$(limited "$agent")" '1'
+done
+gptbot='Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; GPTBot/1.2; +https://openai.com/gptbot)'
+statuses 40 -A "$gptbot" >/dev/null # Drain its bucket again: the checks above took long enough to refill some.
+check 'a limited crawler answers 429, another crawler name still gets 200' "$(get / -o /dev/null -w '%{http_code}' -A "$gptbot") $(get / -o /dev/null -w '%{http_code}' -A 'Mozilla/5.0 (compatible; SemrushBot/7~bl; +http://www.semrush.com/bot.html)')" '429 200'
+# parallel N [curl arguments]: N requests at once, each held 3 s by the stub, as "200=120 429=10".
+parallel() { local n=$1; shift; seq "$n" | xargs -P "$n" -I{} curl -sk --http1.1 --max-time 10 --resolve goodwatch.app:38308:127.0.0.1 -o /dev/null -w '%{http_code}\n' -H 'X-Stub-Slow: 3000' "$@" https://goodwatch.app:38308/ | sort | uniq -c | awk '{printf "%s%s=%s", sep, $2, $1; sep=" "} END {print ""}'; }
+check '130 open anonymous requests: 120 served, 10 refused' "$(parallel 130)" '200=120 429=10'
+check '130 open member requests: no proxy limit' "$(parallel 130 -H "Cookie: $auth=x")" '200=130'
+
 echo '== 3. Forwarded headers on the vector1 leg'
 seen() { for _ in 1 2 3 4; do get / -H 'X-Probe: 1' | grep -o '"instance":"vector1".*"forwardedProto":"[a-z]*"' | sed 's/,"padding.*//' && return; done; }
 client=$(docker network inspect "$prefix-abio" -f '{{(index .IPAM.Config 0).Gateway}}')
