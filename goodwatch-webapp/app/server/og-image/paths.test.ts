@@ -60,10 +60,19 @@ test("old and new map and wishlist image addresses keep their cards", () => {
 })
 
 // Movies go through canonicalTitleId, which this bundle leaves out: shows only.
-test("a title's sub-pages share the title's card", () => {
-	assert.equal(canonicalOgPath("/show/95396-severance/tropes"), "/show/95396")
-	assert.equal(canonicalOgPath("/show/95396/fingerprint"), "/show/95396")
-	assert.equal(canonicalOgPath("/show/95396/at-a-glance"), "/show/95396")
+test("a title's sub-pages have their own cards", () => {
+	assert.equal(
+		canonicalOgPath("/show/95396-severance/tropes"),
+		"/show/95396/tropes",
+	)
+	assert.equal(
+		canonicalOgPath("/show/95396/fingerprint"),
+		"/show/95396/fingerprint",
+	)
+	assert.equal(
+		canonicalOgPath("/show/95396/at-a-glance"),
+		"/show/95396/at-a-glance",
+	)
 	assert.equal(canonicalOgPath("/show/95396/cast"), null)
 })
 

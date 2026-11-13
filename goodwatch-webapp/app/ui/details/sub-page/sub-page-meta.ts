@@ -1,5 +1,5 @@
-// A sub-page's meta tags: its own title, description and canonical address, the title's share card (og-image
-// content.server.ts maps a sub-page's path to its title's card) and the trail from the hub through the title page
+// A sub-page's meta tags: its own title, description and canonical address, its own share card (og-image
+// title-sub-page-content.server.ts) and the trail from the hub through the title page
 // to the sub-page as BreadcrumbList structured data. The title's own Movie or TVSeries data stays on its page.
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { type Crumb, titleTrail } from "~/ui/nav/breadcrumb-trail"

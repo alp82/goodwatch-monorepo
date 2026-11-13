@@ -30,8 +30,13 @@ import {
 	newServicesContent,
 } from "~/server/og-image/new-services-content.server"
 import { profileCardContent } from "~/server/og-image/profile-content.server"
+import {
+	type TitleSubPage,
+	titleSubPageContent,
+} from "~/server/og-image/title-sub-page-content.server"
 import { getPersonProfile } from "~/server/person.server"
 import { talkedAboutNowMode } from "~/server/talked-about-now/flags.server"
+import { titleTropes } from "~/ui/details/tropes/title-tropes.server"
 import { moods } from "~/ui/explore/category/moods"
 import {
 	type NavType,
@@ -90,7 +95,7 @@ const positiveId = (segment: string | undefined) => {
 	return Number.isSafeInteger(id) && id > 0 ? id : null
 }
 
-/** The last segment of a title's sub-page address (ui/details/sub-page/paths.ts). */
+/** The last segment of a title's sub-page address (ui/details/sub-page/paths.ts, title-sub-page-content.server.ts). */
 const TITLE_SUB_PAGES = ["fingerprint", "tropes", "at-a-glance"]
 
 /**
@@ -104,13 +109,15 @@ export function canonicalOgPath(path: string): string | null {
 
 	if (first === "movie" || first === "show" || first === "tv") {
 		const id = positiveId(second)
-		// A title's sub-page (its fingerprint, tropes, at a glance) shares the title's card.
+		// A title's sub-page (its fingerprint, tropes, at a glance) has its own card.
 		const subPage =
 			segments.length === 3 && TITLE_SUB_PAGES.includes(third ?? "")
 		if (!id || (segments.length > 2 && !subPage)) return null
-		return first === "movie"
-			? `/movie/${canonicalTitleId("movie", id)}`
-			: `/show/${id}`
+		const title =
+			first === "movie"
+				? `/movie/${canonicalTitleId("movie", id)}`
+				: `/show/${id}`
+		return subPage ? `${title}/${third}` : title
 	}
 	if (first === "person") {
 		const id = positiveId(second)
@@ -590,6 +597,11 @@ export async function resolveOgContent(
 	path: string,
 ): Promise<OgContent | null> {
 	const [first, second, third, fourth] = path.split("/").filter(Boolean)
+	if ((first === "movie" || first === "show") && third)
+		return titleSubPageContent(first, Number(second), third as TitleSubPage, {
+			details: loadDetails,
+			tropes: titleTropes,
+		})
 	if (first === "movie" || first === "show")
 		return titleContent(first, Number(second))
 	if (first === "person") return personContent(Number(second))

@@ -15,6 +15,8 @@
 //   giant number beside the top winner's poster (AwardsCard.tsx); a body and a one-winner category use the movie card.
 // - Hot on socials: amber headline beside the ranking's top five on ink, each with its daily reads (HotCard.tsx).
 // - By your tropes: a cloud of twelve trope names in three sizes on amber, the same for every link (TropesCard.tsx).
+// - A title's sub-pages: its fingerprint (the poster beside its strongest feelings on ink), tropes (a cloud of the
+//   title's tropes beside a small poster) and at a glance (the poster beside six fact tiles) (TitleSubPageCards.tsx).
 // - Blog posts: the collections' split, the first linked title's backdrop beside the post's headline.
 // - Every other page: backdrop across the top, amber band with the headline below.
 // Image fields hold data URIs, so satori never fetches anything itself.
@@ -44,6 +46,14 @@ import {
 	type OgTasteQuizContent,
 	TasteQuizCard,
 } from "~/ui/og-image/TasteQuizCard"
+import {
+	type OgTitleFingerprintContent,
+	type OgTitleGlanceContent,
+	type OgTitleTropesContent,
+	TitleFingerprintCard,
+	TitleGlanceCard,
+	TitleTropesCard,
+} from "~/ui/og-image/TitleSubPageCards"
 import { type OgTropesContent, TropesCard } from "~/ui/og-image/TropesCard"
 import {
 	Brand,
@@ -120,6 +130,9 @@ export interface OgChatContent {
 }
 
 export type {
+	OgTitleFingerprintContent,
+	OgTitleGlanceContent,
+	OgTitleTropesContent,
 	OgAwardsContent,
 	OgHotContent,
 	OgTropesContent,
@@ -132,6 +145,9 @@ export type {
 }
 
 export type OgContent =
+	| OgTitleFingerprintContent
+	| OgTitleTropesContent
+	| OgTitleGlanceContent
 	| OgAwardsContent
 	| OgHotContent
 	| OgTropesContent
@@ -341,6 +357,12 @@ export function OgCard({ content }: { content: OgContent }) {
 	if (content.kind === "profile-sides")
 		return <ProfileSidesCard content={content} />
 	if (content.kind === "title") return <TitleCard content={content} />
+	if (content.kind === "title-fingerprint")
+		return <TitleFingerprintCard content={content} />
+	if (content.kind === "title-tropes")
+		return <TitleTropesCard content={content} />
+	if (content.kind === "title-glance")
+		return <TitleGlanceCard content={content} />
 	if (content.kind === "page") return <BandCard content={content} />
 	return <SplitCard content={content} />
 }

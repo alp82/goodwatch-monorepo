@@ -358,3 +358,27 @@ export const TROPES_CARD_COPY = {
 	tag: string
 	tropes: { name: string; weight: 1 | 2 | 3 }[]
 }
+
+// The cards of a title's sub-pages (TitleSubPageCards.tsx): its fingerprint, tropes and at a glance. The title's own
+// name, effects, tropes and facts fill them; these are the words around them.
+export const TITLE_SUB_PAGE_CARD_COPY = {
+	/** Fingerprint: above the title, as "Fingerprint · Movie · 2021". */
+	fingerprintTag: "Fingerprint",
+	/** Tropes: the tag in the corner and the count under the poster. */
+	tropesTag: "Tropes",
+	tropesCount: (n: number) =>
+		`${n.toLocaleString("en-US")} trope${n === 1 ? "" : "s"}`,
+	/** At a glance: the tile labels. */
+	tiles: {
+		released: "Released",
+		firstAired: "First aired",
+		runtime: "Runtime",
+		seasons: "Seasons",
+		episodes: "Episodes",
+		rated: "Rated",
+		madeIn: "Made in",
+		language: "Language",
+		boxOffice: "Box office",
+		genres: "Genres",
+	},
+} as const

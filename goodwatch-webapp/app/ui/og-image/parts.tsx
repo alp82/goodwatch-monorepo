@@ -239,7 +239,7 @@ const tokens = (text: string) =>
 		.filter(Boolean)
 		.flatMap((word) => (BREAKS_ANYWHERE.test(word) ? [...word] : [word]))
 
-const HEADLINE_LINE_HEIGHT = 0.95
+export const HEADLINE_LINE_HEIGHT = 0.95
 const HEADLINE_LETTER_SPACING = 1
 // The width of a run of text in px at a font size, with a 3% margin for kerning and rounding.
 const runWidth = (text: string, fontSize: number) =>
