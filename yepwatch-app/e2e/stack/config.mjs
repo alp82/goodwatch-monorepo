@@ -20,6 +20,7 @@ export const GATEWAY_BUNDLE = path.join(REALTIME_DIR, 'dist', 'e2e-gateway.js');
 
 const BASE_PORTS = {
   valkey: 18379,
+  rooms: 18381, // the dedicated rooms Valkey (standalone, as in production)
   crateHttp: 18420,
   crateTransport: 18430,
   cratePsql: 18432,
@@ -49,8 +50,8 @@ export const ORIGINS = {
 };
 
 const SUFFIX = SLOT ? `-s${SLOT}` : '';
-export const CONTAINERS = { valkey: `yw-e2e-valkey${SUFFIX}`, crate: `yw-e2e-crate${SUFFIX}`, caddy: `yw-e2e-caddy${SUFFIX}` };
-export const IMAGES = { valkey: 'valkey/valkey:8', crate: 'crate:6.4.6', caddy: 'caddy:2.11.7' };
+export const CONTAINERS = { valkey: `yw-e2e-valkey${SUFFIX}`, rooms: `yw-e2e-rooms${SUFFIX}`, crate: `yw-e2e-crate${SUFFIX}`, caddy: `yw-e2e-caddy${SUFFIX}` };
+export const IMAGES = { valkey: 'valkey/valkey:8', rooms: 'valkey/valkey:8.1.10', crate: 'crate:6.4.6', caddy: 'caddy:2.11.7' };
 
 // Disposable local secrets. They protect nothing real; they only satisfy the length rules.
 export const SECRETS = {

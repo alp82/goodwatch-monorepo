@@ -177,6 +177,47 @@ export class SqlCreationQuotas implements CreationQuotaStore {
     // A lost insert that didn't land, or a proof of another expiry: the same request retried finishes it.
     if (confirmed?.expires_at !== expiresAt) throw busy()
   }
+  /**
+   * History copy of a reservation the live store made (ValkeyReleaseControl): merges it, with its fixed expiry, into
+   * the creator's row (compare-and-swap, keeping every other reservation) and writes the room's proof row. Idempotent.
+   */
+  async record(roomId: string, admissionDigest: string, creator: string, expiresAt: number) {
+    for (let attempt = 0; attempt < 12; attempt++) {
+      const current = await this.read(creator)
+      const now = current?.now ?? Date.now()
+      const reservations = (current?.reservations ?? []).filter(r => r.expires_at > now || r.room_id === roomId)
+      const own = reservations.find(r => r.room_id === roomId)
+      if (own && (own.admission_digest !== admissionDigest || own.expires_at !== expiresAt)) throw new RoomError('conflict', 'Reservation copy differs', 409)
+      if (!own) {
+        reservations.push({ room_id: roomId, admission_digest: admissionDigest, expires_at: expiresAt })
+        // A creator over the allowance in the copy (live store and copy disagree after a lost store) keeps the newest.
+        while (reservations.length > 100) reservations.shift()
+        const rowExpiry = Math.max(...reservations.map(r => r.expires_at))
+        let landed = false
+        try {
+          const result = current
+            ? await this.sql(`UPDATE ${quotaTable.name} SET reservations=?,expires_at=? WHERE creator_digest=? AND _seq_no=? AND _primary_term=?`, [reservations, rowExpiry, creator, current.seq, current.term])
+            : await this.sql(`INSERT INTO ${quotaTable.name} (creator_digest,format,expires_at,reservations) VALUES (?,?,?,?) ON CONFLICT DO NOTHING`, [creator, 1, rowExpiry, reservations])
+          landed = result.rowcount === 1
+        } catch (error) { if (!(error instanceof IndeterminateWrite)) throw error }
+        if (!landed) continue
+      }
+      try {
+        await this.sql(`INSERT INTO ${reservationTable.name} (room_id,creator_digest,admission_digest,expires_at) VALUES (?,?,?,?) ON CONFLICT DO NOTHING`, [roomId, creator, admissionDigest, expiresAt])
+      } catch (error) { if (!(error instanceof IndeterminateWrite)) throw error }
+      const row = (await this.sql(`SELECT admission_digest,expires_at FROM ${reservationTable.name} WHERE room_id=?`, [roomId])).rows[0]
+      if (!row) continue
+      if (row[0] !== admissionDigest || Number(row[1]) !== expiresAt) throw new RoomError('conflict', 'Reservation copy differs', 409)
+      return
+    }
+    throw busy()
+  }
+  /** Live reservations (proof rows), for the live store's copy: a search, so a just-written one may be missing. */
+  async liveReservations(limit = 50_000) {
+    await this.sql(`REFRESH TABLE ${reservationTable.name}`)
+    return (await this.sql(`SELECT room_id,creator_digest,admission_digest,expires_at FROM ${reservationTable.name} WHERE expires_at>CURRENT_TIMESTAMP LIMIT ?`, [limit])).rows
+      .map(r => ({ roomId: String(r[0]), creator: String(r[1]), admission: String(r[2]), expiresAt: Number(r[3]) }))
+  }
   async count() { return Number((await this.sql(`SELECT count(*) FROM ${reservationTable.name} WHERE expires_at>CURRENT_TIMESTAMP`)).rows[0]?.[0] ?? 0) }
   /** Search finds candidates only; a current primary-key read and CAS protect a newly renewed allowance. */
   async purgeExpired() {

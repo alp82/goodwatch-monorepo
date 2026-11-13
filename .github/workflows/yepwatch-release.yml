@@ -43,11 +43,12 @@ jobs:
           npm --prefix yepwatch-app test
           npm --prefix yepwatch-realtime run build
           npm --prefix yepwatch-realtime test
-      - name: Validate typed storage and concurrency on disposable Crate
+      - name: Validate typed storage, concurrency and live rooms on disposable Crate and Valkey
         working-directory: goodwatch-webapp
         env:
           YEPWATCH_TEST_CONTROL_CRATE: '1'
           YEPWATCH_TEST_RELATIONAL_CRATE: '1'
+          YEPWATCH_TEST_ROOMS_VALKEY: '1'
         run: |
           node app/server/yepwatch/build-release.mjs
           node --experimental-strip-types --test \
@@ -59,7 +60,8 @@ jobs:
             app/server/yepwatch/proposal-release-control-crate.test.ts \
             app/server/yepwatch/proposal-relational-crate.test.ts \
             app/server/yepwatch/proposal-creation-quota.test.ts \
-            app/server/yepwatch/proposal-create-crate.test.ts
+            app/server/yepwatch/proposal-create-crate.test.ts \
+            app/server/yepwatch/proposal-valkey-rooms.test.ts
           node app/server/yepwatch/write-storage-schema.mjs
           git diff --exit-code -- app/server/yepwatch/schema.sql
       - name: Validate Coolify configuration

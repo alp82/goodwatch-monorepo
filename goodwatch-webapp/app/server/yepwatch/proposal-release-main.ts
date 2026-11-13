@@ -1,4 +1,5 @@
 import { createReleaseBus } from "./proposal-release-bus.ts"
+import { createRoomsValkey } from "./proposal-rooms-valkey.ts"
 import { ValkeyTicketStore } from "./proposal-tickets.ts"
 import { ValkeyCommandBudget } from "./proposal-command-budget.ts"
 import Redis from "ioredis"
@@ -50,11 +51,14 @@ assertNoSharedCatalogWriter(cache.getRedisCluster)
 const bus = createReleaseBus(config)
 bus.on("error", () => {})
 void bus.connect().catch(() => {}) // A missing bus keeps readiness red and reconnects; no startup room writes.
-// Tickets on a connection of their own that never resends a command (their scripts are replay-safe anyway).
-const ticketBus = createReleaseBus(config, { once: true })
-ticketBus.on("error", () => {})
-void ticketBus.connect().catch(() => {})
-const tickets = new ValkeyTicketStore(ticketBus)
+// Live rooms, tickets and rate windows in the dedicated rooms Valkey, on a connection that never resends a command
+// (a lost answer is an unknown outcome; every script is replay-safe or re-read). The bus above stays the shared
+// cluster: it carries revision hints to the gateway.
+// Without a rooms Valkey (older deployment routes), rooms stay in Crate and tickets on a once-only bus connection.
+const rooms = config.roomsValkeyUrl ? createRoomsValkey(config.roomsValkeyUrl, config.secret) : createReleaseBus(config, { once: true })
+rooms.on("error", () => {})
+void rooms.connect().catch(() => {})
+const tickets = new ValkeyTicketStore(rooms)
 snapshot.startTitleSnapshot()
 const runtime = createReleaseRuntime(config, {
 	sql: crateSql(config.origin, config.username, config.password),
@@ -62,8 +66,8 @@ const runtime = createReleaseRuntime(config, {
 	memberCatalog: guestProposalCatalog,
 	bus,
 	tickets,
-	// On the tickets' connection: its script is replay-safe too.
-	commands: new ValkeyCommandBudget(ticketBus),
+	commands: new ValkeyCommandBudget(rooms),
+	...(config.roomsValkeyUrl ? { rooms: rooms as ReturnType<typeof createRoomsValkey> } : {}),
 	snapshot: snapshot.getTitleSnapshot,
 	async catalogProbe() {
 		assertNoSharedCatalogWriter(cache.getRedisCluster)
@@ -146,14 +150,14 @@ async function shutdown(signal: string) {
 		})
 		server.closeIdleConnections()
 	})
-	runtime.stop()
+	await Promise.race([runtime.stop(), new Promise((r) => setTimeout(r, 3000))])
 	clearInterval(warm)
 	clearInterval(readyLog)
 	snapshot.stopTitleSnapshot()
 	cache.stopRedisClusterForTest()
 	source.disconnect()
 	bus.disconnect()
-	ticketBus.disconnect()
+	rooms.disconnect()
 	console.info(JSON.stringify({ event: "yepwatch_release_stopped" }))
 	process.exit(0)
 }

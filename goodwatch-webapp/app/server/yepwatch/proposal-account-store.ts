@@ -50,6 +50,9 @@ export function decodeDecision(d: Record<string, any>): HistoricalDecision {
 	};
 }
 
+/** The stored key of an account's room index and of a session's logout: a keyed hash, never the identifier. */
+export const accountKey = (secret: string, id: string) => keyed(secret, "account-rooms", id);
+
 /** The index is a locator only. Callers must check membership against the committed room head. */
 export class SqlAccountRooms implements AccountRoomsStore {
 	private published = new Map<string, string>();
@@ -62,7 +65,14 @@ export class SqlAccountRooms implements AccountRoomsStore {
 		this.now = now;
 	}
 	private key(userId: string) {
-		return keyed(this.secret, "account-rooms", userId);
+		return accountKey(this.secret, userId);
+	}
+	/** Unexpired logouts (by stored key), for the live store's copy: a search, so a just-written one may be missing. */
+	async liveRevocations(now: number, limit = 50_000) {
+		await this.sql(`REFRESH TABLE ${revokedSessionTable.name}`);
+		return (
+			await this.sql(`SELECT id,expires_at FROM ${revokedSessionTable.name} WHERE expires_at>? LIMIT ?`, [now, limit])
+		).rows.map((r) => ({ key: String(r[0]), expiresAt: Number(r[1]) }));
 	}
 	async revokeSession(id: string, expiresAt: number) {
 		const key = this.key(id);

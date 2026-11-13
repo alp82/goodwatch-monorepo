@@ -2,7 +2,8 @@
 // Caddy (the production Caddyfile with loopback upstreams). Reused when already running.
 import { execFileSync, spawnSync } from 'node:child_process';
 import net from 'node:net';
-import { CONTAINERS, IMAGES, PORTS } from './config.mjs';
+import { createHash } from 'node:crypto';
+import { CONTAINERS, IMAGES, PORTS, SECRETS } from './config.mjs';
 
 const docker = (args, opts = {}) => execFileSync('docker', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], ...opts }).trim();
 export const running = (name) => {
@@ -48,6 +49,17 @@ export async function valkeyUp() {
     if (/cluster_slots_assigned:0/.test(info)) docker(['exec', name, 'valkey-cli', '-p', String(PORTS.valkey), 'cluster', 'addslotsrange', '0', '16383']);
     await waitFor(() => /cluster_state:ok/.test(docker(['exec', name, 'valkey-cli', '-p', String(PORTS.valkey), 'cluster', 'info'])), 'valkey cluster ok', 20000);
   }
+}
+
+/** The rooms Valkey as production runs it: standalone, noeviction, AOF, password derived from the room key. */
+export async function roomsUp() {
+  const name = CONTAINERS.rooms;
+  if (await claim(PORTS.rooms, name)) return;
+  const password = createHash('sha256').update(`yepwatch-rooms-valkey:${SECRETS.room}`).digest('hex');
+  docker(['run', '-d', '--rm', '--name', name, '--label', 'yw-e2e=1', '--network', 'host', IMAGES.rooms, 'valkey-server',
+    '--port', String(PORTS.rooms), '--bind', '127.0.0.1', '--requirepass', password, '--appendonly', 'yes',
+    '--appendfsync', 'everysec', '--save', '', '--maxmemory', '256mb', '--maxmemory-policy', 'noeviction']);
+  await waitFor(() => /PONG/.test(docker(['exec', name, 'valkey-cli', '-p', String(PORTS.rooms), '--no-auth-warning', '-a', password, 'ping'])), 'rooms valkey', 20000);
 }
 
 export async function crateUp() {

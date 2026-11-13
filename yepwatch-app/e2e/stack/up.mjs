@@ -8,7 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { CACHE_DIR, CONTAINERS, E2E_DIR, ORIGINS, PORTS, REPO_DIR, STATE_FILE } from './config.mjs';
 import { buildApi, buildGateway, buildWeb } from './build.mjs';
-import { caddyUp, crateUp, portOpen, valkeyUp, waitFor, running } from './docker.mjs';
+import { caddyUp, crateUp, portOpen, roomsUp, valkeyUp, waitFor, running } from './docker.mjs';
 import { cleanEnv } from './safe-env.mjs';
 
 const t0 = Date.now();
@@ -39,8 +39,8 @@ async function controlStatus() {
 
 const [api, gateway] = await Promise.all([buildApi(log), Promise.resolve(buildGateway(log))]);
 const web = buildWeb(log);
-await Promise.all([valkeyUp(), crateUp()]);
-log('valkey + crate up');
+await Promise.all([valkeyUp(), roomsUp(), crateUp()]);
+log('valkey + rooms valkey + crate up');
 
 let status = await controlStatus();
 const stale = api.built || gateway.built;
@@ -58,7 +58,7 @@ if (!status) {
   const { SECRETS, WEBAPP_DIR, API_BUNDLE_DIR } = await import('./config.mjs');
   const env = cleanEnv({
     E2E_PUBLIC_ORIGIN: ORIGINS.front, E2E_CRATE_ORIGIN: ORIGINS.crate, E2E_ISSUER_ORIGIN: ORIGINS.issuer, E2E_IMAGES_ORIGIN: ORIGINS.images,
-    YEPWATCH_SEARCH_URL: `${ORIGINS.search}/api/combined-search`, E2E_VALKEY_PORT: String(PORTS.valkey), E2E_ROOM_SECRET: SECRETS.room,
+    YEPWATCH_SEARCH_URL: `${ORIGINS.search}/api/combined-search`, E2E_VALKEY_PORT: String(PORTS.valkey), E2E_ROOMS_VALKEY_PORT: String(PORTS.rooms), E2E_ROOM_SECRET: SECRETS.room,
     E2E_KEY_ID: SECRETS.keyId, E2E_CLIENT_ID: SECRETS.clientId, E2E_GATEWAY_SECRET: SECRETS.gateway, E2E_API_PORT: String(PORTS.api),
   });
   const p = spawnSync(process.execPath, [path.join(API_BUNDLE_DIR, 'api.mjs'), args.has('--reset') ? 'reset' : 'provision'], { cwd: WEBAPP_DIR, env, encoding: 'utf8' });
@@ -96,6 +96,7 @@ const state = {
   images: ORIGINS.images,
   crate: ORIGINS.crate,
   valkey: `redis://127.0.0.1:${PORTS.valkey}`,
+  rooms: `redis://127.0.0.1:${PORTS.rooms}`,
   webExport: web.out,
   logs: path.join(CACHE_DIR, 'logs'),
   startedAt: new Date().toISOString(),

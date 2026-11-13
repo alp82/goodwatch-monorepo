@@ -126,6 +126,10 @@ export function releaseConfig(env: Env) {
 	if (redisNodes && (!env.YEPWATCH_PROPOSAL_REDIS_USER || !env.YEPWATCH_PROPOSAL_REDIS_PASSWORD)) throw new Error("Shared Redis requires dedicated messaging credentials")
 	for (const name of ["CRATE_HOSTS", "REDIS_HOST", "REDIS_PORT"])
 		required(env, name)
+	// The dedicated rooms Valkey (docs/yepwatch-valkey-rooms.md); its password is derived from the room key. Without
+	// one (older deployment routes), rooms stay in Crate.
+	const roomsValkeyUrl = env.YEPWATCH_PROPOSAL_ROOMS_VALKEY_URL || undefined
+	if (roomsValkeyUrl) url(roomsValkeyUrl, ["redis:", "rediss:"])
 	return {
 		...releaseStoreConfig(env),
 		control: releaseControlConfig(env),
@@ -138,6 +142,7 @@ export function releaseConfig(env: Env) {
 		redisNodes,
 		redisUsername: env.YEPWATCH_PROPOSAL_REDIS_USER,
 		redisPassword: env.YEPWATCH_PROPOSAL_REDIS_PASSWORD,
+		roomsValkeyUrl,
 		host: env.HOST ?? "0.0.0.0",
 		port: integer(env, "PORT", 3000, 0, 65535),
 		sourceCommit: env.SOURCE_COMMIT ?? "unknown",

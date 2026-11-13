@@ -4,7 +4,7 @@ import { SqlDeletionStore } from './proposal-deletion.ts'
 import { ROOM_CONTEXT } from "./proposal-context.ts"
 import { PENDING_IDEA_ATTRIBUTE } from "../../../packages/yepwatch-contracts/proposal.ts"
 import { z } from "zod"
-import { codec, keyed } from "./crypto.server.ts"
+import { codec, hash, keyed } from "./crypto.server.ts"
 import { IndeterminateWrite, RoomError } from "./errors.ts"
 import { LIMITS } from "./types.ts"
 import type { Sql } from "./repository.server.ts"
@@ -167,6 +167,13 @@ export class RelationalProposalRepository implements ProposalRepository {
 			)
 		if (row[0] !== roomId) return null
 		return Number(row[1])
+	}
+	/** Every invite mapping (they are kept until retention removes them), for the live store's copy. Bounded. */
+	async invites(limit = 50_000) {
+		await this.sql(`REFRESH TABLE ${invitationTable.name}`)
+		return (
+			await this.sql(`SELECT code_hash,room_id,expires_at FROM ${invitationTable.name} LIMIT ?`, [limit])
+		).rows.map((r) => ({ hash: String(r[0]), roomId: String(r[1]), expiresAt: Number(r[2]) }))
 	}
 	private remember(key: string, row: Row) {
 		this.cache.set(key, structuredClone(row))
@@ -634,6 +641,85 @@ export class RelationalProposalRepository implements ProposalRepository {
 				))
 			).rowcount === 1
 		)
+	}
+	/**
+	 * The checks a write of this room runs (state size cap, column schemas, relations), without writing: a store that
+	 * keeps live rooms elsewhere (ValkeyRoomRepository) refuses what this history copy would refuse.
+	 */
+	validate(room: ProposalRoom) {
+		this.plan(room, 0)
+	}
+	/**
+	 * History copy (proposal-history-sync.ts): writes the room's head over the one at `base` (its `_seq_no` and
+	 * `_primary_term`), or inserts it when `base` is null, and returns the head's new sequence and term; null when the
+	 * head isn't at `base` (or already exists). Unlike insert, no clock fence: a room admitted live may be copied after
+	 * it expired. Nothing is pending on a copied head (pending_revision 0); the live store keeps notifications.
+	 */
+	async archive(room: ProposalRoom, base: { seq: number; term: number } | null): Promise<{ seq: number; term: number } | "conflict" | "unknown"> {
+		const plan = this.plan(room, 0)
+		await this.ensure([...plan.records.values()])
+		const names = columns(tables.room)
+		const changed = names.filter((k) => k !== "id")
+		let result
+		try {
+			result = base
+				? await this.sql(
+						`UPDATE ${tables.room.name} SET ${changed.map((k) => `${k}=?`).join(",")} WHERE id=? AND _seq_no=? AND _primary_term=? RETURNING _seq_no,_primary_term`,
+						[...changed.map((k) => plan.head[k]), room.id, base.seq, base.term]
+				  )
+				: await this.sql(
+						`INSERT INTO ${tables.room.name} (${names.join(",")}) VALUES (${names.map(() => "?").join(",")}) ON CONFLICT DO NOTHING RETURNING _seq_no,_primary_term`,
+						names.map((k) => plan.head[k])
+				  )
+		} catch (e) {
+			if (e instanceof IndeterminateWrite) return "unknown"
+			throw e
+		}
+		if (result.rowcount !== 1) return "conflict"
+		const row = result.rows[0]
+		if (!row?.length) return "unknown"
+		return { seq: z.number().int().parse(row[0]), term: z.number().int().parse(row[1]) }
+	}
+	/**
+	 * What a copied head of this room is, as a fingerprint of the head row archive() writes for it (its columns name
+	 * every record by content): the same room always gives the same fingerprint, any other content another one.
+	 */
+	fingerprint(room: ProposalRoom) {
+		return hash(stable(this.plan(room, 0).head))
+	}
+	/** The head's sequence, term, revision and fingerprint (a primary-key read, real time); null without a head. */
+	async head(id: string): Promise<{ seq: number; term: number; revision: number; fingerprint: string } | null> {
+		const names = columns(tables.room)
+		const row = (
+			await this.sql(`SELECT ${names.join(",")},_seq_no,_primary_term FROM ${tables.room.name} WHERE id=?`, [id])
+		).rows[0]
+		if (!row) return null
+		const head = parseRow(tables.room, Object.fromEntries(names.map((k, i) => [k, row[i]])))
+		return {
+			seq: Number(row[names.length]),
+			term: Number(row[names.length + 1]),
+			revision: Number(head.revision),
+			fingerprint: hash(stable(head)),
+		}
+	}
+	/**
+	 * Every head of a room expiring after `since`, by id in pages, with what reconciliation compares: a search
+	 * (refreshed first, eventually consistent), so callers confirm by primary key before acting on a difference.
+	 */
+	async liveHeads(since: number) {
+		await this.sql(`REFRESH TABLE ${tables.room.name}`)
+		const heads: { id: string; seq: number; term: number; revision: number }[] = []
+		for (let after = ""; ; ) {
+			const rows = (
+				await this.sql(
+					`SELECT id,_seq_no,_primary_term,revision FROM ${tables.room.name} WHERE expires_at>? AND id>? ORDER BY id LIMIT 500`,
+					[since, after]
+				)
+			).rows
+			for (const r of rows) heads.push({ id: String(r[0]), seq: Number(r[1]), term: Number(r[2]), revision: Number(r[3]) })
+			if (rows.length < 500) return heads
+			after = String(rows[rows.length - 1][0])
+		}
 	}
 	async compareAndSwap(
 		previous: ProposalStored,

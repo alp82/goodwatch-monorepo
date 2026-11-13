@@ -15,7 +15,13 @@ import type { CommandBudget } from "./proposal-command-budget.ts"
 import type { Sql } from "./repository.server.ts"
 import { RelationalProposalRepository } from "./proposal-relational-repository.ts"
 import { checkReleaseStore } from "./proposal-release-store.ts"
-import type { ProposalCatalog } from "./proposal-types.ts"
+import type { ProposalCatalog, ProposalRepository } from "./proposal-types.ts"
+import type { RoomsValkey } from "./proposal-rooms-valkey.ts"
+import { ValkeyRoomRepository } from "./proposal-valkey-repository.ts"
+import { ValkeyReleaseControl } from "./proposal-valkey-control.ts"
+import { ValkeyAccountRooms, MirroredDeletionStore } from "./proposal-valkey-accounts.ts"
+import { HistorySync } from "./proposal-history-sync.ts"
+import { ValkeyCommandBudget } from "./proposal-command-budget.ts"
 import type { ReleaseConfig } from "./proposal-release-config.ts"
 export const RELEASE_HEALTH = {
 	live: `${API_PREFIX}/health/live`,
@@ -39,6 +45,11 @@ export interface ReleaseDependencies {
 	 * Without one, commands are charged on the control row like admissions.
 	 */
 	commands?: CommandBudget
+	/**
+	 * The dedicated rooms Valkey (docs/yepwatch-valkey-rooms.md): live rooms, capacity, admissions, account checks;
+	 * Crate becomes the history copy. Without one, rooms stay in Crate (tests, local runners).
+	 */
+	rooms?: RoomsValkey
 	now?: () => number
 }
 /** No guest identities, fixtures, DDL or fail-open readiness. Normal handler behavior stays in its existing module. */
@@ -47,15 +58,38 @@ export function createReleaseRuntime(
 	deps: ReleaseDependencies
 ) {
 	const now = deps.now ?? Date.now
-	const repository = new RelationalProposalRepository(deps.sql, config.secret)
+	const crateRepository = new RelationalProposalRepository(deps.sql, config.secret)
+	const quotas = new SqlCreationQuotas(deps.sql, config.control.roomsPerPerson ?? 10)
+	let repository: ProposalRepository = crateRepository
+	let control: { check(): Promise<void> } & ConstructorParameters<typeof ProposalService>[5]
+	let history: HistorySync | undefined
+	if (deps.rooms) {
+		const rooms = deps.rooms
+		const deletions = new MirroredDeletionStore(rooms, crateRepository.deletionStore, () => history!.caughtUp())
+		const live = new ValkeyRoomRepository(rooms, crateRepository, config.secret, {
+			accounts: new ValkeyAccountRooms(rooms, crateRepository.accountStore, config.secret),
+			deletions,
+			retentionDays: config.roomRetentionDays,
+			onCommit: () => void history?.kick(),
+		})
+		history = new HistorySync({
+			redis: rooms,
+			repository: live,
+			crate: crateRepository,
+			quotas,
+			accounts: crateRepository.accountStore,
+			deletions,
+			retentionDays: config.roomRetentionDays,
+		})
+		repository = live
+		control = new ValkeyReleaseControl(rooms, config.control, deps.commands ?? new ValkeyCommandBudget(rooms), quotas)
+	} else control = new ReleaseControl(deps.sql, config.control, quotas, deps.commands)
 	const members = config.member
 		? releaseMembers(repository, config.member, fetch, config.secret)
 		: undefined
 	if (members && !deps.memberCatalog)
 		throw new Error("Member catalog adapter required")
 	const tickets = deps.tickets
-	const quotas = new SqlCreationQuotas(deps.sql, config.control.roomsPerPerson ?? 10)
-	const control = new ReleaseControl(deps.sql, config.control, quotas, deps.commands)
 	const service = new ProposalService(
 		repository,
 		members ? deps.memberCatalog!(members) : deps.catalog,
@@ -84,26 +118,47 @@ export function createReleaseRuntime(
 		rooms: false,
 		control: false,
 		realtime: false,
+		history: false,
+	}
+	/** With Valkey rooms, the Crate checks once started: they run on their own, never holding up a probe. */
+	let crateChecking: Promise<void> | undefined
+	function checkCrate() {
+		crateChecking ??= Promise.allSettled([deps.catalogProbe(), checkReleaseStore(deps.sql, config.keyId, config.secret)])
+			.then(([catalog, store]) => {
+				checks.catalog = catalog.status === "fulfilled"
+				checks.history = store.status === "fulfilled"
+			})
+			.finally(() => {
+				crateChecking = undefined
+			})
 	}
 	async function probe() {
 		if (probing) return probing
 		probing = (async () => {
+			const started = Boolean(history && initialized)
+			if (started) checkCrate()
 			const results = await Promise.allSettled([
 				Promise.resolve().then(() => {
 					if (!deps.snapshot()?.count) throw new Error("Snapshot not loaded")
 				}),
-				deps.catalogProbe(),
-				checkReleaseStore(deps.sql, config.keyId, config.secret),
+				started ? Promise.resolve() : deps.catalogProbe(),
+				// Live rooms: in Valkey once its copies of Crate's tables are imported (the first probe imports them),
+				// otherwise the Crate store.
+				history ? control.check().then(() => history!.ensureMirrors()) : checkReleaseStore(deps.sql, config.keyId, config.secret),
 				control.check(),
 				Promise.all([deps.bus.ping(), tickets.check?.()]),
+				// The Crate store (with Valkey rooms: the history copy). Needed to start, not to keep serving.
+				started ? Promise.resolve() : checkReleaseStore(deps.sql, config.keyId, config.secret),
 			])
 			for (const [i, key] of (
 				Object.keys(checks) as (keyof typeof checks)[]
 			).entries())
-				checks[key] = results[i].status === "fulfilled"
+				if (!started || (key !== "catalog" && key !== "history")) checks[key] = results[i].status === "fulfilled"
 			checkedAt = now()
-			if (Object.values(checks).every(Boolean) && !!deps.snapshot()?.count)
+			if (Object.values(checks).every(Boolean) && !!deps.snapshot()?.count) {
+				if (!initialized) history?.start()
 				initialized = true
+			}
 		})().finally(() => {
 			probing = undefined
 		})
@@ -114,9 +169,11 @@ export function createReleaseRuntime(
 			checkedAt !== null &&
 			now() - checkedAt <= Math.max(15000, config.probeMs * 3)
 		const loaded = !!deps.snapshot()?.count
+		// With Valkey rooms, Crate (the history copy, and the catalog queries once the snapshot is loaded) never takes a
+		// started API out of service: rooms keep working on Valkey.
+		const serving = Object.entries(checks).every(([k, ok]) => ok || ((k === "history" || k === "catalog") && history && initialized))
 		return {
-			ready:
-				!draining && recent && loaded && Object.values(checks).every(Boolean),
+			ready: !draining && recent && loaded && serving,
 			status: draining ? "draining" : "running",
 			checks: { ...checks, snapshot: loaded },
 			sourceCommit: config.sourceCommit,
@@ -157,6 +214,7 @@ export function createReleaseRuntime(
 	let repairing = false
 	const repair = setInterval(() => {
 		if (repairing || draining || !readiness().ready) return
+		void history?.kick()
 		repairing = true
 		void service
 			.repair()
@@ -199,10 +257,13 @@ export function createReleaseRuntime(
 		drain() {
 			draining = true
 		},
+		/** The history copy's loops, for shutdown (queued jobs stay in Valkey for the next process). */
+		history,
 		stop() {
 			clearInterval(timer)
 			clearInterval(repair)
 			clearInterval(purge)
+			return history?.stop()
 		},
 	}
 }

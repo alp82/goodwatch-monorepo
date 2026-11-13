@@ -13,6 +13,7 @@ import { ValkeyCommandBudget } from "~/server/yepwatch/proposal-command-budget.t
 import { createReleaseRuntime } from "~/server/yepwatch/proposal-release-runtime.ts"
 import { releaseHttp } from "~/server/yepwatch/proposal-release-http.ts"
 import { createReleaseBus } from "~/server/yepwatch/proposal-release-bus.ts"
+import { createRoomsValkey } from "~/server/yepwatch/proposal-rooms-valkey.ts"
 import { crateSql } from "~/server/yepwatch/repository.server.ts"
 import { provisionReleaseStore } from "~/server/yepwatch/proposal-release-store.ts"
 import { provisionControl } from "~/server/yepwatch/proposal-release-control.ts"
@@ -48,6 +49,7 @@ const issuerOrigin = loopback(need("E2E_ISSUER_ORIGIN"))
 const imagesOrigin = loopback(need("E2E_IMAGES_ORIGIN"))
 loopback(need("YEPWATCH_SEARCH_URL"))
 const valkeyPort = Number(need("E2E_VALKEY_PORT"))
+const roomsPort = Number(need("E2E_ROOMS_VALKEY_PORT"))
 const secret = need("E2E_ROOM_SECRET")
 const keyId = need("E2E_KEY_ID")
 // Production runs 20/600/60 (admissions, commands, actor commands a minute) and 10 rooms per person, with no
@@ -69,6 +71,11 @@ if (command === "provision") {
 	process.exit(0)
 }
 if (command === "reset") {
+	// The live rooms go with the store: the rooms Valkey is emptied first.
+	const rooms = createRoomsValkey(`redis://127.0.0.1:${roomsPort}`, secret)
+	await rooms.connect()
+	await rooms.flushall()
+	rooms.disconnect()
 	for (const table of [...storageTables].reverse()) await sql(`DROP TABLE IF EXISTS ${table.name}`)
 	await sql("DROP TABLE IF EXISTS doc.yepwatch_deletion").catch(() => {})
 	await provision()
@@ -182,18 +189,19 @@ const config = {
 const bus = createReleaseBus(config)
 bus.on("error", () => {})
 void bus.connect().catch(() => {})
-// Tickets on a connection of their own that never resends a command (their scripts are replay-safe anyway).
-const ticketBus = createReleaseBus(config, { once: true })
-ticketBus.on("error", () => {})
-void ticketBus.connect().catch(() => {})
-const tickets = new ValkeyTicketStore(ticketBus)
+// Live rooms, tickets and rate windows in the dedicated rooms Valkey, as in production (proposal-release-main.ts).
+const rooms = createRoomsValkey(`redis://127.0.0.1:${roomsPort}`, secret)
+rooms.on("error", () => {})
+void rooms.connect().catch(() => {})
+const tickets = new ValkeyTicketStore(rooms)
 const runtime = createReleaseRuntime(config as Parameters<typeof createReleaseRuntime>[0], {
 	sql,
 	catalog: fixtureCatalog(),
 	memberCatalog: (members) => fixtureCatalog(members),
 	bus,
 	tickets,
-	commands: new ValkeyCommandBudget(ticketBus),
+	commands: new ValkeyCommandBudget(rooms),
+	rooms,
 	snapshot: () => ({ count: TITLES.length, version: "e2e-fixture" }),
 	async catalogProbe() {},
 })
@@ -206,7 +214,7 @@ for (const signal of ["SIGTERM", "SIGINT"] as const)
 		if (stopping) return
 		stopping = true
 		runtime.drain()
-		runtime.stop()
+		void runtime.stop()
 		server.closeAllConnections()
 		server.close(() => process.exit(0))
 		bus.disconnect()

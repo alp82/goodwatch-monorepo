@@ -35,6 +35,33 @@ services:
     depends_on:
       api: {condition: service_started}
       gateway: {condition: service_started}
+  # Live rooms (docs/yepwatch-valkey-rooms.md). Dedicated: the shared GoodWatch cluster evicts (volatile-lfu, full).
+  # noeviction + AOF everysec on a named volume Coolify keeps across deploys; no published port. The password is
+  # derived from the room key (the api derives the same), so no extra secret is needed.
+  valkey:
+    <<: *common
+    image: valkey/valkey:8.1.10
+    user: "999:999"
+    expose: ["6379"]
+    mem_limit: 1g
+    tmpfs: ["/tmp:uid=999,gid=999,mode=0700,size=1m"]
+    volumes: ["valkey-data:/data"]
+    environment:
+      YEPWATCH_ROOMS_VALKEY_SEED: ${YEPWATCH_ROOM_KEY:?Set a stable random room key of at least 32 characters}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        umask 077;
+        printf 'requirepass %s\n' "$$(printf 'yepwatch-rooms-valkey:%s' "$$YEPWATCH_ROOMS_VALKEY_SEED" | sha256sum | cut -c1-64)" > /tmp/valkey.conf;
+        unset YEPWATCH_ROOMS_VALKEY_SEED;
+        exec valkey-server /tmp/valkey.conf --dir /data --appendonly yes --appendfsync everysec --save ''
+        --maxmemory 512mb --maxmemory-policy noeviction --protected-mode no --aof-use-rdb-preamble yes
+    healthcheck:
+      test: ["CMD-SHELL", "valkey-cli --no-auth-warning -a \"$$(sed -n 's/^requirepass //p' /tmp/valkey.conf)\" ping | grep -q PONG"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+      start_period: 2s
   api:
     <<: *common
     build:
@@ -43,6 +70,8 @@ services:
       target: api
     expose: ["3000"]
     mem_limit: 3g
+    depends_on:
+      valkey: {condition: service_healthy}
     tmpfs: ["/tmp:uid=1000,gid=1000,mode=0700,size=128m"]
     environment:
       SOURCE_COMMIT: ${SOURCE_COMMIT:-unknown}
@@ -66,6 +95,8 @@ services:
       YEPWATCH_PROPOSAL_REDIS_NODES: '[{"host":"10.0.0.14","port":6379},{"host":"10.0.0.15","port":6379},{"host":"10.0.0.16","port":6379}]'
       YEPWATCH_PROPOSAL_REDIS_USER: ${YEPWATCH_REDIS_USER:-default}
       YEPWATCH_PROPOSAL_REDIS_PASSWORD: ${YEPWATCH_REDIS_PASSWORD:?Set existing Redis password}
+      # Live rooms, tickets and rate windows: the dedicated valkey service above (password derived from the room key).
+      YEPWATCH_PROPOSAL_ROOMS_VALKEY_URL: redis://valkey:6379
       CRATE_HOSTS: 10.0.0.11,10.0.0.12,10.0.0.13
       CRATE_PORT: "4200"
       CRATE_USER: ${YEPWATCH_CATALOG_USER:-yepwatch_catalog}
@@ -101,3 +132,5 @@ services:
       YEPWATCH_VALKEY_PASSWORD: ${YEPWATCH_REDIS_PASSWORD}
     depends_on:
       api: {condition: service_started}
+volumes:
+  valkey-data: {}

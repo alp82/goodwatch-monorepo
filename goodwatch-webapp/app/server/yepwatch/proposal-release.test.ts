@@ -72,6 +72,7 @@ function env(): Env {
 		YEPWATCH_PROPOSAL_GATEWAY_SECRET: secret,
 		YEPWATCH_PROPOSAL_PUBLIC_ORIGIN: "https://yepwatch.com",
 		YEPWATCH_PROPOSAL_REVISION_REDIS_URL: "redis://127.0.0.1:6379",
+		YEPWATCH_PROPOSAL_ROOMS_VALKEY_URL: "redis://127.0.0.1:6380",
 		CRATE_HOSTS: "catalog.invalid",
 		REDIS_HOST: "catalog-cache.invalid",
 		REDIS_PORT: "6379",

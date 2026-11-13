@@ -77,14 +77,28 @@ export class SqlDeletionStore implements DeletionStore {
   /** Failures per request seen by this instance, for the backoff escalation only (see MAX_RETRY_MS). */
   private failures = new Map<string, number>();
   constructor(sql: Sql, secret: string) { this.sql = sql; this.secret = secret; }
-  private id(subject: DeletionSubject) { return keyed(this.secret, 'deletion', subjectKey(subject)); }
+  id(subject: DeletionSubject) { return keyed(this.secret, 'deletion', subjectKey(subject)); }
+  /** The state get() answers for a stored row: the live store's copy builds the same one. */
+  state(id: string, requestedAt: number, purgeAfter: number, phase: DeletionState['phase']): DeletionState {
+    return { requestedAt, purgeAfter, phase, recoveryId: keyed(this.secret, 'deletion-recovery', `${id}:${requestedAt}`) };
+  }
+  /** Whether a request with this stored id exists (primary-key read, real time). */
+  async exists(id: string) { return (await this.sql(`SELECT id FROM ${deletionTable.name} WHERE id=?`, [id])).rows.length > 0; }
+  /** Every deletion request (id, times, phase), for the live store's copy. Refreshed first: requests are few. */
+  async entries() {
+    await this.sql(`REFRESH TABLE ${deletionTable.name}`);
+    return (await this.sql(`SELECT id,requested_at,purge_after,phase FROM ${deletionTable.name} LIMIT 100000`)).rows.map(r => {
+      const [id, requestedAt, purgeAfter, phase] = z.tuple([z.string(), z.number(), z.number(), phaseSchema]).parse(r);
+      return { id, requestedAt, purgeAfter, phase };
+    });
+  }
   private async row(subject: DeletionSubject) {
     const row = (await this.sql(`SELECT requested_at,purge_after,phase,_seq_no,_primary_term,lease_until,purge_token FROM ${deletionTable.name} WHERE id=?`, [this.id(subject)])).rows[0];
     return row ? z.tuple([z.number(), z.number(), phaseSchema, z.number(), z.number(), z.number(), z.string().nullable()]).parse(row) : null;
   }
   async get(subject: DeletionSubject): Promise<DeletionState | null> {
     const r = await this.row(subject);
-    return r ? { requestedAt: Number(r[0]), purgeAfter: Number(r[1]), phase: r[2], recoveryId: keyed(this.secret, 'deletion-recovery', `${this.id(subject)}:${r[0]}`) } : null;
+    return r ? this.state(this.id(subject), Number(r[0]), Number(r[1]), r[2]) : null;
   }
   async schedule(subject: DeletionSubject, now: number) {
     // An uncertain insert is reconciled by the immutable primary-key read; retry never extends the grace period.

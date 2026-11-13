@@ -27,6 +27,7 @@ const apiEnv = {
   YEPWATCH_SEARCH_URL: `${ORIGINS.search}/api/combined-search`,
   YEPWATCH_SEARCH_SECRET: SECRETS.search,
   E2E_VALKEY_PORT: String(PORTS.valkey),
+  E2E_ROOMS_VALKEY_PORT: String(PORTS.rooms),
   E2E_ROOM_SECRET: SECRETS.room,
   E2E_KEY_ID: SECRETS.keyId,
   E2E_CLIENT_ID: SECRETS.clientId,

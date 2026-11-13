@@ -19,7 +19,7 @@ assert render(base).returncode != 0, 'Missing runtime secrets must fail'
 result = render(values)
 assert result.returncode == 0, result.stderr
 services = json.loads(result.stdout)['services']
-assert set(services) == {'front', 'api', 'gateway'}
+assert set(services) == {'front', 'api', 'gateway', 'valkey'}
 api, gateway = services['api']['environment'], services['gateway']['environment']
 assert api['REDIS_USER'] == api['YEPWATCH_PROPOSAL_REDIS_USER'] == gateway['YEPWATCH_VALKEY_USER'] == 'existing-user'
 assert api['REDIS_PASS'] == api['YEPWATCH_PROPOSAL_REDIS_PASSWORD'] == gateway['YEPWATCH_VALKEY_PASSWORD'] == 'test-existing-redis'
@@ -28,7 +28,22 @@ assert 'environment' not in services['front']
 # the outage of every deploy.
 assert api['YEPWATCH_PROPOSAL_SHUTDOWN_DELAY_MS'] == '0'
 assert 'CRATE_PASS' not in gateway
+# Live rooms (docs/yepwatch-valkey-rooms.md): a dedicated Valkey that never evicts, persists every second on a
+# named volume, publishes no port, and is up before the api starts.
+valkey = services['valkey']
+command = ' '.join(valkey['command'])
+for flag in ('--appendonly yes', '--appendfsync everysec', '--maxmemory-policy noeviction', '--dir /data'):
+    assert flag in command, flag
+assert valkey['image'].startswith('valkey/valkey:') and valkey['image'].count('.') == 2, 'pin the valkey image'
+assert [(v['type'], v['source'], v['target']) for v in valkey['volumes']] == [('volume', 'valkey-data', '/data')]
+assert not valkey.get('ports'), 'the rooms Valkey publishes no port'
+assert services['api']['depends_on']['valkey']['condition'] == 'service_healthy'
+assert api['YEPWATCH_PROPOSAL_ROOMS_VALKEY_URL'] == 'redis://valkey:6379'
+assert valkey['environment']['YEPWATCH_ROOMS_VALKEY_SEED'] == values['YEPWATCH_ROOM_KEY']
+assert 'valkey' not in json.dumps(services['gateway'].get('depends_on', {}))
 for name, service in services.items():
+    if name == 'valkey':
+        continue
     build = service['build']
     assert Path(build['context']).resolve() == root, 'Coolify project directory must resolve to repository root'
     assert (Path(build['context']) / build['dockerfile']).is_file(), 'Dockerfile must exist inside resolved context'
@@ -48,4 +63,4 @@ assert separate.returncode == 0, separate.stderr
 api = json.loads(separate.stdout)['services']['api']['environment']
 assert api['REDIS_USER'] == 'reader' and api['REDIS_PASS'] == 'test-reader'
 assert api['YEPWATCH_PROPOSAL_REDIS_USER'] == 'existing-user'
-print('PASS: required secrets, three repository targets, shared/independent Redis credentials, runtime-only secrets, one private hold port on the front, no api stop delay')
+print('PASS: required secrets, three repository targets, a persistent noeviction rooms Valkey, shared/independent Redis credentials, runtime-only secrets, one private hold port on the front, no api stop delay')
