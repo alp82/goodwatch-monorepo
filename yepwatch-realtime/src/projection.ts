@@ -59,3 +59,7 @@ export const attachmentSchema = z.strictObject({
 export const authenticateSchema = z.strictObject({ type: z.literal('authenticate'),
   ticket: z.string().min(1).max(4096), roomId: id, lastRevision: count.nullable() })
 export const hintSchema = z.strictObject({ roomId: id, revision: count })
+/** A hint carrying the committed room (RoomCommitted). The snapshot is checked by the room's projection where used. */
+export const committedSchema = z.strictObject({ roomId: id, revision: count, snapshot: z.unknown(),
+  viewers: z.array(z.strictObject({ participantId: id, capabilityEpoch: count })).max(64) })
+export type CommittedHint = z.infer<typeof committedSchema>

@@ -9,6 +9,7 @@
  * Bundled by up.mjs into goodwatch-webapp/build/yepwatch-e2e/api.mjs. Usage: api.mjs serve|provision|reset
  */
 import { ValkeyTicketStore } from "~/server/yepwatch/proposal-tickets.ts"
+import { ValkeyCommandBudget } from "~/server/yepwatch/proposal-command-budget.ts"
 import { createReleaseRuntime } from "~/server/yepwatch/proposal-release-runtime.ts"
 import { releaseHttp } from "~/server/yepwatch/proposal-release-http.ts"
 import { createReleaseBus } from "~/server/yepwatch/proposal-release-bus.ts"
@@ -192,6 +193,7 @@ const runtime = createReleaseRuntime(config as Parameters<typeof createReleaseRu
 	memberCatalog: (members) => fixtureCatalog(members),
 	bus,
 	tickets,
+	commands: new ValkeyCommandBudget(ticketBus),
 	snapshot: () => ({ count: TITLES.length, version: "e2e-fixture" }),
 	async catalogProbe() {},
 })

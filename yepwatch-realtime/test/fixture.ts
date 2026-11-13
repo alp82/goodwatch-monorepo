@@ -22,6 +22,10 @@ export class FakeBus extends EventEmitter implements RevisionBus {
   close() {}
   state(ready: boolean) { this.ready = ready; this.emit('state', ready) }
   hint(revision: number, roomId = 'room-1') { this.emit('hint', { roomId, revision } satisfies RoomInvalidation) }
+  /** A hint carrying the committed room (RoomCommitted). */
+  committed(snapshot: { roomId: string; revision: number }, viewers: { participantId: string; capabilityEpoch: number }[]) {
+    this.emit('committed', { roomId: snapshot.roomId, revision: snapshot.revision, snapshot: structuredClone(snapshot), viewers })
+  }
 }
 // Explicit HTTP fixture. No Crate, catalog, account, backend domain or production data.
 export function continuousSnapshot(): ContinuousSnapshot {

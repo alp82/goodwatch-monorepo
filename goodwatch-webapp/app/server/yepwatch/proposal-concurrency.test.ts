@@ -264,7 +264,7 @@ test(
 	},
 )
 
-test("the gateway hears of a committed command before notify reads the room back", async () => {
+test("the gateway hears of a committed command from the room it committed, once, before the command answers", async () => {
 	const repository = new ProposalMemoryRepository()
 	const events: string[] = []
 	const service = new ProposalService(repository, proposalFixtureCatalog, "early-hint-test-secret-at-least-32-chars", async (e) => {
@@ -281,7 +281,12 @@ test("the gateway hears of a committed command before notify reads the room back
 	}
 	const done = await service.command(id, own, { commandId: randomBytes(16).toString("hex"), sequence: s.own.nextSequence, command: { type: "set_services", serviceIds: [1] } as RoomCommand })
 	const revision = done.receipt.appliedRevision
-	const lastRead = events.lastIndexOf("read")
-	assert.ok(events.indexOf(`publish ${revision}`) >= 0 && events.indexOf(`publish ${revision}`) < lastRead, events.join(", "))
+	const answered = events.length
+	// The committed room, then its plain hint (for a gateway that knows only those).
+	const once = [`publish ${revision}`, `publish ${revision}`]
+	assert.deepEqual(events.slice(0, answered).filter((e) => e.startsWith("publish")), once, events.join(", "))
+	assert.equal(events.slice(0, events.indexOf(`publish ${revision}`)).filter((e) => e === "read").length, 1, "only the command's own read")
+	await new Promise((resolve) => setTimeout(resolve, 20))
+	assert.deepEqual(events.filter((e) => e.startsWith("publish")), once, "notify doesn't publish it again")
 	service.decks.forget(id)
 })

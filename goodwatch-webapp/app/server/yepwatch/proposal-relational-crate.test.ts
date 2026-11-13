@@ -527,3 +527,76 @@ test(
 		assert.deepEqual(room.ideas![0].attributes, [{ text: "heist", kind: "attribute" }])
 	}
 )
+
+test(
+	"typed relational store: a vote's published room is the room a fresh read gives the gateway, and is acknowledged without reading it",
+	{ skip: !enabled, timeout: 180000 },
+	async (t) => {
+		const name = `yepwatch-relational-publish-test-${process.pid}`
+		docker("run", "-d", "--name", name, "-p", "127.0.0.1::4200", "-e", "CRATE_HEAP_SIZE=512m", "crate:6.4.6", "crate", "-Cdiscovery.type=single-node", "-Ccluster.name=" + name)
+		t.after(() => {
+			docker("rm", "-f", name)
+		})
+		const port = docker("port", name, "4200/tcp").split(":").at(-1)
+		const sql = crateSql(`http://127.0.0.1:${port}`, "crate", "")
+		for (let i = 0; ; i++) {
+			try {
+				await sql("SELECT 1")
+				break
+			} catch (e) {
+				if (i > 100) throw e
+				await new Promise((r) => setTimeout(r, 300))
+			}
+		}
+		await provisionReleaseStore(sql, 0, "typed-test", secret)
+		const catalog = {
+			...proposalFixtureCatalog,
+			async metadata() {
+				return { countries: [{ code: "DE", name: "Germany" }], services: [{ id: 1, name: "1", logoUrl: null }], moods: [] }
+			},
+		}
+		const events: any[] = []
+		let roomReads = 0
+		const counting: Sql = async (stmt, args) => {
+			if (/^SELECT .* FROM doc\.yepwatch_room WHERE id=\?/s.test(stmt) && !stmt.startsWith("SELECT pending_revision")) roomReads++
+			return sql(stmt, args)
+		}
+		const service = new ProposalService(new RelationalProposalRepository(counting, secret), catalog, secret, async (e) => {
+			events.push(structuredClone(e))
+		})
+		const host = await service.create(request("Host"))
+		const id = host.credential.roomId
+		const guest = await service.join(id, { ...request("Friend"), inviteCode: host.invite.code })
+		const send = async (who: any, command: any) => {
+			const s = await service.read(id, credential(who))
+			return service.command(id, credential(who), { commandId: randomBytes(16).toString("hex"), sequence: s.own.nextSequence, command })
+		}
+		let s = await service.read(id, credential(host))
+		await send(host, { type: "configure", expectedContextVersion: s.shared.contextVersion, country: "DE" })
+		await send(host, { type: "set_services", serviceIds: [1] })
+		s = await service.read(id, credential(host))
+		const started = await send(host, { type: "start", expectedContextVersion: s.shared.contextVersion, expectedRosterVersion: s.shared.rosterVersion, hostReady: true })
+		await new Promise((r) => setTimeout(r, 200))
+		const sequence = (await service.read(id, credential(guest))).own.nextSequence
+		const reads = roomReads
+		const voted = await service.command(id, credential(guest), {
+			commandId: randomBytes(16).toString("hex"),
+			sequence,
+			command: { type: "vote", generation: started.snapshot.shared.generation, candidateId: started.snapshot.shared.candidates[0].id, expectedVoteRevision: 0, value: "watch" },
+		})
+		await new Promise((r) => setTimeout(r, 300))
+		assert.equal(roomReads - reads, 1, "only the command's own read of the room")
+		const event = events.find((e) => e.revision === voted.receipt.appliedRevision)
+		assert.ok(event && "snapshot" in event, "the vote published the committed room")
+		// Another instance (its own repository, nothing cached) reads the room as the gateway's refresh would.
+		const fresh = new ProposalService(new RelationalProposalRepository(sql, secret), catalog, secret)
+		const attachment = await fresh.attach(id, (await fresh.ticket(id, credential(host))).ticket)
+		const views = await fresh.views(id, [attachment.lease])
+		assert.equal(views.snapshot?.revision, voted.receipt.appliedRevision)
+		assert.deepEqual(event.snapshot, views.snapshot)
+		const pending = (await sql("SELECT pending_revision FROM doc.yepwatch_room WHERE id=?", [id])).rows[0][0]
+		assert.equal(Number(pending), 0, "acknowledged")
+		service.decks.forget(id)
+		fresh.decks.forget(id)
+	}
+)

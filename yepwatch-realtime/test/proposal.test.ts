@@ -272,3 +272,120 @@ test('An API without the batched read (rolling deploy) still serves every phone,
   assert.ok(api.state.viewCalls >= 4, 'each phone read its own view')
   assert.ok(clients.every(c => c.closed === undefined))
 })
+const everyone = [{ participantId: 'person-1', capabilityEpoch: 1 }, { participantId: 'person-2', capabilityEpoch: 1 }]
+test('A committed room reaches every attached phone straight from the hint, without reading the room back', async t => {
+  const { api, bus, clients } = await oneGateway(t, true)
+  const reads = api.state.viewsCalls
+  const next = structuredClone(api.state.shared); next.revision = 2; next.proposal.agreeCount = 2
+  bus.committed(next, everyone)
+  await until(() => clients.every(c => revisions(c.frames).includes(2)))
+  const frame = clients[0].frames.find(f => f.type === 'room.updated')
+  assert.equal(frame?.type === 'room.updated' && frame.snapshot.proposal?.agreeCount, 2)
+  // The plain hint for the same revision (an API that publishes both, or a duplicate) reads nothing.
+  bus.hint(2); await sleep(80)
+  assert.equal(api.state.viewsCalls, reads, 'no read of the room')
+  assert.ok(clients.every(c => revisions(c.frames).filter(r => r === 2).length === 1), 'each phone got it once')
+  assert.ok(clients.every(c => !c.frames.some(f => f.type === 'degraded')))
+})
+test('A phone whose participant the committed room no longer lists is refreshed through the API instead', async t => {
+  const { api, bus, clients } = await oneGateway(t, true)
+  const next = structuredClone(api.state.shared); next.revision = 2
+  api.state.shared = structuredClone(next)
+  api.state.revokedParticipants.add('person-1')
+  // person-1's capability epoch moved on (revoked): only person-2 is a viewer at its epoch.
+  bus.committed(next, [{ participantId: 'person-1', capabilityEpoch: 2 }, everyone[1]])
+  await until(() => clients[0].closed === 1008 && revisions(clients[1].frames).includes(2))
+  assert.ok(!revisions(clients[0].frames).includes(2), 'the revoked phone never sees the committed room')
+  assert.equal(clients[1].closed, undefined)
+})
+test('A committed room that fails the strict projection is never forwarded; the phones read the revision instead', async t => {
+  const { api, bus, clients } = await oneGateway(t, true)
+  const next: any = structuredClone(api.state.shared); next.revision = 2
+  api.state.shared = structuredClone(next)
+  const leaked = structuredClone(next); leaked.proposal.agreedBy = ['person-1']
+  const reads = api.state.viewsCalls
+  bus.committed(leaked, everyone)
+  await until(() => clients.every(c => revisions(c.frames).includes(2)))
+  assert.ok(api.state.viewsCalls > reads, 'read through the API')
+  assert.ok(clients.every(c => !JSON.stringify(c.frames).includes('agreedBy')))
+})
+test('A slower read of an older revision neither degrades nor rewinds a phone that already has the committed room', async t => {
+  const { api, bus, clients } = await oneGateway(t, true)
+  api.state.shared.revision = 2
+  let release!: () => void
+  api.state.beforeView = () => new Promise<void>(resolve => { release = resolve })
+  bus.hint(2)
+  await until(() => typeof release === 'function')
+  const next = structuredClone(api.state.shared); next.revision = 3
+  bus.committed(next, everyone)
+  await until(() => clients.every(c => revisions(c.frames).includes(3)))
+  api.state.beforeView = undefined
+  release()
+  await sleep(120)
+  for (const c of clients) {
+    assert.deepEqual(revisions(c.frames).slice(-1), [3], 'no older revision after the committed one')
+    assert.ok(!c.frames.some(f => f.type === 'degraded'), 'not degraded')
+  }
+})
+test('A committed room for another expiry, or one while the bus is down, is not forwarded', async t => {
+  const { api, bus, clients } = await oneGateway(t, true)
+  api.state.shared.revision = 2
+  const other = structuredClone(api.state.shared); other.expiresAt += 1000
+  const reads = api.state.viewsCalls
+  bus.committed(other, everyone)
+  await until(() => clients.every(c => revisions(c.frames).includes(2)))
+  assert.ok(api.state.viewsCalls > reads, 'read through the API')
+  assert.ok(clients.every(c => c.frames.every(f => !(f.type === 'room.updated' || f.type === 'room.snapshot') || f.snapshot.expiresAt === api.state.shared.expiresAt)))
+  bus.state(false)
+  const later = structuredClone(api.state.shared); later.revision = 3
+  bus.committed(later, everyone); await sleep(80)
+  assert.ok(clients.every(c => !revisions(c.frames).includes(3)))
+})
+test('A delayed committed room older than an announced revision is not forwarded, even to a viewer it lists', async t => {
+  const { api, bus, clients } = await oneGateway(t, true)
+  // Revision 3 revoked person-1; the API refuses its lease. Its plain hint arrives before the delayed revision 2.
+  api.state.revokedParticipants.add('person-1')
+  let release!: () => void
+  api.state.beforeView = () => new Promise<void>(resolve => { release = resolve })
+  api.state.shared.revision = 3
+  bus.hint(3)
+  await until(() => typeof release === 'function')
+  const delayed = structuredClone(api.state.shared); delayed.revision = 2
+  bus.committed(delayed, everyone)
+  await sleep(60)
+  assert.ok(clients.every(c => !revisions(c.frames).includes(2)), 'revision 2 was not forwarded')
+  api.state.beforeView = undefined
+  release()
+  await until(() => clients[0].closed === 1008 && revisions(clients[1].frames).includes(3))
+})
+test('A delayed committed room older than a revision another read already showed is not forwarded to phones still waiting for theirs', async t => {
+  const api = await fixture('proposal'); api.state.shared = choosing(); api.state.leaseMs = 60_000
+  const bus = new FakeBus(), activity = new ActivityHub().bus()
+  const gateway = createGateway(api.authority, bus, { port: 0, auditMs: 20_000, maxPerParticipant: 64 }, { activityBus: activity, proposal: true })
+  const address = await gateway.listen(); assert(address && typeof address !== 'string')
+  t.after(async () => { await gateway.close(); await api.close() })
+  // More phones than one views batch holds: the second batch's answer is held back.
+  const people = Array.from({ length: 26 }, (_, i) => i < 24 ? 'person-1' : 'person-2')
+  const clients: Awaited<ReturnType<typeof connect<ServerRealtimeFrame>>>[] = []
+  for (const person of people) {
+    const client = await connect<ServerRealtimeFrame>(`ws://127.0.0.1:${address.port}${paths.realtime}`)
+    client.ws.send(JSON.stringify({ type: 'authenticate', ticket: api.ticket(person), roomId: 'room-1', lastRevision: null }))
+    clients.push(client)
+    await until(() => client.frames.some(f => f.type === 'room.snapshot'))
+  }
+  // Revision 3 revoked person-2. Its hint was lost; a phone attaching makes the gateway read the room: the first
+  // batch (person-1's phones) reads revision 3, the second (person-2's) is held.
+  api.state.revokedParticipants.add('person-2'); api.state.shared.revision = 3
+  let calls = 0, release!: () => void
+  api.state.beforeView = () => ++calls === 2 ? new Promise<void>(resolve => { release = resolve }) : Promise.resolve()
+  const late = await connect<ServerRealtimeFrame>(`ws://127.0.0.1:${address.port}${paths.realtime}`)
+  late.ws.send(JSON.stringify({ type: 'authenticate', ticket: api.ticket('person-1'), roomId: 'room-1', lastRevision: null }))
+  await until(() => typeof release === 'function' && clients.slice(0, 24).every(c => revisions(c.frames).includes(3)))
+  const delayed = structuredClone(api.state.shared); delayed.revision = 2
+  bus.committed(delayed, everyone)
+  await sleep(60)
+  assert.ok(clients.slice(24).every(c => !revisions(c.frames).includes(2)), 'the revoked phones got nothing from it')
+  api.state.beforeView = undefined
+  release()
+  await until(() => clients.slice(24).every(c => c.closed === 1008))
+})

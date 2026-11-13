@@ -6,7 +6,7 @@ import { promisify } from 'node:util'
 import { ValkeyBus } from '../src/bus.js'
 const busModule = new URL('../../goodwatch-webapp/app/server/yepwatch/proposal-release-bus.ts', import.meta.url)
 const { createReleaseBus } = await import(busModule.href)
-import { REVISION_CHANNEL, ACTIVITY_CHANNEL } from '@goodwatch/yepwatch-contracts/proposal'
+import { REVISION_CHANNEL, ACTIVITY_CHANNEL, REVISION_MESSAGE_MAX } from '@goodwatch/yepwatch-contracts/proposal'
 const exec = promisify(execFile)
 const image = process.env.YEPWATCH_TEST_VALKEY_IMAGE
 async function until(fn: () => boolean) { for (let n = 0; n < 100; n++) { if (fn()) return; await new Promise(r => setTimeout(r, 50)) } throw new Error('Cluster readiness deadline') }
@@ -41,7 +41,7 @@ test('release API and gateway share a real three-node cluster through the named 
   for (const port of ports) await exec('docker', ['exec', name, 'valkey-cli', '-p', String(port), 'ACL', 'SETUSER', 'yepwatch_messaging', 'on', `>${password}`, 'resetkeys', 'resetchannels', `&${REVISION_CHANNEL}`, `&${ACTIVITY_CHANNEL}`, '+ping', '+info', '+cluster|slots', '+cluster|info', '+publish', '+subscribe', '+unsubscribe', '+quit', '+client|setinfo', '+client|setname'])
   t.diagnostic("cluster created and messaging ACL configured")
   const config = { nodes, username: 'yepwatch_messaging', password }
-  const bus = new ValkeyBus(config, REVISION_CHANNEL)
+  const bus = new ValkeyBus(config, REVISION_CHANNEL, REVISION_MESSAGE_MAX)
   t.after(() => bus.close())
   void bus.start()
   await until(() => bus.ready)
@@ -56,5 +56,13 @@ test('release API and gateway share a real three-node cluster through the named 
   await publisher.publish(REVISION_CHANNEL, JSON.stringify({ roomId: 'cluster-room', revision: 7 }))
   await until(() => received.length === 1)
   assert.deepEqual(received[0], { roomId: 'cluster-room', revision: 7 })
+  // A committed room (~60 KB, the size of a full deck) crosses the cluster on the same channel.
+  const committed: { revision: number; snapshot: unknown }[] = []
+  bus.on('committed', hint => committed.push(hint))
+  const snapshot = { roomId: 'cluster-room', revision: 8, padding: 'x'.repeat(60_000) }
+  await publisher.publish(REVISION_CHANNEL, JSON.stringify({ roomId: 'cluster-room', revision: 8, snapshot, viewers: [{ participantId: 'p1', capabilityEpoch: 0 }] }))
+  await until(() => committed.length === 1)
+  assert.deepEqual(committed[0].snapshot, snapshot)
+  assert.equal(received.length, 1, 'not a plain hint')
   await publisher.publish(ACTIVITY_CHANNEL, JSON.stringify({ test: 'neutral activity channel delivery permission' }))
 })

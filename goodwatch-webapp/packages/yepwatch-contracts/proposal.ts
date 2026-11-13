@@ -404,6 +404,19 @@ export interface RoomInvalidation {
 	roomId: string
 	revision: number
 }
+/**
+ * A revision hint on REVISION_CHANNEL that also carries the room as committed: the shared snapshot (the same for
+ * every viewer) and who may view it, by participant and capability epoch (not departed; a member place with a
+ * live session). The gateway hands it straight to those phones instead of reading the room back through
+ * realtimeViews; any other phone (a participant missing here, a newly attached or degraded phone, a lease close to
+ * expiry) is refreshed through realtimeViews as for a plain hint. A room whose message would exceed
+ * REVISION_MESSAGE_MAX bytes publishes a plain hint.
+ */
+export interface RoomCommitted extends RoomInvalidation {
+	snapshot: SharedRoomSnapshot
+	viewers: { participantId: string; capabilityEpoch: number }[]
+}
+export const REVISION_MESSAGE_MAX = 512 * 1024
 export interface MemberStartRequest {
 	roomId: string
 	returnTo: string

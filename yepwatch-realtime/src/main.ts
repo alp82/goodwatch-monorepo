@@ -3,7 +3,7 @@ import { ValkeyBus } from './bus.js'
 import { createGateway, defaults } from './gateway.js'
 import { paths as continuousPaths, REVISION_CHANNEL as continuousRevision } from '@goodwatch/yepwatch-contracts/continuous'
 import { ValkeyActivityBus } from './activity.js'
-import { paths as proposalPaths, REVISION_CHANNEL as proposalRevision, ACTIVITY_CHANNEL as proposalActivity } from '@goodwatch/yepwatch-contracts/proposal'
+import { paths as proposalPaths, REVISION_CHANNEL as proposalRevision, ACTIVITY_CHANNEL as proposalActivity, REVISION_MESSAGE_MAX } from '@goodwatch/yepwatch-contracts/proposal'
 import { proposalServerActivitySchema } from './proposal-activity.js'
 import { runtimeConfig } from './runtime-config.js'
 
@@ -27,7 +27,8 @@ const active = continuous || proposal
 const routes = proposal ? proposalPaths : continuous ? continuousPaths : undefined
 const busConfig = { url: env.YEPWATCH_VALKEY_URL, nodes,
   username: env.YEPWATCH_VALKEY_USER, password: env.YEPWATCH_VALKEY_PASSWORD }
-const bus = new ValkeyBus(busConfig, proposal ? proposalRevision : continuous ? continuousRevision : undefined)
+const bus = proposal ? new ValkeyBus(busConfig, proposalRevision, REVISION_MESSAGE_MAX)
+  : new ValkeyBus(busConfig, continuous ? continuousRevision : undefined)
 const gateway = createGateway(new HttpAuthority(env.YEPWATCH_API_ORIGIN ?? 'http://127.0.0.1:3000', secret, 3000, 2_000_000,
   routes), bus, {
   host, port: number('YEPWATCH_REALTIME_PORT', defaults.port),

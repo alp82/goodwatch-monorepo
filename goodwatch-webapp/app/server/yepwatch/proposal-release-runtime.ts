@@ -11,6 +11,7 @@ import {
 import { createProposalHandler } from "./proposal-http.server.ts"
 import { ProposalService } from "./proposal-service.server.ts"
 import type { TicketStore } from "./proposal-tickets.ts"
+import type { CommandBudget } from "./proposal-command-budget.ts"
 import type { Sql } from "./repository.server.ts"
 import { RelationalProposalRepository } from "./proposal-relational-repository.ts"
 import { checkReleaseStore } from "./proposal-release-store.ts"
@@ -33,6 +34,11 @@ export interface ReleaseDependencies {
 	}
 	/** The realtime tickets, shared by every API process (ValkeyTicketStore). Its check is part of readiness. */
 	tickets: TicketStore
+	/**
+	 * The command rate limit, shared by every API process (ValkeyCommandBudget); its check is part of readiness.
+	 * Without one, commands are charged on the control row like admissions.
+	 */
+	commands?: CommandBudget
 	now?: () => number
 }
 /** No guest identities, fixtures, DDL or fail-open readiness. Normal handler behavior stays in its existing module. */
@@ -49,7 +55,7 @@ export function createReleaseRuntime(
 		throw new Error("Member catalog adapter required")
 	const tickets = deps.tickets
 	const quotas = new SqlCreationQuotas(deps.sql, config.control.roomsPerPerson ?? 10)
-	const control = new ReleaseControl(deps.sql, config.control, quotas)
+	const control = new ReleaseControl(deps.sql, config.control, quotas, deps.commands)
 	const service = new ProposalService(
 		repository,
 		members ? deps.memberCatalog!(members) : deps.catalog,

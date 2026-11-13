@@ -955,7 +955,8 @@ export class RelationalProposalRepository implements ProposalRepository {
 				[id]
 			)
 		).rows[0]
-		if (row && Number(row[0]) <= revision)
+		// Nothing pending (a later write's notify, or repair, acknowledged it): nothing to write.
+		if (row && Number(row[0]) > 0 && Number(row[0]) <= revision)
 			await this.sql(
 				`UPDATE ${tables.room.name} SET pending_revision=0 WHERE id=? AND _seq_no=? AND _primary_term=?`,
 				[id, row[1], row[2]]

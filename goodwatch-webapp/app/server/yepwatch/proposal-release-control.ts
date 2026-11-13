@@ -10,6 +10,7 @@ import type { Sql } from "./repository.server.ts"
 import { CONTINUOUS_LIMITS } from "./continuous-types.ts"
 import type { ProposalRoom } from "./proposal-types.ts"
 import { SqlCreationQuotas, type CreationQuotaStore } from './proposal-creation-quota.ts'
+import type { CommandBudget } from './proposal-command-budget.ts'
 export const CONTROL_TABLE = "doc.yepwatch_control"
 const ID = "proposal3",
 	WINDOW_MS = 60_000
@@ -165,12 +166,18 @@ export async function provisionControl(
 export class ReleaseControl {
 	private sql: Sql
 	private readonly quotas: CreationQuotaStore
+	private readonly commands?: CommandBudget
 	private readonly fingerprints: Set<string>
 	readonly policy: ControlPolicy
-	constructor(sql: Sql, policy: ControlPolicy, quotas: CreationQuotaStore) {
+	/**
+	 * `commands`: where commands are charged instead of the control row (whose compare-and-swap every command in every
+	 * room then took in turn). Admissions (create, join) are always charged on the control row.
+	 */
+	constructor(sql: Sql, policy: ControlPolicy, quotas: CreationQuotaStore, commands?: CommandBudget) {
 		this.sql = sql
 		this.policy = policy
 		this.quotas = quotas
+		this.commands = commands
 		this.fingerprints = acceptedFingerprints(policy)
 	}
 	private async read(): Promise<Read> {
@@ -226,7 +233,7 @@ export class ReleaseControl {
 		}
 	}
 	async check() {
-		await this.read()
+		await Promise.all([this.read(), this.commands?.check?.()])
 	}
 	async summary() {
 		const r = await this.read()
@@ -385,9 +392,31 @@ export class ReleaseControl {
 	async join(roomId: string, actorId: string, admissionDigest: string) {
 		await this.permit("join", roomId, actorId, admissionDigest)
 	}
-	/** `checked`: what `active` returned for this room just before, so the permit starts from that read. */
+	/**
+	 * `checked`: what `active` returned for this room just before, so the permit starts from that read. With a
+	 * command budget that read is the whole room check (nothing more is read or written here); without one, the
+	 * room's capacity is proven first.
+	 */
 	async command(roomId: string, actorId: string, commandDigest: string, checked?: unknown) {
-		await this.permit("command", roomId, actorId, commandDigest, checked)
+		if (!this.commands) {
+			await this.permit("command", roomId, actorId, commandDigest, checked)
+			return
+		}
+		const reused = typeof checked === "object" && checked !== null && checks.has(checked) && (checked as Check).roomId === roomId
+		if (reused) checks.delete(checked)
+		else {
+			const quota = this.quotaProof(roomId)
+			const r = await this.read()
+			if (!this.legacy(r, roomId)) {
+				const failed = await quota
+				if (failed) throw failed.error
+			}
+		}
+		await this.commands.charge(
+			digest(JSON.stringify(["command", roomId, actorId, commandDigest])),
+			digest(`${roomId}:${actorId}`).slice(0, 32),
+			this.policy
+		)
 	}
 	private async permit(
 		kind: "create" | "join" | "command",

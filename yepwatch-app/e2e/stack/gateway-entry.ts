@@ -9,7 +9,7 @@ import { ValkeyBus } from '../../../yepwatch-realtime/src/bus.ts'
 import { createGateway, defaults } from '../../../yepwatch-realtime/src/gateway.ts'
 import { ValkeyActivityBus } from '../../../yepwatch-realtime/src/activity.ts'
 import { proposalServerActivitySchema } from '../../../yepwatch-realtime/src/proposal-activity.ts'
-import { paths, REVISION_CHANNEL, ACTIVITY_CHANNEL } from '../../../goodwatch-webapp/packages/yepwatch-contracts/proposal.ts'
+import { paths, REVISION_CHANNEL, ACTIVITY_CHANNEL, REVISION_MESSAGE_MAX } from '../../../goodwatch-webapp/packages/yepwatch-contracts/proposal.ts'
 
 const env = process.env
 const host = env.YEPWATCH_REALTIME_HOST ?? '127.0.0.1'
@@ -17,7 +17,7 @@ if (!['127.0.0.1', 'localhost'].includes(host)) throw new Error('E2E gateway bin
 const secret = env.YEPWATCH_GATEWAY_SECRET
 if (!secret) throw new Error('YEPWATCH_GATEWAY_SECRET required')
 const busConfig = { url: env.YEPWATCH_VALKEY_URL, nodes: env.YEPWATCH_VALKEY_NODES ? JSON.parse(env.YEPWATCH_VALKEY_NODES) : undefined }
-const bus = new ValkeyBus(busConfig, REVISION_CHANNEL)
+const bus = new ValkeyBus(busConfig, REVISION_CHANNEL, REVISION_MESSAGE_MAX)
 const gateway = createGateway(new HttpAuthority(env.YEPWATCH_API_ORIGIN!, secret, 3000, 2_000_000, paths), bus, {
   host,
   port: Number(env.YEPWATCH_REALTIME_PORT),

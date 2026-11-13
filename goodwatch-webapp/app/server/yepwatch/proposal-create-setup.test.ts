@@ -267,7 +267,8 @@ test("create answers before search resolves; the interpretation lands later as a
 	assert.deepEqual(room.ideas![0].attributes, [{ text: "heist", kind: "attribute" }])
 	assert.deepEqual(room.ideas![0].rankedKeys, [1_000_000_000_001])
 	assert.equal(room.revision, before + 1)
-	assert.deepEqual(f.published, [room.revision], "phones hear about it")
+	// The committed room and its plain hint: one revision.
+	assert.deepEqual([...new Set(f.published)], [room.revision], "phones hear about it")
 	assert.equal(room.interpretationCount, 1)
 	await f.service.decks.idle()
 	assert.equal(f.service.decks.prepared(room), true, "the deck is built again for the idea's ranked titles")

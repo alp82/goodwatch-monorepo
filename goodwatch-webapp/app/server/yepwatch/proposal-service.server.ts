@@ -6,7 +6,7 @@ import { MemoryDeletionStore, requireNotDeleting, type DeletionStore } from './p
 import type { AccountRoomsStore, RoomAccount } from "./proposal-types.ts"
 import type { AccountHome } from "../../../packages/yepwatch-contracts/proposal.ts"
 import type { RoomCommand } from "../../../packages/yepwatch-contracts/proposal.ts"
-import { PENDING_IDEA_ATTRIBUTE, ideaPending } from "../../../packages/yepwatch-contracts/proposal.ts"
+import { PENDING_IDEA_ATTRIBUTE, REVISION_MESSAGE_MAX, ideaPending } from "../../../packages/yepwatch-contracts/proposal.ts"
 import {
 	redesignCommands,
 	retireIneligible,
@@ -30,6 +30,7 @@ import type {
 	RealtimeTicket,
 	RealtimeViewResponse,
 	RealtimeViewsResponse,
+	RoomCommitted,
 	RoomInvalidation,
 	InvitePreview
 } from "../../../packages/yepwatch-contracts/proposal.ts"
@@ -140,7 +141,7 @@ export class ProposalService {
 	/** Realtime tickets, kept outside the room so they never take the room's write lane. */
 	readonly tickets: TicketStore
 	private secret: string
-	private publish: (event: RoomInvalidation) => Promise<void>
+	private publish: (event: RoomInvalidation | RoomCommitted) => Promise<void>
 	private guard?: ProposalOperationGuard
 	private now: () => number
 	private interpret?: InterpretRoom
@@ -169,7 +170,7 @@ export class ProposalService {
 		repository: ProposalRepository,
 		catalog: ProposalCatalog,
 		secret: string,
-		publish: (event: RoomInvalidation) => Promise<void> = async () => {},
+		publish: (event: RoomInvalidation | RoomCommitted) => Promise<void> = async () => {},
 		now: () => number = Date.now,
 		guard?: ProposalOperationGuard,
 		interpret?: InterpretRoom,
@@ -1091,14 +1092,16 @@ export class ProposalService {
 		// notify (publish + acknowledge) then runs on its own, unless the answer has to wait for it: a decision moved
 		// into the history is stored on the accounts first, and an agreement check settles before it answers.
 		// Fresh availability checks must not block joins or withdrawals that invalidate them.
-		if (room && !(room.committed.phase === "choosing" && room.committed.agreement.state === "checking") && !room.historyChanged) {
-			void this.notify(id, { yieldToQueued: true })
+		if (room && !(room.committed.phase === "choosing" && room.committed.agreement.state === "checking") && room.published) {
+			// The room as committed is acknowledged from memory: notify reads nothing.
+			void this.notify(id, { yieldToQueued: true, committed: room.committed, published: room.published })
 			continuousLive(room.committed, this.now())
 			// The capacity read is in flight while the answer's snapshot is built.
 			const capacity = this.guard?.active(room.committed)
 			capacity?.catch(() => {}) // awaited below
 			const snapshot = timedSync("snapshot", () => this.snapshot(room.committed, credential))
-			await (capacity && timed("capacity", capacity))
+			// The publish settles too (it never fails the command: notify publishes again), so its time is on the answer.
+			await Promise.all([capacity && timed("capacity", capacity), room.published])
 			return { receipt, snapshot }
 		}
 		let stored = await this.notify(id, { yieldToQueued: true })
@@ -1117,7 +1120,7 @@ export class ProposalService {
 		credential: ActorCredential,
 		envelope: CommandEnvelope,
 		allowed: Promise<void>
-	): Promise<{ receipt: CommandResult["receipt"]; room?: { committed: ProposalRoom; historyChanged: boolean } }> {
+	): Promise<{ receipt: CommandResult["receipt"]; room?: { committed: ProposalRoom; published: Promise<boolean> | null } }> {
 		const digest = hash(JSON.stringify(envelope))
 		let uncertain = false
 		// An idea command answers without waiting for search: the idea is stored pending, its search reserves one of
@@ -1151,16 +1154,11 @@ export class ProposalService {
 				"You have left this room",
 				403
 			)
-			preflight(old.room, p.id, envelope, this.now())
-			if (redesignCommands.has(envelope.command.type))
-				proposalTransition(
-					old.room,
-					p.id,
-					envelope,
-					this.now(),
-					undefined,
-					reserved
-				)
+			timedSync("preflight", () => {
+				preflight(old.room, p.id, envelope, this.now())
+				if (redesignCommands.has(envelope.command.type))
+					proposalTransition(old.room, p.id, envelope, this.now(), undefined, reserved)
+			})
 			await timed("allowed", allowed)
 			await (this.guard && timed("guard", this.guard.command(id, p.id, digest, check)))
 			const command = envelope.command
@@ -1273,11 +1271,11 @@ export class ProposalService {
 					watchScreensChanged(old.room, room)
 				)
 					room.candidates = await this.catalog.refresh(activeRoom(room))
-				retireIneligible(
-					room,
-					new Set((await this.catalog.excludedKeys?.(room)) ?? [])
-				)
-				reconcile(room, old.room)
+				const excluded = new Set((await timed("exclusions", this.catalog.excludedKeys?.(room) ?? Promise.resolve([]))) ?? [])
+				timedSync("reconcile", () => {
+					retireIneligible(room, excluded)
+					reconcile(room, old.room)
+				})
 			}
 			if (
 				envelope.command.type === "assign_screen" &&
@@ -1308,7 +1306,7 @@ export class ProposalService {
 			if (pending) this.interpretInBackground(id, pending.ideaId, pending)
 			return {
 				receipt: { commandId: envelope.commandId, sequence, appliedRevision: room.revision, replayed: false },
-				room: { committed: room, historyChanged: !this.hintCommitted(old.room, room) }
+				room: { committed: room, published: this.hintCommitted(old.room, room) }
 			}
 		}
 		throw new RoomError(
@@ -2068,21 +2066,50 @@ export class ProposalService {
 		}
 	}
 	/**
-	 * Tells the gateway about a revision as soon as its compare-and-swap succeeds, without waiting for notify's read
-	 * of the room (the other phones see a vote that much sooner). notify still publishes it, a no-op for the gateway,
-	 * and acknowledges it. Not when the history changed: notify stores it on the accounts before anyone hears of it.
-	 * Returns false then (the command's answer waits for notify too).
+	 * Tells the gateway about a revision as soon as its compare-and-swap succeeds, with the room as committed (its
+	 * shared snapshot and viewers), so the other phones get it without anything reading the room back. Not when the
+	 * history changed: notify stores it on the accounts before anyone hears of it; null then (the command's answer
+	 * waits for notify too). Resolves whether the gateway was told (notify publishes again if not; repair retries).
 	 */
-	private hintCommitted(old: ProposalRoom, room: ProposalRoom): boolean {
-		if (JSON.stringify(room.history ?? []) !== JSON.stringify(old.history ?? [])) return false
-		if (room.expiresAt <= this.now()) return true
-		this.publish({ roomId: room.id, revision: room.revision }).catch(() => {
-			/* notify publishes it again; repair retries */
-		})
-		return true
+	private hintCommitted(old: ProposalRoom, room: ProposalRoom): Promise<boolean> | null {
+		if (JSON.stringify(room.history ?? []) !== JSON.stringify(old.history ?? [])) return null
+		if (room.expiresAt <= this.now()) return Promise.resolve(true)
+		return timed("publish", this.announce(timedSync("publish", () => this.committedEvent(room)))).then(
+			() => true,
+			() => false
+		)
 	}
 	/**
-	 * Publishes a committed revision once. Returns the room it read, or null when the read failed.
+	 * Publishes a revision hint; a committed room is followed by its plain hint, once the committed one was sent, for
+	 * a gateway that only knows plain hints (rolling deploy). A gateway that took the committed room ignores it.
+	 */
+	private async announce(event: RoomInvalidation | RoomCommitted) {
+		await this.publish(event)
+		if ("snapshot" in event) await this.publish({ roomId: event.roomId, revision: event.revision })
+	}
+	/**
+	 * The revision hint for a committed room: its shared snapshot (the same for every viewer) and who may view it, a
+	 * participant at their capability epoch that a realtime view would serve (not departed; a member place with a
+	 * live session; that session itself is checked by the gateway's next read). A plain hint when nobody may view it
+	 * or the message would be too large.
+	 */
+	private committedEvent(room: ProposalRoom): RoomInvalidation | RoomCommitted {
+		const now = this.now()
+		const viewers = room.participants.filter(
+			(p) => p.leftAt == null && !p.revoked && (!p.memberUserId || (p.sessions ?? []).some((s) => s.expiresAt > now))
+		)
+		const hint = { roomId: room.id, revision: room.revision }
+		if (!viewers.length) return hint
+		const event: RoomCommitted = {
+			...hint,
+			snapshot: proposalSnapshot(room, viewers[0].id).shared,
+			viewers: viewers.map((p) => ({ participantId: p.id, capabilityEpoch: p.epoch })),
+		}
+		return Buffer.byteLength(JSON.stringify(event)) <= REVISION_MESSAGE_MAX ? event : hint
+	}
+	/**
+	 * Publishes a committed revision once. Returns the room it read, or null when it was handed the committed room
+	 * or the read failed.
 	 *
 	 * `yieldToQueued` (a command's notify, which runs after it left the room's lane): when another write already waits
 	 * in the lane, the revision is published but not acknowledged. Clearing pending_revision is a write too, and moves
@@ -2091,26 +2118,27 @@ export class ProposalService {
 	 * revision pending in its own commit and its own notify acknowledges both; if it commits nothing, repair publishes
 	 * the revision once more, which the gateway ignores.
 	 */
-	async notify(id: string, options: { yieldToQueued?: boolean } = {}): Promise<ProposalStored | null> {
+	async notify(
+		id: string,
+		options: { yieldToQueued?: boolean; committed?: ProposalRoom; published?: Promise<boolean> } = {}
+	): Promise<ProposalStored | null> {
 		let stored: ProposalStored | null = null
 		try {
-			stored = await this.repository.read(id)
-			if (stored?.room.phase === "setup") {
+			// `committed`: the room a command just stored, its revision pending by that compare-and-swap; nothing is read.
+			// The acknowledgement still checks the stored pending revision (a later write may have taken it over).
+			const room = options.committed ?? (stored = await this.repository.read(id))?.room
+			if (room?.phase === "setup") {
 				this.decks.schedule(id)
 				if (this.catalog.refreshExcludedKeys) {
-					this.catalog.refreshExcludedKeys(stored.room)
+					this.catalog.refreshExcludedKeys(room)
 					this.exclusionKeepAlive.touch(id)
 				}
 			}
-			if (
-				!stored ||
-				!stored.pendingRevision
-			)
-				return stored
-			await this.accounts.publish(stored.room.history ?? [])
-			if (stored.room.expiresAt > this.now()) await this.publish({ roomId: id, revision: stored.room.revision })
+			if (!room || (!options.committed && !stored?.pendingRevision)) return stored
+			await this.accounts.publish(room.history ?? [])
+			if (room.expiresAt > this.now() && !(await options.published)) await this.announce(this.committedEvent(room))
 			if (options.yieldToQueued && this.writes.has(id)) return stored
-			await this.repository.acknowledge(id, stored.room.revision)
+			await this.repository.acknowledge(id, room.revision)
 		} catch {
 			/* commit remains durable; repair retries */
 		}

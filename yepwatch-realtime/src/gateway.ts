@@ -11,7 +11,7 @@ import { proposalProjection } from './proposal-projection.js'
 import { cheerAllowed, type DecisionActivityScope, inspectionAllowed, proposalClientActivitySchema, proposalServerActivitySchema } from './proposal-activity.js'
 import { ActivityRelay, type ActivityBus, type ActivitySender } from './activity.js'
 import type { RevisionBus } from './bus.js'
-import { authenticateSchema } from './projection.js'
+import { authenticateSchema, type CommittedHint } from './projection.js'
 
 export const defaults = {
   host: '127.0.0.1', port: 4311,
@@ -36,7 +36,8 @@ interface Client {
   roomDetails?: boolean
   inspectionMatches?: { matches: { candidateId: string }[] }
 }
-interface Room { id: string; clients: Set<Client>; target: number; epoch: number; running: boolean }
+/** `known`: the newest revision any read or committed room has shown for this room (a committed room older is stale). */
+interface Room { id: string; clients: Set<Client>; target: number; known: number; epoch: number; running: boolean }
 type OutputFrame = Exclude<ServerRealtimeFrame | ContinuousFrame, { snapshot: unknown }> |
   { type: 'room.snapshot' | 'room.updated'; snapshot: SharedRoomSnapshot | ContinuousSnapshot | ProposalSnapshot }
 
@@ -178,7 +179,7 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
       const previous = clients.map(client => client.attachment!)
       // The phones share one snapshot (one read of the room): validated once, serialized once per frame shape.
       const projection = once<ContinuousSnapshot | ProposalSnapshot>(continuous?.proposal ? proposalProjection : continuousProjection)
-      const frames = new WeakMap<object, Map<string, string>>()
+      const frames: Frames = new WeakMap()
       // Every friend's view is read at once: one person's answer reaches the sixth phone as fast as the first.
       const views = reads(room, clients)
       await Promise.all(clients.map(async (client, i) => {
@@ -190,43 +191,87 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
           if (previous[i].leaseExpiresAt <= Date.now()) { fail(client, 'expired'); return }
           client.attachment = result.attachment
           expiry(client)
+          if (result.snapshot.revision > room.known) room.known = result.snapshot.revision
           // Never forward reads made across a bus outage or a concurrently newer hint.
-          if (!deliveryReady() || room.epoch !== epoch || result.snapshot.revision < room.target ||
-              result.snapshot.revision < client.lastRevision) { degrade(client); return }
-          if (client.initial || client.degraded || result.snapshot.revision > client.lastRevision) {
-            const type = client.initial || client.degraded ? 'room.snapshot' : 'room.updated'
-            const shape = `${type}:${client.roomDetails === true}`
-            const frame = { type, snapshot: client.roomDetails ? result.snapshot : { ...result.snapshot, participants: result.snapshot.participants.filter(p => !('dropped' in p && p.dropped)).map(p => Object.fromEntries(Object.entries(p).filter(([key]) => key !== 'dropped'))) } as typeof result.snapshot } as OutputFrame
-            const shapes = frames.get(result.snapshot) ?? new Map<string, string>()
-            frames.set(result.snapshot, shapes)
-            const data = shapes.get(shape) ?? JSON.stringify(frame)
-            shapes.set(shape, data)
-            if (send(client, frame, data)) {
-              client.lastRevision = result.snapshot.revision; client.initial = false; client.degraded = false
-              client.participantIds = new Set(result.snapshot.participants.map(p => p.participantId))
-              if ('matches' in result.snapshot) {
-                client.inspectionMatches = { matches: result.snapshot.matches.map(m => ({ candidateId: m.candidateId })) }
-                client.decisionActivity = { phase: result.snapshot.phase, generation: result.snapshot.generation, participants: result.snapshot.participants }
-              }
-              if (relay && !client.activity) {
-                client.activity = relay.open(room.id, result.attachment.participantId,
-                  () => !draining && !client.degraded && !client.initial && client.lastRevision >= room.target && deliveryReady() && client.ws.readyState === WebSocket.OPEN,
-                  () => Math.min(client.attachment!.leaseExpiresAt, client.attachment!.roomExpiresAt),
-                  activity => !continuous?.proposal || (inspectionAllowed(activity, client.inspectionMatches) && cheerAllowed(activity, client.decisionActivity, result.attachment.participantId)))
-                send(client, { type: 'activity.session', roomId: room.id, sessionId: client.activity.sessionId, serverTime: Date.now() })
-              }
-            }
-          }
+          if (!deliveryReady() || room.epoch !== epoch) { degrade(client); return }
+          // A read older than what this phone already has (a committed room handed over while it was in flight).
+          if (!client.initial && !client.degraded && result.snapshot.revision <= client.lastRevision && client.lastRevision >= room.target) return
+          if (result.snapshot.revision < room.target || result.snapshot.revision < client.lastRevision) { degrade(client); return }
+          if (client.initial || client.degraded || result.snapshot.revision > client.lastRevision)
+            present(room, client, result.snapshot, client.initial || client.degraded ? 'room.snapshot' : 'room.updated', frames, result.attachment.participantId)
         } catch (error) {
           if (error instanceof AuthorityError && error.terminal) fail(client, 'unauthorized')
           else degrade(client)
         }
       }))
-      if (room.epoch === epoch && room.target === target) {
+      if (room.epoch === epoch) {
         // A future revision hint can precede a readable commit; do not present stale state as live.
         if ([...room.clients].some(c => c.lastRevision < room.target)) continue
-        return
+        // A newer target every phone already has (handed over from the commit) needs no second read.
+        if (room.target === target || ![...room.clients].some(c => c.degraded)) return
       }
+    }
+  }
+  type Frames = WeakMap<object, Map<string, string>>
+  /** Sends `snapshot` to one phone (validated already); phones sharing a snapshot share its serialized frame. */
+  function present(room: Room, client: Client, snapshot: SharedRoomSnapshot | ContinuousSnapshot | ProposalSnapshot, type: 'room.snapshot' | 'room.updated', frames: Frames, participantId: string) {
+    const shape = `${type}:${client.roomDetails === true}`
+    const frame = { type, snapshot: client.roomDetails ? snapshot : { ...snapshot, participants: snapshot.participants.filter(p => !('dropped' in p && p.dropped)).map(p => Object.fromEntries(Object.entries(p).filter(([key]) => key !== 'dropped'))) } as typeof snapshot } as OutputFrame
+    const shapes = frames.get(snapshot) ?? new Map<string, string>()
+    frames.set(snapshot, shapes)
+    const data = shapes.get(shape) ?? JSON.stringify(frame)
+    shapes.set(shape, data)
+    if (!send(client, frame, data)) return
+    client.lastRevision = snapshot.revision; client.initial = false; client.degraded = false
+    client.participantIds = new Set(snapshot.participants.map(p => p.participantId))
+    if ('matches' in snapshot) {
+      client.inspectionMatches = { matches: snapshot.matches.map(m => ({ candidateId: m.candidateId })) }
+      client.decisionActivity = { phase: snapshot.phase, generation: snapshot.generation, participants: snapshot.participants }
+    }
+    if (relay && !client.activity) {
+      client.activity = relay.open(room.id, participantId,
+        () => !draining && !client.degraded && !client.initial && client.lastRevision >= room.target && deliveryReady() && client.ws.readyState === WebSocket.OPEN,
+        () => Math.min(client.attachment!.leaseExpiresAt, client.attachment!.roomExpiresAt),
+        activity => !continuous?.proposal || (inspectionAllowed(activity, client.inspectionMatches) && cheerAllowed(activity, client.decisionActivity, participantId)))
+      send(client, { type: 'activity.session', roomId: room.id, sessionId: client.activity.sessionId, serverTime: Date.now() })
+    }
+  }
+  /**
+   * A committed room (RoomCommitted) goes straight to the phones it lists as viewers, at their capability epoch, on
+   * this room's expiry, with a lease that outlives the next audit (which renews it through the API); nothing is read.
+   * Any other phone, and every phone when the snapshot fails the strict projection, is refreshed through the API as
+   * for a plain hint. Older than what a phone has, or than a revision already announced: nothing is sent from it.
+   */
+  function onCommitted(hint: CommittedHint) {
+    if (!continuous?.proposal) { onHint(hint); return }
+    const room = rooms.get(hint.roomId)
+    if (!room || draining || !deliveryReady()) return
+    let snapshot: ProposalSnapshot
+    try {
+      snapshot = proposalProjection(hint.snapshot, room.id)
+      if (snapshot.revision !== hint.revision) throw new Error('Revision mismatch')
+    } catch { onHint({ roomId: hint.roomId, revision: hint.revision }); return }
+    // Older than a revision already announced or read (which may have revoked a viewer listed here): that one decides.
+    if (snapshot.revision < room.target || snapshot.revision < room.known) return
+    room.known = snapshot.revision
+    const viewers = new Map(hint.viewers.map(v => [v.participantId, v.capabilityEpoch]))
+    const listed = new Set(snapshot.participants.map(p => p.participantId))
+    const frames: Frames = new WeakMap()
+    const now = Date.now()
+    let behind = false
+    for (const client of room.clients) {
+      if (client.lastRevision >= snapshot.revision) continue
+      const a = client.attachment
+      if (!a || client.initial || client.degraded || client.ws.readyState !== WebSocket.OPEN ||
+          a.leaseExpiresAt - now <= options.auditMs + options.apiTimeoutMs || a.roomExpiresAt <= now ||
+          viewers.get(a.participantId) !== a.capabilityEpoch || !listed.has(a.participantId) ||
+          snapshot.expiresAt !== a.roomExpiresAt || snapshot.phase === 'expired') { behind = true; continue }
+      present(room, client, snapshot, 'room.updated', frames, a.participantId)
+      if (client.lastRevision < snapshot.revision) behind = true
+    }
+    if (snapshot.revision > room.target) {
+      room.target = snapshot.revision
+      if (behind) enqueue(room)
     }
   }
   function onHint(hint: { roomId: string; revision: number }) {
@@ -255,7 +300,7 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
     }
   }, () => onState(false), 2048, continuous.proposal ? { client: proposalClientActivitySchema, server: proposalServerActivitySchema } : undefined) : undefined
   continuous?.activityBus.on('state', onState)
-  bus.on('hint', onHint).on('state', onState)
+  bus.on('hint', onHint).on('committed', onCommitted).on('state', onState)
   server.on('upgrade', (request, socket, head) => {
     const ip = (socket as Socket).remoteAddress ?? 'unknown'
     // Exact URL rejects query secrets; subprotocols are deliberately unsupported.
@@ -320,7 +365,7 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
             clearTimeout(client.authTimer)
             client.attachment = attachment; expiry(client)
             if (!room) {
-              room = { id: request.roomId, clients: new Set(), target: 0, epoch: 0, running: false }
+              room = { id: request.roomId, clients: new Set(), target: 0, known: 0, epoch: 0, running: false }
               rooms.set(room.id, room)
             }
             client.room = room; room.clients.add(client)
@@ -360,7 +405,7 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
     },
     async close() {
       draining = true; clearInterval(audit); clearInterval(heartbeat)
-      bus.off('hint', onHint).off('state', onState); bus.close()
+      bus.off('hint', onHint).off('committed', onCommitted).off('state', onState); bus.close()
       continuous?.activityBus.off('state', onState); relay?.close()
       pending.clear()
       for (const cancel of cancellations) cancel()

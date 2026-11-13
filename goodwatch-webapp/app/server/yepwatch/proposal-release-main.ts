@@ -1,5 +1,6 @@
 import { createReleaseBus } from "./proposal-release-bus.ts"
 import { ValkeyTicketStore } from "./proposal-tickets.ts"
+import { ValkeyCommandBudget } from "./proposal-command-budget.ts"
 import Redis from "ioredis"
 import { loadReleaseSecrets, releaseConfig } from "./proposal-release-config.ts"
 import { crateSql } from "./repository.server.ts"
@@ -61,6 +62,8 @@ const runtime = createReleaseRuntime(config, {
 	memberCatalog: guestProposalCatalog,
 	bus,
 	tickets,
+	// On the tickets' connection: its script is replay-safe too.
+	commands: new ValkeyCommandBudget(ticketBus),
 	snapshot: snapshot.getTitleSnapshot,
 	async catalogProbe() {
 		assertNoSharedCatalogWriter(cache.getRedisCluster)

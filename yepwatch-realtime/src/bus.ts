@@ -1,12 +1,14 @@
 import { EventEmitter } from 'node:events'
 import { Redis, Cluster, type RedisOptions } from 'ioredis'
 import { REVISION_CHANNEL, type RoomInvalidation } from '@goodwatch/yepwatch-contracts'
-import { hintSchema } from './projection.js'
+import { committedSchema, hintSchema, type CommittedHint } from './projection.js'
 
 export interface RevisionBus {
   readonly ready: boolean
   start(): Promise<void>
   on(event: 'hint', listener: (hint: RoomInvalidation) => void): this
+  /** A hint that carries the committed room (proposal channel only; see RoomCommitted). Unvalidated snapshot. */
+  on(event: 'committed', listener: (hint: CommittedHint) => void): this
   on(event: 'state', listener: (ready: boolean) => void): this
   off(event: string, listener: (...args: any[]) => void): this
   close(): void
@@ -25,7 +27,11 @@ export class ValkeyBus extends EventEmitter implements RevisionBus {
   private health?: NodeJS.Timeout
   private probing = false
   private options: RedisOptions
-  constructor(private config: BusConfig, private channel: string = REVISION_CHANNEL) {
+  /**
+   * `maxMessageBytes` above 4096: the channel also carries committed rooms (RoomCommitted, up to that size), emitted
+   * as 'committed'. Plain hints stay 'hint'.
+   */
+  constructor(private config: BusConfig, private channel: string = REVISION_CHANNEL, private maxMessageBytes = 4096) {
     super()
     this.options = { enableOfflineQueue: false, maxRetriesPerRequest: 0,
       connectTimeout: 1000, commandTimeout: 1500, lazyConnect: true,
@@ -71,11 +77,15 @@ export class ValkeyBus extends EventEmitter implements RevisionBus {
       this.retry = setTimeout(() => this.selectSubscriber(), 200)
     })
     subscriber.on('message', (channel, message) => {
-      if (this.subscriber !== subscriber || !this.ready || channel !== this.channel || message.length > 4096) return
+      if (this.subscriber !== subscriber || !this.ready || channel !== this.channel || message.length > this.maxMessageBytes) return
       this.emit('payload', message)
       try {
-        const hint = hintSchema.safeParse(JSON.parse(message))
-        if (hint.success) this.emit('hint', hint.data)
+        const value: unknown = JSON.parse(message)
+        const hint = hintSchema.safeParse(value)
+        if (hint.success) { this.emit('hint', hint.data); return }
+        if (this.maxMessageBytes <= 4096) return
+        const committed = committedSchema.safeParse(value)
+        if (committed.success) this.emit('committed', committed.data)
       } catch { /* Invalid messages never become room data. Audit repairs missing hints. */ }
     })
     void subscriber.connect().catch(() => this.state(false))

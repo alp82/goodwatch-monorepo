@@ -648,7 +648,7 @@ export function createProposalHandler(
 						await service.command(
 							id,
 							actor,
-							parse(commandSchema, await body(request)),
+							await timed("body", body(request).then((value) => parse(commandSchema, value))),
 							deletionCheck
 						)
 					)
