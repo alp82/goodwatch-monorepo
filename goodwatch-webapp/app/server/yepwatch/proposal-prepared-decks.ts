@@ -35,7 +35,8 @@ export function deckInputs(room: ProposalRoom): string {
 /**
  * deckInputs with every member counted as a guest: what a deck reads besides members' seen titles (and saved
  * progress, which is never prepared). A deck built for the same base is still a deck of the room once its members'
- * seen titles are left out, which Start does with a fresh read whatever deck it uses.
+ * seen titles are left out, which Start does (from each member's stored copy, see ContinuousMembers.seenStored)
+ * whatever deck it uses.
  */
 export function deckBase(room: ProposalRoom): string {
 	return digest(room, true)

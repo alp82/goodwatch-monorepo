@@ -1,4 +1,5 @@
 import { timed, timedSync } from "./server-timing.ts"
+import { ExclusionKeepAlive } from "./proposal-member-exclusions.ts"
 import { MemoryAccountRooms } from "./proposal-account-store.ts"
 import { MemoryDeletionStore, requireNotDeleting, type DeletionStore } from './proposal-deletion.ts'
 import type { AccountRoomsStore, RoomAccount } from "./proposal-types.ts"
@@ -148,6 +149,8 @@ export class ProposalService {
 	private writes = new Map<string, { tail: Promise<void>; count: number }>()
 	/** Rooms' expiries (fixed at creation) by id, most recently read last: lets a read check capacity alongside. */
 	private expiries = new Map<string, number>()
+	/** Keeps members' seen copies recent while a room is set up (Start uses them instead of asking GoodWatch). */
+	readonly exclusionKeepAlive: ExclusionKeepAlive
 	constructor(
 		repository: ProposalRepository,
 		catalog: ProposalCatalog,
@@ -169,6 +172,11 @@ export class ProposalService {
 		this.guard = guard
 		this.interpret = interpret
 		this.concurrency = options.interpretations ?? INTERPRETATION_CONCURRENCY
+		this.exclusionKeepAlive = new ExclusionKeepAlive(
+			async (id) => (await repository.read(id))?.room ?? null,
+			(room) => catalog.refreshExcludedKeys?.(room),
+			{ now },
+		)
 		this.decks = new PreparedDecks(catalog, async (id) => {
 			const stored = await repository.read(id)
 			return stored && stored.room.format === 2 && stored.room.flowVersion === 3 ? stored.room : null
@@ -1110,11 +1118,11 @@ export class ProposalService {
 				const room = structuredClone(activeRoom(old.room))
 				if (envelope.command.type === "refill") retire(room)
 				const wantsPage = room.candidates.length < L.active && room.seenKeys.length < L.seen
-				// Seen lists are read again at Start: a deck prepared earlier never shows what a member has since seen.
-				// Fresh: never joins a background build's read that started before a title was marked Seen. Read
-				// alongside the deck, not after it: each is a round trip (GoodWatch, the catalog) on Start's path.
+				// Members' seen titles are left out again at Start, from the copy read when they signed in and kept up
+				// while the room was set up (a deck prepared before a member linked never had them). A member without a
+				// recent copy is read fresh, alongside the deck rather than after it.
 				const seenRead = wantsPage && envelope.command.type === "start" && this.catalog.excludedKeys
-					? timed("seen", this.catalog.excludedKeys(room, { fresh: true }))
+					? timed("seen", this.catalog.excludedKeys(room, { stored: true }))
 					: null
 				seenRead?.catch(() => {}) // Awaited below; a failed deck must not leave it unhandled.
 				// Best effort (members time-box and log their own reads): a failed read starts without those exclusions.
@@ -1124,13 +1132,17 @@ export class ProposalService {
 						seenReadFresh: envelope.command.type === "start" && Boolean(this.catalog.excludedKeys),
 					}))
 				if (page && seenRead) {
-					const excluded = new Set(await seenRead.catch(() => [] as string[]))
-					const unseen = (p: NonNullable<typeof page>) =>
-						excluded.size ? { ...p, candidates: p.candidates.filter((c) => !excluded.has(titleKey(c))) } : p
-					page = unseen(page)
+					await seenRead.catch(() => [] as string[])
+					// Taken again for each deck once it is in hand, from the copies alone (Start's own read above stored a
+					// missing one): a deck build reads GoodWatch, and a grant GoodWatch refused meanwhile no longer counts.
+					const unseen = async (p: NonNullable<typeof page>) => {
+						const excluded = new Set(await this.catalog.excludedKeys!(room, { stored: true, readMissing: false }).catch(() => [] as string[]))
+						return excluded.size ? { ...p, candidates: p.candidates.filter((c) => !excluded.has(titleKey(c))) } : p
+					}
+					page = await unseen(page)
 					// The deck reused across a member's link may hold only titles they've seen; the member-aware deck
 					// reaches past them. A short page still starts: the client refills at two unanswered cards.
-					if (!page.candidates.length) page = unseen(await timed("deck", this.decks.page(room)))
+					if (!page.candidates.length) page = await unseen(await timed("deck", this.decks.page(room)))
 				}
 			}
 			if (envelope.command.type === "restart") await this.accounts.publish(old.room.history ?? [])
@@ -1978,7 +1990,13 @@ export class ProposalService {
 		let stored: ProposalStored | null = null
 		try {
 			stored = await this.repository.read(id)
-			if (stored?.room.phase === "setup") this.decks.schedule(id)
+			if (stored?.room.phase === "setup") {
+				this.decks.schedule(id)
+				if (this.catalog.refreshExcludedKeys) {
+					this.catalog.refreshExcludedKeys(stored.room)
+					this.exclusionKeepAlive.touch(id)
+				}
+			}
 			if (
 				!stored ||
 				!stored.pendingRevision

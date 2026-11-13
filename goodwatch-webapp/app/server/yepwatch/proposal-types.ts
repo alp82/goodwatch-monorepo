@@ -106,15 +106,23 @@ export type ProposalRepository = RoomRepository<ProposalRoom> & {
 }
 export type ProposalStored = StoredRoom<ProposalRoom>
 export interface ExcludedKeysOptions {
-	fresh?: boolean
+	/**
+	 * Start: each member's stored seen copy (ContinuousMembers.seenStored) instead of a GoodWatch read, falling back to
+	 * a fresh read when a member has no recent copy.
+	 */
+	stored?: boolean
+	/** With `stored`: false leaves a member without a copy out instead of reading GoodWatch. */
+	readMissing?: boolean
 }
 export interface ProposalCatalog {
 	metadata: import("./continuous-types.ts").ContinuousCatalog["metadata"]
 	page(
 		room: ProposalRoom
 	): Promise<{ candidates: Candidate[]; exhausted: boolean }>
-	/** Title keys the room's linked members have seen (and don't want shown). `fresh` reads past any session cache. */
+	/** Title keys the room's linked members have seen (and don't want shown). */
 	excludedKeys?(room: ProposalRoom, options?: ExcludedKeysOptions): Promise<string[]>
+	/** A room in setup changed: read members' seen lists again in the background, so Start finds recent copies. */
+	refreshExcludedKeys?(room: ProposalRoom): void
 	refresh?(room: ProposalRoom): Promise<Candidate[]>
 	recheck(
 		room: ProposalRoom,

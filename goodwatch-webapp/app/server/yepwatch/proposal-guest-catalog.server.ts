@@ -7,6 +7,7 @@ import { proposalCatalog } from "./proposal-catalog.server.ts"
 import type { ContinuousMembers } from "./continuous-members.server.ts"
 import { sharedSavedContinuations } from "./continuous-saved-progress.ts"
 import { titleKeySet } from "./ranked-keys-cache.ts"
+import { memberExclusions } from "./proposal-member-exclusions.ts"
 /** Full catalog/evidence reads, with optional remote saved progress; no issuer or local fixtures. */
 export function guestProposalCatalog(members?: ContinuousMembers) {
 	const base = createContinuousCatalog(
@@ -73,18 +74,6 @@ export function guestProposalCatalog(members?: ContinuousMembers) {
 	})
 	return {
 		...catalog,
-		async excludedKeys(room: import("./proposal-types.ts").ProposalRoom, options?: import("./proposal-types.ts").ExcludedKeysOptions) {
-			if (!members) return []
-			return (
-				await Promise.all(
-					room.participants
-						.filter(
-							(p) =>
-								p.leftAt == null && p.member.state === "linked" && !p.showSeen
-						)
-						.map((p) => members.seenOrNone(room, p.id, { fresh: options?.fresh }))
-				)
-			).flat()
-		}
+		...(members ? memberExclusions(members) : { async excludedKeys() { return [] as string[] } })
 	}
 }
