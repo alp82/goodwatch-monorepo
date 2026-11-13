@@ -1,4 +1,5 @@
 import { timed, timedSync } from "./server-timing.ts"
+import { ExclusionKeepAlive } from "./proposal-member-exclusions.ts"
 import { MemoryAccountRooms } from "./proposal-account-store.ts"
 import { MemoryDeletionStore, requireNotDeleting, type DeletionStore } from './proposal-deletion.ts'
 import type { AccountRoomsStore, RoomAccount } from "./proposal-types.ts"
@@ -148,6 +149,8 @@ export class ProposalService {
 	private writes = new Map<string, { tail: Promise<void>; count: number }>()
 	/** Rooms' expiries (fixed at creation) by id, most recently read last: lets a read check capacity alongside. */
 	private expiries = new Map<string, number>()
+	/** Keeps members' seen copies recent while a room is set up (Start uses them instead of asking GoodWatch). */
+	readonly exclusionKeepAlive: ExclusionKeepAlive
 	constructor(
 		repository: ProposalRepository,
 		catalog: ProposalCatalog,
@@ -169,6 +172,11 @@ export class ProposalService {
 		this.guard = guard
 		this.interpret = interpret
 		this.concurrency = options.interpretations ?? INTERPRETATION_CONCURRENCY
+		this.exclusionKeepAlive = new ExclusionKeepAlive(
+			async (id) => (await repository.read(id))?.room ?? null,
+			(room) => catalog.refreshExcludedKeys?.(room),
+			{ now },
+		)
 		this.decks = new PreparedDecks(catalog, async (id) => {
 			const stored = await repository.read(id)
 			return stored && stored.room.format === 2 && stored.room.flowVersion === 3 ? stored.room : null
@@ -1984,7 +1992,10 @@ export class ProposalService {
 			stored = await this.repository.read(id)
 			if (stored?.room.phase === "setup") {
 				this.decks.schedule(id)
-				this.catalog.refreshExcludedKeys?.(stored.room)
+				if (this.catalog.refreshExcludedKeys) {
+					this.catalog.refreshExcludedKeys(stored.room)
+					this.exclusionKeepAlive.touch(id)
+				}
 			}
 			if (
 				!stored ||

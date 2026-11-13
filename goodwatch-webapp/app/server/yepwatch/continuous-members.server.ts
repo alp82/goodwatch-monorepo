@@ -26,11 +26,12 @@ const refused = (e: unknown) => e instanceof RoomError && ["unauthorized", "memb
 const SEEN_TRANSPORT_TIMEOUT_MS = 12_000
 /**
  * Stored seen copies (ContinuousMembers.seenStored): Start uses one up to SEEN_COPY_MAX_AGE_MS old, and a room change
- * in setup reads again once the copy is SEEN_REFRESH_AFTER_MS old. At most SEEN_COPIES_MAX copies holding
+ * in setup (or ExclusionKeepAlive, every 10 s while a room is set up) reads again once the copy is
+ * SEEN_REFRESH_AFTER_MS old. The age bound is also how long a grant GoodWatch revoked, unnoticed, can still shape Start. At most SEEN_COPIES_MAX copies holding
  * SEEN_COPY_KEYS_MAX title keys are kept (least recently stored out): a missing copy only costs Start the bounded
  * read it made before copies existed.
  */
-const SEEN_COPY_MAX_AGE_MS = 5 * 60_000
+const SEEN_COPY_MAX_AGE_MS = 30_000
 const SEEN_REFRESH_AFTER_MS = 10_000
 const SEEN_COPIES_MAX = 2_000
 const SEEN_COPY_KEYS_MAX = 1_000_000
