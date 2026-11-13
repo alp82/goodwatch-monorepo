@@ -9,8 +9,8 @@
  * card flies off over it, taking no input, and its look plays out and fades on its own drive.
  * Transform and opacity only.
  */
-import { useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
-import { Animated, Easing, Image, PanResponder, View } from 'react-native';
+import { memo, startTransition, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, type ComponentType, type ReactNode, type RefObject } from 'react';
+import { Animated, Easing, Image, PanResponder, View, type GestureResponderHandlers } from 'react-native';
 import type { ActivityPointer } from '@goodwatch/yepwatch-contracts/proposal';
 import { playFeedback } from '../../feedback/sounds';
 import { PeerStage } from '../../glow/Peers';
@@ -23,7 +23,7 @@ import type { StageGeometry } from './geometry';
 import { BackLayer, FrontLayer } from './layers';
 import { LOOPING, type Look } from './looks';
 import { Moment } from './moments';
-import { clampI, driver, fill, hidden, same, web, type A, type LayerProps } from './paint';
+import { clampI, driver, fill, hidden, same, web, type A, type LayerProps, type Node } from './paint';
 
 export interface StageCard {
   /** Stable for one card in one round (Undo brings the same key back). */
@@ -51,14 +51,34 @@ interface Departure {
   /** Its streaming logos, as they were when it was answered. */
   services?: ReactNode;
 }
-/** The answered card's stage look, playing out on its own drive while the next card is live. */
-interface Fade {
+/**
+ * One card's stage look (its layers behind and in front of the card) with drives of its own. While the
+ * card is live they follow the drag (`gate` 1: drive = v, lit = the drag's neon); once the card is
+ * answered the same layers play the look out (`gate` 0: drive = fadeV, lit = fadeLit, punch knocks).
+ * So an answer mounts nothing for the look: the live card's layers simply become the fade, and the next
+ * card's layers are built in the background (a transition) while nothing depends on them yet.
+ */
+interface LookSet {
+  /** This set's own identity (Undo brings a card back with a fresh set while its old one still plays out). */
   id: number;
+  /** The card's key. */
+  key: string;
   look: Look;
   posterUrl: string | null;
-  v: Animated.Value;
+  gate: Animated.Value;
+  fadeV: Animated.Value;
   punch: Animated.Value;
-  lit: Animated.Value;
+  fadeLit: Animated.Value;
+  drive: Node;
+  kick: A;
+  lit: { yep: A; nope: A };
+  /** Answered: playing out; never live again. */
+  fading: boolean;
+}
+/** The answered card's stage look, playing out on its set's own drive while the next card is live. */
+interface Fade {
+  id: number;
+  set: LookSet;
 }
 
 /** The first card of a round that just started rises in this long (it is live from its first frame). */
@@ -82,7 +102,7 @@ function flicker(a: Animated.Value) {
 const noop = () => undefined;
 
 /** One answered card leaving: drawn over the live card, out of the accessibility tree, taking no input. */
-function Departing({ d, geo, onDone }: { d: Departure; geo: StageGeometry; onDone: (id: number) => void }) {
+const Departing = memo(function Departing({ d, geo, onDone }: { d: Departure; geo: StageGeometry; onDone: (id: number) => void }) {
   const { w, h, aw, cardTop, threshold, off, phone } = geo;
   const [values] = useState(() => ({ x: new Animated.Value(d.x0), y: new Animated.Value(d.y0), zero: new Animated.Value(0), one: new Animated.Value(1) }));
   const { x, y } = values;
@@ -105,9 +125,90 @@ function Departing({ d, geo, onDone }: { d: Departure; geo: StageGeometry; onDon
         halo={<CardGlow {...side} />} under={<CardUnder {...side} />} over={<CardOver {...side} />} />
     </View>
   );
-}
+});
 
-export function VoteStage({ geo, card, next, empty, disabled, keys, reduced, enter, onEntered, activity, services, moment, controls, onVote, onDetails, onGesture, onPointer, onMomentEnd }: {
+/**
+ * One answer's stage layers for one look on one drive. Invisible (and skipped by the compositor) until its
+ * drive moves. Memoized: the stage re-renders on every vote, a look's layers only when their look or drive do.
+ */
+const StageSide = memo(function StageSide({ layer: Layer, kind, look, g, drive, kick, lit, loop, x, posterUrl, reduced }: {
+  layer: ComponentType<LayerProps>;
+  kind: 'yep' | 'nope';
+  look: Look;
+  g: StageGeometry;
+  drive: Node;
+  kick: A;
+  lit: A;
+  loop: Animated.Value;
+  x: Animated.Value;
+  posterUrl: string | null;
+  reduced: boolean;
+}) {
+  const { p, on } = useMemo(() => ({ p: sideDrive(drive, kind), on: sideOn(drive, kind) }), [drive, kind]);
+  return <Animated.View style={[fill, { opacity: on }]}><Layer look={look} g={g} kind={kind} p={p} loop={loop} punch={kick} lit={lit} x={x} posterUrl={posterUrl} reduced={reduced} /></Animated.View>;
+});
+/** A side's strength (0…1) on a stage drive (−1…1). */
+const sideDrive = (drive: Node, kind: 'yep' | 'nope') => (drive as Animated.Value).interpolate(kind === 'yep' ? { inputRange: [0.03, 1], outputRange: [0, 1], ...clampI } : { inputRange: [-1, -0.03], outputRange: [1, 0], ...clampI });
+/** A side's visibility: off at rest, on as soon as its drive moves. */
+const sideOn = (drive: Node, kind: 'yep' | 'nope') => (drive as Animated.Value).interpolate(kind === 'yep' ? { inputRange: [0.03, 0.031], outputRange: [0, 1], ...clampI } : { inputRange: [-0.031, -0.03], outputRange: [1, 0], ...clampI });
+
+/** The live card's `stamp-yep` / `stamp-nope`: empty, but visible exactly when that side of its look is (checks read them). */
+const StampMarks = memo(function StampMarks({ v }: { v: Animated.Value }) {
+  const on = useMemo(() => ({ nope: sideOn(v, 'nope'), yep: sideOn(v, 'yep') }), [v]);
+  return <>{(['nope', 'yep'] as const).map((kind) => <Animated.View key={kind} {...hidden} testID={`stamp-${kind}`} style={[fill, { opacity: on[kind] }]} />)}</>;
+});
+
+/** The card underneath, seen while the top card moves. */
+const UnderCard = memo(function UnderCard({ title, box, rise, x, lean }: { title: GlowTitle; box: object; rise: Animated.Value; x: Animated.Value; lean: number }) {
+  const style = useMemo(() => [box, { opacity: rise.interpolate({ inputRange: [0, 1], outputRange: [0, 0.85] }), transform: [{ scale: x.interpolate({ inputRange: [-lean, 0, lean], outputRange: [1, 0.94, 1], ...clampI }) }, { translateY: x.interpolate({ inputRange: [-lean, 0, lean], outputRange: [0, 14, 0], ...clampI }) }] }], [box, rise, x, lean]);
+  return (
+    <Animated.View {...hidden} testID="card-under" style={style}>
+      <View style={{ flex: 1, borderRadius: 14, overflow: 'hidden', backgroundColor: '#1a1610' }}>
+        {title.posterUrl ? <Image source={{ uri: title.posterUrl }} accessible={false} resizeMode="cover" style={{ width: '100%', height: '100%' }} /> : null}
+      </View>
+    </Animated.View>
+  );
+});
+
+/** The live card: its friends' pointers behind and in front, the pointer surface, the poster with its drag. */
+const LiveCard = memo(function LiveCard({ card, geo, box, entry, x, y, pan, services, engaged, drives, activity, onPointer, onDetails }: {
+  card: StageCard;
+  geo: StageGeometry;
+  box: object;
+  entry: object;
+  x: Animated.Value;
+  y: Animated.Value;
+  pan: GestureResponderHandlers;
+  services?: ReactNode;
+  engaged: boolean;
+  drives: { yepP: A; nopeP: A; still: A; litY: A; litN: A };
+  activity: Map<string, PeerActivity>;
+  onPointer: (pointer: ActivityPointer | null) => void;
+  onDetails: () => void;
+}) {
+  const { w, h, phone } = geo;
+  const side = (kind: 'yep' | 'nope'): CardLayerProps => ({ look: card.look, kind, w, h, phone, x, p: kind === 'yep' ? drives.yepP : drives.nopeP, punch: drives.still, lit: kind === 'yep' ? drives.litY : drives.litN, posterUrl: card.title.posterUrl });
+  const yepCard = side('yep');
+  const nopeCard = side('nope');
+  return (
+    <Animated.View style={[box, entry]}>
+      <PeerStage layer="back" activity={activity} width={w} height={h} desktop={false} />
+      <PointerSurface width={w} height={h} onPointer={onPointer}>
+        <Poster title={card.title} width={w} height={h} phone={phone} z={geo.z} showText={h >= 300} x={x} y={y} pan={pan} look={card.look} services={services}
+          onDetails={onDetails}
+          halo={engaged ? <><CardGlow {...nopeCard} /><CardGlow {...yepCard} /></> : null}
+          under={engaged ? <><CardUnder {...nopeCard} /><CardUnder {...yepCard} /></> : null}
+          over={engaged ? <><CardOver {...nopeCard} /><CardOver {...yepCard} /></> : null} />
+      </PointerSurface>
+      <PeerStage layer="front" activity={activity} width={w} height={h} desktop={false} />
+    </Animated.View>
+  );
+});
+
+const MemoMoment = memo(Moment);
+
+/** Memoized: the voting screen re-renders on every room update; the stage only when what it shows changes. */
+export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disabled, keys, reduced, enter, onEntered, activity, services, moment, controls, onVote, onDetails, onGesture, onPointer, onMomentEnd }: {
   geo: StageGeometry;
   /** The live card: the next unanswered one, what every press answers. */
   card: StageCard | null;
@@ -157,6 +258,8 @@ export function VoteStage({ geo, card, next, empty, disabled, keys, reduced, ent
    */
   const [departure, setDeparture] = useState<Departure | null>(null);
   const [fade, setFade] = useState<Fade | null>(null);
+  /** The look layer sets: the live card's (once built) and the answered card's while it plays out. */
+  const [sets, setSets] = useState<LookSet[]>([]);
   const fadeRun = useRef<Animated.CompositeAnimation | null>(null);
   const serial = useRef(0);
   /** The card a press already answered, until the next card takes its place (a repeat never answers it twice). */
@@ -180,7 +283,7 @@ export function VoteStage({ geo, card, next, empty, disabled, keys, reduced, ent
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loops = !reduced && ((engaged && card !== null && LOOPING.includes(card.look)) || (fade !== null && LOOPING.includes(fade.look)) || (moment !== null && LOOPING.includes(moment.look)));
+  const loops = !reduced && ((engaged && card !== null && LOOPING.includes(card.look)) || (fade !== null && LOOPING.includes(fade.set.look)) || (moment !== null && LOOPING.includes(moment.look)));
   useEffect(() => {
     if (!loops) return;
     loop.setValue(0);
@@ -227,7 +330,39 @@ export function VoteStage({ geo, card, next, empty, disabled, keys, reduced, ent
 
   useEffect(() => () => fadeRun.current?.stop(), []);
 
-  const engage = () => setEngaged(true);
+  const setSerial = useRef(0);
+  const makeSet = useCallback((c: StageCard): LookSet => {
+    const gate = new Animated.Value(1);
+    const fadeV = new Animated.Value(0);
+    const punch = new Animated.Value(0);
+    const fadeLit = new Animated.Value(0);
+    const gated = (lit: Animated.Value) => same(Animated.add(Animated.multiply(lit, gate), fadeLit));
+    return {
+      id: ++setSerial.current, key: c.key, look: c.look, posterUrl: c.title.posterUrl, gate, fadeV, punch, fadeLit, fading: false,
+      drive: Animated.add(Animated.multiply(v, gate), fadeV), kick: same(punch), lit: { yep: gated(litYep), nope: gated(litNope) },
+    };
+  }, [v, litYep, litNope]);
+  /** The live card's set, added unless it's there (answered sets stay until they finish). */
+  const withLive = useCallback((list: LookSet[], c: StageCard) => (list.some((s) => s.key === c.key && !s.fading) ? list : [...list.filter((s) => s.fading), makeSet(c)]), [makeSet]);
+  // A new live card's look layers are built in the background once the answered card has flown and its
+  // look played out (nothing animates then): they show nothing until the card is dragged or answered, and
+  // building them in the press, or during the fly-off, would cost frames of the next card's arrival.
+  const liveCard = useRef(card);
+  useLayoutEffect(() => { liveCard.current = card; });
+  const settled = departure === null && fade === null;
+  useEffect(() => {
+    const c = liveCard.current;
+    if (!c || !settled) return;
+    // A set built for a card answered meanwhile is harmless: it isn't drawn, and the next build drops it.
+    startTransition(() => setSets((list) => withLive(list, c)));
+    // Per live card: its key names its look.
+  }, [topKey, withLive, settled]);
+  // A drag shows the live look at once: its set is built now if the background hasn't yet.
+  const engage = () => {
+    setEngaged(true);
+    const c = liveCard.current;
+    if (c) setSets((list) => withLive(list, c));
+  };
   const settle = () => {
     Animated.parallel([
       Animated.spring(x, { toValue: 0, friction: 6, tension: 90, useNativeDriver: driver }),
@@ -238,28 +373,45 @@ export function VoteStage({ geo, card, next, empty, disabled, keys, reduced, ent
   };
   const departed = useCallback((id: number) => setDeparture((d) => (d?.id === id ? null : d)), []);
 
-  /** The answered card's stage look on its own drive: from where the drag left it to full, then fading. */
-  const playFade = (look: Look, posterUrl: string | null, answer: boolean, v0: number, wasLit: boolean) => {
+  /**
+   * The answered card's stage look on its own drive: from where the drag left it to full, then fading.
+   * Its live set (when built) turns into the fade; otherwise one is made for it now.
+   */
+  const playFade = (target: StageCard, answer: boolean, v0: number, wasLit: boolean) => {
     fadeRun.current?.stop();
-    const f: Fade = { id: ++serial.current, look, posterUrl, v: new Animated.Value(v0), punch: new Animated.Value(0), lit: new Animated.Value(wasLit ? 1 : 0) };
+    const existing = sets.find((s) => s.key === target.key && !s.fading);
+    const set = existing ?? makeSet(target);
+    set.fading = true;
+    set.gate.setValue(0);
+    set.fadeV.setValue(v0);
+    set.punch.setValue(0);
+    set.fadeLit.setValue(wasLit ? 1 : 0);
+    // Any other unanswered set of this card goes (a background build that raced the press).
+    // The fading set is kept exactly once, read from the list itself (React may replay this on another base).
+    setSets((list) => {
+      const kept = list.filter((s) => s === set || s.fading || s.key !== target.key);
+      return kept.includes(set) ? kept : [...kept, set];
+    });
+    const f: Fade = { id: ++serial.current, set };
     setFade(f);
     const run = Animated.parallel([
-      ...(wasLit ? [] : [flicker(f.lit)]),
+      ...(wasLit ? [] : [flicker(set.fadeLit)]),
       Animated.sequence([
-        Animated.timing(f.v, { toValue: answer ? 1 : -1, duration: FADE_IN_MS, easing: Easing.out(Easing.cubic), useNativeDriver: driver }),
-        Animated.timing(f.v, { toValue: 0, duration: FADE_OUT_MS, easing: Easing.out(Easing.quad), useNativeDriver: driver }),
+        Animated.timing(set.fadeV, { toValue: answer ? 1 : -1, duration: FADE_IN_MS, easing: Easing.out(Easing.cubic), useNativeDriver: driver }),
+        Animated.timing(set.fadeV, { toValue: 0, duration: FADE_OUT_MS, easing: Easing.out(Easing.quad), useNativeDriver: driver }),
       ]),
       // Stamp: the stage takes a short knock as the stamp lands.
       Animated.sequence([
         Animated.delay(40),
-        Animated.timing(f.punch, { toValue: 1, duration: 130, easing: Easing.out(Easing.cubic), useNativeDriver: driver }),
-        Animated.timing(f.punch, { toValue: 0, duration: 300, easing: Easing.inOut(Easing.quad), useNativeDriver: driver }),
+        Animated.timing(set.punch, { toValue: 1, duration: 130, easing: Easing.out(Easing.cubic), useNativeDriver: driver }),
+        Animated.timing(set.punch, { toValue: 0, duration: 300, easing: Easing.inOut(Easing.quad), useNativeDriver: driver }),
       ]),
     ]);
     fadeRun.current = run;
     run.start(() => {
       if (fadeRun.current === run) fadeRun.current = null;
       setFade((cur) => (cur?.id === f.id ? null : cur));
+      setSets((list) => list.filter((s) => s !== set));
     });
   };
 
@@ -293,7 +445,7 @@ export function VoteStage({ geo, card, next, empty, disabled, keys, reduced, ent
     if (reduced) setDeparture(null);
     else {
       setDeparture({ id: ++serial.current, card: target, answer, x0, y0, services });
-      playFade(target.look, target.title.posterUrl, answer, v0, wasLit);
+      playFade(target, answer, v0, wasLit);
     }
     // The answer goes out now; the fly-off is only its picture.
     void onVote(answer, target.key).then((sent) => {
@@ -320,7 +472,6 @@ export function VoteStage({ geo, card, next, empty, disabled, keys, reduced, ent
   });
   useImperativeHandle(controls, () => ({ commit: (yes: boolean) => live.current.commit(yes) }), []);
   // PanResponder only invokes these closures for events; it never reads the refs during construction.
-  // eslint-disable-next-line react-hooks/refs
   const [pan] = useState(() => {
     const base = { x: 0, y: 0 };
     let handling = false;
@@ -386,82 +537,49 @@ export function VoteStage({ geo, card, next, empty, disabled, keys, reduced, ent
     return () => window.removeEventListener('keydown', onKey);
   }, [keys]);
 
-  // Drives, all 0 at rest. The card's own layers follow the card; the stage's follow `v` (or a fade's own drive).
-  const yepP = x.interpolate({ inputRange: [8, Math.max(9, threshold)], outputRange: [0, 1], ...clampI });
-  const nopeP = x.interpolate({ inputRange: [-Math.max(9, threshold), -8], outputRange: [1, 0], ...clampI });
-  const stillI = same(values.still);
-  const litY = same(litYep);
-  const litN = same(litNope);
-  const quiet = values.moment.interpolate({ inputRange: [0, 0.4, 1.6, 2], outputRange: [1, 0, 0, 1], ...clampI });
-  /** One look's stage layers on one drive; each answer's side is invisible (and skipped by the compositor) until its drive moves. */
-  const stageLayers = (layer: typeof BackLayer, look: Look, drive: Animated.Value, kick: A, lit: { yep: A; nope: A }, posterUrl: string | null, ids: boolean) => {
-    const side = (kind: 'yep' | 'nope') => {
-      const p = kind === 'yep' ? drive.interpolate({ inputRange: [0.03, 1], outputRange: [0, 1], ...clampI }) : drive.interpolate({ inputRange: [-1, -0.03], outputRange: [1, 0], ...clampI });
-      const on = kind === 'yep' ? drive.interpolate({ inputRange: [0.03, 0.031], outputRange: [0, 1], ...clampI }) : drive.interpolate({ inputRange: [-0.031, -0.03], outputRange: [1, 0], ...clampI });
-      const props: LayerProps = { look, g: geo, kind, p, loop, punch: kick, lit: lit[kind], x, posterUrl, reduced };
-      const Layer = layer;
-      return <Animated.View key={kind} testID={ids ? `stamp-${kind}` : undefined} style={[fill, { opacity: on }]}><Layer {...props} /></Animated.View>;
-    };
-    return <>{side('nope')}{side('yep')}</>;
-  };
-  const fadeKick = fade ? same(fade.punch) : null;
-  const fadeLit = fade ? same(fade.lit) : null;
+  // The card's own layers' drives, all 0 at rest, following the card. Made once per stage, so the memoized
+  // card keeps the same nodes from vote to vote.
+  const drives = useMemo(() => ({
+    yepP: x.interpolate({ inputRange: [8, Math.max(9, threshold)], outputRange: [0, 1], ...clampI }),
+    nopeP: x.interpolate({ inputRange: [-Math.max(9, threshold), -8], outputRange: [1, 0], ...clampI }),
+    still: same(values.still),
+    litY: same(litYep),
+    litN: same(litNope),
+  }), [x, threshold, values.still, litYep, litNope]);
+  const quietFill = useMemo(() => [fill, { opacity: values.moment.interpolate({ inputRange: [0, 0.4, 1.6, 2], outputRange: [1, 0, 0, 1], ...clampI }) }], [values.moment]);
+  const quiet = (quietFill[1] as { opacity: A }).opacity;
   // Stamp: the stage takes a short knock when the stamp lands.
-  const knock = fade && fadeKick && fade.look === 'stamp' && !reduced ? fadeKick.interpolate({ inputRange: [0, 1], outputRange: [0, phone ? 6 : geo.z(9)] }) : 0;
-  const cardSide = (kind: 'yep' | 'nope'): CardLayerProps | null => card
-    ? { look: card.look, kind, w, h, phone, x, p: kind === 'yep' ? yepP : nopeP, punch: stillI, lit: kind === 'yep' ? litY : litN, posterUrl: card.title.posterUrl }
-    : null;
-  const yepCard = cardSide('yep');
-  const nopeCard = cardSide('nope');
-  const box = { position: 'absolute', left: (aw - w) / 2, top: cardTop, width: w, height: h } as const;
+  const knock = useMemo(() => (fade && fade.set.look === 'stamp' && !reduced ? fade.set.kick.interpolate({ inputRange: [0, 1], outputRange: [0, phone ? 6 : geo.z(9)] }) : 0), [fade, reduced, phone, geo]);
+  const fadeBack = useMemo(() => [fill, { opacity: quiet, transform: [{ translateY: knock }] }], [quiet, knock]);
+  /** A set's layers, behind or in front of the card: the live card's follow the drag, an answered one plays out. */
+  const lookSet = (set: LookSet, layer: typeof BackLayer, style: object) => (
+    <Animated.View key={set.id} {...hidden} style={style}>
+      {(['nope', 'yep'] as const).map((kind) => (
+        <StageSide key={kind} layer={layer} kind={kind} look={set.look} g={geo} drive={set.drive} kick={set.kick} lit={set.lit[kind]} loop={loop} x={x} posterUrl={set.posterUrl} reduced={reduced} />
+      ))}
+    </Animated.View>
+  );
+  const fading = fade ? sets.find((s) => s === fade.set) : undefined;
+  const liveSet = card ? sets.find((s) => s.key === card.key && !s.fading) : undefined;
+  // Behind: the answered look under the live one; in front: the live look under the answered one.
+  const backSets = sets.filter((s) => s === fading || s === liveSet);
+  const frontSets = [...backSets].sort((a, b) => Number(a === fading) - Number(b === fading));
+  const box = useMemo(() => ({ position: 'absolute', left: (aw - w) / 2, top: cardTop, width: w, height: h } as const), [aw, w, cardTop, h]);
   const under = card ? next : null;
   /** The round's first card rising in (identity at rest). */
-  const entry = { opacity: rise, transform: [{ translateY: rise.interpolate({ inputRange: [0, 1], outputRange: [18, 0] }) }] };
+  const entry = useMemo(() => ({ opacity: rise, transform: [{ translateY: rise.interpolate({ inputRange: [0, 1], outputRange: [18, 0] }) }] }), [rise]);
 
   return (
     <View style={{ width: aw, height: geo.stageH }}>
-      {fade && fadeKick && fadeLit ? (
-        <Animated.View {...hidden} style={[fill, { opacity: quiet, transform: [{ translateY: knock }] }]}>
-          {stageLayers(BackLayer, fade.look, fade.v, fadeKick, { yep: fadeLit, nope: fadeLit }, fade.posterUrl, false)}
-        </Animated.View>
-      ) : null}
+      {backSets.map((set) => lookSet(set, BackLayer, set === fading ? fadeBack : quietFill))}
+      {under ? <UnderCard title={under} box={box} rise={rise} x={x} lean={lean} /> : null}
       {card ? (
-        <Animated.View {...hidden} style={[fill, { opacity: quiet }]}>
-          {stageLayers(BackLayer, card.look, v, stillI, { yep: litY, nope: litN }, card.title.posterUrl, false)}
-        </Animated.View>
-      ) : null}
-      {under ? (
-        <Animated.View {...hidden} testID="card-under" style={[box, { opacity: rise.interpolate({ inputRange: [0, 1], outputRange: [0, 0.85] }), transform: [{ scale: x.interpolate({ inputRange: [-lean, 0, lean], outputRange: [1, 0.94, 1], ...clampI }) }, { translateY: x.interpolate({ inputRange: [-lean, 0, lean], outputRange: [0, 14, 0], ...clampI }) }] }]}>
-          <View style={{ flex: 1, borderRadius: 14, overflow: 'hidden', backgroundColor: '#1a1610' }}>
-            {under.posterUrl ? <Image source={{ uri: under.posterUrl }} accessible={false} resizeMode="cover" style={{ width: '100%', height: '100%' }} /> : null}
-          </View>
-        </Animated.View>
-      ) : null}
-      {card && yepCard && nopeCard ? (
-        <Animated.View style={[box, entry]}>
-          <PeerStage layer="back" activity={activity} width={w} height={h} desktop={false} />
-          <PointerSurface width={w} height={h} onPointer={onPointer}>
-            <Poster title={card.title} width={w} height={h} phone={phone} z={geo.z} showText={h >= 300} x={x} y={y} pan={pan.panHandlers} look={card.look} services={services}
-              onDetails={onDetails}
-              halo={engaged ? <><CardGlow {...nopeCard} /><CardGlow {...yepCard} /></> : null}
-              under={engaged ? <><CardUnder {...nopeCard} /><CardUnder {...yepCard} /></> : null}
-              over={engaged ? <><CardOver {...nopeCard} /><CardOver {...yepCard} /></> : null} />
-          </PointerSurface>
-          <PeerStage layer="front" activity={activity} width={w} height={h} desktop={false} />
-        </Animated.View>
+        <LiveCard card={card} geo={geo} box={box} entry={entry} x={x} y={y} pan={pan.panHandlers} services={services} engaged={engaged} drives={drives} activity={activity} onPointer={onPointer} onDetails={onDetails} />
       ) : <View style={box}>{empty}</View>}
       {departure ? <Departing key={departure.id} d={departure} geo={geo} onDone={departed} /> : null}
-      {card ? (
-        <Animated.View {...hidden} style={[fill, { opacity: quiet }]}>
-          {stageLayers(FrontLayer, card.look, v, stillI, { yep: litY, nope: litN }, card.title.posterUrl, true)}
-        </Animated.View>
-      ) : null}
-      {fade && fadeKick && fadeLit ? (
-        <Animated.View {...hidden} style={[fill, { opacity: quiet }]}>
-          {stageLayers(FrontLayer, fade.look, fade.v, fadeKick, { yep: fadeLit, nope: fadeLit }, fade.posterUrl, false)}
-        </Animated.View>
-      ) : null}
-      {moment ? <Moment key={moment.key} look={moment.look} g={geo} posterUrl={moment.title.posterUrl} a={values.moment} loop={loop} reduced={reduced} /> : null}
+      {frontSets.map((set) => lookSet(set, FrontLayer, quietFill))}
+      {card ? <StampMarks v={v} /> : null}
+      {moment ? <MemoMoment key={moment.key} look={moment.look} g={geo} posterUrl={moment.title.posterUrl} a={values.moment} loop={loop} reduced={reduced} /> : null}
     </View>
   );
-}
+});

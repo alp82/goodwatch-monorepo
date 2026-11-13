@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { memo, useEffect, useState, type ReactNode } from 'react';
 import Svg, { Path } from 'react-native-svg';
 import { Animated, Easing, View } from 'react-native';
 import type { PeerActivity } from '../../core/continuous/activity';
@@ -18,7 +18,8 @@ import { useInlineSign } from './direction';
  * fades in, so the faces never change layout position (no layout shift). Offsets are measured from
  * the start edge and mirrored with the writing direction, on native and on the web alike.
  */
-export function LiveFaces({
+/** Memoized: the voting screen re-renders on every room update; the faces when people or activity change. */
+export const LiveFaces = memo(function LiveFaces({
   people,
   activity,
   localReaction,
@@ -80,7 +81,7 @@ export function LiveFaces({
       )}
     </View>
   );
-}
+});
 /**
  * Where a face's springs count as settled: below a tenth of a dp of movement (scale and rotation over a
  * face's size, likewise). The default 0.001 kept a hop's spring running about a second longer, on
@@ -130,7 +131,7 @@ function FaceSlot({ x, arriving, children }: { x: number; arriving: boolean; chi
     </Animated.View>
   );
 }
-function Avatar({
+const Avatar = memo(function Avatar({
   size,
   person,
   pulse,
@@ -333,7 +334,7 @@ function Avatar({
       ))}
     </View>
   );
-}
+});
 /** Ephemeral surface positions and neutral actions; never card identity or another person’s answer. */
 export function PeerStage({
   activity,

@@ -4,17 +4,19 @@
  * no card count: the deck refills in the background, and an empty deck shows "Finding more…",
  * never an end.
  */
-import { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { memo, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Platform, View, useWindowDimensions } from 'react-native';
 import { useFocusEffect } from 'expo-router';
+import type { ActivityPointer } from '@goodwatch/yepwatch-contracts/proposal';
 import { fixturesEnabled } from '../../core/config';
 import { useReducedMotion } from '../../components/ui';
 import { BootPhase } from '../home/boot-phase';
 import { playFeedback } from '../feedback/sounds';
 import { useRoomFeedback } from '../feedback/RoomFeedback';
-import { groupActivity } from '../../core/continuous/activity';
+import { groupActivity, type PeerActivity } from '../../core/continuous/activity';
 import { latestRetainedVote, ownCard } from '../../core/continuous/state';
 import { titlePresentation } from '../glow/adapter';
+import type { GesturePhase } from '../glow/model';
 import { LiveFaces } from '../glow/Peers';
 import { matchesChipFrame, votingBarFit } from '../glow/faces-row';
 import { useActiveTime } from '../glow/useActiveTime';
@@ -23,6 +25,7 @@ import { useLayout } from '../shell/layout';
 import { useBackAction } from '../shell/sheet-back';
 import { useSheetEntry } from '../shell/Sheet';
 import { useSheetOpen } from '../shell/sheet-stack';
+import { useStableCallback, useSteady } from '../shell/steady';
 import { warm } from '../shell/tokens';
 import { openPage, toRooms } from './nav';
 import { useRoom } from './RoomProvider';
@@ -47,8 +50,15 @@ const reaction = (r: Omit<Reaction, 'at'>): Reaction => ({ at: Date.now(), ...r 
 /** In a fixture build, `?look=<name>` pins one look for every card. */
 const pinnedLook = () => (fixturesEnabled && Platform.OS === 'web' && typeof window !== 'undefined' ? pinnedLookFrom(window.location.search) : null);
 
+/** The same people, each with the same name and the same "you". */
+const samePeople = (a: { id: string; nickname: string; self: boolean }[], b: typeof a) =>
+  a.length === b.length && a.every((p, i) => p.id === b[i].id && p.nickname === b[i].nickname && p.self === b[i].self);
+/** The same activity: per person the same frame, pointer and pulse (pruning wraps them in new objects). */
+const sameActivity = (a: Map<string, PeerActivity>, b: Map<string, PeerActivity>) =>
+  a.size === b.size && [...a].every(([id, x]) => { const y = b.get(id); return y !== undefined && x.frame === y.frame && x.pointer === y.pointer && x.pulse === y.pulse; });
+const sameIds = (a: number[], b: number[]) => a.length === b.length && a.every((id, i) => id === b[i]);
 /** Nope (a slight red hint) and Yep (amber). */
-function VoteKey({ yes, disabled, onPress }: { yes: boolean; disabled: boolean; onPress: () => void }) {
+const VoteKey = memo(function VoteKey({ yes, disabled, onPress }: { yes: boolean; disabled: boolean; onPress: () => void }) {
   const { z } = useLayout();
   return (
     <Press label={yes ? 'Yep' : 'Nope'} disabled={disabled} onPress={onPress} repeatable
@@ -57,11 +67,11 @@ function VoteKey({ yes, disabled, onPress }: { yes: boolean; disabled: boolean; 
       <GText bold size={z(17)} color={yes ? warm.ink : glow.ink} lines={1}>{yes ? 'Yep' : 'Nope'}</GText>
     </Press>
   );
-}
+});
 
 /** Matches so far; amber while there's a proposal. Opens Matches, where a proposal set aside with Keep swiping waits as a card. */
 /** `compact`: the icon and the count only (narrow phones at a large font scale) in a fixed box, so the first match moves nothing; the name stays in full. */
-function MatchesChip({ compact }: { compact: boolean }) {
+const MatchesChip = memo(function MatchesChip({ compact }: { compact: boolean }) {
   const { id, view } = useRoom();
   const { z } = useLayout();
   const { fontScale } = useWindowDimensions();
@@ -82,7 +92,7 @@ function MatchesChip({ compact }: { compact: boolean }) {
       {proposal ? <View accessible={false} style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: glow.amber }} /> : null}
     </Press>
   );
-}
+});
 
 /** A full-screen page over the voting screen (the card underneath keeps its place); `page` uses the whole container. */
 function Sheet({ close, children, testID, page = false }: { close: () => void; children: React.ReactNode; testID: string; page?: boolean }) {
@@ -153,27 +163,41 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
   const activeTime = useActiveTime(id, snapshot && card ? `${snapshot.shared.generation}:${card.id}:${vote?.revision ?? 0}` : null,
     Boolean(card) && focused && !panel && answering && boot !== 'boot' && !state.terminal && snapshot?.shared.phase === 'choosing');
   const endMoment = useCallback((key: string) => setMoment((m) => (m?.key === key ? null : m)), []);
-  if (!snapshot || !view) return null;
-  const { shared } = snapshot;
-  const title = card ? titlePresentation(card) : null;
-  const look = card ? dealer.lookFor(`${shared.generation}:${card.id}`) : null;
-  // A Yep of yours made a match once the confirmed room lists it: MATCH plays in that card's look.
-  const settled = state.confirmed && yeps.length ? settleYeps(yeps, state.confirmed) : null;
-  if (settled?.changed) {
-    setYeps(settled.pending);
-    const made = settled.matched[0];
-    const matched = made ? shared.candidates.find((c) => c.id === made.candidateId) : undefined;
-    if (made && matched && view.people.length > 1) setMoment({ key: matchKey(made), title: titlePresentation(matched), look: made.look });
-  }
-  const nextCard = nextCandidate(snapshot, card?.id);
-  const geo = area ? stageGeometry({ aw: area.width, stageH: area.height, vw: layout.width, phone, z }) : null;
-  const rowWidth = area && geo ? Math.min(area.width, Math.max(geo.w, 320)) : phone ? layout.width - 32 : layout.max;
-  const activity = state.connection === 'live'
-    ? groupActivity(new Map([...state.activities].filter(([, a]) => shared.participants.some((p) => p.participantId === a.frame.participantId && !p.dropped))), state.activityNow())
-    : new Map();
-  const undoTarget = latestRetainedVote(snapshot);
+  // What the stage and the bar take, kept steady across renders that don't change them (a vote, a
+  // confirmation, a friend's activity re-render this screen; the stage and the faces then skip theirs).
+  const cardKey = snapshot && card ? `${snapshot.shared.generation}:${card.id}` : null;
+  const title = useMemo(() => (card ? titlePresentation(card) : null), [card]);
+  const look = cardKey ? dealer.lookFor(cardKey) : null;
+  const stageCard = useMemo(() => (cardKey && title && look ? { key: cardKey, title, look } : null), [cardKey, title, look]);
+  const nextCard = snapshot ? nextCandidate(snapshot, card?.id) : undefined;
+  const next = useMemo(() => (nextCard ? titlePresentation(nextCard) : null), [nextCard]);
+  const participants = snapshot?.shared.participants;
+  const activityNow = state.activityNow;
+  const freshActivity = state.connection === 'live' && participants
+    ? groupActivity(new Map([...state.activities].filter(([, a]) => participants.some((p) => p.participantId === a.frame.participantId && !p.dropped))), activityNow())
+    : new Map<string, PeerActivity>();
+  const activity = useSteady(freshActivity, sameActivity);
+  const people = useSteady((view?.people ?? []).map((p) => ({ id: p.id, nickname: p.nickname || '?', self: p.self })), samePeople);
+  const offeredIds = useSteady(card && view ? offeredOn(card, view.enabledServiceIds) : [], sameIds);
+  const services = useMemo(() => {
+    const offered = servicesIn(all, offeredIds);
+    return offered.length ? <Logos services={offered} size={z(22)} /> : undefined;
+  }, [all, offeredIds, z]);
+  const geo = useMemo(() => (area ? stageGeometry({ aw: area.width, stageH: area.height, vw: layout.width, phone, z }) : null), [area, layout.width, phone, z]);
+  const empty = useMemo(() => <FindingMore style={{ flex: 1 }} />, []);
+  const nope = useCallback(() => controls.current?.commit(false), []);
+  const yep = useCallback(() => controls.current?.commit(true), []);
+  const onDetails = useCallback(() => setPanel('details'), []);
+  const onGesture = useStableCallback((gesture: GesturePhase) => { setLocalReaction(reaction({ gesture })); state.activity(gesture); });
+  const onPointer = useStableCallback((pointer: ActivityPointer | null) => {
+    state.pointer(pointer);
+    if (pointer && Date.now() - pointerAt.current > 280) {
+      pointerAt.current = Date.now();
+      setLocalReaction(reaction({ gesture: pointer.pressed ? 'reach' : 'handle' }));
+    }
+  });
   /** Sent the moment it's pressed, for the card it was aimed at; the fly-off plays meanwhile. */
-  function choose(yes: boolean, key: string): Promise<boolean> {
+  const choose = (yes: boolean, key: string): Promise<boolean> => {
     if (!card || !answering || !look || !snapshot || key !== `${snapshot.shared.generation}:${card.id}`) return Promise.resolve(false);
     setLocalReaction(reaction({ answer: yes }));
     state.activity(undefined, 'answer');
@@ -184,17 +208,28 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
     setYeps((list) => [...list, record]);
     void sent.then((ok) => setYeps((list) => answerYep(list, record.serial, ok, room.latest())));
     return sent;
+  };
+  const onVote = useStableCallback(choose);
+  if (!snapshot || !view) return null;
+  const { shared } = snapshot;
+  // A Yep of yours made a match once the confirmed room lists it: MATCH plays in that card's look.
+  const settled = state.confirmed && yeps.length ? settleYeps(yeps, state.confirmed) : null;
+  if (settled?.changed) {
+    setYeps(settled.pending);
+    const made = settled.matched[0];
+    const matched = made ? shared.candidates.find((c) => c.id === made.candidateId) : undefined;
+    if (made && matched && view.people.length > 1) setMoment({ key: matchKey(made), title: titlePresentation(matched), look: made.look });
   }
-  const offered = card ? servicesIn(all, offeredOn(card, view.enabledServiceIds)) : [];
-  const people = view.people.map((p) => ({ id: p.id, nickname: p.nickname || '?', self: p.self }));
+  const rowWidth = area && geo ? Math.min(area.width, Math.max(geo.w, 320)) : phone ? layout.width - 32 : layout.max;
+  const undoTarget = latestRetainedVote(snapshot);
   // The bar's split depends on its width and the font scale only: people coming and going move nothing.
   const fit = votingBarFit({ rowWidth, size: z(26), fontScale, z, undo: Math.max(48, z(40)), gap: 10 });
   return (
     <Screen testID="voting" scroll={false} back={toRooms} covered={Boolean(panel)} width="page" noteTop={(phone ? 12 : z(24)) + barHeight + 8}
       footer={
         <View style={{ flexDirection: 'row', gap: 12, width: phone ? '100%' : rowWidth, alignSelf: 'center' }}>
-          <VoteKey yes={false} disabled={!answering || !card} onPress={() => controls.current?.commit(false)} />
-          <VoteKey yes disabled={!answering || !card} onPress={() => controls.current?.commit(true)} />
+          <VoteKey yes={false} disabled={!answering || !card} onPress={nope} />
+          <VoteKey yes disabled={!answering || !card} onPress={yep} />
         </View>
       }
       overlay={<>
@@ -218,22 +253,16 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
       <View ref={stageBox} onLayout={(e) => { const { width, height } = e.nativeEvent.layout; if (width > 0 && height > 0) setArea((a) => (a && a.width === width && a.height === height ? a : { width, height })); }}
         style={{ flex: 1, minHeight: 80, zIndex: 2 }}>
         {geo ? <VoteStage geo={geo} controls={controls} reduced={reduced} enter={entering} onEntered={onEntered} disabled={!answering} keys={focused && !panel && answering && boot === 'ready'}
-          card={card && title && look ? { key: `${shared.generation}:${card.id}`, title, look } : null}
-          next={nextCard ? titlePresentation(nextCard) : null}
-          empty={<FindingMore style={{ flex: 1 }} />}
+          card={stageCard}
+          next={next}
+          empty={empty}
           activity={activity}
-          services={offered.length ? <Logos services={offered} size={z(22)} /> : undefined}
+          services={services}
           moment={view.people.length > 1 ? moment : null} onMomentEnd={endMoment}
-          onVote={choose}
-          onDetails={() => setPanel('details')}
-          onGesture={(gesture) => { setLocalReaction(reaction({ gesture })); state.activity(gesture); }}
-          onPointer={(pointer) => {
-            state.pointer(pointer);
-            if (pointer && Date.now() - pointerAt.current > 280) {
-              pointerAt.current = Date.now();
-              setLocalReaction(reaction({ gesture: pointer.pressed ? 'reach' : 'handle' }));
-            }
-          }} /> : null}
+          onVote={onVote}
+          onDetails={onDetails}
+          onGesture={onGesture}
+          onPointer={onPointer} /> : null}
       </View>
     </Screen>
   );

@@ -4,6 +4,7 @@
  * browsers) and the avatar on the right. The bar spans the window; its content sits in the page's
  * centered container.
  */
+import { memo } from 'react';
 import { Platform, Text, View, type ViewStyle } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { GetTheApp, installable } from '../home/install';
@@ -92,7 +93,18 @@ function ProfileButton({ me, onPress, quiet }: { me?: HeaderMe; onPress?: () => 
   );
 }
 
-export function AppHeader({ back, onLogo, logoLabel = 'Your rooms', pill, onPill, me, onProfile, profileQuiet }: AppHeaderProps) {
+/** Pill and avatar compared by what they show: screens build them afresh on every render. */
+function sameHeader(a: AppHeaderProps, b: AppHeaderProps) {
+  const pa = a.pill ?? null;
+  const pb = b.pill ?? null;
+  const samePill = pa === pb || (pa !== null && pb !== null && pa.label === pb.label && pa.state === pb.state && pa.fresh === pb.fresh && pa.beat === pb.beat);
+  const sameMe = a.me === b.me || (a.me !== undefined && b.me !== undefined && a.me.name === b.me.name && a.me.member === b.me.member);
+  return samePill && sameMe && a.back === b.back && a.onLogo === b.onLogo && a.logoLabel === b.logoLabel && a.onPill === b.onPill
+    && a.onProfile === b.onProfile && a.profileQuiet === b.profileQuiet;
+}
+
+/** Memoized (sameHeader): a room update re-renders the screen, not the header. */
+export const AppHeader = memo(function AppHeader({ back, onLogo, logoLabel = 'Your rooms', pill, onPill, me, onProfile, profileQuiet }: AppHeaderProps) {
   const { phone, gutter, max, header, z } = useLayout();
   const brand = <BrandMark size={phone ? 21 : z(23)} />;
   // The same box whether or not it's pressable (a panel opening by itself makes it a control): the
@@ -122,4 +134,4 @@ export function AppHeader({ back, onLogo, logoLabel = 'Your rooms', pill, onPill
       )}
     </View>
   );
-}
+}, sameHeader);

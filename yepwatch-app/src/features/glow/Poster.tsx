@@ -55,6 +55,8 @@ export function Poster({ title, width, height, phone, z, showText = true, x, y, 
       style={{
         width,
         height,
+        // Web: the answered card flies in a layer of its own, so its frames move pixels instead of repainting the poster.
+        ...(leaving && !native ? ({ willChange: 'transform' } as object) : null),
         transform: [
           { translateX: x },
           { translateY: y },

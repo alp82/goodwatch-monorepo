@@ -26,11 +26,22 @@ export interface Layout {
   z: (n: number) => number;
 }
 
+/** The last few layouts: the same window size gives the same object (and the same `z`), so memoized parts stay put. */
+const layouts = new Map<string, Layout>();
 /**
  * The one layout every screen shares (YepWatch UX journey, direction D): `k = clamp(width / 1300, 1, 1.45)`,
  * container `min(width - 64, 1100 * k)`, phones use the full width with 16 px gutters.
  */
 export function layoutFor(width: number, height: number): Layout {
+  const key = `${width}x${height}`;
+  const known = layouts.get(key);
+  if (known) return known;
+  const layout = computeLayout(width, height);
+  if (layouts.size >= 8) layouts.delete(layouts.keys().next().value as string);
+  layouts.set(key, layout);
+  return layout;
+}
+function computeLayout(width: number, height: number): Layout {
   const phone = width < PHONE_MAX;
   const k = phone ? 1 : Math.max(1, Math.min(1.45, width / 1300));
   const gutter = phone ? 16 : 32;
