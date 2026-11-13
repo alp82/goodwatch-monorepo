@@ -75,6 +75,8 @@ export function Entrance({ invite, open: request, from }: {
   const [nickname, setNickname] = useState('');
   const [code, setCode] = useState(invite ?? '');
   const [busy, setBusy] = useState(false);
+  /** The name the running join was sent with: its form keeps it while the device's rooms are read anew. */
+  const [sentName, setSentName] = useState<string | null>(null);
   // The running admission. A slow or restarting server: it keeps sending the same saved request by itself
   // (join-room.ts). Offline: it goes again once the browser is back online. Both only while this page is in
   // front: leaving the screen or closing its panel stops them (nothing navigates afterwards; the saved
@@ -239,6 +241,7 @@ export function Entrance({ invite, open: request, from }: {
           retryAt: 0,
         };
       }
+      setSentName(saved.request.nickname || null);
       // A slow or restarting server answers busy or not at all for a while: the same saved request goes again
       // by itself (same command id and secret, so it is always the same seat) until it is answered.
       roomId = await joinUntilAnswered(saved, { intent, signal, onTrouble: setTroubleSince, onSaved: setAdmission });
@@ -382,7 +385,7 @@ export function Entrance({ invite, open: request, from }: {
   // second press lands on Join again, not on whatever the locked form would put there.
   if (shown === 'join') return (
     <JoinScreen invite={Boolean(invite)} head={invite && preview !== null ? <InviteHead preview={preview} /> : null} checking={checkingInvite}
-      nickname={admission ? admission.request.nickname || null : known} nameLocked={Boolean(admission?.request.nickname) && !joining} member={account.member} lapsed={account.lapsed} me={me}
+      nickname={admission ? admission.request.nickname || null : joinLanding && sentName ? sentName : known} nameLocked={Boolean(admission?.request.nickname) && !joining} member={account.member} lapsed={account.lapsed} me={me}
       initialCode={admission?.code || code} action={actionLabel('Join', 'Retry joining')} busy={locked} error={shownError || account.error}
       back={closePanel} editName={openProfile}
       /* Back on this invitation (or the code you typed) as yourself, ready to join. */
