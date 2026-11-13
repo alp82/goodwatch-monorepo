@@ -140,10 +140,10 @@ test("one union resolution spans 200-title batches, with shared numeric alias an
 		"Missing",
 	)
 	assert.deepEqual(index.titles[0].tropes, index.titles[200].tropes)
-	assert.deepEqual(
-		index.references[index.tropes.indexOf(url("Canonical"))].sort(),
-		[url("Old"), url("Other")].sort(),
-	)
+	assert.deepEqual(index.references[index.tropes.indexOf(url("Canonical"))], [
+		url("Old"),
+		url("Other"),
+	])
 })
 
 test("the identity pass yields to the event loop between title slices", async () => {
@@ -162,14 +162,12 @@ test("the identity pass yields to the event loop between title slices", async ()
 				popularity: 1,
 				tropes: ["A"],
 			})) as unknown as T[]
-		return params
-			.slice(1)
-			.map((id) => ({
-				media_tmdb_id: id,
-				name: "A",
-				url: url("A"),
-				length: 10,
-			})) as unknown as T[]
+		return params.slice(1).map((id) => ({
+			media_tmdb_id: id,
+			name: "A",
+			url: url("A"),
+			length: 10,
+		})) as unknown as T[]
 	}
 	// Reads above settle on microtasks only, so an immediate can run during the build only where it yields.
 	let turns = 0

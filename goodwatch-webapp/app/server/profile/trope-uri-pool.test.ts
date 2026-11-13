@@ -218,6 +218,7 @@ test("the memoized target answers exactly as tropeTarget, including repeated, un
 		["Unknown", main("Unknown")],
 		["Thing", "https://tvtropes.org/pmwiki/pmwiki.php/UsefulNotes/Thing"],
 		["Work", "https://tvtropes.org/pmwiki/pmwiki.php/Film/Work"],
+		["Other work label", "https://tvtropes.org/pmwiki/pmwiki.php/Film/Work"],
 		[
 			"Doubled",
 			"https://tvtropes.orghttps://tvtropes.org/pmwiki/pmwiki.php/Main/Old",
