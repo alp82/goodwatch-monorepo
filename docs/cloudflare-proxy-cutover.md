@@ -15,28 +15,29 @@ pgnode01 is a separate change. See [stage 6](#stage-6-later-yepwatchcom).
 
 ## Status
 
-Updated November 13, 2026, about 14:05 UTC. Owner decisions: agents do every part of the cut-over outside Coolify
+Updated November 13, 2026, about 16:00 UTC. Owner decisions: agents do every part of the cut-over outside Coolify
 (Q56); AI training crawlers are blocked, AI search and user-triggered fetchers are allowed (Q57). The owner sets
 `goodwatch.app` and `www.goodwatch.app` to proxied, later. Both are still DNS-only.
 
 | Step | State |
 | --- | --- |
-| 0.1 webapp with `edge-client-address.server.ts` | done: both instances run 6fcec94a3 |
-| 0.2 key in the webapp's Coolify environment | **open (owner)**: both instances still log `EDGE_ORIGIN_KEYS has no key` |
+| 0.1 webapp with `edge-client-address.server.ts` | done: both instances run 691d21e1 (includes 6fcec94a3) |
+| 0.2 key in the webapp's Coolify environment | done: `EDGE_ORIGIN_KEYS` is set in both instances (checked by name only) |
 | 0.2 key in the search roles' `.env` on vector1 | done (one shared `.env`, backed up first) |
 | 0.2b search roles redeployed | done: both roles on 6fcec94a3, no `has no key` line, `/mcp` answers 401 with the expected `WWW-Authenticate` |
-| 0.3, 0.4 trusted-header names, Traefik `forwardedHeaders` | **open (owner)** |
-| 0.5 baseline | open (agent, before the flip) |
+| 0.3 trusted-header names | done, checked inside every container by name and header name only: `SEARCH_TRUSTED_IP_HEADER` and `AUTH_TRUSTED_IP_HEADER` name `X-Real-Ip` on both instances and both search roles; `PERSON_TRUSTED_IP_HEADER` is unset (falls back to the search header); `EDGE_CLIENT_ADDRESS` is unset (rewriting on) |
+| 0.4 Traefik `forwardedHeaders` on abio | done: the running proxy (recreated 15:13 UTC from Coolify's saved configuration) has no `forwardedHeaders` or `proxyProtocol` argument on any entry point, no `--configfile`, and no environment besides `PATH`, so nothing else can set them. vector1 trusts only abio, as planned |
+| 0.5 baseline | done, see [Baseline before the flip](#baseline-before-the-flip) |
 | 1.1 SSL Full (strict) | done (was Full) |
 | 1.2 Minimum TLS 1.2 | done (was 1.0) |
 | 1.3 Always Use HTTPS | checked: off |
-| 1.4 origin key transform rule | **created disabled with a placeholder value. Owner: paste the key as the value, then enable** (agents can't pass the key to the zone without putting it in a logged call) |
+| 1.4 origin key transform rule | done: owner pasted the key and enabled it. `goodwatch_edge_client_address_total{outcome="cloudflare"}` counts static requests on abio, no `unkeyed` there |
 | 1.5 configuration rule | done |
 | 1.6 cache bypass rule, Browser Cache TTL | done (TTL was 4 hours, now respect existing headers) |
 | 1.7 fake search engines rule | done, plan expression unchanged |
 | 1.8 rate limiting rule | deferred, as planned |
 | 1.9 AI crawlers | done, see below |
-| 2 access log header | **open (owner)** |
+| 2 access log header | optional, owner decides: nothing automated needs it (see [Stage 2](#stage-2-access-log-keeps-the-visitors-address-owner-coolify-ui-proxy-restart)) |
 | IP Access Rule from 2014 | left alone: user scope allow (whitelist) for one address, no notes. Owner: confirm or remove |
 
 `static.goodwatch.app` answered 200 for a cached file, a cache-busted file (origin fetch) and `robots.txt` after every
@@ -67,13 +68,115 @@ Browser Cache TTL back to 14400, Training back to `disabled`, Bot Preference Syn
 
 Before the flip, the owner still needs to:
 
-1. Add `EDGE_ORIGIN_KEYS` to the webapp application in Coolify and redeploy. The startup logs must stop saying
-   `EDGE_ORIGIN_KEYS has no key`.
-2. Paste the same key into the disabled transform rule "goodwatch origin key" (**Rules > Transform Rules > Modify
-   Request Header**) and enable it. Then `goodwatch_edge_client_address_total{outcome="cloudflare"}` rises on the
-   instances from static requests, and `unkeyed` stops rising.
-3. Steps 0.3 and 0.4 (header names, no `forwardedHeaders` on abio), and stage 2 (or accept the gap in the access log).
-4. Decide on the 2014 IP allow rule.
+1. Decide on stage 2 (one extra access log line, then a proxy restart) or accept that abio's access log shows
+   Cloudflare addresses after the flip. It's not required: nothing automated reads visitor addresses from that log
+   in a way the flip breaks silently (see stage 2).
+2. Decide on the 2014 IP allow rule (IP Access Rules, under **Security > WAF > Tools** in the zone). Not a flip
+   blocker.
+3. Pick a quiet hour and flip (stage 3).
+
+Done since the last update: the key is in the webapp's environment and in the enabled transform rule, and
+steps 0.3, 0.4 and 0.5 are checked by an agent.
+
+## Baseline before the flip
+
+Recorded November 13, 2026, 15:10 to 15:50 UTC, by an agent, with apex and www DNS-only. Compare the stage 4 numbers
+with these, at a similar time of day. Raw scrapes stay outside the repository.
+
+**Caveats.** abio's proxy was recreated at 15:13:29 UTC, so its Docker log only goes back to then. The webapp was
+deployed twice during the window (691d21e1 at about 15:05, 5fb928ad at about 15:30), so counters restarted and the
+first minutes after each start run warm. The longer view comes from vector1's proxy, which sees only the half of the
+traffic abio balances to it. Grafana Cloud keeps the webapp metrics series for a longer comparison.
+
+Request volume and status mix:
+
+| Source | Window | Requests | Rate | Status mix |
+| --- | --- | --- | --- | --- |
+| abio proxy, all `goodwatch.app` | 15:13 to 15:45 (32 min) | 121,914 | 64/s; per minute median 3,640, p95 5,749, max 6,300 | 2xx 51.3%, 3xx 13.2% (308 13.1%), 4xx 32.3% (403 24.6%, 429 7.2%), 5xx 3.1% (all 503, no 502), status 0 (client gone) 0.1% |
+| vector1 proxy, its half | 24 h to 15:15 | 3,079,186 | 36/s; per minute median 1,743, p95 5,102, max 15,735 | 2xx 51.6%, 3xx 11.6%, 4xx 36.2% (403 23.8%, 429 11.4%), 5xx 0.65% (503 19,671, 502 253) |
+| webapp metrics, abio instance | 7.4 min, 15:13 to 15:20 | 15,150 | 34/s | 2xx 50.4%, 3xx 13.7%, 4xx 30.7%, 5xx 5.2% |
+| webapp metrics, vector1 instance | same | 15,199 | 34/s | 2xx 54.6%, 3xx 12.8%, 4xx 30.9%, 5xx 1.7% |
+
+Shedding: every 5xx in the webapp metrics was a shed busy page (`goodwatch_overload_shed_total` rose by 790 on abio
+and 262 on vector1 in the 7.4 minutes, equal to the 5xx counts). Over 60% of app requests are `/person/:personKey`;
+person policy in the same window: about 8,900 allowed, 3,900 normalized (3xx), 2,500 limited (4xx) across both
+instances. The app's 4xx come almost entirely from person pages and `/sign-up` and `/sign-in`.
+
+Latency, apex requests in abio's proxy log (total time, ms):
+
+| | p50 | p90 | p99 |
+| --- | --- | --- | --- |
+| all statuses (32 min) | 58 | 532 | 1,244 |
+| 2xx only | 286 | 655 | 1,401 |
+| 503 | 6 | 262 | 1,239 |
+| vector1, all statuses (24 h) | 95 | 731 | 3,883 |
+
+Webapp histogram, time to headers for HTML GETs: p50 at most 0.1 s on both instances, p90 at most 1 s (abio) and
+0.5 s (vector1), p99 at most 2 s and 1 s.
+
+TTFB, 5 samples each, median of `time_starttransfer` (both vantage points are in Germany; no second region was
+available to the agent):
+
+| URL | desktop (residential) | hq (datacenter, near abio) |
+| --- | --- | --- |
+| `/` | 0.18 s | 0.05 s |
+| `/movie/603-the-matrix` | 0.20 s | 0.04 s |
+| `/sitemaps/sitemap.xml` (`/sitemap.xml` 301s there) | 0.09 s | 0.05 s |
+
+3 of 15 desktop samples took 1 to 2 s to connect (a TCP retry), already before Cloudflare.
+
+Crawler share by User-Agent (Cloudflare's own bot analytics will be more exact after the flip):
+
+| Class | abio, 32 min | vector1, 24 h |
+| --- | --- | --- |
+| browser-like (includes the distributed crawler) | 88.9% | 81.6% |
+| other bots and scripts (`bot`, `curl`, `python` and similar) | 7.4% | 10.7% |
+| AI training crawlers (blocked at the edge after the flip) | 2.7% | 3.4% (104,248) |
+| AI search and user fetchers (stay allowed) | 0.1% | 3.5% (108,654) |
+| SEO tools | 0.7% | 0.5% |
+| other search engines | 0.3% | 0.2% |
+| Googlebot, Bingbot by User-Agent | under 0.01% | 33 and 6 requests |
+
+Distinct connecting addresses: 79,277 in abio's 32 minutes.
+
+Googlebot crawl (abio candidate collector and the verified export):
+
+| Day (UTC) | Nov 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| verified (Google IP and UA) | 4 | 5 | 24 | 61 | 18 | 10 | 13 | 89 | 33 |
+| Googlebot UA, unverified | 91 | 36 | 191 | 73 | 90 | 15 | 13 | 96 | 34 |
+
+Verified statuses are almost all 200, a few 404 and 301, one 503 and one 410 on Nov 11. After the flip the verified
+count drops to zero by design (see stage 2); use Search Console crawl stats instead.
+
+Search Console:
+
+- Sitemaps: index `/sitemaps/sitemap.xml` (last read Oct 30) with `sitemap_new` (300 URLs, read Nov 7),
+  `sitemap_people` (30, Nov 11), `sitemap_movie_detail_0` (700), `sitemap_show_detail_0` (300),
+  `sitemap_categories` (87), `sitemap_static` (11), all read Oct 18 or later, 0 warnings, 0 errors.
+- URL inspection: `/` indexed (last crawl Nov 11 19:35 UTC, mobile, fetch successful); `/discover` crawled, not
+  indexed (Oct 11); `/movie/603-the-matrix`, `/show/1396-breaking-bad`, `/person/287-brad-pitt` unknown to Google.
+- Search performance: only `/` gets impressions, 1,492 impressions and 93 clicks Oct 14 to Nov 12; about 100
+  impressions and 5 to 13 clicks a day in the last week.
+- Crawl stats and host status are UI only: owner, open **Settings > Crawl stats** before the flip and note total
+  requests, average response time and host status for comparison.
+
+Behavior checks:
+
+| Check | Baseline |
+| --- | --- |
+| Search limit | 11 POSTs to `/api/combined-search` within a few seconds (site `Origin`, empty `q`, so no search runs): ten 400, then 429. One POST from hq at the same time: 400 |
+| `/mcp` initialize without token | 401, `www-authenticate: Bearer error="invalid_token", error_description="Missing Authorization header", scope="mcp:read mcp:write", resource_metadata="https://goodwatch.app/.well-known/oauth-protected-resource/mcp"`, body 76 bytes, `cache-control: private, no-store, no-transform` |
+| `/.well-known/oauth-protected-resource` and `/mcp` suffix | 200 JSON, 339 bytes, SHA-256 starts `7f88d0ccea058869` |
+| `/.well-known/oauth-authorization-server/api/auth`, `/.well-known/openid-configuration/api/auth` | 200 JSON, 2,301 bytes, both `196cc77bdd26b0b6` (without the suffix: 404) |
+| `robots.txt` | 200, 198 bytes, `65d73a969077a6c2` |
+| `https://www.goodwatch.app/movie/603-the-matrix` | 308 to the apex |
+| `http://goodwatch.app/` | 308 to HTTPS |
+| `http://goodwatch.app/.well-known/acme-challenge/test` | 404, no redirect |
+| `https://goodwatch.app/` | 200, `cache-control: private, max-age=0` |
+| `/og/movie/603-the-matrix.png` | 200 `image/jpeg`, `cache-control: public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400` |
+| `goodwatch_edge_client_address_total` | instances: `direct` most requests, `unknown` a few hundred (no connecting address), `cloudflare` 8 on abio (static), none on vector1. Search roles: `unknown` about 4,600 each (health checks), `direct` about 1,120, and one `unkeyed` on search-a: a Cloudflare address without the key reached the origin directly (WARP or another account's Worker). After the flip, a trickle of `unkeyed` like this is normal; a rise in step with traffic means a key mismatch |
+| `goodwatch_search_rate_limit_total` | `allowed` 485 and 482 on the two search roles over about 100 minutes, `limited` 1 |
 
 ## Rules for this rollout
 
@@ -301,6 +404,23 @@ crawl stats and Cloudflare's verified-bot analytics for Googlebot volume meanwhi
 
 Undo: remove the line, Restart Proxy.
 
+**Optional (checked November 13, 2026).** After the flip, `ClientHost` in abio's log is a Cloudflare edge address for
+every apex and www request, with or without this stage. What reads abio's access log:
+
+- `goodwatch-googlebot.service` (candidate collector) keeps recording Googlebot user agents; it doesn't use the
+  address.
+- `goodwatch-googlebot-export` verifies only a `ClientHost` inside Google's crawler ranges. Cloudflare-peer records
+  fail that check and are counted as `excluded_unverified_candidates`, so the verified CSV goes quiet instead of
+  claiming wrong visits. That's safe; it means about 10 to 90 verified Googlebot requests a day stop appearing. The
+  stage 2 line doesn't bring them back, since a logged `Cf-Connecting-Ip` isn't proof (see above). Updating the
+  export to label these records "unverifiable" and say why in its package text is a non-blocking follow-up.
+- `goodwatch-search-ingress.service` (search acceptance) counts routers, methods and statuses, not addresses.
+- fail2ban on abio runs only the `sshd` jail; Grafana Alloy ships metrics, not logs. Neither reads the proxy log.
+- Traefik's own limits on abio (in-flight per host, crawler rate per User-Agent) don't use addresses.
+
+So stage 2 only keeps visitor addresses available for manual crawler analysis. The app's limits never depended on
+the log; they get the visitor's address from the key check.
+
 ### Stage 3: Flip (owner, Cloudflare dashboard)
 
 **The flip can happen when all of these hold:**
@@ -324,8 +444,8 @@ Within 15 minutes:
 | Check | Command or action | Expected |
 | --- | --- | --- |
 | Edge in front | `curl -sI https://goodwatch.app/` | `server: cloudflare`, `cf-ray`, `cf-cache-status: DYNAMIC`, `cache-control: private, max-age=0` unchanged |
-| www redirect | `curl -sI https://www.goodwatch.app/movie/603-the-matrix` | one 301 to `https://goodwatch.app/movie/603-the-matrix` |
-| HTTP | `curl -sI http://goodwatch.app/` | 301 to HTTPS (from Traefik) |
+| www redirect | `curl -sI https://www.goodwatch.app/movie/603-the-matrix` | one 308 to `https://goodwatch.app/movie/603-the-matrix` (308 in the baseline) |
+| HTTP | `curl -sI http://goodwatch.app/` | 308 to HTTPS (from Traefik, as in the baseline) |
 | ACME path reaches port 80 | `curl -sI http://goodwatch.app/.well-known/acme-challenge/test` | 404 from the origin, not a redirect |
 | Members | owner signs in, opens My shows and settings | works; responses `private, no-store`; `cf-cache-status: DYNAMIC` or `BYPASS` |
 | Google sign-in | owner signs in with Google | callback completes |
@@ -333,7 +453,7 @@ Within 15 minutes:
 | MCP | an `initialize` POST to `/mcp` without a token, and one MCP client connected end to end (sign-in, a read tool, a write tool) | same status, `WWW-Authenticate` and body as the stage 0.5 baseline; the client works |
 | OAuth discovery | the `/.well-known/oauth-protected-resource`, `oauth-authorization-server` and `openid-configuration` URLs recorded in the baseline | 200 JSON, byte-identical to the baseline |
 | Streaming | `curl -sN -o /dev/null -w '%{time_starttransfer} %{time_total}\n'` on a movie page, and a Discover search from the browser | first byte well before the end; search results stream in |
-| OG images | `curl -sI https://goodwatch.app/og/movie/603-the-matrix.png` (any known card path) | 200 `image/png`, origin `cache-control` unchanged, `cf-cache-status: DYNAMIC` |
+| OG images | `curl -sI https://goodwatch.app/og/movie/603-the-matrix.png` (any known card path) | 200, same `content-type` as the baseline (`image/jpeg` for this path), origin `cache-control` unchanged, `cf-cache-status: DYNAMIC` |
 | Sitemap, robots | `curl -sI https://goodwatch.app/sitemap.xml`; `curl -s https://goodwatch.app/robots.txt` | 200 XML; robots identical to the baseline (no Cloudflare additions) |
 | Restoration, positive evidence | scrape `goodwatch_edge_client_address_total` on every webapp instance and both search roles (metrics port on the private network) | `outcome="cloudflare"` rises on each of them with traffic; `unkeyed` and `invalid` stay near zero. `unkeyed` rising means the key in Coolify and in the transform rule differ: roll back to DNS-only, then fix |
 | Visitor address, behavior | from machine A, run 11 searches in 30 s; at the same time from machine B (other address) run one | A gets 429, B doesn't. This alone doesn't prove restoration (A and B can use different edges); it complements the metric |
