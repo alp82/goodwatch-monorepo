@@ -23,7 +23,7 @@ import { join } from "node:path"
 import { onShutdown } from "./lifecycle.server.ts"
 
 export const TICK_MS = 50
-const WINDOW_MS = 30_000
+const WINDOW_MS = 15_000
 const SAMPLING_US = 4_000
 export const SLOW_MS = 200
 const MAX_STALL_LINES = 8
@@ -377,6 +377,8 @@ export function startStallProfiler(): void {
 	let lastSummary = Date.now()
 	// The longest hand-over of a window with its analysis, on the main thread: the profiler's own cost.
 	let rotateMaxMs = 0
+	// Of that, the longest wait for the window's samples from the inspector.
+	let handOverMaxMs = 0
 
 	const summarize = () => {
 		console.info(
@@ -390,6 +392,7 @@ export function startStallProfiler(): void {
 				busySelf: top(busyTally.self),
 				busyInclusive: top(busyTally.inclusive),
 				rotateMaxMs: Math.round(rotateMaxMs),
+				handOverMaxMs: Math.round(handOverMaxMs),
 			})}`,
 		)
 	}
@@ -404,7 +407,9 @@ export function startStallProfiler(): void {
 	}
 	const handOver = (last: boolean) => {
 		finished = undefined
+		const ending = performance.now()
 		console.profileEnd(windowName())
+		handOverMaxMs = Math.max(handOverMaxMs, performance.now() - ending)
 		const profile = finished as CpuProfile | undefined
 		finished = undefined
 		window++

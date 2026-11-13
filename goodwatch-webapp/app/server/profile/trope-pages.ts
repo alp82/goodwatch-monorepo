@@ -1,3 +1,4 @@
+import { mapInSlices } from "../time-slice.ts"
 import {
 	type DescriptionReadOptions,
 	type TropeDescriptions,
@@ -89,7 +90,9 @@ async function batched<T extends {}>(
 /** Background pool construction reads identities/titles only, never every article description. */
 export function createTropeReferenceReader(read: CatalogRead) {
 	return async (input: string[]): Promise<TropePageReferences> => {
-		const urls = [...new Set(input.flatMap((url) => tropePageUrl(url) ?? []))]
+		// In slices: the candidate index asks for tens of thousands of URLs, and each one is parsed (see time-slice.ts).
+		const parsed = await mapInSlices(input, tropePageUrl)
+		const urls = [...new Set(parsed.flatMap((url) => url ?? []))]
 		const allowed = new Set(urls)
 		const references = await batched<{
 			reference_url: string

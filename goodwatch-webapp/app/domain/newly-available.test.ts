@@ -9,6 +9,7 @@ import "../server/title-filter/test-alias.ts"
 const {
 	baseService,
 	firstSeenOf,
+	firstSeenSteps,
 	landingOn,
 	titlesThatCanLand,
 	newlyAvailableOf,
@@ -79,6 +80,30 @@ test("the index keeps the time a service first carried a title, only for what ap
 			[MAX, { at: day(5), learnedAt: day(5), previousServices: [] }],
 		],
 	)
+})
+
+test("the stepped first-seen times are the ones of firstSeenOf, with a pause every 256 rows or titles", () => {
+	const services = [NETFLIX, MAX, PRIME, APPLE]
+	const rows = Array.from(
+		{ length: 1_000 },
+		(_, i) =>
+			[
+				i % 2 ? heat : dune,
+				services[i % services.length],
+				day((i % 40) - 10),
+				i % 3 ? null : day((i % 40) - 5),
+				day(i % 40),
+			] as const,
+	)
+	const steps = firstSeenSteps(rows as never, LAUNCH)
+	let pauses = 0
+	let step = steps.next()
+	while (!step.done) {
+		pauses++
+		step = steps.next()
+	}
+	assert.deepEqual(step.value, firstSeenOf(rows as never, LAUNCH))
+	assert.equal(pauses, 3)
 })
 
 test("a service's earliest row counts, across its duplicate ids and its kinds of offer", () => {

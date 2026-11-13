@@ -61,7 +61,7 @@ test("trope names prefer verified headings, then exact slug folds and closest na
 		[gun, 17870],
 		[ending, 11949],
 	])
-	const entries = tropeEntries(catalog, counts, new Map())
+	const entries = await tropeEntries(catalog, counts, new Map())
 	assert.equal(entries[0].item.label, "Chekhov’s Gun")
 	assert.equal(entries[0].item.sub, "A setup pays off. · 17,870 titles")
 	assert.equal(entries[1].item.label, "Bittersweet Endings")
@@ -76,11 +76,11 @@ test("trope names prefer verified headings, then exact slug folds and closest na
 	)
 	assert.equal(matchGroup("tropes", "Tropes", entries, "miller"), undefined)
 	assert.deepEqual(
-		tropeEntries([...catalog].reverse(), counts, new Map()),
+		await tropeEntries([...catalog].reverse(), counts, new Map()),
 		[...entries].reverse(),
 	)
 
-	const verified = tropeEntries(
+	const verified = await tropeEntries(
 		catalog,
 		counts,
 		new Map([[gun, "The Loaded Gun"]]),
@@ -91,6 +91,24 @@ test("trope names prefer verified headings, then exact slug folds and closest na
 		matchGroup("tropes", "Tropes", verified, "chekhov").items[0].label,
 		"The Loaded Gun",
 	)
+})
+
+test("a large trope catalog lets other work run while its entries are built", async () => {
+	const { tropeEntries } = await fixture("command-palette/tropes.server.ts", {
+		"text-rules.server": fold,
+	})
+	const catalog = Array.from({ length: 60_000 }, (_, i) => [
+		`Trope Number ${i}`,
+		`https://tvtropes.org/pmwiki/pmwiki.php/Main/TropeNumber${i}`,
+		"A description that is long enough to be cut into an excerpt for the palette.",
+	])
+	const counts = new Map(catalog.map(([, url]) => [url as string, 3]))
+	let turns = 0
+	const timer = setInterval(() => turns++, 1)
+	const entries = await tropeEntries(catalog, counts, new Map())
+	clearInterval(timer)
+	assert.equal(entries.length, 60_000)
+	assert.ok(turns > 0, "the event loop never ran during the build")
 })
 
 test("trope URLs with only markers, fragments, sentences or oversized names are dropped", async () => {
@@ -112,18 +130,20 @@ test("trope URLs with only markers, fragments, sentences or oversized names are 
 		null,
 	])
 	const counts = new Map(catalog.map(([, url]) => [url, 100]))
-	assert.deepEqual(tropeEntries(catalog, counts, new Map()), [])
+	assert.deepEqual(await tropeEntries(catalog, counts, new Map()), [])
 	const url = "https://tvtropes.org/pmwiki/pmwiki.php/Main/LoveIsADrug"
 	assert.equal(
-		tropeEntries(
-			[["Love Is a Drug", url, null]],
-			new Map([[url, 1]]),
-			new Map(),
+		(
+			await tropeEntries(
+				[["Love Is a Drug", url, null]],
+				new Map([[url, 1]]),
+				new Map(),
+			)
 		)[0].item.label,
 		"Love Is a Drug",
 	)
 	assert.deepEqual(
-		tropeEntries([["Love Is a Drug", url, null]], new Map(), new Map()),
+		await tropeEntries([["Love Is a Drug", url, null]], new Map(), new Map()),
 		[],
 	)
 })

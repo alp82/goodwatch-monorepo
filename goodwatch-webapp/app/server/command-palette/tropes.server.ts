@@ -1,4 +1,5 @@
 import { tropeDiscoverPath } from "~/domain/trope-filter"
+import { mapInSlices, timeSlice } from "../time-slice"
 import { type Entry, excerpt } from "./matching.server"
 
 type CatalogRow = [name: string, url: string, description: string | null]
@@ -48,47 +49,56 @@ function distance(name: string, slug: string): number {
 	return previous[slug.length] / Math.max(folded.length, slug.length, 1)
 }
 
-export function tropeEntries(
+/** The palette's trope entries, built in slices: the catalog has about 100,000 names (see time-slice.ts). */
+export async function tropeEntries(
 	catalog: CatalogRow[],
 	counts: ReadonlyMap<string, number>,
 	pages: ReadonlyMap<string, string | null>,
-): Entry[] {
+): Promise<Entry[]> {
+	const slice = timeSlice()
 	const byUrl = new Map<string, CatalogRow[]>()
 	for (const [raw, url, description] of catalog) {
+		if (slice.due()) await slice.pause()
 		const name = raw.trim()
 		if (!url || !counts.get(url) || !properName(name)) continue
 		const candidates = byUrl.get(url) ?? []
 		candidates.push([name, url, description])
 		byUrl.set(url, candidates)
 	}
-	return [...byUrl].map(([url, candidates]) => {
-		const slug = fold(url.split(/[?#]/)[0].split("/").at(-1) ?? "")
-		const ranked = candidates.map((row) => ({
-			row,
-			distance: distance(row[0], slug),
-		}))
-		ranked.sort(
-			(a, b) =>
-				a.distance - b.distance ||
-				a.row[0].localeCompare(b.row[0]) ||
-				(a.row[2] ?? "").localeCompare(b.row[2] ?? ""),
-		)
-		const [fallback, , description] = ranked[0].row
-		// Same heading preference as profile/trope-uri-pool.ts and trope-recs/candidates.ts.
-		const heading = pages.get(url)?.trim()
-		const label = heading && properName(heading) ? heading : fallback
-		const count = counts.get(url) ?? 0
-		return {
-			names: [...new Set([label, ...candidates.map(([name]) => name)])].sort(),
-			popularity: count,
-			item: {
-				key: `trope-${url}`,
-				label,
-				sub: [excerpt(description), `${count.toLocaleString("en-US")} titles`]
-					.filter(Boolean)
-					.join(" · "),
-				href: tropeDiscoverPath(url),
-			},
-		}
-	})
+	return mapInSlices(
+		[...byUrl],
+		([url, candidates]): Entry => {
+			const slug = fold(url.split(/[?#]/)[0].split("/").at(-1) ?? "")
+			const ranked = candidates.map((row) => ({
+				row,
+				distance: distance(row[0], slug),
+			}))
+			ranked.sort(
+				(a, b) =>
+					a.distance - b.distance ||
+					a.row[0].localeCompare(b.row[0]) ||
+					(a.row[2] ?? "").localeCompare(b.row[2] ?? ""),
+			)
+			const [fallback, , description] = ranked[0].row
+			// Same heading preference as profile/trope-uri-pool.ts and trope-recs/candidates.ts.
+			const heading = pages.get(url)?.trim()
+			const label = heading && properName(heading) ? heading : fallback
+			const count = counts.get(url) ?? 0
+			return {
+				names: [
+					...new Set([label, ...candidates.map(([name]) => name)]),
+				].sort(),
+				popularity: count,
+				item: {
+					key: `trope-${url}`,
+					label,
+					sub: [excerpt(description), `${count.toLocaleString("en-US")} titles`]
+						.filter(Boolean)
+						.join(" · "),
+					href: tropeDiscoverPath(url),
+				},
+			}
+		},
+		slice,
+	)
 }

@@ -1,9 +1,9 @@
-import { setImmediate as yieldToLoop } from "node:timers/promises"
 import type { MediaKey } from "../../types/user-data.ts"
 import type { TropePageReferences } from "../profile/trope-pages.ts"
 import { memoizedTropeTarget, tropeTarget } from "../profile/trope-uri-pool.ts"
 import type { CatalogRead } from "../profile/tropes-data.ts"
 import { defining } from "../profile/tropes-model.ts"
+import { timeSlice } from "../time-slice.ts"
 import type { Candidate, CandidateIndex } from "./ranking.ts"
 
 interface TitleRow {
@@ -21,9 +21,6 @@ export interface Association {
 	url: string | null
 	length: number | null
 }
-
-/** Titles handled between yields: the index build runs in the request process and must not hold its event loop. */
-const TITLES_PER_SLICE = 100
 
 /**
  * URI aliases merge once per title, using the longest excerpt; never match identities by display name. Each identity
@@ -62,6 +59,7 @@ export async function buildCandidateIndex(
 	read: CatalogRead,
 	resolve: (urls: string[]) => Promise<TropePageReferences>,
 	titlePath: (kind: "movie" | "show", id: number, name: string) => string,
+	slice = timeSlice(),
 ): Promise<CandidateIndex> {
 	const raw: {
 		title: Omit<Candidate, "tropes">
@@ -69,6 +67,17 @@ export async function buildCandidateIndex(
 		rows: Association[]
 	}[] = []
 	const urls = new Set<string>()
+	// The build runs in the request process and must not hold its event loop: it lets requests run every few ms
+	// (see time-slice.ts). In slices of 100 titles, a slice took up to 80 ms in production.
+	// About 1.6 million association rows repeat a few tens of thousands of names and URLs; each page's rows come with
+	// their own copies of the strings, which stay in memory until the build ends. One copy of each is kept.
+	const strings = new Map<string, string>()
+	const intern = (text: string) => {
+		const known = strings.get(text)
+		if (known !== undefined) return known
+		strings.set(text, text)
+		return text
+	}
 	// Sequential batches bound query size and concurrency; only metadata is retained for union resolution.
 	for (const kind of ["movie", "show"] as const) {
 		const titles = await read<TitleRow>(
@@ -89,7 +98,12 @@ export async function buildCandidateIndex(
      ORDER BY media_tmdb_id, name, url, length LIMIT 10000 OFFSET ${offset}`,
 					[kind, ...batch.map((t) => t.tmdb_id)],
 				)
-				rows.push(...page)
+				for (const row of page) {
+					if (slice.due()) await slice.pause()
+					row.name = intern(row.name)
+					if (row.url) row.url = intern(row.url)
+					rows.push(row)
+				}
 				if (page.length < 10000) break
 			}
 			for (const row of rows) if (row.url) urls.add(row.url)
@@ -99,7 +113,8 @@ export async function buildCandidateIndex(
 				list.push(row)
 				byTitle.set(Number(row.media_tmdb_id), list)
 			}
-			for (const t of batch)
+			for (const t of batch) {
+				if (slice.due()) await slice.pause()
 				raw.push({
 					title: {
 						id: `${kind}-${t.tmdb_id}` as MediaKey,
@@ -111,11 +126,13 @@ export async function buildCandidateIndex(
 						popularity: Number(t.popularity) || 0,
 						href: titlePath(kind, Number(t.tmdb_id), t.title ?? ""),
 					},
-					names: t.tropes ?? [],
+					names: (t.tropes ?? []).map(intern),
 					rows: byTitle.get(Number(t.tmdb_id)) ?? [],
 				})
+			}
 		}
 	}
+	strings.clear()
 	// Resolve the union once, including negative lookups, across every title batch and both kinds.
 	const resolved = await resolve([...urls])
 	const displayNames = new Map(
@@ -128,35 +145,33 @@ export async function buildCandidateIndex(
 	const positions = new Map<string, number>()
 	const sources: Set<string>[] = []
 	const titles: Candidate[] = []
-	for (let start = 0; start < raw.length; start += TITLES_PER_SLICE) {
-		if (start > 0) await yieldToLoop()
-		for (const { title, names: labels, rows } of raw.slice(
-			start,
-			start + TITLES_PER_SLICE,
-		)) {
-			titles.push({
-				...title,
-				tropes: candidateTropes(labels, rows, resolved, target).map(
-					({ id, d, name }) => {
-						let i = positions.get(id)
-						if (i === undefined) {
-							i = tropes.length
-							positions.set(id, i)
-							tropes.push(id)
-							names.push(displayNames.get(id) ?? name)
-							references.push([])
-							sources.push(new Set())
-						}
-						return { i, d }
-					},
-				),
-			})
-			for (const row of rows) {
-				if (!row.url) continue
-				const i = positions.get(target(row.name, row.url))
-				if (i !== undefined) sources[i].add(row.url)
-			}
+	for (const entry of raw) {
+		if (slice.due()) await slice.pause()
+		const { title, names: labels, rows } = entry
+		titles.push({
+			...title,
+			tropes: candidateTropes(labels, rows, resolved, target).map(
+				({ id, d, name }) => {
+					let i = positions.get(id)
+					if (i === undefined) {
+						i = tropes.length
+						positions.set(id, i)
+						tropes.push(id)
+						names.push(displayNames.get(id) ?? name)
+						references.push([])
+						sources.push(new Set())
+					}
+					return { i, d }
+				},
+			),
+		})
+		for (const row of rows) {
+			if (!row.url) continue
+			const i = positions.get(target(row.name, row.url))
+			if (i !== undefined) sources[i].add(row.url)
 		}
+		// Done with the title's rows: the collector can take them while the build goes on.
+		entry.rows = []
 	}
 	for (let i = 0; i < sources.length; i++) references[i] = [...sources[i]]
 	// Only numeric associations and one identity table survive publication; raw/resolved are build-local.

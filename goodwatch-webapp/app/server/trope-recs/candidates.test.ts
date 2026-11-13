@@ -1,8 +1,9 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { candidateTropes, buildCandidateIndex } from "./candidates.ts"
-import { defining } from "../profile/tropes-model.ts"
 import type { CatalogRead } from "../profile/tropes-data.ts"
+import { defining } from "../profile/tropes-model.ts"
+import { timeSlice } from "../time-slice.ts"
+import { buildCandidateIndex, candidateTropes } from "./candidates.ts"
 const url = (s: string) => `https://tvtropes.org/pmwiki/pmwiki.php/Main/${s}`
 
 test("candidate identities use the profile resolver; aliases merge with max excerpt length and no frequency threshold", () => {
@@ -146,7 +147,7 @@ test("one union resolution spans 200-title batches, with shared numeric alias an
 	])
 })
 
-test("the identity pass yields to the event loop between title slices", async () => {
+test("the build yields to the event loop whenever its time slice is used up", async () => {
 	const read: CatalogRead = async <T extends {}>(
 		sql: string,
 		params: (string | number | Date)[],
@@ -170,6 +171,7 @@ test("the identity pass yields to the event loop between title slices", async ()
 		})) as unknown as T[]
 	}
 	// Reads above settle on microtasks only, so an immediate can run during the build only where it yields.
+	let clock = 0
 	let turns = 0
 	let counting = true
 	const count = () => {
@@ -183,8 +185,10 @@ test("the identity pass yields to the event loop between title slices", async ()
 			return {}
 		},
 		() => "/",
+		// A clock that has always used up its slice: the build yields at every check.
+		timeSlice(10, () => (clock += 10)),
 	)
 	counting = false
 	assert.equal(index.titles.length, 450)
-	assert.ok(turns >= 4, `expected a turn per 100-title slice, got ${turns}`)
+	assert.ok(turns >= 450, `expected a turn per title, got ${turns}`)
 })

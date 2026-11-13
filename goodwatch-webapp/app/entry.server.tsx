@@ -52,6 +52,7 @@ import { startHotOnSocialsWarmup } from "~/server/talked-about-now/startup.serve
 import { startTitleSnapshot } from "~/server/title-snapshot/index.server"
 import { startCrateDiagnostics } from "~/utils/crate-diagnostics"
 import {
+	preloadAuthRuntime,
 	registerAuthCluster,
 	registerLazyAuthResolver,
 } from "./server/auth/boot.server.ts"
@@ -77,6 +78,8 @@ startCrateDiagnostics()
 // reads them (see edge-client-address.server.ts).
 startEdgeClientAddress()
 startLifecycle()
+// After the lifecycle, whose readiness waits for it (see boot.server.ts).
+preloadAuthRuntime()
 startTmdbConnectionCleanup()
 startImportResolutionReconciler()
 startPlexConnectionCleanup()

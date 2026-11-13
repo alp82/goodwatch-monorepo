@@ -13,6 +13,7 @@ import {
 	startPeopleIndex,
 } from "~/server/search-people/people.server"
 import { parseMediaKey } from "~/types/user-data"
+import { jsonDigest, sortInSlices, timeSlice } from "../time-slice"
 import { backgroundStatement, scheduleCatalog } from "./background.server"
 import { type Entry, discover } from "./matching.server"
 import { tropeEntries } from "./tropes.server"
@@ -305,9 +306,15 @@ export function startPaletteCatalog() {
 					? 60 * 60_000
 					: 6 * 60 * 60_000
 		scheduleCatalog(key, interval, async () => {
-			const entries = await loaders[key]()
-			entries.sort((a, b) => a.item.key.localeCompare(b.item.key))
-			const content = digest(entries)
+			// In slices: the trope catalog has tens of thousands of entries, and its JSON is several MB (see
+			// time-slice.ts).
+			const slice = timeSlice()
+			const entries = await sortInSlices(
+				await loaders[key](),
+				(a, b) => a.item.key.localeCompare(b.item.key),
+				slice,
+			)
+			const content = await jsonDigest(entries, slice)
 			const old = state.get(key)
 			state.set(key, {
 				entries: old?.digest === content ? old.entries : entries,

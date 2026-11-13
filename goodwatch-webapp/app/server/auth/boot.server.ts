@@ -4,6 +4,7 @@
 // it and starts as fast as before.
 import type { Cluster } from "ioredis"
 import { registerBetterAuthResolver } from "../../utils/auth-session.ts"
+import { addReadinessCheck } from "../lifecycle.server.ts"
 import { authMaintenanceGuard } from "./cutover-notice.server.ts"
 
 let clusterProvider: () => Cluster | null = () => null
@@ -16,8 +17,36 @@ export function authCluster(): Cluster | null {
 	return clusterProvider()
 }
 
-export const betterAuthEnabled = () => process.env.BETTER_AUTH_ENABLED === "true"
+export const betterAuthEnabled = () =>
+	process.env.BETTER_AUTH_ENABLED === "true"
 export const loadAuthRuntime = () => import("./runtime.server.ts")
+
+/**
+ * With Better Auth on, the runtime starts loading now and readiness waits for it. Loaded on first use, it compiled
+ * its modules for 1.1 to 1.5 s in the middle of the first sign-in (measured with the stall profiler on November 13,
+ * 2026), and every other request waited; one such stall failed a YepWatch sign-in. A failed load leaves readiness to
+ * the other checks, and the first use tries again as before.
+ */
+export function preloadAuthRuntime({
+	enabled = betterAuthEnabled,
+	load = loadAuthRuntime as () => Promise<unknown>,
+	addCheck = addReadinessCheck,
+}: {
+	enabled?: () => boolean
+	load?: () => Promise<unknown>
+	addCheck?: (name: string, check: () => boolean) => void
+} = {}) {
+	if (!enabled()) return
+	let settled = false
+	addCheck("auth runtime", () => settled)
+	load()
+		.catch((error) =>
+			console.error("Auth runtime: loading at start failed", error),
+		)
+		.finally(() => {
+			settled = true
+		})
+}
 
 /** Signed-in requests with Better Auth on resolve their member through the runtime, loaded on the first one. */
 export function registerLazyAuthResolver() {

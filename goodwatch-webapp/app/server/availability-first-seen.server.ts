@@ -4,9 +4,10 @@ import {
 	BACKFILLED,
 	type FirstSeen,
 	type ServiceStay,
-	firstSeenOf,
+	firstSeenSteps,
 } from "~/domain/newly-available"
 import { type TitleKey, titleKey } from "~/utils/title-key"
+import { runInSlices } from "./time-slice"
 
 const DAY_MS = 86_400_000
 
@@ -93,5 +94,6 @@ export async function readFirstSeen(
 				])
 		}
 	}
-	return firstSeenOf(rows, since)
+	// In slices: a country's stays took up to 650 ms in one piece in production (see time-slice.ts).
+	return runInSlices(firstSeenSteps(rows, since))
 }

@@ -63,8 +63,28 @@ export function firstSeenOf(
 	rows: Iterable<ServiceStay>,
 	since: number,
 ): Map<TitleKey, Map<number, ServiceLanding>> {
+	const steps = firstSeenSteps(rows, since)
+	for (;;) {
+		const step = steps.next()
+		if (step.done) return step.value
+	}
+}
+
+/** How many rows or titles `firstSeenSteps` handles between two pauses. */
+const ITEMS_PER_STEP = 256
+
+/**
+ * `firstSeenOf` as steps: it pauses every ITEMS_PER_STEP rows or titles, so that a server can let other work run in
+ * between (a country has hundreds of thousands of stays). The result is the generator's return value.
+ */
+export function* firstSeenSteps(
+	rows: Iterable<ServiceStay>,
+	since: number,
+): Generator<void, Map<TitleKey, Map<number, ServiceLanding>>, void> {
+	let items = 0
 	const stays = new Map<TitleKey, Map<number, Stay[]>>()
 	for (const [key, serviceId, at, droppedOn, learnedAt, exact] of rows) {
+		if (++items % ITEMS_PER_STEP === 0) yield
 		const service = baseService(serviceId)
 		let services = stays.get(key)
 		if (!services) {
@@ -77,6 +97,7 @@ export function firstSeenOf(
 	}
 	const earliest = new Map<TitleKey, Map<number, ServiceLanding>>()
 	for (const [key, services] of stays) {
+		if (++items % ITEMS_PER_STEP === 0) yield
 		const times = new Map<number, ServiceLanding>()
 		for (const [service, history] of services) {
 			const open = history.filter((stay) => stay.droppedOn === null)
