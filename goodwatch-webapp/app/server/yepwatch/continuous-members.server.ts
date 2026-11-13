@@ -24,6 +24,17 @@ import type {
 const refused = (e: unknown) => e instanceof RoomError && ["unauthorized", "member_required"].includes(e.code)
 /** GoodWatch reads abort after 12 s (proposal-release-members.ts); an in-flight seen read is never shared longer. */
 const SEEN_TRANSPORT_TIMEOUT_MS = 12_000
+/**
+ * Stored seen copies (ContinuousMembers.seenStored): Start uses one up to SEEN_COPY_MAX_AGE_MS old, and a room change
+ * in setup reads again once the copy is SEEN_REFRESH_AFTER_MS old. At most SEEN_COPIES_MAX copies holding
+ * SEEN_COPY_KEYS_MAX title keys are kept (least recently stored out): a missing copy only costs Start the bounded
+ * read it made before copies existed.
+ */
+const SEEN_COPY_MAX_AGE_MS = 5 * 60_000
+const SEEN_REFRESH_AFTER_MS = 10_000
+const SEEN_COPIES_MAX = 2_000
+const SEEN_COPY_KEYS_MAX = 1_000_000
+const SEEN_REFUSALS_MAX = 50_000
 /** Throttled, down, unreachable, a garbled reply: the session is kept for a later try. */
 const unavailable = (e: unknown) =>
 	e instanceof RoomError && e.code === "busy" ? e : new RoomError("busy", "GoodWatch is temporarily unavailable; try again", 503, true)
@@ -63,6 +74,8 @@ export interface MemberFlowConfig {
 	sessionSecret?: string
 	/** How long a deck build or Start waits for one member's seen list before going on without it (default 300 ms). */
 	seenReadTimeoutMs?: number
+	/** The oldest stored seen copy Start uses instead of asking GoodWatch (default SEEN_COPY_MAX_AGE_MS). */
+	seenCopyMaxAgeMs?: number
 }
 /** One device's GoodWatch sign-in, sealed by the server: browsers keep it in an HttpOnly cookie, apps in secure storage. */
 export interface MemberSession {
@@ -365,6 +378,7 @@ export class ContinuousMembers {
 		})
 		const grant = await this.issuer.verify(tokens.accessToken)
 		const prefill = await this.reads.prefill(grant.userId, tokens.accessToken)
+		const seenStarted = this.seenStart()
 		const seen = await this.reads.seen?.(grant.userId, tokens.accessToken)
 		for (let attempt = 0; attempt < 6; attempt++) {
 			const old = await this.get(id)
@@ -398,11 +412,13 @@ export class ContinuousMembers {
             intent.status = "linked"
 			intent.verifier = null
 			room.revision++
-			if (await this.repo.compareAndSwap(old, room, true))
+			if (await this.repo.compareAndSwap(old, room, true)) {
+				if (seen) this.keepSeen(this.seenKey(id, p.id, grant.userId, tokens.accessToken), seenStarted, seen, p.memberGrant!.expiresAt)
 				return {
 					returnTo: intent.returnTo,
 					status: { state: "linked" as const, prefill },
 				}
+			}
 		}
 		throw new RoomError(
 			"outcome_unknown",
@@ -815,12 +831,17 @@ export class ContinuousMembers {
 				p.member.state === "linked" &&
 				p.memberGrant?.accessToken === session.accessToken &&
 				p.memberGrant.expiresAt > this.now()
-			)
+			) {
+				// Already linked with this grant (an app reopening the room, perhaps on a restarted server): a missing or
+				// ageing seen copy is read again in the background.
+				this.refreshSeen(room, p.id)
 				return { status: { state: "linked" as const, prefill: p.member.prefill }, session, renewed: fresh.renewed, contextVersion: room.contextVersion }
+			}
 		}
 		const grant = await this.issuer.verify(session.accessToken)
 		requireRoom(grant.userId === session.userId, "unauthorized", "GoodWatch account changed", 401)
 		const prefill = await this.reads.prefill(grant.userId, session.accessToken)
+		const seenStarted = this.seenStart()
 		const seen = await this.reads.seen?.(grant.userId, session.accessToken)
 		for (let attempt = 0; attempt < 6; attempt++) {
 			const old = await this.get(id)
@@ -841,8 +862,10 @@ export class ContinuousMembers {
 				expiresAt: Math.min(session.expiresAt, grant.expiresAt),
 			})
 			room.revision++
-			if (await this.repo.compareAndSwap(old, room, true))
+			if (await this.repo.compareAndSwap(old, room, true)) {
+				if (seen) this.keepSeen(this.seenKey(id, p.id, grant.userId, session.accessToken), seenStarted, seen, p.memberGrant!.expiresAt)
 				return { status: { state: "linked" as const, prefill }, session, renewed: fresh.renewed, contextVersion: room.contextVersion }
+			}
 		}
 		throw new RoomError("busy", "Room busy; try again", 503, true)
 	}
@@ -901,10 +924,28 @@ export class ContinuousMembers {
 	}
 	/**
 	 * Seen reads in flight per room seat, bound to the linked account and its grant: concurrent reads for the same
-	 * link share one GoodWatch request. Nothing is kept once it settles, so every later read asks GoodWatch again and
-	 * a revoked grant, a relinked seat or another account never gets a list read earlier.
+	 * link share one GoodWatch request. The entry goes once the read settles; what it read lives on as the link's copy.
 	 */
 	private seenReads = new Map<string, { fresh: boolean; read: Promise<string[]> }>()
+	/**
+	 * Stored seen copies: the newest successful GoodWatch read per room seat and link (account + grant), from sign-in
+	 * (a room link), a deck build or a refresh. Only Start reads them (seenStored), and only as exclusions. A link is
+	 * bound to its grant: a renewed grant, another account, a guest seat (Log out) or a seat that left has no copy.
+	 */
+	private seenCopies = new Map<string, { keys: string[]; started: { order: number; at: number }; expiresAt: number }>()
+	private seenCopyKeys = 0
+	/**
+	 * Links whose grant GoodWatch refused (revoked, or answering for another account), until the grant expires: their
+	 * copy is gone and no read, also one that started before the refusal and lands after it, stores one again.
+	 */
+	private seenRefused = new Map<string, number>()
+	private seenOrder = 0
+	private seenStart() {
+		return { order: ++this.seenOrder, at: this.now() }
+	}
+	private seenKey(roomId: string, participantId: string, userId: string, accessToken: string) {
+		return `${roomId}\0${participantId}\0${userId}\0${createHash("sha256").update(accessToken).digest("base64url")}`
+	}
 	/** The seat's current link; refuses a guest, an expired grant or an unlinked seat. */
 	private seenLink(room: ContinuousRoom, participantId: string) {
 		const p = actor(room, participantId)
@@ -917,19 +958,75 @@ export class ContinuousMembers {
 		return {
 			userId: p.memberUserId,
 			accessToken: p.memberGrant.accessToken,
-			account: `${p.memberUserId}\0${createHash("sha256").update(p.memberGrant.accessToken).digest("base64url")}`,
+			expiresAt: p.memberGrant.expiresAt,
+			key: this.seenKey(room.id, p.id, p.memberUserId, p.memberGrant.accessToken),
 		}
 	}
+	private refusedSeen(key: string) {
+		const until = this.seenRefused.get(key)
+		if (until === undefined) return false
+		if (until > this.now()) return true
+		this.seenRefused.delete(key)
+		return false
+	}
+	/** Stores a successful read as the link's copy, unless a newer read is stored or GoodWatch refused the link. */
+	private keepSeen(key: string, started: { order: number; at: number }, keys: string[], expiresAt: number) {
+		if (this.refusedSeen(key)) return
+		const old = this.seenCopies.get(key)
+		if (old && old.started.order > started.order) return
+		this.dropSeen(key)
+		this.seenCopies.set(key, { keys, started, expiresAt })
+		this.seenCopyKeys += keys.length
+		const now = this.now()
+		if (this.seenCopies.size > SEEN_COPIES_MAX || this.seenCopyKeys > SEEN_COPY_KEYS_MAX)
+			for (const [k, v] of this.seenCopies) if (v.expiresAt <= now || now - v.started.at > this.copyMaxAge()) this.dropSeen(k)
+		for (const [k] of this.seenCopies) {
+			if (this.seenCopies.size <= SEEN_COPIES_MAX && this.seenCopyKeys <= SEEN_COPY_KEYS_MAX) break
+			if (k !== key) this.dropSeen(k)
+		}
+	}
+	private dropSeen(key: string) {
+		const old = this.seenCopies.get(key)
+		if (!old) return
+		this.seenCopyKeys -= old.keys.length
+		this.seenCopies.delete(key)
+	}
+	private refuseSeen(key: string, until: number) {
+		this.dropSeen(key)
+		this.seenRefused.delete(key)
+		this.seenRefused.set(key, until)
+		if (this.seenRefused.size <= SEEN_REFUSALS_MAX) return
+		const now = this.now()
+		for (const [k, v] of this.seenRefused) if (v <= now) this.seenRefused.delete(k)
+		for (const [k] of this.seenRefused) {
+			if (this.seenRefused.size <= SEEN_REFUSALS_MAX) break
+			this.seenRefused.delete(k)
+		}
+	}
+	private copyMaxAge() {
+		return this.config.seenCopyMaxAgeMs ?? SEEN_COPY_MAX_AGE_MS
+	}
+	/** The link's copy while it is young enough for Start, else undefined. */
+	private seenCopy(key: string) {
+		if (this.refusedSeen(key)) return undefined
+		const copy = this.seenCopies.get(key)
+		if (!copy) return undefined
+		if (copy.expiresAt > this.now() && this.now() - copy.started.at <= this.copyMaxAge()) return copy
+		this.dropSeen(key)
+		return undefined
+	}
 	/**
-	 * A member's seen title keys, read from GoodWatch. `fresh` (Start) never joins a read that started earlier, so a
-	 * title marked Seen since then is in the list; other reads share any read in flight for the same link.
+	 * A member's seen title keys, read from GoodWatch; a successful read becomes the link's copy, a refusal ends it.
+	 * `fresh` never joins a read that started earlier, so a title marked Seen since then is in the list; other reads
+	 * share any read in flight for the same link.
 	 */
 	async seen(room: ContinuousRoom, participantId: string, options: { fresh?: boolean } = {}): Promise<string[]> {
 		if (!this.reads.seen) return []
 		const link = this.seenLink(room, participantId)
-		const key = `${room.id}\0${participantId}\0${link.account}`
+		const key = link.key
 		const pending = this.seenReads.get(key)
 		if (pending && (pending.fresh || !options.fresh)) return pending.read
+		const started = this.seenStart()
 		// No separate identity check first: the read proves the grant itself (MemberReads.seen), and a second
 		// round trip to GoodWatch sat on Start's path.
 		const read = this.reads.seen(link.userId, link.accessToken)
@@ -941,14 +1038,39 @@ export class ContinuousMembers {
 		}
 		const timer = setTimeout(forget, SEEN_TRANSPORT_TIMEOUT_MS)
 		timer.unref?.()
-		read.then(forget, forget)
+		read.then(
+			(keys) => {
+				forget()
+				this.keepSeen(key, started, keys, link.expiresAt)
+			},
+			(e) => {
+				forget()
+				if (refused(e)) this.refuseSeen(key, link.expiresAt)
+			},
+		)
 		this.seenReads.set(key, entry)
 		return read
 	}
 	/**
-	 * `seen` for building decks and Start: never fails the room. A refused grant, a GoodWatch outage or a read
-	 * slower than `seenReadTimeoutMs` leaves this member's seen titles out (logged); nothing is taken from an
-	 * earlier read or another link.
+	 * Reads the seat's seen list again in the background when its copy is missing or SEEN_REFRESH_AFTER_MS old (a
+	 * room change in setup, a room reopened): Start then finds a recent copy. Never throws.
+	 */
+	refreshSeen(room: ContinuousRoom, participantId: string) {
+		if (!this.reads.seen) return
+		try {
+			const { key } = this.seenLink(room, participantId)
+			if (this.refusedSeen(key) || this.seenReads.has(key)) return
+			const copy = this.seenCopies.get(key)
+			if (copy && this.now() - copy.started.at < SEEN_REFRESH_AFTER_MS) return
+			this.seen(room, participantId).catch(() => {})
+		} catch {
+			// Not linked (any more): nothing to refresh.
+		}
+	}
+	/**
+	 * `seen` for building decks: never fails the room. A refused grant, a GoodWatch outage or a read slower than
+	 * `seenReadTimeoutMs` leaves this member's seen titles out (logged); nothing is taken from an earlier read or
+	 * another link.
 	 */
 	async seenOrNone(room: ContinuousRoom, participantId: string, options: { fresh?: boolean } = {}): Promise<string[]> {
 		let timer: ReturnType<typeof setTimeout> | undefined
@@ -965,6 +1087,31 @@ export class ContinuousMembers {
 		} finally {
 			clearTimeout(timer)
 		}
+	}
+	/**
+	 * Start's seen titles for one seat, without calling GoodWatch in the common case: the link's stored copy (read at
+	 * sign-in and kept up by deck builds and room changes in setup) while it is at most `seenCopyMaxAgeMs` old. A title
+	 * marked Seen after that read can still appear. Only the seat's current link counts: a guest seat (Log out), an
+	 * expired or renewed grant, or a link GoodWatch refused has no copy, and a refused link is left out without
+	 * asking again. No copy (a restarted server, another instance, a sign-in read that failed): a fresh read, as
+	 * Start made before copies existed (seenOrNone: bounded, best effort).
+	 */
+	async seenStored(room: ContinuousRoom, participantId: string): Promise<string[]> {
+		if (!this.reads.seen) return []
+		let key: string
+		try {
+			key = this.seenLink(room, participantId).key
+		} catch (e) {
+			console.warn(JSON.stringify({ event: "yepwatch_member_seen_skipped", reason: refused(e) ? "refused" : "unavailable", stored: true }))
+			return []
+		}
+		if (this.refusedSeen(key)) {
+			console.warn(JSON.stringify({ event: "yepwatch_member_seen_skipped", reason: "refused", stored: true }))
+			return []
+		}
+		const copy = this.seenCopy(key)
+		console.info(JSON.stringify({ event: "yepwatch_member_seen_start", source: copy ? "copy" : "read", ...(copy ? { ageMs: this.now() - copy.started.at } : {}) }))
+		return copy ? copy.keys : this.seenOrNone(room, participantId, { fresh: true })
 	}
 	async ownProgress(id: string, participantId: string) {
 		return this.progress((await this.get(id)).room, participantId)

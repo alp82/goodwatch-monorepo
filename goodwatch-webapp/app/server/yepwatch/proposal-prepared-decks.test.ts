@@ -26,7 +26,7 @@ function fixture(options: { delayMs?: number | "default"; excluded?: string[]; f
 		},
 		...(options.excluded ? { excludedKeys: async (_room, read) => {
 			exclusionReads.push(read)
-			if (options.failFreshSeen && read?.fresh) throw new Error("GoodWatch is down")
+			if (options.failFreshSeen && read?.stored) throw new Error("GoodWatch is down")
 			return options.excluded!
 		} } : {}),
 	}
@@ -146,7 +146,7 @@ test("a member's seen titles are left out at Start, also from a deck prepared ea
 	const started = await r.start()
 	assert.equal(f.pages.length, 1)
 	assert.ok(!started.snapshot.shared.candidates.some((c) => c.id === seen.id))
-	assert.deepEqual(f.exclusionReads.at(-1), { fresh: true }, "Start reads seen lists fresh, never joining an earlier background read")
+	assert.deepEqual(f.exclusionReads.at(-1), { stored: true }, "Start leaves out the members' stored seen titles")
 })
 
 test("saved progress decks are never remembered: each page reads progress again", async () => {
@@ -547,10 +547,10 @@ test("Start reads the members' seen titles alongside the deck, not after it", as
 	for (let i = 0; i < 200 && !state.running; i++) await new Promise((resolve) => setTimeout(resolve, 5))
 	assert.equal(state.running, 1, "Start's deck build is running")
 	for (let i = 0; i < 20 && f.exclusionReads.length === reads; i++) await new Promise((resolve) => setTimeout(resolve, 5))
-	const freshWhileBuilding = f.exclusionReads.slice(reads).some((read) => read?.fresh)
+	const freshWhileBuilding = f.exclusionReads.slice(reads).some((read) => read?.stored)
 	release()
 	const started = await start
-	assert.ok(freshWhileBuilding, "the fresh seen read started while the deck was still building")
+	assert.ok(freshWhileBuilding, "Start's seen read started while the deck was still building")
 	assert.equal(started.snapshot.shared.phase, "choosing")
 	assert.ok(!started.snapshot.shared.candidates.some((c) => keyOf(c) === keys[0]), "the member's seen title is left out")
 	await f.service.decks.idle()
@@ -564,7 +564,7 @@ test("Start still starts when the members' seen read fails", async () => {
 	await r.send({ type: "set_services", serviceIds: [1] })
 	await f.service.decks.idle()
 	const started = await r.start()
-	assert.deepEqual(f.exclusionReads.at(-1), { fresh: true })
+	assert.deepEqual(f.exclusionReads.at(-1), { stored: true })
 	assert.equal(started.snapshot.shared.phase, "choosing")
 	assert.ok(started.snapshot.shared.candidates.length > 0)
 	f.service.decks.forget(r.id)

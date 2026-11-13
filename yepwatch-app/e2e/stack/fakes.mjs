@@ -24,7 +24,9 @@ let outage = false;
 const refusedPrompts = new Set();
 // Prompts the search role answers only after a delay (ms), as GoodWatch's two Jev calls take ~0.6-1.5 s. Per prompt.
 const slowPrompts = new Map();
-const counters = { authorize: 0, token: 0, refresh: 0, resource: 0, search: 0 };
+const counters = { authorize: 0, token: 0, refresh: 0, resource: 0, search: 0, seen: 0 };
+// How long the member resource takes to answer a seen read (ms): production's GoodWatch takes ~25-300 ms. Perf work only.
+let seenDelayMs = 0;
 function userOf(name) {
   if (!users.has(name)) users.set(name, { displayName: name.replace(/^member-/, '').replace(/-[0-9a-f]+$/, '') || name, lapsed: false, serviceIds: [8, 337], country: 'DE', accessTtlS: 3600 });
   return users.get(name);
@@ -61,6 +63,7 @@ const issuer = http.createServer(async (req, res) => {
     if (p === '/_e2e/user' && user) { Object.assign(userOf(user), JSON.parse((await readBody(req)) || '{}')); return json(res, 200, userOf(user)); }
     if (p === '/_e2e/search-budget') { const prompt = url.searchParams.get('prompt') ?? ''; if (url.searchParams.get('on') === '0') refusedPrompts.delete(prompt); else refusedPrompts.add(prompt); return json(res, 200, { refused: [...refusedPrompts] }); }
     if (p === '/_e2e/search-delay') { const prompt = url.searchParams.get('prompt') ?? ''; const ms = Number(url.searchParams.get('ms') ?? 0); if (ms > 0) slowPrompts.set(prompt, ms); else slowPrompts.delete(prompt); return json(res, 200, { slow: Object.fromEntries(slowPrompts) }); }
+    if (p === '/_e2e/seen-delay') { seenDelayMs = Math.max(0, Number(url.searchParams.get('ms') ?? 0)); return json(res, 200, { seenDelayMs }); }
     if (p === '/_e2e/outage') { outage = url.searchParams.get('on') === '1'; return json(res, 200, { outage }); }
     if (p === '/_e2e/state') return json(res, 200, { outage, counters, users: Object.fromEntries(users) });
     return json(res, 404, { error: 'unknown' });
@@ -110,7 +113,11 @@ const issuer = http.createServer(async (req, res) => {
     const view = url.searchParams.get('view');
     if (view === 'identity') return json(res, 200, base);
     if (view === 'prefill') return json(res, 200, { ...base, data: { country: u.country, serviceIds: u.serviceIds, savedProgressAvailable: false } });
-    if (view === 'seen') return json(res, 200, { ...base, data: [] });
+    if (view === 'seen') {
+      counters.seen++;
+      if (seenDelayMs) await new Promise((resolve) => setTimeout(resolve, seenDelayMs));
+      return json(res, 200, { ...base, data: u.seen ?? [] });
+    }
     if (view === 'progress') return json(res, 200, { ...base, data: { source: 'goodwatch', shows: [], limitReached: false } });
     return json(res, 400, { error: 'unknown view' });
   }

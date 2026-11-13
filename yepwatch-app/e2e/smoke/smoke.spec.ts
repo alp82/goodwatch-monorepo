@@ -194,6 +194,10 @@ async function journey(room: Room, people: [Person, 'leave' | 'archive'][]) {
   }
   const expected = member ? 3 : 2;
   await eventually(() => host.latest?.participants.length, (n) => n === expected, `host sees ${expected} people`, host);
+  // The host presses Start a beat after the last person is in the room, as people do (web journeys do the same):
+  // the member's room screen lasts exactly until the round arrives, and since Start stopped reading seen titles
+  // from GoodWatch (~250 ms faster), a Start right on the member's arrival showed it for less than a flash.
+  await host.page.waitForTimeout(300);
 
   // Start: first card for the host (gated) and on both other phones.
   await host.tap(host.button('Start'), {

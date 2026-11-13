@@ -17,7 +17,7 @@ function seat(userId: string | null, token = `${userId}-grant`) {
 	} as unknown as ContinuousRoom
 }
 type Call = { userId: string; token?: string; resolve: (keys: string[]) => void; reject: (e: unknown) => void }
-function members(options: { timeoutMs?: number } = {}) {
+function members(options: { timeoutMs?: number; copyMaxAgeMs?: number; now?: () => number } = {}) {
 	const calls: Call[] = []
 	const reads: MemberReads = {
 		seen: (userId, token) => new Promise((resolve, reject) => calls.push({ userId, token, resolve, reject })),
@@ -27,7 +27,8 @@ function members(options: { timeoutMs?: number } = {}) {
 		{} as ContinuousRepository,
 		{} as MemberIssuer,
 		reads,
-		{ callbackUrl: "", browserOrigins: [], nativeReturnUri: "", seenReadTimeoutMs: options.timeoutMs ?? 1000 },
+		{ callbackUrl: "", browserOrigins: [], nativeReturnUri: "", seenReadTimeoutMs: options.timeoutMs ?? 1000, seenCopyMaxAgeMs: options.copyMaxAgeMs },
+		options.now,
 	)
 	return { m, calls }
 }
@@ -39,7 +40,7 @@ function quiet<T>(run: () => Promise<T>) {
 	return run().finally(() => { console.warn = warn }).then((value) => ({ value, logged }))
 }
 
-test("concurrent reads for one link share a request; nothing is kept once it settles", async () => {
+test("concurrent reads for one link share a request; every later read asks GoodWatch again", async () => {
 	const { m, calls } = members()
 	const room = seat("account-a")
 	// A background deck build reads the seen list; a second plain read meanwhile shares it.
@@ -80,7 +81,7 @@ test("a failed seen read leaves the member's exclusions out instead of failing S
 	assert.ok(!logged.join("\n").includes("account-a"), "the log names no account or grant")
 })
 
-test("a slow seen read is cut off at the bound and leaves the exclusions out; the late answer isn't kept", async () => {
+test("a slow seen read is cut off at the bound and leaves the exclusions out; a deck build reads again rather than reuse the late answer", async () => {
 	const { m, calls } = members({ timeoutMs: 30 })
 	const room = seat("account-a")
 	const began = performance.now()
@@ -92,7 +93,7 @@ test("a slow seen read is cut off at the bound and leaves the exclusions out; th
 	calls[0].resolve(["movie_7"])
 	await tick()
 	const next = m.seenOrNone(room, "p1")
-	assert.equal(calls.length, 2, "the late answer wasn't kept: the next read asks again")
+	assert.equal(calls.length, 2, "a deck build asks again")
 	calls[1].resolve(["movie_7", "movie_8"])
 	assert.deepEqual(await next, ["movie_7", "movie_8"])
 	// Another timeout leaves the exclusions out rather than reusing the last list.
@@ -177,4 +178,180 @@ test("a seat logged out and relinked to another account never gets the previous 
 	await tick()
 	calls[2].reject(new RoomError("busy", "down", 503, true))
 	assert.deepEqual((await failing).value, [])
+})
+
+/** Reads the seat's list once, so the link has a copy. */
+async function copied(m: ContinuousMembers, calls: Call[], room: ContinuousRoom, keys: string[]) {
+	const read = m.seen(room, "p1")
+	calls.at(-1)!.resolve(keys)
+	await read
+	await tick()
+}
+function info<T>(run: () => Promise<T>) {
+	const log = console.info
+	const logged: string[] = []
+	console.info = (line: string) => { logged.push(line) }
+	return run().finally(() => { console.info = log }).then((value) => ({ value, logged }))
+}
+
+test("Start uses the link's copy from an earlier read without asking GoodWatch", async () => {
+	const { m, calls } = members()
+	const room = seat("account-a")
+	await copied(m, calls, room, ["movie_1", "show_2"])
+	const { value, logged } = await info(() => m.seenStored(room, "p1"))
+	assert.deepEqual(value, ["movie_1", "show_2"])
+	assert.equal(calls.length, 1, "no GoodWatch request at Start")
+	assert.match(logged.join("\n"), /yepwatch_member_seen_start.*"source":"copy"/)
+	assert.ok(!logged.join("\n").includes("account-a"), "the log names no account or grant")
+})
+
+test("without a copy (a restarted server, another instance) Start reads fresh, bounded, and that read becomes the copy", async () => {
+	const { m, calls } = members()
+	const room = seat("account-a")
+	// A background deck build's read is in flight: Start never joins it (it may predate a title marked Seen).
+	void m.seen(room, "p1")
+	const start = info(() => m.seenStored(room, "p1"))
+	await tick()
+	assert.equal(calls.length, 2, "one fresh read for Start")
+	calls[1].resolve(["movie_1"])
+	assert.deepEqual((await start).value, ["movie_1"])
+	assert.match((await start).logged.join("\n"), /"source":"read"/)
+	calls[0].resolve([])
+	await tick()
+	assert.deepEqual(await m.seenStored(room, "p1"), ["movie_1"], "an older read landing later never replaces a newer copy")
+	assert.equal(calls.length, 2)
+})
+
+test("without a copy and with GoodWatch slow, Start goes on without the member's exclusions within the bound", async () => {
+	const { m, calls } = members({ timeoutMs: 30 })
+	const room = seat("account-a")
+	const began = performance.now()
+	const { value } = await quiet(() => m.seenStored(room, "p1"))
+	assert.deepEqual(value, [])
+	assert.ok(performance.now() - began < 200)
+	// The late answer is still the link's copy: the next Start (a restart of the room) uses it.
+	calls[0].resolve(["movie_7"])
+	await tick()
+	assert.deepEqual(await m.seenStored(room, "p1"), ["movie_7"])
+	assert.equal(calls.length, 1)
+})
+
+test("a copy older than the bound isn't used: Start reads again", async () => {
+	let now = 1_000_000
+	const { m, calls } = members({ copyMaxAgeMs: 60_000, now: () => now })
+	const room = seat("account-a")
+	;(room.participants[0] as { memberGrant: { expiresAt: number } }).memberGrant.expiresAt = now + 3_600_000
+	await copied(m, calls, room, ["movie_1"])
+	now += 60_001
+	const start = m.seenStored(room, "p1")
+	await tick()
+	assert.equal(calls.length, 2)
+	calls[1].resolve(["movie_1", "movie_2"])
+	assert.deepEqual(await start, ["movie_1", "movie_2"])
+})
+
+test("a refusal ends the link's copy: Start leaves the member's titles out without asking GoodWatch, and an older read landing later stores nothing", async () => {
+	const { m, calls } = members()
+	const room = seat("account-a")
+	await copied(m, calls, room, ["movie_1"])
+	// A deck build's read is in flight when a room change's read is refused (grant revoked on GoodWatch).
+	const older = m.seen(room, "p1")
+	const refusedRead = m.seen(room, "p1", { fresh: true })
+	calls[2].reject(new RoomError("member_required", "Connect GoodWatch again", 403))
+	await assert.rejects(refusedRead)
+	calls[1].resolve(["movie_1", "movie_2"])
+	await older
+	await tick()
+	const { value, logged } = await quiet(() => m.seenStored(room, "p1"))
+	assert.deepEqual(value, [])
+	assert.match(logged.join("\n"), /"reason":"refused"/)
+	assert.equal(calls.length, 3, "Start asked GoodWatch nothing for the refused link")
+	// A new grant (the member signed in again) is another link, read on its own.
+	const relinked = seat("account-a", "account-a-grant-2")
+	const start = m.seenStored(relinked, "p1")
+	await tick()
+	assert.equal(calls.length, 4)
+	assert.equal(calls[3].token, "account-a-grant-2")
+	calls[3].resolve(["show_5"])
+	assert.deepEqual(await start, ["show_5"])
+})
+
+test("a GoodWatch outage on a later read keeps the copy", async () => {
+	const { m, calls } = members()
+	const room = seat("account-a")
+	await copied(m, calls, room, ["movie_1"])
+	const failing = m.seen(room, "p1", { fresh: true })
+	calls[1].reject(new RoomError("busy", "GoodWatch is temporarily unavailable", 503, true))
+	await assert.rejects(failing)
+	assert.deepEqual(await m.seenStored(room, "p1"), ["movie_1"])
+	assert.equal(calls.length, 2)
+})
+
+test("a logged-out seat, another account or a renewed grant never gets the link's copy", async () => {
+	const { m, calls } = members()
+	await copied(m, calls, seat("account-a"), ["movie_1", "show_2"])
+	// Log out: the seat is a guest. Leave also removes the grant.
+	assert.deepEqual((await quiet(() => m.seenStored(seat(null), "p1"))).value, [])
+	assert.equal(calls.length, 1)
+	// Relinked to account B on the same seat: B's own list, never A's copy.
+	const b = m.seenStored(seat("account-b"), "p1")
+	await tick()
+	assert.equal(calls.length, 2)
+	assert.equal(calls[1].userId, "account-b")
+	calls[1].resolve(["movie_9"])
+	assert.deepEqual(await b, ["movie_9"])
+	// A's grant renewed: the copy belonged to the old grant; the new one is read (and proves itself).
+	const renewed = m.seenStored(seat("account-a", "account-a-grant-2"), "p1")
+	await tick()
+	assert.equal(calls.length, 3)
+	calls[2].resolve(["movie_1"])
+	assert.deepEqual(await renewed, ["movie_1"])
+	// An expired grant has no copy either.
+	const expired = seat("account-a")
+	;(expired.participants[0] as { memberGrant: { expiresAt: number } }).memberGrant.expiresAt = Date.now() - 1
+	assert.deepEqual((await quiet(() => m.seenStored(expired, "p1"))).value, [])
+	assert.equal(calls.length, 3)
+})
+
+test("a copy is kept per room seat: the same account in another room reads its own", async () => {
+	const { m, calls } = members()
+	await copied(m, calls, seat("account-a"), ["movie_1"])
+	const other = { ...seat("account-a"), id: "room-2" } as ContinuousRoom
+	const start = m.seenStored(other, "p1")
+	await tick()
+	assert.equal(calls.length, 2)
+	calls[1].resolve(["movie_1"])
+	await start
+})
+
+test("a room change reads the list again only when the copy is missing or 10 s old, sharing a read in flight", async () => {
+	let now = 1_000_000
+	const { m, calls } = members({ now: () => now })
+	const room = seat("account-a")
+	;(room.participants[0] as { memberGrant: { expiresAt: number } }).memberGrant.expiresAt = now + 3_600_000
+	m.refreshSeen(room, "p1")
+	m.refreshSeen(room, "p1")
+	assert.equal(calls.length, 1, "missing: read once, the second refresh shares it")
+	calls[0].resolve(["movie_1"])
+	await tick()
+	now += 5_000
+	m.refreshSeen(room, "p1")
+	assert.equal(calls.length, 1, "a 5 s old copy is recent enough")
+	now += 5_000
+	m.refreshSeen(room, "p1")
+	assert.equal(calls.length, 2, "10 s old: read again")
+	calls[1].resolve(["movie_1", "movie_2"])
+	await tick()
+	assert.deepEqual(await m.seenStored(room, "p1"), ["movie_1", "movie_2"], "Start uses the refreshed copy")
+	assert.equal(calls.length, 2)
+	// Not linked (a guest seat): nothing to refresh, never a throw.
+	m.refreshSeen(seat(null), "p1")
+	assert.equal(calls.length, 2)
+	// A refused refresh ends the copy.
+	now += 10_000
+	m.refreshSeen(room, "p1")
+	calls[2].reject(new RoomError("member_required", "Connect GoodWatch again", 403))
+	await tick()
+	assert.deepEqual((await quiet(() => m.seenStored(room, "p1"))).value, [])
+	assert.equal(calls.length, 3)
 })

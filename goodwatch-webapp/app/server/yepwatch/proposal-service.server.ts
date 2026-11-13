@@ -1110,11 +1110,11 @@ export class ProposalService {
 				const room = structuredClone(activeRoom(old.room))
 				if (envelope.command.type === "refill") retire(room)
 				const wantsPage = room.candidates.length < L.active && room.seenKeys.length < L.seen
-				// Seen lists are read again at Start: a deck prepared earlier never shows what a member has since seen.
-				// Fresh: never joins a background build's read that started before a title was marked Seen. Read
-				// alongside the deck, not after it: each is a round trip (GoodWatch, the catalog) on Start's path.
+				// Members' seen titles are left out again at Start, from the copy read when they signed in and kept up
+				// while the room was set up (a deck prepared before a member linked never had them). A member without a
+				// recent copy is read fresh, alongside the deck rather than after it.
 				const seenRead = wantsPage && envelope.command.type === "start" && this.catalog.excludedKeys
-					? timed("seen", this.catalog.excludedKeys(room, { fresh: true }))
+					? timed("seen", this.catalog.excludedKeys(room, { stored: true }))
 					: null
 				seenRead?.catch(() => {}) // Awaited below; a failed deck must not leave it unhandled.
 				// Best effort (members time-box and log their own reads): a failed read starts without those exclusions.
@@ -1978,7 +1978,10 @@ export class ProposalService {
 		let stored: ProposalStored | null = null
 		try {
 			stored = await this.repository.read(id)
-			if (stored?.room.phase === "setup") this.decks.schedule(id)
+			if (stored?.room.phase === "setup") {
+				this.decks.schedule(id)
+				this.catalog.refreshExcludedKeys?.(stored.room)
+			}
 			if (
 				!stored ||
 				!stored.pendingRevision
