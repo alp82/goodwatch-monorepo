@@ -1,3 +1,9 @@
+{
+	servers :8480 {
+		# abio's Traefik sets X-Forwarded-For and X-Forwarded-Proto; keep them instead of replacing them.
+		trusted_proxies static 10.0.0.21/32
+	}
+}
 a.goodwatch.app {
   header {
     Access-Control-Allow-Origin https://goodwatch.app
@@ -72,4 +78,28 @@ a.seen.is {
     handle {
         reverse_proxy 10.0.0.31:3002
     }
+}
+
+# Always-on hold for yepwatch.com (docs/yepwatch-zero-downtime-front.md). abio's Traefik ends TLS and sends
+# yepwatch.com here (Coolify dynamic file yepwatch-front.yaml, source goodwatch-proxy/traefik/). While a deploy
+# replaces the YepWatch containers, the front's published port refuses connections; Caddy holds each request and
+# tries again every 100 ms for up to 30 s. A refused connection never reached the app, so retrying it is safe for
+# every method, WebSocket upgrades included; a request that did reach the front is retried only when it is a GET.
+:8480 {
+	@yepwatch host yepwatch.com
+	handle @yepwatch {
+		reverse_proxy 10.0.0.21:18480 {
+			lb_try_duration 30s
+			lb_try_interval 100ms
+			# A reload of this Caddyfile (for any site) must not cut every open room's WebSocket at once.
+			stream_close_delay 30m
+		}
+	}
+	# Traefik's failover health check (it sends the server address as Host, never yepwatch.com).
+	handle /edge-health {
+		respond "ok" 200
+	}
+	handle {
+		respond "Not found" 404
+	}
 }

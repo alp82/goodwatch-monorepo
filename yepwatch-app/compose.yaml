@@ -22,6 +22,11 @@ services:
       dockerfile: yepwatch-realtime/release/Dockerfile.repository
       target: front
     expose: ["8080"]
+    # A fixed address for the always-on hold in goodwatch-proxy on pgnode01 (docs/yepwatch-zero-downtime-front.md):
+    # while a deploy has no front running, this port refuses connections and the hold retries until it opens.
+    # Private address only. Coolify removes every old container before it starts the new ones, so the port is free
+    # at each deploy. Local use: YEPWATCH_FRONT_ADDRESS=127.0.0.1.
+    ports: ["${YEPWATCH_FRONT_ADDRESS:-10.0.0.21}:18480:8080"]
     mem_limit: 128m
     tmpfs: ["/tmp:uid=1000,gid=1000,mode=0700,size=32m"]
     # Starts with the others: Caddy holds requests until api/gateway answer (lb_try_duration), so a

@@ -1,0 +1,47 @@
+# yepwatch.com through the always-on hold on pgnode01 (docs/yepwatch-zero-downtime-front.md).
+# Coolify: Servers > abio > Proxy > Dynamic Configurations, file name yepwatch-front.yaml. Delete the file to roll back:
+# Coolify's label routers for yepwatch.com (priority = rule length, about 40) take over again at once.
+#
+# TLS stays here (certResolver letsencrypt, the resolver Coolify's labels use). Main path: the goodwatch-proxy Caddy
+# on 10.0.0.11:8480 holds requests while a deploy has no front running. Fallback, only while that Caddy fails its
+# health check: the front's published port on abio directly, which behaves like deploys before the hold.
+# Coolify's gzip-sse middleware is left out on purpose: the front compresses its own responses.
+# Test: goodwatch-proxy/traefik/test-yepwatch-front.sh
+http:
+  routers:
+    yw-front-https:
+      entryPoints: [https]
+      rule: Host(`yepwatch.com`)
+      priority: 1000
+      service: yw-front
+      tls:
+        certResolver: letsencrypt
+    yw-front-http:
+      entryPoints: [http]
+      rule: Host(`yepwatch.com`)
+      priority: 1000
+      middlewares: [yw-front-redirect-to-https]
+      service: yw-front
+  middlewares:
+    yw-front-redirect-to-https:
+      redirectScheme:
+        scheme: https
+  services:
+    yw-front:
+      failover:
+        service: yw-front-hold
+        fallback: yw-front-direct
+    yw-front-hold:
+      loadBalancer:
+        passHostHeader: true
+        healthCheck:
+          path: /edge-health
+          interval: 2s
+          timeout: 1s
+        servers:
+          - url: http://10.0.0.11:8480
+    yw-front-direct:
+      loadBalancer:
+        passHostHeader: true
+        servers:
+          - url: http://10.0.0.21:18480

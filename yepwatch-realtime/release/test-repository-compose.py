@@ -34,11 +34,18 @@ for name, service in services.items():
     assert (Path(build['context']) / build['dockerfile']).is_file(), 'Dockerfile must exist inside resolved context'
     assert service['build']['target'] == name
     assert not service['build'].get('args'), 'Runtime secrets must not be build arguments'
-    assert not service.get('ports'), 'Only Coolify proxy should publish the front'
+    if name != 'front':
+        assert not service.get('ports'), 'Only the front may publish a port'
     assert not service.get('env_file') and not service.get('secrets'), 'No host-side private files required'
+# The always-on hold (docs/yepwatch-zero-downtime-front.md) reaches the front at one fixed private address.
+front_ports = services['front']['ports']
+assert [(p['host_ip'], p['published'], p['target'], p.get('protocol', 'tcp')) for p in front_ports] == [('10.0.0.21', '18480', 8080, 'tcp')], front_ports
+local = render(dict(values, YEPWATCH_FRONT_ADDRESS='127.0.0.1'))
+assert local.returncode == 0, local.stderr
+assert json.loads(local.stdout)['services']['front']['ports'][0]['host_ip'] == '127.0.0.1'
 separate = render(dict(values, YEPWATCH_CATALOG_REDIS_USER='reader', YEPWATCH_CATALOG_REDIS_PASSWORD='test-reader'))
 assert separate.returncode == 0, separate.stderr
 api = json.loads(separate.stdout)['services']['api']['environment']
 assert api['REDIS_USER'] == 'reader' and api['REDIS_PASS'] == 'test-reader'
 assert api['YEPWATCH_PROPOSAL_REDIS_USER'] == 'existing-user'
-print('PASS: required secrets, three repository targets, shared/independent Redis credentials, runtime-only secrets and proxy-only ports, no api stop delay')
+print('PASS: required secrets, three repository targets, shared/independent Redis credentials, runtime-only secrets, one private hold port on the front, no api stop delay')

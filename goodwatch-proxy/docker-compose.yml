@@ -6,7 +6,9 @@ x-logging: &default-logging
 
 services:
   caddy:
-    image: caddy:latest
+    # Pinned: caddy:latest must not move on its own. 2.11 or later is required by the yepwatch.com hold below
+    # (2.8.4 answered 502 to a POST held over a deploy gap). Same pin as the YepWatch front.
+    image: caddy:2.11.7@sha256:3095ad245c353e3bdb27a38f22a095c1cfa9e295ab21c0214c3e72b0e2960525
     container_name: caddy
     restart: always
     ports:
@@ -15,6 +17,8 @@ services:
       - "128.140.87.34:443:443/tcp"
       - "[2a01:4f8:c17:d25::1]:80:80/tcp"
       - "[2a01:4f8:c17:d25::1]:443:443/tcp"
+      # yepwatch.com hold (Caddyfile, :8480): plain HTTP from abio's Traefik over the private network only.
+      - "10.0.0.11:8480:8480/tcp"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
