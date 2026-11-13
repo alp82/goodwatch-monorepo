@@ -3,7 +3,7 @@
  * share this one connection). Owns the room's side effects: registry, GoodWatch link, protocol
  * entry, background refill, this device's "Keep swiping" choice, and the room's open sheets.
  */
-import { createContext, useCallback, useContext, useDeferredValue, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigation } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import type { ActivityView } from '@goodwatch/yepwatch-contracts/proposal';
@@ -349,10 +349,14 @@ function RoomProviderContent({ id, children, renderSheet }: { id: string; childr
   // seeing the same room. Everything else (a vote, a tap, a friend's change) stays urgent, and so do the room's
   // first screen (the startup cover lifts on it) and leaving (the start page replaces the room right after):
   // a deferred screen would show the one before it for a frame.
+  // Only the screen key is deferred (a string: no background render while it stays the same). While the new
+  // screen renders in the background, consumers keep the value of the last commit.
   const screen = screenOf(view, state, entry, dismissedProposal);
-  const deferred = useDeferredValue(value);
   const before = useDeferredValue(screen);
-  const shown = leaving || before === 'none' || before === screen ? value : deferred;
+  const committed = useRef(value);
+  // eslint-disable-next-line react-hooks/refs -- the last committed value, read only while a new screen renders
+  const shown = leaving || before === 'none' || before === screen ? value : committed.current;
+  useLayoutEffect(() => { committed.current = shown; });
   return <RoomContext.Provider value={shown}>{children}</RoomContext.Provider>;
 }
 

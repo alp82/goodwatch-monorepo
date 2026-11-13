@@ -31,7 +31,9 @@ export function timingStats(run, history = [], windowed = false) {
       for (let i = history.length - 1; i >= 0 && values.length < RUN_P95_MIN && runs < WINDOW_RUNS; i--) {
         const earlier = history[i].samples?.[moment];
         if (!Array.isArray(earlier) || !earlier.length) continue;
-        values = values.concat(earlier.filter((v) => typeof v === 'number' && Number.isFinite(v)));
+        // Only as many as are still missing, the newest of that run first.
+        const usable = earlier.filter((v) => typeof v === 'number' && Number.isFinite(v));
+        values = values.concat(usable.slice(-(RUN_P95_MIN - values.length)));
         runs++;
       }
     }

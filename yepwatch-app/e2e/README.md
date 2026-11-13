@@ -14,6 +14,11 @@ node run.mjs gate -- --grep invite                   # extra args go to Playwrig
 The commands live here, not in `yepwatch-app/package.json`: that file's scripts are part of the Expo
 runtime fingerprint (`docs/ota-updates.md`), so adding scripts there would strand installed builds.
 
+Smoke sampling: one room per run, 20 voting rounds (each a match), so vote → peer gets a p95 from the run
+alone. Create and Start happen once a run: their p95 is taken over this run and the newest earlier runs against
+the same origin (up to 20 runs or 20 samples; `lib/timing-window.mjs`, history in
+`artifacts/smoke-history.jsonl`, kept between CI runs in the Actions cache).
+
 Reports: `artifacts/<tier>/report.json` (every gate failure with journey, fault, gate, measured vs budget,
 artifacts; timing p50/p95 per moment) and `artifacts/<tier>/summary.md`. Traces of failed tests are under
 `artifacts/<tier>/results-*/` (`npx playwright show-trace <zip>`).

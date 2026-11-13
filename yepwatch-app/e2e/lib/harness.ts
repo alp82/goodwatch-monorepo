@@ -276,7 +276,8 @@ export class Person {
         const o = await p.result(observerKeys[i], opts.timeout ?? 15000);
         if (!o && opts.soft) continue;
         if (!o) p.journeyFailure(`after ${this.name} pressed ${target}: ${moment} never showed for ${p.name} (now: ${await p.signature()})`);
-        if (input) p.record(moment, o!.at - input.t, `${this.name}: ${target}`);
+        // An observer already satisfied before the press (a late update from an earlier action) is no sample.
+        if (input && o!.at >= input.t) p.record(moment, o!.at - input.t, `${this.name}: ${target}`);
       }
     } else {
       await sleep(60);

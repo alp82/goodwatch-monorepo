@@ -66,6 +66,13 @@ test('a moment sampled once a run borrows from the newest earlier runs, up to 20
   assert.equal(timingStats({ createRoomMs: [400] }, history, false).createRoomMs.samples, 1);
 });
 
+test('an earlier run fills only the samples still missing, its newest first', () => {
+  const own = Array.from({ length: 19 }, () => 100);
+  const stats = timingStats({ voteToPeerMs: own }, [{ samples: { voteToPeerMs: [1000, 1000, ...Array.from({ length: 18 }, () => 100)] } }], true);
+  assert.equal(stats.voteToPeerMs.samples, 20);
+  assert.equal(stats.voteToPeerMs.p95, 100);
+});
+
 test('the history keeps numbers per origin only', () => {
   const line = historyLine('https://yepwatch.com', { createRoomMs: [612.34], voteToPeerMs: [] }, 7);
   assert.deepEqual(JSON.parse(line), { t: 7, origin: 'https://yepwatch.com', samples: { createRoomMs: [612.3] } });

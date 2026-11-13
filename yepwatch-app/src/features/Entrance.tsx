@@ -262,13 +262,17 @@ export function Entrance({ invite, open: request, from }: {
     } finally {
       if (attempt.current === controller) attempt.current = null;
       setTroubleSince(null);
+      // Answered: the page stays joining until the room replaces it. Otherwise it is free again before settled(),
+      // which can start the saved join again at once (back in front after a cancelled send) and mark it busy.
+      const answered = outcome === 'answered' && roomId !== null;
+      if (!answered) setBusy(false);
       // Nothing opens once the person has left: the room waits in Your rooms.
       if (resume.settled(outcome) && roomId) {
         // The room's whole page mounts here (a guest's services sheet with it). As a transition React renders it
         // in slices between frames instead of one long task, and this page stays as it is (joining) until the
         // room replaces it in one commit.
         router.replace({ pathname: '/room/[id]', params: { id: roomId } }, { inTransition: true });
-      } else {
+      } else if (answered) {
         setBusy(false);
       }
     }

@@ -233,7 +233,9 @@ async function journey(room: Room, people: [Person, 'leave' | 'archive'][]) {
     }
     await friend.page.waitForTimeout(400);
     const before = await cardTitle(friend);
-    // From the chip on the host's screen (not the snapshot, which can run ahead of or behind the paint).
+    // The host's chip has caught up with the room (a late match from a round before can't count for this vote),
+    // then the next count is read from the chip itself (not the snapshot, which can run ahead of the paint).
+    for (const end = Date.now() + 3000; Date.now() < end && await shownMatches(host) !== (host.latest?.matches?.length ?? 0);) await host.page.waitForTimeout(50);
     const next = chip(await shownMatches(host) + 1);
     await friend.tap(friend.button('Yep'), {
       repeatable: true, soft: true, timeout: 2500, moment: 'swipeNextCardMs',
