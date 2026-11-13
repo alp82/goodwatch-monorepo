@@ -9,7 +9,7 @@ The choice follows the [ten-model benchmark](benchmarks/search-interpretation-op
 ## OpenRouter setup
 
 1. In [API keys](https://openrouter.ai/settings/keys), create a new ordinary inference key named `goodwatch-openrouter-decision-models`. Owner-approved overflow limit: **$5**, reset **monthly**. Keep existing application keys separate.
-2. In the workspace's **Guardrails** page, create a guardrail allowing only `liquid/d1.1`, save it and explicitly assign it to this key in its API Keys section. Check eligibility. A preset alone does not enforce a model restriction. [Official guardrail instructions](https://openrouter.ai/docs/guides/features/guardrails)
+2. In the workspace's **Guardrails** page, create a guardrail allowing only `liquid/d1.1`, save it and explicitly assign it to this key in its API Keys section. Check eligibility. The guardrail may also supply the dedicated **$5 monthly** budget if the key has no direct limit; choose monthly rather than daily. A preset alone does not enforce a model restriction. [Official guardrail instructions](https://openrouter.ai/docs/guides/features/guardrails)
 3. Store the new secret privately on both search roles (the protected `goodwatch-search/.env` on the search host). Do not put it in the browser or paste it into chat. The running application needs no management key.
 
 ```dotenv
@@ -25,7 +25,7 @@ With the two variables available in the process environment, run the read-only c
 node scripts/search-overflow/check-key.mjs
 ```
 
-It calls only OpenRouter's current-key metadata endpoint, verifies an ordinary key with a positive monthly limit no greater than the configured application cap, and prints budget metadata without the credential. Confirm model restriction assignment in the dashboard separately. [Current-key reference](https://openrouter.ai/docs/api/api-reference/api-keys/get-current-api-key.md)
+It calls only OpenRouter's current-key metadata endpoint, verifies an ordinary key with a positive monthly limit no greater than the configured application cap, supplied by its direct limit or an `api_key`-scoped guardrail budget, and prints budget metadata without the credential. Confirm model restriction assignment in the dashboard separately. [Current-key reference](https://openrouter.ai/docs/api/api-reference/api-keys/get-current-api-key.md)
 
 The $5 cap is inference credit usage, not a promised $5 card transaction. Credit purchases and their fees are separate. Details and source limitations: [key setup research](research/search-overflow-key-setup-2026-11-12.md).
 
