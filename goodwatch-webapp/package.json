@@ -29,7 +29,8 @@
 		"lab:discover": "node scripts/discover-query-lab/server.mjs",
 		"lab:discover:check": "node scripts/discover-query-lab/evaluate-cli.mjs",
 		"lab:discover:browser": "node scripts/discover-query-lab/browser-check.mjs",
-		"lab:discover:assertions": "node --test scripts/discover-query-lab/evaluate.test.mjs"
+		"lab:discover:assertions": "node --test scripts/discover-query-lab/evaluate.test.mjs",
+		"prototype:details-og": "bash scripts/prototype-details-og/serve.sh"
 	},
 	"dependencies": {
 		"@faststats/web": "^0.13.2",
