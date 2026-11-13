@@ -231,3 +231,22 @@ test("a grant GoodWatch refuses while Start builds its deck no longer shapes tha
 	assert.equal(started.shared.phase, "choosing")
 	assert.ok(r.keys.slice(0, 3).every((key) => shown(started).includes(key)), "the refused grant's seen titles are shown")
 })
+
+test("a grant GoodWatch refuses during Start's second, member-aware build no longer shapes that deck", async () => {
+	// Codex review round 2: the copies emptied the reused guest deck; the member-aware build that followed was refused.
+	const r = await memberRoom((keys) => keys.slice(0, 3))
+	await r.a.service.decks.idle()
+	r.a.service.decks.forget(r.id)
+	// The deck built before the member linked (same deck base): what Start reuses across a member's link.
+	const guest = structuredClone((await r.repo.read(r.id))!.room)
+	for (const p of guest.participants) if (p.member?.state === "linked") {
+		p.member = { state: "guest", prefill: null }
+		p.memberUserId = null
+		delete p.memberGrant
+	}
+	await r.a.service.decks.page(guest)
+	r.gw.state.revoked = true
+	const started = await r.start()
+	assert.equal(started.shared.phase, "choosing")
+	assert.ok(r.keys.slice(0, 3).every((key) => shown(started).includes(key)), "the refused grant's seen titles are shown")
+})

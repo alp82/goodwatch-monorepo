@@ -1125,15 +1125,16 @@ export class ProposalService {
 					}))
 				if (page && seenRead) {
 					await seenRead.catch(() => [] as string[])
-					// Taken again once the deck is in hand, from the copies alone (Start's own read above stored a missing
-					// one): a deck build reads GoodWatch, and a grant GoodWatch refused meanwhile no longer counts.
-					const excluded = new Set(await this.catalog.excludedKeys!(room, { stored: true, readMissing: false }).catch(() => [] as string[]))
-					const unseen = (p: NonNullable<typeof page>) =>
-						excluded.size ? { ...p, candidates: p.candidates.filter((c) => !excluded.has(titleKey(c))) } : p
-					page = unseen(page)
+					// Taken again for each deck once it is in hand, from the copies alone (Start's own read above stored a
+					// missing one): a deck build reads GoodWatch, and a grant GoodWatch refused meanwhile no longer counts.
+					const unseen = async (p: NonNullable<typeof page>) => {
+						const excluded = new Set(await this.catalog.excludedKeys!(room, { stored: true, readMissing: false }).catch(() => [] as string[]))
+						return excluded.size ? { ...p, candidates: p.candidates.filter((c) => !excluded.has(titleKey(c))) } : p
+					}
+					page = await unseen(page)
 					// The deck reused across a member's link may hold only titles they've seen; the member-aware deck
 					// reaches past them. A short page still starts: the client refills at two unanswered cards.
-					if (!page.candidates.length) page = unseen(await timed("deck", this.decks.page(room)))
+					if (!page.candidates.length) page = await unseen(await timed("deck", this.decks.page(room)))
 				}
 			}
 			if (envelope.command.type === "restart") await this.accounts.publish(old.room.history ?? [])
