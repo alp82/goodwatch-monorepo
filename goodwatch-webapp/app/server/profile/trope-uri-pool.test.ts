@@ -1,7 +1,11 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { rankTropes } from "../../ui/profile/tropes/model.ts"
-import { buildUriTropePool } from "./trope-uri-pool.ts"
+import {
+	buildUriTropePool,
+	memoizedTropeTarget,
+	tropeTarget,
+} from "./trope-uri-pool.ts"
 import { type TropeTitle, defining, excerptParams } from "./tropes-model.ts"
 
 const url = (slug: string) =>
@@ -194,4 +198,34 @@ test("approved general source routes require known self identity; work/creator t
 	)
 	assert.deepEqual(unsafe.tropes, [original])
 	assert.equal(unsafe.names?.[original], "Source label")
+})
+
+test("the memoized target answers exactly as tropeTarget, including repeated, unapproved and missing URLs", () => {
+	const main = (s: string) => `https://tvtropes.org/pmwiki/pmwiki.php/Main/${s}`
+	const resolved = {
+		[main("Old")]: { url: main("New"), title: "New" },
+		[main("Self")]: { url: main("Self"), title: "Self" },
+		"https://tvtropes.org/pmwiki/pmwiki.php/UsefulNotes/Thing": {
+			url: main("Elsewhere"),
+			title: "Elsewhere",
+		},
+	}
+	const target = memoizedTropeTarget(resolved)
+	const cases: [string, string | null][] = [
+		["Old", main("Old")],
+		["Old again", main("Old")],
+		["Self", main("Self")],
+		["Unknown", main("Unknown")],
+		["Thing", "https://tvtropes.org/pmwiki/pmwiki.php/UsefulNotes/Thing"],
+		["Work", "https://tvtropes.org/pmwiki/pmwiki.php/Film/Work"],
+		[
+			"Doubled",
+			"https://tvtropes.orghttps://tvtropes.org/pmwiki/pmwiki.php/Main/Old",
+		],
+		["Empty", ""],
+		["None", null],
+		["None", null],
+	]
+	for (const [name, url] of [...cases, ...cases])
+		assert.equal(target(name, url), tropeTarget(name, url, resolved))
 })

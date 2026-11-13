@@ -41,6 +41,25 @@ export function tropeTarget(
 	)
 }
 
+/**
+ * tropeTarget for one resolution map, with each URL's page looked up once. A build over millions of associations
+ * repeats a few tens of thousands of URLs, and each uncached lookup parses the URL several times.
+ */
+export function memoizedTropeTarget(resolved: TropePageReferences = {}) {
+	const pages = new Map<string, string | null>()
+	return (name: string, url: string | null) => {
+		if (url) {
+			let page = pages.get(url)
+			if (page === undefined) {
+				page = associationPage(url, resolved)?.url ?? null
+				pages.set(url, page)
+			}
+			if (page !== null) return page
+		}
+		return `label:${JSON.stringify([name, url ?? ""])}`
+	}
+}
+
 /** Group associations before applying the title-count threshold. A title contributes once to each target. */
 export function buildUriTropePool(
 	titles: TropeTitle[],

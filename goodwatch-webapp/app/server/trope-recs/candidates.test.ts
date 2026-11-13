@@ -18,7 +18,9 @@ test("candidate identities use the profile resolver; aliases merge with max exce
 	assert.equal(tropes.length, 3)
 	assert.equal(tropes[0].id, url("Canonical"))
 	assert.equal(tropes[0].d, Math.round(defining(1000, 4) * 100))
-	assert.deepEqual(tropes[1], { id: url("Rare"), d: 0 })
+	assert.deepEqual(tropes[1], { id: url("Rare"), d: 0, name: "Rare" })
+	assert.equal(tropes[0].name, "Old")
+	assert.equal(tropes[2].name, "Missing")
 	assert.equal(tropes[2].id, 'label:["Missing",""]')
 })
 
@@ -142,4 +144,49 @@ test("one union resolution spans 200-title batches, with shared numeric alias an
 		index.references[index.tropes.indexOf(url("Canonical"))].sort(),
 		[url("Old"), url("Other")].sort(),
 	)
+})
+
+test("the identity pass yields to the event loop between title slices", async () => {
+	const read: CatalogRead = async <T extends {}>(
+		sql: string,
+		params: (string | number | Date)[],
+	) => {
+		if (sql.includes("FROM show")) return []
+		if (sql.includes("FROM movie"))
+			return Array.from({ length: 450 }, (_, i) => ({
+				tmdb_id: i + 1,
+				title: "Title",
+				release_year: 2000,
+				poster_path: "/p",
+				gw: 80,
+				popularity: 1,
+				tropes: ["A"],
+			})) as unknown as T[]
+		return params
+			.slice(1)
+			.map((id) => ({
+				media_tmdb_id: id,
+				name: "A",
+				url: url("A"),
+				length: 10,
+			})) as unknown as T[]
+	}
+	// Reads above settle on microtasks only, so an immediate can run during the build only where it yields.
+	let turns = 0
+	let counting = true
+	const count = () => {
+		turns++
+		if (counting) setImmediate(count)
+	}
+	const index = await buildCandidateIndex(
+		read,
+		async () => {
+			setImmediate(count)
+			return {}
+		},
+		() => "/",
+	)
+	counting = false
+	assert.equal(index.titles.length, 450)
+	assert.ok(turns >= 4, `expected a turn per 100-title slice, got ${turns}`)
 })

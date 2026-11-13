@@ -1,7 +1,8 @@
+import { setImmediate as yieldToLoop } from "node:timers/promises"
 import type { MediaKey } from "../../types/user-data.ts"
-import type { CatalogRead } from "../profile/tropes-data.ts"
 import type { TropePageReferences } from "../profile/trope-pages.ts"
-import { tropeTarget } from "../profile/trope-uri-pool.ts"
+import { memoizedTropeTarget, tropeTarget } from "../profile/trope-uri-pool.ts"
+import type { CatalogRead } from "../profile/tropes-data.ts"
 import { defining } from "../profile/tropes-model.ts"
 import type { Candidate, CandidateIndex } from "./ranking.ts"
 
@@ -21,24 +22,39 @@ export interface Association {
 	length: number | null
 }
 
-/** URI aliases merge once per title, using the longest excerpt; never match identities by display name. */
+/** Titles handled between yields: the index build runs in the request process and must not hold its event loop. */
+const TITLES_PER_SLICE = 100
+
+/**
+ * URI aliases merge once per title, using the longest excerpt; never match identities by display name. Each identity
+ * carries the name of its first association row, or its label when only the title's trope list names it.
+ */
 export function candidateTropes(
 	names: string[],
 	rows: Association[],
 	resolved: TropePageReferences,
+	target: (name: string, url: string | null) => string = (name, url) =>
+		tropeTarget(name, url, resolved),
 ) {
 	const lengths = new Map<string, number>()
+	const labels = new Map<string, string>()
 	for (const row of rows) {
-		const id = tropeTarget(row.name, row.url, resolved)
+		const id = target(row.name, row.url)
 		lengths.set(id, Math.max(lengths.get(id) ?? 0, Number(row.length) || 0))
+		if (!labels.has(id)) labels.set(id, row.name)
 	}
 	const found = new Set(rows.map((r) => r.name))
 	for (const name of new Set(names))
-		if (!found.has(name)) lengths.set(tropeTarget(name, null), 0)
+		if (!found.has(name)) {
+			const id = target(name, null)
+			lengths.set(id, 0)
+			if (!labels.has(id)) labels.set(id, name)
+		}
 	const titleTropeCount = new Set(names).size
 	return [...lengths].map(([id, length]) => ({
 		id,
 		d: Math.round(defining(length, titleTropeCount) * 100),
+		name: labels.get(id) ?? "",
 	}))
 }
 
@@ -105,36 +121,43 @@ export async function buildCandidateIndex(
 	const displayNames = new Map(
 		Object.values(resolved).map((r) => [r.url, r.title]),
 	)
+	const target = memoizedTropeTarget(resolved)
 	const tropes: string[] = []
 	const names: string[] = []
 	const references: string[][] = []
 	const positions = new Map<string, number>()
-	const titles = raw.map(({ title, names: labels, rows }) => ({
-		...title,
-		tropes: candidateTropes(labels, rows, resolved).map(({ id, d }) => {
-			let i = positions.get(id)
-			if (i === undefined) {
-				i = tropes.length
-				positions.set(id, i)
-				tropes.push(id)
-				names.push(
-					displayNames.get(id) ??
-						rows.find((r) => tropeTarget(r.name, r.url, resolved) === id)
-							?.name ??
-						labels.find((name) => tropeTarget(name, null) === id) ??
-						"",
-				)
-				references.push([])
+	const sources: Set<string>[] = []
+	const titles: Candidate[] = []
+	for (let start = 0; start < raw.length; start += TITLES_PER_SLICE) {
+		if (start > 0) await yieldToLoop()
+		for (const { title, names: labels, rows } of raw.slice(
+			start,
+			start + TITLES_PER_SLICE,
+		)) {
+			titles.push({
+				...title,
+				tropes: candidateTropes(labels, rows, resolved, target).map(
+					({ id, d, name }) => {
+						let i = positions.get(id)
+						if (i === undefined) {
+							i = tropes.length
+							positions.set(id, i)
+							tropes.push(id)
+							names.push(displayNames.get(id) ?? name)
+							references.push([])
+							sources.push(new Set())
+						}
+						return { i, d }
+					},
+				),
+			})
+			for (const row of rows) {
+				if (!row.url) continue
+				const i = positions.get(target(row.name, row.url))
+				if (i !== undefined) sources[i].add(row.url)
 			}
-			return { i, d }
-		}),
-	}))
-	const sources = tropes.map(() => new Set<string>())
-	for (const { rows } of raw)
-		for (const row of rows) {
-			const i = positions.get(tropeTarget(row.name, row.url, resolved))
-			if (i !== undefined && row.url) sources[i].add(row.url)
 		}
+	}
 	for (let i = 0; i < sources.length; i++) references[i] = [...sources[i]]
 	// Only numeric associations and one identity table survive publication; raw/resolved are build-local.
 	return { titles, tropes, names, references }
