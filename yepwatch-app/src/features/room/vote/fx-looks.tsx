@@ -4,6 +4,7 @@
  * it stays legible on a phone where the card fills the width). Transform and opacity only; colors
  * and filters sit on static copies.
  */
+import { FxView } from './fx-view';
 import type { ReactNode } from 'react';
 import { Animated, Easing, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -21,9 +22,9 @@ const FADE = 'linear-gradient(to bottom, transparent 0, #000 6%, #000 94%, trans
 /** Clipped, window-wide stage box with soft top and bottom edges on the web (back layers). */
 export function Clip({ g, opacity, children }: { g: Geo; opacity?: Node; children: ReactNode }) {
   return (
-    <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: -g.ext, top: 0, width: g.vw, height: g.stageH, overflow: 'hidden' }, webStyle({ WebkitMaskImage: FADE, maskImage: FADE }), opacity ? { opacity } : null]}>
+    <FxView pointerEvents="none" style={[{ position: 'absolute', left: -g.ext, top: 0, width: g.vw, height: g.stageH, overflow: 'hidden' }, webStyle({ WebkitMaskImage: FADE, maskImage: FADE }), opacity ? { opacity } : null]}>
       {children}
-    </Animated.View>
+    </FxView>
   );
 }
 /** Window-wide, unclipped box for front words. */
@@ -33,7 +34,7 @@ export function Over({ g, children }: { g: Geo; children: ReactNode }) {
 /** A word box centered on the card in the Over box. */
 export function At({ g, size, text, style, children }: { g: Geo; size: number; text: VoteWord; style?: object; children: ReactNode }) {
   const ww = wordW(text, size) * 1.04;
-  return <Animated.View style={[{ position: 'absolute', left: g.vw / 2 - ww / 2, top: g.cy - size / 2, width: ww, height: size, alignItems: 'center', justifyContent: 'center' }, style]}>{children}</Animated.View>;
+  return <FxView style={[{ position: 'absolute', left: g.vw / 2 - ww / 2, top: g.cy - size / 2, width: ww, height: size, alignItems: 'center', justifyContent: 'center' }, style]}>{children}</FxView>;
 }
 
 // ————— wall —————
@@ -47,21 +48,21 @@ export function WallBack({ g, kind, p, loop, reduced }: LayerProps) {
   const top0 = (g.stageH - rows * rowH) / 2 + size * 0.03;
   return (
     <Clip g={g} opacity={ease(p)}>
-      <Animated.View style={[fill, { transform: [{ scale: range(p, 1.18, 1, Easing.out(Easing.quad)) }] }]}>
+      <FxView style={[fill, { transform: [{ scale: range(p, 1.18, 1, Easing.out(Easing.quad)) }] }]}>
         {Array.from({ length: rows }, (_, r) => {
           const dir = r % 2 ? 1 : -1;
           const phase = ((r * 0.37) % 1) * itemW;
           const run = reduced ? -phase - itemW : loop.interpolate({ inputRange: [0, 1], outputRange: dir < 0 ? [-phase - itemW, -phase - 2 * itemW] : [-phase - 2 * itemW, -phase - itemW] });
           const slide = range(p, dir * itemW * 0.9, 0, Easing.out(Easing.cubic));
           return (
-            <Animated.View key={r} style={{ position: 'absolute', left: 0, top: top0 + r * rowH, width: count * itemW, height: size, flexDirection: 'row', transform: [{ translateX: Animated.add(run, slide) }] }}>
+            <FxView key={r} style={{ position: 'absolute', left: 0, top: top0 + r * rowH, width: count * itemW, height: size, flexDirection: 'row', transform: [{ translateX: Animated.add(run, slide) }] }}>
               {r % 2
                 ? <Outline text={P.text} size={size} color={P.main} width={g.phone ? 1.5 : 2.5} repeat={count} step={itemW} />
                 : Array.from({ length: count }, (__, k) => <View key={k} style={{ width: itemW, flexShrink: 0, alignItems: 'center' }}><Word text={P.text} size={size} color={P.main} /></View>)}
-            </Animated.View>
+            </FxView>
           );
         })}
-      </Animated.View>
+      </FxView>
     </Clip>
   );
 }
@@ -79,14 +80,14 @@ export function BurstBack({ g, kind, p, loop, reduced }: LayerProps) {
   return (
     <Clip g={g}>
       {nope ? (
-        <Animated.View style={[box, { opacity, transform: [{ scale }, { rotate: spin }] }]}><Rays size={D} color="#a8a29e" widthDeg={5} /></Animated.View>
+        <FxView style={[box, { opacity, transform: [{ scale }, { rotate: spin }] }]}><Rays size={D} color="#a8a29e" widthDeg={5} /></FxView>
       ) : (
         <>
-          <Animated.View style={[box, { opacity, transform: [{ scale }, { rotate: back }] }]}><Rays size={D} color="#f59e0b" opacity={0.4} from={11.25} widthDeg={4} /></Animated.View>
-          <Animated.View style={[box, { opacity, transform: [{ scale }, { rotate: spin }] }]}><Rays size={D} color={amber} widthDeg={8} /></Animated.View>
-          <Animated.View style={{ position: 'absolute', left: g.vw / 2 - D * 0.3, top: g.cy - D * 0.3, opacity: ease(p), transform: [{ scale: range(p, 0.4, 1) }] }}>
+          <FxView style={[box, { opacity, transform: [{ scale }, { rotate: back }] }]}><Rays size={D} color="#f59e0b" opacity={0.4} from={11.25} widthDeg={4} /></FxView>
+          <FxView style={[box, { opacity, transform: [{ scale }, { rotate: spin }] }]}><Rays size={D} color={amber} widthDeg={8} /></FxView>
+          <FxView style={{ position: 'absolute', left: g.vw / 2 - D * 0.3, top: g.cy - D * 0.3, opacity: ease(p), transform: [{ scale: range(p, 0.4, 1) }] }}>
             <Glow width={D * 0.6} height={D * 0.6} color="#fde68a" opacity={0.8} />
-          </Animated.View>
+          </FxView>
         </>
       )}
     </Clip>
@@ -131,7 +132,7 @@ export function StampFront({ g, kind, p }: LayerProps) {
   return (
     <Over g={g}>
       {/* Mostly see-through while it flies in, solid as it lands. */}
-      <Animated.View style={{ position: 'absolute', left: g.vw / 2 - boxW / 2, top: g.cy - boxH / 2, width: boxW, height: boxH,
+      <FxView style={{ position: 'absolute', left: g.vw / 2 - boxW / 2, top: g.cy - boxH / 2, width: boxW, height: boxH,
         opacity: p.interpolate({ inputRange: [0, 0.5, 0.88, 1], outputRange: [0, 0.14, 0.32, 1], extrapolate: 'clamp' }),
         transform: [{ scale: range(p, 3, 1, Easing.in(Easing.quad)) }, { rotate: p.interpolate({ inputRange: [0, 1], outputRange: [`${deg * 2.2}deg`, `${deg}deg`], extrapolate: 'clamp' }) }] }}>
         {/* The stamp's shadow on the stage. */}
@@ -139,7 +140,7 @@ export function StampFront({ g, kind, p }: LayerProps) {
           <Glow width={boxW + size * 0.4} height={boxH + size * 0.28} color="#000" opacity={0.4} />
         </View>
         <StampInk text={P.text} size={size} color={color} border={border} width={boxW} height={boxH} />
-      </Animated.View>
+      </FxView>
     </Over>
   );
 }
@@ -151,12 +152,12 @@ export function BleedBack({ g, kind, p, posterUrl }: LayerProps) {
   const nope = kind === 'nope';
   return (
     <Clip g={g} opacity={ease(p)}>
-      <Animated.View style={{ position: 'absolute', left: (g.vw - W) / 2, top: g.cy - H / 2, width: W, height: H, backgroundColor: web && posterUrl ? undefined : nope ? '#3a3a3a' : '#5c4310', transform: [{ scale: range(p, 1.14, 1, Easing.out(Easing.quad)) }] }}>
+      <FxView style={{ position: 'absolute', left: (g.vw - W) / 2, top: g.cy - H / 2, width: W, height: H, backgroundColor: web && posterUrl ? undefined : nope ? '#3a3a3a' : '#5c4310', transform: [{ scale: range(p, 1.14, 1, Easing.out(Easing.quad)) }] }}>
         <PosterCopy uri={posterUrl} css={nope ? 'blur(48px) grayscale(1) brightness(1.1)' : 'blur(48px) grayscale(1) contrast(0.9) brightness(1.7)'} blur={40}
           tints={nope ? [{ color: '#1a1a1a', opacity: 0.5 }, { color: red, opacity: 0.42 }] : [{ color: '#2a1c00', opacity: 0.25 }, { color: amber, opacity: 0.6 }]} />
         {web ? <View style={[fill, webStyle({ backgroundColor: nope ? red : amber, mixBlendMode: 'multiply' })]} /> : null}
         <View style={[fill, { backgroundColor: nope ? '#7f1d1d' : '#f59e0b', opacity: nope ? 0.35 : 0.28 }]} />
-      </Animated.View>
+      </FxView>
       <LinearGradient colors={nope ? ['#00000080', '#00000020', '#000000a0'] : ['#20140080', '#20140000', '#201400a0']} locations={[0, 0.5, 1]} style={fill} />
     </Clip>
   );
@@ -207,10 +208,10 @@ export function GlitchBack({ g, kind, p, loop, reduced }: LayerProps) {
   return (
     <Clip g={g} opacity={ease(p)}>
       {bands.map(([y, hh, color, o], k) => (
-        <Animated.View key={k} style={{ position: 'absolute', left: -g.vw * 0.2, width: g.vw * 1.4, top: y * g.stageH, height: Math.max(3, hh * g.stageH), opacity: o,
+        <FxView key={k} style={{ position: 'absolute', left: -g.vw * 0.2, width: g.vw * 1.4, top: y * g.stageH, height: Math.max(3, hh * g.stageH), opacity: o,
           transform: [{ translateX: jitter(loop, p, reduced, 11 + k * 7, g.vw * 0.25, 0.3) }, { scaleX: range(p, 0.2, 1) }] }}>
           <LinearGradient start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} colors={[`${color}00`, color, color, `${color}00`]} locations={[0, 0.3, 0.7, 1]} style={fill} />
-        </Animated.View>
+        </FxView>
       ))}
     </Clip>
   );
@@ -225,15 +226,15 @@ export function GlitchFront({ g, kind, p, loop, reduced, punch }: LayerProps) {
   const j = (seed: number, amp: number, sparse = 0) => jitter(loop, p, reduced, seed, amp, sparse);
   // The split copies add light on the web (screen blend); native has no blend, so they sit a little dimmer.
   const copy = (color: string, dx: number, seed: number) => (
-    <Animated.View style={[fill, { alignItems: 'center', justifyContent: 'center', opacity: web ? 0.9 : 0.75, transform: [{ translateX: Animated.add(range(p, 0, dx), j(seed, d * 0.8)) }, { translateY: j(seed + 1, d * 0.4) }] }, webStyle({ mixBlendMode: 'screen' })]}>
+    <FxView style={[fill, { alignItems: 'center', justifyContent: 'center', opacity: web ? 0.9 : 0.75, transform: [{ translateX: Animated.add(range(p, 0, dx), j(seed, d * 0.8)) }, { translateY: j(seed + 1, d * 0.4) }] }, webStyle({ mixBlendMode: 'screen' })]}>
       <Word text={P.text} size={size} color={color} />
-    </Animated.View>
+    </FxView>
   );
   // Two slices of the word that tear sideways now and then.
   const slice = (y0: number, y1: number, seed: number) => (
-    <Animated.View style={{ position: 'absolute', left: 0, width: ww, top: y0 * size, height: (y1 - y0) * size, overflow: 'hidden', transform: [{ translateX: j(seed, size * 0.16, 0.55) }] }}>
+    <FxView style={{ position: 'absolute', left: 0, width: ww, top: y0 * size, height: (y1 - y0) * size, overflow: 'hidden', transform: [{ translateX: j(seed, size * 0.16, 0.55) }] }}>
       <View style={{ position: 'absolute', left: 0, width: ww, top: -y0 * size, height: size, alignItems: 'center', justifyContent: 'center' }}><Word text={P.text} size={size} color={main} /></View>
-    </Animated.View>
+    </FxView>
   );
   return (
     <Over g={g}>
@@ -241,7 +242,7 @@ export function GlitchFront({ g, kind, p, loop, reduced, punch }: LayerProps) {
         <View style={{ position: 'absolute', left: -size * 0.3, top: -size * 0.1 }}><Glow width={ww + size * 0.6} height={size * 1.2} color="#000" opacity={0.5} /></View>
         {copy(c1, -d, 3)}
         {copy(c2, d, 5)}
-        <Animated.View style={[fill, { alignItems: 'center', justifyContent: 'center', transform: [{ translateX: j(9, d * 0.3) }] }]}><Word text={P.text} size={size} color={main} /></Animated.View>
+        <FxView style={[fill, { alignItems: 'center', justifyContent: 'center', transform: [{ translateX: j(9, d * 0.3) }] }]}><Word text={P.text} size={size} color={main} /></FxView>
         {slice(0.18, 0.34, 21)}
         {slice(0.6, 0.72, 27)}
       </At>

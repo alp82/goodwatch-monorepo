@@ -218,7 +218,7 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
     setYeps(settled.pending);
     const made = settled.matched[0];
     const matched = made ? shared.candidates.find((c) => c.id === made.candidateId) : undefined;
-    if (made && matched && view.people.length > 1) setMoment({ key: matchKey(made), title: titlePresentation(matched), look: made.look });
+    if (made && matched && view.people.length > 1) setMoment({ key: matchKey(made), cardKey: `${made.generation}:${made.candidateId}`, title: titlePresentation(matched), look: made.look });
   }
   const rowWidth = area && geo ? Math.min(area.width, Math.max(geo.w, 320)) : phone ? layout.width - 32 : layout.max;
   const undoTarget = latestRetainedVote(snapshot);

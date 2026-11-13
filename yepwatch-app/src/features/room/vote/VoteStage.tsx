@@ -23,6 +23,7 @@ import type { StageGeometry } from './geometry';
 import { BackLayer, FrontLayer } from './layers';
 import { LOOPING, type Look } from './looks';
 import { Moment } from './moments';
+import { FxView } from './fx-view';
 import { clampI, driver, fill, hidden, same, web, type A, type LayerProps, type Node } from './paint';
 
 export interface StageCard {
@@ -33,8 +34,23 @@ export interface StageCard {
 }
 export interface MatchMoment {
   key: string;
+  /** The key of the card whose Yep made it (`StageCard.key`). */
+  cardKey: string;
   title: GlowTitle;
   look: Look;
+}
+/**
+ * A match moment built ahead, hidden, for a card a Yep may still make a match of: the live card, and the card
+ * of the latest Yep until its answer is in. MATCH then only has to show it (opacity and transforms), not build
+ * and paint it in its first frame.
+ */
+interface Seat {
+  id: number;
+  cardKey: string;
+  look: Look;
+  posterUrl: string | null;
+  /** Its own drive: 1 (fully in, so it is painted at full size) while it waits; the moment's run when it plays. */
+  a: Animated.Value;
 }
 export interface VoteStageControls {
   /** Fly the card as the buttons and arrow keys do: lean past the threshold, hold, fly. */
@@ -206,6 +222,14 @@ const LiveCard = memo(function LiveCard({ card, geo, box, entry, x, y, pan, serv
 });
 
 const MemoMoment = memo(Moment);
+/** A seat's moment: hidden while it waits (painted already, on layers of its own), shown as it plays. */
+const SeatMoment = memo(function SeatMoment({ seat, active, g, loop, reduced }: { seat: Seat; active: boolean; g: StageGeometry; loop: Animated.Value; reduced: boolean }) {
+  return (
+    <FxView {...hidden} testID={active ? 'match-moment' : undefined} style={[fill, { opacity: active ? 1 : 0 }]}>
+      <MemoMoment look={seat.look} g={g} posterUrl={seat.posterUrl} a={seat.a} loop={loop} reduced={reduced} testID="" />
+    </FxView>
+  );
+});
 
 /** Memoized: the voting screen re-renders on every room update; the stage only when what it shows changes. */
 export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disabled, keys, reduced, enter, onEntered, activity, services, moment, controls, onVote, onDetails, onGesture, onPointer, onMomentEnd }: {
@@ -307,16 +331,36 @@ export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disab
     return () => v.removeListener(id);
   }, [v, litYep, litNope, reduced]);
 
-  // The match moment: in, hold, out; the stage's looks step aside meanwhile.
+  // The match moment: in, hold, out; the stage's looks step aside meanwhile. A seat built for its card plays it
+  // (web); otherwise it is built now.
   const momentKey = moment?.key;
-  useEffect(() => {
+  const [seats, setSeats] = useState<Seat[]>([]);
+  // Chosen once per moment: a seat built while a moment plays without one never takes it over, and the chosen seat
+  // stays drawn until its moment ends, even if a deferred build pruned it from the list meanwhile.
+  const playing = useMemo(() => (moment ? seats.find((s) => s.cardKey === moment.cardKey && s.look === moment.look && s.posterUrl === moment.title.posterUrl) : undefined),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [momentKey]);
+  const playingSeat = useRef(playing);
+  useLayoutEffect(() => { playingSeat.current = playing; });
+  // Before paint: a seat waits fully in (a = 1), so it starts from 0 in the very frame it shows. Its drive leads
+  // and the stage's follows it: with no look on the stage nothing holds the stage's drive, and a held-less drive
+  // stops its own run.
+  useLayoutEffect(() => {
     if (!momentKey) return;
-    const a = values.moment;
-    const end = () => { a.setValue(0); onMomentEnd(momentKey); };
+    const seat = playingSeat.current;
+    const a = seat ? seat.a : values.moment;
+    const follow = seat ? seat.a.addListener(({ value }) => values.moment.setValue(value)) : null;
+    const end = () => {
+      a.setValue(0);
+      if (follow) seat!.a.removeListener(follow);
+      values.moment.setValue(0);
+      if (seat) setSeats((list) => list.filter((s) => s !== seat));
+      onMomentEnd(momentKey);
+    };
     if (reduced) {
       a.setValue(1);
       const id = setTimeout(end, 900);
-      return () => clearTimeout(id);
+      return () => { clearTimeout(id); if (follow) seat!.a.removeListener(follow); };
     }
     a.setValue(0);
     const run = Animated.sequence([
@@ -325,7 +369,7 @@ export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disab
       Animated.timing(a, { toValue: 2, duration: 300, easing: Easing.in(Easing.quad), useNativeDriver: driver }),
     ]);
     run.start(({ finished }) => { if (finished) end(); });
-    return () => run.stop();
+    return () => { run.stop(); if (follow) seat!.a.removeListener(follow); };
   }, [momentKey, reduced, values.moment, onMomentEnd]);
 
   useEffect(() => () => fadeRun.current?.stop(), []);
@@ -357,6 +401,20 @@ export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disab
     startTransition(() => setSets((list) => withLive(list, c)));
     // Per live card: its key names its look.
   }, [topKey, withLive, settled]);
+  // The live card's seat is built the same way, once no moment plays either (its first paint would cost one of
+  // that moment's frames). It keeps the latest Yep's seat, which waits for that Yep's answer.
+  const seatSerial = useRef(0);
+  const yepSeat = useRef<string | null>(null);
+  const idle = settled && !momentKey;
+  useEffect(() => {
+    const c = liveCard.current;
+    if (!c || !idle || !web) return;
+    startTransition(() => setSeats((list) => {
+      if (list.some((s) => s.cardKey === c.key && s.look === c.look && s.posterUrl === c.title.posterUrl)) return list;
+      const kept = list.filter((s) => s.cardKey === yepSeat.current || s === playingSeat.current);
+      return [...kept, { id: ++seatSerial.current, cardKey: c.key, look: c.look, posterUrl: c.title.posterUrl, a: new Animated.Value(1) }];
+    }));
+  }, [topKey, idle]);
   // A drag shows the live look at once: its set is built now if the background hasn't yet.
   const engage = () => {
     setEngaged(true);
@@ -423,6 +481,7 @@ export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disab
       return;
     }
     answered.current = target.key;
+    if (answer) yepSeat.current = target.key;
     // Where the released drag left the card, as the gesture set it: a native-driven stopAnimation reports
     // its value only later, so the departing copy would start at the center.
     const at = fromDrag ? dragAt.current : { x: 0, y: 0, v: 0 };
@@ -579,7 +638,8 @@ export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disab
       {departure ? <Departing key={departure.id} d={departure} geo={geo} onDone={departed} /> : null}
       {frontSets.map((set) => lookSet(set, FrontLayer, quietFill))}
       {card ? <StampMarks v={v} /> : null}
-      {moment ? <MemoMoment key={moment.key} look={moment.look} g={geo} posterUrl={moment.title.posterUrl} a={values.moment} loop={loop} reduced={reduced} /> : null}
+      {(playing && !seats.includes(playing) ? [...seats, playing] : seats).map((seat) => <SeatMoment key={seat.id} seat={seat} active={seat === playing} g={geo} loop={loop} reduced={reduced} />)}
+      {moment && !playing ? <MemoMoment key={moment.key} look={moment.look} g={geo} posterUrl={moment.title.posterUrl} a={values.moment} loop={loop} reduced={reduced} /> : null}
     </View>
   );
 });
