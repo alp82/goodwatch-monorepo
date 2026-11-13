@@ -8,7 +8,4 @@ Disallow: /discover/*?
 
 Allow: /
 
-User-agent: Google-Extended
-Disallow: /
-
 Sitemap: https://goodwatch.app/sitemaps/sitemap.xml
