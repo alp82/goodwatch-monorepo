@@ -179,6 +179,19 @@ export function storedIndex(deps: {
 				return null
 			}
 		},
+		/** When the stored generation was built, from its meta key alone; null without one. */
+		async builtAt(): Promise<number | null> {
+			const redis = deps.redis()
+			if (!redis) return null
+			try {
+				const raw = await redis.get(META_KEY)
+				const builtAt = raw ? Number((JSON.parse(raw) as Meta).builtAt) : NaN
+				return Number.isFinite(builtAt) ? builtAt : null
+			} catch (error) {
+				report(error)
+				return null
+			}
+		},
 		async save(value: CandidateIndex, builtAt: number) {
 			const redis = deps.redis()
 			if (!redis) return
@@ -265,6 +278,14 @@ export async function loadOrBuild(
 		claim = await store.claim()
 	}
 	try {
+		// A builder may have published and released between this process's last read and its claim.
+		if (claim.token) {
+			const builtAt = await store.builtAt()
+			if (builtAt !== null && now() - builtAt < maxAgeMs) {
+				const published = fresh(await store.load())
+				if (published) return published
+			}
+		}
 		const value = await build()
 		const builtAt = now()
 		await store.save(value, builtAt)

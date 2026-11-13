@@ -261,3 +261,32 @@ test("past twice the lock's lifetime a waiter builds without the lock", async ()
 	assert.equal(builds, 1)
 	assert.equal(waits, (2 * LOCK_SECONDS * 1000) / 15_000)
 })
+
+test("a copy published between the last read and the claim is used, not built again", async () => {
+	const redis = memoryRedis()
+	const store = storedIndex({ redis: () => redis })
+	const other = storedIndex({ redis: () => redis })
+	const now = 10_000_000
+	// The other builder publishes and releases right before this process claims the lock.
+	const set = redis.set.bind(redis)
+	let first = true
+	redis.set = async (...args) => {
+		if (first) {
+			first = false
+			await other.save(sample(1), now)
+		}
+		return set(...args)
+	}
+	let builds = 0
+	const result = await loadOrBuild(
+		store,
+		async () => {
+			builds++
+			return sample()
+		},
+		{ maxAgeMs: 3_600_000, now: () => now, wait: async () => {} },
+	)
+	assert.equal(builds, 0)
+	assert.equal(result.value.titles.length, 1)
+	assert.equal(redis.values.has("trope-recs:index:v1:lock"), false)
+})
