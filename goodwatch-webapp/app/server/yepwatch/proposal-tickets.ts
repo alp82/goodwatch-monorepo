@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto"
 /**
  * Realtime tickets, kept outside the room: issuing one and consuming it on WebSocket attach never writes the room
  * row, so neither waits in the room's write lane behind (or ahead of) a vote or Start.
@@ -59,9 +60,16 @@ export interface ScriptClient {
  * Both keys carry the room in a hash tag, so one script touches one cluster slot. `held` is a sorted set of the
  * room's live tickets (`participantId:epoch:hash`, scored by expiry) that counts a participant's outstanding
  * tickets in its current capability epoch (an earlier epoch's tickets can never attach, so they don't count).
- * Scripts run once: the client must not resend a command whose answer was lost (see the release bus).
+ * Both scripts are safe to run twice: a resend after a lost answer (a client that retries) gets the first answer
+ * again. Issue recognises its own ticket; consume marks the ticket consumed by its attempt (until the ticket's
+ * expiry) instead of deleting it, and the same attempt gets the record again while any other gets nothing.
  */
 const ISSUE = `
+local current = redis.call('GET', KEYS[1])
+if current then
+  if current == ARGV[7] then return 1 end
+  return redis.error_reply('ticket exists')
+end
 redis.call('ZREMRANGEBYSCORE', KEYS[2], '-inf', ARGV[1])
 local held = 0
 for _, m in ipairs(redis.call('ZRANGE', KEYS[2], 0, -1)) do
@@ -74,8 +82,14 @@ if redis.call('PTTL', KEYS[2]) < tonumber(ARGV[3]) then redis.call('PEXPIRE', KE
 return 1
 `
 const CONSUME = `
-local value = redis.call('GETDEL', KEYS[1])
+local value = redis.call('GET', KEYS[1])
 if not value then return false end
+local marker = 'consumed:' .. ARGV[2] .. '|'
+if string.sub(value, 1, 9) == 'consumed:' then
+  if string.sub(value, 1, #marker) == marker then return string.sub(value, #marker + 1) end
+  return false
+end
+redis.call('SET', KEYS[1], marker .. value, 'KEEPTTL')
 local record = cjson.decode(value)
 redis.call('ZREM', KEYS[2], record.participantId .. ':' .. record.epoch .. ':' .. ARGV[1])
 return value
@@ -106,11 +120,16 @@ export class ValkeyTicketStore implements TicketStore {
 		)
 		return Number(issued) === 1
 	}
+	/** Issues and consumes a one-second ticket of its own: every command the scripts use, under this user's ACL. */
 	async check() {
-		await this.client.eval(CONSUME, 2, ticketKey("readiness", "none"), heldKey("readiness"), "none")
+		const now = Date.now()
+		const room = `readiness-${randomUUID()}`
+		const record = { participantId: "readiness", epoch: 0, expiresAt: now + 1000 }
+		if (!(await this.issue(room, "check", record, 1, now))) throw new Error("Ticket store refused its check ticket")
+		if (!(await this.consume(room, "check", now))) throw new Error("Ticket store lost its check ticket")
 	}
 	async consume(roomId: string, hash: string, now: number) {
-		const raw = await this.client.eval(CONSUME, 2, ticketKey(roomId, hash), heldKey(roomId), hash)
+		const raw = await this.client.eval(CONSUME, 2, ticketKey(roomId, hash), heldKey(roomId), hash, randomUUID())
 		if (typeof raw !== "string") return null
 		const record = parseRecord(raw)
 		return record.expiresAt > now ? record : null

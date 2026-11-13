@@ -9,6 +9,7 @@ import { ProposalMemoryRepository, proposalFixtureCatalog } from "./proposal-tes
 import { createProposalHandler } from "./proposal-http.server.ts"
 import { MemoryTicketStore, ValkeyTicketStore, type TicketStore } from "./proposal-tickets.ts"
 import { hash } from "./crypto.server.ts"
+import { RoomError } from "./errors.ts"
 
 const secret = "ticket-tests-secret-at-least-thirty-two-chars"
 const admission = (nickname = "A") => ({
@@ -131,6 +132,17 @@ test("a ticket issued into the room before this release still attaches once", as
 	await assert.rejects(r.service.attach(r.id, ticket), { code: "unauthorized" })
 })
 
+test("an unknown ticket is refused; a room store failure while checking for an old one is reported, not refused", async () => {
+	const r = await room()
+	await assert.rejects(r.service.attach(r.id, "never-issued"), { code: "unauthorized" })
+	const read = r.repo.read.bind(r.repo)
+	r.repo.read = async () => {
+		throw new RoomError("busy", "Store unavailable", 503, true)
+	}
+	await assert.rejects(r.service.attach(r.id, "never-issued"), { code: "busy" })
+	r.repo.read = read
+})
+
 test("a command's answer says how long it waited in the room's write lane", async () => {
 	const r = await room()
 	const handler = createProposalHandler(r.service, { serviceSecret: secret, allowedOrigins: [], secureCookies: false })
@@ -204,6 +216,18 @@ test("Valkey ticket store: one use, per-participant limit, rooms apart, expiry",
 	assert.deepEqual(await store.consume("room-c", "e2", now), record("p1"))
 	assert.equal(await store.issue("room-c", "e3", { ...record("p1"), epoch: 2 }, 1, now), true, "consuming freed the place")
 	await store.check()
+	// A script resent after its answer was lost (a client that retries) gets the first answer again.
+	const resending = new ValkeyTicketStore({
+		async eval(...args: Parameters<typeof client.eval>) {
+			await client.eval(...args) // this answer is "lost"
+			return client.eval(...args)
+		},
+	} as never)
+	assert.equal(await resending.issue("room-d", "r1", record("p9"), 1, now), true, "a resent issue is the same issue")
+	await assert.rejects(store.issue("room-d", "r1", record("p8"), 1, now), /ticket exists/)
+	assert.deepEqual(await resending.consume("room-d", "r1", now), record("p9"), "a resent consume gets its record")
+	assert.equal(await store.consume("room-d", "r1", now), null, "and nobody else does")
+	assert.ok((await client.pttl("yepwatch:ticket:{room-d}:r1")) <= 30_000, "the consumed marker keeps the ticket's expiry")
 	const concurrent = await Promise.all(Array.from({ length: 8 }, () => store.consume("room-a", "h2", now)))
 	assert.equal(concurrent.filter(Boolean).length, 1, "exactly one concurrent consume wins")
 	// A memory store follows the same rules.

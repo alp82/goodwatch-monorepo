@@ -10,7 +10,7 @@ import {
 } from "../../../packages/yepwatch-contracts/proposal.ts"
 import { createProposalHandler } from "./proposal-http.server.ts"
 import { ProposalService } from "./proposal-service.server.ts"
-import { ValkeyTicketStore, type ScriptClient } from "./proposal-tickets.ts"
+import type { TicketStore } from "./proposal-tickets.ts"
 import type { Sql } from "./repository.server.ts"
 import { RelationalProposalRepository } from "./proposal-relational-repository.ts"
 import { checkReleaseStore } from "./proposal-release-store.ts"
@@ -31,11 +31,8 @@ export interface ReleaseDependencies {
 		ping(): Promise<unknown>
 		publish(channel: string, value: string): Promise<unknown>
 	}
-	/**
-	 * The realtime tickets' connection (ValkeyTicketStore), one that never resends a command whose answer was lost:
-	 * a replayed consume would turn an uncertain one into "unauthorized". Its scripts are part of readiness.
-	 */
-	tickets: ScriptClient
+	/** The realtime tickets, shared by every API process (ValkeyTicketStore). Its check is part of readiness. */
+	tickets: TicketStore
 	now?: () => number
 }
 /** No guest identities, fixtures, DDL or fail-open readiness. Normal handler behavior stays in its existing module. */
@@ -50,7 +47,7 @@ export function createReleaseRuntime(
 		: undefined
 	if (members && !deps.memberCatalog)
 		throw new Error("Member catalog adapter required")
-	const tickets = new ValkeyTicketStore(deps.tickets)
+	const tickets = deps.tickets
 	const quotas = new SqlCreationQuotas(deps.sql, config.control.roomsPerPerson ?? 10)
 	const control = new ReleaseControl(deps.sql, config.control, quotas)
 	const service = new ProposalService(
@@ -92,7 +89,7 @@ export function createReleaseRuntime(
 				deps.catalogProbe(),
 				checkReleaseStore(deps.sql, config.keyId, config.secret),
 				control.check(),
-				Promise.all([deps.bus.ping(), tickets.check()]),
+				Promise.all([deps.bus.ping(), tickets.check?.()]),
 			])
 			for (const [i, key] of (
 				Object.keys(checks) as (keyof typeof checks)[]

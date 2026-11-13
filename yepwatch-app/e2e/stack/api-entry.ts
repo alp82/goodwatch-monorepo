@@ -8,6 +8,7 @@
  *  - the public origin is http://127.0.0.1:18480 and release limits are at the schema maxima (100/120/2400/120).
  * Bundled by up.mjs into goodwatch-webapp/build/yepwatch-e2e/api.mjs. Usage: api.mjs serve|provision|reset
  */
+import { ValkeyTicketStore } from "~/server/yepwatch/proposal-tickets.ts"
 import { createReleaseRuntime } from "~/server/yepwatch/proposal-release-runtime.ts"
 import { releaseHttp } from "~/server/yepwatch/proposal-release-http.ts"
 import { createReleaseBus } from "~/server/yepwatch/proposal-release-bus.ts"
@@ -180,9 +181,11 @@ const config = {
 const bus = createReleaseBus(config)
 bus.on("error", () => {})
 void bus.connect().catch(() => {})
-const tickets = createReleaseBus(config, { once: true })
-tickets.on("error", () => {})
-void tickets.connect().catch(() => {})
+// Tickets on a connection of their own that never resends a command (their scripts are replay-safe anyway).
+const ticketBus = createReleaseBus(config, { once: true })
+ticketBus.on("error", () => {})
+void ticketBus.connect().catch(() => {})
+const tickets = new ValkeyTicketStore(ticketBus)
 const runtime = createReleaseRuntime(config as Parameters<typeof createReleaseRuntime>[0], {
 	sql,
 	catalog: fixtureCatalog(),

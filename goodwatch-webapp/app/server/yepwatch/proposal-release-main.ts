@@ -1,4 +1,5 @@
 import { createReleaseBus } from "./proposal-release-bus.ts"
+import { ValkeyTicketStore } from "./proposal-tickets.ts"
 import Redis from "ioredis"
 import { loadReleaseSecrets, releaseConfig } from "./proposal-release-config.ts"
 import { crateSql } from "./repository.server.ts"
@@ -48,9 +49,11 @@ assertNoSharedCatalogWriter(cache.getRedisCluster)
 const bus = createReleaseBus(config)
 bus.on("error", () => {})
 void bus.connect().catch(() => {}) // A missing bus keeps readiness red and reconnects; no startup room writes.
-const tickets = createReleaseBus(config, { once: true })
-tickets.on("error", () => {})
-void tickets.connect().catch(() => {})
+// Tickets on a connection of their own that never resends a command (their scripts are replay-safe anyway).
+const ticketBus = createReleaseBus(config, { once: true })
+ticketBus.on("error", () => {})
+void ticketBus.connect().catch(() => {})
+const tickets = new ValkeyTicketStore(ticketBus)
 snapshot.startTitleSnapshot()
 const runtime = createReleaseRuntime(config, {
 	sql: crateSql(config.origin, config.username, config.password),
@@ -147,7 +150,7 @@ async function shutdown(signal: string) {
 	cache.stopRedisClusterForTest()
 	source.disconnect()
 	bus.disconnect()
-	tickets.disconnect()
+	ticketBus.disconnect()
 	console.info(JSON.stringify({ event: "yepwatch_release_stopped" }))
 	process.exit(0)
 }

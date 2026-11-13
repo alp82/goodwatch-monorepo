@@ -1896,9 +1896,13 @@ export class ProposalService {
 		const digest = hash(ticket)
 		const t = await this.tickets.consume(id, digest, this.now())
 		if (!t) {
+			// A room that is gone or expired holds no ticket; any other failure is reported as it is (retryable).
 			const legacy = await this.get(id).then(
 				({ room }) => room.tickets.some((x) => equal(x.hash, digest)),
-				() => false
+				(e: unknown) => {
+					if (e instanceof RoomError && ["not_found", "expired"].includes(e.code)) return false
+					throw e
+				}
 			)
 			requireRoom(legacy, "unauthorized", "Ticket expired or consumed", 401)
 			return this.write(id, () => this.consumeTicket(id, ticket))

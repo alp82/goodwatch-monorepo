@@ -1,3 +1,4 @@
+import { MemoryTicketStore } from "./proposal-tickets.ts"
 import {
 	controlFingerprint,
 	CONTROL_COLUMNS,
@@ -161,7 +162,7 @@ test("Readiness stays red indefinitely without loaded snapshot; probes recover a
 			},
 			publish: async () => {},
 		},
-		tickets: { eval: async () => null },
+		tickets: new MemoryTicketStore(),
 	})
 	try {
 		await runtime.probe()
