@@ -33,6 +33,11 @@ Until November 2026 every poll read every job row since the observation start: 6
 
 Daily schedules keep every row, because their slot coverage goes back to the observation start. A poll where a schedule's next interval is 23 hours or more (a weekday cron over the weekend) reads every row and leaves the history as it is. Roots with the same time are ordered by id. A history row with a different `version` is ignored and rebuilt from all rows, so deleting folded job rows is only safe while the history rows stay.
 
+Job rows from before October 14, 2026 (`job:01a137b5-7000-0000-0000-000000000000`) of 21 frequent pipelines may be pruned; the backup export and script are in `gw-monitoring-prune-logs/prune_monitoring.py` (stages `precheck`, `backup`, `fetch`, `delete`, `verify`, `report`). Once rows are pruned, restore the export before either of these changes, or the pruned runs drop out of the report totals:
+
+- Bumping `HISTORY_VERSION`, which rebuilds every history from the rows that are left.
+- Changing a pruned schedule to a cadence of 23 hours or more, which makes polls read its remaining rows without the history.
+
 ## Thresholds and incidents
 
 `RUNTIME_HOURS` in `f/monitoring/check.py` sets explicit per-pipeline runtime limits: two hours for frequent publication/provider jobs, six hours for rating crawlers and daily initialization, twelve hours for full Crate population, and six minutes for homepage warming. Unknown future paths default to six hours. Scheduling grace is half a cadence bounded to five minutes–one hour. Three genuine failures trigger a failure incident; neutral no-work/overlap outcomes do not reset or create that streak. Lack-of-progress requires independent unhealthy evidence and exceeds the larger of twice the runtime limit or three cadences.
