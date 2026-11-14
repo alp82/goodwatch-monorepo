@@ -37,7 +37,8 @@ interface Client {
   inspectionMatches?: { matches: { candidateId: string }[] }
 }
 /** `known`: the newest revision any read or committed room has shown for this room (a committed room older is stale). */
-interface Room { id: string; clients: Set<Client>; target: number; known: number; epoch: number; running: boolean }
+/** `requests`: how many times the room was queued for a read; a read that started after a request answers it. */
+interface Room { id: string; clients: Set<Client>; target: number; known: number; epoch: number; running: boolean; requests: number }
 type OutputFrame = Exclude<ServerRealtimeFrame | ContinuousFrame, { snapshot: unknown }> |
   { type: 'room.snapshot' | 'room.updated'; snapshot: SharedRoomSnapshot | ContinuousSnapshot | ProposalSnapshot }
 
@@ -125,6 +126,7 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
   }
   function enqueue(room: Room) {
     if (draining || !rooms.has(room.id)) return
+    room.requests++
     pending.add(room)
     queueMicrotask(pump)
   }
@@ -169,6 +171,8 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
     for (let attempt = 0; attempt < 3 && !draining && deliveryReady(); attempt++) {
       const epoch = room.epoch
       const target = room.target
+      // Everything queued until now (a phone attaching, a hint, the audit) is answered by this attempt's read.
+      const covered = room.requests
       const clients = [...room.clients].filter(client => {
         if (client.ws.readyState !== WebSocket.OPEN || !client.attachment) return false
         if (client.attachment.leaseExpiresAt <= Date.now() || client.attachment.roomExpiresAt <= Date.now()) {
@@ -208,7 +212,11 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
         // A future revision hint can precede a readable commit; do not present stale state as live.
         if ([...room.clients].some(c => c.lastRevision < room.target)) continue
         // A newer target every phone already has (handed over from the commit) needs no second read.
-        if (room.target === target || ![...room.clients].some(c => c.degraded)) return
+        if (room.target === target || ![...room.clients].some(c => c.degraded)) {
+          // A phone that attached during the previous attempt was read by this one: no second read for it.
+          if (room.requests === covered) pending.delete(room)
+          return
+        }
       }
     }
   }
@@ -365,7 +373,7 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
             clearTimeout(client.authTimer)
             client.attachment = attachment; expiry(client)
             if (!room) {
-              room = { id: request.roomId, clients: new Set(), target: 0, known: 0, epoch: 0, running: false }
+              room = { id: request.roomId, clients: new Set(), target: 0, known: 0, epoch: 0, running: false, requests: 0 }
               rooms.set(room.id, room)
             }
             client.room = room; room.clients.add(client)

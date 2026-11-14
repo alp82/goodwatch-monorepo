@@ -191,7 +191,8 @@ test('Two gateways relay decision cheers to capable clients; stale and restarted
   api.state.shared.decision = { candidateId: 'movie:1', proposalVersion: 1, decidedAt: Date.now(), availability: [] }
   api.state.shared.revision++
   buses.forEach(bus => bus.hint(api.state.shared.revision))
-  await until(() => modern.frames.some(f => f.type === 'room.updated' && f.snapshot.phase === 'decided'))
+  // Each gateway reads the decided room on its own; the sender's gateway allows a cheer only once its phone has it.
+  await until(() => [old, modern].every(c => c.frames.some(f => f.type === 'room.updated' && f.snapshot.phase === 'decided')))
   send(old, 1, { cheer })
   await until(() => events(modern.frames).some(f => f.cheer?.kind === 'hold'))
   const first = events(modern.frames).find(f => f.cheer)!
@@ -376,8 +377,9 @@ test('A delayed committed room older than a revision another read already showed
   // Revision 3 revoked person-2. Its hint was lost; a phone attaching makes the gateway read the room: the first
   // batch (person-1's phones) reads revision 3, the second (person-2's) is held.
   api.state.revokedParticipants.add('person-2'); api.state.shared.revision = 3
-  let calls = 0, release!: () => void
-  api.state.beforeView = () => ++calls === 2 ? new Promise<void>(resolve => { release = resolve }) : Promise.resolve()
+  // The two batches are two requests that can reach the API in either order: hold the one with person-2's phones.
+  let release!: () => void
+  api.state.beforeView = participants => participants.includes('person-2') ? new Promise<void>(resolve => { release = resolve }) : Promise.resolve()
   const late = await connect<ServerRealtimeFrame>(`ws://127.0.0.1:${address.port}${paths.realtime}`)
   late.ws.send(JSON.stringify({ type: 'authenticate', ticket: api.ticket('person-1'), roomId: 'room-1', lastRevision: null }))
   await until(() => typeof release === 'function' && clients.slice(0, 24).every(c => revisions(c.frames).includes(3)))

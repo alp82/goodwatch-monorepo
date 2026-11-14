@@ -4,8 +4,9 @@ import { createServer } from 'node:net'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { ValkeyBus } from '../src/bus.js'
+// The API's bus lives in goodwatch-webapp and needs its node_modules (ioredis). It is loaded only when this test
+// runs (YEPWATCH_TEST_VALKEY_IMAGE set), so the gateway's own suite runs on a checkout without the webapp.
 const busModule = new URL('../../goodwatch-webapp/app/server/yepwatch/proposal-release-bus.ts', import.meta.url)
-const { createReleaseBus } = await import(busModule.href)
 import { REVISION_CHANNEL, ACTIVITY_CHANNEL, REVISION_MESSAGE_MAX } from '@goodwatch/yepwatch-contracts/proposal'
 const exec = promisify(execFile)
 const image = process.env.YEPWATCH_TEST_VALKEY_IMAGE
@@ -45,6 +46,7 @@ test('release API and gateway share a real three-node cluster through the named 
   t.after(() => bus.close())
   void bus.start()
   await until(() => bus.ready)
+  const { createReleaseBus } = await import(busModule.href)
   const publisher = createReleaseBus({ redisNodes: nodes, redisUsername: config.username, redisPassword: password, revisionUrl: undefined })
   publisher.on('error', () => {})
   t.after(() => publisher.disconnect())

@@ -45,7 +45,8 @@ export async function fixture(continuous: boolean | 'proposal' = false) {
     shared: (continuous === 'proposal' ? proposalSnapshot() : continuous ? continuousSnapshot() : snapshot()) as any, leaseMs: 2000, revoked: false, unavailable: false, viewCalls: 0,
     // The proposal API reads a room once for all of its phones; false stands in for an older API without that read.
     batched: continuous === 'proposal', viewsCalls: 0,
-    beforeView: undefined as undefined | (() => Promise<void>),
+    /** Holds a read before it answers; gets the participants whose leases the read carries. */
+    beforeView: undefined as undefined | ((participants: string[]) => Promise<void>),
     // Participants whose leases the API refuses (their access was revoked); `revoked` refuses every lease.
     revokedParticipants: new Set<string>(),
     corruptAttachment: undefined as undefined | Record<string, unknown>,
@@ -81,13 +82,13 @@ export async function fixture(continuous: boolean | 'proposal' = false) {
       if (state.revoked || !a || state.revokedParticipants.has(a.participantId) || a.leaseExpiresAt <= Date.now() || a.roomId !== body.roomId) { reply(403, {}); return }
       // Capture BEFORE delay to exercise subscribe/read/update races.
       const shared = structuredClone(state.shared)
-      await state.beforeView?.()
+      await state.beforeView?.([a.participantId])
       reply(200, { ...lease(a.participantId), snapshot: shared }); return
     }
     if (state.batched && 'realtimeViews' in routes && req.url === routes.realtimeViews) {
       state.viewsCalls++
       const shared = structuredClone(state.shared)
-      await state.beforeView?.()
+      await state.beforeView?.((body.leases as string[]).flatMap(value => leases.get(value)?.participantId ?? []))
       const views = (body.leases as string[]).map(value => {
         const a = leases.get(value)
         return state.revoked || !a || state.revokedParticipants.has(a.participantId) || a.leaseExpiresAt <= Date.now() || a.roomId !== body.roomId
