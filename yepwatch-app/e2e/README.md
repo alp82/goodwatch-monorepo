@@ -21,7 +21,7 @@ UX rules live in `lib/rules.mjs`; speed targets in `budgets.mjs`.
 
 `node run.mjs speed [-- --grep <journey>]` brings up the hermetic stack and runs the clean journeys one at a time,
 the timing journey three times, with frame pacing on (no frame over 20 ms while something animates). About
-15 minutes. Run it on a machine with a GPU and nothing else busy, now and then or after an animation change.
+6 minutes. Run it on a machine with a GPU and nothing else busy, now and then or after an animation change.
 
 Read the end of the output (also `artifacts/speed/summary.md`): one line per moment, `ok` or `OVER`, with its p95
 against the target in `budgets.mjs`, then any `frames` failures naming the slow frame and the press before it.
