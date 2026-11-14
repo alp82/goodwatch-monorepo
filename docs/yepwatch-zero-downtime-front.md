@@ -18,6 +18,37 @@ The canonical files: `goodwatch-proxy/Caddyfile` (the `:8480` site), `goodwatch-
 
 State on November 13: pgnode01 runs `caddy:2.11.7` with the `:8480` site on `10.0.0.11:8480` (backup of the old files in `/root/backups/goodwatch-proxy-<time>/`, old image tagged `caddy:2.8.4-before-yepwatch-hold`). The compose change was pushed with `[skip cd]` and goes live with the next YepWatch deploy. Until then the hold has nothing to reach (`10.0.0.21:18480` isn't published) and answers 502 after 30 s, so the Traefik file must wait for that deploy.
 
+## Quiet deploys (November 14, 2026)
+
+A redeploy on November 14 (02:16 UTC) still showed "Reconnecting…" on every phone for about 11 s: the hold covered
+HTTP, but the live channel's WebSocket dropped with its container and only came back once the new api had started.
+Measured on that deploy: Coolify removes the old containers one by one, newest first (front, gateway, api, valkey;
+3.5 s), starts nothing for another 1.9 s, then started valkey, waited 2.5 s for its health check, and started api,
+gateway and front one after another; the api opened its port only after the title snapshot had loaded, 4.9 s after
+its container started. The front went first, so phones only saw the socket drop (1006).
+
+Changed (`yepwatch-app/compose.yaml`, `proposal-release-main.ts`/`-runtime.ts`, the hold in `goodwatch-proxy/Caddyfile`,
+the app's `core/continuous/realtime.ts` and `connection-words.ts`):
+
+- **Order.** valkey, then the api once valkey has *started* (not healthy), then the front, then the gateway. Coolify
+  removes newest first, so the gateway goes first (its goodbye: a `restarting` frame and close 1012), the front never
+  holds a request for an api that is already gone, and valkey goes last.
+- **WebSocket straight to the gateway.** The gateway publishes `10.0.0.21:18481`; the hold sends the exact path
+  `/api/yepwatch/v1/proposal/realtime` there. A front that stops while it holds a WebSocket upgrade waits its whole
+  grace period (10 s, measured), so reconnects must never wait inside the front.
+- **The api listens at once** and holds early requests in its own process (`startupHoldMs`, 25 s), readiness
+  included. The realtime ticket and the gateway's attach/view/views are answered as soon as the rooms and the store
+  answer, before the snapshot (they read rooms only); everything else waits for initialization. Rooms read before
+  then start no idea takeover. The api logs its startup phases (`yepwatch_release_initialized`).
+- **Announced restarts are quiet for 12 s** (`PLANNED_RESTART_QUIET_MS`): an outage that began with the gateway's
+  goodbye on a live channel says nothing until 12 s after it, then "Reconnecting…" as usual. Unannounced drops, a
+  device that is offline and a restart that runs long keep the 3 s rule (owner rule Q24a).
+
+Deploy 3939 (04:03 UTC, still removed in the old order): api container start → listening 1.2 s, live routes 2.6 s,
+snapshot 4.4 s, initialized 5.1 s (was: listening 4.9 s). Verification: `realtime.spec.ts` deploy tests (restart
+project, in `run.mjs gate`), `test-yepwatch-front.sh` (direct route, goodbye reaches the client), and
+`verify-yepwatch-front-deploy.sh` during a real deploy.
+
 ## Traffic today
 
 ### yepwatch.com

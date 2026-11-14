@@ -233,6 +233,9 @@ export function createReleaseRuntime(
 				{ headers: { "cache-control": "no-store" } }
 			)
 		if (path === RELEASE_HEALTH.ready && request.method === "GET") {
+			// While the release initializes, the readiness answer waits (startup hold) like any request: a deploy's
+			// probes through the front see a slow 200, as when the port opened only once initialized, not a 503.
+			if (!initialized) await hold(() => initialized)
 			const state = readiness()
 			return Response.json(state, {
 				status: state.ready ? 200 : 503,

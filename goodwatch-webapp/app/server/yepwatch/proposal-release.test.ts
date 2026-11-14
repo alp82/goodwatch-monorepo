@@ -249,6 +249,9 @@ test("A startup hold keeps early requests waiting; the live channel's routes go 
 			method: "POST", headers: { "content-type": "application/json" }, body: "{}",
 		}))
 		assert.notEqual(ticket.status, 503)
+		// The readiness answer waits for initialization too.
+		let readySettled = false
+		const ready = runtime.handler(new Request("http://api" + RELEASE_HEALTH.ready)).finally(() => { readySettled = true })
 		// An admission waits for the snapshot and the warm reads, then gets the handler's own answer.
 		let settled = false
 		const admission = runtime.handler(new Request("http://api/api/yepwatch/v1/proposal/rooms", {
@@ -256,9 +259,11 @@ test("A startup hold keeps early requests waiting; the live channel's routes go 
 		})).finally(() => { settled = true })
 		await new Promise((r) => setTimeout(r, 100))
 		assert.equal(settled, false, "held while the release initializes")
+		assert.equal(readySettled, false, "readiness held while the release initializes")
 		count = 1
 		await runtime.probe()
 		assert.equal(runtime.initialized(), true)
+		assert.equal((await ready).status, 200)
 		await new Promise((r) => setTimeout(r, 100))
 		assert.equal(settled, false, "held until the warm reads are in")
 		warm()
