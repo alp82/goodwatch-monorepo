@@ -10,7 +10,8 @@ import { Animated, Easing, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { fitTo, wordW, type Geo, type VoteWord } from './geometry';
 import { Outline } from './Outline';
-import { Glow, PosterCopy, Rays } from './shapes';
+import { BlurCopy } from './BlurCopy';
+import { Glow, Rays } from './shapes';
 import { StampInk } from './StampInk';
 import { Word } from './Word';
 import { amber, cream, ease, fill, ink, jitter, pal, range, red, span, textGlow, web, webStyle, type LayerProps, type Node } from './paint';
@@ -153,7 +154,7 @@ export function BleedBack({ g, kind, p, posterUrl }: LayerProps) {
   return (
     <Clip g={g} opacity={ease(p)}>
       <FxView style={{ position: 'absolute', left: (g.vw - W) / 2, top: g.cy - H / 2, width: W, height: H, backgroundColor: web && posterUrl ? undefined : nope ? '#3a3a3a' : '#5c4310', transform: [{ scale: range(p, 1.14, 1, Easing.out(Easing.quad)) }] }}>
-        <PosterCopy uri={posterUrl} css={nope ? 'blur(48px) grayscale(1) brightness(1.1)' : 'blur(48px) grayscale(1) contrast(0.9) brightness(1.7)'} blur={40}
+        <BlurCopy uri={posterUrl} width={W} height={H} blur={48} rest={nope ? 'grayscale(1) brightness(1.1)' : 'grayscale(1) contrast(0.9) brightness(1.7)'} nativeBlur={40}
           tints={nope ? [{ color: '#1a1a1a', opacity: 0.5 }, { color: red, opacity: 0.42 }] : [{ color: '#2a1c00', opacity: 0.25 }, { color: amber, opacity: 0.6 }]} />
         {web ? <View style={[fill, webStyle({ backgroundColor: nope ? red : amber, mixBlendMode: 'multiply' })]} /> : null}
         <View style={[fill, { backgroundColor: nope ? '#7f1d1d' : '#f59e0b', opacity: nope ? 0.35 : 0.28 }]} />
