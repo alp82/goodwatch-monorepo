@@ -1,9 +1,9 @@
 // A fast Android UI driver for gate scenarios. It talks gRPC (plain HTTP/2) to Maestro's on-device
 // server (dev.mobile.maestro.test), the same server Maestro flows use, so the harness and the YAML
-// flows see the same hierarchy. ~190 ms per hierarchy read, ~30 ms per tap.
+// flows see the same hierarchy (~190 ms per read). Taps go through `input tap` (see tapXY).
 // Maestro's own CLI waits for the app to "settle" before and after every command, which this app never
 // does (its hierarchy changes ~10x/s while idle), costing 8-9 s per step; gates can't afford that.
-import { spawn } from 'node:child_process';
+import { execFile, spawn } from 'node:child_process';
 import fs from 'node:fs';
 import http2 from 'node:http2';
 import path from 'node:path';
@@ -22,7 +22,6 @@ export function maestroApks() {
 
 // --- protobuf (just enough) ---
 function varint(n) { const out = []; do { let b = n & 0x7f; n = Math.floor(n / 128); if (n) b |= 0x80; out.push(b); } while (n); return Buffer.from(out); }
-function fieldInt(no, v) { return Buffer.concat([varint(no << 3), varint(v)]); }
 function fieldStr(no, s) { const b = Buffer.from(s); return Buffer.concat([varint((no << 3) | 2), varint(b.length), b]); }
 function readField1(buf) {
   // grpc frame (5 bytes) + message; returns field 1 (bytes or varint).
@@ -98,7 +97,9 @@ export class Phone {
 
   async xml() {
     for (let i = 0; ; i++) { // the server answers empty while UiAutomation (re)connects
-      const f = readField1(await this.call('viewHierarchy'));
+      // On GitHub's software-rendered emulator a read can take 9-10 s while the app is busy (measured 2026-11-14);
+      // the old 10 s deadline threw such reads away just before they answered.
+      const f = readField1(await this.call('viewHierarchy', undefined, 15000));
       if (f && f.length) return f.toString();
       if (i >= 20) throw new Error(`${this.name}: empty hierarchy`);
       await sleep(100);
@@ -144,7 +145,21 @@ export class Phone {
     while (Date.now() < end) { const read = await this.nodesOrNull(end); if (read && !read.some(n => match(n, sel))) return; await sleep(80); }
     throw new Error(`${this.name}: still visible after ${timeout} ms: ${label(sel)}`);
   }
-  async tapXY(x, y) { await this.call('tap', Buffer.concat([fieldInt(1, x), fieldInt(2, y)])); this.lastTap = { x, y, at: Date.now() }; }
+  /**
+   * A tap the way a finger lands: `input tap` injects down+up through InputManager and returns once delivered.
+   * Not Maestro's gRPC tap: UiAutomator injects every touch with waitForAnimations, which waits up to 5 s before
+   * the down and 5 s after the up for window animations to end. Android 15 can leave one running for good: when
+   * the app takes longer than 2 s to attach its transferred splash screen (a cold start on GitHub's
+   * software-rendered emulator), the removed starting window keeps its `starting_reveal` animation, so every
+   * later Maestro tap took 10 s and hit the call deadline ("tap timed out"). Maestro's own key input skips that
+   * wait for the same reason (maestro-android InputInjector).
+   */
+  async tapXY(x, y) {
+    // Asynchronous, so un-awaited taps (rapid-taps) still go out 40 ms apart.
+    await new Promise((resolve, reject) => execFile(tools.adb, ['-s', this.serial, 'shell', 'input', 'tap', String(x), String(y)], { env: toolEnv(), timeout: 30000 },
+      (e) => (e ? reject(new Error(`${this.name}: input tap ${x},${y} failed: ${e.message.split('\n')[0]}`)) : resolve())));
+    this.lastTap = { x, y, at: Date.now() };
+  }
   async tap(sel, opts) { const n = await this.find(sel, opts); await this.tapXY(n.cx, n.cy); return n; }
   async type(text) { await this.call('inputText', fieldStr(1, text)); }
   async fill(sel, text) { await this.tap(sel); await sleep(150); await this.type(text); }
