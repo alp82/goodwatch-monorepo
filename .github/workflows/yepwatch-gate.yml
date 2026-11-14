@@ -383,6 +383,10 @@ jobs:
             ${{ env.YW_E2E_HOME }}/avd
             !${{ env.YW_E2E_HOME }}/avd/yw-e2e.avd/snapshots/default_boot
           key: yw-avd-v2-${{ steps.keys.outputs.cpu }}-emu${{ steps.keys.outputs.emulator }}-${{ hashFiles('yepwatch-app/e2e/native/lib/device.mjs') }}
+      - name: Install ffmpeg (the flash gate reads the screen recording's frames)
+        # The runner image ships no ffmpeg; native/lib/video.mjs decodes each scenario's recording with it. The
+        # background preparation keeps building meanwhile.
+        run: command -v ffmpeg > /dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg > /dev/null; }
       - name: Android E2E gate (cold start + mixed room)
         working-directory: yepwatch-app/e2e
         env:
