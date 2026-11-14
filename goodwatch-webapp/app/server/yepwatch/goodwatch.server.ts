@@ -59,10 +59,11 @@ const offers = keptOfferReads({
 type KeptEpisode = Pick<EpisodeListRow, 'tmdb_id' | 'season_number' | 'episode_number' | 'name' | 'air_date'>
 // Lists straight from the episode table (no other cache in between, so 6 hours is their whole age); an empty list
 // isn't kept. Season labels only when there are some: getEpisodePresentation answers null both for a show without
-// and after a failed read, so null is read again (for most shows that's an in-memory check). Labels come through
-// GoodWatch's shared cache (up to 10 minutes old; this API reads it but has none of its own): kept 10 minutes less.
+// and after a failed read, so null is read again (for most shows that's an in-memory check). Labels may come through
+// GoodWatch's shared caches (where a runtime has them; the release API doesn't): nested, at most 40 minutes old
+// (10 fresh + 10 stale, twice), so they are kept 5 hours.
 const listsKept = new KeyedReads<KeptEpisode[]>(EPISODES_TTL_MS, 1_000, (rows) => rows.length > 0)
-const labelsKept = new KeyedReads<EpisodePresentation | null>(EPISODES_TTL_MS - 10 * 60_000, 1_000, (p) => p !== null)
+const labelsKept = new KeyedReads<EpisodePresentation | null>(EPISODES_TTL_MS - 60 * 60_000, 1_000, (p) => p !== null)
 const EPISODES_BATCH_ROWS = 20_000
 /**
  * Several shows' lists in one query, with the rows and order of GoodWatch's one-show read. When the query's limit
