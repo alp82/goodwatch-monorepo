@@ -3,7 +3,9 @@
 //  - GoodWatch search role (room idea interpretation)                                      :18486
 //  - poster images (stands in for image.tmdb.org)                                          :18487
 // Control endpoints (POST /_e2e/...) let tests lapse a member's grant or make GoodWatch unavailable.
+import fs from 'node:fs';
 import http from 'node:http';
+import path from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { fixtureTitles, interpretIdea } from './fixture-titles.mjs';
 
@@ -27,6 +29,9 @@ const slowPrompts = new Map();
 const counters = { authorize: 0, token: 0, refresh: 0, resource: 0, search: 0, seen: 0 };
 // How long the member resource takes to answer a seen read (ms): production's GoodWatch takes ~25-300 ms. Perf work only.
 let seenDelayMs = 0;
+// Photo posters (perf work only): JPEGs from a local folder instead of the flat SVGs, so posters cost what TMDB's w500
+// JPEGs cost to decode and paint. POST /_e2e/posters?dir=<absolute folder of *.jpg> (no dir: back to SVGs).
+let photoPosters = [];
 function userOf(name) {
   if (!users.has(name)) users.set(name, { displayName: name.replace(/^member-/, '').replace(/-[0-9a-f]+$/, '') || name, lapsed: false, serviceIds: [8, 337], country: 'DE', accessTtlS: 3600 });
   return users.get(name);
@@ -64,6 +69,11 @@ const issuer = http.createServer(async (req, res) => {
     if (p === '/_e2e/search-budget') { const prompt = url.searchParams.get('prompt') ?? ''; if (url.searchParams.get('on') === '0') refusedPrompts.delete(prompt); else refusedPrompts.add(prompt); return json(res, 200, { refused: [...refusedPrompts] }); }
     if (p === '/_e2e/search-delay') { const prompt = url.searchParams.get('prompt') ?? ''; const ms = Number(url.searchParams.get('ms') ?? 0); if (ms > 0) slowPrompts.set(prompt, ms); else slowPrompts.delete(prompt); return json(res, 200, { slow: Object.fromEntries(slowPrompts) }); }
     if (p === '/_e2e/seen-delay') { seenDelayMs = Math.max(0, Number(url.searchParams.get('ms') ?? 0)); return json(res, 200, { seenDelayMs }); }
+    if (p === '/_e2e/posters') {
+      const dir = url.searchParams.get('dir');
+      photoPosters = dir ? fs.readdirSync(dir).filter((f) => /\.jpe?g$/i.test(f)).sort().map((f) => fs.readFileSync(path.join(dir, f))) : [];
+      return json(res, 200, { photoPosters: photoPosters.length });
+    }
     if (p === '/_e2e/outage') { outage = url.searchParams.get('on') === '1'; return json(res, 200, { outage }); }
     if (p === '/_e2e/state') return json(res, 200, { outage, counters, users: Object.fromEntries(users) });
     return json(res, 404, { error: 'unknown' });
@@ -142,6 +152,10 @@ const images = http.createServer((req, res) => {
   if (!m) { res.writeHead(404); return res.end(); }
   const t = titles[Number(m[1]) - 1];
   if (!t) { res.writeHead(404); return res.end(); }
+  if (photoPosters.length) {
+    res.writeHead(200, { 'content-type': 'image/jpeg', 'cache-control': 'public, max-age=86400', 'access-control-allow-origin': '*' });
+    return res.end(photoPosters[t.tmdbId % photoPosters.length]);
+  }
   const hue = hues[t.tmdbId % hues.length];
   res.writeHead(200, { 'content-type': 'image/svg+xml', 'cache-control': 'public, max-age=86400', 'access-control-allow-origin': '*' });
   res.end(`<svg xmlns="http://www.w3.org/2000/svg" width="500" height="750" viewBox="0 0 500 750"><rect width="500" height="750" fill="hsl(${hue} 45% 28%)"/>`

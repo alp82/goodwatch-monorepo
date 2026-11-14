@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { LOOKS, LookDealer, isLook, pinnedLookFrom, shuffledBag, type Look } from '../src/features/room/vote/looks';
+import { LOOKS, LookDealer, harnessLooksFrom, isLook, pinnedLookFrom, shuffledBag, type Look } from '../src/features/room/vote/looks';
 import { EM, fitTo, stageGeometry, wordW } from '../src/features/room/vote/geometry';
 
 /** A seeded generator, so every run deals the same way. */
@@ -62,6 +62,15 @@ test('a pinned look goes to every card', () => {
   assert.equal(pinnedLookFrom(undefined), null);
   assert.equal(isLook('glitch'), true);
   assert.equal(isLook('classic'), false);
+});
+
+test('the harness pin deals its looks in order and a card keeps its own', () => {
+  assert.deepEqual(harnessLooksFrom('wall'), ['wall']);
+  assert.deepEqual(harnessLooksFrom('wall, neon,mix'), ['wall', 'neon']);
+  assert.equal(harnessLooksFrom('mix'), null);
+  assert.equal(harnessLooksFrom(undefined), null);
+  const dealer = new LookDealer(seeded(3), ['wall', 'neon']);
+  assert.deepEqual(['a', 'b', 'c', 'a', 'b'].map((k) => dealer.lookFor(k)), ['wall', 'neon', 'wall', 'wall', 'neon']);
 });
 
 test('words fit their width', () => {

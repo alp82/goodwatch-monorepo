@@ -97,3 +97,18 @@ of a restarting production container.
   `restart` (API/gateway restart mid-journey, serial).
 - Fake sign-in: `room.person(name, { member: 'member-x' })` sets a cookie the fake issuer reads, so
   Continue with GoodWatch comes straight back signed in as that account (`person.roundTrip(button)`).
+
+## Diagnosing frames (never in a gated run)
+
+Switches for perf work. run.mjs, the gate and CI never set them; the normal smoke deals its looks at random.
+
+| env | what |
+|---|---|
+| `E2E_LOOK=wall` or `wall,neon` | every card gets that look (a list is dealt in order), so a run measures one look's frames |
+| `E2E_DIAG=1` | the recorder also keeps every frame gap over 17 ms, when each room answer and WebSocket message arrived, React commit times, the look of the card each input aimed at, and the largest room update (`renders`: plus the components each commit rendered; needs `--no-minify`) |
+| `E2E_DUMP_DIR=<dir>` | each traced person's recordings and command log as `<test>/rec-<name>.json` |
+| `E2E_PERF_TRACE=<regex>` | a Chrome trace of each matching person into `E2E_DUMP_DIR` (`E2E_PERF_TRACE_CATS` picks the categories; tracing costs frames itself) |
+| `E2E_DIAG_CPU_THROTTLE=2` | CPU throttling against the local stack in any target (production mode included) |
+
+Posters on the local stack are flat SVGs; `curl -X POST 'localhost:18485/_e2e/posters?dir=<folder of JPEGs>'` serves
+photo JPEGs instead (no `dir`: back to SVGs), so posters cost what TMDB's w500 JPEGs cost to decode and paint.

@@ -34,7 +34,7 @@ import { servicesIn } from './services';
 import { TitleDetails } from './TitleDetails';
 import { FindingMore, Logos, Screen, useServices } from './ui';
 import { stageGeometry } from './vote/geometry';
-import { LookDealer, pinnedLookFrom } from './vote/looks';
+import { LookDealer, harnessLooksFrom, pinnedLookFrom } from './vote/looks';
 import { answerYep, matchKey, nextCandidate, settleYeps, undoYeps, yepRecord, type YepRecord } from './vote/match';
 import { VoteStage, type MatchMoment, type VoteStageControls } from './vote/VoteStage';
 
@@ -47,8 +47,11 @@ type Reaction = { at: number; gesture?: 'reach' | 'handle' | 'release'; answer?:
 /** Your own face reacts at once (friends see it through activity). */
 const reaction = (r: Omit<Reaction, 'at'>): Reaction => ({ at: Date.now(), ...r });
 
-/** In a fixture build, `?look=<name>` pins one look for every card. */
-const pinnedLook = () => (fixturesEnabled && Platform.OS === 'web' && typeof window !== 'undefined' ? pinnedLookFrom(window.location.search) : null);
+/** Pinned looks, for diagnosis only: the E2E harness's `E2E_LOOK`, or `?look=<name>` in a fixture build. */
+const pinnedLook = () => {
+  if (Platform.OS !== 'web' || typeof window === 'undefined') return null;
+  return harnessLooksFrom((window as { __YEPWATCH_LOOKS__?: unknown }).__YEPWATCH_LOOKS__) ?? (fixturesEnabled ? pinnedLookFrom(window.location.search) : null);
+};
 
 /** The same people, each with the same name and the same "you". */
 const samePeople = (a: { id: string; nickname: string; self: boolean }[], b: typeof a) =>

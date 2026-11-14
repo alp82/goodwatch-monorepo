@@ -25,19 +25,29 @@ export function shuffledBag(last: Look | undefined, random: () => number = Math.
   return bag;
 }
 
-/** Deals looks to cards. `pinned` gives every card the same look (fixture builds only). */
+/**
+ * Deals looks to cards. `pinned` (diagnosis only: fixture builds and the E2E harness) replaces the bag: one look for
+ * every card, or a list dealt in order, round and round.
+ */
 export class LookDealer {
   private queue: Look[] = [];
   private last: Look | undefined;
   private readonly dealt = new Map<string, Look>();
+  private readonly pinned: readonly Look[] | null;
 
-  constructor(private readonly random: () => number = Math.random, private readonly pinned: Look | null = null) {}
+  constructor(private readonly random: () => number = Math.random, pinned: Look | readonly Look[] | null = null) {
+    this.pinned = pinned === null ? null : typeof pinned === 'string' ? [pinned] : pinned.length ? pinned : null;
+  }
 
   /** The look of the card with this key: dealt on first sight, the same one ever after. */
   lookFor(key: string): Look {
-    if (this.pinned) return this.pinned;
     const known = this.dealt.get(key);
     if (known) return known;
+    if (this.pinned) {
+      const look = this.pinned[this.dealt.size % this.pinned.length];
+      this.dealt.set(key, look);
+      return look;
+    }
     if (!this.queue.length) this.queue = shuffledBag(this.last, this.random);
     const look = this.queue.shift() as Look;
     this.last = look;
@@ -51,4 +61,14 @@ export function pinnedLookFrom(search: string | undefined): Look | null {
   if (!search) return null;
   const value = new URLSearchParams(search).get('look');
   return isLook(value) ? value : null;
+}
+
+/**
+ * The E2E harness's look pin (`E2E_LOOK`, for diagnosing one look's frames): `window.__YEPWATCH_LOOKS__`, one look or
+ * a comma list dealt in order. Set only by the harness's init script; null when absent or naming no look.
+ */
+export function harnessLooksFrom(value: unknown): Look[] | null {
+  if (typeof value !== 'string') return null;
+  const looks = value.split(',').map((v) => v.trim()).filter(isLook);
+  return looks.length ? looks : null;
 }

@@ -33,6 +33,61 @@
     hidden: [],
   };
   window.__yw = rec;
+  // Diagnosis only (E2E_DIAG=1, lib/harness.ts): every frame gap over 17 ms, when each room answer (POST under
+  // /proposal/) and WebSocket message arrived, and when React committed. Never on in a gated run.
+  const diag = window.__ywDiag === true ? { gaps: [], posts: [], ws: [], commits: [] } : null;
+  rec.diag = diag;
+  const cap = (list, n) => { if (list.length > n) list.shift(); };
+  if (diag) {
+    // Ties a Chrome trace's clock to the recorder's epoch-ms clock.
+    performance.mark(`yw:epoch:${(performance.timeOrigin + performance.now()).toFixed(1)}`);
+    try {
+      new PerformanceObserver((list) => {
+        for (const e of list.getEntries()) {
+          if ((e.initiatorType !== 'fetch' && e.initiatorType !== 'xmlhttprequest') || !/\/proposal\//.test(e.name)) continue;
+          diag.posts.push({ start: performance.timeOrigin + e.startTime, t: performance.timeOrigin + e.responseEnd, path: new URL(e.name).pathname.split('/').slice(-2).join('/') });
+          cap(diag.posts, 600);
+        }
+      }).observe({ type: 'resource', buffered: true });
+    } catch { /* unsupported */ }
+    const Native = window.WebSocket;
+    window.WebSocket = class extends Native {
+      constructor(...args) {
+        super(...args);
+        this.addEventListener('message', (e) => {
+          const head = typeof e.data === 'string' ? e.data.slice(0, 200) : '';
+          diag.ws.push({ t: now(), n: typeof e.data === 'string' ? e.data.length : 0, type: (/"type":"([^"]+)"/.exec(head) || [])[1] || '' });
+          // One full room update, the largest seen, for replaying its handling offline.
+          if (typeof e.data === 'string' && e.data.length > (diag.sample?.length ?? 0) && head.includes('room.updated')) diag.sample = e.data;
+          cap(diag.ws, 2000);
+        });
+      }
+    };
+    // A minimal React DevTools hook: the time of every commit.
+    window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
+      supportsFiber: true, renderers: new Map(), isDisabled: false, checkDCE() {},
+      inject(r) { this.renderers.set(this.renderers.size + 1, r); return this.renderers.size; },
+      onScheduleFiberRoot() {}, onCommitFiberUnmount() {}, onPostCommitFiberRoot() {},
+      onCommitFiberRoot(_id, root) {
+        diag.commits.push(now());
+        cap(diag.commits, 4000);
+        // E2E_DIAG=renders: which components rendered in this commit (needs an unminified build for names).
+        if (window.__ywDiagRenders !== true) return;
+        const names = {};
+        const nameOf = (f) => { const t = f.type; if (!t || typeof t === 'string') return null; return t.displayName || t.name || t.render?.displayName || t.render?.name || t.type?.displayName || t.type?.name || null; };
+        const stack = [root.current];
+        let n = 0;
+        while (stack.length && n < 20000) {
+          const f = stack.pop(); n++;
+          if (f.flags & 1) { const nm = nameOf(f); if (nm) names[nm] = (names[nm] ?? 0) + 1; }
+          if (f.sibling) stack.push(f.sibling);
+          if (f.child) stack.push(f.child);
+        }
+        (diag.renders ??= []).push({ t: now(), names });
+        cap(diag.renders, 1500);
+      },
+    };
+  }
 
   const visible = (el) => {
     if (!el.isConnected) return false;
@@ -119,6 +174,12 @@
       f.count++;
       if (gap > f.max) f.max = gap;
       if (gap > 20) { f.over20.push([Math.round(t), Math.round(gap)]); if (f.over20.length > 400) f.over20.shift(); }
+      if (diag && gap > 17) {
+        diag.gaps.push([Math.round(t), Math.round(gap)]);
+        cap(diag.gaps, 3000);
+        // Found again in a Chrome trace (E2E_PERF_TRACE): the frame that ended at `t` after `gap` ms.
+        performance.mark(`yw:slow:${Math.round(t)}:${Math.round(gap)}`);
+      }
     }
     f.last = t;
     if (pendingInputs.some((input) => input.mutated)) {
@@ -157,6 +218,8 @@
     window.addEventListener(type, (e) => {
       if (type === 'keydown' && ['Shift', 'Control', 'Alt', 'Meta', 'Tab'].includes(e.key)) return;
       const entry = { t: performance.timeOrigin + e.timeStamp, type, target: describe(e.target), mutated: false, feedbackAt: null };
+      // Diagnosis: the look of the voting card the input was aimed at (Poster's data-look).
+      if (diag) entry.look = [...document.querySelectorAll('[data-testid="poster"][data-look]')].find(visible)?.getAttribute('data-look') ?? null;
       rec.inputs.push(entry);
       if (rec.inputs.length > 500) rec.inputs.shift();
       pendingInputs.push(entry);

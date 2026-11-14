@@ -404,6 +404,11 @@ export class Room {
         // Never recorded when untraced: the video would show the sign-in pages and account of real credentials.
         recordVideo: process.env.E2E_VIDEO === '1' && opts.trace !== false ? { dir: this.info.outputPath(`video-${name}`), size: DEVICES[device].viewport } : undefined,
       });
+      // Diagnosis switches (never set by run.mjs, the gate or CI): E2E_DIAG=1 makes the recorder keep more (frame gaps
+      // over 17 ms, answer and message arrivals, React commits; recorder.page.js); E2E_LOOK pins the card looks (one
+      // look, or a comma list dealt in order; src/features/room/vote/looks.ts) so a run measures one look's frames.
+      if (process.env.E2E_DIAG === '1' || process.env.E2E_DIAG === 'renders') await context.addInitScript(`window.__ywDiag = true;${process.env.E2E_DIAG === 'renders' ? ' window.__ywDiagRenders = true;' : ''}`);
+      if (process.env.E2E_LOOK) await context.addInitScript(`window.__YEPWATCH_LOOKS__ = ${JSON.stringify(process.env.E2E_LOOK)};`);
       await context.addInitScript({ path: RECORDER });
       if (process.env.E2E_TRACE !== '0' && opts.trace !== false) await context.tracing.start({ screenshots: true, snapshots: true, title: `${this.info.title} — ${name}` }).catch(() => {});
       // Signed in to (local) GoodWatch: its authorize step comes straight back, as for a returning member.
@@ -417,11 +422,22 @@ export class Room {
     }
     const page = await context.newPage();
     const p = new Person(this, name, context, page, device);
+    // E2E_PERF_TRACE=<regex>: a Chrome performance trace (main thread, frames, JS samples) of each person whose name
+    // matches, written to E2E_DUMP_DIR at the end. Diagnosis only: tracing itself costs frames.
+    const traceRe = process.env.E2E_PERF_TRACE ? new RegExp(process.env.E2E_PERF_TRACE, 'i') : null;
+    const own = !opts.context ? this.browsers[this.browsers.length - 1] : undefined;
+    if (traceRe?.test(name) && own && process.env.E2E_DUMP_DIR && opts.trace !== false) {
+      await own.startTracing(page, { categories: process.env.E2E_PERF_TRACE_CATS ? process.env.E2E_PERF_TRACE_CATS.split(',') : ['devtools.timeline', 'disabled-by-default-devtools.timeline', 'disabled-by-default-devtools.timeline.frame', 'v8.execute', 'disabled-by-default-v8.cpu_profiler', 'blink.user_timing', 'cc', 'viz', 'gpu'] });
+      this.perfTraces.push({ browser: own, name });
+    }
     if (opts.trace === false) p.traced = false;
     // E2E_CPU_THROTTLE=2.5 slows each page's main thread to about a GitHub runner's (4 vCPU EPYC) on a fast desktop,
     // so a local run reproduces the deploy gate's frame failures. Local stack only, never against production.
+    // E2E_DIAG_CPU_THROTTLE: the same slowdown in any target, local stack included, for diagnosis runs only.
     const throttle = Number(process.env.E2E_CPU_THROTTLE || 0);
-    if (throttle > 1 && process.env.E2E_TARGET !== 'production') await (await p.cdpSession()).send('Emulation.setCPUThrottlingRate', { rate: throttle });
+    const diagThrottle = Number(process.env.E2E_DIAG_CPU_THROTTLE || 0);
+    if (diagThrottle > 1 && ORIGIN?.startsWith('http://127.0.0.1')) await (await p.cdpSession()).send('Emulation.setCPUThrottlingRate', { rate: diagThrottle });
+    else if (throttle > 1 && process.env.E2E_TARGET !== 'production') await (await p.cdpSession()).send('Emulation.setCPUThrottlingRate', { rate: throttle });
     if (this.fault === 'nows') {
       const cdp = await p.cdpSession();
       await cdp.send('Network.enable');
@@ -548,6 +564,26 @@ export class Room {
   private reloaded = false;
   readonly pending: Promise<unknown>[] = [];
 
+  private readonly perfTraces: { browser: Browser; name: string }[] = [];
+
+  /** E2E_DUMP_DIR: each person's recordings, command log and (E2E_PERF_TRACE) Chrome trace, for diagnosis. */
+  private async dump() {
+    if (!process.env.E2E_DUMP_DIR) return;
+    // One folder per test, project and repetition: parallel tests reuse people's names.
+    const slug = `${this.info.titlePath.slice(1).join(' ').replace(/\W+/g, '_').slice(0, 100)}-${this.info.project.name}-r${this.info.repeatEachIndex}`;
+    const dir = path.join(process.env.E2E_DUMP_DIR, slug);
+    fs.mkdirSync(dir, { recursive: true });
+    for (const p of this.people) {
+      if (!p.traced) continue;
+      const file = path.join(dir, `rec-${p.name.replace(/\W+/g, '_')}.json`);
+      fs.writeFileSync(file, JSON.stringify({ name: p.name, device: p.device, look: process.env.E2E_LOOK ?? null, recordings: p.recordings, commandLog: p.commandLog }));
+    }
+    for (const t of this.perfTraces.splice(0)) {
+      const buf = await t.browser.stopTracing().catch(() => null);
+      if (buf) fs.writeFileSync(path.join(dir, `trace-${t.name.replace(/\W+/g, '_')}.json`), buf);
+    }
+  }
+
   async closeBrowsers() {
     void this.reach?.stop();
     await Promise.allSettled(this.browsers.splice(0).map((b) => b.close({ reason: 'Test ended.' })));
@@ -591,6 +627,7 @@ export class Room {
       if (landed) samples.push({ moment: 'restartQueuedLandMs', ms: landed.t - r.back, person: '(room)', detail: `${r.service} restart` });
     }
     if (unreachable.length) await this.info.attach('reachability', { body: JSON.stringify({ stretches: unreachable, excused }), contentType: 'application/json' });
+    await this.dump();
     const dedup = new Map<string, GateFailure>();
     for (const f of failures) dedup.set(`${f.gate}|${f.person}|${f.detail}`, f);
     const unique = [...dedup.values()];
