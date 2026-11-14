@@ -80,3 +80,20 @@ test('a room read answered with only its own part takes the shared room this pho
   assert.equal(withShared({ own, sharedRevision: 6 }, held), null);
   assert.equal(withShared({ own, sharedRevision: 7 }, undefined), null);
 });
+
+test('a room seeded from the account\'s rooms shows at once, and the room\'s own read replaces its own part whatever its sequence', async () => {
+  const { mergeRoom, seedRoom, SEEDED_SEQUENCE } = await import('../src/core/continuous/state');
+  const { continuousFixture } = await import('./continuous-fixture');
+  // The account read counts commands per participant (5); this session's own read counts its own (1).
+  const listed = continuousFixture(); listed.shared.revision = 10; listed.own.nextSequence = 5;
+  const seeded = seedRoom(undefined, listed)!;
+  assert.equal(seeded.shared, listed.shared);
+  assert.equal(seeded.own.nextSequence, SEEDED_SEQUENCE);
+  const read = structuredClone(listed); read.own.nextSequence = 1;
+  const opened = mergeRoom(seeded, read);
+  assert.equal(opened.own.nextSequence, 1, 'the room read\'s sequence wins over the seed');
+  // The account's next read refreshes an unopened seed, but never goes over a room read.
+  const later = structuredClone(listed); later.shared.revision = 11;
+  assert.equal(seedRoom(seeded, later)!.shared.revision, 11);
+  assert.equal(seedRoom(opened, later), opened);
+});

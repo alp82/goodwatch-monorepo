@@ -9,7 +9,7 @@ import { continuousApi, RoomFailure } from '../../core/continuous/api';
 import { roomRegistry } from '../../core/continuous/room-registry';
 import type { RegistrySnapshot } from '../../core/continuous/room-registry-store';
 import { setArchived } from '../../core/continuous/room-registry-state';
-import { mergeRoom, type CachedRoom } from '../../core/continuous/state';
+import { mergeRoom, seedRoom, type CachedRoom } from '../../core/continuous/state';
 import { continuousKey, homeRoomKey } from '../../core/continuous/useRoom';
 import { loadAccess, nativeClient } from '../../core/credentials';
 import { queryClient } from '../../core/providers';
@@ -135,7 +135,13 @@ export function useHome() {
         if (!(e instanceof RoomFailure) || !['unauthorized', 'forbidden', 'not_found', 'expired', 'conflict'].includes(e.code)) throw e;
       }
     }
-    return { ...(await continuousApi.accountHome()), notice: replacedGuest ? 'Resumed your existing place. Your account’s saved answers were kept.' : '' };
+    const home = await continuousApi.accountHome();
+    // Each room's snapshot seeds its room cache (seedRoom): opening a card right after a page load shows the room
+    // itself, not its empty opening page while it reads the same room again. A room you left opens nothing.
+    if (authEpoch.isCurrent(asked))
+      for (const { snapshot } of home.rooms)
+        if (!snapshot.own.left) queryClient.setQueryData<CachedRoom | undefined>(continuousKey(snapshot.shared.roomId), (old) => seedRoom(old, snapshot));
+    return { ...home, notice: replacedGuest ? 'Resumed your existing place. Your account’s saved answers were kept.' : '' };
   }, enabled: account.member && lifecycle.isSuccess && !lifecycle.data?.deletion,
     retry: 1, refetchInterval: 15_000 });
   // The sign-in couldn't be checked: neither a member's rooms nor a guest's start page can be told apart

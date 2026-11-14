@@ -20,6 +20,17 @@ export function mergeRoom(current: CachedRoom | undefined, incoming: RoomSnapsho
     ownRevision: acceptOwn ? incoming.shared.revision : current.ownRevision,
   };
 }
+/**
+ * A room snapshot from a list read (the account's rooms) into a room's cache: shown at once when the room opens, never
+ * trusted for commands. Its own part counts commands per participant, not per session (a room read counts this
+ * session's), so it goes in with sequence 0: the room's own read replaces it whatever it says, and the list's next read
+ * never goes over a room read (only over its own earlier seed).
+ */
+export const SEEDED_SEQUENCE = 0;
+export function seedRoom(current: CachedRoom | undefined, incoming: RoomSnapshot): CachedRoom | undefined {
+  if (current && current.shared.roomId === incoming.shared.roomId && current.own.nextSequence !== SEEDED_SEQUENCE) return current;
+  return mergeRoom(current, { ...incoming, own: { ...incoming.own, nextSequence: SEEDED_SEQUENCE } });
+}
 export function mergePublic(
   current: CachedRoom | undefined,
   shared: SharedRoomSnapshot

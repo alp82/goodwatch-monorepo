@@ -17,7 +17,7 @@ import { queryClient } from '../providers';
 import { publicFailureMessage } from '../recovery';
 import { continuousRealtimeUrl } from '../config';
 import type { Connection } from '../realtime';
-import { mergeRoom, mergePublic, PersistentCommands, withShared, type CachedRoom } from './state';
+import { mergeRoom, mergePublic, PersistentCommands, SEEDED_SEQUENCE, withShared, type CachedRoom } from './state';
 import { awaitsServer, overlayRoom, proposingCandidate, type CommandBuild, type QueuedCommand } from './optimistic';
 import { readCommandRecovery, writePending, writePendingNow } from './storage';
 import { useRetryCountdown } from './useRetryCountdown';
@@ -123,6 +123,12 @@ export function useContinuousRoom(roomId: string) {
   );
   /** A Leave is on its way: the refusals it causes (the live channel, a read) are its own outcome, not lost access. */
   const leavingNow = useRef(false);
+  /** The server confirmed this device's Leave: the live channel is stopped for good (focus, the app coming back or
+   * Retry don't start it again). */
+  const left = useRef(false);
+  /** Settles with a Leave on its way. The gateway refuses the leaver's socket as soon as the Leave commits, often before
+   * its HTTP answer: the live channel's redial waits for that answer instead of asking for a ticket meanwhile. */
+  const leaveSettled = useRef<Promise<void>>(Promise.resolve());
   /** The command id the server last refused as a conflict (see submit and drain). */
   const conflicted = useRef<string | null>(null);
   const authority = useCallback(
@@ -275,7 +281,11 @@ export function useContinuousRoom(roomId: string) {
     if (!credential || !accessRef.current || terminalRef.current) return;
     const realtime = new ContinuousRealtime({
       roomId,
-      ticket: () => api.ticket(accessRef.current!),
+      // After a Leave that went through (or ended access) the channel is stopped: no ticket is asked for then.
+      ticket: () => leaveSettled.current.then(() => {
+        if (left.current || terminalRef.current) throw new RoomFailure('forbidden', 'You have left this room.');
+        return api.ticket(accessRef.current!);
+      }),
       socket: (path) => new WebSocket(continuousRealtimeUrl(path)),
       // Silent redials need a socket that can be dropped while it connects (not React Native on Android).
       silence: Platform.OS === 'android' ? undefined : () => unansweredFor(),
@@ -340,7 +350,7 @@ export function useContinuousRoom(roomId: string) {
     if (AppState.currentState === 'active') realtime.start();
     else realtime.pause();
     const sub = AppState.addEventListener('change', (state) => {
-      if (state === 'active' && !expired()) {
+      if (state === 'active' && !expired() && !left.current) {
         void refetchRef.current().catch(() => undefined);
         realtime.start();
       } else realtime.pause();
@@ -399,19 +409,30 @@ export function useContinuousRoom(roomId: string) {
     return () => clearTimeout(timer);
   }, [room.data?.shared.expiresAt, terminal, expired]);
   async function submit(command?: RoomCommand, commandId?: string) {
+    // A room shown from the start page's seed has no sequence for this session yet: the room's own read brings it,
+    // and no command goes before it has (the server would refuse sequence 0).
+    if (access && cached()?.own.nextSequence === SEEDED_SEQUENCE) await refetch().catch(() => undefined);
     const snapshot = cached();
-    if (!access || !snapshot || expired() || privateError || queue.current.busy || Date.now() < queue.current.retryAt) return false;
+    if (!access || !snapshot || snapshot.own.nextSequence === SEEDED_SEQUENCE || expired() || privateError || queue.current.busy || Date.now() < queue.current.retryAt) return false;
     setBusy(true);
     setError('');
     setErrorCode(null);
     const leaving = (command ?? queue.current.pending?.command)?.type === 'leave';
     leavingNow.current = leaving;
+    let settleLeave = () => {};
+    if (leaving) leaveSettled.current = new Promise((resolve) => { settleLeave = resolve; });
     try {
       const asked = snapshotGeneration();
       const value = await queue.current.send(command, snapshot, (body) =>
         api.command(access, body), commandId
       );
       apply(value);
+      // Left: nothing more comes from this room. The gateway refuses the leaver's socket at once, and its redial a
+      // moment later (while the start page takes over) asked for a ticket the server could only refuse (403).
+      if (leaving && value.own.left) {
+        left.current = true;
+        channel.current?.stop();
+      }
       if (!terminalRef.current) confirmRoom(roomId, asked);
       // A Leave the server confirmed went through, even when the live channel brought the refusal of
       // the leaver's next read first and access already ended here.
@@ -454,6 +475,7 @@ export function useContinuousRoom(roomId: string) {
       return false;
     } finally {
       leavingNow.current = false;
+      settleLeave();
       setBusy(false);
       setRetryAt(terminalRef.current ? 0 : queue.current.retryAt);
       setPending(terminalRef.current ? null : queue.current.pending);
@@ -598,7 +620,7 @@ export function useContinuousRoom(roomId: string) {
     if (!browserEvents()) return;
     const resume = () => {
       setOffline(browserOffline());
-      if (browserOffline() || terminalRef.current || expired() || AppState.currentState !== 'active') return;
+      if (browserOffline() || terminalRef.current || left.current || expired() || AppState.currentState !== 'active') return;
       channel.current?.resume();
       resendUnanswered();
     };
@@ -675,7 +697,7 @@ export function useContinuousRoom(roomId: string) {
     send,
     refetch,
     reconnect: () => {
-      if (!expired()) channel.current?.reconnectNow();
+      if (!expired() && !left.current) channel.current?.reconnectNow();
     },
     activities,
     activityNow: () => Date.now() + clock.current,
