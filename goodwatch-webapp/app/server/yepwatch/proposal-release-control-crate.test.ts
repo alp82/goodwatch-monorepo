@@ -17,7 +17,7 @@ import {
 import { crateSql, type Sql } from "./repository.server.ts"
 import { ProposalService } from "./proposal-service.server.ts"
 import { SqlCreationQuotas } from "./proposal-creation-quota.ts"
-import { proposalFixtureCatalog } from "./proposal-test-support.ts"
+import { proposalFixtureCatalog, untilShardsStarted } from "./proposal-test-support.ts"
 import { createProposalHandler } from "./proposal-http.server.ts"
 import { releaseHttp } from "./proposal-release-http.ts"
 import { IndeterminateWrite, RoomError } from "./errors.ts"
@@ -281,6 +281,7 @@ test(
 
 			docker("restart", name)
 			await ready()
+			await untilShardsStarted(sql)
 			// A fresh OS process reads only these disposable room/control tables; credentials enter on stdin, never argv/logs.
 			const childSource = `
               import {readFileSync} from 'node:fs';
@@ -306,7 +307,7 @@ test(
 							)});
               const sql=crateSql(input.origin,'crate','');
               const service=new ProposalService(new RelationalProposalRepository(sql,input.secret),proposalFixtureCatalog,input.secret,async()=>{},Date.now,new ReleaseControl(sql,input.policy,new SqlCreationQuotas(sql)));
-              let s; for(let attempt=0;attempt<65;attempt++){try{s=await service.read(input.id,input.credential);break}catch(error){if(error.status!==503 || attempt===64)throw error;await new Promise(r=>setTimeout(r,500))}}
+              const s=await service.read(input.id,input.credential);
               console.log(JSON.stringify({actor:s.own.participantId,host:s.shared.hostParticipantId,sequence:s.own.nextSequence}));
             `
 			const recoveredChild = JSON.parse(

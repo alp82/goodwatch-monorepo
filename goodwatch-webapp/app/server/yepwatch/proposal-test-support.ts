@@ -10,6 +10,26 @@ import type {
 import { IndeterminateWrite, RoomError } from "./errors.ts"
 import { CONTINUOUS_LIMITS } from "./continuous-types.ts"
 import { allowanceFull, type CreationQuotaStore } from "./proposal-creation-quota.ts"
+import type { Sql } from "./repository.server.ts"
+
+/**
+ * Waits until every shard of every table on a disposable Crate has started. Right after a (re)start a table is
+ * partly readable: a primary-key read goes to the one shard its key hashes to, so keys on started shards answer
+ * while keys on shards still recovering fail with ShardNotFoundException (which the store answers as busy). A
+ * read of one health key per table (checkReleaseStore) therefore says nothing about the rooms a test reads next.
+ */
+export async function untilShardsStarted(sql: Sql, timeoutMs = 60000) {
+	const deadline = Date.now() + timeoutMs
+	for (;;) {
+		try {
+			// sys.shards lists unassigned shards too, so a table still waiting to recover counts as not started.
+			const [waiting, total] = (await sql("SELECT count(*) FILTER (WHERE state <> 'STARTED'), count(*) FROM sys.shards")).rows[0] as number[]
+			if (total > 0 && waiting === 0) return
+		} catch {}
+		if (Date.now() > deadline) throw new Error("Disposable Crate shards did not all start")
+		await new Promise((r) => setTimeout(r, 250))
+	}
+}
 
 /** Per-person room allowances in memory, on the caller's clock: the reservation rules of SqlCreationQuotas. */
 export class MemoryCreationQuotas implements CreationQuotaStore {

@@ -14,7 +14,7 @@ import {
 	DEFAULT_CONTROL,
 } from "./proposal-release-control.ts"
 import { ProposalService } from "./proposal-service.server.ts"
-import { proposalFixtureCatalog } from "./proposal-test-support.ts"
+import { proposalFixtureCatalog, untilShardsStarted } from "./proposal-test-support.ts"
 import { tables, tableDdl } from "./proposal-storage-schema.ts"
 import { IndeterminateWrite } from "./errors.ts"
 const enabled = process.env.YEPWATCH_TEST_RELATIONAL_CRATE === "1"
@@ -436,6 +436,7 @@ test(
 				await new Promise((r) => setTimeout(r, 300))
 			}
 		}
+		await untilShardsStarted(sql)
 		const restarted = new ProposalService(
 			new RelationalProposalRepository(sql, secret),
 			proposalFixtureCatalog,
