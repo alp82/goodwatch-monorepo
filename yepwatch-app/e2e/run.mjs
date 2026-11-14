@@ -289,10 +289,10 @@ function runTier() {
   const excluded = [...samples.values()].flat().filter((s) => s.excluded);
   if (stretches.length || excluded.length || excused.length) {
     const clock = (t) => new Date(t).toISOString().slice(11, 23);
-    lines.push('', '## Runner network', '', 'Stretches in which YepWatch did not answer the runner. `runner`: the reference did not answer either (the runner was offline; judged as an outage, overlapping samples and transport errors left out). `yepwatch`: the reference answered, or YepWatch answered 5xx (a failure).', '');
+    lines.push('', '## Runner network', '', 'Stretches in which YepWatch did not answer the runner. `runner`: the reference did not answer either (the runner was offline; judged as an outage, overlapping samples and transport errors left out). `yepwatch (HTTP 5xx)`: a failure. `yepwatch (no answer)`: the reference answered but YepWatch held the probe past 1 s (a deploy holds requests): reported only, and no outage for the room’s words.', '');
     for (const s of stretches) lines.push(`- ${s.kind}${s.why ? ` (${s.why})` : ''}: ${clock(s.start)}–${clock(s.end)} UTC (${Math.round(s.end - s.start)} ms) in ${s.journey}`);
     for (const s of excluded) lines.push(`- left out: ${s.moment} ${s.ms} ms (${s.person}, ${s.detail ?? ''}): ${s.excluded}`);
-    for (const e of excused) lines.push(`- error left out: ${e}`);
+    for (const e of excused) lines.push(/reported, not gated/.test(e) ? `- ${e}` : `- error left out: ${e}`);
   }
   for (const [gate, list] of byGate) {
     lines.push('', `## ${gate} (${list.length})`, '');

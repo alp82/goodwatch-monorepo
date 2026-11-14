@@ -93,7 +93,8 @@ Gates: the journey, errors, flash, blocking and connection words (a deploy durin
 "Reconnecting…"), and the production ceilings in `e2e/budgets.mjs`: Create room 1.5 s, invitation in a fresh
 browser 3 s, vote to other phone 1 s, Start to first card 1.5 s. Every other moment (tap feedback, New room, next
 card, …) and the tight targets (`production`: Create room 500 ms, invitation 1.2 s, vote 250 ms, Start 400 ms) are
-reported only, as are the member's `unthrottled_*` numbers. No frame gate: a busy runner can't fail it. A run costs 1 room, 2 admissions and about 40 commands,
+reported only, as are the member's `unthrottled_*` numbers. No frame gate: a busy runner can't fail it. A readiness probe
+held past 1 s during a deploy is reported, not failed (a 5xx fails); the people's screens decide. A run costs 1 room, 2 admissions and about 40 commands,
 far under the production limits of 20 creates/joins a minute and 60 commands per person a minute.
 Runs are serialized by the concurrency group `yepwatch-smoke`.
 

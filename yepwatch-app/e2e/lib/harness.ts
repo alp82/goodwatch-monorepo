@@ -67,6 +67,8 @@ export class Person {
   readonly commandLog: { t: number; status: number; path: string }[] = [];
   /** False for a person who types real credentials: no trace, and no failure aria snapshot of a password form. */
   traced = true;
+  /** Set by finalHarvest(): what this page shows from then on is not judged (finish() doesn't harvest it again). */
+  private recordingDone = false;
   /**
    * Every request this person's pages made, as origin + path only (never a query: OAuth codes and states travel
    * there) with its timing and outcome. Kept for failure messages, so an untraced person's stall still names the
@@ -189,6 +191,13 @@ export class Person {
     }).catch(() => null);
     if (rec) this.recordings.push(rec);
   }
+  /** Harvest now and stop judging this page's screens (e.g. a smoke's tidy-up, which is never a gate). */
+  async finalHarvest() {
+    if (this.recordingDone) return;
+    if (!this.page.isClosed()) await this.harvest();
+    this.recordingDone = true;
+  }
+  get recordingFinished() { return this.recordingDone; }
 
   // ---- navigation -------------------------------------------------------------------------------------
   /** Navigate; by default wait until the startup word has dissolved (the page is usable and at rest). */
@@ -613,18 +622,31 @@ export class Room {
     const failures: GateFailure[] = [];
     const samples: Sample[] = [];
     // The runner offline: an outage like any other for the gates (the room's words are judged against it). YepWatch
-    // unreachable from a working network: an outage too (so its words aren't "without an outage"), and a failure.
+    // answering 5xx from a working network: an outage too (so its words aren't "without an outage"), and a failure.
     const unreachable: Unreachable[] = (await this.reach?.stop()) ?? [];
     const clock = (t: number) => new Date(t).toISOString().slice(11, 23);
-    for (const [start, end] of outagesOf(unreachable)) this.noteOutage(start, end);
+    // YepWatch silent while the reference answered (no 5xx) is reported, not judged: during a deploy the front holds
+    // requests (the readiness probe included) until the new API answers, longer than the probe's 1 s, and nobody is
+    // blocked by that. What the people saw is judged instead: request and socket errors, and connection words, which
+    // such a stretch does not excuse (it is no outage for them). Owner 2026-11-14: no blocking screen during a deploy.
+    const held = (s: Unreachable) => s.kind === 'yepwatch' && s.why !== 'HTTP 5xx';
+    // A stretch with a held part counts only its other parts (their own spans), so the held time excuses no words.
+    const mixed = new Set(unreachable.filter(held).map((s) => s.within.join()));
+    const outageParts = unreachable.filter((s) => !held(s));
+    for (const [start, end] of outagesOf(outageParts.filter((s) => !mixed.has(s.within.join())))) this.noteOutage(start, end);
+    for (const s of outageParts.filter((x) => mixed.has(x.within.join()))) this.noteOutage(s.start, s.end);
+    const heldStretches: string[] = [];
     for (const s of unreachable) {
-      if (s.kind === 'yepwatch')
-        failures.push({ gate: 'journey', person: '(runner)', detail: `YepWatch ${s.why === 'HTTP 5xx' ? 'answered its readiness route with a 5xx' : "didn't answer the runner while the reference did"} for ${Math.round(s.end - s.start)} ms (${clock(s.start)}–${clock(s.end)} UTC)`, measured: Math.round(s.end - s.start), budget: `< ${MIN_UNREACHABLE_MS} ms`, at: s.start });
+      const span = `${Math.round(s.end - s.start)} ms (${clock(s.start)}–${clock(s.end)} UTC)`;
+      if (held(s)) heldStretches.push(`YepWatch didn't answer the runner's readiness probe within 1 s while the reference did, for ${span} (held during a deploy, or slow: reported, not gated)`);
+      else if (s.kind === 'yepwatch')
+        failures.push({ gate: 'journey', person: '(runner)', detail: `YepWatch answered its readiness route with a 5xx for ${span}`, measured: Math.round(s.end - s.start), budget: `< ${MIN_UNREACHABLE_MS} ms`, at: s.start });
     }
+    for (const h of heldStretches) console.log(`[smoke] ${h}`);
     // Transport errors (a failed request, a socket error) while the runner was offline are the runner's, kept for the report.
     const excused: string[] = [];
     for (const p of this.people) {
-      if (!p.page.isClosed()) await p.harvest();
+      if (!p.page.isClosed() && !p.recordingFinished) await p.harvest();
       for (const rec of p.recordings) {
         failures.push(...flashes(rec, p.name), ...layoutShifts(rec, p.name), ...blockingWords(rec, p.name), ...connectionWords(rec, p.name, this.outages()), ...deadButtons(rec, p.name));
         // Frame pacing is no gate (it needs a GPU and an idle CPU): only `node run.mjs frames` (E2E_FRAMES=gate) judges it.
@@ -646,7 +668,7 @@ export class Room {
       const landed = this.people.flatMap((p) => p.commandLog).filter((c) => c.t >= r.back && c.status < 300 && /\/commands$/.test(c.path)).sort((a, b) => a.t - b.t)[0];
       if (landed) samples.push({ moment: 'restartQueuedLandMs', ms: landed.t - r.back, person: '(room)', detail: `${r.service} restart` });
     }
-    if (unreachable.length) await this.info.attach('reachability', { body: JSON.stringify({ stretches: unreachable, excused }), contentType: 'application/json' });
+    if (unreachable.length) await this.info.attach('reachability', { body: JSON.stringify({ stretches: unreachable, excused: [...excused, ...heldStretches] }), contentType: 'application/json' });
     await this.dump();
     const dedup = new Map<string, GateFailure>();
     for (const f of failures) dedup.set(`${f.gate}|${f.person}|${f.detail}`, f);

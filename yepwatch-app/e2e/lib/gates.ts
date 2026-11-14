@@ -57,10 +57,11 @@ export function flashes(rec: Recording, person: string, allow: string[] = []): G
 }
 
 export function layoutShifts(rec: Recording, person: string): GateFailure[] {
-  const total = rec.shifts.reduce((a, s) => a + s.value, 0);
+  const shifts = rec.shifts;
+  const total = shifts.reduce((a, s) => a + s.value, 0);
   if (total <= B.layoutShiftMax) return [];
-  const worst = [...rec.shifts].sort((a, b) => b.value - a.value).slice(0, 3);
-  return [{ gate: 'layout-shift', person, detail: `CLS ${total.toFixed(4)} over ${rec.shifts.length} shifts; worst: ${worst.map((w) => `${w.value.toFixed(4)} ${JSON.stringify(w.sources).slice(0, 220)}`).join(' | ')}`, measured: Number(total.toFixed(4)), budget: B.layoutShiftMax }];
+  const worst = [...shifts].sort((a, b) => b.value - a.value).slice(0, 3);
+  return [{ gate: 'layout-shift', person, detail: `CLS ${total.toFixed(4)} over ${shifts.length} shifts; worst: ${worst.map((w) => `${w.value.toFixed(4)} at ${Math.round(w.t - rec.startedAt)} ms on [${rec.states.filter((x) => x.t <= w.t).at(-1)?.sig ?? ''}] ${JSON.stringify(w.sources).slice(0, 220)}`).join(' | ')}`, measured: Number(total.toFixed(4)), budget: B.layoutShiftMax }];
 }
 
 const lines = (text: string) => (text ? text.split(' ¦ ') : []);

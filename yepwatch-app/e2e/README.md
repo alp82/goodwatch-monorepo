@@ -38,8 +38,12 @@ Smoke runner network (`lib/reachability.ts`): during a production smoke the runn
 route and an IPv4 reference (`https://1.1.1.1/cdn-cgi/trace`, override with `E2E_SMOKE_REFERENCE_URL`) every 250 ms.
 A stretch where neither answered is the runner's own outage: the gates judge the room's words against it, and timing
 samples and transport errors that overlap it are left out (and listed under "Runner network" in summary.md), so a
-dropped home or CI line doesn't fail YepWatch or poison the smoke history. YepWatch not answering while the reference
-does, or answering 5xx, for 1 s or more is a failure of its own.
+dropped home or CI line doesn't fail YepWatch or poison the smoke history. YepWatch answering 5xx for 1 s or more is a
+failure of its own. YepWatch not answering within 1 s while the reference does (a deploy holds requests in the front
+until the new API answers) is reported only and excuses no connection words: what the people saw is judged instead.
+
+The smoke's tidy-up (guests leave, the host archives) is not judged on screen: everyone's journey is harvested first
+(`person.finalHarvest()`); errors during it still count.
 
 Reports: `artifacts/<tier>/report.json` (every gate failure with journey, fault, gate, measured vs budget,
 artifacts; timing p50/p95 per moment) and `artifacts/<tier>/summary.md`. Traces of failed tests are under

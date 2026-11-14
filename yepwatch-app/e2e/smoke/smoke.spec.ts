@@ -158,7 +158,10 @@ async function shownMatches(p: Person) {
   });
 }
 
-/** Best effort, never a gate: a guest leaves through the room sheet; the host archives. */
+/**
+ * Best effort, never a gate: a guest leaves through the room sheet; the host archives. Everyone's journey is
+ * harvested before the first tidy-up step (finalHarvest), so the screens of the tidy-up are not judged; errors still are.
+ */
 async function tidy(p: Person, how: 'leave' | 'archive') {
   try {
     const page = p.page;
@@ -166,9 +169,6 @@ async function tidy(p: Person, how: 'leave' | 'archive') {
     const visible = (name: string | RegExp) => page.getByRole('button', { name, exact: typeof name === 'string' }).filter({ visible: true }).first();
     if (how === 'archive') {
       // From the start page card: works whatever screen the room was left on (match, proposal, sheet).
-      // Harvested first: the navigation drops the room page's recording, and with it the host's whole journey
-      // (create, Start, every Yep) from the gates.
-      await p.harvest();
       await page.goto(new URL('/', page.url()).href);
       await visible(`Archive ${MARK}`).click({ timeout: 10000 });
       await page.getByRole('button', { name: MARK, exact: true }).filter({ visible: true }).waitFor({ state: 'detached', timeout: 8000 });
@@ -192,6 +192,7 @@ test('smoke: guest room, friend by link, member by link, start, vote to a match,
     await journey(room, people);
   } finally {
     // Leave/archive so the smoke room drops off every account and start page (it still expires on its own).
+    for (const p of room.people) await p.finalHarvest();
     for (const [p, how] of people.reverse()) await tidy(p, how);
     // The newest member session for the next run: YepWatch may have renewed (rotated) it during this one.
     const member = room.people.find((p) => p.name === 'Smoke member');
