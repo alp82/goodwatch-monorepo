@@ -1,6 +1,10 @@
 import { test, expect, eventually, type Person } from '../lib/harness';
 import { cardTitle, inviteLink, join, readyHost, start, vote } from './flows';
 
+const COMMANDS = /\/api\/yepwatch\/v1\/proposal\/rooms\/[^/]+\/commands$/;
+/** Past the 500 ms after a press within which the browser excuses a layout shift. */
+const LATE_PROPOSAL_MS = 900;
+
 /** The last Yep that makes a match is timed until the other phones' Matches chip shows it. */
 async function matchAcross(people: Person[]) {
   const [last, ...others] = [...people].reverse();
@@ -55,6 +59,26 @@ test.describe('match, proposal, Tonight', () => {
     await host.page.waitForTimeout(300);
     await start(host, [mia, sam]);
     await eventually(() => host.latest?.generation, (g) => (g ?? 0) >= 1, 'a new round (generation advanced)', host);
+  });
+
+  // CI run 43605791062 (1 in 10): the proposal came back 550 ms after Propose this, past the 500 ms a press excuses,
+  // and Matches drew its card where the match was for a frame before the room's page replaced it: Keep swiping
+  // moved 14 px. Here the proposal always comes late; the layout-shift gate judges the Matches page.
+  test('the proposal comes late: Matches holds still until the proposal replaces it', async ({ room }) => {
+    const host = await readyHost(room);
+    const mia = await room.person('Mia');
+    await join(mia, await inviteLink(host), 'Mia', 'Netflix');
+    await start(host, [mia]);
+    await matchAcross([host, mia]);
+    await host.tap(host.button(/^\d+ match(es)?$/), { expect: { visible: ['matches'] } });
+    await host.page.route(COMMANDS, async (route) => {
+      if (route.request().method() === 'POST' && /"type":"propose"/.test(route.request().postData() ?? '')) await new Promise((resolve) => setTimeout(resolve, LATE_PROPOSAL_MS));
+      await route.continue().catch(() => undefined);
+    });
+    await host.tap(host.button('Propose this').first(), { expect: { visible: ['proposal'] }, timeout: 15000 });
+    await host.page.waitForTimeout(500);
+    await host.harvest();
+    expect(host.recordings.at(-1)?.shifts ?? [], 'no layout shift while the proposal arrives').toEqual([]);
   });
 
   test('Keep swiping sets a proposal aside; Matches shows it as a card', async ({ room }) => {

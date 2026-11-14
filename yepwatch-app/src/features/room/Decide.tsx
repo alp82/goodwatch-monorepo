@@ -2,16 +2,16 @@
  * Matches, the proposal and its agreement (direction D). Privacy: nobody sees who proposed or who
  * agreed; the proposal reads "Someone proposes" (or "Your proposal"), agreement dots and "2 of 3 agree".
  */
-import { useCallback, useEffect, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Image, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import type { Candidate } from '@goodwatch/yepwatch-contracts/proposal';
 import { useLayout } from '../shell/layout';
-import { useBackAction } from '../shell/sheet-back';
+import { leaveScreen, useBackAction } from '../shell/sheet-back';
 import { R, warm } from '../shell/tokens';
 import { GText, Icon, Press, glow, grow } from '../glow/theme';
 import { ScorePill } from '../glow/scores';
-import { showsProposal, type ProposalView } from './model';
+import { showsProposal, type ProposalView, type RoomView } from './model';
 import { leavePage, toRooms } from './nav';
 import { useRoom, useRoomLive } from './RoomProvider';
 import { RoomNotes, RoomStatus } from './RoomStatus';
@@ -162,8 +162,9 @@ export function Proposal() {
 }
 
 /** The proposal, compact, on top of the matches (once set aside with Keep swiping): poster, agreement, Agree. */
-function ProposalCard({ pr }: { pr: ProposalView }) {
-  const { cmd, disabled, reopenProposal } = useRoom();
+function ProposalCard({ pr, held }: { pr: ProposalView; held: boolean }) {
+  const { cmd: live, disabled, reopenProposal } = useRoom();
+  const cmd = { agree: (yes: boolean) => (held ? undefined : live.agree(yes)) };
   const { phone, z } = useLayout();
   const c = pr.candidate;
   const agree = pr.agreed
@@ -173,7 +174,7 @@ function ProposalCard({ pr }: { pr: ProposalView }) {
     : <Press label="Agree" disabled={disabled} onPress={() => void cmd.agree(true)} style={{ minHeight: z(48), paddingHorizontal: z(28), borderRadius: R.control, flexDirection: 'row', gap: 8, backgroundColor: glow.amber }}><Icon name="check" size={18} color={warm.ink} /><GText bold size={z(16)} color={warm.ink}>Agree</GText></Press>;
   return (
     <View testID="proposal-card" style={{ flexDirection: 'row', alignItems: 'center', gap: z(18), padding: z(14), borderRadius: R.card, backgroundColor: '#fbbf240d', borderWidth: 1, borderColor: '#fbbf2470' }}>
-      <Press label={`${c?.title ?? 'The proposal'}, open proposal`} onPress={reopenProposal} style={{ borderRadius: R.control }}><Poster c={c} width={phone ? 78 : z(104)} label={false} /></Press>
+      <Press label={`${c?.title ?? 'The proposal'}, open proposal`} onPress={() => { if (!held) reopenProposal(); }} style={{ borderRadius: R.control }}><Poster c={c} width={phone ? 78 : z(104)} label={false} /></Press>
       <View style={{ flex: 1, minWidth: 0, gap: z(8) }}>
         <Label color={glow.amber}>{proposalLabel(pr)}</Label>
         <GText bold size={phone ? 20 : z(28)} lines={2} style={{ letterSpacing: -0.6 }}>{c?.title ?? 'A match'}</GText>
@@ -189,7 +190,7 @@ function ProposalCard({ pr }: { pr: ProposalView }) {
 }
 
 /** One match: a big poster, its facts, Propose this (or Propose this instead). */
-function MatchCard({ c, proposing }: { c: Candidate; proposing: boolean }) {
+function MatchCard({ c, proposing, held }: { c: Candidate; proposing: boolean; held: boolean }) {
   const { cmd, disabled, reopenProposal } = useRoom();
   const { phone, z } = useLayout();
   const offered = useOffered(c);
@@ -203,7 +204,7 @@ function MatchCard({ c, proposing }: { c: Candidate; proposing: boolean }) {
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><ScorePill score={c.goodwatchScore} size={phone ? 'S' : 'M'} /><Logos services={offered} size={z(22)} /></View>
         </View>
       </View>
-      <Press label={proposing ? 'Propose this instead' : 'Propose this'} disabled={disabled} onPress={() => { reopenProposal(); void cmd.propose(c.id); }}
+      <Press label={proposing ? 'Propose this instead' : 'Propose this'} disabled={disabled} onPress={() => { if (held) return; reopenProposal(); void cmd.propose(c.id); }}
         style={{ ...grow(z(44)), alignItems: 'stretch' }} visual={{ minHeight: z(44), alignItems: 'center', justifyContent: 'center', borderRadius: R.control, borderWidth: 1, borderColor: warm.lineStrong }}>
         <GText bold size={z(15)}>{proposing ? 'Propose this instead' : 'Propose this'}</GText>
       </Press>
@@ -214,14 +215,26 @@ function MatchCard({ c, proposing }: { c: Candidate; proposing: boolean }) {
 /** Every match, the proposal on top. */
 export function MatchesPage() {
   const { id, view, dismissedProposal, setActivityView } = useRoom();
-  const { phone, width, z } = useLayout();
   useFocusEffect(useCallback(() => { setActivityView('matches'); }, [setActivityView]));
   // Nobody stays on Matches once the round is decided or restarted: the room shows what's next.
   // A proposal takes over on the room page underneath, so Back from it leaves the room.
   const phase = view?.phase;
   const proposed = Boolean(view && showsProposal(view, dismissedProposal));
-  useEffect(() => { if ((phase && phase !== 'choosing') || proposed) leavePage(id); }, [phase, proposed, id]);
-  if (!view) return <RoomStatus />;
+  const leaving = Boolean(phase && phase !== 'choosing') || proposed;
+  // Sheets close first: a sheet holds a navigation away, and this page would stay.
+  useEffect(() => { if (leaving) leaveScreen(() => leavePage(id)); }, [leaving, id]);
+  // While it leaves, the page keeps the last layout it showed. Drawn for a frame or two before the room's page
+  // replaced it, the proposal's card where its match was (another height) moved Keep swiping (CI run 43605791062).
+  const [shown, setShown] = useState(view);
+  if (view && !leaving && view !== shown) setShown(view);
+  const page = leaving ? shown ?? view : view;
+  if (!page) return <RoomStatus />;
+  return <Matches id={id} view={page} held={leaving} />;
+}
+
+/** `held`: the layout from before the page began leaving, shown until it's gone; its proposal buttons do nothing. */
+function Matches({ id, view, held }: { id: string; view: RoomView; held: boolean }) {
+  const { phone, width, z } = useLayout();
   const proposal = view.proposal;
   const others = view.matches.filter((c) => c.id !== proposal?.candidateId);
   const cols = phone ? 1 : width < 1000 ? 2 : Math.min(3, Math.max(2, others.length));
@@ -235,10 +248,10 @@ export function MatchesPage() {
         {!phone ? keep : null}
       </View>
       {!count ? <Small>No matches yet</Small> : null}
-      {proposal ? <ProposalCard pr={proposal} /> : null}
+      {proposal ? <ProposalCard pr={proposal} held={held} /> : null}
       {others.length ? (
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', margin: -z(8) }}>
-          {others.map((c) => <View key={c.id} style={{ width: `${100 / cols}%`, padding: z(8) }}><MatchCard c={c} proposing={Boolean(proposal)} /></View>)}
+          {others.map((c) => <View key={c.id} style={{ width: `${100 / cols}%`, padding: z(8) }}><MatchCard c={c} proposing={Boolean(proposal)} held={held} /></View>)}
         </View>
       ) : null}
       {phone ? <Actions>{keep}</Actions> : null}
