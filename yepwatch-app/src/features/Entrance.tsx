@@ -1,10 +1,10 @@
 import { ConnectionDetails } from './rooms/ConnectionDetails';
 import type { ConnectionDiagnostic } from '../core/continuous/connection-diagnostic';
 import { guestOnly } from '../core/config';
-import { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AppState, BackHandler, Platform } from 'react-native';
 import { GText, Press, glow, grow } from './glow/theme';
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useIsFocused } from 'expo-router';
 import * as Crypto from 'expo-crypto';
 import { continuousApi as api, RoomFailure as ApiFailure } from '../core/continuous/api';
 import { loadAccess, nativeClient, saveAccess } from '../core/credentials';
@@ -55,13 +55,31 @@ interface JoinAsk { member: boolean; returning?: { code: string; nickname: strin
  * History are panels in the same frame. Admission keeps the existing recovery: the exact request is
  * persisted before every submit and retried as-is.
  */
-export function Entrance({ invite, open: request, from }: {
+type EntranceProps = {
   invite?: string;
   /** A start page action another screen asked for. */
   open?: StartRequest;
   /** The screen that asked (a room), where signing in from its Profile returns to. */
   from?: string;
-}) {
+};
+
+/**
+ * What a page draws while another page is in front of it: what it last drew. Its hooks keep running (the device's
+ * rooms, saved requests, redirects), but a change of them no longer redraws the whole hidden start page under the
+ * room on every room update. Focus comes from the navigation state, so the page draws anew in the very render that
+ * brings it to the front (on the web a page out of focus isn't displayed at all).
+ */
+const Frozen = memo(function Frozen({ children }: { live: boolean; children: ReactNode }) {
+  return children;
+}, (_before, next) => !next.live);
+
+export function Entrance(props: EntranceProps) {
+  // Web only: a native stack shows the page underneath during a back swipe, before it takes focus.
+  const live = useIsFocused() || Platform.OS !== 'web';
+  return <Frozen live={live}>{useEntrancePage(props)}</Frozen>;
+}
+
+function useEntrancePage({ invite, open: request, from }: EntranceProps) {
   const home = useHome();
   const account = useAccount();
   const boot = useContext(BootPhase);
