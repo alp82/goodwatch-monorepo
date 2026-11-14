@@ -15,9 +15,11 @@ pgnode01 is a separate change. See [stage 6](#stage-6-later-yepwatchcom).
 
 ## Status
 
-Updated November 13, 2026, about 16:00 UTC. Owner decisions: agents do every part of the cut-over outside Coolify
-(Q56); AI training crawlers are blocked, AI search and user-triggered fetchers are allowed (Q57). The owner sets
-`goodwatch.app` and `www.goodwatch.app` to proxied, later. Both are still DNS-only.
+Updated November 14, 2026, about 19:25 UTC. Owner decisions: agents do every part of the cut-over outside Coolify
+(Q56); AI training crawlers are blocked, AI search and user-triggered fetchers are allowed (Q57). The owner set
+`goodwatch.app` to proxied at 19:17 UTC on November 14 (record modified 19:17:08). **`www.goodwatch.app` is still
+DNS-only** in the zone (read 19:20 UTC); it keeps answering its 308 from the origin. Stage 4 checks from 19:20 to
+19:25 UTC are in [After the flip](#after-the-flip).
 
 | Step | State |
 | --- | --- |
@@ -39,6 +41,17 @@ Updated November 13, 2026, about 16:00 UTC. Owner decisions: agents do every par
 | 1.9 AI crawlers | done, see below |
 | 2 access log header | optional, owner decides: nothing automated needs it (see [Stage 2](#stage-2-access-log-keeps-the-visitors-address-owner-coolify-ui-proxy-restart)) |
 | IP Access Rule from 2014 | left alone: user scope allow (whitelist) for one address, no notes. Owner: confirm or remove |
+| 3 flip | apex proxied 19:17 UTC Nov 14; www still DNS-only, owner to flip |
+| 4 edge, HTML, redirects | pass: `server: cloudflare`, `cf-cache-status: DYNAMIC`, `cache-control: private, max-age=0` unchanged; no `cdn-cgi` or email obfuscation in HTML; `http://` 308 to HTTPS from Traefik |
+| 4 OAuth, MCP, robots | pass: `/mcp` 401 with the baseline `WWW-Authenticate`, 76 bytes; the four `.well-known` documents and `robots.txt` byte-identical to the baseline; Google callback reaches Better Auth (302 `state_not_found` without state). Signed-in checks (members, Google, Discord, an MCP client) are the owner's |
+| 4 OG, sitemap, streaming | pass: OG `image/jpeg` with its origin `cache-control`; sitemap index 200 XML; movie page first byte before the end |
+| 4 restoration | pass: `outcome="cloudflare"` +5,000 on each instance and +18 on each search role in 3 minutes; `unkeyed` +2 on abio, flat elsewhere |
+| 4 search limit | pass: 11 POSTs from the desktop: ten 400, then 429; one from hq at the same time: 400 |
+| 4 bots | fake Googlebot and bingbot 403 ("Fake search engines"); GPTBot, ClaudeBot, CCBot, Amazonbot, meta-externalagent 403; OAI-SearchBot, ChatGPT-User, Claude-User, PerplexityBot, facebookexternalhit 200. No verified Googlebot or Bingbot visit yet in the window: check Security Events within 48 hours. **AI Crawl Control's training block also blocks Applebot (28 in 8 minutes) and PetalBot**: owner decides |
+| 4 errors, latency | no 52x at the edge; status mix and latency as before the flip (see below) |
+| 4 key not logged | pass: 0 `gw-edge-key` in abio's log |
+| 4 ACME path | pass: `http://goodwatch.app/.well-known/acme-challenge/test` reaches Traefik's `acme-http@internal` over HTTP, 404; Always Use HTTPS off, SSL strict |
+| Q49 crawler limits | pass: 60 parallel requests with an AhrefsBot user agent (unique test suffix) through Cloudflare: 30 200, 30 429, all on `gw-webapp-crawler-https`; Googlebot straight to the origin on the private network: 200 on `gw-webapp-https` |
 
 `static.goodwatch.app` answered 200 for a cached file, a cache-busted file (origin fetch) and `robots.txt` after every
 change, with its own `Cache-Control` intact.
@@ -177,6 +190,39 @@ Behavior checks:
 | `/og/movie/603-the-matrix.png` | 200 `image/jpeg`, `cache-control: public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400` |
 | `goodwatch_edge_client_address_total` | instances: `direct` most requests, `unknown` a few hundred (no connecting address), `cloudflare` 8 on abio (static), none on vector1. Search roles: `unknown` about 4,600 each (health checks), `direct` about 1,120, and one `unkeyed` on search-a: a Cloudflare address without the key reached the origin directly (WARP or another account's Worker). After the flip, a trickle of `unkeyed` like this is normal; a rise in step with traffic means a key mismatch |
 | `goodwatch_search_rate_limit_total` | `allowed` 485 and 482 on the two search roles over about 100 minutes, `limited` 1 |
+
+## After the flip
+
+Measured November 14, 2026, 19:20 to 19:25 UTC by an agent, 3 to 8 minutes after the apex flip (www still DNS-only).
+Resolvers move over within the 5-minute TTL, so part of the traffic still came direct. Compare again after a day.
+
+| Source | Window | Requests | Status mix | Latency p50/p90/p99 ms, all (2xx) |
+| --- | --- | --- | --- | --- |
+| abio proxy, 30 min before the flip | 18:47 to 19:17 | 130,430 (72/s) | 2xx 51.2%, 3xx 12.3%, 4xx 29.6% (403 15.6%, 429 13.8%), 5xx 6.9% (503) | 50/551/1,418 (251/645/1,562) |
+| abio proxy, after | 19:17 to 19:23 | 21,812, 72% from Cloudflare | 2xx 59.0%, 3xx 11.0%, 4xx 21.9% (403 13.7%, 429 7.8%), 5xx 8.0% (503) | 61/553/1,314 (244/648/1,418) |
+| of those, through Cloudflare | same | 15,721 | 2xx 60.3%, 4xx 21.0%, 5xx 7.8% | 55/564/1,346 (236/658/1,430) |
+| Cloudflare edge, apex | 19:17 to 19:24 | 13,152 | 200 6,958, 403 1,775, 308 1,332, 429 1,082, 204 1,033, 503 885, 499 50, no 52x | |
+
+The 503s are the origin's shed busy page (the direct share had the same 8.5%), not Cloudflare errors. The shedder ran
+at about 4.4 a second on abio and 2.0 on vector1 this evening, higher than the 1.8 and 0.6 of the November 13
+afternoon baseline, and the 5xx share was already 6.9% before the flip. The lower 429 and 403 shares fit crawlers
+blocked at the edge and person limits counting visitors.
+
+TTFB, median of 5, browser user agent: desktop `/` 0.18 s, movie 0.14 s, sitemap 0.11 s (baseline 0.18, 0.20,
+0.09); hq `/` 0.10 s, movie 0.10 s, sitemap 0.14 s (baseline 0.05, 0.04, 0.05: hq used to reach abio directly and now
+goes through Cloudflare's Frankfurt edge).
+
+Firewall events since the flip: "Block AI training crawlers" (AI Crawl Control) 57, among them 28 verified Applebot,
+27 Reflectionbot and 2 PetalBot; the custom "AI training crawlers" rule 42 (mostly ClaudeBot); "Fake search engines"
+2 (the agent's own test requests).
+
+Owner to do or decide:
+
+1. Set `www.goodwatch.app` to proxied (or decide to keep it DNS-only; it only redirects).
+2. Applebot (Apple's search crawler for Siri and Spotlight, in the shedder's `LET_THROUGH`) and PetalBot (Huawei's
+   search) are blocked by the training policy. To let them through, allow them per crawler in AI Crawl Control;
+   Apple's training opt-out is the `Applebot-Extended` token in `robots.txt`, like `Google-Extended`.
+3. The 48-hour checks: Search Console crawl stats and host status, Bing crawl errors, verified bots in Security Events.
 
 ## Rules for this rollout
 
