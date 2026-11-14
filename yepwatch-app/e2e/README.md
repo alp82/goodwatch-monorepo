@@ -19,6 +19,13 @@ alone. Create and Start happen once a run: their p95 is taken over this run and 
 the same origin (up to 20 runs or 20 samples; `lib/timing-window.mjs`, history in
 `artifacts/smoke-history.jsonl`, kept between CI runs in the Actions cache).
 
+Smoke runner network (`lib/reachability.ts`): during a production smoke the runner process asks YepWatch's readiness
+route and an IPv4 reference (`https://1.1.1.1/cdn-cgi/trace`, override with `E2E_SMOKE_REFERENCE_URL`) every 250 ms.
+A stretch where neither answered is the runner's own outage: the gates judge the room's words against it, and timing
+samples and transport errors that overlap it are left out (and listed under "Runner network" in summary.md), so a
+dropped home or CI line doesn't fail YepWatch or poison the smoke history. YepWatch not answering while the reference
+does, or answering 5xx, for 1 s or more is a failure of its own.
+
 Reports: `artifacts/<tier>/report.json` (every gate failure with journey, fault, gate, measured vs budget,
 artifacts; timing p50/p95 per moment) and `artifacts/<tier>/summary.md`. Traces of failed tests are under
 `artifacts/<tier>/results-*/` (`npx playwright show-trace <zip>`).

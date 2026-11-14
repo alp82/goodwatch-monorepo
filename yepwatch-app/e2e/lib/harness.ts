@@ -19,6 +19,7 @@ import { parseFrame, sharedSchema } from '../../src/core/continuous/wire';
 import { audit } from './a11y';
 import { serverTimingLine } from './server-timing';
 import { blockingWords, connectionWords, deadButtons, flashes, frameGaps, layoutShifts, type GateFailure, type Outage, type Recording } from './gates';
+import { duringRunnerOutage, explainedByRunner, MIN_UNREACHABLE_MS, outagesOf, ReachabilityWatch, type Unreachable } from './reachability';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const RECORDER = path.join(here, 'recorder.page.js');
@@ -34,7 +35,9 @@ const SERVER_TIMING_LOG = process.env.E2E_SERVER_TIMING_LOG;
 
 export type Fault = 'none' | 'nows' | 'slow' | 'hidden' | 'restart' | 'twodevice' | 'rapid';
 export type Spec = { visible?: string[]; any?: string[]; hidden?: string[]; text?: string; label?: { text: string; exact?: boolean }; textChanged?: { id: string; from: string }; cardChanged?: { from: string } };
-export interface Sample { moment: string; ms: number; person: string; detail?: string }
+/** `from`/`to`: the measured span in epoch ms, when known. `excluded`: why the budgets leave it out (it overlapped the
+ * runner's own network outage, lib/reachability.ts). */
+export interface Sample { moment: string; ms: number; person: string; detail?: string; from?: number; to?: number; excluded?: string }
 type Shared = { roomId: string; phase: string; ideas: { text: string; on: boolean; authorId: string; attributes: unknown[] }[]; participants: { participantId: string; nickname: string }[]; matches?: unknown[]; generation: number; [k: string]: unknown };
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -237,8 +240,9 @@ export class Person {
   private async inputAfter(armedAt: number) {
     return this.page.evaluate((a) => (window as unknown as { __yw: Recording }).__yw.inputs.find((i) => i.t >= a - 1) ?? null, armedAt);
   }
-  record(moment: string, ms: number, detail?: string) {
-    this.samples.push({ moment, ms: Math.round(ms * 10) / 10, person: this.name, detail });
+  /** `span`: [from, to] in epoch ms, so a sample taken while the runner itself was offline can be left out. */
+  record(moment: string, ms: number, detail?: string, span?: [number, number]) {
+    this.samples.push({ moment, ms: Math.round(ms * 10) / 10, person: this.name, detail, ...(span ? { from: span[0], to: span[1] } : {}) });
   }
   /**
    * The requests that explain a stall, for a failure message: still open after 1 s, failed or answered >= 400 in
@@ -282,20 +286,20 @@ export class Person {
       const input = await this.inputAfter(r!.armedAt);
       if (input && opts.moment) {
         elapsed = r!.at - input.t;
-        this.record(opts.moment, elapsed, String(target));
+        this.record(opts.moment, elapsed, String(target), [input.t, r!.at]);
       }
-      if (input?.feedbackAt) this.record('tapFeedbackMs', input.feedbackAt - input.t, String(target));
+      if (input?.feedbackAt) this.record('tapFeedbackMs', input.feedbackAt - input.t, String(target), [input.t, input.feedbackAt]);
       for (const [i, [p, , moment]] of (opts.observers ?? []).entries()) {
         const o = await p.result(observerKeys[i], opts.timeout ?? 15000);
         if (!o && opts.soft) continue;
         if (!o) p.journeyFailure(`after ${this.name} pressed ${target}: ${moment} never showed for ${p.name} (now: ${await p.signature()})`);
         // An observer already satisfied before the press (a late update from an earlier action) is no sample.
-        if (input && o!.at >= input.t) p.record(moment, o!.at - input.t, `${this.name}: ${target}`);
+        if (input && o!.at >= input.t) p.record(moment, o!.at - input.t, `${this.name}: ${target}`, [input.t, o!.at]);
       }
     } else {
       await sleep(60);
       const input = await this.page.evaluate(() => (window as unknown as { __yw: Recording }).__yw.inputs.at(-1) ?? null).catch(() => null);
-      if (input?.feedbackAt) this.record('tapFeedbackMs', input.feedbackAt - input.t, String(target));
+      if (input?.feedbackAt) this.record('tapFeedbackMs', input.feedbackAt - input.t, String(target), [input.t, input.feedbackAt]);
     }
     return elapsed;
   }
@@ -371,6 +375,8 @@ export class Room {
   private points = 0;
   restartLog: { at: number; back: number; service: string; quietMs?: number }[] = [];
   private offlineWindows: Outage[] = [];
+  /** Production smoke: whether the runner's own network stayed up meanwhile (lib/reachability.ts). */
+  private readonly reach = process.env.E2E_TARGET === 'production' && ORIGIN ? new ReachabilityWatch(ORIGIN) : null;
   /** One browser process per person (not one per worker): each phone gets its own renderer and GPU process, as
    * real phones each have their own GPU. Contexts in one shared Chromium share one software-rendered GPU process,
    * so several phones animating at once (every round ends in a match) slowed each other's frames. */
@@ -543,6 +549,7 @@ export class Room {
   readonly pending: Promise<unknown>[] = [];
 
   async closeBrowsers() {
+    void this.reach?.stop();
     await Promise.allSettled(this.browsers.splice(0).map((b) => b.close({ reason: 'Test ended.' })));
   }
 
@@ -550,20 +557,40 @@ export class Room {
     await Promise.allSettled(this.pending);
     const failures: GateFailure[] = [];
     const samples: Sample[] = [];
+    // The runner offline: an outage like any other for the gates (the room's words are judged against it). YepWatch
+    // unreachable from a working network: an outage too (so its words aren't "without an outage"), and a failure.
+    const unreachable: Unreachable[] = (await this.reach?.stop()) ?? [];
+    const clock = (t: number) => new Date(t).toISOString().slice(11, 23);
+    for (const [start, end] of outagesOf(unreachable)) this.noteOutage(start, end);
+    for (const s of unreachable) {
+      if (s.kind === 'yepwatch')
+        failures.push({ gate: 'journey', person: '(runner)', detail: `YepWatch ${s.why === 'HTTP 5xx' ? 'answered its readiness route with a 5xx' : "didn't answer the runner while the reference did"} for ${Math.round(s.end - s.start)} ms (${clock(s.start)}–${clock(s.end)} UTC)`, measured: Math.round(s.end - s.start), budget: `< ${MIN_UNREACHABLE_MS} ms`, at: s.start });
+    }
+    // Transport errors (a failed request, a socket error) while the runner was offline are the runner's, kept for the report.
+    const excused: string[] = [];
     for (const p of this.people) {
       if (!p.page.isClosed()) await p.harvest();
       for (const rec of p.recordings) {
         failures.push(...flashes(rec, p.name), ...layoutShifts(rec, p.name), ...blockingWords(rec, p.name), ...connectionWords(rec, p.name, this.outages()), ...deadButtons(rec, p.name));
         if (this.fault !== 'hidden' && this.fault !== 'slow') failures.push(...frameGaps(rec, p.name, rec.inputs.map((i) => [i.t, i.t + 1200]), p.harnessBusy));
       }
-      failures.push(...p.failures.filter((f) => !failures.includes(f)));
-      samples.push(...p.samples);
+      for (const f of p.failures) {
+        if (failures.includes(f)) continue;
+        const outage = explainedByRunner(f, unreachable);
+        if (outage) excused.push(`${f.person}: ${f.detail} (the runner was offline ${clock(outage.start)}–${clock(outage.end)} UTC)`);
+        else failures.push(f);
+      }
+      for (const s of p.samples) {
+        const outage = s.from !== undefined && s.to !== undefined ? duringRunnerOutage(s.from, s.to, unreachable) : undefined;
+        samples.push(outage ? { ...s, excluded: `the runner was offline ${clock(outage.start)}–${clock(outage.end)} UTC` } : s);
+      }
     }
     // Restart: queued actions must land within budget after the server returns.
     for (const r of this.restartLog) {
       const landed = this.people.flatMap((p) => p.commandLog).filter((c) => c.t >= r.back && c.status < 300 && /\/commands$/.test(c.path)).sort((a, b) => a.t - b.t)[0];
       if (landed) samples.push({ moment: 'restartQueuedLandMs', ms: landed.t - r.back, person: '(room)', detail: `${r.service} restart` });
     }
+    if (unreachable.length) await this.info.attach('reachability', { body: JSON.stringify({ stretches: unreachable, excused }), contentType: 'application/json' });
     const dedup = new Map<string, GateFailure>();
     for (const f of failures) dedup.set(`${f.gate}|${f.person}|${f.detail}`, f);
     const unique = [...dedup.values()];

@@ -198,8 +198,9 @@ function runTier() {
     if (!samples.has(s.moment)) samples.set(s.moment, []);
     samples.get(s.moment).push({ ...s, journey: t.journey, fault: t.fault });
   }
-  // Timing budgets apply to clean runs; fault runs are reported but not judged against them.
-  const cleanOf = (moment, list) => list.filter((s) => s.fault === 'none' || s.fault === 'smoke' || tier === 'smoke' || moment === 'restartQueuedLandMs');
+  // Timing budgets apply to clean runs; fault runs are reported but not judged against them. A sample taken while
+  // the runner itself was offline (lib/reachability.ts) measures the runner's network: left out, and listed below.
+  const cleanOf = (moment, list) => list.filter((s) => !s.excluded && (s.fault === 'none' || s.fault === 'smoke' || tier === 'smoke' || moment === 'restartQueuedLandMs'));
   const own = Object.fromEntries([...samples].map(([moment, list]) => [moment, cleanOf(moment, list).map((s) => s.ms)]));
   // Smoke: a moment one run samples fewer than 20 times (create and Start: one room per run) takes its p95 over
   // this run plus earlier runs against the same origin (lib/timing-window.mjs). The history holds numbers only.
@@ -253,6 +254,16 @@ function runTier() {
   lines.push('## Timing (p95 vs budget, clean runs)', '', '| moment | samples | runs | p50 | p95 | budget | |', '|---|---|---|---|---|---|---|');
   for (const [m, v] of Object.entries(timing)) lines.push(`| ${m} | ${v.samples}${v.runs > 1 ? ` (${v.runSamples} this run)` : ''} | ${v.runs} | ${v.p50 ?? '-'} | ${v.p95 ?? '-'} | ${v.budget ?? '-'} | ${v.pass ? 'ok' : 'FAIL'} |`);
   if (historyOrigin) lines.push('', `Moments with fewer than 20 samples in this run take their p95 over the newest earlier runs against this origin as well (up to ${WINDOW_RUNS} runs or 20 samples): ${path.relative(here, historyFile)}.`);
+  const stretches = tests.flatMap((t) => (t.reachability?.stretches ?? []).map((s) => ({ ...s, journey: t.journey })));
+  const excused = tests.flatMap((t) => t.reachability?.excused ?? []);
+  const excluded = [...samples.values()].flat().filter((s) => s.excluded);
+  if (stretches.length || excluded.length || excused.length) {
+    const clock = (t) => new Date(t).toISOString().slice(11, 23);
+    lines.push('', '## Runner network', '', 'Stretches in which YepWatch did not answer the runner. `runner`: the reference did not answer either (the runner was offline; judged as an outage, overlapping samples and transport errors left out). `yepwatch`: the reference answered, or YepWatch answered 5xx (a failure).', '');
+    for (const s of stretches) lines.push(`- ${s.kind}${s.why ? ` (${s.why})` : ''}: ${clock(s.start)}–${clock(s.end)} UTC (${Math.round(s.end - s.start)} ms) in ${s.journey}`);
+    for (const s of excluded) lines.push(`- left out: ${s.moment} ${s.ms} ms (${s.person}, ${s.detail ?? ''}): ${s.excluded}`);
+    for (const e of excused) lines.push(`- error left out: ${e}`);
+  }
   for (const [gate, list] of byGate) {
     lines.push('', `## ${gate} (${list.length})`, '');
     // Same detail across journeys/faults → one line with counts.
@@ -275,6 +286,7 @@ function runTier() {
   log(`done in ${(wallClockMs / 1000).toFixed(0)} s → ${path.relative(process.cwd(), path.join(out, 'summary.md'))}, report.json`);
   // Playwright's own line can say "passed": budgets are judged here, across the run's samples, after it ends.
   for (const [m, v] of Object.entries(timing)) if (!v.pass) log(`FAIL ${m}: p95 ${v.p95} ms over budget ${v.budget} ms (${v.samples} samples)`);
+  for (const t of tests) for (const s of t.reachability?.stretches ?? []) if (s.kind === 'runner') log(`runner offline ${Math.round(s.end - s.start)} ms from ${new Date(s.start).toISOString().slice(11, 23)} UTC: judged as an outage, overlapping samples left out (summary.md)`);
   if (failures.length || report.failed) log(`FAILED: ${report.failed} test(s), ${failures.length} gate failure(s)`);
   return failures.length || report.failed ? 1 : 0;
 }

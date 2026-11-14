@@ -187,7 +187,7 @@ async function journey(room: Room, people: [Person, 'leave' | 'archive'][]) {
   const friend = await room.person('Smoke friend');
   await friend.open(invite, { settle: false });
   const shown = await friend.firstShown(['join-screen', 'invite-head']);
-  if (shown.at) friend.record('inviteOpenMs', shown.at - shown.origin, 'navigation start → join page');
+  if (shown.at) friend.record('inviteOpenMs', shown.at - shown.origin, 'navigation start → join page', [shown.origin, shown.at]);
   await friend.fill(friend.page.getByLabel('Your name').filter({ visible: true }), 'Smoke friend');
   await friend.tap(friend.button('Join'), { expect: { visible: ['services-sheet'] } });
   people.push([friend, 'leave']);
@@ -202,7 +202,7 @@ async function journey(room: Room, people: [Person, 'leave' | 'archive'][]) {
     const goodwatchName = await accountName(member);
     await member.open(invite, { settle: false });
     const mShown = await member.firstShown(['join-screen', 'invite-head']);
-    if (mShown.at) member.record('unthrottled_inviteOpenMs', mShown.at - mShown.origin, 'navigation start → join page (signed in)');
+    if (mShown.at) member.record('unthrottled_inviteOpenMs', mShown.at - mShown.origin, 'navigation start → join page (signed in)', [mShown.origin, mShown.at]);
     if (goodwatchName) {
       await member.tap(member.button(`Join as ${goodwatchName}`), { expect: { any: ['waiting', 'services-sheet'] } });
     } else {

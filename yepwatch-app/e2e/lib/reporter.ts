@@ -14,6 +14,8 @@ interface Row {
   error: string | null;
   gates: unknown[];
   timings: unknown[];
+  /** Production smoke: stretches in which YepWatch didn't answer the runner, and errors they explain (lib/reachability.ts). */
+  reachability: { stretches?: unknown[]; excused?: string[] } | [];
   artifacts: string[];
   screens: Record<string, string>;
 }
@@ -50,6 +52,7 @@ export default class GateReporter implements Reporter {
       error: result.error?.message == null ? null : redact(result.error.message.replace(/\u001b\[[0-9;]*m/g, '')).slice(0, 2000),
       gates: read('gates'),
       timings: read('timings'),
+      reachability: read('reachability'),
       artifacts: result.attachments.filter((a) => a.path).map((a) => a.path!),
       screens: Object.fromEntries(result.attachments.filter((a) => a.name.startsWith('screen ') && a.contentType === 'text/plain' && a.body).map((a) => [a.name.slice(7), redact(a.body!.toString('utf8')).slice(0, 4000)])),
     });
