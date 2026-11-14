@@ -1,14 +1,20 @@
 name: YepWatch gate and deploy
 
-# Deploy gate for YepWatch (docs/yepwatch-e2e-pipeline.md). On a push to main that touches what the YepWatch
-# images build from, in parallel: unit/type checks, the web E2E gate (Playwright, sharded) and the Android
-# E2E gate (emulator with KVM). Only when all pass does the deploy job ask Coolify to deploy, wait for it,
-# and run the production smoke.
+# Deploy gate for YepWatch (docs/yepwatch-e2e-pipeline.md), sized for free GitHub-hosted runners (owner
+# 2026-11-14: "just enough to be confident that everything does not break"):
+#   - every push to main that touches what the YepWatch images build from: unit/type checks and the web E2E
+#     (`run.mjs ci`: each journey once on the clean stack; journey, errors, schema, flash, axe + 48 px, and timing
+#     only against coarse ceilings, budgets.mjs). No frame pacing gate anywhere (`run.mjs frames` on demand).
+#   - the Android emulator journey (KVM, no video, no timing gate): nightly, on workflow_dispatch, and on pushes
+#     whose changes touch the APK's native inputs (the same files as native/lib/build.mjs nativeKey()).
+# Only when everything that ran passed does the deploy job ask Coolify to deploy, wait for it, and run the
+# production smoke. No retries: a gate that flakes is a bug.
 #
 # Hermetic: the gate jobs hold no secrets, the stack binds to loopback and refuses non-loopback sockets
 # (e2e/stack/block-egress.mjs), the APK only knows loopback origins, and the production hosts are pointed at
 # 0.0.0.0 on the runner as a second fence. Only `deploy` (COOLIFY_YEPWATCH_TOKEN, environment
-# yepwatch-production) and the smoke (member credentials, environment yepwatch-smoke) see secrets.
+# yepwatch-production) and the smoke (member credentials, environment yepwatch-smoke) see secrets. There is no
+# pull_request trigger, so nothing here ever runs for a fork's code.
 
 on:
   push:
@@ -26,8 +32,15 @@ on:
       - "goodwatch-webapp/patches/**"
       - ".github/workflows/yepwatch-gate.yml"
       - ".github/workflows/yepwatch-smoke.yml"
+  schedule:
+    # Nightly Android journey (the web jobs and the deploy stay off on schedule).
+    - cron: "17 3 * * *"
   workflow_dispatch:
     inputs:
+      android:
+        description: Run the Android emulator journey too
+        type: boolean
+        default: true
       deploy:
         description: Deploy when the gate passes (needs vars.YEPWATCH_DEPLOY_VIA_CI == 'true')
         type: boolean
@@ -42,21 +55,18 @@ permissions:
 
 concurrency:
   # One gate per commit; a newer push doesn't cancel an older gate (its deploy stands down by itself when
-  # a newer YepWatch commit is on main, see coolify-deploy.mjs).
-  group: yepwatch-gate-${{ github.sha }}
+  # a newer YepWatch commit is on main, see coolify-deploy.mjs). Hand-started and nightly runs each get their own.
+  group: yepwatch-gate-${{ github.event_name == 'push' && github.sha || github.run_id }}
   cancel-in-progress: false
 
 env:
   NODE_VERSION: 24.19.0
-  WEB_SHARDS: 6
-  # Frame pacing (60 fps, no frame > 20 ms): enforced on web with one Playwright worker per shard; reported
-  # without gating on Android (SwiftShader, no GPU). See docs/yepwatch-e2e-pipeline.md.
-  WEB_FRAMES: gate
-  NATIVE_FRAMES: report
+  WEB_SHARDS: 3
 
 jobs:
   checks:
     name: Unit and type checks
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -99,13 +109,14 @@ jobs:
           exit $status
 
   web-gate:
-    name: Web gate ${{ matrix.shard }}/6
+    name: Web E2E ${{ matrix.shard }}/3
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5, 6]
+        shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@v7
         with:
@@ -165,31 +176,32 @@ jobs:
           for i in valkey/valkey:8 crate:6.4.6 caddy:2.11.7; do
             until docker image inspect "$i" > /dev/null 2>&1; do sleep 1; done
           done
-      - name: E2E gate, shard ${{ matrix.shard }}/${{ env.WEB_SHARDS }}
+      - name: Web E2E, shard ${{ matrix.shard }}/${{ env.WEB_SHARDS }}
         id: gate
         working-directory: yepwatch-app/e2e
         env:
-          # One test at a time per runner: frame pacing is judged on an otherwise idle 4-vCPU machine.
-          E2E_WORKERS: '1'
+          # Two tests at a time on the 4-vCPU runner: no gate here depends on an idle CPU any more.
+          E2E_WORKERS: '2'
         run: |
           start=$(date +%s)
           set +e
-          node run.mjs gate -- --shard=${{ matrix.shard }}/${{ env.WEB_SHARDS }}
+          node run.mjs ci -- --shard=${{ matrix.shard }}/${{ env.WEB_SHARDS }}
           code=$?
           echo "exit=$code" >> "$GITHUB_OUTPUT"
           echo "Web shard ${{ matrix.shard }}: tier exit $code, $(( $(date +%s) - start )) s for stack + tests" >> "$GITHUB_STEP_SUMMARY"
           # The verdict is web-gate-verdict's (it merges all shards); a shard fails here only without a report.
-          test -f artifacts/gate/report.json
+          test -f artifacts/ci/report.json
       - name: Upload shard report
+        # Traces, network logs and screenshots exist only for failed tests (lib/harness.ts keeps them on failure).
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: web-gate-${{ matrix.shard }}
           path: |
-            yepwatch-app/e2e/artifacts/gate/report.json
-            yepwatch-app/e2e/artifacts/gate/summary.md
-            yepwatch-app/e2e/artifacts/gate/results-*/**/*.zip
-            yepwatch-app/e2e/artifacts/gate/results-*/**/*.png
+            yepwatch-app/e2e/artifacts/ci/report.json
+            yepwatch-app/e2e/artifacts/ci/summary.md
+            yepwatch-app/e2e/artifacts/ci/results-*/**/*.zip
+            yepwatch-app/e2e/artifacts/ci/results-*/**/*.png
           retention-days: 14
           if-no-files-found: warn
       - name: Stack logs on failure
@@ -197,9 +209,9 @@ jobs:
         run: tail -n 60 yepwatch-app/e2e/.cache/logs/*.log yepwatch-app/e2e/.cache/supervisor.out 2>/dev/null || true
 
   web-gate-verdict:
-    name: Web gate verdict
+    name: Web E2E verdict
     needs: web-gate
-    if: always()
+    if: always() && github.event_name != 'schedule'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -216,7 +228,7 @@ jobs:
           pattern: web-gate-*
           path: shards
       - name: Merge shards and judge
-        run: node yepwatch-app/e2e/ci/merge-reports.mjs shards --out merged --expect ${{ env.WEB_SHARDS }} --frames=${{ env.WEB_FRAMES }}
+        run: node yepwatch-app/e2e/ci/merge-reports.mjs shards --out merged --expect ${{ env.WEB_SHARDS }}
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -224,13 +236,46 @@ jobs:
           path: merged
           retention-days: 14
 
+  android-changes:
+    # Pushes only: does this push change the APK's native inputs (native/lib/build.mjs nativeKey(): package files,
+    # app config, plugins, assets, non-code files under src/, the APK build scripts) or the Android harness? One
+    # GitHub API call, no checkout. A push the compare can't describe (new branch, > 300 files) counts as a change.
+    name: Native changes?
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      native: ${{ steps.diff.outputs.native }}
+    steps:
+      - id: diff
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          native=true
+          if [ -n "$BEFORE" ] && [ "$BEFORE" != "0000000000000000000000000000000000000000" ]; then
+            if files=$(gh api "repos/$GITHUB_REPOSITORY/compare/$BEFORE...$AFTER" --jq 'if (.files | length) >= 300 then "TOO-MANY" else .files[].filename end'); then
+              if ! printf '%s\n' "$files" | grep -q TOO-MANY; then
+                if printf '%s\n' "$files" | grep -Eq '^yepwatch-app/(package\.json|package-lock\.json|app\.json|app\.config\.ts|plugins/|assets/|e2e/native/|e2e/ci/native-gate\.mjs)|^yepwatch-app/src/.*\.(png|jpe?g|gif|webp|svg|ttf|otf|mp3|mp4|wav|lottie)$|^\.github/workflows/yepwatch-gate\.yml$'; then native=true; else native=false; fi
+              fi
+            fi
+          fi
+          echo "native=$native" >> "$GITHUB_OUTPUT"
+          echo "Native inputs changed: $native" >> "$GITHUB_STEP_SUMMARY"
+
   android-gate:
-    # Owner decision Q28: one mixed room on one emulator (Android app host + browser friend: create/join,
-    # Start, vote to a match) plus the Android cold start. The two-phone and full Android runs stay in the
-    # pre-OTA gate (e2e/ci/ota-gate.mjs). Budget: the whole workflow under 4 min, so the slow parts overlap:
-    # the stack and the APK repack start in the background as soon as node_modules are back, while the
-    # emulator, system image and AVD caches download.
-    name: Android gate (mixed room)
+    # One mixed room on one emulator (Android app host + browser friend: create/join, Start, vote to a match) plus
+    # the Android cold start, with no video and no timing gate (`native-gate.mjs --mode=journey`): GitHub's emulator
+    # renders in software. The two-phone and full Android runs, video timings and flash checks stay in the pre-OTA
+    # gate on real hardware (e2e/ci/ota-gate.mjs). The slow parts overlap: the stack and the APK repack start in
+    # the background as soon as node_modules are back, while the emulator, system image and AVD caches download.
+    name: Android journey (mixed room)
+    needs: android-changes
+    if: >-
+      !cancelled() && (github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_dispatch' && inputs.android) ||
+      needs.android-changes.outputs.native == 'true')
     runs-on: ubuntu-latest
     # A warm run takes ~4 min. A cold one (no APK base, Gradle, SDK or AVD cache) builds the release APK and the
     # emulator snapshot from scratch, which takes longer; its caches are saved even when the gate fails (below), so
@@ -387,16 +432,12 @@ jobs:
             ${{ env.YW_E2E_HOME }}/avd
             !${{ env.YW_E2E_HOME }}/avd/yw-e2e.avd/snapshots/default_boot
           key: yw-avd-v2-${{ steps.keys.outputs.cpu }}-emu${{ steps.keys.outputs.emulator }}-${{ hashFiles('yepwatch-app/e2e/native/lib/device.mjs') }}
-      - name: Install ffmpeg (the flash gate reads the screen recording's frames)
-        # The runner image ships no ffmpeg; native/lib/video.mjs decodes each scenario's recording with it. The
-        # background preparation keeps building meanwhile.
-        run: command -v ffmpeg > /dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg > /dev/null; }
-      - name: Android E2E gate (cold start + mixed room)
+      - name: Android E2E journey (cold start + mixed room)
         working-directory: yepwatch-app/e2e
         env:
           YW_E2E_PREPARE_MS: ${{ steps.apk.outputs.cache-hit == 'true' && '420000' || '1200000' }}
           YW_E2E_TRACE: ${{ inputs.trace }}
-        run: node ci/native-gate.mjs --mode=subset --frames=${{ env.NATIVE_FRAMES }} --after-prepare="$RUNNER_TEMP/prepare.json"
+        run: node ci/native-gate.mjs --mode=journey --after-prepare="$RUNNER_TEMP/prepare.json"
       - name: Background pull + stack + APK logs
         if: always()
         run: |
@@ -500,20 +541,15 @@ jobs:
             ${{ runner.temp }}/pull.log
           retention-days: 14
           if-no-files-found: warn
-      - name: Upload videos on failure
-        if: failure()
-        uses: actions/upload-artifact@v7
-        with:
-          name: android-gate-videos
-          path: ${{ env.YW_E2E_RUNS }}/**/video/**
-          retention-days: 7
-          if-no-files-found: ignore
 
   deploy:
     name: Deploy via Coolify
     needs: [checks, web-gate-verdict, android-gate]
     # Stays off until the owner switches deploys from the Coolify webhook to this pipeline (vars.YEPWATCH_DEPLOY_VIA_CI).
+    # The Android journey may be skipped (a push without native changes), never failed.
     if: >-
+      !cancelled() && needs.checks.result == 'success' && needs.web-gate-verdict.result == 'success' &&
+      (needs.android-gate.result == 'success' || needs.android-gate.result == 'skipped') &&
       vars.YEPWATCH_DEPLOY_VIA_CI == 'true' && github.ref == 'refs/heads/main' &&
       (github.event_name == 'push' || inputs.deploy)
     runs-on: ubuntu-latest

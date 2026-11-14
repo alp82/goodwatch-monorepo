@@ -29,8 +29,8 @@ function body() {
     for (const f of report.failures.slice(0, 20)) L.push(`| ${f.gate} | ${f.person || '-'} | ${String(f.detail).replace(/\|/g, '\\|').replace(/\n/g, ' ').slice(0, 300)} | ${f.measured ?? ''} | ${f.budget ?? ''} |`);
     L.push('');
   }
-  L.push('| moment | samples | p50 | p95 | budget (fast 4G) |', '|---|---|---|---|---|');
-  for (const [m, v] of Object.entries(report.timing ?? {})) L.push(`| ${m} | ${v.samples} | ${v.p50 ?? '-'} | ${v.p95 ?? '-'} | ${v.budget ?? 'not gated'}${v.pass ? '' : ' **FAIL**'} |`);
+  L.push('| moment | samples | p50 | p95 | target (fast 4G, reported) | ceiling (gate) |', '|---|---|---|---|---|---|');
+  for (const [m, v] of Object.entries(report.timing ?? {})) L.push(`| ${m} | ${v.samples} | ${v.p50 ?? '-'} | ${v.p95 ?? '-'} | ${v.target ?? '-'} | ${v.ceiling ?? 'not gated'}${v.pass ? '' : ' **FAIL**'} |`);
   return L.join('\n');
 }
 

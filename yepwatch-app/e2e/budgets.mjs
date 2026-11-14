@@ -1,5 +1,11 @@
-// Every E2E budget in one place. Timing budgets are p95 over the samples a run collects, measured page-side
+// Every E2E number in one place. Timing moments are p95 over the samples a run collects, measured page-side
 // from the input event (or navigation start) to the first animation frame that shows the expected state.
+//
+// Two kinds of timing number (owner 2026-11-14: "just enough to be confident that everything does not break"):
+//   - `local` / `production` below are TARGETS: the UX we aim for. Every run reports them; none fails on them.
+//   - `ceilings` are the GATES: coarse limits that only real breakage crosses. Hermetic runs (local stack, CI)
+//     gate on 3x the local target of every moment; the production smoke gates on four moments only.
+// Frame pacing (frameMaxMs) is a target too, never a gate: `node run.mjs frames` measures it on demand (README).
 // `local` applies to the loopback stack; `production` to e2e:smoke against a real origin under fast-4G
 // throttling (~9 Mbps, +60 ms RTT, see `network.production`).
 export const budgets = {
@@ -66,6 +72,25 @@ export const COUNTDOWN_WORDS = [/\b\d+\s?s\b/, /Trying again/i, /Try again in/i,
 // Words allowed briefly (up to connectingMaxMs) while a connection is made.
 export const TRANSIENT_WORDS = [/^Connecting…$/];
 
+// Hermetic ceilings: 3x each local target (timing moments only; the UX rules above stay as they are).
+const HERMETIC_FACTOR = 3;
+const TIMING_MOMENTS = ['tapFeedbackMs', 'createRoomMs', 'newRoomMs', 'inviteOpenMs', 'voteToPeerMs', 'ideaToPeerMs', 'startToFirstCardMs',
+  'startToPeerVotingMs', 'swipeNextCardMs', 'relaunchToCardMs', 'restartQueuedLandMs'];
+export const ceilings = {
+  local: Object.fromEntries(TIMING_MOMENTS.map((m) => [m, budgets.local[m] * HERMETIC_FACTOR])),
+  // Production smoke: only these four gate. Every other moment is reported against its target.
+  production: {
+    createRoomMs: 1500, // Create room on Mood → the room page shows
+    inviteOpenMs: 3000, // invite link in a fresh browser → the join page shows
+    voteToPeerMs: 1000, // a vote on one phone → its effect shows on another phone
+    startToFirstCardMs: 1500, // Start → first card (host)
+  },
+};
+
 export function budgetsFor(target = process.env.E2E_TARGET ?? 'local') {
   return { ...budgets, ...budgets[target], target };
+}
+/** The timing gates for a target: moment → ceiling in ms. A moment not listed is reported, never gated. */
+export function ceilingsFor(target = process.env.E2E_TARGET ?? 'local') {
+  return ceilings[target] ?? ceilings.local;
 }

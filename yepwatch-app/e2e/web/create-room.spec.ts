@@ -1,4 +1,5 @@
 import { expect } from '@playwright/test';
+import { ceilingsFor } from '../budgets.mjs';
 import { test, eventually, issuer, type Person } from '../lib/harness';
 import { cardTitle, createRoom, hostName, pageTap, pickServices, recordPage, start } from './flows';
 
@@ -262,7 +263,8 @@ test.describe('create and set up a room', () => {
       const stop = await recordPage(host, 'room-setup', /Mood matching is unavailable/i);
       await host.tap(host.button('Create room'), { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' });
       const created = host.samples.filter((x) => x.moment === 'createRoomMs').at(-1);
-      if (room.fault === 'none') expect(created?.ms, 'Create room → room page with a 1 s search').toBeLessThanOrEqual(300);
+      // The ceiling (3x the target) still tells "didn't wait for the search" (>= 1000 ms) from "opened at once".
+      if (room.fault === 'none') expect(created?.ms, 'Create room → room page with a 1 s search').toBeLessThanOrEqual(ceilingsFor('local').createRoomMs);
       await eventually(() => host.latest?.ideas.map((i) => [i.text, i.attributes.map((a) => a.key ?? a.text)]), (v) => JSON.stringify(v) === JSON.stringify([[mood, ['western']]]), 'the idea\'s matching lands', host, 10000);
       const samples = await stop().catch(() => null);
       expect(samples?.length, 'the room page was sampled').toBeGreaterThan(0);

@@ -33,6 +33,7 @@ export const CONTROL = STACK.control;
 export const ISSUER = STACK.issuer;
 const B = budgetsFor();
 const SERVER_TIMING_LOG = process.env.E2E_SERVER_TIMING_LOG;
+const FRAMES_GATE = process.env.E2E_FRAMES === 'gate';
 
 export type Fault = 'none' | 'nows' | 'slow' | 'hidden' | 'restart' | 'twodevice' | 'rapid';
 export type Spec = { visible?: string[]; any?: string[]; hidden?: string[]; text?: string; label?: { text: string; exact?: boolean }; textChanged?: { id: string; from: string }; cardChanged?: { from: string } };
@@ -626,7 +627,8 @@ export class Room {
       if (!p.page.isClosed()) await p.harvest();
       for (const rec of p.recordings) {
         failures.push(...flashes(rec, p.name), ...layoutShifts(rec, p.name), ...blockingWords(rec, p.name), ...connectionWords(rec, p.name, this.outages()), ...deadButtons(rec, p.name));
-        if (this.fault !== 'hidden' && this.fault !== 'slow') failures.push(...frameGaps(rec, p.name, rec.inputs.map((i) => [i.t, i.t + 1200]), p.harnessBusy));
+        // Frame pacing is no gate (it needs a GPU and an idle CPU): only `node run.mjs frames` (E2E_FRAMES=gate) judges it.
+        if (FRAMES_GATE && this.fault !== 'hidden' && this.fault !== 'slow') failures.push(...frameGaps(rec, p.name, rec.inputs.map((i) => [i.t, i.t + 1200]), p.harnessBusy));
       }
       for (const f of p.failures) {
         if (failures.includes(f)) continue;

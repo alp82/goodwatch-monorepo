@@ -241,3 +241,70 @@ export async function mixedGateRoom({ phone: A, stack, runDir, B, timing, audit,
     if (web) { for (const e of web.errors) errors.push({ phone: 'browser', kind: 'browser', line: e }); await web.close(); }
   }
 }
+
+/**
+ * The CI Android check (nightly, on demand, and on pushes that change native inputs): the same mixed room as
+ * mixedGateRoom (Android host, browser friend by the invitation link, Start, vote to a match), with no video and
+ * no timing gate. GitHub's emulator renders in software, so screen recordings and frame-exact timings measure the
+ * runner, not the app. Gates: the journey finishes, a11y of each screen on the way (labels, 48 dp targets), no
+ * blocking words, no app or browser errors. Step times (host clock, tap to the hierarchy showing the target) are
+ * reported only, through `note`.
+ */
+export async function mixedJourneyRoom({ phone: A, stack, audit, notStuck, journeyFail, errors, note }) {
+  const opening = WebPeer.open({ origin: stack.app, name: 'Webby' }); // Chromium starts while the phone creates the room
+  opening.catch(() => {});
+  let web = null;
+  const step = async (name, act, target, timeout = 15000) => {
+    const at = Date.now();
+    await act();
+    await A.waitFor(target, { timeout });
+    note(name, Date.now() - at);
+  };
+  try {
+    await toStart(A);
+    const tile = await A.find('New room', { timeout: 20000 });
+    await step('New room -> Mood page', () => A.tapXY(tile.cx, tile.cy), 'Mood');
+    await audit(A, 'mood page');
+    await A.tap('cheer me up', { timeout: 10000 });
+    const create = await A.find('Create room', { timeout: 10000 });
+    await step('Create room -> room page', () => A.tapXY(create.cx, create.cy), 'share-row', 20000);
+    await notStuck(A, 'room page after create');
+    await audit(A, 'room page (host, before start)');
+    await A.tap(/^Streaming services/, { timeout: 10000 });
+    await A.waitFor('services-sheet', { timeout: 10000 });
+    await audit(A, 'services sheet');
+    await pickNetflix(A);
+    const code = await inviteCode(A);
+    const joining = opening.then(async (w) => { web = w; await w.join(`${stack.app}/r/${code}`); });
+    joining.catch(() => {});
+    await fillAndSubmit(A, 'Your name', 'Ann');
+    await joining;
+    await A.waitFor('2 people, people', { timeout: 15000 });
+
+    const start = await A.find('Start', { timeout: 10000 });
+    await step('Start -> first card (Android host)', () => A.tapXY(start.cx, start.cy), 'poster', 20000);
+    await web.waitVoting();
+    await audit(A, 'voting');
+
+    // Vote to a match: the phone says Yep to its next cards, the browser skips to one of them and says Yep.
+    const yeps = new Set();
+    for (let i = 0; i < 4; i++) {
+      const t = await posterTitle(A);
+      if (!t) { journeyFail('empty deck', `no card on the phone at vote ${i + 1}`, A); break; }
+      yeps.add(t); await A.tap('Yep', { timeout: 10000 });
+      const end = Date.now() + 8000; while (Date.now() < end && (await posterTitle(A)) === t) await sleep(100);
+    }
+    for (let i = 0; i < 12 && !yeps.has(await web.card()); i++) {
+      const t = await web.card(); await web.button('Nope').click();
+      const end = Date.now() + 5000; while (Date.now() < end && (await web.card()) === t) await sleep(50);
+    }
+    if (!yeps.has(await web.card())) throw new Error(`decks never overlapped: the phone said Yep to ${[...yeps].join(', ')}; browser on "${await web.card()}"`);
+    await sleep(600);
+    await step('Yep in the browser -> match shows on Android', () => web.button('Yep').click(), /^\d+ match(es)?$/, 15000);
+    await audit(A, 'voting with a match');
+    await notStuck(A, 'voting after the match');
+  } finally {
+    if (!web) web = await opening.catch(() => null);
+    if (web) { for (const e of web.errors) errors.push({ phone: 'browser', kind: 'browser', line: e }); await web.close(); }
+  }
+}

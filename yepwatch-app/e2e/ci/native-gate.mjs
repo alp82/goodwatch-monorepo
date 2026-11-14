@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 // CI wrapper for the Android share of the deploy gate (`npm run e2e:gate:android` in e2e/).
 //
-//   node e2e/ci/native-gate.mjs [--mode=subset|gate|full] [--frames=report|gate]
+//   node e2e/ci/native-gate.mjs [--mode=journey|subset|gate|full] [--frames=report|gate]
 //
-// --mode=subset (default, the deploy gate, owner decision Q28): cold start, then one mixed room with the
-// Android app as host and a browser friend (create/join, Start, vote to a match) on ONE emulator. The
-// two-phone `gate` and the `full` run stay local / pre-OTA (ota-gate.mjs).
+// --mode=journey (default, what CI runs on GitHub's emulator: nightly, on demand and on pushes that change native
+// inputs): cold start, then one mixed room with the Android app as host and a browser friend (create/join, Start,
+// vote to a match) on ONE emulator, with no video and no timing gate (step times reported). --mode=subset is the
+// same room with video-measured timings and flash checks (owner decision Q28, before 2026-11-14); it and the
+// two-phone `gate` and the `full` run stay local / pre-OTA (ota-gate.mjs), on real hardware.
 //
 // 1. Overlaps the three slow preparations instead of running them one after another:
 //    shared stack up (Crate/Valkey/Caddy + bundles + web export), release APK for the stack's origins
@@ -34,8 +36,8 @@ const e2eDir = path.resolve(here, '..');
 const nativeDir = path.join(e2eDir, 'native');
 const frames = (process.argv.find((a) => a.startsWith('--frames=')) ?? '--frames=report').slice(9);
 if (!['report', 'gate'].includes(frames)) throw new Error(`--frames must be report or gate, got ${frames}`);
-const mode = (process.argv.find((a) => a.startsWith('--mode=')) ?? '--mode=subset').slice(7);
-if (!['subset', 'gate', 'full'].includes(mode)) throw new Error(`--mode must be subset, gate or full, got ${mode}`);
+const mode = (process.argv.find((a) => a.startsWith('--mode=')) ?? '--mode=journey').slice(7);
+if (!['journey', 'subset', 'gate', 'full'].includes(mode)) throw new Error(`--mode must be journey, subset, gate or full, got ${mode}`);
 const arg = (name) => process.argv.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3);
 const prepareOut = arg('prepare');
 const afterPrepare = arg('after-prepare');
@@ -125,7 +127,7 @@ if (prepareOut) {
 
 await Promise.all([
   afterPrepare ? awaitPrepared(afterPrepare) : hostPrep(),
-  timed('boot', async () => log(`emulators ${JSON.stringify(await boot(mode === 'subset' ? 1 : 2))}`)),
+  timed('boot', async () => log(`emulators ${JSON.stringify(await boot(mode === 'subset' || mode === 'journey' ? 1 : 2))}`)),
 ]).catch((e) => { prepError = e; });
 if (prepError) { log(`preparation failed: ${prepError.stack ?? prepError}`); process.exit(1); }
 
@@ -158,6 +160,8 @@ const bad = [...g.timing.filter((x) => !x.pass && !x.informational).map((x) => `
   ...g.a11y.map((x) => `a11y: ${JSON.stringify(x).slice(0, 200)}`), ...g.stuck.map((x) => `stuck: ${x.where} ${x.words.join(' | ')}`),
   ...g.journey.map((x) => `journey: ${x.name}: ${x.detail}`), ...result.scenarios.filter((x) => !x.pass).map((x) => `scenario ${x.name}: ${x.error}`)];
 if (bad.length) lines.push('', ...bad.slice(0, 40).map((b) => `- ${b}`));
+const steps = g.timing.filter((x) => x.clock === 'host');
+if (steps.length) lines.push('', 'Step times (host clock, reported, not gated):', '', ...steps.map((x) => `- ${x.name}: ${x.ms} ms`));
 const fr = g.frames.map((x) => `- frames ${x.name}: ${JSON.stringify(Object.fromEntries(Object.entries(x).filter(([k]) => k !== 'name')))}`);
 if (fr.length) lines.push('', '<details><summary>Frame pacing numbers</summary>', '', ...fr, '', '</details>');
 const md = `${lines.join('\n')}\n`;

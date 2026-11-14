@@ -1,5 +1,8 @@
 #!/usr/bin/env node
-// Android E2E runner.  node e2e/native/run.mjs subset|gate|full [--only=name,name] [--keep]
+// Android E2E runner.  node e2e/native/run.mjs journey|subset|gate|full [--only=name,name] [--keep]
+// journey: what CI runs on GitHub's emulator (yepwatch-gate.yml android job, nightly / on demand / native changes):
+//   cold start to the start page, then one mixed room (Android host + browser friend) to a match. No video and no
+//   timing gate (software rendering); step times are reported. Gates: journey, a11y + 48 dp, blocking words, errors.
 // subset: the deploy gate's Android check (yepwatch-gate.yml, owner decision Q28): cold start, then one mixed room
 //   (Android host + browser friend: create/join, Start, vote to a match) on one emulator.
 // gate: the two-phone Android journey (~1.5 min warm). full: everything, incl. long background, mixed rooms;
@@ -85,7 +88,7 @@ async function main() {
   const apk = await ensureApk(stack);
   phase('apk', Date.now() - t); result.apk = apk; log('apk', apk.gradle ? 'gradle' : apk.repack ? 'repacked js' : 'cached', apk.ms, 'ms');
   t = Date.now();
-  const devs = await boot(mode === 'subset' ? 1 : 2);
+  const devs = await boot(mode === 'subset' || mode === 'journey' ? 1 : 2);
   phase('boot', Date.now() - t); result.devices = devs;
   t = Date.now();
   const ports = stackPorts(stack);
@@ -120,6 +123,23 @@ async function main() {
     timing('cold start, returning -> start page usable', B.native.coldStartUsableMs, again.A, { amStartTotalTime: am.totalTime, use: 'settled' });
     if (again.A?.ok) S.coldReturningMs = again.A.settledMs;
   }, { modes: ['gate', 'full', 'subset'] });
+
+  // ---- CI journey (no video, no timing gate): cold start, then the mixed room ----
+  const note = (name, ms) => { result.gates.timing.push({ name, ms, informational: true, pass: true, clock: 'host' }); log(`  step ${name}: ${ms} ms (reported)`); };
+  await scenario('cold-start-journey', async () => {
+    A.forceStop(); A.sh(`pm clear ${PACKAGE}`);
+    const at = Date.now();
+    const am = A.launch();
+    await A.find('New room', { timeout: 30000 });
+    note('cold start, first visit -> start page', Date.now() - at);
+    result.coldStart = { amStartTotalTime: am.totalTime };
+    await audit(A, 'start page (first visit)');
+    await notStuck(A, 'start page (first visit)');
+  }, { modes: ['journey'] });
+  await scenario('mixed-room-journey', async () => {
+    const { mixedJourneyRoom } = await import('./lib/mixed.mjs');
+    await mixedJourneyRoom({ phone: A, stack, audit, notStuck, journeyFail, errors: result.gates.errors, note });
+  }, { modes: ['journey'] });
 
   // ---- deploy gate: one mixed room, Android host + browser friend, to a match ----
   await scenario('mixed-room-to-match', async () => {
