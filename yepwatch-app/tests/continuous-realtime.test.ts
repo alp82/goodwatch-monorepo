@@ -1,6 +1,7 @@
 import test, { mock } from 'node:test';
 import assert from 'node:assert/strict';
 import { ContinuousRealtime, FIRST_SNAPSHOT_MS, OPEN_TIMEOUT_MS, POLL_MS, SPARE_TICKET_MARGIN_MS, type RealtimeOptions } from '../src/core/continuous/realtime';
+import { PLANNED_RESTART_QUIET_MS } from '../src/core/continuous/backoff';
 import type { SocketLike } from '../src/core/realtime';
 import { continuousFixture, activityFixture } from './continuous-fixture';
 import { RoomFailure } from '../src/core/continuous/api-client';
@@ -158,7 +159,8 @@ test('a restarting gateway clears peer activity; reconnect rotates one-use ticke
   });
   s.frame({ type: 'restarting', retryAfterMs: 500 });
   assert.equal(s.closed, true);
-  assert.equal(h.statuses.at(-1), 'reconnecting');
+  // An announced restart of a live channel (connection-words.ts keeps it quiet for longer).
+  assert.equal(h.statuses.at(-1), 'restarting');
   const count = s.sent.length;
   h.client.sendActivity('trailer');
   assert.equal(s.sent.length, count);
@@ -178,6 +180,66 @@ test('a restarting gateway clears peer activity; reconnect rotates one-use ticke
   assert.equal(JSON.parse(next.sent[1]).sequence, 1);
   assert.equal(JSON.parse(next.sent[1]).sessionId, 's2');
   h.client.stop();
+});
+function liveSocket(h: ReturnType<typeof harness>, n: number) {
+  const s = h.sockets[n];
+  s.open();
+  s.frame({ type: 'room.snapshot', snapshot: continuousFixture().shared });
+  return s;
+}
+test('an announced restart stays "restarting" for PLANNED_RESTART_QUIET_MS at most, never renewed until live again', async () => {
+  const h = harness();
+  h.client.start();
+  await tick();
+  liveSocket(h, 0).frame({ type: 'restarting', retryAfterMs: 500 });
+  assert.equal(h.statuses.at(-1), 'restarting');
+  h.run(500);
+  await tick();
+  // The next socket is refused (front gone): still the announced restart.
+  h.sockets[1].onerror?.(new Event('error'));
+  assert.equal(h.statuses.at(-1), 'restarting');
+  // A dial that isn't live yet gets another "restarting": it never extends the quiet period.
+  mock.timers.tick(PLANNED_RESTART_QUIET_MS - 100);
+  h.run(500);
+  await tick();
+  h.sockets[2].open();
+  h.sockets[2].frame({ type: 'restarting', retryAfterMs: 500 });
+  assert.equal(h.statuses.at(-1), 'restarting');
+  mock.timers.tick(200);
+  const next = [...h.jobs.values()].at(-1)!.ms;
+  h.run(next);
+  await tick();
+  assert.equal(h.statuses.at(-1), 'reconnecting', 'past the quiet period it is an ordinary outage');
+  // Live again ends it; the next drop without an announcement is an ordinary outage at once.
+  liveSocket(h, 3);
+  assert.equal(h.statuses.at(-1), 'live');
+  h.sockets[3].onclose?.({ code: 1006 } as CloseEvent);
+  assert.equal(h.statuses.at(-1), 'reconnecting');
+  h.client.stop();
+});
+test('close 1012 from a live socket is an announced restart too; from a socket that never went live it is not', async () => {
+  const h = harness();
+  h.client.start();
+  await tick();
+  liveSocket(h, 0).onclose?.({ code: 1012 } as CloseEvent);
+  assert.equal(h.statuses.at(-1), 'restarting');
+  h.client.stop();
+  const fresh = harness();
+  fresh.client.start();
+  await tick();
+  fresh.sockets[0].open();
+  fresh.sockets[0].onclose?.({ code: 1012 } as CloseEvent);
+  assert.equal(fresh.statuses.at(-1), 'reconnecting');
+  fresh.sockets.length = 0;
+  fresh.client.stop();
+  // A "restarting" frame before the first snapshot (the gateway stopping during the handshake) is not either.
+  const early = harness();
+  early.client.start();
+  await tick();
+  early.sockets[0].open();
+  early.sockets[0].frame({ type: 'restarting', retryAfterMs: 500 });
+  assert.equal(early.statuses.at(-1), 'reconnecting');
+  early.client.stop();
 });
 test('rising revisions during own refresh are repaired again; a failed refresh retries with backoff until it succeeds, without polling', async () => {
   let reads = 0;

@@ -2,8 +2,12 @@ import type { RealtimeTicket, SharedRoomSnapshot } from '@goodwatch/yepwatch-con
 import { ApiFailure, isRoomExpired } from './errors';
 import { parseRealtimeFrame } from './wire';
 
-/** `polling`: the live channel can't connect (a blocked WebSocket), but room reads over HTTP keep the room current. */
-export type Connection = 'connecting' | 'live' | 'polling' | 'reconnecting' | 'background' | 'unavailable' | 'expired';
+/**
+ * `polling`: the live channel can't connect (a blocked WebSocket), but room reads over HTTP keep the room current.
+ * `restarting`: reconnecting after the server said it is restarting (a deploy); quiet for longer than an unannounced
+ * drop (connection-words.ts).
+ */
+export type Connection = 'connecting' | 'live' | 'polling' | 'reconnecting' | 'restarting' | 'background' | 'unavailable' | 'expired';
 export interface SocketLike {
   onopen: ((event: Event) => void) | null; onmessage: ((event: MessageEvent) => void) | null; onclose: ((event: CloseEvent) => void) | null; onerror: ((event: Event) => void) | null;
   send(data: string): void; close(): void;

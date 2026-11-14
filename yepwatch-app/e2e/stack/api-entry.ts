@@ -204,9 +204,14 @@ const runtime = createReleaseRuntime(config as Parameters<typeof createReleaseRu
 	rooms,
 	snapshot: () => ({ count: TITLES.length, version: "e2e-fixture" }),
 	async catalogProbe() {},
+	// As in production (proposal-release-main.ts): the listener opens at once and early requests wait in the process.
+	startupHoldMs: 25_000,
 })
 const server = await releaseHttp(runtime.handler, config.host, config.port)
-await runtime.probe()
+while (!runtime.initialized()) {
+	await runtime.probe()
+	if (!runtime.initialized()) await new Promise((resolve) => setTimeout(resolve, 100))
+}
 console.info(JSON.stringify({ event: "yepwatch_e2e_api_listening", port: config.port, ready: runtime.readiness() }))
 let stopping = false
 for (const signal of ["SIGTERM", "SIGINT"] as const)

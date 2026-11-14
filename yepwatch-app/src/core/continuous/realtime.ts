@@ -12,7 +12,7 @@ import {
 import type { SocketLike, Connection } from '../realtime';
 import { RoomFailure } from './api-client';
 import { parseFrame } from './wire';
-import { backoffDelay, RECONNECT_BASE_MS, serverWait } from './backoff';
+import { backoffDelay, PLANNED_RESTART_QUIET_MS, RECONNECT_BASE_MS, serverWait } from './backoff';
 type Timer = ReturnType<typeof setTimeout> | number;
 export interface RealtimeOptions {
   roomId: string;
@@ -95,7 +95,20 @@ export class ContinuousRealtime {
   private pollTimer?: Timer;
   private polling = false;
   private pollSession = 0;
+  /**
+   * Epoch ms until which this outage counts as a restart the server announced (0: none). Set once, when a live socket
+   * gets the gateway's "restarting" frame or close 1012, and never extended until the channel is live again: a server
+   * that keeps announcing restarts can't keep the outage quiet past PLANNED_RESTART_QUIET_MS.
+   */
+  private plannedUntil = 0;
   constructor(private readonly o: RealtimeOptions) {}
+  /** The status of an outage: `restarting` while it is an announced restart, else `reconnecting`. */
+  private outage(): Connection {
+    return this.plannedUntil > Date.now() ? 'restarting' : 'reconnecting';
+  }
+  private planned() {
+    if (!this.plannedUntil) this.plannedUntil = Date.now() + PLANNED_RESTART_QUIET_MS;
+  }
   private later(fn: () => void, ms: number) {
     return (this.o.later ?? setTimeout)(fn, ms);
   }
@@ -143,6 +156,7 @@ export class ContinuousRealtime {
     this.active = false;
     this.dirty = false;
     this.spare = undefined;
+    this.plannedUntil = 0;
     ++this.epoch;
     this.stopPolling();
     this.detach();
@@ -335,7 +349,7 @@ export class ContinuousRealtime {
           return;
         }
         this.polling = ok;
-        this.o.status(ok ? 'polling' : 'reconnecting');
+        this.o.status(ok ? 'polling' : this.outage());
         this.poll();
       });
     }, ms);
@@ -349,7 +363,7 @@ export class ContinuousRealtime {
   private retry(epoch: number, minimum = 0, hung = false) {
     if (!this.active || epoch !== this.epoch) return;
     this.detach(hung);
-    if (!this.polling) this.o.status('reconnecting');
+    if (!this.polling) this.o.status(this.outage());
     const ms = backoffDelay(this.failures++, this.o.random ?? Math.random, minimum, RECONNECT_BASE_MS);
     this.serverRetryAt = minimum > 0 ? Date.now() + minimum : 0;
     if (this.failures >= POLL_AFTER_FAILURES && this.pollTimer === undefined) this.poll();
@@ -378,7 +392,7 @@ export class ContinuousRealtime {
   }
   private async connect(epoch: number) {
     if (!this.active || epoch !== this.epoch) return;
-    if (!this.polling) this.o.status(this.failures ? 'reconnecting' : 'connecting');
+    if (!this.polling) this.o.status(this.failures ? this.outage() : 'connecting');
     this.report(true);
     try {
       const spare = this.spare;
@@ -390,6 +404,8 @@ export class ContinuousRealtime {
       const socket = this.o.socket(ticket.websocketPath);
       this.socket = socket;
       let opened = false;
+      /** This socket carried the room live: only then is a restart it announces this outage's cause. */
+      let served = false;
       // Failed before it opened: the ticket never left this device.
       const unopened = () => {
         if (!opened && this.active && epoch === this.epoch && socket === this.socket) this.spare = ticket;
@@ -444,6 +460,8 @@ export class ContinuousRealtime {
           // Back from degraded on the same socket: others see this person again at once, renewals carry on.
           const recovered = !this.live && this.session !== null;
           this.live = true;
+          served = true;
+          this.plannedUntil = 0;
           this.failures = 0;
           this.serverRetryAt = 0;
           this.stopPolling();
@@ -466,7 +484,10 @@ export class ContinuousRealtime {
         } else if (frame.type === 'pong') this.heartbeat(epoch);
         else if (frame.type === 'resync_required') this.retry(epoch);
         else if (frame.type === 'degraded') this.degrade();
-        else if (frame.type === 'restarting') this.retry(epoch, frame.retryAfterMs);
+        else if (frame.type === 'restarting') {
+          if (served) this.planned();
+          this.retry(epoch, frame.retryAfterMs);
+        }
         else if (frame.type === 'error') {
           if (frame.code === 'expired') {
             if ((this.o.expiresAt() ?? Infinity) <= Date.now()) {
@@ -482,7 +503,13 @@ export class ContinuousRealtime {
           } else this.retry(epoch);
         }
       };
-      socket.onerror = socket.onclose = () => {
+      socket.onerror = () => {
+        unopened();
+        this.retry(epoch);
+      };
+      socket.onclose = (event) => {
+        // 1012 Service Restart: the gateway's own close when it stops (after its "restarting" frame).
+        if (served && event?.code === 1012 && this.active && epoch === this.epoch && socket === this.socket) this.planned();
         unopened();
         this.retry(epoch);
       };

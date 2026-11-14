@@ -88,10 +88,12 @@ export function blockingWords(rec: Recording, person: string, allow: RegExp[] = 
  * Connection words (owner rule Q24a): none during an outage younger than connectionQuietMs, so none at all
  * for a shorter fault (or without a fault: a hidden tab coming back, a second device, no WebSocket); then at
  * most one line, gone within connectionWordsAfterMs of the fault's end; never a countdown or retry timer.
- * `faults` are the stack-side outages this person lived through, [start, end] in epoch ms. A brief
- * "Connecting…" while a page first connects (no fault) keeps its own connectingMaxMs budget.
+ * `faults` are the stack-side outages this person lived through, [start, end, quietMs?] in epoch ms; `quietMs` is an
+ * outage's own, longer quiet period (a restart the server announced). A brief "Connecting…" while a page first
+ * connects (no fault) keeps its own connectingMaxMs budget.
  */
-export function connectionWords(rec: Recording, person: string, faults: [number, number][]): GateFailure[] {
+export type Outage = [number, number] | [number, number, number];
+export function connectionWords(rec: Recording, person: string, faults: Outage[]): GateFailure[] {
   const out: GateFailure[] = [];
   const seen = new Set<string>();
   const fail = (key: string, f: GateFailure) => {
@@ -117,11 +119,12 @@ export function connectionWords(rec: Recording, person: string, faults: [number,
       continue;
     }
     const [a, b] = fault;
+    const quiet = Math.max(B.connectionQuietMs, fault[2] ?? 0);
     const length = Math.round(b - a);
-    if (length < B.connectionQuietMs)
-      fail(`short ${shown.replace(/\d+/g, 'N')}`, { gate: 'journey', person, detail: `"${shown}" visible for ${ms} ms during a ${length} ms outage (quiet under ${B.connectionQuietMs} ms)`, measured: ms, budget: 'never', at: start });
-    else if (start < a + B.connectionQuietMs)
-      fail(`early ${shown.replace(/\d+/g, 'N')}`, { gate: 'journey', person, detail: `"${shown}" showed ${Math.round(start - a)} ms into the outage`, measured: Math.round(start - a), budget: `≥ ${B.connectionQuietMs} ms`, at: start });
+    if (length < quiet)
+      fail(`short ${shown.replace(/\d+/g, 'N')}`, { gate: 'journey', person, detail: `"${shown}" visible for ${ms} ms during a ${length} ms outage (quiet under ${quiet} ms)`, measured: ms, budget: 'never', at: start });
+    else if (start < a + quiet)
+      fail(`early ${shown.replace(/\d+/g, 'N')}`, { gate: 'journey', person, detail: `"${shown}" showed ${Math.round(start - a)} ms into the outage`, measured: Math.round(start - a), budget: `≥ ${quiet} ms`, at: start });
     else if (end > b + B.connectionWordsAfterMs)
       fail(`late ${shown.replace(/\d+/g, 'N')}`, { gate: 'journey', person, detail: `"${shown}" still visible ${Math.round(end - b)} ms after the outage ended`, measured: Math.round(end - b), budget: B.connectionWordsAfterMs, at: start });
   }

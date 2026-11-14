@@ -13,6 +13,7 @@ import {
 } from "./proposal-release-config.ts"
 import {
 	createReleaseRuntime,
+	liveRoute,
 	RELEASE_HEALTH,
 } from "./proposal-release-runtime.ts"
 import {
@@ -211,6 +212,77 @@ test("Readiness stays red indefinitely without loaded snapshot; probes recover a
 	} finally {
 		runtime.stop()
 	}
+})
+test("A startup hold keeps early requests waiting; the live channel's routes go through once the rooms answer", async () => {
+	let count = 0
+	const config = releaseConfig(env())
+	const sql: Sql = async (stmt) => ({
+		rows: stmt.includes("SELECT " + CONTROL_COLUMNS.join(",") + ",_seq_no,_primary_term,CURRENT_TIMESTAMP")
+			? [[...CONTROL_COLUMNS.map((k) => controlRow({ format: 1, fingerprint: controlFingerprint(config.control), window: -1, rooms: [], admissions: [], commands: [] })[k]), 0, 1, Date.now()]]
+			: stmt.includes("format_version")
+			? [[3, "test-key", storeMarker(secret), CONTINUOUS_LIMITS.roomMs]]
+			: [],
+		rowcount: 0,
+	})
+	const catalog: ProposalCatalog = {
+		metadata: async () => ({ countries: [], services: [], moods: [] }),
+		page: async () => ({ candidates: [], exhausted: true }),
+		recheck: async () => [],
+	}
+	let warm!: () => void
+	const runtime = createReleaseRuntime(config, {
+		sql,
+		catalog,
+		snapshot: () => (count ? { count, version: "full" } : null),
+		catalogProbe: async () => {},
+		bus: { ping: async () => {}, publish: async () => {} },
+		tickets: new MemoryTicketStore(),
+		startupHoldMs: 5000,
+		warm: new Promise<void>((resolve) => { warm = resolve }),
+	})
+	try {
+		await runtime.probe()
+		assert.equal(runtime.initialized(), false, "no snapshot yet")
+		assert.equal(runtime.roomsAnswer(), true)
+		// A room read is a live route: answered by the handler itself (no such room) without waiting for the snapshot.
+		const read = await runtime.handler(new Request(`http://api/api/yepwatch/v1/proposal/rooms/${"a".repeat(32)}`))
+		assert.notEqual(read.status, 503)
+		// An admission waits for the snapshot and the warm reads, then gets the handler's own answer.
+		let settled = false
+		const admission = runtime.handler(new Request("http://api/api/yepwatch/v1/proposal/rooms", {
+			method: "POST", headers: { "content-type": "application/json" }, body: "{}",
+		})).finally(() => { settled = true })
+		await new Promise((r) => setTimeout(r, 100))
+		assert.equal(settled, false, "held while the release initializes")
+		count = 1
+		await runtime.probe()
+		assert.equal(runtime.initialized(), true)
+		await new Promise((r) => setTimeout(r, 100))
+		assert.equal(settled, false, "held until the warm reads are in")
+		warm()
+		assert.notEqual((await admission).status, 503)
+		// Draining ends a hold at once with the retryable refusal.
+		const late = createReleaseRuntime(config, {
+			sql, catalog, snapshot: () => null, catalogProbe: async () => {},
+			bus: { ping: async () => {}, publish: async () => {} }, tickets: new MemoryTicketStore(), startupHoldMs: 5000,
+		})
+		const held = late.handler(new Request("http://api/api/yepwatch/v1/proposal/rooms", {
+			method: "POST", headers: { "content-type": "application/json" }, body: "{}",
+		}))
+		late.drain()
+		assert.equal((await held).status, 503)
+		late.stop()
+	} finally {
+		runtime.stop()
+	}
+})
+test("Live routes: the realtime ticket, the gateway's attach/view/views and the room read, nothing else", () => {
+	const id = "b".repeat(32)
+	const p = "/api/yepwatch/v1/proposal"
+	for (const [method, path] of [["GET", `${p}/rooms/${id}`], ["POST", `${p}/rooms/${id}/realtime-ticket`], ["POST", `${p}/realtime/internal/attach`], ["POST", `${p}/realtime/internal/view`], ["POST", `${p}/realtime/internal/views`]])
+		assert.equal(liveRoute(method, path), true, `${method} ${path}`)
+	for (const [method, path] of [["POST", `${p}/rooms`], ["POST", `${p}/rooms/${id}/commands`], ["POST", `${p}/rooms/${id}/join`], ["GET", `${p}/rooms/${id}/member`], ["POST", `${p}/rooms/${id}`], ["GET", `${p}/rooms/${id}/realtime-ticket`], ["GET", `${p}/catalog/metadata`], ["GET", `${p}/rooms/short`]])
+		assert.equal(liveRoute(method, path), false, `${method} ${path}`)
 })
 test("Operator provisioning is explicit and idempotent; ordinary startup only reads table configuration", async () => {
 	let installed = false,

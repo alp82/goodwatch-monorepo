@@ -7,6 +7,7 @@ import { RoomRetention, cleanupRounds, hasDeletions } from './proposal-room-rete
 import {
 	API_PREFIX,
 	REVISION_CHANNEL,
+	paths,
 } from "../../../packages/yepwatch-contracts/proposal.ts"
 import { createProposalHandler } from "./proposal-http.server.ts"
 import { ProposalService, revisionMessage } from "./proposal-service.server.ts"
@@ -51,6 +52,28 @@ export interface ReleaseDependencies {
 	 */
 	rooms?: RoomsValkey
 	now?: () => number
+	/**
+	 * How long a request that arrives before the release is initialized waits in this process for it, instead of
+	 * the immediate "YepWatch is starting" 503 (0, the default). With a hold the listener can open at once: during
+	 * a deploy each request waits here as it would wait in the front's retry loop, and the live channel's routes
+	 * (liveRoute) are answered as soon as the rooms answer, before the catalog snapshot has loaded.
+	 */
+	startupHoldMs?: number
+	/** Settles when the startup reads the first rooms need are in (best effort); held requests wait for it too. */
+	warm?: Promise<unknown>
+}
+
+/**
+ * The routes a phone's live channel needs to come back after a restart: a realtime ticket, the gateway's attach and
+ * view renewals, and the room read (the resync and the HTTP fallback). They read only the rooms (Valkey), the ticket
+ * store and the account mirrors, never the catalog, so they don't wait for the title snapshot.
+ */
+const LIVE_GET = new RegExp(`^${API_PREFIX}/rooms/[A-Za-z0-9_-]{32}$`)
+const LIVE_TICKET = new RegExp(`^${API_PREFIX}/rooms/[A-Za-z0-9_-]{32}/realtime-ticket$`)
+export function liveRoute(method: string, path: string) {
+	if (method === "GET") return LIVE_GET.test(path)
+	if (method !== "POST") return false
+	return path === paths.realtimeAttach || path === paths.realtimeView || path === paths.realtimeViews || LIVE_TICKET.test(path)
 }
 /** No guest identities, fixtures, DDL or fail-open readiness. Normal handler behavior stays in its existing module. */
 export function createReleaseRuntime(
@@ -164,6 +187,22 @@ export function createReleaseRuntime(
 		})
 		return probing
 	}
+	/** Rooms, the release control and the ticket store answer: enough for the live channel's routes (liveRoute). */
+	const roomsAnswer = () => checks.rooms && checks.control && checks.realtime
+	let warmed = !deps.warm
+	void deps.warm?.finally(() => {
+		warmed = true
+	})
+	const admitting = () => initialized && warmed
+	/** Waits (real time, 25 ms steps) until `ok` or the startup hold runs out; false when it ran out or the release drains. */
+	async function hold(ok: () => boolean) {
+		const end = Date.now() + (deps.startupHoldMs ?? 0)
+		while (!ok()) {
+			if (draining || Date.now() >= end) return false
+			await new Promise((resolve) => setTimeout(resolve, 25))
+		}
+		return !draining
+	}
 	function readiness() {
 		const recent =
 			checkedAt !== null &&
@@ -196,7 +235,9 @@ export function createReleaseRuntime(
 			})
 		}
 		// Keep setup/commands truthful while unavailable: do not admit rooms before any startup preflight succeeded.
-		if (!initialized)
+		// With a startup hold the request waits for that here; the live channel's routes only for the rooms.
+		const live = liveRoute(request.method, path)
+		if (!admitting() && !(live && roomsAnswer()) && !(await hold(() => admitting() || (live && roomsAnswer()))))
 			return Response.json(
 				{
 					error: {
@@ -254,6 +295,8 @@ export function createReleaseRuntime(
 		readiness,
 		/** True once a probe found the snapshot loaded and every dependency answering; it never turns false again. */
 		initialized: () => initialized,
+		/** The live channel's routes can be answered (roomsAnswer), though the release may still be initializing. */
+		roomsAnswer,
 		drain() {
 			draining = true
 		},

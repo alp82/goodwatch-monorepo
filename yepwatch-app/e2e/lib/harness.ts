@@ -18,7 +18,7 @@ import { budgetsFor } from '../budgets.mjs';
 import { parseFrame, sharedSchema } from '../../src/core/continuous/wire';
 import { audit } from './a11y';
 import { serverTimingLine } from './server-timing';
-import { blockingWords, connectionWords, deadButtons, flashes, frameGaps, layoutShifts, type GateFailure, type Recording } from './gates';
+import { blockingWords, connectionWords, deadButtons, flashes, frameGaps, layoutShifts, type GateFailure, type Outage, type Recording } from './gates';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const RECORDER = path.join(here, 'recorder.page.js');
@@ -370,7 +370,7 @@ export class Room {
   readonly people: Person[] = [];
   private points = 0;
   restartLog: { at: number; back: number; service: string }[] = [];
-  private offlineWindows: [number, number][] = [];
+  private offlineWindows: Outage[] = [];
   /** One browser process per person (not one per worker): each phone gets its own renderer and GPU process, as
    * real phones each have their own GPU. Contexts in one shared Chromium share one software-rendered GPU process,
    * so several phones animating at once (every round ends in a match) slowed each other's frames. */
@@ -522,11 +522,15 @@ export class Room {
         return;
     }
   }
-  /** An outage a journey makes itself (e.g. a request held past the app's wait), [start, end] in epoch ms. */
-  noteOutage(start: number, end: number) { this.offlineWindows.push([start, end]); }
-  /** Stack-side outages so far, [start, end] in epoch ms: server restarts and offline spells. */
-  outages(): [number, number][] {
-    return [...this.restartLog.map((r) => [r.at, r.back] as [number, number]), ...this.offlineWindows];
+  /**
+   * An outage a journey makes itself (e.g. a request held past the app's wait), [start, end] in epoch ms. `quietMs`:
+   * its own quiet period when it is longer than connectionQuietMs (a restart the server announced: no words before
+   * PLANNED_RESTART_QUIET_MS).
+   */
+  noteOutage(start: number, end: number, quietMs?: number) { this.offlineWindows.push(quietMs === undefined ? [start, end] : [start, end, quietMs]); }
+  /** Stack-side outages so far, [start, end, quietMs?] in epoch ms: server restarts and offline spells. */
+  outages(): Outage[] {
+    return [...this.restartLog.map((r) => [r.at, r.back] as Outage), ...this.offlineWindows];
   }
   twin: Person | null = null;
   private reloaded = false;

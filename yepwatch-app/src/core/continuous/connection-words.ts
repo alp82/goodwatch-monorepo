@@ -1,15 +1,18 @@
+import { useEffect, useState } from 'react';
 import type { Connection } from '../realtime';
-import { useLate } from '../useLate';
-import { QUIET_OUTAGE_MS } from './backoff';
+import { useLateSince } from '../useLate';
+import { PLANNED_RESTART_QUIET_MS, QUIET_OUTAGE_MS } from './backoff';
 
 /**
  * What a room says about its connection, decided here and nowhere else (owner rule Q24a):
- *  - nothing while an outage is younger than QUIET_OUTAGE_MS: actions show at once and queue meanwhile,
+ *  - nothing while an outage is younger than QUIET_OUTAGE_MS: actions show at once and queue meanwhile; an outage
+ *    the server announced (the live channel got "restarting" while live: a deploy) is quiet for
+ *    PLANNED_RESTART_QUIET_MS, unless the device itself is offline,
  *  - after that, one small line: "You’re offline." when the device has no network, else "Reconnecting…",
  *  - never a countdown, a retry timer or "awaiting confirmation".
  * The E2E harness holds the app to the same rule (e2e/lib/gates.ts, connectionWords).
  */
-export { QUIET_OUTAGE_MS };
+export { PLANNED_RESTART_QUIET_MS, QUIET_OUTAGE_MS };
 export const OFFLINE_WORDS = 'You’re offline.';
 export const RECONNECTING_WORDS = 'Reconnecting…';
 
@@ -37,8 +40,22 @@ export function connectionWords(input: ConnectionInput, late: boolean): string {
   return input.offline ? OFFLINE_WORDS : RECONNECTING_WORDS;
 }
 
-/** The room's connection line: '' until an outage has lasted QUIET_OUTAGE_MS without a break. */
+/**
+ * How long an outage stays quiet. `planned`: it began as an announced restart (its first disrupted state was
+ * `restarting`); decided once at its start, so the line never shows and then hides again within one outage.
+ */
+export function quietPeriod(planned: boolean, offline: boolean): number {
+  return planned && !offline ? PLANNED_RESTART_QUIET_MS : QUIET_OUTAGE_MS;
+}
+
+/** The room's connection line: '' until an outage has lasted its quiet period (quietPeriod) without a break. */
 export function useConnectionWords(input: ConnectionInput): string {
-  const late = useLate(disrupted(input), QUIET_OUTAGE_MS);
+  const active = disrupted(input);
+  const [outage, setOutage] = useState<{ since: number; planned: boolean } | null>(null);
+  const startsPlanned = input.connection === 'restarting';
+  useEffect(() => {
+    setOutage((old) => (!active ? null : old ?? { since: Date.now(), planned: startsPlanned }));
+  }, [active, startsPlanned]);
+  const late = useLateSince(active ? outage?.since ?? null : null, quietPeriod(outage?.planned ?? false, input.offline));
   return connectionWords(input, late);
 }

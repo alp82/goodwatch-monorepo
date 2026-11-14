@@ -128,11 +128,16 @@ function openProxy(name) {
     p.server.listen(p.listen, '127.0.0.1', resolve);
   });
 }
-function closeProxy(name) {
+/** Refuses new connections; the open ones stay. */
+function stopListening(name) {
   const p = proxies[name];
   if (!p.server) return;
   p.server.close();
   p.server = null;
+}
+function closeProxy(name) {
+  stopListening(name);
+  const p = proxies[name];
   for (const s of p.sockets) s.destroy();
   p.sockets.clear();
 }
@@ -147,7 +152,7 @@ async function healthy(name) {
   }
 }
 async function start(name) {
-  if (children[name] && children[name].exitCode === null) return;
+  if (alive(children[name])) return;
   const spec = SPECS[name];
   const env = assertSafe(cleanEnv(spec.env), name);
   const out = fs.openSync(path.join(LOGS, `${name}.log`), 'a');
@@ -157,23 +162,32 @@ async function start(name) {
   child.on('exit', (code, signal) => log(name, 'exited', code, signal));
   const end = Date.now() + 30000;
   while (!(await healthy(name))) {
-    if (child.exitCode !== null) throw new Error(`${name} exited during start (see ${LOGS}/${name}.log)`);
+    if (!alive(child)) throw new Error(`${name} exited during start (see ${LOGS}/${name}.log)`);
     if (Date.now() > end) throw new Error(`${name} not healthy after 30 s`);
     await delay(50);
   }
   if (spec.proxy) await openProxy(spec.proxy);
   log(name, 'started pid', child.pid);
 }
+/** Still running: a child ended by a signal keeps exitCode null (signalCode says which), so both are checked. */
+function alive(child) {
+  return Boolean(child) && child.exitCode === null && child.signalCode === null;
+}
 async function stop(name, signal = 'SIGTERM') {
   const spec = SPECS[name];
-  if (spec.proxy) closeProxy(spec.proxy);
+  // New dials are refused at once (Caddy holds them), but connections already open stay until the process is gone,
+  // as with a stopping container: a SIGTERM'd gateway's goodbye ("restarting", close 1012) still reaches the phones,
+  // and the API drains its requests in flight. Whatever the process left open is cut then.
+  if (spec.proxy) stopListening(spec.proxy);
   const child = children[name];
-  if (!child || child.exitCode !== null) return;
-  const exited = new Promise((r) => child.once('exit', r));
-  child.kill(signal);
-  const timer = setTimeout(() => child.kill('SIGKILL'), 5000);
-  await exited;
-  clearTimeout(timer);
+  if (alive(child)) {
+    const exited = new Promise((r) => child.once('exit', r));
+    child.kill(signal);
+    const timer = setTimeout(() => child.kill('SIGKILL'), 5000);
+    await exited;
+    clearTimeout(timer);
+  }
+  if (spec.proxy) closeProxy(spec.proxy);
 }
 
 async function reset() {
@@ -195,7 +209,7 @@ const control = http.createServer(async (req, res) => {
     const [, verb, name] = url.pathname.split('/');
     if (verb === 'status') {
       const status = {};
-      for (const n of Object.keys(SPECS)) status[n] = { pid: children[n]?.pid ?? null, running: children[n]?.exitCode === null, healthy: await healthy(n), restarts: restarts[n] };
+      for (const n of Object.keys(SPECS)) status[n] = { pid: children[n]?.pid ?? null, running: alive(children[n]), healthy: await healthy(n), restarts: restarts[n] };
       return send(200, { children: status, faults, proxies: { api: !!proxies.api.server, gateway: !!proxies.gateway.server } });
     }
     if (req.method !== 'POST') return send(405, { error: 'POST' });

@@ -10,6 +10,13 @@ export const BACKOFF_BASE_MS = 1000;
  * with the other timing, so the resend loop (resend.ts) arms the same quiet period without the page's hooks.
  */
 export const QUIET_OUTAGE_MS = 3000;
+/**
+ * The quiet period of an outage the server announced: the live channel got the gateway's "restarting" frame (or its
+ * close 1012) while it was live. A deploy replaces every YepWatch container one after the other (Coolify), which keeps
+ * the channel away for several seconds although nothing is wrong; votes queue and land meanwhile. Longer than that,
+ * the line shows as for any outage, so a restart that doesn't come back is never hidden for more than this.
+ */
+export const PLANNED_RESTART_QUIET_MS = 12000;
 export const BACKOFF_MAX_MS = 15000;
 export const BACKOFF_JITTER = 0.3;
 /** The longest automatic wait: the capped step with full jitter. */
