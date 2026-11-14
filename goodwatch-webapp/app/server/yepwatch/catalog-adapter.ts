@@ -14,6 +14,11 @@ export interface CatalogReads {
   rankedKeys(room: Room, limit?: number): Promise<number[]>
   displays(keys: number[]): Promise<Map<number, CatalogDisplay>>
   episodes(showId: number): Promise<EpisodeChoice[]>
+  /**
+   * Several shows' episodes in one read (a deck asks for the shows among a window's likely cards at once). A show it
+   * leaves out, or a failed read, is read through `episodes`. Without it, shows are read one by one, a few at a time.
+   */
+  episodesMany?(showIds: number[]): Promise<Map<number, EpisodeChoice[]>>
   availability(titles: CatalogDisplay[], screens: ScreenContext[], fresh: boolean): Promise<Map<number, ScreenAvailability[]>>
 }
 export function occupiedScreens(room: Room) {
@@ -64,16 +69,64 @@ export function createDeckAdapter(reads: CatalogReads, options: { scanLimit?: nu
       let uncertainTitles = 0; let noMatchTitles = 0; let missingMetadataTitles = 0; let missingEpisodeTitles = 0
       const screenCounts = screens.map(s => ({ screenId: s.id, country: s.country!, serviceIds: [...s.serviceIds], watchable: 0, noMatch: 0, unknown: 0 }))
       let budgetReason: 'scan_limit' | 'deadline' | null = null
+      const want = options.limit ?? LIMITS.deck
+      // A window's reads (displays, then offers), started at most one window ahead: window n+1 is read while window n
+      // is checked and its shows' episodes are read. Windows are fixed slices of the pool: [40i, 40(i+1)) within the
+      // scan limit.
+      const windowKeys = (offset: number) => ordered.slice(offset, Math.min(offset + 40, scanLimit, ordered.length))
+      const readWindow = (keys: number[]) => {
+        const read = (async () => {
+          const displays = await reads.displays(keys)
+          return { displays, availability: await reads.availability([...displays.values()], screens, false) }
+        })()
+        read.catch(() => {}) // A read ahead that's never used must not be an unhandled rejection.
+        return read
+      }
+      // Each show's episodes are read once per build; with episodesMany, those of a window's likely cards in one read.
+      const episodeReads = new Map<number, Promise<EpisodeChoice[]>>()
+      const episodesOf = (showId: number) => {
+        let read = episodeReads.get(showId)
+        if (!read) {
+          read = reads.episodes(showId)
+          episodeReads.set(showId, read)
+        }
+        return read
+      }
+      const readAhead = (showIds: number[]) => {
+        const ids = showIds.filter(id => !episodeReads.has(id))
+        if (!ids.length || !reads.episodesMany) return
+        const batch = reads.episodesMany(ids)
+        for (const id of ids) {
+          const read = batch.then(found => found.get(id) ?? reads.episodes(id), () => reads.episodes(id))
+          read.catch(() => {}) // Awaited when its card is checked; a card never checked must not be an unhandled rejection.
+          episodeReads.set(id, read)
+        }
+      }
+      let ahead: { offset: number; read: ReturnType<typeof readWindow> } | null = null
       // Bounded work is explicit: hitting a scan/deadline budget is NOT a verified empty catalog intersection.
       for (let offset = 0; offset < ordered.length; offset += 40) {
         if (scanned >= scanLimit) { budgetReason = 'scan_limit'; break }
         if (clock() >= deadline) { budgetReason = 'deadline'; break }
         const keys = ordered.slice(offset, offset + Math.min(40, scanLimit - scanned)); scanned += keys.length
-        const displays = await reads.displays(keys)
-        const availability = await reads.availability([...displays.values()], screens, false)
+        const current = ahead?.offset === offset ? ahead.read : readWindow(keys)
+        const next = offset + 40
+        ahead = next < ordered.length && next < scanLimit ? { offset: next, read: readWindow(windowKeys(next)) } : null
+        const { displays, availability } = await current
+        // The shows among the next cards this window can give: their episodes in one read (episodesMany).
+        const likely = keys.filter(key => {
+          const title = displays.get(key)
+          if (!title || (room.constraints.maxMinutes != null && (title.runtimeMinutes == null || title.runtimeMinutes > room.constraints.maxMinutes))) return false
+          if (title.mediaType === 'movie' ? !room.constraints.kinds.includes('movie') : !room.constraints.kinds.some(k => k !== 'movie')) return false
+          const offers = availability.get(key) ?? []
+          return screens.every(screen => offers.find(a => a.screenId === screen.id)?.state === 'watchable')
+        }).slice(0, want - results.length)
+        readAhead(likely.flatMap(key => {
+          const title = displays.get(key)!
+          return title.mediaType === 'show' && room.constraints.kinds.includes('show_start') && !selectedShows.has(title.tmdbId) ? [title.tmdbId] : []
+        }))
         // Fetch only the next few needed cards. Ineligible rows leave room for the next window.
         for (let position = 0; position < keys.length;) {
-          const batchKeys = keys.slice(position, position + Math.min(6, (options.limit ?? LIMITS.deck) - results.length))
+          const batchKeys = keys.slice(position, position + Math.min(6, want - results.length))
           position += batchKeys.length
           const batch = await Promise.all(batchKeys.map(async (key): Promise<Candidate | null> => {
             const title = displays.get(key)
@@ -103,7 +156,7 @@ export function createDeckAdapter(reads: CatalogReads, options: { scanLimit?: nu
               if (plan?.agreed && hasContinuing && room.constraints.kinds.includes('show_continue')) identity = { kind: 'show_continue', tmdbId: title.tmdbId, episode: episodeIdentity(plan.proposed!) }
               else {
                 if (!room.constraints.kinds.includes('show_start') || hasContinuing) return null
-                const episodes = await reads.episodes(title.tmdbId)
+                const episodes = await episodesOf(title.tmdbId)
                 const first = [...episodes].sort((a, b) => a.season - b.season || a.number - b.number)[0]
                 if (!first) { missingEpisodeTitles++; return null }
                 identity = { kind: 'show_start', tmdbId: title.tmdbId, episode: episodeIdentity(first) }
@@ -115,7 +168,7 @@ export function createDeckAdapter(reads: CatalogReads, options: { scanLimit?: nu
           for (const candidate of batch) {
             if (!candidate) continue
             results.push(candidate)
-            if (results.length >= (options.limit ?? LIMITS.deck)) { options.onComplete?.(false); return results }
+            if (results.length >= want) { options.onComplete?.(false); return results }
           }
         }
       }

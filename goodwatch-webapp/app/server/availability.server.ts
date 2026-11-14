@@ -32,8 +32,12 @@ async function readEvidence({ mediaType, tmdbId, country }: Scope): Promise<{ pa
 	}
 }
 
-/** One query per media type for list checks; per-title lookups and caching are too slow for 100 titles. */
-export async function getAvailabilityEvidenceBatch(scopes: Scope[]): Promise<Map<string, AvailabilityEvidence>> {
+/**
+ * One query per media type for list checks; per-title lookups and caching are too slow for 100 titles.
+ * `throwOnError`: a failed query throws instead of leaving its titles out (a caller that keeps answers must not keep
+ * a failure as "no evidence").
+ */
+export async function getAvailabilityEvidenceBatch(scopes: Scope[], options?: { throwOnError?: boolean }): Promise<Map<string, AvailabilityEvidence>> {
 	const found = new Map<string, AvailabilityEvidence>()
 	const groups = new Map<string, { mediaType: Scope["mediaType"]; country: string; ids: Set<number> }>()
 	for (const scope of scopes) {
@@ -57,6 +61,7 @@ export async function getAvailabilityEvidenceBatch(scopes: Scope[]): Promise<Map
 				} catch {}
 			}
 		} catch (error) {
+			if (options?.throwOnError) throw error
 			// Same degradation as the single lookup: missing evidence evaluates to unknown.
 			console.warn("Availability evidence unavailable", error instanceof Error ? error.message : "query failure")
 		}

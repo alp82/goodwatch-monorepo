@@ -155,3 +155,59 @@ test('A deck reads only the head of a long ranking it can scan, and a failed dec
   })
   assert.deepEqual(asked, [103, undefined])
 })
+
+test('a deck reads the next window while it checks the current one, and a window\'s likely shows\' episodes in one read', async () => {
+  const r = await room(); r.constraints.kinds = ['movie', 'show_start']
+  // 120 titles: every third a show; only every fourth title is watchable everywhere.
+  const titles = Array.from({ length: 120 }, (_, i) => i % 3 === 0
+    ? { ...start, key: 2_000_000_000_100 + i, tmdbId: 100 + i }
+    : { ...movie, key: 1_000_000_000_100 + i, tmdbId: 100 + i })
+  const watchable = new Set(titles.filter((_, i) => i % 4 === 0).map(t => t.key))
+  const events: string[] = []
+  const windowOf = (keys: number[]) => titles.findIndex(t => t.key === keys[0]) / 40
+  let single = 0
+  const adapter = createDeckAdapter({ ...reads(),
+    async rankedKeys() { return titles.map(t => t.key) },
+    async displays(keys) { events.push(`displays ${windowOf(keys)}`); return new Map(titles.filter(t => keys.includes(t.key)).map(t => [t.key, t])) },
+    async availability(shown, screens) {
+      const w = windowOf(shown.map(t => t.key)); events.push(`offers ${w}`)
+      await new Promise(resolve => setTimeout(resolve, 20))
+      events.push(`offers ${w} done`)
+      return new Map(shown.map(t => [t.key, screens.map(s => ({ screenId: s.id, state: watchable.has(t.key) ? 'watchable' : 'no_match', scope: 'title', checkedAt: Date.now(), offers: [{ serviceId: s.serviceIds[0], name: s.id, url: null, kind: 'where_to_watch', offerType: 'flatrate' }] }))]))
+    },
+    async episodes(id) { single++; return [{ ...fixtureEpisodes[0], tmdbId: id * 100 }] },
+    async episodesMany(ids) {
+      events.push(`episodes ${ids.join(',')}`)
+      await new Promise(resolve => setTimeout(resolve, 20))
+      // The read leaves one show out: it is read on its own.
+      return new Map(ids.filter(id => id !== 112).map(id => [id, [{ ...fixtureEpisodes[0], tmdbId: id * 100 }]]))
+    },
+  }, { limit: 15 })
+  const cards = await adapter.candidates(r)
+  assert.deepEqual(cards.map(c => c.identity.tmdbId), titles.filter(t => watchable.has(t.key)).slice(0, 15).map(t => t.tmdbId), 'ranked order, as without reading ahead')
+  assert.ok(events.indexOf('offers 1') < events.indexOf('offers 0 done'), `window 1 is read while window 0 is: ${events.join(' | ')}`)
+  assert.ok(events.indexOf('offers 2') < events.indexOf('episodes 148'), `and window 2 while window 1's shows are read: ${events.join(' | ')}`)
+  // Window 0's likely cards: the watchable titles 0, 4, …, 36; its shows (every twelfth title) in one read.
+  assert.equal(events.find(e => e.startsWith('episodes')), 'episodes 100,112,124,136')
+  assert.equal(events.filter(e => e.startsWith('episodes')).length, 2, 'one read per window with shows (windows 0 and 1)')
+  assert.equal(single, 1, 'only the show the batch left out is read on its own')
+})
+
+test('a failed batch episode read falls back to reading each show, and an unused read ahead fails nothing', async () => {
+  const r = await room(); r.constraints.kinds = ['show_start']
+  const titles = Array.from({ length: 80 }, (_, i) => ({ ...start, key: 2_000_000_000_100 + i, tmdbId: 100 + i }))
+  let single = 0, windows = 0
+  const cards = await createDeckAdapter({ ...reads(),
+    async rankedKeys() { return titles.map(t => t.key) },
+    async displays(keys) { return new Map(titles.filter(t => keys.includes(t.key)).map(t => [t.key, t])) },
+    async availability(shown, screens) {
+      // The second window (read ahead, never used: the first fills the deck) fails.
+      if (windows++ === 1) throw new Error('offers unavailable')
+      return new Map(shown.map(t => [t.key, screens.map(s => ({ screenId: s.id, state: 'watchable', scope: 'title', checkedAt: Date.now(), offers: [] }))]))
+    },
+    async episodes(id) { single++; return [{ ...fixtureEpisodes[0], tmdbId: id * 100 }] },
+    async episodesMany() { throw new Error('episode catalog unavailable') },
+  }, { limit: 5 }).candidates(r)
+  assert.equal(cards.length, 5)
+  assert.equal(single, 5)
+})

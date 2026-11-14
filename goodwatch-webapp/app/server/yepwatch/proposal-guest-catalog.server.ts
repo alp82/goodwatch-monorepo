@@ -2,7 +2,7 @@ import { matchingIdeaIds } from "./proposal-redesign.ts"
 import { roomIntentKeys } from "./proposal-intent.ts"
 import { createContinuousCatalog } from "./continuous-catalog.ts"
 import { goodwatchCatalog, goodwatchReads } from "./goodwatch.server.ts"
-import { enrichContinuousCandidates } from "./continuous-presentation.server.ts"
+import { enrichContinuousCandidates, warmEnrichment } from "./continuous-presentation.server.ts"
 import { proposalCatalog } from "./proposal-catalog.server.ts"
 import type { ContinuousMembers } from "./continuous-members.server.ts"
 import { sharedSavedContinuations } from "./continuous-saved-progress.ts"
@@ -15,7 +15,19 @@ const reads: CatalogReads = {
 	...goodwatchReads,
 	rankedKeys: (room, limit) => timed("rank", goodwatchReads.rankedKeys(room, limit)),
 	displays: (keys) => timed("displays", goodwatchReads.displays(keys)),
-	availability: (titles, screens, fresh) => timed("availability", goodwatchReads.availability(titles, screens, fresh)),
+	availability: async (titles, screens, fresh) => {
+		const offers = await timed("availability", goodwatchReads.availability(titles, screens, fresh))
+		// Titles every screen can watch are the deck's likely cards: their extras are read meanwhile, for the page's
+		// enrichment once the deck is chosen.
+		if (!fresh)
+			warmEnrichment(
+				titles.filter((t) => {
+					const rows = offers.get(t.key)
+					return rows?.length === screens.length && rows.every((r) => r.state === "watchable")
+				})
+			)
+		return offers
+	},
 	// Summed over a batch's parallel reads: time spent reading, not elapsed time.
 	episodes: (showId) => timed("episodes", goodwatchReads.episodes(showId)),
 }

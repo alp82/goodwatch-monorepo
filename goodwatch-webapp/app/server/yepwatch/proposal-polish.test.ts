@@ -151,3 +151,40 @@ test('candidate wording, strength and colors match the website reading, includin
     assert.equal(c.notFor, notForLine(reading.not) || null)
   }
 })
+test('kept offers: deck reads are kept per title and country; the agreement\'s fresh check always reads, and fills nothing', async () => {
+  const { keptOfferReads } = await import('./availability-adapter.ts')
+  const now = Date.now()
+  let t = now
+  const evidenceOf = (country: string) => ({ version: 1, media_tmdb_id: 1, media_type: 'movie', country_code: country, unknown_contributions: false, checks: ['tmdb_web', 'tmdb_api'].map(source => ({ source, snapshot_id: source, checked_at: now, last_attempt_at: now, state: 'usable', reason: null, mapping_complete: true, offer_types: ['flatrate'], offers: [{ service_id: 8, offer_type: 'flatrate', snapshot_id: source, stream_url: null }] })) })
+  const batches: string[][] = []
+  let fresh = 0, linkReads = 0, failing = false
+  const kept = keptOfferReads({
+    async batch(scopes) {
+      batches.push(scopes.map(s => `${s.mediaType}-${s.tmdbId}-${s.country}`))
+      if (failing) throw new Error('crate unavailable')
+      return new Map(scopes.filter(s => s.tmdbId === 1).map(s => [`${s.mediaType}-${s.tmdbId}`, evidenceOf(s.country)]))
+    },
+    async links() { linkReads++; return [] },
+  }, 10 * 60_000, 100, () => t)
+  const adapter = createAvailabilityAdapter({ names: async () => new Map([[8, 'Netflix']]), batch: kept.batch, links: kept.links, fresh: async scope => { fresh++; return evidenceOf(scope.country) } }, () => t)
+  const screens = [{ id: 'tv', label: 'TV', country: 'DE', serviceIds: [8], confirmed: true }]
+  const displays = [1, 2].map(tmdbId => ({ key: tmdbId, tmdbId, mediaType: 'movie' as const, title: 'Title', year: null, overview: null, posterUrl: null, runtimeMinutes: null }))
+  const first = await adapter(displays, screens, false)
+  assert.equal(first.get(1)![0].state, 'watchable')
+  assert.equal(first.get(2)![0].state, 'unknown', 'no evidence: unknown')
+  await adapter(displays, screens, false)
+  assert.equal(batches.length, 1, 'both titles kept, also the one without evidence')
+  assert.equal(linkReads, 1)
+  for (let i = 0; i < 3; i++) assert.equal((await adapter(displays.slice(0, 1), screens, true)).get(1)![0].state, 'watchable')
+  assert.equal(fresh, 3, 'the final check reads every time, whatever is kept')
+  assert.equal(batches.length, 1)
+  await adapter(displays, [{ ...screens[0], country: 'AT' }], false)
+  assert.deepEqual(batches.at(-1), ['movie-1-AT', 'movie-2-AT'], 'kept per country')
+  t += 10 * 60_000
+  failing = true
+  const failed = await adapter(displays, screens, false)
+  assert.equal(failed.get(1)![0].state, 'unknown', 'past 10 minutes it reads again; a failed read is unknown')
+  failing = false
+  await adapter(displays, screens, false)
+  assert.deepEqual(batches.at(-1), ['movie-1-DE', 'movie-2-DE'], 'and the failure was not kept')
+})

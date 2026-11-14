@@ -1928,10 +1928,11 @@ export class ProposalService {
 			if (!candidate) return
 			const room = structuredClone(old.room)
 			try {
-				const evidence = await this.catalog.recheck(
+				// The final offer check reads fresh (never the deck's kept offers); "recheck" on the answer's Server-Timing.
+				const evidence = await timed("recheck", this.catalog.recheck(
 					activeRoom(old.room),
 					candidate
-				)
+				))
 				requireRoom(
 					evidence.length > 0 && evidence.every((e) => e.state === "watchable"),
 					"no_intersection",

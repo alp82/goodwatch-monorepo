@@ -3,7 +3,7 @@ import { activeRoom } from "./proposal-context.ts"
 import type { ProposalCatalog, ProposalRoom } from "./proposal-types.ts"
 import { measured } from "./server-timing.ts"
 
-/** A deck build at least this slow is logged with where its time went (yepwatch_deck_slow). */
+/** A deck build at least this slow is logged as yepwatch_deck_slow; quicker ones as yepwatch_deck_build. */
 const SLOW_BUILD_MS = 250
 
 type Page = Awaited<ReturnType<ProposalCatalog["page"]>>
@@ -262,11 +262,11 @@ export class PreparedDecks {
 	}
 }
 
-/** A catalog page for the room under its own marks; a slow one is logged with where its time went. */
+/** A catalog page for the room under its own marks; every build is logged with where its time went. */
 function measuredPage(catalog: ProposalCatalog, room: ProposalRoom, kind: "inline" | "prepare"): Promise<Page> {
 	return measured(() => catalog.page(structuredClone(activeRoom(room))), (marks, totalMs) => {
-		if (totalMs >= SLOW_BUILD_MS)
-			console.info(JSON.stringify({ event: "yepwatch_deck_slow", kind, totalMs, marks, uptimeMs: Math.round(process.uptime() * 1000) }))
+		const event = totalMs >= SLOW_BUILD_MS ? "yepwatch_deck_slow" : "yepwatch_deck_build"
+		console.info(JSON.stringify({ event, kind, totalMs, marks, uptimeMs: Math.round(process.uptime() * 1000) }))
 	})
 }
 
