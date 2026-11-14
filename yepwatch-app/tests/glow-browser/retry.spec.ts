@@ -1,6 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import type { CommandEnvelope, GuestAdmissionRequest } from '@goodwatch/yepwatch-contracts/proposal';
 import { continuousFixture } from '../continuous-fixture';
+import { reading } from './room-fake';
 const CREATE = /^(Create room|Try again|Saving…)$/;
 const JOIN = /^(Join|Retry joining|Joining…)$/;
 /** Opening a mood is local; the action returned here explicitly submits it. */
@@ -26,7 +27,7 @@ async function common(page: Page) {
     if (url.endsWith('/guest/resolve-invite')) return route.fulfill({json:{roomId:'test-room'}});
     if (url.endsWith('/commands')) {
       const body = route.request().postDataJSON();
-      if (body.command.type === 'add_idea') room.shared.ideas.push({ id: 'created-idea', text: body.command.text, authorId: room.own.participantId, on: true, attributes: [] });
+      if (body.command.type === 'add_idea') room.shared.ideas.push({ id: 'created-idea', text: body.command.text, authorId: room.own.participantId, on: true, attributes: reading(body.command.text) });
       room.own.nextSequence++; room.shared.revision++;
       return route.fulfill({json:{receipt:{},snapshot:room}});
     }
@@ -175,7 +176,8 @@ test('covered entrance controls are inert until the panel closes', async ({ page
 });
 
 for (const mode of ['create', 'join'] as const) test(`Back escapes an unconfirmed ${mode} without forgetting its exact retry`, async ({ page }) => {
-  // An unanswered request goes once more by itself, then the error shows at once (no half-minute wait).
+  // Owner rule Q16b (resend.ts): while the page is in front, an unanswered request keeps going by itself (the
+  // same saved request each time), with one Reconnecting line after 3 s and no error or Try again.
   test.setTimeout(90_000);
   await common(page); const bodies: GuestAdmissionRequest[]=[];
   if(mode==='join') await page.route('**/proposal/rooms/test-room', route => route.fulfill({status:401,json:{error:{code:'unauthorized',message:'No existing membership',retryable:false}}}));
@@ -183,26 +185,19 @@ for (const mode of ['create', 'join'] as const) test(`Back escapes an unconfirme
   const action=await open(page,mode,'Connection check');
   await action.click();
   await expect(action).toHaveText(mode === 'join' ? 'Joining…' : 'Saving…');
-  await expect(page.getByText('Couldn’t reach YepWatch. Your request is saved. Try again.',{exact:true})).toBeVisible({ timeout: 45_000 });
-  expect(bodies).toHaveLength(2);
-  for (const body of bodies) expect(body).toEqual(bodies[0]);
-  if (mode === 'join') {
-    await page.getByRole('button',{name:'Connection details',exact:true}).click();
-    await expect(page.getByText(/web · network · request/)).toBeVisible();
-    await expect(page.getByText(/No HTTP response/)).toBeVisible();
-  }
-  await expect(action).toBeEnabled();
-  await action.click();await expect.poll(()=>bodies.length).toBe(4);expect(bodies[3]).toEqual(bodies[0]);
-  // Reload restores the pending form (ending the automatic retries), but still allows Back.
-  await page.reload();
-  const sent = bodies.length;
-  await expect(action).toBeEnabled();
-  // Join is a full screen with the room screens' Back; create keeps its panel.
+  await expect(page.getByText('Reconnecting…',{exact:true})).toBeVisible({ timeout: 6_000 });
+  await expect.poll(()=>bodies.length,{ timeout: 20_000 }).toBeGreaterThanOrEqual(3);
+  await expect(action).toBeDisabled();
+  await expect(page.getByText('Couldn’t reach YepWatch. Your request is saved. Try again.',{exact:true})).toHaveCount(0);
+  // Back stops the resends; the saved request stays.
   await page.getByRole('button',{name:'Back',exact:true}).click();
   await expect(page.getByRole('button',{name:'New room',exact:true})).toBeVisible();
   await expect(page.getByLabel('Your name')).toHaveCount(0);
+  const sent = bodies.length;
+  await page.waitForTimeout(6_000);
   expect(bodies).toHaveLength(sent);
-  // Even the other entry action resumes the original operation, without replacing its identity.
+  for (const body of bodies) expect(body).toEqual(bodies[0]);
+  // Even the other entry action resumes the original operation, without replacing its identity: a manual press.
   await page.getByRole('button',{name:mode==='create'?'Join a room':'New room',exact:true}).click();
   await expect(action).toBeEnabled();await action.click();
   await expect.poll(()=>bodies.length).toBe(sent + 1);expect(bodies[sent]).toEqual(bodies[0]);
@@ -217,8 +212,8 @@ test('Back during admission cooldown allows reopening the saved request without 
   await expect(action).toBeDisabled();await expect(action).not.toHaveText(/\d/);expect(posts).toBe(1);
 });
 
-test('a lost create response followed by proxy 404s keeps the saved request; the manual retry ends in the same room', async ({ page }) => {
-  // About 40 s of automatic retries (1-2-4-8-15 s with jitter, at least the 2 s fallback gate) before the error.
+test('a lost create response followed by proxy 404s keeps the saved request; its resends end in the same room', async ({ page }) => {
+  // The proxy's 404 pages are no answer from the API: the saved request keeps going by itself until it lands.
   test.setTimeout(120_000);
   const room = await common(page);
   // A fake API that is idempotent per command id, like the real one: it counts rooms actually created.
@@ -236,13 +231,8 @@ test('a lost create response followed by proxy 404s keeps the saved request; the
   });
   const action = await open(page, 'create', '');
   await action.click();
-  await expect(page.getByText('Couldn’t reach YepWatch. Your request is saved. Try again.', { exact: true })).toBeVisible({ timeout: 90_000 });
-  expect(bodies).toHaveLength(6);
-  const stored = await page.evaluate(() => JSON.parse(sessionStorage.getItem('yepwatch.v3.admission.') ?? 'null'));
-  expect(stored?.request).toEqual(bodies[0]);
-  await expect(action).toBeEnabled();
-  await action.click();
-  await page.waitForURL('**/room/test-room**');
+  await page.waitForURL('**/room/test-room**', { timeout: 90_000 });
+  await expect(page.getByText('Couldn’t reach YepWatch. Your request is saved. Try again.', { exact: true })).toHaveCount(0);
   expect(bodies).toHaveLength(7);
   for (const body of bodies) expect(body).toEqual(bodies[0]);
   expect(rooms.size).toBe(1);
@@ -276,11 +266,18 @@ for (const leave of ['panel', 'background'] as const) test(`automatic admission 
   const stored = await page.evaluate(() => JSON.parse(sessionStorage.getItem('yepwatch.v3.admission.') ?? 'null'));
   expect(stored?.request).toEqual(bodies[0]);
   await expect(page.getByText('Couldn’t reach YepWatch. Your request is saved. Try again.', { exact: true })).toHaveCount(0);
-  if (leave === 'background') await page.evaluate(() => {
-    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
-    document.dispatchEvent(new Event('visibilitychange'));
-  });
-  else await page.getByRole('button', { name: 'New room', exact: true }).click();
+  if (leave === 'background') {
+    await page.evaluate(() => {
+      Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    // Back in front, the paused save goes again by itself (resend-resume.ts), the same request.
+    await expect(action).toHaveText('Saving…');
+    await expect.poll(() => bodies.length, { timeout: 10_000 }).toBeGreaterThan(sent);
+    expect(bodies[sent]).toEqual(bodies[0]);
+    return;
+  }
+  await page.getByRole('button', { name: 'New room', exact: true }).click();
   // The saved request comes back for a manual retry with the same identity.
   await expect(action).toBeEnabled();
   await expect(action).toHaveText(/Create room|Try again/);

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { choosingRoom, fakeRoom, newRoom } from './room-fake';
+import { choosingRoom, fakeRoom, newRoom, reading } from './room-fake';
 
 const button = (page: Page, name: string | RegExp) => page.getByRole('button', { name, exact: typeof name === 'string' });
 /** The app goes to the background and comes back: a re-render and a fresh read of the room. */
@@ -119,7 +119,7 @@ test.describe('Continue with GoodWatch never creates a room; New room still open
 test.describe('NEW is acknowledged per room on the host’s device', () => {
   const withSuggestion = () => {
     const room = choosingRoom();
-    room.shared.ideas.push({ id: 'i2', text: 'space adventure', authorId: 'mia', on: false, attributes: [] });
+    room.shared.ideas.push({ id: 'i2', text: 'space adventure', authorId: 'mia', on: false, attributes: reading('space adventure') });
     return room;
   };
 

@@ -329,7 +329,8 @@ test('Tonight is final: host Start again restarts into the room page, Start begi
   await page.getByRole('button',{name:'Start',exact:true}).click();
   await expect(page.getByRole('button',{name:'Yep',exact:true})).toBeVisible();
   expect(f.writes.map(c=>c.type).slice(0,2)).toEqual(['restart','start']);
-  expect(f.writes[1]).toEqual({type:'start',expectedRosterVersion:2,expectedContextVersion:2,hostReady:true});
+  // Start names the round it was pressed in: the one Start again opened (b315f97a5).
+  expect(f.writes[1]).toEqual({type:'start',expectedGeneration:2,expectedRosterVersion:2,expectedContextVersion:2,hostReady:true});
 });
 
 test('guests see who can start again and get no Start again control', async ({page}) => {

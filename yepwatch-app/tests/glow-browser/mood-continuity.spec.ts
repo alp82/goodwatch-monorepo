@@ -81,7 +81,8 @@ test('a failed create-and-save keeps the draft and retries in the same room', as
   expect(f.room.shared.ideas.map((i) => i.text)).toEqual(['dark and funny']);
 });
 
-test('an accepted mood whose acknowledgement is lost survives reload and retries the exact command without another idea', async ({ page }) => {
+test('an accepted mood whose acknowledgement is lost goes again by itself as the exact command, without another idea', async ({ page }) => {
+  // Owner rule Q16b: a save with no answer keeps going by itself while the page is in front, the same command.
   const f = await fakeRoom(page, newRoom());
   let rooms = 0, lose = true;
   page.on('request', (r) => { if (r.method() === 'POST' && r.url().endsWith('/proposal/rooms')) rooms++; });
@@ -92,16 +93,12 @@ test('an accepted mood whose acknowledgement is lost survives reload and retries
   await page.goto('/new');
   await page.getByLabel('Mood', { exact: true }).fill('dark and funny');
   await page.getByRole('button', { name: 'Create room', exact: true }).click();
-  await expect(page.getByText('Couldn’t reach YepWatch. Your request is saved. Try again.', { exact: true })).toBeVisible();
-  await page.reload();
-  await expect(page.getByLabel('Mood')).toHaveValue('dark and funny');
-  await expect(page.getByRole('button', { name: /^(Create room|Try again)$/, exact: true })).toBeEnabled();
-  await page.getByRole('button', { name: /^(Create room|Try again)$/, exact: true }).click();
   await expect(page.getByTestId('room-setup')).toBeVisible();
+  await expect(page.getByText('Couldn’t reach YepWatch. Your request is saved. Try again.', { exact: true })).toHaveCount(0);
   const commands = f.commands.filter((c) => c.command.type === 'add_idea');
   expect(commands).toHaveLength(2);
   expect(commands[1]).toEqual(commands[0]);
-  expect(rooms).toBe(2); // Replays the exact bootstrap on reload, so the API returns its original room.
+  expect(rooms).toBe(1); // The room was made once; only the idea command goes again.
   expect(f.room.shared.ideas).toHaveLength(1);
 });
 

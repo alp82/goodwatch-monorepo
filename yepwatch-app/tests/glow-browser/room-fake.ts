@@ -9,6 +9,13 @@ import { continuousFixture } from '../continuous-fixture';
 
 export type FakeSnapshot = RoomSnapshot;
 
+/**
+ * GoodWatch's reading of an idea, as the server stores it once search has interpreted it. An idea with no
+ * attributes is one the server kept without a reading (search down or over its limit): the room notes
+ * "Mood matching is unavailable for now" under it (c5c34bbc6), so ordinary ideas carry a reading.
+ */
+export const reading = (text: string) => [{ text, kind: 'phrase' as const }];
+
 /** Voting has no room row of its own: the header's room pill opens Your rooms, and this room's row opens the Room page. */
 export async function openRoomPage(page: Page, label: string, fresh = 0) {
   await page.getByRole('button', { name: `${label}${fresh ? `, ${fresh} new` : ''}, switch room`, exact: true }).click();
@@ -50,7 +57,7 @@ export function choosingRoom(): FakeSnapshot {
     { participantId: 'host', nickname: 'Alp', screenId: 'room', ready: true, serviceIds: [8] },
     { participantId: 'mia', nickname: 'Mia', screenId: 'room', ready: true, serviceIds: [8, 337] },
   ];
-  s.shared.ideas = [{ id: 'i1', text: 'cheer me up', authorId: 'host', on: true, attributes: [] }];
+  s.shared.ideas = [{ id: 'i1', text: 'cheer me up', authorId: 'host', on: true, attributes: reading('cheer me up') }];
   // The first card carries every optional GoodWatch highlight; the second none (its details hide them).
   Object.assign(s.shared.candidates[0], {
     goodwatchScore: 84, genres: ['Comedy', 'Drama'], tagline: 'A perfect holiday without leaving the lobby.', certification: 'FSK 12',
@@ -103,8 +110,8 @@ export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts:
     room.own.nextSequence++;
     switch (c.type) {
       // The command id becomes the idea's id; the host's ideas start on.
-      case 'add_idea': interpretations++; room.shared.ideas.push({ id: body.commandId, text: c.text, authorId: room.own.participantId, on: true, attributes: [] }); break;
-      case 'edit_idea': interpretations++; room.shared.ideas = room.shared.ideas.map((i) => (i.id === c.ideaId ? { ...i, text: c.text } : i)); break;
+      case 'add_idea': interpretations++; room.shared.ideas.push({ id: body.commandId, text: c.text, authorId: room.own.participantId, on: true, attributes: reading(c.text) }); break;
+      case 'edit_idea': interpretations++; room.shared.ideas = room.shared.ideas.map((i) => (i.id === c.ideaId ? { ...i, text: c.text, attributes: reading(c.text) } : i)); break;
       case 'remove_idea': room.shared.ideas = room.shared.ideas.filter((i) => i.id !== c.ideaId); break;
       case 'set_idea': room.shared.ideas = room.shared.ideas.map((i) => (i.id === c.ideaId ? { ...i, on: c.on } : i)); break;
       case 'set_services': me().serviceIds = c.serviceIds; break;

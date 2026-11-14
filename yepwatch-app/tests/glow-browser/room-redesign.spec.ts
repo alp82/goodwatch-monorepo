@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { choosingRoom, fakeRoom, newRoom } from './room-fake';
+import { choosingRoom, fakeRoom, newRoom, reading } from './room-fake';
 
 const shot = (page: Page, name: string) => page.screenshot({ path: `artifacts/room-redesign/${name}.png` });
 const button = (page: Page, name: string | RegExp) => page.getByRole('button', { name, exact: typeof name === 'string' });
@@ -76,7 +76,7 @@ test('Mood on a desktop window: the placeholder on one row, the underline never 
 test('a friend’s idea arrives on with NEW for the host; the Room sheet switches it off, NEW goes, nothing moves', async ({ page }) => {
   const room = choosingRoom();
   room.shared.phase = 'setup';
-  room.shared.ideas.push({ id: 'i2', text: 'space adventure', authorId: 'mia', on: true, attributes: [] });
+  room.shared.ideas.push({ id: 'i2', text: 'space adventure', authorId: 'mia', on: true, attributes: reading('space adventure') });
   const f = await fakeRoom(page, room);
   await page.goto('/room/test-room');
   // The ideas are the headline; the friend's carries its author and NEW.
@@ -109,7 +109,7 @@ test('a friend’s idea arrives on with NEW for the host; the Room sheet switche
 test('NEW stays while the host looks at the room and is gone the next time', async ({ page }) => {
   const room = choosingRoom();
   room.shared.phase = 'setup';
-  room.shared.ideas.push({ id: 'i2', text: 'space adventure', authorId: 'mia', on: true, attributes: [] });
+  room.shared.ideas.push({ id: 'i2', text: 'space adventure', authorId: 'mia', on: true, attributes: reading('space adventure') });
   await fakeRoom(page, room);
   await page.goto('/room/test-room');
   await expect(page.getByText('NEW', { exact: true })).toBeVisible();
@@ -349,8 +349,8 @@ test.describe('the join screen shows the room from the invite preview', () => {
     room.shared.participants[0].nickname = '';
     room.shared.constraints.kinds = ['movie'];
     room.shared.ideas.push(
-      { id: 'i2', text: 'rainy day whodunit', authorId: 'mia', on: true, attributes: [] },
-      { id: 'i3', text: 'something long and sad', authorId: 'mia', on: false, attributes: [] },
+      { id: 'i2', text: 'rainy day whodunit', authorId: 'mia', on: true, attributes: reading('rainy day whodunit') },
+      { id: 'i3', text: 'something long and sad', authorId: 'mia', on: false, attributes: reading('something long and sad') },
     );
     await openInvite(page, room);
     const head = page.getByTestId('invite-head');
