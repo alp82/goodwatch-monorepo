@@ -296,13 +296,18 @@ export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disab
 
   // The first card of a round that just started rises in; it takes presses and drags all along.
   useLayoutEffect(() => {
-    if (!enter) return;
-    onEntered?.();
-    if (reduced) return;
+    if (!enter || reduced) return;
     rise.setValue(0);
     const run = Animated.timing(rise, { toValue: 1, duration: ENTRY_MS, easing: Easing.out(Easing.cubic), useNativeDriver: driver });
     run.start();
     return () => { run.stop(); rise.setValue(1); };
+    // Once, for the round that just started.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  // The entry is taken: told in the background, not in the commit that mounted the stage (the screen above it
+  // re-rendering there made the first card's frame one long task). `enter` is only read as the stage mounts.
+  useEffect(() => {
+    if (enter) startTransition(() => onEntered?.());
     // Once, for the round that just started.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
