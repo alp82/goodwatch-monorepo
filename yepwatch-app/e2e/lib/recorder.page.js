@@ -104,12 +104,44 @@
     const label = el.getAttribute('aria-label') || el.closest('[aria-label]')?.getAttribute('aria-label') || (el.textContent || '').trim().slice(0, 40);
     return `${t ? `[${t.getAttribute('data-testid')}] ` : ''}${el.tagName.toLowerCase()}${label ? ` "${label}"` : ''}`;
   };
+  // Every element carrying a marker test id, kept from the mutation records (added subtrees, changed test ids)
+  // instead of one document-wide query per marker on every changed frame, which was about a third of the
+  // recorder's time. Only elements in the document tree count, as for document.querySelectorAll; disconnected ones
+  // are dropped when read. Until the observer watches the current root element (before it exists, or after the root
+  // is replaced) the document is queried as before.
+  const MARKER_SET = new Set(MARKERS);
+  const ORDER = new Map(MARKERS.map((id, i) => [id, i]));
+  const markers = new Set();
+  let observed = null; // the root element the observer watches and the registry was filled from
+  const scan = (node) => {
+    if (node.nodeType !== 1) return;
+    if (MARKER_SET.has(node.getAttribute('data-testid'))) markers.add(node);
+    if (node.firstElementChild) for (const el of node.querySelectorAll('[data-testid]')) if (MARKER_SET.has(el.getAttribute('data-testid'))) markers.add(el);
+  };
+  const inDocument = (el) => el.isConnected && el.getRootNode() === document;
+  const byDocumentOrder = (a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1);
+  /** The elements with marker test id `id` in the document, in document order. */
+  const markersOf = (id) => {
+    if (observed !== document.documentElement) return [...document.querySelectorAll(`[data-testid="${id}"]`)];
+    onMutations(mo.takeRecords());
+    return [...markers].filter((el) => inDocument(el) && el.getAttribute('data-testid') === id).sort(byDocumentOrder);
+  };
+  let lastLook = null;
   function signature() {
-    const on = [];
-    for (const id of MARKERS) {
-      const els = document.querySelectorAll(`[data-testid="${id}"]`);
-      for (const el of els) if (visible(el)) { on.push(id); break; }
+    const found = new Set();
+    if (observed !== document.documentElement) {
+      startObserving();
+      for (const id of MARKERS) if ([...document.querySelectorAll(`[data-testid="${id}"]`)].some(visible)) found.add(id);
+    } else {
+      onMutations(mo.takeRecords());
+      for (const el of markers) {
+        const id = el.getAttribute('data-testid');
+        if (!inDocument(el) || !MARKER_SET.has(id)) { markers.delete(el); continue; }
+        if (!found.has(id) && visible(el)) found.add(id);
+      }
     }
+    const on = [...found].sort((a, b) => ORDER.get(a) - ORDER.get(b));
+    if (diag) lastLook = found.has('poster') ? markersOf('poster').find((el) => el.hasAttribute('data-look') && visible(el))?.getAttribute('data-look') ?? null : null;
     // Voting with nothing on the stage: no card, no "Finding more…", and no poster image painted anywhere in it.
     if (on.includes('voting') && !on.includes('poster') && !on.includes('finding-more') && !SHEETS.some((s) => on.includes(s)) && !on.includes('matches') && !on.includes('proposal') && !on.includes('tonight')) {
       const stage = [...document.querySelectorAll('[data-testid="voting"]')].find(visible);
@@ -126,11 +158,26 @@
   let pendingInputs = [];
   let wordsDue = false;
   let lastWordsCheck = 0;
-  const mo = new MutationObserver(() => {
+  function onMutations(records) {
+    if (!records.length) return;
+    for (const r of records) {
+      if (r.type === 'childList') for (const n of r.addedNodes) scan(n);
+      else if (r.type === 'attributes' && r.attributeName === 'data-testid') scan(r.target);
+    }
     dirty = true;
     for (const input of pendingInputs) input.mutated = true;
-  });
-  const startObserving = () => mo.observe(document.documentElement, { subtree: true, childList: true, attributes: true, characterData: true });
+  }
+  const mo = new MutationObserver(onMutations);
+  function startObserving() {
+    const root = document.documentElement;
+    if (!root || observed === root) return;
+    mo.disconnect();
+    markers.clear();
+    scan(root);
+    mo.observe(root, { subtree: true, childList: true, attributes: true, characterData: true });
+    observed = root;
+    dirty = true;
+  }
   if (document.documentElement) startObserving(); else document.addEventListener('DOMContentLoaded', startObserving);
 
   function check(spec) {
@@ -192,7 +239,7 @@
       const sig = signature();
       const last = rec.states[rec.states.length - 1];
       if (!last || last.sig !== sig) rec.states.push({ t, sig });
-      const note = [...document.querySelectorAll('[data-testid="room-note"]')].find(visible);
+      const note = markersOf('room-note').find(visible);
       const noteText = note ? note.innerText.trim().replace(/\s+/g, ' ') : '';
       const lastNote = rec.notes[rec.notes.length - 1];
       if ((lastNote?.text ?? '') !== noteText) rec.notes.push({ t, text: noteText });
@@ -219,7 +266,7 @@
       if (type === 'keydown' && ['Shift', 'Control', 'Alt', 'Meta', 'Tab'].includes(e.key)) return;
       const entry = { t: performance.timeOrigin + e.timeStamp, type, target: describe(e.target), mutated: false, feedbackAt: null };
       // Diagnosis: the look of the voting card the input was aimed at (Poster's data-look).
-      if (diag) entry.look = [...document.querySelectorAll('[data-testid="poster"][data-look]')].find(visible)?.getAttribute('data-look') ?? null;
+      if (diag) entry.look = lastLook;
       rec.inputs.push(entry);
       if (rec.inputs.length > 500) rec.inputs.shift();
       pendingInputs.push(entry);

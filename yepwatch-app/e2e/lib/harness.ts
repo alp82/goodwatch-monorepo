@@ -412,6 +412,9 @@ export class Room {
         storageState: opts.storageState,
         // Never recorded when untraced: the video would show the sign-in pages and account of real credentials.
         recordVideo: process.env.E2E_VIDEO === '1' && opts.trace !== false ? { dir: this.info.outputPath(`video-${name}`), size: DEVICES[device].viewport } : undefined,
+        // The network history traces no longer carry (they do only with DOM snapshots): headers and timings, no bodies,
+        // recorded by the browser, not the page. Kept with a failure's attachments, else deleted.
+        recordHar: process.env.E2E_TRACE !== '0' && opts.trace !== false ? { path: this.harPath(name), content: 'omit' } : undefined,
       });
       // Diagnosis switches (never set by run.mjs, the gate or CI): E2E_DIAG=1 makes the recorder keep more (frame gaps
       // over 17 ms, answer and message arrivals, React commits; recorder.page.js); E2E_LOOK pins the card looks (one
@@ -419,7 +422,12 @@ export class Room {
       if (process.env.E2E_DIAG === '1' || process.env.E2E_DIAG === 'renders') await context.addInitScript(`window.__ywDiag = true;${process.env.E2E_DIAG === 'renders' ? ' window.__ywDiagRenders = true;' : ''}`);
       if (process.env.E2E_LOOK) await context.addInitScript(`window.__YEPWATCH_LOOKS__ = ${JSON.stringify(process.env.E2E_LOOK)};`);
       await context.addInitScript({ path: RECORDER });
-      if (process.env.E2E_TRACE !== '0' && opts.trace !== false) await context.tracing.start({ screenshots: true, snapshots: true, title: `${this.info.title} — ${name}` }).catch(() => {});
+      // The trace keeps actions and console only (the network history goes to a HAR, above). Screenshots (a screencast
+      // of every frame) and DOM snapshots (taken around every Playwright call, the recorder polls included) cost the
+      // measured page frames no phone pays; a failure attaches each page's final screenshot and accessibility tree
+      // instead. E2E_TRACE=full brings them back for local diagnosis, never in a gated run.
+      const full = process.env.E2E_TRACE === 'full';
+      if (process.env.E2E_TRACE !== '0' && opts.trace !== false) await context.tracing.start({ screenshots: full, snapshots: full, title: `${this.info.title} — ${name}` }).catch(() => {});
       // Signed in to (local) GoodWatch: its authorize step comes straight back, as for a returning member.
       if (opts.member) await context.addCookies([{ name: 'gw_e2e_member', value: encodeURIComponent(opts.member), domain: '127.0.0.1', path: '/api/auth/', httpOnly: true, secure: false, sameSite: 'Lax' }]);
       // Hidden-tab fault: a controllable page clock so "minutes away" takes seconds (time still flows).
@@ -574,6 +582,7 @@ export class Room {
   readonly pending: Promise<unknown>[] = [];
 
   private readonly perfTraces: { browser: Browser; name: string }[] = [];
+  private harPath(name: string) { return this.info.outputPath(`network-${name.replace(/\W+/g, '_')}.har`); }
 
   /** E2E_DUMP_DIR: each person's recordings, command log and (E2E_PERF_TRACE) Chrome trace, for diagnosis. */
   private async dump() {
@@ -665,6 +674,9 @@ export class Room {
         if (keep && fs.existsSync(file)) await this.info.attach(`trace ${p.name}`, { path: file, contentType: 'application/zip' });
       }
       await p.context.close().catch(() => {});
+      const har = this.harPath(p.name);
+      if (keep && fs.existsSync(har)) await this.info.attach(`network ${p.name}`, { path: har, contentType: 'application/json' });
+      else fs.rmSync(har, { force: true });
     }
     await this.closeBrowsers();
     if (unique.length) {

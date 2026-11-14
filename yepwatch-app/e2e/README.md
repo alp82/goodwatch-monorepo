@@ -28,7 +28,10 @@ does, or answering 5xx, for 1 s or more is a failure of its own.
 
 Reports: `artifacts/<tier>/report.json` (every gate failure with journey, fault, gate, measured vs budget,
 artifacts; timing p50/p95 per moment) and `artifacts/<tier>/summary.md`. Traces of failed tests are under
-`artifacts/<tier>/results-*/` (`npx playwright show-trace <zip>`).
+`artifacts/<tier>/results-*/` (`npx playwright show-trace <zip>`). They hold actions and console only, with each
+page's network history (headers and timings, no bodies) as a HAR beside them, its final screenshot and accessibility tree: Playwright's screencast and DOM snapshots (taken around every
+call, the recorder's 25 ms polls included) cost the measured pages frames no phone pays. `E2E_TRACE=full` brings them
+back for local diagnosis, never in a gated run.
 
 ## Stack (`stack/`)
 
@@ -86,7 +89,11 @@ of a restarting production container.
   measures, page-side, from the input event to the first frame showing the expected state (on this and
   other phones). `room.point(label)` is the fault hook journeys call between steps.
 - `recorder.page.js`: injected before the app; records screen states per frame (test-id markers),
-  notes and blocking words, inputs and their first changed frame, layout shifts, long animation frames.
+  notes and blocking words, inputs and their first changed frame, layout shifts, long animation frames. It reads a
+  frame only after a DOM change, from a marker list kept by its MutationObserver (no document-wide query per
+  marker). `web/recorder.spec.ts` pins what the gates catch
+  from it (one-frame flashes five ways, layout shift, every kind of connection and blocking line, a dropped frame
+  after a press, dead buttons, waiter times) on synthetic pages, without the stack.
 - `gates.ts`, `a11y.ts`: flashes, layout shift, blocking words, connection words (none during an outage
   shorter than 3 s, so none for a hidden tab, a second device or no WebSocket; then one line, gone within 1 s
   of the outage's end; never a countdown; outages are the restart and offline windows), dead buttons, frame
