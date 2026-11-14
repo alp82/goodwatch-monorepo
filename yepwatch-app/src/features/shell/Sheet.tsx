@@ -7,7 +7,7 @@
  * and makes the page underneath inert.
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Animated, BackHandler, Easing, Keyboard, Platform, Pressable, ScrollView, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
+import { Animated, BackHandler, Easing, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import { useIsFocused } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useReducedMotion } from '../../components/ui';
@@ -17,7 +17,7 @@ import { keyboardDismissMode, useLayout } from './layout';
 import { closeTopSheet, isTopSheet, registerSheet } from './sheet-stack';
 import { R, warm } from './tokens';
 import { useFreshSurface } from './fresh-surface';
-import { KeyboardRoom, useKeyboardInset } from './keyboard-inset';
+import { useKeyboardInset } from './keyboard-inset';
 
 export interface SheetProps {
   title: string;
@@ -74,8 +74,9 @@ export function Sheet({ title, onClose, children, actions, testID, width = 680 }
   const { width: windowWidth, height: windowHeight, phone, z } = useLayout();
   const insets = useSafeAreaInsets();
   // Android: the panel's bottom stays above the keyboard (keyboard-inset.tsx), which also covers the bottom safe area.
-  const keyboard = useKeyboardInset();
-  const safeBottom = phone && keyboard.inset === 0 ? insets.bottom : 0;
+  // Measured on the full-screen layer: the panel itself moves during its entrance.
+  const { attach: keyboardAttach, onLayout: keyboardLayout, inset: keyboardInset } = useKeyboardInset();
+  const safeBottom = phone && keyboardInset === 0 ? insets.bottom : 0;
   const reduced = useReducedMotion();
   const [enter] = useState(() => new Animated.Value(reduced ? 1 : 0));
   useEffect(() => {
@@ -133,14 +134,14 @@ export function Sheet({ title, onClose, children, actions, testID, width = 680 }
   };
   const rise = enter.interpolate({ inputRange: [0, 1], outputRange: [phone ? 60 : 16, 0] });
   return (
-    <View testID={testID ? `${testID}-layer` : undefined} style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, zIndex: 50, justifyContent: phone ? 'flex-end' : 'flex-start', alignItems: 'center', paddingTop: phone ? 0 : z(40), paddingBottom: phone ? 0 : z(32) }}>
+    <View ref={keyboardAttach} onLayout={keyboardLayout} testID={testID ? `${testID}-layer` : undefined} style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, zIndex: 50, justifyContent: phone ? 'flex-end' : 'flex-start', alignItems: 'center', paddingTop: phone ? 0 : z(40), paddingBottom: Math.max(keyboardInset, phone ? 0 : z(32)) }}>
       <Animated.View style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: '#000000b3', opacity: enter }}>
         {/* A tap on the shade closes the sheet. Not a control of its own (screen readers have Close). */}
         <Shade onPress={onePress(onClose)} />
       </Animated.View>
       <Animated.View testID={testID} role="dialog" aria-modal aria-label={title} accessibilityViewIsModal onLayout={onPanelLayout}
         style={{ width: panelWidth, maxHeight: phone ? '92%' : '100%', minHeight, flexShrink: 1, backgroundColor: warm.panel, borderColor: warm.lineStrong, borderWidth: 1, ...(phone ? { borderBottomWidth: 0, borderTopLeftRadius: R.card, borderTopRightRadius: R.card } : { borderRadius: R.card }), opacity: enter, transform: [{ translateY: rise }], overflow: 'hidden' }}>
-        <KeyboardRoom {...keyboard} style={{ flexShrink: 1, flexGrow: minHeight ? 1 : 0 }}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flexShrink: 1, flexGrow: minHeight ? 1 : 0 }}>
           {phone ? <View style={{ alignItems: 'center', paddingTop: 8 }}><View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: '#ffffff26' }} /></View> : null}
           <View style={{ flexDirection: 'row', alignItems: 'center', paddingLeft: z(20), paddingRight: 8, paddingTop: phone ? 4 : 10, minHeight: 52 }}>
             <GText bold size={z(22)} lines={1} style={{ flex: 1, letterSpacing: -0.5 }}>{title}</GText>
@@ -153,7 +154,7 @@ export function Sheet({ title, onClose, children, actions, testID, width = 680 }
           {actions ? (
             <View style={{ paddingHorizontal: z(20), paddingTop: 12, paddingBottom: 16 + safeBottom, borderTopWidth: 1, borderTopColor: warm.line, flexDirection: 'row', gap: 10 }}>{actions}</View>
           ) : null}
-        </KeyboardRoom>
+        </KeyboardAvoidingView>
       </Animated.View>
       <EdgeBack back={onClose} />
     </View>

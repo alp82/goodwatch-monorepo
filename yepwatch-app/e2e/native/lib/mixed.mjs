@@ -172,8 +172,9 @@ export async function mixedGateRoom({ phone: A, stack, runDir, B, timing, audit,
     await toStart(A);
     const tile = await A.find('New room', { timeout: 15000 });
     const traced = tracing('new-room') ? await startTrace(A, 'new-room', path.join(runDir, 'video')) : null;
-    const nr = await measure({ actor: A, phones: [A], file: vid('new-room'), action: tapAction(A, tile), targets: { A: roiOf(A, 'Mood') } });
-    if (traced) await traced();
+    let nr;
+    try { nr = await measure({ actor: A, phones: [A], file: vid('new-room'), action: tapAction(A, tile), targets: { A: roiOf(A, 'Mood') } }); }
+    finally { if (traced) await traced(); }
     timing('New room -> Mood page', B.newRoomMs, nr.A);
     await audit(A, 'mood page');
     await A.tap('cheer me up');

@@ -494,6 +494,7 @@ jobs:
             ${{ env.YW_E2E_RUNS }}/**/ci-summary.md
             ${{ env.YW_E2E_RUNS }}/**/*.png
             ${{ env.YW_E2E_RUNS }}/**/logcat-*.txt
+            ${{ env.YW_E2E_RUNS }}/**/*.perfetto-trace
             ${{ env.YW_E2E_HOME }}/logs/*.log
             ${{ runner.temp }}/prepare.log
             ${{ runner.temp }}/pull.log

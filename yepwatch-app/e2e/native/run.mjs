@@ -107,9 +107,11 @@ async function main() {
     A.forceStop(); A.sh(`pm clear ${PACKAGE}`);
     let am;
     const traced = tracing('cold-start') ? await startTrace(A, 'cold-start', path.join(RUN, 'video'), 12000) : null;
-    const first = await measure({ actor: A, phones: [A], file: vid('cold-first'), targets: { A: roiOf(A, 'New room', 20000) },
-      action: hostAction(() => { am = A.launch(); }), appWindowMs: () => am?.totalTime, allowIntermediate: 0, settleMs: 800 });
-    if (traced) await traced();
+    let first;
+    try {
+      first = await measure({ actor: A, phones: [A], file: vid('cold-first'), targets: { A: roiOf(A, 'New room', 20000) },
+        action: hostAction(() => { am = A.launch(); }), appWindowMs: () => am?.totalTime, allowIntermediate: 0, settleMs: 800 });
+    } finally { if (traced) await traced(); }
     timing('cold start, first visit -> start page usable', B.native.coldStartUsableMs, first.A, { amStartTotalTime: am.totalTime, use: 'settled' });
     await audit(A, 'start page (first visit)');
     A.forceStop(); await sleep(500);
