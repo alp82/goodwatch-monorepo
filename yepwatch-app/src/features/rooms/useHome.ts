@@ -108,6 +108,7 @@ function useGuestHome(enabled: boolean) {
 
 /** Archive/Restore presses on their way to the server (module-wide: one account, one start page at a time). */
 let archivesInFlight = 0;
+const archiving = new Map<string, { inFlight: number; presses: number; failed: boolean; before: Promise<() => void>; taken?: { press: number; archivedAt: number | null } }>();
 
 /** Signed-in lists come entirely from the account; guest navigation remains local. */
 export function useHome() {
@@ -161,10 +162,28 @@ export function useHome() {
     // The card leaves (or comes back) with the press, not a read later. The account is read again only once no
     // other Archive/Restore is on its way (an earlier read would put that room back for a moment).
     archivesInFlight += 1;
-    const settling = settleAccountRoom(id, { archivedAt: archived ? Date.now() : null });
+    const archivedAt = archived ? Date.now() : null;
+    const settling = settleAccountRoom(id, { archivedAt });
+    // Presses on one room overlap (Archive, then Undo): once the last answers, a refused one leaves the room as
+    // the newest press the server took, or as it was before the first.
+    const room = archiving.get(id) ?? { inFlight: 0, presses: 0, failed: false, before: settling.then((s) => s.undo) };
+    archiving.set(id, room);
+    room.inFlight += 1;
+    const press = ++room.presses;
     void continuousApi.archive(id, archived)
-      .catch(async () => { setMutationFailed(true); (await settling).undo(); })
-      .finally(() => { archivesInFlight -= 1; if (!archivesInFlight) void queryClient.invalidateQueries({ queryKey: ['account-home'] }); });
+      .then(() => { if (!room.taken || press > room.taken.press) room.taken = { press, archivedAt }; }, () => { room.failed = true; setMutationFailed(true); })
+      .finally(async () => {
+        room.inFlight -= 1;
+        if (!room.inFlight) {
+          archiving.delete(id);
+          if (room.failed) {
+            if (room.taken) await settleAccountRoom(id, { archivedAt: room.taken.archivedAt });
+            else (await room.before)();
+          }
+        }
+        archivesInFlight -= 1;
+        if (!archivesInFlight) void queryClient.invalidateQueries({ queryKey: ['account-home'] });
+      });
   };
   const unavailable = cloud.isError || lifecycle.isError || mutationFailed ? [{ kind: 'unavailable' as const, roomId: 'account', nickname: 'Your rooms' }] : [];
   return {
