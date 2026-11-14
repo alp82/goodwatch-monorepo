@@ -10,7 +10,7 @@
 //
 // At teardown every person's page recording goes through the gates (lib/gates.ts); any failure fails the test.
 // Timing samples are attached for the reporter, which applies the p95 budgets across the run.
-import { test as base, expect, type Browser, type BrowserContext, type Locator, type Page, type TestInfo, type CDPSession } from '@playwright/test';
+import { test as base, expect, type Browser, type BrowserContext, type BrowserType, type Locator, type Page, type TestInfo, type CDPSession } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -371,7 +371,11 @@ export class Room {
   private points = 0;
   restartLog: { at: number; back: number; service: string }[] = [];
   private offlineWindows: [number, number][] = [];
-  constructor(readonly browser: Browser, readonly info: TestInfo, readonly fault: Fault) {}
+  /** One browser process per person (not one per worker): each phone gets its own renderer and GPU process, as
+   * real phones each have their own GPU. Contexts in one shared Chromium share one software-rendered GPU process,
+   * so several phones animating at once (every round ends in a match) slowed each other's frames. */
+  private readonly browsers: Browser[] = [];
+  constructor(readonly browserType: BrowserType, readonly info: TestInfo, readonly fault: Fault) {}
 
   faultAllowsNetworkErrors() {
     return this.fault === 'restart' || this.fault === 'slow' || this.fault === 'nows' || this.fault === 'hidden';
@@ -382,14 +386,18 @@ export class Room {
    * or recorded. */
   async person(name: string, opts: { device?: Device; member?: string; locale?: string; context?: BrowserContext; trace?: boolean } = {}) {
     const device = opts.device ?? 'phone';
-    const context = opts.context ?? await this.browser.newContext({
-      ...DEVICES[device],
-      locale: opts.locale ?? 'de-DE',
-      timezoneId: 'Europe/Berlin',
-      // Never recorded when untraced: the video would show the sign-in pages and account of real credentials.
-      recordVideo: process.env.E2E_VIDEO === '1' && opts.trace !== false ? { dir: this.info.outputPath(`video-${name}`), size: DEVICES[device].viewport } : undefined,
-    });
-    if (!opts.context) {
+    let context = opts.context;
+    if (!context) {
+      // No arguments: the same launch options the worker's shared `browser` fixture would get.
+      const browser = await this.browserType.launch();
+      this.browsers.push(browser);
+      context = await browser.newContext({
+        ...DEVICES[device],
+        locale: opts.locale ?? 'de-DE',
+        timezoneId: 'Europe/Berlin',
+        // Never recorded when untraced: the video would show the sign-in pages and account of real credentials.
+        recordVideo: process.env.E2E_VIDEO === '1' && opts.trace !== false ? { dir: this.info.outputPath(`video-${name}`), size: DEVICES[device].viewport } : undefined,
+      });
       await context.addInitScript({ path: RECORDER });
       if (process.env.E2E_TRACE !== '0' && opts.trace !== false) await context.tracing.start({ screenshots: true, snapshots: true, title: `${this.info.title} — ${name}` }).catch(() => {});
       // Signed in to (local) GoodWatch: its authorize step comes straight back, as for a returning member.
@@ -524,6 +532,10 @@ export class Room {
   private reloaded = false;
   readonly pending: Promise<unknown>[] = [];
 
+  async closeBrowsers() {
+    await Promise.allSettled(this.browsers.splice(0).map((b) => b.close({ reason: 'Test ended.' })));
+  }
+
   async finish() {
     await Promise.allSettled(this.pending);
     const failures: GateFailure[] = [];
@@ -571,6 +583,7 @@ export class Room {
       }
       await p.context.close().catch(() => {});
     }
+    await this.closeBrowsers();
     if (unique.length) {
       const lines = unique.slice(0, 12).map((f) => `  [${f.gate}] ${f.person}: ${f.detail}${f.measured !== undefined ? ` (measured ${f.measured}, budget ${f.budget})` : ''}`);
       throw new Error(`${unique.length} gate failure(s):\n${lines.join('\n')}${unique.length > 12 ? '\n  …' : ''}`);
@@ -580,10 +593,14 @@ export class Room {
 
 export const test = base.extend<{ room: Room }, { fault: Fault }>({
   fault: ['none', { option: true, scope: 'worker' }],
-  room: async ({ browser, fault }, use, info) => {
-    const room = new Room(browser, info, fault);
-    await use(room);
-    await room.finish();
+  room: async ({ playwright, browserName, fault }, use, info) => {
+    const room = new Room(playwright[browserName], info, fault);
+    try {
+      await use(room);
+      await room.finish();
+    } finally {
+      await room.closeBrowsers();
+    }
   },
 });
 export { expect };

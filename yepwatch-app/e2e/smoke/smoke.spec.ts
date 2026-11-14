@@ -125,6 +125,9 @@ async function tidy(p: Person, how: 'leave' | 'archive') {
     const visible = (name: string | RegExp) => page.getByRole('button', { name, exact: typeof name === 'string' }).filter({ visible: true }).first();
     if (how === 'archive') {
       // From the start page card: works whatever screen the room was left on (match, proposal, sheet).
+      // Harvested first: the navigation drops the room page's recording, and with it the host's whole journey
+      // (create, Start, every Yep) from the gates.
+      await p.harvest();
       await page.goto(new URL('/', page.url()).href);
       await visible(`Archive ${MARK}`).click({ timeout: 10000 });
       await page.getByRole('button', { name: MARK, exact: true }).filter({ visible: true }).waitFor({ state: 'detached', timeout: 8000 });

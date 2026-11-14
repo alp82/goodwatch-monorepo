@@ -72,8 +72,10 @@ of a restarting production container.
 
 ## Harness (`lib/`)
 
-- `harness.ts`: `room.person(name, { device, member })` gives an independent browser context (phone
-  390×844 or desktop 1440×900); `person.tap(locator, { expect, moment, observers })` presses a control and
+- `harness.ts`: `room.person(name, { device, member })` gives an independent browser (its own Chromium process, so its own
+  renderer and GPU process, as each real phone has its own GPU; one shared Chromium made phones that animate at once
+  slow each other's frames) with one context (phone 390×844 or
+  desktop 1440×900); `person.tap(locator, { expect, moment, observers })` presses a control and
   measures, page-side, from the input event to the first frame showing the expected state (on this and
   other phones). `room.point(label)` is the fault hook journeys call between steps.
 - `recorder.page.js`: injected before the app; records screen states per frame (test-id markers),
