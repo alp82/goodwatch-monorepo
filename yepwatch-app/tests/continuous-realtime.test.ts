@@ -272,6 +272,10 @@ test('an announced restart survives the app going to the background and back (pa
   h.client.start();
   await tick();
   assert.equal(h.statuses.at(-1), 'restarting', 'back in front: still the announced restart, not connecting');
+  // The announcement runs out PLANNED_RESTART_QUIET_MS after the goodbye, background or not: the page hears it then.
+  mock.timers.tick(PLANNED_RESTART_QUIET_MS);
+  h.run(PLANNED_RESTART_QUIET_MS);
+  assert.equal(h.statuses.at(-1), 'reconnecting');
   // A real stop (leaving the room) ends it.
   h.client.stop();
   h.client.start();

@@ -33,8 +33,10 @@ test('an outage is planned only when it starts as an announced restart; offline 
   assert.equal(nextOutage(null, live, 0), null);
   const planned = nextOutage(null, { ...live, connection: 'restarting' }, 100)!;
   assert.deepEqual(planned, { since: 100, planned: true, offline: false });
-  // The announcement running out mid-outage (now `reconnecting`) keeps the outage and its start.
-  assert.equal(nextOutage(planned, { ...live, connection: 'reconnecting' }, 5000), planned);
+  // The announcement running out mid-outage (now `reconnecting`) keeps the outage and its start, with the short quiet
+  // period from then on (whatever happened meanwhile, e.g. a trip to the background that started a new outage).
+  const expired = nextOutage(planned, { ...live, connection: 'reconnecting' }, 12100)!;
+  assert.deepEqual(expired, { since: 100, planned: false, offline: false });
   // Offline at 4 s, online again at 5 s while the server is still away: still the short period, never hidden again.
   const offline = nextOutage(planned, { ...live, connection: 'restarting', offline: true }, 4000)!;
   assert.equal(offline.offline, true);

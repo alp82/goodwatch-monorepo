@@ -64,6 +64,9 @@ export function nextOutage(old: Outage | null, input: ConnectionInput, now: numb
   if (input.offline && !outage.offline) outage = { ...outage, offline: true };
   if (!outage.planned && !outage.offline && input.connection === 'restarting' && now - outage.since < QUIET_OUTAGE_MS)
     outage = { ...outage, planned: true };
+  // The channel says the announcement ran out (realtime.ts: PLANNED_RESTART_QUIET_MS after the goodbye, whatever the
+  // page did meanwhile, a trip to the background included): the short quiet period applies from the outage's start.
+  if (outage.planned && input.connection === 'reconnecting') outage = { ...outage, planned: false };
   return outage;
 }
 

@@ -111,8 +111,17 @@ export class ContinuousRealtime {
   private outage(): Connection {
     return this.plannedUntil > Date.now() ? 'restarting' : 'reconnecting';
   }
+  private plannedTimer?: Timer;
   private planned() {
-    if (!this.plannedUntil) this.plannedUntil = Date.now() + PLANNED_RESTART_QUIET_MS;
+    if (this.plannedUntil) return;
+    this.plannedUntil = Date.now() + PLANNED_RESTART_QUIET_MS;
+    // When the announcement runs out with the channel still down, the page hears it at once (`reconnecting`), so its
+    // line shows then, not only at the next attempt.
+    this.clear(this.plannedTimer);
+    this.plannedTimer = this.later(() => {
+      this.plannedTimer = undefined;
+      if (this.active && this.down && !this.live && !this.polling) this.o.status(this.outage());
+    }, PLANNED_RESTART_QUIET_MS);
   }
   private later(fn: () => void, ms: number) {
     return (this.o.later ?? setTimeout)(fn, ms);
@@ -165,6 +174,8 @@ export class ContinuousRealtime {
     if (!keepOutage) {
       this.plannedUntil = 0;
       this.down = false;
+      this.clear(this.plannedTimer);
+      this.plannedTimer = undefined;
     }
     ++this.epoch;
     this.stopPolling();
