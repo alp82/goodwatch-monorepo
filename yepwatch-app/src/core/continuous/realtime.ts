@@ -157,12 +157,15 @@ export class ContinuousRealtime {
     const epoch = ++this.epoch;
     void this.connect(epoch);
   }
-  stop() {
+  /** `keepOutage`: a pause, not the end: an outage (and its announcement) still going on carries on after start(). */
+  stop(keepOutage = false) {
     this.active = false;
     this.dirty = false;
     this.spare = undefined;
-    this.plannedUntil = 0;
-    this.down = false;
+    if (!keepOutage) {
+      this.plannedUntil = 0;
+      this.down = false;
+    }
     ++this.epoch;
     this.stopPolling();
     this.detach();
@@ -198,7 +201,7 @@ export class ContinuousRealtime {
   }
   pause() {
     this.sendActivity('away');
-    this.stop();
+    this.stop(true);
     this.o.status('background');
   }
   setView(view: ActivityView) {

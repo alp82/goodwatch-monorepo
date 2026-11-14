@@ -261,6 +261,24 @@ test('a resumed attempt during an outage (focus, back online) keeps reporting th
   assert.equal(h.statuses.at(-1), 'reconnecting');
   h.client.stop();
 });
+test('an announced restart survives the app going to the background and back (pause, start)', async () => {
+  const h = harness({ privateRead: async () => { throw new RoomFailure('outcome_unknown', 'no answer'); } });
+  h.client.start();
+  await tick();
+  liveSocket(h, 0).frame({ type: 'restarting', retryAfterMs: 500 });
+  h.client.pause();
+  assert.equal(h.statuses.at(-1), 'background');
+  mock.timers.tick(100);
+  h.client.start();
+  await tick();
+  assert.equal(h.statuses.at(-1), 'restarting', 'back in front: still the announced restart, not connecting');
+  // A real stop (leaving the room) ends it.
+  h.client.stop();
+  h.client.start();
+  await tick();
+  assert.equal(h.statuses.at(-1), 'connecting');
+  h.client.stop();
+});
 test('close 1012 from a live socket is an announced restart too; from a socket that never went live it is not', async () => {
   const h = harness();
   h.client.start();
