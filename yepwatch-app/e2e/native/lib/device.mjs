@@ -30,8 +30,12 @@ export function ensureAvd() {
   const dir = path.join(HOME, 'avd', `${AVD}.avd`);
   if (fs.existsSync(dir)) return;
   log('creating AVD', AVD);
+  // avdmanager ignores ANDROID_AVD_HOME when that directory doesn't exist yet and silently writes the AVD to
+  // ~/.android/avd instead (exit 0), which is what a fresh CI runner without the AVD cache hit.
+  mkdirp(path.dirname(dir));
   run(tools.avdmanager, ['create', 'avd', '-n', AVD, '-k', IMAGE, '-d', 'pixel_8', '--force'], { input: 'no\n', stdio: ['pipe', 'pipe', 'pipe'] });
   const cfg = path.join(dir, 'config.ini');
+  if (!fs.existsSync(cfg)) throw new Error(`avdmanager reported success but ${cfg} is missing`);
   const kv = { 'hw.keyboard': 'yes', 'hw.audioInput': 'no', 'hw.audioOutput': 'no', 'hw.camera.back': 'none', 'hw.camera.front': 'none',
     'hw.ramSize': '3072', 'disk.dataPartition.size': '4G', 'hw.cpu.ncore': '4', 'hw.gps': 'no' };
   let text = fs.readFileSync(cfg, 'utf8');
