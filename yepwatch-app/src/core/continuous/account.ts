@@ -10,6 +10,7 @@ import type { AccountHome } from '@goodwatch/yepwatch-contracts/proposal';
 import { accountFlow, authEpoch, type DeviceAccount } from './account-flow';
 import { createDeviceAccount, guestAccount, settleLogoutRooms, withoutAccount } from './device-account';
 import type { CachedRoom } from './state';
+import { continuousKey } from './keys';
 import { beginAccount, clearSession, forgetMemberName, readMemberName, readSession, rememberMemberName, saveSession } from './member';
 import { forgetMemberHint, hasMemberHint, rememberMemberHint } from './web-member-return';
 
@@ -49,21 +50,51 @@ authEpoch.subscribe(() => {
   for (const key of ['proposal-room', 'home-room']) void queryClient.invalidateQueries({ queryKey: [key] });
 });
 
+type AccountRoomChange = { leftLabel: string } | { archivedAt: number | null };
+const homeKey = ['account-home'] as const;
+type AccountRoom = AccountHome['rooms'][number];
+
+function changed(r: AccountRoom, change: AccountRoomChange): AccountRoom {
+  return 'leftLabel' in change ? { ...r, leftLabel: change.leftLabel, snapshot: { ...r.snapshot, own: { ...r.snapshot.own, left: true } } }
+    : { ...r, archivedAt: change.archivedAt };
+}
+
 /**
  * A change this device just made to one of the account's rooms (left, archived, restored), written into the
  * account's cached rooms at once: the start page draws its final layout from its first frame, and the read that
  * follows only confirms it (a stale card, then History in its place, moved the page under the person).
- * An account read already in flight is cancelled first, so its older answer can't put the room back. Call it
- * once the server has the change, or right before asking for it (then read again once it has answered).
+ * An account read already in flight is cancelled first, so its older answer can't put the room back. A cached
+ * read from before the room was made or joined gets the room from its own cached snapshot. `undo` puts the
+ * room back as it was.
  */
-export async function settleAccountRoom(roomId: string, change: { leftLabel: string } | { archivedAt: number | null }) {
-  await queryClient.cancelQueries({ queryKey: ['account-home'] });
-  queryClient.setQueriesData<AccountHome>({ queryKey: ['account-home'] }, (home) => home && {
-    ...home,
-    rooms: home.rooms.map((r) => (r.snapshot.shared.roomId !== roomId ? r
-      : 'leftLabel' in change ? { ...r, leftLabel: change.leftLabel, snapshot: { ...r.snapshot, own: { ...r.snapshot.own, left: true } } }
-      : { ...r, archivedAt: change.archivedAt })),
+export async function settleAccountRoom(roomId: string, change: AccountRoomChange) {
+  await queryClient.cancelQueries({ queryKey: homeKey });
+  const before = queryClient.getQueriesData<AccountHome>({ queryKey: homeKey });
+  const own = queryClient.getQueryData<CachedRoom>(continuousKey(roomId));
+  const fresh: AccountRoom | null = own ? (({ ownRevision: _, ...snapshot }) => ({ snapshot, joinedAt: Date.now(), archivedAt: null, leftLabel: null }))(own) : null;
+  queryClient.setQueriesData<AccountHome>({ queryKey: homeKey }, (home) => {
+    if (!home) return home;
+    if (home.rooms.some((r) => r.snapshot.shared.roomId === roomId))
+      return { ...home, rooms: home.rooms.map((r) => (r.snapshot.shared.roomId === roomId ? changed(r, change) : r)) };
+    return fresh ? { ...home, rooms: [...home.rooms, changed(fresh, change)] } : home;
   });
+  // Undo puts back this room only: another change made meanwhile stays.
+  const undo = () => {
+    for (const [key, home] of before) {
+      if (!home) continue;
+      const was = home.rooms.find((r) => r.snapshot.shared.roomId === roomId);
+      queryClient.setQueryData<AccountHome>(key, (now) => now && { ...now, rooms: was
+        ? now.rooms.map((r) => (r.snapshot.shared.roomId === roomId ? was : r))
+        : now.rooms.filter((r) => r.snapshot.shared.roomId !== roomId) });
+    }
+  };
+  return { undo };
+}
+
+/** The server has the change (Leave, Archive in the room): settle the cache before the start page shows, then read it. */
+export async function accountRoomChanged(roomId: string, change: AccountRoomChange) {
+  await settleAccountRoom(roomId, change);
+  void queryClient.invalidateQueries({ queryKey: homeKey });
 }
 
 export const loadAccount = device.load;

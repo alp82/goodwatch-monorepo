@@ -8,9 +8,8 @@ import { Image, View } from 'react-native';
 import { Redirect, useLocalSearchParams } from 'expo-router';
 import { deviceCountryHint } from '../../core/lobby';
 import { guestOnly } from '../../core/config';
-import { settleAccountRoom, useAccount } from '../../core/continuous/account';
+import { accountRoomChanged, useAccount } from '../../core/continuous/account';
 import { continuousApi } from '../../core/continuous/api';
-import { queryClient } from '../../core/providers';
 import { roomRegistry } from '../../core/continuous/room-registry';
 import { Feedback } from '../beta/Feedback';
 import { GoodWatchButton, RECONNECTED_DETAIL, RECONNECT_GOODWATCH } from '../home/Landing';
@@ -67,13 +66,12 @@ function RoomMenuSheet() {
     void cmd.leave().then(async (ok) => {
       if (!ok) { setLeaving(null); return; }
       if (!account.member) await roomRegistry.markLeft(id, view.label).catch(() => undefined);
-      await settleAccountRoom(id, { leftLabel: view.label });
-      void queryClient.invalidateQueries({ queryKey: ['account-home'] });
+      await accountRoomChanged(id, { leftLabel: view.label });
       exitRoom();
     });
   };
   const archive = () => {
-    void (account.member ? continuousApi.archive(id, true).then(async () => { await settleAccountRoom(id, { archivedAt: Date.now() }); void queryClient.invalidateQueries({ queryKey: ['account-home'] }); }) : roomRegistry.archive(id))
+    void (account.member ? continuousApi.archive(id, true).then(() => accountRoomChanged(id, { archivedAt: Date.now() })) : roomRegistry.archive(id))
       .then(exitRoom).catch(() => setNotice('Couldn’t archive this room. Try again.'));
   };
   const on = servicesIn(all, view.enabledServiceIds);

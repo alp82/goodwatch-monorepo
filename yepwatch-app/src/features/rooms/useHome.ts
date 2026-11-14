@@ -106,6 +106,9 @@ function useGuestHome(enabled: boolean) {
   };
 }
 
+/** Archive/Restore presses on their way to the server (module-wide: one account, one start page at a time). */
+let archivesInFlight = 0;
+
 /** Signed-in lists come entirely from the account; guest navigation remains local. */
 export function useHome() {
   const account = useAccount();
@@ -155,10 +158,13 @@ export function useHome() {
   });
   const reload = () => { setMutationFailed(false); void cloud.refetch(); };
   const archive = (id: string, archived: boolean) => {
-    // The card leaves (or comes back) with the press, not a read later.
-    void settleAccountRoom(id, { archivedAt: archived ? Date.now() : null });
-    void continuousApi.archive(id, archived).then(() => queryClient.invalidateQueries({ queryKey: ['account-home'] }))
-      .catch(() => { setMutationFailed(true); void queryClient.invalidateQueries({ queryKey: ['account-home'] }); });
+    // The card leaves (or comes back) with the press, not a read later. The account is read again only once no
+    // other Archive/Restore is on its way (an earlier read would put that room back for a moment).
+    archivesInFlight += 1;
+    const settling = settleAccountRoom(id, { archivedAt: archived ? Date.now() : null });
+    void continuousApi.archive(id, archived)
+      .catch(async () => { setMutationFailed(true); (await settling).undo(); })
+      .finally(() => { archivesInFlight -= 1; if (!archivesInFlight) void queryClient.invalidateQueries({ queryKey: ['account-home'] }); });
   };
   const unavailable = cloud.isError || lifecycle.isError || mutationFailed ? [{ kind: 'unavailable' as const, roomId: 'account', nickname: 'Your rooms' }] : [];
   return {

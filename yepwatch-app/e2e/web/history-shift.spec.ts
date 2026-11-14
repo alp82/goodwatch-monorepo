@@ -29,6 +29,25 @@ async function shifts(p: Person) {
   return p.recordings.at(-1)?.shifts ?? [];
 }
 
+/**
+ * Every DOM change from here on (MutationObserver callbacks run before the frame is painted): whether the shown
+ * start page holds the room's card and History. The recorder's CLS ignores shifts within 500 ms of a press; this doesn't.
+ */
+const watchHome = (p: Person, label: string) => p.page.evaluate((label) => {
+  const w = window as unknown as { __home?: { card: boolean; history: boolean }[] };
+  w.__home = [];
+  new MutationObserver(() => {
+    // The start page stays mounted, hidden, under the room: only a shown one counts.
+    const home = [...document.querySelectorAll<HTMLElement>('[data-testid="home-rooms"]')].find((e) => e.checkVisibility());
+    if (!home) return;
+    const names = [...home.querySelectorAll('[role="button"]')].map((b) => (b.getAttribute('aria-label') ?? b.textContent ?? '').trim().toLowerCase());
+    const state = { card: names.includes(label), history: names.includes('history') };
+    const last = w.__home!.at(-1);
+    if (!last || last.card !== state.card || last.history !== state.history) w.__home!.push(state);
+  }).observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true });
+}, label.toLowerCase());
+const homeStates = (p: Person) => p.page.evaluate(() => (window as unknown as { __home: { card: boolean; history: boolean }[] }).__home);
+
 test.describe('start page History arrives late', () => {
   test('member leaves a room: the start page shows History from the first frame', async ({ room }) => {
     const host = await readyHost(room, 'Alp', 'late history heist');
@@ -49,14 +68,19 @@ test.describe('start page History arrives late', () => {
     await mia.tap(mia.button(/, switch room$/));
     await mia.tap(mia.button(/, Room page$/), { expect: { visible: ['room-sheet'] } });
     await mia.tap(mia.button('Leave room'));
+    await watchHome(mia, 'late history heist');
     await mia.tap(mia.button('Leave'), { expect: { visible: ['home-rooms'] }, timeout: 15000 });
     // History is there with the page, not after the late read; the room's card never shows again.
     expect(await card.count(), 'the left room\'s card is not on the start page').toBe(0);
-    expect(await mia.button('History').count(), 'History is on the start page with its first frame').toBe(1);
+    expect(await mia.button('History').count(), 'History is on the start page').toBe(1);
     await mia.page.waitForResponse(HOME, { timeout: 20000 });
     await mia.page.waitForTimeout(800);
     await expect(card).toHaveCount(0);
     await expect(mia.button('History')).toBeVisible();
+    const seen = await homeStates(mia);
+    expect(seen.length, 'the start page was observed').toBeGreaterThan(0);
+    expect(seen[0], 'the first start page render already has History and no card').toEqual({ card: false, history: true });
+    expect(seen.filter((x) => x.card || !x.history), 'no start page render with the card or without History').toEqual([]);
     expect(await shifts(mia), 'no layout shift on the start page after Leave').toEqual([]);
   });
 
