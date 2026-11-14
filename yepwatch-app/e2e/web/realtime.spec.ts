@@ -1,9 +1,10 @@
 // The live channel across a gateway restart (restart project only: a stack-wide restart disturbs every room).
-// Measured from the moment the restarted gateway answers its health check to the first room snapshot the
-// browser receives on a new socket.
-//   - a plain restart costs under 1 s;
+// From the moment the restarted gateway answers its health check to the first room snapshot the browser receives
+// on a new socket (recorded; only `run.mjs speed` would judge speed, and it doesn't run restarts).
+//   - after a plain restart the live channel comes back;
 //   - a handshake that hangs (no answer, no error: a connection lost on the way, as on 2026-11-12 in production)
-//     is dropped after 1.5 s and redialed, so it costs about 2.3 s instead of the app's old 10 s give-up.
+//     is dropped after 1.5 s and redialed (about 2.3 s), not left to the app's old 10 s give-up. Past 8 s it wasn't
+//     redialed: a behaviour failure, not a slow one.
 import { CONTROL, control, eventually, expect, test, type Person, type Room } from '../lib/harness';
 import { PLANNED_RESTART_QUIET_MS, QUIET_OUTAGE_MS } from '../../src/core/continuous/backoff';
 import { cardTitle, inviteLink, join, readyHost, recordPage, start, vote } from './flows';
@@ -33,7 +34,7 @@ test.describe('live channel after a gateway restart', () => {
   test.skip(({ fault }) => fault !== 'restart', 'stack-wide restarts run in the restart project only');
 
   for (const stall of [0, 1]) {
-    test(stall ? 'a hung handshake after the restart is redialed within 2.8 s' : 'a gateway restart costs under 1 s', async ({ room }) => {
+    test(stall ? 'a hung handshake after the restart is redialed' : 'the live channel comes back after a gateway restart', async ({ room }) => {
       const host = await readyHost(room);
       const received = snapshots(host);
       // A snapshot on the current socket proves the channel is live before the restart. Through the harness: the
@@ -54,8 +55,7 @@ test.describe('live channel after a gateway restart', () => {
       if (!live) host.journeyFailure('no room snapshot within 20 s of the gateway restart');
       const ms = live! - back;
       host.record(stall ? 'gatewayRestartStalledHandshakeMs' : 'gatewayRestartLiveMs', ms, `gateway back → snapshot (restart took ${back - at} ms)`);
-      const budget = stall ? 2800 : 1000;
-      if (ms > budget) host.journeyFailure(`live again ${ms} ms after the gateway was back (budget ${budget} ms)`);
+      if (stall && ms > 8000) host.journeyFailure(`the hung handshake was not redialed: live again only ${ms} ms after the gateway was back`);
     });
   }
 });

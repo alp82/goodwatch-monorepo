@@ -296,7 +296,7 @@ export async function mixedJourneyRoom({ phone: A, stack, audit, notStuck, journ
     }
     if (!yeps.has(await web.card())) throw new Error(`decks never overlapped: the phone said Yep to ${[...yeps].join(', ')}; browser on "${await web.card()}"`);
     await sleep(600);
-    await step('Yep in the browser -> match shows on Android', () => web.button('Yep').click(), /^\d+ match(es)?$/, 15000);
+    await step(() => web.button('Yep').click(), /^\d+ match(es)?$/, 15000);
     await audit(A, 'voting with a match');
     await notStuck(A, 'voting after the match');
   } finally {
