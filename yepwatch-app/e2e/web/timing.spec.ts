@@ -1,6 +1,6 @@
 // Key timing moments, repeated E2E_TIMING_RUNS times (each run its own test, so runs spread over workers).
 // The reporter applies the p95 budgets (budgets.mjs) across all samples of a moment.
-import { test, type Person } from '../lib/harness';
+import { eventually, test, type Person } from '../lib/harness';
 import { cardTitle, createRoom, inviteLink, join, readyHost, start, vote } from './flows';
 
 const runs = Number(process.env.E2E_TIMING_RUNS ?? 3);
@@ -34,3 +34,16 @@ for (let run = 1; run <= runs; run++) {
     void createRoom; void join;
   });
 }
+
+// Start a beat after a setup change (a friend's service joins the room's): the room's deck is built again right
+// then, and Start must not wait visibly for it. Same moments, same budgets.
+test('start right after a setup change', async ({ room }) => {
+  const host = await readyHost(room);
+  const mia = await room.person('Mia');
+  const services = () => new Set(host.latest?.screens.flatMap((s) => s.serviceIds) ?? []).size;
+  const before = services();
+  await join(mia, await inviteLink(host), 'Mia'); // Disney+, which the room doesn't have
+  await eventually(services, (n) => n > before, 'the host\'s room has Mia\'s service', host);
+  await host.page.waitForTimeout(300); // the beat people take (see above)
+  await start(host, [mia]); // startToFirstCardMs, startToPeerVotingMs
+});

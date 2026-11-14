@@ -23,6 +23,12 @@ import { cardTitle, inviteLink, pickServices, readyHost } from '../web/flows';
 const MEMBER_EMAIL = process.env.E2E_SMOKE_MEMBER_EMAIL ?? '';
 const MEMBER_PASSWORD = process.env.E2E_SMOKE_MEMBER_PASSWORD ?? '';
 const GUEST_ONLY = process.env.E2E_SMOKE_GUEST_ONLY === '1';
+/**
+ * E2E_SMOKE_CHANGE_BEFORE_START=1: right before Start, the friend adds a service the room doesn't have yet (a setup
+ * change: the room's deck is built again), and the host presses Start the same beat after the room has it. Same
+ * moments, same budgets: Start must not wait visibly for that build.
+ */
+const CHANGE_BEFORE_START = process.env.E2E_SMOKE_CHANGE_BEFORE_START === '1';
 /** Voting rounds: one vote → peer sample each (run.mjs takes a p95 from one run at 20 samples). */
 const VOTE_ROUNDS = 20;
 const local = /^http:\/\/(127\.0\.0\.1|localhost)[:/]/.test(ORIGIN ?? '');
@@ -209,6 +215,12 @@ async function journey(room: Room, people: [Person, 'leave' | 'archive'][]) {
   }
   const expected = member ? 3 : 2;
   await eventually(() => host.latest?.participants.length, (n) => n === expected, `host sees ${expected} people`, host);
+  if (CHANGE_BEFORE_START) {
+    const services = () => new Set(host.latest?.screens.flatMap((s) => s.serviceIds) ?? []).size;
+    const before = services();
+    await pickServices(friend, ['Disney+'], () => friend.tap(friend.button('Your services'), { expect: { visible: ['services-sheet'] } }));
+    await eventually(services, (n) => n > before, 'the host\'s room has the friend\'s new service', host);
+  }
   // The host presses Start a beat after the last person is in the room, as people do (web journeys do the same):
   // the member's room screen lasts exactly until the round arrives, and since Start stopped reading seen titles
   // from GoodWatch (~250 ms faster), a Start right on the member's arrival showed it for less than a flash.
