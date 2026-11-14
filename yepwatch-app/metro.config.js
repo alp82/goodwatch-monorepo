@@ -8,7 +8,8 @@ const config = getDefaultConfig(__dirname);
 const ZOD_LOCALES = /[\\/]zod[\\/]v4[\\/]locales[\\/]index\.c?js$/;
 const englishOnly = path.join(__dirname, 'metro/zod-locales.js');
 // Web only: react-native-web's Animated writes transform/opacity frames to the element instead of re-rendering
-// the component through React on every frame: metro/animated-props.web.js.
+// the component through React on every frame, and hands timing animations' frames to the Web Animations API:
+// metro/animated-props.web.js, metro/compositor-plan.web.js.
 const ANIMATED_PROPS = /[\\/]react-native-web[\\/]dist[\\/]vendor[\\/]react-native[\\/]Animated[\\/]useAnimatedProps\.js$/;
 const directAnimatedProps = path.join(__dirname, 'metro/animated-props.web.js');
 const upstream = config.resolver.resolveRequest;

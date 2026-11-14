@@ -10,6 +10,9 @@
 // element: its next render computes the current values again and writes whatever differs from what it
 // last wrote. Anything else animated (a color, a size, a non-style prop) keeps the upstream re-render.
 //
+// While such an element follows a timing animation, its frames are played by the browser instead
+// (metro/compositor-plan.web.js): no inline write, so no style recalculation, per frame.
+//
 // Otherwise this is upstream react-native-web 0.21 useAnimatedProps.js unchanged.
 
 'use strict';
@@ -25,6 +28,7 @@ import StyleSheet from 'react-native-web/dist/exports/StyleSheet';
 import setValueForStyles from 'react-native-web/dist/modules/setValueForStyles';
 import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 import useLayoutEffect from 'react-native-web/dist/modules/useLayoutEffect';
+import { Plan, styleLeaves } from './compositor-plan.web';
 
 /** The props node's AnimatedStyle when transform/opacity are its only animated parts, else null. */
 function directStyle(node) {
@@ -46,6 +50,22 @@ function animates(value) {
   return false;
 }
 
+/** The current transform/opacity inline values of a direct style (what writeDirect writes). */
+function resolveDirect(style) {
+  const values = {};
+  const { transform, opacity } = style._style;
+  if (transform != null) values.transform = transform.__getValue();
+  if (opacity != null) values.opacity = opacity.__getValue();
+  const resolved = StyleSheet([values]);
+  return (resolved && resolved[1]) || {};
+}
+/** Per direct style: the values its transform/opacity read (null: not plannable). */
+const leavesCache = new WeakMap();
+function leavesFor(style) {
+  if (!leavesCache.has(style)) leavesCache.set(style, styleLeaves(style));
+  return leavesCache.get(style);
+}
+
 /** What was last written directly to each element, so a frame that changes nothing writes nothing. */
 const written = new WeakMap();
 const isElement = (instance) => instance != null && instance.nodeType === 1 && instance.style != null;
@@ -54,13 +74,7 @@ const isElement = (instance) => instance != null && instance.nodeType === 1 && i
 function writeDirect(instance, style) {
   if (!style || !isElement(instance)) return false;
   // Only these two: a static part resolved on its own (shadowOffset without its color) would write wrong CSS.
-  const values = {};
-  const { transform, opacity } = style._style;
-  if (transform != null) values.transform = transform.__getValue();
-  if (opacity != null) values.opacity = opacity.__getValue();
-  const resolved = StyleSheet([values]);
-  const inline = resolved && resolved[1];
-  if (!inline) return true;
+  const inline = resolveDirect(style);
   const last = written.get(instance);
   if (last && last.transform === inline.transform && last.opacity === inline.opacity) return true;
   written.set(instance, { transform: inline.transform, opacity: inline.opacity });
@@ -123,11 +137,27 @@ export default function useAnimatedProps(props) {
     node.setNativeView(instance);
     instanceRef.current = instance;
 
+    // A timing animation's frames played by the browser (compositor-plan.web.js), while they follow it.
+    let plan = null;
+    const leaves = direct && isElement(instance) && typeof instance.animate === 'function' ? leavesFor(direct) : null;
     // NOTE: This callback is only used by the JavaScript animation driver.
     onUpdateRef.current = () => {
+      if (plan) {
+        const now = Date.now();
+        // The browser shows this frame already, or a new window of the same course takes over (no write either).
+        if (plan.holds(now) || (plan.renewable(now) && plan.start())) {
+          dirtyRef.current = true;
+          return;
+        }
+        plan.end(false);
+      }
       // Transform/opacity on a DOM element: written straight to it, no render.
       if (writeDirect(instance, direct)) {
         dirtyRef.current = true;
+        if (leaves && leaves.length) {
+          plan ??= new Plan(instance, leaves, () => resolveDirect(direct), () => writeDirect(instance, direct));
+          plan.start();
+        }
         return;
       }
       // Schedule an update for this component to update `reducedProps`,
@@ -145,6 +175,8 @@ export default function useAnimatedProps(props) {
       }
     }
     return () => {
+      // The element may stay (new props): its browser animation never outlives this node.
+      if (plan) plan.release();
       onUpdateRef.current = null;
       for (var _i = 0, _events = events; _i < _events.length; _i++) {
         var _events$_i = _events[_i],
