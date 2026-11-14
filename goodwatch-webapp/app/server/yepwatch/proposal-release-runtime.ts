@@ -64,14 +64,13 @@ export interface ReleaseDependencies {
 }
 
 /**
- * The routes a phone's live channel needs to come back after a restart: a realtime ticket, the gateway's attach and
- * view renewals, and the room read (the resync and the HTTP fallback). They read only the rooms (Valkey), the ticket
- * store and the account mirrors, never the catalog, so they don't wait for the title snapshot.
+ * The routes a phone's live channel needs to come back after a restart: a realtime ticket and the gateway's attach and
+ * view renewals. They read the rooms (Valkey), the ticket store and the account mirrors and write no room, never the
+ * catalog, so they don't wait for the title snapshot. The room read is not one of them: in member mode it can repair
+ * a nickname (a room write), so it waits for the release like everything else.
  */
-const LIVE_GET = new RegExp(`^${API_PREFIX}/rooms/[A-Za-z0-9_-]{32}$`)
 const LIVE_TICKET = new RegExp(`^${API_PREFIX}/rooms/[A-Za-z0-9_-]{32}/realtime-ticket$`)
 export function liveRoute(method: string, path: string) {
-	if (method === "GET") return LIVE_GET.test(path)
 	if (method !== "POST") return false
 	return path === paths.realtimeAttach || path === paths.realtimeView || path === paths.realtimeViews || LIVE_TICKET.test(path)
 }
@@ -190,8 +189,11 @@ export function createReleaseRuntime(
 		})
 		return probing
 	}
-	/** Rooms, the release control and the ticket store answer: enough for the live channel's routes (liveRoute). */
-	const roomsAnswer = () => checks.rooms && checks.control && checks.realtime
+	/**
+	 * Rooms, the release control, the ticket store and the store's compatibility check (history) answer: enough for
+	 * the live channel's routes (liveRoute).
+	 */
+	const roomsAnswer = () => checks.rooms && checks.control && checks.realtime && checks.history
 	let warmed = !deps.warm
 	void deps.warm?.finally(() => {
 		warmed = true

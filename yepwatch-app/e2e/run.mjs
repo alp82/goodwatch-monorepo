@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Runs one E2E tier and writes artifacts/<tier>/report.json (machine-readable) + summary.md (human).
 //   node run.mjs gate     each journey once (clean), core journeys under no-WebSocket and rapid taps,
-//                         key timings x3, axe. Target < 4 min.
+//                         key timings x3, axe, then deploys and gateway restarts (realtime.spec). Target < 4 min.
 //   node run.mjs full     every journey under all six faults (restart serially), timings x10, 6-person room.
 //                         Target < 15 min.
 //   node run.mjs smoke [--origin https://yepwatch.com]   guests only, production budgets + fast-4G throttling.
@@ -164,6 +164,9 @@ function runTier() {
       phases.push(phase('gate', ['--project=none', '--project=nows', '--project=rapid', '--grep-invert', 'six people'], {
         E2E_WORKERS: process.env.E2E_WORKERS ?? '10', E2E_TIMING_RUNS: '3', E2E_FAULT_GREP: '@core',
       }));
+      // Deploys and gateway restarts (web/realtime.spec.ts, ~40 s): stack-wide, so alone and one at a time. Left out
+      // when extra Playwright arguments pick tests (a --grep would find none here).
+      if (!extra.length) phases.push(phase('restart', ['--project=restart', 'web/realtime.spec.ts'], { E2E_WORKERS: '1' }));
     } else if (tier === 'full') {
       // Each phase starts from an empty room store (~60 rooms each), so one phase's rooms can't affect the next.
       const groups = [['none', 'nows'], ['rapid', 'slow'], ['hidden', 'twodevice']];

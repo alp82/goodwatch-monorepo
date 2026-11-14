@@ -6,6 +6,7 @@
 //     is dropped after 1.5 s and redialed, so it costs about 2.3 s instead of the app's old 10 s give-up.
 import { CONTROL, control, eventually, expect, test, type Person, type Room } from '../lib/harness';
 import { PLANNED_RESTART_QUIET_MS, QUIET_OUTAGE_MS } from '../../src/core/continuous/backoff';
+import { budgetsFor } from '../budgets.mjs';
 import { cardTitle, inviteLink, join, readyHost, recordPage, start, vote } from './flows';
 
 /** Epoch ms of every room snapshot frame this person's page receives. */
@@ -91,13 +92,18 @@ async function deployLike(room: Room, people: Person[], downMs: number, signal: 
   return { at, back };
 }
 
-/** Each queued vote landed exactly once, and the match both made shows on both phones (rendered and in the room). */
-async function landedOnce(people: Person[], at: number) {
+/**
+ * Each queued vote landed exactly once and within restartQueuedLandMs of the stack's return (every one, not only the
+ * first), and the match both made shows on both phones (rendered and in the room).
+ */
+async function landedOnce(people: Person[], at: number, back: number) {
+  const budget = budgetsFor().restartQueuedLandMs;
   for (const p of people) {
     await eventually(() => shownMatches(p), (n) => n === 1, `${p.name} shows the one match the queued votes made`, p, 15000);
     expect(p.latest?.matches?.length, `${p.name}'s room has exactly one match`).toBe(1);
     const answered = p.commandLog.filter((c) => c.t >= at && /\/commands$/.test(c.path) && c.status < 300);
     expect(answered.length, `${p.name}'s one queued vote was answered once (no resend, no lost vote)`).toBe(1);
+    expect(answered[0].t - back, `${p.name}'s queued vote confirmed within ${budget} ms of the stack's return`).toBeLessThanOrEqual(budget);
   }
   const [a, b] = people;
   await eventually(() => [a.latest?.revision, b.latest?.revision], ([x, y]) => x === y, 'both phones on one revision', a, 5000);
@@ -118,8 +124,8 @@ test.describe('a deploy replaces the gateway and the API', () => {
     const people = await voting(room);
     const stops = await Promise.all(people.map((p) => recordPage(p, 'voting', /Couldn|Try again/i)));
     // The gate holds both phones to the announced restart's quiet period: any connection line in it fails the test.
-    const { at } = await deployLike(room, people, 6000, 'SIGTERM', PLANNED_RESTART_QUIET_MS);
-    await landedOnce(people, at);
+    const { at, back } = await deployLike(room, people, 6000, 'SIGTERM', PLANNED_RESTART_QUIET_MS);
+    await landedOnce(people, at, back);
     for (const [i, stop] of stops.entries()) {
       const samples = await stop();
       expect(samples.some((s) => s.note), `${people[i].name} never showed Reconnecting during an announced restart`).toBe(false);
@@ -130,8 +136,8 @@ test.describe('a deploy replaces the gateway and the API', () => {
   test('unannounced (processes killed): the same outage still says Reconnecting after 3 s, and recovers', async ({ room }) => {
     const people = await voting(room);
     const stop = await recordPage(people[0], 'voting', /Couldn|Try again/i);
-    const { at } = await deployLike(room, people, 6000, 'SIGKILL');
-    await landedOnce(people, at);
+    const { at, back } = await deployLike(room, people, 6000, 'SIGKILL');
+    await landedOnce(people, at, back);
     const samples = await stop();
     const first = samples.find((s) => s.note)?.t;
     expect(first, 'a real outage is never hidden: the line showed').toBeDefined();
@@ -141,8 +147,8 @@ test.describe('a deploy replaces the gateway and the API', () => {
   test('announced but not back within the quiet period: Reconnecting shows then', async ({ room }) => {
     const people = await voting(room);
     const stop = await recordPage(people[0], 'voting', /Couldn|Try again/i);
-    const { at } = await deployLike(room, people, PLANNED_RESTART_QUIET_MS + 1500, 'SIGTERM', PLANNED_RESTART_QUIET_MS);
-    await landedOnce(people, at);
+    const { at, back } = await deployLike(room, people, PLANNED_RESTART_QUIET_MS + 1500, 'SIGTERM', PLANNED_RESTART_QUIET_MS);
+    await landedOnce(people, at, back);
     const samples = await stop();
     const first = samples.find((s) => s.note)?.t;
     expect(first, 'an announced restart that runs long still shows the line').toBeDefined();

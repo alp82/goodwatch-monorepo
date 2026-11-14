@@ -71,8 +71,11 @@ services:
       target: api
     expose: ["3000"]
     mem_limit: 3g
-    # Starts with valkey, not after its health check (that wait cost 2.5 s of every deploy): the api reconnects on its
-    # own and answers nothing that needs the rooms before they answer.
+    # Started, not healthy: waiting for valkey's health check cost 2.5 s of every deploy (its 2 s interval); the api
+    # reconnects on its own and answers nothing that needs the rooms before they answer. The dependency keeps valkey
+    # created first, so Coolify (newest first) removes it last, after every process that writes to it.
+    depends_on:
+      valkey: {condition: service_started}
     tmpfs: ["/tmp:uid=1000,gid=1000,mode=0700,size=128m"]
     environment:
       SOURCE_COMMIT: ${SOURCE_COMMIT:-unknown}

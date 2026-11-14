@@ -244,9 +244,11 @@ test("A startup hold keeps early requests waiting; the live channel's routes go 
 		await runtime.probe()
 		assert.equal(runtime.initialized(), false, "no snapshot yet")
 		assert.equal(runtime.roomsAnswer(), true)
-		// A room read is a live route: answered by the handler itself (no such room) without waiting for the snapshot.
-		const read = await runtime.handler(new Request(`http://api/api/yepwatch/v1/proposal/rooms/${"a".repeat(32)}`))
-		assert.notEqual(read.status, 503)
+		// A realtime ticket is a live route: answered by the handler itself (no such room) without waiting for the snapshot.
+		const ticket = await runtime.handler(new Request(`http://api/api/yepwatch/v1/proposal/rooms/${"a".repeat(32)}/realtime-ticket`, {
+			method: "POST", headers: { "content-type": "application/json" }, body: "{}",
+		}))
+		assert.notEqual(ticket.status, 503)
 		// An admission waits for the snapshot and the warm reads, then gets the handler's own answer.
 		let settled = false
 		const admission = runtime.handler(new Request("http://api/api/yepwatch/v1/proposal/rooms", {
@@ -305,7 +307,7 @@ test("A room read before the release is initialized starts no idea takeover; aft
 	service.guard = undefined
 	let searches = 0
 	service.interpret = async () => { searches++; return null }
-	const read = () => runtime.handler(new Request(`http://api/api/yepwatch/v1/proposal/rooms/${room.id}`, { headers: { authorization: "Bearer invalid", "x-yepwatch-participant": room.hostId } }))
+	const read = () => runtime.handler(new Request(`http://api/api/yepwatch/v1/proposal/rooms/${room.id}/realtime-ticket`, { method: "POST", headers: { authorization: "Bearer invalid", "x-yepwatch-participant": room.hostId, "content-type": "application/json" }, body: "{}" }))
 	try {
 		await runtime.probe()
 		assert.equal(runtime.initialized(), false)
@@ -323,12 +325,12 @@ test("A room read before the release is initialized starts no idea takeover; aft
 		runtime.stop()
 	}
 })
-test("Live routes: the realtime ticket, the gateway's attach/view/views and the room read, nothing else", () => {
+test("Live routes: the realtime ticket and the gateway's attach/view/views, nothing else (not the room read)", () => {
 	const id = "b".repeat(32)
 	const p = "/api/yepwatch/v1/proposal"
-	for (const [method, path] of [["GET", `${p}/rooms/${id}`], ["POST", `${p}/rooms/${id}/realtime-ticket`], ["POST", `${p}/realtime/internal/attach`], ["POST", `${p}/realtime/internal/view`], ["POST", `${p}/realtime/internal/views`]])
+	for (const [method, path] of [["POST", `${p}/rooms/${id}/realtime-ticket`], ["POST", `${p}/realtime/internal/attach`], ["POST", `${p}/realtime/internal/view`], ["POST", `${p}/realtime/internal/views`]])
 		assert.equal(liveRoute(method, path), true, `${method} ${path}`)
-	for (const [method, path] of [["POST", `${p}/rooms`], ["POST", `${p}/rooms/${id}/commands`], ["POST", `${p}/rooms/${id}/join`], ["GET", `${p}/rooms/${id}/member`], ["POST", `${p}/rooms/${id}`], ["GET", `${p}/rooms/${id}/realtime-ticket`], ["GET", `${p}/catalog/metadata`], ["GET", `${p}/rooms/short`]])
+	for (const [method, path] of [["GET", `${p}/rooms/${id}`], ["POST", `${p}/rooms`], ["POST", `${p}/rooms/${id}/commands`], ["POST", `${p}/rooms/${id}/join`], ["GET", `${p}/rooms/${id}/member`], ["POST", `${p}/rooms/${id}`], ["GET", `${p}/rooms/${id}/realtime-ticket`], ["GET", `${p}/catalog/metadata`], ["GET", `${p}/rooms/short`]])
 		assert.equal(liveRoute(method, path), false, `${method} ${path}`)
 })
 test("Operator provisioning is explicit and idempotent; ordinary startup only reads table configuration", async () => {
