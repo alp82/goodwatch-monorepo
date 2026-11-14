@@ -9,3 +9,7 @@ Disallow: /discover/*?
 Allow: /
 
 Sitemap: https://goodwatch.app/sitemaps/sitemap.xml
+
+# Apple's opt-out token for training its models; Applebot still crawls for Siri and Spotlight search.
+User-agent: Applebot-Extended
+Disallow: /

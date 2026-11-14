@@ -219,9 +219,12 @@ Firewall events since the flip: "Block AI training crawlers" (AI Crawl Control) 
 Owner to do or decide:
 
 1. Set `www.goodwatch.app` to proxied (or decide to keep it DNS-only; it only redirects).
-2. Applebot (Apple's search crawler for Siri and Spotlight, in the shedder's `LET_THROUGH`) and PetalBot (Huawei's
-   search) are blocked by the training policy. To let them through, allow them per crawler in AI Crawl Control;
-   Apple's training opt-out is the `Applebot-Extended` token in `robots.txt`, like `Google-Extended`.
+2. Done 2026-11-15 (owner approved): Applebot (Apple's search crawler for Siri and Spotlight, in the shedder's
+   `LET_THROUGH`) and PetalBot (Huawei's search) were blocked by the training policy. The API has no per-crawler
+   switch for AI Crawl Control, so a third WAF custom rule, "Allow verified Applebot and PetalBot past the AI training
+   block", skips the managed phase for requests that are a verified bot (`cf.client.bot`) and carry either user
+   agent. Spoofed user agents still get 403. The training policy itself stays **block**. `robots.txt` now has a
+   `User-agent: Applebot-Extended` / `Disallow: /` group, Apple's training opt-out. Google-Extended is still open.
 3. The 48-hour checks: Search Console crawl stats and host status, Bing crawl errors, verified bots in Security Events.
 
 ## Rules for this rollout
