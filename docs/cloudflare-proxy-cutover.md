@@ -222,8 +222,10 @@ Owner to do or decide:
 2. Done 2026-11-15 (owner approved): Applebot (Apple's search crawler for Siri and Spotlight, in the shedder's
    `LET_THROUGH`) and PetalBot (Huawei's search) were blocked by the training policy. The API has no per-crawler
    switch for AI Crawl Control, so a third WAF custom rule, "Allow verified Applebot and PetalBot past the AI training
-   block", skips the managed phase for requests that are a verified bot (`cf.client.bot`) and carry either user
-   agent. Spoofed user agents still get 403. The training policy itself stays **block**. `robots.txt` now has a
+   block", skips the managed and Super Bot Fight Mode phases for requests that are a verified bot (`cf.client.bot`)
+   and carry either user agent. Skipping only the managed phase didn't help: the training block runs in the
+   `http_request_sbfm` phase, though Security Events label it as managed. A spoofed Applebot still gets 403 from
+   "Fake search engines". A spoofed PetalBot gets 200 because the training block only matches the verified one. The training policy itself stays **block**. `robots.txt` now has a
    `User-agent: Applebot-Extended` / `Disallow: /` group, Apple's training opt-out. Google-Extended is still open.
 3. The 48-hour checks: Search Console crawl stats and host status, Bing crawl errors, verified bots in Security Events.
 
