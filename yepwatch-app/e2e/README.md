@@ -95,6 +95,13 @@ of a restarting production container.
 - Faults (Playwright projects): `none`, `nows`, `rapid`, `slow` (slow network + 4 s offline), `hidden`
   (tab hidden + frozen, clock +5 min), `twodevice` (second tab of the same person, then reload mid-vote),
   `restart` (API/gateway restart mid-journey, serial).
+- Black hole (`lib/blackhole.ts`, `web/blackhole.spec.ts`): `room.person(name, { network: hole })` sends that browser
+  through a SOCKS5 proxy on loopback; `hole.drop()` / `hole.dropAfterUpgrade()` loses every packet silently (no error,
+  no close, navigator.onLine stays true) until `hole.restore()`. TCP is modeled: bytes sent meanwhile arrive at their
+  sender's next retransmission (200 ms, then doubling), a new connection at its next SYN retry (1 s, 3 s, 7 s…).
+- Smoke member session (`lib/smoke-session.ts`): production smokes keep the member's YepWatch sign-in between runs in
+  `~/.config/yepwatch/smoke-member-session.json` (mode 600, `E2E_SMOKE_MEMBER_SESSION` overrides), so back-to-back
+  runs don't each go through GoodWatch's OAuth authorize (30 a minute per address). Delete the file to sign in afresh.
 - Fake sign-in: `room.person(name, { member: 'member-x' })` sets a cookie the fake issuer reads, so
   Continue with GoodWatch comes straight back signed in as that account (`person.roundTrip(button)`).
 

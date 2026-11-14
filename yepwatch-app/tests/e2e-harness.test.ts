@@ -3,6 +3,12 @@ import assert from 'node:assert/strict';
 import { connectionWords, frameGaps, type Recording } from '../e2e/lib/gates';
 import { duringRunnerOutage, explainedByRunner, outagesOf, ReachabilityWatch, unreachable, type Tick } from '../e2e/lib/reachability';
 import { serverTimingLine } from '../e2e/lib/server-timing';
+import { Blackhole, nextRetry, RETRANSMIT_FIRST_MS, SYN_FIRST_MS } from '../e2e/lib/blackhole';
+import net from 'node:net';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { dropSession, loadSession, originPart, saveSession } from '../e2e/lib/smoke-session';
 import { historyLine, readHistory, timingStats } from '../e2e/lib/timing-window.mjs';
 
 const recording = (over: Partial<Recording>): Recording => ({
@@ -309,4 +315,138 @@ test('following up on a failure at teardown keeps the probe pace, however fast t
   assert.deepEqual(stretches.map((s) => [s.kind, s.why]), [['yepwatch', 'HTTP 5xx']]);
   // 300 ms of regular probes and 2 s of follow-up at 250 ms: about 11 pairs, never a flood.
   assert.ok((calls.get('https://yepwatch.test/api/yepwatch/v1/proposal/health/ready') ?? 0) <= 14);
+});
+
+test('the black hole resends as TCP does: after the first wait, then each wait doubled', () => {
+  assert.equal(nextRetry(0, 0, SYN_FIRST_MS), 1000);
+  assert.equal(nextRetry(0, 1001, SYN_FIRST_MS), 3000);
+  assert.equal(nextRetry(0, 3001, SYN_FIRST_MS), 7000);
+  assert.equal(nextRetry(0, 12000, RETRANSMIT_FIRST_MS), 12600);
+  assert.equal(nextRetry(5000, 12000, RETRANSMIT_FIRST_MS), 17600);
+});
+
+/** One SOCKS5 CONNECT through the hole to `port`, by name as Chromium sends it; resolves with the socket once connected. */
+function socks(proxy: number, port: number) {
+  return new Promise<net.Socket>((resolve, reject) => {
+    const s = net.connect(proxy, '127.0.0.1');
+    s.once('error', reject);
+    s.write(Buffer.from([5, 1, 0]));
+    let stage = 0;
+    s.on('data', function onData(b) {
+      if (stage === 0 && b[0] === 5 && b[1] === 0) {
+        stage = 1;
+        const host = Buffer.from('127.0.0.1');
+        s.write(Buffer.concat([Buffer.from([5, 1, 0, 3, host.length]), host, Buffer.from([port >> 8, port & 255])]));
+      } else if (stage === 1) {
+        s.off('data', onData);
+        assert.equal(b[1], 0, 'connected');
+        resolve(s);
+      }
+    });
+  });
+}
+
+test('the black hole holds bytes both ways and new connections while open, and lets them through after', async () => {
+  const echo = net.createServer((c) => c.on('data', (b) => c.write(b)));
+  await new Promise<void>((r) => echo.listen(0, '127.0.0.1', r));
+  const port = (echo.address() as net.AddressInfo).port;
+  const hole = new Blackhole();
+  await hole.listen();
+  try {
+    const s = await socks(hole.port, port);
+    const got: string[] = [];
+    s.on('data', (b) => got.push(b.toString()));
+    const echoed = new Promise((r) => s.once('data', r));
+    s.write('a');
+    await echoed;
+    assert.deepEqual(got, ['a'], 'straight through while closed');
+    hole.drop();
+    s.write('b');
+    const arrived = new Promise<number>((r) => s.once('data', () => r(Date.now())));
+    let late = false;
+    const pending = socks(hole.port, port).then((c) => { late = true; return c; });
+    await new Promise((r) => setTimeout(r, 300));
+    assert.deepEqual(got, ['a'], 'nothing gets through, nothing fails');
+    assert.equal(late, false, 'a new connection waits for its SYN retry');
+    hole.restore();
+    const restoredAt = Date.now();
+    // Held until the hole closed, then delivered (its exact retransmission time: nextRetry, tested above).
+    const at = await arrived;
+    assert.ok(at >= restoredAt, 'the held byte arrives only after the restore');
+    assert.deepEqual(got.join(''), 'ab');
+    const c = await pending;
+    assert.ok(late);
+    c.destroy();
+    s.destroy();
+  } finally {
+    await hole.close();
+    await new Promise<void>((r) => echo.close(() => r()));
+  }
+});
+
+test('the smoke member session is kept private, for its member and origin only, and only while it outlives a run', async () => {
+  const dir = fs.mkdtempSync(path.join(process.env.TMPDIR || os.tmpdir(), 'smoke-session-'));
+  const file = path.join(dir, 'nested', 'session.json');
+  const before = process.env.E2E_SMOKE_MEMBER_SESSION;
+  process.env.E2E_SMOKE_MEMBER_SESSION = file;
+  try {
+    const now = 1_800_000_000_000;
+    const cookie = (name: string, domain: string, expires: number) => ({ name, value: `${name}-value-0123456789abcdef`, domain, path: '/', expires, httpOnly: true, secure: true, sameSite: 'Lax' as const });
+    const state = {
+      cookies: [cookie('yw', 'yepwatch.com', now / 1000 + 86400), cookie('gw', 'goodwatch.app', now / 1000 + 86400), cookie('old', '.yepwatch.com', now / 1000 + 60)],
+      origins: [{ origin: 'https://yepwatch.com', localStorage: [{ name: 'k', value: 'v' }] }, { origin: 'https://goodwatch.app', localStorage: [] }],
+    };
+    assert.deepEqual(originPart(state, 'https://yepwatch.com').cookies.map((c) => c.name), ['yw', 'old'], 'never GoodWatch’s cookies');
+    assert.equal(await saveSession({ storageState: async () => state } as never, 'https://yepwatch.com', 'Member@Example.com', now), true);
+    assert.equal(fs.statSync(file).mode & 0o777, 0o600);
+    assert.equal(fs.statSync(path.dirname(file)).mode & 0o777, 0o700);
+    const kept = loadSession('https://yepwatch.com', 'member@example.com', now);
+    assert.deepEqual(kept?.state.cookies.map((c) => c.name), ['yw'], 'a cookie expiring within the run is left out');
+    assert.deepEqual(kept?.state.origins.map((o) => o.origin), ['https://yepwatch.com']);
+    assert.equal(loadSession('https://yepwatch.com', 'other@example.com', now), null, 'another member');
+    assert.equal(loadSession('https://staging.yepwatch.com', 'member@example.com', now), null, 'another origin');
+    assert.equal(loadSession('https://yepwatch.com', 'member@example.com', now + 2 * 86400_000), null, 'expired');
+    fs.chmodSync(file, 0o644);
+    assert.equal(loadSession('https://yepwatch.com', 'member@example.com', now), null, 'readable by others: not used');
+    dropSession();
+    assert.equal(fs.existsSync(file), false);
+  } finally {
+    if (before === undefined) delete process.env.E2E_SMOKE_MEMBER_SESSION;
+    else process.env.E2E_SMOKE_MEMBER_SESSION = before;
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('the black hole opens behind a WebSocket upgrade request however its bytes are split', async () => {
+  const sink = net.createServer((c) => c.resume());
+  await new Promise<void>((r) => sink.listen(0, '127.0.0.1', r));
+  const port = (sink.address() as net.AddressInfo).port;
+  const hole = new Blackhole();
+  await hole.listen();
+  try {
+    const plain = await socks(hole.port, port);
+    hole.dropAfterUpgrade();
+    const opened = async (timeout: number) => {
+      const end = Date.now() + timeout;
+      while (!hole.open && Date.now() < end) await new Promise((r) => setTimeout(r, 5));
+      return hole.open;
+    };
+    plain.write('GET /x HTTP/1.1\r\nHost: a\r\n\r\n');
+    // A plain request's bytes reach the server (the sink sees the connection's data) without opening the hole.
+    assert.equal(await opened(200), false, 'a plain request leaves it closed');
+    const ws = await socks(hole.port, port);
+    const parts = ['GET /api/yepwatch/v1/proposal/realtime HTTP/1.1\r\nHost: a\r\nUpgr', 'ade: websocket\r\nConnection: Upgrade\r', '\n\r\n'];
+    for (const part of parts.slice(0, -1)) {
+      await new Promise<void>((r) => ws.write(part, () => r()));
+      await new Promise((r) => setTimeout(r, 20));
+      assert.equal(hole.open, false, 'not before the header block is complete');
+    }
+    ws.write(parts.at(-1)!);
+    assert.equal(await opened(5000), true);
+    plain.destroy();
+    ws.destroy();
+  } finally {
+    await hole.close();
+    await new Promise<void>((r) => sink.close(() => r()));
+  }
 });

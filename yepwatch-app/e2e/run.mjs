@@ -78,9 +78,18 @@ if (tier === 'smoke' && !process.env.E2E_SMOKE_MEMBER_EMAIL && !process.env.E2E_
     log(`smoke member from ${file.replace(os.homedir(), '~')}`);
   }
 }
-const SECRETS = [process.env.E2E_SMOKE_MEMBER_PASSWORD].filter((v) => v && v.length >= 4);
+/** The kept smoke member session's cookie values (lib/smoke-session.ts), read at scan time: a run may renew them. */
+function sessionSecrets() {
+  try {
+    const file = process.env.E2E_SMOKE_MEMBER_SESSION || path.join(os.homedir(), '.config', 'yepwatch', 'smoke-member-session.json');
+    return JSON.parse(fs.readFileSync(file, 'utf8')).state.cookies.map((c) => c.value).filter((v) => typeof v === 'string' && v.length >= 16);
+  } catch {
+    return [];
+  }
+}
 let leaked = 0;
 function scanSecrets(redact) {
+  const SECRETS = [process.env.E2E_SMOKE_MEMBER_PASSWORD, ...(tier === 'smoke' ? sessionSecrets() : [])].filter((v) => v && v.length >= 4);
   if (!SECRETS.length || !fs.existsSync(out)) return 0;
   const needles = SECRETS.flatMap((v) => [...new Set([v, JSON.stringify(v).slice(1, -1), encodeURIComponent(v)])]).map((v) => Buffer.from(v));
   const holds = (buf) => needles.some((n) => buf.includes(n));

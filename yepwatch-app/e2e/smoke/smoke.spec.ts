@@ -15,9 +15,13 @@
 //     them from ~/.config/yepwatch/smoke-member.json when unset) fill the
 //     real GoodWatch sign-in form; the one-time consent was given by hand (docs/yepwatch-e2e-pipeline.md).
 //     The member's browser is never traced there (lib/harness.ts person({ trace: false })).
+//     It signs in once per session lifetime, not once per run: the YepWatch sign-in is kept between runs
+//     (lib/smoke-session.ts; GoodWatch's OAuth authorize allows 30 requests a minute per address, and back-to-back
+//     runs got 429). A kept session that no longer signs the member in is dropped and the run signs in afresh.
 //   - local stack (--origin http://127.0.0.1:…): the fake issuer signs a throwaway account in.
 import { randomBytes } from 'node:crypto';
 import { test, eventually, issuer, ISSUER, ORIGIN, type Person, type Room } from '../lib/harness';
+import { dropSession, loadSession, saveSession } from '../lib/smoke-session';
 import { cardTitle, inviteLink, pickServices, readyHost } from '../web/flows';
 
 const MEMBER_EMAIL = process.env.E2E_SMOKE_MEMBER_EMAIL ?? '';
@@ -67,7 +71,7 @@ async function signIn(p: Person) {
   // remembered, as with the local fake issuer).
   await Promise.all([
     p.page.waitForEvent('framenavigated', { predicate: (f) => f === p.page.mainFrame(), timeout: 15000 }),
-    p.button('Continue with GoodWatch').first().click(),
+    p.button(/^(Continue with|Reconnect) GoodWatch$/).first().click(),
   ]).catch((e) => p.journeyFailure(`Continue with GoodWatch did not navigate: ${String(e).split('\n')[0]} (${p.network()})`));
   const here = () => new URL(p.page.url());
   const back = async () => here().origin === origin && !here().pathname.includes('/callback')
@@ -104,14 +108,45 @@ async function signIn(p: Person) {
   await p.settle();
 }
 
-/** The signed-in member's GoodWatch name as YepWatch knows it (null: the account has none). */
-async function accountName(p: Person): Promise<string | null> {
-  const status = await p.page.evaluate(async () => {
+/** What YepWatch says about this browser's sign-in (null: unreadable). */
+async function accountStatus(p: Person) {
+  return p.page.evaluate(async () => {
     const r = await fetch('/api/yepwatch/v1/proposal/account', { credentials: 'include' });
     return r.ok ? (await r.json()) as { state?: string; displayName?: string | null } : null;
-  });
+  }).catch(() => null);
+}
+
+/** The signed-in member's GoodWatch name as YepWatch knows it (null: the account has none). */
+async function accountName(p: Person): Promise<string | null> {
+  const status = await accountStatus(p);
   if (status?.state !== 'member') p.journeyFailure(`signed in, but YepWatch says the account is ${status?.state ?? 'unreadable'}`);
   return status?.displayName?.trim() || null;
+}
+
+/**
+ * Production: the member signed in from the session the last run kept, when it still works; otherwise through
+ * GoodWatch (signIn), and that session is kept for the next runs. Returns how it signed in.
+ */
+async function memberSignIn(room: Room): Promise<Person> {
+  const kept = loadSession(ORIGIN!, MEMBER_EMAIL);
+  const member = await room.person('Smoke member', { trace: false, storageState: kept?.state });
+  await unthrottle(member);
+  if (kept) {
+    await member.open('/');
+    if ((await accountStatus(member))?.state === 'member') {
+      console.log(`[smoke] smoke member signed in from the kept session (${Math.round((Date.now() - kept.savedAt) / 60000)} min old)`);
+      await saveSession(member.context, ORIGIN!, MEMBER_EMAIL);
+      return member;
+    }
+    console.log('[smoke] the kept smoke member session no longer signs in; signing in with GoodWatch');
+    dropSession();
+    // Fresh as a new browser: the kept local storage would have the start page offer "Reconnect GoodWatch".
+    await member.context.clearCookies();
+    await member.page.evaluate(() => { localStorage.clear(); sessionStorage.clear(); }).catch(() => undefined);
+  }
+  await signIn(member);
+  await saveSession(member.context, ORIGIN!, MEMBER_EMAIL);
+  return member;
 }
 
 /** The match count the host's chip shows now ("2 matches"; "Matches" before the first). */
@@ -158,6 +193,10 @@ test('smoke: guest room, friend by link, member by link, start, vote to a match,
   } finally {
     // Leave/archive so the smoke room drops off every account and start page (it still expires on its own).
     for (const [p, how] of people.reverse()) await tidy(p, how);
+    // The newest member session for the next run: YepWatch may have renewed (rotated) it during this one.
+    const member = room.people.find((p) => p.name === 'Smoke member');
+    if (member && !local && !member.page.isClosed() && (await accountStatus(member))?.state === 'member')
+      await saveSession(member.context, ORIGIN!, MEMBER_EMAIL).catch(() => console.log('[smoke] could not keep the member session'));
   }
 });
 
@@ -166,16 +205,16 @@ async function journey(room: Room, people: [Person, 'leave' | 'archive'][]) {
   // E2E_SMOKE_GUEST_ONLY=1 skips the member (until the production test account exists).
   let member: Person | null = null;
   if (!GUEST_ONLY) {
-    const memberAccount = `smoke-member-${randomBytes(3).toString('hex')}`;
     // Never traced against a real origin: a trace keeps the typed password, the sign-in POST body and the
     // session cookies, and CI uploads the run's artifacts (.github/workflows/yepwatch-smoke.yml).
-    member = await room.person('Smoke member', local ? { member: memberAccount } : { trace: false });
-    await unthrottle(member);
     if (local) {
+      const memberAccount = `smoke-member-${randomBytes(3).toString('hex')}`;
+      member = await room.person('Smoke member', { member: memberAccount });
+      await unthrottle(member);
       if (!ISSUER) member.journeyFailure('local smoke needs the stack (no issuer in .stack.json)');
       await issuer(`/_e2e/user?user=${encodeURIComponent(memberAccount)}`, { displayName: 'Smoke member' });
-    }
-    await signIn(member);
+      await signIn(member);
+    } else member = await memberSignIn(room);
   }
 
   const host = await readyHost(room, 'Smoke host', MARK); // newRoomMs, createRoomMs
