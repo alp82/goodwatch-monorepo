@@ -9,18 +9,18 @@
 //   });
 //
 // At teardown every person's page recording goes through the gates (lib/gates.ts); any failure fails the test.
-// Timing samples are attached for the reporter, which applies the p95 budgets across the run.
+// Timing samples are attached for the reporter; only `node run.mjs speed` reads them (budgets.mjs targets).
 import { test as base, expect, type Browser, type BrowserContext, type BrowserType, type Locator, type Page, type TestInfo, type CDPSession } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { budgetsFor } from '../budgets.mjs';
 import { parseFrame, sharedSchema } from '../../src/core/continuous/wire';
 import { audit } from './a11y';
+import { rules } from './rules.mjs';
 import { serverTimingLine } from './server-timing';
 import { blockingWords, connectionWords, deadButtons, flashes, frameGaps, layoutShifts, type GateFailure, type Outage, type Recording } from './gates';
 import type { Blackhole } from './blackhole';
-import { duringRunnerOutage, explainedByRunner, MIN_UNREACHABLE_MS, outagesOf, ReachabilityWatch, type Unreachable } from './reachability';
+import { explainedByRunner, MIN_UNREACHABLE_MS, outagesOf, ReachabilityWatch, type Unreachable } from './reachability';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const RECORDER = path.join(here, 'recorder.page.js');
@@ -31,15 +31,12 @@ const STACK = (fs.existsSync(stackFile) ? JSON.parse(fs.readFileSync(stackFile, 
 export const ORIGIN = process.env.E2E_ORIGIN ?? STACK.front;
 export const CONTROL = STACK.control;
 export const ISSUER = STACK.issuer;
-const B = budgetsFor();
 const SERVER_TIMING_LOG = process.env.E2E_SERVER_TIMING_LOG;
 const FRAMES_GATE = process.env.E2E_FRAMES === 'gate';
 
 export type Fault = 'none' | 'nows' | 'slow' | 'hidden' | 'restart' | 'twodevice' | 'rapid';
 export type Spec = { visible?: string[]; any?: string[]; hidden?: string[]; text?: string; label?: { text: string; exact?: boolean }; textChanged?: { id: string; from: string }; cardChanged?: { from: string } };
-/** `from`/`to`: the measured span in epoch ms, when known. `excluded`: why the budgets leave it out (it overlapped the
- * runner's own network outage, lib/reachability.ts). */
-export interface Sample { moment: string; ms: number; person: string; detail?: string; from?: number; to?: number; excluded?: string }
+export interface Sample { moment: string; ms: number; person: string; detail?: string }
 type Shared = { roomId: string; phase: string; ideas: { text: string; on: boolean; authorId: string; attributes: unknown[] }[]; participants: { participantId: string; nickname: string }[]; matches?: unknown[]; generation: number; [k: string]: unknown };
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -251,9 +248,8 @@ export class Person {
   private async inputAfter(armedAt: number) {
     return this.page.evaluate((a) => (window as unknown as { __yw: Recording }).__yw.inputs.find((i) => i.t >= a - 1) ?? null, armedAt);
   }
-  /** `span`: [from, to] in epoch ms, so a sample taken while the runner itself was offline can be left out. */
-  record(moment: string, ms: number, detail?: string, span?: [number, number]) {
-    this.samples.push({ moment, ms: Math.round(ms * 10) / 10, person: this.name, detail, ...(span ? { from: span[0], to: span[1] } : {}) });
+  record(moment: string, ms: number, detail?: string) {
+    this.samples.push({ moment, ms: Math.round(ms * 10) / 10, person: this.name, detail });
   }
   /**
    * The requests that explain a stall, for a failure message: still open after 1 s, failed or answered >= 400 in
@@ -297,20 +293,20 @@ export class Person {
       const input = await this.inputAfter(r!.armedAt);
       if (input && opts.moment) {
         elapsed = r!.at - input.t;
-        this.record(opts.moment, elapsed, String(target), [input.t, r!.at]);
+        this.record(opts.moment, elapsed, String(target));
       }
-      if (input?.feedbackAt) this.record('tapFeedbackMs', input.feedbackAt - input.t, String(target), [input.t, input.feedbackAt]);
+      if (input?.feedbackAt) this.record('tapFeedbackMs', input.feedbackAt - input.t, String(target));
       for (const [i, [p, , moment]] of (opts.observers ?? []).entries()) {
         const o = await p.result(observerKeys[i], opts.timeout ?? 15000);
         if (!o && opts.soft) continue;
         if (!o) p.journeyFailure(`after ${this.name} pressed ${target}: ${moment} never showed for ${p.name} (now: ${await p.signature()})`);
         // An observer already satisfied before the press (a late update from an earlier action) is no sample.
-        if (input && o!.at >= input.t) p.record(moment, o!.at - input.t, `${this.name}: ${target}`, [input.t, o!.at]);
+        if (input && o!.at >= input.t) p.record(moment, o!.at - input.t, `${this.name}: ${target}`);
       }
     } else {
       await sleep(60);
       const input = await this.page.evaluate(() => (window as unknown as { __yw: Recording }).__yw.inputs.at(-1) ?? null).catch(() => null);
-      if (input?.feedbackAt) this.record('tapFeedbackMs', input.feedbackAt - input.t, String(target), [input.t, input.feedbackAt]);
+      if (input?.feedbackAt) this.record('tapFeedbackMs', input.feedbackAt - input.t, String(target));
     }
     return elapsed;
   }
@@ -473,12 +469,7 @@ export class Room {
     if (this.fault === 'slow') {
       const cdp = await p.cdpSession();
       await cdp.send('Network.enable');
-      await cdp.send('Network.emulateNetworkConditions', { offline: false, ...B.network.slow });
-    }
-    if (process.env.E2E_TARGET === 'production') {
-      const cdp = await p.cdpSession();
-      await cdp.send('Network.enable');
-      await cdp.send('Network.emulateNetworkConditions', { offline: false, ...B.network.production });
+      await cdp.send('Network.emulateNetworkConditions', { offline: false, ...rules.slowNetwork });
     }
     this.people.push(p);
     return p;
@@ -516,7 +507,7 @@ export class Room {
         for (const c of contexts) await c.setOffline(true);
         await sleep(4000);
         for (const c of contexts) await c.setOffline(false);
-        for (const p of actors) await (await p.cdpSession()).send('Network.emulateNetworkConditions', { offline: false, ...B.network.slow });
+        for (const p of actors) await (await p.cdpSession()).send('Network.emulateNetworkConditions', { offline: false, ...rules.slowNetwork });
         this.offlineWindows.push([start, Date.now()]);
         return;
       }
@@ -579,8 +570,7 @@ export class Room {
   noteOutage(start: number, end: number, quietMs?: number) { this.offlineWindows.push(quietMs === undefined ? [start, end] : [start, end, quietMs]); }
   /**
    * A server restart a journey made itself (e.g. a deploy: gateway and API replaced), [at, back] in epoch ms: an outage
-   * for the connection gate (with `quietMs` as noteOutage) and a restart whose queued actions must land within
-   * restartQueuedLandMs of `back`.
+   * for the connection gate (with `quietMs` as noteOutage).
    */
   noteRestart(at: number, back: number, service: string, quietMs?: number) { this.restartLog.push({ at, back, service, quietMs }); }
   /** Stack-side outages so far, [start, end, quietMs?] in epoch ms: server restarts and offline spells. */
@@ -649,7 +639,7 @@ export class Room {
       if (!p.page.isClosed() && !p.recordingFinished) await p.harvest();
       for (const rec of p.recordings) {
         failures.push(...flashes(rec, p.name), ...layoutShifts(rec, p.name), ...blockingWords(rec, p.name), ...connectionWords(rec, p.name, this.outages()), ...deadButtons(rec, p.name));
-        // Frame pacing is no gate (it needs a GPU and an idle CPU): only `node run.mjs frames` (E2E_FRAMES=gate) judges it.
+        // Frame pacing is no gate (it needs a GPU and an idle CPU): only `node run.mjs speed` (E2E_FRAMES=gate) judges it.
         if (FRAMES_GATE && this.fault !== 'hidden' && this.fault !== 'slow') failures.push(...frameGaps(rec, p.name, rec.inputs.map((i) => [i.t, i.t + 1200]), p.harnessBusy));
       }
       for (const f of p.failures) {
@@ -658,15 +648,7 @@ export class Room {
         if (outage) excused.push(`${f.person}: ${f.detail} (the runner was offline ${clock(outage.start)}–${clock(outage.end)} UTC)`);
         else failures.push(f);
       }
-      for (const s of p.samples) {
-        const outage = s.from !== undefined && s.to !== undefined ? duringRunnerOutage(s.from, s.to, unreachable) : undefined;
-        samples.push(outage ? { ...s, excluded: `the runner was offline ${clock(outage.start)}–${clock(outage.end)} UTC` } : s);
-      }
-    }
-    // Restart: queued actions must land within budget after the server returns.
-    for (const r of this.restartLog) {
-      const landed = this.people.flatMap((p) => p.commandLog).filter((c) => c.t >= r.back && c.status < 300 && /\/commands$/.test(c.path)).sort((a, b) => a.t - b.t)[0];
-      if (landed) samples.push({ moment: 'restartQueuedLandMs', ms: landed.t - r.back, person: '(room)', detail: `${r.service} restart` });
+      samples.push(...p.samples);
     }
     if (unreachable.length) await this.info.attach('reachability', { body: JSON.stringify({ stretches: unreachable, excused: [...excused, ...heldStretches] }), contentType: 'application/json' });
     await this.dump();

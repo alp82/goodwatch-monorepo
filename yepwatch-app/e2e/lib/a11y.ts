@@ -2,12 +2,11 @@
 // visible interactive control has an accessible name and a target of at least 48 × 48 CSS px.
 import type { Page } from '@playwright/test';
 import { createRequire } from 'node:module';
-import { budgetsFor } from '../budgets.mjs';
+import { rules as B } from './rules.mjs';
 import type { GateFailure } from './gates';
 
 const require = createRequire(import.meta.url);
 const AXE = require.resolve('axe-core/axe.min.js');
-const B = budgetsFor();
 // One audit per distinct screen state per worker: the same screen in another journey adds nothing.
 const audited = new Set<string>();
 

@@ -1,5 +1,5 @@
 // Collects every test's gate failures and timing samples into one machine-readable file
-// (E2E_REPORT, default artifacts/report-raw.json). e2e/run.mjs merges phases, applies the p95 budgets
+// (E2E_REPORT, default artifacts/report-raw.json). e2e/run.mjs merges phases (`speed` also compares p95s with budgets.mjs)
 // and writes report.json + summary.md.
 import type { FullResult, Reporter, TestCase, TestResult } from '@playwright/test/reporter';
 import fs from 'node:fs';

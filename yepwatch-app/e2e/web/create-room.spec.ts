@@ -1,5 +1,4 @@
 import { expect } from '@playwright/test';
-import { ceilingsFor } from '../budgets.mjs';
 import { test, eventually, issuer, type Person } from '../lib/harness';
 import { cardTitle, createRoom, hostName, pageTap, pickServices, recordPage, start } from './flows';
 
@@ -250,7 +249,7 @@ test.describe('create and set up a room', () => {
   });
 
   // Owner decision Q32: Create room never waits for the idea's interpretation (GoodWatch's two Jev calls,
-  // ~0.6-1.5 s). The search fake takes 1 s for this prompt: the room still opens within createRoomMs, the idea is
+  // ~0.6-1.5 s). The search fake takes 1 s for this prompt: the room still opens before that answer, the idea is
   // pending (no "unavailable" note), and its matching lands a moment later and shapes the deck.
   test('create with a slow idea search: the room opens at once, the idea\'s matching lands later, no unavailable note', async ({ room }) => {
     const host = await room.person('Alp');
@@ -263,8 +262,8 @@ test.describe('create and set up a room', () => {
       const stop = await recordPage(host, 'room-setup', /Mood matching is unavailable/i);
       await host.tap(host.button('Create room'), { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' });
       const created = host.samples.filter((x) => x.moment === 'createRoomMs').at(-1);
-      // The ceiling (3x the target) still tells "didn't wait for the search" (>= 1000 ms) from "opened at once".
-      if (room.fault === 'none') expect(created?.ms, 'Create room → room page with a 1 s search').toBeLessThanOrEqual(ceilingsFor('local').createRoomMs);
+      // Behaviour, not speed: a room page before the 1 s search answered means Create room didn't wait for it.
+      if (room.fault === 'none') expect(created?.ms, 'Create room → room page before the 1 s search answers').toBeLessThan(1000);
       await eventually(() => host.latest?.ideas.map((i) => [i.text, i.attributes.map((a) => a.key ?? a.text)]), (v) => JSON.stringify(v) === JSON.stringify([[mood, ['western']]]), 'the idea\'s matching lands', host, 10000);
       const samples = await stop().catch(() => null);
       expect(samples?.length, 'the room page was sampled').toBeGreaterThan(0);

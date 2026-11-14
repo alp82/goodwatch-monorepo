@@ -1,7 +1,7 @@
 import { defineConfig } from '@playwright/test';
 
-// e2e:smoke — guests only, against the local stack or a real origin (E2E_ORIGIN, production budgets and
-// fast-4G throttling via E2E_TARGET=production). No retries.
+// e2e:smoke — against the local stack or a real origin (E2E_ORIGIN with E2E_TARGET=production). No speed
+// checks (README). No retries.
 export default defineConfig({
   testDir: './smoke',
   outputDir: process.env.E2E_OUT ?? './artifacts/smoke-results',

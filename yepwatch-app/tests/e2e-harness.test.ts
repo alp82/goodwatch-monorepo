@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { connectionWords, frameGaps, type Recording } from '../e2e/lib/gates';
-import { duringRunnerOutage, explainedByRunner, outagesOf, ReachabilityWatch, unreachable, type Tick } from '../e2e/lib/reachability';
+import { explainedByRunner, outagesOf, ReachabilityWatch, unreachable, type Tick } from '../e2e/lib/reachability';
 import { serverTimingLine } from '../e2e/lib/server-timing';
 import { Blackhole, nextRetry, RETRANSMIT_FIRST_MS, SYN_FIRST_MS } from '../e2e/lib/blackhole';
 import net from 'node:net';
@@ -9,7 +9,6 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { dropSession, loadSession, originPart, saveSession } from '../e2e/lib/smoke-session';
-import { historyLine, readHistory, timingStats } from '../e2e/lib/timing-window.mjs';
 
 const recording = (over: Partial<Recording>): Recording => ({
   startedAt: 0, endedAt: 10_000, states: [], notes: [], words: [], inputs: [], shifts: [], loafs: [],
@@ -53,38 +52,6 @@ test('the server timing log keeps the command the server applied, not its replay
   assert.equal(JSON.parse(serverTimingLine(commands, start, 409, { error: { code: 'conflict' } }, 'total;dur=4', 6)!).status, 409);
   assert.equal(JSON.parse(serverTimingLine('/api/yepwatch/v1/proposal/rooms', '{}', 200, {}, 'total;dur=9', 7)!).kind, 'create');
   assert.equal(serverTimingLine('/api/yepwatch/v1/proposal/account', '{}', 200, {}, 'total;dur=9'), null);
-});
-
-test('a moment one run samples 20 times takes its p95 from that run alone', () => {
-  const votes = Array.from({ length: 20 }, (_, i) => 100 + i);
-  const stats = timingStats({ voteToPeerMs: votes }, [{ samples: { voteToPeerMs: [9999] } }], true);
-  assert.deepEqual({ ...stats.voteToPeerMs }, { samples: 20, p50: 109, p95: 118, max: 119, runs: 1, own: 20 });
-});
-
-test('a moment sampled once a run borrows from the newest earlier runs, up to 20 samples', () => {
-  const history = Array.from({ length: 25 }, (_, i) => ({ samples: { createRoomMs: [i === 24 ? 900 : 300] } }));
-  const stats = timingStats({ createRoomMs: [400] }, history, true);
-  assert.equal(stats.createRoomMs.samples, 20);
-  assert.equal(stats.createRoomMs.runs, 20);
-  // One slow run in 20 is the max, not the p95.
-  assert.equal(stats.createRoomMs.max, 900);
-  assert.equal(stats.createRoomMs.p95, 400);
-  // Without a window (local tiers) the one sample is all there is.
-  assert.equal(timingStats({ createRoomMs: [400] }, history, false).createRoomMs.samples, 1);
-});
-
-test('an earlier run fills only the samples still missing, its newest first', () => {
-  const own = Array.from({ length: 19 }, () => 100);
-  const stats = timingStats({ voteToPeerMs: own }, [{ samples: { voteToPeerMs: [1000, 1000, ...Array.from({ length: 18 }, () => 100)] } }], true);
-  assert.equal(stats.voteToPeerMs.samples, 20);
-  assert.equal(stats.voteToPeerMs.p95, 100);
-});
-
-test('the history keeps numbers per origin only', () => {
-  const line = historyLine('https://yepwatch.com', { createRoomMs: [612.34], voteToPeerMs: [] }, 7);
-  assert.deepEqual(JSON.parse(line), { t: 7, origin: 'https://yepwatch.com', samples: { createRoomMs: [612.3] } });
-  const text = `${line}\nnot json\n${historyLine('http://127.0.0.1:18480', { createRoomMs: [30] })}\n`;
-  assert.equal(readHistory(text, 'https://yepwatch.com').length, 1);
 });
 
 // The production smoke of 2026-11-14 05:39 UTC: from 05:39:11.7 to 05:39:23.7 nothing from the runner reached abio
@@ -203,13 +170,6 @@ test('YepWatch answering a moment after the runner is back belongs to the runner
 test('a stretch still open at the end lasts until its last failure was known, nothing invented', () => {
   // A 5xx answered in 30 ms, then the watch stopped.
   assert.deepEqual(parts([...ticks(0, 1000, 'answered', true), { t: T0 + 1000, target: 'error', done: T0 + 1030, reference: true }]), []);
-});
-
-test("a sample spanning the runner's outage is found, one beside it is not", () => {
-  const stretches = unreachable([...ticks(0, 11_700, 'answered', true), ...ticks(11_700, 23_700, 'none', false), ...ticks(23_700, 30_000, 'answered', true)]);
-  // The friend's invitation: navigation at 05:39:11.7, join page at 05:39:23.73 (12 029 ms).
-  assert.ok(duringRunnerOutage(T0 + 11_700, T0 + 23_729, stretches));
-  assert.equal(duringRunnerOutage(T0 + 25_000, T0 + 25_700, stretches), undefined);
 });
 
 test("connection words are judged against the runner's outage, not as words without one", () => {

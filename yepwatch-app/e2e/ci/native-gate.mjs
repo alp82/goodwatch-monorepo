@@ -5,8 +5,8 @@
 //
 // --mode=journey (default, what CI runs on GitHub's emulator: nightly, on demand and on pushes that change native
 // inputs): cold start, then one mixed room with the Android app as host and a browser friend (create/join, Start,
-// vote to a match) on ONE emulator, with no video and no timing gate (step times reported). --mode=subset is the
-// same room with video-measured timings and flash checks (owner decision Q28, before 2026-11-14); it and the
+// vote to a match) on ONE emulator, with no video and no timings. --mode=subset is the same room with video flash
+// checks and reported timings (owner decision Q28, before 2026-11-14); it and the
 // two-phone `gate` and the `full` run stay local / pre-OTA (ota-gate.mjs), on real hardware.
 //
 // 1. Overlaps the three slow preparations instead of running them one after another:
@@ -151,17 +151,14 @@ const lines = [
   '',
   `Preparation (overlapped): stack ${(phases.stack / 1000).toFixed(0)} s, APK ${(phases.apk / 1000).toFixed(0)} s, emulators ${(phases.boot / 1000).toFixed(0)} s${phases.prepareWait != null ? ` (waited ${(phases.prepareWait / 1000).toFixed(0)} s for the background stack + APK)` : ''}; journeys ${(phases.gate / 1000).toFixed(0)} s. APK: ${apkInfo?.gradle ? 'Gradle build (native change)' : apkInfo?.repack ? 'cached base + JS repack' : 'cached'}.`,
   '',
-  `Scenarios ${s.scenarios}; timing ${s.timingFails}, flash ${s.flash}, errors ${s.errors}, a11y ${s.a11y}, stuck ${s.stuck}, journey ${s.journey} failure(s).`,
+  `Scenarios ${s.scenarios}; flash ${s.flash}, errors ${s.errors}, a11y ${s.a11y}, stuck ${s.stuck}, journey ${s.journey} failure(s).`,
   `Frame pacing: ${s.frames} over budget — ${frames === 'report' ? '**reported, not gating** (no GPU: SwiftShader frame times; frame pacing is measured on demand, docs/yepwatch-e2e-pipeline.md).' : 'gating.'}`,
 ];
 if (result.fatal) lines.push('', '```', String(result.fatal).slice(0, 1500), '```');
-const bad = [...g.timing.filter((x) => !x.pass && !x.informational).map((x) => `timing: ${x.name} ${x.ms ?? '-'} ms (budget ${x.budgetMs})${x.error ? ` ${x.error}` : ''}`),
-  ...g.flash.map((x) => `flash: ${x.name}`), ...g.errors.map((x) => `error: ${x.phone} ${JSON.stringify(x).slice(0, 200)}`),
+const bad = [...g.flash.map((x) => `flash: ${x.name}`), ...g.errors.map((x) => `error: ${x.phone} ${JSON.stringify(x).slice(0, 200)}`),
   ...g.a11y.map((x) => `a11y: ${JSON.stringify(x).slice(0, 200)}`), ...g.stuck.map((x) => `stuck: ${x.where} ${x.words.join(' | ')}`),
   ...g.journey.map((x) => `journey: ${x.name}: ${x.detail}`), ...result.scenarios.filter((x) => !x.pass).map((x) => `scenario ${x.name}: ${x.error}`)];
 if (bad.length) lines.push('', ...bad.slice(0, 40).map((b) => `- ${b}`));
-const steps = g.timing.filter((x) => x.clock === 'host');
-if (steps.length) lines.push('', 'Step times (host clock, reported, not gated):', '', ...steps.map((x) => `- ${x.name}: ${x.ms} ms`));
 const fr = g.frames.map((x) => `- frames ${x.name}: ${JSON.stringify(Object.fromEntries(Object.entries(x).filter(([k]) => k !== 'name')))}`);
 if (fr.length) lines.push('', '<details><summary>Frame pacing numbers</summary>', '', ...fr, '', '</details>');
 const md = `${lines.join('\n')}\n`;

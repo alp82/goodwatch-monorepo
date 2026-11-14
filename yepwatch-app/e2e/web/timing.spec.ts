@@ -1,5 +1,5 @@
 // Key timing moments, repeated E2E_TIMING_RUNS times (each run its own test, so runs spread over workers).
-// The reporter applies the p95 budgets (budgets.mjs) across all samples of a moment.
+// `node run.mjs speed` compares each moment's p95 with its target (budgets.mjs).
 import { eventually, test, type Person } from '../lib/harness';
 import { cardTitle, createRoom, inviteLink, join, readyHost, start, vote } from './flows';
 
@@ -36,7 +36,7 @@ for (let run = 1; run <= runs; run++) {
 }
 
 // Start a beat after a setup change (a friend's service joins the room's): the room's deck is built again right
-// then, and Start must not wait visibly for it. Same moments, same budgets.
+// then, and Start must not wait visibly for it.
 test('start right after a setup change', async ({ room }) => {
   const host = await readyHost(room);
   const mia = await room.person('Mia');

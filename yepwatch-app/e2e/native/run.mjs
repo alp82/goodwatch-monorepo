@@ -1,16 +1,17 @@
 #!/usr/bin/env node
 // Android E2E runner.  node e2e/native/run.mjs journey|subset|gate|full [--only=name,name] [--keep]
 // journey: what CI runs on GitHub's emulator (yepwatch-gate.yml android job, nightly / on demand / native changes):
-//   cold start to the start page, then one mixed room (Android host + browser friend) to a match. No video and no
-//   timing gate (software rendering); step times are reported. Gates: journey, a11y + 48 dp, blocking words, errors.
+//   cold start to the start page, then one mixed room (Android host + browser friend) to a match. No video, no
+//   timings (software rendering). Gates: journey, a11y + 48 dp, blocking words, errors.
 // subset: the deploy gate's Android check (yepwatch-gate.yml, owner decision Q28): cold start, then one mixed room
 //   (Android host + browser friend: create/join, Start, vote to a match) on one emulator.
 // gate: the two-phone Android journey (~1.5 min warm). full: everything, incl. long background, mixed rooms;
 //   runs before each OTA (e2e/ci/ota-gate.mjs).
+// Timings (subset/gate/full) are reported against their targets (budgets.mjs), never a gate.
 // No retries: a step that fails once fails the run. Results: e2e/native/.cache/runs/<stamp>/result.json
 import fs from 'node:fs';
 import path from 'node:path';
-import { budgetsFor, CEILING_FACTOR } from './budgets.mjs';
+import { budgets as B } from './budgets.mjs';
 import { ensureApk, PACKAGE } from './lib/build.mjs';
 import { boot, install, reverse, shell, shutdown } from './lib/device.mjs';
 import { RUNS_DIR, log, mkdirp, sleep } from './lib/env.mjs';
@@ -23,25 +24,23 @@ import { resolveStack, stackPorts } from './lib/stack.mjs';
 const mode = process.argv[2] ?? 'gate';
 const only = (process.argv.find(a => a.startsWith('--only=')) ?? '').slice(7).split(',').filter(Boolean);
 const keep = process.argv.includes('--keep');
-const B = budgetsFor();
 const stamp = new Date().toISOString().replace(/[:.]/g, '-');
 const RUN = mkdirp(path.join(RUNS_DIR, `${mode}-${stamp}`));
-const result = { mode, startedAt: new Date().toISOString(), phases: {}, scenarios: [], gates: { timing: [], flash: [], errors: [], a11y: [], stuck: [], frames: [], journey: [] } };
+const result = { mode, startedAt: new Date().toISOString(), phases: {}, scenarios: [], speed: [], gates: { flash: [], errors: [], a11y: [], stuck: [], frames: [], journey: [] } };
 const t0 = Date.now();
 const phase = (name, ms) => { result.phases[name] = ms; };
 
 // ---------- gate recorders ----------
-// `budget` is the target (reported); the gate is its ceiling, CEILING_FACTOR x the target (e2e/budgets.mjs).
+// `budget` is the target: reported, never a gate. A transition that never reached its target screen is a journey failure.
 function timing(name, budget, r, extra = {}) {
-  const ceiling = budget * CEILING_FACTOR;
-  const row = { name, budgetMs: budget, ceilingMs: ceiling, ...extra };
-  if (!r?.ok) Object.assign(row, { pass: false, error: r?.error ?? 'not measured' });
+  const row = { name, budgetMs: budget, ...extra };
+  if (!r?.ok) { row.error = r?.error ?? 'not measured'; if (!extra.informational) journeyFail(name, row.error); }
   else {
     const ms = extra.use === 'settled' ? r.settledMs : r.ms;
-    Object.assign(row, { ms, firstMs: r.ms, settledMs: r.settledMs, onTarget: ms <= budget, pass: ms <= ceiling, resolutionMs: r.resolutionMs, clockErrMs: r.clockErrMs, maxGapMs: r.maxGapMs, video: path.relative(RUN, r.file) });
+    Object.assign(row, { ms, firstMs: r.ms, settledMs: r.settledMs, onTarget: ms <= budget, resolutionMs: r.resolutionMs, clockErrMs: r.clockErrMs, maxGapMs: r.maxGapMs, video: path.relative(RUN, r.file) });
   }
-  result.gates.timing.push(row);
-  log(`  timing ${name}: ${row.ms ?? '-'} ms (first change ${row.firstMs ?? '-'}, settled ${row.settledMs ?? '-'}) target ${budget}${row.onTarget === false ? ' (over)' : ''}, ceiling ${ceiling} ${row.pass ? 'ok' : 'FAIL'}${row.error ? ' ' + row.error : ''}`);
+  result.speed.push(row);
+  log(`  timing ${name}: ${row.ms ?? '-'} ms (first change ${row.firstMs ?? '-'}, settled ${row.settledMs ?? '-'}) target ${budget}${row.onTarget === false ? ' (over)' : ''}${row.error ? ' ' + row.error : ''}`);
   if (r?.ok && r.flash?.failed) {
     result.gates.flash.push({ name, blankFrames: r.flash.blank.length, spikes: r.flash.spikes, intermediate: r.flash.plateaus, frames: path.relative(RUN, r.file.replace(/\.webm$/, '-frames')) });
     log(`  flash ${name}: ${JSON.stringify({ blank: r.flash.blank.length, spikes: r.flash.spikes.length, plateaus: r.flash.plateaus.length })}`);
@@ -129,21 +128,18 @@ async function main() {
     if (again.A?.ok) S.coldReturningMs = again.A.settledMs;
   }, { modes: ['gate', 'full', 'subset'] });
 
-  // ---- CI journey (no video, no timing gate): cold start, then the mixed room ----
-  const note = (name, ms) => { result.gates.timing.push({ name, ms, informational: true, pass: true, clock: 'host' }); log(`  step ${name}: ${ms} ms (reported)`); };
+  // ---- CI journey (no video, no timings): cold start, then the mixed room ----
   await scenario('cold-start-journey', async () => {
     A.forceStop(); A.sh(`pm clear ${PACKAGE}`);
-    const at = Date.now();
     const am = A.launch();
     await A.find('New room', { timeout: 30000 });
-    note('cold start, first visit -> start page', Date.now() - at);
     result.coldStart = { amStartTotalTime: am.totalTime };
     await audit(A, 'start page (first visit)');
     await notStuck(A, 'start page (first visit)');
   }, { modes: ['journey'] });
   await scenario('mixed-room-journey', async () => {
     const { mixedJourneyRoom } = await import('./lib/mixed.mjs');
-    await mixedJourneyRoom({ phone: A, stack, audit, notStuck, journeyFail, errors: result.gates.errors, note });
+    await mixedJourneyRoom({ phone: A, stack, audit, notStuck, journeyFail, errors: result.gates.errors });
   }, { modes: ['journey'] });
 
   // ---- deploy gate: one mixed room, Android host + browser friend, to a match ----
@@ -426,7 +422,7 @@ result.wallMs = Date.now() - t0;
 const g = result.gates;
 result.summary = {
   scenarios: `${result.scenarios.filter(s => s.pass).length}/${result.scenarios.length}`,
-  timingFails: g.timing.filter(x => !x.pass && !x.informational).length, flash: g.flash.length, errors: g.errors.length,
+  flash: g.flash.length, errors: g.errors.length,
   a11y: g.a11y.length, stuck: g.stuck.length, frames: g.frames.filter(f => !f.pass).length, journey: g.journey.length,
 };
 // Frame pacing is reported, never a gate, unless asked for on a GPU-backed emulator (YW_E2E_FRAMES=gate).

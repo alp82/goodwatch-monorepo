@@ -18,16 +18,12 @@ CI runs fits free GitHub-hosted runners; there is no self-hosted runner.
   one-frame wrong screen; blocking and connection words (no blocking "Reconnecting…"); axe WCAG 2.2 AA and 48 px
   targets. **Android on CI**: the journey finishes; logcat errors plus the browser friend's console and page errors;
   blocking words; labels and 48 dp targets. No flash check there (it needs the screen recording, which the
-  software-rendered emulator can't afford); the video-based flash and timing checks stay in the pre-OTA gate.
-- **Speed: ceilings gate, targets are reported.** All numbers live in `yepwatch-app/e2e/budgets.mjs`. The old tight
-  budgets (`local`, `production`) are targets: every summary shows each moment's p95 against them, none fails on them.
-  Gates are coarse `ceilings`: hermetic runs (local stack, CI) 3x each local target (Create room 900 ms, Start → first
-  card 600 ms, vote → other phone 300 ms, …); the production smoke only Create room 1.5 s, invitation 3 s, vote →
-  other phone 1 s, Start → first card 1.5 s, judged on the run's own samples.
-- **Frame pacing is no gate anywhere.** It needs a real GPU and an idle CPU. After an animation change, measure it on
-  demand: `node run.mjs frames [-- --grep voting]` in `yepwatch-app/e2e` (web, one test at a time, no frame over
-  20 ms while something animates), `node e2e/native/run.mjs gate` on a GPU-backed emulator for Android
-  (`gfxinfo`), plus the diagnosis switches in `e2e/README.md`.
+  software-rendered emulator can't afford); the video-based flash checks stay in the pre-OTA gate.
+- **No speed checks in automated runs** (owner 2026-11-14: "the speed checks can be occasional checks made on my
+  machine - nothing that we need to automate for every release"). CI, the Android journey and the production smoke
+  judge behaviour only; ordinary test timeouts still catch a stuck journey. Speed and frame pacing are one on-demand
+  command on the owner's machine: `node run.mjs speed` in `yepwatch-app/e2e` (targets in `e2e/budgets.mjs`; see
+  `e2e/README.md`). The local Android runs (`node e2e/native/run.mjs gate`) report their timings, never fail on them.
 - **No retries.** A remaining gate that flakes is a bug: fix the cause, don't loosen it silently.
 
 ## Deploy gate (`yepwatch-gate.yml`)
@@ -39,20 +35,20 @@ here. Jobs:
 
 - **checks**: app typecheck, lint, unit tests; gateway build + tests (all four in parallel). ~1 min.
 - **web-gate 1..3**: `node run.mjs ci -- --shard=N/3`, two Playwright workers per shard. The `ci` tier is every web
-  journey once on the clean stack (no fault projects, no deploy/restart phase, timings x1): create, invite, join,
+  journey once on the clean stack (no fault projects, no deploy/restart phase): create, invite, join,
   vote, match, propose, Tonight, rooms, relaunch, small screens, members, the recorder's self-tests. Each shard
   brings the hermetic stack up itself (Crate, Valkey and Caddy in Docker; API and gateway bundles; web export with
   a cached Metro transform cache). Traces (actions + console), network logs and screenshots are kept for failed
-  tests only. **web-gate-verdict** merges the shard reports (`e2e/ci/merge-reports.mjs`), recomputes timing p95
-  over all samples against the ceilings, and fails when a shard didn't report. The fault projects (no WebSocket,
+  tests only. **web-gate-verdict** merges the shard reports (`e2e/ci/merge-reports.mjs`) and fails on any gate
+  failure or when a shard didn't report. The fault projects (no WebSocket,
   rapid taps, slow network, hidden tab, second device, restarts) stay in the local `gate` / `full` tiers.
 - **android-gate**: nightly, on `workflow_dispatch`, and on pushes whose files touch the APK's native inputs
   (job **android-changes**: one compare API call against `native/lib/build.mjs` `nativeKey()`'s files plus the
   Android harness). One emulator (KVM, SwiftShader), `node e2e/ci/native-gate.mjs --mode=journey`: the cold start
   to the start page, then one mixed room: the Android app phone creates the room, a browser phone (Playwright
   Chromium) joins through the invitation link, the phone starts, and both vote until there is a match. No video
-  and no timing gate (step times on the host clock are reported). Gates: journey, errors (logcat plus the
-  browser's console and page errors), blocking words, a11y (labels and 48 dp targets). The video-timed `subset`,
+  and no timings. Gates: journey, errors (logcat plus the
+  browser's console and page errors), blocking words, a11y (labels and 48 dp targets). The video `subset`,
   the two-phone `gate` and the `full` Android run stay in the pre-OTA gate (`ota-gate.mjs`) on real hardware.
 
   The background step `native-gate.mjs --prepare=…` brings the stack up and builds the APK (cached base + JS
@@ -82,24 +78,20 @@ reports and the Coolify webhook keeps deploying.
 
 One room per run, three browsers:
 
-1. A guest host (fast-4G throttled: 9 Mbps, +60 ms RTT) taps New room and creates a room named
-   `e2e smoke <ISO minute>`, then sets a name and Netflix.
-2. A fresh guest browser (throttled) joins through the invitation link.
-3. The signed-in test member (unthrottled) joins through the same link ("Join as …").
-4. The host starts the round, and everyone votes Yep until there is a match.
+1. A guest host taps New room and creates a room named `e2e smoke <ISO minute>`, then sets a name and Netflix.
+2. A fresh guest browser joins through the invitation link.
+3. The signed-in test member joins through the same link ("Join as …").
+4. The host starts the round, everyone votes Yep for three rounds, and the match shows on the host's and member's phones.
 5. The friend and the member leave the room, and the host archives it.
 
 Gates: the journey, errors, flash, blocking and connection words (a deploy during the run must not show a blocking
-"Reconnecting…"), and the production ceilings in `e2e/budgets.mjs`: Create room 1.5 s, invitation in a fresh
-browser 3 s, vote to other phone 1 s, Start to first card 1.5 s. Every other moment (tap feedback, New room, next
-card, …) and the tight targets (`production`: Create room 500 ms, invitation 1.2 s, vote 250 ms, Start 400 ms) are
-reported only, as are the member's `unthrottled_*` numbers. No frame gate: a busy runner can't fail it. A readiness probe
-held past 1 s during a deploy is reported, not failed (a 5xx fails); the people's screens decide. A run costs 1 room, 2 admissions and about 40 commands,
+"Reconnecting…"), and accessibility. No speed or frame checks. A readiness probe held past 1 s during a deploy is
+reported, not failed (a 5xx fails); the people's screens decide. A run costs 1 room, 2 admissions and about 20 commands,
 far under the production limits of 20 creates/joins a minute and 60 commands per person a minute.
 Runs are serialized by the concurrency group `yepwatch-smoke`.
 
 On failure, the run opens the issue **"YepWatch production smoke is failing"** (label `yepwatch-e2e`), or
-reopens it. Each failure comments the failing gates, timings and a link to the run artifacts. The next pass
+reopens it. Each failure comments the failing gates and a link to the run artifacts. The next pass
 comments and closes the issue (`e2e/ci/smoke-issue.mjs`).
 
 Triggers:

@@ -2,8 +2,8 @@
 // Production smoke → GitHub issue (label `yepwatch-e2e`), via the gh CLI (GH_TOKEN with issues: write).
 //
 //   node e2e/ci/smoke-issue.mjs fail <report.json> [--reason "after deploy abc123"]
-//       opens "YepWatch production smoke is failing", or reopens it, and comments with the failing gates,
-//       measurements and the run link
+//       opens "YepWatch production smoke is failing", or reopens it, and comments with the failing gates
+//       and the run link
 //   node e2e/ci/smoke-issue.mjs pass <report.json>
 //       comments "passing again" and closes the issue if it is open; does nothing otherwise
 //
@@ -27,10 +27,7 @@ function body() {
   if (report.failures.length) {
     L.push('| gate | person | detail | measured | budget |', '|---|---|---|---|---|');
     for (const f of report.failures.slice(0, 20)) L.push(`| ${f.gate} | ${f.person || '-'} | ${String(f.detail).replace(/\|/g, '\\|').replace(/\n/g, ' ').slice(0, 300)} | ${f.measured ?? ''} | ${f.budget ?? ''} |`);
-    L.push('');
   }
-  L.push('| moment | samples | p50 | p95 | target (fast 4G, reported) | ceiling (gate) |', '|---|---|---|---|---|---|');
-  for (const [m, v] of Object.entries(report.timing ?? {})) L.push(`| ${m} | ${v.samples} | ${v.p50 ?? '-'} | ${v.p95 ?? '-'} | ${v.target ?? '-'} | ${v.ceiling ?? 'not gated'}${v.pass ? '' : ' **FAIL**'} |`);
   return L.join('\n');
 }
 

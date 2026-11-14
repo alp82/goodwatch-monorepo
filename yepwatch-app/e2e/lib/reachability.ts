@@ -3,17 +3,17 @@
 // would blame YepWatch for it: on 2026-11-14 a 12 s drop between the runner and abio showed as "Reconnecting…
 // without an outage" and a 12 s invitation, while abio's proxy served everyone else.
 //
-// While a production smoke runs, the runner process (not the browsers, not throttled) asks YepWatch's readiness route
+// While a production smoke runs, the runner process (not the browsers) asks YepWatch's readiness route
 // and an IPv4 reference outside YepWatch's hosting at the same moments, every PROBE_EVERY_MS, whether or not earlier
 // probes are still waiting (each gives up after PROBE_TIMEOUT_MS). A stretch in which YepWatch didn't answer is
 //  - 'runner' when the reference didn't answer either: the runner was offline. The gates treat it as an outage
-//    (connection words are judged against it) and leave timing samples that overlap it out of the budgets;
+//    (connection words are judged against it, and transport errors in it are excused);
 //  - 'yepwatch' when the reference answered, or when YepWatch answered with a 5xx (whatever the reference did):
 //    YepWatch failed a working network. A failure of its own.
 
 export const PROBE_EVERY_MS = 250;
 export const PROBE_TIMEOUT_MS = 1000;
-/** A 'yepwatch' stretch shorter than this is no failure (one slow answer is the timing gates' business). */
+/** A 'yepwatch' stretch shorter than this is no failure (one slow answer is no outage). */
 export const MIN_UNREACHABLE_MS = 1000;
 /**
  * After the runner's network comes back, YepWatch may answer a little later than the reference (a new TCP and TLS
@@ -145,11 +145,6 @@ export function outagesOf(stretches: Unreachable[]): [number, number][] {
   const seen = new Map<string, [number, number]>();
   for (const s of stretches) seen.set(s.within.join(), s.within);
   return [...seen.values()];
-}
-
-/** Whether [from, to] (epoch ms) overlaps any of the runner's own outages. */
-export function duringRunnerOutage(from: number, to: number, stretches: Unreachable[]): Unreachable | undefined {
-  return stretches.find((s) => s.kind === 'runner' && from <= s.end && to >= s.start);
 }
 
 /**

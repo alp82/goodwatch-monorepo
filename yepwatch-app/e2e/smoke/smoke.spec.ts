@@ -1,14 +1,13 @@
 // Production smoke: ONE room per run, three people.
-//   host    guest, throttled (fast 4G)   New room → Create room → name → Netflix          (newRoomMs, createRoomMs)
-//   friend  guest, throttled, fresh browser through the invitation link                    (inviteOpenMs, startToPeerVotingMs, voteToPeerMs)
-//   member  signed in with GoodWatch, NOT throttled, joins by the same link ("Join as …"; a nameless account types one)
-//           (unthrottled_* moments: reported, never gated)
-// Then Start → 20 rounds of Yep from everyone (each a match: vote → peer sampled 20 times) → everyone leaves /
-// the host archives. Create and Start happen once: run.mjs takes their p95 over this and earlier runs.
+//   host    guest            New room → Create room → name → Netflix
+//   friend  guest, fresh browser through the invitation link
+//   member  signed in with GoodWatch, joins by the same link ("Join as …"; a nameless account types one)
+// Then Start → VOTE_ROUNDS rounds of Yep from everyone (each a match, seen on the other phones) → everyone
+// leaves / the host archives. No speed checks (README "Speed and smoothness, on demand").
 //
 // Why one room: there's no shared cap on active rooms, but a run should stay light on the shared rate windows.
 // A run costs 1 room (the guest host's own allowance of 10, held for the room's 6 h life) + 2 admissions +
-// ~80 commands, far under the 20 creates/joins and 600 commands a minute.
+// ~20 commands, far under the 20 creates/joins and 600 commands a minute.
 //
 // Member sign-in:
 //   - production: E2E_SMOKE_MEMBER_EMAIL / E2E_SMOKE_MEMBER_PASSWORD (a dedicated GoodWatch account; run.mjs reads
@@ -29,12 +28,11 @@ const MEMBER_PASSWORD = process.env.E2E_SMOKE_MEMBER_PASSWORD ?? '';
 const GUEST_ONLY = process.env.E2E_SMOKE_GUEST_ONLY === '1';
 /**
  * E2E_SMOKE_CHANGE_BEFORE_START=1: right before Start, the friend adds a service the room doesn't have yet (a setup
- * change: the room's deck is built again), and the host presses Start the same beat after the room has it. Same
- * moments, same budgets: Start must not wait visibly for that build.
+ * change: the room's deck is built again), and the host presses Start the same beat after the room has it.
  */
 const CHANGE_BEFORE_START = process.env.E2E_SMOKE_CHANGE_BEFORE_START === '1';
-/** Voting rounds: one vote → peer sample each (run.mjs takes a p95 from one run at 20 samples). */
-const VOTE_ROUNDS = 20;
+/** Voting rounds: each a match that must show on the other phones. */
+const VOTE_ROUNDS = 3;
 const local = /^http:\/\/(127\.0\.0\.1|localhost)[:/]/.test(ORIGIN ?? '');
 /** Smoke rooms are recognisable in the store and in History: "e2e smoke 2026-11-11T21:04". */
 const MARK = `e2e smoke ${new Date().toISOString().slice(0, 16)}`;
@@ -52,13 +50,6 @@ async function secretly(what: string, run: () => Promise<unknown>) {
     failed = true;
   }
   if (failed) throw new Error(`${what} failed (the original error is withheld: it may quote the credential)`);
-}
-
-/** Lifts the harness's fast-4G emulation for one person (unthrottled reference numbers). */
-async function unthrottle(p: Person) {
-  const cdp = await p.cdpSession();
-  await cdp.send('Network.enable');
-  await cdp.send('Network.emulateNetworkConditions', { offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1 });
 }
 
 /** Continue with GoodWatch → (sign-in form → consent, when GoodWatch asks) → back on YepWatch, signed in. */
@@ -130,7 +121,6 @@ async function accountName(p: Person): Promise<string | null> {
 async function memberSignIn(room: Room): Promise<Person> {
   const kept = loadSession(ORIGIN!, MEMBER_EMAIL);
   const member = await room.person('Smoke member', { trace: false, storageState: kept?.state });
-  await unthrottle(member);
   if (kept) {
     await member.open('/');
     if ((await accountStatus(member))?.state === 'member') {
@@ -149,7 +139,7 @@ async function memberSignIn(room: Room): Promise<Person> {
   return member;
 }
 
-/** The match count the host's chip shows now ("2 matches"; "Matches" before the first). */
+/** The match count a person's chip shows now ("2 matches"; "Matches" before the first). */
 async function shownMatches(p: Person) {
   return p.page.evaluate(() => {
     const yw = (window as unknown as { __yw: { visible(el: Element): boolean } }).__yw;
@@ -211,38 +201,35 @@ async function journey(room: Room, people: [Person, 'leave' | 'archive'][]) {
     if (local) {
       const memberAccount = `smoke-member-${randomBytes(3).toString('hex')}`;
       member = await room.person('Smoke member', { member: memberAccount });
-      await unthrottle(member);
       if (!ISSUER) member.journeyFailure('local smoke needs the stack (no issuer in .stack.json)');
       await issuer(`/_e2e/user?user=${encodeURIComponent(memberAccount)}`, { displayName: 'Smoke member' });
       await signIn(member);
     } else member = await memberSignIn(room);
   }
 
-  const host = await readyHost(room, 'Smoke host', MARK); // newRoomMs, createRoomMs
+  const host = await readyHost(room, 'Smoke host', MARK);
   people.push([host, 'archive']);
   await host.audit('room page');
   const invite = await inviteLink(host);
 
-  // Friend: a fresh, throttled browser opens the invitation.
+  // Friend: a fresh browser opens the invitation.
   const friend = await room.person('Smoke friend');
   await friend.open(invite, { settle: false });
-  const shown = await friend.firstShown(['join-screen', 'invite-head']);
-  if (shown.at) friend.record('inviteOpenMs', shown.at - shown.origin, 'navigation start → join page', [shown.origin, shown.at]);
+  await friend.firstShown(['join-screen', 'invite-head']);
   await friend.fill(friend.page.getByLabel('Your name').filter({ visible: true }), 'Smoke friend');
   await friend.tap(friend.button('Join'), { expect: { visible: ['services-sheet'] } });
   people.push([friend, 'leave']);
   await pickServices(friend, ['Netflix']);
   await friend.see({ visible: ['waiting'] }, 10000, 'friend waits for the host');
 
-  // Member: unthrottled reference for the invitation open, then join as the GoodWatch name. GoodWatch's email
+  // Member: opens the invitation and joins as the GoodWatch name. GoodWatch's email
   // sign-up asks for no name, so an account may have none: then the join form asks for one (the member's Join
   // keeps its GoodWatch mark). What the account says decides which form is right, so a named member who got
   // the nameless form still fails here.
   if (member) {
     const goodwatchName = await accountName(member);
     await member.open(invite, { settle: false });
-    const mShown = await member.firstShown(['join-screen', 'invite-head']);
-    if (mShown.at) member.record('unthrottled_inviteOpenMs', mShown.at - mShown.origin, 'navigation start → join page (signed in)', [mShown.origin, mShown.at]);
+    await member.firstShown(['join-screen', 'invite-head']);
     if (goodwatchName) {
       await member.tap(member.button(`Join as ${goodwatchName}`), { expect: { any: ['waiting', 'services-sheet'] } });
     } else {
@@ -266,41 +253,25 @@ async function journey(room: Room, people: [Person, 'leave' | 'archive'][]) {
   // from GoodWatch (~250 ms faster), a Start right on the member's arrival showed it for less than a flash.
   await host.page.waitForTimeout(300);
 
-  // Start: first card for the host (gated) and on both other phones.
+  // Start: first card for the host and on both other phones.
   await host.tap(host.button('Start'), {
     expect: { visible: ['voting', 'poster'] },
-    moment: 'startToFirstCardMs',
-    observers: [[friend, { visible: ['voting', 'poster'] }, 'startToPeerVotingMs'], ...(member ? [[member, { visible: ['voting', 'poster'] }, 'unthrottled_startToPeerVotingMs'] as const] : [])],
+    observers: [[friend, { visible: ['voting', 'poster'] }, 'voting'], ...(member ? [[member, { visible: ['voting', 'poster'] }, 'voting'] as const] : [])],
     timeout: 20000,
   });
 
-  // Yep from everyone, round after round: everyone has the same card, so the friend's Yep (the last) makes it
-  // a match, timed until the host's (and member's) match chip counts it. VOTE_ROUNDS rounds give vote → peer a
-  // real p95 from this run alone (20 samples; run.mjs). 3 people × 20 votes in ~45 s: under the 60 commands
-  // per person a minute. A round whose card was no match for everyone (the deck refilled between votes) is
-  // no sample; the run needs a match at the end either way.
-  const chip = (n: number) => ({ label: { text: `^${n} ${n === 1 ? 'match' : 'matches'}$` } });
+  // Yep from everyone, round after round: everyone has the same card, so the friend's Yep (the last) makes it a
+  // match. Its own screen may show the match moment instead of the next card, so that press is soft.
   for (let i = 0; i < VOTE_ROUNDS; i++) {
     for (const p of member ? [host, member] : [host]) {
       await p.page.waitForTimeout(400);
       const before = await cardTitle(p);
-      await p.tap(p.button('Yep'), { expect: { cardChanged: { from: before } }, moment: 'swipeNextCardMs', repeatable: true, timeout: 10000 });
+      await p.tap(p.button('Yep'), { expect: { cardChanged: { from: before } }, repeatable: true, timeout: 10000 });
     }
     await friend.page.waitForTimeout(400);
     const before = await cardTitle(friend);
-    // A round is a sample only once the host's chip shows every match the room has (a late match from a round
-    // before can't count for this vote; the harness also drops an observation already true before the press).
-    // The next count is read from the chip itself (not the snapshot, which can run ahead of the paint). Not in
-    // step within 3 s: the round is voted but not sampled.
-    const settled = async () => await shownMatches(host) === (host.latest?.matches?.length ?? -1);
-    let inStep = false;
-    for (const end = Date.now() + 3000; !(inStep = await settled()) && Date.now() < end;) await host.page.waitForTimeout(50);
-    const next = chip(await shownMatches(host) + 1);
-    await friend.tap(friend.button('Yep'), {
-      repeatable: true, soft: true, timeout: 2500, moment: 'swipeNextCardMs',
-      expect: { cardChanged: { from: before } },
-      observers: inStep ? [[host, next, 'voteToPeerMs'], ...(member ? [[member, next, 'unthrottled_voteToPeerMs']] : [])] as [Person, typeof next, string][] : [],
-    });
+    await friend.tap(friend.button('Yep'), { repeatable: true, soft: true, timeout: 2500, expect: { cardChanged: { from: before } } });
   }
   await eventually(() => host.latest?.matches?.length ?? 0, (n) => n > 0, 'the room has a match', host, 15000);
+  for (const p of member ? [host, member] : [host]) await eventually(() => shownMatches(p), (n) => n > 0, `${p.name} shows the match`, p, 15000);
 }

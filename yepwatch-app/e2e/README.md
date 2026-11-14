@@ -6,39 +6,36 @@ Hermetic stack + Playwright gates for the web app. Everything runs on 127.0.0.1,
 cd yepwatch-app/e2e
 npm install                 # axe-core only; Playwright comes from yepwatch-app/node_modules
 node run.mjs ci             # what CI runs per push: every journey once on the clean stack, axe (shard: -- --shard=1/3)
-npm run e2e:gate            # < 4 min: every journey once, core journeys under no-WS + rapid taps, timings x3, axe
-npm run e2e:full            # < 15 min: every journey under all six faults (restart serially), timings x10, 6 people
-npm run e2e:smoke -- --origin https://yepwatch.com   # guests only, production budgets, fast-4G throttling
+npm run e2e:gate            # < 4 min: every journey once, core journeys under no-WS + rapid taps, axe
+npm run e2e:full            # < 15 min: every journey under all six faults (restart serially), 6 people
+npm run e2e:smoke -- --origin https://yepwatch.com   # one room: two guests and the GoodWatch smoke member
 node run.mjs gate -- --grep invite                   # extra args go to Playwright
-node run.mjs frames -- --grep voting                 # on demand: frame pacing as a gate (see below)
+node run.mjs speed                                   # on demand, your machine: speed + smoothness (below)
 ```
 
-What fails a run: the journey, errors, schema, flash, layout shift, blocking/connection words, dead buttons, axe +
-48 px targets, and timing past its ceiling. Timing targets (`budgets.mjs` `local` / `production`) are reported in
-summary.md (`over target`), never gated; the ceilings (`budgets.mjs` `ceilings`: 3x the local targets on the
-hermetic stack, four coarse limits in production) are. Frame pacing is no gate anywhere.
+What fails a run: the journey (including a stuck one: ordinary test timeouts), errors, schema, flash, layout shift,
+blocking/connection words, dead buttons, axe + 48 px targets. No tier but `speed` judges speed (owner 2026-11-14).
+UX rules live in `lib/rules.mjs`; speed targets in `budgets.mjs`.
 
-## Frame pacing, on demand
+## Speed and smoothness, on demand
 
-After changing an animation, measure frames on a machine with a GPU and nothing else running:
-`node run.mjs frames [-- --grep <journey>]` runs the clean journeys one at a time with `E2E_FRAMES=gate` (no frame
-over `frameMaxMs`, 20 ms, while something animates; harness frames such as axe audits excluded). The same switch
-works on any tier (`E2E_FRAMES=gate node run.mjs smoke --origin …`). Android: `YW_E2E_FRAMES=gate node
-native/run.mjs gate` on a GPU-backed emulator (`gfxinfo` framestats). CI never sets either.
+`node run.mjs speed [-- --grep <journey>]` brings up the hermetic stack and runs the clean journeys one at a time,
+the timing journey three times, with frame pacing on (no frame over 20 ms while something animates). About
+15 minutes. Run it on a machine with a GPU and nothing else busy, now and then or after an animation change.
+
+Read the end of the output (also `artifacts/speed/summary.md`): one line per moment, `ok` or `OVER`, with its p95
+against the target in `budgets.mjs`, then any `frames` failures naming the slow frame and the press before it.
+Exit 0 means every moment is on target and no frame was slow. Android: `YW_E2E_FRAMES=gate node native/run.mjs
+gate` on a GPU-backed emulator reports its timings against the same targets and judges `gfxinfo` frames.
 
 The commands live here, not in `yepwatch-app/package.json`: that file's scripts are part of the Expo
 runtime fingerprint (`docs/ota-updates.md`), so adding scripts there would strand installed builds.
 
-Smoke sampling: one room per run, 20 voting rounds (each a match), so vote → peer gets a p95 from the run
-alone. Create and Start happen once a run: their p95 is taken over this run and the newest earlier runs against
-the same origin (up to 20 runs or 20 samples; `lib/timing-window.mjs`, history in
-`artifacts/smoke-history.jsonl`, kept between CI runs in the Actions cache).
-
 Smoke runner network (`lib/reachability.ts`): during a production smoke the runner process asks YepWatch's readiness
 route and an IPv4 reference (`https://1.1.1.1/cdn-cgi/trace`, override with `E2E_SMOKE_REFERENCE_URL`) every 250 ms.
-A stretch where neither answered is the runner's own outage: the gates judge the room's words against it, and timing
-samples and transport errors that overlap it are left out (and listed under "Runner network" in summary.md), so a
-dropped home or CI line doesn't fail YepWatch or poison the smoke history. YepWatch answering 5xx for 1 s or more is a
+A stretch where neither answered is the runner's own outage: the gates judge the room's words against it, and transport
+errors that overlap it are left out (and listed under "Runner network" in summary.md), so a dropped home or CI line
+doesn't fail YepWatch. YepWatch answering 5xx for 1 s or more is a
 failure of its own. YepWatch not answering within 1 s while the reference does (a deploy holds requests in the front
 until the new API answers) is reported only and excuses no connection words: what the people saw is judged instead.
 
@@ -46,7 +43,7 @@ The smoke's tidy-up (guests leave, the host archives) is not judged on screen: e
 (`person.finalHarvest()`); errors during it still count.
 
 Reports: `artifacts/<tier>/report.json` (every gate failure with journey, fault, gate, measured vs budget,
-artifacts; timing p50/p95 per moment) and `artifacts/<tier>/summary.md`. Traces of failed tests are under
+artifacts; `speed`: p50/p95 per moment) and `artifacts/<tier>/summary.md`. Traces of failed tests are under
 `artifacts/<tier>/results-*/` (`npx playwright show-trace <zip>`). They hold actions and console only, with each
 page's network history (headers and timings, no bodies) as a HAR beside them, its final screenshot and accessibility tree: Playwright's screencast and DOM snapshots (taken around every
 call, the recorder's 25 ms polls included) cost the measured pages frames no phone pays. `E2E_TRACE=full` brings them
@@ -116,8 +113,8 @@ of a restarting production container.
 - `gates.ts`, `a11y.ts`: flashes, layout shift, blocking words, connection words (none during an outage
   shorter than 3 s, so none for a hidden tab, a second device or no WebSocket; then one line, gone within 1 s
   of the outage's end; never a countdown; outages are the restart and offline windows), dead buttons, frame
-  gaps (only with `E2E_FRAMES=gate`), errors (console, uncaught, HTTP, schema via the app's own `sharedSchema`/`parseFrame`), axe WCAG 2.2
-  AA + accessible names + 48×48 targets. Budgets: `budgets.mjs`.
+  gaps (only in `speed`, `E2E_FRAMES=gate`), errors (console, uncaught, HTTP, schema via the app's own `sharedSchema`/`parseFrame`), axe WCAG 2.2
+  AA + accessible names + 48×48 targets. Rules: `lib/rules.mjs`.
 - Faults (Playwright projects): `none`, `nows`, `rapid`, `slow` (slow network + 4 s offline), `hidden`
   (tab hidden + frozen, clock +5 min), `twodevice` (second tab of the same person, then reload mid-vote),
   `restart` (API/gateway restart mid-journey, serial).
@@ -133,7 +130,7 @@ of a restarting production container.
 
 ## Diagnosing frames (never in a gated run)
 
-Switches for perf work. run.mjs, the gate and CI never set them; the normal smoke deals its looks at random.
+Switches for perf work. run.mjs and CI never set them; the normal smoke deals its looks at random.
 
 | env | what |
 |---|---|

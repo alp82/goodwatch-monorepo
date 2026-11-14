@@ -16,7 +16,7 @@
   const STATES = ['room-opening', 'finding-more', 'poster', 'match-moment', 'yepwatch-boot', 'invite-head-pending', 'invite-head',
     'profile-lapsed', 'start-reconnect', 'room-note'];
   const MARKERS = [...SCREENS, ...SHEETS, ...STATES];
-  // Blocking and connection words (budgets.mjs BLOCKING_WORDS, CONNECTION_WORDS). Every visible line that has
+  // Blocking and connection words (lib/rules.mjs BLOCKING_WORDS, CONNECTION_WORDS). Every visible line that has
   // one is recorded, joined by " ¦ ", so the gates can tell one connection line from two.
   const BLOCKING = /Trying again|Try again in \d|Not connected|Reconnecting|Connecting…|You[’']re offline|is saved|Couldn[’']t|Refresh to keep choosing|Something went wrong|YepWatch is starting|Opening the room|awaiting confirmation|Retry in \d/;
   const rec = {

@@ -245,29 +245,25 @@ export async function mixedGateRoom({ phone: A, stack, runDir, B, timing, audit,
 /**
  * The CI Android check (nightly, on demand, and on pushes that change native inputs): the same mixed room as
  * mixedGateRoom (Android host, browser friend by the invitation link, Start, vote to a match), with no video and
- * no timing gate. GitHub's emulator renders in software, so screen recordings and frame-exact timings measure the
- * runner, not the app. Gates: the journey finishes, a11y of each screen on the way (labels, 48 dp targets), no
- * blocking words, no app or browser errors. Step times (host clock, tap to the hierarchy showing the target) are
- * reported only, through `note`.
+ * no speed checks. Gates: the journey finishes, a11y of each screen on the way (labels, 48 dp targets), no
+ * blocking words, no app or browser errors.
  */
-export async function mixedJourneyRoom({ phone: A, stack, audit, notStuck, journeyFail, errors, note }) {
+export async function mixedJourneyRoom({ phone: A, stack, audit, notStuck, journeyFail, errors }) {
   const opening = WebPeer.open({ origin: stack.app, name: 'Webby' }); // Chromium starts while the phone creates the room
   opening.catch(() => {});
   let web = null;
-  const step = async (name, act, target, timeout = 15000) => {
-    const at = Date.now();
+  const step = async (act, target, timeout = 15000) => {
     await act();
     await A.waitFor(target, { timeout });
-    note(name, Date.now() - at);
   };
   try {
     await toStart(A);
     const tile = await A.find('New room', { timeout: 20000 });
-    await step('New room -> Mood page', () => A.tapXY(tile.cx, tile.cy), 'Mood');
+    await step(() => A.tapXY(tile.cx, tile.cy), 'Mood');
     await audit(A, 'mood page');
     await A.tap('cheer me up', { timeout: 10000 });
     const create = await A.find('Create room', { timeout: 10000 });
-    await step('Create room -> room page', () => A.tapXY(create.cx, create.cy), 'share-row', 20000);
+    await step(() => A.tapXY(create.cx, create.cy), 'share-row', 20000);
     await notStuck(A, 'room page after create');
     await audit(A, 'room page (host, before start)');
     await A.tap(/^Streaming services/, { timeout: 10000 });
@@ -282,7 +278,7 @@ export async function mixedJourneyRoom({ phone: A, stack, audit, notStuck, journ
     await A.waitFor('2 people, people', { timeout: 15000 });
 
     const start = await A.find('Start', { timeout: 10000 });
-    await step('Start -> first card (Android host)', () => A.tapXY(start.cx, start.cy), 'poster', 20000);
+    await step(() => A.tapXY(start.cx, start.cy), 'poster', 20000);
     await web.waitVoting();
     await audit(A, 'voting');
 

@@ -1,7 +1,8 @@
 // Turns what a person's page recorded into gate failures. Pure: no Playwright here.
-import { BLOCKING_WORDS, CONNECTION_WORDS, COUNTDOWN_WORDS, TRANSIENT_WORDS, budgetsFor } from '../budgets.mjs';
+import { targets } from '../budgets.mjs';
+import { BLOCKING_WORDS, CONNECTION_WORDS, COUNTDOWN_WORDS, TRANSIENT_WORDS, rules as B } from './rules.mjs';
 
-export type GateName = 'journey' | 'flash' | 'layout-shift' | 'timing' | 'frames' | 'errors' | 'a11y' | 'dead-button' | 'duplicates';
+export type GateName = 'journey' | 'flash' | 'layout-shift' | 'frames' | 'errors' | 'a11y' | 'dead-button' | 'duplicates';
 export interface GateFailure {
   gate: GateName;
   person: string;
@@ -22,7 +23,6 @@ export interface Recording {
   frames: { count: number; over20: [number, number][]; max: number };
 }
 
-const B = budgetsFor();
 // Markers that may legitimately live shorter than the flash budget.
 const SHORT_OK = new Set(['match-moment', 'yepwatch-boot']);
 
@@ -135,14 +135,14 @@ export function connectionWords(rec: Recording, person: string, faults: Outage[]
 export function frameGaps(rec: Recording, person: string, windows: [number, number][], harness: [number, number][] = []): GateFailure[] {
   // Only frames inside interaction windows (an input + 1.2 s): idle pages may legitimately skip frames.
   // A frame the harness held up (an axe audit running in the page) isn't the app's.
-  const bad = rec.frames.over20.filter(([t, gap]) => gap > B.frameMaxMs && windows.some(([a, b]) => t >= a && t <= b)
+  const bad = rec.frames.over20.filter(([t, gap]) => gap > targets.frameMaxMs && windows.some(([a, b]) => t >= a && t <= b)
     && !harness.some(([a, b]) => t - gap < b && t > a));
   if (!bad.length) return [];
   // Named: the worst frame that failed (the first of equals), what was pressed before it, and the scripts of
   // the long animation frame that overlaps it. Not the recording's longest animation frame, which is usually
   // the page load outside every interaction window.
   const [t, worst] = bad.reduce((a, b) => (b[1] > a[1] ? b : a));
-  return [{ gate: 'frames', person, detail: `${bad.length} frames over ${B.frameMaxMs} ms during interactions (worst ${worst} ms, ${describeFrame(rec, t, worst)})`, measured: worst, budget: B.frameMaxMs, at: t }];
+  return [{ gate: 'frames', person, detail: `${bad.length} frames over ${targets.frameMaxMs} ms during interactions (worst ${worst} ms, ${describeFrame(rec, t, worst)})`, measured: worst, budget: targets.frameMaxMs, at: t }];
 }
 
 /** Where a slow frame (ending at `t` after `gap` ms) sits: after which press, and which scripts ran in it. */

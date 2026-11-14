@@ -3,9 +3,9 @@ name: YepWatch gate and deploy
 # Deploy gate for YepWatch (docs/yepwatch-e2e-pipeline.md), sized for free GitHub-hosted runners (owner
 # 2026-11-14: "just enough to be confident that everything does not break"):
 #   - every push to main that touches what the YepWatch images build from: unit/type checks and the web E2E
-#     (`run.mjs ci`: each journey once on the clean stack; journey, errors, schema, flash, axe + 48 px, and timing
-#     only against coarse ceilings, budgets.mjs). No frame pacing gate anywhere (`run.mjs frames` on demand).
-#   - the Android emulator journey (KVM, no video, no timing gate): nightly, on workflow_dispatch, and on pushes
+#     (`run.mjs ci`: each journey once on the clean stack; journey, errors, schema, flash, axe + 48 px). No speed
+#     or frame pacing checks anywhere in CI (`run.mjs speed` on the owner's machine, on demand).
+#   - the Android emulator journey (KVM, no video, no speed checks): nightly, on workflow_dispatch, and on pushes
 #     whose changes touch the APK's native inputs (the same files as native/lib/build.mjs nativeKey()).
 # Only when everything that ran passed does the deploy job ask Coolify to deploy, wait for it, and run the
 # production smoke. No retries: a gate that flakes is a bug.
@@ -268,8 +268,8 @@ jobs:
 
   android-gate:
     # One mixed room on one emulator (Android app host + browser friend: create/join, Start, vote to a match) plus
-    # the Android cold start, with no video and no timing gate (`native-gate.mjs --mode=journey`): GitHub's emulator
-    # renders in software. The two-phone and full Android runs, video timings and flash checks stay in the pre-OTA
+    # the Android cold start, with no video and no speed checks (`native-gate.mjs --mode=journey`): GitHub's emulator
+    # renders in software. The two-phone and full Android runs, video flash checks and reported timings stay in the pre-OTA
     # gate on real hardware (e2e/ci/ota-gate.mjs). The slow parts overlap: the stack and the APK repack start in
     # the background as soon as node_modules are back, while the emulator, system image and AVD caches download.
     name: Android journey (mixed room)

@@ -4,7 +4,7 @@
 //
 //   node e2e/ci/ota-gate.mjs [--ios] [--no-android] [--check]
 //
-//   web full tier      node e2e/run.mjs full             (< 15 min; every journey under all faults, timings x10)
+//   web full tier      node e2e/run.mjs full             (< 15 min; every journey under all faults)
 //   Android full       node e2e/native/run.mjs full      (~6 min; incl. frame pacing on the real GPU)  --no-android skips
 //   iOS (--ios)        EAS Workflows: e2e/native/ci/eas-maestro-ios.yml (simulator build + Maestro, ~25-35 min,
 //                      started first so it runs while the local tiers do)

@@ -1,13 +1,14 @@
 # YepWatch Android E2E
 
 Release-like APK (Hermes bytecode embedded, no dev menu) on headless emulators, against a hermetic loopback
-stack. Gates: journey completes, flash, timing past its ceiling (3x the target, `../budgets.mjs`), errors,
-accessibility. Frame pacing is reported (`YW_E2E_FRAMES=gate` makes it a gate, GPU-backed emulators only). No retries.
+stack. Gates: journey completes, flash, errors, accessibility. Timings are reported against their targets
+(`budgets.mjs`, shared moments from `../budgets.mjs`), never a gate. Frame pacing is reported (`YW_E2E_FRAMES=gate`
+makes it a gate, GPU-backed emulators only). No retries.
 
 ```sh
 cd yepwatch-app/e2e/native
-node run.mjs journey        # what CI runs (GitHub emulator): cold start + one mixed room, no video, step times reported
-node run.mjs subset         # the same room with video timings and flash checks, on one emulator
+node run.mjs journey        # what CI runs (GitHub emulator): cold start + one mixed room, no video, no timings
+node run.mjs subset         # the same room with video flash checks and reported timings, on one emulator
 npm run e2e:native:gate     # the two-phone Android journey (~1.5 min warm, ~3 min from a cold machine)
 npm run e2e:native:full     # everything, incl. 3 min background, mixed Android/browser rooms
 npm run e2e:native:maestro  # the two-phone journey through the YAML flows only (slow, see flows/README.md)
@@ -25,7 +26,7 @@ logcat per phone. Exit code 0 only if every gate passes.
 | `build/` | Staging-only app config: package `dev.yepwatch.e2e`, invitation app links (`https://yepwatch.com/r/`, `http://127.0.0.1/r/`), cleartext allowed for loopback only, no OTA URL (the build refuses one). |
 | `lib/device.mjs` | AVD `yw-e2e` (Pixel 8, API 35, host GPU) with a prepared snapshot (offline: wifi + data off, show touches, Maestro driver installed). Two read-only instances on 5570/5572 boot in 4-10 s. `adb reverse` for stack ports. |
 | `lib/phone.mjs` | Fast driver: gRPC to Maestro's on-device server (~190 ms hierarchy, ~30 ms tap). |
-| `lib/video.mjs` | Timing + flash from the emulator's own 60 fps recorder (method and resolution in the file header). |
+| `lib/video.mjs` | Timing (reported) + flash from the emulator's own 60 fps recorder (method and resolution in the file header). |
 | `lib/gates.mjs` | logcat (JS errors, fatal JS, native crashes, ANRs), a11y (label + 48 dp), `gfxinfo framestats`, blocking words. |
 | `lib/stack.mjs` | Origins: `YW_E2E_STACK` -> `../.stack.json` (shared stack) -> `.cache/dev-stack.json` -> env. |
 | `stack/dev-stack.mjs` | Interim stack until the shared one is merged: synthetic catalog, in-memory rooms, Valkey in Docker, gateway, web export; `env -i` allowlist + loopback-only socket preload. |

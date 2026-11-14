@@ -9,7 +9,7 @@
 // handshake), as in the incident.
 import { expect, eventually, test, type Person } from '../lib/harness';
 import { Blackhole } from '../lib/blackhole';
-import { budgetsFor } from '../budgets.mjs';
+import { rules } from '../lib/rules.mjs';
 import { inviteLink, join, readyHost, recordPage, start, vote } from './flows';
 
 /**
@@ -98,7 +98,7 @@ test.describe('a network that drops packets silently', () => {
         // A live socket with nothing to send never noticed the hole; one that was connecting must connect again.
         if (where === 'handshake') expect(live, `the live channel is back within 10 s of the network\n  ${timeline}`).not.toBeNull();
         expect(samples.some((s) => s.error), 'no error on the page').toBe(false);
-        expect(goneMs, `Reconnecting gone within ${budgetsFor().connectionWordsAfterMs} ms of the network’s return\n  ${timeline}`).toBeLessThanOrEqual(budgetsFor().connectionWordsAfterMs);
+        expect(goneMs, `Reconnecting gone within ${rules.connectionWordsAfterMs} ms of the network’s return\n  ${timeline}`).toBeLessThanOrEqual(rules.connectionWordsAfterMs);
         const votes = () => host.commandLog.filter((c) => c.t >= at && /\/commands$/.test(c.path) && c.status < 300).length;
         await eventually(votes, (n) => n > 0, 'the vote made in the hole was answered', host, 15000);
         await sleep(500);

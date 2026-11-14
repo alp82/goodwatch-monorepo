@@ -1,16 +1,15 @@
 #!/usr/bin/env node
 // Runs one E2E tier and writes artifacts/<tier>/report.json (machine-readable) + summary.md (human).
 //   node run.mjs ci       what CI runs on every push (yepwatch-gate.yml): each journey once on the clean stack
-//                         (no fault projects, no deploy/restart phase, timings x1), axe. Shard with `-- --shard=1/3`.
-//   node run.mjs gate     each journey once (clean), core journeys under no-WebSocket and rapid taps,
-//                         key timings x3, axe, then deploys and gateway restarts (realtime.spec). Target < 4 min.
-//   node run.mjs full     every journey under all six faults (restart serially), timings x10, 6-person room.
-//                         Target < 15 min.
-//   node run.mjs smoke [--origin https://yepwatch.com]   guests only, production budgets + fast-4G throttling.
-//   node run.mjs frames   on demand, after an animation change: frame pacing (no frame over frameMaxMs while
-//                         something animates) as a gate, one test at a time. Needs a GPU-backed, otherwise idle
-//                         machine; never part of CI. `-- --grep voting` narrows it.
-// Timing: every moment is reported against its target; only the coarse ceilings (budgets.mjs `ceilings`) fail a run.
+//                         (no fault projects, no deploy/restart phase), axe. Shard with `-- --shard=1/3`.
+//   node run.mjs gate     each journey once (clean), core journeys under no-WebSocket and rapid taps, axe, then
+//                         deploys and gateway restarts (realtime.spec). Target < 4 min.
+//   node run.mjs full     every journey under all six faults (restart serially), 6-person room. Target < 15 min.
+//   node run.mjs smoke [--origin https://yepwatch.com]   one room: two guests and a GoodWatch member.
+//   node run.mjs speed    on demand, on the owner's machine (GPU, otherwise idle): the clean journeys one at a time,
+//                         timings x3, each moment's p95 vs its target (budgets.mjs) and frame pacing (no frame over
+//                         frameMaxMs while something animates). Never part of CI. `-- --grep voting` narrows it.
+// Only `speed` judges speed; every other tier judges behaviour (journey, errors, flash, words, axe).
 // Extra arguments after `--` go to Playwright (e.g. `node run.mjs gate -- --grep invite`).
 import { Buffer } from 'node:buffer';
 import { spawnSync } from 'node:child_process';
@@ -18,8 +17,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { budgetsFor, ceilingsFor } from './budgets.mjs';
-import { WINDOW_RUNS, historyLine, readHistory, timingStats } from './lib/timing-window.mjs';
+import { targets } from './budgets.mjs';
 import { ORIGINS } from './stack/config.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -179,13 +177,13 @@ function runTier() {
       phases.push(phase('ci', ['--project=none', '--grep-invert', 'six people'], {
         E2E_WORKERS: process.env.E2E_WORKERS ?? '10', E2E_TIMING_RUNS: '1',
       }));
-    } else if (tier === 'frames') {
-      phases.push(phase('frames', ['--project=none', '--grep-invert', 'six people'], {
-        E2E_WORKERS: process.env.E2E_WORKERS ?? '1', E2E_TIMING_RUNS: '1', E2E_FRAMES: 'gate',
+    } else if (tier === 'speed') {
+      phases.push(phase('speed', ['--project=none', '--grep-invert', 'six people'], {
+        E2E_WORKERS: process.env.E2E_WORKERS ?? '1', E2E_TIMING_RUNS: '3', E2E_FRAMES: 'gate',
       }));
     } else if (tier === 'gate') {
       phases.push(phase('gate', ['--project=none', '--project=nows', '--project=rapid', '--grep-invert', 'six people'], {
-        E2E_WORKERS: process.env.E2E_WORKERS ?? '10', E2E_TIMING_RUNS: '3', E2E_FAULT_GREP: '@core',
+        E2E_WORKERS: process.env.E2E_WORKERS ?? '10', E2E_TIMING_RUNS: '1', E2E_FAULT_GREP: '@core',
       }));
       // Deploys and gateway restarts (web/realtime.spec.ts, ~40 s): stack-wide, so alone and one at a time. Left out
       // when extra Playwright arguments pick tests (a --grep would find none here).
@@ -195,7 +193,7 @@ function runTier() {
       const groups = [['none', 'nows'], ['rapid', 'slow'], ['hidden', 'twodevice']];
       for (const [i, g] of groups.entries()) {
         if (i) reset();
-        phases.push(phase(g.join('+'), g.map((f) => `--project=${f}`), { E2E_WORKERS: process.env.E2E_WORKERS ?? '10', E2E_TIMING_RUNS: '10' }));
+        phases.push(phase(g.join('+'), g.map((f) => `--project=${f}`), { E2E_WORKERS: process.env.E2E_WORKERS ?? '10', E2E_TIMING_RUNS: '1' }));
       }
       reset();
       // Stack-wide restarts disturb every room: alone, one test at a time.
@@ -205,10 +203,7 @@ function runTier() {
     }
   }
 
-  // ---- merge + budgets ------------------------------------------------------------------------------------
-  const target = tier === 'smoke' && originArg ? 'production' : 'local';
-  const B = budgetsFor(target);
-  const C = ceilingsFor(target);
+  // ---- merge ---------------------------------------------------------------------------------------------
   const tests = phases.flatMap((p) => p.tests);
   const failures = [];
   for (const t of tests) {
@@ -218,57 +213,23 @@ function runTier() {
       failures.push({ journey: t.journey, fault: t.fault, gate: 'journey', person: '', detail: t.error.split('\n').filter(Boolean).slice(0, 3).join(' · ').slice(0, 400), artifacts: t.artifacts });
     if (t.status === 'timedOut') failures.push({ journey: t.journey, fault: t.fault, gate: 'journey', person: '', detail: `timed out after ${Math.round(t.durationMs / 1000)} s`, artifacts: t.artifacts });
   }
-  const samples = new Map();
-  for (const t of tests) for (const s of t.timings) {
-    if (!samples.has(s.moment)) samples.set(s.moment, []);
-    samples.get(s.moment).push({ ...s, journey: t.journey, fault: t.fault });
-  }
-  // Timing budgets apply to clean runs; fault runs are reported but not judged against them. A sample taken while
-  // the runner itself was offline (lib/reachability.ts) measures the runner's network: left out, and listed below.
-  const cleanOf = (moment, list) => list.filter((s) => !s.excluded && (s.fault === 'none' || s.fault === 'smoke' || tier === 'smoke' || moment === 'restartQueuedLandMs'));
-  const own = Object.fromEntries([...samples].map(([moment, list]) => [moment, cleanOf(moment, list).map((s) => s.ms)]));
-  // Smoke: a moment one run samples fewer than 20 times (create and Start: one room per run) takes its p95 over
-  // this run plus earlier runs against the same origin (lib/timing-window.mjs). The history holds numbers only.
-  const historyOrigin = tier === 'smoke' ? (originArg ?? ORIGINS.front) : null;
-  const historyFile = process.env.E2E_SMOKE_HISTORY || path.join(here, 'artifacts', 'smoke-history.jsonl');
-  let history = [];
-  if (historyOrigin && fs.existsSync(historyFile)) history = readHistory(fs.readFileSync(historyFile, 'utf8'), historyOrigin);
-  const stats = timingStats(own, history, Boolean(historyOrigin));
+  // Speed (the `speed` tier only): each moment's p95 over the run's samples against its target.
   const timing = {};
-  // Targets (B) are reported: p95 over the run (smoke: plus earlier runs, see above). Ceilings (C) gate, judged on
-  // this run's own samples only, so an earlier slow run never fails this one.
-  const ownStats = timingStats(own, [], false);
-  for (const [moment, list] of samples) {
-    const clean = cleanOf(moment, list);
-    const st = stats[moment];
-    const mine = ownStats[moment];
-    const goal = B[moment];
-    const ceiling = C[moment];
-    const pass = ceiling === undefined || mine.p95 === null || mine.p95 <= ceiling;
-    const onTarget = goal === undefined || st.p95 === null || st.p95 <= goal;
-    timing[moment] = { samples: st.samples, runSamples: st.own, runs: st.runs, p50: st.p50, p95: st.p95, max: st.max, runP95: mine.p95, target: goal ?? null, onTarget, ceiling: ceiling ?? null, pass };
-    if (!pass) {
-      const worst = [...clean].sort((a, b) => b.ms - a.ms)[0];
-      failures.push({ journey: `(all, worst: ${worst?.journey ?? '-'})`, fault: worst?.fault ?? 'smoke', gate: 'timing', person: worst?.person ?? '', detail: `${moment} p95 ${mine.p95} ms over ${mine.samples} samples is past its ceiling (p50 ${mine.p50} ms, max ${mine.max} ms${worst ? `; worst at ${worst.detail ?? ''}` : ''})`, measured: mine.p95, budget: ceiling, artifacts: [] });
+  if (tier === 'speed') {
+    const samples = new Map();
+    for (const t of tests) for (const s of t.timings) samples.set(s.moment, [...(samples.get(s.moment) ?? []), s.ms]);
+    const pct = (sorted, p) => sorted[Math.min(sorted.length - 1, Math.ceil((p / 100) * sorted.length) - 1)];
+    for (const [moment, list] of samples) {
+      const ms = [...list].sort((a, b) => a - b);
+      const target = targets[moment] ?? null;
+      const p95 = pct(ms, 95);
+      timing[moment] = { samples: ms.length, p50: pct(ms, 50), p95, max: ms.at(-1), target, onTarget: target === null || p95 <= target };
+      if (!timing[moment].onTarget) failures.push({ journey: '(all)', fault: 'none', gate: 'speed', person: '', detail: `${moment} p95 ${p95} ms over its ${target} ms target (${ms.length} samples, p50 ${timing[moment].p50} ms, max ${ms.at(-1)} ms)`, artifacts: [] });
     }
-  }
-  if (historyOrigin) {
-    // Kept per origin, newest WINDOW_RUNS runs each; written whatever the run's outcome (its samples are real).
-    const keep = fs.existsSync(historyFile) ? fs.readFileSync(historyFile, 'utf8').split('\n').filter(Boolean) : [];
-    const lines = [...keep, historyLine(historyOrigin, own)];
-    const byOrigin = new Map();
-    for (const line of lines) {
-      let o = '';
-      try { o = JSON.parse(line).origin ?? ''; } catch { continue; }
-      if (!byOrigin.has(o)) byOrigin.set(o, []);
-      byOrigin.get(o).push(line);
-    }
-    fs.mkdirSync(path.dirname(historyFile), { recursive: true });
-    fs.writeFileSync(historyFile, `${[...byOrigin.values()].flatMap((l) => l.slice(-WINDOW_RUNS)).join('\n')}\n`);
   }
   const wallClockMs = Date.now() - t0;
   const report = {
-    tier, startedAt: new Date(t0).toISOString(), wallClockMs, target: B.target,
+    tier, startedAt: new Date(t0).toISOString(), wallClockMs,
     tests: tests.length, passed: tests.filter((t) => t.status === 'passed').length, failed: tests.filter((t) => t.status !== 'passed' && t.status !== 'skipped').length,
     timing, failures, results: tests,
   };
@@ -281,17 +242,16 @@ function runTier() {
     byGate.get(f.gate).push(f);
   }
   const lines = [`# YepWatch E2E ${tier}: ${report.failed}/${report.tests} tests failed, ${failures.length} gate failures, ${(wallClockMs / 1000).toFixed(0)} s wall clock`, ''];
-  lines.push('## Timing (clean runs: p95 vs target is reported; only the ceiling gates)', '', '| moment | samples | runs | p50 | p95 | target | | ceiling (this run\'s p95) | gate |', '|---|---|---|---|---|---|---|---|---|');
-  for (const [m, v] of Object.entries(timing)) lines.push(`| ${m} | ${v.samples}${v.runs > 1 ? ` (${v.runSamples} this run)` : ''} | ${v.runs} | ${v.p50 ?? '-'} | ${v.p95 ?? '-'} | ${v.target ?? '-'} | ${v.target === null ? '' : v.onTarget ? 'on target' : 'over target'} | ${v.ceiling === null ? '-' : `${v.ceiling} (${v.runP95 ?? '-'})`} | ${v.ceiling === null ? 'reported' : v.pass ? 'ok' : 'FAIL'} |`);
-  if (historyOrigin) lines.push('', `Reported p95: moments with fewer than 20 samples in this run take it over the newest earlier runs against this origin as well (up to ${WINDOW_RUNS} runs or 20 samples): ${path.relative(here, historyFile)}. The ceiling is judged on this run alone.`);
+  if (tier === 'speed') {
+    lines.push('## Speed (p95 vs target, budgets.mjs)', '', '| moment | samples | p50 | p95 | max | target | |', '|---|---|---|---|---|---|---|');
+    for (const [m, v] of Object.entries(timing)) lines.push(`| ${m} | ${v.samples} | ${v.p50} | ${v.p95} | ${v.max} | ${v.target ?? '-'} | ${v.target === null ? '' : v.onTarget ? 'ok' : 'OVER'} |`);
+  }
   const stretches = tests.flatMap((t) => (t.reachability?.stretches ?? []).map((s) => ({ ...s, journey: t.journey })));
   const excused = tests.flatMap((t) => t.reachability?.excused ?? []);
-  const excluded = [...samples.values()].flat().filter((s) => s.excluded);
-  if (stretches.length || excluded.length || excused.length) {
+  if (stretches.length || excused.length) {
     const clock = (t) => new Date(t).toISOString().slice(11, 23);
-    lines.push('', '## Runner network', '', 'Stretches in which YepWatch did not answer the runner. `runner`: the reference did not answer either (the runner was offline; judged as an outage, overlapping samples and transport errors left out). `yepwatch (HTTP 5xx)`: a failure. `yepwatch (no answer)`: the reference answered but YepWatch held the probe past 1 s (a deploy holds requests): reported only, and no outage for the room’s words.', '');
+    lines.push('', '## Runner network', '', 'Stretches in which YepWatch did not answer the runner. `runner`: the reference did not answer either (the runner was offline; judged as an outage, overlapping transport errors left out). `yepwatch (HTTP 5xx)`: a failure. `yepwatch (no answer)`: the reference answered but YepWatch held the probe past 1 s (a deploy holds requests): reported only, and no outage for the room’s words.', '');
     for (const s of stretches) lines.push(`- ${s.kind}${s.why ? ` (${s.why})` : ''}: ${clock(s.start)}–${clock(s.end)} UTC (${Math.round(s.end - s.start)} ms) in ${s.journey}`);
-    for (const s of excluded) lines.push(`- left out: ${s.moment} ${s.ms} ms (${s.person}, ${s.detail ?? ''}): ${s.excluded}`);
     for (const e of excused) lines.push(/reported, not gated/.test(e) ? `- ${e}` : `- error left out: ${e}`);
   }
   for (const [gate, list] of byGate) {
@@ -314,11 +274,9 @@ function runTier() {
   }
   fs.writeFileSync(path.join(out, 'summary.md'), `${lines.join('\n')}\n`);
   log(`done in ${(wallClockMs / 1000).toFixed(0)} s → ${path.relative(process.cwd(), path.join(out, 'summary.md'))}, report.json`);
-  // Playwright's own line can say "passed": budgets are judged here, across the run's samples, after it ends.
-  for (const [m, v] of Object.entries(timing)) if (!v.pass) log(`FAIL ${m}: p95 ${v.runP95} ms past its ceiling ${v.ceiling} ms (${v.runSamples} samples)`);
-  const over = Object.entries(timing).filter(([, v]) => !v.onTarget).map(([m, v]) => `${m} p95 ${v.p95}/${v.target}`);
-  if (over.length) log(`over target (reported, not gated): ${over.join(', ')}`);
-  for (const t of tests) for (const s of t.reachability?.stretches ?? []) if (s.kind === 'runner') log(`runner offline ${Math.round(s.end - s.start)} ms from ${new Date(s.start).toISOString().slice(11, 23)} UTC: judged as an outage, overlapping samples left out (summary.md)`);
+  // Playwright's own line can say "passed": speed is judged here, across the run's samples, after it ends.
+  for (const [m, v] of Object.entries(timing)) log(`${v.onTarget ? 'ok  ' : 'OVER'} ${m}: p95 ${v.p95} ms${v.target === null ? '' : ` (target ${v.target})`}, ${v.samples} samples`);
+  for (const t of tests) for (const s of t.reachability?.stretches ?? []) if (s.kind === 'runner') log(`runner offline ${Math.round(s.end - s.start)} ms from ${new Date(s.start).toISOString().slice(11, 23)} UTC: judged as an outage (summary.md)`);
   if (failures.length || report.failed) log(`FAILED: ${report.failed} test(s), ${failures.length} gate failure(s)`);
   return failures.length || report.failed ? 1 : 0;
 }
