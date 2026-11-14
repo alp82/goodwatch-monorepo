@@ -102,6 +102,35 @@ test('an accepted mood whose acknowledgement is lost goes again by itself as the
   expect(f.room.shared.ideas).toHaveLength(1);
 });
 
+test('an accepted mood whose acknowledgement is lost survives reload and retries the exact command without another idea', async ({ page }) => {
+  const f = await fakeRoom(page, newRoom());
+  let rooms = 0, lose = true, down = true;
+  page.on('request', (r) => { if (r.method() === 'POST' && r.url().endsWith('/proposal/rooms')) rooms++; });
+  await page.route('**/commands', async (route) => {
+    if (route.request().postDataJSON().command.type === 'add_idea') {
+      // The first one lands but its answer is lost; until the reload the network stays down for the resends.
+      if (lose) { lose = false; f.lose(); return route.fallback(); }
+      if (down) return route.abort('failed');
+    }
+    await route.fallback();
+  });
+  await page.goto('/new');
+  await page.getByLabel('Mood', { exact: true }).fill('dark and funny');
+  await page.getByRole('button', { name: 'Create room', exact: true }).click();
+  await expect(page.getByText('Reconnecting…', { exact: true })).toBeVisible({ timeout: 6_000 });
+  await page.reload();
+  down = false;
+  await expect(page.getByLabel('Mood')).toHaveValue('dark and funny');
+  await expect(page.getByRole('button', { name: /^(Create room|Try again)$/, exact: true })).toBeEnabled();
+  await page.getByRole('button', { name: /^(Create room|Try again)$/, exact: true }).click();
+  await expect(page.getByTestId('room-setup')).toBeVisible();
+  const commands = f.commands.filter((c) => c.command.type === 'add_idea');
+  expect(commands).toHaveLength(2);
+  expect(commands[1]).toEqual(commands[0]);
+  expect(rooms).toBe(2); // Replays the exact bootstrap on reload, so the API returns its original room.
+  expect(f.room.shared.ideas).toHaveLength(1);
+});
+
 test('cancelling a local draft returns to its caller without allocating a room', async ({ page }) => {
   await fakeRoom(page, newRoom());
   let rooms = 0;
