@@ -201,9 +201,10 @@ test("live rooms in Valkey with a Crate history copy", { skip: !enabled, timeout
 		assert.equal(await repository.compareAndSwap(live, next, false), true)
 		// A worker wrote it to Crate and crashed before recording it.
 		const [v, cs, ct] = await raw.hmget(K.room(id), "v", "cs", "ct")
-		await raw.zadd(K.jobs, "XX", 1, `room:${id}`)
 		await raw.hset(K.room(id), "w", v!, "wf", `${v}:${crate.fingerprint(next)}`)
 		assert.equal(typeof (await crate.archive(next, { seq: Number(cs), term: Number(ct) })), "object")
+		// Staged: now the job is due.
+		await raw.zadd(K.jobs, "XX", 1, `room:${id}`)
 		await history.kick()
 		await until(async () => (await raw.hget(K.room(id), "s")) === v, "adopted")
 		assert.equal((await repository.read(id))!.room.participants[0].nickname, "Adopted")
