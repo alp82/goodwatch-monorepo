@@ -30,7 +30,8 @@ import type { ContinuousMembers } from "~/server/yepwatch/continuous-members.ser
 import { memberExclusions } from "~/server/yepwatch/proposal-member-exclusions.ts"
 import type { ProposalCatalog, ProposalRoom } from "~/server/yepwatch/proposal-types.ts"
 import { paths } from "../../../goodwatch-webapp/packages/yepwatch-contracts/proposal.ts"
-import { COUNTRIES, PROVIDERS, fixtureTitles, servicesOf } from "./fixture-titles.mjs"
+import { enrichContinuousCandidates } from "~/server/yepwatch/continuous-presentation.server.ts"
+import { COUNTRIES, PROVIDERS, extrasQuery, fixtureTitles, offerUrl, servicesOf } from "./fixture-titles.mjs"
 
 const env = process.env
 function need(name: string) {
@@ -117,7 +118,7 @@ const reads: CatalogReads = {
 						offers: offered.map((id: number) => ({
 							serviceId: id,
 							name: PROVIDERS.find(([p]) => p === id)![1],
-							url: `https://example.invalid/watch/${id}/${t.tmdbId}`,
+							url: offerUrl(id, t.tmdbId),
 							kind: "provider",
 							offerType: "flatrate",
 						})),
@@ -134,6 +135,7 @@ async function metadata(country?: string | null) {
 		moods: [],
 	}
 }
+const extras = extrasQuery(TITLES)
 const keyName = (key: number) => `${key >= 2_000_000_000_000 ? "show" : "movie"}_${key % 1_000_000_000_000}`
 function fixtureCatalog(members?: ContinuousMembers): ProposalCatalog {
 	// Members' seen titles as production reads them (proposal-guest-catalog.server.ts): best effort in deck builds,
@@ -145,13 +147,19 @@ function fixtureCatalog(members?: ContinuousMembers): ProposalCatalog {
 			return roomIntentKeys(room as ProposalRoom, keys).filter((k) => !excluded.has(keyName(k)))
 		},
 	})
-	const catalog = proposalCatalog(base)
+	// As production's guest catalog (proposal-guest-catalog.server.ts): ideas attributed and cards enriched inside the
+	// proposal catalog, the enrichment reading the fixture instead of the GoodWatch catalog tables.
+	const catalog = proposalCatalog({
+		...base,
+		async page(room) {
+			const page = await base.page(room)
+			const attributed = page.candidates.map((c) => ({ ...c, ideaIds: matchingIdeaIds(room as ProposalRoom, c) }))
+			const country = room.screens.find((s) => room.participants.some((p) => p.screenId === s.id))?.country
+			return { ...page, candidates: await enrichContinuousCandidates(attributed, country ?? "US", extras) }
+		},
+	})
 	return {
 		...catalog,
-		async page(room) {
-			const page = await catalog.page(room)
-			return { ...page, candidates: page.candidates.map((c) => ({ ...c, ideaIds: matchingIdeaIds(room, c) })) }
-		},
 		...(exclusions ?? { excludedKeys: async () => [] }),
 	}
 }
