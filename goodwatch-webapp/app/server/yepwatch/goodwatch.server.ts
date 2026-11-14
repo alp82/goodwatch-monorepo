@@ -55,39 +55,39 @@ const offers = keptOfferReads({
     return timed('links', readStreamLinks(scopes, searchQuery))
   },
 }, OFFERS_TTL_MS, 20_000)
-const episodesKept = new KeyedReads<KeptEpisodes>(EPISODES_TTL_MS, 1_000, (e) => e.source.length > 0)
 /** What a deck reads of an episode (and corrections may change): the rest isn't kept. */
 type KeptEpisode = Pick<EpisodeListRow, 'tmdb_id' | 'season_number' | 'episode_number' | 'name' | 'air_date'>
-type KeptEpisodes = { source: KeptEpisode[]; presentation: EpisodePresentation | null }
-const kept = ({ tmdb_id, season_number, episode_number, name, air_date }: KeptEpisode): KeptEpisode => ({ tmdb_id, season_number, episode_number, name, air_date })
-async function presentationOf(showId: number) {
-  const { getEpisodePresentation } = await import('../episode-presentation.server')
-  return getEpisodePresentation(showId)
-}
-/** One show's list, as GoodWatch pages read it. */
-async function readEpisodes(showId: number): Promise<KeptEpisodes> {
-  const { getSourceEpisodeList } = await import('../tracking.server')
-  const [source, presentation] = await Promise.all([getSourceEpisodeList(showId), presentationOf(showId)])
-  return { source: source.map(kept), presentation }
-}
+// Lists straight from the episode table (no other cache in between, so 6 hours is their whole age); an empty list
+// isn't kept. Season labels only when there are some: getEpisodePresentation answers null both for a show without
+// and after a failed read, so null is read again (for most shows that's an in-memory check).
+const listsKept = new KeyedReads<KeptEpisode[]>(EPISODES_TTL_MS, 1_000, (rows) => rows.length > 0)
+const labelsKept = new KeyedReads<EpisodePresentation | null>(EPISODES_TTL_MS, 1_000, (p) => p !== null)
 const EPISODES_BATCH_ROWS = 20_000
 /**
- * Several shows' lists in one query (the same rows and order as the one-show read, without descriptions). A show
- * whose rows the query's limit may have cut off is left out (it is read on its own).
+ * Several shows' lists in one query, with the rows and order of GoodWatch's one-show read. When the query's limit
+ * may have cut the list short, the last show it reached and every show after it are left out (read again later).
  */
-async function readEpisodesMany(showIds: number[]): Promise<Map<number, KeptEpisodes>> {
+async function readLists(showIds: number[]): Promise<Map<number, KeptEpisode[]>> {
   const { query } = await import('~/utils/crate')
-  const [rows, presentations] = await Promise.all([
-    query<KeptEpisode & { show_id: number }>(`SELECT show_id, tmdb_id, season_number, episode_number, name, air_date FROM episode WHERE show_id IN (${showIds.map(() => '?').join(',')}) AND removed_at IS NULL ORDER BY show_id, season_number, episode_number LIMIT ${EPISODES_BATCH_ROWS}`, showIds),
-    Promise.all(showIds.map(presentationOf)),
-  ])
-  const cut = rows.length >= EPISODES_BATCH_ROWS ? rows.at(-1)!.show_id : null
-  const lists = new Map<number, KeptEpisode[]>(showIds.filter(id => id !== cut).map(id => [id, []]))
-  for (const row of rows) lists.get(row.show_id)?.push(kept(row))
-  return new Map([...lists].map(([id, source]) => [id, { source, presentation: presentations[showIds.indexOf(id)] }]))
+  const ids = [...showIds].sort((x, y) => x - y)
+  const rows = await query<KeptEpisode & { show_id: number }>(`SELECT show_id, tmdb_id, season_number, episode_number, name, air_date FROM episode WHERE show_id IN (${ids.map(() => '?').join(',')}) AND removed_at IS NULL ORDER BY show_id, season_number, episode_number LIMIT ${EPISODES_BATCH_ROWS}`, ids)
+  return episodeLists(ids, rows, EPISODES_BATCH_ROWS)
 }
+/** `rows` (ordered by show) per show of `ids`; at `limit` rows, the last show reached and all after it are left out. */
+export function episodeLists(ids: number[], rows: (KeptEpisode & { show_id: number })[], limit: number) {
+  const cut = rows.length >= limit ? Number(rows.at(-1)!.show_id) : Infinity
+  const lists = new Map<number, KeptEpisode[]>(ids.filter(id => id < cut).map(id => [id, []]))
+  for (const { tmdb_id, season_number, episode_number, name, air_date, show_id } of rows) lists.get(Number(show_id))?.push({ tmdb_id, season_number, episode_number, name, air_date })
+  return lists
+}
+async function readLabels(showIds: number[]): Promise<Map<number, EpisodePresentation | null>> {
+  const { getEpisodePresentation } = await import('../episode-presentation.server')
+  return new Map(await Promise.all(showIds.map(async id => [id, await getEpisodePresentation(id)] as const)))
+}
+const byKey = <V>(read: (ids: number[]) => Promise<Map<number, V>>) => async (missing: string[]) =>
+  new Map([...(await read(missing.map(Number)))].map(([id, value]) => [String(id), value]))
 /** Corrections are applied on every read (they go live within seconds); which episodes have aired, too. */
-async function episodeChoices(showId: number, { source, presentation }: KeptEpisodes) {
+async function episodeChoices(showId: number, source: KeptEpisode[], presentation: EpisodePresentation | null) {
   const { applyCorrections } = await import('../feedback/apply-corrections.server')
   const canonical = await applyCorrections({ kind: 'show', id: showId }, source)
   const labels = new Map(presentation?.episodes.map(e => [e.id, e]))
@@ -98,18 +98,21 @@ async function episodeChoices(showId: number, { source, presentation }: KeptEpis
       ...(label ? { displaySeason: label.displaySeason, displayNumber: label.displayNumber, presentationVersion: presentation!.version } : {}) }
   })
 }
-async function episodes(showId: number) {
-  const kept = await episodesKept.many([String(showId)], async () => new Map([[String(showId), await readEpisodes(showId)]]))
-  // A failed read throws (KeyedReads passes it on), as it did before.
-  return episodeChoices(showId, kept.get(String(showId))!)
-}
 /** Several shows' episodes, those not kept read in one query; a show it can't answer is left out. */
 async function episodesMany(showIds: number[]) {
-  const kept = await episodesKept.many(showIds.map(String), async missing => {
-    const read = await timed('episodes', readEpisodesMany(missing.map(Number)))
-    return new Map([...read].map(([id, value]) => [String(id), value]))
-  })
-  return new Map(await Promise.all([...kept].map(async ([id, value]) => [Number(id), await episodeChoices(Number(id), value)] as const)))
+  const keys = showIds.map(String)
+  const [lists, labels] = await Promise.all([
+    listsKept.many(keys, byKey(ids => timed('episodes', readLists(ids)))),
+    labelsKept.many(keys, byKey(readLabels)),
+  ])
+  return new Map(await Promise.all([...lists].filter(([id]) => labels.has(id)).map(async ([id, list]) => [Number(id), await episodeChoices(Number(id), list, labels.get(id)!)] as const)))
+}
+async function episodes(showId: number) {
+  const found = (await episodesMany([showId])).get(showId)
+  if (found) return found
+  // A list longer than the batch limit: GoodWatch's own one-show read, not kept.
+  const [{ getSourceEpisodeList }, labels] = await Promise.all([import('../tracking.server'), readLabels([showId])])
+  return episodeChoices(showId, await getSourceEpisodeList(showId), labels.get(showId) ?? null)
 }
 const baseRanking = rankedKeysCache()
 type RankingCombo = { country: string; type: 'all' | 'movie' | 'show'; moods: string[] }

@@ -39,8 +39,9 @@ const scopeKey = (s: Scope) => `${s.mediaType}-${s.tmdbId}-${s.country}`
 /**
  * Evidence and direct-link reads for deck builds, kept per title and country (KeyedReads) for at most `ttlMs`: the
  * `batch` and `links` of an adapter whose `fresh` (the agreement's final check) stays unkept. A title without evidence
- * is kept as such. `reads.batch` must throw when it fails: a failure is never kept, and its titles are answered
- * without evidence (unknown), as an unkept read answered them.
+ * is kept as such. `reads.batch` is asked one media type at a time and must throw when it fails: a failure is never
+ * kept, and its titles are answered without evidence (unknown), as an unkept read answered them; the other type's
+ * answer stands.
  */
 export function keptOfferReads(reads: { batch(scopes: Scope[]): Promise<Map<string, unknown>>; links(scopes: Scope[]): Promise<StreamLink[]> }, ttlMs: number, maxEntries = 40_000, now: () => number = Date.now) {
   const evidence = new KeyedReads<unknown>(ttlMs, maxEntries, () => true, now)
@@ -50,15 +51,19 @@ export function keptOfferReads(reads: { batch(scopes: Scope[]): Promise<Map<stri
     async batch(scopes: Scope[]): Promise<Map<string, unknown>> {
       const byKey = new Map(scopes.map(s => [scopeKey(s), s]))
       const kept = await evidence.many([...byKey.keys()], async missing => {
-        const wanted = missing.map(key => byKey.get(key)!)
-        try {
-          const rows = await reads.batch(wanted)
-          // Every title read is answered, with null for one without evidence.
-          return new Map(wanted.map(s => [scopeKey(s), rows.get(`${s.mediaType}-${s.tmdbId}`) ?? null]))
-        } catch (error) {
-          console.warn('Availability evidence unavailable', error instanceof Error ? error.message : 'query failure')
-          return new Map()
-        }
+        const answer = new Map<string, unknown>()
+        await Promise.all((['movie', 'show'] as const).map(async mediaType => {
+          const wanted = missing.map(key => byKey.get(key)!).filter(s => s.mediaType === mediaType)
+          if (!wanted.length) return
+          try {
+            const rows = await reads.batch(wanted)
+            // Every title read is answered, with null for one without evidence.
+            for (const s of wanted) answer.set(scopeKey(s), rows.get(`${s.mediaType}-${s.tmdbId}`) ?? null)
+          } catch (error) {
+            console.warn('Availability evidence unavailable', error instanceof Error ? error.message : 'query failure')
+          }
+        }))
+        return answer
       })
       const found = new Map<string, unknown>()
       for (const s of scopes) {

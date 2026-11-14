@@ -188,3 +188,21 @@ test('kept offers: deck reads are kept per title and country; the agreement\'s f
   await adapter(displays, screens, false)
   assert.deepEqual(batches.at(-1), ['movie-1-DE', 'movie-2-DE'], 'and the failure was not kept')
 })
+test('kept offers: one media type\'s failed read leaves the other\'s evidence, and only the failed titles are read again', async () => {
+  const { keptOfferReads } = await import('./availability-adapter.ts')
+  const asked: string[][] = []
+  let failMovies = true
+  const kept = keptOfferReads({
+    async batch(scopes) {
+      asked.push(scopes.map(s => `${s.mediaType}-${s.tmdbId}`))
+      if (failMovies && scopes[0].mediaType === 'movie') throw new Error('crate unavailable')
+      return new Map(scopes.map(s => [`${s.mediaType}-${s.tmdbId}`, { ok: true }]))
+    },
+    async links() { return [] },
+  }, 60_000)
+  const scopes = [{ mediaType: 'movie' as const, tmdbId: 1, country: 'DE' }, { mediaType: 'show' as const, tmdbId: 2, country: 'DE' }]
+  assert.deepEqual([...(await kept.batch(scopes)).keys()], ['show-2'])
+  failMovies = false
+  assert.deepEqual([...(await kept.batch(scopes)).keys()].sort(), ['movie-1', 'show-2'])
+  assert.deepEqual(asked.at(-1), ['movie-1'], 'the show was kept, the failed movie read again')
+})

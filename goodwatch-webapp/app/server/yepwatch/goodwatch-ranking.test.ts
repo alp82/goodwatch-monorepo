@@ -93,3 +93,12 @@ test("the base ranking doesn't build the catalog's popularity ranks it never fil
 	// The catalog scan behind popularity ranks reads the count once per title; the filter itself a few times per slice.
 	assert.ok(scans < 100, `no full catalog scan for popularity ranks (count read ${scans} times)`)
 })
+
+test("a batched episode read cut off by its limit leaves out the last show reached and every show after it", async () => {
+	const { episodeLists } = await import("./goodwatch.server.ts")
+	const row = (show_id: number, n: number) => ({ show_id, tmdb_id: show_id * 100 + n, season_number: 1, episode_number: n, name: null, air_date: null })
+	const whole = episodeLists([3, 1, 2], [row(1, 1), row(1, 2), row(3, 1)], 4)
+	assert.deepEqual([...whole].map(([id, list]) => [id, list.length]), [[3, 1], [1, 2], [2, 0]], "under the limit every show is answered, one without rows too")
+	const cut = episodeLists([1, 2, 3, 4], [row(1, 1), row(2, 1), row(2, 2), row(2, 3)], 4)
+	assert.deepEqual([...cut.keys()], [1], "show 2 may be cut short, 3 and 4 were never reached")
+})
