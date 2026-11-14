@@ -179,6 +179,9 @@ test("live rooms in Valkey with a Crate history copy", { skip: !enabled, timeout
 	})
 
 	await t.test("a late copy record from an older incarnation never touches the replacement", async () => {
+		// The replacement's copy can still be recording itself (Crate already has it): wait until no job is left.
+		await history.kick()
+		await until(async () => (await raw.zcard(K.jobs)) === 0, "idle")
 		const [v, s, cs] = await raw.hmget(K.room(id), "v", "s", "cs")
 		await raw.zadd(K.jobs, 5, `room:${id}`)
 		assert.equal(Number(await script(redis, "ywSynced", K.jobs, K.tries, K.room(id), `room:${id}`, 5, 999, 1, 1, Date.now(), "1")), 4)
@@ -192,6 +195,9 @@ test("live rooms in Valkey with a Crate history copy", { skip: !enabled, timeout
 		const next = structuredClone(live.room)
 		next.revision++
 		next.participants[0].nickname = "Adopted"
+		// Hold the room's copy job until the crash is staged: the background loop runs due jobs every second, and a
+		// copy before the staged write below would move the Crate head under it.
+		await raw.zadd(K.jobs, Date.now() + 60_000, `room:${id}`)
 		assert.equal(await repository.compareAndSwap(live, next, false), true)
 		// A worker wrote it to Crate and crashed before recording it.
 		const [v, cs, ct] = await raw.hmget(K.room(id), "v", "cs", "ct")
@@ -212,7 +218,8 @@ test("live rooms in Valkey with a Crate history copy", { skip: !enabled, timeout
 		const a = structuredClone(live.room)
 		a.revision++
 		a.participants[0].nickname = "Late A"
-		await raw.zadd(K.jobs, "XX", Date.now() + 60_000, `room:${id}`)
+		// Hold the copy job (there is none after idle, so not XX) until the lost write is staged.
+		await raw.zadd(K.jobs, Date.now() + 60_000, `room:${id}`)
 		assert.equal(await repository.compareAndSwap(live, a, false), true)
 		const [va] = await raw.hmget(K.room(id), "v")
 		await raw.hset(K.room(id), "w", va!, "wf", `${va}:${crate.fingerprint(a)}`)
