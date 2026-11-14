@@ -7,6 +7,7 @@ import {
   type GuestAdmission,
   type CreateRoomRequest,
   type JoinRoomRequest,
+  type OwnRead,
   type RoomSnapshot,
   type CatalogMetadata,
   type RealtimeTicket,
@@ -159,6 +160,10 @@ export class ContinuousApi {
   join = (id: string, body: JoinRoomRequest, access?: RoomAccess, signal?: AbortSignal) =>
     this.request<GuestAdmission>(paths.join(id), body, access, signal, undefined, ADMISSION_TIMEOUT_MS);
   snapshot = (a: RoomAccess, signal?: AbortSignal) => this.request<RoomSnapshot>(paths.snapshot(a.roomId), undefined, a, signal);
+  /** The room, or only the own part while the room is still at `known`, the shared revision held (an API before
+   * this answers the whole room either way). */
+  snapshotSince = (a: RoomAccess, known: number, signal?: AbortSignal) =>
+    this.request<RoomSnapshot | OwnRead>(`${paths.snapshot(a.roomId)}?known=${known}`, undefined, a, signal);
   command = (a: RoomAccess, c: CommandEnvelope) =>
     this.request<CommandResult>(paths.commands(a.roomId), c, a);
   ticket = (a: RoomAccess) => this.request<RealtimeTicket>(paths.realtimeTicket(a.roomId), {}, a);

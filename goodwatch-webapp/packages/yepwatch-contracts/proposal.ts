@@ -170,6 +170,11 @@ export interface RoomSnapshot {
 	shared: SharedRoomSnapshot
 	own: OwnPrivateSnapshot
 }
+/** The room read's answer to `?known=<shared revision>` while the room is still at that revision: the own part only. */
+export interface OwnRead {
+	own: OwnPrivateSnapshot
+	sharedRevision: number
+}
 export interface MemberPrefill {
 	country: string | null
 	serviceIds: number[]

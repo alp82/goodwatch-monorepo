@@ -65,3 +65,18 @@ test('public wire parser rejects private votes/current-title extensions and malf
   assert.equal(parseRealtimeFrame(JSON.stringify({ type: 'room.updated', snapshot })), null);
   for (const value of ['null', '{}', '[]', 'garbage']) assert.equal(parseRealtimeFrame(value), null);
 });
+
+test('a room read answered with only its own part takes the shared room this phone holds, at that revision only', async () => {
+  const { withShared } = await import('../src/core/continuous/state');
+  const shared = { revision: 7 } as never as import('@goodwatch/yepwatch-contracts/proposal').SharedRoomSnapshot;
+  const own = { participantId: 'p', nextSequence: 3 } as never as import('@goodwatch/yepwatch-contracts/proposal').OwnPrivateSnapshot;
+  const held = { shared, own, ownRevision: 7 } as never as import('../src/core/continuous/state').CachedRoom;
+  const whole = { shared: { revision: 8 }, own } as never as import('@goodwatch/yepwatch-contracts/proposal').RoomSnapshot;
+  assert.equal(withShared(whole, held), whole);
+  const answer = withShared({ own, sharedRevision: 7 }, held);
+  assert.equal(answer?.shared, shared);
+  assert.equal(answer?.own, own);
+  // The phone holds another revision by now (or nothing): read the whole room.
+  assert.equal(withShared({ own, sharedRevision: 6 }, held), null);
+  assert.equal(withShared({ own, sharedRevision: 7 }, undefined), null);
+});

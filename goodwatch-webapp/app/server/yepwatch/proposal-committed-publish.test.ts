@@ -159,3 +159,25 @@ test("a committed room is serialized once: the bus message is the JSON its size 
 	assert.ok(isCommitted(committed[0]))
 	assert.equal(committedSerializations, 1, "the size check and the bus message share one JSON.stringify")
 })
+
+test("a room read that names the shared revision it holds gets only its own part while the room is still there", async () => {
+	const r = await started()
+	const handler = createProposalHandler(r.service, { serviceSecret: secret, allowedOrigins: [], secureCookies: false })
+	const read = (query = "") => handler(new Request(`http://api${paths.snapshot(r.id)}${query}`, {
+		headers: { "x-yepwatch-client": "native", authorization: `Bearer ${r.b.credential.token}`, "x-yepwatch-participant": r.b.credential.participantId },
+	})).then(async (response) => ({ status: response.status, body: await response.json() }))
+	const full = await read()
+	assert.equal(full.status, 200)
+	const revision = full.body.shared.revision
+	// Current: the own part and the revision it belongs to.
+	assert.deepEqual(await read(`?known=${revision}`), { status: 200, body: { own: full.body.own, sharedRevision: revision } })
+	// Behind (or ahead of) the room, or not a revision: the whole room, as before.
+	for (const known of [revision - 1, revision + 1, "x", "", "1e3"]) {
+		const answer = await read(`?known=${known}`)
+		assert.equal(answer.status, 200)
+		assert.deepEqual(Object.keys(answer.body).sort(), ["own", "shared"], `known=${known}`)
+	}
+	await r.vote(r.a)
+	const after = await read(`?known=${revision}`)
+	assert.ok(after.body.shared.revision > revision, "a newer room comes whole")
+})

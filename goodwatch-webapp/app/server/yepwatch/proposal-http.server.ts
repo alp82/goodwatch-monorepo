@@ -7,6 +7,7 @@ import {
 	API_PREFIX,
 	MEMBER_SESSION_HEADER,
 	paths,
+	type OwnRead,
 } from "../../../packages/yepwatch-contracts/proposal.ts"
 import { isAccountState, type MemberSession } from "./continuous-members.server.ts"
 import { equal, random } from "./crypto.server.ts"
@@ -633,6 +634,12 @@ export function createProposalHandler(
 						)?.nickname ?? "unknown")) snapshot = await service.read(id, actor)
 						snapshot.own.member = member
 					}
+					// `known`: the shared revision the asking phone already holds (it reads after each live update for its own
+					// part). Still current: only the own part goes back, a few hundred bytes instead of the whole room again.
+					// Without it, or behind it, the whole room, as for every app before this.
+					const known = url.searchParams.get("known")
+					if (known !== null && /^\d{1,15}$/.test(known) && Number(known) === snapshot.shared.revision)
+						return reply({ own: snapshot.own, sharedRevision: snapshot.shared.revision } satisfies OwnRead)
 					return reply(snapshot)
 				}
 				if (request.method === "GET" && operation === "member/progress") {

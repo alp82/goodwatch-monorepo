@@ -1,6 +1,7 @@
 import { retainRequest, retryDeadline } from './retry';
 import type {
   CommandEnvelope,
+  OwnRead,
   RoomCommand,
   RoomSnapshot,
   SharedRoomSnapshot,
@@ -28,6 +29,15 @@ export function mergePublic(
     shared.revision < current.shared.revision
     ? current
     : { ...current, shared };
+}
+/**
+ * A room read's answer as a whole room: as it came, or its own part with the shared room this phone holds at the
+ * revision the answer names. Null when that shared room is no longer the one held (a newer update came meanwhile):
+ * read the whole room then.
+ */
+export function withShared(answer: RoomSnapshot | OwnRead, held: CachedRoom | undefined): RoomSnapshot | null {
+  if ('shared' in answer) return answer;
+  return held && held.shared.revision === answer.sharedRevision ? { shared: held.shared, own: answer.own } : null;
 }
 export function ownCard(snapshot: RoomSnapshot, pendingId?: string) {
   const unanswered = (id: string) =>

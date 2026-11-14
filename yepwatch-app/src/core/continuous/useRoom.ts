@@ -17,7 +17,7 @@ import { queryClient } from '../providers';
 import { publicFailureMessage } from '../recovery';
 import { continuousRealtimeUrl } from '../config';
 import type { Connection } from '../realtime';
-import { mergeRoom, mergePublic, PersistentCommands, type CachedRoom } from './state';
+import { mergeRoom, mergePublic, PersistentCommands, withShared, type CachedRoom } from './state';
 import { awaitsServer, overlayRoom, proposingCandidate, type CommandBuild, type QueuedCommand } from './optimistic';
 import { readCommandRecovery, writePending, writePendingNow } from './storage';
 import { useRetryCountdown } from './useRetryCountdown';
@@ -166,7 +166,10 @@ export function useContinuousRoom(roomId: string) {
     if (!access || expired()) return;
     try {
       const asked = snapshotGeneration();
-      const incoming = await api.snapshot(access);
+      // After a live update this phone holds the shared room already: the read asks for its own part only.
+      const held = cached();
+      const answer = held ? await api.snapshotSince(access, held.shared.revision) : await api.snapshot(access);
+      const incoming = withShared(answer, cached()) ?? (await api.snapshot(access));
       apply(incoming);
       if (!terminalRef.current) { setPrivateError(false); confirmRoom(roomId, asked); }
       return incoming;
@@ -176,7 +179,7 @@ export function useContinuousRoom(roomId: string) {
       if (!terminalRef.current && !transientFailure(e)) setPrivateError(true);
       throw e;
     }
-  }, [access, expired, apply, authority, roomId]);
+  }, [access, expired, apply, authority, roomId, cached]);
   const room = useQuery<CachedRoom>({
     queryKey: continuousKey(roomId),
     enabled: Boolean(access) && !terminal,
