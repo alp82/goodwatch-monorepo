@@ -30,9 +30,12 @@ its container started. The front went first, so phones only saw the socket drop 
 Changed (`yepwatch-app/compose.yaml`, `proposal-release-main.ts`/`-runtime.ts`, the hold in `goodwatch-proxy/Caddyfile`,
 the app's `core/continuous/realtime.ts` and `connection-words.ts`):
 
-- **Order.** valkey, then the api once valkey has *started* (not healthy), then the front, then the gateway. Coolify
-  removes newest first, so the gateway goes first (its goodbye: a `restarting` frame and close 1012), the front never
-  holds a request for an api that is already gone, and valkey goes last.
+- **Order.** valkey, then the api once valkey has *started* (not healthy), then the gateway, then the front. Coolify
+  removes newest first: the front goes first (the api still answers what it holds), then the gateway (its goodbye: a
+  `restarting` frame and close 1012). From the front's removal on, a phone's next realtime ticket waits in the hold for
+  the new api, so its next WebSocket finds the new gateway listening. (Deploy 3942 ran with the gateway first: phones
+  got tickets from the old api and dialed a gateway that was gone; the hold kept those handshakes until the client's
+  open timeout closed them, 9 WebSocket errors in the smoke, though no line showed.) valkey goes last.
 - **WebSocket straight to the gateway.** The gateway publishes `10.0.0.21:18481`; the hold sends the exact path
   `/api/yepwatch/v1/proposal/realtime` there. A front that stops while it holds a WebSocket upgrade waits its whole
   grace period (10 s, measured), so reconnects must never wait inside the front.

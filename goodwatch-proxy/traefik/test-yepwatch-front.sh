@@ -96,9 +96,9 @@ firewall() {
       || docker exec "$prefix-firewall" iptables "$1" "${rule[@]}"
   done
 }
-deploy() { # Coolify: remove every old container one by one (newest first: gateway, front, api), then start the new ones.
+deploy() { # Coolify: remove every old container one by one (newest first: front, gateway, api), then start the new ones.
   local c
-  for c in gateway front api; do docker stop -t 10 "$prefix-$c" >/dev/null; done
+  for c in front gateway api; do docker stop -t 10 "$prefix-$c" >/dev/null; done
   firewall -I
   sleep "$gap"
   docker start "$prefix-api" "$prefix-gateway" >/dev/null
