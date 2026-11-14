@@ -86,7 +86,10 @@ export function Screen({ back, right, children, footer, footerPlacement, overlay
   useSheetsHoldNavigation(focused && sheetOpen, () => { closeSheets?.(); closeTopSheet(); });
   const derived: HeaderPill | null = view ? { label: view.label, state: view.phase === 'decided' ? 'decided' : 'live', fresh: view.newSuggestions, beat: focused && !covered ? room?.liveBeat : null } : null;
   const current = view && roomId && room ? { roomId, label: view.label, decided: view.phase === 'decided', openRoomPage: () => room.openSheet('room') } : undefined;
-  const roomSheet = room && view && focused && room.sheet ? room.renderSheet(room.sheet) : null;
+  // The same element while the sheet stays: this frame re-renders with the room, and a new element redrew the whole sheet.
+  const openSheet = room && view && focused ? room.sheet : null;
+  const renderSheet = room?.renderSheet;
+  const roomSheet = useMemo(() => (openSheet && renderSheet ? renderSheet(openSheet) : null), [openSheet, renderSheet]);
   const scrollGap = gap ?? (scroll ? 22 : 12);
   return (
     <AppFrame testID={testID} scroll={scroll} covered={covered} overlay={overlay} sheet={sheet ?? roomSheet} backdrop={backdrop} width={width} gap={scrollGap} noteTop={noteTop}

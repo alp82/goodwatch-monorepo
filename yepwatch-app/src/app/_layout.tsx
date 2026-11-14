@@ -1,7 +1,7 @@
 import { BootPageReady, BootPhase, bootPage } from '../features/home/boot-phase';
 import { useWebFontsReady } from '../features/home/useWebFontsReady';
 import { Stack, usePathname } from 'expo-router';
-import { useCallback, useLayoutEffect, useState } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useState } from 'react';
 import { Platform, Text, View } from 'react-native';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
@@ -45,12 +45,15 @@ export default function Layout() {
   const done = useCallback(() => setBooted(true), []);
   const hideNative = useCallback(() => { if (Platform.OS !== 'web') void SplashScreen.hideAsync().catch(() => undefined); }, []);
   const shown = booted || arriving;
+  // The same element while the fonts stay loaded: this layout re-renders on every change of address and page
+  // readiness, and a new Stack element re-rendered the whole navigator and the screens in it each time.
+  const stack = useMemo(() => fontsReady && <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#070707' } }}><Stack.Screen name="room/[id]" options={arrivalRoom} /></Stack>, [fontsReady]);
   return <BootPageReady.Provider value={markPageReady}><BootPhase.Provider value={booted ? 'ready' : arriving ? 'enter' : 'boot'}><Providers><StatusBar style="light" /><View style={{ flex: 1, backgroundColor: '#070707' }} {...(Platform.OS === 'web' ? null : leftoverTouchGuard)}>
     {/* Inert (no focus inside hidden content) until the cover starts to dissolve. Native draws the page
         under the opaque cover, so its first (heavy) draw is done before the dissolve and can't stall it;
         the web hides it outright (the browser composites the dissolve). */}
     <CoveredBody covered={!booted} testID="boot-stack" style={{ flex: 1, opacity: shown || Platform.OS !== 'web' ? 1 : 0 }}>
-      {fontsReady && <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#070707' } }}><Stack.Screen name="room/[id]" options={arrivalRoom} /></Stack>}
+      {stack}
     </CoveredBody>
     {Platform.OS === 'web' && !fontsReady && <View aria-hidden pointerEvents="none" style={{ position: 'absolute', opacity: 0 }}>
       <Text style={{ fontFamily: 'Gabarito' }}>YepWatch</Text><Text style={{ fontFamily: 'GabaritoBold' }}>YepWatch</Text>

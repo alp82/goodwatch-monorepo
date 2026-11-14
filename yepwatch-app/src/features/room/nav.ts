@@ -34,7 +34,7 @@ const NEW_ROOM_SETTLE_MS = 1000;
 export function openNewRoom() {
   if (moodInFront || Date.now() - newRoomPushedAt < NEW_ROOM_SETTLE_MS) return;
   newRoomPushedAt = Date.now();
-  router.push('/new');
+  router.push('/new', { inTransition: true });
 }
 /** The Mood page of a new room came to the front (true) or left it (false). */
 export function newRoomInFront(front: boolean) {
@@ -53,7 +53,7 @@ export const arrivesInPlace = (id: string | undefined) => Boolean(id && arrivals
 /** The New room page's answer opens its room in the page's place. */
 export function openCreatedRoom(id: string) {
   arrivals.add(id);
-  router.replace({ pathname: '/room/[id]', params: { id } });
+  router.replace({ pathname: '/room/[id]', params: { id } }, { inTransition: true });
 }
 /**
  * Fetches the code of the pages a start-page action opens (Mood, the room) ahead of the tap. A route

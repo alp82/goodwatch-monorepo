@@ -3,9 +3,9 @@
  * share this one connection). Owns the room's side effects: registry, GoodWatch link, protocol
  * entry, background refill, this device's "Keep swiping" choice, and the room's open sheets.
  */
-import { createContext, useCallback, useContext, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createContext, memo, useCallback, useContext, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from 'react';
 import { useNavigation } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
+import { replaceEqualDeep, useQuery } from '@tanstack/react-query';
 import type { ActivityView } from '@goodwatch/yepwatch-contracts/proposal';
 import { continuousKey, useContinuousRoom } from '../../core/continuous/useRoom';
 import { roomRegistry } from '../../core/continuous/room-registry';
@@ -46,15 +46,34 @@ const dismissed = new Map<string, number>();
 /** Each opening of a room on this device: its own live-dot beat. */
 let openings = 0;
 
-export interface RoomContextValue {
-  id: string;
-  state: ReturnType<typeof useContinuousRoom>;
-  entry: ReturnType<typeof useLobbyEntry>;
+type LiveRoom = ReturnType<typeof useContinuousRoom>;
+/**
+ * The live room as screens read it: the same fields, but one object while none of them changes and functions
+ * that keep their identity. The live room is a new object on every render (a query's fetch status, a credential
+ * arriving), and each of those re-rendered every room screen in full.
+ */
+export type RoomState = Omit<LiveRoom, 'room' | LiveField> & { room: { error: LiveRoom['room']['error'] } };
+/** What changes with nearly every update of the room (each vote, each answer): in RoomLive, not in RoomState. */
+type LiveField = 'confirmed' | 'display' | 'busy' | 'activities' | 'cheerEvents' | 'cheerHolders';
+/**
+ * The room objects that change with nearly every update (a vote, a command's answer, a friend's activity).
+ * Apart from the room context, so screens that only show the room's view (RoomView, kept the same object while
+ * its content is the same) don't re-render for each of them.
+ */
+export type RoomLive = Pick<LiveRoom, LiveField> & {
   /** The room with this device's unconfirmed changes in it. */
   snapshot: CachedRoom | undefined;
+};
+export interface RoomContextValue {
+  id: string;
+  state: RoomState;
+  entry: ReturnType<typeof useLobbyEntry>;
+  /** The same object while its content stays the same (a vote or a command's answer often changes nothing in it). */
   view: RoomView | null;
   cmd: RoomCommands;
   latest: () => CachedRoom | undefined;
+  /** The country GoodWatch brought for this member (Your services' starting country). */
+  prefillCountry: string | null | undefined;
   /** Only what really stops input: the server is deciding, a command awaits confirmation, or the private state needs a refresh. */
   disabled: boolean;
   invite: StoredInvite | null | undefined;
@@ -95,6 +114,13 @@ export interface RoomContextValue {
   liveBeat: string;
 }
 const RoomContext = createContext<RoomContextValue | null>(null);
+const RoomLiveContext = createContext<RoomLive | null>(null);
+/** The room's fast-changing objects (RoomLive); a screen reading them re-renders with each update of the room. */
+export function useRoomLive() {
+  const value = useContext(RoomLiveContext);
+  if (!value) throw new Error('useRoomLive outside a room');
+  return value;
+}
 /** The room when the screen is inside one (the shared frame derives its header from it), else null. */
 export function useOptionalRoom() {
   return useContext(RoomContext);
@@ -103,6 +129,25 @@ export function useRoom() {
   const value = useContext(RoomContext);
   if (!value) throw new Error('useRoom outside a room');
   return value;
+}
+
+/**
+ * A part of a room screen that renders only when what it reads from the room changes. `pick` takes those
+ * values (each one compared by identity); the part's body gets them as props next to its own and is skipped
+ * while they all stay the same. A component reading useRoom() re-renders, with everything it draws, on any
+ * change of the room context.
+ */
+export function roomPart<Picked extends object, Props extends object = Record<never, never>>(
+  name: string,
+  pick: (room: RoomContextValue) => Picked,
+  Body: (props: Props & Picked) => ReactNode,
+): ComponentType<Props> {
+  const Inner = memo(Body as ComponentType<Props & Picked>);
+  function RoomPart(props: Props) {
+    return <Inner {...props} {...pick(useRoom())} />;
+  }
+  RoomPart.displayName = `Room(${name})`;
+  return RoomPart;
 }
 
 export function RoomProvider(props: { id: string; children: ReactNode; renderSheet: (sheet: RoomSheet) => ReactNode }) {
@@ -189,7 +234,14 @@ function RoomProviderContent({ id, children, renderSheet }: { id: string; childr
   const saves = useSettingsSaves({ cmd, view: confirmedView, latest, blocked: disabled || state.retrySeconds > 0, failed: saveFailed });
   const display = state.display;
   const snapshot = useMemo(() => (display ? previewDrafts(display, saves.saving) : undefined), [display, saves.saving]);
-  const view = useMemo(() => (snapshot ? roomView(snapshot, seenIdeas, state.proposing) : null), [snapshot, seenIdeas, state.proposing]);
+  // Structurally shared with the previous view: an update that changes nothing it shows keeps the same objects.
+  const lastView = useRef<RoomView | null>(null);
+  const view = useMemo(() => {
+    const next = snapshot ? roomView(snapshot, seenIdeas, state.proposing) : null;
+    // eslint-disable-next-line react-hooks/refs -- the previous view, only to keep its unchanged parts
+    return next && lastView.current ? replaceEqualDeep(lastView.current, next) : next;
+  }, [snapshot, seenIdeas, state.proposing]);
+  useLayoutEffect(() => { lastView.current = view; });
 
   // One rule for every connection word (core/continuous/connection-words.ts): nothing for a short outage,
   // then one small line. A hidden page reads as background, so a quick return shows nothing.
@@ -336,12 +388,30 @@ function RoomProviderContent({ id, children, renderSheet }: { id: string; childr
   const invite = invitation.data;
   let inviteUrl: string | null = null;
   try { inviteUrl = invite ? appInviteUrl(invite.path) : null; } catch { inviteUrl = null; }
-  const value: RoomContextValue = {
-    id, state, entry, snapshot, view, cmd, latest, disabled, invite, inviteUrl, signin, memberBusy, memberLapsed: account.lapsed, linkFailed: linkFailed && wantsLink, retryLink, connectionWords, notice: notice || account.error, setNotice,
-    dismissedProposal, dismissProposal, reopenProposal, setActivityView: state.setView, saves, acknowledgeIdeas,
-    leaving, sheet: sheets.at(-1) ?? null, openSheet, closeSheet, closeSheets, renderSheet, openRoom,
-    liveBeat: `${id}:${opening}:${arrivals.joins}`,
-  };
+  const roomState = useRoomState(state);
+  const { working: entryWorking, error: entryError, retry: entryRetry, required: entryRequired } = entry;
+  const retryEntry = useStableCallback(entryRetry);
+  const stableEntry = useMemo(() => ({ working: entryWorking, error: entryError, retry: retryEntry, required: entryRequired }), [entryWorking, entryError, retryEntry, entryRequired]);
+  const { drafts, saving, edit, hold, release } = saves;
+  const stableSaves = useMemo(() => ({ drafts, saving, edit, hold, release }), [drafts, saving, edit, hold, release]);
+  const memberLapsed = account.lapsed;
+  const shownLinkFailed = linkFailed && wantsLink;
+  const shownNotice = notice || account.error;
+  const sheet = sheets.at(-1) ?? null;
+  const liveBeat = `${id}:${opening}:${arrivals.joins}`;
+  const setActivityView = state.setView;
+  // One object while nothing in it changes: an update screens don't read (a fetch status, a credential) re-renders
+  // only this provider, not every room screen under it.
+  const { confirmed: liveConfirmed, display: liveDisplay, busy, activities, cheerHolders } = state;
+  const cheerEvents = useSameItems(state.cheerEvents);
+  const live = useMemo<RoomLive>(() => ({ snapshot, confirmed: liveConfirmed, display: liveDisplay, busy, activities, cheerEvents, cheerHolders }),
+    [snapshot, liveConfirmed, liveDisplay, busy, activities, cheerEvents, cheerHolders]);
+  const value = useMemo<RoomContextValue>(() => ({
+    id, state: roomState, entry: stableEntry, view, prefillCountry, cmd, latest, disabled, invite, inviteUrl, signin, memberBusy, memberLapsed, linkFailed: shownLinkFailed, retryLink, connectionWords, notice: shownNotice, setNotice,
+    dismissedProposal, dismissProposal, reopenProposal, setActivityView, saves: stableSaves, acknowledgeIdeas,
+    leaving, sheet, openSheet, closeSheet, closeSheets, renderSheet, openRoom, liveBeat,
+  }), [id, roomState, stableEntry, view, prefillCountry, cmd, latest, disabled, invite, inviteUrl, signin, memberBusy, memberLapsed, shownLinkFailed, retryLink, connectionWords, shownNotice,
+    dismissedProposal, dismissProposal, reopenProposal, setActivityView, stableSaves, acknowledgeIdeas, leaving, sheet, openSheet, closeSheet, closeSheets, renderSheet, openRoom, liveBeat]);
   // A change of screen (the round starts: voting replaces the room; a proposal, Tonight, the room's status)
   // mounts a whole new screen. The room's snapshots arrive through the query cache, whose updates React
   // renders synchronously, so that mount was one long task (~20-50 ms) on every phone in the room. The new
@@ -354,14 +424,54 @@ function RoomProviderContent({ id, children, renderSheet }: { id: string; childr
   const screen = screenOf(view, state, entry, dismissedProposal);
   const before = useDeferredValue(screen);
   const committed = useRef(value);
+  const committedLive = useRef(live);
+  const current = leaving || before === 'none' || before === screen;
   // eslint-disable-next-line react-hooks/refs -- the last committed value, read only while a new screen renders
-  const shown = leaving || before === 'none' || before === screen ? value : committed.current;
-  useLayoutEffect(() => { committed.current = shown; });
-  return <RoomContext.Provider value={shown}>{children}</RoomContext.Provider>;
+  const shown = current ? value : committed.current;
+  // eslint-disable-next-line react-hooks/refs -- the last committed value, read only while a new screen renders
+  const shownLive = current ? live : committedLive.current;
+  useLayoutEffect(() => { committed.current = shown; committedLive.current = shownLive; });
+  return <RoomContext.Provider value={shown}><RoomLiveContext.Provider value={shownLive}>{children}</RoomLiveContext.Provider></RoomContext.Provider>;
 }
 
 /** Which screen the room shows (RoomHome): a change of it mounts a new screen. */
 function screenOf(view: RoomView | null, state: RoomContextValue['state'], entry: RoomContextValue['entry'], dismissedProposal: number | null) {
   if (!view) return 'none';
   return `${view.phase}:${view.me.inRound}:${entry.required}:${showsProposal(view, dismissedProposal)}:${Boolean(state.terminal) || state.access === null}`;
+}
+
+/** A function of the latest render with one identity: callers keep it in effects and memoized values. */
+function useStableCallback<A extends unknown[], R>(fn: (...args: A) => R): (...args: A) => R {
+  const latest = useRef(fn);
+  useLayoutEffect(() => { latest.current = fn; });
+  return useCallback((...args: A) => latest.current(...args), []);
+}
+
+/** Keeps the previous array while its items are the same ones (the live room filters some lists anew each render). */
+function useSameItems<T>(items: T[]): T[] {
+  const last = useRef(items);
+  // eslint-disable-next-line react-hooks/refs -- the previous equal array, so memoized values keep their identity
+  const kept = last.current.length === items.length && last.current.every((item, i) => item === items[i]) ? last.current : items;
+  useLayoutEffect(() => { last.current = kept; });
+  return kept;
+}
+
+/** The live room for screens (RoomState, without the RoomLive fields): its functions keep their identity, its object changes only with a field. */
+function useRoomState(live: LiveRoom): RoomState {
+  const send = useStableCallback(live.send);
+  const cheer = useStableCallback(live.cheer);
+  const reconnect = useStableCallback(live.reconnect);
+  const activityNow = useStableCallback(live.activityNow);
+  const inspect = useStableCallback(live.inspect);
+  const pointer = useStableCallback(live.pointer);
+  const activity = useStableCallback(live.activity);
+  const viewNow = useStableCallback(live.view);
+  const error = live.room.error;
+  const room = useMemo(() => ({ error }), [error]);
+  const { proposing, working, access, connection, offline, error: roomError, errorCode, clearError, privateError, terminal, adoptAccess, pending, retrySeconds, refetch, setView } = live;
+  return useMemo(() => ({
+    room, proposing, view: viewNow, working, access, cheer, connection, offline, error: roomError, errorCode, clearError, privateError,
+    terminal, adoptAccess, pending, retrySeconds, send, refetch, reconnect, activityNow, setView, inspect, pointer, activity,
+  }), [room, proposing, viewNow, working, access, cheer, connection, offline, roomError, errorCode, clearError, privateError,
+    terminal, adoptAccess, pending, retrySeconds, send, refetch, reconnect, activityNow, setView, inspect, pointer, activity]);
 }

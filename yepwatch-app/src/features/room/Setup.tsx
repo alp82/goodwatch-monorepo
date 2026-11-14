@@ -15,7 +15,7 @@ import { GText, glow } from '../glow/theme';
 import { NAME_MAX } from './model';
 import { toRooms } from './nav';
 import { Chip, IdeaStack, PeopleRow, ShareRow, fieldStyleFor, useAcknowledgeShownIdeas } from './parts';
-import { useRoom } from './RoomProvider';
+import { roomPart } from './RoomProvider';
 import { RoomNotes } from './RoomStatus';
 import { namesLine, servicesIn } from './services';
 import { START_FAILED_NOTE, hostStartPhase, type StartPhase } from './start-progress';
@@ -23,9 +23,9 @@ import { StartButton, StartStatus, useEased } from './StartProgress';
 import { Actions, Button, Glyph, KindIcons, Label, Logos, Note, RoomButton, Screen, Small, kindsLabel, usePinnedActions, useServices } from './ui';
 
 /** Share, people, movies and shows, streaming: whole-row controls that open the room's sheets. */
-function RoomDetails() {
-  const { view, inviteUrl, openSheet } = useRoom();
+const RoomDetails = roomPart('RoomDetails', (r) => ({ view: r.view, inviteUrl: r.inviteUrl, openSheet: r.openSheet }), function RoomDetails({ view, inviteUrl, openSheet }) {
   const { z } = useLayout();
+  const openPeople = useCallback(() => openSheet('people'), [openSheet]);
   const { all } = useServices(view?.country);
   // A friend's services join the line: the names glide over as the logos widen.
   const names = useGlide({ axis: 'x' });
@@ -35,7 +35,7 @@ function RoomDetails() {
   return (
     <View style={{ gap: z(10) }}>
       {inviteUrl || view.isHost ? <ShareRow /> : null}
-      <PeopleRow onPress={() => openSheet('people')} />
+      <PeopleRow onPress={openPeople} />
       <Chip label={`${kinds}, ${view.isHost ? 'change' : 'view'}`} action={view.isHost ? 'Change' : undefined} onPress={() => openSheet('kinds')}>
         <KindIcons kinds={view.kinds} size={z(20)} color={glow.soft} />
         <GText size={z(15)} color={glow.soft} style={{ flex: 1 }}>{kinds}</GText>
@@ -53,7 +53,7 @@ function RoomDetails() {
       )}
     </View>
   );
-}
+});
 
 /**
  * The shared layout: headline (room label and ideas) and the details with the actions, side by side
@@ -108,8 +108,10 @@ function RoomBefore({ testID, label, actions, pinned, extra, start = 'idle' }: {
 /** How long after the last keystroke the host's name saves. */
 const NAME_SAVE_MS = 600;
 
-export function RoomSetup() {
-  const { view, cmd, state, latest, disabled, signin, memberBusy, memberLapsed, openSheet } = useRoom();
+export const RoomSetup = roomPart('RoomSetup', (r) => ({
+  view: r.view, cmd: r.cmd, latest: r.latest, disabled: r.disabled, signin: r.signin, memberBusy: r.memberBusy, memberLapsed: r.memberLapsed, openSheet: r.openSheet,
+  acknowledgeIdeas: r.acknowledgeIdeas, pending: r.state.pending, privateError: r.state.privateError, retrySeconds: r.state.retrySeconds, send: r.state.send,
+}), function RoomSetup({ view, cmd, latest, disabled, signin, memberBusy, memberLapsed, openSheet, acknowledgeIdeas, pending, privateError, retrySeconds, send }) {
   const { z } = useLayout();
   const pinned = usePinnedActions();
   const [name, setName] = useState('');
@@ -147,7 +149,7 @@ export function RoomSetup() {
   const [attempt, setAttempt] = useState<'starting' | 'failed' | null>(null);
   const mounted = useRef(true);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
-  useAcknowledgeShownIdeas();
+  useAcknowledgeShownIdeas(view, acknowledgeIdeas);
   if (!view) return null;
   const typed = name.trim();
   const named = Boolean(view.me.nickname || typed);
@@ -162,7 +164,7 @@ export function RoomSetup() {
   // A start the server hasn't confirmed (the answer got lost, the server restarting) is saved and goes out
   // again by itself: Start keeps its words meanwhile, never a failure. A long outage gets the room's one
   // connection line, whose Retry sends that same start.
-  const pendingStart = state.pending?.command.type === 'start';
+  const pendingStart = pending?.command.type === 'start';
   const phase = hostStartPhase({ attempt, retrying: pendingStart });
   const run = (go: () => Promise<boolean>) => {
     setAttempt('starting');
@@ -173,10 +175,10 @@ export function RoomSetup() {
   const onStart = () => {
     if (missing === 'services' || missing === 'kinds') openSheet(missing);
     else if (missing === 'name') nameInput.current?.focus();
-    else if (pendingStart) run(() => state.send());
+    else if (pendingStart) run(() => send());
     else run(start);
   };
-  const blocked = !view.country || state.privateError || state.retrySeconds > 0 || (Boolean(state.pending) && !pendingStart);
+  const blocked = !view.country || privateError || retrySeconds > 0 || (Boolean(pending) && !pendingStart);
   const actions = (
     <View style={{ gap: 10 }}>
       {phase === 'failed' ? <Note>{START_FAILED_NOTE}</Note> : null}
@@ -200,18 +202,17 @@ export function RoomSetup() {
     ? <GoodWatchButton label={RECONNECT_GOODWATCH} detail={RECONNECTED_DETAIL} disabled={memberBusy || disabled} onPress={() => void signin()} />
     : null;
   return <RoomBefore testID="room-setup" label="Your room" pinned={pinned} actions={actions} extra={nameField ?? reconnect} start={phase} />;
-}
+});
 
 /**
  * A friend's room before Start (or while joining a running round): the same room, waiting for the
  * host. The server says nothing while the host's start builds the deck; voting takes over the moment
  * the round arrives.
  */
-export function Waiting() {
-  const { view, entry, openSheet } = useRoom();
+export const Waiting = roomPart('Waiting', (r) => ({ view: r.view, entryWorking: r.entry.working, openSheet: r.openSheet }), function Waiting({ view, entryWorking, openSheet }) {
   if (!view) return null;
   const owner = view.hostName || 'Your friend';
-  const joining = view.phase === 'setup' ? null : entry.working ? 'Joining…' : 'Joining the round…';
+  const joining = view.phase === 'setup' ? null : entryWorking ? 'Joining…' : 'Joining the round…';
   const actions = (
     <View style={{ gap: 10 }}>
       <Actions>
@@ -222,4 +223,4 @@ export function Waiting() {
     </View>
   );
   return <RoomBefore testID="waiting" label={`${owner}’s room`} pinned={false} actions={actions} start={joining ? 'starting' : 'idle'} />;
-}
+});

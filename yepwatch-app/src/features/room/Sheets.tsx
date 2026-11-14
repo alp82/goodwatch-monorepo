@@ -55,12 +55,12 @@ const Done = () => {
 
 /** The room in one place: its ideas, people and link, settings, archive and leave. */
 function RoomMenuSheet() {
-  const { id, view, cmd, disabled, closeSheet, openSheet, setNotice } = useRoom();
+  const { id, view, cmd, disabled, closeSheet, openSheet, setNotice, acknowledgeIdeas } = useRoom();
   const account = useAccount();
   const { z } = useLayout();
   const { all } = useServices(view?.country);
   const [leaving, setLeaving] = useState<'ask' | 'sending' | null>(null);
-  useAcknowledgeShownIdeas();
+  useAcknowledgeShownIdeas(view, acknowledgeIdeas);
   if (!view) return null;
   const leave = () => {
     setLeaving('sending');
@@ -164,10 +164,10 @@ function useDraftSheet<K extends DraftKey>(key: K, final: () => Drafts[K]) {
 
 /** Your own services (per person) and, for the host, the room's country. */
 function ServicesSheet() {
-  const { view, snapshot, saves, closeSheet, signin, memberBusy, memberLapsed, disabled } = useRoom();
+  const { view, prefillCountry, saves, closeSheet, signin, memberBusy, memberLapsed, disabled } = useRoom();
   // An unsaved change (from this visit or one still being saved) wins; otherwise the confirmed room.
   const draft = saves.drafts.services;
-  const fallback = snapshot?.own.member.prefill?.country ?? deviceCountryHint() ?? 'US';
+  const fallback = prefillCountry ?? deviceCountryHint() ?? 'US';
   const shown = draft?.country ?? view?.country ?? fallback;
   const { all, metadata } = useServices(shown);
   const selected = draft?.picked ?? view?.myServiceIds ?? [];

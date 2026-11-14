@@ -25,7 +25,7 @@ import { useBackAction } from '../shell/sheet-back';
 import { warm } from '../shell/tokens';
 import { meta } from './Decide';
 import { toRooms } from './nav';
-import { useRoom } from './RoomProvider';
+import { useRoom, useRoomLive } from './RoomProvider';
 import { RoomNotes } from './RoomStatus';
 import { Actions, Screen, usePinnedActions } from './ui';
 
@@ -55,7 +55,8 @@ function TonightGlow({ uri }: { uri: string }) {
 }
 
 export function Tonight() {
-  const { state, snapshot, view, cmd, disabled, setActivityView } = useRoom();
+  const { state, view, cmd, disabled, setActivityView } = useRoom();
+  const { snapshot, cheerHolders, cheerEvents } = useRoomLive();
   // Cheers travel on the matches view.
   useFocusEffect(useCallback(() => { setActivityView('matches'); }, [setActivityView]));
   useBackAction(toRooms);
@@ -76,7 +77,7 @@ export function Tonight() {
   const { phone, wide, height, header, max, z } = useLayout();
   const pinned = usePinnedActions();
   if (!view || !shared || !decision || !c) return null;
-  const holders = new Map(state.cheerHolders);
+  const holders = new Map(cheerHolders);
   if (gesture.holding) holders.set(view.me.id, gesture.seed);
   const required = view.people.map((p) => p.id);
   const allHold = enabled && required.length > 0 && required.every((id) => holders.has(id));
@@ -109,7 +110,7 @@ export function Tonight() {
           </Animated.View>
         </Pressable>
       </View>
-      {poster.width > 0 ? <CheerLayer poster={poster} events={state.cheerEvents} holders={holders} allHold={allHold} reduced={reduced} selfId={view.me.id} onBurst={() => spring.kick(0.006)} /> : null}
+      {poster.width > 0 ? <CheerLayer poster={poster} events={cheerEvents} holders={holders} allHold={allHold} reduced={reduced} selfId={view.me.id} onBurst={() => spring.kick(0.006)} /> : null}
     </View>
   );
   const info = (

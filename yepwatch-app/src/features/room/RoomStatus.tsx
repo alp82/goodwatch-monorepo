@@ -6,7 +6,7 @@ import { useLayout } from '../shell/layout';
 import { GText, Icon, glow } from '../glow/theme';
 import { IDEA_LIMITS } from './model';
 import { exitRoom, toRooms } from './nav';
-import { useRoom } from './RoomProvider';
+import { useRoom, useRoomLive } from './RoomProvider';
 import { NoteLine, useFrameNote, type FrameNote } from '../shell/floating-note';
 import { Actions, Button, Screen } from './ui';
 
@@ -46,6 +46,7 @@ export function RoomStatus() {
 export function RoomNotes() {
   const focused = useIsFocused();
   const { view, state, entry, notice, setNotice, connectionWords, sheet, openSheet, linkFailed, retryLink } = useRoom();
+  const { busy } = useRoomLive();
   // Nobody brings a service (or the last one would go): ask for services, not an error.
   const noServices = state.errorCode === 'needs_context' && !state.pending;
   const ideaLimit = state.errorCode === 'limit_reached' && !state.pending;
@@ -67,7 +68,7 @@ export function RoomNotes() {
     action: state.offline ? undefined : {
       label,
       // A server's pause disables Retry without a countdown.
-      disabled: state.busy || state.retrySeconds > 0,
+      disabled: busy || state.retrySeconds > 0,
       onPress: () => {
         setNotice('');
         if (linkLine) retryLink();

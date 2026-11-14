@@ -28,7 +28,7 @@ import { useSheetOpen } from '../shell/sheet-stack';
 import { useStableCallback, useSteady } from '../shell/steady';
 import { warm } from '../shell/tokens';
 import { openPage, toRooms } from './nav';
-import { useRoom } from './RoomProvider';
+import { useRoom, useRoomLive } from './RoomProvider';
 import { RoomNotes } from './RoomStatus';
 import { servicesIn } from './services';
 import { TitleDetails } from './TitleDetails';
@@ -108,7 +108,8 @@ function Sheet({ close, children, testID, page = false }: { close: () => void; c
 /** `entering`: the round just started, so the first card rises in; `onEntered` once the stage has played that. */
 export function Voting({ entering = false, onEntered }: { entering?: boolean; onEntered?: () => void }) {
   const room = useRoom();
-  const { id, state, snapshot, view, cmd, entry } = room;
+  const { id, state, view, cmd, entry } = room;
+  const { snapshot, activities, confirmed } = useRoomLive();
   const layout = useLayout();
   const { fontScale } = useWindowDimensions();
   const { phone, z } = layout;
@@ -174,7 +175,7 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
   const participants = snapshot?.shared.participants;
   const activityNow = state.activityNow;
   const freshActivity = state.connection === 'live' && participants
-    ? groupActivity(new Map([...state.activities].filter(([, a]) => participants.some((p) => p.participantId === a.frame.participantId && !p.dropped))), activityNow())
+    ? groupActivity(new Map([...activities].filter(([, a]) => participants.some((p) => p.participantId === a.frame.participantId && !p.dropped))), activityNow())
     : new Map<string, PeerActivity>();
   const activity = useSteady(freshActivity, sameActivity);
   const people = useSteady((view?.people ?? []).map((p) => ({ id: p.id, nickname: p.nickname || '?', self: p.self })), samePeople);
@@ -213,7 +214,7 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
   if (!snapshot || !view) return null;
   const { shared } = snapshot;
   // A Yep of yours made a match once the confirmed room lists it: MATCH plays in that card's look.
-  const settled = state.confirmed && yeps.length ? settleYeps(yeps, state.confirmed) : null;
+  const settled = confirmed && yeps.length ? settleYeps(yeps, confirmed) : null;
   if (settled?.changed) {
     setYeps(settled.pending);
     const made = settled.matched[0];

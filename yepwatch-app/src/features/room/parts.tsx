@@ -8,9 +8,9 @@ import { useGlide } from '../shell/glide';
 import { useLayout } from '../shell/layout';
 import { R, warm } from '../shell/tokens';
 import { GText, Icon, Press, glow, grow, spaceToggles } from '../glow/theme';
-import type { Kind } from './model';
+import type { Kind, RoomView } from './model';
 import { openPage } from './nav';
-import { useRoom } from './RoomProvider';
+import { roomPart, useRoom } from './RoomProvider';
 import { firstTiles, pickedIn, type ServiceChoice } from './services';
 import { Glyph, HeroIcon, KindIcons, NewBadge, Small, Switch, TextLink } from './ui';
 
@@ -39,8 +39,7 @@ export function headlineSize(text: string, width: number, max: number, oneRowMin
  * The host has seen the friend ideas shown while this is mounted: NEW stays on them during this
  * visit and goes once it ends (switching one acknowledges it at once).
  */
-export function useAcknowledgeShownIdeas() {
-  const { view, acknowledgeIdeas } = useRoom();
+export function useAcknowledgeShownIdeas(view: RoomView | null, acknowledgeIdeas: (ids: readonly string[]) => void) {
   const shown = useRef(new Set<string>());
   useEffect(() => {
     if (!view?.isHost) return;
@@ -54,8 +53,7 @@ export function useAcknowledgeShownIdeas() {
  * same list; only the host's switches work. A friend's idea carries its author's name and, until
  * the host has seen it, NEW. Your own ideas open Mood to edit or remove them.
  */
-export function IdeaStack() {
-  const { id, view, cmd, disabled } = useRoom();
+export const IdeaStack = roomPart('IdeaStack', (r) => ({ id: r.id, view: r.view, cmd: r.cmd, disabled: r.disabled }), function IdeaStack({ id, view, cmd, disabled }) {
   const { phone, wide, max, z } = useLayout();
   // Start from the column RoomBefore gives the ideas (measured below), so the first frame already has the
   // final headline size instead of resizing a frame later.
@@ -102,7 +100,7 @@ export function IdeaStack() {
       )}
     </View>
   );
-}
+});
 
 /** One idea and its switch. A line appearing under the idea (Yours, a name) glides the switch to the new centre. */
 function IdeaRow({ body, control }: { body: ReactNode; control: ReactNode }) {
@@ -117,8 +115,7 @@ function IdeaRow({ body, control }: { body: ReactNode; control: ReactNode }) {
 }
 
 /** The invitation link as one control: the whole row copies or shares it and says Copied or Shared. */
-export function ShareRow() {
-  const { inviteUrl } = useRoom();
+export const ShareRow = roomPart('ShareRow', (r) => ({ inviteUrl: r.inviteUrl }), function ShareRow({ inviteUrl }) {
   const { z } = useLayout();
   const [state, setState] = useState<'' | 'copied' | 'shared' | 'manual'>('');
   useEffect(() => {
@@ -145,11 +142,10 @@ export function ShareRow() {
       {state === 'manual' && inviteUrl ? <><Small>Select and copy the link</Small><GText size={z(15)} selectable>{inviteUrl}</GText></> : null}
     </View>
   );
-}
+});
 
 /** Who's in (and who's still picking services); opens People. */
-export function PeopleRow({ onPress }: { onPress: () => void }) {
-  const { view } = useRoom();
+export const PeopleRow = roomPart<{ view: RoomView | null }, { onPress: () => void }>('PeopleRow', (r) => ({ view: r.view }), function PeopleRow({ view, onPress }) {
   const { z } = useLayout();
   // Someone joins: the words glide over as the faces widen.
   const words = useGlide({ axis: 'x' });
@@ -170,7 +166,7 @@ export function PeopleRow({ onPress }: { onPress: () => void }) {
       <Icon name="right" size={16} color={glow.muted} />
     </Press>
   );
-}
+});
 
 /** A setting as a whole-row control: content, then Change (amber when something is missing). */
 export function Chip({ label, onPress, children, warn = false, action }: { label: string; onPress?: () => void; children: ReactNode; warn?: boolean; /** The word at the end ("Change"); none when absent. */ action?: string }) {

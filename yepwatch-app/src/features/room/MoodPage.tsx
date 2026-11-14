@@ -3,12 +3,13 @@ import { useMutation } from '@tanstack/react-query';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { IDEA_LIMITS } from './model';
 import { leavePage } from './nav';
-import { useRoom } from './RoomProvider';
+import { useRoom, useRoomLive } from './RoomProvider';
 import { RoomStatus } from './RoomStatus';
 import { MoodComposer } from './MoodComposer';
 
 export function MoodPage() {
   const { id, view, cmd, disabled, state, latest } = useRoom();
+  const live = useRoomLive();
   const { idea = 'new' } = useLocalSearchParams<{ idea?: string }>();
   const editing = view?.ideas.find((i) => i.id === idea && i.mine) ?? null;
   const focused = useRef(false);
@@ -34,18 +35,18 @@ export function MoodPage() {
   // A lost acknowledgement can be recovered by the durable queue while this mutation shows its error.
   useEffect(() => {
     const intent = mutation.variables;
-    const confirmed = state.confirmed;
+    const confirmed = live.confirmed;
     if (!focused.current || !mutation.isError || !intent || !confirmed || recovered.current === mutation.submittedAt) return;
     const ideas = confirmed.shared.ideas;
     const saved = intent.editId
       ? intent.text ? ideas.some((i) => i.id === intent.editId && i.text === intent.text) : !ideas.some((i) => i.id === intent.editId)
       : ideas.some((i) => !intent.beforeIds.includes(i.id) && i.text === intent.text && i.authorId === confirmed.own.participantId);
     if (saved) { recovered.current = mutation.submittedAt; leave(); }
-  }, [mutation.isError, mutation.variables, mutation.submittedAt, state.confirmed, leave]);
+  }, [mutation.isError, mutation.variables, mutation.submittedAt, live.confirmed, leave]);
   const ownPending = Boolean(mutation.variables && state.pending && ['add_idea', 'edit_idea', 'remove_idea'].includes(state.pending.command.type));
   // Another of this person's changes is still on its way (a switch just flipped, on a slow network): the
   // mood waits its turn and goes right after, instead of the press (or Enter) doing nothing.
-  const othersFirst = !mutation.isPending && !state.privateError && (state.busy || (disabled && !ownPending));
+  const othersFirst = !mutation.isPending && !state.privateError && (live.busy || (disabled && !ownPending));
   const [waiting, setWaiting] = useState<string | null>(null);
   const send = (text: string, after?: () => void) => mutation.mutate({ text, editId: editing?.id, beforeIds: latest()?.shared.ideas.map((i) => i.id) ?? [] }, { onSettled: after });
   const sendRef = useRef(send);

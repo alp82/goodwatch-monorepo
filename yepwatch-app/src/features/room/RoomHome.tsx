@@ -1,16 +1,23 @@
 /** /room/<id>: the screen for where the room is (setup, choosing, a proposal, Tonight); `?sheet=` opens one of its sheets. */
-import { useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { showsProposal, type RoomView } from './model';
 import { toRooms } from './nav';
 import { isRoomSheet, useRoom } from './RoomProvider';
-import { RoomStatus } from './RoomStatus';
-import { Proposal } from './Decide';
+import { RoomStatus as RoomStatusScreen } from './RoomStatus';
+import { Proposal as ProposalScreen } from './Decide';
 import { RoomSetup, Waiting } from './Setup';
 import { startedLive } from './start-progress';
-import { Tonight } from './Tonight';
+import { Tonight as TonightScreen } from './Tonight';
 import { useBackAction } from '../shell/sheet-back';
-import { Voting } from './Voting';
+import { Voting as VotingScreen } from './Voting';
+
+// Each screen re-renders by itself when the room changes (it reads the room); this screen's own re-renders (its
+// address parameters, the round entry) don't redraw them. RoomSetup and Waiting are room parts (memoized) already.
+const Voting = memo(VotingScreen);
+const Proposal = memo(ProposalScreen);
+const Tonight = memo(TonightScreen);
+const RoomStatus = memo(RoomStatusScreen);
 
 /**
  * The round started while this screen was open (setup became choosing): voting takes over in that

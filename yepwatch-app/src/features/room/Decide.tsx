@@ -13,7 +13,7 @@ import { GText, Icon, Press, glow, grow } from '../glow/theme';
 import { ScorePill } from '../glow/scores';
 import { showsProposal, type ProposalView } from './model';
 import { leavePage, toRooms } from './nav';
-import { useRoom } from './RoomProvider';
+import { useRoom, useRoomLive } from './RoomProvider';
 import { RoomNotes, RoomStatus } from './RoomStatus';
 import { servicesIn } from './services';
 import { Actions, Button, Dots, Label, Logos, Screen, Small, T, TextLink, usePinnedActions, useServices } from './ui';
@@ -45,7 +45,8 @@ function useOffered(c: Candidate | null) {
  * under it never move.
  */
 function AgreementLine({ pr, size, align }: { pr: ProposalView; size: number; align: 'flex-start' | 'center' }) {
-  const { snapshot, cmd, disabled } = useRoom();
+  const { cmd, disabled } = useRoom();
+  const { snapshot } = useRoomLive();
   const a = snapshot?.shared.agreement;
   const line = Math.round(size * 1.4);
   // Each wording is its own node in a row as wide as the column: a new wording replaces the old one
