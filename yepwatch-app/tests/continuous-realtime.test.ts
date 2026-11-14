@@ -242,6 +242,25 @@ test('room reads that work end an announced restart: a later failed read is an o
   assert.equal(h.statuses.at(-1), 'reconnecting');
   h.client.stop();
 });
+test('a resumed attempt during an outage (focus, back online) keeps reporting the outage, not connecting', async () => {
+  const h = harness({ privateRead: async () => { throw new RoomFailure('outcome_unknown', 'no answer'); } });
+  h.client.start();
+  await tick();
+  liveSocket(h, 0).frame({ type: 'restarting', retryAfterMs: 500 });
+  assert.equal(h.statuses.at(-1), 'restarting');
+  // Past the gateway's named wait, still in backoff: the page comes back to the front.
+  mock.timers.tick(600);
+  h.client.resume();
+  await tick();
+  assert.equal(h.statuses.slice(2).includes('connecting'), false, 'the outage never looked over');
+  assert.equal(h.statuses.at(-1), 'restarting');
+  // The resumed dial fails after the announcement ran out: an ordinary outage from then on.
+  assert.equal(h.sockets.length, 2);
+  mock.timers.tick(PLANNED_RESTART_QUIET_MS);
+  h.sockets[1].onerror?.(new Event('error'));
+  assert.equal(h.statuses.at(-1), 'reconnecting');
+  h.client.stop();
+});
 test('close 1012 from a live socket is an announced restart too; from a socket that never went live it is not', async () => {
   const h = harness();
   h.client.start();

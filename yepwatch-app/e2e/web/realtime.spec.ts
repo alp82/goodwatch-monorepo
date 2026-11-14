@@ -146,6 +146,8 @@ test.describe('a deploy replaces the gateway and the API', () => {
     const first = samples.find((s) => s.note)?.t;
     expect(first, 'a real outage is never hidden: the line showed').toBeDefined();
     expect(first! - at, 'and not before the quiet period').toBeGreaterThanOrEqual(QUIET_OUTAGE_MS);
+    // Sampled every 50 ms; a frame or two to render.
+    expect(first! - at, 'but as soon as it is over').toBeLessThanOrEqual(QUIET_OUTAGE_MS + 300);
   });
 
   test('announced but not back within the quiet period: Reconnecting shows then', async ({ room }) => {
@@ -157,6 +159,6 @@ test.describe('a deploy replaces the gateway and the API', () => {
     const first = samples.find((s) => s.note)?.t;
     expect(first, 'an announced restart that runs long still shows the line').toBeDefined();
     expect(first! - at).toBeGreaterThanOrEqual(PLANNED_RESTART_QUIET_MS);
-    expect(first! - at).toBeLessThan(PLANNED_RESTART_QUIET_MS + 1500);
+    expect(first! - at).toBeLessThanOrEqual(PLANNED_RESTART_QUIET_MS + 300);
   });
 });

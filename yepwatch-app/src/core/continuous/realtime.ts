@@ -101,6 +101,11 @@ export class ContinuousRealtime {
    * that keeps announcing restarts can't keep the outage quiet past PLANNED_RESTART_QUIET_MS.
    */
   private plannedUntil = 0;
+  /**
+   * The channel dropped and hasn't been live since: a resumed attempt (focus, back online) keeps reporting the outage
+   * instead of `connecting`, so the page's outage and its quiet period carry on rather than start again.
+   */
+  private down = false;
   constructor(private readonly o: RealtimeOptions) {}
   /** The status of an outage: `restarting` while it is an announced restart, else `reconnecting`. */
   private outage(): Connection {
@@ -157,6 +162,7 @@ export class ContinuousRealtime {
     this.dirty = false;
     this.spare = undefined;
     this.plannedUntil = 0;
+    this.down = false;
     ++this.epoch;
     this.stopPolling();
     this.detach();
@@ -351,7 +357,10 @@ export class ContinuousRealtime {
         this.polling = ok;
         // Room reads that work end the outage for the page (`polling` is connected): an announcement from before
         // no longer explains a later failure.
-        if (ok) this.plannedUntil = 0;
+        if (ok) {
+          this.plannedUntil = 0;
+          this.down = false;
+        }
         this.o.status(ok ? 'polling' : this.outage());
         this.poll();
       });
@@ -366,6 +375,7 @@ export class ContinuousRealtime {
   private retry(epoch: number, minimum = 0, hung = false) {
     if (!this.active || epoch !== this.epoch) return;
     this.detach(hung);
+    this.down = true;
     if (!this.polling) this.o.status(this.outage());
     const ms = backoffDelay(this.failures++, this.o.random ?? Math.random, minimum, RECONNECT_BASE_MS);
     this.serverRetryAt = minimum > 0 ? Date.now() + minimum : 0;
@@ -395,7 +405,7 @@ export class ContinuousRealtime {
   }
   private async connect(epoch: number) {
     if (!this.active || epoch !== this.epoch) return;
-    if (!this.polling) this.o.status(this.failures ? this.outage() : 'connecting');
+    if (!this.polling) this.o.status(this.failures || this.down ? this.outage() : 'connecting');
     this.report(true);
     try {
       const spare = this.spare;
@@ -465,6 +475,7 @@ export class ContinuousRealtime {
           this.live = true;
           served = true;
           this.plannedUntil = 0;
+          this.down = false;
           this.failures = 0;
           this.serverRetryAt = 0;
           this.stopPolling();
