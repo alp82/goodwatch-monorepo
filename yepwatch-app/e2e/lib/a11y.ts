@@ -9,6 +9,11 @@ const require = createRequire(import.meta.url);
 const AXE = require.resolve('axe-core/axe.min.js');
 // One audit per distinct screen state per worker: the same screen in another journey adds nothing.
 const audited = new Set<string>();
+// The one accepted axe finding. Owner decision 2026-11-14 (Q69): the Rotten Tomatoes score chip keeps its brand
+// red (#f83309, src/features/glow/score-format.ts) with white text (3.8:1, audience value at 0.9 opacity 3.3:1),
+// "keep it as it is now". Only axe's color-contrast rule, and only nodes inside that chip, are let through; every
+// other rule there and every color-contrast node elsewhere still fails.
+const ACCEPTED = { rule: 'color-contrast', within: '[data-testid="source-score-rotten"]' } as const;
 
 export async function audit(page: Page, person: string, label: string): Promise<GateFailure[]> {
   const sig = await page.evaluate(() => (window as unknown as { __yw: { signature(): string } }).__yw.signature()).catch(() => '');
@@ -16,11 +21,17 @@ export async function audit(page: Page, person: string, label: string): Promise<
   if (audited.has(key)) return [];
   audited.add(key);
   if (!(await page.evaluate(() => 'axe' in window))) await page.addScriptTag({ path: AXE });
-  const result = await page.evaluate(async (tags) => {
+  const result = await page.evaluate(async ({ tags, accepted }) => {
     const axe = (window as unknown as { axe: { run(ctx: unknown, opts: unknown): Promise<{ violations: { id: string; impact: string; help: string; nodes: { target: string[]; failureSummary: string }[] }[] }> } }).axe;
     const r = await axe.run(document, { runOnly: { type: 'tag', values: tags }, resultTypes: ['violations'] });
-    return r.violations.map((v) => ({ id: v.id, impact: v.impact, help: v.help, nodes: v.nodes.slice(0, 4).map((n) => `${n.target.join(' ')}: ${n.failureSummary.split('\n').slice(1, 2).join(' ').trim()}`), count: v.nodes.length }));
-  }, B.axeTags as string[]);
+    // A node is accepted only when its target is one plain light-DOM selector (a shadow-DOM target is a nested array,
+    // a frame target has several parts: neither is accepted) resolving to an element inside the accepted chip.
+    const isAccepted = (id: string, target: unknown[]) => id === accepted.rule && target.length === 1 && typeof target[0] === 'string' && !!document.querySelector(target[0])?.closest(accepted.within);
+    return r.violations
+      .map((v) => ({ ...v, nodes: v.nodes.filter((n) => !isAccepted(v.id, n.target)) }))
+      .filter((v) => v.nodes.length > 0)
+      .map((v) => ({ id: v.id, impact: v.impact, help: v.help, nodes: v.nodes.slice(0, 4).map((n) => `${n.target.join(' ')}: ${n.failureSummary.split('\n').slice(1, 2).join(' ').trim()}`), count: v.nodes.length }));
+  }, { tags: B.axeTags as string[], accepted: ACCEPTED });
   const controls = await page.evaluate((min) => {
     const sel = 'button, a[href], input:not([type=hidden]), textarea, select, [role=button], [role=link], [role=switch], [role=checkbox], [role=radio], [role=tab], [role=menuitem], [role=slider], [tabindex]:not([tabindex="-1"])';
     const out: { name: string; w: number; h: number; what: string; problem: string }[] = [];

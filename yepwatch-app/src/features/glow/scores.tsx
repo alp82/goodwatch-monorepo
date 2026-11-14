@@ -60,9 +60,9 @@ export function ScoreRing({ score, size = 48 }: { score: number | null | undefin
   );
 }
 
-function Chip({ logo, wide, brand, label, children }: { logo: number; wide?: boolean; brand: string; label: string; children: ReactNode }) {
+function Chip({ logo, wide, brand, label, testID, children }: { logo: number; wide?: boolean; brand: string; label: string; testID?: string; children: ReactNode }) {
   return (
-    <View accessible accessibilityLabel={label} style={{ height: 28, flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 6, borderRadius: 6, backgroundColor: brand }}>
+    <View accessible accessibilityLabel={label} testID={testID} style={{ height: 28, flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 6, borderRadius: 6, backgroundColor: brand }}>
       <Image source={logo} accessible={false} resizeMode="contain" style={wide ? { width: 25, height: 12 } : { width: 14, height: 14 }} />
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>{children}</View>
     </View>
@@ -82,7 +82,7 @@ export function SourceChips({ scores }: { scores: Candidate['scores'] }) {
       {s.imdb ? <Chip logo={LOGOS.imdb} wide brand={BRAND.imdb} label={`IMDb ${s.imdb}`}><Value ink="#000000">{s.imdb}</Value></Chip> : null}
       {s.metacritic ? <Chip logo={LOGOS.metacritic} brand={BRAND.metacritic} label={`Metacritic ${s.metacritic}`}><Value ink="#ffffff">{s.metacritic}</Value></Chip> : null}
       {s.rt || s.rtAudience ? (
-        <Chip logo={LOGOS.rotten} brand={BRAND.rotten} label={`Rotten Tomatoes: critics ${s.rt ?? 'unknown'}, audience ${s.rtAudience ?? 'unknown'}`}>
+        <Chip logo={LOGOS.rotten} brand={BRAND.rotten} testID="source-score-rotten" label={`Rotten Tomatoes: critics ${s.rt ?? 'unknown'}, audience ${s.rtAudience ?? 'unknown'}`}>
           <Value ink="#ffffff">{s.rt ?? '–'}</Value><Rule ink="#ffffff" /><Value ink="#ffffff" dim>{s.rtAudience ?? '–'}</Value>
         </Chip>
       ) : null}

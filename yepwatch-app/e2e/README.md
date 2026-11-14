@@ -114,7 +114,9 @@ of a restarting production container.
   shorter than 3 s, so none for a hidden tab, a second device or no WebSocket; then one line, gone within 1 s
   of the outage's end; never a countdown; outages are the restart and offline windows), dead buttons, frame
   gaps (only in `speed`, `E2E_FRAMES=gate`), errors (console, uncaught, HTTP, schema via the app's own `sharedSchema`/`parseFrame`), axe WCAG 2.2
-  AA + accessible names + 48×48 targets. Rules: `lib/rules.mjs`.
+  AA + accessible names + 48×48 targets. Rules: `lib/rules.mjs`. One accepted axe finding (`a11y.ts`
+  `ACCEPTED`, pinned by `web/a11y-exception.spec.ts`): color-contrast inside the Rotten Tomatoes chip, whose brand
+  red stays by owner decision (2026-11-14); every other rule there and that rule elsewhere still fail.
 - Faults (Playwright projects): `none`, `nows`, `rapid`, `slow` (slow network + 4 s offline), `hidden`
   (tab hidden + frozen, clock +5 min), `twodevice` (second tab of the same person, then reload mid-vote),
   `restart` (API/gateway restart mid-journey, serial).
