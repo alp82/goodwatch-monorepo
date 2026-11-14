@@ -59,7 +59,9 @@ export function RoomNotes() {
       : state.error || connectionWords || (linkFailed ? 'Couldn’t connect GoodWatch to this room.' : ''));
   const connectionLine = Boolean(text) && text === connectionWords;
   const linkLine = linkFailed && text === 'Couldn’t connect GoodWatch to this room.';
-  const label = linkLine || entry.error || (connectionLine && state.pending) ? 'Retry' : noServices ? 'Your services' : ideaLimit ? 'OK' : 'Refresh';
+  // The connection line's action says Retry for the whole outage, whether it resends a saved action or reconnects: a
+  // label that changed when an action got saved mid-outage moved the line's words (layout shift).
+  const label = linkLine || entry.error || connectionLine ? 'Retry' : noServices ? 'Your services' : ideaLimit ? 'OK' : 'Refresh';
   const note: FrameNote | null = focused && (text || developmentNotice) ? {
     text,
     detail: developmentNotice || undefined,

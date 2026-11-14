@@ -27,6 +27,7 @@ import { apiUrl } from '../config';
 import { invitePreviewSchema } from './wire';
 import { earlyInviteResponse } from './early-invite';
 import { parseRetryAfter } from './retry';
+import { requestSent, yepwatchAnswered } from './network';
 import type { RoomAccess } from '../credentials';
 /** How long a room create or join waits for an answer before it counts as unanswered (and is kept for a resend). */
 export const ADMISSION_TIMEOUT_MS = 6000;
@@ -85,6 +86,7 @@ export class ContinuousApi {
       headers.Authorization = `Bearer ${access.token}`;
       headers['X-YepWatch-Participant'] = access.participantId;
     }
+    const settled = requestSent();
     try {
       const url = apiUrl(path);
       stage = 'request';
@@ -97,6 +99,8 @@ export class ContinuousApi {
       };
       response = await (earlyInviteResponse(url, init, this.fetcher) ?? this.fetcher(url, init));
       stage = 'response';
+      // The network works: the live channel stops waiting out its backoff (ContinuousRealtime.answered).
+      yepwatchAnswered(response.status, Boolean(access) && path === paths.realtimeTicket(access!.roomId));
       // While Log out runs, the server may still answer as the account: only Log out's own answer counts.
       const outdated = () => !authEpoch.isCurrent(asked) || (!authEpoch.settled() && path !== paths.accountLogout);
       const renewed = response.headers.get('x-yepwatch-session');
@@ -141,6 +145,7 @@ export class ContinuousApi {
         connectionDiagnostic(e, stage, response?.status, Date.now() - started, timedOut, signal?.aborted === true)
       );
     } finally {
+      settled();
       clearTimeout(timer);
       signal?.removeEventListener('abort', abort);
     }

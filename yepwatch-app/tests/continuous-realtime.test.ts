@@ -1,6 +1,6 @@
 import test, { mock } from 'node:test';
 import assert from 'node:assert/strict';
-import { ContinuousRealtime, FIRST_SNAPSHOT_MS, OPEN_TIMEOUT_MS, POLL_MS, SPARE_TICKET_MARGIN_MS, type RealtimeOptions } from '../src/core/continuous/realtime';
+import { ContinuousRealtime, FIRST_SNAPSHOT_MS, NUDGE_SPREAD_MS, OPEN_TIMEOUT_MS, POLL_MS, SILENT_OPEN_TIMEOUT_MS, SILENT_EVIDENCE_MS, SILENT_REDIAL_FOR_MS, SPARE_TICKET_MARGIN_MS, STALE_ATTEMPT_MS, type RealtimeOptions } from '../src/core/continuous/realtime';
 import { PLANNED_RESTART_QUIET_MS } from '../src/core/continuous/backoff';
 import type { SocketLike } from '../src/core/realtime';
 import { continuousFixture, activityFixture } from './continuous-fixture';
@@ -822,6 +822,9 @@ test('a handshake that never opens is dropped after 1.5 s and redialed at once w
   const hung = h.sockets[0];
   // No open, no error, no close: a connection lost on the way. The 10 s wait was for the gateway's answer.
   assert.deepEqual([...h.jobs.values()].map((j) => j.ms), [OPEN_TIMEOUT_MS]);
+  // YepWatch answered meanwhile (the network works): not a silent outage, so the usual 250 ms backoff.
+  mock.timers.tick(10);
+  h.client.answered(200);
   h.run(OPEN_TIMEOUT_MS);
   assert.equal(hung.closed, true, 'the hung socket is abandoned');
   assert.equal(h.statuses.at(-1), 'reconnecting');
@@ -976,6 +979,9 @@ test('handshakes that keep timing out wait longer each time (1.5-3-6-10 s), and 
   h.client.start();
   await tick();
   for (const [open, wait] of [[1500, 250], [3000, 500], [6000, 1000], [10000, 2000], [10000, 4000]]) {
+    // An answer while it hangs: a slow network (a silent one redials quickly instead, below).
+    mock.timers.tick(10);
+    h.client.answered(200);
     h.run(open);
     h.run(wait);
     await tick();
@@ -998,5 +1004,196 @@ test('a socket that opened but sends nothing is given up after FIRST_SNAPSHOT_MS
   h.run(FIRST_SNAPSHOT_MS);
   assert.equal(h.sockets[0].closed, true);
   assert.equal(h.statuses.at(-1), 'reconnecting');
+  h.client.stop();
+});
+
+const ticketPath = '/api/yepwatch/v1/proposal/realtime';
+test('network evidence (a YepWatch answer) ends the backoff wait at once, after a random spread of up to NUDGE_SPREAD_MS', async () => {
+  let failing = 3;
+  const h = harness({
+    random: () => 0.5,
+    ticket: async () => {
+      if (failing-- > 0) throw new RoomFailure('outcome_unknown', 'offline');
+      return { ticket: 'fresh', expiresAt: Date.now() + 10000, websocketPath: ticketPath };
+    },
+  });
+  h.client.start();
+  await tick();
+  h.run(288); // 250 ms + 15 % jitter
+  await tick();
+  h.run(575);
+  await tick();
+  const waits = () => [...h.jobs.values()].map((j) => j.ms).filter((ms) => ms !== POLL_MS);
+  assert.deepEqual(waits(), [1150], 'offline attempts back off');
+  // A 5xx, a 429 and the channel's own ticket answer are no evidence for this.
+  h.client.answered(503);
+  h.client.answered(429);
+  h.client.answered(200, true);
+  assert.deepEqual(waits(), [1150]);
+  h.client.answered(200);
+  assert.deepEqual(waits(), [Math.round(0.5 * NUDGE_SPREAD_MS)], 'the long wait is dropped');
+  h.run(Math.round(0.5 * NUDGE_SPREAD_MS));
+  await tick();
+  assert.equal(h.sockets.length, 1, 'connected right away');
+  h.sockets[0].open();
+  h.sockets[0].frame({ type: 'room.snapshot', snapshot: continuousFixture().shared });
+  assert.equal(h.statuses.at(-1), 'live');
+  // Live: evidence changes nothing.
+  h.client.answered(200);
+  assert.equal(h.sockets[0].closed, false);
+  h.client.stop();
+});
+test('network evidence redoes an attempt that went out into the outage (older than STALE_ATTEMPT_MS), with its unused ticket; a younger one is kept', async () => {
+  const h = harness({ silence: () => SILENT_EVIDENCE_MS }); // a request waits unanswered
+  h.client.start();
+  await tick();
+  h.run(OPEN_TIMEOUT_MS); // silent: nothing answered
+  h.run(0);
+  await tick();
+  const second = h.sockets[1];
+  // Evidence right after the dial: that handshake went out on the working network.
+  mock.timers.tick(STALE_ATTEMPT_MS - 1);
+  h.client.answered(200);
+  assert.equal(second.closed, false, 'a young attempt is kept');
+  assert.equal(h.sockets.length, 2);
+  mock.timers.tick(1);
+  h.client.answered(200);
+  assert.equal(second.closed, true, 'a stale handshake is cut');
+  await tick(); // random() = 0: no spread, dialed at once
+  assert.equal(h.sockets.length, 3);
+  h.sockets[2].open();
+  assert.equal(JSON.parse(h.sockets[2].sent[0]).ticket, 'ticket-1', 'the unused ticket goes with the redial');
+  assert.equal(h.tickets(), 1);
+  h.client.stop();
+});
+test('network evidence acts once per failure, never before a server-named wait, never while room reads keep the room current', async () => {
+  let tickets = 0;
+  const h = harness({
+    ticket: async () => {
+      tickets++;
+      if (tickets === 1) throw new RoomFailure('limit_reached', 'Slow down', 429, undefined, undefined, true, 8);
+      return { ticket: `t${tickets}`, expiresAt: Date.now() + 30000, websocketPath: ticketPath };
+    },
+  });
+  h.client.start();
+  await tick();
+  assert.deepEqual([...h.jobs.values()].map((j) => j.ms), [8000]);
+  h.client.answered(200);
+  assert.deepEqual([...h.jobs.values()].map((j) => j.ms), [8000], 'the server named a wait');
+  mock.timers.tick(8000);
+  h.run(8000);
+  await tick();
+  // The redial hangs past STALE_ATTEMPT_MS: the first evidence redoes it, the second waits for that attempt.
+  mock.timers.tick(STALE_ATTEMPT_MS);
+  h.client.answered(200);
+  await tick();
+  assert.equal(h.sockets.length, 2);
+  mock.timers.tick(STALE_ATTEMPT_MS);
+  h.client.answered(200);
+  assert.equal(h.sockets[1].closed, false, 'once per failure: a slow network still connects');
+  // It fails by itself; then room reads take over (polling) and evidence no longer redials.
+  h.sockets[1].onerror?.(new Event('error'));
+  h.run(POLL_MS);
+  await tick();
+  assert.equal(h.statuses.at(-1), 'polling');
+  const before = h.sockets.length;
+  mock.timers.tick(STALE_ATTEMPT_MS);
+  h.client.answered(200);
+  assert.equal(h.sockets.length, before);
+  h.client.stop();
+});
+test('a silent outage (nothing answers) redials every SILENT_OPEN_TIMEOUT_MS at once, without backoff, for SILENT_REDIAL_FOR_MS', async () => {
+  const h = harness({ silence: () => SILENT_EVIDENCE_MS }); // a request waits unanswered
+  h.client.start();
+  await tick();
+  // The first handshake gets the usual wait; it hangs and nothing answered since its dial.
+  h.run(OPEN_TIMEOUT_MS);
+  assert.equal(h.statuses.at(-1), 'reconnecting');
+  for (let i = 0; i < 5; i++) {
+    h.run(0);
+    await tick();
+    assert.deepEqual([...h.jobs.values()].filter((j) => j.ms !== POLL_MS).map((j) => j.ms), [SILENT_OPEN_TIMEOUT_MS], `dial ${i + 2} waits ${SILENT_OPEN_TIMEOUT_MS} ms`);
+    mock.timers.tick(SILENT_OPEN_TIMEOUT_MS);
+    h.run(SILENT_OPEN_TIMEOUT_MS);
+  }
+  assert.equal(h.tickets(), 1, 'every redial takes the unused ticket');
+  // Past the window the usual waits come back.
+  mock.timers.tick(SILENT_REDIAL_FOR_MS);
+  assert.ok([...h.jobs.values()].some((j) => j.ms === 0));
+  h.run(0);
+  await tick();
+  h.run(OPEN_TIMEOUT_MS);
+  assert.ok([...h.jobs.values()].some((j) => j.ms > 0 && j.ms !== POLL_MS && j.ms !== OPEN_TIMEOUT_MS), 'a backoff again');
+  h.client.stop();
+});
+test('an answer during the outage (the HTTP fallback reads, slowly) ends silent redials: a slow network gets the doubling waits', async () => {
+  const h = harness({ silence: () => SILENT_EVIDENCE_MS }); // a request waits unanswered
+  h.client.start();
+  await tick();
+  h.run(OPEN_TIMEOUT_MS);
+  h.run(0);
+  await tick();
+  assert.ok([...h.jobs.values()].some((j) => j.ms === SILENT_OPEN_TIMEOUT_MS));
+  mock.timers.tick(10);
+  h.client.answered(200);
+  h.run(SILENT_OPEN_TIMEOUT_MS);
+  assert.ok(![...h.jobs.values()].some((j) => j.ms === 0), 'no instant redial once YepWatch answered');
+  h.run(500);
+  await tick();
+  assert.ok([...h.jobs.values()].some((j) => j.ms === OPEN_TIMEOUT_MS * 2), 'the doubled open wait of a slow network');
+  h.client.stop();
+});
+test('resume (back online, back in front) redoes an attempt that went out into the outage', async () => {
+  const h = harness({ silence: () => SILENT_EVIDENCE_MS }); // a request waits unanswered
+  h.client.start();
+  await tick();
+  h.run(OPEN_TIMEOUT_MS);
+  h.run(0);
+  await tick();
+  mock.timers.tick(STALE_ATTEMPT_MS);
+  h.client.resume();
+  await tick();
+  assert.equal(h.sockets[1].closed, true);
+  assert.equal(h.sockets.length, 3, 'dialed again at once');
+  h.client.stop();
+});
+
+test('a slow network (no request waiting unanswered) keeps the doubling open waits, so a 1.8 s handshake connects on the second dial', async () => {
+  let waited = 0;
+  const h = harness({ silence: () => waited });
+  h.client.start();
+  await tick();
+  // Nothing answered since the dial, but nothing has waited long for an answer either: not a silent network.
+  waited = SILENT_EVIDENCE_MS - 1;
+  h.run(OPEN_TIMEOUT_MS);
+  assert.ok(![...h.jobs.values()].some((j) => j.ms === 0), 'no instant redial');
+  h.run(250);
+  await tick();
+  assert.ok([...h.jobs.values()].some((j) => j.ms === OPEN_TIMEOUT_MS * 2), 'the next handshake gets 3 s');
+  h.sockets[1].open();
+  h.sockets[1].frame({ type: 'room.snapshot', snapshot: continuousFixture().shared });
+  assert.equal(h.statuses.at(-1), 'live');
+  h.client.stop();
+});
+test('silent probes count only up to the HTTP fallback, so the backoff after the silence has not grown', async () => {
+  let waited = SILENT_EVIDENCE_MS;
+  const h = harness({ silence: () => waited });
+  h.client.start();
+  await tick();
+  h.run(OPEN_TIMEOUT_MS);
+  for (let i = 0; i < 6; i++) {
+    h.run(0);
+    await tick();
+    h.run(SILENT_OPEN_TIMEOUT_MS);
+  }
+  // The network answers again but this handshake still hangs: a normal failure, with a short backoff.
+  waited = 0;
+  mock.timers.tick(10);
+  h.client.answered(503);
+  h.run(0);
+  await tick();
+  h.run(OPEN_TIMEOUT_MS);
+  const waits = [...h.jobs.values()].map((j) => j.ms).filter((ms) => ms !== POLL_MS);
+  assert.deepEqual(waits, [1000], 'the third step (250 · 2²), not one grown by every probe');
   h.client.stop();
 });

@@ -30,6 +30,11 @@ export interface RealtimeOptions {
   later?: (fn: () => void, ms: number) => Timer;
   cancel?: (timer: Timer) => void;
   random?: () => number;
+  /**
+   * How long YepWatch has said nothing while an HTTP request waited for it (network.ts, unansweredFor). Without it (or
+   * on Android, whose connecting sockets can't be cancelled) there are no silent redials.
+   */
+  silence?: () => number;
   /** Reconnect progress for the banner: an attempt is running, or the next one starts at `retryAt`. */
   attempt?: (state: ReconnectState) => void;
 }
@@ -46,10 +51,35 @@ export interface ReconnectState {
  */
 export const OPEN_TIMEOUT_MS = 1500;
 export const OPEN_TIMEOUT_MAX_MS = 10000;
+/**
+ * A handshake that hung while YepWatch answered nothing at all (no HTTP answer since its dial, and an HTTP request has
+ * waited at least SILENT_EVIDENCE_MS without one) hung on a network that drops every packet, not a slow one: the next dial waits only this long and goes at once, without doubling or a
+ * backoff, for the first SILENT_REDIAL_FOR_MS of the outage. A SYN lost in the outage is resent only after 1 s, 3 s,
+ * 7 s…, so a socket dialed early in the outage would open seconds after the network is back; a young one opens at
+ * once, and the line goes within 1 s of the return (owner rule). Nothing reaches the server meanwhile, or the front
+ * holds the upgrade (a restart), so the redials cost it nothing. Any answer (the HTTP fallback reads too) ends it: a
+ * slow network gets the doubling waits again.
+ */
+export const SILENT_OPEN_TIMEOUT_MS = 750;
+export const SILENT_REDIAL_FOR_MS = 30000;
+/** How long an HTTP request must have waited, with no YepWatch answer at all meanwhile, to count as a silent network. */
+export const SILENT_EVIDENCE_MS = 3000;
 /** After the socket opened: authentication and the gateway's first room snapshot. */
 export const FIRST_SNAPSHOT_MS = 10000;
 /** A spare ticket is used for the next dial only while this much of its life is left (clocks differ a little). */
 export const SPARE_TICKET_MARGIN_MS = 5000;
+/**
+ * When the network shows it works again (an HTTP answer from YepWatch, back online, back in front), an attempt that has
+ * been running at least this long went out into the outage: its ticket request or handshake waits on packets that were
+ * lost (TCP resends them only after a growing pause; a lost SYN after 1 s, 3 s, 7 s…), so it is dropped and made again.
+ * A younger one went out on the working network and is kept.
+ */
+export const STALE_ATTEMPT_MS = 1000;
+/**
+ * The reconnect that network evidence starts waits a random 0 to this long: after a server comes back, every phone's
+ * answers arrive at about the same moment, and their channels shouldn't all dial in the same instant.
+ */
+export const NUDGE_SPREAD_MS = 250;
 /** Failed live attempts in a row before room reads over HTTP take over until the channel connects. */
 export const POLL_AFTER_FAILURES = 2;
 export const POLL_MS = 5000;
@@ -92,6 +122,21 @@ export class ContinuousRealtime {
   private sequence = 0;
   private view: ActivityView = 'voting';
   private attempting = false;
+  /** Epoch ms the running attempt's current step began: its ticket request, then its socket's dial. */
+  private attemptAt = 0;
+  /** The running socket's ticket while it hasn't opened (still unused: kept for the next dial when it is dropped). */
+  private unsent?: RealtimeTicket;
+  /**
+   * Network evidence already restarted this outage's attempt: the next evidence waits for that attempt to fail by
+   * itself, so a slow network whose handshakes take longer than STALE_ATTEMPT_MS still connects.
+   */
+  private nudged = false;
+  /** Epoch ms of YepWatch's last HTTP answer of any kind (answered). */
+  private lastAnswerAt = 0;
+  /** Epoch ms of the first handshake of this outage that hung while YepWatch answered nothing (0: none). */
+  private silentSince = 0;
+  /** YepWatch answered something during this outage: the network works, however slowly; no silent redials. */
+  private outageAnswered = false;
   private pollTimer?: Timer;
   private polling = false;
   private pollSession = 0;
@@ -140,6 +185,7 @@ export class ContinuousRealtime {
     this.retryTimer = this.ping = this.watchdog = this.renewal = this.repairTimer = undefined;
     this.live = false;
     this.session = null;
+    this.unsent = undefined;
     this.o.clearActivity();
     if (this.socket) {
       const old = this.socket;
@@ -162,6 +208,8 @@ export class ContinuousRealtime {
   start() {
     this.active = true;
     this.failures = 0;
+    this.silentSince = 0;
+    this.outageAnswered = false;
     this.detach();
     const epoch = ++this.epoch;
     void this.connect(epoch);
@@ -202,13 +250,53 @@ export class ContinuousRealtime {
       this.start();
       return;
     }
-    // An attempt already running is kept (a second would ask for another ticket), and so is a wait the
-    // server named. Only the waits that grew while requests got no answer at all start over.
-    if (this.live || this.attempting || this.serverRetryAt > Date.now()) return;
+    // A wait the server named is kept. Only the waits that grew while requests got no answer at all start over.
+    if (this.live || this.serverRetryAt > Date.now()) return;
+    // An attempt that started on the working network is kept (a second would ask for another ticket); one that went
+    // out into the outage is redone.
+    if (this.attempting && Date.now() - this.attemptAt < STALE_ATTEMPT_MS) return;
     this.failures = 0;
-    this.detach();
+    this.redo(0);
+  }
+  /**
+   * YepWatch answered an HTTP request (network.ts, yepwatchAnswered): the network works now. A silent outage (every
+   * packet lost: no error, no `online` event) ends without a word to the channel, which would otherwise sit out its
+   * backoff, or a handshake whose SYN or answer was lost, for seconds after everything else works again. So the wait
+   * ends now and an attempt that went out into the outage is redone (STALE_ATTEMPT_MS), after a random spread of up
+   * to NUDGE_SPREAD_MS. Once per failure (`nudged`); never before a wait the server named; never while room reads
+   * keep the room current (`polling`: HTTP works, the channel itself is refused). The backoff count stays, so a
+   * gateway that is down while the API answers is still asked less and less often.
+   */
+  /**
+   * YepWatch answered an HTTP request with `status` (network.ts). `ticket`: the channel's own ticket request, whose
+   * answer is its attempt going ahead.
+   */
+  answered(status: number, ticket = false) {
+    this.lastAnswerAt = Date.now();
+    if (this.down) this.outageAnswered = true;
+    if (!ticket && status < 500 && status !== 429) this.nudge();
+  }
+  nudge() {
+    if (!this.active || this.live || this.polling || this.nudged || !(this.down || this.failures)) return;
+    if (this.serverRetryAt > Date.now()) return;
+    if (this.attempting && Date.now() - this.attemptAt < STALE_ATTEMPT_MS) return;
+    this.nudged = true;
+    this.redo(Math.round((this.o.random ?? Math.random)() * NUDGE_SPREAD_MS));
+  }
+  /** Drops what is running or waiting (a socket that never opened keeps its ticket for the next dial) and connects after `ms`. */
+  private redo(ms: number) {
+    const unsent = this.unsent;
+    this.detach(true);
+    if (unsent) this.spare = unsent;
     const epoch = ++this.epoch;
-    void this.connect(epoch);
+    if (!ms) {
+      void this.connect(epoch);
+      return;
+    }
+    this.report(false, Date.now() + ms);
+    this.retryTimer = this.later(() => {
+      void this.connect(epoch);
+    }, ms);
   }
   pause() {
     this.sendActivity('away');
@@ -386,12 +474,21 @@ export class ContinuousRealtime {
     this.pollTimer = undefined;
     this.polling = false;
   }
+  /** A silent outage (SILENT_OPEN_TIMEOUT_MS) still in its fast-redial window at `at`. */
+  private silenced(at: number) {
+    return this.silentSince > 0 && !this.outageAnswered && at - this.silentSince < SILENT_REDIAL_FOR_MS;
+  }
   private retry(epoch: number, minimum = 0, hung = false) {
     if (!this.active || epoch !== this.epoch) return;
     this.detach(hung);
     this.down = true;
+    this.nudged = false;
     if (!this.polling) this.o.status(this.outage());
-    const ms = backoffDelay(this.failures++, this.o.random ?? Math.random, minimum, RECONNECT_BASE_MS);
+    // A silent outage redials at once (SILENT_OPEN_TIMEOUT_MS) and its quick probes don't grow the backoff (they only
+    // count up to the HTTP fallback); every other failure backs off.
+    const silent = hung && this.silenced(Date.now());
+    const ms = silent ? 0 : backoffDelay(this.failures, this.o.random ?? Math.random, minimum, RECONNECT_BASE_MS);
+    if (!silent || this.failures < POLL_AFTER_FAILURES) this.failures++;
     this.serverRetryAt = minimum > 0 ? Date.now() + minimum : 0;
     if (this.failures >= POLL_AFTER_FAILURES && this.pollTimer === undefined) this.poll();
     this.report(false, Date.now() + ms);
@@ -421,6 +518,7 @@ export class ContinuousRealtime {
     if (!this.active || epoch !== this.epoch) return;
     if (!this.polling) this.o.status(this.failures || this.down ? this.outage() : 'connecting');
     this.report(true);
+    this.attemptAt = Date.now();
     try {
       const spare = this.spare;
       this.spare = undefined;
@@ -430,6 +528,8 @@ export class ContinuousRealtime {
         throw new RoomFailure('invalid_request', 'Unexpected realtime destination.');
       const socket = this.o.socket(ticket.websocketPath);
       this.socket = socket;
+      this.attemptAt = Date.now();
+      this.unsent = ticket;
       let opened = false;
       /** This socket carried the room live: only then is a restart it announces this outage's cause. */
       let served = false;
@@ -437,17 +537,24 @@ export class ContinuousRealtime {
       const unopened = () => {
         if (!opened && this.active && epoch === this.epoch && socket === this.socket) this.spare = ticket;
       };
-      const openWait = Math.min(OPEN_TIMEOUT_MAX_MS, OPEN_TIMEOUT_MS * 2 ** this.openTimeouts);
-      this.openDeadline = Date.now() + openWait;
+      const dialAt = Date.now();
+      const silent = this.silenced(dialAt);
+      const openWait = silent ? SILENT_OPEN_TIMEOUT_MS : Math.min(OPEN_TIMEOUT_MAX_MS, OPEN_TIMEOUT_MS * 2 ** this.openTimeouts);
+      this.openDeadline = dialAt + openWait;
       this.watchdog = this.later(() => {
         unopened();
-        this.openTimeouts++;
+        // Nothing answered while it hung: no network at all, so the next dial is soon and quick (SILENT_OPEN_TIMEOUT_MS).
+        // An answer meanwhile: a slow network, whose next handshake gets twice the wait.
+        if (!this.outageAnswered && this.lastAnswerAt <= dialAt && (this.o.silence?.() ?? 0) >= SILENT_EVIDENCE_MS) this.silentSince ||= dialAt;
+        else this.openTimeouts++;
         this.retry(epoch, 0, true);
       }, openWait);
       socket.onopen = () => {
         if (!this.active || epoch !== this.epoch || socket !== this.socket) return;
         opened = true;
+        this.unsent = undefined;
         this.openTimeouts = 0;
+        this.silentSince = 0;
         this.clear(this.watchdog);
         this.watchdog = this.later(() => this.retry(epoch), FIRST_SNAPSHOT_MS);
         socket.send(
@@ -491,6 +598,8 @@ export class ContinuousRealtime {
           this.plannedUntil = 0;
           this.down = false;
           this.failures = 0;
+          this.nudged = false;
+          this.outageAnswered = false;
           this.serverRetryAt = 0;
           this.stopPolling();
           if (recovered) {

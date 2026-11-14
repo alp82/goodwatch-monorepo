@@ -31,7 +31,7 @@ import { adoptAccountRoom } from './account-access';
 import { authEpoch } from './account-flow';
 import { ACTIVITY_LIMITS } from '@goodwatch/yepwatch-contracts/proposal';
 import { continuousKey } from './keys';
-import { browserEvents, browserOffline } from './network';
+import { browserEvents, browserOffline, onYepwatchAnswer, unansweredFor } from './network';
 import { confirmRoom, readSavedRoom, saveRoom, snapshotGeneration } from './room-snapshot';
 import { SAVED_ROOM_GRACE_MS } from './room-snapshot-state';
 export { continuousKey } from './keys';
@@ -274,6 +274,8 @@ export function useContinuousRoom(roomId: string) {
       roomId,
       ticket: () => api.ticket(accessRef.current!),
       socket: (path) => new WebSocket(continuousRealtimeUrl(path)),
+      // Silent redials need a socket that can be dropped while it connects (not React Native on Android).
+      silence: Platform.OS === 'android' ? undefined : () => unansweredFor(),
       revision: () => cached()?.shared.revision ?? null,
       expiresAt: () => cached()?.shared.expiresAt ?? null,
       snapshot: (shared) => {
@@ -340,7 +342,10 @@ export function useContinuousRoom(roomId: string) {
         realtime.start();
       } else realtime.pause();
     });
+    // Any YepWatch answer shows the network works: a channel still waiting out a silent outage connects now.
+    const offAnswer = onYepwatchAnswer((status, ticket) => realtime.answered(status, ticket));
     return () => {
+      offAnswer();
       sub.remove();
       realtime.stop();
       channel.current = null;
@@ -568,17 +573,31 @@ export function useContinuousRoom(roomId: string) {
   const retryOnline = (connection === 'live' || connection === 'polling') && Boolean(pending) && !busy && retrySeconds === 0;
   const retryRef = useRef(send);
   useEffect(() => { retryRef.current = send; });
+  /**
+   * The network is back: a saved command whose request got no answer at all goes again now (same id: applies once).
+   * Once per saved command: if that resend gets no answer either, the bounded automatic retries take over.
+   */
+  const fastResent = useRef('');
+  const resendUnanswered = useCallback(() => {
+    const pending = queue.current.pending;
+    if (!pending || !queue.current.unanswered || queue.current.busy || terminalRef.current) return;
+    if (fastResent.current === pending.commandId) return;
+    fastResent.current = pending.commandId;
+    queue.current.retryAt = 0;
+    setRetryAt(0);
+    void retryRef.current();
+  }, []);
+  // A YepWatch answer, or the live channel back, after a silent outage (no `online` event): the saved command doesn't
+  // wait out its fallback gate.
+  useEffect(() => onYepwatchAnswer((status) => { if (status < 500 && status !== 429) resendUnanswered(); }), [resendUnanswered]);
+  useEffect(() => { if (connection === 'live' || connection === 'polling') resendUnanswered(); }, [connection, resendUnanswered]);
   useEffect(() => {
     if (!browserEvents()) return;
     const resume = () => {
       setOffline(browserOffline());
       if (browserOffline() || terminalRef.current || expired() || AppState.currentState !== 'active') return;
       channel.current?.resume();
-      if (queue.current.pending && queue.current.unanswered) {
-        queue.current.retryAt = 0;
-        setRetryAt(0);
-        void retryRef.current();
-      }
+      resendUnanswered();
     };
     const away = () => setOffline(true);
     window.addEventListener('online', resume);
@@ -589,7 +608,7 @@ export function useContinuousRoom(roomId: string) {
       window.removeEventListener('focus', resume);
       window.removeEventListener('offline', away);
     };
-  }, [expired]);
+  }, [expired, resendUnanswered]);
   // Bounded: after a few tries the line with Retry stays, so a failing server isn't kept busy by this device.
   const autoRetries = useRef({ commandId: '', tries: 0 });
   useEffect(() => {

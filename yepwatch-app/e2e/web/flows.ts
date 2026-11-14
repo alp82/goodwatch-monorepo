@@ -45,8 +45,8 @@ export async function join(friend: Person, invite: string, name: string, service
 }
 
 /** Host has a name and Netflix; a ready room page. */
-export async function readyHost(room: Room, name = 'Alp', mood?: string) {
-  const host = await room.person(name);
+export async function readyHost(room: Room, name = 'Alp', mood?: string, opts?: Parameters<Room['person']>[1]) {
+  const host = await room.person(name, opts);
   await createRoom(host, mood);
   await hostName(host, name);
   await pickServices(host, ['Netflix'], () => host.tap(host.button('Streaming services, add'), { expect: { visible: ['services-sheet'] } }));

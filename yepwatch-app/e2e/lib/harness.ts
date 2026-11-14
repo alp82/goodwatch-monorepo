@@ -19,6 +19,7 @@ import { parseFrame, sharedSchema } from '../../src/core/continuous/wire';
 import { audit } from './a11y';
 import { serverTimingLine } from './server-timing';
 import { blockingWords, connectionWords, deadButtons, flashes, frameGaps, layoutShifts, type GateFailure, type Outage, type Recording } from './gates';
+import type { Blackhole } from './blackhole';
 import { duringRunnerOutage, explainedByRunner, MIN_UNREACHABLE_MS, outagesOf, ReachabilityWatch, type Unreachable } from './reachability';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -383,24 +384,32 @@ export class Room {
   private readonly browsers: Browser[] = [];
   constructor(readonly browserType: BrowserType, readonly info: TestInfo, readonly fault: Fault) {}
 
+  /** A journey that breaks the network itself (a black hole, lib/blackhole.ts): failed requests and sockets are its own. */
+  networkFault = false;
   faultAllowsNetworkErrors() {
-    return this.fault === 'restart' || this.fault === 'slow' || this.fault === 'nows' || this.fault === 'hidden';
+    return this.networkFault || this.fault === 'restart' || this.fault === 'slow' || this.fault === 'nows' || this.fault === 'hidden';
   }
 
   /** `trace: false` keeps this person out of Playwright tracing and E2E_VIDEO: a trace stores typed values, request
    * bodies and cookies, so a person who signs in with real credentials (the production smoke member) is never traced
    * or recorded. */
-  async person(name: string, opts: { device?: Device; member?: string; locale?: string; context?: BrowserContext; trace?: boolean } = {}) {
+  /** `network`: the person's browser sends everything through this black hole (lib/blackhole.ts), so a journey can
+   * drop their packets silently. */
+  async person(name: string, opts: { device?: Device; member?: string; locale?: string; context?: BrowserContext; trace?: boolean; network?: Blackhole; storageState?: Awaited<ReturnType<BrowserContext['storageState']>> } = {}) {
     const device = opts.device ?? 'phone';
     let context = opts.context;
     if (!context) {
       // No arguments: the same launch options the worker's shared `browser` fixture would get.
-      const browser = await this.browserType.launch();
+      // A proxied browser: Playwright adds <-loopback> to the bypass rules, so the loopback stack goes through it too.
+      const browser = await this.browserType.launch(opts.network ? { proxy: { server: await opts.network.listen() } } : undefined);
+      if (opts.network) this.networkFault = true;
       this.browsers.push(browser);
       context = await browser.newContext({
         ...DEVICES[device],
         locale: opts.locale ?? 'de-DE',
         timezoneId: 'Europe/Berlin',
+        // A saved sign-in (the production smoke member's, lib/smoke-session.ts).
+        storageState: opts.storageState,
         // Never recorded when untraced: the video would show the sign-in pages and account of real credentials.
         recordVideo: process.env.E2E_VIDEO === '1' && opts.trace !== false ? { dir: this.info.outputPath(`video-${name}`), size: DEVICES[device].viewport } : undefined,
       });
