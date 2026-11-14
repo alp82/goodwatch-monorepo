@@ -255,9 +255,11 @@ jobs:
         run: |
           native=true
           if [ -n "$BEFORE" ] && [ "$BEFORE" != "0000000000000000000000000000000000000000" ]; then
-            if files=$(gh api "repos/$GITHUB_REPOSITORY/compare/$BEFORE...$AFTER" --jq 'if (.files | length) >= 300 then "TOO-MANY" else .files[].filename end'); then
+            if files=$(gh api "repos/$GITHUB_REPOSITORY/compare/$BEFORE...$AFTER" --jq 'if (.files | length) >= 300 then "TOO-MANY" else .files[] | (.filename, (.previous_filename // empty)) end'); then
               if ! printf '%s\n' "$files" | grep -q TOO-MANY; then
-                if printf '%s\n' "$files" | grep -Eq '^yepwatch-app/(package\.json|package-lock\.json|app\.json|app\.config\.ts|plugins/|assets/|e2e/native/|e2e/ci/native-gate\.mjs)|^yepwatch-app/src/.*\.(png|jpe?g|gif|webp|svg|ttf|otf|mp3|mp4|wav|lottie)$|^\.github/workflows/yepwatch-gate\.yml$'; then native=true; else native=false; fi
+                # nativeKey(): package files, app config, plugins/, assets/, and every file under src/ that isn't code.
+                if printf '%s\n' "$files" | grep -Eq '^yepwatch-app/(package\.json|package-lock\.json|app\.json|app\.config\.ts|plugins/|assets/|e2e/native/|e2e/ci/native-gate\.mjs)|^\.github/workflows/yepwatch-gate\.yml$' \
+                  || printf '%s\n' "$files" | grep -E '^yepwatch-app/src/' | grep -Evq '\.(tsx?|jsx?|cjs|mjs|json)$'; then native=true; else native=false; fi
               fi
             fi
           fi
@@ -581,7 +583,8 @@ jobs:
   smoke:
     name: Production smoke after deploy
     needs: deploy
-    if: needs.deploy.outputs.deployed == 'true'
+    # Explicit status check: a skipped Android journey upstream must not suppress the smoke after a real deploy.
+    if: ${{ !cancelled() && needs.deploy.result == 'success' && needs.deploy.outputs.deployed == 'true' }}
     permissions:
       contents: read
       issues: write

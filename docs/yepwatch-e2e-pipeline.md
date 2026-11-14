@@ -14,9 +14,11 @@ production smoke after every deploy and OTA (and every 6 hours), and a pre-OTA g
 "We don't aim for enterprise level QA here, just enough to be confident that everything does not break." Everything
 CI runs fits free GitHub-hosted runners; there is no self-hosted runner.
 
-- **Gates everywhere**: the journey finishes; console, request, WebSocket and schema errors; flash / one-frame wrong
-  screen; blocking and connection words (no blocking "Reconnecting…"); axe WCAG 2.2 AA and 48 px targets (web) /
-  labels and 48 dp targets (Android).
+- **Web (CI and production smoke)**: the journey finishes; console, request, WebSocket and schema errors; flash /
+  one-frame wrong screen; blocking and connection words (no blocking "Reconnecting…"); axe WCAG 2.2 AA and 48 px
+  targets. **Android on CI**: the journey finishes; logcat errors plus the browser friend's console and page errors;
+  blocking words; labels and 48 dp targets. No flash check there (it needs the screen recording, which the
+  software-rendered emulator can't afford); the video-based flash and timing checks stay in the pre-OTA gate.
 - **Speed: ceilings gate, targets are reported.** All numbers live in `yepwatch-app/e2e/budgets.mjs`. The old tight
   budgets (`local`, `production`) are targets: every summary shows each moment's p95 against them, none fails on them.
   Gates are coarse `ceilings`: hermetic runs (local stack, CI) 3x each local target (Create room 900 ms, Start → first

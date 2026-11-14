@@ -110,10 +110,23 @@ export class Phone {
     return all ? n : n.filter(x => x.pkg === PACKAGE);
   }
   async has(sel) { return (await this.nodes()).some(n => match(n, sel)); }
+  /**
+   * The app's nodes, or null when the hierarchy read itself stalled. On a software-rendered emulator (GitHub's) a
+   * read during a cold start can hang past the 10 s call timeout while the app's first frame builds; a wait with
+   * time left reads again instead of failing.
+   */
+  async nodesOrNull(end) {
+    try { return await this.nodes(); } catch (e) {
+      if (!/viewHierarchy timed out|empty hierarchy/.test(String(e?.message)) || Date.now() >= end) throw e;
+      return null;
+    }
+  }
   async find(sel, { timeout = 10000, enabled = true } = {}) {
     const end = Date.now() + timeout; let last = [];
     while (Date.now() < end) {
-      last = await this.nodes();
+      const read = await this.nodesOrNull(end);
+      if (!read) continue;
+      last = read;
       const hits = last.filter(n => match(n, sel) && n.visible && n.w > 0 && n.h > 0 && (!enabled || n.enabled));
       // Prefer the actionable element over its text child.
       hits.sort((a, b) => (b.clickable - a.clickable) || (b.checkable - a.checkable));
@@ -128,7 +141,7 @@ export class Phone {
   async waitFor(sel, opts) { return this.find(sel, { enabled: false, ...opts }); }
   async waitGone(sel, { timeout = 10000 } = {}) {
     const end = Date.now() + timeout;
-    while (Date.now() < end) { if (!(await this.has(sel))) return; await sleep(80); }
+    while (Date.now() < end) { const read = await this.nodesOrNull(end); if (read && !read.some(n => match(n, sel))) return; await sleep(80); }
     throw new Error(`${this.name}: still visible after ${timeout} ms: ${label(sel)}`);
   }
   async tapXY(x, y) { await this.call('tap', Buffer.concat([fieldInt(1, x), fieldInt(2, y)])); this.lastTap = { x, y, at: Date.now() }; }
