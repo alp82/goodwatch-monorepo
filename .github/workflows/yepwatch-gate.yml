@@ -228,7 +228,10 @@ jobs:
     # emulator, system image and AVD caches download.
     name: Android gate (mixed room)
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    # A warm run takes ~4 min. A cold one (no APK base, Gradle, SDK or AVD cache) builds the release APK and the
+    # emulator snapshot from scratch, which takes longer; its caches are saved even when the gate fails (below), so
+    # it happens once per native key.
+    timeout-minutes: 30
     env:
       YW_E2E_HOME: /home/runner/.cache/yw-e2e-native
       YW_E2E_RUNS: /home/runner/.cache/yw-e2e-runs
@@ -299,13 +302,14 @@ jobs:
         # Keyed by the harness's native key (lockfile, app config, plugins, assets): a JS-only change reuses
         # this Gradle-built APK and only swaps in a freshly bundled index.android.bundle (lib/build.mjs).
         id: apk
-        uses: actions/cache@v6
+        uses: actions/cache/restore@v6
         with:
           path: ${{ env.YW_E2E_HOME }}/apk/${{ steps.keys.outputs.native_key }}/base*
           key: yw-apk-base-${{ steps.keys.outputs.native_key }}
       - name: Restore Gradle (cold native builds only)
+        id: gradle
         if: steps.apk.outputs.cache-hit != 'true'
-        uses: actions/cache@v6
+        uses: actions/cache/restore@v6
         with:
           path: |
             ${{ env.YW_E2E_HOME }}/gradle/caches/modules-2
@@ -315,7 +319,8 @@ jobs:
       - name: Restore Metro caches (web export + APK bundle)
         # The APK's Metro cache sits in a directory per build-time env (loopback origins), so it only ever
         # serves the bundle it was filled for; the web export uses /tmp/metro-cache.
-        uses: actions/cache@v6
+        id: metro
+        uses: actions/cache/restore@v6
         with:
           path: |
             /tmp/metro-cache
@@ -337,27 +342,32 @@ jobs:
         # (cached base + JS repack) while the next steps download the Android caches. Bounded below the job
         # deadline (native-gate.mjs PULL_MS, PREPARE_MS); the gate step waits for $RUNNER_TEMP/prepare.json.
         working-directory: yepwatch-app/e2e
+        env:
+          # A cold release build (no APK base cache) gets 20 min instead of 7.
+          YW_E2E_PREPARE_MS: ${{ steps.apk.outputs.cache-hit == 'true' && '420000' || '1200000' }}
         run: |
           nohup node ci/native-gate.mjs --prepare="$RUNNER_TEMP/prepare.json" --pulled="$RUNNER_TEMP/pull.status" \
             > "$RUNNER_TEMP/prepare.log" 2>&1 &
       - name: Restore Android emulator + system image
         id: sdk
-        uses: actions/cache@v6
+        uses: actions/cache/restore@v6
         with:
           path: |
             ${{ env.ANDROID_HOME }}/emulator
             ${{ env.ANDROID_HOME }}/system-images/android-35/google_apis/x86_64
           key: yw-sdk-${{ runner.os }}-api35-google_apis-x86_64-v1
       - name: Install emulator + system image (cache miss only)
+        id: sdk_install
         if: steps.sdk.outputs.cache-hit != 'true'
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install emulator "$SYSTEM_IMAGE" > /dev/null
       - name: Restore Maestro
         id: maestro
-        uses: actions/cache@v6
+        uses: actions/cache/restore@v6
         with:
           path: ${{ env.YW_E2E_HOME }}/tools/maestro
           key: yw-maestro-${{ env.MAESTRO_VERSION }}
       - name: Install Maestro (cache miss only)
+        id: maestro_install
         if: steps.maestro.outputs.cache-hit != 'true'
         run: |
           mkdir -p "$YW_E2E_HOME/tools"
@@ -366,7 +376,8 @@ jobs:
       - name: Restore AVD + snapshot
         # A snapshot only loads on the CPU model and emulator build that saved it. default_boot (the
         # emulator's own quick-boot image, ~1.3 GB) is never loaded by the harness, so it stays out.
-        uses: actions/cache@v6
+        id: avd
+        uses: actions/cache/restore@v6
         with:
           path: |
             ${{ env.YW_E2E_HOME }}/avd
@@ -374,6 +385,8 @@ jobs:
           key: yw-avd-v2-${{ steps.keys.outputs.cpu }}-emu${{ steps.keys.outputs.emulator }}-${{ hashFiles('yepwatch-app/e2e/native/lib/device.mjs') }}
       - name: Android E2E gate (cold start + mixed room)
         working-directory: yepwatch-app/e2e
+        env:
+          YW_E2E_PREPARE_MS: ${{ steps.apk.outputs.cache-hit == 'true' && '420000' || '1200000' }}
         run: node ci/native-gate.mjs --mode=subset --frames=${{ env.NATIVE_FRAMES }} --after-prepare="$RUNNER_TEMP/prepare.json"
       - name: Background pull + stack + APK logs
         if: always()
@@ -381,10 +394,87 @@ jobs:
           echo "::group::image pull log"; cat "$RUNNER_TEMP/pull.log" 2>/dev/null; echo "::endgroup::"
           echo "::group::background stack + APK log"; cat "$RUNNER_TEMP/prepare.log" 2>/dev/null; echo "::endgroup::"
       - name: Stop the emulator (before the AVD cache is saved)
+        id: stopped
         if: always()
         run: |
           "$ANDROID_HOME/platform-tools/adb" -s emulator-5570 emu kill > /dev/null 2>&1 || true
-          sleep 3
+          # The AVD is saved only once the emulator process is gone (it writes the AVD until it exits).
+          pid=$(cat "$YW_E2E_HOME/emulator-5570.pid" 2>/dev/null || true)
+          for i in $(seq 1 60); do { [ -z "$pid" ] || ! kill -0 "$pid" 2>/dev/null; } && break; sleep 0.5; done
+          if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then echo "emulator=running" >> "$GITHUB_OUTPUT"; else echo "emulator=stopped" >> "$GITHUB_OUTPUT"; fi
+      - name: Wait for the background preparation (before its caches are saved)
+        # The background --prepare process (Gradle, Metro) may still be writing when an earlier step failed: wait for
+        # its outcome, then stop Gradle's daemon so nothing writes into its cache while it is saved.
+        id: prepared
+        if: always()
+        run: |
+          for i in $(seq 1 1300); do
+            [ -f "$RUNNER_TEMP/prepare.json" ] && break
+            pid=$(cat "$RUNNER_TEMP/prepare.json.pid" 2>/dev/null || true)
+            [ -n "$pid" ] && ! kill -0 "$pid" 2>/dev/null && break
+            [ -z "$pid" ] && [ $i -gt 4 ] && break
+            sleep 1
+          done
+          ok=$(node -e 'try { console.log(require(process.argv[1]).ok === true) } catch { console.log(false) }' "$RUNNER_TEMP/prepare.json")
+          echo "ok=$ok" >> "$GITHUB_OUTPUT"
+          pkill -f GradleDaemon > /dev/null 2>&1 || true
+          sleep 2
+      - name: What the run built (for the cache saves below)
+        # Saved even when the gate fails, so a cold run's slow work (the release APK, Gradle's downloads, the SDK, the
+        # emulator snapshot) is done once; only what finished is saved: the APK, Gradle and Metro after a successful
+        # background preparation, Maestro after its install step passed, the AVD with the harness's own snapshot
+        # marker (written after a save without KO) once the emulator has exited.
+        id: built
+        if: always()
+        run: |
+          has() { [ -e "$1" ] && echo true || echo false; }
+          echo "apk=$(has "$YW_E2E_HOME/apk/${{ steps.keys.outputs.native_key }}/base.json")" >> "$GITHUB_OUTPUT"
+          echo "gradle=$(has "$YW_E2E_HOME/gradle/caches/modules-2")" >> "$GITHUB_OUTPUT"
+          echo "avd=$(has "$YW_E2E_HOME/avd/yw-e2e.avd/snapshots/yw-base-v2/yw-saved.json")" >> "$GITHUB_OUTPUT"
+      - name: Save release APK base
+        if: always() && steps.apk.outputs.cache-hit != 'true' && steps.prepared.outputs.ok == 'true' && steps.built.outputs.apk == 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ env.YW_E2E_HOME }}/apk/${{ steps.keys.outputs.native_key }}/base*
+          key: ${{ steps.apk.outputs.cache-primary-key }}
+      - name: Save Gradle
+        if: always() && steps.gradle.outcome == 'success' && steps.gradle.outputs.cache-hit != 'true' && steps.prepared.outputs.ok == 'true' && steps.built.outputs.gradle == 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            ${{ env.YW_E2E_HOME }}/gradle/caches/modules-2
+            ${{ env.YW_E2E_HOME }}/gradle/wrapper
+          key: ${{ steps.gradle.outputs.cache-primary-key }}
+      - name: Save Metro caches
+        if: always() && steps.metro.outputs.cache-hit != 'true' && steps.prepared.outputs.ok == 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            /tmp/metro-cache
+            ${{ env.YW_E2E_HOME }}/metro
+          key: ${{ steps.metro.outputs.cache-primary-key }}
+      - name: Save Android emulator + system image
+        if: always() && steps.sdk_install.outcome == 'success'
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            ${{ env.ANDROID_HOME }}/emulator
+            ${{ env.ANDROID_HOME }}/system-images/android-35/google_apis/x86_64
+          key: ${{ steps.sdk.outputs.cache-primary-key }}
+      - name: Save Maestro
+        if: always() && steps.maestro_install.outcome == 'success'
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ env.YW_E2E_HOME }}/tools/maestro
+          key: ${{ steps.maestro.outputs.cache-primary-key }}
+      - name: Save AVD + snapshot
+        if: always() && steps.avd.outputs.cache-hit != 'true' && steps.stopped.outputs.emulator == 'stopped' && steps.built.outputs.avd == 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            ${{ env.YW_E2E_HOME }}/avd
+            !${{ env.YW_E2E_HOME }}/avd/yw-e2e.avd/snapshots/default_boot
+          key: ${{ steps.avd.outputs.cache-primary-key }}
       - name: Upload run
         if: always()
         uses: actions/upload-artifact@v7

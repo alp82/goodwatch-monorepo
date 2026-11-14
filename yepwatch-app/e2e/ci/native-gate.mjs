@@ -14,7 +14,7 @@
 //    the background right after node_modules are restored, so the bundling overlaps the emulator, system
 //    image and AVD cache downloads. A later --after-prepare=<file> boots the emulator while it waits for it.
 //    --pulled=<status file> makes --prepare first wait for the background image pull's exit status (0 = all
-//    pulled). Both sides are bounded below the 12-min job: a failed pull or a preparation past PREPARE_MS
+//    pulled). Both sides are bounded below the job timeout: a failed pull or a preparation past PREPARE_MS
 //    writes a failed outcome, and the waiter gives up after WAIT_MS or as soon as the preparer died silently.
 // 2. Runs `e2e/native/run.mjs <mode>` unchanged (it finds the APK cached and the emulators booted).
 // 3. Re-judges its result.json. Every gate stays a gate except frame pacing when --frames=report (CI default):
@@ -43,8 +43,9 @@ const pulled = arg('pulled');
 // Deadlines inside the CI job's 12 min (yepwatch-gate.yml android-gate): checkout and caches take ~1-3 min
 // before the gate step, the journeys ~2 min after it.
 const PULL_MS = 4 * 60000;
-const PREPARE_MS = 7 * 60000;
-const WAIT_MS = 7.5 * 60000;
+// CI gives a cold release build (no APK base cache) longer: YW_E2E_PREPARE_MS (yepwatch-gate.yml).
+const PREPARE_MS = Number(process.env.YW_E2E_PREPARE_MS || 7 * 60000);
+const WAIT_MS = PREPARE_MS + 30000;
 const t0 = Date.now();
 const log = (m) => console.log(`[native-gate ${((Date.now() - t0) / 1000).toFixed(1)}s] ${m}`);
 const phases = {};

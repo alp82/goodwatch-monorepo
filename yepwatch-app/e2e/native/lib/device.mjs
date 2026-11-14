@@ -11,6 +11,8 @@ import { PACKAGE } from './build.mjs';
 
 export const AVD = process.env.YW_E2E_AVD ?? 'yw-e2e';
 export const SNAPSHOT = 'yw-base-v2';
+/** The harness's own "this snapshot saved" marker inside the snapshot directory. */
+export const SNAPSHOT_MARKER = 'yw-saved.json';
 const IMAGE = 'system-images;android-35;google_apis;x86_64';
 /** Console ports (serial emulator-<port>); even numbers in 5554..5682. Kept inside 5555-5585: Maestro (dadb) only treats emulators in that range as connected.
  * YW_E2E_EMU_PORTS (comma list, e.g. 5574,5576) lets a second harness run its own instances next to 5570/5572. */
@@ -87,10 +89,13 @@ export async function ensureSnapshot() {
   const { maestroApks } = await import('./phone.mjs');
   for (const apk of maestroApks()) adb(serial, 'install', '-r', '-g', apk);
   await sleep(2000);
-  run(tools.adb, ['-s', serial, 'emu', 'avd', 'snapshot', 'save', SNAPSHOT], { timeout: 120000 });
+  const saved = run(tools.adb, ['-s', serial, 'emu', 'avd', 'snapshot', 'save', SNAPSHOT], { timeout: 120000 });
+  if (/^KO\b/m.test(saved)) throw new Error(`emulator refused to save snapshot ${SNAPSHOT}: ${saved.trim().slice(0, 200)}`);
   run(tools.adb, ['-s', serial, 'emu', 'kill']);
   for (let i = 0; i < 120 && devices().includes(serial); i++) await sleep(500);
   await sleep(1000);
+  // Written only after the save came back without KO: CI caches the AVD only with this marker (yepwatch-gate.yml).
+  fs.writeFileSync(path.join(HOME, 'avd', `${AVD}.avd`, 'snapshots', SNAPSHOT, SNAPSHOT_MARKER), JSON.stringify({ savedAt: new Date().toISOString() }));
 }
 
 /** Boot (or reuse) `count` emulators from the snapshot. Returns serials and boot timings. */
