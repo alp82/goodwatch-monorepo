@@ -1,0 +1,56 @@
+== 1. Today: only the routers from the container labels
+PASS  all requests reach abio: abio=20
+PASS  vector1 proxy redirects a request from abio to HTTPS: 302
+== 2. Both files installed: the file routers win over the label routers
+PASS  requests alternate: abio=10 vector1=10
+PASS  HTTP redirects to HTTPS: 301 https://goodwatch.app/x
+PASS  the proxy leaves compression to the app:
+PASS  vector1 proxy no longer redirects abio: 200
+PASS  the readiness path reaches the vector1 instance: 200
+PASS  another client of vector1 proxy still gets the redirect: 302
+== 2b. No cookie for anonymous requests, a sticky cookie for members
+PASS  an anonymous response sets no cookie:
+PASS  the readiness path sets no cookie:
+PASS  analytics cookies alone set no cookie:
+PASS  a name that only ends like the auth cookie sets no cookie:
+PASS  anonymous requests alternate: abio=5 vector1=5
+      first member response sets: gw_instance=<value>; Path=/; HttpOnly; Secure; SameSite=Lax
+PASS  a member response sets the sticky cookie: 1
+PASS  the cookie value holds no address: 0
+PASS  ten member requests with the cookie reach one instance: 1
+PASS  a member with the cookie gets no second one:
+PASS  the auth cookie in numbered parts, after other cookies, is a member: 1
+PASS  the member rule also holds over HTTP/1.1: 1
+PASS  gw.session_token gets the sticky cookie: 1
+PASS  gw.session_token stays on one instance: 1
+PASS  gw.session_token rejects prefixed names and cookie values:
+PASS  gw.session_token rejects suffixes:
+PASS  __Secure-gw.session_token gets the sticky cookie: 1
+PASS  __Secure-gw.session_token stays on one instance: 1
+PASS  __Secure-gw.session_token rejects prefixed names and cookie values:
+PASS  __Secure-gw.session_token rejects suffixes:
+PASS  a signed-out visitor with a leftover sticky cookie alternates: abio=5 vector1=5
+PASS  and gets no cookie:
+== 3. Forwarded headers on the vector1 leg
+      without trustedIPs: "instance":"vector1","host":"goodwatch.app:38308","realIp":"192.168.32.21","forwardedFor":"192.168.32.21","forwardedProto":"http"
+      with trustedIPs:    "instance":"vector1","host":"goodwatch.app:38308","realIp":"<visitor>","forwardedFor":"<visitor>, 192.168.32.21","forwardedProto":"https"
+PASS  the visitor address and scheme arrive: 1
+== 4. vector1 instance killed (no drain), then started again
+      10 s from the kill: abio=49 502=2
+PASS  only abio answers afterwards: abio=10
+PASS  both answer again: abio=10 vector1=10
+== 5. Deploy on abio: a new container joins the alias, then the old one gets SIGTERM and drains
+      14 s from the SIGTERM: abio=2 abio-new=117 vector1=119
+PASS  no failed request during the deploy: 0
+      afterwards: abio-new=10 vector1=10
+PASS  the new container and vector1 answer: 1
+== 6. Deploy on vector1: SIGTERM, drain, 10 s without a container, new container
+      20 s from the SIGTERM: abio-new=306 vector1=43
+PASS  no failed request while vector1 is away: 0
+PASS  vector1 is back: 1
+== 7. Both instances down
+PASS  the answer is 503: 503
+== 8. File removed on abio: back to the label routers
+PASS  all requests reach abio: abio-new=10
+
+All checks passed
