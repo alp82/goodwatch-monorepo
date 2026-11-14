@@ -5,6 +5,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { APP_DIR, NATIVE_DIR, sleep } from './env.mjs';
 import { gfxFrames, gfxReset } from './gates.mjs';
+import { startTrace, tracing } from './trace.mjs';
 import { createRoom, fillAndSubmit, freshStart, inviteCode, inviteUrl, joinFromJoinScreen, measure, pickNetflix, posterTitle, roiOf, tapAction, toStart } from './journey.mjs';
 
 const require = createRequire(path.join(APP_DIR, 'package.json'));
@@ -170,7 +171,9 @@ export async function mixedGateRoom({ phone: A, stack, runDir, B, timing, audit,
   try {
     await toStart(A);
     const tile = await A.find('New room', { timeout: 15000 });
+    const traced = tracing('new-room') ? await startTrace(A, 'new-room', path.join(runDir, 'video')) : null;
     const nr = await measure({ actor: A, phones: [A], file: vid('new-room'), action: tapAction(A, tile), targets: { A: roiOf(A, 'Mood') } });
+    if (traced) await traced();
     timing('New room -> Mood page', B.newRoomMs, nr.A);
     await audit(A, 'mood page');
     await A.tap('cheer me up');

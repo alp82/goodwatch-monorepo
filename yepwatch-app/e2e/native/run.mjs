@@ -14,6 +14,7 @@ import { RUNS_DIR, log, mkdirp, sleep } from './lib/env.mjs';
 import { Logcat, a11yAudit, blockingWords, gfxFrames, gfxReset } from './lib/gates.mjs';
 import { createRoom, freshStart, toStart, fillAndSubmit, hostAction, inviteUrl, joinFromJoinScreen, measure, pickNetflix, posterTitle, roiOf, tapAction } from './lib/journey.mjs';
 import { Phone } from './lib/phone.mjs';
+import { startTrace, tracing } from './lib/trace.mjs';
 import { resolveStack, stackPorts } from './lib/stack.mjs';
 
 const mode = process.argv[2] ?? 'gate';
@@ -100,8 +101,10 @@ async function main() {
   await scenario('cold-start', async () => {
     A.forceStop(); A.sh(`pm clear ${PACKAGE}`);
     let am;
+    const traced = tracing('cold-start') ? await startTrace(A, 'cold-start', path.join(RUN, 'video'), 12000) : null;
     const first = await measure({ actor: A, phones: [A], file: vid('cold-first'), targets: { A: roiOf(A, 'New room', 20000) },
       action: hostAction(() => { am = A.launch(); }), appWindowMs: () => am?.totalTime, allowIntermediate: 0, settleMs: 800 });
+    if (traced) await traced();
     timing('cold start, first visit -> start page usable', B.native.coldStartUsableMs, first.A, { amStartTotalTime: am.totalTime, use: 'settled' });
     await audit(A, 'start page (first visit)');
     A.forceStop(); await sleep(500);

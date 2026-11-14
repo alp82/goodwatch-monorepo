@@ -39,11 +39,16 @@ export async function stopRecording(rec) {
 }
 
 export function decode(rec) {
-  const raw = execFileSync('ffmpeg', ['-v', 'error', '-i', rec.file, '-vf', `scale=${W}:${H},format=gray`, '-f', 'rawvideo', '-'], { maxBuffer: 1 << 30 });
+  // One decoded frame per recorded frame (-fps_mode passthrough), so frame i is the recorder's frame i with its own
+  // timestamp. rawvideo output is constant-rate by default: ffmpeg duplicates frames into the recorder's gaps, which
+  // shifts every index against the ffprobe timestamps (on CI 446 decoded frames for 182 recorded ones, so the frames
+  // past 182 got made-up times).
+  const raw = execFileSync('ffmpeg', ['-v', 'error', '-i', rec.file, '-vf', `scale=${W}:${H},format=gray`, '-fps_mode', 'passthrough', '-f', 'rawvideo', '-'], { maxBuffer: 1 << 30, stdio: ['ignore', 'pipe', 'pipe'] });
   const pts = execFileSync('ffprobe', ['-v', 'error', '-select_streams', 'v', '-show_entries', 'frame=pts_time,best_effort_timestamp_time', '-of', 'csv=p=0', rec.file], { encoding: 'utf8' })
     .trim().split('\n').map(l => Number(l.split(',').find(x => x && x !== 'N/A')) * 1000);
   const n = Math.floor(raw.length / (W * H));
-  const frames = Array.from({ length: n }, (_, i) => ({ i, t: pts[i] ?? i * 1000 / 60, px: raw.subarray(i * W * H, (i + 1) * W * H) }));
+  if (n !== pts.length || pts.some(t => !Number.isFinite(t))) throw new Error(`${path.basename(rec.file)}: ${n} decoded frames for ${pts.length} timestamps`);
+  const frames = Array.from({ length: n }, (_, i) => ({ i, t: pts[i], px: raw.subarray(i * W * H, (i + 1) * W * H) }));
   return { ...rec, frames };
 }
 

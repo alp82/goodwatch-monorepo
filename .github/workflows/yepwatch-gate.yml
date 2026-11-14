@@ -32,6 +32,10 @@ on:
         description: Deploy when the gate passes (needs vars.YEPWATCH_DEPLOY_VIA_CI == 'true')
         type: boolean
         default: false
+      trace:
+        description: Android steps to record a Perfetto trace for (YW_E2E_TRACE, e.g. new-room,cold-start; diagnostics only)
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -391,6 +395,7 @@ jobs:
         working-directory: yepwatch-app/e2e
         env:
           YW_E2E_PREPARE_MS: ${{ steps.apk.outputs.cache-hit == 'true' && '420000' || '1200000' }}
+          YW_E2E_TRACE: ${{ inputs.trace }}
         run: node ci/native-gate.mjs --mode=subset --frames=${{ env.NATIVE_FRAMES }} --after-prepare="$RUNNER_TEMP/prepare.json"
       - name: Background pull + stack + APK logs
         if: always()
