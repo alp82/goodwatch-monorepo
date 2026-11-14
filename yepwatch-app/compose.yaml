@@ -33,7 +33,7 @@ services:
     # starts any new one). Once the front is gone, every request (a realtime ticket included) waits in the hold for
     # the new api, so after the gateway's goodbye a phone gets its next ticket only from the new api, and its next
     # WebSocket finds the new gateway already listening instead of hanging in the hold (the client would give up on it
-    # after its open timeout). The api is still there when the front stops, so the front never holds a request for an
+    # after its open timeout: 9 WebSocket errors in the smoke across deploys 3942 and 3945, which removed the gateway first). The api is still there when the front stops, so the front never holds a request for an
     # api that is gone. Started without waiting for more: Caddy holds requests until api/gateway answer
     # (lb_try_duration), and the api holds early requests in its own process until it is initialized
     # (proposal-release-main.ts).
