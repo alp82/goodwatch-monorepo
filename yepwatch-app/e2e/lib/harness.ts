@@ -404,6 +404,10 @@ export class Room {
     const page = await context.newPage();
     const p = new Person(this, name, context, page, device);
     if (opts.trace === false) p.traced = false;
+    // E2E_CPU_THROTTLE=2.5 slows each page's main thread to about a GitHub runner's (4 vCPU EPYC) on a fast desktop,
+    // so a local run reproduces the deploy gate's frame failures. Local stack only, never against production.
+    const throttle = Number(process.env.E2E_CPU_THROTTLE || 0);
+    if (throttle > 1 && process.env.E2E_TARGET !== 'production') await (await p.cdpSession()).send('Emulation.setCPUThrottlingRate', { rate: throttle });
     if (this.fault === 'nows') {
       const cdp = await p.cdpSession();
       await cdp.send('Network.enable');

@@ -104,6 +104,11 @@ Both switches are workflow env values (`WEB_FRAMES`, `NATIVE_FRAMES`). A 4-core 
 web frame-gate failures compared with the same tests on free cores. If CI frame failures turn out to come from
 the runner rather than the app, the remedy is a bigger runner, not a looser budget.
 
+To reproduce the CI frame failures locally, slow each page's main thread to a runner's speed:
+`E2E_CPU_THROTTLE=2.5 E2E_WORKERS=1 taskset -c 0-3 node run.mjs gate -- --shard=1/6` (in `yepwatch-app/e2e`). On a
+Ryzen 9950X3D this fails the same 9 of 11 shard-1 tests as CI, with the same press and script named; without the
+throttle 1-2 fail. Tracing and the recorder's own per-frame checks were measured and change nothing.
+
 ### Hermeticity
 
 - The gate jobs reference no secrets.
