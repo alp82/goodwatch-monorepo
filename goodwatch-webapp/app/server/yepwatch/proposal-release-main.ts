@@ -47,7 +47,7 @@ snapshot.configureTitleSnapshotReader({
 		return source.getBuffer(key)
 	},
 })
-const [{ guestProposalCatalog }, { warmRankings, warmCatalogLists }, { searchQuery }, cache] = await Promise.all([
+const [{ guestProposalCatalog }, { warmRankings, warmCatalogLists, warmDeckReads }, { searchQuery }, cache] = await Promise.all([
 	import("./proposal-guest-catalog.server.ts"),
 	import("./goodwatch.server.ts"),
 	import("../combined-search/catalog.server.ts"),
@@ -96,17 +96,28 @@ const runtime = createReleaseRuntime(config, {
 // Each new snapshot version gets the base rankings of common and recently used room settings built in the background
 // (slice by slice, see goodwatch.server.ts), so the first room of each doesn't wait for them.
 const WARM_RANKINGS = ["US", "DE", "GB"].map((country) => ({ country, type: "all" as const, moods: [] }))
+// Then, once per process, a first deck's reads for the same countries (Netflix screens), so the first rooms after a
+// deploy don't build their deck on cold caches (see warmDeckReads).
 let warmedVersion: string | undefined
 let warming = false
-const warm = setInterval(() => {
+let deckWarmed = false
+const warmNow = () => {
 	const version = snapshot.getTitleSnapshot()?.version
 	if (!version || version === warmedVersion || warming) return
 	warming = true
 	void warmRankings(WARM_RANKINGS)
-		.then(() => { warmedVersion = version })
+		.then(async () => {
+			warmedVersion = version
+			if (deckWarmed) return
+			deckWarmed = true
+			await warmDeckReads(WARM_RANKINGS.map(({ country }) => ({ country, serviceIds: [8] })), (marks, totalMs) =>
+				console.info(JSON.stringify({ event: "yepwatch_deck_warm", totalMs, marks, uptimeMs: Math.round(process.uptime() * 1000) }))
+			)
+		})
 		.catch(() => {})
 		.finally(() => { warming = false })
-}, 5_000)
+}
+const warm = setInterval(warmNow, 5_000)
 warm.unref()
 // The listener opens now: the hold above keeps each early request waiting in this process, and the Docker health
 // check (readiness) stays red until the release is initialized, within its start period.
@@ -137,6 +148,8 @@ while (!runtime.initialized()) {
 }
 mark("initialized")
 console.info(JSON.stringify({ event: "yepwatch_release_initialized", phases }))
+// The snapshot is in: warm now rather than at the next 5 s tick.
+warmNow()
 const readyLog = setInterval(() => {
 	if (!runtime.readiness().ready) return
 	console.info(

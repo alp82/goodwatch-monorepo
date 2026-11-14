@@ -82,6 +82,34 @@ export async function warmRankings(seed: RankingCombo[] = []) {
     try { await baseKeys(combo) } catch { return } // No snapshot yet: the next check warms.
   }
 }
+/**
+ * Walks a first deck's reads (title displays, offers, first episodes) for the most popular titles of each `combo`, as
+ * a room's deck build would, so the first rooms after a start don't pay for cold modules and caches: production
+ * 2026-11-14, the first deck build after a deploy took 1.9 s, the next ones 0.9-1.0 s. Best effort; `done` hears
+ * where the time went.
+ */
+export async function warmDeckReads(combos: { country: string; serviceIds: number[] }[], done?: (marks: Record<string, number>, totalMs: number) => void) {
+  const started = performance.now()
+  const marks: Record<string, number> = {}
+  const time = async <T>(name: string, work: Promise<T>) => {
+    const at = performance.now()
+    try { return await work } finally { marks[name] = Math.round((marks[name] ?? 0) + performance.now() - at) }
+  }
+  for (const { country, serviceIds } of combos) {
+    try {
+      const keys = (await time('rank', baseKeys({ country, type: 'all', moods: [] }))).slice(0, 120)
+      const screens = [{ id: 'warm', label: 'Warm-up', country, serviceIds, confirmed: true }]
+      // As the deck scan does: 40 titles at a time, then the first episode of the shows among them, 6 at a time.
+      for (let offset = 0; offset < keys.length; offset += 40) {
+        const displays = await time('displays', goodwatchReads.displays(keys.slice(offset, offset + 40)))
+        await time('availability', goodwatchReads.availability([...displays.values()], screens, false))
+        const shows = [...displays.values()].filter(t => t.mediaType === 'show').map(t => t.tmdbId)
+        for (let i = 0; i < shows.length; i += 6) await time('episodes', Promise.all(shows.slice(i, i + 6).map(id => episodes(id).catch(() => []))))
+      }
+    } catch { /* No snapshot yet, or a read failed: the first room reads as before. */ }
+  }
+  done?.(marks, Math.round(performance.now() - started))
+}
 export const goodwatchReads: CatalogReads = {
   async rankedKeys(room) {
     const { isMoodKey } = await import('../../domain/moods')

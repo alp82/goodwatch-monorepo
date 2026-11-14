@@ -16,6 +16,8 @@ const reads: CatalogReads = {
 	rankedKeys: (room, limit) => timed("rank", goodwatchReads.rankedKeys(room, limit)),
 	displays: (keys) => timed("displays", goodwatchReads.displays(keys)),
 	availability: (titles, screens, fresh) => timed("availability", goodwatchReads.availability(titles, screens, fresh)),
+	// Summed over a batch's parallel reads: time spent reading, not elapsed time.
+	episodes: (showId) => timed("episodes", goodwatchReads.episodes(showId)),
 }
 /** Full catalog/evidence reads, with optional remote saved progress; no issuer or local fixtures. */
 export function guestProposalCatalog(members?: ContinuousMembers) {
