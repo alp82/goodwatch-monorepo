@@ -9,7 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { budgetsFor } from './budgets.mjs';
 import { ensureApk, PACKAGE } from './lib/build.mjs';
-import { boot, install, reverse, shutdown } from './lib/device.mjs';
+import { boot, install, reverse, shell, shutdown } from './lib/device.mjs';
 import { RUNS_DIR, log, mkdirp, sleep } from './lib/env.mjs';
 import { Logcat, a11yAudit, blockingWords, gfxFrames, gfxReset } from './lib/gates.mjs';
 import { createRoom, freshStart, toStart, fillAndSubmit, hostAction, inviteUrl, joinFromJoinScreen, measure, pickNetflix, posterTitle, roiOf, tapAction } from './lib/journey.mjs';
@@ -89,7 +89,12 @@ async function main() {
   phase('boot', Date.now() - t); result.devices = devs;
   t = Date.now();
   const ports = stackPorts(stack);
-  await Promise.all(devs.map(async (d, i) => { reverse(d.serial, ports); install(d.serial, apk.apk); }));
+  await Promise.all(devs.map(async (d, i) => {
+    reverse(d.serial, ports); install(d.serial, apk.apk);
+    // The AVD has a hardware keyboard (hw.keyboard, for typing through adb), which hides the soft keyboard unless
+    // told otherwise; phones show it, and it covers the bottom of the page, so every run has it.
+    shell(d.serial, 'settings put secure show_ime_with_hard_keyboard 1');
+  }));
   phones = [];
   for (const [i, d] of devs.entries()) phones.push(await new Phone(d.serial, i, i ? 'B' : 'A').start());
   logcats = phones.map(p => new Logcat(p).start());

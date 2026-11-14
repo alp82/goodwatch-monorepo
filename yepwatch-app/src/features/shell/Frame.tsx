@@ -5,7 +5,7 @@
  * over the body while the header stays usable.
  */
 import { useState, type ReactNode } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, View, type ViewStyle } from 'react-native';
+import { Platform, ScrollView, View, type ViewStyle } from 'react-native';
 import { router, usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Backdrop } from '../glow/Backdrop';
@@ -22,6 +22,7 @@ import { Shade } from './Sheet';
 import { closeTopSheet } from './sheet-stack';
 import { useStableCallback } from './steady';
 import { warm } from './tokens';
+import { KeyboardRoom, useKeyboardInset } from './keyboard-inset';
 import { openNewRoom } from '../room/nav';
 
 export { BrandMark } from './Header';
@@ -101,8 +102,12 @@ export function AppFrame({ header = {}, rooms, children, footer, footerPlacement
   const back = header.back ? goBack : undefined;
   const openPill = useStableCallback(() => (header.onPill ? header.onPill() : setRoomsOpen(true)));
   const openProfile = useStableCallback(() => (header.onProfile ? header.onProfile() : setProfileOpen(true)));
+  // Android: the keyboard covers the page (edge to edge, keyboard-inset.ts); the body and its pinned action stay above it.
+  const keyboard = useKeyboardInset();
+  // The keyboard covers the system navigation area too, so its inset replaces the bottom safe area.
+  const safeBottom = keyboard.inset > 0 ? 0 : insets.bottom;
   const top = scroll ? (phone ? 22 : z(40)) : (phone ? 12 : z(24));
-  const bottom = (scroll ? (phone ? 32 : z(56)) : (phone ? 12 : z(32))) + (pinned ? 0 : insets.bottom);
+  const bottom = (scroll ? (phone ? 32 : z(56)) : (phone ? 12 : z(32))) + (pinned ? 0 : safeBottom);
   const content = (
     <>
       {children}
@@ -122,7 +127,7 @@ export function AppFrame({ header = {}, rooms, children, footer, footerPlacement
       {shownSheet && !covered ? <View testID="header-shade" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: insets.top + layout.header, zIndex: 31 }}><Shade onPress={onePress(() => { closeTopSheet(); })} /></View> : null}
       <View style={{ flex: 1, minHeight: 0 }}>
         <CoveredBody keepView covered={covered || Boolean(shownSheet)}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, minHeight: 0 }}>
+          <KeyboardRoom {...keyboard} style={{ flex: 1, minHeight: 0 }}>
             {scroll ? (
               <ScrollView testID="frame-body" style={{ flex: 1 }} keyboardShouldPersistTaps="handled" keyboardDismissMode={keyboardDismissMode} contentContainerStyle={{ flexGrow: 1, paddingHorizontal: gutter, paddingTop: top, paddingBottom: bottom, ...webClip }}>
                 <View style={{ ...column, gap }}>{content}</View>
@@ -133,11 +138,11 @@ export function AppFrame({ header = {}, rooms, children, footer, footerPlacement
               </View>
             )}
             {pinned ? (
-              <View testID="frame-dock" style={{ borderTopWidth: 1, borderTopColor: warm.line, backgroundColor: 'rgba(10,9,8,0.9)', paddingHorizontal: gutter, paddingTop: 12, paddingBottom: 14 + insets.bottom }}>
+              <View testID="frame-dock" style={{ borderTopWidth: 1, borderTopColor: warm.line, backgroundColor: 'rgba(10,9,8,0.9)', paddingHorizontal: gutter, paddingTop: 12, paddingBottom: 14 + safeBottom }}>
                 <View style={{ ...column, gap: 10 }}>{footer}</View>
               </View>
             ) : null}
-          </KeyboardAvoidingView>
+          </KeyboardRoom>
         </CoveredBody>
         {shownSheet}
         {/* Under a screen's own top bar the note sits lower (noteTop); with a sheet open it goes back up to

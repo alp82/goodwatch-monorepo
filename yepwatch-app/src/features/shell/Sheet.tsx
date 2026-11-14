@@ -7,7 +7,7 @@
  * and makes the page underneath inert.
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Animated, BackHandler, Easing, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
+import { Animated, BackHandler, Easing, Keyboard, Platform, Pressable, ScrollView, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import { useIsFocused } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useReducedMotion } from '../../components/ui';
@@ -17,6 +17,7 @@ import { keyboardDismissMode, useLayout } from './layout';
 import { closeTopSheet, isTopSheet, registerSheet } from './sheet-stack';
 import { R, warm } from './tokens';
 import { useFreshSurface } from './fresh-surface';
+import { KeyboardRoom, useKeyboardInset } from './keyboard-inset';
 
 export interface SheetProps {
   title: string;
@@ -72,6 +73,9 @@ const INPUT_ANSWER_MS = 400;
 export function Sheet({ title, onClose, children, actions, testID, width = 680 }: SheetProps) {
   const { width: windowWidth, height: windowHeight, phone, z } = useLayout();
   const insets = useSafeAreaInsets();
+  // Android: the panel's bottom stays above the keyboard (keyboard-inset.tsx), which also covers the bottom safe area.
+  const keyboard = useKeyboardInset();
+  const safeBottom = phone && keyboard.inset === 0 ? insets.bottom : 0;
   const reduced = useReducedMotion();
   const [enter] = useState(() => new Animated.Value(reduced ? 1 : 0));
   useEffect(() => {
@@ -136,20 +140,20 @@ export function Sheet({ title, onClose, children, actions, testID, width = 680 }
       </Animated.View>
       <Animated.View testID={testID} role="dialog" aria-modal aria-label={title} accessibilityViewIsModal onLayout={onPanelLayout}
         style={{ width: panelWidth, maxHeight: phone ? '92%' : '100%', minHeight, flexShrink: 1, backgroundColor: warm.panel, borderColor: warm.lineStrong, borderWidth: 1, ...(phone ? { borderBottomWidth: 0, borderTopLeftRadius: R.card, borderTopRightRadius: R.card } : { borderRadius: R.card }), opacity: enter, transform: [{ translateY: rise }], overflow: 'hidden' }}>
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flexShrink: 1, flexGrow: minHeight ? 1 : 0 }}>
+        <KeyboardRoom {...keyboard} style={{ flexShrink: 1, flexGrow: minHeight ? 1 : 0 }}>
           {phone ? <View style={{ alignItems: 'center', paddingTop: 8 }}><View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: '#ffffff26' }} /></View> : null}
           <View style={{ flexDirection: 'row', alignItems: 'center', paddingLeft: z(20), paddingRight: 8, paddingTop: phone ? 4 : 10, minHeight: 52 }}>
             <GText bold size={z(22)} lines={1} style={{ flex: 1, letterSpacing: -0.5 }}>{title}</GText>
             <Press label="Close" onPress={onClose} style={{ width: 48, height: 48, borderRadius: R.control }}><Icon name="close" size={20} color={glow.soft} /></Press>
           </View>
           <ScrollView style={{ flexGrow: minHeight ? 1 : 0, flexShrink: 1 }} keyboardShouldPersistTaps="handled" keyboardDismissMode={keyboardDismissMode} onScrollBeginDrag={Keyboard.dismiss}
-            contentContainerStyle={{ paddingHorizontal: z(20), paddingTop: 8, paddingBottom: actions ? 16 : 20 + (phone ? insets.bottom : 0), gap: 18 }}>
+            contentContainerStyle={{ paddingHorizontal: z(20), paddingTop: 8, paddingBottom: actions ? 16 : 20 + safeBottom, gap: 18 }}>
             {children}
           </ScrollView>
           {actions ? (
-            <View style={{ paddingHorizontal: z(20), paddingTop: 12, paddingBottom: 16 + (phone ? insets.bottom : 0), borderTopWidth: 1, borderTopColor: warm.line, flexDirection: 'row', gap: 10 }}>{actions}</View>
+            <View style={{ paddingHorizontal: z(20), paddingTop: 12, paddingBottom: 16 + safeBottom, borderTopWidth: 1, borderTopColor: warm.line, flexDirection: 'row', gap: 10 }}>{actions}</View>
           ) : null}
-        </KeyboardAvoidingView>
+        </KeyboardRoom>
       </Animated.View>
       <EdgeBack back={onClose} />
     </View>
