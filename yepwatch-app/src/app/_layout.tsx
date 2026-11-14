@@ -13,6 +13,7 @@ import { CoveredBody } from '../features/shell/parts';
 import { installLeftoverTapGuard, leftoverTouchGuard, surfaceAppeared } from '../features/shell/fresh-surface';
 import { useFrontRoom } from '../features/shell/useFrontRoom';
 import { arrivesInPlace } from '../features/room/nav';
+import { ROOT_SCREENS } from '../features/shell/route-order';
 installLeftoverTapGuard();
 if (Platform.OS !== 'web') {
   // The startup cover continues the system splash exactly (the Y on the same ground), so the splash can
@@ -47,7 +48,10 @@ export default function Layout() {
   const shown = booted || arriving;
   // The same element while the fonts stay loaded: this layout re-renders on every change of address and page
   // readiness, and a new Stack element re-rendered the whole navigator and the screens in it each time.
-  const stack = useMemo(() => fontsReady && <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#070707' } }}><Stack.Screen name="room/[id]" options={arrivalRoom} /></Stack>, [fontsReady]);
+  const stack = useMemo(() => fontsReady && <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#070707' } }}>
+    {/* Every screen, in expo-router's own order (route-order.ts): a different order re-renders the tree once more after mount. */}
+    {ROOT_SCREENS.map((name) => <Stack.Screen key={name} name={name} {...(name === 'room/[id]' ? { options: arrivalRoom } : null)} />)}
+  </Stack>, [fontsReady]);
   return <BootPageReady.Provider value={markPageReady}><BootPhase.Provider value={booted ? 'ready' : arriving ? 'enter' : 'boot'}><Providers><StatusBar style="light" /><View style={{ flex: 1, backgroundColor: '#070707' }} {...(Platform.OS === 'web' ? null : leftoverTouchGuard)}>
     {/* Inert (no focus inside hidden content) until the cover starts to dissolve. Native draws the page
         under the opaque cover, so its first (heavy) draw is done before the dissolve and can't stall it;
