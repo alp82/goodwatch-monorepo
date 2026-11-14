@@ -162,6 +162,37 @@ test("saved progress decks are never remembered: each page reads progress again"
 	f.service.decks.forget(r.id)
 })
 
+test("a slow deck build is logged with its own marks, saved progress decks too, never on the request", async () => {
+	const { timed, withServerTiming } = await import("./server-timing.ts")
+	const f = fixture({ delayMs: 60_000, page: () => timed("availability", new Promise((resolve) => setTimeout(resolve, 260))) })
+	const r = await room(f)
+	await r.send({ type: "set_services", serviceIds: [1] })
+	const logged: { event: string; kind: string; totalMs: number; marks: Record<string, number> }[] = []
+	const info = console.info
+	console.info = (line: unknown) => { try { logged.push(JSON.parse(String(line))) } catch { /* not ours */ } }
+	try {
+		const plain = await r.stored()
+		const continuing = structuredClone(plain)
+		continuing.constraints.kinds = ["show_continue"]
+		for (const deckRoom of [plain, continuing]) {
+			const response = await withServerTiming(async () => {
+				await f.service.decks.page(deckRoom)
+				return new Response("{}")
+			})
+			assert.match(response.headers.get("server-timing") ?? "", /^total;dur=/, "the deck's reads stay off the request")
+		}
+	} finally {
+		console.info = info
+		f.service.decks.forget(r.id)
+	}
+	const slow = logged.filter((l) => l.event === "yepwatch_deck_slow")
+	assert.equal(slow.length, 2)
+	for (const l of slow) {
+		assert.equal(l.kind, "inline")
+		assert.ok(l.totalMs >= 250 && l.marks.availability >= 250)
+	}
+})
+
 test("a command answer still checks the room is live after the commit", async () => {
 	let now = Date.now()
 	const f = fixture({ delayMs: 60_000, now: () => now })

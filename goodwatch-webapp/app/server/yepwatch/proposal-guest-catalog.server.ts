@@ -8,10 +8,19 @@ import type { ContinuousMembers } from "./continuous-members.server.ts"
 import { sharedSavedContinuations } from "./continuous-saved-progress.ts"
 import { titleKeySet } from "./ranked-keys-cache.ts"
 import { memberExclusions } from "./proposal-member-exclusions.ts"
+import { timed } from "./server-timing.ts"
+import type { CatalogReads } from "./catalog-adapter.ts"
+// Each read of a deck build under its own mark (PreparedDecks logs a slow build with them).
+const reads: CatalogReads = {
+	...goodwatchReads,
+	rankedKeys: (room, limit) => timed("rank", goodwatchReads.rankedKeys(room, limit)),
+	displays: (keys) => timed("displays", goodwatchReads.displays(keys)),
+	availability: (titles, screens, fresh) => timed("availability", goodwatchReads.availability(titles, screens, fresh)),
+}
 /** Full catalog/evidence reads, with optional remote saved progress; no issuer or local fixtures. */
 export function guestProposalCatalog(members?: ContinuousMembers) {
 	const base = createContinuousCatalog(
-		goodwatchReads,
+		reads,
 		goodwatchCatalog.metadata,
 		{
 			rank: async (room, base, limit) => {
@@ -65,10 +74,10 @@ export function guestProposalCatalog(members?: ContinuousMembers) {
 			)?.country
 			return {
 				...page,
-				candidates: await enrichContinuousCandidates(
+				candidates: await timed("enrich", enrichContinuousCandidates(
 					attributed,
 					country ?? "US"
-				)
+				))
 			}
 		}
 	})

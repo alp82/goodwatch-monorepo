@@ -1,6 +1,10 @@
 import { createHash } from "node:crypto"
 import { activeRoom } from "./proposal-context.ts"
 import type { ProposalCatalog, ProposalRoom } from "./proposal-types.ts"
+import { measured } from "./server-timing.ts"
+
+/** A deck build at least this slow is logged with where its time went (yepwatch_deck_slow). */
+const SLOW_BUILD_MS = 250
 
 type Page = Awaited<ReturnType<ProposalCatalog["page"]>>
 interface Entry {
@@ -165,8 +169,7 @@ export class PreparedDecks {
 	 */
 	async page(room: ProposalRoom, options: { seenReadFresh?: boolean } = {}): Promise<Page> {
 		// Saved progress moves on without changing the room (an episode watched elsewhere): never remembered or reused.
-		if (activeRoom(room).constraints.kinds.includes("show_continue"))
-			return this.catalog.page(structuredClone(activeRoom(room)))
+		if (activeRoom(room).constraints.kinds.includes("show_continue")) return measuredPage(this.catalog, room, "inline")
 		const inputs = deckInputs(room)
 		const entry = this.entries.get(room.id)
 		const current = entry && entry.inputs === inputs && this.now() - entry.builtAt < this.maxAgeMs ? entry : null
@@ -188,7 +191,7 @@ export class PreparedDecks {
 				// A failed background build says nothing about now: build again below.
 			}
 		}
-		return structuredClone(await this.build(room, inputs))
+		return structuredClone(await this.build(room, inputs, "inline"))
 	}
 	/** Whether a prepared deck (built or building) matches the room as it is now. For tests and logs. */
 	prepared(room: ProposalRoom) {
@@ -205,8 +208,8 @@ export class PreparedDecks {
 		clearTimeout(this.timers.get(roomId))
 		this.timers.delete(roomId)
 	}
-	private build(room: ProposalRoom, inputs: string): Promise<Page> {
-		const page = this.catalog.page(structuredClone(activeRoom(room)))
+	private build(room: ProposalRoom, inputs: string, kind: "inline" | "prepare"): Promise<Page> {
+		const page = measuredPage(this.catalog, room, kind)
 		const entry: Entry = { inputs, base: deckBase(room), page, builtAt: this.now() }
 		this.entries.delete(room.id)
 		this.entries.set(room.id, entry)
@@ -253,10 +256,18 @@ export class PreparedDecks {
 		}
 		if (!ready(room) || this.prepared(room)) return
 		const inputs = deckInputs(room)
-		const page = await this.build(room, inputs).catch(() => null)
+		const page = await this.build(room, inputs, "prepare").catch(() => null)
 		// Only the room's latest deck: one a newer setup change replaced would only leave rows behind.
 		if (page && this.store && this.entries.get(roomId)?.inputs === inputs) await this.store(room, page).catch(() => {})
 	}
+}
+
+/** A catalog page for the room under its own marks; a slow one is logged with where its time went. */
+function measuredPage(catalog: ProposalCatalog, room: ProposalRoom, kind: "inline" | "prepare"): Promise<Page> {
+	return measured(() => catalog.page(structuredClone(activeRoom(room))), (marks, totalMs) => {
+		if (totalMs >= SLOW_BUILD_MS)
+			console.info(JSON.stringify({ event: "yepwatch_deck_slow", kind, totalMs, marks, uptimeMs: Math.round(process.uptime() * 1000) }))
+	})
 }
 
 /** Whether Start could build a deck now: everyone present is on a confirmed screen with a country and services. */

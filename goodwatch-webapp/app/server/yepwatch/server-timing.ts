@@ -49,3 +49,22 @@ export function mark(name: string, ms: number) {
 	const marks = current.getStore()
 	if (marks) marks.set(name, (marks.get(name) ?? 0) + ms)
 }
+
+/**
+ * Runs background `work` (a deck build) under its own marks, never the request that happened to start it, and hands
+ * them over with its total once it settles.
+ */
+export function measured<T>(work: () => Promise<T>, done: (marks: Record<string, number>, totalMs: number) => void): Promise<T> {
+	const marks: Marks = new Map()
+	const started = performance.now()
+	const result = current.run(marks, work)
+	const report = () => {
+		try {
+			done(Object.fromEntries([...marks].map(([name, ms]) => [name, Math.round(ms)])), Math.round(performance.now() - started))
+		} catch {
+			// Reporting never fails the work.
+		}
+	}
+	result.then(report, report)
+	return result
+}
