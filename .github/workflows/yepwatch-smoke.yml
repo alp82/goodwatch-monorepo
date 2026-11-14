@@ -1,8 +1,10 @@
 name: YepWatch production smoke
 
 # e2e:smoke against https://yepwatch.com (docs/yepwatch-e2e-pipeline.md): one guest room, a friend by
-# invitation link, a signed-in member by the same link, Start, votes to a match, everyone leaves. Production
-# budgets under fast-4G throttling; unthrottled numbers are reported without gating. < 2 min.
+# invitation link, a signed-in member by the same link, Start, votes to a match, everyone leaves. Under fast-4G
+# throttling it gates the journey, errors, flash, blocking/connection words and four coarse ceilings (budgets.mjs:
+# create 1.5 s, invite 3 s, vote to other phone 1 s, Start to first card 1.5 s); every other number, the tight
+# targets and unthrottled numbers are reported. No frame gate (a busy runner must not fail it). < 2 min.
 #
 # Runs after each CI deploy (called by yepwatch-gate.yml), after each OTA (workflow_dispatch from
 # e2e/ci/ota-gate.mjs instructions), every 6 hours, and by hand. Scheduled runs stay off until
@@ -65,7 +67,7 @@ jobs:
           path: |
             yepwatch-app/node_modules
             yepwatch-app/e2e/node_modules
-          key: yw-nm-smoke-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('yepwatch-app/package-lock.json', 'yepwatch-app/e2e/package-lock.json') }}
+          key: yw-nm-smoke-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('yepwatch-app/package-lock.json', 'yepwatch-app/e2e/package-lock.json', 'goodwatch-webapp/packages/yepwatch-contracts/**') }}
       - name: Install (cache miss only)
         if: steps.nm.outputs.cache-hit != 'true'
         run: |

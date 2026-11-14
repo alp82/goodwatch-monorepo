@@ -4,9 +4,21 @@ import { expect } from '@playwright/test';
 import { test, eventually, type Person } from '../lib/harness';
 import { inviteLink, pickServices, start } from './flows';
 
-/** The focused (or given) element's box is inside the window and the topmost thing at its center. */
+/**
+ * The focused (or given) element's box is inside the window and the topmost thing at its center, once motion has
+ * settled: a sheet's slide-in (~300 ms) can still be carrying it up when a scripted Tab lands within a few frames,
+ * faster than any person. Checked for up to 1 s; still off screen or covered then is a failure.
+ */
 async function onScreen(p: Person, what: string, selector?: string) {
-  const r = await p.page.evaluate((sel) => {
+  let r = await reach(p, selector);
+  for (const end = Date.now() + 1000; !r.ok && Date.now() < end;) {
+    await p.page.waitForTimeout(50);
+    r = await reach(p, selector);
+  }
+  if (!r.ok) p.journeyFailure(`${what} is not reachable: ${r.why}`);
+}
+async function reach(p: Person, selector?: string) {
+  return p.page.evaluate((sel) => {
     const el = (sel ? document.querySelector(sel) : document.activeElement) as HTMLElement | null;
     if (!el || el === document.body) return { ok: false, why: 'nothing focused' };
     const b = el.getBoundingClientRect();
@@ -18,7 +30,6 @@ async function onScreen(p: Person, what: string, selector?: string) {
     if (!hit || !(el === hit || el.contains(hit) || hit.contains(el))) return { ok: false, why: `covered by ${hit?.outerHTML.slice(0, 120)}` };
     return { ok: true, why: '' };
   }, selector ?? null);
-  if (!r.ok) p.journeyFailure(`${what} is not reachable: ${r.why}`);
 }
 
 /** Tab until the focused element's accessible name (or label) matches; then it must be on screen. */

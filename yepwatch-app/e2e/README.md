@@ -5,11 +5,26 @@ Hermetic stack + Playwright gates for the web app. Everything runs on 127.0.0.1,
 ```sh
 cd yepwatch-app/e2e
 npm install                 # axe-core only; Playwright comes from yepwatch-app/node_modules
+node run.mjs ci             # what CI runs per push: every journey once on the clean stack, axe (shard: -- --shard=1/3)
 npm run e2e:gate            # < 4 min: every journey once, core journeys under no-WS + rapid taps, timings x3, axe
 npm run e2e:full            # < 15 min: every journey under all six faults (restart serially), timings x10, 6 people
 npm run e2e:smoke -- --origin https://yepwatch.com   # guests only, production budgets, fast-4G throttling
 node run.mjs gate -- --grep invite                   # extra args go to Playwright
+node run.mjs frames -- --grep voting                 # on demand: frame pacing as a gate (see below)
 ```
+
+What fails a run: the journey, errors, schema, flash, layout shift, blocking/connection words, dead buttons, axe +
+48 px targets, and timing past its ceiling. Timing targets (`budgets.mjs` `local` / `production`) are reported in
+summary.md (`over target`), never gated; the ceilings (`budgets.mjs` `ceilings`: 3x the local targets on the
+hermetic stack, four coarse limits in production) are. Frame pacing is no gate anywhere.
+
+## Frame pacing, on demand
+
+After changing an animation, measure frames on a machine with a GPU and nothing else running:
+`node run.mjs frames [-- --grep <journey>]` runs the clean journeys one at a time with `E2E_FRAMES=gate` (no frame
+over `frameMaxMs`, 20 ms, while something animates; harness frames such as axe audits excluded). The same switch
+works on any tier (`E2E_FRAMES=gate node run.mjs smoke --origin …`). Android: `YW_E2E_FRAMES=gate node
+native/run.mjs gate` on a GPU-backed emulator (`gfxinfo` framestats). CI never sets either.
 
 The commands live here, not in `yepwatch-app/package.json`: that file's scripts are part of the Expo
 runtime fingerprint (`docs/ota-updates.md`), so adding scripts there would strand installed builds.
@@ -97,7 +112,7 @@ of a restarting production container.
 - `gates.ts`, `a11y.ts`: flashes, layout shift, blocking words, connection words (none during an outage
   shorter than 3 s, so none for a hidden tab, a second device or no WebSocket; then one line, gone within 1 s
   of the outage's end; never a countdown; outages are the restart and offline windows), dead buttons, frame
-  gaps, errors (console, uncaught, HTTP, schema via the app's own `sharedSchema`/`parseFrame`), axe WCAG 2.2
+  gaps (only with `E2E_FRAMES=gate`), errors (console, uncaught, HTTP, schema via the app's own `sharedSchema`/`parseFrame`), axe WCAG 2.2
   AA + accessible names + 48×48 targets. Budgets: `budgets.mjs`.
 - Faults (Playwright projects): `none`, `nows`, `rapid`, `slow` (slow network + 4 s offline), `hidden`
   (tab hidden + frozen, clock +5 min), `twodevice` (second tab of the same person, then reload mid-vote),

@@ -73,7 +73,7 @@ export const COUNTDOWN_WORDS = [/\b\d+\s?s\b/, /Trying again/i, /Try again in/i,
 export const TRANSIENT_WORDS = [/^Connecting…$/];
 
 // Hermetic ceilings: 3x each local target (timing moments only; the UX rules above stay as they are).
-const HERMETIC_FACTOR = 3;
+export const HERMETIC_FACTOR = 3;
 const TIMING_MOMENTS = ['tapFeedbackMs', 'createRoomMs', 'newRoomMs', 'inviteOpenMs', 'voteToPeerMs', 'ideaToPeerMs', 'startToFirstCardMs',
   'startToPeerVotingMs', 'swipeNextCardMs', 'relaunchToCardMs', 'restartQueuedLandMs'];
 export const ceilings = {

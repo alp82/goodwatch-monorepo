@@ -1,11 +1,13 @@
 # YepWatch Android E2E
 
 Release-like APK (Hermes bytecode embedded, no dev menu) on headless emulators, against a hermetic loopback
-stack. Gates: journey completes, flash, timing, errors, accessibility, frame pacing. No retries.
+stack. Gates: journey completes, flash, timing past its ceiling (3x the target, `../budgets.mjs`), errors,
+accessibility. Frame pacing is reported (`YW_E2E_FRAMES=gate` makes it a gate, GPU-backed emulators only). No retries.
 
 ```sh
 cd yepwatch-app/e2e/native
-node run.mjs subset         # the deploy gate's check: cold start + one mixed room (Android host, browser friend) on one emulator
+node run.mjs journey        # what CI runs (GitHub emulator): cold start + one mixed room, no video, step times reported
+node run.mjs subset         # the same room with video timings and flash checks, on one emulator
 npm run e2e:native:gate     # the two-phone Android journey (~1.5 min warm, ~3 min from a cold machine)
 npm run e2e:native:full     # everything, incl. 3 min background, mixed Android/browser rooms
 npm run e2e:native:maestro  # the two-phone journey through the YAML flows only (slow, see flows/README.md)

@@ -152,7 +152,7 @@ const lines = [
   `Preparation (overlapped): stack ${(phases.stack / 1000).toFixed(0)} s, APK ${(phases.apk / 1000).toFixed(0)} s, emulators ${(phases.boot / 1000).toFixed(0)} s${phases.prepareWait != null ? ` (waited ${(phases.prepareWait / 1000).toFixed(0)} s for the background stack + APK)` : ''}; journeys ${(phases.gate / 1000).toFixed(0)} s. APK: ${apkInfo?.gradle ? 'Gradle build (native change)' : apkInfo?.repack ? 'cached base + JS repack' : 'cached'}.`,
   '',
   `Scenarios ${s.scenarios}; timing ${s.timingFails}, flash ${s.flash}, errors ${s.errors}, a11y ${s.a11y}, stuck ${s.stuck}, journey ${s.journey} failure(s).`,
-  `Frame pacing: ${s.frames} over budget — ${frames === 'report' ? '**reported, not gating on CI** (no GPU: SwiftShader frame times). Enforced by ota-gate.mjs on real hardware.' : 'gating.'}`,
+  `Frame pacing: ${s.frames} over budget — ${frames === 'report' ? '**reported, not gating** (no GPU: SwiftShader frame times; frame pacing is measured on demand, docs/yepwatch-e2e-pipeline.md).' : 'gating.'}`,
 ];
 if (result.fatal) lines.push('', '```', String(result.fatal).slice(0, 1500), '```');
 const bad = [...g.timing.filter((x) => !x.pass && !x.informational).map((x) => `timing: ${x.name} ${x.ms ?? '-'} ms (budget ${x.budgetMs})${x.error ? ` ${x.error}` : ''}`),

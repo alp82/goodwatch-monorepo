@@ -88,7 +88,7 @@ jobs:
           path: |
             yepwatch-app/node_modules
             yepwatch-realtime/node_modules
-          key: yw-nm-checks-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('yepwatch-app/package-lock.json', 'yepwatch-realtime/package-lock.json') }}
+          key: yw-nm-checks-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('yepwatch-app/package-lock.json', 'yepwatch-realtime/package-lock.json', 'goodwatch-webapp/packages/yepwatch-contracts/**') }}
       - name: Install (cache miss only)
         if: steps.nm.outputs.cache-hit != 'true'
         run: |
@@ -143,7 +143,7 @@ jobs:
             yepwatch-app/node_modules
             yepwatch-realtime/node_modules
             yepwatch-app/e2e/node_modules
-          key: yw-nm-e2e-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('goodwatch-webapp/package-lock.json', 'goodwatch-webapp/patches/**', 'yepwatch-app/package-lock.json', 'yepwatch-realtime/package-lock.json', 'yepwatch-app/e2e/package-lock.json') }}
+          key: yw-nm-e2e-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('goodwatch-webapp/package-lock.json', 'goodwatch-webapp/patches/**', 'yepwatch-app/package-lock.json', 'yepwatch-realtime/package-lock.json', 'yepwatch-app/e2e/package-lock.json', 'goodwatch-webapp/packages/yepwatch-contracts/**') }}
       - name: Install (cache miss only)
         if: steps.nm.outputs.cache-hit != 'true'
         run: |
@@ -333,7 +333,7 @@ jobs:
             yepwatch-app/node_modules
             yepwatch-realtime/node_modules
             yepwatch-app/e2e/node_modules
-          key: yw-nm-e2e-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('goodwatch-webapp/package-lock.json', 'goodwatch-webapp/patches/**', 'yepwatch-app/package-lock.json', 'yepwatch-realtime/package-lock.json', 'yepwatch-app/e2e/package-lock.json') }}
+          key: yw-nm-e2e-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('goodwatch-webapp/package-lock.json', 'goodwatch-webapp/patches/**', 'yepwatch-app/package-lock.json', 'yepwatch-realtime/package-lock.json', 'yepwatch-app/e2e/package-lock.json', 'goodwatch-webapp/packages/yepwatch-contracts/**') }}
       - name: Install (cache miss only)
         if: steps.nm.outputs.cache-hit != 'true'
         run: |

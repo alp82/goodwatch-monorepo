@@ -10,7 +10,7 @@
 // No retries: a step that fails once fails the run. Results: e2e/native/.cache/runs/<stamp>/result.json
 import fs from 'node:fs';
 import path from 'node:path';
-import { budgetsFor } from './budgets.mjs';
+import { budgetsFor, CEILING_FACTOR } from './budgets.mjs';
 import { ensureApk, PACKAGE } from './lib/build.mjs';
 import { boot, install, reverse, shell, shutdown } from './lib/device.mjs';
 import { RUNS_DIR, log, mkdirp, sleep } from './lib/env.mjs';
@@ -31,12 +31,17 @@ const t0 = Date.now();
 const phase = (name, ms) => { result.phases[name] = ms; };
 
 // ---------- gate recorders ----------
+// `budget` is the target (reported); the gate is its ceiling, CEILING_FACTOR x the target (e2e/budgets.mjs).
 function timing(name, budget, r, extra = {}) {
-  const row = { name, budgetMs: budget, ...extra };
+  const ceiling = budget * CEILING_FACTOR;
+  const row = { name, budgetMs: budget, ceilingMs: ceiling, ...extra };
   if (!r?.ok) Object.assign(row, { pass: false, error: r?.error ?? 'not measured' });
-  else Object.assign(row, { ms: extra.use === 'settled' ? r.settledMs : r.ms, firstMs: r.ms, settledMs: r.settledMs, pass: (extra.use === 'settled' ? r.settledMs : r.ms) <= budget, resolutionMs: r.resolutionMs, clockErrMs: r.clockErrMs, maxGapMs: r.maxGapMs, video: path.relative(RUN, r.file) });
+  else {
+    const ms = extra.use === 'settled' ? r.settledMs : r.ms;
+    Object.assign(row, { ms, firstMs: r.ms, settledMs: r.settledMs, onTarget: ms <= budget, pass: ms <= ceiling, resolutionMs: r.resolutionMs, clockErrMs: r.clockErrMs, maxGapMs: r.maxGapMs, video: path.relative(RUN, r.file) });
+  }
   result.gates.timing.push(row);
-  log(`  timing ${name}: ${row.ms ?? '-'} ms (first change ${row.firstMs ?? '-'}, settled ${row.settledMs ?? '-'}) budget ${budget} ${row.pass ? 'ok' : 'FAIL'}${row.error ? ' ' + row.error : ''}`);
+  log(`  timing ${name}: ${row.ms ?? '-'} ms (first change ${row.firstMs ?? '-'}, settled ${row.settledMs ?? '-'}) target ${budget}${row.onTarget === false ? ' (over)' : ''}, ceiling ${ceiling} ${row.pass ? 'ok' : 'FAIL'}${row.error ? ' ' + row.error : ''}`);
   if (r?.ok && r.flash?.failed) {
     result.gates.flash.push({ name, blankFrames: r.flash.blank.length, spikes: r.flash.spikes, intermediate: r.flash.plateaus, frames: path.relative(RUN, r.file.replace(/\.webm$/, '-frames')) });
     log(`  flash ${name}: ${JSON.stringify({ blank: r.flash.blank.length, spikes: r.flash.spikes.length, plateaus: r.flash.plateaus.length })}`);
@@ -424,7 +429,9 @@ result.summary = {
   timingFails: g.timing.filter(x => !x.pass && !x.informational).length, flash: g.flash.length, errors: g.errors.length,
   a11y: g.a11y.length, stuck: g.stuck.length, frames: g.frames.filter(f => !f.pass).length, journey: g.journey.length,
 };
-result.pass = !result.fatal && result.scenarios.every(s => s.pass) && Object.entries(result.summary).every(([k, v]) => k === 'scenarios' || v === 0);
+// Frame pacing is reported, never a gate, unless asked for on a GPU-backed emulator (YW_E2E_FRAMES=gate).
+const framesGate = process.env.YW_E2E_FRAMES === 'gate';
+result.pass = !result.fatal && result.scenarios.every(s => s.pass) && Object.entries(result.summary).every(([k, v]) => k === 'scenarios' || (k === 'frames' && !framesGate) || v === 0);
 fs.writeFileSync(path.join(RUN, 'result.json'), JSON.stringify(result, null, 2));
 log(`${result.pass ? 'PASS' : 'FAIL'} ${mode} in ${(result.wallMs / 1000).toFixed(1)} s ${JSON.stringify(result.summary)} phases ${JSON.stringify(result.phases)}`);
 log('result', path.join(RUN, 'result.json'));

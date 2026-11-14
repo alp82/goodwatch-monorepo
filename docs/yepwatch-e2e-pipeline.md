@@ -5,80 +5,57 @@ production smoke after every deploy and OTA (and every 6 hours), and a pre-OTA g
 
 | Tier | Where | Command | Target | Blocks |
 |---|---|---|---|---|
-| Deploy gate | GitHub Actions, push to main | `.github/workflows/yepwatch-gate.yml` | < 4 min | the Coolify deploy |
+| Deploy gate | GitHub Actions: push to main (web), nightly / by hand / native changes (Android) | `.github/workflows/yepwatch-gate.yml` | < 5 min | the Coolify deploy |
 | Production smoke | GitHub Actions | `.github/workflows/yepwatch-smoke.yml` | < 90 s | nothing (opens an issue) |
 | Pre-OTA gate | your machine (+ EAS for iOS) | `node yepwatch-app/e2e/ci/ota-gate.mjs [--ios]` | ~20 min (+ iOS in parallel) | the OTA publish |
+
+## What gates, and how hard (owner 2026-11-14)
+
+"We don't aim for enterprise level QA here, just enough to be confident that everything does not break." Everything
+CI runs fits free GitHub-hosted runners; there is no self-hosted runner.
+
+- **Gates everywhere**: the journey finishes; console, request, WebSocket and schema errors; flash / one-frame wrong
+  screen; blocking and connection words (no blocking "Reconnecting…"); axe WCAG 2.2 AA and 48 px targets (web) /
+  labels and 48 dp targets (Android).
+- **Speed: ceilings gate, targets are reported.** All numbers live in `yepwatch-app/e2e/budgets.mjs`. The old tight
+  budgets (`local`, `production`) are targets: every summary shows each moment's p95 against them, none fails on them.
+  Gates are coarse `ceilings`: hermetic runs (local stack, CI) 3x each local target (Create room 900 ms, Start → first
+  card 600 ms, vote → other phone 300 ms, …); the production smoke only Create room 1.5 s, invitation 3 s, vote →
+  other phone 1 s, Start → first card 1.5 s, judged on the run's own samples.
+- **Frame pacing is no gate anywhere.** It needs a real GPU and an idle CPU. After an animation change, measure it on
+  demand: `node run.mjs frames [-- --grep voting]` in `yepwatch-app/e2e` (web, one test at a time, no frame over
+  20 ms while something animates), `node e2e/native/run.mjs gate` on a GPU-backed emulator for Android
+  (`gfxinfo`), plus the diagnosis switches in `e2e/README.md`.
+- **No retries.** A remaining gate that flakes is a bug: fix the cause, don't loosen it silently.
 
 ## Deploy gate (`yepwatch-gate.yml`)
 
 Triggered by a push to main touching `yepwatch-app/**`, `yepwatch-realtime/**`, the webapp's YepWatch server
-code and contracts, or shared webapp server code the API bundle compiles in. Jobs run in parallel:
+code and contracts, or shared webapp server code the API bundle compiles in; also nightly (Android only) and by
+hand (`gh workflow run yepwatch-gate.yml [-f android=false]`). No `pull_request` trigger, so fork code never runs
+here. Jobs:
 
-- **checks**: app typecheck, lint, unit tests; gateway build + tests (all four in parallel).
-- **web-gate 1..6**: `node run.mjs gate -- --shard=N/6` with one Playwright worker per shard. Each shard brings
-  the hermetic stack up itself (Crate, Valkey and Caddy in Docker; API and gateway bundles; web export with a
-  cached Metro transform cache). **web-gate-verdict** merges the shard reports (`e2e/ci/merge-reports.mjs`) and
-  recomputes timing p95 over all samples. It fails when a shard didn't report.
-- **android-gate** (owner decision Q28): one emulator, `node e2e/ci/native-gate.mjs --mode=subset`
-  (`npm run e2e:gate:android` in `yepwatch-app/e2e`). It checks the Android cold start (first visit and
-  returning, 1.5 s each), then one mixed room: the Android app phone creates the room, a browser phone
-  (Playwright Chromium) joins through the invitation link, the phone starts, and both vote until there is a
-  match. Hard gates: journey, flash (video of each measured transition), timing, errors (logcat plus the
-  browser's console and page errors) and a11y (labels and 48 dp targets on each Android screen on the way).
-  Frame pacing is reported only (see below). No retries. The two-phone `gate` and the `full` Android run stay
-  in the pre-OTA gate (`ota-gate.mjs`, `e2e/native/run.mjs full`).
+- **checks**: app typecheck, lint, unit tests; gateway build + tests (all four in parallel). ~1 min.
+- **web-gate 1..3**: `node run.mjs ci -- --shard=N/3`, two Playwright workers per shard. The `ci` tier is every web
+  journey once on the clean stack (no fault projects, no deploy/restart phase, timings x1): create, invite, join,
+  vote, match, propose, Tonight, rooms, relaunch, small screens, members, the recorder's self-tests. Each shard
+  brings the hermetic stack up itself (Crate, Valkey and Caddy in Docker; API and gateway bundles; web export with
+  a cached Metro transform cache). Traces (actions + console), network logs and screenshots are kept for failed
+  tests only. **web-gate-verdict** merges the shard reports (`e2e/ci/merge-reports.mjs`), recomputes timing p95
+  over all samples against the ceilings, and fails when a shard didn't report. The fault projects (no WebSocket,
+  rapid taps, slow network, hidden tab, second device, restarts) stay in the local `gate` / `full` tiers.
+- **android-gate**: nightly, on `workflow_dispatch`, and on pushes whose files touch the APK's native inputs
+  (job **android-changes**: one compare API call against `native/lib/build.mjs` `nativeKey()`'s files plus the
+  Android harness). One emulator (KVM, SwiftShader), `node e2e/ci/native-gate.mjs --mode=journey`: the cold start
+  to the start page, then one mixed room: the Android app phone creates the room, a browser phone (Playwright
+  Chromium) joins through the invitation link, the phone starts, and both vote until there is a match. No video
+  and no timing gate (step times on the host clock are reported). Gates: journey, errors (logcat plus the
+  browser's console and page errors), blocking words, a11y (labels and 48 dp targets). The video-timed `subset`,
+  the two-phone `gate` and the `full` Android run stay in the pre-OTA gate (`ota-gate.mjs`) on real hardware.
 
-  Timings measured on the phone (video, ±17 ms): New room → Mood 300 ms, Create room → room 300 ms, Start →
-  first card 200 ms, the browser's Yep → match on the phone 100 ms (anchor: the browser's `pointerdown` time,
-  as in the web harness). Start on the phone → voting in the browser (200 ms) is timed inside the page
-  against the phone's touch frame. Budgets come from `e2e/budgets.mjs`.
-
-  How it fits in the 4 minutes:
-  - It runs in parallel with the web shards and the checks.
-  - Right after node_modules are restored, a background step runs `native-gate.mjs --prepare=…`. It
-    brings the stack up and builds the APK while the next steps download the emulator, system image and AVD
-    caches. The gate step boots the emulator from the snapshot and waits for the preparation
-    (`--after-prepare=…`).
-  - Caches:
-
-    | Cache | Key |
-    |---|---|
-    | node_modules | lockfiles + webapp patches (shared with the web shards) |
-    | Base APK (Gradle) | `yw-apk-base-<native key>` (lockfile, app config, plugins, assets, non-code files under `src/`; `e2e/native/lib/build.mjs` `nativeKey()`) |
-    | Gradle | `yw-gradle-<app lockfile>`, restored only when the base APK misses |
-    | Metro (web export + APK bundle) | `yw-metro-android-<app lockfile>-<sha>`, restore prefix without the sha |
-    | Emulator + system image | `yw-sdk-…-api35-google_apis-x86_64-v1` |
-    | Maestro | `yw-maestro-<version>` |
-    | AVD + snapshot | `yw-avd-v2-<CPU digest>-emu<emulator build>-<hash of lib/device.mjs>` (without `default_boot`) |
-    | Playwright Chromium | `yw-pw-<Playwright version>` |
-
-  - With a JS-only change, the cached base APK is reused. Only `index.android.bundle` is rebuilt
-    (`expo export:embed` + `hermesc`, with the persisted Metro cache), swapped into the APK and re-signed.
-    The Metro cache for the APK lives in one directory per build-time env (`$YW_E2E_HOME/metro/<hash>`).
-    `EXPO_PUBLIC_*` values are inlined during the transform, so a cache only ever serves the origins it was
-    filled for. A native-key change means a Gradle build (several minutes on a runner). That push goes over
-    4 minutes, and it needs a store build anyway.
-
-  Measured locally (2026-11-12, 32-core host, warm caches, stack stopped, web export and APK deleted
-  before each run, like a fresh runner):
-
-  | Step | Local |
-  |---|---|
-  | Stack up (web export from a warm Metro cache, API + gateway bundles, Crate/Valkey/Caddy) | 8-10 s |
-  | APK: JS repack into the cached base, cold Metro cache / warm | 20 s / 11-13 s |
-  | Emulator boot from the snapshot (1 instance, host GPU) | 3-8 s (16 s with the first run's cold page cache) |
-  | APK install + driver start | 1.5-3 s |
-  | Cold start, both launches | 7.5-8 s |
-  | Mixed room to a match | 36-39 s |
-  | `native-gate.mjs` wall clock (prepare in the background, then gate) | 57-64 s |
-
-  CI estimate, not measured yet: about 15 s for checkout and setup, then 30-40 s for node_modules and the
-  small caches. The background stack and APK take 60-90 s on 4 vCPUs. They overlap with about 40-60 s of
-  emulator, system image and AVD downloads (about 3 GB packed). Booting from the snapshot under SwiftShader
-  takes 15-30 s. The journeys take 70-95 s (1.5-2x local under SwiftShader). That puts the job at
-  **about 3.3-4 min**, close to the budget. If it runs over, cut cache bytes first: a smaller AVD RAM size
-  makes a smaller snapshot. A bigger runner also helps. Don't drop gates.
-- **deploy** (needs all of the above): `e2e/ci/coolify-deploy.mjs` runs `POST /api/v1/deploy?uuid=…&force=false`.
+  The background step `native-gate.mjs --prepare=…` brings the stack up and builds the APK (cached base + JS
+  repack) right after node_modules are restored, while the emulator, system image and AVD caches download.
+- **deploy** (needs checks and the web verdict to pass, and the Android journey to pass or be skipped): `e2e/ci/coolify-deploy.mjs` runs `POST /api/v1/deploy?uuid=…&force=false`.
   On the installed Coolify 4.5.3, `GET /deploy` only answers "use POST". The script then polls
   `GET /api/v1/deployments/<uuid>` until the status is `finished`, `failed` or `cancelled-by-user`. It waits
   30 s for the compose container swap, then waits until `https://yepwatch.com/api/yepwatch/v1/proposal/health/ready`
@@ -88,26 +65,6 @@ code and contracts, or shared webapp server code the API bundle compiles in. Job
 
 The deploy job runs only when the repository variable `YEPWATCH_DEPLOY_VIA_CI` is `true`. Until then the gate
 reports and the Coolify webhook keeps deploying.
-
-### Frame pacing on CI
-
-GitHub's runners have no GPU.
-
-- **Web: frame pacing is enforced** (60 fps, no frame over 20 ms during interactions). Each shard runs one
-  test at a time on an otherwise idle 4-vCPU machine.
-- **Android: frame pacing is reported, not gating.** `NATIVE_FRAMES: report` in the workflow. The emulator
-  renders with SwiftShader, so `gfxinfo` frame times measure the software renderer, not the app. The
-  deploy gate's mixed room has no swipe frame scenario. `NATIVE_FRAMES: report` matters only if the job runs
-  `--mode=gate` or `full`. The pre-OTA gate enforces frame pacing on a real GPU.
-
-Both switches are workflow env values (`WEB_FRAMES`, `NATIVE_FRAMES`). A 4-core local simulation doubled the
-web frame-gate failures compared with the same tests on free cores. If CI frame failures turn out to come from
-the runner rather than the app, the remedy is a bigger runner, not a looser budget.
-
-To reproduce the CI frame failures locally, slow each page's main thread to a runner's speed:
-`E2E_CPU_THROTTLE=2.5 E2E_WORKERS=1 taskset -c 0-3 node run.mjs gate -- --shard=1/6` (in `yepwatch-app/e2e`). On a
-Ryzen 9950X3D this fails the same 9 of 11 shard-1 tests as CI, with the same press and script named; without the
-throttle 1-2 fail. Tracing and the recorder's own per-frame checks were measured and change nothing.
 
 ### Hermeticity
 
@@ -130,9 +87,11 @@ One room per run, three browsers:
 4. The host starts the round, and everyone votes Yep until there is a match.
 5. The friend and the member leave the room, and the host archives it.
 
-Budgets come from `e2e/budgets.mjs` `production`: tap feedback 50 ms, New room / Create room 500 ms, invitation
-in a fresh browser 1.2 s, vote to other phone 250 ms, Start to first card 400 ms. The member's
-`unthrottled_*` numbers are reported without gating. A run costs 1 room, 2 admissions and about 40 commands,
+Gates: the journey, errors, flash, blocking and connection words (a deploy during the run must not show a blocking
+"Reconnecting…"), and the production ceilings in `e2e/budgets.mjs`: Create room 1.5 s, invitation in a fresh
+browser 3 s, vote to other phone 1 s, Start to first card 1.5 s. Every other moment (tap feedback, New room, next
+card, …) and the tight targets (`production`: Create room 500 ms, invitation 1.2 s, vote 250 ms, Start 400 ms) are
+reported only, as are the member's `unthrottled_*` numbers. No frame gate: a busy runner can't fail it. A run costs 1 room, 2 admissions and about 40 commands,
 far under the production limits of 20 creates/joins a minute and 60 commands per person a minute.
 Runs are serialized by the concurrency group `yepwatch-smoke`.
 

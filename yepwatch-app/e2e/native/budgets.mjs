@@ -22,8 +22,11 @@ const native = {
 };
 
 let shared = fallback;
+// Timings are targets (reported); a timing fails only past HERMETIC_FACTOR x its target (web budgets.mjs `ceilings`).
+let hermeticFactor = 3;
 const webBudgets = fileURLToPath(new URL('../budgets.mjs', import.meta.url));
-if (fs.existsSync(webBudgets)) shared = (await import(webBudgets)).budgets;
+if (fs.existsSync(webBudgets)) ({ budgets: shared, HERMETIC_FACTOR: hermeticFactor } = await import(webBudgets));
+export const CEILING_FACTOR = hermeticFactor;
 
 export const budgets = { ...shared, local: { ...fallback.local, ...shared.local }, native };
 export function budgetsFor() { return { ...budgets, ...budgets.local, native }; }
