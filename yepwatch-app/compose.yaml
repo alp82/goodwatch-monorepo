@@ -139,10 +139,11 @@ services:
       YEPWATCH_VALKEY_NODES: '[{"host":"10.0.0.14","port":6379},{"host":"10.0.0.15","port":6379},{"host":"10.0.0.16","port":6379}]'
       YEPWATCH_VALKEY_USER: ${YEPWATCH_REDIS_USER:-default}
       YEPWATCH_VALKEY_PASSWORD: ${YEPWATCH_REDIS_PASSWORD}
-    # Created after the api, so removed before it (see front): phones get the gateway's goodbye and then stay quiet
-    # through the deploy (yepwatch-app core/continuous/realtime.ts, PLANNED_RESTART_QUIET_MS) while the api it needs
-    # is still there.
+    # Created last, so removed first (see front): phones get the gateway's goodbye and then stay quiet through the
+    # deploy (yepwatch-app core/continuous/realtime.ts, PLANNED_RESTART_QUIET_MS) before any request of theirs can
+    # meet a stopping front, while the api it needs is still there.
     depends_on:
       api: {condition: service_started}
+      front: {condition: service_started}
 volumes:
   valkey-data: {}

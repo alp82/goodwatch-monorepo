@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import type { Connection } from '../realtime';
-import { useLateSince } from '../useLate';
 import { PLANNED_RESTART_QUIET_MS, QUIET_OUTAGE_MS } from './backoff';
 
 /**
@@ -54,11 +53,18 @@ interface Outage {
   planned: boolean;
   offline: boolean;
 }
-/** The outage after one more render: started (planned when it starts as `restarting`), latched offline, or over. */
+/**
+ * The outage after one more render: started (planned when it starts as `restarting`), latched offline, or over. An
+ * outage that becomes `restarting` while still inside the short quiet period (a request that failed a moment before
+ * the gateway's goodbye arrived) becomes planned too: nothing has shown yet, so nothing hides again.
+ */
 export function nextOutage(old: Outage | null, input: ConnectionInput, now: number): Outage | null {
   if (!disrupted(input)) return null;
-  const outage = old ?? { since: now, planned: input.connection === 'restarting', offline: false };
-  return input.offline && !outage.offline ? { ...outage, offline: true } : outage;
+  let outage = old ?? { since: now, planned: input.connection === 'restarting', offline: false };
+  if (input.offline && !outage.offline) outage = { ...outage, offline: true };
+  if (!outage.planned && !outage.offline && input.connection === 'restarting' && now - outage.since < QUIET_OUTAGE_MS)
+    outage = { ...outage, planned: true };
+  return outage;
 }
 
 /** The room's connection line: '' until an outage has lasted its quiet period (quietPeriod) without a break. */
@@ -70,6 +76,20 @@ export function useConnectionWords(input: ConnectionInput): string {
     setOutage((old) => nextOutage(old, { offline, connection, pending }, Date.now())); // eslint-disable-line react-hooks/set-state-in-effect
   }, [offline, connection, pending]);
   const current = disrupted(input) ? outage : null;
-  const late = useLateSince(current?.since ?? null, quietPeriod(current?.planned ?? false, (current?.offline ?? false) || offline));
+  const late = useLateOutage(current?.since ?? null, quietPeriod(current?.planned ?? false, (current?.offline ?? false) || offline));
   return connectionWords(input, late);
+}
+
+/**
+ * True once the outage that began at `since` has lasted `ms`. Unlike useLateSince it stays true when `ms` shrinks
+ * mid-outage (offline after a long announced restart): the line never blanks for a render while the outage goes on.
+ */
+function useLateOutage(since: number | null, ms: number) {
+  const [lateFor, setLateFor] = useState<number | null>(null);
+  useEffect(() => {
+    if (since === null) return;
+    const timer = setTimeout(() => setLateFor(since), Math.max(0, since + ms - Date.now()));
+    return () => clearTimeout(timer);
+  }, [since, ms]);
+  return since !== null && lateFor === since;
 }

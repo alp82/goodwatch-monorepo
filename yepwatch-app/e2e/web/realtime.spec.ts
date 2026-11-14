@@ -101,7 +101,11 @@ async function landedOnce(people: Person[], at: number, back: number) {
   for (const p of people) {
     await eventually(() => shownMatches(p), (n) => n === 1, `${p.name} shows the one match the queued votes made`, p, 15000);
     expect(p.latest?.matches?.length, `${p.name}'s room has exactly one match`).toBe(1);
-    const answered = p.commandLog.filter((c) => c.t >= at && /\/commands$/.test(c.path) && c.status < 300);
+    // The match can reach the page over the live channel before the vote's own HTTP answer does: wait for that.
+    const answeredNow = () => p.commandLog.filter((c) => c.t >= at && /\/commands$/.test(c.path) && c.status < 300);
+    await eventually(() => answeredNow().length, (n) => n > 0, `${p.name}'s queued vote got its answer`, p, 15000);
+    await sleep(500); // a duplicate answer would come right behind it
+    const answered = answeredNow();
     expect(answered.length, `${p.name}'s one queued vote was answered once (no resend, no lost vote)`).toBe(1);
     expect(answered[0].t - back, `${p.name}'s queued vote confirmed within ${budget} ms of the stack's return`).toBeLessThanOrEqual(budget);
   }

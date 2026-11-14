@@ -41,8 +41,10 @@ test('an outage is planned only when it starts as an announced restart; offline 
   const back = nextOutage(offline, { ...live, connection: 'restarting' }, 5000)!;
   assert.equal(back.since, 100);
   assert.equal(quietPeriod(back.planned, back.offline), QUIET_OUTAGE_MS);
-  // A `restarting` that comes after an unannounced start doesn't make it planned.
-  const unplanned = nextOutage(null, { ...live, connection: 'reconnecting' }, 0)!;
-  assert.equal(nextOutage(unplanned, { ...live, connection: 'restarting' }, 1000)!.planned, false);
+  // A `restarting` within the short quiet period of an unannounced start (a vote that failed just before the
+  // goodbye) makes it planned; after the line could have shown, it doesn't.
+  const unplanned = nextOutage(null, { ...live, pending: true }, 0)!;
+  assert.equal(nextOutage(unplanned, { ...live, connection: 'restarting', pending: true }, 1000)!.planned, true);
+  assert.equal(nextOutage(unplanned, { ...live, connection: 'restarting' }, QUIET_OUTAGE_MS)!.planned, false);
   assert.equal(nextOutage(back, live, 6000), null, 'live again ends it');
 });

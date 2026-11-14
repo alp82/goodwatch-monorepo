@@ -69,6 +69,7 @@
   // Inputs waiting for their first changed frame. A quick double or triple tap lands several inputs
   // before the next frame: each one gets the first frame that shows a change made after it.
   let pendingInputs = [];
+  let wordsDue = false;
   let lastWordsCheck = 0;
   const mo = new MutationObserver(() => {
     dirty = true;
@@ -126,6 +127,7 @@
     }
     if (dirty && document.body) {
       dirty = false;
+      wordsDue = true;
       const sig = signature();
       const last = rec.states[rec.states.length - 1];
       if (!last || last.sig !== sig) rec.states.push({ t, sig });
@@ -136,13 +138,16 @@
       for (const [key, w] of Object.entries(rec.waiters)) {
         if (check(w.spec)) { rec.results[key] = { at: t, armedAt: w.armedAt }; delete rec.waiters[key]; }
       }
-      if (t - lastWordsCheck > 100) {
-        lastWordsCheck = t;
-        const all = document.body.innerText || '';
-        const text = BLOCKING.test(all) ? all.split('\n').map((l) => l.trim()).filter((l) => l && BLOCKING.test(l)).map((l) => l.slice(0, 120)).join(' ¦ ') : '';
-        const lastWord = rec.words[rec.words.length - 1];
-        if ((lastWord?.text ?? '') !== text) rec.words.push({ t, text });
-      }
+    }
+    // At most every 100 ms, but a change that came in during those 100 ms is still looked at once they are over: a
+    // line that went away right after a check was otherwise recorded as visible until some later change.
+    if (wordsDue && document.body && t - lastWordsCheck > 100) {
+      wordsDue = false;
+      lastWordsCheck = t;
+      const all = document.body.innerText || '';
+      const text = BLOCKING.test(all) ? all.split('\n').map((l) => l.trim()).filter((l) => l && BLOCKING.test(l)).map((l) => l.slice(0, 120)).join(' ¦ ') : '';
+      const lastWord = rec.words[rec.words.length - 1];
+      if ((lastWord?.text ?? '') !== text) rec.words.push({ t, text });
     }
     requestAnimationFrame(frame);
   }

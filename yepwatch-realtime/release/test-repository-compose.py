@@ -38,12 +38,13 @@ assert valkey['image'].startswith('valkey/valkey:') and valkey['image'].count('.
 assert [(v['type'], v['source'], v['target']) for v in valkey['volumes']] == [('volume', 'valkey-data', '/data')]
 assert not valkey.get('ports'), 'the rooms Valkey publishes no port'
 # Deploy order (Coolify creates in dependency order and removes newest first): valkey, then the api once valkey has
-# started (not healthy: that wait cost 2.5 s a deploy), then front and gateway once the api has started. So front and
-# gateway are removed first, never holding a request for an api that is already gone, and valkey last.
+# started (not healthy: that wait cost 2.5 s a deploy), then the front once the api has started, then the gateway. So the
+# gateway goes first, the front never holds a request for an api that is already gone, and valkey goes last.
 assert not valkey.get('depends_on')
 assert {k: v['condition'] for k, v in services['api']['depends_on'].items()} == {'valkey': 'service_started'}
-for name in ('front', 'gateway'):
-    assert {k: v['condition'] for k, v in services[name]['depends_on'].items()} == {'api': 'service_started'}, services[name]['depends_on']
+assert {k: v['condition'] for k, v in services['front']['depends_on'].items()} == {'api': 'service_started'}
+# The gateway last of all, so removed first: its goodbye reaches phones before a request can meet a stopping front.
+assert {k: v['condition'] for k, v in services['gateway']['depends_on'].items()} == {'api': 'service_started', 'front': 'service_started'}
 assert api['YEPWATCH_PROPOSAL_ROOMS_VALKEY_URL'] == 'redis://valkey:6379'
 assert valkey['environment']['YEPWATCH_ROOMS_VALKEY_SEED'] == values['YEPWATCH_ROOM_KEY']
 assert 'valkey' not in json.dumps(services['gateway'].get('depends_on', {}))
