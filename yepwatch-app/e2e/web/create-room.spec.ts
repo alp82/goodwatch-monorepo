@@ -147,6 +147,9 @@ test.describe('create and set up a room', () => {
       if (route.request().method() !== 'POST') return route.continue();
       if (++tries === 1) {
         first = Date.now();
+        // The answer takes a moment to reach the app, as over a network: going away when the route has the request
+        // (not when the app has the answer) would cancel it before the app learns of the wait.
+        await new Promise((r) => setTimeout(r, 200));
         return route.fulfill({ status: 429, headers: { 'Retry-After': '10' }, contentType: 'application/json',
           body: JSON.stringify({ error: { code: 'rate_limited', message: 'Slow down', retryable: true } }) });
       }
@@ -154,22 +157,44 @@ test.describe('create and set up a room', () => {
       answered = Date.now();
       await route.fulfill({ response });
     });
+    // In the page, so its time is the page's own: when the app shows a line is compared with when it went away.
     const visibility = (state: 'hidden' | 'visible') => host.page.evaluate((s) => {
       Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => s });
       Object.defineProperty(document, 'hidden', { configurable: true, get: () => s === 'hidden' });
       document.dispatchEvent(new Event('visibilitychange'));
+      return Date.now();
     }, state);
     await host.open('/');
     await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] } });
     await host.fill(host.page.getByLabel('Mood'), 'rate limited heist');
     const stop = await recordPage(host, 'mood-page', /Couldn|Try again|offline/i);
+    // Away as soon as the app holds the server's wait: it has read the 429 and saved the deadline with its request.
+    // Going away earlier (the route has the request, the answer is still on its way) cancels the request before the
+    // app learns of any wait, so it rightly sends again on return and this route answers that at once. Watched in the
+    // page, so the test's own scheduling can't push the moment past the quiet period.
+    await host.page.evaluate(() => {
+      const w = window as unknown as { __awayAt?: number };
+      delete w.__awayAt;
+      const watch = window.setInterval(() => {
+        const saved = JSON.parse(sessionStorage.getItem('yepwatch.v3.admission.') ?? 'null') as { retryAt?: number } | null;
+        if (!(saved?.retryAt && saved.retryAt > 0)) return;
+        window.clearInterval(watch);
+        Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' });
+        Object.defineProperty(document, 'hidden', { configurable: true, get: () => true });
+        document.dispatchEvent(new Event('visibilitychange'));
+        w.__awayAt = Date.now();
+      }, 5);
+    });
     await host.tap(host.button('Create room'), { expect: {} });
-    await expect.poll(() => tries).toBe(1);
-    // Away before the quiet period ends, back a second later: the saved wait resumes.
-    await visibility('hidden');
-    await new Promise((r) => setTimeout(r, 1000));
-    const back = Date.now();
-    await visibility('visible');
+    const awayAt = () => host.page.evaluate(() => (window as unknown as { __awayAt?: number }).__awayAt ?? 0);
+    await expect.poll(awayAt, { intervals: [10], timeout: 10000 }).toBeGreaterThan(0);
+    const away = await awayAt();
+    expect(tries).toBe(1);
+    const tapped = await pageTap(host);
+    expect(away - tapped, 'away before the quiet period ends').toBeLessThan(3000);
+    // Back a second later: the saved wait resumes.
+    await new Promise((r) => setTimeout(r, Math.max(0, away + 1000 - Date.now())));
+    const back = await visibility('visible');
     await expect(host.page.getByTestId('room-note').filter({ visible: true })).toHaveText('Reconnecting…', { timeout: 8000 });
     await host.see({ visible: ['room-setup'] }, 15000, 'the room opens by itself after the wait');
     room.noteOutage(first, answered);
