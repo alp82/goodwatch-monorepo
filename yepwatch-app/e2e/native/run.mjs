@@ -50,7 +50,17 @@ const audited = new Set();
 async function audit(p, screen) {
   if (audited.has(screen)) return;
   audited.add(screen);
-  const found = a11yAudit(await p.nodes(), { screen, minDp: B.native.minTargetDp });
+  // Audit the settled screen: while the soft keyboard slides in, a scroll view's bounds and scrollable flag lag
+  // its content, so a chip cut by its edge read as a 10 dp target (2026-11-14). Read until two reads agree.
+  const shape = (ns) => JSON.stringify(ns.map(n => [n.bounds, n.scrollable]));
+  let nodes = await p.nodes();
+  for (let i = 0; i < 6; i++) {
+    await sleep(300);
+    const again = await p.nodes();
+    if (shape(again) === shape(nodes)) break;
+    nodes = again;
+  }
+  const found = a11yAudit(nodes, { screen, minDp: B.native.minTargetDp });
   if (found.length) { try { const shot = path.relative(RUN, p.screenshot(path.join(RUN, `a11y-${screen.replace(/\W+/g, '-')}-${p.name}.png`))); for (const f of found) f.shot = shot; } catch { /* best effort */ } }
   for (const f of found) result.gates.a11y.push(f);
 }
