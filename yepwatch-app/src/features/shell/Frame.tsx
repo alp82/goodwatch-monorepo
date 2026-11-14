@@ -5,7 +5,7 @@
  * over the body while the header stays usable.
  */
 import { useState, type ReactNode } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, View, type ViewStyle } from 'react-native';
 import { router, usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Backdrop } from '../glow/Backdrop';
@@ -72,6 +72,10 @@ export const startPage = {
 
 // Web: effects that fly past the page edge (falling popcorn) must not grow the scroll area.
 const webClip = Platform.OS === 'web' ? { overflow: 'hidden' as const } : null;
+// Web: the frame fills the window, so nothing in it (the voting stage's glows and resting stamps reach past the
+// screen edge) may grow the document's scroll area either; iOS Safari lets a page pan sideways into it. `clip`
+// cuts it off at the window like `hidden` without making the frame a scroll container a focused field could scroll.
+const webFrameClip = Platform.OS === 'web' ? ({ overflow: 'clip' } as unknown as ViewStyle) : null;
 
 export function AppFrame({ header = {}, rooms, children, footer, footerPlacement = 'auto', sheet, overlay, backdrop, covered = false, scroll = true, width = 'page', gap = 0, testID, noteTop = 8 }: AppFrameProps) {
   const layout = useLayout();
@@ -107,7 +111,7 @@ export function AppFrame({ header = {}, rooms, children, footer, footerPlacement
   );
   return (
     <NoteLayerProvider slot={notes.slot}>
-    <View testID={testID} style={{ flex: 1, backgroundColor: glow.bg }}>
+    <View testID={testID} style={[{ flex: 1, backgroundColor: glow.bg }, webFrameClip]}>
       <View pointerEvents="none" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}><Backdrop /></View>
       {backdrop}
       {/* An open sheet is modal: the header behind it is out of reach for touch, focus and screen readers,
