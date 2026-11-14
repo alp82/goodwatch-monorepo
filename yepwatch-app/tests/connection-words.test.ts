@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { connectionWords, disrupted, OFFLINE_WORDS, PLANNED_RESTART_QUIET_MS, QUIET_OUTAGE_MS, quietPeriod, RECONNECTING_WORDS } from '../src/core/continuous/connection-words';
+import { connectionWords, disrupted, nextOutage, OFFLINE_WORDS, PLANNED_RESTART_QUIET_MS, QUIET_OUTAGE_MS, quietPeriod, RECONNECTING_WORDS } from '../src/core/continuous/connection-words';
 
 test('connection words: nothing before the quiet period, then one line, offline says only that', () => {
   const live = { offline: false, connection: 'live' as const, pending: false };
@@ -26,4 +26,23 @@ test('an announced restart is quiet for longer, unless the device is offline; it
   assert.equal(disrupted(restarting), true, 'an announced restart is an outage, only a quieter one');
   assert.equal(connectionWords(restarting, false), '');
   assert.equal(connectionWords(restarting, true), RECONNECTING_WORDS);
+});
+
+test('an outage is planned only when it starts as an announced restart; offline once makes it short for good', () => {
+  const live = { offline: false, connection: 'live' as const, pending: false };
+  assert.equal(nextOutage(null, live, 0), null);
+  const planned = nextOutage(null, { ...live, connection: 'restarting' }, 100)!;
+  assert.deepEqual(planned, { since: 100, planned: true, offline: false });
+  // The announcement running out mid-outage (now `reconnecting`) keeps the outage and its start.
+  assert.equal(nextOutage(planned, { ...live, connection: 'reconnecting' }, 5000), planned);
+  // Offline at 4 s, online again at 5 s while the server is still away: still the short period, never hidden again.
+  const offline = nextOutage(planned, { ...live, connection: 'restarting', offline: true }, 4000)!;
+  assert.equal(offline.offline, true);
+  const back = nextOutage(offline, { ...live, connection: 'restarting' }, 5000)!;
+  assert.equal(back.since, 100);
+  assert.equal(quietPeriod(back.planned, back.offline), QUIET_OUTAGE_MS);
+  // A `restarting` that comes after an unannounced start doesn't make it planned.
+  const unplanned = nextOutage(null, { ...live, connection: 'reconnecting' }, 0)!;
+  assert.equal(nextOutage(unplanned, { ...live, connection: 'restarting' }, 1000)!.planned, false);
+  assert.equal(nextOutage(back, live, 6000), null, 'live again ends it');
 });

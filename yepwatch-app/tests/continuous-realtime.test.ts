@@ -217,6 +217,31 @@ test('an announced restart stays "restarting" for PLANNED_RESTART_QUIET_MS at mo
   assert.equal(h.statuses.at(-1), 'reconnecting');
   h.client.stop();
 });
+test('room reads that work end an announced restart: a later failed read is an ordinary outage', async () => {
+  let ok = false;
+  const h = harness({ privateRead: async () => { if (!ok) throw new RoomFailure('outcome_unknown', 'no answer'); } });
+  h.client.start();
+  await tick();
+  liveSocket(h, 0).frame({ type: 'restarting', retryAfterMs: 500 });
+  assert.equal(h.statuses.at(-1), 'restarting');
+  // Dials keep failing; after two the room is read over HTTP.
+  h.run(500);
+  await tick();
+  h.sockets[1].onerror?.(new Event('error'));
+  ok = true;
+  h.run(POLL_MS);
+  await tick();
+  await tick();
+  assert.equal(h.statuses.at(-1), 'polling');
+  ok = false;
+  const pollJob = [...h.jobs.values()].find((j) => j.ms === POLL_MS);
+  assert.ok(pollJob);
+  h.run(POLL_MS);
+  await tick();
+  await tick();
+  assert.equal(h.statuses.at(-1), 'reconnecting');
+  h.client.stop();
+});
 test('close 1012 from a live socket is an announced restart too; from a socket that never went live it is not', async () => {
   const h = harness();
   h.client.start();

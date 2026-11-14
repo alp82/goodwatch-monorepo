@@ -497,8 +497,16 @@ export class ProposalService {
 	 * A pending idea whose lease ran out lost the attempt searching for it (crash, restart, deploy, overload). Any
 	 * process that reads the room queues a takeover, unless the room is backing off after a failure here.
 	 */
+	/**
+	 * While the release initializes (proposal-release-runtime.ts), only the live channel's routes are answered: a room
+	 * they read must not start searches, writes or catalog refreshes yet. The once-a-minute sweep takes over afterwards.
+	 */
+	private interpretationsPaused = false
+	pauseInterpretations(paused: boolean) {
+		this.interpretationsPaused = paused
+	}
 	private resumeInterpretations(room: ProposalRoom) {
-		if (!this.interpret || this.retrying(room.id)) return
+		if (!this.interpret || this.interpretationsPaused || this.retrying(room.id)) return
 		for (const idea of room.ideas ?? [])
 			if (
 				ideaPending(idea) &&

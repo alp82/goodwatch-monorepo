@@ -5,7 +5,8 @@
 # that stands in for the private network; 10.0.0.x in the files becomes $net.x there, nothing else changes:
 #   client ──TLS──▶ "abio" ($net.21): Traefik 2.10.7 with yepwatch-front.yaml
 #                     ├─ main:     "pgnode01" ($net.11:8480): Caddy 2.11.7, the global options + :8480 site of ../Caddyfile
-#                     │              └─▶ $net.21:18480 (the front's published port)
+#                     │              ├─▶ $net.21:18480 (the front's published port)
+#                     │              └─▶ $net.21:18481 (the gateway's published port: the WebSocket path only)
 #                     └─ fallback: front:8080 (the app network)
 #                   front: Caddy 2.11.7 with the real yepwatch-realtime/release/Caddyfile on :8080 and :18480, in front
 #                   of stub api (:3000, opens its port only after READY_MS, like the real one) and stub gateway
@@ -88,12 +89,16 @@ probe() { docker run --rm --network "$prefix-private" --add-host "yepwatch.com:$
 # Owner: this test; purpose: simulate the unpublished front port (abio's firewall drops it). Lives only in the throwaway
 # "abio" network namespace. The comment match is used where the kernel has it (xt_comment), else the rule goes without.
 firewall() {
-  local rule=(INPUT -p tcp --dport 18480 -j DROP) note=(-m comment --comment "yw-front-test: simulate the unpublished front port")
-  docker exec "$prefix-firewall" iptables "$1" "${rule[@]:0:5}" "${note[@]}" "${rule[@]:5}" 2>/dev/null \
-    || docker exec "$prefix-firewall" iptables "$1" "${rule[@]}"
+  local port
+  for port in 18480 18481; do
+    local rule=(INPUT -p tcp --dport "$port" -j DROP) note=(-m comment --comment "yw-front-test: simulate an unpublished port")
+    docker exec "$prefix-firewall" iptables "$1" "${rule[@]:0:5}" "${note[@]}" "${rule[@]:5}" 2>/dev/null \
+      || docker exec "$prefix-firewall" iptables "$1" "${rule[@]}"
+  done
 }
-deploy() { # Coolify: remove every old container, then start the new ones.
-  docker stop -t 10 "$prefix-front" "$prefix-gateway" "$prefix-api" >/dev/null
+deploy() { # Coolify: remove every old container one by one (newest first: gateway, front, api), then start the new ones.
+  local c
+  for c in gateway front api; do docker stop -t 10 "$prefix-$c" >/dev/null; done
   firewall -I
   sleep "$gap"
   docker start "$prefix-api" "$prefix-gateway" >/dev/null
@@ -121,6 +126,7 @@ wait $!
 long=$(cat "$work/ws-long.json")
 check "long WebSocket opened once" "$(json 'v.opens+" open, "+v.failedAttempts+" failed"' <<<"$long")" "1 open, 0 failed"
 check "long WebSocket kept echoing" "$(json 'v.maxEchoGapMs<2500' <<<"$long")" true
+check "WebSocket goes from the hold straight to the gateway's port" "$(json 'v.via.join(",")' <<<"$long")" "$net.11"
 
 echo "--- deploy: front, api and gateway gone for ${gap}s (port dropped), then ${ready_ms} ms until the api listens"
 probe loop $((gap + ready_ms / 1000 + 14)) > "$work/loop.json" & loop_pid=$!
@@ -133,6 +139,7 @@ check "failed requests during the deploy" "$(json 'v.failed' <<<"$loop")" 0
 check "longest held request under gap + readiness + 3 s" "$(json "v.maxMs < ($gap + 3) * 1000 + $ready_ms" <<<"$loop")" true
 echo "      websocket: $ws"
 check "WebSocket reconnected on its first try" "$(json 'v.reconnects>=1 && v.failedAttempts===0' <<<"$ws")" true
+check "the gateway's goodbye reached the client (close 1012)" "$(json 'v.closes[0]' <<<"$ws")" 1012
 check "WebSocket echo gap under gap + readiness + 4 s" "$(json "v.maxEchoGapMs < ($gap + 4) * 1000 + $ready_ms" <<<"$ws")" true
 
 echo "--- failover: hold Caddy stopped, then back"

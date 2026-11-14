@@ -29,8 +29,13 @@ services:
     ports: ["${YEPWATCH_FRONT_ADDRESS:-10.0.0.21}:18480:8080"]
     mem_limit: 128m
     tmpfs: ["/tmp:uid=1000,gid=1000,mode=0700,size=32m"]
-    # Starts with valkey, waiting for nothing: Caddy holds requests until api/gateway answer (lb_try_duration), and the
-    # api holds early requests in its own process until it is initialized (proposal-release-main.ts).
+    # Created after the api so Coolify removes it before the api (it removes the old containers newest first, one by
+    # one, before it starts any new one): a request the front still holds for the api when it stops would keep it
+    # waiting its whole grace period. Started without waiting for more: Caddy holds requests until api/gateway answer
+    # (lb_try_duration), and the api holds early requests in its own process until it is initialized
+    # (proposal-release-main.ts).
+    depends_on:
+      api: {condition: service_started}
   # Live rooms (docs/yepwatch-valkey-rooms.md). Dedicated: the shared GoodWatch cluster evicts (volatile-lfu, full).
   # noeviction + AOF everysec on a named volume Coolify keeps across deploys; no published port. The password is
   # derived from the room key (the api derives the same), so no extra secret is needed.
@@ -66,11 +71,8 @@ services:
       target: api
     expose: ["3000"]
     mem_limit: 3g
-    # Started, not healthy: waiting for valkey's health check cost 2.5 s of every deploy (its 2 s interval). The api
-    # reconnects on its own and answers nothing that needs the rooms before they answer. Kept as a dependency so
-    # valkey is created first and so removed last (see gateway).
-    depends_on:
-      valkey: {condition: service_started}
+    # Starts with valkey, not after its health check (that wait cost 2.5 s of every deploy): the api reconnects on its
+    # own and answers nothing that needs the rooms before they answer.
     tmpfs: ["/tmp:uid=1000,gid=1000,mode=0700,size=128m"]
     environment:
       SOURCE_COMMIT: ${SOURCE_COMMIT:-unknown}
@@ -120,6 +122,11 @@ services:
       dockerfile: yepwatch-realtime/release/Dockerfile.repository
       target: gateway
     expose: ["4311"]
+    # The live channel's own address for the always-on hold in goodwatch-proxy on pgnode01 (as the front's 18480): its
+    # WebSocket goes there straight, not through the front, so the gateway's goodbye ("restarting", close 1012) reaches
+    # every phone whichever container a deploy removes first, and the hold keeps the reconnect waiting until the new
+    # gateway listens. Private address only.
+    ports: ["${YEPWATCH_FRONT_ADDRESS:-10.0.0.21}:18481:4311"]
     mem_limit: 512m
     tmpfs: ["/tmp:uid=1000,gid=1000,mode=0700,size=32m"]
     environment:
@@ -129,12 +136,10 @@ services:
       YEPWATCH_VALKEY_NODES: '[{"host":"10.0.0.14","port":6379},{"host":"10.0.0.15","port":6379},{"host":"10.0.0.16","port":6379}]'
       YEPWATCH_VALKEY_USER: ${YEPWATCH_REDIS_USER:-default}
       YEPWATCH_VALKEY_PASSWORD: ${YEPWATCH_REDIS_PASSWORD}
-    # Created last on purpose: Coolify removes the old containers newest first (docker ps order), one by one, before it
-    # starts any new one. The gateway goes first then, while the front still carries its sockets, so every phone gets
-    # its "restarting" frame and close 1012 and stays quiet through the deploy (yepwatch-app core/continuous/realtime.ts,
-    # PLANNED_RESTART_QUIET_MS). Removed after the front, phones would only see the connection drop (1006).
+    # Created after the api, so removed before it (see front): phones get the gateway's goodbye and then stay quiet
+    # through the deploy (yepwatch-app core/continuous/realtime.ts, PLANNED_RESTART_QUIET_MS) while the api it needs
+    # is still there.
     depends_on:
       api: {condition: service_started}
-      front: {condition: service_started}
 volumes:
   valkey-data: {}

@@ -125,6 +125,8 @@ export function createReleaseRuntime(
 		roomSearch(process.env),
 		{ tickets }
 	)
+	// Rooms read before the release is initialized (the live routes, liveRoute) start no background work.
+	service.pauseInterpretations(true)
 	const handle = createProposalHandler(service, {
 		serviceSecret: config.gatewaySecret,
 		allowedOrigins: [config.publicOrigin],
@@ -181,6 +183,7 @@ export function createReleaseRuntime(
 			if (Object.values(checks).every(Boolean) && !!deps.snapshot()?.count) {
 				if (!initialized) history?.start()
 				initialized = true
+				service.pauseInterpretations(false)
 			}
 		})().finally(() => {
 			probing = undefined

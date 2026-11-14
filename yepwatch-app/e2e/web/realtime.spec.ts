@@ -4,9 +4,9 @@
 //   - a plain restart costs under 1 s;
 //   - a handshake that hangs (no answer, no error: a connection lost on the way, as on 2026-11-12 in production)
 //     is dropped after 1.5 s and redialed, so it costs about 2.3 s instead of the app's old 10 s give-up.
-import { CONTROL, control, eventually, expect, test, type Person } from '../lib/harness';
+import { CONTROL, control, eventually, expect, test, type Person, type Room } from '../lib/harness';
 import { PLANNED_RESTART_QUIET_MS, QUIET_OUTAGE_MS } from '../../src/core/continuous/backoff';
-import { inviteLink, join, readyHost, recordPage, start, vote } from './flows';
+import { cardTitle, inviteLink, join, readyHost, recordPage, start, vote } from './flows';
 
 /** Epoch ms of every room snapshot frame this person's page receives. */
 function snapshots(p: Person) {
@@ -62,54 +62,64 @@ test.describe('live channel after a gateway restart', () => {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-/**
- * A deploy as Coolify runs it: every old process is stopped one by one, the gateway first (compose.yaml: created last,
- * so removed first), then the API; nothing serves for a while; then the new ones start. Votes cast meanwhile queue
- * (the front holds their requests) and must reach the other phone once the room is live again.
- */
-async function deployLike(people: Person[], downMs: number, signal: 'SIGTERM' | 'SIGKILL') {
-  const at = Date.now();
-  await control(`/stop/gateway?signal=${signal}`);
-  await control(`/stop/api?signal=${signal}`);
-  // Each phone answers a card while nothing serves.
-  for (const p of people) await vote(p, true);
-  await sleep(Math.max(0, at + downMs - Date.now()));
-  await Promise.all([control('/start/api'), control('/start/gateway')]);
-  return { at, back: Date.now() };
+/** The match count the page shows (the chip's label "1 match", "2 matches"; "Matches" before the first). */
+async function shownMatches(p: Person) {
+  return p.page.evaluate(() => {
+    const yw = (window as unknown as { __yw: { visible(el: Element): boolean } }).__yw;
+    const chip = [...document.querySelectorAll('[aria-label]')].find((e) => /^\d+ match(es)?$/.test(e.getAttribute('aria-label') ?? '') && yw.visible(e));
+    return chip ? Number.parseInt(chip.getAttribute('aria-label')!, 10) : 0;
+  });
 }
 
 /**
- * Both phones on one revision again, at least one revision per queued vote past `before` (every committed vote is a
- * new room revision): each vote landed and its effect reached both phones.
+ * A deploy as Coolify runs it: every old process is stopped one by one, the gateway first, then the API; nothing
+ * serves for a while; then the new ones start. Both phones say Yep to the card they share while nothing serves: the
+ * votes queue (the front holds their requests), and the match they make must show on both once the room is back.
  */
-async function converged(people: Person[], before: number) {
-  const [a, b] = people;
-  await eventually(
-    () => ({ a: a.latest?.revision ?? -1, b: b.latest?.revision ?? -1 }),
-    (v) => v.a === v.b && v.a >= before + people.length,
-    `both phones on one revision, at least ${people.length} past ${before}`,
-    a,
-    15000,
-  );
+async function deployLike(room: Room, people: Person[], downMs: number, signal: 'SIGTERM' | 'SIGKILL', quietMs?: number) {
+  const titles = await Promise.all(people.map((p) => cardTitle(p)));
+  if (new Set(titles).size !== 1) people[0].journeyFailure(`the phones show different cards before the deploy: ${titles.join(' / ')}`);
+  if ((await Promise.all(people.map(shownMatches))).some((n) => n !== 0)) people[0].journeyFailure('a match before the deploy');
+  const at = Date.now();
+  await control(`/stop/gateway?signal=${signal}`);
+  await control(`/stop/api?signal=${signal}`);
+  for (const p of people) await vote(p, true);
+  await sleep(Math.max(0, at + downMs - Date.now()));
+  await Promise.all([control('/start/api'), control('/start/gateway')]);
+  const back = Date.now();
+  room.noteRestart(at, back, `deploy (${signal})`, quietMs);
+  return { at, back };
 }
-const revision = (people: Person[]) => Math.max(...people.map((p) => p.latest?.revision ?? -1));
+
+/** Each queued vote landed exactly once, and the match both made shows on both phones (rendered and in the room). */
+async function landedOnce(people: Person[], at: number) {
+  for (const p of people) {
+    await eventually(() => shownMatches(p), (n) => n === 1, `${p.name} shows the one match the queued votes made`, p, 15000);
+    expect(p.latest?.matches?.length, `${p.name}'s room has exactly one match`).toBe(1);
+    const answered = p.commandLog.filter((c) => c.t >= at && /\/commands$/.test(c.path) && c.status < 300);
+    expect(answered.length, `${p.name}'s one queued vote was answered once (no resend, no lost vote)`).toBe(1);
+  }
+  const [a, b] = people;
+  await eventually(() => [a.latest?.revision, b.latest?.revision], ([x, y]) => x === y, 'both phones on one revision', a, 5000);
+}
 
 test.describe('a deploy replaces the gateway and the API', () => {
   test.skip(({ fault }) => fault !== 'restart', 'stack-wide restarts run in the restart project only');
 
-  test('announced (gateway stops first, says restarting): no connection words for 6 s down; queued votes reach the other phone', async ({ room }) => {
+  async function voting(room: Room) {
     const host = await readyHost(room);
     const mia = await room.person('Mia');
     await join(mia, await inviteLink(host), 'Mia');
     await start(host, [mia]);
-    const people = [host, mia];
+    return [host, mia];
+  }
+
+  test('announced (the gateway says restarting): no connection words for 6 s down; queued votes land once and show on both phones', async ({ room }) => {
+    const people = await voting(room);
     const stops = await Promise.all(people.map((p) => recordPage(p, 'voting', /Couldn|Try again/i)));
-    const before = revision(people);
-    const { at, back } = await deployLike(people, 6000, 'SIGTERM');
     // The gate holds both phones to the announced restart's quiet period: any connection line in it fails the test.
-    room.noteOutage(at, back, PLANNED_RESTART_QUIET_MS);
-    await converged(people, before);
-    host.record('deployLiveAgainMs', Date.now() - back, 'stack back → both phones converged');
+    const { at } = await deployLike(room, people, 6000, 'SIGTERM', PLANNED_RESTART_QUIET_MS);
+    await landedOnce(people, at);
     for (const [i, stop] of stops.entries()) {
       const samples = await stop();
       expect(samples.some((s) => s.note), `${people[i].name} never showed Reconnecting during an announced restart`).toBe(false);
@@ -118,16 +128,10 @@ test.describe('a deploy replaces the gateway and the API', () => {
   });
 
   test('unannounced (processes killed): the same outage still says Reconnecting after 3 s, and recovers', async ({ room }) => {
-    const host = await readyHost(room);
-    const mia = await room.person('Mia');
-    await join(mia, await inviteLink(host), 'Mia');
-    await start(host, [mia]);
-    const people = [host, mia];
-    const stop = await recordPage(host, 'voting', /Couldn|Try again/i);
-    const before = revision(people);
-    const { at, back } = await deployLike(people, 6000, 'SIGKILL');
-    room.noteOutage(at, back);
-    await converged(people, before);
+    const people = await voting(room);
+    const stop = await recordPage(people[0], 'voting', /Couldn|Try again/i);
+    const { at } = await deployLike(room, people, 6000, 'SIGKILL');
+    await landedOnce(people, at);
     const samples = await stop();
     const first = samples.find((s) => s.note)?.t;
     expect(first, 'a real outage is never hidden: the line showed').toBeDefined();
@@ -135,16 +139,10 @@ test.describe('a deploy replaces the gateway and the API', () => {
   });
 
   test('announced but not back within the quiet period: Reconnecting shows then', async ({ room }) => {
-    const host = await readyHost(room);
-    const mia = await room.person('Mia');
-    await join(mia, await inviteLink(host), 'Mia');
-    await start(host, [mia]);
-    const people = [host, mia];
-    const stop = await recordPage(host, 'voting', /Couldn|Try again/i);
-    const before = revision(people);
-    const { at, back } = await deployLike(people, PLANNED_RESTART_QUIET_MS + 3000, 'SIGTERM');
-    room.noteOutage(at, back, PLANNED_RESTART_QUIET_MS);
-    await converged(people, before);
+    const people = await voting(room);
+    const stop = await recordPage(people[0], 'voting', /Couldn|Try again/i);
+    const { at } = await deployLike(room, people, PLANNED_RESTART_QUIET_MS + 1500, 'SIGTERM', PLANNED_RESTART_QUIET_MS);
+    await landedOnce(people, at);
     const samples = await stop();
     const first = samples.find((s) => s.note)?.t;
     expect(first, 'an announced restart that runs long still shows the line').toBeDefined();

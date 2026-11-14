@@ -276,6 +276,53 @@ test("A startup hold keeps early requests waiting; the live channel's routes go 
 		runtime.stop()
 	}
 })
+test("A room read before the release is initialized starts no idea takeover; after it, reads do again", async () => {
+	const { ProposalService } = await import("./proposal-service.server.ts")
+	const { ProposalMemoryRepository, proposalFixtureCatalog } = await import("./proposal-test-support.ts")
+	const { PENDING_IDEA_ATTRIBUTE } = await import("../../../packages/yepwatch-contracts/proposal.ts")
+	const config = releaseConfig(env())
+	const sql: Sql = async (stmt) => ({
+		rows: stmt.includes("SELECT " + CONTROL_COLUMNS.join(",") + ",_seq_no,_primary_term,CURRENT_TIMESTAMP")
+			? [[...CONTROL_COLUMNS.map((k) => controlRow({ format: 1, fingerprint: controlFingerprint(config.control), window: -1, rooms: [], admissions: [], commands: [] })[k]), 0, 1, Date.now()]]
+			: stmt.includes("format_version")
+			? [[3, "test-key", storeMarker(secret), CONTINUOUS_LIMITS.roomMs]]
+			: [],
+		rowcount: 0,
+	})
+	const repo = new ProposalMemoryRepository()
+	const seed = new ProposalService(repo, proposalFixtureCatalog, secret)
+	const admitted = await seed.create({ contractVersion: 3, commandId: crypto.randomUUID(), admissionSecret: "a".repeat(43), nickname: "Host" })
+	const room = repo.rows.get(admitted.credential.roomId)!.room
+	// An idea whose search lease ran out (a deploy took its process away): any reader would take it over.
+	room.ideas = [{ id: "idea-1", authorId: room.hostId, text: "space heist", on: true, attributes: [{ ...PENDING_IDEA_ATTRIBUTE }], rankedKeys: [], interpretedAt: Date.now() - 600_000 } as never]
+	let count = 0
+	const runtime = createReleaseRuntime(config, {
+		sql, catalog: proposalFixtureCatalog, snapshot: () => (count ? { count, version: "full" } : null), catalogProbe: async () => {},
+		bus: { ping: async () => {}, publish: async () => {} }, tickets: new MemoryTicketStore(), startupHoldMs: 1000,
+	})
+	const service = runtime.service as unknown as { repository: Record<string, unknown>; guard: unknown; interpret: unknown; interpretationsIdle(): Promise<void> }
+	for (const method of ["read", "compareAndSwap", "acknowledge"]) service.repository[method] = (repo as unknown as Record<string, (...a: unknown[]) => unknown>)[method].bind(repo)
+	service.guard = undefined
+	let searches = 0
+	service.interpret = async () => { searches++; return null }
+	const read = () => runtime.handler(new Request(`http://api/api/yepwatch/v1/proposal/rooms/${room.id}`, { headers: { authorization: "Bearer invalid", "x-yepwatch-participant": room.hostId } }))
+	try {
+		await runtime.probe()
+		assert.equal(runtime.initialized(), false)
+		assert.equal(runtime.roomsAnswer(), true)
+		assert.equal((await read()).status, 401)
+		await service.interpretationsIdle()
+		assert.equal(searches, 0, "no search before the release is initialized")
+		count = 1
+		await runtime.probe()
+		assert.equal(runtime.initialized(), true)
+		await read()
+		await service.interpretationsIdle()
+		assert.equal(searches, 1, "the takeover runs once initialized")
+	} finally {
+		runtime.stop()
+	}
+})
 test("Live routes: the realtime ticket, the gateway's attach/view/views and the room read, nothing else", () => {
 	const id = "b".repeat(32)
 	const p = "/api/yepwatch/v1/proposal"

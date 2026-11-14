@@ -44,6 +44,8 @@ if (mode === 'gateway') {
   server.on('upgrade', (req, socket) => {
     const accept = crypto.createHash('sha1').update(`${req.headers['sec-websocket-key']}258EAFA5-E914-47DA-95CA-C5AB0DC85B11`).digest('base64');
     socket.write(`HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ${accept}\r\n\r\n`);
+    // Who dialed: the hold (straight to the published port) or the front (127.0.0.1, same namespace).
+    socket.write(frame(1, `via ${socket.remoteAddress.replace(/^::ffff:/, '')}`));
     sockets.add(socket);
     let buffer = Buffer.alloc(0);
     socket.on('data', (chunk) => {
@@ -65,8 +67,13 @@ if (mode === 'gateway') {
     socket.on('error', () => sockets.delete(socket));
   });
   setInterval(() => { for (const socket of sockets) socket.write(frame(9, 'hb')); }, 20_000);
+  // 4311 for the front, 18481 where Docker publishes it on abio (compose.yaml).
   server.listen(4311);
-  process.on('SIGTERM', () => { for (const socket of sockets) socket.end(frame(8, Buffer.from([0x03, 0xe9]))); setTimeout(() => process.exit(0), 100); });
+  const published = http.createServer((req, res) => { res.statusCode = 426; res.end(); });
+  published.on('upgrade', (...args) => server.emit('upgrade', ...args));
+  published.listen(18481);
+  // Like the real gateway when it stops: close 1012 (Service Restart) on every socket.
+  process.on('SIGTERM', () => { for (const socket of sockets) socket.end(frame(8, Buffer.from([0x03, 0xf4]))); setTimeout(() => process.exit(0), 100); });
 }
 
 async function request(kind) {
@@ -120,7 +127,7 @@ if (mode === 'loop') {
 if (mode === 'ws') {
   const url = ORIGIN.replace('https:', 'wss:') + REALTIME;
   const end = Date.now() + seconds * 1000;
-  const stats = { opens: 0, reconnects: 0, failedAttempts: 0, echoes: 0, maxEchoGapMs: 0, maxOpenMs: 0, closes: [] };
+  const stats = { opens: 0, reconnects: 0, failedAttempts: 0, echoes: 0, maxEchoGapMs: 0, maxOpenMs: 0, closes: [], via: [] };
   let lastEcho = Date.now();
   while (Date.now() < end) {
     const started = Date.now();
@@ -131,7 +138,9 @@ if (mode === 'ws') {
         opened = true; stats.opens += 1; stats.maxOpenMs = Math.max(stats.maxOpenMs, Date.now() - started);
         timer = setInterval(() => { if (Date.now() >= end) { ws.close(1000); return; } ws.send(`echo-${n++}`); }, 1000);
       };
-      ws.onmessage = () => { stats.echoes += 1; stats.maxEchoGapMs = Math.max(stats.maxEchoGapMs, Date.now() - lastEcho); lastEcho = Date.now(); };
+      ws.onmessage = (event) => {
+        if (String(event.data).startsWith('via ')) { if (!stats.via.includes(String(event.data).slice(4))) stats.via.push(String(event.data).slice(4)); return; }
+        stats.echoes += 1; stats.maxEchoGapMs = Math.max(stats.maxEchoGapMs, Date.now() - lastEcho); lastEcho = Date.now(); };
       ws.onclose = (event) => { clearInterval(timer); resolve({ opened, code: event.code }); };
       ws.onerror = () => {};
     });

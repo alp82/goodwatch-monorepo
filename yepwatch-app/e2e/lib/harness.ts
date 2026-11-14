@@ -369,7 +369,7 @@ let restartCount = 0;
 export class Room {
   readonly people: Person[] = [];
   private points = 0;
-  restartLog: { at: number; back: number; service: string }[] = [];
+  restartLog: { at: number; back: number; service: string; quietMs?: number }[] = [];
   private offlineWindows: Outage[] = [];
   /** One browser process per person (not one per worker): each phone gets its own renderer and GPU process, as
    * real phones each have their own GPU. Contexts in one shared Chromium share one software-rendered GPU process,
@@ -528,9 +528,15 @@ export class Room {
    * PLANNED_RESTART_QUIET_MS).
    */
   noteOutage(start: number, end: number, quietMs?: number) { this.offlineWindows.push(quietMs === undefined ? [start, end] : [start, end, quietMs]); }
+  /**
+   * A server restart a journey made itself (e.g. a deploy: gateway and API replaced), [at, back] in epoch ms: an outage
+   * for the connection gate (with `quietMs` as noteOutage) and a restart whose queued actions must land within
+   * restartQueuedLandMs of `back`.
+   */
+  noteRestart(at: number, back: number, service: string, quietMs?: number) { this.restartLog.push({ at, back, service, quietMs }); }
   /** Stack-side outages so far, [start, end, quietMs?] in epoch ms: server restarts and offline spells. */
   outages(): Outage[] {
-    return [...this.restartLog.map((r) => [r.at, r.back] as Outage), ...this.offlineWindows];
+    return [...this.restartLog.map((r) => (r.quietMs === undefined ? [r.at, r.back] : [r.at, r.back, r.quietMs]) as Outage), ...this.offlineWindows];
   }
   twin: Person | null = null;
   private reloaded = false;

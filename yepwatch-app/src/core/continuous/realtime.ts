@@ -349,6 +349,9 @@ export class ContinuousRealtime {
           return;
         }
         this.polling = ok;
+        // Room reads that work end the outage for the page (`polling` is connected): an announcement from before
+        // no longer explains a later failure.
+        if (ok) this.plannedUntil = 0;
         this.o.status(ok ? 'polling' : this.outage());
         this.poll();
       });

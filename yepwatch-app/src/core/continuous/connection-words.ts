@@ -42,20 +42,34 @@ export function connectionWords(input: ConnectionInput, late: boolean): string {
 
 /**
  * How long an outage stays quiet. `planned`: it began as an announced restart (its first disrupted state was
- * `restarting`); decided once at its start, so the line never shows and then hides again within one outage.
+ * `restarting`); `offline`: the device was offline at any point of it. Both are decided for the whole outage and the
+ * period can only shrink, so the line never shows and then hides again within one outage.
  */
 export function quietPeriod(planned: boolean, offline: boolean): number {
   return planned && !offline ? PLANNED_RESTART_QUIET_MS : QUIET_OUTAGE_MS;
 }
 
+interface Outage {
+  since: number;
+  planned: boolean;
+  offline: boolean;
+}
+/** The outage after one more render: started (planned when it starts as `restarting`), latched offline, or over. */
+export function nextOutage(old: Outage | null, input: ConnectionInput, now: number): Outage | null {
+  if (!disrupted(input)) return null;
+  const outage = old ?? { since: now, planned: input.connection === 'restarting', offline: false };
+  return input.offline && !outage.offline ? { ...outage, offline: true } : outage;
+}
+
 /** The room's connection line: '' until an outage has lasted its quiet period (quietPeriod) without a break. */
 export function useConnectionWords(input: ConnectionInput): string {
-  const active = disrupted(input);
-  const [outage, setOutage] = useState<{ since: number; planned: boolean } | null>(null);
-  const startsPlanned = input.connection === 'restarting';
+  const { offline, connection, pending } = input;
+  const [outage, setOutage] = useState<Outage | null>(null);
   useEffect(() => {
-    setOutage((old) => (!active ? null : old ?? { since: Date.now(), planned: startsPlanned }));
-  }, [active, startsPlanned]);
-  const late = useLateSince(active ? outage?.since ?? null : null, quietPeriod(outage?.planned ?? false, input.offline));
+    // The outage's start is a moment in time (Date.now), so it is taken after the render that first shows it.
+    setOutage((old) => nextOutage(old, { offline, connection, pending }, Date.now())); // eslint-disable-line react-hooks/set-state-in-effect
+  }, [offline, connection, pending]);
+  const current = disrupted(input) ? outage : null;
+  const late = useLateSince(current?.since ?? null, quietPeriod(current?.planned ?? false, (current?.offline ?? false) || offline));
   return connectionWords(input, late);
 }

@@ -86,8 +86,25 @@ a.seen.is {
 # tries again every 100 ms for up to 30 s (the gap is about 8 s). A refused connection never reached the app, so
 # retrying it is safe for every method, WebSocket upgrades included; a request that did reach the front is retried
 # only when it is a GET. Once the front runs, it holds requests for the api and gateway the same way.
+# The live channel's WebSocket goes straight to the gateway's own published port (18481), not through the front: the
+# gateway's goodbye when it stops ("restarting", close 1012) reaches every phone whichever container a deploy removes
+# first, and the reconnect waits here, never inside a front that is about to stop (its grace period would hold it).
 :8480 {
 	@yepwatch host yepwatch.com
+	@realtime {
+		host yepwatch.com
+		path /api/yepwatch/v1/proposal/realtime
+	}
+	handle @realtime {
+		reverse_proxy 10.0.0.21:18481 {
+			lb_try_duration 30s
+			lb_try_interval 100ms
+			transport http {
+				dial_timeout 500ms
+			}
+			stream_close_delay 30m
+		}
+	}
 	handle @yepwatch {
 		reverse_proxy 10.0.0.21:18480 {
 			lb_try_duration 30s
