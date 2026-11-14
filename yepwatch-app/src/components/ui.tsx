@@ -1,7 +1,8 @@
-import { type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState, useSyncExternalStore } from 'react';
 import { AccessibilityInfo, Animated, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type TextStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { developmentNotice } from '../core/config';
+import { createMotionPreference } from './motion-preference';
 
 export const colors = { bg: '#060606', panel: '#171717', raised: '#262626', line: '#383838', ink: '#fafafa', muted: '#b6b6b6', amber: '#fbbf24', amberInk: '#1c1404', green: '#86d4aa', danger: '#ffb2ad' };
 export function Words({ children, muted = false, style }: { children: ReactNode; muted?: boolean; style?: TextStyle }) {
@@ -22,23 +23,14 @@ export function Notice({ children, error = false }: { children: ReactNode; error
 export function Page({ children, eyebrow }: { children: ReactNode; eyebrow?: string }) {
   return <SafeAreaView style={s.safe}><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={s.scroll}><View style={s.content}><View style={s.brandRow}><Text accessibilityLabel="YepWatch" style={s.brand}>Yep<Text style={{ color: colors.amber }}>Watch</Text></Text><Words muted style={{ fontSize: 13 }}>By GoodWatch</Words></View>{developmentNotice && <Notice>{developmentNotice}</Notice>}{eyebrow && <Words muted style={{ fontSize: 13, letterSpacing: 1 }}>{eyebrow.toUpperCase()}</Words>}{children}<Words muted style={s.footer}>Choose together. Play on your own screens.</Words></View></ScrollView></SafeAreaView>;
 }
-/** Null means the asynchronous platform preference has not arrived yet. */
+const motion = createMotionPreference({
+  media: () => (Platform.OS === 'web' && typeof window !== 'undefined' && typeof window.matchMedia === 'function' ? window.matchMedia('(prefers-reduced-motion: reduce)') : null),
+  ask: () => AccessibilityInfo.isReduceMotionEnabled(),
+  onChange: cb => { AccessibilityInfo.addEventListener('reduceMotionChanged', cb); },
+});
+/** Null only on native before the first answer at app start (see motion-preference.ts). */
 export function useMotionPreference() {
-  const [reduced, setReduced] = useState<boolean | null>(null);
-  useEffect(() => {
-    let active = true;
-    let changed = false;
-    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', value => {
-      changed = true;
-      if (active) setReduced(value);
-    });
-    AccessibilityInfo.isReduceMotionEnabled().then(
-      value => { if (active && !changed) setReduced(value); },
-      () => { if (active && !changed) setReduced(true); },
-    );
-    return () => { active = false; sub.remove(); };
-  }, []);
-  return reduced;
+  return useSyncExternalStore(motion.subscribe, motion.read, motion.read);
 }
 export function useReducedMotion() {
   return useMotionPreference() ?? true;

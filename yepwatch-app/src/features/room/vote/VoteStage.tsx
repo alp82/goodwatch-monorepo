@@ -99,6 +99,11 @@ interface Fade {
 
 /** The first card of a round that just started rises in this long (it is live from its first frame). */
 export const ENTRY_MS = 140;
+/**
+ * Where the rise is when the card's first frame paints: one 60 fps frame into the eased curve, so that
+ * frame already shows the card (at 0 the stage would show nothing for a frame) and the rest plays as designed.
+ */
+const ENTRY_FIRST_FRAME = 1 - (1 - 16 / ENTRY_MS) ** 3;
 /** The answered card flies off in this long. */
 export const FLY_MS = 250;
 /** The answered card's stage look builds in and fades in about 450 ms. */
@@ -271,7 +276,7 @@ export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disab
     moment: new Animated.Value(0),
     loop: new Animated.Value(0),
     /** The round's first card rising in (1 at rest). */
-    rise: new Animated.Value(enter && !reduced ? 0 : 1),
+    rise: new Animated.Value(enter && !reduced ? ENTRY_FIRST_FRAME : 1),
   }));
   const { x, y, v, litYep, litNope, loop, rise } = values;
   /** The live card is being dragged: its look layers mount only then; at rest the card is just the card. */
@@ -297,8 +302,8 @@ export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disab
   // The first card of a round that just started rises in; it takes presses and drags all along.
   useLayoutEffect(() => {
     if (!enter || reduced) return;
-    rise.setValue(0);
-    const run = Animated.timing(rise, { toValue: 1, duration: ENTRY_MS, easing: Easing.out(Easing.cubic), useNativeDriver: driver });
+    rise.setValue(ENTRY_FIRST_FRAME);
+    const run = Animated.timing(rise, { toValue: 1, duration: ENTRY_MS - 16, easing: Easing.out(Easing.cubic), useNativeDriver: driver });
     run.start();
     return () => { run.stop(); rise.setValue(1); };
     // Once, for the round that just started.
