@@ -8,7 +8,7 @@ import type { ContinuousMembers } from "./continuous-members.server.ts"
 import { sharedSavedContinuations } from "./continuous-saved-progress.ts"
 import { titleKeySet } from "./ranked-keys-cache.ts"
 import { memberExclusions } from "./proposal-member-exclusions.ts"
-import { timed } from "./server-timing.ts"
+import { timed, timedSync } from "./server-timing.ts"
 import type { CatalogReads } from "./catalog-adapter.ts"
 // Each read of a deck build under its own mark (PreparedDecks logs a slow build with them).
 const reads: CatalogReads = {
@@ -48,16 +48,16 @@ export function guestProposalCatalog(members?: ContinuousMembers) {
 										!(p as import("./proposal-types.ts").ProposalParticipant)
 											.showSeen
 								)
-								.map((p) => members?.seenOrNone(room, p.id) ?? [])
+								.map((p) => (members ? timed("seen", members.seenOrNone(room, p.id)) : []))
 						)
 					).flat()
 				)
 				// Seen titles are filtered out after: read that many more.
-				const keys = roomIntentKeys(
+				const keys = timedSync("intent", () => roomIntentKeys(
 					room as import("./proposal-types.ts").ProposalRoom,
 					base,
 					limit === undefined ? undefined : limit + excluded.size
-				)
+				))
 				return excluded.size ? keys.filter((key) => !excluded.has(key)) : keys
 			},
 			...(members

@@ -8,6 +8,7 @@ import {
 } from "./continuous-types.ts";
 import { RoomError } from "./errors.ts";
 import { titleKeySet } from "./ranked-keys-cache.ts";
+import { timed } from "./server-timing.ts";
 /** Structural adapter only; existing GoodWatch filters/evidence/episode rules remain authoritative. */
 export function catalogRoom(room: ContinuousRoom): Room {
 	return {
@@ -101,7 +102,8 @@ export function createContinuousCatalog(
 			);
 			try {
 				return {
-					candidates: await adapter.candidates(catalogRoom(room)),
+					// "scan": the pool and window checks, reads included (each read also has its own mark).
+					candidates: await timed("scan", adapter.candidates(catalogRoom(room))),
 					exhausted: complete,
 				};
 			} catch (e) {
