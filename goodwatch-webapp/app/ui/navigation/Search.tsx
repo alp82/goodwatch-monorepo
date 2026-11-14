@@ -3,6 +3,7 @@
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid"
 import { useEffect, useState } from "react"
 import { useNavigation } from "./NavigationContext"
+import { isSearchShortcut } from "./search-shortcut"
 
 const SEARCH_LABEL = "Search titles, people, moods"
 
@@ -116,12 +117,7 @@ export function useSearchShortcuts() {
 	const { setSearchOpen } = useNavigation()
 	useEffect(() => {
 		const onKey = (event: KeyboardEvent) => {
-			const typing = (event.target as HTMLElement | null)?.closest?.(
-				"input, textarea, select, [contenteditable]",
-			)
-			const command =
-				event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey)
-			if (command || (event.key === "/" && !typing && !event.metaKey)) {
+			if (isSearchShortcut(event)) {
 				event.preventDefault()
 				// Focus the visible search entry first: the dialog returns focus to what had it, so Escape lands on
 				// the omnibox rather than wherever focus was.
