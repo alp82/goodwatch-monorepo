@@ -47,8 +47,17 @@ the app's `core/continuous/realtime.ts` and `connection-words.ts`):
   goodbye on a live channel says nothing until 12 s after it, then "Reconnecting…" as usual. Unannounced drops, a
   device that is offline and a restart that runs long keep the 3 s rule (owner rule Q24a).
 
-Deploy 3939 (04:03 UTC, still removed in the old order): api container start → listening 1.2 s, live routes 2.6 s,
-snapshot 4.4 s, initialized 5.1 s (was: listening 4.9 s). Verification: `realtime.spec.ts` deploy tests (restart
+Measured during real deploys (`verify-yepwatch-front-deploy.sh`, smokes back to back; one smoke spanned each swap):
+
+| Deploy | Removal order | api start → listening / live routes / initialized | Loop requests failed | Smoke across the swap |
+|---|---|---|---|---|
+| 3930 (before) | front, gateway, api, valkey | 4.9 s / 4.9 s / 4.9 s | n/a | "Reconnecting…" ~11 s (reported) |
+| 3939 | front first (old) | 1.2 / 2.6 / 5.1 s | 23 of 1416 (health 503, fixed) | no line, no errors |
+| 3942, 3945 | gateway first | 1.4 / 2.4 / 4.7 s | 0 | no line; 9 WebSocket errors (handshakes to a gone gateway) |
+| 3948 | front, gateway, api, valkey (new) | 1.0 / 2.2 / 4.5 s | 0 (longest 10.3 s) | PASS: no line, no errors, every vote landed |
+
+Deploy 3948: gateway goodbye 04:30:11.9, new api live routes 04:30:18.8, so the channel was away about 7 s,
+inside the 12 s quiet period. Verification: `realtime.spec.ts` deploy tests (restart
 project, in `run.mjs gate`), `test-yepwatch-front.sh` (direct route, goodbye reaches the client), and
 `verify-yepwatch-front-deploy.sh` during a real deploy.
 
