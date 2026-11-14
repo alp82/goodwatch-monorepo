@@ -35,7 +35,7 @@ type Kind = 'movie' | 'show'
  * daily catalog ingest), when every part of them was read; a partial read is used once and read again next time.
  */
 const EXTRAS_TTL_MS = 6 * 3600_000
-export const extrasKept = () => new KeyedReads<Extras>(EXTRAS_TTL_MS, 20_000, (e) => e.title !== null && e.people !== null && e.trailerUrl !== undefined)
+export const extrasKept = () => new KeyedReads<Extras>(EXTRAS_TTL_MS, 10_000, (e) => e.title !== null && e.people !== null && e.trailerUrl !== undefined)
 const shared = extrasKept()
 
 /** One bounded read per catalog part for `ids` of one kind. */

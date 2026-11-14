@@ -54,9 +54,12 @@ const offers = keptOfferReads({
     const { searchQuery } = await import('../combined-search/catalog.server')
     return timed('links', readStreamLinks(scopes, searchQuery))
   },
-}, OFFERS_TTL_MS)
-const episodesKept = new KeyedReads<KeptEpisodes>(EPISODES_TTL_MS, 3_000, (e) => e.source.length > 0)
-type KeptEpisodes = { source: EpisodeListRow[]; presentation: EpisodePresentation | null }
+}, OFFERS_TTL_MS, 20_000)
+const episodesKept = new KeyedReads<KeptEpisodes>(EPISODES_TTL_MS, 1_000, (e) => e.source.length > 0)
+/** What a deck reads of an episode (and corrections may change): the rest isn't kept. */
+type KeptEpisode = Pick<EpisodeListRow, 'tmdb_id' | 'season_number' | 'episode_number' | 'name' | 'air_date'>
+type KeptEpisodes = { source: KeptEpisode[]; presentation: EpisodePresentation | null }
+const kept = ({ tmdb_id, season_number, episode_number, name, air_date }: KeptEpisode): KeptEpisode => ({ tmdb_id, season_number, episode_number, name, air_date })
 async function presentationOf(showId: number) {
   const { getEpisodePresentation } = await import('../episode-presentation.server')
   return getEpisodePresentation(showId)
@@ -65,7 +68,7 @@ async function presentationOf(showId: number) {
 async function readEpisodes(showId: number): Promise<KeptEpisodes> {
   const { getSourceEpisodeList } = await import('../tracking.server')
   const [source, presentation] = await Promise.all([getSourceEpisodeList(showId), presentationOf(showId)])
-  return { source, presentation }
+  return { source: source.map(kept), presentation }
 }
 const EPISODES_BATCH_ROWS = 20_000
 /**
@@ -75,12 +78,12 @@ const EPISODES_BATCH_ROWS = 20_000
 async function readEpisodesMany(showIds: number[]): Promise<Map<number, KeptEpisodes>> {
   const { query } = await import('~/utils/crate')
   const [rows, presentations] = await Promise.all([
-    query<EpisodeListRow & { show_id: number }>(`SELECT show_id, tmdb_id, season_number, episode_number, name, air_date, runtime, still_path, episode_type FROM episode WHERE show_id IN (${showIds.map(() => '?').join(',')}) AND removed_at IS NULL ORDER BY show_id, season_number, episode_number LIMIT ${EPISODES_BATCH_ROWS}`, showIds),
+    query<KeptEpisode & { show_id: number }>(`SELECT show_id, tmdb_id, season_number, episode_number, name, air_date FROM episode WHERE show_id IN (${showIds.map(() => '?').join(',')}) AND removed_at IS NULL ORDER BY show_id, season_number, episode_number LIMIT ${EPISODES_BATCH_ROWS}`, showIds),
     Promise.all(showIds.map(presentationOf)),
   ])
   const cut = rows.length >= EPISODES_BATCH_ROWS ? rows.at(-1)!.show_id : null
-  const lists = new Map<number, EpisodeListRow[]>(showIds.filter(id => id !== cut).map(id => [id, []]))
-  for (const { show_id, ...row } of rows) lists.get(show_id)?.push(row)
+  const lists = new Map<number, KeptEpisode[]>(showIds.filter(id => id !== cut).map(id => [id, []]))
+  for (const row of rows) lists.get(row.show_id)?.push(kept(row))
   return new Map([...lists].map(([id, source]) => [id, { source, presentation: presentations[showIds.indexOf(id)] }]))
 }
 /** Corrections are applied on every read (they go live within seconds); which episodes have aired, too. */
