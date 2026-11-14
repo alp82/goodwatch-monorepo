@@ -90,7 +90,10 @@ async function gradleBuild(origins, logFile) {
   if (/EXPO_UPDATE_URL|u\.expo\.dev/.test(manifest)) throw new Error('E2E manifest has an OTA update URL; refusing to build');
   log('native: gradle assembleRelease (x86_64)');
   code = await runLogged(path.join(STAGE, 'android/gradlew'), [':app:assembleRelease', '--console=plain', '-PreactNativeArchitectures=x86_64',
-    '--build-cache', '-Dorg.gradle.jvmargs=-Xmx6g'], { cwd: path.join(STAGE, 'android'), env, log: logFile });
+    '--build-cache', '-Dorg.gradle.jvmargs=-Xmx6g',
+    // CI builds while the emulator and the stack run on a 16 GB runner: a Gradle daemon (6 GB heap) and a Kotlin
+    // daemon left alive after the build, plus the journey's Chromium, filled swap until the emulator was killed.
+    ...(process.env.CI ? ['--no-daemon', '-Pkotlin.compiler.execution.strategy=in-process'] : [])], { cwd: path.join(STAGE, 'android'), env, log: logFile });
   if (code) throw new Error(`gradle failed (${code}); see ${logFile}`);
   const out = ['outputs/apk/release', 'intermediates/apk/release'].map(d => path.join(STAGE, 'android/app/build', d, 'app-release.apk')).find(f => fs.existsSync(f));
   if (!out) throw new Error('gradle finished without app-release.apk');
