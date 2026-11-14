@@ -3,7 +3,7 @@ import { useQueries, useQuery } from '@tanstack/react-query';
 import type { RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
 import { authEpoch } from '../../core/continuous/account-flow';
 import { adoptAccountRoom } from '../../core/continuous/account-access';
-import { useAccount } from '../../core/continuous/account';
+import { settleAccountRoom, useAccount } from '../../core/continuous/account';
 import { leftRoom } from './home-model';
 import { continuousApi, RoomFailure } from '../../core/continuous/api';
 import { roomRegistry } from '../../core/continuous/room-registry';
@@ -155,7 +155,10 @@ export function useHome() {
   });
   const reload = () => { setMutationFailed(false); void cloud.refetch(); };
   const archive = (id: string, archived: boolean) => {
-    void continuousApi.archive(id, archived).then(() => queryClient.invalidateQueries({ queryKey: ['account-home'] })).catch(() => setMutationFailed(true));
+    // The card leaves (or comes back) with the press, not a read later.
+    void settleAccountRoom(id, { archivedAt: archived ? Date.now() : null });
+    void continuousApi.archive(id, archived).then(() => queryClient.invalidateQueries({ queryKey: ['account-home'] }))
+      .catch(() => { setMutationFailed(true); void queryClient.invalidateQueries({ queryKey: ['account-home'] }); });
   };
   const unavailable = cloud.isError || lifecycle.isError || mutationFailed ? [{ kind: 'unavailable' as const, roomId: 'account', nickname: 'Your rooms' }] : [];
   return {

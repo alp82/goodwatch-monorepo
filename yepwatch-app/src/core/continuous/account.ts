@@ -49,6 +49,23 @@ authEpoch.subscribe(() => {
   for (const key of ['proposal-room', 'home-room']) void queryClient.invalidateQueries({ queryKey: [key] });
 });
 
+/**
+ * A change this device just made to one of the account's rooms (left, archived, restored), written into the
+ * account's cached rooms at once: the start page draws its final layout from its first frame, and the read that
+ * follows only confirms it (a stale card, then History in its place, moved the page under the person).
+ * An account read already in flight is cancelled first, so its older answer can't put the room back. Call it
+ * once the server has the change, or right before asking for it (then read again once it has answered).
+ */
+export async function settleAccountRoom(roomId: string, change: { leftLabel: string } | { archivedAt: number | null }) {
+  await queryClient.cancelQueries({ queryKey: ['account-home'] });
+  queryClient.setQueriesData<AccountHome>({ queryKey: ['account-home'] }, (home) => home && {
+    ...home,
+    rooms: home.rooms.map((r) => (r.snapshot.shared.roomId !== roomId ? r
+      : 'leftLabel' in change ? { ...r, leftLabel: change.leftLabel, snapshot: { ...r.snapshot, own: { ...r.snapshot.own, left: true } } }
+      : { ...r, archivedAt: change.archivedAt })),
+  });
+}
+
 export const loadAccount = device.load;
 /** A sign-in that just completed on this device (the app's sheet or its return link). */
 export const accountSignedIn = device.signedIn;
