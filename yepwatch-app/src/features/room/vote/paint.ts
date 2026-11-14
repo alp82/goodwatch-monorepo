@@ -112,4 +112,6 @@ export interface LayerProps {
   x: Animated.Value;
   posterUrl: string | null;
   reduced: boolean;
+  /** Back layers: another look's back layer is still playing out under this one (the previous card's). */
+  stacked?: boolean;
 }

@@ -152,7 +152,7 @@ const Departing = memo(function Departing({ d, geo, onDone }: { d: Departure; ge
  * One answer's stage layers for one look on one drive. Invisible (and skipped by the compositor) until its
  * drive moves. Memoized: the stage re-renders on every vote, a look's layers only when their look or drive do.
  */
-const StageSide = memo(function StageSide({ layer: Layer, kind, look, g, drive, kick, lit, loop, x, posterUrl, reduced }: {
+const StageSide = memo(function StageSide({ layer: Layer, kind, look, g, drive, kick, lit, loop, x, posterUrl, reduced, stacked }: {
   layer: ComponentType<LayerProps>;
   kind: 'yep' | 'nope';
   look: Look;
@@ -164,9 +164,10 @@ const StageSide = memo(function StageSide({ layer: Layer, kind, look, g, drive, 
   x: Animated.Value;
   posterUrl: string | null;
   reduced: boolean;
+  stacked: boolean;
 }) {
   const { p, on } = useMemo(() => ({ p: sideDrive(drive, kind), on: sideOn(drive, kind) }), [drive, kind]);
-  return <Animated.View style={[fill, { opacity: on }]}><Layer look={look} g={g} kind={kind} p={p} loop={loop} punch={kick} lit={lit} x={x} posterUrl={posterUrl} reduced={reduced} /></Animated.View>;
+  return <Animated.View style={[fill, { opacity: on }]}><Layer look={look} g={g} kind={kind} p={p} loop={loop} punch={kick} lit={lit} x={x} posterUrl={posterUrl} reduced={reduced} stacked={stacked} /></Animated.View>;
 });
 /** A side's strength (0…1) on a stage drive (−1…1). */
 const sideDrive = (drive: Node, kind: 'yep' | 'nope') => (drive as Animated.Value).interpolate(kind === 'yep' ? { inputRange: [0.03, 1], outputRange: [0, 1], ...clampI } : { inputRange: [-1, -0.03], outputRange: [1, 0], ...clampI });
@@ -621,10 +622,10 @@ export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disab
   const knock = useMemo(() => (fade && fade.set.look === 'stamp' && !reduced ? fade.set.kick.interpolate({ inputRange: [0, 1], outputRange: [0, phone ? 6 : geo.z(9)] }) : 0), [fade, reduced, phone, geo]);
   const fadeBack = useMemo(() => [fill, { opacity: quiet, transform: [{ translateY: knock }] }], [quiet, knock]);
   /** A set's layers, behind or in front of the card: the live card's follow the drag, an answered one plays out. */
-  const lookSet = (set: LookSet, layer: typeof BackLayer, style: object) => (
+  const lookSet = (set: LookSet, layer: typeof BackLayer, style: object, stacked = false) => (
     <Animated.View key={set.id} {...hidden} style={style}>
       {(['nope', 'yep'] as const).map((kind) => (
-        <StageSide key={kind} layer={layer} kind={kind} look={set.look} g={geo} drive={set.drive} kick={set.kick} lit={set.lit[kind]} loop={loop} x={x} posterUrl={set.posterUrl} reduced={reduced} />
+        <StageSide key={kind} layer={layer} kind={kind} look={set.look} g={geo} drive={set.drive} kick={set.kick} lit={set.lit[kind]} loop={loop} x={x} posterUrl={set.posterUrl} reduced={reduced} stacked={stacked} />
       ))}
     </Animated.View>
   );
@@ -640,7 +641,7 @@ export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disab
 
   return (
     <View style={{ width: aw, height: geo.stageH }}>
-      {backSets.map((set) => lookSet(set, BackLayer, set === fading ? fadeBack : quietFill))}
+      {backSets.map((set) => lookSet(set, BackLayer, set === fading ? fadeBack : quietFill, set !== fading && fading !== undefined))}
       {under ? <UnderCard title={under} box={box} rise={rise} x={x} lean={lean} /> : null}
       {card ? (
         <LiveCard card={card} geo={geo} box={box} entry={entry} x={x} y={y} pan={pan.panHandlers} services={services} engaged={engaged} drives={drives} activity={activity} onPointer={onPointer} onDetails={onDetails} />

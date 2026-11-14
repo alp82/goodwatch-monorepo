@@ -8,7 +8,7 @@ import { FxView } from './fx-view';
 import type { ReactNode } from 'react';
 import { Animated, Easing, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { fitTo, wordW, type Geo, type VoteWord } from './geometry';
+import { EDGE, fitTo, wordW, type Geo, type Rim, type VoteWord } from './geometry';
 import { Outline } from './Outline';
 import { BlurCopy } from './BlurCopy';
 import { Glow, Rays } from './shapes';
@@ -19,12 +19,28 @@ import { amber, cream, ease, fill, ink, jitter, pal, range, red, span, textGlow,
 /** The stage's word size: stage-wide on a phone, about two cards wide on desktop. */
 export const bigSize = (g: Geo, text: VoteWord, f = 1) => Math.min(fitTo(text, (g.phone ? g.aw - 24 : Math.min(g.vw * 0.7, g.w * 2.1)) * f), g.h * 0.5);
 
-const FADE = 'linear-gradient(to bottom, transparent 0, #000 6%, #000 94%, transparent 100%)';
+const FADE = `linear-gradient(to bottom, transparent 0, #000 ${EDGE * 100}%, #000 ${100 - EDGE * 100}%, transparent 100%)`;
+const stageBox = (g: Geo) => ({ position: 'absolute', left: -g.ext, top: 0, width: g.vw, height: g.stageH, overflow: 'hidden' } as const);
 /** Clipped, window-wide stage box with soft top and bottom edges on the web (back layers). */
 export function Clip({ g, opacity, children }: { g: Geo; opacity?: Node; children: ReactNode }) {
   return (
-    <FxView pointerEvents="none" style={[{ position: 'absolute', left: -g.ext, top: 0, width: g.vw, height: g.stageH, overflow: 'hidden' }, webStyle({ WebkitMaskImage: FADE, maskImage: FADE }), opacity ? { opacity } : null]}>
+    <FxView pointerEvents="none" style={[stageBox(g), webStyle({ WebkitMaskImage: FADE, maskImage: FADE }), opacity ? { opacity } : null]}>
       {children}
+    </FxView>
+  );
+}
+/**
+ * The same soft edges without the mask where only the backdrop is behind the stage (`rim`): the backdrop's own colors
+ * painted over the content, fading to clear. A mask over moving content costs the compositor a second pass over the
+ * whole stage every frame; two still strips cost nothing. Switching keeps the content mounted.
+ */
+function RimClip({ g, rim, children }: { g: Geo; rim: Rim | null; children: ReactNode }) {
+  const strip = { position: 'absolute', left: 0, right: 0, height: g.stageH * EDGE } as const;
+  return (
+    <FxView pointerEvents="none" style={[stageBox(g), rim ? null : webStyle({ WebkitMaskImage: FADE, maskImage: FADE })]}>
+      {children}
+      {rim ? <LinearGradient colors={rim.top} locations={[0, 0.5, 1]} style={[strip, { top: 0 }]} /> : null}
+      {rim ? <LinearGradient colors={rim.bottom} locations={[0, 0.5, 1]} style={[strip, { bottom: 0 }]} /> : null}
     </FxView>
   );
 }
@@ -69,7 +85,7 @@ export function WallBack({ g, kind, p, loop, reduced }: LayerProps) {
 }
 
 // ————— burst —————
-export function BurstBack({ g, kind, p, loop, reduced }: LayerProps) {
+export function BurstBack({ g, kind, p, loop, reduced, stacked }: LayerProps) {
   const D = Math.hypot(g.vw, g.stageH) * 1.25;
   const nope = kind === 'nope';
   const spin = reduced ? '0deg' : loop.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '22.5deg'] });
@@ -78,21 +94,21 @@ export function BurstBack({ g, kind, p, loop, reduced }: LayerProps) {
   const opacity = nope ? p.interpolate({ inputRange: [0, 0.25, 0.9], outputRange: [0, 0.5, 0], extrapolate: 'clamp' }) : ease(p);
   const scale = nope ? range(p, 1, 0.04, Easing.in(Easing.quad)) : range(p, 0.3, 1, Easing.out(Easing.cubic));
   const box = { position: 'absolute', left: g.vw / 2 - D / 2, top: g.cy - D / 2, width: D, height: D } as const;
-  return (
-    <Clip g={g}>
-      {nope ? (
-        <FxView style={[box, { opacity, transform: [{ scale }, { rotate: spin }] }]}><Rays size={D} color="#a8a29e" widthDeg={5} /></FxView>
-      ) : (
-        <>
-          <FxView style={[box, { opacity, transform: [{ scale }, { rotate: back }] }]}><Rays size={D} color="#f59e0b" opacity={0.4} from={11.25} widthDeg={4} /></FxView>
-          <FxView style={[box, { opacity, transform: [{ scale }, { rotate: spin }] }]}><Rays size={D} color={amber} widthDeg={8} /></FxView>
-          <FxView style={{ position: 'absolute', left: g.vw / 2 - D * 0.3, top: g.cy - D * 0.3, opacity: ease(p), transform: [{ scale: range(p, 0.4, 1) }] }}>
-            <Glow width={D * 0.6} height={D * 0.6} color="#fde68a" opacity={0.8} />
-          </FxView>
-        </>
-      )}
-    </Clip>
+  const rays = nope ? (
+    <FxView style={[box, { opacity, transform: [{ scale }, { rotate: spin }] }]}><Rays size={D} color="#a8a29e" widthDeg={5} /></FxView>
+  ) : (
+    <>
+      <FxView style={[box, { opacity, transform: [{ scale }, { rotate: back }] }]}><Rays size={D} color="#f59e0b" opacity={0.4} from={11.25} widthDeg={4} /></FxView>
+      <FxView style={[box, { opacity, transform: [{ scale }, { rotate: spin }] }]}><Rays size={D} color={amber} widthDeg={8} /></FxView>
+      <FxView style={{ position: 'absolute', left: g.vw / 2 - D * 0.3, top: g.cy - D * 0.3, opacity: ease(p), transform: [{ scale: range(p, 0.4, 1) }] }}>
+        <Glow width={D * 0.6} height={D * 0.6} color="#fde68a" opacity={0.8} />
+      </FxView>
+    </>
   );
+  // Native has no mask (hard edges) and stays so. The rim only stands in for the mask over the bare backdrop: the match
+  // moment dims the stage under its back layer as it plays, and the previous card's look may still be playing out under
+  // the live one, so those keep the mask.
+  return <RimClip g={g} rim={web && kind !== 'match' && !stacked ? g.rim : null}>{rays}</RimClip>;
 }
 export function BurstFront({ g, kind, p, punch }: LayerProps) {
   const P = pal(kind);

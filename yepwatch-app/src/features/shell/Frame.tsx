@@ -4,7 +4,7 @@
  * is pinned at the bottom on phones and sits at the end of the content on bigger windows. Sheets open
  * over the body while the header stays usable.
  */
-import { useState, type ReactNode } from 'react';
+import { useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import { Platform, ScrollView, View, type ViewStyle } from 'react-native';
 import { router, usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -62,6 +62,8 @@ export interface AppFrameProps {
   testID?: string;
   /** How far below the header the room's note floats (below a screen's own top bar). */
   noteTop?: number;
+  /** The frame's outer box, which the room backdrop spans (the voting stage places its rim against it). */
+  frameRef?: Ref<ComponentRef<typeof View>>;
 }
 
 /** Header destinations: a local new-room draft, an existing room, or the start page's join form. */
@@ -78,7 +80,7 @@ const webClip = Platform.OS === 'web' ? { overflow: 'hidden' as const } : null;
 // cuts it off at the window like `hidden` without making the frame a scroll container a focused field could scroll.
 const webFrameClip = Platform.OS === 'web' ? ({ overflow: 'clip' } as unknown as ViewStyle) : null;
 
-export function AppFrame({ header = {}, rooms, children, footer, footerPlacement = 'auto', sheet, overlay, backdrop, covered = false, scroll = true, width = 'page', gap = 0, testID, noteTop = 8 }: AppFrameProps) {
+export function AppFrame({ header = {}, rooms, children, footer, footerPlacement = 'auto', sheet, overlay, backdrop, covered = false, scroll = true, width = 'page', gap = 0, testID, noteTop = 8, frameRef }: AppFrameProps) {
   const layout = useLayout();
   const pathname = usePathname();
   const { phone, short, gutter, max, z } = layout;
@@ -116,7 +118,7 @@ export function AppFrame({ header = {}, rooms, children, footer, footerPlacement
   );
   return (
     <NoteLayerProvider slot={notes.slot}>
-    <View testID={testID} style={[{ flex: 1, backgroundColor: glow.bg }, webFrameClip]}>
+    <View ref={frameRef} testID={testID} style={[{ flex: 1, backgroundColor: glow.bg }, webFrameClip]}>
       <View pointerEvents="none" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}><Backdrop /></View>
       {backdrop}
       {/* An open sheet is modal: the header behind it is out of reach for touch, focus and screen readers,

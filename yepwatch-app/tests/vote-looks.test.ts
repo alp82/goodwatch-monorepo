@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { LOOKS, LookDealer, harnessLooksFrom, isLook, pinnedLookFrom, shuffledBag, type Look } from '../src/features/room/vote/looks';
-import { EM, fitTo, stageGeometry, wordW } from '../src/features/room/vote/geometry';
+import { EM, fitTo, stageGeometry, stageRim, wordW } from '../src/features/room/vote/geometry';
 
 /** A seeded generator, so every run deals the same way. */
 function seeded(seed: number) {
@@ -98,4 +98,17 @@ test('one card size and position for every look: 2:3, centered, capped', () => {
   const empty = stageGeometry({ aw: 0, stageH: 0, vw: 390, phone: true, z });
   assert.equal(empty.w, 0);
   assert.equal(empty.h, 0);
+});
+
+test("the stage's rim takes the backdrop's colors where the stage sits in the frame", () => {
+  // Stage 0…1000 of a 1000 px frame: the backdrop's first and last stops, opaque at the edge, clear 6 % in.
+  const full = stageRim(0, 1000, 1000)!;
+  assert.deepEqual(full.top, ['rgba(23, 20, 14, 1)', 'rgba(22, 19, 14, 0.5)', 'rgba(21, 19, 14, 0)']);
+  assert.equal(full.bottom[2], 'rgba(7, 7, 7, 1)');
+  assert.equal(full.bottom[0], 'rgba(7, 7, 8, 0)');
+  // A stage 450 px down: its top edge is the backdrop's middle stop.
+  assert.equal(stageRim(450, 400, 1000)!.top[0], 'rgba(11, 11, 14, 1)');
+  // Not placed yet: no rim (the burst keeps its mask).
+  assert.equal(stageRim(0, 0, 1000), null);
+  assert.equal(stageRim(0, 500, 0), null);
 });

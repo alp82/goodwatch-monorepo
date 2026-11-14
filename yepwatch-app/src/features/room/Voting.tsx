@@ -33,7 +33,7 @@ import { RoomNotes } from './RoomStatus';
 import { servicesIn } from './services';
 import { TitleDetails } from './TitleDetails';
 import { FindingMore, Logos, Screen, useServices } from './ui';
-import { stageGeometry } from './vote/geometry';
+import { stageGeometry, stageRim, type Rim } from './vote/geometry';
 import { LookDealer, harnessLooksFrom, pinnedLookFrom } from './vote/looks';
 import { answerYep, matchKey, nextCandidate, settleYeps, undoYeps, yepRecord, type YepRecord } from './vote/match';
 import { VoteStage, type MatchMoment, type VoteStageControls } from './vote/VoteStage';
@@ -114,7 +114,7 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
   const { id, state, view, cmd, entry } = room;
   const { snapshot, activities, confirmed } = useRoomLive();
   const layout = useLayout();
-  const { fontScale } = useWindowDimensions();
+  const { fontScale, height: windowHeight } = useWindowDimensions();
   const { phone, z } = layout;
   /** The row over the stage holds the 48 × 48 touch targets of the matches chip and Undo. */
   const barHeight = Math.max(48, z(44));
@@ -123,13 +123,32 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
   // The card is placed from the stage's measured size; it isn't drawn before that (a guess would move it).
   const [area, setArea] = useState<{ width: number; height: number } | null>(null);
   const stageBox = useRef<React.ComponentRef<typeof View>>(null);
+  const frameBox = useRef<React.ComponentRef<typeof View>>(null);
+  /** Web: the backdrop's colors at the stage's edges (where it sits in the frame the backdrop spans). */
+  const [rim, setRim] = useState<Rim | null>(null);
+  const placeRim = useStableCallback(() => {
+    const el = stageBox.current as unknown as HTMLElement | null;
+    const frame = frameBox.current as unknown as HTMLElement | null;
+    if (Platform.OS !== 'web' || !el || !frame || typeof el.offsetTop !== 'number') return;
+    // Layout offsets, not client rects: a screen sliding or scaling in doesn't move the stage in its frame.
+    let top = 0;
+    let at: HTMLElement | null = el;
+    while (at && at !== frame) {
+      top += at.offsetTop;
+      at = at.offsetParent as HTMLElement | null;
+    }
+    const next = at ? stageRim(top, el.offsetHeight, frame.offsetHeight) : null;
+    setRim((r) => (JSON.stringify(r) === JSON.stringify(next) ? r : next));
+  });
   const ready = Boolean(snapshot && view);
   // The web measures before the first paint, so the first card is drawn where it stays.
   useLayoutEffect(() => {
     const el = stageBox.current as unknown as HTMLElement | null;
     if (Platform.OS !== 'web' || !el || typeof el.offsetWidth !== 'number') return;
     if (el.offsetWidth > 0 && el.offsetHeight > 0) setArea((a) => (a && a.width === el.offsetWidth && a.height === el.offsetHeight ? a : { width: el.offsetWidth, height: el.offsetHeight }));
-  }, [ready]);
+    placeRim();
+    // The window's height too: a stage held at its least height doesn't resize while the frame (and its backdrop) does.
+  }, [ready, placeRim, windowHeight]);
   const [focused, setFocused] = useState(true);
   const [localReaction, setLocalReaction] = useState<Reaction>({ at: 0 });
   const [dealer] = useState(() => new LookDealer(Math.random, pinnedLook()));
@@ -187,7 +206,7 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
     const offered = servicesIn(all, offeredIds);
     return offered.length ? <Logos services={offered} size={z(22)} /> : undefined;
   }, [all, offeredIds, z]);
-  const geo = useMemo(() => (area ? stageGeometry({ aw: area.width, stageH: area.height, vw: layout.width, phone, z }) : null), [area, layout.width, phone, z]);
+  const geo = useMemo(() => (area ? stageGeometry({ aw: area.width, stageH: area.height, vw: layout.width, phone, z, rim }) : null), [area, layout.width, phone, z, rim]);
   const empty = useMemo(() => <FindingMore style={{ flex: 1 }} />, []);
   const nope = useCallback(() => controls.current?.commit(false), []);
   const yep = useCallback(() => controls.current?.commit(true), []);
@@ -229,7 +248,7 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
   // The bar's split depends on its width and the font scale only: people coming and going move nothing.
   const fit = votingBarFit({ rowWidth, size: z(26), fontScale, z, undo: Math.max(48, z(40)), gap: 10 });
   return (
-    <Screen testID="voting" scroll={false} back={toRooms} covered={Boolean(panel)} width="page" noteTop={(phone ? 12 : z(24)) + barHeight + 8}
+    <Screen testID="voting" frameRef={frameBox} scroll={false} back={toRooms} covered={Boolean(panel)} width="page" noteTop={(phone ? 12 : z(24)) + barHeight + 8}
       footer={
         <View style={{ flexDirection: 'row', gap: 12, width: phone ? '100%' : rowWidth, alignSelf: 'center' }}>
           <VoteKey yes={false} disabled={!answering || !card} onPress={nope} />
@@ -254,7 +273,7 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
         </Press>
       </View>
       {/* A page on top hides this one (zero size on the web): keep the last real size. */}
-      <View ref={stageBox} onLayout={(e) => { const { width, height } = e.nativeEvent.layout; if (width > 0 && height > 0) setArea((a) => (a && a.width === width && a.height === height ? a : { width, height })); }}
+      <View ref={stageBox} onLayout={(e) => { const { width, height } = e.nativeEvent.layout; if (width > 0 && height > 0) { setArea((a) => (a && a.width === width && a.height === height ? a : { width, height })); placeRim(); } }}
         style={{ flex: 1, minHeight: 80, zIndex: 2 }}>
         {geo ? <VoteStage geo={geo} controls={controls} reduced={reduced} enter={entering} onEntered={onEntered} disabled={!answering} keys={focused && !panel && answering && boot === 'ready'}
           card={stageCard}

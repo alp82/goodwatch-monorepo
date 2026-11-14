@@ -43,7 +43,7 @@ export function Label({ children, color = glow.muted }: { children: string; colo
  * action (`footer`) is pinned on phones and sits in the content on bigger windows. The room's open
  * sheet (Room, Your services …) shows over the screen that is in front; leaving that screen closes it.
  */
-export function Screen({ back, right, children, footer, footerPlacement, overlay, sheet, backdrop, testID, scroll = true, covered = false, pill, rooms, me, onProfile, width = SCREEN_WIDTH, gap, noteTop }: {
+export function Screen({ back, right, children, footer, footerPlacement, overlay, sheet, backdrop, testID, scroll = true, covered = false, pill, rooms, me, onProfile, width = SCREEN_WIDTH, gap, noteTop, frameRef }: {
   back?: () => void;
   /** A row above the content (voting's Undo and room bar). */
   right?: ReactNode;
@@ -70,6 +70,7 @@ export function Screen({ back, right, children, footer, footerPlacement, overlay
   gap?: number;
   /** Where the room's note floats below the header (under a top bar of the screen's own). */
   noteTop?: number;
+  frameRef?: AppFrameProps['frameRef'];
 }) {
   const room = useOptionalRoom();
   const view = room?.view ?? null;
@@ -92,7 +93,7 @@ export function Screen({ back, right, children, footer, footerPlacement, overlay
   const roomSheet = useMemo(() => (openSheet && renderSheet ? renderSheet(openSheet) : null), [openSheet, renderSheet]);
   const scrollGap = gap ?? (scroll ? 22 : 12);
   return (
-    <AppFrame testID={testID} scroll={scroll} covered={covered} overlay={overlay} sheet={sheet ?? roomSheet} backdrop={backdrop} width={width} gap={scrollGap} noteTop={noteTop}
+    <AppFrame testID={testID} scroll={scroll} covered={covered} overlay={overlay} sheet={sheet ?? roomSheet} backdrop={backdrop} width={width} gap={scrollGap} noteTop={noteTop} frameRef={frameRef}
       header={{ back, pill: pill === undefined ? derived : pill, me: me ?? (view ? { name: view.me.nickname || null, member: view.member } : undefined), onProfile }}
       rooms={rooms ?? (room ? { current, actions: { open: room.openRoom } } : undefined)}
       footer={footer} footerPlacement={footerPlacement}>
