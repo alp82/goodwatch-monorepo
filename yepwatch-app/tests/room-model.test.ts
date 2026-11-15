@@ -91,15 +91,49 @@ test('proposal: shown to everyone in the round until set aside for that version;
   assert.equal(Object.keys(v.proposal!).some((k) => /proposer|by|who/i.test(k)), false);
 });
 
-test('your own I’m in (proposal) never takes over your screen, sent or on its way', () => {
+test('your own I’m in (proposal) never takes over your screen; nor does any while a tiebreak is open', () => {
   const s = room();
   s.shared.phase = 'choosing';
   s.shared.matches = [{ candidateId: 'c2', averageYepMs: null }];
   s.shared.proposalVersion = 3;
   s.shared.proposal = { candidateId: 'c2', version: 3, previousCandidateId: null, agreeCount: 1, requiredCount: 2, averageYepMs: null };
-  assert.equal(showsProposal(roomView(s, undefined, 'c2'), null), false, 'Propose on its way');
   s.own.agreement = { proposalVersion: 3, agreed: true, revision: 1, isProposer: true };
   assert.equal(showsProposal(roomView(s), null), false, 'your proposal');
+  s.own.agreement = { proposalVersion: 3, agreed: false, revision: 1, isProposer: false };
+  assert.equal(showsProposal(roomView(s), null), true, 'a friend’s');
+  s.shared.tiebreak = { version: 4, candidateIds: ['c1', 'c2'], favorites: [], outcome: null };
+  assert.equal(showsProposal(roomView(s), null), false, 'the tiebreak is settled on Matches');
+});
+
+test('Matches reads I’m in counts, your own I’m ins and the tiebreak from the room', () => {
+  const s = room();
+  s.shared.phase = 'choosing';
+  s.shared.matches = [{ candidateId: 'c1', averageYepMs: null }, { candidateId: 'c2', averageYepMs: null }];
+  s.shared.ins = [{ candidateId: 'c1', count: 2 }, { candidateId: 'c2', count: 1 }];
+  s.own.ins = { candidateIds: ['c1'], revision: 2 };
+  s.shared.tiebreak = { version: 4, candidateIds: ['c1', 'c2'], favorites: [{ candidateId: 'c1', count: 1 }, { candidateId: 'c2', count: 0 }], outcome: null };
+  s.own.favorite = { tiebreakVersion: 4, candidateId: 'c1' };
+  const v = roomView(s);
+  assert.deepEqual(v.ins, [{ id: 'c1', count: 2, mine: true }, { id: 'c2', count: 1, mine: false }]);
+  assert.deepEqual(v.tiebreak, { version: 4, candidateIds: ['c1', 'c2'], favorites: { c1: 1, c2: 0 }, mine: 'c1', outcome: null });
+});
+
+test('I’m in and favorites are aimed at what was tapped: another device’s change or a new tiebreak drops them', async () => {
+  const s = room();
+  s.shared.phase = 'choosing';
+  s.own.ins = { candidateIds: [], revision: 3 };
+  s.shared.tiebreak = { version: 4, candidateIds: ['c1', 'c2'], favorites: [], outcome: null };
+  const queued: ((snapshot: RoomSnapshot) => RoomCommand | null)[] = [];
+  const cmd = roomCommands(async (c) => { if (typeof c === 'function') queued.push(c); return true; }, () => s);
+  await cmd.setIn('c1', true);
+  await cmd.pickFavorite('c2');
+  const [setIn, pick] = queued;
+  assert.deepEqual(setIn(s), { type: 'set_in', generation: s.shared.generation, candidateId: 'c1', in: true, expectedOwnInRevision: 3 });
+  assert.equal(setIn({ ...s, own: { ...s.own, ins: { candidateIds: ['c1'], revision: 4 } } }), null);
+  assert.equal(setIn({ ...s, shared: { ...s.shared, generation: s.shared.generation + 1 } }), null);
+  assert.deepEqual(pick(s), { type: 'pick_favorite', generation: s.shared.generation, tiebreakVersion: 4, candidateId: 'c2' });
+  assert.equal(pick({ ...s, shared: { ...s.shared, tiebreak: { ...s.shared.tiebreak!, version: 5 } } }), null);
+  assert.equal(pick({ ...s, shared: { ...s.shared, tiebreak: { ...s.shared.tiebreak!, outcome: { candidateId: 'c1', spun: false, among: ['c1'] } } } }), null);
 });
 
 test('commands carry the redesigned names and the latest versions', async () => {
@@ -178,19 +212,6 @@ test('room view: NEW is a friend idea not yet acknowledged on this device, switc
   assert.deepEqual(roomView(s, new Set(['i2'])).ideas.filter((i) => i.fresh).map((i) => i.id), ['i3']);
 });
 
-test('proposal in flight: the same title shown by the room reads as pending, never as someone else\'s or as yours', () => {
-  const s = continuousFixture();
-  s.shared.proposalVersion = 3;
-  s.shared.proposal = { candidateId: 'c2', version: 3, previousCandidateId: null, agreeCount: 1, requiredCount: 2, averageYepMs: null };
-  const pending = roomView(s, undefined, 'c2').proposal!;
-  assert.deepEqual([pending.pending, pending.mine, pending.agreed], [true, false, false]);
-  // Another title proposed meanwhile is someone else's.
-  assert.equal(roomView(s, undefined, 'c1').proposal!.pending, false);
-  // The server's answer settles it: this device's own (or not).
-  s.own.agreement = { ...s.own.agreement, proposalVersion: 3, agreed: true, isProposer: true };
-  const mine = roomView(s, undefined, 'c2').proposal!;
-  assert.deepEqual([mine.pending, mine.mine, mine.agreed], [false, true, true]);
-});
 test('a queued tap keeps what it was aimed at: a new proposal or round drops it, own version bumps do not', async () => {
   const s = room();
   s.shared.phase = 'choosing';

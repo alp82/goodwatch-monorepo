@@ -237,10 +237,10 @@ function RoomProviderContent({ id, children, renderSheet }: { id: string; childr
   // Structurally shared with the previous view: an update that changes nothing it shows keeps the same objects.
   const lastView = useRef<RoomView | null>(null);
   const view = useMemo(() => {
-    const next = snapshot ? roomView(snapshot, seenIdeas, state.proposing) : null;
+    const next = snapshot ? roomView(snapshot, seenIdeas) : null;
     // eslint-disable-next-line react-hooks/refs -- the previous view, only to keep its unchanged parts
     return next && lastView.current ? replaceEqualDeep(lastView.current, next) : next;
-  }, [snapshot, seenIdeas, state.proposing]);
+  }, [snapshot, seenIdeas]);
   useLayoutEffect(() => { lastView.current = view; });
 
   // One rule for every connection word (core/continuous/connection-words.ts): nothing for a short outage,
@@ -468,10 +468,10 @@ function useRoomState(live: LiveRoom): RoomState {
   const viewNow = useStableCallback(live.view);
   const error = live.room.error;
   const room = useMemo(() => ({ error }), [error]);
-  const { proposing, working, access, connection, offline, error: roomError, errorCode, clearError, privateError, terminal, adoptAccess, pending, retrySeconds, refetch, setView } = live;
+  const { working, access, connection, offline, error: roomError, errorCode, clearError, privateError, terminal, adoptAccess, pending, retrySeconds, refetch, setView } = live;
   return useMemo(() => ({
-    room, proposing, view: viewNow, working, access, cheer, connection, offline, error: roomError, errorCode, clearError, privateError,
+    room, view: viewNow, working, access, cheer, connection, offline, error: roomError, errorCode, clearError, privateError,
     terminal, adoptAccess, pending, retrySeconds, send, refetch, reconnect, activityNow, setView, inspect, pointer, activity,
-  }), [room, proposing, viewNow, working, access, cheer, connection, offline, roomError, errorCode, clearError, privateError,
+  }), [room, viewNow, working, access, cheer, connection, offline, roomError, errorCode, clearError, privateError,
     terminal, adoptAccess, pending, retrySeconds, send, refetch, reconnect, activityNow, setView, inspect, pointer, activity]);
 }

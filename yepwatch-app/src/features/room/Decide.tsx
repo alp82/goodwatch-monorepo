@@ -1,7 +1,7 @@
 /**
  * Matches ("What are we watching now?") and a friend's I'm in taking over the screen. On Matches every match
- * is a checkbox: tap every one you're in for (matches-in.ts says what a tap sends today). Everyone in for
- * one title decides it (Tonight); everyone in for two or more opens the tiebreak. Privacy: counts, never
+ * is a checkbox: tap every one you're in for (`set_in`, matches-in.ts). Everyone in for one title decides it
+ * (Tonight); everyone in for two or more opens the tiebreak, which the server settles. Privacy: counts, never
  * who; a friend's I'm in reads "Someone's in", with dots and "2 of 3 in".
  */
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
@@ -15,12 +15,12 @@ import { leaveScreen, useBackAction } from '../shell/sheet-back';
 import { R, warm } from '../shell/tokens';
 import { GText, Icon, Press, glow, spaceToggles } from '../glow/theme';
 import { ScorePill } from '../glow/scores';
-import { showsProposal, type ProposalView, type RoomView } from './model';
+import type { ProposalView, RoomView } from './model';
 import { leavePage, toRooms } from './nav';
 import { useRoom, useRoomLive } from './RoomProvider';
 import { RoomNotes, RoomStatus } from './RoomStatus';
 import { servicesIn } from './services';
-import { everyoneIn, inRows, inTap, localAfter, type ProposalIns } from './matches-in';
+import { everyoneIn } from './matches-in';
 import { useHover, useOn } from './matches-motion';
 import { Tiebreak } from './Tiebreak';
 import { Actions, Button, Dots, Label, Logos, Screen, T, TextLink, usePinnedActions, useServices } from './ui';
@@ -82,29 +82,6 @@ function Agreed({ grow = true }: { grow?: boolean }) {
   );
 }
 
-/**
- * While this device's Propose of this title awaits its answer: where "You proposed this" will be, the same
- * size, so nothing moves when the answer makes it yours. Nothing claims it before then: a friend may have
- * proposed the same title at the same moment.
- */
-function Proposing({ grow = true }: { grow?: boolean }) {
-  const { z } = useLayout();
-  return (
-    <View accessibilityLiveRegion="polite" style={{ ...(grow ? { flexGrow: 1, flexShrink: 1, flexBasis: 0 } : null), minHeight: z(54), paddingHorizontal: 18, borderRadius: 12, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: warm.line }}>
-      <View style={{ width: 18, height: 18 }} />
-      {/* As wide as "You're in": a card beside it doesn't move when the answer comes. */}
-      <View>
-        <View aria-hidden accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ opacity: 0 }}><GText bold size={z(17)}>You’re in</GText></View>
-        <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, alignItems: 'center', justifyContent: 'center' }}><GText bold size={z(17)} color={glow.muted} lines={1}>Joining…</GText></View>
-      </View>
-    </View>
-  );
-}
-/** Keeps the space of the Take back link under "You're in" while the proposal is pending. */
-function TakeBackSpace({ children }: { children: ReactNode }) {
-  return <View aria-hidden accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ opacity: 0 }}>{children}</View>;
-}
-
 const proposalLabel = (pr: ProposalView) => (pr.mine || pr.agreed ? 'You’re in' : 'Someone’s in');
 
 /** A friend's I'm in: shown to everyone else in the round until it's decided or set aside on this device with Keep swiping. */
@@ -122,7 +99,7 @@ export function Proposal() {
   const agree = <Button label="I’m in" icon={<Icon name="check" size={18} color={warm.ink} />} disabled={disabled} onPress={() => void cmd.agree(true)} />;
   const keepButton = <Button secondary label="Keep swiping" onPress={keep} />;
   const takeBack = <TextLink label="Take back" color={glow.muted} disabled={disabled} onPress={() => void cmd.agree(false)} />;
-  const under = pr.agreed ? takeBack : pr.pending ? <TakeBackSpace><TextLink label="Take back" color={glow.muted} disabled onPress={() => undefined} /></TakeBackSpace> : null;
+  const under = pr.agreed ? takeBack : null;
   const titleSize = wide ? z(56) : 30;
   const info = (
     <View style={{ gap: z(14), alignItems: wide ? 'flex-start' : 'center' }}>
@@ -146,7 +123,7 @@ export function Proposal() {
           <View style={{ flex: 1, maxWidth: z(560), gap: z(32), paddingTop: z(12) }}>
             {info}
             <View style={{ width: Math.min(z(420), max - pw - z(64)), gap: 8 }}>
-              <Actions>{pr.agreed ? <Agreed /> : pr.pending ? <Proposing /> : agree}{keepButton}</Actions>
+              <Actions>{pr.agreed ? <Agreed /> : agree}{keepButton}</Actions>
               {under}
             </View>
           </View>
@@ -154,7 +131,7 @@ export function Proposal() {
       </Screen>
     );
   }
-  const main = pr.agreed ? <Agreed /> : pr.pending ? <Proposing /> : agree;
+  const main = pr.agreed ? <Agreed /> : agree;
   return (
     <Screen testID="proposal" back={toRooms} width="page" footer={pinned ? <Actions>{main}</Actions> : undefined}>
       <RoomNotes />
@@ -170,9 +147,6 @@ export function Proposal() {
 }
 
 // ——— Matches: "What are we watching now?" ———
-
-/** "I'm in" marks kept on this device only, per room and round (see matches-in.ts), while the app runs. */
-const marks = new Map<string, Set<string>>();
 
 const FILL = { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 } as const;
 /** The row's backdrop band: the match's own poster, blurred. */
@@ -399,50 +373,59 @@ function SingleMatch({ c, on, n, of, name, onToggle, disabled }: MatchProps) {
   );
 }
 
-/** Every match, the proposal on top. */
+/** Every match, each one an I'm in checkbox; the tiebreak over them once everyone's in for two or more. */
 export function MatchesPage() {
-  const { id, view, dismissedProposal, setActivityView } = useRoom();
+  const { id, view, setActivityView } = useRoom();
   useFocusEffect(useCallback(() => { setActivityView('matches'); }, [setActivityView]));
-  // Nobody stays on Matches once the round is decided or restarted: the room shows what's next.
-  // A friend's proposal takes over on the room page underneath, so Back from it leaves the room. Your own
-  // (an I'm in from here) doesn't: you stay to say which other ones you're in for.
+  // Nobody stays on Matches once the round is decided or restarted: the room shows what's next. A friend's I'm in
+  // doesn't take you away from here: you stay to say which other ones you're in for.
   const phase = view?.phase;
-  const proposed = Boolean(view && showsProposal(view, dismissedProposal));
-  const leaving = Boolean(phase && phase !== 'choosing') || proposed;
+  const leaving = Boolean(phase && phase !== 'choosing');
+  // A tiebreak's outcome decides the round: the winner shows here (the spin lands) before Tonight takes over.
+  const outcome = view?.tiebreak?.outcome ? `${view.generation}:${view.tiebreak.version}` : null;
+  const [landed, setLanded] = useState<string | null>(null);
+  const holding = leaving && phase === 'decided' && outcome !== null && landed !== outcome;
+  const onLanded = useCallback(() => {
+    if (!outcome) return;
+    // A beat to read the winner before the page goes.
+    const timer = setTimeout(() => setLanded(outcome), LANDED_BEAT_MS);
+    return () => clearTimeout(timer);
+  }, [outcome]);
   // Sheets close first: a sheet holds a navigation away, and this page would stay.
-  useEffect(() => { if (leaving) leaveScreen(() => leavePage(id)); }, [leaving, id]);
-  // While it leaves, the page keeps the last layout it showed. Drawn for a frame or two before the room's page
-  // replaced it, the proposal's card where its match was (another height) moved Keep swiping (CI run 43605791062).
+  useEffect(() => { if (leaving && !holding) leaveScreen(() => leavePage(id)); }, [leaving, holding, id]);
+  // While it leaves, the page keeps the last layout it showed: drawn for a frame or two before the room's page
+  // replaced it, another layout would move Keep swiping (CI run 43605791062).
   const [shown, setShown] = useState(view);
   if (view && !leaving && view !== shown) setShown(view);
   const page = leaving ? shown ?? view : view;
-  if (!page) return <RoomStatus />;
-  return <Matches id={id} view={page} held={leaving} />;
+  if (!page || !view) return <RoomStatus />;
+  return <Matches id={id} view={page} tiebreak={leaving ? view.tiebreak : page.tiebreak} held={leaving} onLanded={onLanded} />;
 }
 
-/** `held`: the layout from before the page began leaving, shown until it's gone; its toggles do nothing. */
-function Matches({ id, view, held }: { id: string; view: RoomView; held: boolean }) {
+/** How long the tiebreak's winner shows once the spin has landed, before the page leaves for Tonight. */
+const LANDED_BEAT_MS = 1400;
+
+/**
+ * `held`: the layout from before the page began leaving, shown until it's gone; its toggles do nothing.
+ * `tiebreak`: the room's latest (the decided room still carries the outcome the held layout lacks).
+ */
+function Matches({ id, view, tiebreak, held, onLanded }: { id: string; view: RoomView; tiebreak: RoomView['tiebreak']; held: boolean; onLanded: () => void }) {
   const { cmd, disabled } = useRoom();
   const { phone, z, max } = useLayout();
-  const key = `${id}:${view.generation}`;
-  const [local, setLocal] = useState<ReadonlySet<string>>(() => marks.get(key) ?? new Set());
-  const [tiebreak, setTiebreak] = useState(false);
-  const [favorite, setFavorite] = useState<string | null>(null);
-  const pr = view.proposal;
-  const proposal: ProposalIns | null = pr ? { candidateId: pr.candidateId, agreeCount: pr.agreeCount, mine: pr.agreed || pr.pending } : null;
-  const required = pr?.requiredCount ?? view.people.filter((p) => p.inRound && !p.dropped).length;
+  // The tiebreak opens by itself each time one appears; closed, "Pick one of N" opens it again. Its outcome
+  // always shows.
+  const [closed, setClosed] = useState<number | null>(null);
+  const required = view.required;
   const matches = view.matches;
-  const rows = inRows(matches.map((c) => c.id), proposal, local);
+  const rows = view.ins;
   const byId = new Map(rows.map((r) => [r.id, r]));
-  const tied = everyoneIn(rows, required).map((cid) => matches.find((c) => c.id === cid)!).filter(Boolean);
+  const tiedIds = tiebreak?.candidateIds ?? everyoneIn(rows, required);
+  const tied = tiedIds.map((cid) => matches.find((c) => c.id === cid)).filter((c): c is Candidate => Boolean(c));
+  const sheetOpen = Boolean(tiebreak && tied.length > 1 && (tiebreak.outcome || closed !== tiebreak.version));
   const toggle = (cid: string) => {
     if (held) return;
-    const tap = inTap(cid, proposal, local);
-    const next = localAfter(local, cid, tap, proposal);
-    marks.set(key, next);
-    setLocal(next);
-    if (tap.kind === 'agree') void cmd.agree(tap.agreed);
-    else if (tap.kind === 'propose') void cmd.propose(cid);
+    const row = byId.get(cid);
+    void cmd.setIn(cid, !row?.mine);
   };
   const count = matches.length;
   const sub = count === 0 ? 'When everyone says Yep to a title, it shows up here.' : count === 1 ? '1 match · Tap it if you’re in' : `${count} matches · Tap every one you’re in for`;
@@ -460,7 +443,7 @@ function Matches({ id, view, held }: { id: string; view: RoomView; held: boolean
       </View>
       <Actions>
         {keep}
-        {tied.length > 1 ? <Button label={`Pick one of ${tied.length}`} icon={<Icon name="dice" size={17} color={warm.ink} />} onPress={() => setTiebreak(true)} /> : null}
+        {tied.length > 1 && tiebreak ? <Button label={`Pick one of ${tied.length}`} icon={<Icon name="dice" size={17} color={warm.ink} />} onPress={() => setClosed(null)} /> : null}
       </Actions>
     </View>
   );
@@ -468,8 +451,9 @@ function Matches({ id, view, held }: { id: string; view: RoomView; held: boolean
     <Screen testID="matches" back={() => leavePage(id)} width="page" gap={phone ? 16 : z(28)} footer={footer}
       // Leaving, the header keeps the room as it was too (a decision would change its pill under the held page).
       pill={held ? { label: view.label, state: 'live', fresh: view.newSuggestions, beat: null } : undefined}
-      sheet={tiebreak && tied.length > 1 ? (
-        <Tiebreak tied={tied} favorites={favorite ? { [favorite]: 1 } : {}} mine={favorite} required={required} seed={key} onPick={setFavorite} onClose={() => setTiebreak(false)} />
+      sheet={sheetOpen && tiebreak ? (
+        <Tiebreak tied={tied} favorites={tiebreak.favorites} mine={tiebreak.mine} required={required} outcome={tiebreak.outcome}
+          onPick={(cid) => { if (!held) void cmd.pickFavorite(cid); }} onLanded={onLanded} onClose={() => setClosed(tiebreak.version)} />
       ) : undefined}>
       <RoomNotes />
       <View style={{ gap: 4, alignItems: phone ? 'flex-start' : 'center' }}>

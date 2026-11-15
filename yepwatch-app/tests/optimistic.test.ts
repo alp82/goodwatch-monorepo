@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import type { RoomCommand, RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
-import { awaitsServer, overlayRoom, previewCommand, proposingCandidate } from '../src/core/continuous/optimistic';
+import { awaitsServer, overlayRoom, previewCommand } from '../src/core/continuous/optimistic';
 import { continuousFixture } from './continuous-fixture';
 
 function room(): RoomSnapshot {
@@ -90,16 +90,42 @@ test('what the server decides waits for its answer; everything else shows at onc
   assert.equal(previewCommand(s, 'c', { type: 'leave' }), s);
 });
 
-test('a propose in flight: the room showing that title doesn\'t make it this device\'s own until the server says so', () => {
+test('I’m in shows at once: your list, the room’s count and your Yep, once, over the revision it was aimed at', () => {
   const s = continuousFixture();
-  const command = { type: 'propose', generation: s.shared.generation, expectedRosterVersion: s.shared.rosterVersion, expectedProposalVersion: s.shared.proposalVersion, candidateId: 'c1' } as RoomCommand;
-  assert.deepEqual(previewCommand(s, 'p1', command), s);
-  // A poll brought the shared room with a proposal of the same title before this device's answer: it may be
-  // someone else's (proposed at the same moment). Nothing here claims it.
-  const ahead: RoomSnapshot = { ...s, shared: { ...s.shared, proposalVersion: s.shared.proposalVersion + 1, proposal: { candidateId: 'c1', version: s.shared.proposalVersion + 1, agreeCount: 1, requiredCount: 2 } as RoomSnapshot['shared']['proposal'] } };
-  assert.deepEqual(previewCommand(ahead, 'p1', command), ahead);
-  // What the screen needs to hold the space: which title this device is proposing.
-  assert.equal(proposingCandidate(ahead, { commandId: 'p1', sequence: 1, command }, []), 'c1');
-  assert.equal(proposingCandidate(ahead, null, [{ commandId: 'p2', build: () => command }]), 'c1');
-  assert.equal(proposingCandidate(ahead, null, []), null);
+  s.shared.participants = [{ participantId: 'p1', nickname: 'A', screenId: 'room', ready: true, serviceIds: [8] }, { participantId: 'p2', nickname: 'B', screenId: 'room', ready: true, serviceIds: [8] }];
+  s.shared.ins = [{ candidateId: 'c1', count: 1 }, { candidateId: 'c2', count: 0 }];
+  s.own.ins = { candidateIds: [], revision: 3 };
+  const command = { type: 'set_in', generation: s.shared.generation, candidateId: 'c1', in: true, expectedOwnInRevision: 3 } as const;
+  const shown = previewCommand(s, 'c', command);
+  assert.deepEqual(shown.own.ins, { candidateIds: ['c1'], revision: 4 });
+  assert.deepEqual(shown.shared.ins, [{ candidateId: 'c1', count: 2 }, { candidateId: 'c2', count: 0 }]);
+  assert.equal(shown.own.votes.find((v) => v.candidateId === 'c1')?.value, 'watch', 'I’m in makes your answer a Yep');
+  assert.equal(shown.own.agreement.revision, s.own.agreement.revision + 1, 'the agreement revision moves as the server moves it');
+  assert.equal(previewCommand(shown, 'c', command), shown, 'applied twice counts once');
+  assert.equal(previewCommand(s, 'c', { ...command, expectedOwnInRevision: 2 }), s, 'a newer choice from another device stays');
+  assert.equal(previewCommand(s, 'c', { ...command, generation: s.shared.generation + 1 }), s);
+  // Out again: the count goes down, never below zero.
+  const out = previewCommand(shown, 'c', { ...command, in: false, expectedOwnInRevision: 4 });
+  assert.deepEqual(out.own.ins, { candidateIds: [], revision: 5 });
+  assert.equal(out.shared.ins?.[0].count, 1);
+  // Never above everyone in the room.
+  const full = { ...s, shared: { ...s.shared, ins: [{ candidateId: 'c1', count: 2 }] } };
+  assert.equal(previewCommand(full, 'c', command).shared.ins?.[0].count, 2);
+});
+
+test('a favorite shows at once in the tiebreak it was picked in; a changed or settled tiebreak drops it', () => {
+  const s = continuousFixture();
+  s.shared.tiebreak = { version: 7, candidateIds: ['c1', 'c2'], favorites: [{ candidateId: 'c1', count: 1 }, { candidateId: 'c2', count: 0 }], outcome: null };
+  s.own.favorite = null;
+  const pick = { type: 'pick_favorite', generation: s.shared.generation, tiebreakVersion: 7, candidateId: 'c2' } as const;
+  const shown = previewCommand(s, 'c', pick);
+  assert.deepEqual(shown.own.favorite, { tiebreakVersion: 7, candidateId: 'c2' });
+  assert.deepEqual(shown.shared.tiebreak?.favorites, [{ candidateId: 'c1', count: 1 }, { candidateId: 'c2', count: 1 }]);
+  assert.equal(previewCommand(shown, 'c', pick), shown);
+  // Switching moves your one pick.
+  const moved = previewCommand(shown, 'c', { ...pick, candidateId: 'c1' });
+  assert.deepEqual(moved.shared.tiebreak?.favorites, [{ candidateId: 'c1', count: 2 }, { candidateId: 'c2', count: 0 }]);
+  assert.equal(previewCommand(s, 'c', { ...pick, tiebreakVersion: 6 }), s);
+  const settled = { ...s, shared: { ...s.shared, tiebreak: { ...s.shared.tiebreak, outcome: { candidateId: 'c1', spun: false, among: ['c1'] } } } };
+  assert.equal(previewCommand(settled, 'c', pick), settled);
 });

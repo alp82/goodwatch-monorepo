@@ -1,12 +1,12 @@
 /**
  * The tiebreak: everyone's in for two or more titles. Everyone taps a favorite; most favorites wins; when
- * favorites tie too, a fair spin among the most-picked lands on the same title on every phone (the
- * server's seed). A bottom sheet on phones, a centered panel on bigger windows. Counts only, never who.
+ * favorites tie too, a fair spin among the most-picked lands on the server's outcome, the same title on every
+ * phone. A bottom sheet on phones, a centered panel on bigger windows. Counts only, never who.
  *
- * It needs the server's favorites (docs/rethink-matches-backend.md); Matches opens it once the room
- * reports everyone in for more than one title.
+ * Matches opens it by itself when the room reports a tiebreak (`shared.tiebreak`); the server settles the
+ * outcome and decides the winner like any title everyone's in for (Tonight).
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, View } from 'react-native';
 import type { Candidate } from '@goodwatch/yepwatch-contracts/proposal';
 import { useReducedMotion } from '../../components/ui';
@@ -16,8 +16,7 @@ import { Sheet } from '../shell/Sheet';
 import { R, warm } from '../shell/tokens';
 import { Poster } from './Decide';
 import { useOn, useHover } from './matches-motion';
-import { SPIN_STEPS, spinPath, tieOutcome } from './matches-in';
-import { Button } from './ui';
+import { SPIN_STEPS, spinPath, type TieOutcome } from './matches-in';
 
 export interface TiebreakProps {
   tied: Candidate[];
@@ -27,11 +26,11 @@ export interface TiebreakProps {
   mine: string | null;
   /** People who pick (everyone in the round). */
   required: number;
-  /** The server's spin seed for this tiebreak. */
-  seed: string;
+  /** The server's outcome once every favorite is in; the spin lands on its winner. */
+  outcome: TieOutcome | null;
   onPick: (id: string) => void;
-  /** Watch the winner (absent: the room decides it on its own). */
-  onWatch?: (id: string) => void;
+  /** The winner is showing (the spin has landed, or there was none); may return a cleanup. */
+  onLanded?: () => void | (() => void);
   onClose: () => void;
 }
 
@@ -80,15 +79,16 @@ function TieTile({ c, width, lit, picked, dim, count, choosing, onPick }: { c: C
   );
 }
 
-export function Tiebreak({ tied, favorites, mine, required, seed, onPick, onWatch, onClose }: TiebreakProps) {
+export function Tiebreak({ tied, favorites, mine, required, outcome, onPick, onLanded, onClose }: TiebreakProps) {
   const { phone, z, width: windowWidth } = useLayout();
-  const ids = tied.map((c) => c.id);
-  const outcome = tieOutcome(ids, favorites, required, seed);
   const spin = useSpin(outcome?.spun ? outcome.among : null, outcome?.spun ? outcome.winner : null);
   const done = outcome ? (!outcome.spun || spin.done) : false;
   const picked = Object.values(favorites).reduce((n, v) => n + v, 0);
   const waitingFor = Math.max(0, required - picked);
-  const phase = !mine ? 'choose' : !outcome ? 'waiting' : done ? 'done' : 'spinning';
+  const phase = outcome ? (done ? 'done' : 'spinning') : !mine ? 'choose' : 'waiting';
+  const landedRef = useRef(onLanded);
+  useEffect(() => { landedRef.current = onLanded; });
+  useEffect(() => (done ? landedRef.current?.() ?? undefined : undefined), [done]);
   const winner = done && outcome ? tied.find((c) => c.id === outcome.winner) ?? null : null;
   const status = phase === 'choose' ? 'Tap your favorite. Most picks wins. If picks tie too, a fair spin decides.'
     : phase === 'waiting' ? `Waiting for ${waitingFor} more ${waitingFor === 1 ? 'pick' : 'picks'}`
@@ -99,7 +99,7 @@ export function Tiebreak({ tied, favorites, mine, required, seed, onPick, onWatc
   const tileW = Math.min(phone ? 130 : z(160), Math.floor((inner - gap * (tied.length - 1)) / tied.length));
   return (
     <Sheet testID="tiebreak" title={`Everyone’s in for ${tied.length}`} onClose={onClose} width={620}
-      actions={winner && onWatch ? <Button label={`Watch ${winner.title}`} onPress={() => onWatch(winner.id)} /> : <View style={{ minHeight: z(54) }} />}>
+      actions={<View style={{ minHeight: z(54) }} />}>
       <View style={{ gap: 6 }}>
         <GText bold size={phone ? 24 : z(30)} style={{ letterSpacing: -0.8 }}>{winner ? winner.title : 'Which one first?'}</GText>
         <View accessibilityLiveRegion="polite" style={{ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 28 }}>

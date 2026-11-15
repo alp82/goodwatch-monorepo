@@ -95,6 +95,7 @@ test('activity requires authenticated live snapshot and a fresh session; backgro
     cheers: true,
     roomDetails: true,
     candidateReasons: true,
+    matchesIn: true,
   });
   h.client.sendActivity('matches', 'handle');
   assert.equal(s.sent.length, 1);

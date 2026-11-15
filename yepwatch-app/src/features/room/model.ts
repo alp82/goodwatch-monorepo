@@ -4,6 +4,7 @@
  */
 import { ideaPending, type Candidate, type RoomCommand, type RoomConstraints, type RoomIdea, type RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
 import type { CommandBuild } from '../../core/continuous/optimistic';
+import { inRows, tiebreakView, type InRow, type TiebreakView } from './matches-in';
 import { noun } from '../shell/noun';
 
 export type Kind = 'movie' | 'show_start';
@@ -43,8 +44,6 @@ export interface ProposalView {
   requiredCount: number;
   mine: boolean;
   agreed: boolean;
-  /** This device proposed this title and the server hasn't said yet whose proposal the room shows. */
-  pending: boolean;
 }
 
 export interface RoomView {
@@ -87,6 +86,12 @@ export interface RoomView {
   /** Linked members only: seen titles show again. Null for guests. */
   showSeen: boolean | null;
   matches: Candidate[];
+  /** Each match's "I'm in" count and whether you're in, in the matches' order (matches-in.ts). */
+  ins: InRow[];
+  /** People whose I'm in decides (everyone in the round). */
+  required: number;
+  /** Everyone's in for two or more: pick a favorite (matches-in.ts). */
+  tiebreak: TiebreakView | null;
   proposal: ProposalView | null;
   decision: Candidate | null;
 }
@@ -109,8 +114,7 @@ export function ideasLabel(active: readonly { text: string }[], hostName = '') {
 const NONE: ReadonlySet<string> = new Set();
 
 /** `seenIdeas`: friend ideas the host already acknowledged on this device (opened the Room page or switched them). */
-/** `proposing`: the title this device's Propose is on its way for (optimistic.ts proposingCandidate). */
-export function roomView(snapshot: RoomSnapshot, seenIdeas: ReadonlySet<string> = NONE, proposing: string | null = null): RoomView {
+export function roomView(snapshot: RoomSnapshot, seenIdeas: ReadonlySet<string> = NONE): RoomView {
   const { shared, own } = snapshot;
   const all: RoomPerson[] = shared.participants.map((p) => ({
     id: p.participantId,
@@ -141,6 +145,7 @@ export function roomView(snapshot: RoomSnapshot, seenIdeas: ReadonlySet<string> 
   const candidate = (id: string | null | undefined) => shared.candidates.find((c) => c.id === id) ?? null;
   const proposalOwn = own.agreement.proposalVersion === shared.proposalVersion;
   const member = own.member.state === 'linked';
+  const matches = shared.matches.map((m) => candidate(m.candidateId)).filter((c): c is Candidate => Boolean(c));
   return {
     roomId: shared.roomId,
     phase: shared.phase,
@@ -170,7 +175,10 @@ export function roomView(snapshot: RoomSnapshot, seenIdeas: ReadonlySet<string> 
     canStart: isHost && Boolean(me.nickname) && enabledServiceIds.length > 0 && kinds.length > 0 && Boolean(country),
     member,
     showSeen: member ? own.showSeen : null,
-    matches: shared.matches.map((m) => candidate(m.candidateId)).filter((c): c is Candidate => Boolean(c)),
+    matches,
+    ins: inRows(matches.map((c) => c.id), shared.ins, own.ins),
+    required: shared.proposal?.requiredCount ?? people.filter((p) => p.inRound).length,
+    tiebreak: shared.phase === 'setup' ? null : tiebreakView(shared, own),
     proposal: shared.proposal ? {
       candidateId: shared.proposal.candidateId,
       candidate: candidate(shared.proposal.candidateId),
@@ -179,20 +187,19 @@ export function roomView(snapshot: RoomSnapshot, seenIdeas: ReadonlySet<string> 
       requiredCount: shared.proposal.requiredCount,
       mine: proposalOwn && own.agreement.isProposer,
       agreed: proposalOwn && own.agreement.agreed,
-      pending: !proposalOwn && proposing === shared.proposal.candidateId,
     } : null,
     decision: candidate(shared.decision?.candidateId),
   };
 }
 
 /**
- * A friend's I'm in (the room's proposal) takes over the screen of everyone else in the round until it's decided
- * or set aside on this device. Never the screen of the person whose I'm in it is: they said it on Matches, and
- * stay there or keep swiping.
+ * A friend's I'm in (the room's proposal: the title with the most I'm ins) takes over the screen of everyone else
+ * in the round until it's decided or set aside on this device. Never the screen of the person whose I'm in it is:
+ * they said it on Matches, and stay there or keep swiping. Not while a tiebreak is open: that's settled on Matches.
  */
 export function showsProposal(view: RoomView, dismissedVersion: number | null) {
   const p = view.proposal;
-  return view.phase === 'choosing' && Boolean(p) && view.me.inRound && !p!.mine && !p!.pending && dismissedVersion !== p!.version;
+  return view.phase === 'choosing' && Boolean(p) && view.me.inRound && !p!.mine && !view.tiebreak && dismissedVersion !== p!.version;
 }
 
 /** The status line under a room's name on the start page. */
@@ -257,10 +264,27 @@ export function roomCommands(send: Send, latest: () => RoomSnapshot | undefined,
     },
     vote: (candidateId: string, yes: boolean, activeExposureMs: number | null) => voteOn(candidateId, yes ? 'watch' : 'pass', yes ? activeExposureMs : null),
     undo: (candidateId: string) => voteOn(candidateId, null, null),
-    propose: (candidateId: string) => {
-      const seen = view()?.shared;
+    /**
+     * I'm in (or not) for a match, aimed at your I'm ins as you saw them: another device of yours changing them
+     * meanwhile drops it (the room shows the newer choice).
+     */
+    setIn: (candidateId: string, value: boolean) => {
+      const seen = view();
       if (!seen) return Promise.resolve(false);
-      return send((s) => (s.shared.generation !== seen.generation ? null : { type: 'propose', generation: seen.generation, expectedRosterVersion: s.shared.rosterVersion, expectedProposalVersion: seen.proposalVersion, candidateId }));
+      const generation = seen.shared.generation;
+      const expectedOwnInRevision = seen.own.ins?.revision ?? 0;
+      return send((s) => (s.shared.generation !== generation || (s.own.ins?.revision ?? 0) !== expectedOwnInRevision ? null : {
+        type: 'set_in', generation, candidateId, in: value, expectedOwnInRevision,
+      }));
+    },
+    /** Your favorite in the tiebreak you saw (null takes it back); a changed tiebreak drops it. */
+    pickFavorite: (candidateId: string | null) => {
+      const seen = view()?.shared;
+      const tiebreak = seen?.tiebreak;
+      if (!seen || !tiebreak || tiebreak.outcome) return Promise.resolve(false);
+      return send((s) => (s.shared.generation !== seen.generation || s.shared.tiebreak?.version !== tiebreak.version || s.shared.tiebreak.outcome ? null : {
+        type: 'pick_favorite', generation: seen.generation, tiebreakVersion: tiebreak.version, candidateId,
+      }));
     },
     agree: (agreed: boolean) => {
       const seen = view();

@@ -165,9 +165,24 @@ const details = z.union([
     })
     .strict(),
 ]);
+const inCount = z.object({ candidateId: id, count: n }).strict();
 export const sharedSchema = z
   .object({
     contractVersion: z.literal(3),
+    // Matches "I'm in" (counts only, never who) and the tiebreak; only for clients that ask (matchesIn).
+    ins: z.array(inCount).max(512).optional(),
+    inVersion: n.optional(),
+    tiebreak: z
+      .object({
+        version: n,
+        candidateIds: z.array(id).min(2).max(512),
+        favorites: z.array(inCount).max(512),
+        seed: z.string().min(8).max(64).optional(),
+        outcome: z.object({ candidateId: id, spun: z.boolean(), among: z.array(id).min(1).max(512) }).strict().nullable(),
+      })
+      .strict()
+      .nullable()
+      .optional(),
     ideas: z.array(z.strictObject({id:z.string(),text:z.string().min(2).max(200),authorId:z.string(),on:z.boolean(),attributes:z.array(z.strictObject({text:z.string(),kind:z.enum(['attribute','excluded','want','avoid','phrase']),key:z.string().optional()})).max(100)})).max(8),
     disabledServiceIds: z.array(z.number().int().positive()).max(1200),
     roomId: id,

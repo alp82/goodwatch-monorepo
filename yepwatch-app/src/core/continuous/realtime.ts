@@ -566,8 +566,10 @@ export class ContinuousRealtime {
             pointers: true,
             cheers: true,
             roomDetails: true,
-            // Each card's "why this" reason (api-client.ts withCandidateReasons).
+            // Each card's "why this" reason (api-client.ts withRoomOptIns).
             candidateReasons: true,
+            // Matches "I'm in" counts and the tiebreak (api-client.ts withRoomOptIns).
+            matchesIn: true,
           })
         );
       };

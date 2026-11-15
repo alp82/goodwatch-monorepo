@@ -11,7 +11,7 @@ export type CommandBuild = (snapshot: RoomSnapshot) => RoomCommand | null;
 export interface QueuedCommand { commandId: string; build: CommandBuild }
 
 /** The server decides what these lead to, so the screen waits for its answer. */
-const SERVER_DECIDES: ReadonlySet<RoomCommand['type']> = new Set<RoomCommand['type']>(['add_idea', 'edit_idea', 'remove_idea', 'start', 'propose', 'restart', 'leave', 'retry_agreement']);
+const SERVER_DECIDES: ReadonlySet<RoomCommand['type']> = new Set<RoomCommand['type']>(['add_idea', 'edit_idea', 'remove_idea', 'start', 'restart', 'leave', 'retry_agreement']);
 export const awaitsServer = (command: RoomCommand) => SERVER_DECIDES.has(command.type);
 
 export function previewCommand<T extends RoomSnapshot>(s: T, commandId: string, c: RoomCommand): T {
@@ -59,22 +59,37 @@ export function previewCommand<T extends RoomSnapshot>(s: T, commandId: string, 
         : s.own.votes;
       return { ...s, shared: { ...s.shared, proposal: { ...proposal, agreeCount } }, own: { ...s.own, votes, agreement: { ...s.own.agreement, agreed: c.agreed, revision: s.own.agreement.revision + 1 } } };
     }
+    case 'set_in': {
+      const mine = s.own.ins?.candidateIds ?? [];
+      // Only over the I'm ins it was aimed at: a refresh may already carry it (or a newer change) before its answer.
+      if (c.generation !== s.shared.generation || (s.own.ins?.revision ?? 0) !== c.expectedOwnInRevision || mine.includes(c.candidateId) === c.in) return s;
+      const required = s.shared.participants.filter((p) => !p.dropped).length;
+      const ins = s.shared.ins?.map((r) => (r.candidateId === c.candidateId ? { ...r, count: Math.min(required, Math.max(0, r.count + (c.in ? 1 : -1))) } : r));
+      // As the server counts it: your revisions move with every change, and I'm in makes your answer a Yep.
+      const old = s.own.votes.find((v) => v.candidateId === c.candidateId);
+      const votes = c.in && old?.value !== 'watch'
+        ? [...s.own.votes.filter((v) => v.candidateId !== c.candidateId), { candidateId: c.candidateId, value: 'watch' as const, revision: (old?.revision ?? 0) + 1, activeExposureMs: null, timingSource: 'implied' as const }]
+        : s.own.votes;
+      return {
+        ...s,
+        shared: ins ? { ...s.shared, ins } : s.shared,
+        own: { ...s.own, votes, ins: { candidateIds: c.in ? [...mine, c.candidateId] : mine.filter((id) => id !== c.candidateId), revision: (s.own.ins?.revision ?? 0) + 1 },
+          agreement: { ...s.own.agreement, revision: s.own.agreement.revision + 1 } },
+      };
+    }
+    case 'pick_favorite': {
+      const t = s.shared.tiebreak;
+      if (!t || t.outcome || t.version !== c.tiebreakVersion || c.generation !== s.shared.generation) return s;
+      const before = s.own.favorite?.tiebreakVersion === t.version ? s.own.favorite.candidateId : null;
+      if (before === c.candidateId) return s;
+      const favorites = t.candidateIds.map((id) => {
+        const count = t.favorites.find((f) => f.candidateId === id)?.count ?? 0;
+        return { candidateId: id, count: Math.max(0, count + (id === c.candidateId ? 1 : 0) - (id === before ? 1 : 0)) };
+      });
+      return { ...s, shared: { ...s.shared, tiebreak: { ...t, favorites } }, own: { ...s.own, favorite: { tiebreakVersion: t.version, candidateId: c.candidateId } } };
+    }
     default: return s;
   }
-}
-
-/**
- * The title this device is proposing while the server hasn't answered. The server decides whether it goes
- * through and whose it is (a friend may propose the same title at the same moment): until its answer the
- * screen shows a proposal of this title as pending, in the space the proposer's own would take.
- */
-export function proposingCandidate(confirmed: RoomSnapshot, pending: CommandEnvelope | null, queued: readonly QueuedCommand[]): string | null {
-  if (pending?.command.type === 'propose') return pending.command.candidateId;
-  for (const entry of queued) {
-    const command = entry.build(confirmed);
-    if (command?.type === 'propose') return command.candidateId;
-  }
-  return null;
 }
 
 /** The confirmed room plus the command awaiting confirmation and everything queued behind it. */
