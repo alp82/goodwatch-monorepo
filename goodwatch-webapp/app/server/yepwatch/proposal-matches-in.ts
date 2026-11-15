@@ -7,9 +7,18 @@ export function initializeIns(room: ProposalRoom) {
   room.inVersion ??= 0
   room.tiebreak ??= null
   for (const p of room.participants) {
+    if (p.insAgreementRevision !== undefined && p.insAgreementRevision !== p.agreementRevision) {
+      delete p.ins
+      p.inRevision = Math.max(p.inRevision ?? 0, p.agreementRevision)
+      p.inOrder = {}
+      p.favorite = null
+      room.tiebreak = null
+    }
     p.ins ??= room.proposal && p.approvedProposalVersion === room.proposal.version ? [room.proposal.candidateId] : []
     p.inRevision ??= p.agreementRevision
     p.favorite ??= null
+    p.insAgreementRevision = p.agreementRevision
+    p.inOrder ??= {}
   }
 }
 export function inCounts(room: ProposalRoom, ids: string[]) {
@@ -47,6 +56,9 @@ export function setIn(room: ProposalRoom, p: ProposalParticipant, id: string, va
     p.inRevision!++
     p.agreementRevision++
     room.inVersion!++
+    p.insAgreementRevision = p.agreementRevision
+    if (value) p.inOrder![id] = room.inVersion!
+    else delete p.inOrder![id]
   }
   if (value && p.votes[id]?.value !== 'watch') {
     const revision = (p.votes[id]?.revision ?? 0) + 1
@@ -63,7 +75,7 @@ export function reconcileIns(room: ProposalRoom, previous: ProposalRoom, ids: st
   for (const p of room.participants) {
     const old = previous.participants.find(o => o.id === p.id)
     const kept = p.leftAt != null || old?.leftAt != null ? [] : p.ins!.filter(id => room.candidates.some(c => c.id === id) && p.votes[id]?.value === 'watch')
-    if (JSON.stringify(kept) !== JSON.stringify(p.ins)) { p.ins = kept; p.inRevision!++; p.agreementRevision++ }
+    if (JSON.stringify(kept) !== JSON.stringify(p.ins)) { p.ins = kept; p.inRevision!++; p.agreementRevision++; p.insAgreementRevision = p.agreementRevision }
     if (p.leftAt != null || old?.leftAt != null) p.favorite = null
   }
   const counts = room.phase === 'setup' ? [] : inCounts(room, ids)
@@ -72,7 +84,7 @@ export function reconcileIns(room: ProposalRoom, previous: ProposalRoom, ids: st
   const everyone = people.length ? counts.filter(c => c.count === people.length).map(c => c.candidateId) : []
   if (everyone.length >= 2) {
     if (!room.tiebreak || room.tiebreak.candidateIds.length !== everyone.length || room.tiebreak.candidateIds.some(id => !everyone.includes(id))) {
-      room.inVersion = Math.max(room.inVersion!, (previous.tiebreak?.version ?? 0) + 1)
+      room.inVersion = Math.max(room.inVersion!, previous.inVersion ?? 0) + 1
       room.tiebreak = { version: room.inVersion, candidateIds: everyone, seed: randomBytes(8).toString('hex'), outcome: null }
       for (const p of room.participants) p.favorite = null
     } else if (room.rosterVersion !== previous.rosterVersion) room.tiebreak.outcome = null
@@ -82,13 +94,15 @@ export function reconcileIns(room: ProposalRoom, previous: ProposalRoom, ids: st
     for (const p of room.participants) p.favorite = null
   }
   const winner = room.tiebreak?.outcome?.candidateId ?? (everyone.length === 1 ? everyone[0] : null)
-  const best = counts.reduce<{ candidateId: string; count: number } | null>((best, c) => c.count > (best?.count ?? 0) ? c : best, null)?.candidateId ?? null
+  const latest = (id: string) => Math.max(0, ...people.filter(p => p.ins!.includes(id)).map(p => p.inOrder?.[id] ?? 0))
+  const best = counts.reduce<{ candidateId: string; count: number } | null>((best, c) =>
+    c.count > 0 && (c.count > (best?.count ?? 0) || (best && c.count === best.count && latest(c.candidateId) > latest(best.candidateId))) ? c : best, null)?.candidateId ?? null
   // Preserve the pending title across a late join so legacy agree can supply its implied Yep.
   const pending = !best && room.proposal && room.candidates.some(c => c.id === room.proposal!.candidateId) &&
     people.some(p => p.ins!.includes(room.proposal!.candidateId)) &&
     !people.some(p => p.votes[room.proposal!.candidateId]?.value === 'pass' ||
       (room.proposal!.baseParticipantIds.includes(p.id) && p.votes[room.proposal!.candidateId]?.value !== 'watch')) ? room.proposal.candidateId : null
-  const selected = best ?? pending
+  const selected = winner ?? best ?? pending
   if (selected !== (room.proposal?.candidateId ?? null) || (selected && (room.inVersion !== (previous.inVersion ?? 0) ||
       room.tiebreak?.outcome?.candidateId !== previous.tiebreak?.outcome?.candidateId))) {
     const old = room.proposal?.candidateId ?? null

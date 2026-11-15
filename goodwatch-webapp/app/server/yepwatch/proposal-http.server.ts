@@ -100,7 +100,7 @@ export function createProposalHandler(
 		const reply = (data: unknown, status = 200) => {
 			deliverRenewal()
 			return new Response(timedSync("json", () => JSON.stringify(data, (key, value) =>
-				!url.pathname.startsWith(`${API_PREFIX}/realtime/internal/`) && url.searchParams.get('matchesIn') !== '1' &&
+				url.searchParams.get('matchesIn') !== '1' &&
 				['ins', 'inVersion', 'tiebreak', 'favorite'].includes(key) ? undefined : key === 'candidates' && Array.isArray(value) &&
         !url.pathname.startsWith(`${API_PREFIX}/realtime/internal/`) && url.searchParams.get('candidateReasons') !== '1'
           ? value.map(({ reason: _, ...card }) => card) : value)), { status, headers })

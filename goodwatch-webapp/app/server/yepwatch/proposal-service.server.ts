@@ -1,3 +1,4 @@
+import { initializeIns, setIn } from './proposal-matches-in.ts'
 import { ideasForServiceReread } from './proposal-redesign.ts'
 import { emitRoundOutcome, recordOutcome } from './proposal-outcome.ts'
 import type { TasteProfiles } from "./proposal-taste-profile.ts"
@@ -1732,6 +1733,7 @@ export class ProposalService {
 					for (const p of room.participants) {
 						p.approvedProposalVersion = null;
 						p.agreementRevision++;
+						p.insAgreementRevision = p.agreementRevision;
 					}
 				} else if (room.proposal) {
 					if (room.proposal.proposerId === source.id)
@@ -2043,6 +2045,9 @@ export class ProposalService {
 			} catch (e) {
 				if (!(e instanceof RoomError)) return // Unknown failure leaves durable checking for background repair.
 				if (e.code === "expired") return
+				initializeIns(room)
+				for (const p of room.participants) setIn(room, p, candidate.id, false)
+				reconcile(room, old.room)
 				room.agreement = {
 					version: room.agreement.version,
 					state: "unavailable",

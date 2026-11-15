@@ -4,10 +4,10 @@ Base `f5e06a2b`, approved prototype `5c4e53cf`. Import `@goodwatch/yepwatch-cont
 
 - Shared `matches:[{candidateId,averageYepMs:number|null}]`; no pick count or owners. `proposalVersion` is monotonic even when proposal becomes null. Shared `proposal:{candidateId,version,previousCandidateId,agreeCount,requiredCount,averageYepMs}|null`. No proposer or approver identity. Shared `agreement:{version,state:'none'|'checking'|'unavailable',error}` is the fresh-check attempt fence; Done includes `proposalVersion`.
 - Own `agreement:{proposalVersion,agreed,revision,isProposer}` replaces own pick. Own votes additionally expose only the caller's `activeExposureMs` and `timingSource:'active_exposure'|'implied'|'unavailable'`.
-- `propose{generation,expectedRosterVersion,expectedProposalVersion,candidateId}` adds a current shared match to the actor's ins, preserving every other selection. Repeating an existing in is a no-op; the legacy proposal is the most popular match, ties by match order. No UI navigation changes agreement.
+- `propose{generation,expectedRosterVersion,expectedProposalVersion,candidateId}` moves the actor to that current shared match, dropping only that actor's other ins. Repeating a sole existing in is a no-op; the legacy proposal is the most popular match, ties by most recently added in. A settled tiebreak winner takes precedence. No UI navigation changes agreement.
 - `agree{generation,expectedRosterVersion,expectedProposalVersion,candidateId,expectedOwnAgreementRevision,agreed:boolean}` explicitly agrees/withdraws for exactly that proposal/title. An unvoted late newcomer Agree implies Yep but NEVER exposure timing. Withdrawal retains Yep and measured timing. Changing a private Nope/undo invalidates the proposal, so it cannot be agreed after it is cleared.
 - A late join preserves the proposal and existing approvals, adds a required participant with no answers/approval, removes no quorum member, and cancels any pending finalization. Proposal survives pending unknown newcomer votes; it is cleared by any Nope, or undo of a Yep by anyone who had Yep when proposed (including a newcomer who later Yep/Agreed then undoes). Missing viewing context prevents finalization. Returning to voting, away and disconnect never withdraw agreement or change quorum.
-- When exactly one current match has everyone in, or a tiebreak settles, confirmed viewing screens allow the persisted checking state and fresh per-screen offer check/CAS. Join/withdraw/changed counts/Nope/undo fence a held check; another Propose preserves existing ins and may still decide the original title. No host finalize. Retry agreement requires both current checker and proposal versions.
+- When exactly one current match has everyone in, or a tiebreak settles, confirmed viewing screens allow the persisted checking state and fresh per-screen offer check/CAS. Join/withdraw/changed agreement candidate/Nope/undo fence a held check; unrelated ins do not restart it. An unavailable offer check removes everyone’s in on that title. No host finalize. Retry agreement requires both current checker and proposal versions.
 
 ## Quickest and duration
 
@@ -39,7 +39,7 @@ Shared fields (optional on the wire for compatibility):
 - `ins: { candidateId: string; count: number }[]`: every current match in match order, **including zero counts**.
 - `inVersion: number`: monotonic; increments on changed ins/counts, including roster/match reconciliation.
 - `tiebreak: { version: number; candidateIds: string[]; favorites: { candidateId: string; count: number }[];
-  seed: string; outcome: { candidateId: string; spun: boolean; among: string[] } | null } | null`.
+  seed?: string; outcome: { candidateId: string; spun: boolean; among: string[] } | null } | null`.
 
 Own fields (also optional without capability):
 - `ins: { candidateIds: string[]; revision: number }`.
@@ -48,18 +48,21 @@ Own fields (also optional without capability):
 Only active seats contribute. Joins/rejoins start with no ins/favorite; departures drop selections from counts.
 Exactly one everyone-in match starts the existing fresh offer check; multiple open a tiebreak, and none close it.
 An unchanged tied set keeps its version/seed/picks; a changed set gets a new monotonic version and random 16-hex
-seed, clearing picks. Roster changes also re-evaluate a pending outcome. Every active seat must pick before
+seed, clearing picks. Every new tiebreak advances the persisted inVersion, even after closing on a roster change. The seed is omitted until outcome is set. Roster changes also re-evaluate a pending outcome. Every active seat must pick before
 settlement: most picks wins, with ties in tiebreak order resolved by unsigned UTF-16 FNV-1a of
 `seed + ":" + among.join(",")`, modulo `among.length`.
 
 The existing `decision.proposalVersion: number` is retained. `proposalVersion` increments when counts change
-or an outcome changes, fencing the existing agreement/offer check. The legacy proposal projects the title with
-the most ins (positive counts only; ties by match order), including after a tiebreak. The decision may therefore
-name the tiebreak winner rather than the legacy aggregate's title. Pending late-join proposals remain available
-for old `agree`, which can supply the missing Yep. `propose(X)` adds X to the actor's ins without clearing any
-selections; `agree` toggles that proposal title, and `own.agreement` reflects the actor's in for that title.
+or an outcome changes. The offer-check fence depends on the agreement candidate and its real inputs, so
+unrelated ins do not retry unavailable checks. The legacy proposal projects the tiebreak winner, otherwise
+the most ins (positive counts only; ties by most recent in), otherwise a pending late-join proposal.
+The decision and legacy proposal always name the same title. Old `agree` can supply the missing Yep.
+`propose(X)` moves only the actor's ins to X; `agree` toggles that proposal title, and `own.agreement`
+reflects the actor's in for that title.
 
 Conflicts: `set_in` invalid phase/generation/match → `Pick a current match`; stale actor revision →
 `Your I'm in changed`; invalid/closed/completed tiebreak, generation, version or favorite → `The tiebreak changed`.
 A final decision remains historical across later roster changes. If its tied set no longer has everyone in,
 snapshots omit that obsolete tiebreak (`null`) and own favorite while retaining the final decision.
+
+Internal realtime calls also require `?matchesIn=1` for these fields. Both API/gateway deployment orders work; gateway first is preferred.

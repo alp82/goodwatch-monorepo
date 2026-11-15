@@ -6,6 +6,7 @@ import { proposalTransition, proposalSnapshot, reconcile, agreementCandidate } f
 import { initializeIns, setIn, tieHash } from './proposal-matches-in.ts'
 import { proposalCommandSchema } from './proposal-validation.ts'
 import { ProposalMemoryRepository, proposalFixtureCatalog } from './proposal-test-support.ts'
+import { ValkeyRoomRepository } from './proposal-valkey-repository.ts'
 import { encodeMatches, decodeMatches } from './proposal-matches-storage.ts'
 import { RelationalProposalRepository } from './proposal-relational-repository.ts'
 import { parseRow, tables, columns } from './proposal-storage-schema.ts'
@@ -87,7 +88,7 @@ test('favorite fences generation/version/membership, allows null and replacement
   assert.equal(room.tiebreak!.outcome, null); assert.deepEqual(proposalSnapshot(room, room.hostId).shared.tiebreak!.favorites.map(f => f.count), [0, 0])
   room = pick(pick(room, 0, ids[1]), 1, ids[1]); assert.deepEqual(room.tiebreak!.outcome, { candidateId: ids[1], spun: false, among: [ids[1]] })
   assert.equal(room.agreement.state, 'checking'); assert.equal(agreementCandidate(room)?.id, ids[1])
-  assert.equal(proposalSnapshot(room, room.hostId).shared.proposal?.candidateId, ids[0], 'legacy aggregate retains match-order tie break')
+  assert.equal(proposalSnapshot(room, room.hostId).shared.proposal?.candidateId, ids[1], 'legacy proposal follows the winner')
   assert.throws(() => pick(room, 0, null), /The tiebreak changed/)
   assert.throws(() => send(fixture(), 0, { type: 'pick_favorite', generation: 1, tiebreakVersion: 0, candidateId: null }), /The tiebreak changed/)
 })
@@ -109,7 +110,7 @@ test('leave excludes ins and favorite counts; join closes ties/checks and starts
   const old = structuredClone(room); room.participants[1].leftAt = null; room.participants[1].ins = [ids[0]]; room.rosterVersion++; reconcile(room, old)
   assert.deepEqual(room.participants[1].ins, [])
 })
-test('legacy propose/agree preserve multi-select and project highest counts, then match order; own/shared privacy', () => {
+test('legacy propose/agree preserve multi-select and project highest counts, then most recent in; own/shared privacy', () => {
   let room = mark(fixture(), 0, ids[1])
   room = send(room, 1, { type: 'propose', generation: 1, expectedRosterVersion: 1, expectedProposalVersion: room.proposalVersion, candidateId: ids[0] })
   assert.deepEqual(room.participants[0].ins, [ids[1]]); assert.equal(room.proposal!.candidateId, ids[0])
@@ -208,7 +209,7 @@ test('service commits favorite outcome and fresh offers before the final decisio
   await command(a, { type: 'pick_favorite', generation: 1, tiebreakVersion: version, candidateId: ids[1] })
   const result = await command(b, { type: 'pick_favorite', generation: 1, tiebreakVersion: version, candidateId: ids[1] })
   assert.equal(result.snapshot.shared.phase, 'decided')
-  assert.equal(result.snapshot.shared.proposal!.candidateId, ids[0])
+  assert.equal(result.snapshot.shared.proposal!.candidateId, ids[1])
   assert.equal(result.snapshot.shared.decision!.candidateId, ids[1]); assert.deepEqual(checked, [ids[1]])
   assert.equal(result.snapshot.shared.decision!.proposalVersion, result.snapshot.shared.proposalVersion)
 })
@@ -266,4 +267,136 @@ test('set_in continuing shows requires every active participant to have linked, 
     assert.doesNotThrow(() => command(invalid))
   }
   assert.deepEqual(command(room).participants[0].ins, [ids[0]])
+})
+
+const propose = (room: ProposalRoom, who: number, candidateId: string) => send(room, who, {
+  type: 'propose', generation: room.generation, expectedRosterVersion: room.rosterVersion,
+  expectedProposalVersion: room.proposalVersion, candidateId,
+})
+
+test('legacy re-propose refreshes an existing in and moves the projected proposal', () => {
+  let room = propose(fixture(), 0, ids[1])
+  room = propose(room, 1, ids[0])
+  assert.equal(room.proposal!.candidateId, ids[0])
+  const before = structuredClone(room), actor = before.participants[0]
+  room = propose(room, 0, ids[1])
+  assert.equal(room.proposal!.candidateId, ids[1])
+  assert.deepEqual(room.participants.map(p => p.ins), [[ids[1]], [ids[0]]])
+  assert.equal(room.inVersion, before.inVersion! + 1)
+  assert.equal(room.participants[0].inOrder![ids[1]], room.inVersion)
+  assert.equal(room.proposalVersion, before.proposalVersion + 1)
+  assert.equal(room.participants[0].inRevision, actor.inRevision! + 1)
+  assert.equal(room.participants[0].agreementRevision, actor.agreementRevision + 1)
+  assert.equal(room.participants[0].insAgreementRevision, room.participants[0].agreementRevision)
+  assert.throws(() => send(room, 0, { type: 'set_in', generation: room.generation, candidateId: ids[1],
+    in: false, expectedOwnInRevision: actor.inRevision! }), /Your I'm in changed/)
+  assert.throws(() => send(room, 0, { type: 'agree', generation: room.generation, candidateId: ids[1],
+    expectedRosterVersion: room.rosterVersion, expectedProposalVersion: room.proposalVersion,
+    agreed: false, expectedOwnAgreementRevision: actor.agreementRevision }), /Your agreement changed/)
+})
+
+test('legacy propose moves only the actor and cannot trap legacy clients in a hidden tie', () => {
+  let room = tied()
+  room = propose(room, 0, ids[2])
+  assert.deepEqual(room.participants[0].ins, [ids[2]])
+  assert.deepEqual(room.participants[1].ins, ids.slice(0, 2))
+  assert.equal(room.tiebreak, null)
+  assert.equal(room.proposal!.candidateId, ids[2])
+  room = propose(room, 1, ids[2])
+  assert.equal(agreementCandidate(room)?.id, ids[2])
+})
+
+test('equal counts project the most recently added in, preserved through storage', () => {
+  let room = mark(fixture(), 0, ids[2])
+  room = mark(room, 1, ids[0])
+  assert.equal(room.proposal!.candidateId, ids[0])
+  const loaded = structuredClone(room)
+  for (const p of loaded.participants) delete p.inOrder
+  decodeMatches(loaded, encodeMatches(room))
+  reconcile(loaded, structuredClone(loaded))
+  assert.equal(loaded.proposal!.candidateId, ids[0])
+  room = mark(room, 0, ids[1])
+  assert.equal(room.proposal!.candidateId, ids[1])
+  room = mark(room, 1, ids[2])
+  assert.equal(room.proposal!.candidateId, ids[2], 'counts take precedence over recency')
+})
+
+test('old API writes invalidate stale ins in whole-room JSON and relational extension records', () => {
+  const original = mark(mark(fixture(), 0, ids[0]), 1, ids[1])
+  const record = encodeMatches(original)
+  for (const relational of [false, true]) {
+    const room = structuredClone(original)
+    room.proposalVersion++
+    room.proposal = { candidateId: ids[2], version: room.proposalVersion, previousCandidateId: ids[0],
+      proposerId: 'person_1', baseParticipantIds: room.participants.map(p => p.id) }
+    for (const p of room.participants) { p.approvedProposalVersion = null; p.agreementRevision++ }
+    room.participants[1].approvedProposalVersion = room.proposalVersion
+    if (relational) decodeMatches(room, record)
+    else {
+      const repo = new ValkeyRoomRepository({} as never, {} as never, 'valkey-overlap-secret-at-least-thirty-two',
+        { accounts: {} as never, deletions: {} as never, retentionDays: 30 })
+      Object.assign(room, repo.decode(room.id, repo.encode(room)))
+    }
+    assert.deepEqual(room.participants.map(p => p.ins), [[], [ids[2]]])
+    assert.ok(room.participants.every(p => p.insAgreementRevision === p.agreementRevision))
+    assert.equal(room.tiebreak, null)
+  }
+})
+
+test('roster-only close and reopen never reuse a tiebreak version or accept an old favorite', () => {
+  let room = fixture(3)
+  for (const who of [0, 1]) for (const id of ids.slice(0, 2)) room = mark(room, who, id)
+  room = send(room, 2, { type: 'leave' })
+  const version = room.tiebreak!.version
+  room = pick(room, 0, ids[0])
+  const previous = structuredClone(room)
+  room.participants[2].leftAt = null; room.rosterVersion++; reconcile(room, previous)
+  assert.equal(room.tiebreak, null)
+  room = send(room, 2, { type: 'leave' })
+  assert.ok(room.tiebreak!.version > version)
+  assert.throws(() => send(room, 0, { type: 'pick_favorite', generation: 1, tiebreakVersion: version, candidateId: ids[0] }), /The tiebreak changed/)
+})
+
+test('unrelated in changes preserve a failed offer check but real candidate changes restart it', () => {
+  let room = mark(mark(fixture(), 0, ids[0]), 1, ids[0])
+  room.agreement.state = 'unavailable'; room.agreement.error = { code: 'no_intersection' }
+  const failed = structuredClone(room.agreement)
+  room = mark(room, 0, ids[1])
+  assert.deepEqual(room.agreement, failed)
+  room = mark(room, 1, ids[1])
+  assert.equal(room.agreement.state, 'none')
+})
+
+test('public tiebreak seed is absent until the outcome exists', () => {
+  let room = tied()
+  assert.equal('seed' in proposalSnapshot(room, room.hostId).shared.tiebreak!, false)
+  room = pick(pick(room, 0, ids[0]), 1, ids[1])
+  assert.equal(proposalSnapshot(room, room.hostId).shared.tiebreak!.seed, room.tiebreak!.seed)
+})
+
+test('restart advances a legacy in revision from its agreement revision', () => {
+  const room = fixture()
+  for (const p of room.participants) { delete p.inRevision; p.agreementRevision = 19 }
+  const reset = send(room, 0, { type: 'restart', expectedRevision: room.revision, expectedGeneration: room.generation })
+  assert.ok(reset.participants.every(p => p.inRevision! >= 20))
+})
+
+test('matches migration and schema store the extension without indexing or columnstore', async () => {
+  const { readFile } = await import('node:fs/promises')
+  for (const file of ['schema.sql', 'migrations/20261115-matches-in.sql']) {
+    const sql = await readFile(new URL(file, import.meta.url), 'utf8')
+    assert.match(sql, /"?tiebreak_record"? TEXT INDEX OFF STORAGE WITH \(columnstore = false\)/)
+  }
+})
+
+test('agreement inputs include reaching unanimity while viewing context is missing', () => {
+  const base = fixture()
+  base.screens[0].confirmed = false
+  const room = mark(mark(base, 0, ids[0]), 1, ids[0])
+  assert.equal(room.agreement.state, 'unavailable')
+  assert.equal(room.agreement.error?.code, 'needs_context')
+  const previous = structuredClone(room), ready = structuredClone(room)
+  ready.screens[0].confirmed = true; ready.contextVersion++
+  reconcile(ready, previous)
+  assert.equal(ready.agreement.state, 'checking')
 })

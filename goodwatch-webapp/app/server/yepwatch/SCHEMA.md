@@ -126,7 +126,7 @@ private answers and must remain under the same access restrictions as room inter
 ### Matches I'm in (2026-11-15)
 
 `yepwatch_room.in_version BIGINT` defaults to zero when absent/null. `tiebreak_record TEXT` stores a validated
-JSON extension: `{ tiebreak, participants: [{ id, ins, inRevision, favorite }] }`. `tiebreak` holds version,
+JSON extension: `{ tiebreak, participants: [{ id, ins, inRevision, insAgreementRevision, inOrder, favorite }] }`. `tiebreak` holds version,
 candidateIds, seed and outcome; favorite counts derive from active participants on projection. Missing/null
 records upgrade existing proposal approvals to ins lazily, preserving installed clients' selections.
 
@@ -141,9 +141,22 @@ Apply `migrations/20261115-matches-in.sql` explicitly after a snapshot, before d
 
 ```sql
 ALTER TABLE doc.yepwatch_room ADD COLUMN in_version BIGINT;
-ALTER TABLE doc.yepwatch_room ADD COLUMN tiebreak_record TEXT;
+ALTER TABLE doc.yepwatch_room ADD COLUMN tiebreak_record TEXT INDEX OFF STORAGE WITH (columnstore = false);
 ```
 
 CrateDB 6.4.6 rejects `ADD COLUMN IF NOT EXISTS`. Replaying an already applied statement reports
 "column already exists" and can be skipped. No startup DDL is added. Key read-after-write paths retain their
 OR-of-key-equalities reads (never `id = ANY(?)`).
+
+Ins carry the participant's agreement revision in `insAgreementRevision`; a mismatch on load discards the
+extension's ins/favorite and upgrades the current legacy approval instead. Account merge updates the stamp
+when it advances agreementRevision. `inOrder` persists the inVersion at each addition for legacy projection
+ties (most ins, then most recent in); a settled tiebreak winner takes precedence. Restart advances an absent
+inRevision from agreementRevision. Unavailable checks remove all ins on the checked title. Unrelated ins
+do not restart the offer check.
+
+Every new tiebreak advances persisted inVersion, which never resets when it closes. The seed stays private
+until outcome is set. Internal realtime responses omit ins/inVersion/tiebreak/favorite unless the gateway
+sends `?matchesIn=1` on attach/view/views; the new gateway always sends it. Either API/gateway deployment
+order works after the migration; **gateway first is preferred**. Installed gateways continue receiving their
+strict legacy response shape when the API deploys first.

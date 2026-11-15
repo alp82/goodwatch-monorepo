@@ -121,7 +121,7 @@ async function fixture() {
 	return { repo, service, a, b, id, send, vote, propose, agree }
 }
 
-test("Legacy proposals preserve ins, project the most popular match and explicit Agree decides", async () => {
+test("Legacy proposals project the latest equal-count title and explicit Agree decides", async () => {
 	const f = await fixture()
 	const cards = (await f.service.read(f.id, credential(f.a))).shared.candidates
 	for (const c of cards) {
@@ -133,13 +133,13 @@ test("Legacy proposals preserve ins, project the most popular match and explicit
 	assert.equal(s.shared.proposal?.agreeCount, 1)
 	assert.equal(s.own.agreement.isProposer, true)
 	s = (await f.propose(f.b, cards[1].id)).snapshot
-	assert.equal(s.shared.proposal?.candidateId, cards[0].id)
+	assert.equal(s.shared.proposal?.candidateId, cards[1].id)
 	assert.equal(s.shared.proposal?.agreeCount, 1)
 	assert.equal(
 		(await f.service.read(f.id, credential(f.a))).own.agreement.agreed,
-		true
+		false
 	)
-	s = (await f.agree(f.b)).snapshot
+	s = (await f.agree(f.a)).snapshot
 	assert.equal(s.shared.phase, "decided")
 	assert.equal(s.shared.decision?.proposalVersion, s.shared.proposalVersion)
 	const wire = JSON.stringify(s.shared)
@@ -248,8 +248,8 @@ for (const race of ["join", "undo", "replace", "withdraw"] as const)
 		release()
 		await check
 		const s = await f.service.read(f.id, credential(f.a))
-		assert.equal(s.shared.phase, race === "replace" ? "decided" : "choosing")
-		if (race !== "replace") assert.equal(s.shared.decision, null)
+		assert.equal(s.shared.phase, "choosing")
+		assert.equal(s.shared.decision, null)
 	})
 test("Lost command acknowledgement replays exactly once and browsing does not withdraw", async () => {
 	const f = await fixture()
@@ -309,7 +309,7 @@ test("HTTP contract3 guest admission/setup uses separate paths and candidate dur
 	assert.equal(a.credential.token, "")
 })
 
-test("Unknown fresh offers retain explicit proposal; exact versioned retry can finish later", async () => {
+test("Unavailable offers remove everyone from the title; legacy clients can choose another title", async () => {
 	const f = await fixture()
 	const id = (await f.service.read(f.id, credential(f.a))).shared.candidates[0]
 		.id
@@ -326,19 +326,17 @@ test("Unknown fresh offers retain explicit proposal; exact versioned retry can f
 		)
 	}
 	let s = (await f.agree(f.b)).snapshot
+	f.service.catalog.recheck = base
 	assert.equal(s.shared.phase, "choosing")
-	assert.equal(s.shared.proposal?.agreeCount, 2)
+	assert.equal(s.shared.proposal, null)
+	assert.ok(f.repo.rows.get(f.id)!.room.participants.every(p => !p.ins!.includes(id)))
 	assert.equal(s.shared.agreement.state, "unavailable")
 	assert.equal(s.shared.decision, null)
-	f.service.catalog.recheck = base
-	s = (
-		await f.send(f.a, {
-			type: "retry_agreement",
-			generation: s.shared.generation,
-			expectedAgreementVersion: s.shared.agreement.version,
-			expectedProposalVersion: s.shared.proposalVersion,
-		})
-	).snapshot
+	const other = s.shared.candidates.find(c => c.id !== id)!.id
+	await f.vote(f.a, other, "watch")
+	await f.vote(f.b, other, "watch")
+	await f.propose(f.a, other)
+	s = (await f.agree(f.b)).snapshot
 	assert.equal(s.shared.phase, "decided")
 })
 test("Active exposure bounds and missing data remain honest; no direction or individual timing in shared state", async () => {

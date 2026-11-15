@@ -76,21 +76,26 @@ export function averageYepMs(room: ProposalRoom, id: string): number | null {
 		return null
 	return times.reduce((sum, v) => sum + v.activeExposureMs!, 0) / times.length
 }
+function agreementSelection(room: ProposalRoom) {
+	const required = activeRoom(room).participants.length
+	if (!required) return null
+	const everyone = inCounts(room, matches(room).map(c => c.id)).filter(c => c.count === required)
+	const id = room.tiebreak ? room.tiebreak.outcome?.candidateId : everyone.length === 1 ? everyone[0].candidateId : null
+	return id && everyone.some(c => c.candidateId === id) ? id : null
+}
 function signature(room: ProposalRoom) {
 	room = activeRoom(room)
+	const candidateId = agreementSelection(room)
 	return JSON.stringify([
 		room.generation,
 		room.rosterVersion,
 		room.contextVersion,
-		room.inVersion ?? 0,
-		room.tiebreak ?? null,
-		room.proposal?.version ?? null,
-		room.proposal?.candidateId ?? null,
+		candidateId,
+		agreementCandidate(room)?.id ?? null,
 		room.participants.map((p) => [
 			p.id,
 			p.screenId,
-			p.approvedProposalVersion,
-			p.votes[room.proposal?.candidateId ?? ""]?.value ?? null
+			p.votes[candidateId ?? ""]?.value ?? null
 		])
 	])
 }
@@ -191,7 +196,8 @@ export function proposalSnapshot(
 		contractVersion: 3,
 		ins,
 		inVersion: room.inVersion ?? 0,
-		tiebreak: tie ? { ...structuredClone(tie), favorites: favoriteCounts(room) } : null,
+		tiebreak: tie ? { version: tie.version, candidateIds: [...tie.candidateIds],
+			...(tie.outcome ? { seed: tie.seed } : {}), outcome: structuredClone(tie.outcome), favorites: favoriteCounts(room) } : null,
 		// A pending idea's stored marker carries its search reservation: phones see only the marker itself.
 		ideas: (room.ideas ?? []).map(({ rankedKeys: _, interpretedAt: __, ...idea }) =>
 			ideaPending(idea) ? { ...structuredClone(idea), attributes: [{ ...PENDING_IDEA_ATTRIBUTE }] } : structuredClone(idea)
@@ -456,6 +462,14 @@ export function proposalTransition(
 			requireRoom(room.rosterVersion === c.expectedRosterVersion, 'conflict', 'Room roster changed')
 			if (c.type === 'propose') {
 				requireRoom(matches(room).some(m => m.id === c.candidateId), 'conflict', 'Pick a current match')
+				for (const id of [...p.ins!]) if (id !== c.candidateId) setIn(room, p, id, false)
+				if (p.ins!.includes(c.candidateId)) {
+					p.inRevision!++
+					p.agreementRevision++
+					room.inVersion!++
+					p.insAgreementRevision = p.agreementRevision
+					p.inOrder![c.candidateId] = room.inVersion!
+				}
 				setIn(room, p, c.candidateId, true)
 			} else {
 				requireRoom(room.proposal?.candidateId === c.candidateId, 'conflict', 'Proposal title changed')
@@ -517,7 +531,7 @@ export function proposalTransition(
 			room.proposal = null
 			clearApprovals(room)
 			room.inVersion = (room.inVersion ?? 0) + 1; room.tiebreak = null
-			for (const p of room.participants) { p.ins = []; p.inRevision = (p.inRevision ?? 0) + 1; p.favorite = null }
+			for (const p of room.participants) { p.ins = []; p.inRevision = (p.inRevision ?? p.agreementRevision) + 1; p.insAgreementRevision = p.agreementRevision; p.inOrder = {}; p.favorite = null }
 		}
 		if (c.type === "vote") {
 			const valid =

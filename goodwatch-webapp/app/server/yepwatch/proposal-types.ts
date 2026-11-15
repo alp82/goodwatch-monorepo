@@ -42,6 +42,8 @@ export interface AccountRoomsStore {
 export interface ProposalParticipant extends ContinuousParticipant {
 	ins?: string[]
 	inRevision?: number
+	insAgreementRevision?: number
+	inOrder?: Record<string, number>
 	favorite?: { tiebreakVersion: number; candidateId: string | null } | null
   /** Server-only device profile identity; never part of a room projection. */
   profileId?: string | null
@@ -68,7 +70,7 @@ export interface ProposalParticipant extends ContinuousParticipant {
 }
 export interface ProposalRoom extends ContinuousRoom {
 	inVersion?: number
-	tiebreak?: Omit<import("../../../packages/yepwatch-contracts/proposal.ts").MatchesTiebreak, "favorites"> | null
+	tiebreak?: Omit<import("../../../packages/yepwatch-contracts/proposal.ts").MatchesTiebreak, "favorites" | "seed"> & { seed: string } | null
 	startedAt?: number | null
 	firstMatchAt?: number | null
 	outcomeEmittedAt?: number | null

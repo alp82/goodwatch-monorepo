@@ -491,3 +491,29 @@ test("a lease whose sign-in was still active when its refresh began is refused o
 		assert.equal(seat.memberUserId, null, "the race happened: the seat is a guest now");
 	}
 });
+
+test("account merge preserves ins and updates their agreement stamp", async () => {
+	const repo = new ProposalMemoryRepository(),
+		service = new ProposalService(repo, proposalFixtureCatalog, secret);
+	const phone = account("phone");
+	const owner = await service.create(request(), phone);
+	await choosing(service, owner, phone);
+	const id = owner.credential.roomId;
+	const guest = await service.join(id, {
+		...request("Guest"),
+		inviteCode: owner.invite.code,
+	});
+	const room = repo.rows.get(id)!.room;
+	const p = room.participants.find(p => p.id === owner.credential.participantId)!;
+	const candidateId = room.candidates[0].id;
+	p.votes[candidateId] = { value: "watch", revision: 1 };
+	p.ins = [candidateId];
+	p.inRevision = 1;
+	p.insAgreementRevision = p.agreementRevision;
+	const before = p.agreementRevision;
+	await service.linkAccount(id, credential(guest), account("pc"));
+	const merged = repo.rows.get(id)!.room.participants[0];
+	assert.ok(merged.agreementRevision > before);
+	assert.equal(merged.insAgreementRevision, merged.agreementRevision);
+	assert.deepEqual(merged.ins, [candidateId]);
+});

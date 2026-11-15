@@ -99,7 +99,8 @@ export interface MatchesTiebreak {
 	version: number
 	candidateIds: string[]
 	favorites: { candidateId: string; count: number }[]
-	seed: string
+	/** Revealed only with the outcome. */
+	seed?: string
 	outcome: { candidateId: string; spun: boolean; among: string[] } | null
 }
 export interface SharedRoomSnapshot {

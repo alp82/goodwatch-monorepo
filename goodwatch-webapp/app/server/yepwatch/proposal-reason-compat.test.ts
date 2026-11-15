@@ -46,3 +46,21 @@ test('HTTP read responses omit reasons by default and include them only with can
   assert.equal(supported.own.favorite, null)
   assert.equal(parseFrame(JSON.stringify({ type: 'room.snapshot', snapshot: supported.shared })), null)
 })
+
+test('internal single and batched views require matchesIn=1 to emit matches fields', async () => {
+  const repo = new ProposalMemoryRepository(), service = new ProposalService(repo, proposalFixtureCatalog, 'internal-compat-secret-at-least-thirty-two')
+  const admission = await service.create({ contractVersion: 3, commandId: 'new', admissionSecret: 'a'.repeat(43), nickname: 'Host' })
+  const id = admission.credential.roomId
+  const ticket = await service.ticket(id, admission.credential)
+  const attached = await service.attach(id, ticket.ticket)
+  const handler = createProposalHandler(service, { serviceSecret: 's'.repeat(32), allowedOrigins: [] })
+  for (const path of [paths.realtimeView, paths.realtimeViews]) for (const optIn of [false, true]) {
+    const response = await handler(new Request(`https://api.example${path}${optIn ? '?matchesIn=1' : ''}`, {
+      method: 'POST', headers: { authorization: `Bearer ${'s'.repeat(32)}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ roomId: id, ...(path === paths.realtimeView ? { lease: attached.lease } : { leases: [attached.lease] }) }),
+    }))
+    assert.equal(response.status, 200)
+    const value = await response.json()
+    for (const key of ['ins', 'inVersion', 'tiebreak']) assert.equal(key in value.snapshot, optIn)
+  }
+})
