@@ -6,7 +6,7 @@ import { createRequire } from 'node:module';
 import { APP_DIR, NATIVE_DIR, sleep } from './env.mjs';
 import { gfxFrames, gfxReset } from './gates.mjs';
 import { startTrace, tracing } from './trace.mjs';
-import { createRoom, fillAndSubmit, freshStart, inviteCode, inviteUrl, joinFromJoinScreen, measure, pickNetflix, posterTitle, roiOf, tapAction, toStart } from './journey.mjs';
+import { createRoom, fillAndSubmit, freshStart, inviteCode, inviteUrl, joinFromJoinScreen, measure, pickNetflix, posterTitle, roiOf, setUpDevice, tapAction, toStart } from './journey.mjs';
 
 const require = createRequire(path.join(APP_DIR, 'package.json'));
 // The web harness's page recorder: its visible() predicate (viewport, opacity and visibility through every
@@ -30,10 +30,18 @@ export class WebPeer {
   async createRoom(mood = 'something funny') {
     const p = this.page;
     await p.goto(this.origin);
+    // A first visit sets up first: the name, then Skip for now (no Taste cards).
+    await this.button(/^(Start with you|New couch)$/).waitFor();
+    if (await this.button('Start with you').isVisible()) {
+      await this.button('Start with you').click();
+      await p.getByLabel('Your name').filter({ visible: true }).fill(this.name);
+      await this.button('Continue').click();
+      await this.button('Skip for now').click();
+    }
     await this.button('New couch').click();
-    await p.getByLabel('Mood').fill(mood); await p.getByLabel('Mood').press('Enter');
     await p.getByTestId('room-setup').waitFor();
-    await p.getByLabel('Your name').fill(this.name); await p.getByLabel('Your name').press('Enter');
+    await p.getByLabel('Describe what you want to watch').filter({ visible: true }).fill(mood);
+    await this.button('Add').click();
     await this.button(/^Streaming services/).click();
     await p.getByRole('checkbox', { name: 'Netflix' }).click();
     await this.button('Done').click();
@@ -61,8 +69,9 @@ export class WebPeer {
   async waitVoting() { await this.page.getByTestId('voting').waitFor({ timeout: 15000 }); }
   async yep() { await this.button('Yep').click(); }
   async openMatches() { await this.button(/^\d+ match(es)?$/).click(); await this.page.getByTestId('matches').waitFor(); }
-  async propose() { await this.button('Propose this').first().click(); }
-  async agree() { await this.button('Agree').click(); }
+  /** I'm in on the first match (Matches rows are I'm in toggles). */
+  async propose() { await this.page.getByRole('checkbox', { name: /^I’m in for / }).first().click(); }
+  async agree() { await this.button('I’m in').click(); }
   async waitTonight() { await this.page.getByTestId('tonight').first().waitFor({ timeout: 20000 }); }
   /** The current card's title from its accessible label (as e2e/web/flows.ts cardTitle). */
   card() {
@@ -130,7 +139,7 @@ export async function mixedHostAndroid({ phone: A, stack, runDir, timing, journe
     // The browser sees the match: measured on the phone side only (the browser has its own gates).
     await A.tapXY(yep.cx, yep.cy);
     await web.page.getByRole('button', { name: /^\d+ match(es)?$/ }).waitFor({ timeout: 5000 });
-    await A.tap(/^\d+ match(es)?$/); await A.tap('Propose this');
+    await A.tap(/^\d+ match(es)?$/); await A.tap(/^I’m in for /);
     await web.agree().catch(async () => { await web.openMatches(); await web.agree(); });
     await A.waitFor('tonight-poster', { timeout: 10000 }); await web.waitTonight();
     if (web.errors.length) journeyFail('mixed web errors', web.errors.slice(0, 5).join(' | '));
@@ -152,7 +161,7 @@ export async function mixedHostWeb({ phone: Bp, stack, runDir, timing, journeyFa
     await Bp.tap('Yep'); await sleep(400); await web.yep();
     await Bp.waitFor(/^\d+ match(es)?$/, { timeout: 5000 });
     await web.openMatches(); await web.propose();
-    await Bp.tap('Agree', { timeout: 8000 });
+    await Bp.tap('I’m in', { timeout: 8000 });
     await Bp.waitFor('tonight-poster', { timeout: 10000 }); await web.waitTonight();
     if (web.errors.length) journeyFail('mixed web errors', web.errors.slice(0, 5).join(' | '));
   } finally { await web.close(); }
@@ -173,29 +182,25 @@ export async function mixedGateRoom({ phone: A, stack, runDir, B, timing, audit,
   let web = null;
   try {
     await toStart(A);
+    await setUpDevice(A, 'Ann');
     const tile = await A.find('New couch', { timeout: 15000 });
     const traced = tracing('new-room') ? await startTrace(A, 'new-room', path.join(runDir, 'video')) : null;
-    let nr;
-    try { nr = await measure({ actor: A, phones: [A], file: vid('new-room'), action: tapAction(A, tile), targets: { A: roiOf(A, 'Mood') } }); }
+    let cr;
+    try { cr = await measure({ actor: A, phones: [A], file: vid('create-room'), action: tapAction(A, tile), targets: { A: roiOf(A, 'share-row', 10000) } }); }
     finally { if (traced) await traced(); }
-    timing('New room -> Mood page', B.newRoomMs, nr.A);
-    await audit(A, 'mood page');
-    await A.tap('cheer me up');
-    const create = await A.find('Create couch');
-    const cr = await measure({ actor: A, phones: [A], file: vid('create-room'), action: tapAction(A, create), targets: { A: roiOf(A, 'share-row', 10000) } });
-    timing('Create room -> room page', B.createRoomMs, cr.A);
+    timing('New couch -> couch setup', B.createRoomMs, cr.A);
     await notStuck(A, 'room page after create');
     await audit(A, 'room page (host, before start)');
+    await fillAndSubmit(A, 'Describe what you want to watch', 'cheer me up');
     // Services first: once a friend with services is in, the row shows theirs ("Netflix, change").
     await A.tap(/^Streaming services/);
     await A.waitFor('services-sheet');
     await audit(A, 'services sheet');
     await pickNetflix(A);
-    // The friend joins through the share row's link while the host types a name.
+    // The friend joins through the Invite sheet's link (the host's name came with setup).
     const code = await inviteCode(A);
     const joining = opening.then(async (w) => { web = w; await w.join(`${stack.app}/r/${code}`); });
     joining.catch(() => {});
-    await fillAndSubmit(A, 'Your name', 'Ann');
     await joining;
     await A.waitFor('2 people, people', { timeout: 5000 });
 
@@ -261,14 +266,13 @@ export async function mixedJourneyRoom({ phone: A, stack, audit, notStuck, journ
   };
   try {
     await toStart(A);
+    if (await A.has('Start with you')) await audit(A, 'start page (first visit)');
+    await setUpDevice(A, 'Ann');
     const tile = await A.find('New couch', { timeout: 20000 });
-    await step(() => A.tapXY(tile.cx, tile.cy), 'Mood');
-    await audit(A, 'mood page');
-    await A.tap('cheer me up', { timeout: 10000 });
-    const create = await A.find('Create couch', { timeout: 10000 });
-    await step(() => A.tapXY(create.cx, create.cy), 'share-row', 20000);
+    await step(() => A.tapXY(tile.cx, tile.cy), 'share-row', 20000);
     await notStuck(A, 'room page after create');
     await audit(A, 'room page (host, before start)');
+    await fillAndSubmit(A, 'Describe what you want to watch', 'cheer me up');
     await A.tap(/^Streaming services/, { timeout: 10000 });
     await A.waitFor('services-sheet', { timeout: 10000 });
     await audit(A, 'services sheet');
@@ -276,7 +280,6 @@ export async function mixedJourneyRoom({ phone: A, stack, audit, notStuck, journ
     const code = await inviteCode(A);
     const joining = opening.then(async (w) => { web = w; await w.join(`${stack.app}/r/${code}`); });
     joining.catch(() => {});
-    await fillAndSubmit(A, 'Your name', 'Ann');
     await joining;
     await A.waitFor('2 people, people', { timeout: 15000 });
 

@@ -3,6 +3,6 @@ appId: com.yepwatch.app
 - launchApp:
     clearState: true
 - extendedWaitUntil:
-    visible: New room
+    visible: 'Start with you|New couch'
     timeout: 90000
 - takeScreenshot: 01-choose-together

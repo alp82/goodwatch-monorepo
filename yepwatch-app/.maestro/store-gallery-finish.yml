@@ -2,7 +2,7 @@ appId: com.yepwatch.app
 ---
 - tapOn:
     waitToSettleTimeoutMs: 1500
-    text: Propose this
+    text: 'I’m in for .*'
     index: 0
 - extendedWaitUntil:
     visible: Everyone agreed

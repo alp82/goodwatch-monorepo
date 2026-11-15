@@ -16,7 +16,7 @@ import { ensureApk, PACKAGE } from './lib/build.mjs';
 import { boot, install, reverse, shell, shutdown } from './lib/device.mjs';
 import { RUNS_DIR, log, mkdirp, sleep } from './lib/env.mjs';
 import { Logcat, a11yAudit, blockingWords, gfxFrames, gfxReset } from './lib/gates.mjs';
-import { createRoom, freshStart, toStart, fillAndSubmit, hostAction, inviteUrl, joinFromJoinScreen, measure, pickNetflix, posterTitle, roiOf, tapAction } from './lib/journey.mjs';
+import { START_RE, createRoom, freshStart, toStart, fillAndSubmit, hostAction, inviteCode, inviteUrl, joinFromJoinScreen, measure, pickNetflix, posterTitle, roiOf, setUpDevice, tapAction } from './lib/journey.mjs';
 import { Phone } from './lib/phone.mjs';
 import { startTrace, tracing } from './lib/trace.mjs';
 import { resolveStack, stackPorts } from './lib/stack.mjs';
@@ -126,13 +126,13 @@ async function main() {
     const traced = tracing('cold-start') ? await startTrace(A, 'cold-start', path.join(RUN, 'video'), 12000) : null;
     let first;
     try {
-      first = await measure({ actor: A, phones: [A], file: vid('cold-first'), targets: { A: roiOf(A, 'New couch', 20000) },
+      first = await measure({ actor: A, phones: [A], file: vid('cold-first'), targets: { A: roiOf(A, START_RE, 20000) },
         action: hostAction(() => { am = A.launch(); }), appWindowMs: () => am?.totalTime, allowIntermediate: 0, settleMs: 800 });
     } finally { if (traced) await traced(); }
     timing('cold start, first visit -> start page usable', B.native.coldStartUsableMs, first.A, { amStartTotalTime: am.totalTime, use: 'settled' });
     await audit(A, 'start page (first visit)');
     A.forceStop(); await sleep(500);
-    const again = await measure({ actor: A, phones: [A], file: vid('cold-again'), targets: { A: roiOf(A, 'New couch', 20000) },
+    const again = await measure({ actor: A, phones: [A], file: vid('cold-again'), targets: { A: roiOf(A, START_RE, 20000) },
       action: hostAction(() => { am = A.launch(); }), appWindowMs: () => am?.totalTime, allowIntermediate: 0, settleMs: 800 });
     timing('cold start, returning -> start page usable', B.native.coldStartUsableMs, again.A, { amStartTotalTime: am.totalTime, use: 'settled' });
     if (again.A?.ok) S.coldReturningMs = again.A.settledMs;
@@ -142,7 +142,7 @@ async function main() {
   await scenario('cold-start-journey', async () => {
     A.forceStop(); A.sh(`pm clear ${PACKAGE}`);
     const am = A.launch();
-    await A.find('New couch', { timeout: 30000 });
+    await A.find(START_RE, { timeout: 30000 });
     result.coldStart = { amStartTotalTime: am.totalTime };
     await audit(A, 'start page (first visit)');
     await notStuck(A, 'start page (first visit)');
@@ -158,18 +158,17 @@ async function main() {
     await mixedGateRoom({ phone: A, stack, runDir: RUN, B, timing, audit, notStuck, journeyFail, errors: result.gates.errors, frames: result.gates.frames });
   }, { modes: ['subset'] });
 
-  // ---- create room on A, with New room / Create room timings, a11y, back priority ----
+  // ---- setup, then New couch on A (straight to the couch setup), with its timing, a11y, back priority ----
   await scenario('create-room', async () => {
+    await toStart(A);
+    if (await A.has('Start with you')) await audit(A, 'start page (first visit)');
+    await setUpDevice(A, 'Ann');
     const tile = await A.find('New couch', { timeout: 15000 });
-    const nr = await measure({ actor: A, phones: [A], file: vid('new-room'), action: tapAction(A, tile), targets: { A: roiOf(A, 'Mood') } });
-    timing('New room -> Mood page', B.newRoomMs, nr.A);
-    await audit(A, 'mood page');
-    await A.tap('cheer me up');
-    const create = await A.find('Create couch');
-    const cr = await measure({ actor: A, phones: [A], file: vid('create-room'), action: tapAction(A, create), targets: { A: roiOf(A, 'share-row', 10000) } });
-    timing('Create room -> room page', B.createRoomMs, cr.A);
+    const cr = await measure({ actor: A, phones: [A], file: vid('create-room'), action: tapAction(A, tile), targets: { A: roiOf(A, 'share-row', 10000) } });
+    timing('New couch -> couch setup', B.createRoomMs, cr.A);
     await notStuck(A, 'room page after create');
     await audit(A, 'room page (host, before start)');
+    await fillAndSubmit(A, 'Describe what you want to watch', 'cheer me up');
     await A.tap(/^Streaming services/);
     await A.waitFor('services-sheet');
     await audit(A, 'services sheet');
@@ -178,14 +177,8 @@ async function main() {
     if (!(await A.has('room-setup'))) journeyFail('back priority', 'Back on the services sheet left the room page');
     await A.tap(/^Streaming services/);
     await pickNetflix(A);
-    // Android: typing a name then hiding the keyboard with Back must still save it.
-    await A.fill('Your name', 'Ann'); await sleep(150); A.back(); await sleep(1500);
-    const field = (await A.nodes()).find(n => n.desc === 'Your name' && /EditText/.test(n.cls));
-    if (field && field.text === 'Ann') {
-      journeyFail('host name lost on keyboard Back', 'Typed "Ann", hid the keyboard with Back: the name stays an uncommitted draft (friends see "?" and "Waiting for the host to start") until Enter/blur');
-      await A.tap('Your name'); A.key('KEYCODE_ENTER'); await sleep(400);
-    }
-    S.code = (await (await import('./lib/journey.mjs')).inviteCode(A));
+    // The name came with setup: the couch setup asks only a host without one.
+    S.code = await inviteCode(A);
   });
 
   // ---- B: invitation link with the app installed and backgrounded ----
@@ -285,22 +278,22 @@ async function main() {
     await A.tap(/^\d+ match(es)?$/);
     await A.waitFor('matches');
     await audit(A, 'matches');
-    // The end of the list: the last match's Propose this sits fully above the system navigation bar.
+    // The end of the list: the last match's I'm in row sits fully above the system navigation bar.
     await A.swipe(540, 1800, 540, 500, 250); await sleep(700);
     await audit(A, 'matches (end of the list)');
     const nodes = await A.nodes();
     const bar = nodes[0].bounds[3] - Math.round(24 * 420 / 160); // gesture navigation bar: 24 dp on the Pixel 8 AVD
-    const last = nodes.filter(n => n.desc === 'Propose this').at(-1);
-    if (!last) journeyFail('Propose this at the end of the list', 'no Propose this on screen after scrolling to the end', A);
-    else if (last.bounds[3] > bar) journeyFail('Propose this under the navigation bar', `the last Propose this ends at y=${last.bounds[3]} px; the navigation bar starts at ${bar}`, A);
+    const last = nodes.filter(n => n.desc.startsWith('I’m in for ')).at(-1);
+    if (!last) journeyFail('I’m in at the end of the list', 'no I’m in row on screen after scrolling to the end', A);
+    else if (last.bounds[3] > bar) journeyFail('I’m in under the navigation bar', `the last I’m in row ends at y=${last.bounds[3]} px; the navigation bar starts at ${bar}`, A);
     await A.swipe(540, 500, 540, 1800, 250); await sleep(700);
-    await A.tap('Propose this');
-    await Bp.waitFor('Agree', { timeout: 5000 });
-    await audit(Bp, 'proposal (friend)');
-    const agree = await Bp.find('Agree');
+    await A.tap(/^I’m in for /);
+    await Bp.waitFor('I’m in', { timeout: 5000 });
+    await audit(Bp, 'someone’s in (friend)');
+    const agree = await Bp.find('I’m in');
     const r = await measure({ actor: Bp, phones: [A, Bp], file: vid('agree'), action: tapAction(Bp, agree),
       targets: { A: roiOf(A, 'tonight-poster', 8000), B: roiOf(Bp, 'tonight-poster', 8000) } });
-    timing('Agree on B -> Tonight on A (peer)', B.voteToPeerMs, r.A, { informational: true });
+    timing('I’m in on B -> Tonight on A (peer)', B.voteToPeerMs, r.A, { informational: true });
     await audit(A, 'tonight (host)');
   });
 
@@ -380,7 +373,7 @@ async function main() {
     await audit(Bp, 'room sheet (friend)');
     await Bp.tap('Leave couch');
     if (await Bp.has('leave-confirm')) { await audit(Bp, 'leave confirm'); await Bp.tap({ desc: 'Leave couch', index: 1 }).catch(() => Bp.tap('Leave')); }
-    await Bp.waitFor('New couch', { timeout: 8000 });
+    await Bp.waitFor(START_RE, { timeout: 8000 });
     // A archives, then restores from History.
     await A.tap(/switch couch$/); await A.tap(/Couch page$/); await A.waitFor('room-sheet');
     await A.tap('Archive couch');

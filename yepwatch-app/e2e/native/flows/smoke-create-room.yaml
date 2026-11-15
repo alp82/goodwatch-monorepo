@@ -1,17 +1,28 @@
-# Fresh install -> New room -> mood -> room page with Netflix and a name. Ends on the host's room page.
+# Fresh install -> setup (name, Skip for now) -> New couch -> couch setup with an idea and Netflix. Ends on the
+# host's couch setup.
 appId: ${APP_ID || 'dev.yepwatch.e2e'}
-name: Create a room
+name: Create a couch
 tags: [gate, single]
 ---
 - launchApp: { clearState: true }
-- extendedWaitUntil: { visible: "New couch", timeout: 20000 }
-- tapOn: { text: "New couch", waitToSettleTimeoutMs: 300 }
-- tapOn: { text: "cheer me up", waitToSettleTimeoutMs: 300 }
-- tapOn: { text: "Create room", waitToSettleTimeoutMs: 300 }
-- extendedWaitUntil: { visible: { id: "share-row" }, timeout: 10000 }
-- runFlow: _pick-netflix-from-room.yaml
+- extendedWaitUntil: { visible: "Start with you", timeout: 20000 }
+- tapOn: { text: "Start with you", waitToSettleTimeoutMs: 300 }
+- extendedWaitUntil: { visible: { id: "first-run" }, timeout: 8000 }
 - tapOn: { text: "Your name", waitToSettleTimeoutMs: 300 }
 - inputText: ${NAME || 'Ann'}
 - pressKey: Enter
+- extendedWaitUntil: { visible: "Skip for now", timeout: 15000 }
+- tapOn: { text: "Skip for now", waitToSettleTimeoutMs: 300 }
+- extendedWaitUntil: { visible: "New couch", timeout: 10000 }
+- tapOn: { text: "New couch", waitToSettleTimeoutMs: 300 }
+- extendedWaitUntil: { visible: { id: "share-row" }, timeout: 10000 }
+- tapOn: { text: "Describe what you want to watch", waitToSettleTimeoutMs: 300 }
+- inputText: cheer me up
+- pressKey: Enter
+- extendedWaitUntil: { visible: "cheer me up\\. Your idea.*", timeout: 8000 }
+- runFlow: _pick-netflix-from-room.yaml
 - assertVisible: "Start( with [0-9]+| on my own)"
-- assertVisible: { text: ".*/r/[A-Z0-9]+" }
+- tapOn: { text: "Invite friends, show QR code and link", waitToSettleTimeoutMs: 300 }
+- extendedWaitUntil: { visible: { id: "invite-sheet" }, timeout: 5000 }
+- assertVisible: { text: "QR code for .*/r/[A-Z0-9]+" }
+- back

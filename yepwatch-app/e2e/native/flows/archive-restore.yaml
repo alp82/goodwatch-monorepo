@@ -5,7 +5,7 @@ tags: [full, host]
 - tapOn: { text: ".*, switch couch", waitToSettleTimeoutMs: 300 }
 - tapOn: { text: ".*, Couch page", waitToSettleTimeoutMs: 300 }
 - extendedWaitUntil: { visible: { id: "room-sheet" }, timeout: 5000 }
-- tapOn: { text: "Archive room", waitToSettleTimeoutMs: 300 }
+- tapOn: { text: "Archive couch", waitToSettleTimeoutMs: 300 }
 - extendedWaitUntil: { visible: "New couch", timeout: 8000 }
 - tapOn: { text: "Decided, .*|History.*", waitToSettleTimeoutMs: 300 }
 - extendedWaitUntil: { visible: { id: "history-panel" }, timeout: 5000 }

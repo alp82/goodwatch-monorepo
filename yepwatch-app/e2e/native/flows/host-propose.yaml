@@ -1,10 +1,11 @@
-# After a match: Matches -> Propose this. Ends on "Your proposal".
+# After a match: Matches -> I'm in on the first match (the room's proposal). Ends on Matches with it checked.
 appId: ${APP_ID || 'dev.yepwatch.e2e'}
-name: Propose the match
+name: I'm in on the match
 tags: [gate, host]
 ---
 - extendedWaitUntil: { visible: "\\d+ match(es)?", timeout: 10000 }
 - tapOn: { text: "\\d+ match(es)?", waitToSettleTimeoutMs: 300 }
 - extendedWaitUntil: { visible: { id: "matches" }, timeout: 5000 }
-- tapOn: { text: "Propose this", waitToSettleTimeoutMs: 300 }
-- assertVisible: "YOUR PROPOSAL"
+- extendedWaitUntil: { visible: "What are we watching now\\?", timeout: 5000 }
+- tapOn: { text: "I’m in for .*", index: 0, waitToSettleTimeoutMs: 300 }
+- assertVisible: { text: "I’m in for .*", checked: true }

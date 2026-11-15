@@ -4,5 +4,5 @@ appId: com.yepwatch.app
     text: '[1-9][0-9]* matches?'
     waitToSettleTimeoutMs: 1500
 - extendedWaitUntil:
-    visible: Propose this
+    visible: 'I’m in for .*'
     timeout: 30000
