@@ -87,7 +87,7 @@ test.describe('create and set up a room', () => {
     });
     await host.open('/');
     await setUpStart(host);
-    const stop = await recordPage(host, 'new-couch', /Couldn|Try again|offline/i);
+    const stop = await recordPage(host, 'new-couch-wait,new-couch', /Couldn|Try again|offline/i);
     await host.tap(host.button('New couch'), { expect: {} });
     // Q24a: quiet at first, then one small floating line; never "Couldn't reach" or Try again.
     await expect(host.page.getByTestId('room-note').filter({ visible: true })).toHaveText('Reconnecting…', { timeout: 12000 });
@@ -132,7 +132,7 @@ test.describe('create and set up a room', () => {
     });
     await host.open('/');
     await setUpStart(host);
-    const stop = await recordPage(host, 'new-couch', /Couldn|Try again|offline/i);
+    const stop = await recordPage(host, 'new-couch-wait,new-couch', /Couldn|Try again|offline/i);
     await host.tap(host.button('New couch'), { expect: {} });
     await host.see({ visible: ['room-setup'] }, 10000, 'the room opens by itself');
     room.noteOutage(first, answered);
@@ -175,7 +175,7 @@ test.describe('create and set up a room', () => {
     }, state);
     await host.open('/');
     await setUpStart(host);
-    const stop = await recordPage(host, 'new-couch', /Couldn|Try again|offline/i);
+    const stop = await recordPage(host, 'new-couch-wait,new-couch', /Couldn|Try again|offline/i);
     // Away as soon as the app holds the server's wait: it has read the 429 and saved the deadline with its request.
     // Going away earlier (the route has the request, the answer is still on its way) cancels the request before the
     // app learns of any wait, so it rightly sends again on return and this route answers that at once. Watched in the

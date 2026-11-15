@@ -96,7 +96,9 @@ function NewRoomDraft({ account }: { account: ReturnType<typeof useAccount> }) {
 function NewCouchScreen({ back, note, error, details, disabled, retry }: { back: () => void; note?: string; error?: string; details?: ReactNode; disabled: boolean; retry: () => void }) {
   const { z } = useLayout();
   return (
-    <Screen testID="new-couch" back={back} pill={{ label: noun.create, state: 'new' }}>
+    // While the couch is being made the screen is an empty frame for a moment (new-couch-wait); it becomes a screen
+    // of its own (new-couch) only when it has something to say.
+    <Screen testID={note || error ? 'new-couch' : 'new-couch-wait'} back={back} pill={{ label: noun.create, state: 'new' }}>
       {note ? <BusyNote text={note} /> : null}
       {error ? (
         <View style={{ gap: z(18), alignItems: 'center', paddingTop: z(48) }}>

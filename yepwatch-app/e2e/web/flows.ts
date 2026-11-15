@@ -151,12 +151,13 @@ export async function pageTap(p: Person): Promise<number> {
 }
 
 export async function recordPage(p: Person, testId: string, error: RegExp) {
+  // `testId` may list several ("a,b"): a page whose test id changes with what it shows.
   await p.page.evaluate(({ testId, source, flags }) => {
     const w = window as unknown as { __pageLog?: { t: number; note: boolean; error: boolean }[]; __pageTimer?: number };
     const errorText = new RegExp(source, flags);
     w.__pageLog = [];
     const sample = () => {
-      const page = document.querySelector(`[data-testid="${testId}"]`);
+      const page = document.querySelector(testId.split(',').map((id) => `[data-testid="${id}"]`).join(','));
       if (!page) return;
       const note = document.querySelector('[data-testid="room-note"]')?.textContent ?? '';
       w.__pageLog!.push({ t: Date.now(), note: note.includes('Reconnecting'), error: errorText.test(page.textContent ?? '') });
