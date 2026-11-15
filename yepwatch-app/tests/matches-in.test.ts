@@ -35,7 +35,9 @@ test('another title while only you are in on the proposal: it is proposed, and t
   const mine = { candidateId: 'a', agreeCount: 1, mine: true };
   const tap = inTap('b', mine, none);
   assert.deepEqual(tap, { kind: 'propose' });
-  assert.deepEqual([...localAfter(none, 'b', tap, mine)], ['a']);
+  assert.deepEqual([...localAfter(none, 'b', tap, mine)].sort(), ['a', 'b']);
+  // Yours from the tap, before the room's answer.
+  assert.deepEqual(inRows(['b'], mine, localAfter(none, 'b', tap, mine))[0], { id: 'b', count: 1, mine: true });
 });
 
 test('agreeing to a title clears its local mark', () => {

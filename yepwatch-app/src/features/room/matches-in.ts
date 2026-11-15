@@ -52,8 +52,9 @@ export function inTap(id: string, proposal: ProposalIns | null, local: ReadonlyS
 }
 
 /**
- * The "I'm in" marks this device keeps after a tap. Proposing a new title replaces your own proposal on the
- * server, so a title you were in for stays marked here; agreeing to a title clears its local mark.
+ * The "I'm in" marks this device keeps after a tap. A proposed title is marked until the room's proposal is that
+ * title (its count then wins), so it reads as yours from the tap. Proposing replaces your own proposal on the
+ * server, so a title you were in for stays marked here; agreeing to or taking back a title clears its mark.
  */
 export function localAfter(local: ReadonlySet<string>, id: string, tap: InTap, proposal: ProposalIns | null): Set<string> {
   const next = new Set(local);
@@ -61,7 +62,8 @@ export function localAfter(local: ReadonlySet<string>, id: string, tap: InTap, p
     if (tap.on) next.add(id);
     else next.delete(id);
   } else if (tap.kind === 'propose') {
-    next.delete(id);
+    // Shown as yours at once; once the room's proposal is this title its own count takes over.
+    next.add(id);
     if (proposal?.mine) next.add(proposal.candidateId);
   } else next.delete(id);
   return next;

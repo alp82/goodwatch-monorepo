@@ -235,18 +235,27 @@ function Seats({ on, n, of, size, name }: { on: boolean; n: number; of: number; 
           <GText bold size={size * 0.42} color="#141008">{(name || '?').slice(0, 1).toUpperCase()}</GText>
         </Animated.View>
       </View>
-      {Array.from({ length: others }, (_, k) => <View key={`in-${k}`} style={[ring, { marginLeft: overlap, backgroundColor: '#8a8072', borderWidth: 2, borderColor: '#0d0d0d' }]} />)}
-      {Array.from({ length: empty }, (_, k) => <View key={`open-${k}`} style={[ring, { marginLeft: overlap, backgroundColor: '#0d0d0d', borderWidth: 1.5, borderColor: '#ffffff33' }]} />)}
+      {/* Keyed by place: a friend getting in fills a seat, nothing moves along. */}
+      {Array.from({ length: others + empty }, (_, k) => (
+        <View key={`seat-${k}`} style={[ring, { marginLeft: overlap, borderColor: '#0d0d0d' }, k < others ? { backgroundColor: '#8a8072', borderWidth: 2 } : { backgroundColor: '#0d0d0d', borderWidth: 1.5, borderColor: '#ffffff33' }]} />
+      ))}
     </View>
   );
 }
 
 /** "I'm in" off; a check and "You're in" on. */
-function InLabel({ on, size }: { on: boolean; size: number }) {
-  return (
+function InLabel({ on, size, align = 'center' }: { on: boolean; size: number; align?: 'center' | 'flex-start' }) {
+  const label = (shown: boolean) => (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-      {on ? <Icon name="check" size={size} color={glow.amber} /> : null}
-      <GText bold size={size} color={on ? glow.amber : glow.soft} lines={1}>{on ? 'You’re in' : 'I’m in'}</GText>
+      {shown ? <Icon name="check" size={size} color={glow.amber} /> : null}
+      <GText bold size={size} color={shown ? glow.amber : glow.soft} lines={1}>{shown ? 'You’re in' : 'I’m in'}</GText>
+    </View>
+  );
+  // As wide as "You're in" with its check either way: switching it moves nothing.
+  return (
+    <View style={{ alignSelf: align }}>
+      <View aria-hidden accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ opacity: 0 }}>{label(true)}</View>
+      <View style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, flexDirection: 'row', justifyContent: align, alignItems: 'center' }}>{label(on)}</View>
     </View>
   );
 }
@@ -355,7 +364,7 @@ function SingleMatch({ c, on, n, of, name, onToggle, disabled }: MatchProps) {
   const seats = (
     <View style={{ minHeight: z(56), flexDirection: 'row', alignItems: 'center', gap: 14 }}>
       <Seats on={on} n={n} of={of} size={z(38)} name={name} />
-      <View style={{ flex: 1 }}><InLabel on={on} size={z(18)} /></View>
+      <View style={{ flex: 1 }}><InLabel on={on} size={z(18)} align="flex-start" /></View>
       <GText size={z(13)} color={glow.muted}>{`${n} of ${of} in`}</GText>
     </View>
   );
@@ -457,6 +466,8 @@ function Matches({ id, view, held }: { id: string; view: RoomView; held: boolean
   );
   return (
     <Screen testID="matches" back={() => leavePage(id)} width="page" gap={phone ? 16 : z(28)} footer={footer}
+      // Leaving, the header keeps the room as it was too (a decision would change its pill under the held page).
+      pill={held ? { label: view.label, state: 'live', fresh: view.newSuggestions, beat: null } : undefined}
       sheet={tiebreak && tied.length > 1 ? (
         <Tiebreak tied={tied} favorites={favorite ? { [favorite]: 1 } : {}} mine={favorite} required={required} seed={key} onPick={setFavorite} onClose={() => setTiebreak(false)} />
       ) : undefined}>
