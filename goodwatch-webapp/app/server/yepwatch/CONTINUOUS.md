@@ -77,3 +77,40 @@ These remain **unfinished implementation/operations**, not reasons for the user 
 - **Device/distribution:** Verify actual iOS/Android auth return and invite-install recovery, production HTTPS/cookie/origin/association-file behavior, graceful API/gateway rollout and multi-node Crate durability/failover. Retained local transport success is not this evidence.
 
 No production DDL, registrations, DNS, deployment, commits or pushes form part of this slice.
+
+## YepWatch device taste and follow-ups
+
+Taste answers stay exclusively in YepWatch. Members keep their GoodWatch taste; optional next-day ratings blend
+into a temporary YepWatch vector and never write a GoodWatch rating, history, hidden title or wishlist entry.
+Profiles have no account/name/room fields, only a hashed device identity and bounded title events. Profile answers,
+vectors, quantiles, ids and revisions are absent from shared/own room snapshots and gateway publications.
+
+The app creates 32 random bytes as unpadded base64url and sends them in `x-yepwatch-profile` on profile requests
+and create/join/resume admissions (room reads also renew/bind the supplied profile). `GET /api/yepwatch/v1/proposal/profile` returns counts and eligible follow-ups.
+`POST /profile/answers` (same prefix) accepts `{ revision, items: [{ key, answer, at, source?, decidedAt? }] }`,
+1–50 items. The server returns `{ revision, answered }`. Profile routes share the command budget: 600 requests/minute overall,
+120/minute per hashed Caddy-forwarded IP, plus the persistent per-profile 120 changed batches/hour limit. `answer` is `loved`, `not_for_me`, `unseen` or null for undo.
+Keep `at` unchanged when retrying; use a later timestamp for undo or a changed answer. A changed stale revision
+returns HTTP 409 `{ error, profile }`; retry against `profile.revision`. Counts `answered` include Loved it and
+Not for me; `unseen` has its own count. A null undo tombstone counts toward the 500-event storage cap, not the counts.
+
+`GET /profile/taste-deck?count=10` returns `{ cards }` with 1–10 display cards selected from ten cached fingerprint
+clusters. The default targets six movies/four shows and skips answered titles. Country/services don't restrict
+calibration. `DELETE /profile` returns 204, clears the row and schedules new setup decks. Generate a new device
+secret on reset so the old profile's identity is no longer attached to future admissions.
+
+A committed couch decision records a pending pick for every present participant with a profile, including members.
+The serving notification path records it best effort; the Valkey history outbox retries it before acknowledging its
+room copy. It is idempotent by profile/title/decision time. `GET /profile` exposes only pending picks aged at least
+10 hours and strictly less than seven days, newest first. Each has display fields plus `decidedAt`. Submit
+`source: "followup"` and that `decidedAt` on the answer item; `loved`/`not_for_me` feed taste and seen, `did_not_watch`
+dismisses without a taste answer. Seven-day follow-ups are unavailable and pruned by cleanup. Nothing is pushed.
+
+Ranker integration: `getProfileTaste(profiles, profileId, goodwatchVector?)` from `proposal-taste.ts`, documented in
+its header, returns the vector, 119-entry cosine quantile table, confidence, revision and seen/hidden/unseen sets.
+Use the release runtime's `profiles`; `profiles.signals(ids)` batches cold cache reads during preparation. A linked
+member passes their existing GoodWatch vector, otherwise omit it. The five-liked GoodWatch gate stays unchanged;
+YepWatch uses one liked title, or the spec's negative-only -N fallback. Hidden is empty because a taste dislike is
+seen, not an explicit hidden action. Member hidden keys continue to come from the GoodWatch member resource.
+Prepared digest and its seen-read fallback both include profile revisions. Answer changes schedule only setup
+rooms observed with that profile; cold profiles are loaded in one query on the next prepared build after restart.

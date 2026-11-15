@@ -263,6 +263,8 @@ export const tables = {
 		interpreted_at: integer()
 	}),
 	participant: entity("participant", {
+    profile_id: additive(text(43)),
+    taste_revision: additive(integer()),
 		sessions: array(object({ id: text(128), tokenHash: text(128), expiresAt: integer(), nextSequence: integer(1), receipts: array(commandReceipt, 64) }), 12),
 		joined_at: integer(),
 		archived_at: nullable(integer()),
@@ -410,7 +412,7 @@ export function tableDdl(table: Table, replicas: 0 | 2) {
 	return `CREATE TABLE IF NOT EXISTS ${table.name} (\n  ${fields.join(
 		",\n  "
 	)}\n) CLUSTERED INTO ${
-		table.name === "doc.yepwatch_room" ? 4 : 1
+		table.name === "doc.yepwatch_room" || table.name === "doc.yepwatch_taste_profile" ? 4 : 1
 	} SHARDS WITH (column_policy='strict',number_of_replicas=${replicas},"write.wait_for_active_shards"='${
 		replicas + 1
 	}',refresh_interval=1000)`
@@ -473,7 +475,17 @@ export const invitationTable: Table = {
 	primary: "code_hash",
 	fields: { code_hash: text(64), room_id: text(128), expires_at: integer() }
 }
+export const tasteProfileTable: Table = {
+ name: "doc.yepwatch_taste_profile", primary: "id", fields: {
+  id: text(43),
+  answers: object({ items: array(object({ key: integer(), answer: nullable(enumeration(["loved", "not_for_me", "unseen"])), source: enumeration(["taste", "followup"]), at: integer() }), 500) }),
+  followups: array(object({ key: integer(), decided_at: integer(), state: enumeration(["pending", "answered", "dismissed"]) }), 20),
+  dealt: array(integer(), 300), revision: integer(), created_at: integer(), updated_at: integer(), expires_at: integer(),
+  write_window: integer(-1), write_count: integer(),
+ }
+}
 export const storageTables: Table[] = [
+  tasteProfileTable,
 	creationQuotaTable,
 	creationReservationTable,
 	deletionTable,

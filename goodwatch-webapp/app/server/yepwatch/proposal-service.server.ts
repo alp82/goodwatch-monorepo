@@ -1,3 +1,4 @@
+import type { TasteProfiles } from "./proposal-taste-profile.ts"
 import { mark, timed, timedSync } from "./server-timing.ts"
 import { MemoryTicketStore, type TicketStore } from "./proposal-tickets.ts"
 import { ExclusionKeepAlive } from "./proposal-member-exclusions.ts"
@@ -169,6 +170,9 @@ export class ProposalService {
 	private guard?: ProposalOperationGuard
 	private now: () => number
 	private interpret?: InterpretRoom
+	/** Private profile access for HTTP routes and catalog preparation. */
+	readonly profiles?: TasteProfiles
+	private profileRooms = new Map<string, Set<string>>()
 	/** First decks built during setup, so Start doesn't wait for the catalog. */
 	readonly decks: PreparedDecks
 	/** Refill pages being built ahead of their commands' lane (refillPage), by room, sender and command. */
@@ -200,10 +204,14 @@ export class ProposalService {
 		now: () => number = Date.now,
 		guard?: ProposalOperationGuard,
 		interpret?: InterpretRoom,
-		options: { decks?: PreparedDecksOptions; interpretations?: number; tickets?: TicketStore } = {}
+		options: { decks?: PreparedDecksOptions; interpretations?: number; tickets?: TicketStore; profiles?: TasteProfiles } = {}
 	) {
 		if (secret.length < 32) throw new Error("Room secret too short")
-		this.repository = repository
+		this.profiles = options.profiles
+    if (this.profiles) this.profiles.changed = async (profileId) => {
+      for (const id of this.profileRooms.get(profileId) ?? []) this.decks.schedule(id)
+    }
+    this.repository = repository
 		this.accounts = repository.accountStore ?? new MemoryAccountRooms()
 		this.deletions = repository.deletionStore ?? new MemoryDeletionStore()
 		this.catalog = catalog
@@ -221,7 +229,9 @@ export class ProposalService {
 		)
 		this.decks = new PreparedDecks(catalog, async (id) => {
 			const stored = await repository.read(id)
-			return stored && stored.room.format === 2 && stored.room.flowVersion === 3 ? stored.room : null
+			if (!stored || stored.room.format !== 2 || stored.room.flowVersion !== 3) return null
+      await this.prepareProfiles(stored.room)
+      return stored.room
 		}, {
 			now,
 			// Start then finds the prepared deck's cards already stored and writes only what changed.
@@ -229,6 +239,38 @@ export class ProposalService {
 			...options.decks,
 		})
 	}
+  /** Warm profile copies in one batch before a prepared build. Ranker signal() then does no Crate read. */
+  async prepareProfiles(room: ProposalRoom) {
+    if (!this.profiles) return
+    const people = activeRoom(room).participants.filter(p => p.profileId)
+    await this.profiles.signals(people.map(p => p.profileId!))
+    for (const p of people) {
+      let rooms = this.profileRooms.get(p.profileId!)
+      if (!rooms) this.profileRooms.set(p.profileId!, rooms = new Set())
+      rooms.add(room.id)
+      if (rooms.size > 100) rooms.delete(rooms.values().next().value!)
+      p.tasteRevision = (await this.profiles.signal(p.profileId!)).revision
+    }
+    while (this.profileRooms.size > 5000) this.profileRooms.delete(this.profileRooms.keys().next().value!)
+  }
+  /** Attaches only after authenticating this device's room credential. The profile secret never enters the room. */
+  async bindProfile(id: string, credential: ActorCredential, profileId: string) {
+    if (!this.profiles) return
+    await this.write(id, async () => {
+      for (let i = 0; i < 6; i++) {
+        const old = await this.get(id), room = structuredClone(old.room)
+        const p = this.auth(room, credential)
+        const revision = await this.profiles!.touch(profileId)
+        if (p.profileId === profileId && p.tasteRevision === revision) { await this.prepareProfiles(room); return }
+        p.profileId = profileId; p.tasteRevision = revision; room.revision++
+        if (!(await this.repository.compareAndSwap(old, room, true))) continue
+        await this.prepareProfiles(room)
+        await this.notify(id)
+        return
+      }
+      throw new RoomError("busy", "Profile link will need another attempt", 503, true)
+    })
+  }
 	/** Avoid retry storms between this process's joins, votes and socket handshakes.
 	 * Database CAS remains the authority across processes and background repair.
 	 */
@@ -1343,10 +1385,12 @@ export class ProposalService {
 				// Usually prepared during setup; a Start retried after losing its compare-and-swap reuses the same build.
 				if (wantsPage && envelope.command.type === "refill" && refill && refillInputs(room) === refill.inputs && room.candidates.length <= refill.cards)
 					page = structuredClone(refill.page)
-				else if (wantsPage)
+				else if (wantsPage) {
+					await this.prepareProfiles(room)
 					page = await timed("deck", this.decks.page(room, {
 						seenReadFresh: envelope.command.type === "start" && Boolean(this.catalog.excludedKeys),
 					}))
+				}
 				if (page && seenRead) {
 					await seenRead.catch(() => [] as string[])
 					// Taken again for each deck once it is in hand, from the copies alone (Start's own read above stored a
@@ -2262,6 +2306,7 @@ export class ProposalService {
 				}
 			}
 			if (!room || (!options.committed && !stored?.pendingRevision)) return stored
+			await this.profiles?.recordDecision(room).catch(() => {})
 			await this.accounts.publish(room.history ?? [])
 			if (room.expiresAt > this.now() && !(await options.published)) await this.announce(this.committedEvent(room))
 			if (options.yieldToQueued && this.writes.has(id)) return stored

@@ -83,3 +83,23 @@ One room-head CAS publishes account membership uniqueness. Account indexes are r
 A final decision adds a typed snapshot and its participant/account entitlements to the same room publication. The existing pending marker remains set until these committed snapshots have been copied idempotently to account history. Repair also projects expired rooms. Restart projects retained history before clearing the round; expired-room cleanup does likewise before removing the head. Unpublished history preparations are never copied. Guest upgrades may add account entitlement to a retained decision without changing its title or participants. Decision history never records GoodWatch watches, Seen or taste.
 
 Account history listing explicitly refreshes the archive index before the account-filtered query, making a just-confirmed choice visible to another device. Existing DQL privileges cover REFRESH ([CrateDB privileges](https://docs.cratedb.com/projects/crate-reference/en/latest/admin/privileges.html)); no runtime DDL privilege is needed.
+
+## Private device taste profiles
+
+`doc.yepwatch_taste_profile` is a separate mutable CAS table, never part of a room projection or GoodWatch library.
+`id` is HMAC-SHA256 of a canonical 32-byte base64url device secret, domain-separated with `yepwatch-profile` and the
+room signing key. Requests use `x-yepwatch-profile`; the raw secret is never stored. The table has no names, avatars,
+account ids or room ids. The participant record adds nullable `profile_id` and `taste_revision`, both server-only.
+
+Each row has at most 500 latest answer events (including null undo tombstones), 20 follow-ups and 300 dealt keys.
+Answer values are `loved`, `not_for_me`, `unseen` or null. Sources are `taste` or `followup`. A null event fences
+older retries; the 500-event cap also bounds these tombstones. `created_at` prevents a replayed old decision from
+repopulating a reset profile. `write_window` and `write_count` enforce 120 changed answer batches per UTC hour,
+including across API processes. Every mutation uses primary-key `_seq_no` / `_primary_term` CAS. Deletes remove the
+row immediately. Room joins touch expiry at most daily; answer/follow-up writes retain it for 180 days. The minute
+cleanup removes expired rows (500 per run) and prunes follow-ups aged seven days (500 profiles per run).
+
+Apply `migrations/20261115-taste-profiles.sql` explicitly after a snapshot; the API does not run DDL. The profile
+table uses four shards and one replica in that migration. Existing profile role access is restricted to the YepWatch
+API/operator; grant no table access to the realtime gateway or GoodWatch rating readers/writers. Backups contain
+private answers and must remain under the same access restrictions as room interaction records.

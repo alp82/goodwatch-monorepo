@@ -22,6 +22,7 @@ import {
 	deletionTable,
 	creationQuotaTable,
 	creationReservationTable,
+  tasteProfileTable,
 	columns,
 	parseRow,
 	tableDdl,
@@ -94,11 +95,11 @@ const candidateValues = (c: ProposalRoom["candidates"][number]): Row => ({
 	genres: c.genres ?? null
 })
 export async function provisionRelationalRooms(sql: Sql, replicas: 0 | 2) {
-	for (const table of [...Object.values(tables), invitationTable, accountIndexTable, accountHistoryTable, revokedSessionTable, deletionTable, creationQuotaTable, creationReservationTable])
+	for (const table of [...Object.values(tables), invitationTable, accountIndexTable, accountHistoryTable, revokedSessionTable, deletionTable, creationQuotaTable, creationReservationTable, tasteProfileTable])
 		await sql(tableDdl(table, replicas))
 }
 export async function checkRelationalRooms(sql: Sql) {
-	for (const table of [...Object.values(tables), invitationTable, accountIndexTable, accountHistoryTable, revokedSessionTable, deletionTable, creationQuotaTable, creationReservationTable])
+	for (const table of [...Object.values(tables), invitationTable, accountIndexTable, accountHistoryTable, revokedSessionTable, deletionTable, creationQuotaTable, creationReservationTable, tasteProfileTable])
 		await sql(
 			`SELECT ${columns(table).join(",")} FROM ${table.name} WHERE ${
 				table.primary
@@ -347,6 +348,8 @@ export class RelationalProposalRepository implements ProposalRepository {
 				member_state: p.member.state,
 				member_prefill: p.member.prefill,
 				member_user_id: p.memberUserId,
+        profile_id: p.profileId,
+        taste_revision: p.tasteRevision,
 				vote_records: votes,
 				receipt_records: receipts,
 				agreement_record: agreement,
@@ -871,6 +874,8 @@ export class RelationalProposalRepository implements ProposalRepository {
 						agreementRevision: agreement.revision,
 						member: { state: p.member_state, prefill: p.member_prefill },
 						memberUserId: p.member_user_id,
+            ...(p.profile_id ? { profileId: p.profile_id } : {}),
+            ...(p.taste_revision != null ? { tasteRevision: p.taste_revision } : {}),
 						...(grant
 							? {
 									memberGrant: {

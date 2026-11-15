@@ -1,3 +1,4 @@
+import type { ProposalRoom } from "./proposal-types.ts"
 import type { RelationalProposalRepository } from "./proposal-relational-repository.ts"
 import type { SqlCreationQuotas } from "./proposal-creation-quota.ts"
 import type { SqlAccountRooms } from "./proposal-account-store.ts"
@@ -29,6 +30,7 @@ export interface HistorySyncDeps {
 	accounts: SqlAccountRooms
 	deletions: MirroredDeletionStore
 	retentionDays: number
+  followups?: (room: ProposalRoom) => Promise<void>
 	now?: () => number
 	log?: (event: Record<string, unknown>) => void
 }
@@ -52,7 +54,7 @@ export class HistorySync {
 	private logged = new Map<string, number>()
 	private inviteKeepMs: number
 	constructor(deps: HistorySyncDeps) {
-		this.d = { now: Date.now, log: (e) => console.error(JSON.stringify(e)), ...deps }
+		this.d = { followups: async () => {}, now: Date.now, log: (e) => console.error(JSON.stringify(e)), ...deps }
 		this.inviteKeepMs = INVITE_KEEP_MS(deps.retentionDays)
 	}
 	private get redis() {
@@ -175,6 +177,7 @@ export class HistorySync {
 		// and reconcile adopts it by fingerprint.
 		if (Number(s ?? 0) >= Number(v)) return void (await synced(0))
 		const room = this.d.repository.decode(id, body!)
+    await this.d.followups(room)
 		const base = cs ? { seq: Number(cs), term: Number(ct) } : null
 		if (!base) await this.dependencies(room)
 		const fingerprint = this.d.crate.fingerprint(room)

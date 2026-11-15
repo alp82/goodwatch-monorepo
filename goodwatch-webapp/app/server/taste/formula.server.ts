@@ -16,18 +16,18 @@
 //   the research measured at about 0.635.
 // A change to the vector or the quantile table changes stored values: bump TASTE_KEY_VERSION in version.server.ts. The
 // scale is applied on every read, so tuning it needs no bump.
-import { shownMatch } from "~/domain/taste-match"
-import { LIKED_FROM, MIN_LIKED } from "~/domain/taste-rules"
+import { shownMatch } from "../../domain/taste-match.ts"
+import { LIKED_FROM, MIN_LIKED } from "../../domain/taste-rules.ts"
 import type {
 	TitleKey,
 	TitleSnapshot,
 } from "~/server/title-snapshot/index.server"
-import { VALID_FINGERPRINT_KEYS } from "~/server/utils/fingerprint"
+import { VALID_FINGERPRINT_KEYS } from "../utils/fingerprint.ts"
 
 export const TASTE_LENGTH = VALID_FINGERPRINT_KEYS.length
 // MIN_LIKED (liked titles a taste needs) and LIKED_FROM (the lowest liked score) live in ~/domain/taste-rules, which
 // the browser's rating flow reads too.
-export { LIKED_FROM, MIN_LIKED } from "~/domain/taste-rules"
+export { LIKED_FROM, MIN_LIKED } from "../../domain/taste-rules.ts"
 export const WANT_TO_SEE_WEIGHT = 0.5
 /**
  * The percentiles the quantile table holds: 0 to 99 in whole percents, then 99.1 to 99.9 in tenths, 99.91 to 99.99 in
@@ -85,6 +85,15 @@ export function tasteVector(
 	snapshot: TitleSnapshot,
 	signals: TasteSignals,
 ): TasteCounts & { vector: Float32Array | null } {
+	return tasteVectorFrom(snapshot, signals, { minLiked: MIN_LIKED })
+}
+
+/** Shared weighted 2P - N core. Callers choose their own signal minimum; GoodWatch always uses MIN_LIKED. */
+export function tasteVectorFrom(
+	snapshot: TitleSnapshot,
+	signals: TasteSignals,
+	{ minLiked }: { minLiked: number },
+): TasteCounts & { vector: Float32Array | null } {
 	const positive = new Float64Array(TASTE_LENGTH)
 	const negative = new Float64Array(TASTE_LENGTH)
 	let positiveWeight = 0
@@ -119,12 +128,13 @@ export function tasteVector(
 		}
 	}
 	const counts = { ratings: signals.ratings.length, liked, wantToSee, sourceAt }
-	if (liked < MIN_LIKED) return { ...counts, vector: null }
+	if (liked < minLiked || (positiveWeight === 0 && negativeWeight === 0))
+		return { ...counts, vector: null }
 
 	const taste = new Float64Array(TASTE_LENGTH)
 	let squares = 0
 	for (let k = 0; k < TASTE_LENGTH; k++) {
-		const p = positive[k] / positiveWeight
+		const p = positiveWeight ? positive[k] / positiveWeight : 0
 		taste[k] = negativeWeight > 0 ? 2 * p - negative[k] / negativeWeight : p
 		squares += taste[k] * taste[k]
 	}
