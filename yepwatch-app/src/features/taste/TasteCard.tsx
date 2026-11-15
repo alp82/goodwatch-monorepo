@@ -81,7 +81,7 @@ function InlineDetails({ t, onClose }: { t: CardTitle; onClose: () => void }) {
     <Animated.View style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, opacity: v, backgroundColor: '#0d0b08f2', transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }] }}>
       <ScrollView contentContainerStyle={{ padding: z(16), gap: z(8) }}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <GText bold size={z(12)} color={glow.amber} style={{ flex: 1, letterSpacing: 1.2 }}>DETAILS</GText>
+          <GText bold size={z(12)} color={glow.amber} style={{ flex: 1, letterSpacing: 0.2 }}>Details</GText>
           <HoverPress label="Close details" hover="tint" onPress={onClose} style={{ borderRadius: 12 }}><Icon name="close" size={20} color={glow.soft} /></HoverPress>
         </View>
         <GText bold size={z(20)} style={{ letterSpacing: -0.4 }}>{t.title}</GText>

@@ -4,8 +4,8 @@
  * "Using your GoodWatch taste"), then one live Taste card at a time. Answers stay in YepWatch; they go to the profile
  * as they're given and the rest on Done.
  */
-import { useEffect, useRef, useState } from 'react';
-import { Animated, BackHandler, Easing, Platform, ScrollView, View } from 'react-native';
+import { useEffect, useRef, useState, type ComponentRef } from 'react';
+import { AccessibilityInfo, Animated, BackHandler, Easing, Platform, ScrollView, View, findNodeHandle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useReducedMotion } from '../../components/ui';
@@ -70,6 +70,24 @@ function TasteMode() {
     document.addEventListener('keydown', key, true);
     return () => document.removeEventListener('keydown', key, true);
   }, []);
+  // A modal dialog (the navigator under it is inert, _layout.tsx): focus moves into it on open and back to the control
+  // that opened it on close. Tab stays inside, since nothing else on the page takes focus.
+  const dialog = useRef<ComponentRef<typeof View>>(null);
+  useEffect(() => {
+    const node = dialog.current;
+    if (Platform.OS !== 'web') {
+      const handle = node ? findNodeHandle(node) : null;
+      if (handle) AccessibilityInfo.setAccessibilityFocus(handle);
+      return;
+    }
+    const el = node as unknown as HTMLElement | null;
+    const opener = document.activeElement instanceof HTMLElement && !el?.contains(document.activeElement) ? document.activeElement : null;
+    if (el) { el.tabIndex = -1; el.style.outline = 'none'; el.focus({ preventScroll: true }); }
+    return () => {
+      // After this commit: the page under it stops being inert in the same commit, then the opener can take focus.
+      requestAnimationFrame(() => { if (opener?.isConnected && (!document.activeElement || document.activeElement === document.body)) opener.focus({ preventScroll: true }); });
+    };
+  }, []);
   const grow = growFrom(origin, width, height, v, reduced);
   const rated = profile.rated ?? 0;
   const content = (
@@ -104,14 +122,15 @@ function TasteMode() {
     </>
   );
   return (
-    <View testID="taste-mode" role="dialog" aria-modal aria-label="Taste mode" accessibilityViewIsModal style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, zIndex: 80 }}>
+    <View ref={dialog} testID="taste-mode" role="dialog" aria-modal aria-label="Taste mode" accessibilityViewIsModal style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, zIndex: 80 }}>
       <Animated.View style={{ flex: 1, overflow: 'hidden', backgroundColor: glow.bg, opacity: grow.shell, transform: grow.transform }}>
         <LinearGradient colors={['#3a2a0e', '#1a140a', '#0a0907']} locations={[0, 0.45, 1]} style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }} />
         <Animated.View style={{ flex: 1, opacity: grow.content, paddingTop: insets.top }}>
           <View style={{ height: header, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: phone ? gutter - 4 : gutter, borderBottomWidth: 1, borderBottomColor: warm.amberLine }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, height: z(28), paddingHorizontal: 10, borderRadius: 8, backgroundColor: glow.amber }}>
               <Heart size={z(14)} color={warm.ink} filled />
-              <GText bold size={z(13)} color={warm.ink} style={{ letterSpacing: 1.2 }}>TASTE MODE</GText>
+              {/* The approved amber tab shows in capitals; the text itself (what screen readers say) is sentence case. */}
+              <GText bold size={z(13)} color={warm.ink} style={{ letterSpacing: 1.2, textTransform: 'uppercase' }}>Taste mode</GText>
             </View>
             <GText bold size={z(16)} lines={1} style={{ flex: 1 }}>Tune your taste</GText>
             <HoverPress label="Done" hint="Your answers are kept" onPress={close} style={{ minHeight: 48, paddingHorizontal: 8, borderRadius: 10, flexDirection: 'row', gap: 6 }}>

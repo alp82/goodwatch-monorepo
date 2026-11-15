@@ -81,12 +81,22 @@ test('Profile opens Taste mode; Done keeps the answers; Reset my taste deletes t
   await button(page, 'Tune your taste').click();
   const mode = page.getByRole('dialog', { name: 'Taste mode' });
   await expect(mode).toBeVisible();
-  await expect(mode.getByText('TASTE MODE', { exact: true })).toBeVisible();
+  await expect(mode.getByText('Taste mode', { exact: true })).toBeVisible();
+  // A modal dialog: focus moves in, Tab stays inside, the page under it is out of reach.
+  const focusInMode = () => mode.evaluate((el) => el.contains(document.activeElement));
+  await expect.poll(focusInMode).toBe(true);
+  for (let i = 0; i < 12; i++) {
+    await page.keyboard.press('Tab');
+    expect(await page.evaluate(() => document.activeElement === document.body || Boolean(document.activeElement?.closest('[role="dialog"]')))).toBe(true);
+  }
+  await expect(button(page, 'Tune your taste')).toHaveCount(0);
   await mode.getByRole('button', { name: 'Loved it', exact: true }).click();
   await mode.getByRole('button', { name: 'Not for me', exact: true }).click();
   await expect(page.getByTestId('setup-chip')).toContainText('5 rated');
   await mode.getByRole('button', { name: 'Done', exact: true }).click();
   await expect(mode).toHaveCount(0);
+  // Focus goes back to the control that opened it.
+  await expect(button(page, 'Tune your taste')).toBeFocused();
   await expect.poll(() => f.profile.answers.map((a) => a.answer)).toEqual(['loved', 'not_for_me']);
   await expect(page.getByTestId('profile-panel')).toBeVisible();
   await button(page, 'Reset my taste').click();

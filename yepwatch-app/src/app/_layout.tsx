@@ -16,6 +16,7 @@ import { arrivesInPlace } from '../features/room/nav';
 import { ROOT_SCREENS } from '../features/shell/route-order';
 import { useVisualViewportFrame } from '../features/shell/visual-viewport';
 import { TasteModeLayer } from '../features/taste/TasteMode';
+import { useTasteMode } from '../features/taste/taste-mode';
 installLeftoverTapGuard();
 if (Platform.OS !== 'web') {
   // The startup cover continues the system splash exactly (the Y on the same ground), so the splash can
@@ -34,6 +35,8 @@ export default function Layout() {
   const [booted, setBooted] = useState(false);
   const [arriving, setArriving] = useState(false);
   const pathname = usePathname();
+  // Taste mode is a full-screen dialog over the navigator: everything under it is out of reach while it's open.
+  const { open: tasteOpen } = useTasteMode();
   // The app builds unseen under the startup cover and shows as soon as the page in front is ready (or
   // right away for pages that don't load first). Back in the room the app was closed in: the start page
   // never shows on the way (useFrontRoom).
@@ -57,10 +60,10 @@ export default function Layout() {
     {ROOT_SCREENS.map((name) => <Stack.Screen key={name} name={name} {...(name === 'room/[id]' ? { options: arrivalRoom } : null)} />)}
   </Stack>, [fontsReady]);
   return <BootPageReady.Provider value={markPageReady}><BootPhase.Provider value={booted ? 'ready' : arriving ? 'enter' : 'boot'}><Providers><StatusBar style="light" /><View ref={root} style={{ flex: 1, backgroundColor: '#070707' }} {...(Platform.OS === 'web' ? null : leftoverTouchGuard)}>
-    {/* Inert (no focus inside hidden content) until the cover starts to dissolve. Native draws the page
+    {/* Inert (no focus inside hidden content) until the cover starts to dissolve, and under Taste mode. Native draws the page
         under the opaque cover, so its first (heavy) draw is done before the dissolve and can't stall it;
         the web hides it outright (the browser composites the dissolve). */}
-    <CoveredBody covered={!booted} testID="boot-stack" style={{ flex: 1, opacity: shown || Platform.OS !== 'web' ? 1 : 0 }}>
+    <CoveredBody keepView covered={!booted || tasteOpen} testID="boot-stack" style={{ flex: 1, opacity: shown || Platform.OS !== 'web' ? 1 : 0 }}>
       {stack}
     </CoveredBody>
     {Platform.OS === 'web' && !fontsReady && <View aria-hidden pointerEvents="none" style={{ position: 'absolute', opacity: 0 }}>
