@@ -34,7 +34,7 @@
       "freshReadbackMatches": true,
       "subtitle": "Pick what to watch, together",
       "keywords": "movie night,couch,friends,couple,date,swipe,match,tv shows,streaming,group,decide,film,taste",
-      "promotionalText": "Start a couch, invite your friends and swipe the same cards. Say Yep or Nope. When everyone says Yep, it’s a match. Pick one and press play.",
+      "promotionalText": "Start a couch, invite your friends and swipe the same cards. Say Yep or Nope. When everyone says Yep, it\u2019s a match. Pick one and press play.",
       "whatsNew": "not set: Apple has no What's New field for an app's first version (1.0.0); releaseNotes in store/en-US.json is ready for the next version"
     },
     "gallery": {
@@ -259,8 +259,8 @@
       "phoneBringYourPeople": {
         "A-full": "whole Invite sheet screen scaled: QR small, header and dimmed couch compete",
         "B-sheet-zoom": "Invite sheet cropped and enlarged: QR, Share link, Leo is here (picked, reads at 230 px)",
-        "C-faces-and-sheet": "Who’s here row + sheet: little zoom, still busy",
-        "D-faces-strip": "Who’s here + Invite strip only: thin band, mostly empty frame",
+        "C-faces-and-sheet": "Who\u2019s here row + sheet: little zoom, still busy",
+        "D-faces-strip": "Who\u2019s here + Invite strip only: thin band, mostly empty frame",
         "fade-vs-card": "top fade left dim couch text visible; card edge at the sheet top is cleaner on amber and night, used on all phones"
       },
       "iphoneLarge1": {
@@ -343,7 +343,7 @@
         ]
       }
     ],
-    "scanOtherFrames": "Phone matches lists (Tap every one you’re in for) are dense but rows and posters read; iPad matches and spin frames show small text but the posters carry them. Left as is.",
+    "scanOtherFrames": "Phone matches lists (Tap every one you\u2019re in for) are dense but rows and posters read; iPad matches and spin frames show small text but the posters carry them. Left as is.",
     "apple": {
       "stateBefore": "DEVELOPER_REJECTED",
       "stateAfter": "DEVELOPER_REJECTED",
@@ -358,5 +358,14 @@
       "uploaded": false,
       "reason": "still no Play Developer API credential; store/assets/android/gallery-02-couch.png updated for manual upload"
     }
+  },
+  "playUpload": {
+    "date": "2026-11-15",
+    "credential": "service account play-publisher@goodwatch-423201 (key in ~/dev/projects/goodwatch/keys, outside git)",
+    "editId": "01092336529658077470",
+    "listing": "en-US title, shortDescription, fullDescription from store/en-US.json",
+    "phoneScreenshots": 8,
+    "readback": "short and full description match, 8 screenshots",
+    "notDone": "Data safety (API needs the full form CSV; apply store/google-data-safety-notes.json in Play Console)"
   }
 }
