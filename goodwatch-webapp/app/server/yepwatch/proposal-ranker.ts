@@ -3,7 +3,7 @@ import type { TitleSnapshot } from '../title-snapshot/snapshot.server.ts'
 import type { PersonSignal } from './proposal-person-signal.ts'
 import { tastePercentile } from './proposal-person-signal.ts'
 import { MAX_RANKED, qualityPriors, roomJitter, unitFingerprint } from './proposal-pool.ts'
-import { feedbackAdjustment, type RoundFeedback } from './proposal-feedback.ts'
+import { feedbackAdjustment, FEEDBACK_RANK_HEAD, type RoundFeedback } from './proposal-feedback.ts'
 
 export const RANKER_VERSION = 'picks-1'
 export const RANK_WEIGHTS = { taste: .45, idea: .35, quality: .25, wishlist: .08, availability: .04 } as const
@@ -68,7 +68,7 @@ export function rankDeck(input: RankInput, limit: number): Ranked[] {
     const idea = ideaFits.length ? Math.max(...ideaFits) : 0, best = ideaFits.indexOf(idea)
     const parts: ScoreParts = { taste: taste.taste, minimum: taste.minimum, idea, quality: quality.get(key) ?? 0,
       wishlist: Math.min(1, (input.wishlist.get(key) ?? 0) / 2), availability: Number(input.sharedServiceKeys?.has(key) ?? false),
-      feedback: feedbackAdjustment(snapshot, key, input.feedback), repeat: input.repeatNopes?.has(key) ? -.1 : 0 }
+      feedback: 0, repeat: input.repeatNopes?.has(key) ? -.1 : 0 }
     const score = weights.taste * parts.taste + (ideas.length ? weights.idea : 0) * parts.idea +
       (weights.quality + (taste.count ? 0 : weights.taste)) * parts.quality + weights.wishlist * parts.wishlist +
       weights.availability * parts.availability + roomJitter(input.seed, key) + parts.feedback + parts.repeat
@@ -77,6 +77,16 @@ export function rankDeck(input: RankInput, limit: number): Ranked[] {
       short: key >= 2e12 && !!c.facts?.lengths[row] && c.facts.lengths[row] <= 30,
       service: input.sharedServiceKeys?.get(key), score: c.scores[row] }) }
   }).filter(r => input.refill || !r.veto).sort((a, b) => b.score - a.score || a.key - b.key)
+  // Feedback refines the next refill's contenders, with work independent of the
+  // pool size and round length. Feedback vectors were normalized once by roundFeedback.
+  if (input.feedback && (input.feedback.yeps.length || input.feedback.nopes.length)) {
+    for (let i = 0; i < Math.min(ranked.length, FEEDBACK_RANK_HEAD); i++) {
+      const r = ranked[i]
+      r.parts.feedback = feedbackAdjustment(snapshot, r.key, input.feedback, unitFingerprint(snapshot, r.key))
+      r.score += r.parts.feedback
+    }
+    ranked.sort((a, b) => b.score - a.score || a.key - b.key)
+  }
   // Greedy diversity only over the top 200; precompute unit vectors once, not for each pair.
   const head = ranked.slice(0, 200), tail = ranked.slice(200), picked: Ranked[] = []
   const vectors = new Map(head.map(r => [r.key, unitFingerprint(snapshot, r.key)]))

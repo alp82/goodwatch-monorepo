@@ -1,7 +1,7 @@
 import type { CountryServices } from '../availability-index.server.ts'
 import { matchingIdeaIds } from "./proposal-redesign.ts"
 import { rankDeck, RANKER_VERSION, type Ranked } from './proposal-ranker.ts'
-import { MAX_RANKED, passesFloor, qualityPriors, poolStepOf, poolQualityOf } from './proposal-pool.ts'
+import { MAX_RANKED, passesFloor, qualityPriors, poolStepOf, poolQualityOf, unitFingerprint } from './proposal-pool.ts'
 import { roundFeedback, feedbackAdjustment, reorderTail } from './proposal-feedback.ts'
 import type { RoomTasteSource, PersonSignal } from './proposal-person-signal.ts'
 import type { ProposalRoom, ProposalCatalog } from './proposal-types.ts'
@@ -79,7 +79,7 @@ export function guestProposalCatalog(members?: ContinuousMembers, profiles?: Roo
       if (!snapshot) return
       const feedback = roundFeedback(room, snapshot)
       const scores = new Map(room.outcome?.map(t => [(room.dealtKeys ?? room.seenKeys)[t.position], t.score]) ?? [])
-      reorderTail(room, key => (scores.get(`${key < 2e12 ? 'movie' : 'show'}_${key % 1e12}`) ?? 0) + feedbackAdjustment(snapshot!, key, feedback))
+      reorderTail(room, key => (scores.get(`${key < 2e12 ? 'movie' : 'show'}_${key % 1e12}`) ?? 0) + feedbackAdjustment(snapshot!, key, feedback, unitFingerprint(snapshot!, key)))
     },
     async page(room) {
       const active = room.participants.filter(p => p.leftAt == null)

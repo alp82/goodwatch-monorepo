@@ -2,7 +2,8 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { rankingSnapshot } from './proposal-ranking-test-support.ts'
 import { rankDeck, groupTaste, candidateReason, ideaFit, RANK_WEIGHTS, type RankInput } from './proposal-ranker.ts'
-import { qualityPriors } from './proposal-pool.ts'
+import { qualityPriors, unitFingerprint } from './proposal-pool.ts'
+import { FEEDBACK_RANK_HEAD } from './proposal-feedback.ts'
 import type { PersonSignal } from './proposal-person-signal.ts'
 export const person = (vector: number[], confidence = 1): PersonSignal => ({ vector: Float32Array.from([...vector, ...Array(74).fill(0)].slice(0, 74)), quantiles: Float32Array.from([...Array.from({ length: 100 }, (_, i) => i / 100), ...Array.from({ length: 9 }, (_, i) => (991 + i) / 1000), ...Array.from({ length: 9 }, (_, i) => (9991 + i) / 10000), 1]), confidence, unseen: new Set(), source: 'member', snapshotVersion: 'fixture' })
 const input = (): RankInput => ({ snapshot: rankingSnapshot([{ key: 1e12 + 1, fp: [10, 0] }, { key: 1e12 + 2, fp: [7, 7] }, { key: 1e12 + 3, fp: [0, 10] }]),
@@ -71,4 +72,31 @@ test('3000 titles and 12 tastes: measure warm rank budget', () => {
   const times = Array.from({ length: 5 }, () => { const start = performance.now(); rankDeck(i, 200); return performance.now() - start }).sort((a, b) => a - b)
   console.info(JSON.stringify({ event: 'test_rank_speed', medianMs: times[2], targetMs: 10 }))
   assert.ok(times[2] < 10, 'prepared pool supplies cached quality priors; warm rank budget is 10 ms')
+})
+test('feedback promotes Yep neighbors and demotes group Nope neighbors only in the pre-feedback head', () => {
+  const titles = Array.from({ length: 400 }, (_, i) => ({ key: 1e12 + i + 1, fp: i % 2 ? [10, 0] : [0, 10] }))
+  const i = { ...input(), snapshot: rankingSnapshot(titles), pool: titles.map(t => t.key), refill: true }
+  const baseline = rankDeck(i, 400), contenders = new Set(baseline.slice(0, FEEDBACK_RANK_HEAD).map(r => r.key))
+  // These full weights are the feedback classes produced by multiple people's votes.
+  const feedback = { yeps: [{ vector: unitFingerprint(i.snapshot, 1e12 + 2)!, weight: 1 }], nopes: [{ vector: unitFingerprint(i.snapshot, 1e12 + 1)!, weight: 1 }] }
+  const ranked = rankDeck({ ...i, feedback }, 400)
+  for (const original of baseline) {
+    const changed = ranked.find(r => r.key === original.key)!
+    const adjustment = contenders.has(original.key) ? (original.key % 2 === 0 ? .12 : -.15) : 0
+    assert.ok(Math.abs(changed.score - original.score - adjustment) < 1e-7)
+    assert.ok(Math.abs(changed.parts.feedback - adjustment) < 1e-7)
+  }
+  assert.ok(baseline.some((r, at) => contenders.has(r.key) && r.key % 2 === 0 && ranked.findIndex(next => next.key === r.key) < at))
+})
+test('3000 titles, 12 tastes and 120+120 feedback entries: bounded warm refill rank budget', () => {
+  const titles = Array.from({ length: 3000 }, (_, i) => ({ key: (i % 2 ? 1e12 : 2e12) + i + 1, fp: [5 + i % 6, 5 + (i * 3) % 6] }))
+  const snapshot = rankingSnapshot(titles), pool = titles.map(t => t.key)
+  const feedback = { yeps: pool.slice(0, 120).map(key => ({ vector: unitFingerprint(snapshot, key)!, weight: 1 })),
+    nopes: pool.slice(120, 240).map(key => ({ vector: unitFingerprint(snapshot, key)!, weight: 1 })) }
+  const i = { ...input(), snapshot, pool, quality: qualityPriors(snapshot, pool), people: Array.from({ length: 12 }, () => person([.707, .707])), peopleCount: 12, refill: true, feedback }
+  for (let n = 0; n < 20; n++) rankDeck(i, 200)
+  const times = Array.from({ length: 5 }, () => { const start = performance.now(); rankDeck(i, 200); return performance.now() - start }).sort((a, b) => a - b)
+  const budget = process.env.CI ? 30 : 15
+  console.info(JSON.stringify({ event: 'test_rank_feedback_speed', medianMs: times[2], targetMs: 15, budgetMs: budget }))
+  assert.ok(times[2] < budget, `warm feedback rank budget is ${budget} ms (15 ms target, CI slack)`)
 })

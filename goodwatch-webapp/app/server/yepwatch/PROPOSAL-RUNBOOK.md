@@ -87,7 +87,7 @@ Measure on the deployed snapshot and hardware before asserting those budgets in 
 cards of every present person (`PROTECTED_UNANSWERED`): the card they are on, the one under it, and two more because
 the app answers ahead of the server (votes still on their way). Only the remaining slots reorder, by stored base score plus current round feedback.
 Half-weight single answers and group thresholds are separate feedback classes; additional votes within a class
-reuse a refill. Recently retired cards retain their aggregate feedback within a bounded 120-answered-card window, keeping vote work bounded. `dealtKeys` keeps positions stable when an idea or
+reuse a refill. Recently retired cards retain their aggregate feedback within a bounded 120-answered-card window. Similarity scoring uses the latest 32 entries per direction, with feedback title vectors normalized once per refill. Refill ranking applies feedback only to the top 300 titles in the pre-feedback order (before diversity); the 3000-title, 12-taste, 120+120-feedback warm ranking target is 15 ms. Tail learning uses the same per-direction bound and preserves protected cards. `dealtKeys` keeps positions stable when an idea or
 service edit removes untouched cards from `seenKeys`; it is private and never logged or projected.
 
 ### Member/profile integration boundary

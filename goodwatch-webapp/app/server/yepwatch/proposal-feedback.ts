@@ -6,6 +6,10 @@ import { CONTINUOUS_LIMITS } from './continuous-types.ts'
 
 export interface FeedbackVote { position: number; yep: number; nope: number }
 export interface RoundFeedback { yeps: { vector: Float32Array; weight: number }[]; nopes: { vector: Float32Array; weight: number }[] }
+// Entries are in dealt-position order. Keep recent evidence in each direction,
+// independently, so a long run of Nopes cannot crowd out all the Yeps.
+export const MAX_FEEDBACK_PER_DIRECTION = 32
+export const FEEDBACK_RANK_HEAD = 300
 export function feedbackClass(yep: number, nope: number): { yep: number; nope: number } {
   const answers = yep + nope
   return { yep: yep >= 2 && yep * 2 >= answers ? 1 : answers === 1 && yep === 1 ? .5 : 0,
@@ -43,12 +47,20 @@ export function roundFeedback(room: ProposalRoom, snapshot: Pick<TitleSnapshot, 
   }
   return result
 }
-export function feedbackAdjustment(snapshot: Pick<TitleSnapshot, 'cosine'>, key: number, feedback?: RoundFeedback) {
+/** Pass a precomputed unit candidate vector to avoid repeated snapshot lookups; null means no fingerprint. */
+export function feedbackAdjustment(snapshot: Pick<TitleSnapshot, 'cosine'>, key: number, feedback?: RoundFeedback, vector?: Float32Array | null) {
   if (!feedback) return 0
-  const max = (items: RoundFeedback['yeps']) => items.reduce((best, item) => {
-    const cosine = snapshot.cosine(key, item.vector) ?? 0
-    return Math.max(best, cosine > .8 ? cosine * item.weight : 0)
-  }, 0)
+  const max = (items: RoundFeedback['yeps']) => {
+    let best = 0
+    for (let i = Math.max(0, items.length - MAX_FEEDBACK_PER_DIRECTION); i < items.length; i++) {
+      const item = items[i]
+      let cosine = 0
+      if (vector === undefined) cosine = snapshot.cosine(key, item.vector) ?? 0
+      else if (vector) for (let d = 0; d < vector.length; d++) cosine += vector[d] * item.vector[d]
+      if (cosine > .8) best = Math.max(best, cosine * item.weight)
+    }
+    return best
+  }
   return .12 * max(feedback.yeps) - .15 * max(feedback.nopes)
 }
 /**
