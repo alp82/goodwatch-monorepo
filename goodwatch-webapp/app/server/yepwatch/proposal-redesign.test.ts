@@ -217,6 +217,13 @@ test("idea authors, host switches, editing, removing, no resets, and unchanged t
 	assert.equal(hostIdea.on, true)
 	assert.equal(friend.on, true)
 	assert.equal(friend.authorId, f.b.credential.participantId)
+	for (const who of [f.a, f.b]) {
+		await assert.rejects(f.send({ type: "add_idea", text: "Another idea" }, who), {
+			code: "limit_reached",
+			message: "One idea each. Edit yours to change it."
+		})
+	}
+	assert.equal((await f.repo.read(f.id))!.room.interpretationCount, 2)
 	await assert.rejects(
 		f.send({ type: "set_idea", ideaId: friend.id, on: true }, f.b),
 		{ code: "forbidden" }
@@ -229,8 +236,12 @@ test("idea authors, host switches, editing, removing, no resets, and unchanged t
 		f.send({ type: "edit_idea", ideaId: friend.id, text: friend.text }, f.b),
 		{ code: "invalid_request" }
 	)
-	await f.send({ type: "set_idea", ideaId: friend.id, on: true })
-	await f.send({ type: "edit_idea", ideaId: friend.id, text: "New idea" }, f.b)
+	await f.send({ type: "set_idea", ideaId: friend.id, on: false })
+	s = (await f.send({ type: "edit_idea", ideaId: friend.id, text: "New idea" }, f.b)).snapshot
+	assert.equal(s.shared.ideas.length, 2)
+	assert.equal(s.shared.ideas[1].id, friend.id)
+	assert.equal(s.shared.ideas[1].on, true)
+	assert.equal((await f.repo.read(f.id))!.room.interpretationCount, 3)
 	await f.send({ type: "remove_idea", ideaId: hostIdea.id })
 	s = (await f.send({ type: "remove_idea", ideaId: friend.id })).snapshot
 	assert.equal(s.shared.generation, generation)
@@ -531,13 +542,21 @@ test("failed interpretations, spend-limit refusals included, consume the budget 
 	assert.deepEqual(s.shared.ideas.map((i) => [i.text, i.attributes]), [["Budget refused", []]])
 	room = (await f.repo.read(f.id))!.room
 	assert.equal(room.interpretationCount, 2)
-	for (let i = 0; i < 7; i++) {
-    const joined = await f.service.join(f.id, { contractVersion: 3, commandId: randomUUID(), admissionSecret: 'y'.repeat(43), nickname: `Person ${i}`, inviteCode: f.a.invite.code })
-    await f.send({ type: 'add_idea', text: `Idea ${i}` }, joined)
-  }
-	await assert.rejects(f.send({ type: "add_idea", text: "Ninth idea" }), {
-		code: "limit_reached"
-	})
+	for (let i = 0; i < 8; i++) {
+		const friend = await f.service.join(f.id, {
+			contractVersion: 3,
+			commandId: randomUUID(),
+			admissionSecret: "a".repeat(43),
+			nickname: `Friend ${i}`,
+			inviteCode: f.a.invite.code
+		})
+		if (i < 7) await f.send({ type: "add_idea", text: `Idea ${i}` }, friend)
+		else await assert.rejects(f.send({ type: "add_idea", text: "Ninth idea" }, friend), {
+			code: "limit_reached"
+		})
+	}
+	assert.equal((await f.repo.read(f.id))!.room.ideas!.length, 8)
+	assert.equal((await f.repo.read(f.id))!.room.interpretationCount, 9)
 	assert.equal(f.searches(), 7)
 })
 
@@ -912,8 +931,8 @@ test("settings commute with a friend's change but never apply to a decided room"
 	const f = await fixture()
 	const stale = (await f.service.read(f.id, f.a.credential)).shared
 	await f.send({ type: "set_services", serviceIds: [2] }, f.b)
-	const saved = await f.send({ type: "configure", expectedContextVersion: stale.contextVersion, constraints: { kinds: ["show_start"], maxMinutes: null, moods: [] } })
-	assert.deepEqual(saved.snapshot.shared.constraints.kinds, ["show_start"])
+	const saved = await f.send({ type: "configure", expectedContextVersion: stale.contextVersion, constraints: { kinds: ["show"], maxMinutes: null, moods: [] } })
+	assert.deepEqual(saved.snapshot.shared.constraints.kinds, ["show"])
 	const room = structuredClone(await f.repo.read(f.id))!.room
 	room.phase = "decided"
 	assert.throws(() => command(room, { type: "configure", expectedContextVersion: 0, country: "DE" }), conflict)

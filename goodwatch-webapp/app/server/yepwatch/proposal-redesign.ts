@@ -129,6 +129,11 @@ export function redesignTransition(
 		}
 		if (c.constraints) room.constraints = structuredClone(c.constraints)
 	} else if (c.type === "add_idea") {
+		requireRoom(
+			!room.ideas.some((idea) => idea.authorId === actorId),
+			"limit_reached",
+			"One idea each. Edit yours to change it."
+		)
 		requireRoom(room.ideas.length < 8, "limit_reached", "At most eight ideas")
     requireRoom(!room.ideas.some(i => i.authorId === actorId), "conflict", "Replace your existing idea")
 		requireRoom(
@@ -202,6 +207,7 @@ export function redesignTransition(
 				room.seenKeys = room.seenKeys.filter((key) => !replaced.has(key))
 				idea.on = true
 				idea.text = c.text
+				idea.on = true
 				idea.rankedKeys = []
 				idea.attributes = []
 				idea.interpretedAt = now

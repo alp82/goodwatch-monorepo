@@ -223,7 +223,9 @@ export interface CommandEnvelope<T extends RoomCommand = RoomCommand> {
 export type RoomCommand =
   | { type: "leave" }
   | { type: "configure"; expectedContextVersion: number; country?: string; constraints?: RoomConstraints }
+  /** One idea per author; a second one is refused with limit_reached ("One idea each. Edit yours to change it."). */
   | { type: "add_idea"; text: string }
+  /** Replaces your idea in place and switches it on; consumes one of the room's 24 interpretations. */
   | { type: "edit_idea"; ideaId: string; text: string }
   | { type: "remove_idea"; ideaId: string }
   | { type: "set_idea"; ideaId: string; on: boolean }
