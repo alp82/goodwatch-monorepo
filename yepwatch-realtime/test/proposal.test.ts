@@ -30,8 +30,8 @@ class MemoryActivity extends EventEmitter implements ActivityBus {
   state(ready: boolean) { this.ready = ready; this.emit('state', ready) }
   close() {}
 }
-async function setup(t: test.TestContext, pointers = false, roomDetails = false, cheers = false) {
-  const api = await fixture('proposal'); api.state.shared = choosing(); if (roomDetails) { api.state.shared.disabledServiceIds = [337]; api.state.shared.ideas = [{id:'idea',text:'A cosy mystery',authorId:'person-1',on:true,attributes:[{text:'Mystery',kind:'want'}]}]; api.state.shared.participants.push({participantId:'person-3',nickname:'Dropped',serviceIds:null,screenId:'screen-1',ready:true,dropped:true}) }; api.state.leaseMs = 60_000
+async function setup(t: test.TestContext, pointers = false, roomDetails = false, cheers = false, matchesIn = false) {
+  const api = await fixture('proposal'); api.state.shared = choosing(); if (matchesIn) { api.state.shared.ins = api.state.shared.matches.map((m: { candidateId: string }) => ({ candidateId: m.candidateId, count: 0 })); api.state.shared.inVersion = 0; api.state.shared.tiebreak = null }; if (roomDetails) { api.state.shared.disabledServiceIds = [337]; api.state.shared.ideas = [{id:'idea',text:'A cosy mystery',authorId:'person-1',on:true,attributes:[{text:'Mystery',kind:'want'}]}]; api.state.shared.participants.push({participantId:'person-3',nickname:'Dropped',serviceIds:null,screenId:'screen-1',ready:true,dropped:true}) }; api.state.leaseMs = 60_000
   const hub = new ActivityHub(), buses = [new FakeBus(), new FakeBus()], activities = [hub.bus(), hub.bus()]
   const gateways = buses.map((b, n) => createGateway(api.authority, b, { port: 0, auditMs: 1000 }, { activityBus: activities[n], proposal: true }))
   const addresses = await Promise.all(gateways.map(g => g.listen()))
@@ -39,7 +39,7 @@ async function setup(t: test.TestContext, pointers = false, roomDetails = false,
   const clients = await Promise.all(addresses.map((a, n) => {
     assert(a && typeof a !== 'string');
     return connect<ServerRealtimeFrame>(`ws://127.0.0.1:${a.port}${paths.realtime}`).then(client => {
-      client.ws.send(JSON.stringify({type:'authenticate',ticket:api.ticket(`person-${n+1}`),roomId:'room-1',lastRevision:null,...(pointers && n === 1 ? {pointers:true}: {}),...(roomDetails && n === 1 ? {roomDetails:true}: {}),...(cheers && n === 1 ? {cheers:true}: {})}));return client;
+      client.ws.send(JSON.stringify({type:'authenticate',ticket:api.ticket(`person-${n+1}`),roomId:'room-1',lastRevision:null,...(pointers && n === 1 ? {pointers:true}: {}),...(roomDetails && n === 1 ? {roomDetails:true}: {}),...(cheers && n === 1 ? {cheers:true}: {}),...(matchesIn && n === 1 ? {matchesIn:true}: {})}));return client;
     })
   }))
   await until(() => clients.every(c => c.frames.some(f => f.type === 'activity.session')))
@@ -390,4 +390,21 @@ test('A delayed committed room older than a revision another read already showed
   api.state.beforeView = undefined
   release()
   await until(() => clients.slice(24).every(c => c.closed === 1008))
+})
+
+
+test('matchesIn authenticate gates initial and updated shared fields independently per phone', async t => {
+  const { api, buses, clients: [old, current] } = await setup(t, false, false, false, true)
+  const initial = (frames: ServerRealtimeFrame[]) => frames.find(f => f.type === 'room.snapshot')!
+  const a = initial(old.frames), b = initial(current.frames)
+  assert(a.type === 'room.snapshot' && b.type === 'room.snapshot')
+  for (const key of ['ins', 'inVersion', 'tiebreak']) { assert.equal(key in a.snapshot, false); assert.equal(key in b.snapshot, true) }
+  api.state.shared.ins[0].count = 1; api.state.shared.inVersion = 1; api.state.shared.revision++
+  buses.forEach(bus => bus.hint(api.state.shared.revision))
+  await until(() => [old, current].every(c => c.frames.some(f => f.type === 'room.updated')))
+  const updated = current.frames.find(f => f.type === 'room.updated')!
+  const legacy = old.frames.find(f => f.type === 'room.updated')!
+  assert(updated.type === 'room.updated' && legacy.type === 'room.updated')
+  assert.equal(updated.snapshot.ins![0].count, 1); assert.equal(updated.snapshot.inVersion, 1)
+  assert.equal('ins' in legacy.snapshot, false)
 })

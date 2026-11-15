@@ -29,6 +29,14 @@ export const proposalSharedSchema = continuousSharedSchema.extend({
     viewingDuration: z.strictObject({ minutes: z.number().finite().positive(), scope: z.enum(['movie', 'episode']) }).nullable(),
   })).max(512),
   matches: z.array(z.strictObject({ candidateId: id, averageYepMs: average })).max(512),
+  ins: z.array(z.strictObject({ candidateId: id, count })).max(512).optional(),
+  inVersion: count.optional(),
+  tiebreak: z.strictObject({
+    version: count, candidateIds: z.array(id).min(2).max(512),
+    favorites: z.array(z.strictObject({ candidateId: id, count })).max(512),
+    seed: z.string().min(8).max(64).optional(),
+    outcome: z.strictObject({ candidateId: id, spun: z.boolean(), among: z.array(id).min(1).max(512) }).nullable(),
+  }).nullable().optional(),
   proposalVersion: count,
   proposal: z.strictObject({ candidateId: id, version: count, previousCandidateId: id.nullable(),
     agreeCount: count, requiredCount: count, averageYepMs: average }).nullable(),
@@ -47,6 +55,17 @@ export function proposalProjection(input: unknown, roomId: string): SharedRoomSn
       value.matches.some(m => !candidates.has(m.candidateId))) throw new Error('Ambiguous proposal projection')
   if (value.candidates.some(c => c.viewingDuration && c.viewingDuration.scope !== (c.identity.kind === 'movie' ? 'movie' : 'episode')))
     throw new Error('Invalid duration scope')
+  const ins = value.ins, tie = value.tiebreak
+  if ((ins === undefined) !== (value.inVersion === undefined) || (ins === undefined) !== (tie === undefined)) throw new Error('Incomplete matches in projection')
+  const unique = (ids: string[]) => new Set(ids).size === ids.length
+  if (ins && (!unique(ins.map(c => c.candidateId)) || ins.length !== matches.size ||
+      ins.some((c, i) => c.candidateId !== value.matches[i]?.candidateId || c.count > required))) throw new Error('Invalid in counts')
+  if (tie && ((tie.outcome ? tie.seed === undefined : tie.seed !== undefined) || !required || !unique(tie.candidateIds) || tie.candidateIds.some(id => ins?.find(c => c.candidateId === id)?.count !== required) ||
+      !unique(tie.favorites.map(f => f.candidateId)) || tie.favorites.some(f => !tie.candidateIds.includes(f.candidateId)) ||
+      tie.favorites.reduce((sum, f) => sum + f.count, 0) > required ||
+      (tie.outcome && (!unique(tie.outcome.among) || !tie.outcome.among.includes(tie.outcome.candidateId) ||
+        tie.outcome.among.some(id => !tie.candidateIds.includes(id)))))) throw new Error('Invalid tiebreak')
+  if (value.phase === 'setup' && (ins?.length || tie)) throw new Error('Setup has matches in')
   const proposal = value.proposal
   // A late join preserves the proposal while its current all-Yep match is pending.
   if (proposal && (!candidates.has(proposal.candidateId) || proposal.version !== value.proposalVersion ||
@@ -54,14 +73,16 @@ export function proposalProjection(input: unknown, roomId: string): SharedRoomSn
       proposal.averageYepMs !== (matches.get(proposal.candidateId)?.averageYepMs ?? null))) throw new Error('Invalid proposal aggregate')
   if ((value.phase === 'setup' && (value.matches.length || proposal || value.decision)) ||
       ((value.phase === 'decided') !== !!value.decision) ||
-      (value.decision && (!proposal || proposal.candidateId !== value.decision.candidateId ||
+      (value.decision && (!proposal || !candidates.has(value.decision.candidateId) ||
+        proposal.candidateId !== value.decision.candidateId ||
         value.decision.proposalVersion !== proposal.version)))
     throw new Error('Invalid proposal decision')
   return value
 }
 
-/** Installed app bundles reject unknown Candidate fields. Reasons require an explicit authenticate capability. */
-export function proposalForClient(snapshot: SharedRoomSnapshot, candidateReasons = false): SharedRoomSnapshot {
-  if (candidateReasons) return snapshot
-  return { ...snapshot, candidates: snapshot.candidates.map(({ reason: _, ...candidate }) => candidate) }
+/** Installed strict bundles receive only fields covered by their declared capabilities. */
+export function proposalForClient(snapshot: SharedRoomSnapshot, candidateReasons = false, matchesIn = false): SharedRoomSnapshot {
+  if (candidateReasons && (matchesIn || !('ins' in snapshot || 'inVersion' in snapshot || 'tiebreak' in snapshot))) return snapshot
+  const { ins, inVersion, tiebreak, ...legacy } = snapshot
+  return { ...(matchesIn ? snapshot : legacy), candidates: candidateReasons ? snapshot.candidates : snapshot.candidates.map(({ reason: _, ...candidate }) => candidate) }
 }

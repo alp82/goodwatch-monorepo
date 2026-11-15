@@ -40,6 +40,11 @@ export interface AccountRoomsStore {
 }
 /** Storage envelope2 is reused for existing member-read compatibility; flowVersion/table/routes distinguish protocol3. */
 export interface ProposalParticipant extends ContinuousParticipant {
+	ins?: string[]
+	inRevision?: number
+	insAgreementRevision?: number
+	inOrder?: Record<string, number>
+	favorite?: { tiebreakVersion: number; candidateId: string | null } | null
   /** Server-only device profile identity; never part of a room projection. */
   profileId?: string | null
   tasteRevision?: number
@@ -64,6 +69,8 @@ export interface ProposalParticipant extends ContinuousParticipant {
 	agreementRevision: number
 }
 export interface ProposalRoom extends ContinuousRoom {
+	inVersion?: number
+	tiebreak?: Omit<import("../../../packages/yepwatch-contracts/proposal.ts").MatchesTiebreak, "favorites" | "seed"> & { seed: string } | null
 	startedAt?: number | null
 	firstMatchAt?: number | null
 	outcomeEmittedAt?: number | null

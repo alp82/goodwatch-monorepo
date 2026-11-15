@@ -83,7 +83,9 @@ export class HttpAuthority implements Authority {
   }
   private async post(path: string, body: unknown): Promise<unknown> {
     try {
-      const response = await fetch(new URL(path, this.base), {
+      const url = new URL(path, this.base)
+      url.searchParams.set('matchesIn', '1')
+      const response = await fetch(url, {
         method: 'POST', redirect: 'error', signal: AbortSignal.any([AbortSignal.timeout(this.timeoutMs), this.shutdown.signal]),
         headers: { Authorization: `Bearer ${this.secret}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(body),

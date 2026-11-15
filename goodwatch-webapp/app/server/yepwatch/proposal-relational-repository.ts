@@ -1,3 +1,4 @@
+import { encodeMatches, decodeMatches } from './proposal-matches-storage.ts'
 import { timed, timedSync } from "./server-timing.ts"
 import { SqlAccountRooms, encodeDecision, decodeDecision } from "./proposal-account-store.ts"
 import { SqlDeletionStore } from './proposal-deletion.ts'
@@ -430,6 +431,8 @@ export class RelationalProposalRepository implements ProposalRepository {
 			agreement_check: room.agreement,
 			seen_keys: room.seenKeys,
 			proposal_version: room.proposalVersion,
+			in_version: room.inVersion ?? 0,
+			tiebreak_record: encodeMatches(room),
 			participant_records: participants,
 			country: room.screens[0]?.country ?? null,
 			service_ids: room.screens[0]?.serviceIds ?? [],
@@ -1005,6 +1008,8 @@ export class RelationalProposalRepository implements ProposalRepository {
 					  }
 					: null,
 				proposalVersion: h.proposal_version,
+				inVersion: h.in_version ?? 0,
+				tiebreak: null,
 				proposal: proposal
 					? {
 							candidateId: proposal.candidate_id,
@@ -1034,6 +1039,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 					codeHash: t.code_hash
 				}))
 			}
+			decodeMatches(room, h.tiebreak_record)
 			this.validateRelations(room)
 			this.stored.set(room, referenced)
 			return {

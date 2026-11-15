@@ -1,3 +1,4 @@
+import { initializeIns } from './proposal-matches-in.ts'
 import { randomInt } from "node:crypto"
 import { timed, timedSync } from "./server-timing.ts"
 import { codec } from "./crypto.server.ts"
@@ -59,6 +60,7 @@ export class ValkeyRoomRepository implements ProposalRepository {
 			throw fail()
 		}
 		if (room?.id !== id) throw fail()
+		initializeIns(room)
 		return room
 	}
 	async read(id: string): Promise<ProposalStored | null> {

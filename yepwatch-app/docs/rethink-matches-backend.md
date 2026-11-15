@@ -51,10 +51,10 @@ what it needs.
   - zero → close any tiebreak.
 - A participant leaving or joining (roster change) drops their ins from the count; a joiner starts with none, so an
   open tiebreak or a running check is re-evaluated (`reconcile`), as proposals are today.
-- Keep `propose` / `agree` working for installed bundles: treat `propose(X)` as `set_in(X, true)` for the actor,
+- Keep `propose` / `agree` working for installed bundles: treat `propose(X)` as a move to X (drop only the actor’s other ins),
   and `agree(true|false)` on the proposal's title as `set_in(title, true|false)`. Stop clearing everyone's ins on
   `propose` (that was the single-proposal model). Keep projecting `proposal` for old bundles as the title with the
-  most ins (ties: match order), `agreeCount` = its in count.
+  most ins (ties: most recently added in), with the settled tiebreak winner taking precedence; `agreeCount` = its in count.
 
 `pick_favorite`
 - Only while a tiebreak is open and `tiebreakVersion` matches (409 `conflict`, "The tiebreak changed").
@@ -73,7 +73,7 @@ tiebreak: {
   version: number                                      // bumps when the tied set changes
   candidateIds: string[]                               // everyone's in for these, match order (2+)
   favorites: { candidateId: string; count: number }[]  // picks so far, counts only
-  seed: string                                         // random per tiebreak version (server-chosen, e.g. 16 hex chars)
+  seed?: string                                         // random per tiebreak version (server-chosen, e.g. 16 hex chars)
   outcome: { candidateId: string; spun: boolean; among: string[] } | null
 } | null
 ```
@@ -96,7 +96,7 @@ tiebreak: z.strictObject({
   version: count,
   candidateIds: z.array(id).min(2).max(512),
   favorites: z.array(z.strictObject({ candidateId: id, count })).max(512),
-  seed: z.string().min(8).max(64),
+  seed: z.string().min(8).max(64).optional(),
   outcome: z.strictObject({ candidateId: id, spun: z.boolean(), among: z.array(id).min(1).max(512) }).nullable(),
 }).nullable(),
 ```
@@ -132,3 +132,20 @@ the server.
   the winner and the room moves to Tonight.
 - Update `tests/glow-browser/room-fake.ts` (`set_in`, `pick_favorite`) and `e2e/web/decide.spec.ts` (two people
   in for two titles → tiebreak → spin → Tonight).
+
+## Review clarifications
+
+Each new tiebreak advances persisted inVersion, including close/reopen through roster changes; a version
+never names two tiebreaks. The seed is omitted until outcome exists, then required. Proposal and decision
+always name the winner. An unavailable offer check removes everyone’s in on the checked title; unrelated
+ins do not restart the check. Legacy propose moves only its actor, leaving everyone else’s ins alone.
+
+Private participant extensions (ins, inRevision, insAgreementRevision, inOrder, favorite) are stored in the
+room’s tiebreak_record with the tiebreak in this typed-row repository. inOrder persists each addition’s
+inVersion. On load an agreementRevision/stamp mismatch discards stale ins and upgrades legacy approval;
+account merge advances the stamp with agreementRevision. Restart falls back to agreementRevision for an
+absent inRevision. The TEXT column disables indexing and columnstore.
+
+Public HTTP and internal realtime responses require `?matchesIn=1` for matches fields. The new gateway sends
+it on every internal request. Either API/gateway deployment order works after migration; gateway first is
+preferred. Existing installed clients continue to receive the legacy shape without opting in.

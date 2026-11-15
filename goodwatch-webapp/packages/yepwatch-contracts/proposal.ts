@@ -95,7 +95,19 @@ export interface RoomIdea { id: string; text: string; authorId: string; on: bool
 export const PENDING_IDEA_ATTRIBUTE = { text: "Matching the mood", kind: "phrase", key: "yepwatch:pending" } as const
 export const ideaPending = (idea: Pick<RoomIdea, "attributes">) =>
 	idea.attributes.length === 1 && idea.attributes[0].key === PENDING_IDEA_ATTRIBUTE.key
+export interface MatchesTiebreak {
+	version: number
+	candidateIds: string[]
+	favorites: { candidateId: string; count: number }[]
+	/** Revealed only with the outcome. */
+	seed?: string
+	outcome: { candidateId: string; spun: boolean; among: string[] } | null
+}
 export interface SharedRoomSnapshot {
+	/** Capability matchesIn: every current match in match order, including zero counts. */
+	ins?: { candidateId: string; count: number }[]
+	inVersion?: number
+	tiebreak?: MatchesTiebreak | null
   ideas: RoomIdea[]
   disabledServiceIds: number[]
 	contractVersion: 3
@@ -139,6 +151,8 @@ export interface SharedRoomSnapshot {
 	decision: Decision | null
 }
 export interface OwnPrivateSnapshot {
+	ins?: { candidateIds: string[]; revision: number }
+	favorite?: { tiebreakVersion: number; candidateId: string | null } | null
   showSeen: boolean
   left?: boolean
 	participantId: string
@@ -221,6 +235,8 @@ export interface CommandEnvelope<T extends RoomCommand = RoomCommand> {
 	command: T
 }
 export type RoomCommand =
+	| { type: "set_in"; generation: number; candidateId: string; in: boolean; expectedOwnInRevision: number }
+	| { type: "pick_favorite"; generation: number; tiebreakVersion: number; candidateId: string | null }
   | { type: "leave" }
   | { type: "configure"; expectedContextVersion: number; country?: string; constraints?: RoomConstraints }
   /** One idea per author; a second one is refused with limit_reached ("One idea each. Edit yours to change it."). */
@@ -394,6 +410,7 @@ export type ClientRealtimeFrame =
 			pointers?: true
 			roomDetails?: true
       candidateReasons?: true
+			matchesIn?: true
 			cheers?: true
 	  }
 	| { type: "ping" }

@@ -1,3 +1,4 @@
+import { initializeIns, inCounts, favoriteCounts, setIn, reconcileIns } from './proposal-matches-in.ts'
 import { recordOutcome } from './proposal-outcome.ts'
 import { RANKER_VERSION } from './proposal-ranker.ts'
 import {
@@ -75,36 +76,37 @@ export function averageYepMs(room: ProposalRoom, id: string): number | null {
 		return null
 	return times.reduce((sum, v) => sum + v.activeExposureMs!, 0) / times.length
 }
+function agreementSelection(room: ProposalRoom) {
+	const required = activeRoom(room).participants.length
+	if (!required) return null
+	const everyone = inCounts(room, matches(room).map(c => c.id)).filter(c => c.count === required)
+	const id = room.tiebreak ? room.tiebreak.outcome?.candidateId : everyone.length === 1 ? everyone[0].candidateId : null
+	return id && everyone.some(c => c.candidateId === id) ? id : null
+}
 function signature(room: ProposalRoom) {
 	room = activeRoom(room)
+	const candidateId = agreementSelection(room)
 	return JSON.stringify([
 		room.generation,
 		room.rosterVersion,
 		room.contextVersion,
-		room.proposal?.version ?? null,
-		room.proposal?.candidateId ?? null,
+		candidateId,
+		agreementCandidate(room)?.id ?? null,
 		room.participants.map((p) => [
 			p.id,
 			p.screenId,
-			p.approvedProposalVersion,
-			p.votes[room.proposal?.candidateId ?? ""]?.value ?? null
+			p.votes[candidateId ?? ""]?.value ?? null
 		])
 	])
 }
 export function agreementCandidate(room: ProposalRoom): Candidate | null {
 	room = activeRoom(room)
-	const proposal = room.proposal
-	if (
-		!proposal ||
-		room.participants.some((p) => p.revoked) ||
-		!readyScreens(room) ||
-		!allYep(room, proposal.candidateId) ||
-		!room.participants.every(
-			(p) => p.approvedProposalVersion === proposal.version
-		)
-	)
-		return null
-	const c = room.candidates.find((c) => c.id === proposal.candidateId)
+	const required = room.participants.length
+	const everyone = inCounts(room, matches(room).map(c => c.id)).filter(c => c.count === required)
+	const candidateId = room.tiebreak ? room.tiebreak.outcome?.candidateId : everyone.length === 1 ? everyone[0].candidateId : null
+	if (!candidateId || !required || !room.proposal || room.participants.some(p => p.revoked) || !readyScreens(room) || !allYep(room, candidateId) ||
+			!everyone.some(c => c.candidateId === candidateId)) return null
+	const c = room.candidates.find(c => c.id === candidateId)
 	if (
 		c?.identity.kind === "show_continue" &&
 		!room.participants.every(
@@ -123,24 +125,10 @@ function clearApprovals(room: ProposalRoom) {
 export function reconcile(room: ProposalRoom, previous: ProposalRoom) {
 	const oldSignature = signature(previous)
 	const oldAgreement = structuredClone(previous.agreement)
-	const proposal = room.proposal
-	if (proposal) {
-		const broken =
-			!room.candidates.some(
-				(c) => c.id === proposal.candidateId && candidateEligible(room, c)
-			) ||
-			activeRoom(room).participants.some(
-				(p) =>
-					p.votes[proposal.candidateId]?.value === "pass" ||
-					(proposal.baseParticipantIds.includes(p.id) &&
-						p.votes[proposal.candidateId]?.value !== "watch")
-			)
-		if (broken) {
-			room.proposal = null
-			room.proposalVersion++
-			clearApprovals(room)
-		}
+	if (room.proposal && !room.candidates.some(c => c.id === room.proposal!.candidateId && candidateEligible(room, c))) {
+		room.proposal = null; room.proposalVersion++
 	}
+	reconcileIns(room, previous, matches(room).map(c => c.id), matches(previous).map(c => c.id))
 	if (signature(room) === oldSignature) {
 		room.agreement = oldAgreement
 		return
@@ -200,9 +188,16 @@ export function proposalSnapshot(
 	const active = activeRoom(room)
 	const p = actor(room, participantId)
 	const proposal = room.proposal
+	const ins = room.phase === 'setup' ? [] : inCounts(room, matches(room).map(c => c.id))
+	const tie = room.tiebreak && active.participants.length > 0 && room.tiebreak.candidateIds.every(id =>
+		ins.find(c => c.candidateId === id)?.count === active.participants.length) ? room.tiebreak : null
 	const shared: SharedRoomSnapshot = {
 		...legacy.shared,
 		contractVersion: 3,
+		ins,
+		inVersion: room.inVersion ?? 0,
+		tiebreak: tie ? { version: tie.version, candidateIds: [...tie.candidateIds],
+			...(tie.outcome ? { seed: tie.seed } : {}), outcome: structuredClone(tie.outcome), favorites: favoriteCounts(room) } : null,
 		// A pending idea's stored marker carries its search reservation: phones see only the marker itself.
 		ideas: (room.ideas ?? []).map(({ rankedKeys: _, interpretedAt: __, ...idea }) =>
 			ideaPending(idea) ? { ...structuredClone(idea), attributes: [{ ...PENDING_IDEA_ATTRIBUTE }] } : structuredClone(idea)
@@ -260,6 +255,7 @@ export function proposalSnapshot(
 		}
 		shared.candidates = []
 		shared.matches = []
+		shared.ins = []; shared.inVersion = 0; shared.tiebreak = null
 		shared.proposal = null
 		shared.decision = null
 		shared.agreement = { version: 0, state: "none", error: null }
@@ -270,6 +266,8 @@ export function proposalSnapshot(
 		shared,
 		own: {
 			...own,
+			ins: { candidateIds: p.leftAt == null ? [...(p.ins ?? (proposal && p.approvedProposalVersion === proposal.version ? [proposal.candidateId] : []))] : [], revision: p.inRevision ?? p.agreementRevision },
+			favorite: p.leftAt == null && tie ? structuredClone(p.favorite ?? null) : null,
 			showSeen: p.showSeen ?? false,
 			left: p.leftAt != null,
 			canHost: p.leftAt == null && room.hostId === p.id,
@@ -435,106 +433,50 @@ export function proposalTransition(
 		return redesigned
 	}
 	let room: ProposalRoom
-	if (
-		c.type === "propose" ||
-		c.type === "agree" ||
-		c.type === "retry_agreement"
-	) {
+	if (c.type === 'set_in' || c.type === 'pick_favorite' || c.type === 'propose' || c.type === 'agree' || c.type === 'retry_agreement') {
 		room = structuredClone(original)
+		initializeIns(room)
 		const p = actor(room, actorId)
-		requireRoom(room.phase === "choosing", "conflict", "Choosing is not active")
-		requireRoom(
-			room.generation === c.generation,
-			"conflict",
-			"Suggestion generation changed"
-		)
-		requireRoom(
-			room.proposalVersion === c.expectedProposalVersion,
-			"conflict",
-			"Proposal changed"
-		)
-		if (c.type === "retry_agreement") {
-			requireRoom(
-				room.agreement.version === c.expectedAgreementVersion &&
-					agreementCandidate(room),
-				"conflict",
-				"Agreement changed"
-			)
-			room.agreement = {
-				version: room.agreement.version + 1,
-				state: "checking",
-				error: null
-			}
-			room.revision++
-			return room
-		}
-		requireRoom(
-			room.rosterVersion === c.expectedRosterVersion,
-			"conflict",
-			"Room roster changed"
-		)
-		if (c.type === "propose") {
-			if (room.proposal?.candidateId === c.candidateId) {
+		if (c.type === 'set_in') {
+			requireRoom(room.phase === 'choosing' && room.generation === c.generation, 'conflict', 'Pick a current match')
+			if (c.in && room.candidates.find(v => v.id === c.candidateId)?.identity.kind === 'show_continue' &&
+					!activeRoom(room).participants.every(m => m.member.state === 'linked' && m.memberGrant && m.memberGrant.expiresAt > now)) memberProgressRequired()
+			requireRoom(matches(room).some(m => m.id === c.candidateId), 'conflict', 'Pick a current match')
+			requireRoom(p.inRevision === c.expectedOwnInRevision, 'conflict', "Your I'm in changed")
+			setIn(room, p, c.candidateId, c.in)
+		} else if (c.type === 'pick_favorite') {
+			const tie = room.tiebreak
+			requireRoom(room.phase === 'choosing' && room.generation === c.generation && tie && !tie.outcome && tie.version === c.tiebreakVersion &&
+				(c.candidateId === null || tie.candidateIds.includes(c.candidateId)), 'conflict', 'The tiebreak changed')
+			p.favorite = { tiebreakVersion: c.tiebreakVersion, candidateId: c.candidateId }
+		} else {
+			requireRoom(room.phase === 'choosing', 'conflict', 'Choosing is not active')
+			requireRoom(room.generation === c.generation, 'conflict', 'Suggestion generation changed')
+			requireRoom(room.proposalVersion === c.expectedProposalVersion, 'conflict', 'Proposal changed')
+			if (c.type === 'retry_agreement') {
+				requireRoom(room.agreement.version === c.expectedAgreementVersion && agreementCandidate(room), 'conflict', 'Agreement changed')
+				room.agreement = { version: room.agreement.version + 1, state: 'checking', error: null }
 				room.revision++
 				return room
 			}
-			requireRoom(
-				matches(room).some((m) => m.id === c.candidateId),
-				"conflict",
-				"Propose a current shared match"
-			)
-			const previousCandidateId = room.proposal?.candidateId ?? null
-			room.proposalVersion++
-			clearApprovals(room)
-			room.proposal = {
-				candidateId: c.candidateId,
-				version: room.proposalVersion,
-				previousCandidateId,
-				proposerId: p.id,
-				baseParticipantIds: activeRoom(room).participants.map((p) => p.id)
-			}
-			p.approvedProposalVersion = room.proposalVersion
-		} else {
-			requireRoom(
-				room.proposal?.candidateId === c.candidateId,
-				"conflict",
-				"Proposal title changed"
-			)
-			requireRoom(
-				p.agreementRevision === c.expectedOwnAgreementRevision,
-				"conflict",
-				"Your agreement changed"
-			)
-			if (c.agreed) {
-				if (
-					room.candidates.find((v) => v.id === c.candidateId)?.identity.kind ===
-						"show_continue" &&
-					!activeRoom(room).participants.every(
-						(m) =>
-							m.member.state === "linked" &&
-							m.memberGrant &&
-							m.memberGrant.expiresAt > now
-					)
-				)
-					memberProgressRequired()
-				if (p.votes[c.candidateId]?.value !== "watch") {
-					const old = p.votes[c.candidateId]
-					delete p.votes[c.candidateId]
-					p.votes[c.candidateId] = {
-						value: "watch",
-						revision: (old?.revision ?? 0) + 1,
-						activeExposureMs: null,
-						timingSource: "implied"
-					}
-					p.lastVotedId = c.candidateId
+			requireRoom(room.rosterVersion === c.expectedRosterVersion, 'conflict', 'Room roster changed')
+			if (c.type === 'propose') {
+				requireRoom(matches(room).some(m => m.id === c.candidateId), 'conflict', 'Pick a current match')
+				for (const id of [...p.ins!]) if (id !== c.candidateId) setIn(room, p, id, false)
+				if (p.ins!.includes(c.candidateId)) {
+					p.inRevision!++
+					p.agreementRevision++
+					room.inVersion!++
+					p.insAgreementRevision = p.agreementRevision
+					p.inOrder![c.candidateId] = room.inVersion!
 				}
-				if (!room.proposal.baseParticipantIds.includes(p.id))
-					room.proposal.baseParticipantIds.push(p.id)
-			}
-			const next = c.agreed ? room.proposal.version : null
-			if (p.approvedProposalVersion !== next) {
-				p.approvedProposalVersion = next
-				p.agreementRevision++
+				setIn(room, p, c.candidateId, true)
+			} else {
+				requireRoom(room.proposal?.candidateId === c.candidateId, 'conflict', 'Proposal title changed')
+				requireRoom(p.agreementRevision === c.expectedOwnAgreementRevision, 'conflict', 'Your agreement changed')
+				if (c.agreed && room.candidates.find(v => v.id === c.candidateId)?.identity.kind === 'show_continue' &&
+						!activeRoom(room).participants.every(m => m.member.state === 'linked' && m.memberGrant && m.memberGrant.expiresAt > now)) memberProgressRequired()
+				setIn(room, p, c.candidateId, c.agreed)
 			}
 		}
 		room.revision++
@@ -588,6 +530,8 @@ export function proposalTransition(
 			room.proposalVersion++
 			room.proposal = null
 			clearApprovals(room)
+			room.inVersion = (room.inVersion ?? 0) + 1; room.tiebreak = null
+			for (const p of room.participants) { p.ins = []; p.inRevision = (p.inRevision ?? p.agreementRevision) + 1; p.insAgreementRevision = p.agreementRevision; p.inOrder = {}; p.favorite = null }
 		}
 		if (c.type === "vote") {
 			const valid =

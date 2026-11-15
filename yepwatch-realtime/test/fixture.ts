@@ -70,13 +70,14 @@ export async function fixture(continuous: boolean | 'proposal' = false) {
     try { let raw = ''; for await (const chunk of req) raw += chunk; body = JSON.parse(raw) }
     catch { reply(400, {}); return }
     if (state.unavailable) { reply(503, {}); return }
-    if (req.url === routes.realtimeAttach) {
+    const pathname = new URL(req.url!, 'http://fixture').pathname
+    if (pathname === routes.realtimeAttach) {
       const t = tickets.get(body.ticket)
       if (!t || t.expiresAt <= Date.now() || t.roomId !== body.roomId) { reply(401, {}); return }
       tickets.delete(body.ticket)
       reply(200, { ...lease(t.participantId), ...state.corruptAttachment }); return
     }
-    if (req.url === routes.realtimeView) {
+    if (pathname === routes.realtimeView) {
       state.viewCalls++
       const a = leases.get(body.lease)
       if (state.revoked || !a || state.revokedParticipants.has(a.participantId) || a.leaseExpiresAt <= Date.now() || a.roomId !== body.roomId) { reply(403, {}); return }
@@ -85,7 +86,7 @@ export async function fixture(continuous: boolean | 'proposal' = false) {
       await state.beforeView?.([a.participantId])
       reply(200, { ...lease(a.participantId), snapshot: shared }); return
     }
-    if (state.batched && 'realtimeViews' in routes && req.url === routes.realtimeViews) {
+    if (state.batched && 'realtimeViews' in routes && pathname === routes.realtimeViews) {
       state.viewsCalls++
       const shared = structuredClone(state.shared)
       await state.beforeView?.((body.leases as string[]).flatMap(value => leases.get(value)?.participantId ?? []))
