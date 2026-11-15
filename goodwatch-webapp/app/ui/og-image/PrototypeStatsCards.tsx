@@ -40,7 +40,7 @@ export const STATS_VARIANTS = [
 	{ key: "G", name: "Standoff — one movie, two crowds, two scores" },
 	{ key: "H", name: "Quiz — a question from the page, three poster answers" },
 	{ key: "I", name: "Tabloid — stacked counts: Christmas, zombies, sharks, Friday the 13th" },
-	{ key: "K", name: "Tabloid mix — titles, sharks, years, longest movie" },
+	{ key: "K", name: "Tabloid mix — titles, years, movies called Home, longest movie" },
 	{ key: "J", name: "Press play — start in 1618, finish about now" },
 ] as const
 export type StatsVariant = (typeof STATS_VARIANTS)[number]["key"]
@@ -304,19 +304,21 @@ function Quiz({ c }: { c: StatsCardContent }) {
 	)
 }
 
+// Anton runs about 0.45 em per uppercase character: the label takes the largest size (up to 58) that fits beside its number.
+const labelSize = (l: { n: string; text: string }) =>
+	Math.min(58, Math.floor((790 - 22 - (l.n.replace(/ /g, "").length * 0.45 + (l.n.split(" ").length - 1) * 0.2) * 118) / (l.text.length * 0.46)))
+
 function Tabloid({ c, mix = false }: { c: StatsCardContent; mix?: boolean }) {
 	const lines = (mix ? c.fun.mix : c.fun.counts).slice(0, 4)
 	return (
 		<Frame bg={INK}>
 			<div style={col({ position: "absolute", left: SIDE, top: 0, bottom: 0, width: 790, justifyContent: "center", gap: 18 })}>
 				{lines.map((l) => (
-					// A fixed number column, so every label starts at the same x; labels sit on the number's baseline.
-					<div key={l.text} style={row({ alignItems: "flex-end", gap: 28 })}>
-						<div style={{ display: "flex", width: 240 }}>
-							<Num text={l.n} size={118} />
-						</div>
-						<div style={{ display: "flex", width: 520, paddingBottom: 4 }}>
-							<Num text={l.text} size={40} color="#fff" />
+					// Labels sit on the number's baseline: bottom-aligned, lifted by Anton's descent at each size.
+					<div key={l.text} style={row({ alignItems: "flex-end", gap: 22 })}>
+						<Num text={l.n} size={118} />
+						<div style={{ display: "flex", paddingBottom: 8 }}>
+							<Num text={l.text} size={labelSize(l)} color="#fff" />
 						</div>
 					</div>
 				))}

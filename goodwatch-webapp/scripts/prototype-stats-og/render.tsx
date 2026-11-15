@@ -102,8 +102,8 @@ const content: StatsCardContent = {
 		],
 		mix: [
 			{ n: short(c.movies + c.shows), text: "movies and shows" },
-			{ n: count(t.sharks), text: "shark movies" },
 			{ n: String(watchYears), text: "years to watch them all" },
+			{ n: count(t.commonTitles[0].movies), text: `movies called ${t.commonTitles[0].title}` },
 			{ n: `${Math.round(r.longest[0].runtime / 60)} h`, text: `${r.longest[0].title}, the longest movie` },
 		],
 		pressPlay: { year: Math.floor(made.getUTCFullYear() + made.getUTCMonth() / 12 - exactYears), years: watchYears },
