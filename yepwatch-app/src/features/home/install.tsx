@@ -8,7 +8,7 @@ import { Image, Platform, Pressable, View, type ViewStyle } from 'react-native';
 import { Link } from 'expo-router';
 import codes from './codes.json';
 import { GText, Press, glow, grow } from '../glow/theme';
-import { HoverProvider, Nudge, hoverTransition, liftStyle } from '../shell/hover';
+import { HoverProvider, LiftShadow, Nudge, hoverTransition, liftStyle } from '../shell/hover';
 import { StoreLogo } from '../shell/marks';
 import { useLayout } from '../shell/layout';
 import { R, warm } from '../shell/tokens';
@@ -43,6 +43,7 @@ export function QrCard({ store, width }: { store: Store; width: number }) {
     <Link href={store.url as `https://${string}`} target="_blank" rel="noopener noreferrer" asChild>
       <Pressable {...externalAttrs} accessibilityRole="link" accessibilityLabel={`Install YepWatch on ${store.title}`} {...props}
         style={{ width, padding: 12, gap: 10, borderRadius: R.card, borderWidth: 1, borderColor: '#2a2a2a', backgroundColor: glow.panel, ...liftStyle(hover, down) }}>
+        <LiftShadow on={hover && !down} radius={R.card} inset={-1} />
         <HoverProvider value={hover}>
         <View style={{ width: width - 24, height: width - 24, borderRadius: 8, overflow: 'hidden', backgroundColor: '#fff' }}>
           <Image source={qrSource(store)} accessibilityLabel={`${store.title} installation QR code`} style={{ width: '100%', height: '100%' }} />

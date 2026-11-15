@@ -2,7 +2,8 @@
  * Desktop hover for YepWatch controls (owner rule, rethink.md): big tiles lift (2 px up, a deeper shadow, the arrow
  * nudges forward); short controls lighten (a brighter surface and border, the icon nudges, no lift, no shadow); flat
  * links, icons and rows get a light wash. No outline rings. Web pointers only (react-native-web ignores touch for
- * hover); a press still dims or settles. Transitions run on transform, box-shadow and opacity only.
+ * hover); a press still dims or settles. Transitions run on transform and opacity only: the lift's shadow sits on a
+ * layer of its own (LiftShadow) that fades in.
  */
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
@@ -11,16 +12,25 @@ import { glow, native, onePress, s, spaceToggles } from '../glow/theme';
 /** Style keys react-native-web understands but React Native's types don't list. */
 export const webOnly = (o: Record<string, unknown>) => (native ? {} : o) as ViewStyle;
 const EASE = 'cubic-bezier(0.2, 0.7, 0.2, 1)';
-export const hoverTransition = webOnly({ transitionProperty: 'transform, box-shadow, opacity', transitionDuration: '180ms', transitionTimingFunction: EASE });
+export const hoverTransition = webOnly({ transitionProperty: 'transform, opacity', transitionDuration: '180ms', transitionTimingFunction: EASE });
 /** The shadow a lifted dark surface casts. */
 export const LIFT_SHADOW = '0 10px 24px rgba(0,0,0,0.38)';
 /** An amber surface's lift: a warm glow under the dark drop. */
 export const AMBER_LIFT = '0 12px 30px rgba(251,191,36,0.16), 0 6px 16px rgba(0,0,0,0.34)';
-const REST_SHADOW = '0 0 0 rgba(0,0,0,0)';
 
-export function liftStyle(hovered: boolean, pressed: boolean, shadow = LIFT_SHADOW, rest = REST_SHADOW): ViewStyle {
+/** A big tile's lift: 2 px up while hovered, settles while pressed. Its shadow is a LiftShadow inside the tile. */
+export function liftStyle(hovered: boolean, pressed: boolean): ViewStyle {
   const up = hovered && !pressed;
-  return { ...hoverTransition, transform: [{ translateY: up ? -2 : 0 }, { scale: pressed ? 0.985 : 1 }], boxShadow: up ? shadow : rest } as ViewStyle;
+  return { ...hoverTransition, transform: [{ translateY: up ? -2 : 0 }, { scale: pressed ? 0.985 : 1 }] } as ViewStyle;
+}
+
+/**
+ * The lifted shadow, on a transparent layer over the tile's border box (`inset`: minus its border width) that fades
+ * in, so the hover animates opacity and never repaints a shadow. The tile's first child: drawn under its content.
+ */
+export function LiftShadow({ on, shadow = LIFT_SHADOW, radius = 10, inset = 0 }: { on: boolean; shadow?: string; radius?: number; inset?: number }) {
+  if (native) return null;
+  return <View pointerEvents="none" aria-hidden style={[{ position: 'absolute', top: inset, left: inset, right: inset, bottom: inset, borderRadius: radius, opacity: on ? 1 : 0 }, hoverTransition, webOnly({ boxShadow: shadow })]} />;
 }
 
 const Hovered = createContext(false);
@@ -62,12 +72,17 @@ export function HoverPress({ label, onPress, children, disabled = false, quiet =
 }) {
   const [on, setOn] = useState(false);
   const live = on && !disabled && !quiet;
-  const skin = (StyleSheet.flatten(visual ?? style) ?? {}) as ViewStyle & { boxShadow?: string };
+  const skin = (StyleSheet.flatten(visual ?? style) ?? {}) as ViewStyle;
   const bw = typeof skin.borderWidth === 'number' ? skin.borderWidth : 0;
   const amber = typeof skin.backgroundColor === 'string' && skin.backgroundColor.toLowerCase() === glow.amber.toLowerCase();
   const wash = hover === 'lighten'
     ? <View pointerEvents="none" style={[{ position: 'absolute', top: -bw, left: -bw, right: -bw, bottom: -bw, borderRadius: skin.borderRadius ?? 10, borderWidth: bw, borderColor: amber ? '#ffffff59' : '#ffffff2e', backgroundColor: amber ? '#ffffff2b' : '#ffffff10' }, hoverTransition, { opacity: live ? 1 : 0 }]} />
-    : hover === 'tint' ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, hoverTransition, { borderRadius: skin.borderRadius ?? 10, backgroundColor: '#ffffff12', opacity: live ? 1 : 0 }]} /> : null;
+    : hover === 'tint' ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, hoverTransition, { borderRadius: skin.borderRadius ?? 10, backgroundColor: '#ffffff12', opacity: live ? 1 : 0 }]} />
+    : null;
+  const lift = (pressed: boolean) => hover === 'lift'
+    // Shows while hovered, goes while pressed (the tile settles).
+    ? <LiftShadow on={live && !pressed} shadow={shadow} radius={typeof skin.borderRadius === 'number' ? skin.borderRadius : 10} inset={-bw} />
+    : null;
   const inner = <Hovered.Provider value={live}>{children}</Hovered.Provider>;
   return (
     <Pressable
@@ -87,13 +102,13 @@ export function HoverPress({ label, onPress, children, disabled = false, quiet =
       style={({ pressed }) => [
         s.press,
         style,
-        hover === 'lift' ? liftStyle(live, pressed, shadow, skin.boxShadow) : hoverTransition,
+        hover === 'lift' ? liftStyle(live, pressed) : hoverTransition,
         disabled && dim && { opacity: 0.42 },
         pressed && hover !== 'lift' && { opacity: 0.78 },
         !native && !disabled && !quiet ? webOnly({ cursor: 'pointer' }) : null,
       ]}
     >
-      {visual ? <View style={visual}>{wash}{inner}</View> : <>{wash}{inner}</>}
+      {({ pressed }) => (visual ? <View style={visual}>{lift(pressed)}{wash}{inner}</View> : <>{lift(pressed)}{wash}{inner}</>)}
     </Pressable>
   );
 }
