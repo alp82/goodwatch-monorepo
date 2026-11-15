@@ -1,8 +1,15 @@
 import { expect, test, type Page } from '@playwright/test';
-import { choosingRoom, fakeRoom, newRoom, reading } from './room-fake';
+import { choosingRoom, fakeRoom, inRoom, newRoom, reading, settleTie } from './room-fake';
 
 const shot = (page: Page, name: string) => page.screenshot({ path: `artifacts/room-redesign/${name}.png` });
 const button = (page: Page, name: string | RegExp) => page.getByRole('button', { name, exact: typeof name === 'string' });
+/** The app reads the room again (as on a return to the front): it sees what the test changed with `f.push()`. */
+const reread = (page: Page) => page.evaluate(() => {
+  for (const state of ['hidden', 'visible']) {
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => state });
+    document.dispatchEvent(new Event('visibilitychange'));
+  }
+});
 
 test('guest host: /new makes the couch at once, the idea from the console, name and services before Start', async ({ page }) => {
   const f = await fakeRoom(page, newRoom());
@@ -203,10 +210,11 @@ test('streaming: yours and the room’s, who brings what, host switches off', as
   await expect(page.getByRole('switch', { name: 'Use Disney+' })).toBeDisabled();
 });
 
-test('Matches: What are we watching now, I’m in toggles; your I’m in keeps you there, a friend’s takes over (no names)', async ({ page }) => {
+test('Matches: What are we watching now, I’m in toggles every one you’re in for; a friend’s I’m in counts on its row (no names)', async ({ page }) => {
   const room = choosingRoom();
   room.shared.matches = [{ candidateId: 'c1', averageYepMs: null }, { candidateId: 'c2', averageYepMs: null }];
-  const f = await fakeRoom(page, room);
+  room.own.ins = { candidateIds: [], revision: 0 };
+  const f = await fakeRoom(page, inRoom(room));
   await page.goto('/room/test-room');
   await button(page, '2 matches').click();
   await expect(page.getByTestId('matches')).toBeVisible();
@@ -216,26 +224,72 @@ test('Matches: What are we watching now, I’m in toggles; your I’m in keeps y
   const first = page.getByRole('checkbox', { name: /^I’m in for Isolated test c1/ });
   const second = page.getByRole('checkbox', { name: /^I’m in for Isolated test c2/ });
   await expect(first).toHaveAttribute('aria-checked', 'false');
-  // Your I'm in: the room's proposal, and you stay on Matches.
+  // Every tap is an I'm in of its own: both stay on, and you stay on Matches.
   await first.click();
-  await expect.poll(() => f.sent().filter((t) => t === 'propose').length).toBe(1);
   await expect(first).toHaveAttribute('aria-checked', 'true');
   await expect(first).toHaveAccessibleName('I’m in for Isolated test c1, 1 of 2 in');
-  await expect(page.getByTestId('matches')).toBeVisible();
-  // A second one while nobody else is in: it becomes the proposal, the first stays marked here.
   await second.click();
-  await expect.poll(() => f.sent().filter((t) => t === 'propose').length).toBe(2);
-  await expect(first).toHaveAttribute('aria-checked', 'true');
   await expect(second).toHaveAttribute('aria-checked', 'true');
-  // Tapping your proposal again takes your I'm in back.
+  await expect(first).toHaveAttribute('aria-checked', 'true');
+  await expect.poll(() => f.commands.filter((e) => e.command.type === 'set_in').map((e) => e.command)).toEqual([
+    { type: 'set_in', generation: room.shared.generation, candidateId: 'c1', in: true, expectedOwnInRevision: 0 },
+    { type: 'set_in', generation: room.shared.generation, candidateId: 'c2', in: true, expectedOwnInRevision: 1 },
+  ]);
+  // Tapping one again takes that I'm in back, nothing else.
   await second.click();
-  await expect.poll(() => f.commands.at(-1)?.command).toMatchObject({ type: 'agree', agreed: false });
+  await expect.poll(() => f.commands.at(-1)?.command).toMatchObject({ type: 'set_in', candidateId: 'c2', in: false, expectedOwnInRevision: 2 });
   await expect(second).toHaveAttribute('aria-checked', 'false');
-  // A friend's I'm in: someone's in, no faces, and it takes over the screen.
-  f.room.own.agreement = { ...f.room.own.agreement, isProposer: false, agreed: false };
-  f.room.shared.proposal = { ...f.room.shared.proposal!, agreeCount: 1 };
+  await expect(first).toHaveAttribute('aria-checked', 'true');
+  expect(f.sent().filter((t) => t === 'propose' || t === 'agree')).toEqual([]);
+  // A friend's I'm in counts on its row and keeps you here; counts, never who.
+  inRoom(f.room, { c2: 1 });
   f.push();
-  await page.reload();
+  await reread(page);
+  await expect(second).toHaveAccessibleName('I’m in for Isolated test c2, 1 of 2 in');
+  await expect(page.getByTestId('matches')).toBeVisible();
+  await expect(page.getByTestId('frame-body').getByText(/Mia/)).toHaveCount(0);
+});
+
+test('Matches: everyone in for two opens the tiebreak by itself; favorites wait for everyone, the spin lands on the server’s pick, then Tonight', async ({ page }) => {
+  const room = choosingRoom();
+  room.shared.matches = [{ candidateId: 'c1', averageYepMs: null }, { candidateId: 'c2', averageYepMs: null }];
+  room.own.ins = { candidateIds: ['c1'], revision: 1 };
+  const f = await fakeRoom(page, inRoom(room, { c1: 1, c2: 1 }));
+  await page.goto('/room/test-room');
+  await button(page, '2 matches').click();
+  await expect(page.getByTestId('matches')).toBeVisible();
+  await expect(page.getByTestId('tiebreak')).toHaveCount(0);
+  await page.getByRole('checkbox', { name: /^I’m in for Isolated test c2/ }).click();
+  // The room reports everyone in for both: the tiebreak opens on its own.
+  await expect(page.getByTestId('tiebreak')).toBeVisible();
+  await expect(page.getByText('Everyone’s in for 2', { exact: true }).first()).toBeVisible();
+  await shot(page, '09b-tiebreak');
+  await page.getByRole('radio', { name: 'Isolated test c2, my favorite' }).click();
+  await expect.poll(() => f.commands.at(-1)?.command).toEqual({ type: 'pick_favorite', generation: room.shared.generation, tiebreakVersion: f.room.shared.tiebreak!.version, candidateId: 'c2' });
+  await expect(page.getByText('Waiting for 1 more pick', { exact: true })).toBeVisible();
+  // Closed, it opens again from Pick one of 2.
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('tiebreak')).toHaveCount(0);
+  await button(page, 'Pick one of 2').click();
+  await expect(page.getByText('Waiting for 1 more pick', { exact: true })).toBeVisible();
+  // The friend picks the other one: favorites tie, the server spins (its outcome: c1) and decides the room.
+  f.room.shared.tiebreak!.favorites = f.room.shared.tiebreak!.favorites.map((x) => (x.candidateId === 'c1' ? { ...x, count: 1 } : x));
+  settleTie(f.room);
+  f.push();
+  await reread(page);
+  await expect(page.getByText('The spin picked Isolated test c1', { exact: true })).toBeVisible();
+  await expect(page.getByTestId('tonight')).toBeVisible();
+});
+
+test('a friend’s I’m in takes over the room page: someone’s in, no faces; I’m in agrees to it', async ({ page }) => {
+  const room = choosingRoom();
+  room.shared.matches = [{ candidateId: 'c1', averageYepMs: null }, { candidateId: 'c2', averageYepMs: null }];
+  room.shared.proposalVersion = 2;
+  room.shared.proposal = { candidateId: 'c2', version: 2, previousCandidateId: null, agreeCount: 1, requiredCount: 2, averageYepMs: null };
+  room.own.agreement = { proposalVersion: 2, agreed: false, revision: 0, isProposer: false };
+  room.own.ins = { candidateIds: [], revision: 0 };
+  await fakeRoom(page, inRoom(room, { c2: 1 }));
+  await page.goto('/room/test-room');
   await expect(page.getByText('SOMEONE’S IN', { exact: true })).toBeVisible();
   await expect(page.getByText('1 of 2 in', { exact: true })).toBeVisible();
   // The header's setup chip carries your own name; the proposal itself names nobody.
@@ -245,11 +299,6 @@ test('Matches: What are we watching now, I’m in toggles; your I’m in keeps y
   await expect(page.getByText('You’re in', { exact: true })).toBeVisible();
   await button(page, 'Keep swiping').click();
   await expect(page.getByTestId('voting')).toBeVisible();
-  // Set aside: the peek opens Matches, where its row counts both.
-  await button(page, '2 matches').click();
-  await expect(page.getByTestId('matches')).toBeVisible();
-  await expect(second).toHaveAccessibleName('I’m in for Isolated test c2, 2 of 2 in');
-  await expect(page.getByText('Everyone’s in for Isolated test c2', { exact: true })).toBeVisible();
 });
 
 test('Tonight: scores, watch button for the first switched-on service, no Cheer button, host Start again', async ({ page }) => {

@@ -391,6 +391,8 @@ export function MatchesPage() {
     const timer = setTimeout(() => setLanded(outcome), LANDED_BEAT_MS);
     return () => clearTimeout(timer);
   }, [outcome]);
+  // The tiebreak closed (by hand, or to let the page go): nothing holds the page any more.
+  const onSkip = useCallback(() => { if (outcome) setLanded(outcome); }, [outcome]);
   // Sheets close first: a sheet holds a navigation away, and this page would stay.
   useEffect(() => { if (leaving && !holding) leaveScreen(() => leavePage(id)); }, [leaving, holding, id]);
   // While it leaves, the page keeps the last layout it showed: drawn for a frame or two before the room's page
@@ -399,7 +401,7 @@ export function MatchesPage() {
   if (view && !leaving && view !== shown) setShown(view);
   const page = leaving ? shown ?? view : view;
   if (!page || !view) return <RoomStatus />;
-  return <Matches id={id} view={page} tiebreak={leaving ? view.tiebreak : page.tiebreak} held={leaving} onLanded={onLanded} />;
+  return <Matches id={id} view={page} tiebreak={leaving ? view.tiebreak : page.tiebreak} held={leaving} onLanded={onLanded} onSkip={onSkip} />;
 }
 
 /** How long the tiebreak's winner shows once the spin has landed, before the page leaves for Tonight. */
@@ -409,19 +411,20 @@ const LANDED_BEAT_MS = 1400;
  * `held`: the layout from before the page began leaving, shown until it's gone; its toggles do nothing.
  * `tiebreak`: the room's latest (the decided room still carries the outcome the held layout lacks).
  */
-function Matches({ id, view, tiebreak, held, onLanded }: { id: string; view: RoomView; tiebreak: RoomView['tiebreak']; held: boolean; onLanded: () => void }) {
+function Matches({ id, view, tiebreak, held, onLanded, onSkip }: { id: string; view: RoomView; tiebreak: RoomView['tiebreak']; held: boolean; onLanded: () => void | (() => void); onSkip: () => void }) {
   const { cmd, disabled } = useRoom();
   const { phone, z, max } = useLayout();
-  // The tiebreak opens by itself each time one appears; closed, "Pick one of N" opens it again. Its outcome
-  // always shows.
-  const [closed, setClosed] = useState<number | null>(null);
+  // The tiebreak opens by itself each time one appears, and again when its outcome comes; closed, "Pick one of N"
+  // opens it again.
+  const [closed, setClosed] = useState<string | null>(null);
+  const sheetKey = tiebreak ? `${tiebreak.version}:${tiebreak.outcome ? 'outcome' : 'picking'}` : null;
   const required = view.required;
   const matches = view.matches;
   const rows = view.ins;
   const byId = new Map(rows.map((r) => [r.id, r]));
   const tiedIds = tiebreak?.candidateIds ?? everyoneIn(rows, required);
   const tied = tiedIds.map((cid) => matches.find((c) => c.id === cid)).filter((c): c is Candidate => Boolean(c));
-  const sheetOpen = Boolean(tiebreak && tied.length > 1 && (tiebreak.outcome || closed !== tiebreak.version));
+  const sheetOpen = Boolean(tiebreak && tied.length > 1 && closed !== sheetKey);
   const toggle = (cid: string) => {
     if (held) return;
     const row = byId.get(cid);
@@ -453,7 +456,7 @@ function Matches({ id, view, tiebreak, held, onLanded }: { id: string; view: Roo
       pill={held ? { label: view.label, state: 'live', fresh: view.newSuggestions, beat: null } : undefined}
       sheet={sheetOpen && tiebreak ? (
         <Tiebreak tied={tied} favorites={tiebreak.favorites} mine={tiebreak.mine} required={required} outcome={tiebreak.outcome}
-          onPick={(cid) => { if (!held) void cmd.pickFavorite(cid); }} onLanded={onLanded} onClose={() => setClosed(tiebreak.version)} />
+          onPick={(cid) => { if (!held) void cmd.pickFavorite(cid); }} onLanded={onLanded} onClose={() => { setClosed(sheetKey); onSkip(); }} />
       ) : undefined}>
       <RoomNotes />
       <View style={{ gap: 4, alignItems: phone ? 'flex-start' : 'center' }}>

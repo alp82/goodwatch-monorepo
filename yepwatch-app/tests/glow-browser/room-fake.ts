@@ -1,7 +1,8 @@
 /**
  * An isolated fake of the redesigned room API for browser tests: ideas, per-person services, host
- * switches, rename, seen titles, and the existing voting, proposal and agreement commands. Friends
- * are participants the test edits directly (`f.room`, then `f.push()` to bump the revision).
+ * switches, rename, seen titles, voting, the proposal's agreement, and Matches' I'm in (`set_in`) with its
+ * tiebreak (`pick_favorite`, `inRoom` below). Friends are participants the test edits directly (`f.room`, then
+ * `f.push()` to bump the revision).
  */
 import type { Page, Route } from '@playwright/test';
 import type { AccountDecision, CatalogMetadata, CommandEnvelope, InvitePreview, ProfileAnswerItem, ProfileSummary, RoomSnapshot, TasteCard } from '@goodwatch/yepwatch-contracts/proposal';
@@ -91,6 +92,41 @@ export function tasteCards(count = 10, posters = false): TasteCard[] {
   }));
 }
 
+/**
+ * Matches' I'm in as the server keeps it (contract 3 with matchesIn): every match's count, your own list, and the
+ * tiebreak once everyone's in for two or more. `friends`: other people's I'm ins per title. Settles like the
+ * server: every favorite in → most picks wins (favorites tied: the first of the most-picked, `spun`); the room is
+ * then decided on the winner.
+ */
+/** Every favorite in (friends' picks are in `favorites` already): the outcome, then the room decides on it. */
+export function settleTie(s: FakeSnapshot) {
+  const t = s.shared.tiebreak;
+  const required = s.shared.participants.filter((p) => !p.dropped).length;
+  if (!t || t.outcome || t.favorites.reduce((n, f) => n + f.count, 0) < required) return s;
+  const top = Math.max(...t.favorites.map((f) => f.count));
+  const among = t.favorites.filter((f) => f.count === top).map((f) => f.candidateId);
+  t.seed = 'fake-seed-0001';
+  t.outcome = { candidateId: among[0], spun: among.length > 1, among };
+  s.shared.phase = 'decided';
+  s.shared.decision = { candidateId: among[0], proposalVersion: s.shared.proposalVersion, decidedAt: Date.now(), availability: s.shared.candidates.find((c) => c.id === among[0])?.availability ?? [] };
+  return s;
+}
+
+export function inRoom(s: FakeSnapshot, friends: Record<string, number> = {}) {
+  const mine = s.own.ins?.candidateIds ?? [];
+  const required = s.shared.participants.filter((p) => !p.dropped).length;
+  s.shared.ins = s.shared.matches.map((m) => ({ candidateId: m.candidateId, count: Math.min(required, (friends[m.candidateId] ?? 0) + (mine.includes(m.candidateId) ? 1 : 0)) }));
+  s.shared.inVersion = (s.shared.inVersion ?? 0) + 1;
+  const everyone = s.shared.ins.filter((r) => r.count >= required).map((r) => r.candidateId);
+  const open = s.shared.tiebreak;
+  if (everyone.length < 2) s.shared.tiebreak = null;
+  else if (!open || open.candidateIds.join() !== everyone.join()) {
+    s.shared.tiebreak = { version: s.shared.inVersion, candidateIds: everyone, favorites: everyone.map((candidateId) => ({ candidateId, count: 0 })), outcome: null };
+    s.own.favorite = null;
+  }
+  return s;
+}
+
 const union = (s: FakeSnapshot) => [...new Set(s.shared.participants.filter((p) => !p.dropped).flatMap((p) => p.serviceIds ?? []))].filter((id) => !s.shared.disabledServiceIds.includes(id));
 
 /**
@@ -124,6 +160,8 @@ export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts:
   const nextCard = () => room.shared.candidates.find((c) => !room.own.votes.some((v) => v.candidateId === c.id && v.value !== null))?.id ?? null;
   /** The server's refusals the app answers in place; null when the command applies. */
   function refuse(c: CommandEnvelope['command']): { status: number; code: string; message: string } | null {
+    if (c.type === 'set_in' && (c.expectedOwnInRevision !== (room.own.ins?.revision ?? 0) || !room.shared.matches.some((m) => m.candidateId === c.candidateId))) return { status: 409, code: 'conflict', message: 'Your I’m in changed' };
+    if (c.type === 'pick_favorite' && (!room.shared.tiebreak || room.shared.tiebreak.outcome || room.shared.tiebreak.version !== c.tiebreakVersion)) return { status: 409, code: 'conflict', message: 'The tiebreak changed' };
     if ((c.type === 'set_services' || c.type === 'set_service_enabled') && !room.shared.screens[0]?.country) return { status: 409, code: 'needs_context', message: 'Choose a country first' };
     if (c.type === 'refill' && !union(room).length) return { status: 409, code: 'needs_context', message: 'Nobody brings a service' };
     // One idea each: another add from someone who has one is refused (the app sends edit_idea for theirs).
@@ -176,6 +214,22 @@ export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts:
         room.own.agreement = { proposalVersion: room.shared.proposalVersion, agreed: c.agreed, revision: room.own.agreement.revision + 1, isProposer: room.own.agreement.isProposer };
         if (room.shared.proposal) room.shared.proposal.agreeCount += c.agreed ? 1 : -1;
         break;
+      case 'set_in': {
+        const mine = room.own.ins?.candidateIds ?? [];
+        const friends = Object.fromEntries((room.shared.ins ?? []).map((r) => [r.candidateId, r.count - (mine.includes(r.candidateId) ? 1 : 0)]));
+        room.own.ins = { candidateIds: c.in ? [...mine.filter((id) => id !== c.candidateId), c.candidateId] : mine.filter((id) => id !== c.candidateId), revision: (room.own.ins?.revision ?? 0) + 1 };
+        room.own.agreement = { ...room.own.agreement, revision: room.own.agreement.revision + 1 };
+        inRoom(room, friends);
+        break;
+      }
+      case 'pick_favorite': {
+        const t = room.shared.tiebreak!;
+        const before = room.own.favorite?.tiebreakVersion === t.version ? room.own.favorite.candidateId : null;
+        t.favorites = t.favorites.map((f) => ({ ...f, count: f.count + (f.candidateId === c.candidateId ? 1 : 0) - (f.candidateId === before ? 1 : 0) }));
+        room.own.favorite = { tiebreakVersion: t.version, candidateId: c.candidateId };
+        settleTie(room);
+        break;
+      }
       case 'restart':
         Object.assign(room.shared, { phase: 'setup', decision: null, proposal: null, matches: [] });
         room.shared.generation++;
