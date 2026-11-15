@@ -1,4 +1,3 @@
-import { WATCH_PATHS } from "../../domain/member-paths.ts"
 // Pieces My shows, My movies and My library share (#385): the page head with the ways to the other pages, the note
 // for an empty list, a poster, and what a guest sees in place of a member's page.
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid"
@@ -6,11 +5,11 @@ import { Link } from "@remix-run/react"
 import type { ReactNode } from "react"
 import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
 import type { SignUpMessage } from "~/ui/sign-up-prompt/messages"
+import { WATCH_PATHS } from "../../domain/member-paths.ts"
+import { DISPLAY, WRAP } from "./style"
 
-/** The display face of the page names and the page width, as on Watch next (ui/watch-next/style.ts). Kept here so
- * that these pages do not pull that module out of the chunk the home and Watch next share. */
-export const DISPLAY = "font-['Gabarito'] font-black tracking-[-0.03em]"
-export const WRAP = "mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8"
+export { DISPLAY, WRAP }
+
 export const tmdbImage = (path: string, size: string) =>
 	`https://image.tmdb.org/t/p/${size}${path}`
 
@@ -55,7 +54,8 @@ export function PageHead({
 	aside?: ReactNode
 }) {
 	// With one key on a phone, the key stays beside the name and the line under the name wraps in its column.
-	const oneRowOnPhones = !aside && links.filter((link) => !link.fromSm).length <= 1
+	const oneRowOnPhones =
+		!aside && links.filter((link) => !link.fromSm).length <= 1
 	return (
 		<header
 			className={`${WRAP} flex items-end gap-y-3 pb-4 pt-6 ${oneRowOnPhones ? "flex-nowrap gap-x-4 sm:flex-wrap sm:gap-x-6" : "flex-wrap gap-x-6"}`}

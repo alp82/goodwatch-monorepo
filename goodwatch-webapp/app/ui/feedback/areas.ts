@@ -660,6 +660,7 @@ export const PAGE_TYPES: PageType[] = [
 		name: "Info pages",
 		routes: [
 			"about.tsx",
+			"stats.tsx",
 			"how-it-works.tsx",
 			"use-with-ai.tsx",
 			"support.tsx",
@@ -671,7 +672,7 @@ export const PAGE_TYPES: PageType[] = [
 		],
 		example: "/about",
 		match: re(
-			/^\/(about|how-it-works|use-with-ai|support|discord|privacy|terms|disclaimer)(\/|$)/,
+			/^\/(about|stats|how-it-works|use-with-ai|support|discord|privacy|terms|disclaimer)(\/|$)/,
 		),
 		areas: [],
 	},

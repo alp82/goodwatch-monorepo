@@ -51,7 +51,7 @@ MAIN_CATEGORIES = [
 STATIC_ROUTES = [
     "/", "/movies", "/movies/best", "/shows", "/shows/best", "/people", "/awards", "/discover",
     "/map", "/hot", "/how-it-works",
-    "/about", "/disclaimer", "/privacy", "/support", "/use-with-ai",
+    "/about", "/stats", "/disclaimer", "/privacy", "/support", "/use-with-ai",
     "/discord"
 ]
 

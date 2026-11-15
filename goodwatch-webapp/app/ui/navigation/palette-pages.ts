@@ -650,6 +650,19 @@ const PAGES: Entry[] = [
 		names: ["about goodwatch", "about us"],
 		words: ["who", "story", "why"],
 	}),
+	page("stats", "GoodWatch in numbers", "/stats", ChartBarIcon, {
+		sub: GOODWATCH,
+		names: ["stats", "statistics", "in numbers"],
+		words: [
+			"numbers",
+			"records",
+			"facts",
+			"trivia",
+			"quiz",
+			"how many",
+			"catalog",
+		],
+	}),
 	page("howItWorks", "How it works", "/how-it-works", LightBulbIcon, {
 		sub: GOODWATCH,
 		words: ["scores", "methodology", "faq", "ratings", "sources", "explained"],

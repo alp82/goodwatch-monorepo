@@ -1,9 +1,11 @@
-# pixelfx (vendored for the explorer map)
+# pixelfx core (vendored, shared across the app)
 
 Copied from https://github.com/patch-gg/pixelfx at a84159688af3ca37a4be05a0d422b94451b2e24e. `core/` is the library's
 core, unchanged except `core/index.js` (trimmed), `core/index.d.ts` (types), `core/fx.js` (an `alpha` option that fades a
-whole effect) and `core/painter.js` (`glowRing` scans only the ring's band inside the frame). `fx/cinema/` holds effects written for GoodWatch's
-map with the library's tools.
+whole effect) and `core/painter.js` (`glowRing` scans only the ring's band inside the frame). It is the one core for
+every pixel effect in the app: the explorer map (`ui/explorer/effects/pixelfx`), the /stats page
+(`ui/stats/effects/pixelfx`) and the footer cinema (`ui/footer/cinema/pixelfx`) keep their effects next to a
+`core/index.js` that re-exports this one, and each says where its effects come from in its own LICENSE.md.
 
 ## License
 

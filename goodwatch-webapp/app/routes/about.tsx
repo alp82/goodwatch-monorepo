@@ -1,7 +1,7 @@
 // /about: one narrow column that reads like a short note. The tagline, why GoodWatch exists and who makes it; what it
-// does (four tiles into /how-it-works); four numbers; where to find us; where the data comes from. Facts checked on
-// 2026-10-18: since 2023 is the repo's first commit, "free" is the sign-up page's word, the numbers are the start page
-// intro's snapshot (server/living-room/intro/content.json, captured 2026-10-17).
+// does (four tiles into /how-it-works); four numbers, with a link to the rest on /stats; where to find us; where the
+// data comes from. Facts checked on 2026-10-18: since 2023 is the repo's first commit, "free" is the sign-up page's
+// word, the numbers are the start page intro's snapshot (server/living-room/intro/content.json, captured 2026-10-17).
 import {
 	FingerPrintIcon,
 	SparklesIcon,
@@ -118,16 +118,19 @@ export default function About() {
 				<MoreLink to="/how-it-works">See how it works</MoreLink>
 			</section>
 
-			<dl className="grid grid-cols-2 gap-y-6 border-y border-white/10 py-8 sm:grid-cols-4">
-				{NUMBERS.map(({ n, label }) => (
-					<div key={label} className="flex flex-col gap-1">
-						<dt className="order-2 text-sm text-gray-400">{label}</dt>
-						<dd className="text-3xl font-black tracking-tight text-white">
-							{n}
-						</dd>
-					</div>
-				))}
-			</dl>
+			<div className="flex flex-col gap-4 border-y border-white/10 py-8">
+				<dl className="grid grid-cols-2 gap-y-6 sm:grid-cols-4">
+					{NUMBERS.map(({ n, label }) => (
+						<div key={label} className="flex flex-col gap-1">
+							<dt className="order-2 text-sm text-gray-400">{label}</dt>
+							<dd className="text-3xl font-black tracking-tight text-white">
+								{n}
+							</dd>
+						</div>
+					))}
+				</dl>
+				<MoreLink to="/stats">GoodWatch in numbers</MoreLink>
+			</div>
 
 			<section aria-labelledby="about-find" className="flex flex-col gap-4">
 				<h2

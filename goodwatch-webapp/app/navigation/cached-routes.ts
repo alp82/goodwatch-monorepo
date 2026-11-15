@@ -29,6 +29,7 @@ export const CACHED_ROUTE_IDS = [
 	"routes/hot",
 	"routes/blog._index",
 	"routes/blog.$slug",
+	"routes/stats",
 ] as const
 
 export type CachedRouteId = (typeof CACHED_ROUTE_IDS)[number]

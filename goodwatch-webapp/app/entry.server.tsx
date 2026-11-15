@@ -48,6 +48,7 @@ import { withoutRelatedMapMarkup } from "~/server/related-map-handoff"
 import { logProcessRole, processRole } from "~/server/role.server"
 import { startStallProfiler } from "~/server/stall-profiler.server"
 import { startStaticFiles } from "~/server/static-files.server"
+import { startStatsRefresh } from "~/server/stats/stats.server"
 import { startHotOnSocialsWarmup } from "~/server/talked-about-now/startup.server"
 import { startTitleSnapshot } from "~/server/title-snapshot/index.server"
 import { startCrateDiagnostics } from "~/utils/crate-diagnostics"
@@ -92,6 +93,8 @@ if (processRole() !== "search") startFingerprintPopulation()
 startHotOnSocialsWarmup()
 // The title pages' "What's new on" links read the links of the /new pages that this keeps loaded (#489).
 if (processRole() !== "search") startNewPagesRefresh()
+// The /stats snapshot: its metrics, and its daily refresh on a deployed server (see stats.server.ts).
+if (processRole() !== "search") startStatsRefresh()
 // While the process is overloaded, anonymous page requests from clients that never ran the site's scripts get a short
 // busy page (see overload-shed.server.ts). Started before the page cache, so that a stored page is still answered, and
 // after the lifecycle, whose health answers stay inside it.

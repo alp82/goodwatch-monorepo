@@ -1,4 +1,4 @@
-// Types for the parts of the vendored pixelfx core that the map effects call.
+// Types for the parts of the vendored pixelfx core that the app's effects call (map, /stats, footer cinema).
 
 export interface FxFrame {
 	w: number

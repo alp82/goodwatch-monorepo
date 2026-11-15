@@ -116,6 +116,11 @@ export const STATIC_PAGE_COPY: Record<string, PageCopy> = {
 		title: "Why GoodWatch exists",
 		subtitle: "Made by people who watch too much.",
 	},
+	"/stats": {
+		tag: "In numbers",
+		title: "GoodWatch in numbers",
+		subtitle: "Every movie, show, score and streaming offer, counted daily.",
+	},
 	// A post's card takes its text from app/content/blog/posts.json (server/og-image/blog-content.server.ts).
 	"/blog": {
 		tag: "Blog",
