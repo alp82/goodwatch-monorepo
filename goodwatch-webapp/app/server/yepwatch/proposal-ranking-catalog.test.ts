@@ -46,3 +46,19 @@ test('release catalog uses member wishlist, profile/hidden exclusions and shared
   room.participants = room.participants.slice(0, 2)
   assert.notEqual((await catalog.page(room)).candidates.find(c => c.identity.tmdbId === 10)?.reason?.code, 'want_to_see')
 })
+test('a taste that lands after a setup change rebuilds the prepared deck once; an unchanged one does not', async () => {
+  const room = rankingRoom(); room.phase = 'setup'; room.participants[0].member = { state: 'linked', prefill: null }
+  let member: PersonalSignals | null = null, profile: PersonalSignals | null = null, landing: PersonalSignals | null = { ...none(), revision: 'member-1' }
+  const members = { refreshSeen() {}, tasteStored: () => member, refreshTaste: async () => (member = landing ?? member) } as unknown as ContinuousMembers
+  const profiles: RoomTasteSource = { prepare: async () => { profile = { ...none(), revision: 'profile-1' } }, stored: () => profile }
+  const catalog = guestProposalCatalog(members, profiles), changed: string[] = []
+  catalog.onInputsChanged!(id => changed.push(id))
+  const settle = () => new Promise(resolve => setTimeout(resolve, 5))
+  const before = catalog.inputRevision!(room)
+  catalog.refreshExcludedKeys!(room); await settle()
+  assert.deepEqual(changed, [room.id])
+  assert.notEqual(catalog.inputRevision!(room), before, 'both tastes are part of the deck identity')
+  landing = null
+  catalog.refreshExcludedKeys!(room); await settle()
+  assert.deepEqual(changed, [room.id], 'the same tastes again: nothing to rebuild')
+})

@@ -1,4 +1,7 @@
 -- Apply explicitly after a snapshot and before deploying the picks ranker. Do not run at startup.
+-- Additive nullable columns on tables yepwatch_runtime already reads and writes (no new grant): the API deployed
+-- before it ignores them. CrateDB's ADD COLUMN has no IF NOT EXISTS: a replayed statement fails with "column already
+-- exists" and can be skipped.
 ALTER TABLE doc.yepwatch_candidate ADD COLUMN reason OBJECT(STRICT) AS (code TEXT, text TEXT);
 ALTER TABLE doc.yepwatch_room ADD COLUMN started_at BIGINT;
 ALTER TABLE doc.yepwatch_room ADD COLUMN dealt_keys ARRAY(TEXT);

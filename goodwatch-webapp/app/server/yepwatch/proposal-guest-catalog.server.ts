@@ -1,7 +1,7 @@
 import type { CountryServices } from '../availability-index.server.ts'
 import { matchingIdeaIds } from "./proposal-redesign.ts"
 import { rankDeck, RANKER_VERSION, type Ranked } from './proposal-ranker.ts'
-import { passesFloor, qualityPriors, poolStepOf, poolQualityOf } from './proposal-pool.ts'
+import { MAX_RANKED, passesFloor, qualityPriors, poolStepOf, poolQualityOf } from './proposal-pool.ts'
 import { roundFeedback, feedbackAdjustment, reorderTail } from './proposal-feedback.ts'
 import type { RoomTasteSource, PersonSignal } from './proposal-person-signal.ts'
 import type { ProposalRoom, ProposalCatalog } from './proposal-types.ts'
@@ -42,6 +42,8 @@ const reads: CatalogReads = {
 /** Full catalog/evidence reads, with optional remote saved progress; no issuer or local fixtures. */
 export function guestProposalCatalog(members?: ContinuousMembers, profiles?: RoomTasteSource): ProposalCatalog {
   const exclusions = roomExclusions(members, profiles)
+  let inputsChanged: (roomId: string) => void = () => {}
+  const inputRevision = (room: ProposalRoom) => JSON.stringify(room.participants.filter(p => p.leftAt == null).map(p => [(p.member.state === 'linked' ? members?.tasteStored(room, p.id)?.revision : null) ?? null, profiles?.stored(room, p)?.revision ?? null]))
   let snapshot: TitleSnapshot | null = null
   const indexes = new Map<string, CountryServices>()
   const plain = proposalCatalog(createContinuousCatalog(reads, goodwatchCatalog.metadata, members ? {
@@ -49,8 +51,19 @@ export function guestProposalCatalog(members?: ContinuousMembers, profiles?: Roo
   } : {}))
   return {
     ...plain, ...exclusions,
-    inputRevision(room) { return JSON.stringify(room.participants.filter(p => p.leftAt == null).map(p => [(p.member.state === 'linked' ? members?.tasteStored(room, p.id)?.revision : null) ?? null, profiles?.stored(room, p)?.revision ?? null])) },
-    refreshExcludedKeys(room) { exclusions.refreshExcludedKeys(room); void profiles?.prepare(room).catch(() => {}) },
+    inputRevision,
+    onInputsChanged(listener) { inputsChanged = listener },
+    // Tastes are read and built here, in setup and in the background. A deck prepared before one landed was ranked
+    // without it: it is prepared again, so Start still finds a deck for the room as it is.
+    refreshExcludedKeys(room) {
+      exclusions.refreshExcludedKeys(room)
+      const before = inputRevision(room)
+      const linked = room.participants.filter(p => p.leftAt == null && p.member.state === 'linked')
+      void Promise.all([...linked.map(p => members?.refreshTaste(room, p.id)), profiles?.prepare(room).catch(() => {})])
+        .then(() => profiles?.prepare(room))
+        .then(() => { if (inputRevision(room) !== before) inputsChanged(room.id) })
+        .catch(() => {})
+    },
     ideaReadingSize(room, keys) {
       const index = indexes.get(room.screens[0]?.country ?? '')
       if (!index) return keys.length
@@ -114,16 +127,21 @@ export function guestProposalCatalog(members?: ContinuousMembers, profiles?: Roo
           if (!current) return base.filter(k => !excluded.has(k))
           const moodMask = maskOfMoods(room.constraints.moods as Parameters<typeof maskOfMoods>[0])
           poolStep = poolStepOf(base)
-          const ideaKeys = ideas.flatMap(i => i.rankedKeys).filter(key => {
+          const eligible = (key: number) => {
             const row = current.rowOf(key), kind = key < 2e12 ? 'movie' : 'show_start'
             const on = carried(key)
             return row >= 0 && room.constraints.kinds.includes(kind) && (!moodMask || (current.columns.moods[row] & moodMask) !== 0) &&
               passesFloor(current, key, poolStep, true) && (!on || [...on].some(id => services.has(id)))
-          })
-          const pool = [...new Set([...base, ...ideaKeys])]
-          const extra = pool.length > base.length
-          const quality = !extra && poolQualityOf(base) || timedSync('intent', () => qualityPriors(current, pool))
-          if (extra) timedSync('intent', () => pool.sort((a, b) => quality.get(b)! - quality.get(a)! || a - b))
+          }
+          // Idea titles first, each idea's best in turn, at most half the ranker's budget: the ranker scores the first
+          // MAX_RANKED keys of the pool (the base pool is ordered by quality), and an idea's own titles, let in one
+          // floor step lower, would otherwise be the ones cut from a large pool.
+          const lanes = ideas.map(i => i.rankedKeys.filter(eligible)), ideaKeys = new Set<number>()
+          for (let at = 0; ideaKeys.size < MAX_RANKED / 2 && lanes.some(lane => at < lane.length); at++)
+            for (const lane of lanes) if (at < lane.length) ideaKeys.add(lane[at])
+          const pool = [...new Set([...ideaKeys, ...base])]
+          const known = poolQualityOf(base)
+          const quality = known && [...ideaKeys].every(key => known.has(key)) ? known : timedSync('intent', () => qualityPriors(current, pool))
           poolSize = pool.length
           const shared = new Map<number, string>()
           const picked = active.filter(p => p.serviceIds?.length)

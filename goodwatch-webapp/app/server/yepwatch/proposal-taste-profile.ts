@@ -87,11 +87,24 @@ export class SqlProfileStore implements ProfileStore {
 	}
 	async read(ids: string[]) {
 		if (!ids.length) return []
-		const result = await this.sql(
-			`SELECT id,answers,followups,dealt,revision,updated_at,expires_at,write_window,write_count,created_at,_seq_no,_primary_term FROM ${TABLE} WHERE id=ANY(?)`,
-			[ids]
-		)
-		return result.rows.map((r) => ({
+		// OR of key equalities, not ANY or IN: Crate plans this as a real-time primary-key Get. A search only sees a
+		// row after the next refresh (up to a second), so an answer right after another would read the profile as it
+		// was, fail its compare-and-swap and be refused as a conflict.
+		const rows: unknown[][] = []
+		for (let at = 0; at < ids.length; at += 64) {
+			const part = ids.slice(at, at + 64)
+			rows.push(
+				...(
+					await this.sql(
+						`SELECT id,answers,followups,dealt,revision,updated_at,expires_at,write_window,write_count,created_at,_seq_no,_primary_term FROM ${TABLE} WHERE ${part
+							.map(() => "id=?")
+							.join(" OR ")}`,
+						part
+					)
+				).rows
+			)
+		}
+		return rows.map((r) => ({
 			profile: {
 				id: r[0],
 				answers: r[1],
@@ -185,17 +198,25 @@ export class ProfileConflict extends RoomError {
 		this.profile = profile
 	}
 }
+interface HeldTaste {
+	version: string
+	member?: string
+	value: ReturnType<typeof profileTaste>
+}
+const memberKeyOf = (member?: Float32Array | null) =>
+	member
+		? Buffer.from(member.buffer, member.byteOffset, member.byteLength).toString("base64")
+		: undefined
 export class TasteProfiles {
 	private cache = new Map<
 		string,
 		{
 			at: number
 			profile: Profile
-			signal?: {
-				version: string
-				member?: string
-				value: ReturnType<typeof profileTaste>
-			}
+			/** The profile's own taste. */
+			signal?: HeldTaste
+			/** The same answers blended into one member vector, kept beside it: a blend never replaces the own taste. */
+			blend?: HeldTaste
 		}
 	>()
 	/** The room service sets this to invalidate setup decks. Only rooms using this profile are affected. */
@@ -252,15 +273,15 @@ export class TasteProfiles {
 	private remember(p: Profile) {
 		// The same profile at the same revision has the same answers: keep its built taste (a room read is not a rebuild).
 		const held = this.cache.get(p.id)
-		const signal =
+		const same =
 			held &&
 			held.profile.revision === p.revision &&
 			held.profile.created_at === p.created_at &&
 			JSON.stringify(held.profile.answers) === JSON.stringify(p.answers)
-				? held.signal
-				: undefined
+		const signal = same ? held.signal : undefined
+		const blend = same ? held.blend : undefined
 		this.cache.delete(p.id)
-		this.cache.set(p.id, { at: this.now(), profile: p, ...(signal ? { signal } : {}) })
+		this.cache.set(p.id, { at: this.now(), profile: p, ...(signal ? { signal } : {}), ...(blend ? { blend } : {}) })
 		while (this.cache.size > 5000)
 			this.cache.delete(this.cache.keys().next().value!)
 	}
@@ -515,24 +536,32 @@ export class TasteProfiles {
 				503,
 				true
 			)
-		const memberKey = member
-			? Buffer.from(
-					member.buffer,
-					member.byteOffset,
-					member.byteLength
-			  ).toString("base64")
-			: undefined
-		if (
-			!entry.signal ||
-			entry.signal.version !== snapshot.version ||
-			entry.signal.member !== memberKey
-		)
-			entry.signal = {
+		const memberKey = memberKeyOf(member)
+		const slot = member ? "blend" : "signal"
+		let held = entry[slot]
+		if (!held || held.version !== snapshot.version || held.member !== memberKey)
+			held = entry[slot] = {
 				version: snapshot.version,
 				member: memberKey,
 				value: profileTaste(snapshot, entry.profile.answers.items, member),
 			}
-		return { ...entry.signal.value, revision: entry.profile.revision }
+		return { ...held.value, revision: entry.profile.revision }
+	}
+	/** The revision of the copy this process holds, without a read; null when it holds none. */
+	revisionHeld(id: string): number | null {
+		return this.cache.get(id)?.profile.revision ?? null
+	}
+	/**
+	 * The taste signal() already built for the profile (and this member vector) on the current snapshot: no store read
+	 * and no calculation, so a deck build's ranking and Start's exclusions can ask synchronously. Null when none is held.
+	 */
+	held(id: string, member?: Float32Array | null) {
+		const entry = this.cache.get(id)
+		const taste = entry?.[member ? "blend" : "signal"]
+		const version = this.snapshot()?.version
+		if (!entry || !taste || taste.version !== version || taste.member !== memberKeyOf(member)) return null
+		if (entry.profile.expires_at <= this.now()) return null
+		return { ...taste.value, revision: entry.profile.revision, snapshotVersion: taste.version }
 	}
 	async deck(id: string, count: number) {
 		if (!Number.isInteger(count) || count < 1 || count > 10)

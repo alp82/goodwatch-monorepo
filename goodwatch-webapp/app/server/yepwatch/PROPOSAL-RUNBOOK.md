@@ -64,23 +64,28 @@ Ideas get one softer floor and can admit otherwise excluded genres, never adult 
 `QUALITY`, `POOL_TARGET`, `RANK_WEIGHTS`, `LEAST_MISERY` and `RANKER_VERSION` own tuning. There is no collection
 penalty because the current snapshot has no collection id.
 
-The ranker scores at most 3000 eligible titles. Taste uses confidence-shrunk percentiles, 65% minimum and 35% mean;
+The ranker scores at most 3000 eligible titles: up to 1500 idea titles first (each idea's best in turn), then the
+base pool by quality, so an idea's own titles are never the ones a large pool cuts. Taste uses confidence-shrunk percentiles, 65% minimum and 35% mean;
 confident hard vetoes stay out of the first page and return for refills. Unknown fingerprints are neutral. Quality
 receives the taste weight when nobody has usable taste. Ideas steer and get two early turns each. Member Want to See,
 a service shared by everyone with service picks, recent explicit profile Nopes, room-seeded jitter and a top-200
 diversity pass finish the order. No new model call is made for ranking. Short idea readings after a service change
-use the existing background interpreter and spend the same 24-interpretation lifetime allowance.
+use the existing background interpreter and spend the same 24-interpretation lifetime allowance, down to a reserve
+of eight (`REREAD_RESERVE`): switching services back and forth never leaves a room unable to read a new idea.
 
 Prepared decks, prestored cards and the existing offer/episode/extras read caches remain in place. Member taste is
-read and calibrated in the background after sign-in/setup changes, never fetched by Start or a vote. Missing or
-expired copies are neutral. A catalog's private `inputRevision` is included in prepared and refill identities;
+read and calibrated in the background after sign-in/setup changes, never fetched by Start or a vote. A copy is
+read again once it is five minutes old (setup changes and the 10 s keep-alive), stays in use until the new one lands
+and is neutral once ten minutes old or missing. When a taste lands or changes without a room write, the catalog
+tells the service (`onInputsChanged`) and the room's deck is prepared again, so Start still finds a deck. A catalog's private `inputRevision` is included in prepared and refill identities;
 finished decks cannot cross a change in cached taste revision. Start's last seen/hidden guard still uses stored
 copies. Warm pool service filtering targets 5 ms; rank targets 10 ms for 3000 titles and 12 tastes; tail learning
 targets 1 ms. The synthetic 200k-row pool test also verifies event-loop yields and a warm cache hit under 5 ms.
 Measure on the deployed snapshot and hardware before asserting those budgets in production.
 
-`proposal-feedback.ts` freezes every card anyone answered (including an undo record) and the first two unanswered
-cards of every present person. Only the remaining slots reorder, by stored base score plus current round feedback.
+`proposal-feedback.ts` freezes every card anyone answered (including an undo record) and the first four unanswered
+cards of every present person (`PROTECTED_UNANSWERED`): the card they are on, the one under it, and two more because
+the app answers ahead of the server (votes still on their way). Only the remaining slots reorder, by stored base score plus current round feedback.
 Half-weight single answers and group thresholds are separate feedback classes; additional votes within a class
 reuse a refill. Recently retired cards retain their aggregate feedback within a bounded 120-answered-card window, keeping vote work bounded. `dealtKeys` keeps positions stable when an idea or
 service edit removes untouched cards from `seenKeys`; it is private and never logged or projected.
@@ -93,7 +98,25 @@ source (`member`/`profile`) and snapshot version. Null taste means neutral. A st
 Build/calibrate on answer writes or member reads, and cache by revision and snapshot version. Do not calibrate in
 `stored`, Start, or a vote.
 
-A profile store implements `RoomTasteSource`:
+Device profiles implement `RoomTasteSource` in `proposal-profile-signals.ts` (`profileTasteSource(profiles, members)`),
+which the release runtime passes to `guestProposalCatalog(members, profiles)`:
+
+- A participant with a profile and no held GoodWatch taste ranks on their YepWatch answers (source `profile`,
+  confidence `(loved + 0.5 * not for me) / 8`). A linked member whose GoodWatch taste is held keeps that vector with
+  the answers blended in (`profileTaste`'s bounded blend, weight `n / (n + 20)`), counted once as source `member`
+  with confidence `min(1, member + answers)`. A member without answers ranks on GoodWatch taste alone.
+- Loved it / Not for me titles are the person's seen set (left out unless they show seen titles); Haven't seen it
+  is the unseen set. Profiles have no hidden titles or wishlist; members' come from GoodWatch.
+- Taste is built when answers are written (`TasteProfiles.answers`) and by `prepare` in a deck build or setup
+  refresh. `stored` only looks up `TasteProfiles.held`: no read, no calculation. Start's only profile work is
+  `prepareProfiles`, which takes the held revision (one primary-key read when the held copy is over ten minutes old).
+- Deck identity: the participant's `tasteRevision` is in the prepared digest and the source's revision (profile
+  revision, snapshot version, own or blend) is in `inputRevision`. A changed profile rebuilds the prepared deck;
+  room reads that change neither leave it alone.
+- Not built: the profile Nope history for the 30-day repeat penalty (`voteCommitted`, `roundEnded`). The store has
+  a `dealt` column and no writer, so `nopes` is always empty for profiles.
+
+The interface a source implements:
 
 - `prepare(room)` batches missing device profiles before a background build. `stored(room, participant)` returns
   a synchronous `PersonalSignals` copy: revision, taste, seen, always-hidden keys, empty profile wishlist and an

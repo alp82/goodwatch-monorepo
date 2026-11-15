@@ -9,9 +9,14 @@ export const titleKey = (c: ProposalRoom["candidates"][number]) =>
 export const rankedKey = (c: { identity: { kind: string; tmdbId: number } }) =>
 	(c.identity.kind === "movie" ? 1_000_000_000_000 : 2_000_000_000_000) +
 	c.identity.tmdbId
-/** A service change spends the existing lifetime allowance, including automatic re-readings. */
+/** Readings a service change may never spend: one new or changed idea for each of the eight people stays possible. */
+export const REREAD_RESERVE = 8
+/**
+ * A service change spends the room's lifetime allowance of 24 readings, but only down to REREAD_RESERVE: switching
+ * services back and forth must not leave the room unable to read a new idea.
+ */
 export function ideasForServiceReread(room: ProposalRoom, count = (keys: readonly number[]) => keys.length) {
-  return (room.ideas ?? []).filter(i => !ideaPending(i) && count(i.rankedKeys) < 100).slice(0, Math.max(0, 24 - (room.interpretationCount ?? 0)))
+  return (room.ideas ?? []).filter(i => !ideaPending(i) && count(i.rankedKeys) < 100).slice(0, Math.max(0, 24 - REREAD_RESERVE - (room.interpretationCount ?? 0)))
 }
 export const redesignCommands = new Set([
 	"add_idea",
@@ -100,7 +105,7 @@ export function redesignTransition(
 	if (c.type === "rename") p.nickname = c.nickname
 	else if (c.type === "set_show_seen") {
 		requireRoom(
-			p.member.state === "linked" || !!(p as { profileId?: string }).profileId,
+			p.member.state === "linked" || !!p.profileId,
 			"member_required",
 			"Connect GoodWatch first",
 			403
@@ -135,7 +140,6 @@ export function redesignTransition(
 			"One idea each. Edit yours to change it."
 		)
 		requireRoom(room.ideas.length < 8, "limit_reached", "At most eight ideas")
-    requireRoom(!room.ideas.some(i => i.authorId === actorId), "conflict", "Replace your existing idea")
 		requireRoom(
 			interpretationReserved || (room.interpretationCount ?? 0) < 24,
 			"limit_reached",

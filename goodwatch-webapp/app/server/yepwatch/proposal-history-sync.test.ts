@@ -20,7 +20,7 @@ test("Follow-up failure logs only a count and does not block the room history co
 		},
 		retentionDays: 30,
 		followups: async () => { throw new Error("private profile details") },
-		log: event => logs.push(event),
+		log: (event: Record<string, unknown>) => logs.push(event),
 	} as unknown as HistorySyncDeps)
 	await (history as unknown as { room(id: string, member: string, lease: number): Promise<void> }).room(room.id, "job", 1)
 	assert.equal(archived, true)

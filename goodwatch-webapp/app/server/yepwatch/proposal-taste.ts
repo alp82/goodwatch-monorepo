@@ -40,10 +40,13 @@ export function profileTaste(
 		const norm = Math.hypot(...blended)
 		vector = norm ? blended.map((v) => v / norm) : null
 	}
+	const own = Math.min(1, (loved + 0.5 * notForMe) / 8)
 	return {
 		vector,
 		liked,
-		confidence: member ? 1 : Math.min(1, (loved + 0.5 * notForMe) / 8),
+		/** What the YepWatch answers alone are worth, whoever's vector they are blended into. */
+		own,
+		confidence: member ? 1 : own,
 		quantiles: vector
 			? quantileTable(poolCosines(tastePool(snapshot), vector))
 			: null,

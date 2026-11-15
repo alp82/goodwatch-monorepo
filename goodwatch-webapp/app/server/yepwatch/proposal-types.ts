@@ -135,6 +135,11 @@ export interface ExcludedKeysOptions {
 export interface ProposalCatalog {
 	/** Private build metadata, persisted on the room's aggregate outcome, never on Candidate/wire. */
 	inputRevision?(room: ProposalRoom): string
+	/**
+	 * Registers who hears that a room's private deck inputs (inputRevision) changed without a room write: a member's
+	 * taste read landed, a profile's taste was built. The service rebuilds the room's prepared deck then.
+	 */
+	onInputsChanged?(listener: (roomId: string) => void): void
 	ideaReadingSize?(room: ProposalRoom, keys: readonly number[]): number
 	reorderTail?(room: ProposalRoom): void
 	roundEnded?(room: ProposalRoom): Promise<void>

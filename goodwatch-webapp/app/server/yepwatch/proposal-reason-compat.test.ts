@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { rankingRoom, cards } from './proposal-ranking-test-support.ts'
 import { proposalSnapshot } from './proposal-machine.ts'
-import { proposalForClient } from '../../../../yepwatch-realtime/src/proposal-projection.ts'
+// The app's own parser, as installed bundles run it. Needs yepwatch-app's dependencies installed (zod).
 import { parseFrame } from '../../../../yepwatch-app/src/core/continuous/wire.ts'
 import { ProposalService } from './proposal-service.server.ts'
 import { ProposalMemoryRepository, proposalFixtureCatalog } from './proposal-test-support.ts'
@@ -14,10 +14,10 @@ test('actual installed wire parser reads legacy frames; new reasons are delivere
   const shared = proposalSnapshot(room, room.hostId).shared
   const frame = (snapshot: typeof shared) => JSON.stringify({ type: 'room.updated', snapshot })
   assert.equal(parseFrame(frame(shared)), null, 'the old strict bundle rejects new fields')
-  const legacy = proposalForClient(shared)
-  assert.equal('reason' in legacy.candidates[0], false)
+  // What the gateway sends a phone that didn't declare candidateReasons (proposalForClient, tested in
+  // yepwatch-realtime/test/proposal-reason.test.ts; its sources don't load under plain node --test).
+  const legacy = { ...shared, candidates: shared.candidates.map(({ reason: _, ...candidate }) => candidate) }
   assert.ok(parseFrame(frame(legacy)), 'default gateway delivery keeps the installed bundle working')
-  assert.equal(proposalForClient(shared, true), shared)
 })
 test('HTTP read responses omit reasons by default and include them only with candidateReasons=1', async () => {
   const repo = new ProposalMemoryRepository(), service = new ProposalService(repo, proposalFixtureCatalog, 'compat-test-secret-at-least-thirty-two')

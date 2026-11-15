@@ -17,8 +17,8 @@ test('feedback thresholds, single-voter half weight and cosine cutoff', () => {
   assert.equal(feedbackAdjustment(snapshot, 1e12 + 2, feedback), 0)
   assert.equal(feedbackAdjustment({ cosine: () => .8 }, 1, feedback), 0)
 })
-test('learning protects answered cards and the first two unanswered cards of every present voter', () => {
-  const room = rankingRoom(); room.candidates = cards(8); room.seenKeys = cards(8).map(c => `movie_${c.identity.tmdbId}`)
+test('learning protects answered cards and the next four unanswered cards of every present voter', () => {
+  const room = rankingRoom(); room.candidates = cards(10); room.seenKeys = cards(10).map(c => `movie_${c.identity.tmdbId}`)
   room.startedAt = 10
   const first = room.participants[0]
   first.votes = { 'movie:1': { value: 'pass', revision: 1 }, 'movie:2': { value: 'watch', revision: 1 } }
@@ -26,12 +26,13 @@ test('learning protects answered cards and the first two unanswered cards of eve
   room.participants.push(other)
   recordOutcome(room, undefined, 11)
   reorderTail(room, key => key)
-  assert.deepEqual(room.candidates.slice(0, 4).map(c => c.id), ['movie:1', 'movie:2', 'movie:3', 'movie:4'])
-  assert.deepEqual(room.candidates.slice(4).map(c => c.id), ['movie:8', 'movie:7', 'movie:6', 'movie:5'])
+  // The slower voter keeps cards 1 to 4; the one who answered two is on 3 with 4 under it, and may already have
+  // answered both on their phone (votes still on their way), which puts them on 5 with 6 under it.
+  assert.deepEqual(room.candidates.slice(0, 6).map(c => c.id), ['movie:1', 'movie:2', 'movie:3', 'movie:4', 'movie:5', 'movie:6'])
+  assert.deepEqual(room.candidates.slice(6).map(c => c.id), ['movie:10', 'movie:9', 'movie:8', 'movie:7'])
   assert.equal(room.outcome?.filter(t => t.moved).length, 4)
-  assert.equal(roundOutcome(room).cardsDealt, 8)
-  const shuffled = [...room.candidates].sort(() => 0)
-  assert.equal(new Set(shuffled.map(c => c.id)).size, 8)
+  assert.equal(roundOutcome(room).cardsDealt, 10)
+  assert.equal(new Set(room.candidates.map(c => c.id)).size, 10)
 })
 test('refill digest changes on group thresholds and retains feedback for retired cards', () => {
   const room = rankingRoom(); room.candidates = cards(3); room.seenKeys = ['movie_1', 'movie_2', 'movie_3']; room.startedAt = 10

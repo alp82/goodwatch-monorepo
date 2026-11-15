@@ -1,5 +1,7 @@
 import { expiredRoundOutcomes } from './proposal-expired-outcomes.ts'
 import { TasteProfiles, SqlProfileStore } from "./proposal-taste-profile.ts"
+import { profileTasteSource } from "./proposal-profile-signals.ts"
+import type { RoomTasteSource } from "./proposal-person-signal.ts"
 import type { TitleSnapshot } from "../title-snapshot/snapshot.server.ts"
 import type { TasteCard } from "../../../packages/yepwatch-contracts/proposal.ts"
 import { roomSearch } from "./proposal-intent.ts"
@@ -35,7 +37,8 @@ export const RELEASE_HEALTH = {
 export interface ReleaseDependencies {
 	sql: Sql
 	catalog: ProposalCatalog
-	memberCatalog?: (members: ContinuousMembers) => ProposalCatalog
+	/** The catalog for a release with members or device taste profiles (either may be absent). */
+	memberCatalog?: (members?: ContinuousMembers, profiles?: RoomTasteSource) => ProposalCatalog
 	snapshot(): { count: number; version: string } | null
 	catalogProbe(): Promise<void>
   profileSnapshot?: () => TitleSnapshot | null
@@ -120,7 +123,9 @@ export function createReleaseRuntime(
 	if (members && !deps.memberCatalog)
 		throw new Error("Member catalog adapter required")
 	const tickets = deps.tickets
-	const catalog = members ? deps.memberCatalog!(members) : deps.catalog
+	// Device profiles feed the same ranker as members' GoodWatch taste (profileTasteSource blends the two).
+	const taste = profiles && deps.memberCatalog ? profileTasteSource(profiles, members) : undefined
+	const catalog = members || taste ? deps.memberCatalog!(members, taste) : deps.catalog
 	const service = new ProposalService(
 		repository,
 		catalog,

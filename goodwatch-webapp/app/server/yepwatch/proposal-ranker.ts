@@ -46,7 +46,7 @@ export function ideaFit(rank: number | undefined, length: number, wants: readonl
 export function candidateReason(input: { wishlist: number; peopleCount: number; tasteCount: number; minimum: number; idea: number; nickname?: string; short: boolean; service?: string; score: number }): NonNullable<Candidate['reason']> {
   let code: ReasonCode = 'popular_now', text = 'Popular right now'
   if (input.wishlist > 0 && input.peopleCount >= 3) { code = 'want_to_see'; text = "On someone's Want to See list" }
-  else if (input.tasteCount >= 2 && input.minimum >= .7) { code = 'fits_everyone'; text = `Fits all ${input.tasteCount} of you` }
+  else if (input.tasteCount >= 2 && input.minimum >= .7) { code = 'fits_everyone'; text = input.tasteCount === 2 ? 'Fits both of you' : `Fits all ${input.tasteCount} of you` }
   else if (input.idea >= .5 && input.nickname) { code = 'fits_idea'; text = `Fits ${input.nickname.slice(0, 40)}'s idea` }
   else if (input.tasteCount === 1 && input.minimum >= .75) { code = 'close_to_your_taste'; text = 'Close to your taste' }
   else if (input.short) { code = 'short_episodes'; text = 'Short episodes, easy to start' }

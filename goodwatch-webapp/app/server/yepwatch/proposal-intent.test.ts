@@ -11,7 +11,7 @@ import {
 import type { CatalogReads } from "./catalog-adapter.ts"
 import { ideasForServiceReread, redesignTransition } from './proposal-redesign.ts'
 import { rankingRoom } from './proposal-ranking-test-support.ts'
-test('one idea per person; editing re-enables it, clears its reading, and service rereads stay within 24', () => {
+test('one idea per person; editing re-enables it, clears its reading, and service rereads leave eight readings for ideas', () => {
   const room = rankingRoom(); room.phase = 'setup'
   room.ideas = [{ id: 'idea', text: 'Old idea', authorId: room.hostId, on: false, rankedKeys: [1e12 + 1], attributes: [{ text: 'Old', kind: 'want', key: 'romance' }], interpretedAt: 1 }]
   const envelope = { commandId: 'edit', sequence: 1, command: { type: 'edit_idea' as const, ideaId: 'idea', text: 'New idea' } }
@@ -19,10 +19,10 @@ test('one idea per person; editing re-enables it, clears its reading, and servic
   assert.equal(next.ideas![0].on, true)
   assert.deepEqual(next.ideas![0].rankedKeys, []); assert.deepEqual(next.ideas![0].attributes, [])
   assert.equal(next.interpretationCount, 1)
-  assert.throws(() => redesignTransition(next, room.hostId, { ...envelope, command: { type: 'add_idea', text: 'Second idea' } }, 6), { code: 'conflict' })
-  next.interpretationCount = 24
+  assert.throws(() => redesignTransition(next, room.hostId, { ...envelope, command: { type: 'add_idea', text: 'Second idea' } }, 6), { code: 'limit_reached', message: 'One idea each. Edit yours to change it.' })
+  next.interpretationCount = 16
   assert.deepEqual(ideasForServiceReread(next), [])
-  next.interpretationCount = 23
+  next.interpretationCount = 15
   assert.equal(ideasForServiceReread(next).length, 1)
   next.ideas![0].rankedKeys = Array.from({ length: 100 }, (_, i) => 1e12 + i + 1)
   assert.equal(ideasForServiceReread(next).length, 0)

@@ -1,4 +1,6 @@
--- Apply explicitly after a snapshot. The API never runs this migration.
+-- Apply explicitly after a snapshot, before deploying the API that reads profiles. The API never runs this migration.
+-- Additive: the API deployed before it ignores the new table and columns. CrateDB's ADD COLUMN has no IF NOT EXISTS:
+-- on a replay the two ALTER statements fail with "column already exists" and can be skipped.
 CREATE TABLE IF NOT EXISTS doc.yepwatch_taste_profile (
   "id" TEXT PRIMARY KEY,
   "answers" OBJECT(STRICT) AS ("items" ARRAY(OBJECT(STRICT) AS ("key" BIGINT,"answer" TEXT,"source" TEXT,"at" BIGINT))) NOT NULL,
@@ -12,6 +14,6 @@ CREATE TABLE IF NOT EXISTS doc.yepwatch_taste_profile (
   "write_count" BIGINT NOT NULL
 ) CLUSTERED INTO 4 SHARDS WITH (column_policy='strict',number_of_replicas=2,"write.wait_for_active_shards"='3',refresh_interval=1000);
 
-ALTER TABLE doc.yepwatch_participant ADD COLUMN IF NOT EXISTS profile_id TEXT;
-ALTER TABLE doc.yepwatch_participant ADD COLUMN IF NOT EXISTS taste_revision BIGINT;
+ALTER TABLE doc.yepwatch_participant ADD COLUMN profile_id TEXT;
+ALTER TABLE doc.yepwatch_participant ADD COLUMN taste_revision BIGINT;
 GRANT DQL,DML ON TABLE doc.yepwatch_taste_profile TO yepwatch_runtime;

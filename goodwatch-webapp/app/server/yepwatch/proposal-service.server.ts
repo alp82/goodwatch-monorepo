@@ -229,6 +229,7 @@ export class ProposalService {
 			(room) => catalog.refreshExcludedKeys?.(room),
 			{ now },
 		)
+		catalog.onInputsChanged?.((id) => this.decks.schedule(id))
 		this.decks = new PreparedDecks(catalog, async (id) => {
 			const stored = await repository.read(id)
 			if (!stored || stored.room.format !== 2 || stored.room.flowVersion !== 3) return null
@@ -245,9 +246,11 @@ export class ProposalService {
   async prepareProfiles(room: ProposalRoom) {
     if (!this.profiles) return
     const people = activeRoom(room).participants.filter(p => p.profileId)
-    await this.profiles.signals(people.map(p => p.profileId!))
+    // Best effort: a profile store that doesn't answer leaves the held copies in use; Start never fails on it.
+    await this.profiles.signals(people.map(p => p.profileId!)).catch(() => {})
     this.trackProfiles(room)
-    for (const p of people) p.tasteRevision = (await this.profiles.signal(p.profileId!)).revision
+    // Only the revision: the taste itself is built on an answer write or a deck build, never here (Start calls this).
+    for (const p of people) p.tasteRevision = this.profiles.revisionHeld(p.profileId!) ?? p.tasteRevision
   }
   /** Which rooms a profile's answer rebuilds the prepared deck of (bounded, this process only). */
   private trackProfiles(room: ProposalRoom) {

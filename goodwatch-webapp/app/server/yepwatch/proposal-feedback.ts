@@ -51,6 +51,12 @@ export function feedbackAdjustment(snapshot: Pick<TitleSnapshot, 'cosine'>, key:
   }, 0)
   return .12 * max(feedback.yeps) - .15 * max(feedback.nopes)
 }
+/**
+ * How many of each person's next unanswered cards never move: the card they are on and the one under it, and two
+ * more, because the app answers ahead of the server (a Yep or Nope shows the next card at once, the vote is sent
+ * behind it). Someone two votes ahead of what the server has seen still keeps their two visible cards in place.
+ */
+export const PROTECTED_UNANSWERED = 4
 /** Protect the current card and the one under it for EVERY present person, including lagging voters. */
 export function reorderTail(room: ProposalRoom, score: (key: number) => number): void {
   const protectedIds = new Set<string>()
@@ -58,7 +64,7 @@ export function reorderTail(room: ProposalRoom, score: (key: number) => number):
     let unanswered = 0
     for (const c of room.candidates) {
       if (Object.prototype.hasOwnProperty.call(p.votes, c.id)) protectedIds.add(c.id)
-      if (p.votes[c.id]?.value == null && ++unanswered <= 2) protectedIds.add(c.id)
+      if (p.votes[c.id]?.value == null && ++unanswered <= PROTECTED_UNANSWERED) protectedIds.add(c.id)
     }
   }
   const tail = room.candidates.filter(c => !protectedIds.has(c.id)).map((c, order) => ({ c, order, score: score(rankedKey(c)) }))
