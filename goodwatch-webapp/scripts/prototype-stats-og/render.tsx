@@ -100,6 +100,12 @@ const content: StatsCardContent = {
 			{ n: count(t.sharks), text: "shark movies" },
 			{ n: count(t.friday13Horror), text: "Friday the 13th horrors" },
 		],
+		mix: [
+			{ n: short(c.movies + c.shows), text: "movies and shows" },
+			{ n: count(t.sharks), text: "shark movies" },
+			{ n: String(watchYears), text: "years to watch them all" },
+			{ n: `${Math.round(r.longest[0].runtime / 60)} h`, text: `${r.longest[0].title}, the longest movie` },
+		],
 		pressPlay: { year: Math.floor(made.getUTCFullYear() + made.getUTCMonth() / 12 - exactYears), years: watchYears },
 	},
 	hero: { n: `${watchYears} years`, line: "of watching: every movie and every episode on GoodWatch, back to back." },
@@ -126,7 +132,7 @@ const content: StatsCardContent = {
 }
 
 const cards: { variant: string; name: string; file: string }[] = []
-const ORDER = ["F", "G", "H", "I", "J", "A", "B", "C", "D", "E"]
+const ORDER = ["K", "F", "G", "H", "I", "J", "A", "B", "C", "D", "E"]
 for (const { key, name } of [...STATS_VARIANTS].sort((a, b) => ORDER.indexOf(a.key) - ORDER.indexOf(b.key))) {
 	const svg = await satori(resolveTree(createElement(PrototypeStatsCard, { variant: key, content })) as never, {
 		width: 1200,
@@ -146,7 +152,7 @@ const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta n
 h1{font-size:20px;margin:8px 0 4px}p{color:#aaa;margin:0 0 16px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,560px),1fr));gap:22px}
 figure{margin:0}img{width:100%;height:auto;border-radius:10px;display:block}figcaption{margin-top:6px;color:#bbb}b{color:#fbbf24}</style></head>
 <body><main><h1>Link-preview cards for /stats (prototype)</h1>
-<p>Numbers from the live snapshot of ${content.asOf}. Round 2 (F–J) uses the page's fun facts and says "stats"; round 1 (A–E) follows. "Today" is the card goodwatch.app/og/stats.png serves now.</p>
+<p>Numbers from the live snapshot of ${content.asOf}. The I remix with mixed stats (K) comes first, then round 2 (F–J) uses the page's fun facts and says "stats"; round 1 (A–E) follows. "Today" is the card goodwatch.app/og/stats.png serves now.</p>
 <div class="grid"><figure><img src="current.jpg?v=${v}" alt="current card"><figcaption><b>Today</b> — generic static card</figcaption></figure>
 ${cards.map((x) => `<figure><img src="${x.file}?v=${v}" alt="${x.variant}"><figcaption><b>${x.variant}</b> — ${x.name}</figcaption></figure>`).join("")}
 </div></main></body></html>`

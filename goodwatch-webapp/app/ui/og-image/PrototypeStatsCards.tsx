@@ -25,6 +25,7 @@ export interface StatsCardContent {
 		vs: { title: string; year: number; poster: string | null; left: { score: string; of: string; source: string }; right: { score: string; of: string; source: string } }
 		quiz: { question: string; answers: { title: string; poster: string | null }[] }
 		counts: { n: string; text: string }[]
+		mix: { n: string; text: string }[]
 		pressPlay: { year: number; years: number }
 	}
 }
@@ -39,6 +40,7 @@ export const STATS_VARIANTS = [
 	{ key: "G", name: "Standoff — one movie, two crowds, two scores" },
 	{ key: "H", name: "Quiz — a question from the page, three poster answers" },
 	{ key: "I", name: "Tabloid — stacked counts: Christmas, zombies, sharks, Friday the 13th" },
+	{ key: "K", name: "Tabloid mix — titles, sharks, years, longest movie" },
 	{ key: "J", name: "Press play — start in 1618, finish about now" },
 ] as const
 export type StatsVariant = (typeof STATS_VARIANTS)[number]["key"]
@@ -302,8 +304,8 @@ function Quiz({ c }: { c: StatsCardContent }) {
 	)
 }
 
-function Tabloid({ c }: { c: StatsCardContent }) {
-	const lines = c.fun.counts.slice(0, 4)
+function Tabloid({ c, mix = false }: { c: StatsCardContent; mix?: boolean }) {
+	const lines = (mix ? c.fun.mix : c.fun.counts).slice(0, 4)
 	return (
 		<Frame bg={INK}>
 			<div style={col({ position: "absolute", left: SIDE, top: 50, width: 760, gap: 10 })}>
@@ -355,5 +357,6 @@ export function PrototypeStatsCard({ variant, content }: { variant: StatsVariant
 	if (variant === "G") return <Standoff c={content} />
 	if (variant === "H") return <Quiz c={content} />
 	if (variant === "I") return <Tabloid c={content} />
+	if (variant === "K") return <Tabloid c={content} mix />
 	return <PressPlay c={content} />
 }
