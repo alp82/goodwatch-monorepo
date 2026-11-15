@@ -4,7 +4,7 @@
 //     const host = await room.person('Alp');                       // phone 390×844
 //     const desk = await room.person('Dee', { device: 'desktop' }); // 1440×900
 //     await host.open('/');
-//     await host.tap(host.button('New couch'), { expect: { visible: ['mood-page'] }, moment: 'newRoomMs' });
+//     await host.tap(host.button('New couch'), { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' });
 //     await room.point('room');                                     // fault hook (restart, offline, hide, …)
 //   });
 //
@@ -207,7 +207,7 @@ export class Person {
     // A screen is up and the startup word is gone (goto resolves before React has rendered anything).
     await this.page.waitForFunction(() => {
       const sig = (window as unknown as { __yw?: { signature(): string } }).__yw?.signature() ?? '';
-      return !sig.includes('yepwatch-boot') && /landing|home-rooms|mood-page|room-setup|waiting|voting|matches|proposal|tonight|join-screen|room-status/.test(sig);
+      return !sig.includes('yepwatch-boot') && /landing|home-rooms|mood-page|new-couch|room-setup|waiting|voting|matches|proposal|tonight|join-screen|room-status/.test(sig);
     }, undefined, { timeout, polling: 50 }).catch(async () => this.journeyFailure(`no screen came up after the startup word (now: ${await this.signature()}; ${this.network()})`));
     // A person looks at the page before pressing: a press within its first 250 ms would make the page
     // itself count as a flash (between the startup and the next screen), which no person would see.

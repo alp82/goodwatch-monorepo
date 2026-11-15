@@ -14,19 +14,24 @@ export async function setUp(p: Person, name = p.name, answers = 0) {
   await p.tap(p.button(answers >= 5 ? 'That’s enough' : 'Skip for now'), { expect: { visible: ['home-rooms'] } });
 }
 
-/** New couch from the start page (after setup on a first visit). */
-export async function newCouch(p: Person, opts: Parameters<Person['tap']>[1] = { expect: { visible: ['mood-page'] } }, name = p.name) {
+/** The start page, set up: a first visit goes through setup first. */
+export async function setUpStart(p: Person, name = p.name) {
   await p.see({ any: ['landing', 'home-rooms'] }, 15000, 'start page');
   if (await p.page.getByTestId('landing').filter({ visible: true }).count()) await setUp(p, name);
+}
+
+/** New couch from the start page (after setup on a first visit): it makes the couch and opens its setup. */
+export async function newCouch(p: Person, opts: Parameters<Person['tap']>[1] = { expect: { visible: ['room-setup'] } }, name = p.name) {
+  await setUpStart(p, name);
   await p.tap(p.button('New couch'), opts);
 }
 
+/** New couch, then `mood` as the host's idea from the setup's describe field (none when empty). */
 export async function createRoom(host: Person, mood = 'funny space heist', name = host.name) {
   await host.open('/');
-  await newCouch(host, { expect: { visible: ['mood-page'] }, moment: 'newRoomMs' }, name);
-  await host.fill(host.page.getByLabel('Mood'), mood);
-  await host.tap(host.button('Create couch'), { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' });
-  await eventually(() => host.latest?.ideas.map((i) => i.text), (v) => JSON.stringify(v) === JSON.stringify([mood]), 'the room has exactly the one idea', host);
+  await newCouch(host, { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' }, name);
+  if (mood) await addIdea(host, mood);
+  await eventually(() => host.latest?.ideas.map((i) => i.text), (v) => JSON.stringify(v) === JSON.stringify(mood ? [mood] : []), 'the room has exactly the one idea', host);
   return host.page.url();
 }
 

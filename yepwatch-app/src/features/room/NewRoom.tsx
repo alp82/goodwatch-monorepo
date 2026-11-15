@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useId, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { View } from 'react-native';
 import { AppState } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -14,12 +15,19 @@ import { newRoomSave } from './new-room-save';
 import { useAccount } from '../../core/continuous/account';
 import { roomRegistry } from '../../core/continuous/room-registry';
 import { useRetryCountdown } from '../../core/continuous/useRetryCountdown';
-import { MoodComposer } from './MoodComposer';
+import { GText } from '../glow/theme';
+import { BusyNote } from '../shell/floating-note';
+import { useLayout } from '../shell/layout';
+import { Actions, Button, Screen } from './ui';
 import { useBackAction } from '../shell/sheet-back';
 import { newRoomInFront, openCreatedRoom, preloadStartPages } from './nav';
 import { noun } from '../shell/noun';
 
-/** The draft owns the screen until the complete create-and-save operation succeeds. */
+/**
+ * New couch makes the couch at once and opens its setup, where ideas go in (no mood page first). This screen owns
+ * the create-and-save operation until it succeeds: it shows nothing while the couch is made, one floating line
+ * during an outage, and Try again only after a definitive refusal.
+ */
 export function NewRoom() {
   const account = useAccount();
   return <NewRoomDraft key={account.generation} account={account} />;
@@ -64,7 +72,7 @@ function NewRoomDraft({ account }: { account: ReturnType<typeof useAccount> }) {
   // Offline says so only after the quiet period (connection-words.ts); the room is created by itself when back.
   const offlineLate = useLate(offline, QUIET_OUTAGE_MS);
   const error = mutation.isError && !cancelled ? offline ? (offlineLate ? OFFLINE_WORDS : undefined) : transientFailure(failure) ? 'Couldn’t reach YepWatch. Your request is saved. Try again.' : failure instanceof RoomFailure && failure.code !== 'catalog_unavailable'
-    ? failure.message : 'Couldn’t save this mood. Try again; your text is kept.' : undefined;
+    ? failure.message : `Couldn’t make the ${noun.one}. Try again.` : undefined;
   // Saved: the button keeps saying Saving… until the room replaces this screen (no frame of Create room again).
   // Paused (the app left the front mid-save, e.g. iOS inactive under Control Center): it goes again by itself
   // when back, so no frame of Try again meanwhile.
@@ -72,9 +80,32 @@ function NewRoomDraft({ account }: { account: ReturnType<typeof useAccount> }) {
   // Owner rule Q24a: nothing for an outage under QUIET_OUTAGE_MS, then one small line floating over the page
   // (no layout shift, no countdown); the room still opens by itself when the answer comes.
   const reconnecting = useLateSince(saving ? troubleSince : null, QUIET_OUTAGE_MS);
-  return <MoodComposer first text={text ?? draft.data?.text ?? ''} onTextChange={setText} pick={(value) => resume.pick(value)} back={back}
-    saving={saving} note={reconnecting ? RECONNECTING_WORDS : undefined} disabled={saving || retrySeconds > 0 || !account.ready || draft.isPending}
-    error={error} details={error && failure instanceof RoomFailure && failure.diagnostic ? <ConnectionDetails diagnostic={failure.diagnostic} /> : undefined}
-    action={mutation.isError ? 'Try again' : noun.make} />;
+  const disabled = saving || retrySeconds > 0 || !account.ready || draft.isPending;
+  // The first press was New couch: the save starts by itself once the draft (and any saved wait) is known. A saved
+  // request from an earlier visit goes again as it was.
+  const started = useRef(false);
+  useEffect(() => {
+    if (started.current || disabled || !draft.data) return;
+    started.current = true;
+    resume.pick(text ?? draft.data.text);
+  }, [disabled, draft.data, resume, text]);
+  return <NewCouchScreen back={back} note={reconnecting ? RECONNECTING_WORDS : undefined} error={error} disabled={disabled}
+    details={error && failure instanceof RoomFailure && failure.diagnostic ? <ConnectionDetails diagnostic={failure.diagnostic} /> : undefined}
+    retry={() => resume.pick(text ?? draft.data?.text ?? '')} />;
 }
 
+function NewCouchScreen({ back, note, error, details, disabled, retry }: { back: () => void; note?: string; error?: string; details?: ReactNode; disabled: boolean; retry: () => void }) {
+  const { z } = useLayout();
+  return (
+    <Screen testID="new-couch" back={back} pill={{ label: noun.create, state: 'new' }}>
+      {note ? <BusyNote text={note} /> : null}
+      {error ? (
+        <View style={{ gap: z(18), alignItems: 'center', paddingTop: z(48) }}>
+          <View accessibilityLiveRegion="polite"><GText color="#fca5a5" size={15} style={{ textAlign: 'center' }}>{error}</GText></View>
+          {details}
+          <Actions style={{ width: z(340), maxWidth: '100%' }}><Button label="Try again" disabled={disabled} onPress={retry} /></Actions>
+        </View>
+      ) : null}
+    </Screen>
+  );
+}

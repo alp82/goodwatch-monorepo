@@ -9,7 +9,7 @@
 (() => {
   if (window.__yw) return;
   const now = () => performance.timeOrigin + performance.now();
-  const SCREENS = ['landing', 'home-rooms', 'mood-page', 'room-setup', 'waiting', 'voting', 'matches', 'proposal', 'tonight',
+  const SCREENS = ['landing', 'home-rooms', 'mood-page', 'new-couch', 'room-setup', 'waiting', 'voting', 'matches', 'proposal', 'tonight',
     'join-screen', 'room-status', 'delete-account-page'];
   const SHEETS = ['rooms-sheet', 'room-sheet', 'services-sheet', 'streaming-sheet', 'kinds-sheet', 'people-sheet', 'profile-panel',
     'history-panel', 'details-panel', 'trailer-panel', 'leave-confirm'];

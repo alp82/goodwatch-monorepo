@@ -1,5 +1,5 @@
 import { test, expect, eventually } from '../lib/harness';
-import { createRoom, inviteLink, join, readyHost, start } from './flows';
+import { addIdea, createRoom, inviteLink, join, readyHost, start } from './flows';
 
 test.describe('rooms: leave, archive, history, back', () => {
   test('a friend leaves; the host sees one person fewer', async ({ room }) => {
@@ -67,9 +67,8 @@ test.describe('rooms: leave, archive, history, back', () => {
     const host = await readyHost(room, 'Alp', 'heist night');
     await start(host, []);
     await host.tap(host.button(/, switch couch$/), { expect: { visible: ['rooms-sheet'] } });
-    await host.tap(host.button('New couch').last(), { expect: { visible: ['mood-page'] }, moment: 'newRoomMs' });
-    await host.fill(host.page.getByLabel('Mood'), 'western');
-    await host.tap(host.button('Create couch'), { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' });
+    await host.tap(host.button('New couch').last(), { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' });
+    await addIdea(host, 'western');
     await host.tap(host.button(/, switch couch$/), { expect: { visible: ['rooms-sheet'] } });
     await host.audit('Your rooms sheet (two rooms)');
     const other = host.testId('rooms-sheet').getByRole('button', { name: /^heist night/ }).first();

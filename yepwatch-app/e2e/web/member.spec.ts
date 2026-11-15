@@ -16,9 +16,7 @@ test.describe('GoodWatch sign-in (local fake issuer)', () => {
     await expect(host.page.getByRole('button', { name: 'Continue with GoodWatch' })).toHaveCount(0);
     await host.audit('start page (member)');
     // A new room links to the account and brings the GoodWatch services.
-    await newCouch(host, { expect: { visible: ['mood-page'] }, moment: 'newRoomMs' });
-    await host.fill(host.page.getByLabel('Mood'), 'heist');
-    await host.tap(host.button('Create couch'), { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' });
+    await newCouch(host, { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' });
     await expect(host.button(/^Netflix, Disney\+.*, change$/)).toBeVisible({ timeout: 10000 });
     await host.tap(host.button('Profile'), { expect: { visible: ['profile-panel'] } });
     await host.audit('Profile (member)');

@@ -4,7 +4,7 @@
 // navigation start) to the first animation frame that shows the expected state.
 export const targets = {
   tapFeedbackMs: 50, // any input → first visible change
-  createRoomMs: 300, // Create room on Mood → the room page shows
+  createRoomMs: 300, // New couch on the start page → the couch setup shows (the couch is made on the way)
   newRoomMs: 300, // New room on the start page → the Mood page shows
   inviteOpenMs: 800, // invite link in a fresh browser → the room's join page (host + mood) shows
   voteToPeerMs: 100, // a vote on one phone → its effect shows on another phone

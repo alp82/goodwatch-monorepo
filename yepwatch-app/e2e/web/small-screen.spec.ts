@@ -74,17 +74,15 @@ for (const device of ['se', 'android'] as const) {
       await host.tap(host.button('Continue'), { expect: { text: 'What do you like?' } });
       await host.page.setViewportSize(size);
       await host.tap(host.button('Skip for now'), { expect: { visible: ['home-rooms'] } });
-      await host.tap(host.button('New couch'), { expect: { visible: ['mood-page'] } });
-      await host.audit('Mood page (small phone)');
-      await host.fill(host.page.getByLabel('Mood'), 'funny space heist');
-      await host.tap(host.button('Create couch'), { expect: { visible: ['room-setup'] } });
+      await host.tap(host.button('New couch'), { expect: { visible: ['room-setup'] } });
       await room.point('room');
       await host.audit('room page (small phone)');
       await eventually(() => savedName(host), (v) => v === 'Alp', 'the room has the name from setup', host);
       // Services, Movies or shows.
       await pickServices(host, ['Netflix'], () => host.tap(host.button('Streaming services, add'), { expect: { visible: ['services-sheet'] } }));
       await host.tap(host.page.getByRole('radio', { name: 'Movies', exact: true }).filter({ visible: true }), { expect: {} });
-      // Your idea, replaced from the describe field.
+      // Your idea from the describe field, then replaced from it.
+      await addIdea(host, 'funny space heist');
       await addIdea(host, 'space adventure');
       await eventually(() => host.latest?.ideas.map((i) => i.text), (v) => JSON.stringify(v) === JSON.stringify(['space adventure']), 'the idea replaced', host);
       await host.tap(host.button('Couch'), { expect: { visible: ['room-sheet'] } });
@@ -107,9 +105,7 @@ for (const device of ['se', 'android'] as const) {
       await tabTo(host, 'Skip for now');
       await host.tap(host.page.locator(':focus'), { key: 'Enter', expect: { visible: ['home-rooms'] } });
       await tabTo(host, 'New couch');
-      await host.tap(host.page.locator(':focus'), { key: 'Enter', expect: { visible: ['mood-page'] } });
-      await host.page.keyboard.type('funny space heist');
-      await host.tap(host.page.getByLabel('Mood'), { key: 'Enter', expect: { visible: ['room-setup'] } });
+      await host.tap(host.page.locator(':focus'), { key: 'Enter', expect: { visible: ['room-setup'] } });
       await room.point('room');
       await eventually(() => savedName(host), (v) => v === 'Alp', 'the room has the name from setup', host);
       // Services: Tab to the row, Enter opens the sheet, Space ticks a service, Done closes.
@@ -120,11 +116,11 @@ for (const device of ['se', 'android'] as const) {
       await expect(host.page.locator(':focus'), 'Space ticks the focused service').toHaveAttribute('aria-checked', 'true');
       await tabTo(host, 'Done');
       await host.tap(host.page.locator(':focus'), { key: 'Enter', expect: { hidden: ['services-sheet'] } });
-      // Your idea: Tab to the describe field, type, Enter replaces it.
+      // Your idea: Tab to the describe field, type, Enter adds it.
       await tabTo(host, 'Describe what you want to watch');
       await host.page.keyboard.type('space adventure');
       await host.page.keyboard.press('Enter');
-      await eventually(() => host.latest?.ideas.map((i) => i.text), (v) => JSON.stringify(v) === JSON.stringify(['space adventure']), 'the idea replaced', host);
+      await eventually(() => host.latest?.ideas.map((i) => i.text), (v) => JSON.stringify(v) === JSON.stringify(['space adventure']), 'your idea', host);
       // Space switches an idea off and on.
       await tabTo(host, /^space adventure\. Your idea/);
       await host.page.keyboard.press('Space');
@@ -140,8 +136,6 @@ for (const device of ['se', 'android'] as const) {
       const host = await room.person('Alp', { device });
       await host.open('/');
       await newCouch(host);
-      await host.fill(host.page.getByLabel('Mood'), 'funny space heist');
-      await host.tap(host.button('Create couch'), { expect: { visible: ['room-setup'] } });
       const invite = await inviteLink(host);
       const friend = await room.person('Mia', { device });
       await friend.open(invite, { settle: false });

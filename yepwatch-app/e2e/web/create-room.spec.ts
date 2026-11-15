@@ -1,20 +1,19 @@
 import { expect } from '@playwright/test';
 import { test, eventually, issuer, type Person } from '../lib/harness';
-import { addIdea, cardTitle, createRoom, hostName, newCouch, pageTap, pickServices, recordPage, start } from './flows';
+import { addIdea, cardTitle, createRoom, hostName, newCouch, pageTap, pickServices, recordPage, setUpStart, start } from './flows';
 
 const roomCountry = (p: Person) => (p.latest?.screens as { country: string | null }[] | undefined)?.[0]?.country;
 
-/** Create room, untimed: the compatibility paths take extra round trips and aren't the createRoomMs moment. */
+/** New couch and an idea, untimed: the compatibility paths take extra round trips and aren't the createRoomMs moment. */
 async function createWithoutTiming(host: Person, mood: string) {
   await host.open('/');
-  await newCouch(host, { expect: { visible: ['mood-page'] } });
-  await host.fill(host.page.getByLabel('Mood'), mood);
-  await host.tap(host.button('Create couch'), { expect: { visible: ['room-setup'] } });
+  await newCouch(host, { expect: { visible: ['room-setup'] } });
+  await addIdea(host, mood);
   await eventually(() => host.latest?.ideas.map((i) => i.text), (v) => JSON.stringify(v) === JSON.stringify([mood]), 'the room has exactly the one idea', host);
 }
 
 test.describe('create and set up a room', () => {
-  test('create room: start page → Mood → room page @core', async ({ room }) => {
+  test('create a couch: setup, start page, New couch → couch setup @core', async ({ room }) => {
     const host = await room.person('Alp');
     await host.open('/');
     await host.see({ visible: ['landing'] });
@@ -32,16 +31,15 @@ test.describe('create and set up a room', () => {
     await host.tap(host.button('That’s enough'), { expect: { visible: ['home-rooms'] } });
     expect(host.commandLog.filter((c) => c.path.endsWith('/rooms')).length, 'setup creates no couch').toBe(0);
     await host.audit('start page (set up)');
-    await newCouch(host, { expect: { visible: ['mood-page'] }, moment: 'newRoomMs' });
-    await host.audit('Mood page');
-    await host.fill(host.page.getByLabel('Mood'), 'funny space heist');
     const sent = host.commandLog.length;
-    await host.tap(host.button('Create couch'), { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' });
-    // One round trip: the create request carries the country and the first idea (no configure/add_idea after it).
+    // New couch makes the couch at once and opens its setup (no mood page in between).
+    await newCouch(host, { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' });
+    // One round trip: the create request carries the country (no configure after it).
     if (room.fault === 'none') expect(host.commandLog.slice(sent).map((c) => c.path.replace(/^.*\/proposal/, '')).filter((path) => !path.endsWith('/realtime-ticket'))).toEqual(['/rooms']);
     expect(roomCountry(host)).toMatch(/^[A-Z]{2}$/);
     await room.point('room');
     await host.audit('room page (host, before Start)');
+    await addIdea(host, 'funny space heist');
     await eventually(() => host.latest?.ideas.map((i) => [i.text, i.on]), (v) => JSON.stringify(v) === JSON.stringify([['funny space heist', true]]), 'exactly one idea, on', host);
   });
 
@@ -88,10 +86,9 @@ test.describe('create and set up a room', () => {
       await route.fulfill({ response }).catch(() => undefined); // the app stopped waiting for the slow ones
     });
     await host.open('/');
-    await newCouch(host, { expect: { visible: ['mood-page'] } });
-    await host.fill(host.page.getByLabel('Mood'), 'slow server heist');
-    const stop = await recordPage(host, 'mood-page', /Couldn|Try again|offline/i);
-    await host.tap(host.button('Create couch'), { expect: {} });
+    await setUpStart(host);
+    const stop = await recordPage(host, 'new-couch', /Couldn|Try again|offline/i);
+    await host.tap(host.button('New couch'), { expect: {} });
     // Q24a: quiet at first, then one small floating line; never "Couldn't reach" or Try again.
     await expect(host.page.getByTestId('room-note').filter({ visible: true })).toHaveText('Reconnecting…', { timeout: 12000 });
     await host.see({ visible: ['room-setup'] }, 30000, 'the room opens by itself');
@@ -111,7 +108,7 @@ test.describe('create and set up a room', () => {
     expect(answers.every((a) => a.status === 200)).toBe(true);
     expect(new Set(answers.map((a) => a.roomId)).size).toBe(1);
     expect(host.latest?.roomId).toBe(answers[0].roomId);
-    await eventually(() => host.latest?.ideas.map((i) => i.text), (v) => JSON.stringify(v) === JSON.stringify(['slow server heist']), 'the one room has its one idea', host);
+    await eventually(() => host.latest?.ideas.length, (n) => n === 0, 'the one room, no ideas yet', host);
   });
 
   // Q24a: an outage the server recovers from within 3 s shows nothing at all.
@@ -134,17 +131,16 @@ test.describe('create and set up a room', () => {
       await route.fulfill({ response });
     });
     await host.open('/');
-    await newCouch(host, { expect: { visible: ['mood-page'] } });
-    await host.fill(host.page.getByLabel('Mood'), 'short outage heist');
-    const stop = await recordPage(host, 'mood-page', /Couldn|Try again|offline/i);
-    await host.tap(host.button('Create couch'), { expect: {} });
+    await setUpStart(host);
+    const stop = await recordPage(host, 'new-couch', /Couldn|Try again|offline/i);
+    await host.tap(host.button('New couch'), { expect: {} });
     await host.see({ visible: ['room-setup'] }, 10000, 'the room opens by itself');
     room.noteOutage(first, answered);
     const samples = await stop().catch(() => null);
     expect(tries).toBe(2);
     expect(answered - first, 'answered within the quiet period').toBeLessThan(3000);
-    // The recorder lives in the page, which stays (the room replaces the Mood page in place).
-    expect(samples, 'the Mood page was sampled').not.toBeNull();
+    // The recorder lives in the page, which stays (the room replaces the New couch screen in place).
+    expect(samples, 'the New couch screen was sampled').not.toBeNull();
     expect(samples!.filter((s) => s.note || s.error), 'nothing ever shows').toEqual([]);
     await expect(host.page.getByTestId('room-note').filter({ visible: true })).toHaveCount(0);
   });
@@ -178,9 +174,8 @@ test.describe('create and set up a room', () => {
       return Date.now();
     }, state);
     await host.open('/');
-    await newCouch(host, { expect: { visible: ['mood-page'] } });
-    await host.fill(host.page.getByLabel('Mood'), 'rate limited heist');
-    const stop = await recordPage(host, 'mood-page', /Couldn|Try again|offline/i);
+    await setUpStart(host);
+    const stop = await recordPage(host, 'new-couch', /Couldn|Try again|offline/i);
     // Away as soon as the app holds the server's wait: it has read the 429 and saved the deadline with its request.
     // Going away earlier (the route has the request, the answer is still on its way) cancels the request before the
     // app learns of any wait, so it rightly sends again on return and this route answers that at once. Watched in the
@@ -198,7 +193,7 @@ test.describe('create and set up a room', () => {
         w.__awayAt = Date.now();
       }, 5);
     });
-    await host.tap(host.button('Create couch'), { expect: {} });
+    await host.tap(host.button('New couch'), { expect: {} });
     const awayAt = () => host.page.evaluate(() => (window as unknown as { __awayAt?: number }).__awayAt ?? 0);
     await expect.poll(awayAt, { intervals: [10], timeout: 10000 }).toBeGreaterThan(0);
     const away = await awayAt();
@@ -221,9 +216,9 @@ test.describe('create and set up a room', () => {
   });
 
   // Production 2026-11-12: GoodWatch's search spend limit was reached (503 interpretation_unavailable, budget).
-  // Owner rule: a failing dependency never blocks the user. The room opens with the idea kept but unmatched, a small
-  // note says so, and setup and Start go on with the usual ranking: no Try again, no error gate.
-  test('search over its spend limit: the room with an idea opens, sets up and starts without a tap on Try again', async ({ room }) => {
+  // Owner rule: a failing dependency never blocks the user. The idea is kept but unmatched, a small note says so, and
+  // setup and Start go on with the usual ranking: no Try again, no error gate.
+  test('search over its spend limit: the idea is kept, the couch sets up and starts without a tap on Try again', async ({ room }) => {
     const host = await room.person('Alp');
     const mood = `budget refused heist ${Math.random().toString(36).slice(2, 8)}`;
     const second = `${mood} sequel`;
@@ -231,18 +226,14 @@ test.describe('create and set up a room', () => {
     await issuer(`/_e2e/search-budget?prompt=${encodeURIComponent(second)}`);
     try {
       await host.open('/');
-      await newCouch(host, { expect: { visible: ['mood-page'] } });
-      await host.fill(host.page.getByLabel('Mood'), mood);
-      const stop = await recordPage(host, 'mood-page', /Couldn|Try again|unavailable/i);
-      const sent = host.commandLog.length;
-      await host.tap(host.button('Create couch'), { expect: { visible: ['room-setup'] } });
-      const samples = await stop().catch(() => null);
-      expect(samples, 'the Mood page was sampled').not.toBeNull();
-      expect(samples!.filter((s) => s.error), 'no error or Try again on the Mood page').toEqual([]);
-      // Still one round trip: the server keeps the idea, so the app sends no add_idea after the create.
-      if (room.fault === 'none') expect(host.commandLog.slice(sent).map((c) => c.path.replace(/^.*\/proposal/, '')).filter((path) => !path.endsWith('/realtime-ticket'))).toEqual(['/rooms']);
+      await newCouch(host, { expect: { visible: ['room-setup'] } });
+      const stop = await recordPage(host, 'room-setup', /Couldn|Try again/i);
+      await addIdea(host, mood);
       await eventually(() => host.latest?.ideas.map((i) => [i.text, i.on, i.attributes.length]), (v) => JSON.stringify(v) === JSON.stringify([[mood, true, 0]]), 'the idea is kept, uninterpreted', host);
       await expect(host.page.getByTestId('idea-unmatched').filter({ visible: true })).toHaveText('Mood matching is unavailable for now');
+      const samples = await stop().catch(() => null);
+      expect(samples, 'the couch setup was sampled').not.toBeNull();
+      expect(samples!.filter((s) => s.error), 'no error or Try again on the couch setup').toEqual([]);
       // The idea's switch says so too: the note is inside it, so its accessible name carries it.
       await expect(host.page.getByRole('switch', { name: `${mood}. Your idea. Mood matching is unavailable for now`, exact: true }).filter({ visible: true })).toBeVisible();
       await room.point('room');
@@ -259,22 +250,21 @@ test.describe('create and set up a room', () => {
     }
   });
 
-  // Owner decision Q32: Create room never waits for the idea's interpretation (GoodWatch's two Jev calls,
-  // ~0.6-1.5 s). The search fake takes 4 s for this prompt: the room opens before that answer, the idea is
-  // pending (no "unavailable" note), and its matching lands a moment later and shapes the deck.
-  test('create with a slow idea search: the room opens at once, the idea\'s matching lands later, no unavailable note', async ({ room }) => {
+  // Owner decision Q32: adding an idea never waits for its interpretation (GoodWatch's two Jev calls,
+  // ~0.6-1.5 s). The search fake takes 4 s for this prompt: the idea is listed before that answer, pending (no
+  // "unavailable" note), and its matching lands a moment later and shapes the deck.
+  test('an idea with a slow search: listed at once, its matching lands later, no unavailable note', async ({ room }) => {
     const host = await room.person('Alp');
     const mood = `slow western ${Math.random().toString(36).slice(2, 8)}`;
     await issuer(`/_e2e/search-delay?prompt=${encodeURIComponent(mood)}&ms=4000`);
     try {
       await host.open('/');
-      await newCouch(host, { expect: { visible: ['mood-page'] } });
-      await host.fill(host.page.getByLabel('Mood'), mood);
+      await newCouch(host, { expect: { visible: ['room-setup'] } });
       const stop = await recordPage(host, 'room-setup', /Mood matching is unavailable/i);
-      await host.tap(host.button('Create couch'), { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' });
-      const created = host.samples.filter((x) => x.moment === 'createRoomMs').at(-1);
-      // Behaviour, not speed: a room page before the 4 s search answered means Create room didn't wait for it.
-      if (room.fault === 'none') expect(created?.ms, 'Create room → room page before the 4 s search answers').toBeLessThan(4000);
+      const added = Date.now();
+      await addIdea(host, mood);
+      // Behaviour, not speed: the idea listed before the 4 s search answered means Add didn't wait for it.
+      if (room.fault === 'none') expect(Date.now() - added, 'Add → the idea listed before the 4 s search answers').toBeLessThan(4000);
       await eventually(() => host.latest?.ideas.map((i) => [i.text, i.attributes.map((a) => a.key ?? a.text)]), (v) => JSON.stringify(v) === JSON.stringify([[mood, ['western']]]), 'the idea\'s matching lands', host, 10000);
       const samples = await stop().catch(() => null);
       expect(samples?.length, 'the room page was sampled').toBeGreaterThan(0);
@@ -294,9 +284,8 @@ test.describe('create and set up a room', () => {
   test('create a couch without an idea', async ({ room }) => {
     const host = await room.person('Alp');
     await host.open('/');
-    await newCouch(host, { expect: { visible: ['mood-page'] } });
-    await host.tap(host.button('Continue without an idea'), { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' });
-    await eventually(() => host.latest?.ideas.length, (n) => n === 0, 'Continue without an idea makes a couch without ideas', host);
+    await newCouch(host, { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' });
+    await eventually(() => host.latest?.ideas.length, (n) => n === 0, 'New couch makes a couch without ideas', host);
   });
 
   test('setup: name, services, movies or shows, your idea on/off and replaced, a friend-free Start', async ({ room }) => {
