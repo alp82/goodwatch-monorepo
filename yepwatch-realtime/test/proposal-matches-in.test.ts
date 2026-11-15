@@ -109,3 +109,12 @@ test('gateway authority opts into matchesIn on attach, view and batched views', 
     assert.ok(urls.every(url => url.searchParams.get('matchesIn') === '1'))
   } finally { globalThis.fetch = originalFetch }
 })
+
+
+test('unconfirmed everyone-in sets with one or multiple titles accept no tiebreak and no agreement', () => {
+  const s = snapshot(); s.tiebreak = null; s.agreement.state = 'none'
+  assert.deepEqual(proposalProjection(s, s.roomId), s)
+  s.ins![1].count = 0
+  assert.deepEqual(proposalProjection(s, s.roomId), s)
+  assert.equal(s.participants.filter(p => !p.dropped).length, 2)
+})

@@ -126,7 +126,7 @@ private answers and must remain under the same access restrictions as room inter
 ### Matches I'm in (2026-11-15)
 
 `yepwatch_room.in_version BIGINT` defaults to zero when absent/null. `tiebreak_record TEXT` stores a validated
-JSON extension: `{ tiebreak, participants: [{ id, ins, inRevision, insAgreementRevision, inOrder, favorite }] }`. `tiebreak` holds version,
+JSON extension: `{ confirmed?: string[] | null, tiebreak, participants: [{ id, ins, inRevision, insAgreementRevision, inOrder, favorite }] }`. `tiebreak` holds version,
 candidateIds, seed and outcome; favorite counts derive from active participants on projection. Missing/null
 records upgrade existing proposal approvals to ins lazily, preserving installed clients' selections.
 
@@ -155,6 +155,9 @@ ties (most ins, then most recent in); a settled tiebreak winner takes precedence
 inRevision from agreementRevision. Unavailable checks remove all ins on the checked title. Unrelated ins
 do not restart the offer check.
 
+`confirmed` stores the explicitly confirmed everyone-in set in match order; absent/null means unconfirmed.
+`set_in` only changes selections. `confirm_in { generation, inVersion }` starts the single-title check or opens
+a multi-title tiebreak. A changed everyone-in set clears confirmation. No additional SQL column is needed.
 Every new tiebreak advances persisted inVersion, which never resets when it closes. The seed stays private
 until outcome is set. Internal realtime responses omit ins/inVersion/tiebreak/favorite unless the gateway
 sends `?matchesIn=1` on attach/view/views; the new gateway always sends it. Either API/gateway deployment

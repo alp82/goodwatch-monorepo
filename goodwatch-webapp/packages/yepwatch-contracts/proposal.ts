@@ -236,6 +236,7 @@ export interface CommandEnvelope<T extends RoomCommand = RoomCommand> {
 }
 export type RoomCommand =
 	| { type: "set_in"; generation: number; candidateId: string; in: boolean; expectedOwnInRevision: number }
+	| { type: "confirm_in"; generation: number; inVersion: number }
 	| { type: "pick_favorite"; generation: number; tiebreakVersion: number; candidateId: string | null }
   | { type: "leave" }
   | { type: "configure"; expectedContextVersion: number; country?: string; constraints?: RoomConstraints }

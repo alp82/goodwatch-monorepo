@@ -53,6 +53,7 @@ export const proposalCommandSchema = z
 		sequence: n.min(1),
 		command: z.discriminatedUnion("type", [
 			z.object({ type: z.literal("set_in"), generation: n, candidateId: id, in: z.boolean(), expectedOwnInRevision: n }).strict(),
+			z.object({ type: z.literal("confirm_in"), generation: n, inVersion: n }).strict(),
 			z.object({ type: z.literal("pick_favorite"), generation: n, tiebreakVersion: n, candidateId: id.nullable() }).strict(),
 			z
 				.object({

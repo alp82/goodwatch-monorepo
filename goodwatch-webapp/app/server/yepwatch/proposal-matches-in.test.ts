@@ -29,16 +29,20 @@ const mark = (room: ProposalRoom, who: number, candidateId: string, value = true
   candidateId, in: value, expectedOwnInRevision: room.participants[who].inRevision ?? 0 })
 const pick = (room: ProposalRoom, who: number, candidateId: string | null) => send(room, who, { type: 'pick_favorite', generation: room.generation,
   candidateId, tiebreakVersion: room.tiebreak!.version })
+const confirm = (room: ProposalRoom, who = 0) => send(room, who, { type: 'confirm_in', generation: room.generation, inVersion: room.inVersion ?? 0 })
 function tied(people = 2) {
   let room = fixture(people)
   for (let who = 0; who < people; who++) for (const id of ids.slice(0, 2)) room = mark(room, who, id)
-  return room
+  return confirm(room)
 }
 test('set_in and pick_favorite validate exact shapes, booleans, nullable pick and safe revision fences', () => {
   const parse = (command: unknown) => proposalCommandSchema.safeParse({ commandId: 'command', sequence: 1, command }).success
   const command = { type: 'set_in', generation: 1, candidateId: ids[0], in: true, expectedOwnInRevision: 0 }
   assert.ok(parse(command)); assert.ok(parse({ type: 'pick_favorite', generation: 1, tiebreakVersion: 1, candidateId: null }))
   for (const change of [{ in: 1 }, { expectedOwnInRevision: -1 }, { expectedOwnInRevision: 1.5 }, { generation: NaN }, { person: 'private' }, { candidateId: '' }]) assert.equal(parse({ ...command, ...change }), false)
+  const confirmCommand = { type: 'confirm_in', generation: 1, inVersion: 0 }
+  assert.ok(parse(confirmCommand))
+  for (const change of [{ inVersion: -1 }, { inVersion: 1.5 }, { inVersion: Number.MAX_SAFE_INTEGER + 1 }, { inVersion: undefined }, { generation: NaN }, { extra: true }]) assert.equal(parse({ ...confirmCommand, ...change }), false)
   assert.equal(parse({ type: 'pick_favorite', generation: 1, tiebreakVersion: -1, candidateId: null }), false)
 })
 test('set_in is multi-select, idempotent, revision fenced, choosing/current generation/current match only', () => {
@@ -65,20 +69,78 @@ test('set_in true records implied Yep without replacing measured Yep timing', ()
   room = send(room, 1, { type: 'agree', generation: 1, candidateId: ids[0], agreed: true, expectedRosterVersion: room.rosterVersion,
     expectedProposalVersion: room.proposalVersion, expectedOwnAgreementRevision: room.participants[1].agreementRevision })
   assert.deepEqual(room.participants[1].votes[ids[0]], { value: 'watch', revision: 3, activeExposureMs: null, timingSource: 'implied' })
+  assert.equal(room.agreement.state, 'checking'); assert.deepEqual(room.confirmedIns, [ids[0]])
 })
-test('everyoneIn one starts offer checking, two opens tiebreak, zero closes it and cancels checking', () => {
+test('late joiner set_in restores the pending match without confirming it', () => {
+  const before = mark(mark(fixture(), 0, ids[0]), 1, ids[0])
+  let room = structuredClone(before)
+  room.participants.push({ ...structuredClone(room.participants[0]), id: 'new', votes: {}, ins: [], inRevision: 0,
+    approvedProposalVersion: null, agreementRevision: 0 })
+  room.rosterVersion++; reconcile(room, before)
+  assert.equal(room.proposal?.candidateId, ids[0])
+  assert.deepEqual(proposalSnapshot(room, room.hostId).shared.matches, [])
+  assert.throws(() => mark(room, 2, ids[0], false), { status: 409, code: 'conflict', message: 'Pick a current match' })
+  assert.throws(() => mark(room, 2, ids[1]), { status: 409, code: 'conflict', message: 'Pick a current match' })
+  assert.throws(() => send(room, 2, { type: 'set_in', generation: room.generation, candidateId: ids[0], in: true,
+    expectedOwnInRevision: 1 }), /Your I'm in changed/)
+  for (const change of ['missing', 'ineligible'] as const) {
+    const invalid = structuredClone(room)
+    if (change === 'missing') invalid.candidates = invalid.candidates.filter(c => c.id !== ids[0])
+    else invalid.candidates[0].availability = []
+    assert.throws(() => mark(invalid, 2, ids[0]), { status: 409, code: 'conflict', message: 'Pick a current match' })
+  }
+
+  room = mark(room, 2, ids[0])
+  assert.deepEqual(room.participants[2].votes[ids[0]], { value: 'watch', revision: 1, activeExposureMs: null, timingSource: 'implied' })
+  assert.deepEqual(room.participants[2].ins, [ids[0]])
+  const snapshot = proposalSnapshot(room, room.hostId)
+  assert.deepEqual(snapshot.shared.matches.map(c => c.candidateId), [ids[0]])
+  assert.deepEqual(snapshot.shared.ins, [{ candidateId: ids[0], count: 3 }])
+  assert.equal(room.confirmedIns, before.confirmedIns)
+  assert.equal(room.agreement.state, 'none'); assert.equal(room.phase, 'choosing')
+  assert.equal(agreementCandidate(room), null)
+  room = confirm(room, 2)
+  assert.deepEqual(room.confirmedIns, [ids[0]])
+  assert.equal(room.agreement.state, 'checking')
+})
+test('taps alone never check or break ties; confirmation starts one check and withdrawal clears it', () => {
   let room = mark(mark(fixture(), 0, ids[0]), 1, ids[0])
+  assert.equal(room.agreement.state, 'none'); assert.equal(agreementCandidate(room), null)
+  assert.equal(room.tiebreak, null); assert.equal(room.phase, 'choosing')
+  room = confirm(room, 1)
   assert.equal(room.agreement.state, 'checking'); assert.equal(agreementCandidate(room)?.id, ids[0])
-  room = mark(mark(room, 0, ids[1]), 1, ids[1]); assert.ok(room.tiebreak); assert.equal(room.agreement.state, 'none')
-  room = mark(mark(room, 0, ids[0], false), 0, ids[1], false)
+  assert.deepEqual(confirm(room), { ...room, revision: room.revision + 1 })
+  room = mark(room, 0, ids[0], false)
+  assert.equal(room.agreement.state, 'none'); assert.equal(room.confirmedIns, null)
+  room = mark(room, 0, ids[0]); assert.equal(room.agreement.state, 'none')
+  room = mark(mark(room, 0, ids[1]), 1, ids[1])
   assert.equal(room.tiebreak, null); assert.equal(room.agreement.state, 'none')
+  const before = room.inVersion!
+  room = confirm(room)
+  assert.deepEqual(room.tiebreak!.candidateIds, ids.slice(0, 2)); assert.ok(room.inVersion! > before)
+  assert.deepEqual(confirm(room), { ...room, revision: room.revision + 1 })
+})
+test('confirm fences generation, phase, current ins version and nonempty everyone-in set', () => {
+  const room = fixture()
+  for (const inVersion of [room.inVersion!, room.inVersion! + 1]) assert.throws(() => send(room, 0,
+    { type: 'confirm_in', generation: room.generation, inVersion }), { status: 409, code: 'conflict', message: "The I'm ins changed" })
+  for (const r of [{ ...room, generation: 2 }, { ...room, phase: 'decided' as const }]) assert.throws(() => send(r, 0,
+    { type: 'confirm_in', generation: 1, inVersion: r.inVersion! }), /Pick a current match/)
+})
+test('confirm retries an unavailable single-title check once and preserves an active check', () => {
+  let room = confirm(mark(mark(fixture(), 0, ids[0]), 1, ids[0]))
+  room.agreement.state = 'unavailable'; room.agreement.error = { code: 'no_intersection' }
+  const version = room.agreement.version
+  room = confirm(room)
+  assert.deepEqual(room.agreement, { version: version + 1, state: 'checking', error: null })
+  assert.deepEqual(confirm(room), { ...room, revision: room.revision + 1 })
 })
 test('same tied set preserves version, seed and picks; changed set rotates seed/version and clears picks', () => {
   let room = pick(tied(), 0, ids[0]); const tie = structuredClone(room.tiebreak!)
   room = mark(room, 0, ids[2]); assert.deepEqual(room.tiebreak, tie); assert.equal(room.participants[0].favorite?.candidateId, ids[0])
-  room = mark(room, 1, ids[2]); assert.ok(room.tiebreak!.version > tie.version); assert.notEqual(room.tiebreak!.seed, tie.seed)
+  room = mark(room, 1, ids[2]); assert.equal(room.tiebreak, null); room = confirm(room); assert.ok(room.tiebreak!.version > tie.version); assert.notEqual(room.tiebreak!.seed, tie.seed)
   assert.match(room.tiebreak!.seed, /^[0-9a-f]{16}$/); assert.ok(room.participants.every(p => p.favorite === null))
-  room = mark(room, 0, ids[2], false); assert.deepEqual(room.tiebreak!.candidateIds, ids.slice(0, 2)); assert.ok(room.tiebreak!.version > tie.version)
+  room = mark(room, 0, ids[2], false); assert.equal(room.tiebreak, null); room = confirm(room); assert.deepEqual(room.tiebreak!.candidateIds, ids.slice(0, 2)); assert.ok(room.tiebreak!.version > tie.version)
 })
 test('favorite fences generation/version/membership, allows null and replacement until outcome', () => {
   let room = tied()
@@ -133,7 +195,7 @@ test('memory and relational row mapping preserve ins revisions, favorites and ti
   const head = parseRow(tables.room, plan.head)
   assert.equal(head.in_version, room.inVersion)
   assert.equal(head.tiebreak_record, encodeMatches(room))
-  const loaded = structuredClone(room); loaded.tiebreak = null
+  const loaded = structuredClone(room); loaded.tiebreak = null; delete loaded.confirmedIns
   for (const p of loaded.participants) { delete p.ins; delete p.inRevision; delete p.favorite }
   decodeMatches(loaded, head.tiebreak_record); assert.deepEqual(loaded, room)
   const reader = new RelationalProposalRepository(async (statement, args = []) => {
@@ -147,20 +209,27 @@ test('memory and relational row mapping preserve ins revisions, favorites and ti
     return { rows, rowcount: rows.length, cols: [] }
   }, 'matches-in-storage-secret-at-least-32')
   const read = (await reader.read(room.id))!.room
-  assert.equal(read.inVersion, room.inVersion); assert.deepEqual(read.tiebreak, room.tiebreak)
+  assert.deepEqual(read.confirmedIns, room.confirmedIns); assert.equal(read.inVersion, room.inVersion); assert.deepEqual(read.tiebreak, room.tiebreak)
   assert.deepEqual(read.participants.map(p => [p.ins, p.inRevision, p.favorite]), room.participants.map(p => [p.ins, p.inRevision, p.favorite]))
+  const valkey = new ValkeyRoomRepository({} as never, {} as never, 'matches-in-storage-secret-at-least-32',
+    { accounts: {} as never, deletions: {} as never, retentionDays: 30 })
+  assert.deepEqual(valkey.decode(room.id, valkey.encode(room)).confirmedIns, room.confirmedIns)
+  const legacy = JSON.parse(encodeMatches(room)); delete legacy.confirmed
+  decodeMatches(structuredClone(room), JSON.stringify(legacy))
+  for (const confirmed of [[], [''], 1, Array(513).fill(ids[0])]) assert.throws(() => decodeMatches(structuredClone(room), JSON.stringify({ ...legacy, confirmed })))
   const empty = fixture(); decodeMatches(empty, null); assert.equal(empty.tiebreak, null)
   const old = { ...head }; delete old.in_version; delete old.tiebreak_record
   assert.doesNotThrow(() => parseRow(tables.room, old))
 })
-test('running single-title check cancels on join and resumes only when the new participant is in', () => {
-  const before = mark(mark(fixture(), 0, ids[0]), 1, ids[0])
+test('running single-title check cancels on join and needs confirmation after the new participant is in', () => {
+  const before = confirm(mark(mark(fixture(), 0, ids[0]), 1, ids[0]))
   assert.equal(before.agreement.state, 'checking')
   let room = structuredClone(before)
   room.participants.push({ ...structuredClone(room.participants[0]), id: 'new', ins: [], inRevision: 0, approvedProposalVersion: null, agreementRevision: 0 })
   room.rosterVersion++; reconcile(room, before)
   assert.equal(room.agreement.state, 'none'); assert.equal(agreementCandidate(room), null)
-  room = mark(room, 2, ids[0]); assert.equal(room.agreement.state, 'checking')
+  room = mark(room, 2, ids[0]); assert.equal(room.agreement.state, 'none')
+  room = confirm(room); assert.equal(room.agreement.state, 'checking')
   assert.equal(proposalSnapshot(room, room.hostId).shared.ins![0].count, 3)
 })
 test('setup/restart clears ins and tiebreak; legacy stored approvals upgrade without loss', () => {
@@ -170,7 +239,7 @@ test('setup/restart clears ins and tiebreak; legacy stored approvals upgrade wit
   room.participants[0].approvedProposalVersion = 3; room.participants[0].agreementRevision = 2
   initializeIns(room); assert.deepEqual(room.participants[0].ins, [id]); assert.equal(room.participants[0].inRevision, 2)
   const reset = send(tied(), 0, { type: 'restart', expectedRevision: 1, expectedGeneration: 1 })
-  assert.deepEqual(proposalSnapshot(reset, reset.hostId).shared.ins, []); assert.equal(reset.tiebreak, null)
+  assert.deepEqual(proposalSnapshot(reset, reset.hostId).shared.ins, []); assert.equal(reset.tiebreak, null); assert.equal(reset.confirmedIns, null)
   assert.ok(reset.participants.every(p => !p.ins!.length && p.favorite === null))
 })
 
@@ -205,7 +274,8 @@ test('service commits favorite outcome and fresh offers before the final decisio
   // Seed the multi-title selection before settlement; the pure transition tests exercise every intervening mark.
   const row = repo.rows.get(room.id)!.room, before = structuredClone(row)
   row.participants[1].ins = ids.slice(0, 2); row.participants[1].inRevision = 2; reconcile(row, before)
-  const version = row.tiebreak!.version
+  await command(a, { type: 'confirm_in', generation: 1, inVersion: row.inVersion! })
+  const version = repo.rows.get(room.id)!.room.tiebreak!.version
   await command(a, { type: 'pick_favorite', generation: 1, tiebreakVersion: version, candidateId: ids[1] })
   const result = await command(b, { type: 'pick_favorite', generation: 1, tiebreakVersion: version, candidateId: ids[1] })
   assert.equal(result.snapshot.shared.phase, 'decided')
@@ -346,19 +416,19 @@ test('old API writes invalidate stale ins in whole-room JSON and relational exte
 test('roster-only close and reopen never reuse a tiebreak version or accept an old favorite', () => {
   let room = fixture(3)
   for (const who of [0, 1]) for (const id of ids.slice(0, 2)) room = mark(room, who, id)
-  room = send(room, 2, { type: 'leave' })
+  room = confirm(send(room, 2, { type: 'leave' }))
   const version = room.tiebreak!.version
   room = pick(room, 0, ids[0])
   const previous = structuredClone(room)
   room.participants[2].leftAt = null; room.rosterVersion++; reconcile(room, previous)
   assert.equal(room.tiebreak, null)
-  room = send(room, 2, { type: 'leave' })
+  room = confirm(send(room, 2, { type: 'leave' }))
   assert.ok(room.tiebreak!.version > version)
   assert.throws(() => send(room, 0, { type: 'pick_favorite', generation: 1, tiebreakVersion: version, candidateId: ids[0] }), /The tiebreak changed/)
 })
 
-test('unrelated in changes preserve a failed offer check but real candidate changes restart it', () => {
-  let room = mark(mark(fixture(), 0, ids[0]), 1, ids[0])
+test('unrelated in changes preserve a failed offer check but everyone-in set changes clear it', () => {
+  let room = confirm(mark(mark(fixture(), 0, ids[0]), 1, ids[0]))
   room.agreement.state = 'unavailable'; room.agreement.error = { code: 'no_intersection' }
   const failed = structuredClone(room.agreement)
   room = mark(room, 0, ids[1])
@@ -392,11 +462,69 @@ test('matches migration and schema store the extension without indexing or colum
 test('agreement inputs include reaching unanimity while viewing context is missing', () => {
   const base = fixture()
   base.screens[0].confirmed = false
-  const room = mark(mark(base, 0, ids[0]), 1, ids[0])
+  const unconfirmed = mark(mark(base, 0, ids[0]), 1, ids[0])
+  assert.equal(unconfirmed.agreement.state, 'none')
+  const room = confirm(unconfirmed)
   assert.equal(room.agreement.state, 'unavailable')
   assert.equal(room.agreement.error?.code, 'needs_context')
   const previous = structuredClone(room), ready = structuredClone(room)
   ready.screens[0].confirmed = true; ready.contextVersion++
   reconcile(ready, previous)
   assert.equal(ready.agreement.state, 'checking')
+})
+
+test('confirmed sets compare without order and are stored in match order on confirmation', () => {
+  const room = tied(), previous = structuredClone(room)
+  room.confirmedIns!.reverse()
+  reconcile(room, previous)
+  assert.deepEqual(room.tiebreak, previous.tiebreak)
+  assert.deepEqual(confirm(room).confirmedIns, ids.slice(0, 2))
+})
+
+test('legacy propose followed by agree starts the check without explicit confirmation', () => {
+  let room = propose(fixture(), 0, ids[0])
+  room = send(room, 1, { type: 'agree', generation: room.generation, candidateId: ids[0], agreed: true,
+    expectedRosterVersion: room.rosterVersion, expectedProposalVersion: room.proposalVersion,
+    expectedOwnAgreementRevision: room.participants[1].agreementRevision })
+  assert.equal(room.agreement.state, 'checking'); assert.equal(agreementCandidate(room)?.id, ids[0])
+})
+
+test('single-title confirm checks fresh offers and decides through the service', async () => {
+  const repo = new ProposalMemoryRepository(), checked: string[] = []
+  const service = new ProposalService(repo, { ...proposalFixtureCatalog, async recheck(room, candidate) {
+    checked.push(candidate.id); return candidate.availability
+  } }, 'confirm-service-secret-at-least-thirty-two')
+  const a = await service.create({ contractVersion: 3, commandId: 'create', admissionSecret: 'a'.repeat(43), nickname: 'A' })
+  const room = repo.rows.get(a.credential.roomId)!.room, base = fixture(1)
+  room.phase = 'choosing'; room.generation = 1; room.candidates = base.candidates; room.screens = base.screens
+  Object.assign(room.participants[0], { votes: base.participants[0].votes, ins: [], inRevision: 0, screenId: 'room', serviceIds: [1] })
+  const marked = await service.command(room.id, a.credential, { commandId: 'mark', sequence: 1,
+    command: { type: 'set_in', generation: 1, candidateId: ids[0], in: true, expectedOwnInRevision: 0 } })
+  assert.equal(marked.snapshot.shared.phase, 'choosing'); assert.equal(marked.snapshot.shared.agreement.state, 'none'); assert.deepEqual(checked, [])
+  const result = await service.command(room.id, a.credential, { commandId: 'confirm', sequence: marked.snapshot.own.nextSequence,
+    command: { type: 'confirm_in', generation: 1, inVersion: marked.snapshot.shared.inVersion! } })
+  assert.equal(result.snapshot.shared.phase, 'decided'); assert.equal(result.snapshot.shared.decision!.candidateId, ids[0])
+  assert.deepEqual(checked, [ids[0]])
+})
+
+test('confirm continuing shows checks member grants including expiry and ignores departed seats', () => {
+  const now = Date.now(), room = fixture()
+  room.constraints.kinds = ['show_continue']
+  room.candidates[0].identity = { kind: 'show_continue', tmdbId: 1, episode: { tmdbId: 2, season: 1, number: 2 } }
+  for (const p of room.participants) {
+    p.member = { state: 'linked', prefill: null }; p.memberGrant = { accessToken: 'grant', expiresAt: now + 10000 }
+    setIn(room, p, ids[0], true)
+  }
+  reconcile(room, structuredClone(room))
+  for (const kind of ['guest', 'missing', 'expired']) {
+    const invalid = structuredClone(room), p = invalid.participants[1]
+    if (kind === 'guest') p.member = { state: 'guest', prefill: null }
+    if (kind === 'missing') delete p.memberGrant
+    if (kind === 'expired') p.memberGrant!.expiresAt = now
+    assert.throws(() => confirm(invalid), kind === 'expired' ? { code: 'member_required', status: 403 } :
+      { code: 'conflict', status: 409, message: "The I'm ins changed" })
+    p.leftAt = now
+    assert.doesNotThrow(() => confirm(invalid))
+  }
+  assert.equal(confirm(room).agreement.state, 'checking')
 })

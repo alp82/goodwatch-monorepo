@@ -69,6 +69,7 @@ export interface ProposalParticipant extends ContinuousParticipant {
 	agreementRevision: number
 }
 export interface ProposalRoom extends ContinuousRoom {
+	confirmedIns?: string[] | null
 	inVersion?: number
 	tiebreak?: Omit<import("../../../packages/yepwatch-contracts/proposal.ts").MatchesTiebreak, "favorites" | "seed"> & { seed: string } | null
 	startedAt?: number | null

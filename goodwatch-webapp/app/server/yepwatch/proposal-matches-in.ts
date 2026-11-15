@@ -26,6 +26,9 @@ export function inCounts(room: ProposalRoom, ids: string[]) {
   return ids.map(candidateId => ({ candidateId, count: people.filter(p => p.ins?.includes(candidateId) ||
     (p.ins === undefined && room.proposal?.candidateId === candidateId && p.approvedProposalVersion === room.proposal.version)).length }))
 }
+export function sameIns(a: string[] | null | undefined, b: string[]) {
+  return !!a && a.length === b.length && a.every(id => b.includes(id))
+}
 export function favoriteCounts(room: ProposalRoom) {
   const tie = room.tiebreak
   return tie ? tie.candidateIds.map(candidateId => ({ candidateId, count: activeRoom(room).participants.filter(p =>
@@ -82,7 +85,9 @@ export function reconcileIns(room: ProposalRoom, previous: ProposalRoom, ids: st
   if (JSON.stringify(counts) !== JSON.stringify(previous.phase === 'setup' ? [] : inCounts(previous, oldIds)) &&
       room.inVersion === (previous.inVersion ?? 0)) room.inVersion!++
   const everyone = people.length ? counts.filter(c => c.count === people.length).map(c => c.candidateId) : []
-  if (everyone.length >= 2) {
+  if (room.confirmedIns && !sameIns(room.confirmedIns, everyone)) room.confirmedIns = null
+  const confirmed = sameIns(room.confirmedIns, everyone)
+  if (everyone.length >= 2 && confirmed) {
     if (!room.tiebreak || room.tiebreak.candidateIds.length !== everyone.length || room.tiebreak.candidateIds.some(id => !everyone.includes(id))) {
       room.inVersion = Math.max(room.inVersion!, previous.inVersion ?? 0) + 1
       room.tiebreak = { version: room.inVersion, candidateIds: everyone, seed: randomBytes(8).toString('hex'), outcome: null }
@@ -93,7 +98,7 @@ export function reconcileIns(room: ProposalRoom, previous: ProposalRoom, ids: st
     room.tiebreak = null
     for (const p of room.participants) p.favorite = null
   }
-  const winner = room.tiebreak?.outcome?.candidateId ?? (everyone.length === 1 ? everyone[0] : null)
+  const winner = room.tiebreak?.outcome?.candidateId ?? (everyone.length === 1 && confirmed ? everyone[0] : null)
   const latest = (id: string) => Math.max(0, ...people.filter(p => p.ins!.includes(id)).map(p => p.inOrder?.[id] ?? 0))
   const best = counts.reduce<{ candidateId: string; count: number } | null>((best, c) =>
     c.count > 0 && (c.count > (best?.count ?? 0) || (best && c.count === best.count && latest(c.candidateId) > latest(best.candidateId))) ? c : best, null)?.candidateId ?? null

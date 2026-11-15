@@ -27,7 +27,8 @@ Existing neutral activity frame shape remains, plus `inspection:{kind:'poster',c
 adds/removes one current match from the actor's multi-select. Changed values increment the actor's revision
 and the room's `inVersion`; repeated values are no-ops after checking the revision fence. A true value supplies
 an implied Yep when needed. `pick_favorite { generation: number, tiebreakVersion: number, candidateId: string | null }`
-sets or withdraws one favorite until the tiebreak outcome is set. Both commands require the choosing phase.
+sets or withdraws one favorite until the tiebreak outcome is set. All three commands require the choosing phase.
+For a pending late-join proposal still in the eligible candidate pool, `set_in` with `in: true` also supplies the joiner's implied Yep and in even before it is a current match, without confirming or deciding; `in: false` still requires a current match.
 
 Clients declare `?matchesIn=1` on HTTP requests, or `matchesIn: true` in realtime authenticate. Without this
 capability shared `ins`, `inVersion`, `tiebreak`, and own `ins`, `favorite` are omitted. The capability is
@@ -46,7 +47,11 @@ Own fields (also optional without capability):
 - `favorite: { tiebreakVersion: number; candidateId: string | null } | null`.
 
 Only active seats contribute. Joins/rejoins start with no ins/favorite; departures drop selections from counts.
-Exactly one everyone-in match starts the existing fresh offer check; multiple open a tiebreak, and none close it.
+Taps only change ins. `confirm_in { generation: number, inVersion: number }` confirms the current everyone-in set:
+one title starts the fresh offer check; two or more open a tiebreak. A stale version or empty set conflicts.
+Changing the everyone-in set clears confirmation and closes its check/tiebreak; re-adding requires confirmation again.
+Repeated confirmation preserves a running check/tiebreak; confirming a failed single-title check retries it.
+Legacy `propose`/`agree` implicitly confirm a sole everyone-in title.
 An unchanged tied set keeps its version/seed/picks; a changed set gets a new monotonic version and random 16-hex
 seed, clearing picks. Every new tiebreak advances the persisted inVersion, even after closing on a roster change. The seed is omitted until outcome is set. Roster changes also re-evaluate a pending outcome. Every active seat must pick before
 settlement: most picks wins, with ties in tiebreak order resolved by unsigned UTF-16 FNV-1a of
