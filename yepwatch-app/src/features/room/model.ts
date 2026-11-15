@@ -185,16 +185,21 @@ export function roomView(snapshot: RoomSnapshot, seenIdeas: ReadonlySet<string> 
   };
 }
 
-/** A proposal takes over the screen of everyone in the round until it's decided or set aside on this device. */
+/**
+ * A friend's I'm in (the room's proposal) takes over the screen of everyone else in the round until it's decided
+ * or set aside on this device. Never the screen of the person whose I'm in it is: they said it on Matches, and
+ * stay there or keep swiping.
+ */
 export function showsProposal(view: RoomView, dismissedVersion: number | null) {
-  return view.phase === 'choosing' && Boolean(view.proposal) && view.me.inRound && dismissedVersion !== view.proposal!.version;
+  const p = view.proposal;
+  return view.phase === 'choosing' && Boolean(p) && view.me.inRound && !p!.mine && !p!.pending && dismissedVersion !== p!.version;
 }
 
 /** The status line under a room's name on the start page. */
 export function statusLine(view: RoomView) {
   if (view.phase === 'decided') return view.decision ? `Tonight: ${view.decision.title}` : 'Tonight';
   if (view.phase === 'setup') return 'Setting up';
-  if (view.proposal) return `Proposed: ${view.proposal.candidate?.title ?? 'a match'}`;
+  if (view.proposal) return `Someone’s in: ${view.proposal.candidate?.title ?? 'a match'}`;
   return `Choosing · ${view.matches.length} ${view.matches.length === 1 ? 'match' : 'matches'}`;
 }
 

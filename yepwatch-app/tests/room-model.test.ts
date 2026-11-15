@@ -85,10 +85,21 @@ test('proposal: shown to everyone in the round until set aside for that version;
   assert.equal(showsProposal(v, null), true);
   assert.equal(showsProposal(v, 3), false, 'Keep swiping on this device');
   assert.equal(showsProposal(v, 2), true, 'a new proposal shows again');
-  assert.equal(statusLine(v), 'Proposed: Isolated test c2');
+  assert.equal(statusLine(v), 'Someone’s in: Isolated test c2');
   s.own.participantId = 'sam';
   assert.equal(showsProposal(roomView(s), null), false, 'not in the round');
   assert.equal(Object.keys(v.proposal!).some((k) => /proposer|by|who/i.test(k)), false);
+});
+
+test('your own I’m in (proposal) never takes over your screen, sent or on its way', () => {
+  const s = room();
+  s.shared.phase = 'choosing';
+  s.shared.matches = [{ candidateId: 'c2', averageYepMs: null }];
+  s.shared.proposalVersion = 3;
+  s.shared.proposal = { candidateId: 'c2', version: 3, previousCandidateId: null, agreeCount: 1, requiredCount: 2, averageYepMs: null };
+  assert.equal(showsProposal(roomView(s, undefined, 'c2'), null), false, 'Propose on its way');
+  s.own.agreement = { proposalVersion: 3, agreed: true, revision: 1, isProposer: true };
+  assert.equal(showsProposal(roomView(s), null), false, 'your proposal');
 });
 
 test('commands carry the redesigned names and the latest versions', async () => {

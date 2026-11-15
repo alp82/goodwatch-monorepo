@@ -249,6 +249,29 @@ test.describe('deck and voting', () => {
     await host.see({ hidden: ['details-panel'], visible: ['voting'] }, 5000, 'browser Back closes the details sheet first');
   });
 
+  test('first round: the how-to guides the real card on a phone and a desktop, until the person acts', async ({ room }) => {
+    const host = await readyHost(room, 'Alp', undefined, { howTo: true });
+    const sam = await room.person('Sam', { device: 'desktop', locale: 'en-US', howTo: true });
+    await join(sam, await inviteLink(host), 'Sam', 'Netflix');
+    await start(host, [sam]);
+    for (const p of [host, sam]) {
+      await p.see({ text: 'Would you watch this tonight?' }, 5000, `${p.name}: every card asks the question`);
+      await expect(p.button('Skip the how-to')).toBeVisible({ timeout: 5000 });
+    }
+    await host.audit('voting, how-to (phone)');
+    await sam.audit('voting, how-to (desktop)');
+    // A vote ends it; Skip does too. Neither comes back on this device.
+    await vote(host, true);
+    await expect(host.button('Skip the how-to')).toHaveCount(0);
+    await sam.tap(sam.button('Skip the how-to'), { expect: {} });
+    await expect(sam.button('Skip the how-to')).toHaveCount(0);
+    await vote(sam, false);
+    await host.page.reload();
+    await host.see({ visible: ['voting', 'poster'] }, 15000, 'voting after a reload');
+    await host.page.waitForTimeout(800);
+    await expect(host.button('Skip the how-to')).toHaveCount(0);
+  });
+
   test('deck refills while voting (no end, "Finding more…" only while loading)', async ({ room }) => {
     const host = await readyHost(room);
     const mia = await room.person('Mia');

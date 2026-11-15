@@ -55,6 +55,22 @@ interface Seat {
 export interface VoteStageControls {
   /** Fly the card as the buttons and arrow keys do: lean past the threshold, hold, fly. */
   commit: (yes: boolean) => void;
+  /** Mount (true) or drop (false) the live card's look layers, as a grab and its settle do (the how-to's ghost hand). */
+  engage: (on: boolean) => void;
+}
+/** The drag core: `x`, `y` move the card (px), `v` (−1…1 at the threshold) drives the stage looks. */
+export interface DragValues { x: Animated.Value; y: Animated.Value; v: Animated.Value }
+/** A box in stage coordinates: x from the stage's left edge, y from its top. */
+export interface StageBox { x: number; y: number; width: number; height: number }
+/**
+ * Where the stage sits on screen, for looks that must read fully when the card isn't centered in the
+ * window (desktop Tonight: the card's column is left of the question column).
+ */
+export interface StageFrame {
+  /** The whole window, in stage coordinates (its left edge is usually at a negative x). */
+  window: StageBox;
+  /** The question column beside the card, in stage coordinates; null when there is none (phones: one column). */
+  aside: StageBox | null;
 }
 /** The answered card flying off over the next one. Its answer went out when it was pressed. */
 interface Departure {
@@ -66,6 +82,8 @@ interface Departure {
   y0: number;
   /** Its streaming logos, as they were when it was answered. */
   services?: ReactNode;
+  /** Answered while the looks were off (`plain`): no look, this overlay on the card instead. */
+  over?: (x: Animated.Value) => ReactNode;
 }
 /**
  * One card's stage look (its layers behind and in front of the card) with drives of its own. While the
@@ -125,7 +143,7 @@ function flicker(a: Animated.Value) {
 const noop = () => undefined;
 
 /** One answered card leaving: drawn over the live card, out of the accessibility tree, taking no input. */
-const Departing = memo(function Departing({ d, geo, onDone }: { d: Departure; geo: StageGeometry; onDone: (id: number) => void }) {
+const Departing = memo(function Departing({ d, geo, tools, onDone }: { d: Departure; geo: StageGeometry; tools: boolean; onDone: (id: number) => void }) {
   const { w, h, aw, cardTop, threshold, off, phone } = geo;
   const [values] = useState(() => ({ x: new Animated.Value(d.x0), y: new Animated.Value(d.y0), zero: new Animated.Value(0), one: new Animated.Value(1) }));
   const { x, y } = values;
@@ -141,11 +159,12 @@ const Departing = memo(function Departing({ d, geo, onDone }: { d: Departure; ge
     ? x.interpolate({ inputRange: [8, Math.max(9, threshold)], outputRange: [0, 1], ...clampI })
     : x.interpolate({ inputRange: [-Math.max(9, threshold), -8], outputRange: [1, 0], ...clampI });
   const side: CardLayerProps = { look: d.card.look, kind: d.answer ? 'yep' : 'nope', w, h, phone, x, p, punch: same(values.zero), lit: same(values.one), posterUrl: d.card.title.posterUrl };
+  const plain = d.over !== undefined;
   return (
     <View {...hidden} style={{ position: 'absolute', left: (aw - w) / 2, top: cardTop, width: w, height: h }}>
       <Poster title={d.card.title} width={w} height={h} phone={phone} z={geo.z} showText={h >= 300} x={x} y={y} pan={{}} look={d.card.look} services={d.services}
-        leaving onDetails={noop}
-        halo={<CardGlow {...side} />} under={<CardUnder {...side} />} over={<CardOver {...side} />} />
+        leaving tools={tools} onDetails={noop}
+        halo={plain ? null : <CardGlow {...side} />} under={plain ? null : <CardUnder {...side} />} over={plain ? d.over?.(x) : <CardOver {...side} />} />
     </View>
   );
 });
@@ -195,7 +214,7 @@ const UnderCard = memo(function UnderCard({ title, box, rise, x, lean }: { title
 });
 
 /** The live card: its friends' pointers behind and in front, the pointer surface, the poster with its drag. */
-const LiveCard = memo(function LiveCard({ card, geo, box, entry, x, y, pan, services, engaged, drives, activity, onPointer, onDetails }: {
+const LiveCard = memo(function LiveCard({ card, geo, box, entry, x, y, pan, services, engaged, drives, activity, tools, extra, onPointer, onDetails }: {
   card: StageCard;
   geo: StageGeometry;
   box: object;
@@ -207,6 +226,9 @@ const LiveCard = memo(function LiveCard({ card, geo, box, entry, x, y, pan, serv
   engaged: boolean;
   drives: { yepP: A; nopeP: A; still: A; litY: A; litN: A };
   activity: Map<string, PeerActivity>;
+  tools: boolean;
+  /** Drawn over the poster, moving and tilting with it. */
+  extra?: ReactNode;
   onPointer: (pointer: ActivityPointer | null) => void;
   onDetails: () => void;
 }) {
@@ -219,10 +241,10 @@ const LiveCard = memo(function LiveCard({ card, geo, box, entry, x, y, pan, serv
       <PeerStage layer="back" activity={activity} width={w} height={h} desktop={false} />
       <PointerSurface width={w} height={h} onPointer={onPointer}>
         <Poster title={card.title} width={w} height={h} phone={phone} z={geo.z} showText={h >= 300} x={x} y={y} pan={pan} look={card.look} services={services}
-          onDetails={onDetails}
+          tools={tools} onDetails={onDetails}
           halo={engaged ? <><CardGlow {...nopeCard} /><CardGlow {...yepCard} /></> : null}
           under={engaged ? <><CardUnder {...nopeCard} /><CardUnder {...yepCard} /></> : null}
-          over={engaged ? <><CardOver {...nopeCard} /><CardOver {...yepCard} /></> : null} />
+          over={<>{engaged ? <><CardOver {...nopeCard} /><CardOver {...yepCard} /></> : null}{extra}</>} />
       </PointerSurface>
       <PeerStage layer="front" activity={activity} width={w} height={h} desktop={false} />
     </Animated.View>
@@ -240,7 +262,7 @@ const SeatMoment = memo(function SeatMoment({ seat, active, g, loop, reduced }: 
 });
 
 /** Memoized: the voting screen re-renders on every room update; the stage only when what it shows changes. */
-export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disabled, keys, reduced, enter, onEntered, activity, services, moment, controls, onVote, onDetails, onGesture, onPointer, onMomentEnd, onVeil }: {
+export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disabled, keys, reduced, enter, onEntered, activity, services, moment, controls, onVote, onDetails, onGesture, onPointer, onMomentEnd, onVeil, drag, plain = false, cardOver, cardTools = true }: {
   geo: StageGeometry;
   /** The live card: the next unanswered one, what every press answers. */
   card: StageCard | null;
@@ -272,12 +294,31 @@ export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disab
    * looks on the stage change. The stage must sit above the column, so the looks paint over it.
    */
   onVeil?: (opacity: A | null) => void;
+  // ——— Tonight's layout and how-to. The voting screen passes these; the looks read `frame` and drive `asideVeil`. ———
+  /** The drag core from outside (read once, when the stage mounts): the first-round how-to moves the real card with it. */
+  drag?: DragValues;
+  /** No random looks (no card or stage layers, no answered-card fade, no neon): the card, its drag and `cardOver` only. */
+  plain?: boolean;
+  /** Drawn over the live card (it moves and tilts with it), and over a card answered while `plain` as it flies off. */
+  cardOver?: (x: Animated.Value) => ReactNode;
+  /** The poster's own Details and Trailer buttons (off where the screen shows them beside the card). */
+  cardTools?: boolean;
+  /**
+   * Where the stage sits on screen (desktop Tonight; null or absent on phones, where the stage is centered in the
+   * window). For looks that must reach both screen edges and keep their words clear of the question column.
+   */
+  frame?: StageFrame | null;
+  /**
+   * The question column's opacity (1 at rest), owned by the screen and applied to the column. A look that crosses
+   * the column drives it down (to about 0.1) while it plays and back to 1 after. Absent on phones.
+   */
+  asideVeil?: Animated.Value;
 }) {
   const { w, h, aw, cardTop, threshold, lean, phone } = geo;
   const [values] = useState(() => ({
-    x: new Animated.Value(0),
-    y: new Animated.Value(0),
-    v: new Animated.Value(0),
+    x: drag?.x ?? new Animated.Value(0),
+    y: drag?.y ?? new Animated.Value(0),
+    v: drag?.v ?? new Animated.Value(0),
     /** The live card never takes a knock; its layers get a resting punch. */
     still: new Animated.Value(0),
     litYep: new Animated.Value(0),
@@ -326,7 +367,7 @@ export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disab
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loops = !reduced && ((engaged && card !== null && LOOPING.includes(card.look)) || (fade !== null && LOOPING.includes(fade.set.look)) || (moment !== null && LOOPING.includes(moment.look)));
+  const loops = !reduced && ((engaged && !plain && card !== null && LOOPING.includes(card.look)) || (fade !== null && LOOPING.includes(fade.set.look)) || (moment !== null && LOOPING.includes(moment.look)));
   useEffect(() => {
     if (!loops) return;
     loop.setValue(0);
@@ -522,8 +563,8 @@ export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disab
     playFeedback('swipe');
     if (reduced) setDeparture(null);
     else {
-      setDeparture({ id: ++serial.current, card: target, answer, x0, y0, services });
-      playFade(target, answer, v0, wasLit);
+      setDeparture({ id: ++serial.current, card: target, answer, x0, y0, services, over: plain ? cardOver ?? (() => null) : undefined });
+      if (!plain) playFade(target, answer, v0, wasLit);
     }
     // The answer goes out now; the fly-off is only its picture.
     void onVote(answer, target.key).then((sent) => {
@@ -548,7 +589,7 @@ export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disab
   useLayoutEffect(() => {
     live.current = { commit, settle, threshold, disabled, onDetails, onGesture, engage };
   });
-  useImperativeHandle(controls, () => ({ commit: (yes: boolean) => live.current.commit(yes) }), []);
+  useImperativeHandle(controls, () => ({ commit: (yes: boolean) => live.current.commit(yes), engage: (on: boolean) => (on ? live.current.engage() : setEngaged(false)) }), []);
   // PanResponder only invokes these closures for events; it never reads the refs during construction.
   const [pan] = useState(() => {
     const base = { x: 0, y: 0 };
@@ -640,7 +681,7 @@ export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disab
   const fading = fade ? sets.find((s) => s === fade.set) : undefined;
   const liveSet = card ? sets.find((s) => s.key === card.key && !s.fading) : undefined;
   // Behind: the answered look under the live one; in front: the live look under the answered one.
-  const backSets = sets.filter((s) => s === fading || s === liveSet);
+  const backSets = plain ? [] : sets.filter((s) => s === fading || s === liveSet);
   const frontSets = [...backSets].sort((a, b) => Number(a === fading) - Number(b === fading));
   // The question column fades while a look on the stage, or the match moment, paints across it.
   const momentLook = moment?.look;
@@ -663,17 +704,18 @@ export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disab
   const under = card ? next : null;
   /** The round's first card rising in (identity at rest). */
   const entry = useMemo(() => ({ opacity: rise, transform: [{ translateY: rise.interpolate({ inputRange: [0, 1], outputRange: [18, 0] }) }] }), [rise]);
+  const extra = useMemo(() => cardOver?.(x), [cardOver, x]);
 
   return (
     <View style={{ width: aw, height: geo.stageH }}>
       {backSets.map((set) => lookSet(set, BackLayer, set === fading ? fadeBack : quietFill, set !== fading && fading !== undefined))}
       {under ? <UnderCard title={under} box={box} rise={rise} x={x} lean={lean} /> : null}
       {card ? (
-        <LiveCard card={card} geo={geo} box={box} entry={entry} x={x} y={y} pan={pan.panHandlers} services={services} engaged={engaged} drives={drives} activity={activity} onPointer={onPointer} onDetails={onDetails} />
+        <LiveCard card={card} geo={geo} box={box} entry={entry} x={x} y={y} pan={pan.panHandlers} services={services} engaged={engaged && !plain} drives={drives} activity={activity} tools={cardTools} extra={extra} onPointer={onPointer} onDetails={onDetails} />
       ) : <View style={box}>{empty}</View>}
-      {departure ? <Departing key={departure.id} d={departure} geo={geo} onDone={departed} /> : null}
+      {departure ? <Departing key={departure.id} d={departure} geo={geo} tools={cardTools} onDone={departed} /> : null}
       {frontSets.map((set) => lookSet(set, FrontLayer, quietFill))}
-      {card ? <StampMarks v={v} /> : null}
+      {card ? <StampMarks v={plain ? values.still : v} /> : null}
       {(playing && !seats.includes(playing) ? [...seats, playing] : seats).map((seat) => <SeatMoment key={seat.id} seat={seat} active={seat === playing} g={geo} loop={loop} reduced={reduced} />)}
       {moment && !playing ? <MemoMoment key={moment.key} look={moment.look} g={geo} posterUrl={moment.title.posterUrl} a={values.moment} loop={loop} reduced={reduced} /> : null}
     </View>
