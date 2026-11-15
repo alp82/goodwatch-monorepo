@@ -1,0 +1,299 @@
+{
+  "contactDir": "artifacts/store-gallery-rethink",
+  "families": {
+    "android": {
+      "size": [
+        1080,
+        1920
+      ],
+      "out": "store/assets/android",
+      "frames": [
+        {
+          "file": "gallery-01-taste.png",
+          "source": "artifacts/store-gallery-rethink/native/android/01-taste-swipe.png",
+          "caption": [
+            "Start with what",
+            "you *love*"
+          ],
+          "bg": "amber"
+        },
+        {
+          "file": "gallery-02-couch.png",
+          "source": "artifacts/store-gallery-rethink/native/android/02-couch-setup.png",
+          "caption": [
+            "Grab a *couch*.",
+            "Bring your people."
+          ],
+          "bg": "night"
+        },
+        {
+          "file": "gallery-03-yep.png",
+          "source": "artifacts/store-gallery-rethink/native/android/03-yep.png",
+          "caption": [
+            "Would you watch",
+            "this *tonight*?"
+          ],
+          "bg": "green"
+        },
+        {
+          "file": "gallery-04-nope.png",
+          "source": "artifacts/store-gallery-rethink/native/android/04-nope.png",
+          "caption": [
+            "Not feeling it?",
+            "*Nope.* Next."
+          ],
+          "bg": "red"
+        },
+        {
+          "file": "gallery-05-match.png",
+          "source": "artifacts/store-gallery-rethink/native/android/05-match.png",
+          "caption": [
+            "Everyone said Yep.",
+            "It’s a *match*."
+          ],
+          "bg": "warm"
+        },
+        {
+          "file": "gallery-06-matches.png",
+          "source": "artifacts/store-gallery-rethink/native/android/06-matches.png",
+          "caption": [
+            "Tap every one",
+            "*you’re in* for"
+          ],
+          "bg": "amber"
+        },
+        {
+          "file": "gallery-07-spin.png",
+          "source": "artifacts/store-gallery-rethink/native/android/07-spin.png",
+          "caption": [
+            "A tie? A fair",
+            "*spin* decides"
+          ],
+          "bg": "night"
+        },
+        {
+          "file": "gallery-08-watch.png",
+          "source": "artifacts/store-gallery-rethink/native/android/08-decided.png",
+          "caption": [
+            "Picked. Now",
+            "*press play*."
+          ],
+          "bg": "green"
+        }
+      ]
+    },
+    "iphone-medium": {
+      "size": [
+        1206,
+        2622
+      ],
+      "out": "store/assets/ios-iphone-medium",
+      "frames": [
+        {
+          "file": "gallery-01-taste.png",
+          "source": "artifacts/store-gallery-rethink/native/iphone-medium/01-taste-swipe.png",
+          "caption": [
+            "Start with what",
+            "you *love*"
+          ],
+          "bg": "amber"
+        },
+        {
+          "file": "gallery-02-couch.png",
+          "source": "artifacts/store-gallery-rethink/native/iphone-medium/02-couch-setup.png",
+          "caption": [
+            "Grab a *couch*.",
+            "Bring your people."
+          ],
+          "bg": "night"
+        },
+        {
+          "file": "gallery-03-yep.png",
+          "source": "artifacts/store-gallery-rethink/native/iphone-medium/03-yep.png",
+          "caption": [
+            "Would you watch",
+            "this *tonight*?"
+          ],
+          "bg": "green"
+        },
+        {
+          "file": "gallery-04-nope.png",
+          "source": "artifacts/store-gallery-rethink/native/iphone-medium/04-nope.png",
+          "caption": [
+            "Not feeling it?",
+            "*Nope.* Next."
+          ],
+          "bg": "red"
+        },
+        {
+          "file": "gallery-05-match.png",
+          "source": "artifacts/store-gallery-rethink/native/iphone-medium/05-match.png",
+          "caption": [
+            "Everyone said Yep.",
+            "It’s a *match*."
+          ],
+          "bg": "warm"
+        },
+        {
+          "file": "gallery-06-matches.png",
+          "source": "artifacts/store-gallery-rethink/native/iphone-medium/06-matches.png",
+          "caption": [
+            "Tap every one",
+            "*you’re in* for"
+          ],
+          "bg": "amber"
+        },
+        {
+          "file": "gallery-07-spin.png",
+          "source": "artifacts/store-gallery-rethink/native/iphone-medium/07-spin.png",
+          "caption": [
+            "A tie? A fair",
+            "*spin* decides"
+          ],
+          "bg": "night"
+        },
+        {
+          "file": "gallery-08-watch.png",
+          "source": "artifacts/store-gallery-rethink/native/iphone-medium/08-decided.png",
+          "caption": [
+            "Picked. Now",
+            "*press play*."
+          ],
+          "bg": "green"
+        }
+      ]
+    },
+    "ipad": {
+      "size": [
+        2064,
+        2752
+      ],
+      "out": "store/assets/ios-ipad",
+      "frames": [
+        {
+          "file": "gallery-01-couch.png",
+          "source": "artifacts/store-gallery-rethink/native/ipad/01-couch-setup.png",
+          "caption": [
+            "Grab a *couch*.",
+            "One idea each."
+          ],
+          "bg": "night",
+          "captionShare": 0.16
+        },
+        {
+          "file": "gallery-02-yep.png",
+          "source": "artifacts/store-gallery-rethink/native/ipad/02-yep.png",
+          "caption": [
+            "Would you watch",
+            "this *tonight*?"
+          ],
+          "bg": "green",
+          "captionShare": 0.16
+        },
+        {
+          "file": "gallery-03-invite.png",
+          "source": "artifacts/store-gallery-rethink/native/ipad/alt-invite.png",
+          "caption": [
+            "Friends join with",
+            "a *code*, link or QR"
+          ],
+          "bg": "warm",
+          "captionShare": 0.16
+        },
+        {
+          "file": "gallery-04-matches.png",
+          "source": "artifacts/store-gallery-rethink/native/ipad/04-matches.png",
+          "caption": [
+            "Tap every one",
+            "*you’re in* for"
+          ],
+          "bg": "amber",
+          "captionShare": 0.16
+        },
+        {
+          "file": "gallery-05-spin.png",
+          "source": "artifacts/store-gallery-rethink/native/ipad/05-spin.png",
+          "caption": [
+            "A tie? A fair",
+            "*spin* decides"
+          ],
+          "bg": "red",
+          "captionShare": 0.16
+        },
+        {
+          "file": "gallery-06-watch.png",
+          "source": "artifacts/store-gallery-rethink/native/ipad/06-decided.png",
+          "caption": [
+            "Picked. Now",
+            "*press play*."
+          ],
+          "bg": "night",
+          "captionShare": 0.16
+        }
+      ]
+    },
+    "iphone-large": {
+      "size": [
+        1320,
+        2868
+      ],
+      "out": "store/assets/ios-iphone",
+      "frames": [
+        {
+          "file": "gallery-01-couch.png",
+          "source": "artifacts/store-gallery-rethink/native/iphone-large/01-couch-setup.png",
+          "caption": [
+            "Grab a *couch*.",
+            "One idea each."
+          ],
+          "bg": "amber"
+        },
+        {
+          "file": "gallery-02-yep.png",
+          "source": "artifacts/store-gallery-rethink/native/iphone-large/02-yep.png",
+          "caption": [
+            "Would you watch",
+            "this *tonight*?"
+          ],
+          "bg": "green"
+        },
+        {
+          "file": "gallery-03-match.png",
+          "source": "artifacts/store-gallery-rethink/native/iphone-large/03-match.png",
+          "caption": [
+            "Everyone said Yep.",
+            "It’s a *match*."
+          ],
+          "bg": "night"
+        },
+        {
+          "file": "gallery-04-matches.png",
+          "source": "artifacts/store-gallery-rethink/native/iphone-large/04-matches.png",
+          "caption": [
+            "Tap every one",
+            "*you’re in* for"
+          ],
+          "bg": "warm"
+        },
+        {
+          "file": "gallery-05-spin.png",
+          "source": "artifacts/store-gallery-rethink/native/iphone-large/05-spin.png",
+          "caption": [
+            "A tie? A fair",
+            "*spin* decides"
+          ],
+          "bg": "red"
+        },
+        {
+          "file": "gallery-06-watch.png",
+          "source": "artifacts/store-gallery-rethink/native/iphone-large/06-decided.png",
+          "caption": [
+            "Picked. Now",
+            "*press play*."
+          ],
+          "bg": "green"
+        }
+      ]
+    }
+  }
+}

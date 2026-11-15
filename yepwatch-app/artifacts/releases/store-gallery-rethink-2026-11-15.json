@@ -1,0 +1,254 @@
+{
+  "checkedAt": "2026-11-15T12:41:08.905Z",
+  "branch": "chore/yepwatch-store-rethink",
+  "gallery": {
+    "frames": "artifacts/store-gallery-rethink/frames.json",
+    "manifest": "store/assets/gallery-manifest.json",
+    "spec": "store/gallery-rethink.json",
+    "contactSheets": [
+      "artifacts/store-gallery-rethink/contact-android.png",
+      "artifacts/store-gallery-rethink/contact-iphone-medium.png",
+      "artifacts/store-gallery-rethink/contact-iphone-large.png",
+      "artifacts/store-gallery-rethink/contact-ipad.png"
+    ],
+    "counts": {
+      "android": 8,
+      "iphoneMedium": 8,
+      "iphoneLarge": 6,
+      "ipad": 6
+    }
+  },
+  "apple": {
+    "appId": "6826403019",
+    "version": "1.0.0",
+    "stateAtUpload": "DEVELOPER_REJECTED (review withdrawn earlier; not WAITING_FOR_REVIEW, so edits were allowed)",
+    "stateAfter": "DEVELOPER_REJECTED",
+    "attachedBuild": {
+      "id": "c6b590be-1d13-40a7-aede-d9cfe0c8654c",
+      "version": "18",
+      "processingState": "VALID"
+    },
+    "submittedForReview": false,
+    "listing": {
+      "applied": true,
+      "freshReadbackMatches": true,
+      "subtitle": "Pick what to watch, together",
+      "keywords": "movie night,couch,friends,couple,date,swipe,match,tv shows,streaming,group,decide,film,taste",
+      "promotionalText": "Start a couch, invite your friends and swipe the same cards. Say Yep or Nope. When everyone says Yep, it’s a match. Pick one and press play.",
+      "whatsNew": "not set: Apple has no What's New field for an app's first version (1.0.0); releaseNotes in store/en-US.json is ready for the next version"
+    },
+    "gallery": {
+      "applied": true,
+      "replaced": true,
+      "deletedOldScreenshots": 22,
+      "allProcessed": true,
+      "screenshots": [
+        {
+          "type": "APP_IPAD_PRO_3GEN_129",
+          "name": "gallery-01-couch.png",
+          "id": "67c00019-6e2a-84cb-801c-1a84694c13a1",
+          "md5": "ea7e2c981151a824cd5f1d9251806372",
+          "complete": true
+        },
+        {
+          "type": "APP_IPAD_PRO_3GEN_129",
+          "name": "gallery-02-yep.png",
+          "id": "fd400019-6e2a-84cb-8032-e2c696e5a85f",
+          "md5": "ce19c4fe86b0048aadecf81b3e7214ac",
+          "complete": true
+        },
+        {
+          "type": "APP_IPAD_PRO_3GEN_129",
+          "name": "gallery-03-invite.png",
+          "id": "e0000019-6e2a-84cb-8015-f262ecee0c47",
+          "md5": "3d321a0fefe1ac2dea3a598f9125f93d",
+          "complete": true
+        },
+        {
+          "type": "APP_IPAD_PRO_3GEN_129",
+          "name": "gallery-04-matches.png",
+          "id": "80800019-6e2a-84cb-803d-31fa4530d51d",
+          "md5": "b79e627153597f76b0a4e9c875849680",
+          "complete": true
+        },
+        {
+          "type": "APP_IPAD_PRO_3GEN_129",
+          "name": "gallery-05-spin.png",
+          "id": "1e400019-6e2a-84cb-8003-48cf1917a59b",
+          "md5": "21b45c433a6e621bee1eaa16c8be9204",
+          "complete": true
+        },
+        {
+          "type": "APP_IPAD_PRO_3GEN_129",
+          "name": "gallery-06-watch.png",
+          "id": "8c800019-6e2a-84cb-800f-545e8f32d2ca",
+          "md5": "a619415b0906fec2ca59b93f8ec40091",
+          "complete": true
+        },
+        {
+          "type": "APP_IPHONE_61",
+          "name": "gallery-01-taste.png",
+          "id": "71c00019-6e2a-84cb-802e-3542030743bb",
+          "md5": "835fce0da09a8676d1485860ef23b436",
+          "complete": true
+        },
+        {
+          "type": "APP_IPHONE_61",
+          "name": "gallery-02-couch.png",
+          "id": "9dc00019-6e2a-84cb-8023-bfb4fde11d8a",
+          "md5": "cfc82be3f6c4398d70f6b6d43577a6a9",
+          "complete": true
+        },
+        {
+          "type": "APP_IPHONE_61",
+          "name": "gallery-03-yep.png",
+          "id": "6f400019-6e2a-84cb-8039-c9193290b016",
+          "md5": "ab80f56783a36cbe4ac04454c92cb49b",
+          "complete": true
+        },
+        {
+          "type": "APP_IPHONE_61",
+          "name": "gallery-04-nope.png",
+          "id": "3ec00019-6e2a-84cb-8020-1aedf8978220",
+          "md5": "acc1a99e02d1a0ea8e8770e6bf158322",
+          "complete": true
+        },
+        {
+          "type": "APP_IPHONE_61",
+          "name": "gallery-05-match.png",
+          "id": "b2c00019-6e2a-84cb-8003-a39fd84c76d0",
+          "md5": "3d3cdfd63949e7ca78827e3cd76516ad",
+          "complete": true
+        },
+        {
+          "type": "APP_IPHONE_61",
+          "name": "gallery-06-matches.png",
+          "id": "9cc00019-6e2a-84cb-8011-aeb36b9543bf",
+          "md5": "a484fdc0e2b7d640d7e68bc4c79af7ea",
+          "complete": true
+        },
+        {
+          "type": "APP_IPHONE_61",
+          "name": "gallery-07-spin.png",
+          "id": "cf400019-6e2a-84cb-8031-1fec3c8726ae",
+          "md5": "a38ca6ed44b4aaa97ae0c93b28f2b915",
+          "complete": true
+        },
+        {
+          "type": "APP_IPHONE_61",
+          "name": "gallery-08-watch.png",
+          "id": "61800019-6e2a-84cb-8030-da1392a5127e",
+          "md5": "60f64d3319d073a67d103b30cfbcbdc6",
+          "complete": true
+        },
+        {
+          "type": "APP_IPHONE_67",
+          "name": "gallery-01-couch.png",
+          "id": "31c00019-6e2a-84cb-8010-bc1d7ddfd3b4",
+          "md5": "5b2b4c6097267b398308d8c96f8cb7e5",
+          "complete": true
+        },
+        {
+          "type": "APP_IPHONE_67",
+          "name": "gallery-02-yep.png",
+          "id": "c0400019-6e2a-84cb-8033-9bf5bfc6b5b8",
+          "md5": "399012e3fdb5d701cb2e69ca4c5c59dc",
+          "complete": true
+        },
+        {
+          "type": "APP_IPHONE_67",
+          "name": "gallery-03-match.png",
+          "id": "13800019-6e2a-84cb-8015-7eb3b878e489",
+          "md5": "0a5e6c207547d7379305025d6185ac2d",
+          "complete": true
+        },
+        {
+          "type": "APP_IPHONE_67",
+          "name": "gallery-04-matches.png",
+          "id": "29000019-6e2a-84cb-8032-30efe9e977da",
+          "md5": "50ba7084f5110d74e90a67cb476b05f6",
+          "complete": true
+        },
+        {
+          "type": "APP_IPHONE_67",
+          "name": "gallery-05-spin.png",
+          "id": "2f400019-6e2a-84cb-8022-939dff3441e2",
+          "md5": "6a34ec8e8c99b792795bde0be3fc9897",
+          "complete": true
+        },
+        {
+          "type": "APP_IPHONE_67",
+          "name": "gallery-06-watch.png",
+          "id": "91800019-6e2a-84cb-8025-4923d6003d4e",
+          "md5": "1d7c2a6189f19cd787952a9278ce4b28",
+          "complete": true
+        }
+      ],
+      "freshSets": [
+        {
+          "type": "APP_IPHONE_61",
+          "names": [
+            "gallery-01-taste.png",
+            "gallery-02-couch.png",
+            "gallery-03-yep.png",
+            "gallery-04-nope.png",
+            "gallery-05-match.png",
+            "gallery-06-matches.png",
+            "gallery-07-spin.png",
+            "gallery-08-watch.png"
+          ]
+        },
+        {
+          "type": "APP_IPAD_PRO_3GEN_129",
+          "names": [
+            "gallery-01-couch.png",
+            "gallery-02-yep.png",
+            "gallery-03-invite.png",
+            "gallery-04-matches.png",
+            "gallery-05-spin.png",
+            "gallery-06-watch.png"
+          ]
+        },
+        {
+          "type": "APP_IPHONE_67",
+          "names": [
+            "gallery-01-couch.png",
+            "gallery-02-yep.png",
+            "gallery-03-match.png",
+            "gallery-04-matches.png",
+            "gallery-05-spin.png",
+            "gallery-06-watch.png"
+          ]
+        }
+      ]
+    }
+  },
+  "google": {
+    "uploaded": false,
+    "reason": "No Play Developer API credential exists: EAS has no Google service-account submission key for com.yepwatch.app and both local Google Cloud service accounts get 403 PERMISSION_DENIED on androidpublisher edits. Play listing and screenshots are prepared for manual upload in Play Console (main store listing, en-US).",
+    "prepared": {
+      "screenshots": "store/assets/android/gallery-01..08 (1080x1920)",
+      "shortDescription": "Start a couch, swipe Yep or Nope, and find something you all want to watch.",
+      "fullDescription": "store/en-US.json description",
+      "releaseNotes": "store/en-US.json releaseNotes",
+      "export": "node scripts/export-store-copy.cjs <dir>"
+    },
+    "dataSafetyChange": "store/google-data-safety-notes.json: taste profiles added to User interaction and Device ID reasons; separateDataDeletionWithoutAccountDeletion now true (Reset my taste). Apply in Play Console Data safety."
+  },
+  "privacyDeclarations": {
+    "apple": "No new data type. Device ID gains Product Personalization (per-device taste-profile secret). Taste answers fall under Product Interaction / Other User Content, already linked with Product Personalization. App Privacy in App Store Connect still needs the Device ID purpose added by hand.",
+    "google": "No new data type; data deletion without account deletion now offered (Reset my taste)."
+  },
+  "captureCleanup": {
+    "peersLeft": true,
+    "tasteProfilesReset": "every run ends with Profile > Reset my taste (DELETE /proposal/profile); capture.json tasteReset true for all kept runs. Failed EAS runs also reset (their finally block ran). Rooms themselves expire on their own (no delete API); the host phone's couches were left in place."
+  },
+  "easJobs": {
+    "simulatorBuild": "228182d6-e015-45c9-ab73-0483af84f0ad",
+    "captures": {
+      "iphone-medium": "3f830a7f-d74e-413b-b379-bf3e55e9b68d",
+      "iphone-large": "4f85dd2f-a628-4c1b-a79e-9821f0e9a0cd",
+      "ipad": "e1f91fc7-9606-4a94-bfb0-3a77df20698a"
+    }
+  }
+}

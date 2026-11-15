@@ -1,0 +1,318 @@
+{
+  "iphone-medium": [
+    {
+      "file": "store/assets/ios-iphone-medium/gallery-01-taste.png",
+      "caption": "Start with what / you love",
+      "source": "artifacts/store-gallery-rethink/native/iphone-medium/01-taste-swipe.png",
+      "sourceSha256": "4107fcd447d0fe53e6eeac5d9cf6a31564e40c55d6f3a34998ec669ae56b2c64",
+      "sha256": "ec398fc964d04be5930f0e554fe25f52d8338651ebe28c653b08a7cdd45611cd",
+      "size": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "store/assets/ios-iphone-medium/gallery-02-couch.png",
+      "caption": "Grab a couch. / Bring your people.",
+      "source": "artifacts/store-gallery-rethink/native/iphone-medium/02-couch-setup.png",
+      "sourceSha256": "ae41527e319aa906751c223f9f6890fd29080b343f945bbc734c8a947bc3f748",
+      "sha256": "1acb5569630acc8eab8de53ec9ded80eac683cfee58a103ad2a84f54ba2676e9",
+      "size": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "store/assets/ios-iphone-medium/gallery-03-yep.png",
+      "caption": "Would you watch / this tonight?",
+      "source": "artifacts/store-gallery-rethink/native/iphone-medium/03-yep.png",
+      "sourceSha256": "1faf3c7f98b87da8ef65f58932ae94822d0df3edddc69fafc9072ad2e79e95f8",
+      "sha256": "aae11056ed87432922467ba260f968d46f8727fb28fdecc1d705f2d4809198f8",
+      "size": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "store/assets/ios-iphone-medium/gallery-04-nope.png",
+      "caption": "Not feeling it? / Nope. Next.",
+      "source": "artifacts/store-gallery-rethink/native/iphone-medium/04-nope.png",
+      "sourceSha256": "c088aad1260028e16eacdd12f11155862385db26f4aa00b2a8329eecfaa413b7",
+      "sha256": "c990f97ce71aa7baf91a1b9b9a506634733e5c43cf39470652d28114b4f70609",
+      "size": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "store/assets/ios-iphone-medium/gallery-05-match.png",
+      "caption": "Everyone said Yep. / It’s a match.",
+      "source": "artifacts/store-gallery-rethink/native/iphone-medium/05-match.png",
+      "sourceSha256": "3e12fcc79c877a74dd9ef7e3bd48a7218b6c078a0b68e379636628531a563eca",
+      "sha256": "b5ec607ba0ea22ccade20f1b3e153416af793853726182d989abf9d785948ca3",
+      "size": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "store/assets/ios-iphone-medium/gallery-06-matches.png",
+      "caption": "Tap every one / you’re in for",
+      "source": "artifacts/store-gallery-rethink/native/iphone-medium/06-matches.png",
+      "sourceSha256": "8e45772615e0186dc65864b6880507785d819950f9c4384ea92cba0da6dda993",
+      "sha256": "26cf11044f9782ef77f223fa44f0a2b576f626e3297d02b6c3a9fd3194a57f1a",
+      "size": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "store/assets/ios-iphone-medium/gallery-07-spin.png",
+      "caption": "A tie? A fair / spin decides",
+      "source": "artifacts/store-gallery-rethink/native/iphone-medium/07-spin.png",
+      "sourceSha256": "7abab61670b685e9215a25bcbf03c47812fe51916d21dc2730d29d1b18c08fc8",
+      "sha256": "1af4662070fd26f0c13de1dc480e0ebd636d46c332eb07a84ffb9a453929b686",
+      "size": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "store/assets/ios-iphone-medium/gallery-08-watch.png",
+      "caption": "Picked. Now / press play.",
+      "source": "artifacts/store-gallery-rethink/native/iphone-medium/08-decided.png",
+      "sourceSha256": "29eb2a264006e97ecb6562d479da39e60ab9f11f9cf7aa880de77edc3728eb9a",
+      "sha256": "57b758d1b2943dfb3416bdc1a5ad530f50cda447c38c30c18e0260ba4d0d56e3",
+      "size": [
+        1206,
+        2622
+      ]
+    }
+  ],
+  "android": [
+    {
+      "file": "store/assets/android/gallery-01-taste.png",
+      "caption": "Start with what / you love",
+      "source": "artifacts/store-gallery-rethink/native/android/01-taste-swipe.png",
+      "sourceSha256": "35a48873f2e1a1dd168a0a40e00e8393e0304e8639817f934c796599f747e92b",
+      "sha256": "94a6874abc05343d7a7d63b91fa8d67328fd31908e7c453f489684da658a6e8d",
+      "size": [
+        1080,
+        1920
+      ]
+    },
+    {
+      "file": "store/assets/android/gallery-02-couch.png",
+      "caption": "Grab a couch. / Bring your people.",
+      "source": "artifacts/store-gallery-rethink/native/android/02-couch-setup.png",
+      "sourceSha256": "f7cfc00f15377c4533eee09f7224c2f0bd3c7407bc724d777b2e98ef1db100d5",
+      "sha256": "f42fde47be790e47be99b27f576a31c9e491be37721bbbfef6c0d41251a041ae",
+      "size": [
+        1080,
+        1920
+      ]
+    },
+    {
+      "file": "store/assets/android/gallery-03-yep.png",
+      "caption": "Would you watch / this tonight?",
+      "source": "artifacts/store-gallery-rethink/native/android/03-yep.png",
+      "sourceSha256": "b6745991d2465854f0f208bb2a015c875e7b2ceff768e7667355d83519f380cf",
+      "sha256": "ee0b530440582daebe5dbc2b5678b4eb781425e39692a4e099a240bccddfc627",
+      "size": [
+        1080,
+        1920
+      ]
+    },
+    {
+      "file": "store/assets/android/gallery-04-nope.png",
+      "caption": "Not feeling it? / Nope. Next.",
+      "source": "artifacts/store-gallery-rethink/native/android/04-nope.png",
+      "sourceSha256": "add50704736c52a6678ece441db06c171e61cd0bac3600c4291ce5a82b63c1a0",
+      "sha256": "15a121543419401e8c6db10145a21d7360eed1d86ec32610366d2cc281cfbeb7",
+      "size": [
+        1080,
+        1920
+      ]
+    },
+    {
+      "file": "store/assets/android/gallery-05-match.png",
+      "caption": "Everyone said Yep. / It’s a match.",
+      "source": "artifacts/store-gallery-rethink/native/android/05-match.png",
+      "sourceSha256": "34e8e16db8b153860c6e8364465b60ffb25a15636b28c036f27ba19905180a65",
+      "sha256": "8f942909bebc5c67f1e94b9dc9dae5443743d72323332b818720c1cd32122486",
+      "size": [
+        1080,
+        1920
+      ]
+    },
+    {
+      "file": "store/assets/android/gallery-06-matches.png",
+      "caption": "Tap every one / you’re in for",
+      "source": "artifacts/store-gallery-rethink/native/android/06-matches.png",
+      "sourceSha256": "0f028bc04fe1b191678b66371e4232cdb488d2c17495bf8654d66524757030b5",
+      "sha256": "c21c23d145d5e581f4493002491c181a4191ce56a1a54dae40a8acb73fb77d6f",
+      "size": [
+        1080,
+        1920
+      ]
+    },
+    {
+      "file": "store/assets/android/gallery-07-spin.png",
+      "caption": "A tie? A fair / spin decides",
+      "source": "artifacts/store-gallery-rethink/native/android/07-spin.png",
+      "sourceSha256": "a2a73aea6c679306c6ff30d11c2b91ec7968825747c9fbecc86ad267edb98ec9",
+      "sha256": "dffe95caaed8f73c711788f46fadefcb5eb31a85a65b7a6ca11c637eb6a5eb82",
+      "size": [
+        1080,
+        1920
+      ]
+    },
+    {
+      "file": "store/assets/android/gallery-08-watch.png",
+      "caption": "Picked. Now / press play.",
+      "source": "artifacts/store-gallery-rethink/native/android/08-decided.png",
+      "sourceSha256": "b2da1ca8e98169b57a7d83c610de6844e8d12070312e09a54713f4ab36b4e994",
+      "sha256": "b114ba3d1ffc0ee5e494218dd8795864c71218c23d47be8f91ca831901c1aa10",
+      "size": [
+        1080,
+        1920
+      ]
+    }
+  ],
+  "ipad": [
+    {
+      "file": "store/assets/ios-ipad/gallery-01-couch.png",
+      "caption": "Grab a couch. / One idea each.",
+      "source": "artifacts/store-gallery-rethink/native/ipad/01-couch-setup.png",
+      "sourceSha256": "750f5cab020e379d1307189f2cf5433c24518ab010b23d0b21504281515eea22",
+      "sha256": "12dac684d50749f532d807103499225e3a773114893868c75ab391aaf526db33",
+      "size": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "store/assets/ios-ipad/gallery-02-yep.png",
+      "caption": "Would you watch / this tonight?",
+      "source": "artifacts/store-gallery-rethink/native/ipad/02-yep.png",
+      "sourceSha256": "fc48570e6e427e124f11d9d29b664526b98c7ec66aace1dea2538122d94bf83f",
+      "sha256": "66827d92d10d7cf376f0bd6dc11b784c64f8ddace6892ec26d86c6f32f54fea9",
+      "size": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "store/assets/ios-ipad/gallery-03-invite.png",
+      "caption": "Friends join with / a code, link or QR",
+      "source": "artifacts/store-gallery-rethink/native/ipad/alt-invite.png",
+      "sourceSha256": "46f97fb8e2f54c1486df212e9a42a7f4ffd8476ab716230e450fb609d5a7abbf",
+      "sha256": "0a8a7e3bba30db4575ec681796a040c3fd6dabf22c0802b7da42221df8225ca8",
+      "size": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "store/assets/ios-ipad/gallery-04-matches.png",
+      "caption": "Tap every one / you’re in for",
+      "source": "artifacts/store-gallery-rethink/native/ipad/04-matches.png",
+      "sourceSha256": "433792172718966029fc15d448b21f19ce025751bcfe2706916bdf27dfce11db",
+      "sha256": "6106e7ee977b6db0a0d3b467435b55be13b5b91f7d28668930fd6601b9b70985",
+      "size": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "store/assets/ios-ipad/gallery-05-spin.png",
+      "caption": "A tie? A fair / spin decides",
+      "source": "artifacts/store-gallery-rethink/native/ipad/05-spin.png",
+      "sourceSha256": "32651fcbb8b117f59066d16e9ecd94fd6ebcdb9f9c21352c6b4a7d7fc5753f11",
+      "sha256": "39bdca962fac92ecfb56c7fa012cb5e1acc9c957cc6c8c574d93af438d45e4b1",
+      "size": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "store/assets/ios-ipad/gallery-06-watch.png",
+      "caption": "Picked. Now / press play.",
+      "source": "artifacts/store-gallery-rethink/native/ipad/06-decided.png",
+      "sourceSha256": "b59877e88b970281e6f4e5f737ca355607a34cd99cb60be8f9b9dfc1388837ba",
+      "sha256": "a6bd427d2a52c84eebef6b9c570f39cf6d51f3aaa6d9fd5ad1b8c5a8d4b982da",
+      "size": [
+        2064,
+        2752
+      ]
+    }
+  ],
+  "iphone-large": [
+    {
+      "file": "store/assets/ios-iphone/gallery-01-couch.png",
+      "caption": "Grab a couch. / One idea each.",
+      "source": "artifacts/store-gallery-rethink/native/iphone-large/01-couch-setup.png",
+      "sourceSha256": "dd1b7d63462cbb84019a86d2d8e8c44b1da83f4b74e8885dc952328f248609f6",
+      "sha256": "05d8705b32dd99f98fa3feec5bb20d00ade662fbf3be9022e3809484954be9a1",
+      "size": [
+        1320,
+        2868
+      ]
+    },
+    {
+      "file": "store/assets/ios-iphone/gallery-02-yep.png",
+      "caption": "Would you watch / this tonight?",
+      "source": "artifacts/store-gallery-rethink/native/iphone-large/02-yep.png",
+      "sourceSha256": "c8dd30b14ade30a3e95a88c95beef25b89221de37243a99dd72b029b5ee487d2",
+      "sha256": "7809ea6a3e8a9a845190a01c95eb00ed782acfb90251e82876071dd46afb3485",
+      "size": [
+        1320,
+        2868
+      ]
+    },
+    {
+      "file": "store/assets/ios-iphone/gallery-03-match.png",
+      "caption": "Everyone said Yep. / It’s a match.",
+      "source": "artifacts/store-gallery-rethink/native/iphone-large/03-match.png",
+      "sourceSha256": "2f566e49424a80140a0d435032746d09fc08d29064f3361bc5afe474131f7a8b",
+      "sha256": "12a1dcf23a8266222eef2ed4644b853c3e0c3ec785989334d6f8f22c6b909f6c",
+      "size": [
+        1320,
+        2868
+      ]
+    },
+    {
+      "file": "store/assets/ios-iphone/gallery-04-matches.png",
+      "caption": "Tap every one / you’re in for",
+      "source": "artifacts/store-gallery-rethink/native/iphone-large/04-matches.png",
+      "sourceSha256": "4a342a28ca04a90af4b121ecfba65455dcbff7a842ae351601574e19c8693db4",
+      "sha256": "9c5cb3b7355a25424d2630f70ebb87e6838ef214122bff1ed6f3fd68f71432d3",
+      "size": [
+        1320,
+        2868
+      ]
+    },
+    {
+      "file": "store/assets/ios-iphone/gallery-05-spin.png",
+      "caption": "A tie? A fair / spin decides",
+      "source": "artifacts/store-gallery-rethink/native/iphone-large/05-spin.png",
+      "sourceSha256": "0ca69f6c6b8fbd6faf227b03457502efb1547bf8c5d3f3516dd4aabea9eb4954",
+      "sha256": "617bd7cef31f90553ecbad33fa654f977102c88e0b39b512677512f1d2178314",
+      "size": [
+        1320,
+        2868
+      ]
+    },
+    {
+      "file": "store/assets/ios-iphone/gallery-06-watch.png",
+      "caption": "Picked. Now / press play.",
+      "source": "artifacts/store-gallery-rethink/native/iphone-large/06-decided.png",
+      "sourceSha256": "ef3f6492183f4118a27de0e273d81ed6b3a7645873ba642559fae0fd30caa714",
+      "sha256": "99ec3f037219b19a61720de7ac2e02fa36e7a6ad62c7ea7fe246d04831725f54",
+      "size": [
+        1320,
+        2868
+      ]
+    }
+  ]
+}
