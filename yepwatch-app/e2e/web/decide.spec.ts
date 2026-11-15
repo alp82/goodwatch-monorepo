@@ -1,7 +1,7 @@
 import { test, expect, eventually, type Person } from '../lib/harness';
 import { cardTitle, inviteLink, join, readyHost, start, vote } from './flows';
 
-const COMMANDS = /\/api\/yepwatch\/v1\/proposal\/rooms\/[^/]+\/commands$/;
+const COMMANDS = /\/api\/yepwatch\/v1\/proposal\/rooms\/[^/]+\/commands(?:\?|$)/;
 /** Past the 500 ms after a press within which the browser excuses a layout shift. */
 const LATE_PROPOSAL_MS = 900;
 

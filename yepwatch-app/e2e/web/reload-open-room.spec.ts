@@ -9,7 +9,7 @@ import { test, expect, issuer } from '../lib/harness';
 import { inviteLink, readyHost } from './flows';
 
 const TICKET = /\/api\/yepwatch\/v1\/proposal\/rooms\/[^/]+\/realtime-ticket$/;
-const COMMANDS = /\/api\/yepwatch\/v1\/proposal\/rooms\/[^/]+\/commands$/;
+const COMMANDS = /\/api\/yepwatch\/v1\/proposal\/rooms\/[^/]+\/commands(?:\?|$)/;
 const LATE_LEAVE_MS = 800;
 
 async function signedIn(p: Person, user: string, displayName: string) {

@@ -47,7 +47,7 @@ test.describe('invite and join', () => {
     const answers: { participantId?: string; status: number }[] = [];
     let first = 0;
     let answered = 0;
-    await mia.page.route(/\/api\/yepwatch\/v1\/proposal\/rooms\/[^/]+\/join$/, async (route) => {
+    await mia.page.route(/\/api\/yepwatch\/v1\/proposal\/rooms\/[^/]+\/join(?:\?|$)/, async (route) => {
       if (route.request().method() !== 'POST') return route.continue();
       const n = answers.length + 1;
       if (n === 1) first = Date.now();

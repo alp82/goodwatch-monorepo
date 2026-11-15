@@ -47,7 +47,7 @@ test.describe('relaunch mid-vote', () => {
     // A slow first read: the startup cover shows its word, then dissolves over the ready room (its card
     // already drawn underneath). From the first script of the reloaded page, → every few ms while the cover
     // is up: a window-wide key listener under the cover would answer a card nobody can see yet.
-    await mia.page.route(/\/api\/yepwatch\/v1\/proposal\/rooms\/[^/]+$/, async (route) => {
+    await mia.page.route(/\/api\/yepwatch\/v1\/proposal\/rooms\/[^/]+(?:\?|$)/, async (route) => {
       if (route.request().method() === 'GET') await new Promise((resolve) => setTimeout(resolve, 600));
       await route.continue();
     });

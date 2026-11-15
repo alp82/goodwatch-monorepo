@@ -47,7 +47,7 @@ test.describe('create and set up a room', () => {
   test('an older server refuses setup: the app sends the plain create and sets the room up itself', async ({ room }) => {
     const host = await room.person('Alp');
     host.expectStatus(/^400 .*\/proposal\/rooms$/);
-    await host.page.route(/\/api\/yepwatch\/v1\/proposal\/rooms$/, (route) => route.request().method() === 'POST' && route.request().postDataJSON()?.setup
+    await host.page.route(/\/api\/yepwatch\/v1\/proposal\/rooms(?:\?|$)/, (route) => route.request().method() === 'POST' && route.request().postDataJSON()?.setup
       ? route.fulfill({ status: 400, contentType: 'application/json', body: JSON.stringify({ error: { code: 'invalid_request', message: 'Invalid request shape', retryable: false } }) })
       : route.continue());
     await createWithoutTiming(host, 'cozy murder mystery');
@@ -57,7 +57,7 @@ test.describe('create and set up a room', () => {
   // Older app bundles send the plain create, then configure and add_idea.
   test('an older app (plain create, then its own setup steps) still gets a set-up room', async ({ room }) => {
     const host = await room.person('Alp');
-    await host.page.route(/\/api\/yepwatch\/v1\/proposal\/rooms$/, (route) => {
+    await host.page.route(/\/api\/yepwatch\/v1\/proposal\/rooms(?:\?|$)/, (route) => {
       const body = route.request().method() === 'POST' ? route.request().postDataJSON() : null;
       if (!body?.setup) return route.continue();
       delete body.setup;
@@ -74,7 +74,7 @@ test.describe('create and set up a room', () => {
     const answers: { roomId?: string; status: number }[] = [];
     let first = 0;
     let answered = 0;
-    await host.page.route(/\/api\/yepwatch\/v1\/proposal\/rooms$/, async (route) => {
+    await host.page.route(/\/api\/yepwatch\/v1\/proposal\/rooms(?:\?|$)/, async (route) => {
       if (route.request().method() !== 'POST') return route.continue();
       const n = answers.length + 1;
       if (n === 1) first = Date.now();
@@ -118,7 +118,7 @@ test.describe('create and set up a room', () => {
     let tries = 0;
     let first = 0;
     let answered = 0;
-    await host.page.route(/\/api\/yepwatch\/v1\/proposal\/rooms$/, async (route) => {
+    await host.page.route(/\/api\/yepwatch\/v1\/proposal\/rooms(?:\?|$)/, async (route) => {
       if (route.request().method() !== 'POST') return route.continue();
       if (++tries === 1) {
         first = Date.now();
@@ -152,7 +152,7 @@ test.describe('create and set up a room', () => {
     let tries = 0;
     let first = 0;
     let answered = 0;
-    await host.page.route(/\/api\/yepwatch\/v1\/proposal\/rooms$/, async (route) => {
+    await host.page.route(/\/api\/yepwatch\/v1\/proposal\/rooms(?:\?|$)/, async (route) => {
       if (route.request().method() !== 'POST') return route.continue();
       if (++tries === 1) {
         first = Date.now();
