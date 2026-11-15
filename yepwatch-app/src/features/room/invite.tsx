@@ -92,7 +92,7 @@ export const WhoStrip = roomPart('WhoStrip', (r) => ({ view: r.view, inviteUrl: 
           <GText size={small} color={glow.muted} lines={1}>{peopleWords(n)}</GText>
         </View>
         <View style={{ height: row, flexDirection: 'row', alignItems: 'center' }}>
-          <HoverPress label={`Who’s here: ${n} ${n === 1 ? 'person' : 'people'}`} hint="Shows everyone on the couch" hover="tint" repeatable onPress={() => openSheet('people')}
+          <HoverPress label={`Who’s here: ${n} ${n === 1 ? 'person' : 'people'}`} hint={`Shows everyone on the ${noun.one}`} hover="tint" repeatable onPress={() => openSheet('people')}
             style={{ width: Math.min(facesW, (shown.length + (extra ? 1 : 0)) * seat) + 8, height: row, marginLeft: -4, paddingHorizontal: 4, borderRadius: R.control, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'flex-start' }}>
             {shown.map((p) => (
               <Arrive key={p.id} style={{ width: seat, height: row, alignItems: 'center', justifyContent: 'center', gap: 3 }}>

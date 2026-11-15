@@ -11,9 +11,9 @@ import { parseInvite } from '../../core/invites';
 import { GText, Icon, glow } from '../glow/theme';
 import { AMBER_LIFT, HoverPress, Nudge } from '../shell/hover';
 import { useLayout } from '../shell/layout';
+import { noun } from '../shell/noun';
 import { R, warm } from '../shell/tokens';
 import { Heart } from '../taste/icons';
-import { COUCH } from './couch-words';
 import { IntroFilm } from './IntroFilm';
 import { QrCard, StoreButton, installable, stores } from './install';
 
@@ -105,14 +105,14 @@ export function NewTile({ onPress, disabled, quiet }: { onPress: () => void; dis
   const box = phone ? 40 : z(48);
   const word = (phone ? 28 : z(38)) * 1.1;
   return (
-    <HoverPress label={COUCH.create} hint="Invite friends, everyone swipes, get a match" onPress={onPress} disabled={disabled} quiet={quiet} hover="lift" shadow={AMBER_LIFT}
+    <HoverPress label={noun.create} hint="Invite friends, everyone swipes, get a match" onPress={onPress} disabled={disabled} quiet={quiet} hover="lift" shadow={AMBER_LIFT}
       style={{ alignSelf: 'stretch', height: phone ? 270 : z(wide ? 320 : 280), alignItems: 'stretch', justifyContent: 'space-between', gap: phone ? 12 : z(16), padding: phone ? 18 : z(26), borderRadius: R.card, backgroundColor: glow.amber, overflow: 'hidden' }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <View style={{ width: box, height: box, borderRadius: 12, backgroundColor: '#20140014', alignItems: 'center', justifyContent: 'center' }}><Glyph d={PLUS} size={box * 0.58} color={warm.ink} weight={2.4} /></View>
         <ArrowDot size={box} />
       </View>
       <View style={{ flex: 1, minHeight: 0, justifyContent: 'center' }}><ThreeBeats vertical={phone || wide} /></View>
-      <GText bold size={word} color={warm.ink} lines={2} style={{ letterSpacing: -word * 0.03, lineHeight: word * 1.05 }}>{COUCH.create}</GText>
+      <GText bold size={word} color={warm.ink} lines={2} style={{ letterSpacing: -word * 0.03, lineHeight: word * 1.05 }}>{noun.create}</GText>
     </HoverPress>
   );
 }
@@ -133,7 +133,7 @@ export function JoinCodeField({ onJoin, me, busy, disabled, initial = '' }: { on
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <View style={{ width: phone ? 34 : z(40), height: phone ? 34 : z(40), borderRadius: 12, backgroundColor: warm.amberSoft, alignItems: 'center', justifyContent: 'center' }}><Glyph d={DOOR} size={(phone ? 34 : z(40)) * 0.54} color={glow.amber} /></View>
         <View style={{ flex: 1 }}>
-          <GText bold size={phone ? 17 : z(19)}>{COUCH.joinAny}</GText>
+          <GText bold size={phone ? 17 : z(19)}>{noun.joinAny}</GText>
           <GText size={z(13)} color={glow.muted}>Type the code from the invite, or paste the link.</GText>
         </View>
       </View>

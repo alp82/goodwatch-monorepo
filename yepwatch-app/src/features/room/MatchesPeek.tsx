@@ -14,10 +14,10 @@ import type { Candidate } from '@goodwatch/yepwatch-contracts/proposal';
 import { useReducedMotion } from '../../components/ui';
 import { playFeedback } from '../feedback/sounds';
 import { GText, Icon, glow, native } from '../glow/theme';
+import { HoverPress, Nudge } from '../shell/hover';
 import { useLayout } from '../shell/layout';
 import { useStableCallback } from '../shell/steady';
 import { warm } from '../shell/tokens';
-import { HoverPress, Nudge } from './hover';
 import { openPage } from './nav';
 
 const sized = (url: string | null) => (url ? url.replace('/w500/', '/w185/') : null);
@@ -53,10 +53,8 @@ export const MatchesPeek = memo(function MatchesPeek({ roomId, matches, proposal
   return (
     <View testID="matches-peek" {...(phone ? pan.panHandlers : null)}>
       <HoverPress label={label} hint={lit ? 'Opens your matches' : undefined} disabled={!lit} dim={false} onPress={open}
-        hover={{ backgroundColor: '#ffffff0d', borderColor: n ? glow.amber : warm.lineStrong }}
         style={{ alignItems: 'stretch' }}
         visual={{ borderRadius: phone ? 14 : 12, borderWidth: 1, borderColor: proposal ? glow.amber : n ? warm.amberLine : warm.line, backgroundColor: n ? '#fbbf240d' : 'transparent', paddingHorizontal: 12, paddingTop: phone ? 6 : 10, paddingBottom: phone ? 8 : 10 }}>
-        {(on) => (
           <View style={{ gap: 6 }}>
             {phone ? <View style={{ alignSelf: 'center', width: 36, height: 4, borderRadius: 2, backgroundColor: n ? '#fbbf2477' : '#ffffff2a' }} /> : null}
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -80,10 +78,9 @@ export const MatchesPeek = memo(function MatchesPeek({ roomId, matches, proposal
                 <GText bold size={z(15)} lines={1} color={n ? glow.amber : glow.soft}>{n ? matchCount(n) : 'Matches land here'}</GText>
                 <GText size={z(12)} lines={1} color={glow.muted}>{lit ? (phone ? 'Pull up to see them' : 'Open to see them') : 'When everyone says Yep'}</GText>
               </View>
-              {lit ? <Nudge on={on} dx={0} dy={-2}><View style={{ transform: [{ rotate: '-90deg' }] }}><Icon name="right" size={z(16)} color={glow.amber} /></View></Nudge> : null}
+              {lit ? <Nudge dx={0} dy={-2}><View style={{ transform: [{ rotate: '-90deg' }] }}><Icon name="right" size={z(16)} color={glow.amber} /></View></Nudge> : null}
             </View>
           </View>
-        )}
       </HoverPress>
     </View>
   );

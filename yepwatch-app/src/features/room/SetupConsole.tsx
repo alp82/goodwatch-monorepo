@@ -12,6 +12,7 @@ import { useReducedMotion } from '../../components/ui';
 import { GText, glow, native } from '../glow/theme';
 import { HoverPress, useHovered } from '../shell/hover';
 import { useLayout } from '../shell/layout';
+import { noun } from '../shell/noun';
 import { R, warm } from '../shell/tokens';
 import { IDEA_LIMITS, type IdeaView, type Kind } from './model';
 import { TRY_EXAMPLES } from './MoodComposer';
@@ -244,7 +245,7 @@ export const IdeaField = roomPart('IdeaField', (r) => ({
   const ready = clean.length >= IDEA_LIMITS.min && !ideaSave.blocked && !full && !(mine && mine.text === clean && mine.on);
   const submit = () => { if (!ready) return; sent.current = clean; ideaSave.save(clean); };
   const placeholder = mine ? `Replace your ${word}` : phone || wide ? 'Describe a mood or a plot' : 'Describe a mood, a theme, or a plot';
-  const hint = full ? `Up to ${IDEA_LIMITS.perRoom} ideas on a couch.` : mine ? `Replaces your ${word}, “${mine.text}”.` : `One ${word} each. You can replace yours later.`;
+  const hint = full ? `Up to ${IDEA_LIMITS.perRoom} ideas on ${noun.a}.` : mine ? `Replaces your ${word}, “${mine.text}”.` : `One ${word} each. You can replace yours later.`;
   return (
     <View style={{ gap: 8 }}>
       <SectionHead id="mood" title={host ? 'What are you in the mood for?' : 'Got a wish?'} />

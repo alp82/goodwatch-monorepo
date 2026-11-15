@@ -5,7 +5,6 @@
 import { useState } from 'react';
 import { Image, Pressable, View } from 'react-native';
 import type { DecisionRecord } from '../../core/continuous/room-registry-state';
-import { COUCH } from '../home/couch-words';
 import { GText, Icon, Press, glow, grow, onePress } from '../glow/theme';
 import { HeroIcon, LiveBadge, Note, TextLink } from '../room/ui';
 import { FaceStack } from '../shell/parts';
@@ -37,7 +36,7 @@ export function PosterFan({ posters, width, height }: { posters: readonly string
 
 /** A couch's name on its card: its ideas, or whose couch it is (never a filter default such as "Anything"). */
 export const couchTitle = (room: Pick<HomeRoom, 'label' | 'own' | 'hostNickname'>) =>
-  room.label !== 'Anything' ? room.label : room.own || !room.hostNickname ? 'Your couch' : noun.of(room.hostNickname);
+  room.label !== 'Anything' ? room.label : room.own || !room.hostNickname ? noun.yourOne : noun.of(room.hostNickname);
 
 /** An open room: its deck as a poster fan, LIVE, the room's ideas, its status and people. Archive sits on the card. */
 function LiveCard({ room: given, width, now, open, archive, quiet }: { room: HomeRoom; width: number; now: number; open: () => void; archive: () => void; quiet: boolean }) {
@@ -133,7 +132,7 @@ export function YourRooms({ rooms, decisions, unavailable, loading, open, archiv
       {live.length ? (
         <View style={{ gap: z(14) }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            <GText bold size={z(22)} style={{ letterSpacing: -0.4 }}>{COUCH.yours}</GText>
+            <GText bold size={z(22)} style={{ letterSpacing: -0.4 }}>{noun.yours}</GText>
             <GText size={z(16)} color={glow.muted}>{`${live.length} open`}</GText>
           </View>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap }}>

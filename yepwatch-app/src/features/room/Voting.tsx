@@ -28,13 +28,13 @@ import { votingBarFit } from '../glow/faces-row';
 import { useActiveTime } from '../glow/useActiveTime';
 import { TrailerLink } from '../glow/TrailerLink';
 import { GText, Icon, Press, glow, native } from '../glow/theme';
+import { HoverPress } from '../shell/hover';
 import { useLayout } from '../shell/layout';
 import { useBackAction } from '../shell/sheet-back';
 import { useSheetEntry } from '../shell/Sheet';
 import { useSheetOpen } from '../shell/sheet-stack';
 import { useStableCallback, useSteady } from '../shell/steady';
 import { warm } from '../shell/tokens';
-import { HoverPress } from './hover';
 import { MatchesPeek } from './MatchesPeek';
 import { toRooms } from './nav';
 import { useRoom, useRoomLive } from './RoomProvider';
@@ -103,7 +103,6 @@ const VoteKey = memo(function VoteKey({ yes, disabled, onPress, lit, box }: { ye
         opacity: lit, transform: [{ scale: lit.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1.02] }) }] }} />
       <Animated.View style={{ flex: 1, flexDirection: 'row', transform: [{ scale: lit.interpolate({ inputRange: [0, 1], outputRange: [1, 1.04] }) }] }}>
         <HoverPress label={yes ? 'Yep' : 'Nope'} disabled={disabled} onPress={onPress} repeatable
-          hover={yes ? { backgroundColor: '#fcc94a' } : { backgroundColor: '#ef44441f', borderColor: '#ef444470' }}
           style={{ flexGrow: 1, flexShrink: 1, flexBasis: 0, minHeight: z(54), borderRadius: 12, paddingHorizontal: 16, flexDirection: 'row', gap: 9, backgroundColor: yes ? glow.amber : '#ef44440f', borderWidth: 1, borderColor: yes ? glow.amber : '#ef444440' }}>
           <Icon name={yes ? 'check' : 'close'} size={18} color={yes ? warm.ink : '#f87171'} />
           <GText bold size={z(17)} color={yes ? warm.ink : glow.ink} lines={1}>{yes ? 'Yep' : 'Nope'}</GText>
@@ -125,7 +124,7 @@ function CardTools({ title, trailerUrl, disabled, onDetails }: { title: string; 
   );
   return (
     <View style={{ flexDirection: 'row', gap: 6 }}>
-      <HoverPress label={title ? `Details about ${title}` : 'Details'} disabled={disabled} onPress={onDetails} hover={{ backgroundColor: '#ffffff0f', borderColor: warm.lineStrong }} visual={look}>
+      <HoverPress label={title ? `Details about ${title}` : 'Details'} disabled={disabled} onPress={onDetails} visual={look}>
         <Icon name="external" size={z(12)} color={glow.muted} /><GText bold size={z(13)} color={glow.muted}>Details</GText>
       </HoverPress>
       {trailerUrl && !disabled

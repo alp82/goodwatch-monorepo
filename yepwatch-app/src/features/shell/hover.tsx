@@ -37,7 +37,7 @@ export function Nudge({ children, dx = 3, dy = 0, style }: { children: ReactNode
 export type HoverLook = 'lift' | 'lighten' | 'tint' | 'none';
 
 /** The theme's Press (same props) with a desktop hover look. */
-export function HoverPress({ label, onPress, children, disabled = false, quiet = false, style, selected, hint, repeatable = false, visual, hover = 'lighten', shadow, role = 'button', checked, testID }: {
+export function HoverPress({ label, onPress, children, disabled = false, quiet = false, style, selected, hint, repeatable = false, visual, hover = 'lighten', shadow, role = 'button', checked, dim = true, testID }: {
   label: string;
   onPress: () => void;
   children: ReactNode;
@@ -56,6 +56,8 @@ export function HoverPress({ label, onPress, children, disabled = false, quiet =
   role?: 'button' | 'radio' | 'switch';
   /** Radio and switch state. */
   checked?: boolean;
+  /** Dim while disabled (off where the disabled state has a look of its own). */
+  dim?: boolean;
   testID?: string;
 }) {
   const [on, setOn] = useState(false);
@@ -86,7 +88,7 @@ export function HoverPress({ label, onPress, children, disabled = false, quiet =
         s.press,
         style,
         hover === 'lift' ? liftStyle(live, pressed, shadow, skin.boxShadow) : hoverTransition,
-        disabled && { opacity: 0.42 },
+        disabled && dim && { opacity: 0.42 },
         pressed && hover !== 'lift' && { opacity: 0.78 },
         !native && !disabled && !quiet ? webOnly({ cursor: 'pointer' }) : null,
       ]}
