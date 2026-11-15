@@ -6,7 +6,11 @@
   "mainCommits": "0770f7365..24ff841c2 (release 193f79476, smoke script ce5bb857b + 24ff841c2)",
   "crate": {
     "snapshot": "goodwatch-db-backup-v2.yepwatch_pre_rethink_20261115 (22 tables, SUCCESS)",
-    "migrations": ["20261115-picks-quality.sql", "20261115-taste-profiles.sql", "20261115-matches-in.sql"],
+    "migrations": [
+      "20261115-picks-quality.sql",
+      "20261115-taste-profiles.sql",
+      "20261115-matches-in.sql"
+    ],
     "applied": "2026-11-15 before the push, 14 statements, no errors; grant DQL,DML on doc.yepwatch_taste_profile to yepwatch_runtime"
   },
   "reviews": [
@@ -24,15 +28,43 @@
   },
   "deploy": "Coolify: Goodwatch Webapp and YepWatch Webapp finished 05:49 UTC; web bundle carries the new copy",
   "ota": {
-    "ios": { "channel": "beta", "runtime": "d170fdc5c8fc2b6651fbf0c52f6f90fded747495", "updateId": "01a1ddc2-cd06-7b70-831b-f81b8afb121a", "groupId": "85b285bf-f339-44a0-b7d9-213282047c29" },
-    "android": { "channel": "beta-preview", "runtime": "e602b9da0532d0b6553acc72b771132638acce70", "updateId": "01a1ddc3-4ac0-7b32-a4dd-6f970978e0fb", "groupId": "7f0c6141-0ea5-4dda-aa32-f9b1692a8314" }
+    "ios": {
+      "channel": "beta",
+      "runtime": "d170fdc5c8fc2b6651fbf0c52f6f90fded747495",
+      "updateId": "01a1ddc2-cd06-7b70-831b-f81b8afb121a",
+      "groupId": "85b285bf-f339-44a0-b7d9-213282047c29"
+    },
+    "android": {
+      "channel": "beta-preview",
+      "runtime": "e602b9da0532d0b6553acc72b771132638acce70",
+      "updateId": "01a1ddc3-4ac0-7b32-a4dd-6f970978e0fb",
+      "groupId": "7f0c6141-0ea5-4dda-aa32-f9b1692a8314"
+    }
   },
   "limits": [
     "Native Maestro flows were updated but not run (no emulator); native looks not seen on a device.",
     "Native tablets keep centered vote looks (the question column is measured on web only).",
     "Installed apps before this OTA: a tiebreak needs a new-app user to tap Pick one of N.",
-    "Profile Nope repeat penalty not built (no writer for the dealt column).",
     "Revoked seats still block a decision (unchanged rule; nothing calls revoke outside tests).",
     "The start page line 'Someone's in: <title>' follows the title with most I'm ins and can change as people tap."
-  ]
+  ],
+  "followUp": {
+    "date": "2026-11-15",
+    "repeatAvoidance": "b971f9663 + ac6b6de18: Tonight Nopes per profile (nopes column, 30 days, 300 max), score -0.1 x nopers/profiles; Crate snapshot yepwatch_pre_profile_nopes_20261115 then ADD COLUMN nopes; Fable-reviewed; prod smoke passed after deploy",
+    "store": "15d4d0de4: new galleries (Android 8, iPhone 6.3 8, iPhone 6.9 6, iPad 6) and listing copy; App Store Connect listing + screenshots uploaded and read back (version 1.0.0 build 18 is DEVELOPER_REJECTED, not resubmitted); Play not uploaded (no working Play API key); see store-gallery-rethink-2026-11-15.json",
+    "productionOta": {
+      "ios": {
+        "channel": "production",
+        "runtime": "d170fdc5c8fc2b6651fbf0c52f6f90fded747495",
+        "updateId": "01a1df3c-4776-70fa-bd81-e1d164f1f977",
+        "groupId": "17cef8d7-a07b-47fd-9209-16fd8b360e70"
+      },
+      "android": {
+        "channel": "production",
+        "runtime": "8d1264ebe69b509f2f258813b92603f31603f9d5",
+        "updateId": "01a1df3c-a952-70e1-b139-5d250e7259b6",
+        "groupId": "f989f029-3a05-48be-adf3-bbfafb8bce18"
+      }
+    }
+  }
 }
