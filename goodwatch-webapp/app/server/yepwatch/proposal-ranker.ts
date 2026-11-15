@@ -5,7 +5,7 @@ import { tastePercentile } from './proposal-person-signal.ts'
 import { MAX_RANKED, qualityPriors, roomJitter, unitFingerprint } from './proposal-pool.ts'
 import { feedbackAdjustment, FEEDBACK_RANK_HEAD, type RoundFeedback } from './proposal-feedback.ts'
 
-export const RANKER_VERSION = 'picks-1'
+export const RANKER_VERSION = 'picks-2'
 export const RANK_WEIGHTS = { taste: .45, idea: .35, quality: .25, wishlist: .08, availability: .04 } as const
 export const LEAST_MISERY = .65
 export interface RankIdea { id: string; nickname: string; rankedKeys: readonly number[]; wants: readonly string[]; avoids: readonly string[] }
@@ -15,8 +15,10 @@ export interface RankInput {
   weights?: { [K in keyof typeof RANK_WEIGHTS]: number }; leastMisery?: number
   pool: readonly number[]; snapshot: TitleSnapshot; people: readonly PersonSignal[]; ideas: readonly RankIdea[]
   wishlist: ReadonlyMap<number, number>; sharedServiceKeys?: ReadonlyMap<number, string>; excluded: ReadonlySet<number>
+  /** Recent Nopes per active linked profile, independent of taste confidence. Length is the repeat denominator. */
+  nopeProfiles?: readonly ReadonlySet<number>[]
   feedback?: RoundFeedback; seed: string; peopleCount: number; refill?: boolean
-  repeatNopes?: ReadonlySet<number>; fingerprintKeys?: readonly string[]; quality?: ReadonlyMap<number, number>
+  fingerprintKeys?: readonly string[]; quality?: ReadonlyMap<number, number>
 }
 export function groupTaste(snapshot: Pick<TitleSnapshot, 'cosine' | 'version'> & Partial<Pick<TitleSnapshot, 'rowOf' | 'cosineAt'>>, key: number, people: readonly PersonSignal[], fingerprint?: Float32Array | null, leastMisery = LEAST_MISERY) {
   let minimum = 1, sum = 0, n = 0, veto = false, unseen = 0
@@ -30,6 +32,7 @@ export function groupTaste(snapshot: Pick<TitleSnapshot, 'cosine' | 'version'> &
     const p = cosine == null ? .5 : tastePercentile(cosine, person.quantiles)
     const c = Math.max(0, Math.min(1, person.confidence)), shrunk = c * p + (1 - c) * .5
     minimum = Math.min(minimum, shrunk); sum += shrunk; n++
+    // Only raw percentiles determine vetoes.
     veto ||= c >= .5 && p < .15
     if (p > .7 && person.unseen.has(key)) unseen = .05
   }
@@ -66,9 +69,13 @@ export function rankDeck(input: RankInput, limit: number): Ranked[] {
     const ideaFits = lanes.map(({ idea, ranks }) => ideaFit(ranks.get(key), idea.rankedKeys.length, idea.wants, idea.avoids, snapshot.fingerprint(key), dimensions))
     fits.set(key, ideaFits)
     const idea = ideaFits.length ? Math.max(...ideaFits) : 0, best = ideaFits.indexOf(idea)
+    // All active linked profiles count, including people without a taste signal.
+    const profiles = input.nopeProfiles ?? []
+    const nopers = profiles.filter(nopes => nopes.has(key)).length
+    const repeat = nopers ? -.1 * (nopers / profiles.length) : 0
     const parts: ScoreParts = { taste: taste.taste, minimum: taste.minimum, idea, quality: quality.get(key) ?? 0,
       wishlist: Math.min(1, (input.wishlist.get(key) ?? 0) / 2), availability: Number(input.sharedServiceKeys?.has(key) ?? false),
-      feedback: 0, repeat: input.repeatNopes?.has(key) ? -.1 : 0 }
+      feedback: 0, repeat }
     const score = weights.taste * parts.taste + (ideas.length ? weights.idea : 0) * parts.idea +
       (weights.quality + (taste.count ? 0 : weights.taste)) * parts.quality + weights.wishlist * parts.wishlist +
       weights.availability * parts.availability + roomJitter(input.seed, key) + parts.feedback + parts.repeat

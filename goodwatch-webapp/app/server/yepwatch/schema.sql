@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS doc.yepwatch_taste_profile (
   "id" TEXT PRIMARY KEY,
   "answers" OBJECT(STRICT) AS ("items" ARRAY(OBJECT(STRICT) AS ("key" BIGINT,"answer" TEXT,"source" TEXT,"at" BIGINT))) NOT NULL,
   "followups" ARRAY(OBJECT(STRICT) AS ("key" BIGINT,"decided_at" BIGINT,"state" TEXT)) NOT NULL,
+  "nopes" ARRAY(OBJECT(STRICT) AS ("key" BIGINT,"at" BIGINT)),
   "dealt" ARRAY(BIGINT) NOT NULL,
   "revision" BIGINT NOT NULL,
   "created_at" BIGINT NOT NULL,

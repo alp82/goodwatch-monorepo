@@ -13,6 +13,9 @@ import {
 	proposalFixtureCatalog,
 } from "./proposal-test-support.ts"
 import { createProposalHandler } from "./proposal-http.server.ts"
+import { TasteProfiles } from "./proposal-taste-profile.ts"
+import { profileTasteSource } from "./proposal-profile-signals.ts"
+import { MemoryProfileStore, tasteFixture, tasteDisplays } from "./proposal-taste-test-support.ts"
 import { RoomError } from "./errors.ts"
 import { roomIntentKeys } from "./proposal-intent.ts"
 import { rankedKey } from "./proposal-redesign.ts"
@@ -28,9 +31,9 @@ const credential = (a: GuestAdmission) => ({
 	participantId: a.credential.participantId,
 	token: a.credential.token,
 })
-async function fixture() {
+async function fixture(catalog: ProposalCatalog = proposalFixtureCatalog) {
 	const repo = new ProposalMemoryRepository()
-	const service = new ProposalService(repo, proposalFixtureCatalog, secret)
+	const service = new ProposalService(repo, catalog, secret)
 	const a = await service.create(admission())
 	const b = await service.join(a.credential.roomId, {
 		...admission("B"),
@@ -859,4 +862,28 @@ test("Start again clears departed voters' old answers and preserves the decided 
  assert.equal(departed.approvedProposalVersion, null)
  assert.equal(departed.leftAt, departedBefore.leftAt)
  assert.deepEqual(next.history, before.history)
+})
+
+test("profile save failures never fail a committed vote command", async () => {
+	for (const throwing of [false, true]) {
+		const store = new MemoryProfileStore()
+		const profiles = new TasteProfiles(store, secret, () => tasteFixture(), tasteDisplays, () => 1_000_000)
+		const profileId = profiles.identity(randomBytes(32).toString("base64url"))
+		await profiles.touch(profileId)
+		const source = profileTasteSource(profiles)
+		let completion: Promise<void> | undefined
+		store.save = async () => { if (throwing) throw new Error("unavailable"); return false }
+		const f = await fixture({ ...proposalFixtureCatalog, voteCommitted(room, participantId, candidateId, value) {
+			const participant = { ...room.participants.find(p => p.id === participantId)!, profileId }
+			const card = room.candidates.find(c => c.id === candidateId)!
+			completion = source.voteCommitted!(room, participant, rankedKey(card), value, 1_000_000)
+			return completion
+		} })
+		const state = await f.service.read(f.id, credential(f.a))
+		const card = state.shared.candidates[0]
+		await assert.doesNotReject(f.vote(f.a, card.id, "pass"))
+		await completion
+		const after = await f.service.read(f.id, credential(f.a))
+		assert.equal(after.own.votes.find(v => v.candidateId === card.id)?.value, "pass")
+	}
 })

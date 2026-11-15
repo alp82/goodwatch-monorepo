@@ -488,6 +488,7 @@ export const tasteProfileTable: Table = {
   id: text(43),
   answers: object({ items: array(object({ key: integer(), answer: nullable(enumeration(["loved", "not_for_me", "unseen"])), source: enumeration(["taste", "followup"]), at: integer() }), 500) }),
   followups: array(object({ key: integer(), decided_at: integer(), state: enumeration(["pending", "answered", "dismissed"]) }), 20),
+  nopes: additive(array(object({ key: integer(), at: integer() }), 300)),
   dealt: array(integer(), 300), revision: integer(), created_at: integer(), updated_at: integer(), expires_at: integer(),
   write_window: integer(-1), write_count: integer(),
  }

@@ -290,7 +290,8 @@ CREATE TABLE doc.yepwatch_taste_profile (
     items ARRAY(OBJECT(STRICT) AS (key BIGINT, answer TEXT, source TEXT, at BIGINT))
   ),
   followups ARRAY(OBJECT(STRICT) AS (key BIGINT, decided_at BIGINT, state TEXT)),  -- item 13, at most 20
-  dealt ARRAY(BIGINT),           -- last 300 Tonight cards dealt to this profile, for repeat avoidance
+  dealt ARRAY(BIGINT),           -- legacy, unused
+  nopes ARRAY(OBJECT(STRICT) AS (key BIGINT, at BIGINT)), -- up to 300 explicit Nopes, retained for 30 days
   revision BIGINT,
   updated_at BIGINT,
   expires_at BIGINT              -- updated_at + 180 days
@@ -477,8 +478,13 @@ Server:
 - `set_show_seen` (`yw/proposal-redesign.ts:96-103`) is allowed for anyone with a profile, not only linked members.
 - The ranker gets the union as `excluded`. The scan's existing seen filtering at Start
   (`yw/proposal-service.server.ts:1351-1362`) stays as the last guard.
-- Repeat avoidance: titles in a profile's `dealt` ring that the person said Nope to in the last 30 days get `-0.1`.
-  Titles dealt but unanswered get nothing. `dealt` is written when a round ends (item 1 hook), at most 300 keys.
+- Repeat avoidance: each profile's `nopes` stores up to 300 explicit Nopes with timestamps, retained for 30 days.
+  Committed Nope votes add entries; Yep and undo remove them. Titles dealt but unanswered get nothing.
+  After the taste/least-misery combination, add the score-level term `-0.1 * nopers / peopleCount`, where
+  `peopleCount` is all active participants with a linked profile (including skipped Taste or zero confidence)
+  and `nopers` counts those profiles whose recent `nopes` include the title. Everyone Noping subtracts the full 0.1.
+  `parts.repeat` reports this term; taste percentiles and vetoes are unchanged. Participants without taste
+  confidence still do not enter group taste or least misery.
 
 Tests: exclusions per source, `showSeen` on keeps seen but still removes hidden, a profile participant can switch
 `showSeen`, repeat avoidance applies to Nopes only.

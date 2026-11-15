@@ -71,8 +71,12 @@ test(
 			assert.equal(old.profile.answers.items[0].answer, "loved")
 			const changed = structuredClone(old.profile)
 			changed.revision++
+			changed.nopes = [{ key: key(2), at: now }]
 			assert.equal(await store.save(changed, old), true)
 			assert.equal(await store.save(changed, old), false)
+			assert.deepEqual((await store.read([id]))[0].profile.nopes, changed.nopes)
+			await sql("UPDATE doc.yepwatch_taste_profile SET nopes=NULL WHERE id=?", [id])
+			assert.deepEqual((await store.read([id]))[0].profile.nopes, [], "old NULL rows are empty")
 			await profiles.answers(id, {
 				revision: 2,
 				items: [{ key: key(1), answer: null, at: ++now }],

@@ -673,3 +673,44 @@ test("Profile lookup SQL uses primary-key equalities for batched reads, touch an
 	assert.equal(selects[2].match(/id=\?/g)!.length, 64)
 	assert.equal(selects[4].match(/id=\?/g)!.length, 2)
 })
+
+test('answers retries a concurrent Nope-only save once and retains the fresh Nopes', async () => {
+	const f = fixture()
+	await f.profiles.touch(f.id)
+	const save = f.store.save.bind(f.store)
+	let writes = 0
+	f.store.save = async (p, old) => {
+		if (++writes === 1) {
+			const current = (await f.store.read([f.id]))[0]
+			await save({ ...current.profile, nopes: [{ key: key(2), at: f.now() }] }, current)
+		}
+		return save(p, old)
+	}
+	assert.deepEqual(await f.profiles.answers(f.id, {
+		revision: 0, items: [{ key: key(1), answer: 'loved', at: f.now() }],
+	}), { revision: 1, answered: 1 })
+	assert.equal(writes, 2)
+	const stored = f.store.rows.get(f.id)!.profile
+	assert.deepEqual(stored.nopes, [{ key: key(2), at: f.now() }])
+	assert.equal(stored.write_count, 1, 'only the answer consumes budget')
+	assert.equal(f.profiles.nopesHeld(f.id).has(key(2)), true)
+})
+
+test('answers rejects concurrent answer changes even if the revision is unchanged', async () => {
+	const f = fixture()
+	await f.profiles.touch(f.id)
+	const save = f.store.save.bind(f.store)
+	let writes = 0
+	f.store.save = async (p, old) => {
+		if (++writes === 1) {
+			const current = (await f.store.read([f.id]))[0]
+			await save({ ...current.profile, answers: { items: [{ key: key(5), answer: 'unseen', at: f.now(), source: 'taste' }] } }, current)
+		}
+		return save(p, old)
+	}
+	await assert.rejects(f.profiles.answers(f.id, {
+		revision: 0, items: [{ key: key(1), answer: 'loved', at: f.now() }],
+	}), ProfileConflict)
+	assert.equal(writes, 1, 'conflicting answers are never overwritten')
+	assert.equal(f.store.rows.get(f.id)!.profile.answers.items[0].key, key(5))
+})

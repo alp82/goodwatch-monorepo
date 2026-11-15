@@ -26,7 +26,7 @@ export interface RoomTasteSource {
   stored(room: ProposalRoom, participant: ProposalParticipant): PersonalSignals | null
   /** Persist the person's explicit Nope/undo before room vote retirement can discard it. Best effort after CAS. */
   voteCommitted?(room: ProposalRoom, participant: ProposalParticipant, key: number, value: 'watch' | 'pass' | null, at: number): Promise<void>
-  /** Best effort after a committed round end; store a bounded, idempotent dealt/Nope ring here. */
+  /** Optional best-effort round-end fallback using retained private votes; counts cannot reconstruct Nopes. */
   roundEnded?(room: ProposalRoom): Promise<void>
 }
 const levels = [...Array.from({ length: 100 }, (_, i) => i / 100),

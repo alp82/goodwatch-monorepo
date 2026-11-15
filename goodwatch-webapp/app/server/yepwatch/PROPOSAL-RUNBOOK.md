@@ -113,8 +113,15 @@ which the release runtime passes to `guestProposalCatalog(members, profiles)`:
 - Deck identity: the participant's `tasteRevision` is in the prepared digest and the source's revision (profile
   revision, snapshot version, own or blend) is in `inputRevision`. A changed profile rebuilds the prepared deck;
   room reads that change neither leave it alone.
-- Not built: the profile Nope history for the 30-day repeat penalty (`voteCommitted`, `roundEnded`). The store has
-  a `dealt` column and no writer, so `nopes` is always empty for profiles.
+- Built: `voteCommitted` persists explicit profile Nopes for 30 days (at most 300 newest keys).
+  Yep and undo remove them; unanswered cards record nothing. Async per-profile coalescing and three CAS attempts
+  leave the answer budget and taste revision unchanged, update the held cache, and silently drop store failures.
+  Apply `migrations/20261115-profile-nopes.sql` before deployment. The unused `dealt` column stays unchanged.
+  Ranking adds `-0.1 * nopers / peopleCount` after the taste/least-misery combination. Here `peopleCount` is
+  every active participant with a linked profile, including those who skipped Taste or have zero confidence;
+  `nopers` counts those profiles with a recent Nope for the title. Everyone Noping gives a full -0.1.
+  Taste minimum/mean and vetoes use unmodified percentiles; people without taste confidence do not enter them.
+  `parts.repeat` reports this separate score-level term, which is added once to the score. No per-person/title details enter outcome logs.
 
 The interface a source implements:
 
@@ -128,12 +135,10 @@ The interface a source implements:
 - If a member has YepWatch answers, build the member/profile blend on write/read, return it from the profile source
   as `taste.source = "member"`. Otherwise cached GoodWatch taste wins, then profile taste. Never count one person
   twice. Only the GoodWatch source's wishlist contributes a Want to See boost.
-- `roundEnded(room)` runs best effort after a committed decision/restart/logical expiry. Make it idempotent by room
-  generation; retain at most 300 dealt keys and timestamp only explicit Nopes. Resolve `room.outcome[].position`
-  through `room.dealtKeys` (fallback `seenKeys` for old rooms). Counts never reconstruct individual Nopes: use
-  the `voteCommitted(room, participant, key, value, at)` source hook, which runs after successful vote CAS and before a subsequent refill can retire that vote. Persist explicit Nopes and undo in that hook; use retained private votes only as a fallback.
-  Unanswered cards have no repeat penalty. The profile storage/API, taste deck and next-day follow-ups belong to
-  items 4, 6 and 13 and are supplied separately.
+- `voteCommitted(room, participant, key, value, at)` runs best effort after successful vote CAS, before retirement
+  can discard private votes. It writes explicit Nopes/removals only for linked profiles. No `roundEnded` fallback
+  is needed: counts cannot reconstruct individual Nopes, and unanswered cards have no repeat penalty.
+  Pending batches have a separate 600-key sanity cap (including removals); bursts coalesce before I/O.
 
 The `taste` member resource is grant checked on every request; it returns a rounded vector, liked count, version,
 500 newest wishlist keys and bounded hidden keys. No ratings leave GoodWatch. Copies are bound to room, seat,

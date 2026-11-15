@@ -3,7 +3,7 @@ import { matchingIdeaIds } from "./proposal-redesign.ts"
 import { rankDeck, RANKER_VERSION, type Ranked } from './proposal-ranker.ts'
 import { MAX_RANKED, passesFloor, qualityPriors, poolStepOf, poolQualityOf, unitFingerprint } from './proposal-pool.ts'
 import { roundFeedback, feedbackAdjustment, reorderTail } from './proposal-feedback.ts'
-import type { RoomTasteSource, PersonSignal } from './proposal-person-signal.ts'
+import type { RoomTasteSource } from './proposal-person-signal.ts'
 import type { ProposalRoom, ProposalCatalog } from './proposal-types.ts'
 import type { TitleSnapshot } from '../title-snapshot/snapshot.server.ts'
 import { VALID_FINGERPRINT_KEYS } from '../utils/fingerprint.ts'
@@ -90,12 +90,17 @@ export function guestProposalCatalog(members?: ContinuousMembers, profiles?: Roo
       ]))
       const sources = active.map(p => ({ member: p.member.state === 'linked' ? members?.tasteStored(room, p.id) : null, profile: profiles?.stored(room, p) }))
       // A profile may supply a pre-blended member vector (item 6). Otherwise GoodWatch wins, then profile.
-      let people = sources.map(s => s.profile?.taste?.source === 'member' ? s.profile.taste : s.member?.taste ?? s.profile?.taste).filter((p): p is PersonSignal => !!p)
+      const now = Date.now()
+      const nopeProfiles = sources.flatMap(s => s.profile ? [new Set([...s.profile.nopes]
+        .filter(([, at]) => at <= now && at >= now - 30 * 86400000).map(([key]) => key))] : [])
+      let people = sources.flatMap(s => {
+        const taste = s.profile?.taste?.source === 'member' ? s.profile.taste : s.member?.taste ?? s.profile?.taste
+        return taste ? [taste] : []
+      })
       let tasteSources = { member: people.filter(p => p.source === 'member').length, profile: people.filter(p => p.source === 'profile').length, none: active.length - people.length }
-      const wishlist = new Map<number, number>(), repeatNopes = new Set<number>()
+      const wishlist = new Map<number, number>()
       for (const source of sources) {
         for (const key of source.member?.wishlist ?? []) wishlist.set(key, (wishlist.get(key) ?? 0) + 1)
-        for (const [key, at] of source.profile?.nopes ?? []) if (at <= Date.now() && Date.now() - at <= 30 * 86400000) repeatNopes.add(key)
       }
       const excluded = titleKeySet([...(await exclusions.excludedKeys(room)), ...room.seenKeys])
       const ranked = new Map<number, Ranked>()
@@ -150,8 +155,8 @@ export function guestProposalCatalog(members?: ContinuousMembers, profiles?: Roo
             const names = new Map((await goodwatchCatalog.metadata(country)).services.map(s => [s.id, s.name]))
             for (const key of pool) { const on = carried(key); const service = common.find(id => on?.has(id)); if (service !== undefined) shared.set(key, names.get(index.services[service]) ?? 'your service') }
           }
-          const result = timedSync('rank', () => rankDeck({ pool, snapshot: current, people, ideas, wishlist, sharedServiceKeys: shared,
-            excluded, seed: room.id, peopleCount: active.length, refill: room.phase === 'choosing', repeatNopes, quality,
+          const result = timedSync('rank', () => rankDeck({ pool, snapshot: current, people, nopeProfiles, ideas, wishlist, sharedServiceKeys: shared,
+            excluded, seed: room.id, peopleCount: active.length, refill: room.phase === 'choosing', quality,
             fingerprintKeys: VALID_FINGERPRINT_KEYS, feedback: roundFeedback(room, current) }, limit ?? 3000))
           for (const r of result) ranked.set(r.key, r)
           return result.map(r => r.key)

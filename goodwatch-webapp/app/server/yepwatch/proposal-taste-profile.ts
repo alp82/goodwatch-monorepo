@@ -19,6 +19,14 @@ import type {
 } from "../../../packages/yepwatch-contracts/proposal.ts"
 import type { ProposalRoom } from "./proposal-types.ts"
 import { activeRoom } from "./proposal-context.ts"
+export const NOPE_RETENTION_MS = 30 * 86400000
+interface Nope { key: number; at: number }
+function retainedNopes(items: readonly Nope[] | null | undefined, now: number): Nope[] {
+	const latest = new Map<number, number>()
+	for (const { key, at } of items ?? [])
+		if (at <= now && now - at <= NOPE_RETENTION_MS && at >= (latest.get(key) ?? -Infinity)) latest.set(key, at)
+	return [...latest].map(([key, at]) => ({ key, at })).sort((a, b) => b.at - a.at || a.key - b.key).slice(0, 300)
+}
 export const PROFILE_RETENTION_MS = 180 * 86400000
 export const FOLLOWUP_MIN_MS = 10 * 3600000
 export const FOLLOWUP_MAX_MS = 7 * 86400000
@@ -61,6 +69,7 @@ export interface Profile {
 	answers: { items: Answer[] }
 	followups: Followup[]
 	dealt: number[]
+	nopes?: Nope[] | null
 	revision: number
 	created_at: number
 	updated_at: number
@@ -96,7 +105,7 @@ export class SqlProfileStore implements ProfileStore {
 			rows.push(
 				...(
 					await this.sql(
-						`SELECT id,answers,followups,dealt,revision,updated_at,expires_at,write_window,write_count,created_at,_seq_no,_primary_term FROM ${TABLE} WHERE ${part
+						`SELECT id,answers,followups,dealt,revision,updated_at,expires_at,write_window,write_count,created_at,_seq_no,_primary_term,nopes FROM ${TABLE} WHERE ${part
 							.map(() => "id=?")
 							.join(" OR ")}`,
 						part
@@ -116,6 +125,7 @@ export class SqlProfileStore implements ProfileStore {
 				write_window: Number(r[7]),
 				write_count: Number(r[8]),
 				created_at: Number(r[9]),
+				nopes: r[12] ?? [],
 			} as Profile,
 			seq: Number(r[10]),
 			term: Number(r[11]),
@@ -133,6 +143,7 @@ export class SqlProfileStore implements ProfileStore {
 			"write_window",
 			"write_count",
 			"created_at",
+			"nopes",
 		] as const
 		const values = columns.map((c) => p[c])
 		if (!old) {
@@ -186,7 +197,7 @@ export class SqlProfileStore implements ProfileStore {
 				(f) => now - f.decided_at < FOLLOWUP_MAX_MS
 			)
 			if (p.followups.length !== old.profile.followups.length) {
-				await this.save(p, old)
+				await this.save({ ...p, nopes: retainedNopes(p.nopes, now) }, old)
 			}
 		}
 	}
@@ -208,6 +219,54 @@ const memberKeyOf = (member?: Float32Array | null) =>
 		? Buffer.from(member.buffer, member.byteOffset, member.byteLength).toString("base64")
 		: undefined
 export class TasteProfiles {
+	private nopeWriters = new Map<string, { pending: Map<number, { value: "watch" | "pass" | null; at: number }>; done: Promise<void> }>()
+	/**
+	 * Coalesce committed votes before I/O and serialize each profile's batches. Three fresh-read CAS attempts
+	 * keep this best-effort work cheap; no answer budget/revision change, callbacks, or round-end reconstruction.
+	 * Pending events are capped at 600 latest keys as a separate sanity bound, including removals.
+	 */
+	recordVote(id: string, key: number, value: "watch" | "pass" | null, at: number): Promise<void> {
+		let writer = this.nopeWriters.get(id)
+		if (!writer) {
+			writer = { pending: new Map(), done: Promise.resolve() }
+			this.nopeWriters.set(id, writer)
+			const work = writer
+			work.done = Promise.resolve().then(async () => {
+				try {
+					while (work.pending.size) {
+						const batch = work.pending
+						work.pending = new Map()
+						for (let attempt = 0; attempt < 3; attempt++) {
+							const old = (await this.store.read([id]))[0]
+							if (!old || old.profile.expires_at <= this.now()) break
+							const p = structuredClone(old.profile)
+							const nopes = new Map(retainedNopes(p.nopes, this.now()).map(n => [n.key, n.at]))
+							for (const [key, event] of batch) {
+								if (event.at < p.created_at || event.at > this.now() || event.at < (nopes.get(key) ?? -Infinity)) continue
+								if (event.value === "pass") nopes.set(key, event.at)
+								else nopes.delete(key)
+							}
+							p.nopes = retainedNopes([...nopes].map(([key, at]) => ({ key, at })), this.now())
+							if (JSON.stringify(p.nopes) === JSON.stringify(old.profile.nopes ?? []) ||
+								await this.store.save(this.pruneNopes(p), old)) { this.remember(p); break }
+						}
+					}
+				} catch { /* Best effort: never fail a room command or log private identifiers. */ }
+				finally { this.nopeWriters.delete(id) }
+			})
+		}
+		const previous = writer.pending.get(key)
+		if (!previous || at >= previous.at) {
+			writer.pending.delete(key)
+			writer.pending.set(key, { value, at })
+		}
+		while (writer.pending.size > 600) writer.pending.delete(writer.pending.keys().next().value!)
+		return writer.done
+	}
+	nopesHeld(id: string): ReadonlyMap<number, number> {
+		const p = this.cache.get(id)?.profile
+		return new Map(p && p.expires_at > this.now() ? retainedNopes(p.nopes, this.now()).map(n => [n.key, n.at]) : [])
+	}
 	private cache = new Map<
 		string,
 		{
@@ -239,6 +298,10 @@ export class TasteProfiles {
 		this.displays = displays
 		this.now = now
 	}
+	private pruneNopes(p: Profile) {
+		p.nopes = retainedNopes(p.nopes, this.now())
+		return p
+	}
 	identity(secret: string | null) {
 		if (
 			!secret ||
@@ -262,6 +325,7 @@ export class TasteProfiles {
 			answers: { items: [] },
 			followups: [],
 			dealt: [],
+			nopes: [],
 			revision: 0,
 			created_at: now,
 			updated_at: now,
@@ -359,7 +423,7 @@ export class TasteProfiles {
 			}
 			p.updated_at = this.now()
 			p.expires_at = this.now() + PROFILE_RETENTION_MS
-			if (await this.store.save(p, old)) {
+			if (await this.store.save(this.pruneNopes(p), old)) {
 				this.remember(p)
 				return p.revision
 			}
@@ -476,8 +540,16 @@ export class TasteProfiles {
 		if (tasteChanged) p.revision++
 		p.updated_at = now
 		p.expires_at = now + PROFILE_RETENTION_MS
-		if (!(await this.store.save(p, old)))
-			throw new ProfileConflict(await this.summary(id))
+		if (!(await this.store.save(this.pruneNopes(p), old))) {
+			const fresh = await this.fresh(id)
+			// A Nope-only write does not invalidate the answer revision or budget.
+			const withoutNopes = ({ nopes: _nopes, ...rest }: Profile) => rest
+			if (!old || !fresh || JSON.stringify(withoutNopes(fresh.profile)) !== JSON.stringify(withoutNopes(old.profile)))
+				throw new ProfileConflict(await this.summary(id))
+			p.nopes = fresh.profile.nopes
+			if (!(await this.store.save(this.pruneNopes(p), fresh)))
+				throw new ProfileConflict(await this.summary(id))
+		}
 		this.remember(p)
 		// Precompute before scheduling a build; a changed callback failure must not turn a committed answer into failure.
 		if (tasteChanged) {
@@ -632,7 +704,7 @@ export class TasteProfiles {
 					.slice(0, 20)
 				p.updated_at = this.now()
 				p.expires_at = this.now() + PROFILE_RETENTION_MS
-				if (await this.store.save(p, old)) {
+				if (await this.store.save(this.pruneNopes(p), old)) {
 					this.remember(p)
 					break
 				}

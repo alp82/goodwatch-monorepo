@@ -4,7 +4,6 @@ import type { TasteProfiles } from "./proposal-taste-profile.ts"
 import type { ProposalParticipant, ProposalRoom } from "./proposal-types.ts"
 
 const NO_KEYS: ReadonlySet<number> = new Set()
-const NO_NOPES: ReadonlyMap<number, number> = new Map()
 
 /**
  * Device taste profiles as the ranker's taste source (RoomTasteSource).
@@ -19,7 +18,7 @@ const NO_NOPES: ReadonlyMap<number, number> = new Map()
  * no taste here, so the catalog falls back to their GoodWatch taste unchanged.
  *
  * The answered titles count as seen (left out unless the person shows seen titles), "haven't seen" answers as the
- * unseen set. Profiles have no hidden titles, wishlist or Nope history: a member's come from GoodWatch.
+ * unseen set. Profiles have no hidden titles or wishlist; explicit Nope history belongs to this profile.
  */
 export function profileTasteSource(
 	profiles: TasteProfiles,
@@ -31,6 +30,9 @@ export function profileTasteSource(
 	/** One signals object per held taste: the catalog reads it several times a build. */
 	const built = new WeakMap<object, PersonalSignals>()
 	return {
+		voteCommitted(_room, participant, key, value, at) {
+			return participant.profileId ? profiles.recordVote(participant.profileId, key, value, at) : Promise.resolve()
+		},
 		async prepare(room) {
 			const people = profiled(room)
 			if (!people.length) return
@@ -51,7 +53,8 @@ export function profileTasteSource(
 			const from = blend ?? own
 			const cached = built.get(from.quantiles ?? from.seen)
 			const revision = `${own.revision}:${own.snapshotVersion}:${blend ? `blend:${member!.confidence}` : member ? "member" : "own"}`
-			if (cached?.revision === revision) return cached
+			const nopes = profiles.nopesHeld(id)
+			if (cached?.revision === revision && cached.nopes.size === nopes.size && [...nopes].every(([key, at]) => cached.nopes.get(key) === at)) return cached
 			// A member's own taste already ranks them: their answers add to it only through the blend.
 			const taste =
 				from.vector && from.quantiles && (blend || !member)
@@ -64,7 +67,7 @@ export function profileTasteSource(
 							snapshotVersion: from.snapshotVersion,
 					  }
 					: null
-			const signals: PersonalSignals = { revision, taste, seen: own.seen, hidden: NO_KEYS, wishlist: NO_KEYS, nopes: NO_NOPES }
+			const signals: PersonalSignals = { revision, taste, seen: own.seen, hidden: NO_KEYS, wishlist: NO_KEYS, nopes }
 			built.set(from.quantiles ?? from.seen, signals)
 			return signals
 		},
