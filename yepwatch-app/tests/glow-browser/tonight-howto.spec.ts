@@ -53,6 +53,8 @@ test('someone who already answered cards in this round never gets the how-to', a
   await expect(page.getByTestId('voting')).toBeVisible();
   await page.waitForTimeout(800);
   await expect(button(page, 'Skip the how-to')).toHaveCount(0);
+  // Their next round doesn't start with it either.
+  expect(await page.evaluate((k) => localStorage.getItem(k), SEEN)).toBe('1');
 });
 
 test('wide windows: the question column beside the card, the poster’s Details and Trailer move into it', async ({ page }) => {

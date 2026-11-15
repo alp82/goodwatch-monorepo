@@ -153,9 +153,11 @@ const ASIDE_GAP = 40;
 /**
  * Whether the how-to runs: a person's first round on this device, until they act. Web knows at once; native
  * reads the device first (nothing shows meanwhile). Someone who already answered cards in this round
- * (an app from before the how-to, a reload) never gets it.
+ * (an app from before the how-to, a reload) never gets it, and it's remembered as seen: their later rounds don't
+ * start with it either.
  */
 function useTutorialGate(answeredBefore: boolean) {
+  useEffect(() => { if (answeredBefore && tutorialSeenNow() !== true) void writeTutorialSeen(); }, [answeredBefore]);
   const [state, setState] = useState<'unknown' | 'teach' | 'done'>(() => {
     const now = tutorialSeenNow();
     return now === null ? 'unknown' : now || answeredBefore ? 'done' : 'teach';
