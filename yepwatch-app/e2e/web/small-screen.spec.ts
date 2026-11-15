@@ -86,7 +86,7 @@ for (const device of ['se', 'android'] as const) {
       await host.tap(host.button('Couch'), { expect: { visible: ['room-sheet'] } });
       await host.audit('Room sheet (small phone)');
       await host.tap(host.button('Close').last(), { expect: { hidden: ['room-sheet'] } });
-      await onScreen(host, 'Start (in the dock)', '[data-testid="frame-dock"] [aria-label="Start"]');
+      await onScreen(host, 'Start (in the dock)', '[data-testid="frame-dock"] [aria-label="Start on my own"]');
       await start(host, []);
       await host.audit('voting (small phone)');
     });
@@ -124,7 +124,7 @@ for (const device of ['se', 'android'] as const) {
       await host.page.keyboard.press('Space');
       await eventually(() => host.latest?.ideas.find((i) => i.text === 'space adventure')?.on, (on) => on === true, 'Space switched the idea on again', host);
       // Start.
-      await tabTo(host, 'Start');
+      await tabTo(host, 'Start on my own');
       await host.tap(host.page.locator(':focus'), { key: 'Enter', expect: { visible: ['voting', 'poster'] }, timeout: 20000 });
     });
 

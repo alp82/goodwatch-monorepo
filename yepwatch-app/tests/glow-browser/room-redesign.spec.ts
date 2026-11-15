@@ -29,7 +29,7 @@ test('guest host: New room opens Mood at once, a preset then Create room, name a
   await expect.poll(() => f.room.shared.ideas.map((i) => [i.text, i.on])).toEqual([['cheer me up', true]]);
   await shot(page, '02-room-setup');
   // Streaming: Start without services opens the picker (the room gets a country), back on the room page.
-  await button(page, 'Start').click();
+  await button(page, 'Start on my own').click();
   await expect(page.getByTestId('services-sheet')).toBeVisible();
   await page.getByRole('checkbox', { name: 'Netflix' }).click();
   await page.getByRole('checkbox', { name: 'Prime Video' }).click();
@@ -45,8 +45,8 @@ test('guest host: New room opens Mood at once, a preset then Create room, name a
   await page.getByLabel('Your name').fill('Alp');
   await page.getByLabel('Your name').press('Enter');
   await expect.poll(() => f.room.shared.participants[0].nickname).toBe('Alp');
-  await expect(button(page, 'Start')).toBeEnabled();
-  await button(page, 'Start').click();
+  await expect(button(page, 'Start on my own')).toBeEnabled();
+  await button(page, 'Start on my own').click();
   await expect(page.getByTestId('voting')).toBeVisible();
   await expect(button(page, 'Yep')).toBeVisible();
   await shot(page, '04-voting');

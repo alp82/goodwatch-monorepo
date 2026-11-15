@@ -326,7 +326,7 @@ test('Tonight is final: host Start again restarts into the room page, Start begi
   await expect(page.getByRole('button',{name:/Keep swiping|Keep voting/})).toHaveCount(0);
   await page.getByRole('button',{name:'Start again',exact:true}).click();
   await expect(page.getByTestId('room-setup')).toBeVisible();
-  await page.getByRole('button',{name:'Start',exact:true}).click();
+  await page.getByRole('button',{name:'Start on my own',exact:true}).click();
   await expect(page.getByRole('button',{name:'Yep',exact:true})).toBeVisible();
   expect(f.writes.map(c=>c.type).slice(0,2)).toEqual(['restart','start']);
   // Start names the round it was pressed in: the one Start again opened (b315f97a5).

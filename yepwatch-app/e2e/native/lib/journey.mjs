@@ -40,7 +40,7 @@ export async function createRoom(p, { name = 'Ann', mood = 'cheer me up' } = {})
   await p.tap('New couch');
   await p.tap(mood, { timeout: 8000 });
   await p.tap('Create couch', { timeout: 8000 });
-  await p.waitFor(/^Start( with \d+)?$/, { timeout: 10000 });
+  await p.waitFor(/^Start( with \d+| on my own)$/, { timeout: 10000 });
   await p.tap(/^Streaming services/);
   await pickNetflix(p);
   if (name) await fillAndSubmit(p, 'Your name', name);

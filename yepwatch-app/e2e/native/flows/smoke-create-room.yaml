@@ -13,5 +13,5 @@ tags: [gate, single]
 - tapOn: { text: "Your name", waitToSettleTimeoutMs: 300 }
 - inputText: ${NAME || 'Ann'}
 - pressKey: Enter
-- assertVisible: "Start( with [0-9]+)?"
+- assertVisible: "Start( with [0-9]+| on my own)"
 - assertVisible: { text: ".*/r/[A-Z0-9]+" }

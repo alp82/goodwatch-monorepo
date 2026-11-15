@@ -291,12 +291,12 @@ test.describe('create and set up a room', () => {
     await createRoom(host, 'rainy day whodunit');
     await room.point('room');
     // Start opens the first missing step instead of starting.
-    await host.tap(host.button('Start'), { expect: { visible: ['services-sheet'] } });
+    await host.tap(host.button('Start on my own'), { expect: { visible: ['services-sheet'] } });
     await host.audit('Your services sheet');
     await pickServices(host, ['Netflix', 'Disney+']);
     await eventually(() => (host.latest?.screens as { serviceIds: number[]; country: string }[] | undefined)?.[0]?.serviceIds.length ?? 0, (n) => n > 0, 'services saved on the screen', host);
     // Name is the next missing step: Start focuses the field.
-    await host.tap(host.button('Start'), { expect: {} });
+    await host.tap(host.button('Start on my own'), { expect: {} });
     await hostName(host, 'Alp');
     // Movies or shows: one switch in the console.
     const shows = host.page.getByRole('radio', { name: 'Shows', exact: true }).filter({ visible: true });
@@ -304,7 +304,8 @@ test.describe('create and set up a room', () => {
     await eventually(() => JSON.stringify((host.latest?.constraints as { kinds: string[] } | undefined)?.kinds), (k) => k === JSON.stringify(['show_start']), 'shows only', host);
     await host.tap(host.page.getByRole('radio', { name: 'Movies and shows', exact: true }).filter({ visible: true }), { expect: {} });
     // Your idea switches off and on.
-    const sw = host.page.getByRole('switch', { name: 'rainy day whodunit. Your idea', exact: true }).filter({ visible: true });
+    // Its name goes on with what the server read in it.
+    const sw = host.page.getByRole('switch', { name: /^rainy day whodunit\. Your idea/ }).filter({ visible: true });
     await host.tap(sw, { expect: {} });
     await eventually(() => host.latest?.ideas.find((i) => i.text === 'rainy day whodunit')?.on, (on) => on === false, 'idea switched off', host);
     await host.tap(sw, { expect: {} });
@@ -316,10 +317,10 @@ test.describe('create and set up a room', () => {
     await host.tap(host.button('How it works'), { expect: { visible: ['how-sheet'] } });
     await host.audit('How it works');
     await host.tap(host.button('Close').last(), { expect: { hidden: ['how-sheet'] } });
-    await host.tap(host.button('Invite friends, show QR code and link'), { expect: { visible: ['invite-surface'] } });
+    await host.tap(host.button('Invite friends, show QR code and link'), { expect: { any: ['invite-surface', 'invite-sheet'] } });
     await host.audit('Invite friends');
     await host.page.keyboard.press('Escape');
-    await host.see({ hidden: ['invite-surface'] }, 5000, 'Invite closed');
+    await host.see({ hidden: ['invite-surface', 'invite-sheet'] }, 5000, 'Invite closed');
     // Room sheet and Streaming sheet.
     await host.tap(host.button('Couch'), { expect: { visible: ['room-sheet'] } });
     await host.audit('Room sheet');

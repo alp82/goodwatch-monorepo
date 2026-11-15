@@ -108,7 +108,8 @@ export function SectionHead({ id, title, meta }: { id: string; title: string; me
   return (
     <View testID={`head-${id}`} style={{ height: phone ? 24 : z(24), flexDirection: 'row', alignItems: 'center', gap: 8 }}>
       <GText bold size={phone ? 16 : z(16)} lines={1} style={{ flex: 1 }}>{title}</GText>
-      {meta ? <GText size={phone ? 13 : z(13)} color={glow.muted} lines={1}>{meta}</GText> : null}
+      {/* A box of one width with the words from its left edge: a new count never moves them. */}
+      {meta ? <View style={{ width: phone ? 92 : z(96) }}><GText size={phone ? 13 : z(13)} color={glow.muted} lines={1}>{meta}</GText></View> : null}
     </View>
   );
 }
@@ -178,7 +179,8 @@ function DescribeField({ value, onChange, onSubmit, ready, action, placeholder, 
   const [focus, setFocus] = useState(false);
   const filled = value.length > 0;
   const t = useTry(skip, filled || Boolean(error));
-  const h = phone ? 56 : z(60);
+  // The action inside keeps a 48 px target: the field is 14 px taller than it.
+  const h = Math.max(62, z(62));
   const tryH = Math.max(48, z(34));
   const showTry = !filled && !error;
   const tryFade = useTo(showTry ? 1 : 0, 150);
@@ -198,7 +200,7 @@ function DescribeField({ value, onChange, onSubmit, ready, action, placeholder, 
           onFocus={() => setFocus(true)} onBlur={() => setFocus(false)}
           style={{ flex: 1, minWidth: 0, height: h - 2, padding: 0, borderWidth: 0, backgroundColor: 'transparent', color: glow.ink, fontFamily: 'Gabarito', fontSize: phone ? 17 : z(18), ...webField } as TextStyle} />
         <HoverPress label={action} hover="lighten" repeatable disabled={!ready} onPress={onSubmit}
-          style={{ width: phone ? 92 : z(100), height: h - 14, minHeight: 0, borderRadius: 12, backgroundColor: ready ? glow.amber : warm.faint, borderWidth: 1, borderColor: ready ? glow.amber : warm.lineStrong }}>
+          style={{ width: phone ? 92 : z(100), height: h - 14, borderRadius: 12, backgroundColor: ready ? glow.amber : warm.faint, borderWidth: 1, borderColor: ready ? glow.amber : warm.lineStrong }}>
           <GText bold size={phone ? 16 : z(16)} color={ready ? warm.ink : glow.ink}>{action}</GText>
         </HoverPress>
       </View>
@@ -262,7 +264,8 @@ const kindsOf = (p: Pick3): Kind[] => (p === 'both' ? ['movie', 'show_start'] : 
 /** One row: the label and a three-way switch whose thumb slides under the choice. Only the host changes it. */
 export const KindSwitch = roomPart('KindSwitch', (r) => ({ view: r.view, saves: r.saves }), function KindSwitch({ view, saves }) {
   const { phone, z } = useLayout();
-  const h = Math.max(48, z(44));
+  // Each choice is a 48 px target inside the track's 4 px padding.
+  const h = Math.max(56, z(52));
   const width = phone ? 222 : z(246);
   const seg = (width - 8) / 3;
   const kinds = saves.drafts.kinds ?? view?.kinds ?? [];
@@ -308,7 +311,8 @@ export const StreamingRow = roomPart('StreamingRow', (r) => ({ view: r.view, ope
       <GText bold size={phone ? 16 : z(16)} lines={1}>Streaming</GText>
       <HoverPress label={missing ? 'Streaming services, add' : `${on.length ? names : 'Streaming'}, change`} hover="lighten" repeatable onPress={() => openSheet(sheet)}
         style={{ flex: 1, minWidth: 0, height: h, paddingLeft: 12, paddingRight: 10, borderRadius: 12, flexDirection: 'row', justifyContent: 'flex-start', gap: 8, backgroundColor: missing ? warm.amberSoft : 'transparent', borderWidth: 1, borderColor: missing ? warm.amberLine : warm.line }}>
-        {on.length ? <Logos services={on} size={z(22)} /> : missing ? <Glyph name="plus" size={z(16)} color={glow.amber} /> : null}
+        {/* Logos fill a box of one width from its left edge: a friend's service joining moves nothing. */}
+        {missing ? <Glyph name="plus" size={z(16)} color={glow.amber} /> : <View style={{ width: Math.round(z(22) * (1 + 3 * 0.78)) }}>{on.length ? <Logos services={on} size={z(22)} /> : null}</View>}
         <GText size={phone ? 14 : z(14)} bold={missing} color={missing ? glow.amber : glow.soft} lines={1} style={{ flex: 1 }}>{names}</GText>
         <GText bold size={z(13)} color={missing ? glow.amber : glow.muted}>{missing ? 'Add' : 'Change'}</GText>
       </HoverPress>

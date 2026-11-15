@@ -29,10 +29,11 @@ export async function pickServices(p: Person, services: string[], open?: () => P
 
 /** The invitation link, as Invite shows it: the QR code's name carries the link. Invite closes again. */
 export async function inviteLink(host: Person) {
-  await host.tap(host.button('Invite friends, show QR code and link'), { expect: { visible: ['invite-surface'] } });
+  // A popover on wide windows, a sheet on phones.
+  await host.tap(host.button('Invite friends, show QR code and link'), { expect: { any: ['invite-surface', 'invite-sheet'] } });
   const text = (await host.page.getByRole('img', { name: /^QR code for / }).filter({ visible: true }).getAttribute('aria-label')) ?? '';
   await host.page.keyboard.press('Escape');
-  await host.see({ hidden: ['invite-surface'] }, 5000, 'Invite closed');
+  await host.see({ hidden: ['invite-surface', 'invite-sheet'] }, 5000, 'Invite closed');
   const path = text.match(/\/r\/[A-Za-z0-9._-]+/)?.[0];
   if (!path) host.journeyFailure(`no invitation link in Invite ("${text}")`);
   return new URL(path!, host.page.url()).href;
@@ -65,7 +66,7 @@ export async function readyHost(room: Room, name = 'Alp', mood?: string, opts?: 
 }
 
 export async function start(host: Person, friends: Person[]) {
-  await host.tap(host.button(/^Start( with \d+)?$/), {
+  await host.tap(host.button(/^Start( with \d+| on my own)$/), {
     expect: { visible: ['voting', 'poster'] },
     moment: 'startToFirstCardMs',
     observers: friends.map((f) => [f, { visible: ['voting', 'poster'] }, 'startToPeerVotingMs'] as [Person, { visible: string[] }, string]),

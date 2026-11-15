@@ -204,7 +204,7 @@ async function main() {
 
   // ---- Start -> first card on host and friend ----
   await scenario('start-round', async () => {
-    const start = await A.find(/^Start( with \d+)?$/);
+    const start = await A.find(/^Start( with \d+| on my own)$/);
     const r = await measure({ actor: A, phones: [A, Bp], file: vid('start'), action: tapAction(A, start),
       targets: { A: roiOf(A, 'poster', 10000), B: roiOf(Bp, 'poster', 10000) } });
     timing('Start -> first card (host)', B.startToFirstCardMs, r.A);
@@ -308,7 +308,7 @@ async function main() {
   await scenario('restart-round', async () => {
     await A.tap('Start again');
     await A.waitFor('room-setup', { timeout: 8000 });
-    await A.tap(/^Start( with \d+)?$/);
+    await A.tap(/^Start( with \d+| on my own)$/);
     await A.waitFor('poster', { timeout: 8000 });
     await Bp.waitFor('poster', { timeout: 8000 });
   }, { modes: ['full'] });

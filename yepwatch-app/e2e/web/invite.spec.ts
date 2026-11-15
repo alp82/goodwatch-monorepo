@@ -114,8 +114,8 @@ test.describe('invite and join', () => {
     await join(mia, await inviteLink(host), 'Mia');
     await room.point('room');
     await addIdea(mia, 'space adventure', [[host, { label: { text: '^space adventure\\. Mia’s wish' } }, 'ideaToPeerMs']]);
-    await expect(host.page.getByRole('switch', { name: 'space adventure. Mia’s wish', exact: true }).filter({ visible: true })).toHaveAttribute('aria-checked', 'true');
-    await expect(mia.page.getByLabel('space adventure. Your wish. On', { exact: true }).filter({ visible: true })).toBeVisible();
+    await expect(host.page.getByRole('switch', { name: /^space adventure\. Mia’s wish/ }).filter({ visible: true })).toHaveAttribute('aria-checked', 'true');
+    await expect(mia.page.getByLabel(/^space adventure\. Your wish\..* On$/).filter({ visible: true })).toBeVisible();
     await expect(mia.page.getByTestId('waiting').getByRole('switch')).toHaveCount(0);
     await eventually(() => host.latest?.ideas.length, (n) => n === 2, 'exactly two ideas', host);
   });

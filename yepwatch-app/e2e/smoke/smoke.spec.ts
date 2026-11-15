@@ -254,7 +254,7 @@ async function journey(room: Room, people: [Person, 'leave' | 'archive'][]) {
   await host.page.waitForTimeout(300);
 
   // Start: first card for the host and on both other phones.
-  await host.tap(host.button(/^Start( with \d+)?$/), {
+  await host.tap(host.button(/^Start( with \d+| on my own)$/), {
     expect: { visible: ['voting', 'poster'] },
     observers: [[friend, { visible: ['voting', 'poster'] }, 'voting'], ...(member ? [[member, { visible: ['voting', 'poster'] }, 'voting'] as const] : [])],
     timeout: 20000,

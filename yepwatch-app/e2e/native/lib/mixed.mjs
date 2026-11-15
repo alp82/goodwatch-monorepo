@@ -57,7 +57,7 @@ export class WebPeer {
     await this.button('Done').click();
     await p.getByTestId('waiting').waitFor();
   }
-  async start() { await this.button(/^Start( with \d+)?$/).click(); await this.page.getByTestId('voting').waitFor({ timeout: 15000 }); }
+  async start() { await this.button(/^Start( with \d+| on my own)$/).click(); await this.page.getByTestId('voting').waitFor({ timeout: 15000 }); }
   async waitVoting() { await this.page.getByTestId('voting').waitFor({ timeout: 15000 }); }
   async yep() { await this.button('Yep').click(); }
   async openMatches() { await this.button(/^\d+ match(es)?$/).click(); await this.page.getByTestId('matches').waitFor(); }
@@ -123,7 +123,7 @@ export async function mixedHostAndroid({ phone: A, stack, runDir, timing, journe
   try {
     await web.join(`${stack.app}/r/${code}`);
     await A.waitFor('2 people, people', { timeout: 8000 });
-    await A.tap(/^Start( with \d+)?$/);
+    await A.tap(/^Start( with \d+| on my own)$/);
     await A.waitFor('poster', { timeout: 10000 }); await web.waitVoting();
     await web.yep(); await sleep(500);
     const yep = await A.find('Yep');
@@ -145,7 +145,7 @@ export async function mixedHostWeb({ phone: Bp, stack, runDir, timing, journeyFa
     Bp.home(); await sleep(500);
     Bp.openLink(`${stack.app}/r/${code}`);
     await joinFromJoinScreen(Bp, 'Bob');
-    const start = web.button('Start');
+    const start = web.button(/^Start( with \d+| on my own)$/);
     const r = await measure({ actor: Bp, phones: [Bp], file: path.join(runDir, 'video', 'mixed-web-start.webm'), targets: { B: roiOf(Bp, 'poster', 10000) },
       action: async () => { const hostMs = Date.now(); await start.click(); return { anchor: 'host', hostMs }; } });
     timing('browser host Start -> first card on Android guest', 200, r.B, { informational: true, note: 'anchor = Playwright click call on the host' });
@@ -201,7 +201,7 @@ export async function mixedGateRoom({ phone: A, stack, runDir, B, timing, audit,
 
     // Start on the phone: the phone's first card from its video; the browser's voting page from inside the
     // page (first animation frame it is shown), both against the touch frame on the host clock.
-    const start = await A.find(/^Start( with \d+)?$/);
+    const start = await A.find(/^Start( with \d+| on my own)$/);
     const browserVoting = await web.watchVisible(['voting', 'poster'], 10000);
     const st = await measure({ actor: A, phones: [A], file: vid('start'), targets: { A: roiOf(A, 'poster', 10000) }, action: tapAction(A, start) });
     timing('Start -> first card (Android host)', B.startToFirstCardMs, st.A);
@@ -280,7 +280,7 @@ export async function mixedJourneyRoom({ phone: A, stack, audit, notStuck, journ
     await joining;
     await A.waitFor('2 people, people', { timeout: 15000 });
 
-    const start = await A.find(/^Start( with \d+)?$/, { timeout: 10000 });
+    const start = await A.find(/^Start( with \d+| on my own)$/, { timeout: 10000 });
     await step(() => A.tapXY(start.cx, start.cy), 'poster', 20000);
     await web.waitVoting();
     await audit(A, 'voting');
