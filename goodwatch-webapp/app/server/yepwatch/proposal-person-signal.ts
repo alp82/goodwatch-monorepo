@@ -5,8 +5,6 @@ export interface PersonSignal {
   vector: Float32Array
   /** 119 entries at 0..99, 99.1..99.9, 99.91..99.99, 100 percent. */
   quantiles: Float32Array
-  /** Profile Nope history, attached even when the chosen vector comes from GoodWatch. */
-  nopes?: ReadonlySet<number>
   confidence: number
   unseen: ReadonlySet<number>
   source: 'member' | 'profile'

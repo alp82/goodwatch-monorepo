@@ -247,7 +247,8 @@ export class TasteProfiles {
 								else nopes.delete(key)
 							}
 							p.nopes = retainedNopes([...nopes].map(([key, at]) => ({ key, at })), this.now())
-							if (await this.store.save(this.pruneNopes(p), old)) { this.remember(p); break }
+							if (JSON.stringify(p.nopes) === JSON.stringify(old.profile.nopes ?? []) ||
+								await this.store.save(this.pruneNopes(p), old)) { this.remember(p); break }
 						}
 					}
 				} catch { /* Best effort: never fail a room command or log private identifiers. */ }
@@ -539,8 +540,16 @@ export class TasteProfiles {
 		if (tasteChanged) p.revision++
 		p.updated_at = now
 		p.expires_at = now + PROFILE_RETENTION_MS
-		if (!(await this.store.save(this.pruneNopes(p), old)))
-			throw new ProfileConflict(await this.summary(id))
+		if (!(await this.store.save(this.pruneNopes(p), old))) {
+			const fresh = await this.fresh(id)
+			// A Nope-only write does not invalidate the answer revision or budget.
+			const withoutNopes = ({ nopes: _nopes, ...rest }: Profile) => rest
+			if (!old || !fresh || JSON.stringify(withoutNopes(fresh.profile)) !== JSON.stringify(withoutNopes(old.profile)))
+				throw new ProfileConflict(await this.summary(id))
+			p.nopes = fresh.profile.nopes
+			if (!(await this.store.save(this.pruneNopes(p), fresh)))
+				throw new ProfileConflict(await this.summary(id))
+		}
 		this.remember(p)
 		// Precompute before scheduling a build; a changed callback failure must not turn a committed answer into failure.
 		if (tasteChanged) {

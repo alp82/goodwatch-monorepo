@@ -38,7 +38,7 @@ test('release catalog uses member wishlist, profile/hidden exclusions and shared
   assert.equal(page.candidates.find(c => c.identity.tmdbId === 10)?.reason?.code, 'want_to_see')
   assert.equal(page.candidates.find(c => c.identity.tmdbId === 4)?.reason?.code, 'on_service_for_everyone', 'profile wishlists never produce a Want to See boost')
   assert.equal(page.candidates.find(c => c.identity.tmdbId === 4)?.reason?.text, 'On Service two for everyone')
-  assert.equal(Object.values(page.ranking!).find(r => r.key === 1e12 + 4)?.parts.repeat, 0, 'without taste there is no contribution to penalize')
+  assert.equal(Object.values(page.ranking!).find(r => r.key === 1e12 + 4)?.parts.repeat, -.1, 'profiles without taste still penalize the score')
   assert.equal(Object.values(page.ranking!).find(r => r.key === 1e12 + 10)?.parts.repeat, 0, 'Nopes older than 30 days do not penalize a card')
   room.participants[1].serviceIds = [1]; room.participants[0].serviceIds = [2]
   const mixed = await catalog.page(room)
@@ -63,7 +63,7 @@ test('a taste that lands after a setup change rebuilds the prepared deck once; a
   assert.deepEqual(changed, [room.id], 'the same tastes again: nothing to rebuild')
 })
 
-test('catalog attaches profile Nopes to the chosen member signal only', async () => {
+test('catalog counts each active linked profile Nope once alongside member taste', async () => {
   const room = rankingRoom(); room.phase = 'setup'; room.participants[0].member = { state: 'linked', prefill: null }
   room.participants.push({ ...structuredClone(room.participants[0]), id: 'other' })
   const vector = new Float32Array(74); vector[0] = 1
@@ -76,9 +76,33 @@ test('catalog attaches profile Nopes to the chosen member signal only', async ()
   const catalog = guestProposalCatalog(members, profiles)
   const penalized = await catalog.page(room)
   const rank = Object.values(penalized.ranking!).find(r => r.key === 1e12 + 4)!
-  assert.ok(Math.abs(rank.parts.repeat + .45 * (.65 * .1 + .35 * .1 / 2)) < 1e-9)
+  assert.ok(Math.abs(rank.parts.repeat + .1 / 2) < 1e-9)
   noperPresent = false
   const baseline = Object.values((await catalog.page(room)).ranking!).find(r => r.key === 1e12 + 4)!
   assert.equal(baseline.parts.repeat, 0)
   assert.ok(Math.abs(rank.score - baseline.score - rank.parts.repeat) < 1e-9)
 })
+
+for (const confidence of [null, 0] as const) {
+  test(`catalog applies Nopes with ${confidence === null ? 'skipped Taste' : 'only unseen answers'}, excluding departed and unlinked people`, async () => {
+    const room = rankingRoom(); room.phase = 'setup'
+    room.participants[0].profileId = 'linked-profile'
+    const vector = new Float32Array(74); vector[0] = 1
+    const profile: PersonalSignals = { ...none(), taste: confidence === null ? null : { vector,
+      quantiles: new Float32Array(119), confidence, unseen: new Set([1e12 + 29]), source: 'profile', snapshotVersion: snapshot.version } }
+    room.participants.push({ ...structuredClone(room.participants[0]), id: 'departed', leftAt: 1 },
+      { ...structuredClone(room.participants[0]), id: 'unlinked', profileId: undefined })
+    const profiles: RoomTasteSource = { prepare: async () => {}, stored: (_r, p) => p.profileId ? profile : null }
+    const catalog = guestProposalCatalog(undefined, profiles)
+    const before = await catalog.page(room)
+    const target = Object.values(before.ranking!).find(r => r.key === 1e12 + 4)!
+    profile.nopes = new Map([[target.key, Date.now()]])
+    const after = await catalog.page(room)
+    const penalized = Object.values(after.ranking!).find(r => r.key === target.key)!
+    assert.equal(penalized.parts.repeat, -.1, 'only the active linked profile counts in the denominator')
+    assert.ok(Math.abs(target.score - penalized.score - .1) < 1e-12)
+    assert.equal(penalized.parts.taste, 0)
+    assert.equal(penalized.parts.minimum, 0)
+    assert.ok(penalized.score < target.score, 'a participant without taste still lowers the score')
+  })
+}

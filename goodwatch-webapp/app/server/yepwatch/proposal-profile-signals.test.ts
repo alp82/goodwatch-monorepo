@@ -175,3 +175,20 @@ test('votes arriving during a Nope save drain in a subsequent batch, including u
 	assert.equal(writes, 2)
 	assert.deepEqual([...source.stored(f.room, f.person)!.nopes], [[key(2), f.at()]])
 })
+
+test('Yep and undo without a stored Nope perform no writes and refresh the held cache', async () => {
+	const f = setup(), source = profileTasteSource(f.profiles)
+	await f.profiles.touch(f.id)
+	await source.prepare(f.room)
+	const row = f.store.rows.get(f.id)!
+	row.profile.nopes = [{ key: key(2), at: f.at() }]
+	row.seq++
+	let writes = 0
+	const save = f.store.save.bind(f.store)
+	f.store.save = async (p, old) => { writes++; return save(p, old) }
+	for (const value of ['watch', null] as const) {
+		await source.voteCommitted!(f.room, f.person, key(1), value, f.at())
+		assert.equal(writes, 0)
+		assert.deepEqual([...source.stored(f.room, f.person)!.nopes], [[key(2), f.at()]])
+	}
+})

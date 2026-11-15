@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { rankingSnapshot } from './proposal-ranking-test-support.ts'
 import { rankDeck, groupTaste, candidateReason, ideaFit, RANK_WEIGHTS, type RankInput } from './proposal-ranker.ts'
-import { qualityPriors, unitFingerprint } from './proposal-pool.ts'
+import { qualityPriors, unitFingerprint, roomJitter } from './proposal-pool.ts'
 import { FEEDBACK_RANK_HEAD } from './proposal-feedback.ts'
 import type { PersonSignal } from './proposal-person-signal.ts'
 export const person = (vector: number[], confidence = 1): PersonSignal => ({ vector: Float32Array.from([...vector, ...Array(74).fill(0)].slice(0, 74)), quantiles: Float32Array.from([...Array.from({ length: 100 }, (_, i) => i / 100), ...Array.from({ length: 9 }, (_, i) => (991 + i) / 1000), ...Array.from({ length: 9 }, (_, i) => (9991 + i) / 10000), 1]), confidence, unseen: new Set(), source: 'member', snapshotVersion: 'fixture' })
@@ -29,9 +29,9 @@ test('weights, exclusions, Want to See, repeat Nopes and deterministic seed', ()
   assert.ok(Math.abs(boosted.score - original.score - RANK_WEIGHTS.wishlist) < 1e-9)
   const withTaste = { ...i, people: [person([0, 1])] }
   const before = rankDeck(withTaste, 20).find(r => r.key === 1e12 + 3)!
-  const repeat = rankDeck({ ...withTaste, people: [{ ...withTaste.people[0], nopes: new Set([1e12 + 3]) }] }, 20).find(r => r.key === 1e12 + 3)!
-  assert.ok(Math.abs(repeat.score - before.score + .1 * RANK_WEIGHTS.taste) < 1e-9)
-  assert.ok(Math.abs(repeat.parts.repeat + .1 * RANK_WEIGHTS.taste) < 1e-9)
+  const repeat = rankDeck({ ...withTaste, nopeProfiles: [new Set([1e12 + 3])] }, 20).find(r => r.key === 1e12 + 3)!
+  assert.ok(Math.abs(repeat.score - before.score + .1) < 1e-9)
+  assert.ok(Math.abs(repeat.parts.repeat + .1) < 1e-9)
   assert.equal(original.parts.repeat, 0)
 })
 test('ideas steer with wants/avoids and each idea gets its highest scoring remaining titles early', () => {
@@ -106,18 +106,48 @@ test('3000 titles, 12 tastes and 120+120 feedback entries: bounded warm refill r
   assert.ok(times[2] < budget, `warm feedback rank budget is ${budget} ms (15 ms target, CI slack)`)
 })
 
-test('repeat avoidance adjusts only the Noper before minimum and mean, without creating vetoes', () => {
-  const snapshot = { version: 'fixture', cosine: (_key: number, vector: Float32Array) => vector[0] }
-  const key = 1e12 + 2, a = person([.2]), b = person([.8])
-  const baseline = groupTaste(snapshot, key, [a, b])
-  const noper = { ...a, nopes: new Set([key]) }
-  const penalized = groupTaste(snapshot, key, [noper, b])
-  assert.ok(Math.abs(baseline.taste - penalized.taste - (.65 * .1 + .35 * .1 / 2)) < 1e-9)
-  assert.ok(Math.abs(baseline.minimum - penalized.minimum - .1) < 1e-9)
-  assert.equal(penalized.veto, false, 'raw .2 stays above the veto threshold')
-  assert.deepEqual(groupTaste(snapshot, key, [b]), groupTaste(snapshot, key, [{ ...b }]), 'absent Noper has no effect')
-  assert.equal(groupTaste(snapshot, key, [b]).taste, groupTaste(snapshot, key, [b, { ...noper, confidence: 0 }]).taste)
-  const clamped = groupTaste(snapshot, key, [{ ...person([.05]), nopes: new Set([key]) }])
-  assert.equal(clamped.minimum, 0)
-  assert.equal(clamped.veto, true, 'existing raw veto remains')
+test('Nope score penalty leaves raw taste, reasons and vetoes unchanged', () => {
+  const i = { ...input(), people: [person([.1, .995])], refill: true }
+  const baseline = rankDeck(i, 20)
+  const penalized = rankDeck({ ...i, nopeProfiles: [new Set(i.pool)] }, 20)
+  for (const before of baseline) {
+    const after = penalized.find(r => r.key === before.key)!
+    assert.deepEqual(after.reason, before.reason)
+    assert.equal(after.parts.taste, before.parts.taste)
+    assert.equal(after.parts.minimum, before.parts.minimum)
+    assert.equal(after.veto, before.veto)
+    assert.ok(Math.abs(before.score - after.score - .1) < 1e-12, 'everyone Noped: exactly 0.1 score drop')
+  }
+  assert.ok(baseline.some(r => r.veto), 'fixture includes a raw veto')
+  assert.ok(baseline.some(r => !r.veto), 'fixture includes an eligible title')
 })
+
+for (const n of [1, 2, 3, 4]) {
+  test(`one Noper among ${n} profiles drops a first-page title by ${.1 / n} score`, () => {
+    // A dense set of plausible top contenders and a broad lower tail. Each title
+    // has distinct fingerprint dimensions, avoiding an artificial diversity tie.
+    const titles = Array.from({ length: 60 }, (_, at) => ({ key: 1e12 + at + 1,
+      score: 95 - Math.floor(at / 2), votes: 100000 - at * 1000,
+      fp: Array.from({ length: 74 }, (_, d) => d === at + 1 ? 10 : 0) }))
+    const snapshot = rankingSnapshot(titles)
+    const people = Array.from({ length: n }, (_, p) => person(Array.from({ length: 74 }, (_, d) =>
+      d === 0 ? 0 : d <= 20 ? .145 + p * .002 - d * .0005 : .12 - (d - 20) * .002)))
+    // The calibration table maps the cosine spread into realistic percentiles.
+    for (const p of people) p.quantiles = Float32Array.from(p.quantiles, q => q * .19)
+    const i = { ...input(), snapshot, pool: titles.map(t => t.key), people, peopleCount: n,
+      nopeProfiles: Array.from({ length: n }, () => new Set<number>()) }
+    const baseline = rankDeck(i, 60)
+    const target = baseline[8]
+    assert.ok(baseline.slice(0, 10).some(r => r.key === target.key))
+    assert.ok(new Set(baseline.map(r => r.parts.taste.toFixed(3))).size > 20, 'realistic spread of taste percentiles')
+    assert.ok(new Set(i.pool.map(k => roomJitter(i.seed, k))).size > 20, 'production room jitter varies across the pool')
+    i.nopeProfiles[n - 1].add(target.key) // the highest-fit person, not the minimum
+    const penalized = rankDeck(i, 60), after = penalized.find(r => r.key === target.key)!
+    assert.ok(!penalized.slice(0, 10).some(r => r.key === target.key), 'Nope moves the title off the first page')
+    assert.ok(Math.abs(target.score - after.score - .1 / n) < 1e-12, `score drop = ${.1 / n}`)
+    assert.equal(after.parts.repeat, -.1 / n)
+    console.info(JSON.stringify({ peopleCount: n, scoreDrop: .1 / n }))
+    const everyone = rankDeck({ ...i, nopeProfiles: i.nopeProfiles.map(() => new Set([target.key])) }, 60).find(r => r.key === target.key)!
+    assert.ok(Math.abs(target.score - everyone.score - .1) < 1e-12, 'everyone Noped: exactly 0.1 score drop')
+  })
+}

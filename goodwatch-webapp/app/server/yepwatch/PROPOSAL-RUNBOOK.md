@@ -117,10 +117,11 @@ which the release runtime passes to `guestProposalCatalog(members, profiles)`:
   Yep and undo remove them; unanswered cards record nothing. Async per-profile coalescing and three CAS attempts
   leave the answer budget and taste revision unchanged, update the held cache, and silently drop store failures.
   Apply `migrations/20261115-profile-nopes.sql` before deployment. The unused `dealt` column stays unchanged.
-  Ranking subtracts 0.1 from only that person's shrunk percentile, clamped at zero, before minimum/mean;
-  raw percentiles still determine vetoes. A linked member's chosen vector receives their profile Nopes.
-  Without a taste signal there is no contribution to adjust. `parts.repeat` reports the weighted taste delta,
-  already included in taste. No per-person/title details enter outcome logs.
+  Ranking adds `-0.1 * nopers / peopleCount` after the taste/least-misery combination. Here `peopleCount` is
+  every active participant with a linked profile, including those who skipped Taste or have zero confidence;
+  `nopers` counts those profiles with a recent Nope for the title. Everyone Noping gives a full -0.1.
+  Taste minimum/mean and vetoes use unmodified percentiles; people without taste confidence do not enter them.
+  `parts.repeat` reports this separate score-level term, which is added once to the score. No per-person/title details enter outcome logs.
 
 The interface a source implements:
 

@@ -90,10 +90,12 @@ export function guestProposalCatalog(members?: ContinuousMembers, profiles?: Roo
       ]))
       const sources = active.map(p => ({ member: p.member.state === 'linked' ? members?.tasteStored(room, p.id) : null, profile: profiles?.stored(room, p) }))
       // A profile may supply a pre-blended member vector (item 6). Otherwise GoodWatch wins, then profile.
+      const now = Date.now()
+      const nopeProfiles = sources.flatMap(s => s.profile ? [new Set([...s.profile.nopes]
+        .filter(([, at]) => at <= now && at >= now - 30 * 86400000).map(([key]) => key))] : [])
       let people = sources.flatMap(s => {
         const taste = s.profile?.taste?.source === 'member' ? s.profile.taste : s.member?.taste ?? s.profile?.taste
-        // Without taste there is no personal contribution to adjust. Only a linked profile supplies Nopes.
-        return taste ? [{ ...taste, nopes: new Set(s.profile?.nopes.keys() ?? []) }] : []
+        return taste ? [taste] : []
       })
       let tasteSources = { member: people.filter(p => p.source === 'member').length, profile: people.filter(p => p.source === 'profile').length, none: active.length - people.length }
       const wishlist = new Map<number, number>()
@@ -153,7 +155,7 @@ export function guestProposalCatalog(members?: ContinuousMembers, profiles?: Roo
             const names = new Map((await goodwatchCatalog.metadata(country)).services.map(s => [s.id, s.name]))
             for (const key of pool) { const on = carried(key); const service = common.find(id => on?.has(id)); if (service !== undefined) shared.set(key, names.get(index.services[service]) ?? 'your service') }
           }
-          const result = timedSync('rank', () => rankDeck({ pool, snapshot: current, people, ideas, wishlist, sharedServiceKeys: shared,
+          const result = timedSync('rank', () => rankDeck({ pool, snapshot: current, people, nopeProfiles, ideas, wishlist, sharedServiceKeys: shared,
             excluded, seed: room.id, peopleCount: active.length, refill: room.phase === 'choosing', quality,
             fingerprintKeys: VALID_FINGERPRINT_KEYS, feedback: roundFeedback(room, current) }, limit ?? 3000))
           for (const r of result) ranked.set(r.key, r)
