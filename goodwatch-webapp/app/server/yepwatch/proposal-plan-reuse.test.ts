@@ -96,6 +96,9 @@ test("participant records written before the profile columns keep their ids once
 	// Older still: written before service_ids and show_seen existed.
 	const oldest = { room_id: "r", nickname: "Host" }
 	assert.equal(repo.validRecordId("participant", { ...read, show_seen: null }, repo.recordId("participant", oldest)), true)
+	// And the other way round (rolling deploy, rollback): this release's id for a participant without a profile is the
+	// one a release without the columns computes.
+	assert.equal(repo.recordId("participant", read), repo.recordId("participant", before))
 	// A linked profile is content: the id covers it.
 	const linked = { ...before, profile_id: "p".repeat(43), taste_revision: 2 }
 	assert.equal(repo.validRecordId("participant", linked, repo.recordId("participant", before)), false)

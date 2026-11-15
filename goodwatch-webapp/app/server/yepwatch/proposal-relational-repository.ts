@@ -183,6 +183,10 @@ export class RelationalProposalRepository implements ProposalRepository {
 	}
 	private recordId(entity: Entity, row: Row) {
 		const { record_id: _, ...values } = row
+		// A participant without a profile has the id it always had: records from before the profile columns stay valid,
+		// and a release that doesn't know the columns (rolling deploy, rollback) reads the ones this release writes.
+		if (entity === "participant")
+			for (const key of ["profile_id", "taste_revision"]) if (values[key] == null) delete values[key]
 		return keyed(this.secret, `yepwatch-row:${entity}`, stable(values))
 	}
 	/**
@@ -219,13 +223,6 @@ export class RelationalProposalRepository implements ProposalRepository {
             }
             if (this.recordId(entity, legacy) === id) return true
         }
-		// Records written before the profile columns existed: their ids were computed without them.
-		if (entity === "participant") {
-			for (const key of ["profile_id", "taste_revision"]) {
-				if (legacy[key] == null) delete legacy[key]
-			}
-			if (this.recordId(entity, legacy) === id) return true
-		}
 		for (const key of entity === "participant"
 			? ["service_ids", "show_seen"]
 			: entity === "candidate"
@@ -355,7 +352,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 				member_state: p.member.state,
 				member_prefill: p.member.prefill,
 				member_user_id: p.memberUserId,
-				// Stored null without a profile: the record id is computed over exactly what the store returns.
+				// Null without a profile, as the store returns it; recordId leaves null profile columns out.
 				profile_id: p.profileId ?? null,
 				taste_revision: p.tasteRevision ?? null,
 				vote_records: votes,
