@@ -69,6 +69,8 @@ export function Poster({ title, width, height, phone, z, showText = true, x, y, 
       {halo}
       <View
         {...pan}
+        // A named card needs a role for its name (axe aria-prohibited-attr): it reads as the card's picture.
+        accessibilityRole={leaving ? undefined : 'image'}
         accessibilityLabel={leaving ? undefined : `${title.title}. Swipe or use the choice buttons.`}
         style={[{
           flex: 1,
