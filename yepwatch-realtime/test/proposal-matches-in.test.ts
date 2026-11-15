@@ -9,12 +9,13 @@ function snapshot() {
     overview: null, posterUrl: null, runtimeMinutes: 90, viewingDuration: { minutes: 90, scope: 'movie' as const }, availability: [] }))
   s.matches = s.candidates.map(c => ({ candidateId: c.id, averageYepMs: null }))
   s.ins = s.matches.map(m => ({ candidateId: m.candidateId, count: 2 })); s.inVersion = 4
-  s.tiebreak = { version: 4, candidateIds: s.candidates.map(c => c.id), favorites: [{ candidateId: 'movie_1', count: 1 }, { candidateId: 'movie_2', count: 0 }], seed: '0123456789abcdef', outcome: null }
+  s.tiebreak = { version: 4, candidateIds: s.candidates.map(c => c.id), favorites: [{ candidateId: 'movie_1', count: 1 }, { candidateId: 'movie_2', count: 0 }], outcome: null }
   return s
 }
 test('matches in projection accepts anonymous counts, pending picks, zero counts and outcome', () => {
   const s = snapshot(); assert.deepEqual(proposalProjection(s, s.roomId), s)
   s.tiebreak!.favorites[1].count = 1
+  s.tiebreak!.seed = '0123456789abcdef'
   s.tiebreak!.outcome = { candidateId: 'movie_1', spun: true, among: ['movie_1', 'movie_2'] }
   assert.deepEqual(proposalProjection(s, s.roomId), s)
   s.tiebreak = null; s.ins![1].count = 0
@@ -62,11 +63,14 @@ test('matchesIn and candidateReasons are independent capabilities; default deliv
   assert.ok(s.ins); assert.ok(s.candidates[0].reason)
 })
 
-test('a completed decision may name the tiebreak winner while the legacy aggregate keeps match order', () => {
+test('a completed decision strictly requires the legacy proposal to name its winner', () => {
   const s = snapshot(); s.tiebreak!.favorites = [{ candidateId: 'movie_2', count: 2 }]
+  s.tiebreak!.seed = '0123456789abcdef'
   s.tiebreak!.outcome = { candidateId: 'movie_2', spun: false, among: ['movie_2'] }
   s.proposalVersion = 2; s.proposal = { candidateId: 'movie_1', version: 2, previousCandidateId: null, agreeCount: 2, requiredCount: 2, averageYepMs: null }
   s.phase = 'decided'; s.decision = { candidateId: 'movie_2', proposalVersion: 2, decidedAt: 1, availability: [] }
+  assert.throws(() => proposalProjection(s, s.roomId))
+  s.proposal!.candidateId = 'movie_2'
   assert.doesNotThrow(() => proposalProjection(s, s.roomId))
   s.tiebreak!.outcome = null
   assert.throws(() => proposalProjection(s, s.roomId))
@@ -74,4 +78,34 @@ test('a completed decision may name the tiebreak winner while the legacy aggrega
   assert.doesNotThrow(() => proposalProjection(s, s.roomId), 'a historical winner survives a roster change')
   s.decision!.candidateId = 'missing'
   assert.throws(() => proposalProjection(s, s.roomId))
+})
+
+test('seed is required with an outcome and forbidden before it', () => {
+  const s = snapshot()
+  assert.equal('seed' in proposalProjection(s, s.roomId).tiebreak!, false)
+  s.tiebreak!.seed = '0123456789abcdef'
+  assert.throws(() => proposalProjection(s, s.roomId))
+  s.tiebreak!.outcome = { candidateId: 'movie_1', spun: false, among: ['movie_1'] }
+  assert.doesNotThrow(() => proposalProjection(s, s.roomId))
+  delete s.tiebreak!.seed
+  assert.throws(() => proposalProjection(s, s.roomId))
+})
+
+test('gateway authority opts into matchesIn on attach, view and batched views', async () => {
+  const { HttpAuthority } = await import('../src/authority.js')
+  const { paths } = await import('@goodwatch/yepwatch-contracts/proposal')
+  const originalFetch = globalThis.fetch, urls: URL[] = []
+  globalThis.fetch = async input => {
+    urls.push(new URL(String(input)))
+    return Response.json({ roomId: 'room-1', participantId: 'person-1', lease: 'l'.repeat(43),
+      leaseExpiresAt: 100, roomExpiresAt: 200, capabilityEpoch: 1, scope: 'shared:read' })
+  }
+  try {
+    const authority = new HttpAuthority('https://api.example', 's'.repeat(32), 3000, 2_000_000, paths)
+    await authority.attach({ roomId: 'room-1', ticket: 't'.repeat(43) })
+    await authority.view({ roomId: 'room-1', lease: 'l'.repeat(43) })
+    await authority.views!({ roomId: 'room-1', leases: ['l'.repeat(43)] })
+    assert.deepEqual(urls.map(url => url.pathname), [paths.realtimeAttach, paths.realtimeView, paths.realtimeViews])
+    assert.ok(urls.every(url => url.searchParams.get('matchesIn') === '1'))
+  } finally { globalThis.fetch = originalFetch }
 })

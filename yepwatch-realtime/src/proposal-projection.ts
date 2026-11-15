@@ -34,7 +34,7 @@ export const proposalSharedSchema = continuousSharedSchema.extend({
   tiebreak: z.strictObject({
     version: count, candidateIds: z.array(id).min(2).max(512),
     favorites: z.array(z.strictObject({ candidateId: id, count })).max(512),
-    seed: z.string().min(8).max(64),
+    seed: z.string().min(8).max(64).optional(),
     outcome: z.strictObject({ candidateId: id, spun: z.boolean(), among: z.array(id).min(1).max(512) }).nullable(),
   }).nullable().optional(),
   proposalVersion: count,
@@ -60,7 +60,7 @@ export function proposalProjection(input: unknown, roomId: string): SharedRoomSn
   const unique = (ids: string[]) => new Set(ids).size === ids.length
   if (ins && (!unique(ins.map(c => c.candidateId)) || ins.length !== matches.size ||
       ins.some((c, i) => c.candidateId !== value.matches[i]?.candidateId || c.count > required))) throw new Error('Invalid in counts')
-  if (tie && (!required || !unique(tie.candidateIds) || tie.candidateIds.some(id => ins?.find(c => c.candidateId === id)?.count !== required) ||
+  if (tie && ((tie.outcome ? tie.seed === undefined : tie.seed !== undefined) || !required || !unique(tie.candidateIds) || tie.candidateIds.some(id => ins?.find(c => c.candidateId === id)?.count !== required) ||
       !unique(tie.favorites.map(f => f.candidateId)) || tie.favorites.some(f => !tie.candidateIds.includes(f.candidateId)) ||
       tie.favorites.reduce((sum, f) => sum + f.count, 0) > required ||
       (tie.outcome && (!unique(tie.outcome.among) || !tie.outcome.among.includes(tie.outcome.candidateId) ||
@@ -74,7 +74,7 @@ export function proposalProjection(input: unknown, roomId: string): SharedRoomSn
   if ((value.phase === 'setup' && (value.matches.length || proposal || value.decision)) ||
       ((value.phase === 'decided') !== !!value.decision) ||
       (value.decision && (!proposal || !candidates.has(value.decision.candidateId) ||
-        (proposal.candidateId !== value.decision.candidateId && tie?.outcome?.candidateId !== value.decision.candidateId && !(ins && tie === null)) ||
+        proposal.candidateId !== value.decision.candidateId ||
         value.decision.proposalVersion !== proposal.version)))
     throw new Error('Invalid proposal decision')
   return value
