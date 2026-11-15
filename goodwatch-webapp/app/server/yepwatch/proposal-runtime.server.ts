@@ -5,10 +5,9 @@ import {
 import { createProposalHandler } from "./proposal-http.server.ts"
 import { ProposalService, revisionMessage } from "./proposal-service.server.ts"
 import { ValkeyTicketStore } from "./proposal-tickets.ts"
-import { proposalCatalog } from "./proposal-catalog.server.ts"
+import { guestProposalCatalog } from "./proposal-guest-catalog.server.ts"
 import {
 	configuredContinuousMembers,
-	continuousGoodwatchCatalog,
 } from "./continuous-runtime.server.ts"
 import { RelationalProposalRepository } from "./proposal-relational-repository.ts"
 import { crateSql } from "./repository.server.ts"
@@ -60,7 +59,7 @@ export async function proposalRuntimeHandler(request: Request) {
 		const members = configuredContinuousMembers(repository, origins)
 		const service = new ProposalService(
 			repository,
-			proposalCatalog(continuousGoodwatchCatalog(members)),
+			guestProposalCatalog(members),
 			secret,
 			async (event) => {
 				const { getRedisCluster } = await import("../../utils/cache")

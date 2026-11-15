@@ -1,5 +1,6 @@
 /** First-release relational schema. No dynamic objects or serialized domain documents. */
 import { z } from "zod"
+import { REASON_CODES } from "../../../packages/yepwatch-contracts/proposal.ts"
 export interface Field {
 	sql: string
 	schema: z.ZodTypeAny
@@ -188,6 +189,10 @@ export const tables = {
 		name: "doc.yepwatch_room",
 		primary: "id",
 		fields: {
+      dealt_keys: additive(array(text(), 6000)), started_at: additive(integer()), first_match_at: additive(integer()), outcome_emitted_at: additive(integer()), ranker_version: additive(text(100)),
+      taste_sources: additive(object({ member: integer(), profile: integer(), none: integer() })),
+      outcome: additive(array(object({ position: integer(), reason: nullable(enumeration([...REASON_CODES])),
+        taste: real, idea: real, quality: real, score: real, yep: integer(), nope: integer(), unanswered: integer(), matched: bool, moved: bool }), 6000)),
 			id: text(128),
 			storage_format: integer(2),
 			revision: integer(),
@@ -328,6 +333,7 @@ export const tables = {
 	}),
 	history: entity("history", decisionFields),
 	candidate: entity("candidate", {
+    reason: additive(object({ code: enumeration([...REASON_CODES]), text: { ...text(80), schema: z.string().min(1).max(80) } })),
         essence: additive(array(text(), 6)),
         effects: additive(array(object({ line: text(), strength: real, color: text(7) }), 5)),
         not_for: additive(text()),

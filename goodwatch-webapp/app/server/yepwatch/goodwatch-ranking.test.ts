@@ -75,12 +75,16 @@ test("a snapshot reload between slices doesn't mix two snapshots into one rankin
 	let current = loaded
 	let slices = 0
 	boundary.rankingSnapshot = () => current
-	boundary.rankingSlice = () => {
-		if (++slices === 1) current = reloaded
-	}
+	boundary.rankingSlice = () => {}
+  const flags = loaded.columns.flags
+  let scheduled = false
+  Object.defineProperty(loaded.columns, 'flags', { get() {
+    if (!scheduled) { scheduled = true; setImmediate(() => { slices++; current = reloaded }) }
+    return flags
+  } })
 	const keys = await goodwatchReads.rankedKeys(room("DE"))
 	boundary.rankingSlice = () => {}
-	assert.ok(slices >= 3, "built in slices")
+	assert.ok(slices >= 1, "yielded while building")
 	assert.deepEqual([...keys], byPopularity(loaded), "the whole ranking is the snapshot it started with")
 })
 

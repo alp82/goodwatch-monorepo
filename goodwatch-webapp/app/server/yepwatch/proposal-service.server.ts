@@ -1,3 +1,5 @@
+import { ideasForServiceReread } from './proposal-redesign.ts'
+import { emitRoundOutcome, recordOutcome } from './proposal-outcome.ts'
 import { mark, timed, timedSync } from "./server-timing.ts"
 import { MemoryTicketStore, type TicketStore } from "./proposal-tickets.ts"
 import { ExclusionKeepAlive } from "./proposal-member-exclusions.ts"
@@ -1214,7 +1216,7 @@ export class ProposalService {
 			if (!build) {
 				build = (async () => {
 					await this.guard?.command(id, p.id, digest)
-					return { inputs: refillInputs(room), cards: room.candidates.length, page: await timed("deck", this.decks.page(room)) }
+					return { inputs: refillInputs(room, this.catalog.inputRevision?.(room)), cards: room.candidates.length, page: await timed("deck", this.decks.page(room)) }
 				})()
 				this.refills.set(key, build)
 				const done = () => { if (this.refills.get(key) === build) this.refills.delete(key) }
@@ -1341,7 +1343,7 @@ export class ProposalService {
 				seenRead?.catch(() => {}) // Awaited below; a failed deck must not leave it unhandled.
 				// Best effort (members time-box and log their own reads): a failed read starts without those exclusions.
 				// Usually prepared during setup; a Start retried after losing its compare-and-swap reuses the same build.
-				if (wantsPage && envelope.command.type === "refill" && refill && refillInputs(room) === refill.inputs && room.candidates.length <= refill.cards)
+				if (wantsPage && envelope.command.type === "refill" && refill && refillInputs(room, this.catalog.inputRevision?.(room)) === refill.inputs && room.candidates.length <= refill.cards)
 					page = structuredClone(refill.page)
 				else if (wantsPage)
 					page = await timed("deck", this.decks.page(room, {
@@ -1371,6 +1373,7 @@ export class ProposalService {
 				reserved
 			))
 			let pending: PendingIdea | undefined
+      const rereads: PendingIdea[] = []
 			if ((command.type === "add_idea" || command.type === "edit_idea") && this.interpret) {
 				const idea = room.ideas!.find(
 					(i) =>
@@ -1411,6 +1414,16 @@ export class ProposalService {
 				room.candidates = await this.catalog.refresh(activeRoom(room))
 				reconcile(room, old.room)
 			}
+			if (command.type === 'vote') { recordOutcome(room, undefined, this.now()); this.catalog.reorderTail?.(room) }
+      if (this.interpret && ['set_services', 'set_service_enabled', 'configure'].includes(command.type) && watchScreensChanged(old.room, room)) {
+        for (const idea of ideasForServiceReread(room, keys => this.catalog.ideaReadingSize?.(room, keys) ?? keys.length)) {
+          room.interpretationCount = (room.interpretationCount ?? 0) + 1
+          const reread: PendingIdea = { ideaId: idea.id, text: idea.text, job: token(), lease: this.now() }
+          idea.rankedKeys = []
+          markPending(idea, reread)
+          rereads.push(reread)
+        }
+      }
 			const changed = actor(room, p.id)
 			if (command.type === "leave") changed.leftLabel = this.label(old.room)
 			const commandState = this.commandState(changed, credential)
@@ -1430,6 +1443,8 @@ export class ProposalService {
 				continue
 			}
 			if (pending) this.interpretInBackground(id, pending.ideaId, pending)
+      if (command.type === 'vote') void this.catalog.voteCommitted?.(room, p.id, command.candidateId, command.value, this.now()).catch(() => {})
+      for (const reread of rereads) this.interpretInBackground(id, reread.ideaId, reread)
 			return {
 				receipt: { commandId: envelope.commandId, sequence, appliedRevision: room.revision, replayed: false },
 				room: { committed: room, published: this.hintCommitted(old.room, room) }
@@ -1955,6 +1970,7 @@ export class ProposalService {
 					decidedAt: this.now(),
 					availability: evidence
 				}
+				room.outcomeEmittedAt = this.now()
 				room.phase = "decided"
 				this.recordDecision(room)
 				room.agreement.state = "none"
@@ -1974,6 +1990,10 @@ export class ProposalService {
 				if (!(e instanceof IndeterminateWrite)) throw e
 				continue
 			}
+      if (room.phase === 'decided') {
+        emitRoundOutcome(room, 'decision')
+        void this.catalog.roundEnded?.(room).catch(() => {})
+      }
 			await this.notify(id)
 			return
 		}
@@ -2199,6 +2219,11 @@ export class ProposalService {
 	 * waits for notify too). Resolves whether the gateway was told (notify publishes again if not; repair retries).
 	 */
 	private hintCommitted(old: ProposalRoom, room: ProposalRoom): Promise<boolean> | null {
+    if (old.startedAt != null && old.phase !== 'decided' && ((room.phase === 'decided') || room.generation !== old.generation)) {
+      const ended = room.phase === 'decided' ? room : old
+      emitRoundOutcome(ended, room.phase === 'decided' ? 'decision' : 'restart')
+      void this.catalog.roundEnded?.(ended).catch(() => {})
+    }
 		if (JSON.stringify(room.history ?? []) !== JSON.stringify(old.history ?? [])) return null
 		if (room.expiresAt <= this.now()) return Promise.resolve(true)
 		return timed("publish", this.announce(timedSync("publish", () => this.committedEvent(room)))).then(

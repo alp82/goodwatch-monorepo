@@ -77,3 +77,20 @@ These remain **unfinished implementation/operations**, not reasons for the user 
 - **Device/distribution:** Verify actual iOS/Android auth return and invite-install recovery, production HTTPS/cookie/origin/association-file behavior, graceful API/gateway rollout and multi-node Crate durability/failover. Retained local transport success is not this evidence.
 
 No production DDL, registrations, DNS, deployment, commits or pushes form part of this slice.
+
+
+## Proposal picks privacy and measurement
+
+The owner approved aggregate-only `yepwatch_round_outcome` logging on 2026-11-15. The allowlist is ranker version,
+end type, people count and counts by taste source, kinds, number of on ideas, cards dealt, and per dealt position:
+reason code, taste minimum/idea fit/quality bucketed to tenths, Yep/Nope/unanswered counts, matched and moved flags.
+Round totals include matches, first-match position, Start-to-first-match/decision durations and decision boolean.
+There are no room/person/profile/title identifiers, names, idea text, list contents, raw votes or vectors. Deck builds
+log only aggregate medians, reason counts, pool/floor counts, taste share and timings. See `proposal-outcome.ts` for
+the exact allowlist and `PROPOSAL-RUNBOOK.md` for the staged baseline/tuning procedure.
+
+Member taste is a private current-grant-bound copy. Device profile taste plugs into the same calibrated
+`PersonSignal` interface (`proposal-person-signal.ts`); its store, API and follow-ups ship separately. Neither source
+is projected. Seen and hidden exclusions stay private. A profile's own explicit Nopes can feed a bounded 30-day repeat
+penalty; unanswered dealt cards never do. Reasons name only public idea authors. New reasons are capability gated
+because installed app bundles reject unknown Candidate fields.

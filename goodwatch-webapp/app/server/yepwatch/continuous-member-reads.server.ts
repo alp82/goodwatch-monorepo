@@ -75,3 +75,15 @@ export async function goodwatchSeenTitles(userId: string): Promise<string[]> {
  const viewer = await getMemberViewerContext(userId, "US")
  return [...viewer.seen].map(key => { const p = parseTitleKey(key); return `${p.mediaType}_${p.tmdbId}` })
 }
+
+export async function goodwatchMemberTaste(userId: string): Promise<import('./proposal-member-taste.ts').MemberTaste> {
+ const [{ loadTaste }, { getMemberViewerContext }, { createHash }] = await Promise.all([
+   import('../taste/index.server'), import('../viewer.server'), import('node:crypto'),
+ ])
+ const [taste, viewer] = await Promise.all([loadTaste({ kind: 'member', userId }), getMemberViewerContext(userId, 'US')])
+ const vector = taste.vector ? Array.from(taste.vector, v => Math.round(v * 1000) / 1000) : null
+ const wishlist = [...viewer.wishlist].sort((a, b) => b[1].getTime() - a[1].getTime()).slice(0, 500).map(([key]) => key)
+ const hidden = [...viewer.hidden].sort((a, b) => a - b).slice(0, 100000)
+ const version = createHash('sha256').update(JSON.stringify([vector, taste.liked, wishlist, hidden])).digest('base64url')
+ return { vector, liked: taste.liked, version, wishlist, hidden }
+}

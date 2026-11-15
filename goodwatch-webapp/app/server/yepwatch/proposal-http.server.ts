@@ -97,7 +97,9 @@ export function createProposalHandler(
 		}
 		const reply = (data: unknown, status = 200) => {
 			deliverRenewal()
-			return new Response(timedSync("json", () => JSON.stringify(data)), { status, headers })
+			return new Response(timedSync("json", () => JSON.stringify(data, (key, value) => key === 'candidates' && Array.isArray(value) &&
+        !url.pathname.startsWith(`${API_PREFIX}/realtime/internal/`) && url.searchParams.get('candidateReasons') !== '1'
+          ? value.map(({ reason: _, ...card }) => card) : value)), { status, headers })
 		}
 		const cookie = (name: string) =>
 			(request.headers.get("cookie") ?? "")

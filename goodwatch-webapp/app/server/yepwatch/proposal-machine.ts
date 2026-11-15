@@ -1,3 +1,5 @@
+import { recordOutcome } from './proposal-outcome.ts'
+import { RANKER_VERSION } from './proposal-ranker.ts'
 import {
 	redesignTransition,
 	refreshServices,
@@ -173,6 +175,7 @@ function continuousSnapshotCandidate(
 ): Omit<Candidate, "viewingDuration"> {
 	return {
 		...projectCandidate(c),
+		...(c.reason === undefined ? {} : { reason: c.reason == null ? null : { code: c.reason.code, text: c.reason.text } }),
 		...(c.tagline === undefined ? {} : { tagline: c.tagline }),
         ...(c.certification === undefined ? {} : { certification: c.certification }),
         ...(c.scores === undefined ? {} : { scores: c.scores == null ? null : { ...c.scores } }),
@@ -360,7 +363,7 @@ export function proposalTransition(
 	actorId: string,
 	sent: CommandEnvelope,
 	now: number,
-	page?: { candidates: Candidate[]; exhausted: boolean },
+	page?: Awaited<ReturnType<import('./proposal-types.ts').ProposalCatalog['page']>>,
 	interpretationReserved = false
 ): ProposalRoom {
 	const envelope = commute(original, sent)
@@ -612,6 +615,12 @@ export function proposalTransition(
 	for (const departed of original.participants.filter((p) => p.leftAt != null))
 		if (!room.participants.some((p) => p.id === departed.id))
 			room.participants.push(structuredClone(departed))
+	if (c.type === 'start') {
+    room.startedAt = now; room.firstMatchAt = null; room.outcomeEmittedAt = null; room.outcome = []; room.dealtKeys = []; room.rankerVersion = RANKER_VERSION
+    room.tasteSources = page?.tasteSources ?? { member: 0, profile: 0, none: activeRoom(room).participants.length }
+  }
+  if (c.type === 'restart') { room.startedAt = null; room.firstMatchAt = null; room.outcomeEmittedAt = null; room.outcome = []; room.dealtKeys = []; room.tasteSources = null }
+  recordOutcome(room, page, now)
 	reconcile(room, original)
 	// A full deck waits for the others' answers. Once a card can retire, open the stream again so the next
 	// refill makes room; nobody would otherwise ask and every deck would stay empty. Checked after departed
@@ -647,6 +656,7 @@ function retirable(room: ProposalRoom) {
 }
 /** Retain current proposal, matches, each actor's last answer, and anything still unanswered. */
 export function retire(room: ProposalRoom) {
+	recordOutcome(room)
 	const remove = retirable(room)
 	room.candidates = room.candidates.filter((c) => !remove.has(c.id))
 	for (const p of room.participants) for (const id of remove) delete p.votes[id]

@@ -1,3 +1,4 @@
+import { expiredRoundOutcomes } from './proposal-expired-outcomes.ts'
 import { roomSearch } from "./proposal-intent.ts"
 import { releaseMembers } from "./proposal-release-members.ts"
 import type { ContinuousMembers } from "./continuous-members.server.ts"
@@ -112,9 +113,10 @@ export function createReleaseRuntime(
 	if (members && !deps.memberCatalog)
 		throw new Error("Member catalog adapter required")
 	const tickets = deps.tickets
+	const catalog = members ? deps.memberCatalog!(members) : deps.catalog
 	const service = new ProposalService(
 		repository,
-		members ? deps.memberCatalog!(members) : deps.catalog,
+		catalog,
 		config.secret,
 		async (event) => {
 			await deps.bus.publish(REVISION_CHANNEL, revisionMessage(event))
@@ -281,6 +283,7 @@ export function createReleaseRuntime(
 	const cleanup = cleanupRounds(
 		[
 			() => service.deletions.purgeDue(now()),
+      () => expiredRoundOutcomes(deps.sql, repository, now(), catalog.roundEnded),
 			() => quotas.purgeExpired(),
 			async () => {
 				const report = await retention.run()

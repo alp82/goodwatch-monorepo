@@ -8,6 +8,8 @@ import { ContinuousMembers } from "./continuous-members.server.ts"
 import { centralMemberIssuer } from "./continuous-member-issuer.server.ts"
 import {
 	goodwatchMemberPrefill,
+ goodwatchMemberTaste,
+ goodwatchSeenTitles,
 	goodwatchSavedProgress,
 } from "./continuous-member-reads.server.ts"
 import { sharedSavedContinuations } from "./continuous-saved-progress.ts"
@@ -41,7 +43,7 @@ export function configuredContinuousMembers(
 	return new ContinuousMembers(
 		repository,
 		centralMemberIssuer({ ...config, issuerOrigin }),
-		{ prefill: goodwatchMemberPrefill, progress: goodwatchSavedProgress },
+		{ prefill: goodwatchMemberPrefill, taste: goodwatchMemberTaste, seen: goodwatchSeenTitles, progress: goodwatchSavedProgress },
 		{
 			callbackUrl,
 			browserOrigins: origins,

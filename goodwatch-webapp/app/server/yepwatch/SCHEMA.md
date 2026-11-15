@@ -83,3 +83,19 @@ One room-head CAS publishes account membership uniqueness. Account indexes are r
 A final decision adds a typed snapshot and its participant/account entitlements to the same room publication. The existing pending marker remains set until these committed snapshots have been copied idempotently to account history. Repair also projects expired rooms. Restart projects retained history before clearing the round; expired-room cleanup does likewise before removing the head. Unpublished history preparations are never copied. Guest upgrades may add account entitlement to a retained decision without changing its title or participants. Decision history never records GoodWatch watches, Seen or taste.
 
 Account history listing explicitly refreshes the archive index before the account-filtered query, making a just-confirmed choice visible to another device. Existing DQL privileges cover REFRESH ([CrateDB privileges](https://docs.cratedb.com/projects/crate-reference/en/latest/admin/privileges.html)); no runtime DDL privilege is needed.
+
+
+## Picks quality additions (2026-11-15)
+
+`migrations/20261115-picks-quality.sql` adds `yepwatch_candidate.reason` (strict code/text object), plus room
+`started_at`, `first_match_at`, `outcome_emitted_at`, `dealt_keys`, `ranker_version`, `taste_sources` and `outcome`.
+The dealt title-key ledger is private and preserves stable count positions across removal of untouched cards;
+counts in `outcome` contain no person or title identifiers. Its raw base score supports tail reordering and is
+excluded from analytics; logged components are bucketed to tenths. Neither the ledger nor outcomes/timing/source
+counts are projected. The existing room roles own these columns. There is no profile table in this migration;
+items 4/6/13 supply device profile storage separately through `proposal-person-signal.ts`.
+
+Deploy the strict realtime projection and capability gate before/with reasons. Legacy clients receive no reason;
+HTTP opts in with `candidateReasons=1`, realtime authentication with `candidateReasons: true`. The immutable candidate
+reader accepts record hashes predating the nullable column. Run the additive migration explicitly after a snapshot;
+`schema.sql` remains an empty-store installer, never an upgrade script.

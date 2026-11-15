@@ -603,7 +603,7 @@ test("Room prompt is interpreted after the command answers and retained across s
 		(await service.read(id, credential(a))).shared.ideas,
 		interpretedIdeas
 	)
-	assert.equal(interpreted, 1)
+	assert.equal(interpreted, 3, "country and service changes re-read a short reading within the lifetime budget")
 })
 
 test("Dropping out preserves cards and answers; repeated return restores the same identity and host if empty", async () => {

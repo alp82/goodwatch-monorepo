@@ -531,8 +531,10 @@ test("failed interpretations, spend-limit refusals included, consume the budget 
 	assert.deepEqual(s.shared.ideas.map((i) => [i.text, i.attributes]), [["Budget refused", []]])
 	room = (await f.repo.read(f.id))!.room
 	assert.equal(room.interpretationCount, 2)
-	for (let i = 0; i < 7; i++)
-		await f.send({ type: "add_idea", text: `Idea ${i}` })
+	for (let i = 0; i < 7; i++) {
+    const joined = await f.service.join(f.id, { contractVersion: 3, commandId: randomUUID(), admissionSecret: 'y'.repeat(43), nickname: `Person ${i}`, inviteCode: f.a.invite.code })
+    await f.send({ type: 'add_idea', text: `Idea ${i}` }, joined)
+  }
 	await assert.rejects(f.send({ type: "add_idea", text: "Ninth idea" }), {
 		code: "limit_reached"
 	})
@@ -910,8 +912,8 @@ test("settings commute with a friend's change but never apply to a decided room"
 	const f = await fixture()
 	const stale = (await f.service.read(f.id, f.a.credential)).shared
 	await f.send({ type: "set_services", serviceIds: [2] }, f.b)
-	const saved = await f.send({ type: "configure", expectedContextVersion: stale.contextVersion, constraints: { kinds: ["show"], maxMinutes: null, moods: [] } })
-	assert.deepEqual(saved.snapshot.shared.constraints.kinds, ["show"])
+	const saved = await f.send({ type: "configure", expectedContextVersion: stale.contextVersion, constraints: { kinds: ["show_start"], maxMinutes: null, moods: [] } })
+	assert.deepEqual(saved.snapshot.shared.constraints.kinds, ["show_start"])
 	const room = structuredClone(await f.repo.read(f.id))!.room
 	room.phase = "decided"
 	assert.throws(() => command(room, { type: "configure", expectedContextVersion: 0, country: "DE" }), conflict)
