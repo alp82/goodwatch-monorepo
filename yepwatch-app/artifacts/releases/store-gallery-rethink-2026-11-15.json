@@ -375,5 +375,16 @@
     "reviewSubmissionId": "b8d6c674-6000-49b8-95c4-60a367097899",
     "stateAfter": "WAITING_FOR_REVIEW",
     "ownerRequest": "submit it"
+  },
+  "playAlphaRelease": {
+    "date": "2026-11-15",
+    "easBuildId": "86bdb10b-4f77-4426-bd00-5cb5ccfdf2df",
+    "versionCode": 19,
+    "aabSha256Prefix": "45effa5abca7f66c",
+    "track": "alpha",
+    "release": "1.0.0 (19) - couches, completed (replaces 17 and the unfinished 19 draft)",
+    "editId": "04283372588786130977",
+    "ownerRequest": "Do it",
+    "openItem": "Ads declaration still says the app contains ads; change to No in App content > Ads"
   }
 }
