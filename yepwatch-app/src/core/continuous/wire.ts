@@ -1,5 +1,12 @@
 import { z } from 'zod';
-import { REASON_CODES, type ServerRealtimeFrame } from '@goodwatch/yepwatch-contracts/proposal';
+import type { ReasonCode, ServerRealtimeFrame } from '@goodwatch/yepwatch-contracts/proposal';
+
+// The contract's card reason codes, spelled out here so this module stays type-only on the contracts package (the
+// E2E harness loads it in Node, which can't strip types under node_modules). The check below fails to compile when
+// the two lists differ.
+const REASON_CODES = ['fits_everyone', 'close_to_your_taste', 'fits_idea', 'want_to_see', 'on_service_for_everyone', 'short_episodes', 'well_liked', 'popular_now'] as const satisfies readonly ReasonCode[];
+const reasonCodesComplete: Exclude<ReasonCode, typeof REASON_CODES[number]> extends never ? true : never = true;
+void reasonCodesComplete;
 export const invitePreviewSchema = z.object({
   roomId: z.string().regex(/^[A-Za-z0-9_-]{32}$/),
   hostName: z.string().min(1).max(40).nullable(),
