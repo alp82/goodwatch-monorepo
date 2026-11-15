@@ -217,6 +217,13 @@ test("idea authors, host switches, editing, removing, no resets, and unchanged t
 	assert.equal(hostIdea.on, true)
 	assert.equal(friend.on, true)
 	assert.equal(friend.authorId, f.b.credential.participantId)
+	for (const who of [f.a, f.b]) {
+		await assert.rejects(f.send({ type: "add_idea", text: "Another idea" }, who), {
+			code: "limit_reached",
+			message: "One idea each. Edit yours to change it."
+		})
+	}
+	assert.equal((await f.repo.read(f.id))!.room.interpretationCount, 2)
 	await assert.rejects(
 		f.send({ type: "set_idea", ideaId: friend.id, on: true }, f.b),
 		{ code: "forbidden" }
@@ -229,8 +236,12 @@ test("idea authors, host switches, editing, removing, no resets, and unchanged t
 		f.send({ type: "edit_idea", ideaId: friend.id, text: friend.text }, f.b),
 		{ code: "invalid_request" }
 	)
-	await f.send({ type: "set_idea", ideaId: friend.id, on: true })
-	await f.send({ type: "edit_idea", ideaId: friend.id, text: "New idea" }, f.b)
+	await f.send({ type: "set_idea", ideaId: friend.id, on: false })
+	s = (await f.send({ type: "edit_idea", ideaId: friend.id, text: "New idea" }, f.b)).snapshot
+	assert.equal(s.shared.ideas.length, 2)
+	assert.equal(s.shared.ideas[1].id, friend.id)
+	assert.equal(s.shared.ideas[1].on, true)
+	assert.equal((await f.repo.read(f.id))!.room.interpretationCount, 3)
 	await f.send({ type: "remove_idea", ideaId: hostIdea.id })
 	s = (await f.send({ type: "remove_idea", ideaId: friend.id })).snapshot
 	assert.equal(s.shared.generation, generation)
@@ -531,11 +542,21 @@ test("failed interpretations, spend-limit refusals included, consume the budget 
 	assert.deepEqual(s.shared.ideas.map((i) => [i.text, i.attributes]), [["Budget refused", []]])
 	room = (await f.repo.read(f.id))!.room
 	assert.equal(room.interpretationCount, 2)
-	for (let i = 0; i < 7; i++)
-		await f.send({ type: "add_idea", text: `Idea ${i}` })
-	await assert.rejects(f.send({ type: "add_idea", text: "Ninth idea" }), {
-		code: "limit_reached"
-	})
+	for (let i = 0; i < 8; i++) {
+		const friend = await f.service.join(f.id, {
+			contractVersion: 3,
+			commandId: randomUUID(),
+			admissionSecret: "a".repeat(43),
+			nickname: `Friend ${i}`,
+			inviteCode: f.a.invite.code
+		})
+		if (i < 7) await f.send({ type: "add_idea", text: `Idea ${i}` }, friend)
+		else await assert.rejects(f.send({ type: "add_idea", text: "Ninth idea" }, friend), {
+			code: "limit_reached"
+		})
+	}
+	assert.equal((await f.repo.read(f.id))!.room.ideas!.length, 8)
+	assert.equal((await f.repo.read(f.id))!.room.interpretationCount, 9)
 	assert.equal(f.searches(), 7)
 })
 

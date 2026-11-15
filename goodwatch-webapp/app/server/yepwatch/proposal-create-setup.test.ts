@@ -310,10 +310,15 @@ test("a spend-limit refusal keeps its slot spent and ends the idea uninterpreted
 	const send = sender(f.service, id, a.credential)
 	room = await stored(f.repo, id)
 	await f.repo.compareAndSwap((await f.repo.read(id))!, { ...structuredClone(room), interpretationCount: 23, revision: room.revision + 1 }, false)
-	await send({ type: "add_idea", text: "the last one" })
+	const ideaId = room.ideas![0].id
+	await assert.rejects(send({ type: "add_idea", text: "duplicate" }), {
+		code: "limit_reached", message: "One idea each. Edit yours to change it."
+	})
+	assert.equal((await stored(f.repo, id)).interpretationCount, 23)
+	await send({ type: "edit_idea", ideaId, text: "the last one" })
 	await f.service.interpretationsIdle()
 	assert.equal((await stored(f.repo, id)).interpretationCount, 24)
-	await assert.rejects(send({ type: "add_idea", text: "one too many" }), { code: "limit_reached" })
+	await assert.rejects(send({ type: "edit_idea", ideaId, text: "one too many" }), { code: "limit_reached" })
 })
 
 test("a crashed instance's interpretation is taken over by any instance that reads the room after its lease", async () => {
@@ -658,8 +663,12 @@ test("eight stale pending ideas in one room under overload: one retry cycle, que
 	f.hold() // the first process hangs on every search it starts
 	const a = await f.service.create(f.request({ country: "DE", idea: "idea 0" }))
 	const id = a.credential.roomId
-	const send = sender(f.service, id, a.credential)
-	for (let i = 1; i < 8; i++) await send({ type: "add_idea", text: `idea ${i}` })
+	for (let i = 1; i < 8; i++) {
+		const friend = await f.service.join(id, {
+			...f.request(), nickname: `Friend ${i}`, inviteCode: a.invite.code
+		})
+		await sender(f.service, id, friend.credential)({ type: "add_idea", text: `idea ${i}` })
+	}
 	const hung = f.searches()
 	f.hold()()
 	f.state.search = "busy"

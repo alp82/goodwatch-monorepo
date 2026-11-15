@@ -1,0 +1,64 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { stubModules } from '../rating-onboarding.test-support.ts'
+import { rankingSnapshot, rankingRoom } from './proposal-ranking-test-support.ts'
+import type { CatalogReads } from './catalog-adapter.ts'
+import type { RoomTasteSource, PersonalSignals } from './proposal-person-signal.ts'
+import type { ContinuousMembers } from './continuous-members.server.ts'
+const snapshot = rankingSnapshot(Array.from({ length: 30 }, (_, i) => ({ key: 1e12 + i + 1, score: i === 3 ? 95 : 80, fp: [10, 0] })), 'catalog-fixture')
+const globals = globalThis as typeof globalThis & { picksSnapshot: typeof snapshot; picksReads: CatalogReads; picksMetadata: () => Promise<unknown> }
+globals.picksSnapshot = snapshot
+globals.picksReads = {
+  rankedKeys: async () => Array.from(snapshot.columns.pointIds),
+  displays: async keys => new Map(keys.map(key => [key, { key, tmdbId: key % 1e12, mediaType: 'movie' as const, title: 'Fixture', year: 2020, overview: null, posterUrl: null, runtimeMinutes: 90, goodwatchScore: 80 }])),
+  availability: async (titles, screens) => new Map(titles.map(t => [t.key, screens.map(s => ({ screenId: s.id, state: 'watchable' as const, scope: 'title' as const, checkedAt: 1,
+    offers: [{ serviceId: 1, name: 'Service one', url: null, kind: 'where_to_watch' as const, offerType: 'flatrate' as const }] }))])),
+  episodes: async () => [],
+}
+globals.picksMetadata = async () => ({ countries: [{ code: 'DE', name: 'Germany' }], services: [{ id: 1, name: 'Service one', logoUrl: null }, { id: 2, name: 'Service two', logoUrl: null }], moods: [] })
+stubModules({
+  './goodwatch.server.ts': 'export const goodwatchReads=globalThis.picksReads;export const goodwatchCatalog={metadata:globalThis.picksMetadata}',
+  '../title-snapshot/index.server': 'export const getTitleSnapshot=()=>globalThis.picksSnapshot',
+  '~/server/availability-index.server': `export const countryServices=()=>({services:[1,2],offsets:new Uint32Array(Array.from({length:31},(_,i)=>i*2)),entries:new Uint16Array(Array.from({length:60},(_,i)=>i%2)),rowOf:key=>key%1e12-1,indexOfService:id=>id-1})`,
+  './continuous-presentation.server.ts': 'export const enrichContinuousCandidates=async cards=>cards;export const warmEnrichment=()=>{}',
+})
+const { guestProposalCatalog } = await import('./proposal-guest-catalog.server.ts')
+const none = (): PersonalSignals => ({ revision: '1', taste: null, seen: new Set(), hidden: new Set(), wishlist: new Set(), nopes: new Map() })
+test('release catalog uses member wishlist, profile/hidden exclusions and shared-service intersections, without reading taste at Start', async () => {
+  const room = rankingRoom(); room.phase = 'setup'; room.participants[0].member = { state: 'linked', prefill: null }; room.participants[0].serviceIds = [1, 2]; room.screens[0].serviceIds = [1, 2]
+  room.participants.push(...['b', 'c'].map((id, i) => ({ ...structuredClone(room.participants[0]), id, serviceIds: i ? null : [2] })))
+  const member = none(); member.wishlist = new Set([1e12 + 10]); member.hidden = new Set([1e12 + 2])
+  const profile = none(); profile.seen = new Set([1e12 + 3]); profile.wishlist = new Set([1e12 + 4])
+  profile.nopes = new Map([[1e12 + 4, Date.now()], [1e12 + 10, Date.now() - 31 * 86400000]])
+  const profiles: RoomTasteSource = { prepare: async () => {}, stored: () => profile }
+  const members = { seenOrNone: async () => ['movie_1'], seenStored: async () => ['movie_1'], tasteStored: () => member, refreshSeen() {},
+    refreshTaste() { throw Error('a build must use the cached taste') } } as unknown as ContinuousMembers
+  const catalog = guestProposalCatalog(members, profiles), page = await catalog.page(room)
+  for (const id of [1, 2, 3]) assert.equal(page.candidates.some(c => c.identity.tmdbId === id), false)
+  assert.equal(page.candidates.find(c => c.identity.tmdbId === 10)?.reason?.code, 'want_to_see')
+  assert.equal(page.candidates.find(c => c.identity.tmdbId === 4)?.reason?.code, 'on_service_for_everyone', 'profile wishlists never produce a Want to See boost')
+  assert.equal(page.candidates.find(c => c.identity.tmdbId === 4)?.reason?.text, 'On Service two for everyone')
+  assert.equal(Object.values(page.ranking!).find(r => r.key === 1e12 + 4)?.parts.repeat, -.1)
+  assert.equal(Object.values(page.ranking!).find(r => r.key === 1e12 + 10)?.parts.repeat, 0, 'Nopes older than 30 days do not penalize a card')
+  room.participants[1].serviceIds = [1]; room.participants[0].serviceIds = [2]
+  const mixed = await catalog.page(room)
+  assert.equal(mixed.candidates.some(c => c.reason?.code === 'on_service_for_everyone'), false)
+  room.participants = room.participants.slice(0, 2)
+  assert.notEqual((await catalog.page(room)).candidates.find(c => c.identity.tmdbId === 10)?.reason?.code, 'want_to_see')
+})
+test('a taste that lands after a setup change rebuilds the prepared deck once; an unchanged one does not', async () => {
+  const room = rankingRoom(); room.phase = 'setup'; room.participants[0].member = { state: 'linked', prefill: null }
+  let member: PersonalSignals | null = null, profile: PersonalSignals | null = null, landing: PersonalSignals | null = { ...none(), revision: 'member-1' }
+  const members = { refreshSeen() {}, tasteStored: () => member, refreshTaste: async () => (member = landing ?? member) } as unknown as ContinuousMembers
+  const profiles: RoomTasteSource = { prepare: async () => { profile = { ...none(), revision: 'profile-1' } }, stored: () => profile }
+  const catalog = guestProposalCatalog(members, profiles), changed: string[] = []
+  catalog.onInputsChanged!(id => changed.push(id))
+  const settle = () => new Promise(resolve => setTimeout(resolve, 5))
+  const before = catalog.inputRevision!(room)
+  catalog.refreshExcludedKeys!(room); await settle()
+  assert.deepEqual(changed, [room.id])
+  assert.notEqual(catalog.inputRevision!(room), before, 'both tastes are part of the deck identity')
+  landing = null
+  catalog.refreshExcludedKeys!(room); await settle()
+  assert.deepEqual(changed, [room.id], 'the same tastes again: nothing to rebuild')
+})

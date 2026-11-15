@@ -42,7 +42,6 @@ export interface HttpOptions {
 	allowedOrigins: string[]
 	secureCookies?: boolean
 	members?: ContinuousMembers
-  profileBudget?: import("./proposal-command-budget.ts").CommandBudget
 	/** Draws the room invite link-preview card; defaults to the child process renderer. */
 	inviteCard?: (hostName: string | null) => Promise<Uint8Array>
 }
@@ -100,7 +99,9 @@ export function createProposalHandler(
 		}
 		const reply = (data: unknown, status = 200) => {
 			deliverRenewal()
-			return new Response(timedSync("json", () => JSON.stringify(data)), { status, headers })
+			return new Response(timedSync("json", () => JSON.stringify(data, (key, value) => key === 'candidates' && Array.isArray(value) &&
+        !url.pathname.startsWith(`${API_PREFIX}/realtime/internal/`) && url.searchParams.get('candidateReasons') !== '1'
+          ? value.map(({ reason: _, ...card }) => card) : value)), { status, headers })
 		}
 		const cookie = (name: string) =>
 			(request.headers.get("cookie") ?? "")
@@ -308,8 +309,9 @@ export function createProposalHandler(
       const profileSecret = request.headers.get(PROFILE_HEADER)
       if (profileSecret && service.profiles) {
         const scoped = { participantId: c.participantId, token: c.token, ...(a ? { accountId: a.userId, sessionId: a.sessionId } : {}) }
-        await service.bindProfile(c.roomId, scoped, service.profiles.identity(profileSecret))
-        admission.snapshot = await service.read(c.roomId, scoped)
+        // Profile work runs after admission; neither a cold catalog nor a slow store delays the response.
+        const profileId = service.profiles.identity(profileSecret)
+        void service.bindProfile(c.roomId, scoped, profileId).catch(() => {})
       }
       if (request.headers.get('x-yepwatch-client') !== 'native') {
         setCookie(`yepwatch3_${c.roomId}`, `${c.participantId}.${c.token}`, Math.floor((c.expiresAt - Date.now()) / 1000))
@@ -370,9 +372,7 @@ export function createProposalHandler(
         const profiles = service.profiles
         if (!profiles) throw new RoomError("not_implemented", "Taste profiles are not configured", 501)
         const id = profiles.identity(request.headers.get(PROFILE_HEADER))
-        // Caddy overwrites X-Forwarded-For for untrusted clients; use its final hop. Never retain the raw address.
-        const address = request.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim() ?? "direct"
-        await options.profileBudget?.charge(random(), keyed(options.serviceSecret, "profile-ip", address), { commands: 600, actorCommands: 120 })
+        // Reads are uncharged. answers() enforces its durable per-profile write window, independent of rooms/IPs.
         if (request.method === "GET" && url.pathname === paths.profile) return reply(await profiles.summary(id))
         if (request.method === "GET" && url.pathname === paths.profileTasteDeck) return reply(await profiles.deck(id, Number(url.searchParams.get("count") ?? 10)))
         if (request.method === "POST" && url.pathname === paths.profileAnswers) return reply(await profiles.answers(id, parse(profileAnswersSchema, await body(request))))
@@ -652,8 +652,6 @@ export function createProposalHandler(
 				if (request.method === "POST" && operation === "preview")
 					return reply(await service.preview(id, actor, parse(proposalPreviewSchema, await body(request))))
 				if (request.method === "GET" && !operation) {
-          const profileSecret = request.headers.get(PROFILE_HEADER)
-          if (profileSecret && service.profiles) await service.bindProfile(id, actor, service.profiles.identity(profileSecret))
 					let snapshot = await service.read(id, actor)
 					if (options.members) {
 						const member = await options.members.status(id, snapshot.own.participantId)

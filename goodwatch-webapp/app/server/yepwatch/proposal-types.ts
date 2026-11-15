@@ -64,6 +64,14 @@ export interface ProposalParticipant extends ContinuousParticipant {
 	agreementRevision: number
 }
 export interface ProposalRoom extends ContinuousRoom {
+	startedAt?: number | null
+	firstMatchAt?: number | null
+	outcomeEmittedAt?: number | null
+	/** Stable dealt positions even when setup changes retire untouched cards and release seenKeys. Private. */
+	dealtKeys?: string[]
+	outcome?: import('./proposal-outcome.ts').CardOutcome[]
+	rankerVersion?: string | null
+	tasteSources?: { member: number; profile: number; none: number } | null
 	history?: HistoricalDecision[]
 	intent?:
 		| (RoomDescription & { rankedKeys: number[]; interpretedAt: number })
@@ -125,10 +133,21 @@ export interface ExcludedKeysOptions {
 	readMissing?: boolean
 }
 export interface ProposalCatalog {
+	/** Private build metadata, persisted on the room's aggregate outcome, never on Candidate/wire. */
+	inputRevision?(room: ProposalRoom): string
+	/**
+	 * Registers who hears that a room's private deck inputs (inputRevision) changed without a room write: a member's
+	 * taste read landed, a profile's taste was built. The service rebuilds the room's prepared deck then.
+	 */
+	onInputsChanged?(listener: (roomId: string) => void): void
+	ideaReadingSize?(room: ProposalRoom, keys: readonly number[]): number
+	reorderTail?(room: ProposalRoom): void
+	roundEnded?(room: ProposalRoom): Promise<void>
+	voteCommitted?(room: ProposalRoom, participantId: string, candidateId: string, value: 'watch' | 'pass' | null, at: number): Promise<void>
 	metadata: import("./continuous-types.ts").ContinuousCatalog["metadata"]
 	page(
 		room: ProposalRoom
-	): Promise<{ candidates: Candidate[]; exhausted: boolean }>
+	): Promise<{ candidates: Candidate[]; exhausted: boolean; inputRevision?: string; ranking?: Record<string, import('./proposal-ranker.ts').Ranked>; tasteSources?: { member: number; profile: number; none: number }; diagnostics?: import('./proposal-outcome.ts').DeckDiagnostics }>
 	/** Title keys the room's linked members have seen (and don't want shown). */
 	excludedKeys?(room: ProposalRoom, options?: ExcludedKeysOptions): Promise<string[]>
 	/** A room in setup changed: read members' seen lists again in the background, so Start finds recent copies. */

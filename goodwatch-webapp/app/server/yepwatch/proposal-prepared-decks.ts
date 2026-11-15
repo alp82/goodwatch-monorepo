@@ -1,3 +1,5 @@
+import { feedbackDigest } from './proposal-feedback.ts'
+import { deckBuildDiagnostics } from './proposal-outcome.ts'
 import { createHash } from "node:crypto"
 import { activeRoom } from "./proposal-context.ts"
 import type { ProposalCatalog, ProposalRoom } from "./proposal-types.ts"
@@ -16,9 +18,9 @@ interface Entry {
 }
 
 // What a participant or the room carries that a catalog page never reads: commands, sessions, sockets, answers and
-// names change these all the time during setup, and must not make a prepared deck look out of date.
+// names change these all the time during setup. Only public idea author names affect card reasons.
 // The roster and context versions count changes, not what changed: who is in the room and its screens are inputs below.
-const ROOM_NOISE = ["revision", "tickets", "stream", "agreement", "interpretationCount", "history", "memberIntents", "expiresAt", "inviteHash", "hostId", "proposal", "proposalVersion", "decision", "intent", "rosterVersion", "contextVersion"] as const
+const ROOM_NOISE = ["revision", "tickets", "stream", "agreement", "interpretationCount", "history", "memberIntents", "expiresAt", "inviteHash", "hostId", "proposal", "proposalVersion", "decision", "intent", "rosterVersion", "contextVersion", "startedAt", "firstMatchAt", "outcomeEmittedAt", "dealtKeys", "outcome", "rankerVersion", "tasteSources"] as const
 const PARTICIPANT_NOISE = ["nickname", "sessions", "receipts", "nextSequence", "epoch", "ready", "tokenHash", "admissionHash", "joinedAt", "archivedAt", "leftLabel", "pick", "agreementRevision", "approvedProposalVersion", "lastVotedId", "memberGrant"] as const
 
 /**
@@ -27,10 +29,9 @@ const PARTICIPANT_NOISE = ["nickname", "sessions", "receipts", "nextSequence", "
  * with the same digest get the same first page. It leaves out only what a page never reads (ROOM_NOISE,
  * PARTICIPANT_NOISE), so anything new on a room counts as an input until it's listed there.
  *
- * Guests count only by the screens they watch on: a page reads a participant's screen (whose country and services
- * are the room's) and, for a linked member, their seen titles and saved progress. So a friend joining as a guest, or
- * picking services the room already has, leaves the deck prepared before they came up to date. Their own service
- * picks reach the page through the room's screen, which is an input.
+ * People count and individual service sets affect shared reasons and availability. Public idea author names
+ * affect the reason text. Guests without profiles otherwise count by screen; members and profile participants
+ * carry personal inputs, and the catalog appends the private cached taste revision (no read during Start).
  */
 export function deckInputs(room: ProposalRoom): string {
 	return digest(room, false)
@@ -53,11 +54,11 @@ export function deckBase(room: ProposalRoom): string {
  * titles (`seenKeys`, which only a new page changes), and it was built for at least as many cards as the room has (a
  * vote only ever retires cards), so it is never longer than a page built now would be.
  */
-export function refillInputs(room: ProposalRoom): string {
+export function refillInputs(room: ProposalRoom, personalRevision = ''): string {
 	const shape = structuredClone(room)
 	shape.candidates = []
 	for (const p of shape.participants) p.votes = {}
-	return digest(shape, false)
+	return createHash("sha256").update(digest(shape, false)).update(personalRevision).update(JSON.stringify(feedbackDigest(room))).digest("base64url")
 }
 
 function digest(room: ProposalRoom, membersAsGuests: boolean): string {
@@ -66,10 +67,13 @@ function digest(room: ProposalRoom, membersAsGuests: boolean): string {
 	const shape: Record<string, unknown> = { ...active }
 	for (const key of ROOM_NOISE) delete shape[key]
 	const present = room.participants.filter((p) => p.leftAt == null)
+	// Aggregate people/services affect reasons. Identity is needed only for a member or a device profile.
+	shape.peopleCount = present.length
+	shape.personalServices = present.map(p => [...(p.serviceIds ?? [])].sort((a,b) => a-b)).sort((a,b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))
+	shape.ideaNames = (room.ideas ?? []).filter(i => i.on).map(i => present.find(p => p.id === i.authorId)?.nickname ?? "Someone")
   // Even the seen-read fallback must retain profile taste: a stale taste deck cannot be repaired by seen filtering.
   if (present.some(p => p.profileId)) shape.profileInputs = present.filter(p => p.profileId)
     .map(p => [p.profileId, p.tasteRevision ?? 0]).sort((a, b) => String(a[0]).localeCompare(String(b[0])))
-	// How many guests watch on a screen, or who they are, never changes a page: only which screens they watch on.
 	shape.guestScreens = [...new Set(present.filter(guest).map((p) => String(p.screenId)))].sort()
 	shape.participants = present
 		.filter((p) => !guest(p))
@@ -83,7 +87,7 @@ function digest(room: ProposalRoom, membersAsGuests: boolean): string {
 	return createHash("sha256").update(stable(shape)).digest("base64url")
 }
 
-/** Nothing of theirs but their screen reaches a page: no member link, grant or account. */
+/** No personal taste or progress to read; aggregate people/services still affect the deck. */
 const isGuest = (p: ProposalRoom["participants"][number]) =>
 	!p.profileId && p.member?.state !== "linked" && !p.memberUserId && !p.memberGrant
 
@@ -173,7 +177,7 @@ export class PreparedDecks {
 	async page(room: ProposalRoom, options: { seenReadFresh?: boolean } = {}): Promise<Page> {
 		// Saved progress moves on without changing the room (an episode watched elsewhere): never remembered or reused.
 		if (activeRoom(room).constraints.kinds.includes("show_continue")) return measuredPage(this.catalog, room, "inline")
-		const inputs = deckInputs(room)
+		const inputs = this.inputs(room)
 		const entry = this.entries.get(room.id)
 		const current = entry && entry.inputs === inputs && this.now() - entry.builtAt < this.maxAgeMs ? entry : null
 		const settled = this.settled.get(room.id)
@@ -183,7 +187,7 @@ export class PreparedDecks {
 			options.seenReadFresh &&
 			settled &&
 			settled !== current &&
-			settled.base === deckBase(room) &&
+			settled.base === deckBase(room) + (this.catalog.inputRevision?.(room) ?? '') &&
 			this.now() - settled.builtAt < this.maxAgeMs
 		)
 			return structuredClone(await settled.page)
@@ -199,7 +203,7 @@ export class PreparedDecks {
 	/** Whether a prepared deck (built or building) matches the room as it is now. For tests and logs. */
 	prepared(room: ProposalRoom) {
 		const entry = this.entries.get(room.id)
-		return !!entry && entry.inputs === deckInputs(room) && this.now() - entry.builtAt < this.maxAgeMs
+		return !!entry && entry.inputs === this.inputs(room) && this.now() - entry.builtAt < this.maxAgeMs
 	}
 	/** Resolves once no deck is waiting or building. For tests. */
 	async idle(): Promise<void> {
@@ -211,14 +215,20 @@ export class PreparedDecks {
 		clearTimeout(this.timers.get(roomId))
 		this.timers.delete(roomId)
 	}
+	private inputs(room: ProposalRoom) { return deckInputs(room) + (this.catalog.inputRevision?.(room) ?? '') }
 	private build(room: ProposalRoom, inputs: string, kind: "inline" | "prepare"): Promise<Page> {
 		const page = measuredPage(this.catalog, room, kind)
-		const entry: Entry = { inputs, base: deckBase(room), page, builtAt: this.now() }
+		const entry: Entry = { inputs, base: deckBase(room) + (this.catalog.inputRevision?.(room) ?? ''), page, builtAt: this.now() }
 		this.entries.delete(room.id)
 		this.entries.set(room.id, entry)
 		while (this.entries.size > this.maxRooms) this.entries.delete(this.entries.keys().next().value!)
 		page.then(
-			() => {
+			(result) => {
+        // A first profile read can populate its cache during this build. Remember the revision actually ranked.
+        if (result.inputRevision !== undefined) {
+          entry.inputs = deckInputs(room) + result.inputRevision
+          entry.base = deckBase(room) + result.inputRevision
+        }
 				// A slower, older build never replaces a newer one that finished first.
 				if ((this.settled.get(room.id)?.builtAt ?? -Infinity) > entry.builtAt) return
 				this.settled.delete(room.id)
@@ -258,18 +268,19 @@ export class PreparedDecks {
 			return
 		}
 		if (!ready(room) || this.prepared(room)) return
-		const inputs = deckInputs(room)
+		const inputs = this.inputs(room)
 		const page = await this.build(room, inputs, "prepare").catch(() => null)
 		// Only the room's latest deck: one a newer setup change replaced would only leave rows behind.
-		if (page && this.store && this.entries.get(roomId)?.inputs === inputs) await this.store(room, page).catch(() => {})
+		if (page && this.store && this.entries.get(roomId)?.inputs === deckInputs(room) + (page.inputRevision ?? this.catalog.inputRevision?.(room) ?? '')) await this.store(room, page).catch(() => {})
 	}
 }
 
 /** A catalog page for the room under its own marks; every build is logged with where its time went. */
 function measuredPage(catalog: ProposalCatalog, room: ProposalRoom, kind: "inline" | "prepare"): Promise<Page> {
-	return measured(() => catalog.page(structuredClone(activeRoom(room))), (marks, totalMs) => {
+	let diagnostics: Record<string, unknown> = {}
+	return measured(async () => { const page = await catalog.page(structuredClone(activeRoom(room))); diagnostics = deckBuildDiagnostics(page.diagnostics); return page }, (marks, totalMs) => {
 		const event = totalMs >= SLOW_BUILD_MS ? "yepwatch_deck_slow" : "yepwatch_deck_build"
-		console.info(JSON.stringify({ event, kind, totalMs, marks, uptimeMs: Math.round(process.uptime() * 1000) }))
+		console.info(JSON.stringify({ event, kind, totalMs, marks, ...diagnostics, uptimeMs: Math.round(process.uptime() * 1000) }))
 	})
 }
 

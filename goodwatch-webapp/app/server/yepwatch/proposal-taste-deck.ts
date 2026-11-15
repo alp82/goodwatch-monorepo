@@ -13,6 +13,57 @@ export interface TasteCluster {
 	votes: number
 }
 const cache = new WeakMap<TitleSnapshot, Promise<TasteCluster[]>>()
+const ready = new WeakMap<TitleSnapshot, TasteCluster[]>()
+const fallbacks = new WeakMap<TitleSnapshot, TasteCluster[]>()
+/** Never waits for k-means: the first request for a snapshot starts it and gets the fallback until it is built. */
+export function readyTasteClusters(snapshot: TitleSnapshot): TasteCluster[] {
+	void tasteClusters(snapshot).catch(() => {})
+	const built = ready.get(snapshot)
+	if (built) return built
+	const cached = fallbacks.get(snapshot)
+	if (cached) return cached
+	const buckets = new Map<string, Entry[]>()
+	for (let row = 0; row < snapshot.count; row++) {
+		const f = snapshot.factsAt(row)
+		if (f.adult || !f.hasPoster || f.score === null || f.votes < 1000) continue
+		const movie = f.mediaType === "movie"
+		const decade = f.releaseDay === null
+			? 0
+			: Math.floor(new Date(f.releaseDay * 86400000).getUTCFullYear() / 10)
+		const bucket = `${movie}:${f.genres[0] ?? "unknown"}:${decade}`
+		const titles = buckets.get(bucket) ?? []
+		titles.push({
+			key: (movie ? 1e12 : 2e12) + f.tmdbId,
+			movie,
+			votes: f.votes,
+			likely: Math.log(f.votes),
+			unit: new Float32Array(),
+		})
+		buckets.set(bucket, titles)
+	}
+	const groups = [...buckets.values()]
+	for (const titles of groups) titles.sort((a, b) => b.votes - a.votes || a.key - b.key)
+	groups.sort((a, b) => b[0].votes - a[0].votes || a[0].key - b[0].key)
+	const clusters: TasteCluster[] = Array.from({ length: 10 }, (_, id) => ({
+		id, titles: [], votes: 0,
+	}))
+	// Spread the most popular title from each genre/decade/type before repeating a bucket.
+	let index = 0
+	let active = groups
+	for (let depth = 0; active.length; depth++) {
+		active = active.filter(group => group.length > depth)
+		for (const group of active) {
+			const entry = group[depth]
+			if (!entry) continue
+			const cluster = clusters[index++ % clusters.length]
+			cluster.titles.push(entry)
+			cluster.votes += entry.votes
+		}
+	}
+	const result = clusters.filter((c) => c.titles.length)
+	fallbacks.set(snapshot, result)
+	return result
+}
 const dot = (a: Float32Array, b: Float32Array) =>
 	a.reduce((s, v, k) => s + v * b[k], 0)
 const unit = (v: Float32Array) => {
@@ -26,12 +77,16 @@ export function tasteClusters(
 ): Promise<TasteCluster[]> {
 	let pending = cache.get(snapshot)
 	if (pending) return pending
-	pending = build(snapshot)
+	pending = build(snapshot).then((clusters) => {
+		ready.set(snapshot, clusters)
+		return clusters
+	})
 	cache.set(snapshot, pending)
 	pending.catch(() => cache.delete(snapshot))
 	return pending
 }
 async function build(snapshot: TitleSnapshot): Promise<TasteCluster[]> {
+	await yieldSlice()
 	const entries: Entry[] = []
 	const year = new Date(snapshot.builtAt).getUTCFullYear()
 	for (let row = 0; row < snapshot.count; row++) {

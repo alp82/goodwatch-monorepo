@@ -1,3 +1,4 @@
+import { memberTasteSchema } from './proposal-member-taste.ts'
 import type {
   MemberPrefill,
   MemberProgressResponse,
@@ -6,6 +7,7 @@ import { fillWebFetchGaps } from "../web-fetch-gaps.server.ts";
 
 export const MEMBER_RESOURCE_PATH = "/api/yepwatch/account";
 export interface MemberResourceReads {
+  taste?(userId: string): Promise<import('./proposal-member-taste.ts').MemberTaste>;
   verify(token: string): Promise<{ userId: string; expiresAt: number }>;
   seen?(userId: string): Promise<string[]>;
   displayName?(userId: string): Promise<string | null>;
@@ -30,7 +32,7 @@ export function createMemberResource(reads: MemberResourceReads) {
     const url = new URL(request.url);
     const view = url.searchParams.get("view") ?? "identity";
     if (
-      !["identity", "prefill", "progress", "seen"].includes(view) ||
+      !["identity", "prefill", "progress", "seen", "taste"].includes(view) ||
       [...url.searchParams.keys()].some((k) => k !== "view") ||
       url.searchParams.getAll("view").length > 1
     )
@@ -51,7 +53,9 @@ export function createMemberResource(reads: MemberResourceReads) {
     }
     try {
       const data =
-        view === "prefill"
+        view === "taste"
+          ? memberTasteSchema.parse(await reads.taste?.(identity.userId))
+          : view === "prefill"
           ? await reads.prefill(identity.userId)
           : view === "progress"
           ? await reads.progress(identity.userId)

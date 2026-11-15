@@ -2,12 +2,22 @@ import type { CommandEnvelope } from "../../../packages/yepwatch-contracts/propo
 import type { ProposalRoom } from "./proposal-types.ts"
 import { requireRoom } from "./errors.ts"
 import { ROOM_CONTEXT } from "./proposal-context.ts"
+import { ideaPending } from '../../../packages/yepwatch-contracts/proposal.ts'
 
 export const titleKey = (c: ProposalRoom["candidates"][number]) =>
 	`${c.identity.kind === "movie" ? "movie" : "show"}_${c.identity.tmdbId}`
 export const rankedKey = (c: { identity: { kind: string; tmdbId: number } }) =>
 	(c.identity.kind === "movie" ? 1_000_000_000_000 : 2_000_000_000_000) +
 	c.identity.tmdbId
+/** Readings a service change may never spend: one new or changed idea for each of the eight people stays possible. */
+export const REREAD_RESERVE = 8
+/**
+ * A service change spends the room's lifetime allowance of 24 readings, but only down to REREAD_RESERVE: switching
+ * services back and forth must not leave the room unable to read a new idea.
+ */
+export function ideasForServiceReread(room: ProposalRoom, count = (keys: readonly number[]) => keys.length) {
+  return (room.ideas ?? []).filter(i => !ideaPending(i) && count(i.rankedKeys) < 100).slice(0, Math.max(0, 24 - REREAD_RESERVE - (room.interpretationCount ?? 0)))
+}
 export const redesignCommands = new Set([
 	"add_idea",
 	"edit_idea",
@@ -95,7 +105,7 @@ export function redesignTransition(
 	if (c.type === "rename") p.nickname = c.nickname
 	else if (c.type === "set_show_seen") {
 		requireRoom(
-			p.member.state === "linked",
+			p.member.state === "linked" || !!p.profileId,
 			"member_required",
 			"Connect GoodWatch first",
 			403
@@ -124,6 +134,11 @@ export function redesignTransition(
 		}
 		if (c.constraints) room.constraints = structuredClone(c.constraints)
 	} else if (c.type === "add_idea") {
+		requireRoom(
+			!room.ideas.some((idea) => idea.authorId === actorId),
+			"limit_reached",
+			"One idea each. Edit yours to change it."
+		)
 		requireRoom(room.ideas.length < 8, "limit_reached", "At most eight ideas")
 		requireRoom(
 			interpretationReserved || (room.interpretationCount ?? 0) < 24,
@@ -194,7 +209,9 @@ export function redesignTransition(
 					return false
 				})
 				room.seenKeys = room.seenKeys.filter((key) => !replaced.has(key))
+				idea.on = true
 				idea.text = c.text
+				idea.on = true
 				idea.rankedKeys = []
 				idea.attributes = []
 				idea.interpretedAt = now

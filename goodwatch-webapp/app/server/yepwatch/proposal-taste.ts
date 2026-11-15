@@ -25,11 +25,11 @@ export function profileTaste(
 		.map((a) => ({ key: a.key, score: a.answer === "loved" ? 9 : 3, at: a.at }))
 	const loved = ratings.filter((r) => r.score === 9).length
 	const notForMe = ratings.length - loved
-	// The explicit negative-only case in rethink-picks steers away with -N; empty/unseen-only stays neutral.
+	// With no usable loved fingerprints, steer away with -N; empty/unseen-only stays neutral.
 	let { vector, liked } = tasteVectorFrom(
 		snapshot,
 		{ ratings, wantToSee: [] },
-		{ minLiked: loved ? 1 : 0 }
+		{ minLiked: 0 }
 	)
 	if (member) {
 		const weight = ratings.length / (ratings.length + 20)
@@ -40,10 +40,13 @@ export function profileTaste(
 		const norm = Math.hypot(...blended)
 		vector = norm ? blended.map((v) => v / norm) : null
 	}
+	const own = Math.min(1, (loved + 0.5 * notForMe) / 8)
 	return {
 		vector,
 		liked,
-		confidence: member ? 1 : Math.min(1, (loved + 0.5 * notForMe) / 8),
+		/** What the YepWatch answers alone are worth, whoever's vector they are blended into. */
+		own,
+		confidence: member ? 1 : own,
 		quantiles: vector
 			? quantileTable(poolCosines(tastePool(snapshot), vector))
 			: null,

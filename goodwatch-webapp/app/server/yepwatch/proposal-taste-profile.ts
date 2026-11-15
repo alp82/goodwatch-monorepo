@@ -10,7 +10,7 @@ import { z } from "zod"
 import type { Sql } from "./repository.server.ts"
 import { RoomError } from "./errors.ts"
 import { profileTaste, type Answer } from "./proposal-taste.ts"
-import { calibrationKeys, tasteClusters } from "./proposal-taste-deck.ts"
+import { calibrationKeys, readyTasteClusters } from "./proposal-taste-deck.ts"
 import type { TitleSnapshot } from "../title-snapshot/snapshot.server.ts"
 import type {
 	ProfileAnswersRequest,
@@ -87,11 +87,24 @@ export class SqlProfileStore implements ProfileStore {
 	}
 	async read(ids: string[]) {
 		if (!ids.length) return []
-		const result = await this.sql(
-			`SELECT id,answers,followups,dealt,revision,updated_at,expires_at,write_window,write_count,created_at,_seq_no,_primary_term FROM ${TABLE} WHERE id=ANY(?)`,
-			[ids]
-		)
-		return result.rows.map((r) => ({
+		// OR of key equalities, not ANY or IN: Crate plans this as a real-time primary-key Get. A search only sees a
+		// row after the next refresh (up to a second), so an answer right after another would read the profile as it
+		// was, fail its compare-and-swap and be refused as a conflict.
+		const rows: unknown[][] = []
+		for (let at = 0; at < ids.length; at += 64) {
+			const part = ids.slice(at, at + 64)
+			rows.push(
+				...(
+					await this.sql(
+						`SELECT id,answers,followups,dealt,revision,updated_at,expires_at,write_window,write_count,created_at,_seq_no,_primary_term FROM ${TABLE} WHERE ${part
+							.map(() => "id=?")
+							.join(" OR ")}`,
+						part
+					)
+				).rows
+			)
+		}
+		return rows.map((r) => ({
 			profile: {
 				id: r[0],
 				answers: r[1],
@@ -173,7 +186,6 @@ export class SqlProfileStore implements ProfileStore {
 				(f) => now - f.decided_at < FOLLOWUP_MAX_MS
 			)
 			if (p.followups.length !== old.profile.followups.length) {
-				p.revision++
 				await this.save(p, old)
 			}
 		}
@@ -186,17 +198,25 @@ export class ProfileConflict extends RoomError {
 		this.profile = profile
 	}
 }
+interface HeldTaste {
+	version: string
+	member?: string
+	value: ReturnType<typeof profileTaste>
+}
+const memberKeyOf = (member?: Float32Array | null) =>
+	member
+		? Buffer.from(member.buffer, member.byteOffset, member.byteLength).toString("base64")
+		: undefined
 export class TasteProfiles {
 	private cache = new Map<
 		string,
 		{
 			at: number
 			profile: Profile
-			signal?: {
-				version: string
-				member?: string
-				value: ReturnType<typeof profileTaste>
-			}
+			/** The profile's own taste. */
+			signal?: HeldTaste
+			/** The same answers blended into one member vector, kept beside it: a blend never replaces the own taste. */
+			blend?: HeldTaste
 		}
 	>()
 	/** The room service sets this to invalidate setup decks. Only rooms using this profile are affected. */
@@ -251,8 +271,17 @@ export class TasteProfiles {
 		}
 	}
 	private remember(p: Profile) {
+		// The same profile at the same revision has the same answers: keep its built taste (a room read is not a rebuild).
+		const held = this.cache.get(p.id)
+		const same =
+			held &&
+			held.profile.revision === p.revision &&
+			held.profile.created_at === p.created_at &&
+			JSON.stringify(held.profile.answers) === JSON.stringify(p.answers)
+		const signal = same ? held.signal : undefined
+		const blend = same ? held.blend : undefined
 		this.cache.delete(p.id)
-		this.cache.set(p.id, { at: this.now(), profile: p })
+		this.cache.set(p.id, { at: this.now(), profile: p, ...(signal ? { signal } : {}), ...(blend ? { blend } : {}) })
 		while (this.cache.size > 5000)
 			this.cache.delete(this.cache.keys().next().value!)
 	}
@@ -303,6 +332,17 @@ export class TasteProfiles {
 				return d ? [{ ...d, decidedAt: f.decided_at }] : []
 			}),
 		}
+	}
+	/** The revision this process read or wrote within the last minute, unless the daily expiry touch is due; else null. */
+	known(id: string): number | null {
+		const e = this.cache.get(id),
+			now = this.now()
+		return e &&
+			now - e.at < 60000 &&
+			e.profile.expires_at > now &&
+			now - e.profile.updated_at < 86400000
+			? e.profile.revision
+			: null
 	}
 	async touch(id: string) {
 		for (let i = 0; i < 6; i++) {
@@ -368,20 +408,29 @@ export class TasteProfiles {
 				item.decidedAt !== undefined
 			)
 				throw new RoomError("invalid_request", "Invalid taste answer", 400)
-			if (item.answer === "did_not_watch") continue
 			const existing = p.answers.items.find((a) => a.key === item.key)
+			// A follow-up owns only its own signal; dismissal/undo must preserve a Taste answer.
+			if (source === "followup" && existing?.source === "taste") continue
+			if (
+				source === "followup" &&
+				(item.answer === "did_not_watch" || item.answer === null) &&
+				!existing
+			) continue
+			const answer = item.answer === "did_not_watch" ? null : item.answer
 			if (existing && existing.at >= item.at) {
 				if (
 					existing.at === item.at &&
-					(existing.answer !== item.answer || existing.source !== source)
+					(existing.answer !== answer || existing.source !== source)
 				)
-					throw new ProfileConflict(await this.describe(old!.profile))
+					throw new ProfileConflict(
+						await this.describe(old?.profile ?? this.empty(id))
+					)
 				continue
 			}
 			p.answers.items = p.answers.items.filter((a) => a.key !== item.key)
 			p.answers.items.push({
 				key: item.key,
-				answer: item.answer,
+				answer,
 				at: item.at,
 				source,
 			})
@@ -391,9 +440,11 @@ export class TasteProfiles {
 		p.followups = p.followups.filter(
 			(f) => now - f.decided_at < FOLLOWUP_MAX_MS
 		)
+		const tasteChanged =
+			JSON.stringify(p.answers) !==
+			JSON.stringify(old?.profile.answers ?? { items: [] })
 		const identical =
-			JSON.stringify(p.answers) ===
-				JSON.stringify(old?.profile.answers ?? { items: [] }) &&
+			!tasteChanged &&
 			JSON.stringify(p.followups) ===
 				JSON.stringify(old?.profile.followups ?? [])
 		if (identical) {
@@ -401,7 +452,9 @@ export class TasteProfiles {
 			return { revision: p.revision, answered: s.answered }
 		}
 		if (request.revision !== p.revision)
-			throw new ProfileConflict(await this.describe(old?.profile ?? p))
+			throw new ProfileConflict(
+				await this.describe(old?.profile ?? this.empty(id))
+			)
 		const window = Math.floor(now / 3600000)
 		if (p.write_window !== window) {
 			p.write_window = window
@@ -420,15 +473,17 @@ export class TasteProfiles {
 				}
 			)
 		p.write_count++
-		p.revision++
+		if (tasteChanged) p.revision++
 		p.updated_at = now
 		p.expires_at = now + PROFILE_RETENTION_MS
 		if (!(await this.store.save(p, old)))
 			throw new ProfileConflict(await this.summary(id))
 		this.remember(p)
 		// Precompute before scheduling a build; a changed callback failure must not turn a committed answer into failure.
-		await this.signal(id)
-		await this.changed(id, p.revision).catch(() => {})
+		if (tasteChanged) {
+			await this.signal(id).catch(() => {})
+			await this.changed(id, p.revision).catch(() => {})
+		}
 		return {
 			revision: p.revision,
 			answered: p.answers.items.filter(
@@ -481,24 +536,32 @@ export class TasteProfiles {
 				503,
 				true
 			)
-		const memberKey = member
-			? Buffer.from(
-					member.buffer,
-					member.byteOffset,
-					member.byteLength
-			  ).toString("base64")
-			: undefined
-		if (
-			!entry.signal ||
-			entry.signal.version !== snapshot.version ||
-			entry.signal.member !== memberKey
-		)
-			entry.signal = {
+		const memberKey = memberKeyOf(member)
+		const slot = member ? "blend" : "signal"
+		let held = entry[slot]
+		if (!held || held.version !== snapshot.version || held.member !== memberKey)
+			held = entry[slot] = {
 				version: snapshot.version,
 				member: memberKey,
 				value: profileTaste(snapshot, entry.profile.answers.items, member),
 			}
-		return { ...entry.signal.value, revision: entry.profile.revision }
+		return { ...held.value, revision: entry.profile.revision }
+	}
+	/** The revision of the copy this process holds, without a read; null when it holds none. */
+	revisionHeld(id: string): number | null {
+		return this.cache.get(id)?.profile.revision ?? null
+	}
+	/**
+	 * The taste signal() already built for the profile (and this member vector) on the current snapshot: no store read
+	 * and no calculation, so a deck build's ranking and Start's exclusions can ask synchronously. Null when none is held.
+	 */
+	held(id: string, member?: Float32Array | null) {
+		const entry = this.cache.get(id)
+		const taste = entry?.[member ? "blend" : "signal"]
+		const version = this.snapshot()?.version
+		if (!entry || !taste || taste.version !== version || taste.member !== memberKeyOf(member)) return null
+		if (entry.profile.expires_at <= this.now()) return null
+		return { ...taste.value, revision: entry.profile.revision, snapshotVersion: taste.version }
 	}
 	async deck(id: string, count: number) {
 		if (!Number.isInteger(count) || count < 1 || count > 10)
@@ -516,18 +579,22 @@ export class TasteProfiles {
 				true
 			)
 		const p = (await this.fresh(id))?.profile ?? this.empty(id)
-		const keys = calibrationKeys(
-			await tasteClusters(snapshot),
-			p.answers.items,
-			count
-		)
-		const displays = await this.displays(keys)
-		return {
-			cards: keys.flatMap((key) => {
-				const d = displays.get(key)
-				return d ? [d] : []
-			}),
+		let clusters = readyTasteClusters(snapshot)
+		const cards: TasteCard[] = []
+		// Discard attempted candidates, including display misses, and draw the next calibration candidates.
+		// Continue across exhausted clusters when the remaining pool can still fill the requested count.
+		while (cards.length < count) {
+			const keys = calibrationKeys(clusters, p.answers.items, count - cards.length)
+			if (!keys.length) break
+			const displays = await this.displays(keys)
+			for (const key of keys) {
+				const card = displays.get(key)
+				if (card) cards.push(card)
+			}
+			const attempted = new Set(keys)
+			clusters = clusters.map(c => ({ ...c, titles: c.titles.filter(t => !attempted.has(t.key)) }))
 		}
+		return { cards }
 	}
 	/** Called only after a committed decision. Never creates a missing/deleted profile. Idempotent across retries. */
 	async recordDecision(room: ProposalRoom) {
@@ -563,7 +630,6 @@ export class TasteProfiles {
 				]
 					.sort((a, b) => b.decided_at - a.decided_at)
 					.slice(0, 20)
-				p.revision++
 				p.updated_at = this.now()
 				p.expires_at = this.now() + PROFILE_RETENTION_MS
 				if (await this.store.save(p, old)) {

@@ -72,6 +72,13 @@ CREATE TABLE IF NOT EXISTS doc.yepwatch_invitation (
 ) CLUSTERED INTO 1 SHARDS WITH (column_policy='strict',number_of_replicas=2,"write.wait_for_active_shards"='3',refresh_interval=1000);
 
 CREATE TABLE IF NOT EXISTS doc.yepwatch_room (
+  "dealt_keys" ARRAY(TEXT),
+  "started_at" BIGINT,
+  "first_match_at" BIGINT,
+  "outcome_emitted_at" BIGINT,
+  "ranker_version" TEXT,
+  "taste_sources" OBJECT(STRICT) AS ("member" BIGINT,"profile" BIGINT,"none" BIGINT),
+  "outcome" ARRAY(OBJECT(STRICT) AS ("position" BIGINT,"reason" TEXT,"taste" DOUBLE PRECISION,"idea" DOUBLE PRECISION,"quality" DOUBLE PRECISION,"score" DOUBLE PRECISION,"yep" BIGINT,"nope" BIGINT,"unanswered" BIGINT,"matched" BOOLEAN,"moved" BOOLEAN)),
   "id" TEXT PRIMARY KEY,
   "storage_format" BIGINT NOT NULL,
   "revision" BIGINT NOT NULL,
@@ -226,6 +233,7 @@ CREATE TABLE IF NOT EXISTS doc.yepwatch_candidate (
   "room_id" TEXT NOT NULL,
   "generation" BIGINT NOT NULL,
   "expires_at" BIGINT NOT NULL,
+  "reason" OBJECT(STRICT) AS ("code" TEXT,"text" TEXT),
   "essence" ARRAY(TEXT),
   "effects" ARRAY(OBJECT(STRICT) AS ("line" TEXT,"strength" DOUBLE PRECISION,"color" TEXT)),
   "not_for" TEXT,

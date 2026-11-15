@@ -1,3 +1,4 @@
+import { emitRoundOutcome } from './proposal-outcome.ts'
 import type { Sql } from "./repository.server.ts"
 import type { HistoricalDecision } from "./proposal-types.ts"
 import type { DeletionSubject } from "./proposal-deletion.ts"
@@ -245,10 +246,12 @@ export class RoomRetention {
 		now: number,
 		count: (table: string, rows: number) => void
 	): Promise<"removed" | "skipped" | "waiting" | "checking" | "gone"> {
+		let ended: import("./proposal-types.ts").ProposalRoom | undefined
 		let head: { seq: number; term: number; inviteHash: string; history: HistoricalDecision[]; people: { id: string; memberUserId?: string | null }[] }
 		try {
 			const stored = await this.repository.read(id)
 			if (!stored || stored.room.expiresAt > cutoff) return "gone"
+			ended = stored.room as import("./proposal-types.ts").ProposalRoom
 			head = { seq: stored.seq, term: stored.term, inviteHash: stored.room.inviteHash, history: stored.room.history ?? [], people: stored.room.participants }
 		} catch {
 			// A head whose records are already incomplete cannot be read. It may go only if nothing is left to publish.
@@ -264,6 +267,7 @@ export class RoomRetention {
 		// Crate 5.10 rejects extra predicates beside a CAS; the head read above proved the expiry.
 		const removed = (await this.sql(`DELETE FROM ${ROOM} WHERE id=? AND _seq_no=? AND _primary_term=?`, [id, head.seq, head.term])).rowcount
 		count(ROOM, removed)
+		if (removed && ended && ended.phase !== "decided" && ended.outcomeEmittedAt == null) emitRoundOutcome(ended, "expiry")
 		return removed ? "removed" : "gone"
 	}
 

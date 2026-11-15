@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { REASON_CODES } from '@goodwatch/yepwatch-contracts/proposal'
 import type { SharedRoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal'
 import { continuousSharedSchema } from './continuous-projection.js'
 
@@ -11,6 +12,7 @@ export const proposalSharedSchema = continuousSharedSchema.extend({
   disabledServiceIds: z.array(z.number().int().positive()).max(1200),
   participants: z.array(continuousSharedSchema.shape.participants.element.extend({ nickname: z.string().max(40), serviceIds:z.array(z.number().int().positive()).max(100).nullable(), dropped:z.boolean().optional() })).max(12),
   candidates: z.array(continuousSharedSchema.shape.candidates.element.extend({
+    reason: z.strictObject({ code: z.enum(REASON_CODES), text: z.string().min(1).max(80) }).nullable().optional(),
     tagline: z.string().nullable().optional(),
     certification: z.string().nullable().optional(),
     scores: z.strictObject({
@@ -56,4 +58,10 @@ export function proposalProjection(input: unknown, roomId: string): SharedRoomSn
         value.decision.proposalVersion !== proposal.version)))
     throw new Error('Invalid proposal decision')
   return value
+}
+
+/** Installed app bundles reject unknown Candidate fields. Reasons require an explicit authenticate capability. */
+export function proposalForClient(snapshot: SharedRoomSnapshot, candidateReasons = false): SharedRoomSnapshot {
+  if (candidateReasons) return snapshot
+  return { ...snapshot, candidates: snapshot.candidates.map(({ reason: _, ...candidate }) => candidate) }
 }

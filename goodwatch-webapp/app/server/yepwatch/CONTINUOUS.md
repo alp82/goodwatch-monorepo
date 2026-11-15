@@ -78,6 +78,23 @@ These remain **unfinished implementation/operations**, not reasons for the user 
 
 No production DDL, registrations, DNS, deployment, commits or pushes form part of this slice.
 
+
+## Proposal picks privacy and measurement
+
+The owner approved aggregate-only `yepwatch_round_outcome` logging on 2026-11-15. The allowlist is ranker version,
+end type, people count and counts by taste source, kinds, number of on ideas, cards dealt, and per dealt position:
+reason code, taste minimum/idea fit/quality bucketed to tenths, Yep/Nope/unanswered counts, matched and moved flags.
+Round totals include matches, first-match position, Start-to-first-match/decision durations and decision boolean.
+There are no room/person/profile/title identifiers, names, idea text, list contents, raw votes or vectors. Deck builds
+log only aggregate medians, reason counts, pool/floor counts, taste share and timings. See `proposal-outcome.ts` for
+the exact allowlist and `PROPOSAL-RUNBOOK.md` for the staged baseline/tuning procedure.
+
+Member taste is a private current-grant-bound copy. Device profile taste plugs into the same calibrated
+`PersonSignal` interface (`proposal-person-signal.ts`) through `proposal-profile-signals.ts`. Neither source
+is projected. Seen and hidden exclusions stay private. A profile's own explicit Nopes can feed a bounded 30-day repeat
+penalty; unanswered dealt cards never do. Reasons name only public idea authors. New reasons are capability gated
+because installed app bundles reject unknown Candidate fields.
+
 ## YepWatch device taste and follow-ups
 
 Taste answers stay exclusively in YepWatch. Members keep their GoodWatch taste; optional next-day ratings blend
@@ -106,9 +123,11 @@ room copy. It is idempotent by profile/title/decision time. `GET /profile` expos
 `source: "followup"` and that `decidedAt` on the answer item; `loved`/`not_for_me` feed taste and seen, `did_not_watch`
 dismisses without a taste answer. Seven-day follow-ups are unavailable and pruned by cleanup. Nothing is pushed.
 
-Ranker integration: `getProfileTaste(profiles, profileId, goodwatchVector?)` from `proposal-taste.ts`, documented in
-its header, returns the vector, 119-entry cosine quantile table, confidence, revision and seen/hidden/unseen sets.
-Use the release runtime's `profiles`; `profiles.signals(ids)` batches cold cache reads during preparation. A linked
+Ranker integration: `profileTasteSource` (`proposal-profile-signals.ts`) feeds profiles into the picks ranker (see
+`PROPOSAL-RUNBOOK.md`). Underneath, `getProfileTaste(profiles, profileId, goodwatchVector?)` from `proposal-taste.ts`
+returns the vector, 119-entry cosine quantile table, confidence, revision and seen/hidden/unseen sets;
+`profiles.signals(ids)` batches cold cache reads during preparation and `profiles.held(id, vector?)` returns what is
+already built without a read. A linked
 member passes their existing GoodWatch vector, otherwise omit it. The five-liked GoodWatch gate stays unchanged;
 YepWatch uses one liked title, or the spec's negative-only -N fallback. Hidden is empty because a taste dislike is
 seen, not an explicit hidden action. Member hidden keys continue to come from the GoodWatch member resource.

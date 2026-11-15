@@ -1,25 +1,36 @@
 import type { ContinuousMembers } from "./continuous-members.server.ts"
 import type { ExcludedKeysOptions, ProposalRoom } from "./proposal-types.ts"
+import type { RoomTasteSource } from './proposal-person-signal.ts'
 
 /** Members whose seen titles a room leaves out: present, linked, and not showing what they've seen. */
 const excluding = (room: ProposalRoom) =>
 	room.participants.filter((p) => p.leftAt == null && p.member.state === "linked" && !p.showSeen)
 
 /** A catalog's member exclusions (ProposalCatalog.excludedKeys and refreshExcludedKeys) from members' seen titles. */
-export function memberExclusions(members: ContinuousMembers) {
+export function roomExclusions(members?: ContinuousMembers, profiles?: RoomTasteSource) {
 	return {
 		async excludedKeys(room: ProposalRoom, options?: ExcludedKeysOptions) {
-			return (
+			const seen = members ? (
 				await Promise.all(
 					excluding(room).map((p) => (options?.stored ? members.seenStored(room, p.id, { read: options.readMissing !== false }) : members.seenOrNone(room, p.id)))
 				)
-			).flat()
+			).flat() : []
+			const keys = new Set(seen)
+			for (const p of room.participants.filter(p => p.leftAt == null)) {
+				for (const source of [members?.tasteStored(room, p.id), profiles?.stored(room, p)]) {
+					if (!source) continue
+					for (const key of [...source.hidden, ...(!p.showSeen ? source.seen : [])])
+						keys.add(`${key < 2e12 ? 'movie' : 'show'}_${key % 1e12}`)
+				}
+			}
+			return [...keys]
 		},
 		refreshExcludedKeys(room: ProposalRoom) {
-			for (const p of excluding(room)) members.refreshSeen(room, p.id)
+			for (const p of room.participants.filter(p => p.leftAt == null && p.member.state === 'linked')) members?.refreshSeen(room, p.id)
 		},
 	}
 }
+export const memberExclusions = roomExclusions
 
 /**
  * Keeps members' seen copies recent while a room is set up and quiet: every `everyMs` it reads the room and, while it

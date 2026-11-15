@@ -31,7 +31,10 @@ export const REVISION_CHANNEL = "yepwatch:v3:revision" as const
 export const ACTIVITY_CHANNEL = "yepwatch:v3:activity" as const
 export type RoomPhase = "setup" | "choosing" | "decided" | "expired"
 export type VoteValue = "watch" | "pass"
+export const REASON_CODES = ['fits_everyone', 'close_to_your_taste', 'fits_idea', 'want_to_see', 'on_service_for_everyone', 'short_episodes', 'well_liked', 'popular_now'] as const
+export type ReasonCode = typeof REASON_CODES[number]
 export interface Candidate extends BaseCandidate {
+	reason?: { code: ReasonCode; text: string } | null
 	/** Actual movie or canonical episode runtime only; show-average runtime is insufficient. */
 	viewingDuration: { minutes: number; scope: "movie" | "episode" } | null
 	/** Only real catalog values. Null/absent means unknown, never a seed or invented score. */
@@ -220,7 +223,9 @@ export interface CommandEnvelope<T extends RoomCommand = RoomCommand> {
 export type RoomCommand =
   | { type: "leave" }
   | { type: "configure"; expectedContextVersion: number; country?: string; constraints?: RoomConstraints }
+  /** One idea per author; a second one is refused with limit_reached ("One idea each. Edit yours to change it."). */
   | { type: "add_idea"; text: string }
+  /** Replaces your idea in place and switches it on; consumes one of the room's 24 interpretations. */
   | { type: "edit_idea"; ideaId: string; text: string }
   | { type: "remove_idea"; ideaId: string }
   | { type: "set_idea"; ideaId: string; on: boolean }
@@ -388,6 +393,7 @@ export type ClientRealtimeFrame =
 			lastRevision: number | null
 			pointers?: true
 			roomDetails?: true
+      candidateReasons?: true
 			cheers?: true
 	  }
 	| { type: "ping" }

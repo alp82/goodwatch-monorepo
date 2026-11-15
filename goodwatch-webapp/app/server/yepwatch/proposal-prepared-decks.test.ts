@@ -8,13 +8,14 @@ import { ProposalMemoryRepository, proposalFixtureCatalog } from "./proposal-tes
 import type { ExcludedKeysOptions, ProposalCatalog, ProposalRepository, ProposalRoom } from "./proposal-types.ts"
 
 const secret = "prepared-decks-test-secret-at-least-32-chars"
-function fixture(options: { delayMs?: number | "default"; excluded?: string[]; failFreshSeen?: boolean; now?: () => number; guard?: ProposalOperationGuard; prestore?: ProposalRepository["prestore"]; page?: (room: ProposalRoom) => Promise<void> } = {}) {
+function fixture(options: { inputRevision?: () => string; delayMs?: number | "default"; excluded?: string[]; failFreshSeen?: boolean; now?: () => number; guard?: ProposalOperationGuard; prestore?: ProposalRepository["prestore"]; page?: (room: ProposalRoom) => Promise<void> } = {}) {
 	const repository = new ProposalMemoryRepository()
 	if (options.prestore) Object.assign(repository, { prestore: options.prestore })
 	const pages: ProposalRoom[] = []
 	const exclusionReads: (ExcludedKeysOptions | undefined)[] = []
 	const catalog: ProposalCatalog = {
 		...proposalFixtureCatalog,
+		inputRevision: options.inputRevision,
 		async metadata(country) {
 			const m = await proposalFixtureCatalog.metadata(country)
 			return { ...m, services: [1, 2, 3].map((id) => ({ id, name: `Fixture service ${id}`, logoUrl: null })) }
@@ -22,7 +23,7 @@ function fixture(options: { delayMs?: number | "default"; excluded?: string[]; f
 		async page(room) {
 			pages.push(structuredClone(room))
 			await options.page?.(room)
-			return proposalFixtureCatalog.page(room)
+			return { ...await proposalFixtureCatalog.page(room), ...(options.inputRevision ? { inputRevision: options.inputRevision() } : {}) }
 		},
 		...(options.excluded ? { excludedKeys: async (_room, read) => {
 			exclusionReads.push(read)
@@ -35,6 +36,30 @@ function fixture(options: { delayMs?: number | "default"; excluded?: string[]; f
 	})
 	return { repository, service, pages, exclusionReads }
 }
+test('a cached taste revision invalidates prepared decks without a room write, including Start fallback', async () => {
+  let revision = 'profile-1'
+  const f = fixture({ delayMs: 60000, inputRevision: () => revision, excluded: [] }), r = await room(f)
+  await r.send({ type: 'set_services', serviceIds: [1] })
+  const stored = await r.stored()
+  await f.service.decks.page(stored)
+  assert.ok(f.service.decks.prepared(stored))
+  revision = 'profile-2'
+  assert.equal(f.service.decks.prepared(stored), false)
+  await f.service.decks.page(stored, { seenReadFresh: true })
+  assert.equal(f.pages.length, 2, 'a stale settled deck cannot cross a personal revision')
+  f.service.decks.forget(r.id)
+})
+test('the first profile read during preparation remembers the consumed revision for Start', async () => {
+  let revision = 'missing'
+  const f = fixture({ delayMs: 60000, inputRevision: () => revision, page: async () => { revision = 'read-and-calibrated' } }), r = await room(f)
+  await r.send({ type: 'set_services', serviceIds: [1] })
+  const stored = await r.stored()
+  await f.service.decks.page(stored)
+  assert.ok(f.service.decks.prepared(stored))
+  await f.service.decks.page(stored, { seenReadFresh: true })
+  assert.equal(f.pages.length, 1)
+  f.service.decks.forget(r.id)
+})
 async function room(f: ReturnType<typeof fixture>) {
 	const host = await f.service.create({
 		contractVersion: 3,
@@ -247,17 +272,18 @@ test("a command is refused, and commits nothing, once the room's capacity reserv
 	f.service.decks.forget(r.id)
 })
 
-test("a guest joining and picking services the room already has keeps the prepared deck", async () => {
+test("a joining person and individual services invalidate group reason and shared availability inputs", async () => {
 	const f = fixture({ delayMs: 60_000 })
 	const r = await room(f)
 	await r.send({ type: "set_services", serviceIds: [1] })
 	await f.service.decks.page(await r.stored())
 	const friend = await r.join("Friend")
-	assert.ok(f.service.decks.prepared(await r.stored()), "a guest's arrival changes nothing a page reads")
+	assert.ok(!f.service.decks.prepared(await r.stored()), "people count changes reasons")
 	await friend({ type: "set_services", serviceIds: [1] })
-	assert.ok(f.service.decks.prepared(await r.stored()), "nor do services the room already has")
+	assert.ok(!f.service.decks.prepared(await r.stored()), "individual services affect shared availability")
+	await f.service.decks.page(await r.stored())
 	const started = await r.start()
-	assert.equal(f.pages.length, 1, "Start used the deck prepared before the friend came")
+	assert.equal(f.pages.length, 2, "Start used the deck prepared after the friend picked services")
 	assert.equal(started.snapshot.shared.phase, "choosing")
 	f.service.decks.forget(r.id)
 })

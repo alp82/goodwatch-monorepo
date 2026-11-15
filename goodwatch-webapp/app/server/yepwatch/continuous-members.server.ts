@@ -16,6 +16,8 @@ import type {
 } from "../../../packages/yepwatch-contracts/proposal.ts"
 import { RoomError, requireRoom } from "./errors.ts"
 import { timed } from "./server-timing.ts"
+import { calibrateMemberTaste, type MemberTaste } from './proposal-member-taste.ts'
+import type { PersonalSignals } from './proposal-person-signal.ts'
 import { actor, continuousLive } from "./continuous-machine.ts"
 import type {
 	ContinuousRepository,
@@ -23,6 +25,9 @@ import type {
 } from "./continuous-types.ts"
 /** Only a definitive refusal (revoked grant, another account) ends a device session. */
 const refused = (e: unknown) => e instanceof RoomError && ["unauthorized", "member_required"].includes(e.code)
+/** A member's taste copy is used for deck builds up to this old, and read again in setup once half that old. */
+const TASTE_COPY_MAX_AGE_MS = 600_000
+const TASTE_REFRESH_AFTER_MS = 300_000
 /** GoodWatch reads abort after 12 s (proposal-release-members.ts); an in-flight seen read is never shared longer. */
 const SEEN_TRANSPORT_TIMEOUT_MS = 12_000
 /**
@@ -62,6 +67,7 @@ export interface MemberIssuer {
 	refresh?(input: { refreshToken: string }): Promise<MemberTokens>
 }
 export interface MemberReads {
+	taste?(userId: string, accessToken?: string): Promise<MemberTaste>
 	/** Refuses (throws) when the token doesn't belong to `userId`: ContinuousMembers.seen checks the grant with this read alone. */
 	seen?(userId: string, accessToken?: string): Promise<string[]>
 	prefill(userId: string, accessToken?: string): Promise<MemberPrefill>
@@ -1101,6 +1107,7 @@ export class ContinuousMembers {
 	 * room change in setup, a room reopened): Start then finds a recent copy. Never throws.
 	 */
 	refreshSeen(room: ContinuousRoom, participantId: string) {
+		void this.refreshTaste(room, participantId)
 		if (!this.reads.seen) return
 		try {
 			const { key } = this.seenLink(room, participantId)
@@ -1168,6 +1175,57 @@ export class ContinuousMembers {
 	}
 	async ownProgress(id: string, participantId: string) {
 		return this.progress((await this.get(id)).room, participantId)
+	}
+	private tasteCopies = new Map<string, { at: number; value: PersonalSignals }>()
+	private tasteReads = new Map<string, Promise<PersonalSignals | null>>()
+  private tasteKeys = 0
+  private dropTaste(key: string) {
+    const old = this.tasteCopies.get(key)
+    if (old) this.tasteKeys -= old.value.hidden.size + old.value.wishlist.size
+    this.tasteCopies.delete(key)
+  }
+	/**
+	 * The member's taste copy for deck builds, under the same current-grant key and refusal guard as seen. No read:
+	 * a missing copy, or one older than TASTE_COPY_MAX_AGE_MS, is neutral (also at Start).
+	 */
+	tasteStored(room: ContinuousRoom, participantId: string): PersonalSignals | null {
+		try {
+			const { key } = this.seenLink(room, participantId), copy = this.tasteCopies.get(key)
+			if (!copy) return null
+      if (this.refusedSeen(key) || this.now() - copy.at >= TASTE_COPY_MAX_AGE_MS) { this.dropTaste(key); return null }
+      return copy.value
+		} catch { return null }
+	}
+	/**
+	 * Reads the member's taste when no copy is held or the held one is TASTE_REFRESH_AFTER_MS old (a room change in
+	 * setup, ExclusionKeepAlive). The old copy stays in use until the new one lands or it reaches its maximum age, so
+	 * a room in setup never falls back to no taste (and a rebuilt deck) between two reads. Never throws.
+	 */
+	async refreshTaste(room: ContinuousRoom, participantId: string): Promise<PersonalSignals | null> {
+		if (!this.reads.taste) return null
+		let link: ReturnType<ContinuousMembers['seenLink']>
+		try { link = this.seenLink(room, participantId) } catch { return null }
+		if (this.refusedSeen(link.key)) return null
+		const copy = this.tasteStored(room, participantId)
+		if (copy && this.now() - this.tasteCopies.get(link.key)!.at < TASTE_REFRESH_AFTER_MS) return copy
+		const pending = this.tasteReads.get(link.key)
+		if (pending) return pending
+		const started = this.now()
+		const read = this.reads.taste(link.userId, link.accessToken).then(calibrateMemberTaste).then(value => {
+			if (this.refusedSeen(link.key)) return null
+			this.dropTaste(link.key)
+      this.tasteCopies.set(link.key, { at: started, value })
+      this.tasteKeys += value.hidden.size + value.wishlist.size
+      while (this.tasteCopies.size > 2000 || this.tasteKeys > 1000000) this.dropTaste(this.tasteCopies.keys().next().value!)
+			return value
+		}).catch(e => {
+			// A refused grant ends the copy at once; an outage keeps the one held until it is too old.
+			if (refused(e)) { this.dropTaste(link.key); this.refuseGrant(link.accessToken, link.expiresAt) }
+			console.warn(JSON.stringify({ event: 'yepwatch_member_taste_skipped', reason: refused(e) ? 'refused' : 'unavailable' }))
+			return this.tasteStored(room, participantId)
+		}).finally(() => this.tasteReads.delete(link.key))
+		this.tasteReads.set(link.key, read)
+		return read
 	}
 	async status(
 		id: string,

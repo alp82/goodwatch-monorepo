@@ -1,4 +1,7 @@
+import { expiredRoundOutcomes } from './proposal-expired-outcomes.ts'
 import { TasteProfiles, SqlProfileStore } from "./proposal-taste-profile.ts"
+import { profileTasteSource } from "./proposal-profile-signals.ts"
+import type { RoomTasteSource } from "./proposal-person-signal.ts"
 import type { TitleSnapshot } from "../title-snapshot/snapshot.server.ts"
 import type { TasteCard } from "../../../packages/yepwatch-contracts/proposal.ts"
 import { roomSearch } from "./proposal-intent.ts"
@@ -25,7 +28,7 @@ import { ValkeyRoomRepository } from "./proposal-valkey-repository.ts"
 import { ValkeyReleaseControl } from "./proposal-valkey-control.ts"
 import { ValkeyAccountRooms, MirroredDeletionStore } from "./proposal-valkey-accounts.ts"
 import { HistorySync } from "./proposal-history-sync.ts"
-import { MemoryCommandBudget, ValkeyCommandBudget } from "./proposal-command-budget.ts"
+import { ValkeyCommandBudget } from "./proposal-command-budget.ts"
 import type { ReleaseConfig } from "./proposal-release-config.ts"
 export const RELEASE_HEALTH = {
 	live: `${API_PREFIX}/health/live`,
@@ -34,7 +37,8 @@ export const RELEASE_HEALTH = {
 export interface ReleaseDependencies {
 	sql: Sql
 	catalog: ProposalCatalog
-	memberCatalog?: (members: ContinuousMembers) => ProposalCatalog
+	/** The catalog for a release with members or device taste profiles (either may be absent). */
+	memberCatalog?: (members?: ContinuousMembers, profiles?: RoomTasteSource) => ProposalCatalog
 	snapshot(): { count: number; version: string } | null
 	catalogProbe(): Promise<void>
   profileSnapshot?: () => TitleSnapshot | null
@@ -119,9 +123,12 @@ export function createReleaseRuntime(
 	if (members && !deps.memberCatalog)
 		throw new Error("Member catalog adapter required")
 	const tickets = deps.tickets
+	// Device profiles feed the same ranker as members' GoodWatch taste (profileTasteSource blends the two).
+	const taste = profiles && deps.memberCatalog ? profileTasteSource(profiles, members) : undefined
+	const catalog = members || taste ? deps.memberCatalog!(members, taste) : deps.catalog
 	const service = new ProposalService(
 		repository,
-		members ? deps.memberCatalog!(members) : deps.catalog,
+		catalog,
 		config.secret,
 		async (event) => {
 			await deps.bus.publish(REVISION_CHANNEL, revisionMessage(event))
@@ -138,7 +145,6 @@ export function createReleaseRuntime(
 		allowedOrigins: [config.publicOrigin],
 		secureCookies: true,
 		members,
-    profileBudget: deps.commands ?? (deps.rooms ? new ValkeyCommandBudget(deps.rooms) : new MemoryCommandBudget(now)),
 	})
 	let draining = false
 	let initialized = false
@@ -289,6 +295,7 @@ export function createReleaseRuntime(
 	const cleanup = cleanupRounds(
 		[
 			() => service.deletions.purgeDue(now()),
+      () => expiredRoundOutcomes(deps.sql, repository, now(), catalog.roundEnded),
 			() => quotas.purgeExpired(),
       () => profiles?.expire() ?? Promise.resolve(),
 			async () => {

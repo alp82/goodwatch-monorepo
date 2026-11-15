@@ -1,3 +1,5 @@
+import { ideasForServiceReread } from './proposal-redesign.ts'
+import { emitRoundOutcome, recordOutcome } from './proposal-outcome.ts'
 import type { TasteProfiles } from "./proposal-taste-profile.ts"
 import { mark, timed, timedSync } from "./server-timing.ts"
 import { MemoryTicketStore, type TicketStore } from "./proposal-tickets.ts"
@@ -173,6 +175,7 @@ export class ProposalService {
 	/** Private profile access for HTTP routes and catalog preparation. */
 	readonly profiles?: TasteProfiles
 	private profileRooms = new Map<string, Set<string>>()
+	private profileWarmups = new Map<string, Promise<void>>()
 	/** First decks built during setup, so Start doesn't wait for the catalog. */
 	readonly decks: PreparedDecks
 	/** Refill pages being built ahead of their commands' lane (refillPage), by room, sender and command. */
@@ -227,6 +230,7 @@ export class ProposalService {
 			(room) => catalog.refreshExcludedKeys?.(room),
 			{ now },
 		)
+		catalog.onInputsChanged?.((id) => this.decks.schedule(id))
 		this.decks = new PreparedDecks(catalog, async (id) => {
 			const stored = await repository.read(id)
 			if (!stored || stored.room.format !== 2 || stored.room.flowVersion !== 3) return null
@@ -239,32 +243,52 @@ export class ProposalService {
 			...options.decks,
 		})
 	}
-  /** Warm profile copies in one batch before a prepared build. Ranker signal() then does no Crate read. */
+  /** Use held revisions immediately. Cold reads warm a later build without delaying rooms or admissions. */
   async prepareProfiles(room: ProposalRoom) {
     if (!this.profiles) return
+    const profiles = this.profiles
     const people = activeRoom(room).participants.filter(p => p.profileId)
-    await this.profiles.signals(people.map(p => p.profileId!))
-    for (const p of people) {
-      let rooms = this.profileRooms.get(p.profileId!)
-      if (!rooms) this.profileRooms.set(p.profileId!, rooms = new Set())
+    this.trackProfiles(room)
+    for (const p of people) p.tasteRevision = profiles.revisionHeld(p.profileId!) ?? p.tasteRevision
+    if (!people.length || this.profileWarmups.has(room.id)) return
+    const revisions = new Map(people.map(p => [p.profileId!, profiles.revisionHeld(p.profileId!)]))
+    const warming = profiles.signals([...revisions.keys()]).then(() => {
+      // Never mutate a room after returning it to its caller. A later build picks up the warmed revisions.
+      if ([...revisions].some(([id, revision]) => profiles.revisionHeld(id) !== revision)) this.decks.schedule(room.id)
+    }).catch(() => {}).finally(() => { this.profileWarmups.delete(room.id) })
+    this.profileWarmups.set(room.id, warming)
+  }
+  /** Which rooms a profile's answer rebuilds the prepared deck of (bounded, this process only). */
+  private trackProfiles(room: ProposalRoom) {
+    for (const p of activeRoom(room).participants) {
+      if (!p.profileId) continue
+      let rooms = this.profileRooms.get(p.profileId)
+      if (!rooms) this.profileRooms.set(p.profileId, rooms = new Set())
       rooms.add(room.id)
       if (rooms.size > 100) rooms.delete(rooms.values().next().value!)
-      p.tasteRevision = (await this.profiles.signal(p.profileId!)).revision
     }
     while (this.profileRooms.size > 5000) this.profileRooms.delete(this.profileRooms.keys().next().value!)
   }
   /** Attaches only after authenticating this device's room credential. The profile secret never enters the room. */
   async bindProfile(id: string, credential: ActorCredential, profileId: string) {
     if (!this.profiles) return
+    // Authenticate and check the link before entering the room lane, even with a cold profile cache.
+    // Revision refresh belongs to preparation; a repeated admission never needs a room write.
+    const { room } = await this.get(id)
+    const participant = this.auth(room, credential)
+    if (participant.profileId === profileId) return this.trackProfiles(room)
+    // Store latency must not hold up room commands. HTTP runs this whole best-effort link in the background.
+    let revision: number
+    try { revision = await this.profiles.touch(profileId) } catch { return }
     await this.write(id, async () => {
       for (let i = 0; i < 6; i++) {
         const old = await this.get(id), room = structuredClone(old.room)
         const p = this.auth(room, credential)
-        const revision = await this.profiles!.touch(profileId)
-        if (p.profileId === profileId && p.tasteRevision === revision) { await this.prepareProfiles(room); return }
+        if (p.profileId === profileId) return this.trackProfiles(room)
         p.profileId = profileId; p.tasteRevision = revision; room.revision++
         if (!(await this.repository.compareAndSwap(old, room, true))) continue
-        await this.prepareProfiles(room)
+        this.trackProfiles(room)
+        this.decks.schedule(id)
         await this.notify(id)
         return
       }
@@ -1256,7 +1280,7 @@ export class ProposalService {
 			if (!build) {
 				build = (async () => {
 					await this.guard?.command(id, p.id, digest)
-					return { inputs: refillInputs(room), cards: room.candidates.length, page: await timed("deck", this.decks.page(room)) }
+					return { inputs: refillInputs(room, this.catalog.inputRevision?.(room)), cards: room.candidates.length, page: await timed("deck", this.decks.page(room)) }
 				})()
 				this.refills.set(key, build)
 				const done = () => { if (this.refills.get(key) === build) this.refills.delete(key) }
@@ -1383,7 +1407,7 @@ export class ProposalService {
 				seenRead?.catch(() => {}) // Awaited below; a failed deck must not leave it unhandled.
 				// Best effort (members time-box and log their own reads): a failed read starts without those exclusions.
 				// Usually prepared during setup; a Start retried after losing its compare-and-swap reuses the same build.
-				if (wantsPage && envelope.command.type === "refill" && refill && refillInputs(room) === refill.inputs && room.candidates.length <= refill.cards)
+				if (wantsPage && envelope.command.type === "refill" && refill && refillInputs(room, this.catalog.inputRevision?.(room)) === refill.inputs && room.candidates.length <= refill.cards)
 					page = structuredClone(refill.page)
 				else if (wantsPage) {
 					await this.prepareProfiles(room)
@@ -1415,6 +1439,7 @@ export class ProposalService {
 				reserved
 			))
 			let pending: PendingIdea | undefined
+      const rereads: PendingIdea[] = []
 			if ((command.type === "add_idea" || command.type === "edit_idea") && this.interpret) {
 				const idea = room.ideas!.find(
 					(i) =>
@@ -1455,6 +1480,16 @@ export class ProposalService {
 				room.candidates = await this.catalog.refresh(activeRoom(room))
 				reconcile(room, old.room)
 			}
+			if (command.type === 'vote') { recordOutcome(room, undefined, this.now()); this.catalog.reorderTail?.(room) }
+      if (this.interpret && ['set_services', 'set_service_enabled', 'configure'].includes(command.type) && watchScreensChanged(old.room, room)) {
+        for (const idea of ideasForServiceReread(room, keys => this.catalog.ideaReadingSize?.(room, keys) ?? keys.length)) {
+          room.interpretationCount = (room.interpretationCount ?? 0) + 1
+          const reread: PendingIdea = { ideaId: idea.id, text: idea.text, job: token(), lease: this.now() }
+          idea.rankedKeys = []
+          markPending(idea, reread)
+          rereads.push(reread)
+        }
+      }
 			const changed = actor(room, p.id)
 			if (command.type === "leave") changed.leftLabel = this.label(old.room)
 			const commandState = this.commandState(changed, credential)
@@ -1474,6 +1509,8 @@ export class ProposalService {
 				continue
 			}
 			if (pending) this.interpretInBackground(id, pending.ideaId, pending)
+      if (command.type === 'vote') void this.catalog.voteCommitted?.(room, p.id, command.candidateId, command.value, this.now()).catch(() => {})
+      for (const reread of rereads) this.interpretInBackground(id, reread.ideaId, reread)
 			return {
 				receipt: { commandId: envelope.commandId, sequence, appliedRevision: room.revision, replayed: false },
 				room: { committed: room, published: this.hintCommitted(old.room, room) }
@@ -1999,6 +2036,7 @@ export class ProposalService {
 					decidedAt: this.now(),
 					availability: evidence
 				}
+				room.outcomeEmittedAt = this.now()
 				room.phase = "decided"
 				this.recordDecision(room)
 				room.agreement.state = "none"
@@ -2018,6 +2056,10 @@ export class ProposalService {
 				if (!(e instanceof IndeterminateWrite)) throw e
 				continue
 			}
+      if (room.phase === 'decided') {
+        emitRoundOutcome(room, 'decision')
+        void this.catalog.roundEnded?.(room).catch(() => {})
+      }
 			await this.notify(id)
 			return
 		}
@@ -2243,6 +2285,11 @@ export class ProposalService {
 	 * waits for notify too). Resolves whether the gateway was told (notify publishes again if not; repair retries).
 	 */
 	private hintCommitted(old: ProposalRoom, room: ProposalRoom): Promise<boolean> | null {
+    if (old.startedAt != null && old.phase !== 'decided' && ((room.phase === 'decided') || room.generation !== old.generation)) {
+      const ended = room.phase === 'decided' ? room : old
+      emitRoundOutcome(ended, room.phase === 'decided' ? 'decision' : 'restart')
+      void this.catalog.roundEnded?.(ended).catch(() => {})
+    }
 		if (JSON.stringify(room.history ?? []) !== JSON.stringify(old.history ?? [])) return null
 		if (room.expiresAt <= this.now()) return Promise.resolve(true)
 		return timed("publish", this.announce(timedSync("publish", () => this.committedEvent(room)))).then(
@@ -2306,9 +2353,10 @@ export class ProposalService {
 				}
 			}
 			if (!room || (!options.committed && !stored?.pendingRevision)) return stored
-			await this.profiles?.recordDecision(room).catch(() => {})
 			await this.accounts.publish(room.history ?? [])
 			if (room.expiresAt > this.now() && !(await options.published)) await this.announce(this.committedEvent(room))
+			// After the announcement: phones never wait for the profile store to hear a decision.
+			await this.profiles?.recordDecision(room).catch(() => {})
 			if (options.yieldToQueued && this.writes.has(id)) return stored
 			await this.repository.acknowledge(id, room.revision)
 		} catch {

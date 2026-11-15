@@ -77,6 +77,7 @@ async function parallel<T, R>(
 /** A candidate's own columns: what Start writes for each card of its deck (see prestore). */
 const candidateValues = (c: ProposalRoom["candidates"][number]): Row => ({
 	candidate_id: c.id,
+ reason: c.reason ?? null,
 	idea_ids: c.ideaIds ?? null,
 	identity: c.identity,
 	title: c.title,
@@ -183,6 +184,10 @@ export class RelationalProposalRepository implements ProposalRepository {
 	}
 	private recordId(entity: Entity, row: Row) {
 		const { record_id: _, ...values } = row
+		// A participant without a profile has the id it always had: records from before the profile columns stay valid,
+		// and a release that doesn't know the columns (rolling deploy, rollback) reads the ones this release writes.
+		if (entity === "participant")
+			for (const key of ["profile_id", "taste_revision"]) if (values[key] == null) delete values[key]
 		return keyed(this.secret, `yepwatch-row:${entity}`, stable(values))
 	}
 	/**
@@ -214,7 +219,10 @@ export class RelationalProposalRepository implements ProposalRepository {
 		if (this.recordId(entity, row) === id) return true
 		const legacy = { ...row }
         if (entity === "candidate") {
-            for (const key of ["essence", "effects", "not_for"]) {
+            const withoutReason = { ...row }
+            if (withoutReason.reason == null) delete withoutReason.reason
+            if (this.recordId(entity, withoutReason) === id) return true
+            for (const key of ["essence", "effects", "not_for", "reason"]) {
                 if (legacy[key] == null) delete legacy[key]
             }
             if (this.recordId(entity, legacy) === id) return true
@@ -348,8 +356,9 @@ export class RelationalProposalRepository implements ProposalRepository {
 				member_state: p.member.state,
 				member_prefill: p.member.prefill,
 				member_user_id: p.memberUserId,
-        profile_id: p.profileId,
-        taste_revision: p.tasteRevision,
+				// Null without a profile, as the store returns it; recordId leaves null profile columns out.
+				profile_id: p.profileId ?? null,
+				taste_revision: p.tasteRevision ?? null,
 				vote_records: votes,
 				receipt_records: receipts,
 				agreement_record: agreement,
@@ -404,6 +413,8 @@ export class RelationalProposalRepository implements ProposalRepository {
 			  })
 			: null
 		const head = parseRow(tables.room, {
+      dealt_keys: room.dealtKeys ?? null, outcome_emitted_at: room.outcomeEmittedAt ?? null, started_at: room.startedAt ?? null, first_match_at: room.firstMatchAt ?? null, outcome: room.outcome ?? null,
+      ranker_version: room.rankerVersion ?? null, taste_sources: room.tasteSources ?? null,
 			id: room.id,
 			storage_format: 2,
 			revision: room.revision,
@@ -919,6 +930,8 @@ export class RelationalProposalRepository implements ProposalRepository {
 			const room: ProposalRoom = {
 				format: 2,
 				flowVersion: 3,
+        dealtKeys: h.dealt_keys ?? undefined, outcomeEmittedAt: h.outcome_emitted_at ?? null, startedAt: h.started_at ?? null, firstMatchAt: h.first_match_at ?? null, outcome: h.outcome ?? [],
+        rankerVersion: h.ranker_version ?? null, tasteSources: h.taste_sources ?? null,
 				history: history.map(decodeDecision),
 				id,
 				revision: h.revision,
@@ -956,6 +969,7 @@ export class RelationalProposalRepository implements ProposalRepository {
 				constraints: h.constraints,
 				candidates: candidates.map((c) => ({
 					id: c.candidate_id,
+          reason: c.reason ?? null,
 					...(c.idea_ids == null ? {} : { ideaIds: c.idea_ids }),
 					identity: c.identity,
 					title: c.title,

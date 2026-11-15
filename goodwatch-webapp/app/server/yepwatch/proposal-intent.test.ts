@@ -9,6 +9,25 @@ import {
 	proposalFixtureCatalog,
 } from "./proposal-test-support.ts"
 import type { CatalogReads } from "./catalog-adapter.ts"
+import { ideasForServiceReread, redesignTransition } from './proposal-redesign.ts'
+import { rankingRoom } from './proposal-ranking-test-support.ts'
+test('one idea per person; editing re-enables it, clears its reading, and service rereads leave eight readings for ideas', () => {
+  const room = rankingRoom(); room.phase = 'setup'
+  room.ideas = [{ id: 'idea', text: 'Old idea', authorId: room.hostId, on: false, rankedKeys: [1e12 + 1], attributes: [{ text: 'Old', kind: 'want', key: 'romance' }], interpretedAt: 1 }]
+  const envelope = { commandId: 'edit', sequence: 1, command: { type: 'edit_idea' as const, ideaId: 'idea', text: 'New idea' } }
+  const next = redesignTransition(room, room.hostId, envelope, 5)!
+  assert.equal(next.ideas![0].on, true)
+  assert.deepEqual(next.ideas![0].rankedKeys, []); assert.deepEqual(next.ideas![0].attributes, [])
+  assert.equal(next.interpretationCount, 1)
+  assert.throws(() => redesignTransition(next, room.hostId, { ...envelope, command: { type: 'add_idea', text: 'Second idea' } }, 6), { code: 'limit_reached', message: 'One idea each. Edit yours to change it.' })
+  next.interpretationCount = 16
+  assert.deepEqual(ideasForServiceReread(next), [])
+  next.interpretationCount = 15
+  assert.equal(ideasForServiceReread(next).length, 1)
+  next.ideas![0].rankedKeys = Array.from({ length: 100 }, (_, i) => 1e12 + i + 1)
+  assert.equal(ideasForServiceReread(next).length, 0)
+  assert.equal(ideasForServiceReread(next, () => 50).length, 1, 'only keys still on the room services count')
+})
 const intent = {
 	prompt: "A funny film",
 	attributes: [{ text: "Funny", kind: "want" as const }],
@@ -211,7 +230,7 @@ test("room search accepts extra fields from the search role and stores only text
 	const intent = await search("something funny", "US", [8])
 	assert.deepEqual(intent.attributes, [{ text: "Situational Comedy", kind: "want", key: "situational_comedy" }])
 	assert.deepEqual(intent.rankedKeys, [2000000001400])
-	assert.equal(Object.hasOwn(intent, "extra"), false)
+	assert.equal(Object.prototype.hasOwnProperty.call(intent, "extra"), false)
 })
 
 test("a room's ranking asked for its first keys is the head of the whole ranking", () => {
