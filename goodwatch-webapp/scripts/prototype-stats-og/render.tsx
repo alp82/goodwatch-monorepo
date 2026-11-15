@@ -67,7 +67,41 @@ for (const t of posterTitles) {
 	if (img) posters.push(img)
 }
 
+const t = s.trivia
+const made = new Date(s.generatedAt)
+const exactYears = (c.movieMinutes + c.episodeMinutes) / MINUTES_PER_YEAR
+const bieber = r.letterboxdOverImdb[0]
+const quizTop = r.mostImdbVotesMovies.slice(0, 3)
 const content: StatsCardContent = {
+	fun: {
+		bento: {
+			big: { n: count(t.commonTitles[0].movies), text: `movies are called ${t.commonTitles[0].title}.` },
+			small: [
+				{ n: count(t.sharks), text: "shark movies" },
+				{ n: hoursMinutes(r.longest[0].runtime), text: `${r.longest[0].title}, the longest movie` },
+				{ n: count(s.people.mostCastCredits[0].credits), text: `roles for ${s.people.mostCastCredits[0].name}` },
+				{ n: count(t.commonRoles[0].credits), text: `characters are just "${t.commonRoles[0].role}"` },
+			],
+		},
+		vs: {
+			title: bieber.title,
+			year: bieber.year ?? 0,
+			poster: await image(bieber.poster),
+			left: { score: String(bieber.imdb), of: "/10", source: "IMDb" },
+			right: { score: bieber.letterboxd.toFixed(2), of: "/5", source: "Letterboxd" },
+		},
+		quiz: {
+			question: "Which movie has the most IMDb votes?",
+			answers: await Promise.all([quizTop[1], quizTop[0], quizTop[2]].map(async (x) => ({ title: x.title, poster: await image(x.poster) }))),
+		},
+		counts: [
+			{ n: count(t.christmas), text: "Christmas movies" },
+			{ n: count(t.zombies), text: "zombie movies" },
+			{ n: count(t.sharks), text: "shark movies" },
+			{ n: count(t.friday13Horror), text: "Friday the 13th horrors" },
+		],
+		pressPlay: { year: Math.floor(made.getUTCFullYear() + made.getUTCMonth() / 12 - exactYears), years: watchYears },
+	},
 	hero: { n: `${watchYears} years`, line: "of watching: every movie and every episode on GoodWatch, back to back." },
 	tiles: [
 		{ n: short(c.movies), label: "movies" },
@@ -92,7 +126,8 @@ const content: StatsCardContent = {
 }
 
 const cards: { variant: string; name: string; file: string }[] = []
-for (const { key, name } of STATS_VARIANTS) {
+const ORDER = ["F", "G", "H", "I", "J", "A", "B", "C", "D", "E"]
+for (const { key, name } of [...STATS_VARIANTS].sort((a, b) => ORDER.indexOf(a.key) - ORDER.indexOf(b.key))) {
 	const svg = await satori(resolveTree(createElement(PrototypeStatsCard, { variant: key, content })) as never, {
 		width: 1200,
 		height: 630,
@@ -111,7 +146,7 @@ const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta n
 h1{font-size:20px;margin:8px 0 4px}p{color:#aaa;margin:0 0 16px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,560px),1fr));gap:22px}
 figure{margin:0}img{width:100%;height:auto;border-radius:10px;display:block}figcaption{margin-top:6px;color:#bbb}b{color:#fbbf24}</style></head>
 <body><main><h1>Link-preview cards for /stats (prototype)</h1>
-<p>Numbers from the live snapshot of ${content.asOf}. "Today" is the card goodwatch.app/og/stats.png serves now.</p>
+<p>Numbers from the live snapshot of ${content.asOf}. Round 2 (F–J) uses the page's fun facts and says "stats"; round 1 (A–E) follows. "Today" is the card goodwatch.app/og/stats.png serves now.</p>
 <div class="grid"><figure><img src="current.jpg?v=${v}" alt="current card"><figcaption><b>Today</b> — generic static card</figcaption></figure>
 ${cards.map((x) => `<figure><img src="${x.file}?v=${v}" alt="${x.variant}"><figcaption><b>${x.variant}</b> — ${x.name}</figcaption></figure>`).join("")}
 </div></main></body></html>`
