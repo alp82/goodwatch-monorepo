@@ -2,8 +2,9 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { rankingRoom, cards } from './proposal-ranking-test-support.ts'
 import { proposalSnapshot } from './proposal-machine.ts'
-// The app's own parser, as installed bundles run it. Needs yepwatch-app's dependencies installed (zod).
-import { parseFrame } from '../../../../yepwatch-app/src/core/continuous/wire.ts'
+// The parser installed bundles run (frozen), and the current app's parser.
+import { parseFrame } from './installed-wire.fixture.ts'
+import { parseFrame as parseCurrentFrame } from '../../../../yepwatch-app/src/core/continuous/wire.ts'
 import { ProposalService } from './proposal-service.server.ts'
 import { ProposalMemoryRepository, proposalFixtureCatalog } from './proposal-test-support.ts'
 import { createProposalHandler } from './proposal-http.server.ts'
@@ -45,6 +46,7 @@ test('HTTP read responses omit reasons by default and include them only with can
   assert.deepEqual(supported.own.ins, { candidateIds: [], revision: 0 })
   assert.equal(supported.own.favorite, null)
   assert.equal(parseFrame(JSON.stringify({ type: 'room.snapshot', snapshot: supported.shared })), null)
+  assert.ok(parseCurrentFrame(JSON.stringify({ type: 'room.snapshot', snapshot: (await read('?matchesIn=1&candidateReasons=1')).shared })), 'the current app reads what it opts into')
 })
 
 test('internal single and batched views require matchesIn=1 to emit matches fields', async () => {
