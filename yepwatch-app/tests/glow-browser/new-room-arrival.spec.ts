@@ -1,6 +1,6 @@
 /** New room's editor works while admission is pending; its draft survives the room taking over. */
 import { expect, test, type Page } from '@playwright/test';
-import { choosingRoom, fakeRoom, newRoom } from './room-fake';
+import { choosingRoom, fakeRoom, newRoom, setUpDevice } from './room-fake';
 
 const slowCreate = (page: Page, ms: number) => page.route('**/api/yepwatch/v1/**', async (route) => {
   if (route.request().method() === 'POST' && new URL(route.request().url()).pathname.endsWith('/rooms')) await new Promise((r) => setTimeout(r, ms));
@@ -22,9 +22,10 @@ test('New room from inside a room accepts a mood before admission finishes', asy
 
 test('New room from the start page offers presets before admission finishes', async ({ page }) => {
   await fakeRoom(page, newRoom());
+  await setUpDevice(page);
   await slowCreate(page, 1500);
   await page.goto('/');
-  await page.getByRole('button', { name: 'New room', exact: true }).click();
+  await page.getByRole('button', { name: 'New couch', exact: true }).click();
   await page.getByRole('button', { name: 'cheer me up', exact: true }).click();
   await expect(page.getByTestId('retry-panel')).toHaveCount(0);
   await expect(page).toHaveURL(/\/new$/);

@@ -1,15 +1,11 @@
 /**
- * The returning start page (direction D): the greeting (with Continue with GoodWatch for guests), the
- * big New room / Join a room tiles, open rooms as poster-fan cards (LIVE, mood, status, faces), then
- * one compact Decided row that opens History. Desktop browsers add a Get the app card. With no rooms:
- * the greeting, "What are we watching?", the tiles and History when there is any.
+ * The set-up start page's list under New couch and Join: open couches as poster-fan cards (LIVE, mood, status,
+ * faces), then one compact Decided row (or History) that opens History. Nothing when there's none of these.
  */
 import { useState } from 'react';
 import { Image, Pressable, View } from 'react-native';
 import type { DecisionRecord } from '../../core/continuous/room-registry-state';
-import { AppCard, installable } from '../home/install';
-import { StartSignIn } from '../home/Landing';
-import { Tiles } from '../home/start-parts';
+import { COUCH } from '../home/couch-words';
 import { GText, Icon, Press, glow, grow, onePress } from '../glow/theme';
 import { HeroIcon, LiveBadge, Note, TextLink } from '../room/ui';
 import { FaceStack } from '../shell/parts';
@@ -38,9 +34,14 @@ export function PosterFan({ posters, width, height }: { posters: readonly string
   );
 }
 
+/** A couch's name on its card: its ideas, or whose couch it is (never a filter default such as "Anything"). */
+export const couchTitle = (room: Pick<HomeRoom, 'label' | 'own' | 'hostNickname'>) =>
+  room.label !== 'Anything' ? room.label : room.own || !room.hostNickname ? 'Your couch' : `${room.hostNickname}’s couch`;
+
 /** An open room: its deck as a poster fan, LIVE, the room's ideas, its status and people. Archive sits on the card. */
-function LiveCard({ room, width, now, open, archive, quiet }: { room: HomeRoom; width: number; now: number; open: () => void; archive: () => void; quiet: boolean }) {
+function LiveCard({ room: given, width, now, open, archive, quiet }: { room: HomeRoom; width: number; now: number; open: () => void; archive: () => void; quiet: boolean }) {
   const { z } = useLayout();
+  const room = { ...given, label: couchTitle(given) };
   const fan = Math.round(width * 0.82);
   return (
     <View style={{ width }}>
@@ -55,7 +56,7 @@ function LiveCard({ room, width, now, open, archive, quiet }: { room: HomeRoom; 
           <GText size={z(14)} color={room.hot ? glow.amber : glow.soft} lines={1}>{room.status}</GText>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <FaceStack people={room.people} size={z(22)} max={4} />
-            <GText size={z(13)} color={glow.muted} lines={1} style={{ flex: 1 }}>{!room.own && room.hostNickname ? `${room.hostNickname}’s room` : timeAgo(room.openedAt, now)}</GText>
+            <GText size={z(13)} color={glow.muted} lines={1} style={{ flex: 1 }}>{!room.own && room.hostNickname ? `${room.hostNickname}’s couch` : timeAgo(room.openedAt, now)}</GText>
           </View>
         </View>
       </Pressable>
@@ -101,8 +102,7 @@ function HistoryButton({ onPress }: { onPress: () => void }) {
   );
 }
 
-export function YourRooms({ title, rooms, decisions, unavailable, loading, open, archive, archivedRoom, undoArchive, newRoom, join, retry, history, signIn, signingIn = false, lapsed = false, disabled, quiet }: {
-  title: string;
+export function YourRooms({ rooms, decisions, unavailable, loading, open, archive, archivedRoom, undoArchive, retry, history, quiet }: {
   /** Rooms on the start page; the open ones become cards. */
   rooms: readonly HomeRoom[];
   decisions: readonly DecisionRecord[];
@@ -113,84 +113,39 @@ export function YourRooms({ title, rooms, decisions, unavailable, loading, open,
   /** Just archived: Undo stays offered for a moment. */
   archivedRoom: boolean;
   undoArchive: () => void;
-  newRoom: () => void;
-  join: () => void;
   retry: () => void;
   /** History has something (decided, left or archived rooms). */
   history?: () => void;
-  /** Guests: Continue with GoodWatch; a lapsed member: Reconnect GoodWatch. */
-  signIn?: () => void;
-  /** A GoodWatch sign-in is already starting: the button waits. */
-  signingIn?: boolean;
-  /** The session ran out: `signIn` is the small Reconnect GoodWatch, not the guest button. */
-  lapsed?: boolean;
-  disabled: boolean;
-  /** A room is opening: the buttons rest without dimming. */
+  /** A room is opening: the cards rest without dimming. */
   quiet: boolean;
 }) {
   const { phone, max, z } = useLayout();
   const [now] = useState(() => Date.now());
   const live = rooms.filter((r) => r.live);
-  const blank = !live.length && !decisions.length && !loading;
   const gap = phone ? 12 : z(18);
   const cols = phone ? 2 : Math.max(3, Math.floor((max + gap) / (z(300) + gap)));
   const cardWidth = Math.floor((max - gap * (cols - 1)) / cols);
-  const tiles = { newRoom, join, disabled, quiet };
-  // As wide as the New room and Join tiles above it, on every window.
-  const signInButton = signIn ? <StartSignIn height={phone ? 54 : z(54)} signIn={signIn} signingIn={signingIn} lapsed={lapsed} disabled={disabled} quiet={quiet} /> : null;
-  const notes = (
-    <>
-      {archivedRoom ? <Note action={{ label: 'Undo', onPress: undoArchive }}>Room archived</Note> : null}
-      {unavailable.length > 0 && (
-        <TextLink color={glow.muted} onPress={retry} label={unavailable.length === 1 ? 'One room didn’t load. Retry' : `${unavailable.length} rooms didn’t load. Retry`} />
-      )}
-    </>
-  );
-  if (blank) {
-    return (
-      <View testID="home-rooms" style={{ gap: phone ? 24 : z(36) }}>
-        <View style={{ gap: z(6) }}>
-          <GText bold size={phone ? 34 : z(54)} style={{ letterSpacing: phone ? -1 : -1.6 }}>{title}</GText>
-          <GText size={phone ? 17 : z(21)} color={glow.soft}>What are we watching?</GText>
-        </View>
-        <View style={{ gap: phone ? 12 : z(16) }}>
-          <Tiles {...tiles} height={phone ? 170 : z(240)} />
-          {signInButton}
-        </View>
-        {history ? (
-          <View style={{ flexDirection: 'row' }}>
-            <HistoryButton onPress={history} />
-          </View>
-        ) : null}
-        {notes}
-        {!phone && installable ? <AppCard /> : null}
-      </View>
-    );
-  }
+  const notes = archivedRoom || unavailable.length > 0;
+  if (!live.length && !loading && !notes && !history) return null;
   return (
-    <View testID="home-rooms" style={{ gap: phone ? 28 : z(40) }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-        <GText bold size={phone ? 30 : z(44)} style={{ flex: 1, letterSpacing: -1 }}>{title}</GText>
-      </View>
-      <View style={{ gap: phone ? 12 : z(16) }}>
-        <Tiles {...tiles} height={phone ? 132 : z(184)} />
-        {signInButton}
-      </View>
+    <View testID="home-lists" style={{ gap: phone ? 28 : z(40) }}>
       {live.length ? (
         <View style={{ gap: z(14) }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            <GText bold size={z(22)} style={{ letterSpacing: -0.4 }}>Open</GText>
-            <GText size={z(16)} color={glow.muted}>{String(live.length)}</GText>
+            <GText bold size={z(22)} style={{ letterSpacing: -0.4 }}>{COUCH.yours}</GText>
+            <GText size={z(16)} color={glow.muted}>{`${live.length} open`}</GText>
           </View>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap }}>
             {live.map((r) => <LiveCard key={r.roomId} room={r} width={cardWidth} now={now} open={() => open(r.roomId)} archive={() => archive(r.roomId)} quiet={quiet} />)}
           </View>
         </View>
-      ) : loading ? <GText size={13} color={glow.muted}>Opening your rooms…</GText> : null}
-      {notes}
+      ) : loading ? <GText size={13} color={glow.muted}>Opening your couches…</GText> : null}
+      {archivedRoom ? <Note action={{ label: 'Undo', onPress: undoArchive }}>Couch archived</Note> : null}
+      {unavailable.length > 0 && (
+        <TextLink color={glow.muted} onPress={retry} label={unavailable.length === 1 ? 'One couch didn’t load. Retry' : `${unavailable.length} couches didn’t load. Retry`} />
+      )}
       {decisions.length && history ? <DecidedRow decisions={decisions} onPress={history} />
-        : history ? <HistoryButton onPress={history} /> : null}
-      {!phone && installable ? <AppCard /> : null}
+        : history ? <View style={{ flexDirection: 'row' }}><HistoryButton onPress={history} /></View> : null}
     </View>
   );
 }

@@ -1,13 +1,13 @@
 import { expect } from '@playwright/test';
 import { test, eventually, issuer, type Person } from '../lib/harness';
-import { cardTitle, createRoom, hostName, pageTap, pickServices, recordPage, start } from './flows';
+import { cardTitle, createRoom, hostName, pageTap, pickServices, recordPage, start, newCouch } from './flows';
 
 const roomCountry = (p: Person) => (p.latest?.screens as { country: string | null }[] | undefined)?.[0]?.country;
 
 /** Create room, untimed: the compatibility paths take extra round trips and aren't the createRoomMs moment. */
 async function createWithoutTiming(host: Person, mood: string) {
   await host.open('/');
-  await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] } });
+  await newCouch(host, { expect: { visible: ['mood-page'] } });
   await host.fill(host.page.getByLabel('Mood'), mood);
   await host.tap(host.button('Create room'), { expect: { visible: ['room-setup'] } });
   await eventually(() => host.latest?.ideas.map((i) => i.text), (v) => JSON.stringify(v) === JSON.stringify([mood]), 'the room has exactly the one idea', host);
@@ -19,7 +19,20 @@ test.describe('create and set up a room', () => {
     await host.open('/');
     await host.see({ visible: ['landing'] });
     await host.audit('start page (first visit)');
-    await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] }, moment: 'newRoomMs' });
+    // Setup: the name, a few Taste cards (each answer and Undo), back on the start page, set up. Nothing is created.
+    await host.tap(host.button('Start with you'), { expect: { visible: ['first-run'] } });
+    await host.audit('setup: name');
+    await host.fill(host.page.getByLabel('Your name').filter({ visible: true }), 'Alp');
+    await host.tap(host.button('Continue'), { expect: { text: 'What do you like?' } });
+    await host.see({ text: '1 of \\d+' }, 15000, 'the first Taste card');
+    await host.audit('setup: Taste cards');
+    for (const answer of ['Loved it', 'Not for me', 'Haven’t seen']) await host.tap(host.button(answer).first(), { expect: {}, repeatable: true });
+    await host.tap(host.button('Undo'), { expect: { text: '3 of \\d+' } });
+    for (let i = 0; i < 3; i++) await host.tap(host.button('Loved it').first(), { expect: {}, repeatable: true });
+    await host.tap(host.button('That’s enough'), { expect: { visible: ['home-rooms'] } });
+    expect(host.commandLog.filter((c) => c.path.endsWith('/rooms')).length, 'setup creates no couch').toBe(0);
+    await host.audit('start page (set up)');
+    await newCouch(host, { expect: { visible: ['mood-page'] }, moment: 'newRoomMs' });
     await host.audit('Mood page');
     await host.fill(host.page.getByLabel('Mood'), 'funny space heist');
     const sent = host.commandLog.length;
@@ -75,7 +88,7 @@ test.describe('create and set up a room', () => {
       await route.fulfill({ response }).catch(() => undefined); // the app stopped waiting for the slow ones
     });
     await host.open('/');
-    await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] } });
+    await newCouch(host, { expect: { visible: ['mood-page'] } });
     await host.fill(host.page.getByLabel('Mood'), 'slow server heist');
     const stop = await recordPage(host, 'mood-page', /Couldn|Try again|offline/i);
     await host.tap(host.button('Create room'), { expect: {} });
@@ -121,7 +134,7 @@ test.describe('create and set up a room', () => {
       await route.fulfill({ response });
     });
     await host.open('/');
-    await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] } });
+    await newCouch(host, { expect: { visible: ['mood-page'] } });
     await host.fill(host.page.getByLabel('Mood'), 'short outage heist');
     const stop = await recordPage(host, 'mood-page', /Couldn|Try again|offline/i);
     await host.tap(host.button('Create room'), { expect: {} });
@@ -165,7 +178,7 @@ test.describe('create and set up a room', () => {
       return Date.now();
     }, state);
     await host.open('/');
-    await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] } });
+    await newCouch(host, { expect: { visible: ['mood-page'] } });
     await host.fill(host.page.getByLabel('Mood'), 'rate limited heist');
     const stop = await recordPage(host, 'mood-page', /Couldn|Try again|offline/i);
     // Away as soon as the app holds the server's wait: it has read the 429 and saved the deadline with its request.
@@ -218,7 +231,7 @@ test.describe('create and set up a room', () => {
     await issuer(`/_e2e/search-budget?prompt=${encodeURIComponent(second)}`);
     try {
       await host.open('/');
-      await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] } });
+      await newCouch(host, { expect: { visible: ['mood-page'] } });
       await host.fill(host.page.getByLabel('Mood'), mood);
       const stop = await recordPage(host, 'mood-page', /Couldn|Try again|unavailable/i);
       const sent = host.commandLog.length;
@@ -257,7 +270,7 @@ test.describe('create and set up a room', () => {
     await issuer(`/_e2e/search-delay?prompt=${encodeURIComponent(mood)}&ms=4000`);
     try {
       await host.open('/');
-      await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] } });
+      await newCouch(host, { expect: { visible: ['mood-page'] } });
       await host.fill(host.page.getByLabel('Mood'), mood);
       const stop = await recordPage(host, 'room-setup', /Mood matching is unavailable/i);
       await host.tap(host.button('Create room'), { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' });
@@ -283,7 +296,7 @@ test.describe('create and set up a room', () => {
   test('create room from a preset chip ("Anything goes")', async ({ room }) => {
     const host = await room.person('Alp');
     await host.open('/');
-    await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] } });
+    await newCouch(host, { expect: { visible: ['mood-page'] } });
     await host.tap(host.button('Anything goes'), { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' });
     await eventually(() => host.latest?.ideas.length, (n) => n === 0, 'Anything goes makes a room without ideas', host);
   });

@@ -2,7 +2,7 @@ import { ConnectionDetails } from './rooms/ConnectionDetails';
 import type { ConnectionDiagnostic } from '../core/continuous/connection-diagnostic';
 import { guestOnly } from '../core/config';
 import { memo, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
-import { AppState, BackHandler, Platform } from 'react-native';
+import { AppState, BackHandler, Platform, View } from 'react-native';
 import { GText, Press, glow, grow } from './glow/theme';
 import { router, useFocusEffect, useIsFocused } from 'expo-router';
 import * as Crypto from 'expo-crypto';
@@ -27,9 +27,12 @@ import { browserOffline, onBackOnline } from '../core/continuous/network';
 import { OFFLINE_WORDS, QUIET_OUTAGE_MS, RECONNECTING_WORDS } from '../core/continuous/connection-words';
 import { useLate, useLateSince } from '../core/useLate';
 import { BusyNote } from './shell/floating-note';
-import { Landing } from './home/Landing';
+import { Landing, SetUpStart } from './home/Landing';
+import { FirstRun } from './home/FirstRun';
+import { FollowUpCard } from './home/FollowUpCard';
+import { useTasteProfile } from '../core/continuous/taste-profile';
 import { BootPageReady, BootPhase } from './home/boot-phase';
-import { greeting, type HomeRoom } from './rooms/home-model';
+import type { HomeRoom } from './rooms/home-model';
 import { YourRooms } from './rooms/YourRooms';
 import { HistorySheet, InviteHead, JoinScreen, ProfileSheet } from './rooms/panels';
 import type { InvitePreview } from '@goodwatch/yepwatch-contracts/proposal';
@@ -37,11 +40,14 @@ import { useHome } from './rooms/useHome';
 import { useAccount } from '../core/continuous/account';
 import { memberTransition } from '../core/continuous/member-transition';
 import { AppFrame } from './shell/Frame';
+import { useLayout } from './shell/layout';
 import { openNewRoom, preloadStartPages } from './room/nav';
 
-type PanelKind = 'join' | 'profile' | 'history';
+type PanelKind = 'join' | 'profile' | 'history' | 'setup';
 /** What another screen can open on the start page (`/?open=…`). */
 export type StartRequest = 'profile' | 'history' | 'join' | 'new';
+/** How long the start page waits for the taste profile (its next-day question) before it shows without one. */
+const PROFILE_WAIT_MS = 1500;
 /** How long Your rooms offers Undo after an archive. */
 const UNDO_ARCHIVE_MS = 6_000;
 /** The saved request's manual retry gate is still closed. */
@@ -82,6 +88,7 @@ export function Entrance(props: EntranceProps) {
 function useEntrancePage({ invite, open: request, from }: EntranceProps) {
   const home = useHome();
   const account = useAccount();
+  const layout = useLayout();
   const boot = useContext(BootPhase);
   // A redirect during the home boot can unmount the navigator before it is retained.
   useEffect(() => { if (boot === 'ready' && home.deletionPending) router.replace('/delete-account'); }, [boot, home.deletionPending]);
@@ -93,6 +100,8 @@ function useEntrancePage({ invite, open: request, from }: EntranceProps) {
   const [nickname, setNickname] = useState('');
   const [code, setCode] = useState(invite ?? '');
   const [busy, setBusy] = useState(false);
+  /** The running join came from the start page's own Join field. */
+  const [inlineJoin, setInlineJoin] = useState(false);
   /** The name the running join was sent with: its form keeps it while the device's rooms are read anew. */
   const [sentName, setSentName] = useState<string | null>(null);
   // The running admission. A slow or restarting server: it keeps sending the same saved request by itself
@@ -149,7 +158,20 @@ function useEntrancePage({ invite, open: request, from }: EntranceProps) {
   useEffect(() => { if (memberOf) router.replace({ pathname: '/room/[id]', params: { id: memberOf } }); }, [memberOf]);
   // An invitation's page is ready once its room preview is in and the membership check is done, so the join
   // page appears whole (never with a placeholder head) as the startup cover dissolves.
-  const pageReady = home.ready && home.settled && !restoring && (invite ? preview !== undefined && !checkingInvite && !memberOf : !home.loadingRooms);
+  // The set-up start page appears with its next-day question or without it, never with it arriving late: the page
+  // waits for the profile (at most PROFILE_WAIT_MS) and decides its slot when it shows (and each time it's back in front).
+  const knownName = home.nickname ?? (account.member || account.lapsed ? account.name : null);
+  const setUpPage = account.member || home.hasRooms || home.decisions.length > 0 || home.unavailable.length > 0 || Boolean(knownName);
+  // A first visit asks the server nothing about a profile (there is none to ask about yet).
+  const profile = useTasteProfile(60_000, setUpPage && !invite);
+  const [profileWaitOver, setProfileWaitOver] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setProfileWaitOver(true), PROFILE_WAIT_MS); return () => clearTimeout(t); }, []);
+  const profileKnown = profileWaitOver || profile.status === 'ready' || profile.status === 'failed';
+  const pageReady = home.ready && home.settled && !restoring && (invite ? preview !== undefined && !checkingInvite && !memberOf : !home.loadingRooms && (!setUpPage || profileKnown));
+  const focused = useIsFocused();
+  const [followUpSlot, setFollowUpSlot] = useState<{ open: boolean; focused: boolean } | null>(null);
+  if (pageReady && (followUpSlot === null || (focused && !followUpSlot.focused))) setFollowUpSlot({ open: profile.followUps.length > 0, focused });
+  else if (followUpSlot && followUpSlot.focused !== focused) setFollowUpSlot({ ...followUpSlot, focused });
   useEffect(() => { if (pageReady) markPageReady(invite ? `invite:${invite}` : 'home'); }, [pageReady, markPageReady, invite]);
   // Back from GoodWatch: the cover lifts once the page is whole, with the account already in it.
   useEffect(() => { if (home.ready && !restoring && account.ready) memberTransition.arrived(); }, [home.ready, restoring, account.ready]);
@@ -219,8 +241,9 @@ function useEntrancePage({ invite, open: request, from }: EntranceProps) {
     };
   }, [invite, checkVersion, intent]);
   /** Starts a join the person asked for; the page's resend state machine runs it (runJoin). */
-  function joinRoom(member = false, returning?: { code: string; nickname: string }, name?: string, joinCode?: string) {
+  function joinRoom(member = false, returning?: { code: string; nickname: string }, name?: string, joinCode?: string, inline = false) {
     if (restoring || restoreFailed || (admission && admission.intent !== intent) || waiting(admission)) return;
+    setInlineJoin(inline);
     resume.focus();
     resume.pick({ member, returning, name, code: joinCode });
   }
@@ -303,7 +326,7 @@ function useEntrancePage({ invite, open: request, from }: EntranceProps) {
   useEffect(() => resume.connect({ send: (ask) => void joinRef.current?.(ask), abort: () => attempt.current?.abort() }), [resume]);
   useEffect(() => onBackOnline(() => resume.online()), [resume]);
   // A lapsed sign-in keeps its name: the page doesn't turn back into a guest's mid-session.
-  const known = home.nickname ?? (account.member || account.lapsed ? account.name : null);
+  const known = knownName;
   // Offline says so only after the quiet period (connection-words.ts); the request goes by itself when back.
   const offlineLate = useLate(error === OFFLINE_WORDS, QUIET_OUTAGE_MS);
   const shownError = error === OFFLINE_WORDS && !offlineLate ? '' : error;
@@ -366,6 +389,16 @@ function useEntrancePage({ invite, open: request, from }: EntranceProps) {
   const signIn = guestOnly || account.member ? undefined : () => signInFrom('/');
   const signInFromProfile = guestOnly || account.member ? undefined : () => signInFrom(roomFrom ?? '/?open=profile');
   const openJoin = () => { setError(''); if (!resumeAdmission()) setPanel('join'); };
+  /** Start with you (first visit): setup, unless a saved request is waiting (every entry action resumes it first). */
+  const setUp = () => { setError(''); if (!resumeAdmission()) setPanel('setup'); };
+  /** The start page's own Join field: set up (a name), it joins right here; otherwise the Join screen asks the name. */
+  const joinCode = (typed: string) => {
+    setError('');
+    setCode(typed);
+    if (resumeAdmission()) return;
+    if (!known) { setPanel('join'); return; }
+    joinRoom(account.member, undefined, known, typed, true);
+  };
   // Another screen's header asked for New room: it starts once the saved request is known.
   const handled = useRef(false);
   useEffect(() => {
@@ -375,8 +408,10 @@ function useEntrancePage({ invite, open: request, from }: EntranceProps) {
     // Starting the admission is the point of this request (it runs once, like a press of New room).
     if (request === 'new') create(); // eslint-disable-line react-hooks/set-state-in-effect
   }, [request, home.ready, restoring]); // eslint-disable-line react-hooks/exhaustive-deps
-  const returning = home.hasRooms || home.decisions.length > 0 || home.unavailable.length > 0 || Boolean(known);
-  const pending = admission?.code ? 'join' : null;
+  const returning = setUpPage;
+  // A join started from the start page's own field keeps the start page while it runs (its saved request would
+  // otherwise turn the page into the Join screen for a frame); a join that fails shows its Join screen to retry.
+  const pending = admission?.code && !(inlineJoin && joining) ? 'join' : null;
   const shown: PanelKind | null = panel ?? (recoveryDismissed ? null : pending ?? (restoreFailed || recoveryBlocked ? 'join' : null));
   // No countdowns (connection-words.ts): the saved request waits out the server's pause behind a disabled button.
   const actionLabel = (first: string, again: string) => (joining ? 'Joining…' : admission ? again : first);
@@ -397,6 +432,11 @@ function useEntrancePage({ invite, open: request, from }: EntranceProps) {
   // A join on its way keeps its screen: the device's rooms are read anew as it lands (its name, the room), and
   // the room replaces this page a moment later in one commit.
   const joinLanding = busy && shown === 'join';
+  // Setup (first visit): name, then a few Taste cards, then back here, set up. Its own screen, like Join.
+  if (shown === 'setup') return (
+    <FirstRun initialName={known ?? ''} me={me} back={closePanel} done={closePanel}
+      saveName={(name) => home.setNickname(name)} />
+  );
   if (!joinLanding && (!home.ready || restoring || memberOf || (!returning && !home.settled))) return <AppFrame header={{ me, onProfile: openProfile, profileQuiet: true }}>{null}</AppFrame>;
   // Joining is its own screen, like the room's pages: the start page doesn't render underneath.
   // While a join is on its way the form keeps its layout (the saved name locks only once it's back), so a
@@ -426,14 +466,18 @@ function useEntrancePage({ invite, open: request, from }: EntranceProps) {
       sheet={sheet}
     >
       {returning ? (
-        <YourRooms title={known ? `${greeting(new Date().getHours())}, ${known}` : greeting(new Date().getHours())}
-          rooms={home.active} decisions={home.decisions} unavailable={home.unavailable} loading={home.loadingRooms} open={open} newRoom={create}
-          join={openJoin} retry={home.retry} history={history} signIn={signIn} signingIn={account.busy} lapsed={account.lapsed}
-          archive={(roomId) => { home.archive(roomId); setJustArchived(roomId); }}
-          archivedRoom={Boolean(justArchived)} undoArchive={() => { if (justArchived) home.restore(justArchived); setJustArchived(null); }}
-          disabled={checkingInvite} quiet={busy} />
+        <View testID="home-rooms" style={{ gap: layout.phone ? 28 : layout.z(40) }}>
+          <SetUpStart me={known} newRoom={create} joinCode={joinCode} setUp={setUp} code={code}
+            signIn={signIn} signingIn={account.busy} lapsed={account.lapsed} disabled={checkingInvite} quiet={busy} joining={joining && !shown}
+            top={followUpSlot?.open && profile.followUps.length ? <FollowUpCard followUps={profile.followUps} /> : null} />
+          <YourRooms rooms={home.active} decisions={home.decisions} unavailable={home.unavailable} loading={home.loadingRooms} open={open}
+            retry={home.retry} history={history}
+            archive={(roomId) => { home.archive(roomId); setJustArchived(roomId); }}
+            archivedRoom={Boolean(justArchived)} undoArchive={() => { if (justArchived) home.restore(justArchived); setJustArchived(null); }}
+            quiet={busy} />
+        </View>
       ) : (
-        <Landing newRoom={create} join={openJoin} signIn={signIn} signingIn={account.busy} lapsed={account.lapsed} disabled={checkingInvite} quiet={busy} />
+        <Landing newRoom={create} joinCode={joinCode} setUp={setUp} signIn={signIn} signingIn={account.busy} lapsed={account.lapsed} disabled={checkingInvite} quiet={busy} />
       )}
       {!shown ? reconnectLine : null}
       {!shown && home.notice ? <GText size={14} color={glow.soft}>{home.notice}</GText> : null}

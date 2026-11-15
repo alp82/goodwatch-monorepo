@@ -102,7 +102,7 @@ test.describe('Continue with GoodWatch never creates a room; New room still open
     await button(page, 'Continue with GoodWatch').click();
     await page.waitForURL((url) => url.pathname === '/');
     await expect(button(page, 'Continue with GoodWatch')).toHaveCount(0);
-    await button(page, 'New room').click();
+    await button(page, 'New couch').click();
     await expect(page.getByLabel('Mood')).toBeVisible();
     await expect(page).toHaveURL(/\/new$/);
     await button(page, 'cheer me up').click();

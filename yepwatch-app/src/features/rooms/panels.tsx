@@ -24,6 +24,7 @@ import { R, warm } from '../shell/tokens';
 import { posterAt, timeAgo, type HomeRoom } from './home-model';
 import { useHome } from './useHome';
 import { LegalLinks } from '../legal/LegalLinks';
+import { TasteEntry } from '../taste/TasteEntry';
 
 const MAX_NAME = 40;
 /** Browsers draw their own focus outline and caret; the amber border and caret replace them. */
@@ -197,13 +198,14 @@ export function ProfileSheet({ nickname, save, member = false, lapsed = false, s
       <View style={{ gap: 8 }}>
         <Label>Your name</Label>
         <Field label="Your name" value={value} onChange={setValue} placeholder="Your name" returnKey="done" onSubmit={go} />
-        <GText size={13} color={glow.muted}>Used for new rooms</GText>
+        <GText size={13} color={glow.muted}>Used for new couches</GText>
       </View>
-      {!member && !lapsed && signIn ? <View style={{ gap: 14 }}><Or /><GoodWatchButton detail="Brings your streaming services to new rooms" onPress={signIn} disabled={busy} /></View> : null}
+      <TasteEntry member={member} />
+      {!member && !lapsed && signIn ? <View style={{ gap: 14 }}><Or /><GoodWatchButton detail="Brings your streaming services to new couches" onPress={signIn} disabled={busy} /></View> : null}
       {(member || lapsed) && logOut ? (
         <View style={{ gap: 8 }}>
           <Action label="Log out" onPress={logOut} disabled={busy} small />
-          <GText size={13} color={glow.muted}>Your rooms stay as they are. GoodWatch stays signed in.</GText>
+          <GText size={13} color={glow.muted}>Your couches stay as they are. GoodWatch stays signed in.</GText>
         </View>
       ) : null}
       <ErrorText>{error}</ErrorText>

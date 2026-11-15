@@ -1,6 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 import { continuousFixture } from '../continuous-fixture';
 import { openRoomPage } from './room-fake';
+/** The start page card of a couch without ideas: named after whose it is (never "Anything"). */
+const COUCH_CARD = /^(Your couch|.+’s couch)$/;
 
 async function fixture(page: Page, setup = false) {
   const room = continuousFixture();
@@ -78,10 +80,10 @@ test('Back closes matches, returns to Your rooms without leaving, and reopens th
   await page.getByRole('button', { name: 'Back', exact: true }).filter({ visible: true }).click();
   await expect(page.getByTestId('poster')).toHaveText(original, { useInnerText: true });
   await page.getByRole('button', { name: 'Back', exact: true }).filter({ visible: true }).click();
-  await expect(page.getByRole('button', { name: 'Anything', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: COUCH_CARD })).toBeVisible();
   await expect(page.getByTestId('yepwatch-boot')).toHaveCount(0);
   await page.reload();
-  await page.getByRole('button', { name: 'Anything', exact: true }).click();
+  await page.getByRole('button', { name: COUCH_CARD }).click();
   await expect(page.getByTestId('poster')).toHaveText(original, { useInnerText: true });
   expect(f.writes).toEqual([]);
 });
@@ -116,7 +118,7 @@ for (const [width, height] of [[320,568], [375,667], [390,844], [844,390], [1440
     await fixture(page);
     await page.getByRole('button', { name: 'Back', exact: true }).click();
     await expect(page).toHaveURL(/\/$/);
-    const back = page.getByRole('button', { name: 'Anything', exact: true });
+    const back = page.getByRole('button', { name: COUCH_CARD });
     await expect(back).toBeVisible();
     // The room's card sits under the start tiles; it fits the window once scrolled to.
     await back.evaluate((el) => el.scrollIntoView({ block: 'center' }));
@@ -136,7 +138,7 @@ test('boot reveals YepWatch once, then stays absent during navigation', async ({
   await page.waitForTimeout(850);
   await page.screenshot({ path: '.expo/feedback-boot.png' });
   await expect(boot).toHaveCount(0, { timeout: 5000 });
-  await page.getByRole('button', { name: 'Join a room', exact: true }).click();
+  await page.getByRole('button', { name: 'Start with you', exact: true }).click();
   await page.getByRole('button', { name: 'Back', exact: true }).click();
   await expect(boot).toHaveCount(0);
 });
@@ -170,7 +172,7 @@ for (const navigation of ['button', 'edge'] as const) test(`Tonight ${navigation
   else { await page.mouse.move(5,350);await page.mouse.down();await page.mouse.move(125,355,{steps:12});await page.mouse.up(); }
   await expect(page).toHaveURL(/\/$/);
   // A decided room leaves the open rooms for the Decided row, which opens History.
-  await expect(page.getByRole('button',{name:'Anything',exact:true})).toHaveCount(0);
+  await expect(page.getByRole('button',{name:COUCH_CARD})).toHaveCount(0);
   await page.getByRole('button',{name:'Decided, 1, open History',exact:true}).click();
   await expect(page.getByTestId('history-panel').getByText('Isolated test c1 (2020)',{exact:true})).toBeVisible();
   await page.getByRole('button',{name:'Isolated test c1, Anything',exact:true}).click();
@@ -312,7 +314,9 @@ test('Continue with GoodWatch needs no guest name, shows its G mark and makes no
   await page.goto('/');
   const signin = page.getByRole('button', { name: 'Continue with GoodWatch', exact: true });
   await expect(signin).toBeEnabled();
-  await expect(signin.locator('svg, img')).toHaveCount(1);
+  // The vector G (no dark square image) and the arrow that nudges on hover.
+  await expect(signin.locator('img')).toHaveCount(0);
+  await expect(signin.locator('svg')).toHaveCount(2);
   await signin.click();
   await expect.poll(() => signIns).toBe(1);
   expect(requests).toEqual([]);

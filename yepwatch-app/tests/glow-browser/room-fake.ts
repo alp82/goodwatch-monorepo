@@ -4,7 +4,7 @@
  * are participants the test edits directly (`f.room`, then `f.push()` to bump the revision).
  */
 import type { Page, Route } from '@playwright/test';
-import type { AccountDecision, CatalogMetadata, CommandEnvelope, InvitePreview, RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
+import type { AccountDecision, CatalogMetadata, CommandEnvelope, InvitePreview, ProfileAnswerItem, ProfileSummary, RoomSnapshot, TasteCard } from '@goodwatch/yepwatch-contracts/proposal';
 import { continuousFixture } from '../continuous-fixture';
 
 export type FakeSnapshot = RoomSnapshot;
@@ -68,6 +68,29 @@ export function choosingRoom(): FakeSnapshot {
   return s;
 }
 
+/**
+ * The device set up before (a name): the start page shows New couch and its Join field instead of the first visit's
+ * setup tile. A name changed later in the test stays (only an empty profile gets the seed).
+ */
+export const setUpDevice = (page: Page, name = 'Alp') => page.addInitScript((n) => {
+  if (!sessionStorage.getItem('yepwatch.v3.profile')) sessionStorage.setItem('yepwatch.v3.profile', JSON.stringify({ nickname: n }));
+}, name);
+
+/** Taste deck cards as GET /profile/taste-deck sends them (`posters`: real TMDB posters, for screenshots). */
+export function tasteCards(count = 10, posters = false): TasteCard[] {
+  const titles: [string, number, 'movie' | 'tv', string][] = [
+    ['Parasite', 2019, 'movie', '/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg'], ['Breaking Bad', 2008, 'tv', '/ztkUQFLlC19CCMYHW9o1zWhJRNq.jpg'],
+    ['Inception', 2010, 'movie', '/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg'], ['Stranger Things', 2016, 'tv', '/uOOtwVbSr4QDjAGIifLDwpb2Pdl.jpg'],
+    ['Spirited Away', 2001, 'movie', '/39wmItIWsg5sZMyRUHLkWBcuVR.jpg'], ['The Office', 2005, 'tv', '/dg9e5fPRRId8PoBE0F6jl5y85Eu.jpg'],
+    ['The Dark Knight', 2008, 'movie', '/qJ2tW6WMUDux911r6m7haRef0WH.jpg'], ['Interstellar', 2014, 'movie', '/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg'],
+    ['Pulp Fiction', 1994, 'movie', '/vQWk5YBFWF4bZaofAbv0tShwBvQ.jpg'], ['Game of Thrones', 2011, 'tv', '/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg'],
+  ];
+  return titles.slice(0, count).map(([title, year, mediaType, poster], i) => ({
+    key: (mediaType === 'movie' ? 1e12 : 2e12) + 1000 + i, title, year, mediaType, overview: `${title}: a well-known title for the taste deck.`,
+    runtimeMinutes: mediaType === 'movie' ? 120 + i : 50, posterUrl: posters ? `https://image.tmdb.org/t/p/w500${poster}` : null,
+  }));
+}
+
 const union = (s: FakeSnapshot) => [...new Set(s.shared.participants.filter((p) => !p.dropped).flatMap((p) => p.serviceIds ?? []))].filter((id) => !s.shared.disabledServiceIds.includes(id));
 
 /**
@@ -77,7 +100,11 @@ const union = (s: FakeSnapshot) => [...new Set(s.shared.participants.filter((p) 
  * signed in here before (as Alex) and the session has run out. `slowStart` holds the sign-in start for
  * that many ms; `linkFailures` answers that many room links with a retryable 503 first.
  */
-export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts: { accountName?: string | null; history?: AccountDecision[]; invite?: string; interpretations?: number; preview?: 'fail'; member?: 'return' | 'signed-in' | 'lapsed'; slowStart?: number; linkFailures?: number; nextRooms?: FakeSnapshot[]; refuseConfigures?: number } = {}) {
+export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts: { accountName?: string | null; history?: AccountDecision[]; invite?: string; interpretations?: number; preview?: 'fail'; member?: 'return' | 'signed-in' | 'lapsed'; slowStart?: number; linkFailures?: number; nextRooms?: FakeSnapshot[]; refuseConfigures?: number;
+  /** The device's taste profile: rated titles, next-day questions, the taste deck (posters for screenshots). */
+  profile?: { answered?: number; followups?: ProfileSummary['followups']; posters?: boolean } } = {}) {
+  /** The taste profile as the fake API keeps it; `answers` is every item POSTed, in order. */
+  const profile = { revision: 0, answered: opts.profile?.answered ?? 0, followups: [...(opts.profile?.followups ?? [])], answers: [] as ProfileAnswerItem[], deletes: 0, headers: [] as string[] };
   let archivedAt: number | null = null;
   const admission = () => ({ credential: { roomId: room.shared.roomId, participantId: room.own.participantId, token: '', sessionKey: room.own.member.state === 'linked' ? 'account-session' : 'guest-session', expiresAt: room.shared.expiresAt }, invite: { code: opts.invite ?? 'K7QX', path: `/r/${opts.invite ?? 'K7QX'}` }, snapshot: room });
   const account = { member: opts.member === 'signed-in', starts: 0, links: 0, logouts: 0 };
@@ -167,6 +194,25 @@ export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts:
     const url = new URL(route.request().url());
     const path = url.pathname;
     if (path.endsWith('/catalog/metadata')) return route.fulfill({ json: metadata });
+    if (/\/proposal\/profile(\/|$)/.test(path)) {
+      const method = route.request().method();
+      profile.headers.push(route.request().headers()['x-yepwatch-profile'] ?? '');
+      const summary = (): ProfileSummary => ({ answered: profile.answered, loved: profile.answered, notForMe: 0, unseen: 0, revision: profile.revision, followups: profile.followups });
+      if (path.endsWith('/profile/taste-deck')) return route.fulfill({ json: { cards: tasteCards(Number(url.searchParams.get('count') ?? 10), opts.profile?.posters) } });
+      if (path.endsWith('/profile/answers')) {
+        const body = route.request().postDataJSON() as { revision: number; items: ProfileAnswerItem[] };
+        if (body.revision !== profile.revision) return route.fulfill({ status: 409, json: { error: { code: 'conflict', message: 'Profile changed', retryable: false }, profile: summary() } });
+        for (const item of body.items) {
+          profile.answers.push(item);
+          if (item.source === 'followup') profile.followups = profile.followups.filter((f) => !(f.key === item.key && f.decidedAt === item.decidedAt));
+          profile.answered += item.answer === 'loved' || item.answer === 'not_for_me' ? 1 : item.answer === null ? -1 : 0;
+        }
+        profile.revision++;
+        return route.fulfill({ json: { revision: profile.revision, answered: profile.answered } });
+      }
+      if (method === 'DELETE') { profile.deletes++; Object.assign(profile, { revision: 0, answered: 0, followups: [] }); return route.fulfill({ status: 204, body: '' }); }
+      return route.fulfill({ json: summary() });
+    }
     if (path.endsWith('/account/start') && opts.member) {
       account.starts++;
       if (opts.slowStart) await new Promise((r) => setTimeout(r, opts.slowStart));
@@ -277,6 +323,7 @@ export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts:
   return {
     room,
     commands,
+    profile,
     /** This browser's GoodWatch sign-in as the fake API sees it. */
     account,
     sent: () => commands.map((c) => c.command.type as string),

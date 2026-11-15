@@ -31,7 +31,9 @@ import { memberExclusions } from "~/server/yepwatch/proposal-member-exclusions.t
 import type { ProposalCatalog, ProposalRoom } from "~/server/yepwatch/proposal-types.ts"
 import { paths } from "../../../goodwatch-webapp/packages/yepwatch-contracts/proposal.ts"
 import { enrichContinuousCandidates } from "~/server/yepwatch/continuous-presentation.server.ts"
-import { COUNTRIES, PROVIDERS, extrasQuery, fixtureTitles, offerUrl, servicesOf } from "./fixture-titles.mjs"
+import { COUNTRIES, PROVIDERS, WORDS, extrasQuery, fixtureTitles, offerUrl, servicesOf } from "./fixture-titles.mjs"
+import type { TitleSnapshot } from "~/server/title-snapshot/snapshot.server.ts"
+import type { TasteCard } from "../../../goodwatch-webapp/packages/yepwatch-contracts/proposal.ts"
 
 const env = process.env
 function need(name: string) {
@@ -87,6 +89,45 @@ if (command === "reset") {
 // ---- fixture catalog through the real deck code -------------------------------------------------------
 const TITLES = fixtureTitles(imagesOrigin) as CatalogDisplay[]
 const byKey = new Map(TITLES.map((t) => [t.key, t]))
+/**
+ * Taste profiles (Taste mode, the next-day question) read a title snapshot: a small one over the fixture titles, each
+ * title's fingerprint one mark per mood word, so the calibration deck's clusters and the profile vector work as in
+ * production (proposal-taste-deck.ts, proposal-taste.ts).
+ */
+function tasteSnapshot(): TitleSnapshot {
+	const fingerprints = TITLES.map((t) => {
+		const fp = new Uint8Array(74)
+		for (const word of t.genres ?? []) fp[WORDS.indexOf(word)] = 10
+		return fp
+	})
+	const rowOf = new Map(TITLES.map((t, row) => [t.key, row]))
+	const factsAt = (row: number) => {
+		const t = TITLES[row] as CatalogDisplay & { tmdbId: number; year: number }
+		return {
+			key: t.key, tmdbId: t.tmdbId, mediaType: t.key >= 2e12 ? "show" : "movie", genres: t.genres ?? [], releaseDay: Math.round(Date.UTC(t.year, 5, 1) / 86400000),
+			score: t.goodwatchScore ?? 70, votes: 200000 - row * 100, popularity: 1, origin: null, hasPoster: true, hasBackdrop: false, adult: false, anime: false, moods: [],
+		}
+	}
+	return {
+		version: "e2e-taste-fixture",
+		builtAt: new Date("2026-11-01"),
+		count: TITLES.length,
+		forEach: (fn: (key: number, row: number) => void) => TITLES.forEach((t, row) => fn(t.key, row)),
+		fingerprint: (key: number) => fingerprints[rowOf.get(key) ?? -1] ?? null,
+		fingerprintAt: (row: number) => fingerprints[row],
+		factsAt,
+		facts: (key: number) => (rowOf.has(key) ? factsAt(rowOf.get(key)!) : null),
+		rowOf: (key: number) => rowOf.get(key) ?? -1,
+		has: (key: number) => rowOf.has(key),
+	} as unknown as TitleSnapshot
+}
+const TASTE_SNAPSHOT = tasteSnapshot()
+async function tasteDisplays(keys: number[]) {
+	return new Map(keys.flatMap((key): [number, TasteCard][] => {
+		const t = byKey.get(key)
+		return t ? [[key, { key, title: t.title, year: t.year ?? null, posterUrl: t.posterUrl ?? null, mediaType: key >= 2e12 ? "tv" : "movie", overview: t.overview ?? null, runtimeMinutes: t.runtimeMinutes ?? null }]] : []
+	}))
+}
 const rows: ProviderCatalogRow[] = PROVIDERS.map(([id, name], i) => ({
 	tmdb_id: id as number,
 	name: name as string,
@@ -211,6 +252,8 @@ const runtime = createReleaseRuntime(config as Parameters<typeof createReleaseRu
 	commands: new ValkeyCommandBudget(rooms),
 	rooms,
 	snapshot: () => ({ count: TITLES.length, version: "e2e-fixture" }),
+	profileSnapshot: () => TASTE_SNAPSHOT,
+	profileDisplays: tasteDisplays,
 	async catalogProbe() {},
 	// As in production (proposal-release-main.ts): the listener opens at once and early requests wait in the process.
 	startupHoldMs: 25_000,

@@ -1,6 +1,6 @@
 import { expect, test, type Page, type Route, type WebSocketRoute } from '@playwright/test';
 import type { GuestAdmissionRequest } from '@goodwatch/yepwatch-contracts/proposal';
-import { choosingRoom, fakeRoom, newRoom } from './room-fake';
+import { choosingRoom, fakeRoom, newRoom, setUpDevice } from './room-fake';
 
 const busy = (route: Route) =>
   route.fulfill({ status: 503, headers: { 'Retry-After': '1' }, json: { error: { code: 'busy', message: 'Service unavailable', retryable: true } } });
@@ -77,8 +77,9 @@ test('Create during a restart: two 503s are retried with the same request, keepi
     bodies.push(route.request().postDataJSON());
     return bodies.length <= 2 ? busy(route) : route.fallback();
   });
+  await setUpDevice(page);
   await page.goto('/');
-  await page.getByRole('button', { name: 'New room', exact: true }).click();
+  await page.getByRole('button', { name: 'New couch', exact: true }).click();
   await page.getByLabel('Mood').fill('cheer me up');
   await page.getByRole('button', { name: 'Create room', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Saving…', exact: true })).toBeVisible();

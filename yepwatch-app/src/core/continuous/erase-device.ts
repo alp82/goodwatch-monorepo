@@ -14,6 +14,6 @@ export async function eraseDevice(roomIds: string[]) {
   // The command outbox (storage.ts): its whole directory, also for rooms no longer listed (a linked account's).
   await commandFiles.eraseAll();
   await SecureStore.deleteItemAsync(`yepwatch.v3.admission.${await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, '')}`);
-  for (const key of ['yepwatch.recent-room', 'yepwatch.v3.front-room', 'yepwatch.v2.member-intent', 'yepwatch.v3.account-intent', 'yepwatch.v3.member-session', 'yepwatch.v3.member-name']) await SecureStore.deleteItemAsync(key);
+  for (const key of ['yepwatch.recent-room', 'yepwatch.v3.front-room', 'yepwatch.v2.member-intent', 'yepwatch.v3.account-intent', 'yepwatch.v3.member-session', 'yepwatch.v3.member-name', 'yepwatch.v3.taste-secret', 'yepwatch.v3.taste-outbox']) await SecureStore.deleteItemAsync(key);
   forgetSessionCache();
 }

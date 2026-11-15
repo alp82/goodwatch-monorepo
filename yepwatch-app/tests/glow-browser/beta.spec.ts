@@ -9,8 +9,9 @@ test('shared beta links redirect to the install-first home and both app links wo
   await expect(page.getByRole('link', { name: 'Install YepWatch on iPhone' })).toHaveAttribute('href', invitations.ios);
   await expect(page.getByRole('link', { name: 'Install YepWatch on Android' })).toHaveAttribute('href', invitations.android ?? invitations.androidApk);
   await expect(page.getByText('Coming soon', { exact: true })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Join a room', exact: true }).click();
-  await expect(page.getByLabel('Room code or invitation')).toBeVisible();
+  // A first visit starts with setup (or GoodWatch) and asks the server nothing.
+  await expect(page.getByRole('button', { name: 'Start with you', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Continue with GoodWatch', exact: true })).toBeVisible();
   expect(requests).toEqual([]);
 });
 
@@ -43,7 +44,7 @@ for (const [width, height] of [[390,844],[1440,900]]) test(`first visit lands on
   await expect(brand).toHaveCSS('opacity', '1');
   await expect(page.locator('.mini-intro')).toBeVisible();
   for (const name of ['Install YepWatch on iPhone', 'Install YepWatch on Android']) await expect(page.getByRole('link', { name })).toBeInViewport();
-  for (const name of ['New room', 'Join a room', 'Continue with GoodWatch']) await expect(page.getByRole('button', { name, exact: true })).toBeInViewport();
+  for (const name of ['Start with you', 'Continue with GoodWatch']) await expect(page.getByRole('button', { name, exact: true })).toBeInViewport();
   expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(true);
   await page.screenshot({path:`.expo/home-entry-${width}.png`});
 });

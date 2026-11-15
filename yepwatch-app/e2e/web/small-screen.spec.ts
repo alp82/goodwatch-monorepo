@@ -2,7 +2,7 @@
 // and by keyboard, and the control in use is on screen and not under the pinned dock or the header.
 import { expect } from '@playwright/test';
 import { test, eventually, type Person } from '../lib/harness';
-import { inviteLink, pickServices, start } from './flows';
+import { inviteLink, newCouch, pickServices, start } from './flows';
 
 /**
  * The focused (or given) element's box is inside the window and the topmost thing at its center, once motion has
@@ -59,14 +59,10 @@ for (const device of ['se', 'android'] as const) {
       const host = await room.person('Alp', { device });
       await host.open('/');
       await host.audit('start page (small phone)');
-      await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] } });
-      await host.audit('Mood page (small phone)');
-      await host.fill(host.page.getByLabel('Mood'), 'funny space heist');
-      await host.tap(host.button('Create room'), { expect: { visible: ['room-setup'] } });
-      await room.point('room');
-      await host.audit('room page (small phone)');
-      // Name: the field is below the fold. Tapping scrolls it up; it keeps focus through that scroll and
-      // through the keyboard taking height away, and Enter saves the name.
+      // Setup's name: tapping the field focuses it, and with the keyboard's height taken away Continue stays on screen
+      // above it (the root follows the visual viewport).
+      await host.tap(host.button('Start with you'), { expect: { visible: ['first-run'] } });
+      await host.audit('setup name (small phone)');
       const field = host.page.getByLabel('Your name').filter({ visible: true });
       await host.tap(field, { expect: {} });
       await onScreen(host, 'Your name field (tapped)');
@@ -74,9 +70,17 @@ for (const device of ['se', 'android'] as const) {
       await host.page.setViewportSize({ width: size.width, height: size.height - KEYBOARD });
       await host.page.keyboard.type('Alp');
       expect(await host.page.evaluate(() => document.activeElement?.getAttribute('aria-label')), 'the name field keeps focus while typing').toBe('Your name');
-      await host.page.keyboard.press('Enter');
-      await eventually(() => savedName(host), (v) => v === 'Alp', 'host name saved by Enter', host);
+      await onScreen(host, 'Continue (above the keyboard)', '[data-testid="frame-dock"] [aria-label="Continue"]');
+      await host.tap(host.button('Continue'), { expect: { text: 'What do you like?' } });
       await host.page.setViewportSize(size);
+      await host.tap(host.button('Skip for now'), { expect: { visible: ['home-rooms'] } });
+      await host.tap(host.button('New couch'), { expect: { visible: ['mood-page'] } });
+      await host.audit('Mood page (small phone)');
+      await host.fill(host.page.getByLabel('Mood'), 'funny space heist');
+      await host.tap(host.button('Create room'), { expect: { visible: ['room-setup'] } });
+      await room.point('room');
+      await host.audit('room page (small phone)');
+      await eventually(() => savedName(host), (v) => v === 'Alp', 'the room has the name from setup', host);
       // Services, Movies and shows.
       await pickServices(host, ['Netflix'], () => host.tap(host.button('Streaming services, add'), { expect: { visible: ['services-sheet'] } }));
       await host.tap(host.button('Movies and shows, change'), { expect: { visible: ['kinds-sheet'] } });
@@ -98,16 +102,20 @@ for (const device of ['se', 'android'] as const) {
     test(`whole setup by keyboard: name, services, idea, Start (${device})`, async ({ room }) => {
       const host = await room.person('Alp', { device });
       await host.open('/');
-      await tabTo(host, 'New room');
+      // Setup by keyboard: Start with you, the name and Enter, Skip for now, then New couch.
+      await tabTo(host, 'Start with you');
+      await host.tap(host.page.locator(':focus'), { key: 'Enter', expect: { visible: ['first-run'] } });
+      await tabTo(host, 'Your name');
+      await host.page.keyboard.type('Alp');
+      await host.tap(host.page.locator(':focus'), { key: 'Enter', expect: { text: 'What do you like?' } });
+      await tabTo(host, 'Skip for now');
+      await host.tap(host.page.locator(':focus'), { key: 'Enter', expect: { visible: ['home-rooms'] } });
+      await tabTo(host, 'New couch');
       await host.tap(host.page.locator(':focus'), { key: 'Enter', expect: { visible: ['mood-page'] } });
       await host.page.keyboard.type('funny space heist');
       await host.tap(host.page.getByLabel('Mood'), { key: 'Enter', expect: { visible: ['room-setup'] } });
       await room.point('room');
-      // Name: Tab to it, type, Enter saves.
-      await tabTo(host, 'Your name');
-      await host.page.keyboard.type('Alp');
-      await host.page.keyboard.press('Enter');
-      await eventually(() => savedName(host), (v) => v === 'Alp', 'host name saved by Enter', host);
+      await eventually(() => savedName(host), (v) => v === 'Alp', 'the room has the name from setup', host);
       // Services: Tab to the row, Enter opens the sheet, Space ticks a service, Done closes.
       await tabTo(host, 'Streaming services, add');
       await host.tap(host.page.locator(':focus'), { key: 'Enter', expect: { visible: ['services-sheet'] } });
@@ -136,7 +144,7 @@ for (const device of ['se', 'android'] as const) {
     test(`a friend joins by Enter and waits (${device})`, async ({ room }) => {
       const host = await room.person('Alp', { device });
       await host.open('/');
-      await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] } });
+      await newCouch(host);
       await host.fill(host.page.getByLabel('Mood'), 'funny space heist');
       await host.tap(host.button('Create room'), { expect: { visible: ['room-setup'] } });
       const invite = await inviteLink(host);

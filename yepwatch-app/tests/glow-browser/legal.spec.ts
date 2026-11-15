@@ -19,7 +19,7 @@ test('deletion requested on another device hides cached account history and requ
   await page.route('**/account/deletion', route => route.fulfill({ json: { accountTag: 'fixture-account-alex', deletion: pending ? { requestedAt: Date.now(), purgeAfter: Date.now() + 86400_000, phase: 'pending', recoveryId: 'remote-deletion' } : null } }));
   await page.route('**/account/restore', route => { pending = false; return route.fulfill({ json: { restored: true } }); });
   await page.goto('/');
-  await expect(page.getByRole('button', { name: 'New room', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'New couch', exact: true })).toBeVisible();
   pending = true;
   await page.reload();
   await expect(page).toHaveURL(/\/delete-account$/);

@@ -6,8 +6,8 @@ const button = (page: Page, name: string | RegExp) => page.getByRole('button', {
 
 test('guest host: New room opens Mood at once, a preset then Create room, name and services before Start', async ({ page }) => {
   const f = await fakeRoom(page, newRoom());
-  await page.goto('/');
-  await button(page, 'New room').click();
+  // A host without a name (a device that never set up opens /new from Your couches): the room asks for it.
+  await page.goto('/new');
   await expect(page.getByLabel('Mood')).toBeVisible();
   await expect(page).toHaveURL(/\/new$/);
   expect(f.room.shared.participants[0].nickname).toBe('');

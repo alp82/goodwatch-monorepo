@@ -3,7 +3,7 @@
  * between), and local changes that show before the server answers.
  */
 import { expect, test, type Page } from '@playwright/test';
-import { choosingRoom, fakeRoom, newRoom } from './room-fake';
+import { choosingRoom, fakeRoom, newRoom, setUpDevice } from './room-fake';
 
 const button = (page: Page, name: string) => page.getByRole('button', { name, exact: true });
 type Paint = { t: number; text: string; dim: number };
@@ -29,17 +29,18 @@ test.beforeEach(async ({ page }) => { await page.addInitScript(recorder); });
 
 test('create: the start page goes straight to Mood, the room page never shows on the way', async ({ page }) => {
   await fakeRoom(page, newRoom());
+  await setUpDevice(page);
   await latency(page, 150);
   await page.goto('/');
-  await button(page, 'New room').click();
+  await button(page, 'New couch').click();
   await expect(page.getByLabel('Mood')).toBeVisible();
   await page.waitForTimeout(500);
   const seen = await paints(page);
   // The start page's own film shows rooms too: only what paints after it counts.
-  expect(seen.filter((p) => !/New room/.test(p.text) && /Just you|YOUR ROOM|MOOD|Connecting|Not connected/.test(p.text) && !/or try:/.test(p.text))).toEqual([]);
+  expect(seen.filter((p) => !/New couch/.test(p.text) && /Just you|YOUR ROOM|MOOD|Connecting|Not connected/.test(p.text) && !/or try:/.test(p.text))).toEqual([]);
   // A local draft returns to its caller; no room has been allocated.
   await button(page, 'Back').click();
-  await expect(button(page, 'New room')).toBeVisible();
+  await expect(button(page, 'New couch')).toBeVisible();
 });
 
 test('join: from the invitation straight to Your services, open over the room from its first paint', async ({ page }) => {
@@ -90,7 +91,7 @@ test('sign-in: back from GoodWatch to the start page, no room screen ever paints
   await button(page, 'Continue with GoodWatch').click();
   await page.waitForURL((url) => url.pathname === '/');
   await expect(page.getByTestId('member-transition')).toHaveCount(0);
-  await expect(button(page, 'New room')).toBeVisible();
+  await expect(button(page, 'New couch')).toBeVisible();
   await page.waitForTimeout(300);
   expect((await paints(page)).filter((p) => /Just you|YOUR ROOM|Opening the room|Describe a mood/.test(p.text))).toEqual([]);
 });
@@ -164,7 +165,7 @@ test('archive: a room moves to History at once, Undo and Restore bring it back, 
   await expect(page.getByTestId('room-setup')).toBeVisible();
   await page.goto('/');
   await button(page, 'Archive cheer me up').click();
-  await expect(page.getByText('Room archived')).toBeVisible();
+  await expect(page.getByText('Couch archived')).toBeVisible();
   await expect(button(page, 'cheer me up')).toHaveCount(0);
   await button(page, 'Undo').click();
   await expect(button(page, 'cheer me up')).toBeVisible();

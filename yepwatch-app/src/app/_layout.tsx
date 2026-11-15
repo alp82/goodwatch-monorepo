@@ -1,7 +1,7 @@
 import { BootPageReady, BootPhase, bootPage } from '../features/home/boot-phase';
 import { useWebFontsReady } from '../features/home/useWebFontsReady';
 import { Stack, usePathname } from 'expo-router';
-import { useCallback, useLayoutEffect, useMemo, useState } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
 import { Platform, Text, View } from 'react-native';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
@@ -14,6 +14,8 @@ import { installLeftoverTapGuard, leftoverTouchGuard, surfaceAppeared } from '..
 import { useFrontRoom } from '../features/shell/useFrontRoom';
 import { arrivesInPlace } from '../features/room/nav';
 import { ROOT_SCREENS } from '../features/shell/route-order';
+import { useVisualViewportFrame } from '../features/shell/visual-viewport';
+import { TasteModeLayer } from '../features/taste/TasteMode';
 installLeftoverTapGuard();
 if (Platform.OS !== 'web') {
   // The startup cover continues the system splash exactly (the Y on the same ground), so the splash can
@@ -46,13 +48,15 @@ export default function Layout() {
   const done = useCallback(() => setBooted(true), []);
   const hideNative = useCallback(() => { if (Platform.OS !== 'web') void SplashScreen.hideAsync().catch(() => undefined); }, []);
   const shown = booted || arriving;
+  const root = useRef<ComponentRef<typeof View>>(null);
+  useVisualViewportFrame(root);
   // The same element while the fonts stay loaded: this layout re-renders on every change of address and page
   // readiness, and a new Stack element re-rendered the whole navigator and the screens in it each time.
   const stack = useMemo(() => fontsReady && <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#070707' } }}>
     {/* Every screen, in expo-router's own order (route-order.ts): a different order re-renders the tree once more after mount. */}
     {ROOT_SCREENS.map((name) => <Stack.Screen key={name} name={name} {...(name === 'room/[id]' ? { options: arrivalRoom } : null)} />)}
   </Stack>, [fontsReady]);
-  return <BootPageReady.Provider value={markPageReady}><BootPhase.Provider value={booted ? 'ready' : arriving ? 'enter' : 'boot'}><Providers><StatusBar style="light" /><View style={{ flex: 1, backgroundColor: '#070707' }} {...(Platform.OS === 'web' ? null : leftoverTouchGuard)}>
+  return <BootPageReady.Provider value={markPageReady}><BootPhase.Provider value={booted ? 'ready' : arriving ? 'enter' : 'boot'}><Providers><StatusBar style="light" /><View ref={root} style={{ flex: 1, backgroundColor: '#070707' }} {...(Platform.OS === 'web' ? null : leftoverTouchGuard)}>
     {/* Inert (no focus inside hidden content) until the cover starts to dissolve. Native draws the page
         under the opaque cover, so its first (heavy) draw is done before the dissolve and can't stall it;
         the web hides it outright (the browser composites the dissolve). */}
@@ -62,6 +66,7 @@ export default function Layout() {
     {Platform.OS === 'web' && !fontsReady && <View aria-hidden pointerEvents="none" style={{ position: 'absolute', opacity: 0 }}>
       <Text style={{ fontFamily: 'Gabarito' }}>YepWatch</Text><Text style={{ fontFamily: 'GabaritoBold' }}>YepWatch</Text>
     </View>}
+    <TasteModeLayer />
     {!booted && <Boot ready={fontsReady} pageReady={pageReady} word={!page?.startsWith('invite:')} done={done} onLayout={hideNative} onRevealed={revealed} />}
     <MemberTransition />
   </View></Providers></BootPhase.Provider></BootPageReady.Provider>;

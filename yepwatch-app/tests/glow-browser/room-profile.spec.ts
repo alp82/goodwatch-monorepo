@@ -1,6 +1,6 @@
 /** The avatar opens Profile over the page it was pressed on: a room never turns into the start page. */
 import { expect, test } from '@playwright/test';
-import { choosingRoom, fakeRoom, newRoom } from './room-fake';
+import { choosingRoom, fakeRoom, newRoom, setUpDevice } from './room-fake';
 
 for (const member of [undefined, 'signed-in'] as const) {
   test(`Profile in a room opens over the room and closes back to it (${member ?? 'guest'})`, async ({ page }) => {
@@ -27,8 +27,9 @@ for (const member of [undefined, 'signed-in'] as const) {
 
 test('Profile on the Mood page keeps the Mood page underneath', async ({ page }) => {
   await fakeRoom(page, newRoom());
+  await setUpDevice(page);
   await page.goto('/');
-  await page.getByRole('button', { name: 'New room', exact: true }).click();
+  await page.getByRole('button', { name: 'New couch', exact: true }).click();
   await expect(page.getByLabel('Mood')).toBeVisible();
   const url = page.url();
   await page.getByRole('button', { name: 'Profile', exact: true }).click();
