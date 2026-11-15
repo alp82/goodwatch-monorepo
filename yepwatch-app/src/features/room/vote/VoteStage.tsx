@@ -60,18 +60,6 @@ export interface VoteStageControls {
 }
 /** The drag core: `x`, `y` move the card (px), `v` (−1…1 at the threshold) drives the stage looks. */
 export interface DragValues { x: Animated.Value; y: Animated.Value; v: Animated.Value }
-/** A box in stage coordinates: x from the stage's left edge, y from its top. */
-export interface StageBox { x: number; y: number; width: number; height: number }
-/**
- * Where the stage sits on screen, for looks that must read fully when the card isn't centered in the
- * window (desktop Tonight: the card's column is left of the question column).
- */
-export interface StageFrame {
-  /** The whole window, in stage coordinates (its left edge is usually at a negative x). */
-  window: StageBox;
-  /** The question column beside the card, in stage coordinates; null when there is none (phones: one column). */
-  aside: StageBox | null;
-}
 /** The answered card flying off over the next one. Its answer went out when it was pressed. */
 interface Departure {
   id: number;
@@ -294,7 +282,7 @@ export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disab
    * looks on the stage change. The stage must sit above the column, so the looks paint over it.
    */
   onVeil?: (opacity: A | null) => void;
-  // ——— Tonight's layout and how-to. The voting screen passes these; the looks read `frame` and drive `asideVeil`. ———
+  // ——— Tonight's how-to and wide layout. Where the stage sits (and the question column) comes in `geo` (`place`). ———
   /** The drag core from outside (read once, when the stage mounts): the first-round how-to moves the real card with it. */
   drag?: DragValues;
   /** No random looks (no card or stage layers, no answered-card fade, no neon): the card, its drag and `cardOver` only. */
@@ -303,16 +291,6 @@ export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disab
   cardOver?: (x: Animated.Value) => ReactNode;
   /** The poster's own Details and Trailer buttons (off where the screen shows them beside the card). */
   cardTools?: boolean;
-  /**
-   * Where the stage sits on screen (desktop Tonight; null or absent on phones, where the stage is centered in the
-   * window). For looks that must reach both screen edges and keep their words clear of the question column.
-   */
-  frame?: StageFrame | null;
-  /**
-   * The question column's opacity (1 at rest), owned by the screen and applied to the column. A look that crosses
-   * the column drives it down (to about 0.1) while it plays and back to 1 after. Absent on phones.
-   */
-  asideVeil?: Animated.Value;
 }) {
   const { w, h, aw, cardTop, threshold, lean, phone } = geo;
   const [values] = useState(() => ({
@@ -688,14 +666,15 @@ export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disab
   const veil = useMemo(() => {
     if (geo.column === null) return null;
     const parts: Node[] = [];
-    for (const set of [fading, liveSet]) {
+    // The how-to's plain card paints no looks, so nothing veils the column for it.
+    for (const set of plain ? [] : [fading, liveSet]) {
       if (!set) continue;
       for (const kind of ['yep', 'nope'] as const) if (crossesColumn(set.look, kind)) parts.push(ease(sideDrive(set.drive, kind)));
     }
     if (momentLook && momentCrossesColumn(momentLook)) parts.push(ease(values.moment.interpolate({ inputRange: [0, 1, 2], outputRange: [0, 1, 0], ...clampI })));
     if (!parts.length) return null;
     return (parts.reduce((a, b) => Animated.add(a, b)) as Animated.Value).interpolate({ inputRange: [0, 1], outputRange: [1, VEIL], ...clampI });
-  }, [geo.column, fading, liveSet, momentLook, values.moment]);
+  }, [geo.column, plain, fading, liveSet, momentLook, values.moment]);
   const veilTo = useRef(onVeil);
   useLayoutEffect(() => { veilTo.current = onVeil; });
   useEffect(() => { veilTo.current?.(veil); }, [veil]);

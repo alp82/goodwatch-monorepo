@@ -45,9 +45,10 @@ import { EdgeGlow } from './tutorial/EdgeGlow';
 import { Tutorial, type Rect } from './tutorial/Tutorial';
 import { FindingMore, Label, Logos, Screen, useServices } from './ui';
 import { stageGeometry, stageRim, type Rim } from './vote/geometry';
+import type { A } from './vote/paint';
 import { LookDealer, harnessLooksFrom, pinnedLookFrom } from './vote/looks';
 import { answerYep, matchKey, nextCandidate, settleYeps, undoYeps, yepRecord, type YepRecord } from './vote/match';
-import { VoteStage, type DragValues, type MatchMoment, type StageFrame, type VoteStageControls } from './vote/VoteStage';
+import { VoteStage, type DragValues, type MatchMoment, type VoteStageControls } from './vote/VoteStage';
 
 /** The one question every Tonight card asks. */
 export const TONIGHT_QUESTION = 'Would you watch this tonight?';
@@ -199,6 +200,10 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
   const [rim, setRim] = useState<Rim | null>(null);
   /** Web: the stage's left edge in the window, so looks can reach both screen edges from a stage off center. */
   const [stageLeft, setStageLeft] = useState<number | null>(null);
+  /** Web, wide windows: the question column beside the stage (window x), so looks keep their words clear of it. */
+  const [column, setColumn] = useState<{ left: number; width: number } | null>(null);
+  /** The question column's opacity while a look paints across it (VoteStage `onVeil`); null at rest. */
+  const [veil, setVeil] = useState<A | null>(null);
   const placeStage = useStableCallback(() => {
     const el = stageBox.current as unknown as HTMLElement | null;
     const frame = frameBox.current as unknown as HTMLElement | null;
@@ -212,9 +217,15 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
     }
     const next = at ? stageRim(top, el.offsetHeight, frame.offsetHeight) : null;
     setRim((r) => (JSON.stringify(r) === JSON.stringify(next) ? r : next));
-    let left = 0;
-    for (let node: HTMLElement | null = el; node; node = node.offsetParent as HTMLElement | null) left += node.offsetLeft;
-    setStageLeft(left);
+    const windowLeft = (box: HTMLElement) => {
+      let left = 0;
+      for (let node: HTMLElement | null = box; node; node = node.offsetParent as HTMLElement | null) left += node.offsetLeft;
+      return left;
+    };
+    setStageLeft(windowLeft(el));
+    const aside = asideBox.current as unknown as HTMLElement | null;
+    const nextColumn = aside && typeof aside.offsetLeft === 'number' && aside.offsetWidth > 0 ? { left: windowLeft(aside), width: aside.offsetWidth } : null;
+    setColumn((c) => (c?.left === nextColumn?.left && c?.width === nextColumn?.width ? c : nextColumn));
   });
   const ready = Boolean(snapshot && view);
   // The web measures before the first paint, so the first card is drawn where it stays.
@@ -236,13 +247,11 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
   const pointerAt = useRef(0);
   /**
    * The card's drag core lives here, so Nope and Yep light up as the card leans their way, and the how-to can
-   * move the real card. The flash and pin values are the how-to's taps and tips. The question column's veil
-   * is the looks' to drive (VoteStage `asideVeil`).
+   * move the real card. The flash and pin values are the how-to's taps and tips.
    */
   const [drives] = useState(() => ({
     drag: { x: new Animated.Value(0), y: new Animated.Value(0), v: new Animated.Value(0) } as DragValues,
     yes: new Animated.Value(0), no: new Animated.Value(0), pinYes: new Animated.Value(0), pinNo: new Animated.Value(0),
-    veil: new Animated.Value(1),
   }));
   const { all } = useServices(view?.country);
   useFocusEffect(useCallback(() => {
@@ -312,7 +321,7 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
     const offered = servicesIn(all, offeredIds);
     return offered.length ? <Logos services={offered} size={z(22)} /> : undefined;
   }, [all, offeredIds, z]);
-  const geo = useMemo(() => (area ? stageGeometry({ aw: area.width, stageH: area.height, vw: layout.width, phone, z, rim, place: stageLeft === null ? null : { left: stageLeft } }) : null), [area, layout.width, phone, z, rim, stageLeft]);
+  const geo = useMemo(() => (area ? stageGeometry({ aw: area.width, stageH: area.height, vw: layout.width, phone, z, rim, place: stageLeft === null ? null : { left: stageLeft, column: wide ? column : null } }) : null), [area, layout.width, phone, z, rim, stageLeft, column, wide]);
   const empty = useMemo(() => <FindingMore style={{ flex: 1 }} />, []);
   const nope = useCallback(() => controls.current?.commit(false), []);
   const yep = useCallback(() => controls.current?.commit(true), []);
@@ -358,24 +367,15 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
   const touch = useMemo(() => phone || touchScreen(), [phone]);
   const cardOver = useMemo(() => (teaching && geo ? (x: Animated.Value) => <EdgeGlow x={x} T={geo.threshold} w={geo.w} h={geo.h} touch={touch} /> : undefined), [teaching, geo, touch]);
 
-  // Where the card, the buttons and (wide) the question column are. The how-to's layer and the looks read them.
+  // Where the card and the buttons are, for the how-to's layer.
   const [rects, setRects] = useState<{ card: Rect; yes: Rect; no: Rect } | null>(null);
-  const [frame, setFrame] = useState<StageFrame | null>(null);
   const [tick, setTick] = useState(0);
   const relayout = useCallback(() => setTick((n) => n + 1), []);
   useEffect(() => {
-    if (!geo || (!teaching && !wide)) return;
+    if (!geo || !teaching) return;
     const t = setTimeout(() => {
-      void Promise.all([measure(rootBox), measure(stageBox), measure(yesBox), measure(noBox), measure(asideBox)]).then(([root, stage, yes, no, aside]) => {
-        if (!stage) return;
-        if (wide) {
-          const next: StageFrame = {
-            window: { x: -stage.x, y: -stage.y, width: windowWidth, height: windowHeight },
-            aside: aside ? { x: aside.x - stage.x, y: aside.y - stage.y, width: aside.w, height: aside.h } : null,
-          };
-          setFrame((cur) => (cur && JSON.stringify(cur) === JSON.stringify(next) ? cur : next));
-        }
-        if (!teaching || !root || !yes || !no) return;
+      void Promise.all([measure(rootBox), measure(stageBox), measure(yesBox), measure(noBox)]).then(([root, stage, yes, no]) => {
+        if (!stage || !root || !yes || !no) return;
         const rel = (r: Rect) => ({ x: r.x - root.x, y: r.y - root.y, w: r.w, h: r.h });
         const next = { card: { x: stage.x - root.x + (geo.aw - geo.w) / 2, y: stage.y - root.y + geo.cardTop, w: geo.w, h: geo.h }, yes: rel(yes), no: rel(no) };
         // Measuring again with nothing moved keeps the same rects, so the how-to isn't restarted.
@@ -383,7 +383,7 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
       });
     }, 60);
     return () => clearTimeout(t);
-  }, [teaching, wide, geo, tick, windowWidth, windowHeight]);
+  }, [teaching, geo, tick, windowWidth, windowHeight]);
   const engage = useCallback((on: boolean) => controls.current?.engage(on), []);
   const stopTutorial = useCallback(() => finishTutorial(), [finishTutorial]);
 
@@ -450,8 +450,7 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
         plain={teaching}
         cardOver={cardOver}
         cardTools={!wide}
-        frame={wide ? frame : null}
-        asideVeil={wide ? drives.veil : undefined} /> : null}
+        onVeil={wide ? setVeil : undefined} /> : null}
     </View>
   );
   const details = panel === 'details' && title && card ? (
@@ -483,8 +482,8 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
           <View style={{ flex: 1, minHeight: 0, flexDirection: 'row', gap: z(ASIDE_GAP), alignItems: 'stretch' }}>
             {/* Above the question column: a look (or a card flying off) paints over it, veiling it when it crosses it. */}
             <View style={{ flex: 1, minWidth: 0, zIndex: 2 }}>{stage}</View>
-            <Animated.View ref={asideBox} collapsable={false} onLayout={relayout} testID="tonight-question"
-              style={{ width: z(ASIDE_W), justifyContent: 'center', gap: z(18), zIndex: 1, opacity: drives.veil }}>
+            <Animated.View ref={asideBox} collapsable={false} onLayout={() => { placeStage(); relayout(); }} testID="tonight-question"
+              style={{ width: z(ASIDE_W), justifyContent: 'center', gap: z(18), zIndex: 1, opacity: veil ?? 1 }}>
               <Label>{countLine}</Label>
               <GText bold size={z(40)} style={{ letterSpacing: -1, lineHeight: z(40) * 1.12 }}>{TONIGHT_QUESTION}</GText>
               <View style={{ minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
