@@ -263,7 +263,9 @@ const PHONE = { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch:
       const imIn = (p) => p.getByRole('checkbox', { name: /^I’m in for / }).filter({ visible: true }).first();
       await imIn(host).click();
       await expect(mia.getByRole('checkbox', { name: /, 1 of 3 in$/ }).filter({ visible: true }).first()).toBeVisible({ timeout: 10000 });
-      await expect(mia.getByText(/Alp/)).toHaveCount(0); // never says who
+      // Never says who is in ("Fits Alp's idea" is the idea's credit, not an I'm in).
+      await expect(mia.getByText(/Alp(’s| is) in\b/)).toHaveCount(0);
+      await expect(mia.getByRole('checkbox', { name: /Alp/ })).toHaveCount(0);
       await imIn(mia).click();
       await expect(sam.getByRole('checkbox', { name: /, 2 of 3 in$/ }).filter({ visible: true }).first()).toBeVisible({ timeout: 10000 });
       await imIn(sam).click();
