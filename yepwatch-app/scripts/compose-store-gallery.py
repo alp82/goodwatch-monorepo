@@ -128,7 +128,8 @@ def main():
     spec_path = Path(options.spec).resolve()
     spec = json.loads(spec_path.read_text())
     root = APP
-    manifest = {}
+    manifest_path = root / spec['contactDir'] / 'frames.json'
+    manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
     for family, conf in spec['families'].items():
         if options.only and family not in options.only:
             continue
@@ -143,13 +144,15 @@ def main():
             target = out / f['file']
             image.save(target, optimize=True)
             written.append(target)
-            manifest.setdefault(family, []).append({'file': str(target.relative_to(root)), 'caption': ' / '.join(f['caption']).replace('*', ''),
+            if f is conf['frames'][0]:
+                manifest[family] = []
+            manifest[family].append({'file': str(target.relative_to(root)), 'caption': ' / '.join(f['caption']).replace('*', ''),
                 'source': f['source'], 'sourceSha256': hashlib.sha256(source.read_bytes()).hexdigest(), 'sha256': hashlib.sha256(target.read_bytes()).hexdigest(), 'size': conf['size']})
         contact_dir = root / spec['contactDir']
         contact_dir.mkdir(parents=True, exist_ok=True)
         contact(written, contact_dir / f'contact-{family}.png')
         print(family, len(written), 'frames')
-    (root / spec['contactDir'] / 'frames.json').write_text(json.dumps(manifest, indent=2) + '\n')
+    manifest_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + '\n')
 
 
 if __name__ == '__main__':

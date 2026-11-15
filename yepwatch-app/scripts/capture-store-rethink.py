@@ -145,6 +145,21 @@ class Phone:
             pass
         return out
 
+    def tap_visible(self, pattern):
+        """Tap the largest on-screen element whose label fully matches (wide layouts keep hidden copies of some buttons)."""
+        rx = re.compile(pattern)
+        best = None
+        for label, bounds in self.labels():
+            b = [int(float(x)) for x in re.findall(r'-?[0-9.]+', bounds)]
+            if not rx.fullmatch(label) or len(b) != 4 or b[2] <= b[0] or b[3] <= b[1] or b[0] < 0 or b[1] < 0:
+                continue
+            area = (b[2] - b[0]) * (b[3] - b[1])
+            if not best or area > best[0]:
+                best = (area, (b[0] + b[2]) // 2, (b[1] + b[3]) // 2)
+        if not best:
+            return self.tap(pattern, wait=False)
+        return self.flow([{'tapOn': {'point': f'{best[1]},{best[2]}', 'waitToSettleTimeoutMs': 1}}])
+
     def find(self, pattern):
         rx = re.compile(pattern)
         return next((label for label, _ in self.labels() if rx.search(label)), None)
@@ -260,26 +275,40 @@ def scenario(phone, notes):
         candidates = {c['title']: c['id'] for c in peers[0].snap()['shared']['candidates']}
         matches = []
         plan = ['yep', 'match', 'nope', 'match', 'yep', 'nope', 'match', 'yep', 'match', 'nope', 'yep', 'match']
-        last = None
-        for index, kind in enumerate(plan):
+        last, index, attempts = None, 0, 0
+        while index < len(plan) and attempts < len(plan) + 4:
+            attempts += 1
+            kind = plan[index]
             label = None
-            for _ in range(4):
-                label = phone.find(re.escape(CARD) + '$')
-                if label and label != last:
+            for _ in range(3):
+                # The card that just left can stay in the tree for a moment: prefer a card label that isn't it.
+                cards = [l for l, _ in phone.labels() if l.endswith(CARD)]
+                fresh = [l for l in cards if l != last]
+                label = fresh[0] if fresh else None
+                if label:
                     break
                 time.sleep(1.5)
-            if not label or label == last:
-                break
+            if not label:
+                if last and last in cards:
+                    # The vote didn't land (the first tap after a new screen can be swallowed): vote this card again.
+                    label = last
+                    index -= 1 if index else 0
+                    kind = plan[index]
+                    notes['votes'].append({'index': index, 'retry': True})
+                else:
+                    break
             last = label
             title = label[:-len(CARD)]
             cid = candidates.get(title)
             if kind == 'match' and cid:
                 for peer in peers:
                     peer.yep(cid)
-                matches.append(cid)
+                if cid not in matches:
+                    matches.append(cid)
             button = 'Nope' if kind == 'nope' else 'Yep'
-            phone.record(f'v{index:02d}-{kind}', lambda: phone.tap('^' + button + '$', wait=False), 4 if kind == 'match' else 2.5)
+            phone.record(f'v{attempts:02d}-{kind}', lambda: phone.tap_visible(button), 4 if kind == 'match' else 2.5)
             notes['votes'].append({'index': index, 'kind': kind, 'title': title})
+            index += 1
             time.sleep(1.5)
 
         phone.tap('[0-9]+ matches')
