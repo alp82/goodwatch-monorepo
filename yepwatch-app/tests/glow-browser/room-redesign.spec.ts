@@ -281,6 +281,28 @@ test('Matches: everyone in for two opens the tiebreak by itself; favorites wait 
   await expect(page.getByTestId('tonight')).toBeVisible();
 });
 
+test('a tiebreak opening while you swipe brings Matches to the front, once', async ({ page }) => {
+  const room = choosingRoom();
+  room.shared.matches = [{ candidateId: 'c1', averageYepMs: null }, { candidateId: 'c2', averageYepMs: null }];
+  room.own.ins = { candidateIds: ['c1', 'c2'], revision: 2 };
+  const f = await fakeRoom(page, inRoom(room, { c1: 0, c2: 0 }));
+  await page.goto('/room/test-room');
+  await expect(page.getByTestId('voting')).toBeVisible();
+  // A friend left: the one left with you is in for both too.
+  inRoom(f.room, { c1: 1, c2: 1 });
+  f.push();
+  await reread(page);
+  await expect(page.getByTestId('tiebreak')).toBeVisible();
+  await expect(page.getByTestId('matches')).toBeVisible();
+  // Set aside, it stays aside: back on the room page nothing opens it again.
+  await page.keyboard.press('Escape');
+  await button(page, 'Keep swiping').click();
+  await expect(page.getByTestId('voting')).toBeVisible();
+  await reread(page);
+  await page.waitForTimeout(300);
+  await expect(page.getByTestId('matches')).toHaveCount(0);
+});
+
 test('a friend’s I’m in takes over the room page: someone’s in, no faces; I’m in agrees to it', async ({ page }) => {
   const room = choosingRoom();
   room.shared.matches = [{ candidateId: 'c1', averageYepMs: null }, { candidateId: 'c2', averageYepMs: null }];

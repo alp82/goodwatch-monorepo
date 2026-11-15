@@ -20,6 +20,8 @@ import { useStableCallback } from '../shell/steady';
 import { warm } from '../shell/tokens';
 import { openPage } from './nav';
 
+/** Each poster of the stack shows this share of the one under it. */
+const FAN = 0.22;
 const sized = (url: string | null) => (url ? url.replace('/w500/', '/w185/') : null);
 export const matchCount = (n: number) => `${n} ${n === 1 ? 'match' : 'matches'}`;
 
@@ -58,11 +60,12 @@ export const MatchesPeek = memo(function MatchesPeek({ roomId, matches, proposal
           <View style={{ gap: 6 }}>
             {phone ? <View style={{ alignSelf: 'center', width: 36, height: 4, borderRadius: 2, backgroundColor: n ? '#fbbf2477' : '#ffffff2a' }} /> : null}
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', height: pw * 1.5, minWidth: pw }}>
+              {/* As wide for one poster as for four: a match arriving moves nothing beside the stack. */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', height: pw * 1.5, width: pw * (1 + FAN * 3) }}>
                 {n ? shown.map((m, k) => {
                   const uri = sized(m.posterUrl);
                   return (
-                    <Drop key={m.id} left={k ? -pw * 0.45 : 0} z={k} entering={!known.has(m.id)}>
+                    <Drop key={m.id} left={k ? -pw * (1 - FAN) : 0} z={k} entering={!known.has(m.id)}>
                       <View style={{ width: pw, height: pw * 1.5, borderRadius: 4, borderWidth: 1.5, borderColor: '#14110d', backgroundColor: warm.well, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }}>
                         {uri ? <Image source={{ uri }} accessible={false} style={{ width: '100%', height: '100%' }} /> : <Icon name="tickets" size={pw * 0.55} color={glow.amber} />}
                       </View>

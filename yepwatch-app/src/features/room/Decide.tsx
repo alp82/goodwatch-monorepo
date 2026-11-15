@@ -16,7 +16,7 @@ import { R, warm } from '../shell/tokens';
 import { GText, Icon, Press, glow, spaceToggles } from '../glow/theme';
 import { ScorePill } from '../glow/scores';
 import type { ProposalView, RoomView } from './model';
-import { leavePage, toRooms } from './nav';
+import { leavePage, matchesInFront, toRooms } from './nav';
 import { useRoom, useRoomLive } from './RoomProvider';
 import { RoomNotes, RoomStatus } from './RoomStatus';
 import { servicesIn } from './services';
@@ -192,15 +192,16 @@ function Plus({ size, color }: { size: number; color: string }) {
  * One seat per person: yours first (a dashed amber ring with a plus; your face drops in when you're in),
  * then the others who are in as plain filled seats (counts, never who), then faint empty seats.
  */
-function Seats({ on, n, of, size, name }: { on: boolean; n: number; of: number; size: number; name: string }) {
+function Seats({ on, n, of, box, size, name }: { on: boolean; n: number; of: number; /** Seats' room kept for the round (someone leaving moves nothing). */ box: number; size: number; name: string }) {
   const v = useOn(on, 220);
   const seats = Math.min(of, MAX_SEATS);
+  const room = Math.min(Math.max(box, of), MAX_SEATS);
   const others = Math.min(seats - 1, Math.max(0, n - (on ? 1 : 0)));
   const empty = Math.max(0, seats - 1 - others);
   const ring = { width: size, height: size, borderRadius: size / 2 } as const;
   const overlap = -size * 0.24;
   return (
-    <View accessible={false} style={{ flexDirection: 'row', alignItems: 'center' }}>
+    <View accessible={false} style={{ flexDirection: 'row', alignItems: 'center', width: size + (room - 1) * (size + overlap) }}>
       <View style={ring}>
         <Animated.View style={[ring, { position: 'absolute', borderWidth: 2, borderStyle: 'dashed', borderColor: glow.amber, backgroundColor: '#0d0d0d', alignItems: 'center', justifyContent: 'center', opacity: v.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }]}>
           <Plus size={size * 0.5} color={glow.amber} />
@@ -262,7 +263,7 @@ function OnLayer({ on, radius }: { on: boolean; radius: number }) {
   return <Animated.View pointerEvents="none" style={[FILL, { borderRadius: radius, backgroundColor: '#fbbf240d', borderWidth: 1.5, borderColor: '#fbbf2499', opacity: v }]} />;
 }
 
-interface MatchProps { c: Candidate; on: boolean; n: number; of: number; name: string; onToggle: () => void; disabled: boolean }
+interface MatchProps { c: Candidate; on: boolean; n: number; of: number; box: number; name: string; onToggle: () => void; disabled: boolean }
 
 /**
  * A whole match as one checkbox (role checkbox, checked state, Space toggles on the web). Hover: the tall
@@ -286,7 +287,7 @@ function Toggle({ on, label, onToggle, disabled, lift, inner, children }: { on: 
 const inName = (c: Candidate, n: number, of: number) => `I’m in for ${c.title}, ${n} of ${of} in`;
 
 /** Two or more matches: one wide row each on a blurred band of its own poster. The poster is the checkbox; the whole row toggles. */
-function MatchRow({ c, on, n, of, name, onToggle, disabled }: MatchProps) {
+function MatchRow({ c, on, n, of, box, name, onToggle, disabled }: MatchProps) {
   const { phone, z } = useLayout();
   const cw = phone ? 78 : z(112);
   const pw = phone ? 60 : z(72);
@@ -318,7 +319,7 @@ function MatchRow({ c, on, n, of, name, onToggle, disabled }: MatchProps) {
               </View>
             )}
             <View style={{ width: cw, alignItems: 'center', gap: 6 }}>
-              <Seats on={on} n={n} of={of} size={phone ? 26 : z(30)} name={name} />
+              <Seats on={on} n={n} of={of} box={box} size={phone ? 26 : z(30)} name={name} />
               <InLabel on={on} size={phone ? 12 : z(13)} />
             </View>
           </View>
@@ -329,7 +330,7 @@ function MatchRow({ c, on, n, of, name, onToggle, disabled }: MatchProps) {
 }
 
 /** One match, editorial: big poster beside its facts, filling a phone and sitting wide on desktop. The poster is the checkbox; the whole card toggles. */
-function SingleMatch({ c, on, n, of, name, onToggle, disabled }: MatchProps) {
+function SingleMatch({ c, on, n, of, box, name, onToggle, disabled }: MatchProps) {
   const { phone, z, max } = useLayout();
   const pad = phone ? 12 : z(24);
   const width = phone ? max : Math.min(max, z(880));
@@ -337,7 +338,7 @@ function SingleMatch({ c, on, n, of, name, onToggle, disabled }: MatchProps) {
   const reason = cardReason(c);
   const seats = (
     <View style={{ minHeight: z(56), flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-      <Seats on={on} n={n} of={of} size={z(38)} name={name} />
+      <Seats on={on} n={n} of={of} box={box} size={z(38)} name={name} />
       <View style={{ flex: 1 }}><InLabel on={on} size={z(18)} align="flex-start" /></View>
       <GText size={z(13)} color={glow.muted}>{`${n} of ${of} in`}</GText>
     </View>
@@ -376,7 +377,11 @@ function SingleMatch({ c, on, n, of, name, onToggle, disabled }: MatchProps) {
 /** Every match, each one an I'm in checkbox; the tiebreak over them once everyone's in for two or more. */
 export function MatchesPage() {
   const { id, view, setActivityView } = useRoom();
-  useFocusEffect(useCallback(() => { setActivityView('matches'); }, [setActivityView]));
+  useFocusEffect(useCallback(() => {
+    setActivityView('matches');
+    matchesInFront(true);
+    return () => matchesInFront(false);
+  }, [setActivityView]));
   // Nobody stays on Matches once the round is decided or restarted: the room shows what's next. A friend's I'm in
   // doesn't take you away from here: you stay to say which other ones you're in for.
   const phase = view?.phase;
@@ -419,6 +424,9 @@ function Matches({ id, view, tiebreak, held, onLanded, onSkip }: { id: string; v
   const [closed, setClosed] = useState<string | null>(null);
   const sheetKey = tiebreak ? `${tiebreak.version}:${tiebreak.outcome ? 'outcome' : 'picking'}` : null;
   const required = view.required;
+  // The most people this round's seats made room for: someone leaving takes a seat away without moving the rest.
+  const [box, setBox] = useState({ generation: view.generation, seats: required });
+  if (box.generation !== view.generation || required > box.seats) setBox({ generation: view.generation, seats: required });
   const matches = view.matches;
   const rows = view.ins;
   const byId = new Map(rows.map((r) => [r.id, r]));
@@ -434,20 +442,25 @@ function Matches({ id, view, tiebreak, held, onLanded, onSkip }: { id: string; v
   const sub = count === 0 ? 'When everyone says Yep to a title, it shows up here.' : count === 1 ? '1 match · Tap it if you’re in' : `${count} matches · Tap every one you’re in for`;
   const one = count === 1 ? matches[0] : null;
   const name = view.me.nickname;
-  const props = (c: Candidate): MatchProps => ({ c, on: byId.get(c.id)?.mine ?? false, n: byId.get(c.id)?.count ?? 0, of: required, name, onToggle: () => toggle(c.id), disabled });
+  const props = (c: Candidate): MatchProps => ({ c, on: byId.get(c.id)?.mine ?? false, n: byId.get(c.id)?.count ?? 0, of: required, box: box.seats, name, onToggle: () => toggle(c.id), disabled });
   const decided = tied.length === 1 ? tied[0] : null;
   const keep = <Button secondary label="Keep swiping" onPress={() => leavePage(id)} />;
   const footer = (
-    <View style={{ gap: 10, width: phone ? '100%' : z(tied.length > 1 ? 520 : 400), alignSelf: 'center' }}>
-      {/* One line, always there: everyone getting in on a title moves nothing. */}
+    <View style={{ gap: 10, width: phone ? '100%' : z(400), alignSelf: 'center' }}>
+      {/* One line, always there: everyone getting in on a title, or a tiebreak opening, moves nothing. Closed, the
+          tiebreak opens again from it. */}
       <View accessibilityLiveRegion="polite" style={{ minHeight: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-        {tied.length ? <Icon name="check" size={16} color={glow.amber} /> : null}
-        {tied.length ? <GText bold size={z(14)} color={glow.amber} lines={1}>{decided ? `Everyone’s in for ${decided.title}` : `Everyone’s in for ${tied.length}`}</GText> : null}
+        {tied.length > 1 && tiebreak ? (
+          <Press label={`Pick one of ${tied.length}`} onPress={() => setClosed(null)} style={{ minHeight: 48, marginVertical: -12, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 8 }}>
+            <Icon name="dice" size={16} color={glow.amber} />
+            <GText bold size={z(14)} color={glow.amber} lines={1}>{`Everyone’s in for ${tied.length} · Pick one`}</GText>
+          </Press>
+        ) : tied.length ? <>
+          <Icon name="check" size={16} color={glow.amber} />
+          <GText bold size={z(14)} color={glow.amber} lines={1}>{decided ? `Everyone’s in for ${decided.title}` : `Everyone’s in for ${tied.length}`}</GText>
+        </> : null}
       </View>
-      <Actions>
-        {keep}
-        {tied.length > 1 && tiebreak ? <Button label={`Pick one of ${tied.length}`} icon={<Icon name="dice" size={17} color={warm.ink} />} onPress={() => setClosed(null)} /> : null}
-      </Actions>
+      <Actions>{keep}</Actions>
     </View>
   );
   return (

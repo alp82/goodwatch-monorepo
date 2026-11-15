@@ -14,6 +14,21 @@ export function openPage(id: string, page: RoomPage, params: Record<string, stri
 }
 /** The room with one of its sheets open: what /room/<id>/<sheet> addresses lead to. */
 export const sheetHref = (id: string, sheet: RoomSheet) => ({ pathname: '/room/[id]' as const, params: { id, sheet } });
+/**
+ * Matches is in front (its focus says so): a tiebreak opening is already on screen there. Otherwise the room page
+ * opens Matches once per tiebreak (`openForTiebreak`), so nobody swiping misses it.
+ */
+let matchesFront = false;
+export function matchesInFront(front: boolean) {
+  matchesFront = front;
+}
+const tiebreaksShown = new Set<string>();
+/** Opens Matches for a tiebreak (`key`: room, round and tiebreak version) unless it showed, or Matches is in front. */
+export function openForTiebreak(id: string, key: string) {
+  if (tiebreaksShown.has(key)) return;
+  tiebreaksShown.add(key);
+  if (!matchesFront) openPage(id, 'matches');
+}
 /** Back from a sub-page: the page underneath, or the room itself when the page was opened directly. */
 export function leavePage(id: string) {
   router.dismissTo({ pathname: '/room/[id]', params: { id } });

@@ -2,7 +2,7 @@
 import { memo, useCallback, useEffect, useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { showsProposal, type RoomView } from './model';
-import { toRooms } from './nav';
+import { openForTiebreak, toRooms } from './nav';
 import { isRoomSheet, useRoom } from './RoomProvider';
 import { RoomStatus as RoomStatusScreen } from './RoomStatus';
 import { Proposal as ProposalScreen } from './Decide';
@@ -51,6 +51,10 @@ export function RoomHome() {
     if (params.signin || params.fresh) router.setParams({ signin: undefined, fresh: undefined });
   }, [params.signin, params.fresh]);
   const round = useRoundEntry(view);
+  // Everyone's in for two or more and you haven't picked: Matches comes to the front, where the tiebreak is.
+  const tb = view?.tiebreak;
+  const tiebreak = view && view.phase === 'choosing' && view.me.inRound && tb && !tb.outcome && !tb.mine ? `${view.roomId}:${view.generation}:${tb.version}` : null;
+  useEffect(() => { if (tiebreak && view) openForTiebreak(view.roomId, tiebreak); }, [tiebreak]); // eslint-disable-line react-hooks/exhaustive-deps
   const setup = view?.phase === 'setup' || (view?.phase === 'choosing' && !view.me.inRound);
   useBackAction(toRooms, setup);
   // Leaving ends your access on purpose: the room stays as it was until the start page takes over.

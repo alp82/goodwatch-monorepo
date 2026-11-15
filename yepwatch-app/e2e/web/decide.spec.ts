@@ -26,8 +26,8 @@ async function matchAcross(people: Person[]) {
   last.journeyFailure('no match after 15 rounds of everyone saying Yep');
 }
 
-/** A match's I'm in checkbox on Matches ("I'm in for <title>, 1 of 3 in"). */
-const imIn = (p: Person) => p.page.getByRole('checkbox', { name: /^I’m in for / }).filter({ visible: true }).first();
+/** A match's I'm in checkbox on Matches ("I'm in for <title>, 1 of 3 in"); `n`: which match. */
+const imIn = (p: Person, n = 0) => p.page.getByRole('checkbox', { name: /^I’m in for / }).filter({ visible: true }).nth(n);
 
 test.describe('match, I’m in, Tonight', () => {
   test('match → Matches → I’m in → friends’ I’m in → Tonight → Start again @core', async ({ room }) => {
@@ -76,7 +76,7 @@ test.describe('match, I’m in, Tonight', () => {
     await matchAcross([host, mia]);
     await host.tap(host.button(/^\d+ match(es)?$/), { expect: { visible: ['matches'] } });
     await host.page.route(COMMANDS, async (route) => {
-      if (route.request().method() === 'POST' && /"type":"propose"/.test(route.request().postData() ?? '')) await new Promise((resolve) => setTimeout(resolve, LATE_PROPOSAL_MS));
+      if (route.request().method() === 'POST' && /"type":"set_in"/.test(route.request().postData() ?? '')) await new Promise((resolve) => setTimeout(resolve, LATE_PROPOSAL_MS));
       await route.continue().catch(() => undefined);
     });
     await host.tap(imIn(host), { expect: { text: 'You’re in' }, timeout: 15000 });
@@ -102,5 +102,42 @@ test.describe('match, I’m in, Tonight', () => {
     // The host takes it back: nobody is in any more.
     await host.tap(imIn(host), { expect: {} });
     await eventually(() => (host.latest?.proposal as { agreeCount: number } | null)?.agreeCount ?? 0, (n) => n === 0, 'I’m in taken back', host);
+  });
+  // Everyone in for two titles: multi-select on Matches, then the tiebreak. The server decides the first title
+  // everyone's in for at once, so two become everyone's together only when the room shrinks: Sam leaves.
+  test('everyone in for two → tiebreak → favorites → the spin → Tonight', async ({ room }) => {
+    const host = await readyHost(room);
+    const mia = await room.person('Mia');
+    const sam = await room.person('Sam');
+    const invite = await inviteLink(host);
+    await join(mia, invite, 'Mia', 'Netflix');
+    await join(sam, invite, 'Sam', 'Netflix');
+    await start(host, [mia, sam]);
+    await matchAcross([host, mia, sam]);
+    await matchAcross([host, mia, sam]);
+    for (const p of [host, mia, sam]) await p.tap(p.button(/^\d+ matches$/), { expect: { visible: ['matches'] } });
+    // Every tap is its own I'm in; a friend's I'm in keeps everyone on Matches, counted on its row.
+    await host.tap(imIn(host, 0), { expect: { label: { text: ', 1 of 3 in$' } }, observers: [[mia, { label: { text: ', 1 of 3 in$' } }, 'inToPeerMs']] });
+    await host.tap(imIn(host, 1), { expect: { label: { text: ', 1 of 3 in$' } } });
+    await mia.tap(imIn(mia, 0), { expect: { label: { text: ', 2 of 3 in$' } } });
+    await mia.tap(imIn(mia, 1), { expect: { label: { text: ', 2 of 3 in$' } }, observers: [[sam, { label: { text: ', 2 of 3 in$' } }, 'inToPeerMs']] });
+    await expect(host.page.getByRole('checkbox', { name: /, 2 of 3 in$/, checked: true }).filter({ visible: true })).toHaveCount(2);
+    await expect(sam.testId('matches')).toBeVisible();
+    await mia.audit('Matches, in for two');
+    // Sam leaves: the two left are in for both, and the tiebreak opens by itself on their phones.
+    await sam.tap(sam.button(/, switch couch$/));
+    await sam.tap(sam.button(/, Couch page$/), { expect: { visible: ['room-sheet'] } });
+    await sam.tap(sam.button('Leave couch'));
+    await sam.tap(sam.button('Leave'), { expect: { visible: ['home-rooms'] }, observers: [[host, { visible: ['tiebreak'] }, 'tiebreakToPeerMs'], [mia, { visible: ['tiebreak'] }, 'tiebreakToPeerMs']], timeout: 15000 });
+    await host.audit('Tiebreak');
+    // Favorites wait for everyone; different picks tie, so the server's spin decides and the room goes to Tonight.
+    await host.tap(host.page.getByRole('radio', { name: /, my favorite$/ }).filter({ visible: true }).nth(0), { expect: { text: 'Waiting for 1 more pick' } });
+    await mia.tap(mia.page.getByRole('radio', { name: /, my favorite$/ }).filter({ visible: true }).nth(1), { expect: { visible: ['tonight'] }, observers: [[host, { visible: ['tonight'] }, 'favoriteToPeerMs']], timeout: 20000 });
+    await eventually(() => host.latest?.phase, (p) => p === 'decided', 'the room decided', host);
+    const tiebreak = host.latest?.tiebreak as { outcome: { candidateId: string; spun: boolean } | null } | null | undefined;
+    const decision = host.latest?.decision as { candidateId: string } | null | undefined;
+    expect(tiebreak?.outcome?.spun, 'tied favorites spin').toBe(true);
+    expect(decision?.candidateId, 'Tonight is the spin’s pick').toBe(tiebreak?.outcome?.candidateId);
+    await host.audit('Tonight after the tiebreak');
   });
 });
