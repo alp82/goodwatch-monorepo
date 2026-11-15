@@ -121,7 +121,7 @@ async function fixture() {
 	return { repo, service, a, b, id, send, vote, propose, agree }
 }
 
-test("One shared proposal, anonymous counts, replacement clears approvals, explicit Agree automatically decides", async () => {
+test("Legacy proposals preserve ins, project the most popular match and explicit Agree decides", async () => {
 	const f = await fixture()
 	const cards = (await f.service.read(f.id, credential(f.a))).shared.candidates
 	for (const c of cards) {
@@ -133,13 +133,13 @@ test("One shared proposal, anonymous counts, replacement clears approvals, expli
 	assert.equal(s.shared.proposal?.agreeCount, 1)
 	assert.equal(s.own.agreement.isProposer, true)
 	s = (await f.propose(f.b, cards[1].id)).snapshot
-	assert.equal(s.shared.proposal?.previousCandidateId, cards[0].id)
+	assert.equal(s.shared.proposal?.candidateId, cards[0].id)
 	assert.equal(s.shared.proposal?.agreeCount, 1)
 	assert.equal(
 		(await f.service.read(f.id, credential(f.a))).own.agreement.agreed,
-		false
+		true
 	)
-	s = (await f.agree(f.a)).snapshot
+	s = (await f.agree(f.b)).snapshot
 	assert.equal(s.shared.phase, "decided")
 	assert.equal(s.shared.decision?.proposalVersion, s.shared.proposalVersion)
 	const wire = JSON.stringify(s.shared)
@@ -248,8 +248,8 @@ for (const race of ["join", "undo", "replace", "withdraw"] as const)
 		release()
 		await check
 		const s = await f.service.read(f.id, credential(f.a))
-		assert.equal(s.shared.phase, "choosing")
-		assert.equal(s.shared.decision, null)
+		assert.equal(s.shared.phase, race === "replace" ? "decided" : "choosing")
+		if (race !== "replace") assert.equal(s.shared.decision, null)
 	})
 test("Lost command acknowledgement replays exactly once and browsing does not withdraw", async () => {
 	const f = await fixture()

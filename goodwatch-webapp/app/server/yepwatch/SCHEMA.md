@@ -122,3 +122,28 @@ Apply `migrations/20261115-taste-profiles.sql` explicitly after a snapshot; the 
 table uses four shards and one replica in that migration. Existing profile role access is restricted to the YepWatch
 API/operator; grant no table access to the realtime gateway or GoodWatch rating readers/writers. Backups contain
 private answers and must remain under the same access restrictions as room interaction records.
+
+### Matches I'm in (2026-11-15)
+
+`yepwatch_room.in_version BIGINT` defaults to zero when absent/null. `tiebreak_record TEXT` stores a validated
+JSON extension: `{ tiebreak, participants: [{ id, ins, inRevision, favorite }] }`. `tiebreak` holds version,
+candidateIds, seed and outcome; favorite counts derive from active participants on projection. Missing/null
+records upgrade existing proposal approvals to ins lazily, preserving installed clients' selections.
+
+This checkout's `participant_records` references immutable typed participant rows; it does **not** contain
+serialized participant objects as the handoff assumes. To preserve the requested two-column migration and
+avoid participant DDL, the private per-person extension is serialized in the new room TEXT record alongside
+the tiebreak. It is committed atomically with the room head and is never projected as shared data. The live
+Valkey repository already seals/serializes the entire room, including the new participant and room properties;
+no explicit field list needs changing there. This is the storage-location deviation from the handoff.
+
+Apply `migrations/20261115-matches-in.sql` explicitly after a snapshot, before deploying:
+
+```sql
+ALTER TABLE doc.yepwatch_room ADD COLUMN in_version BIGINT;
+ALTER TABLE doc.yepwatch_room ADD COLUMN tiebreak_record TEXT;
+```
+
+CrateDB 6.4.6 rejects `ADD COLUMN IF NOT EXISTS`. Replaying an already applied statement reports
+"column already exists" and can be skipped. No startup DDL is added. Key read-after-write paths retain their
+OR-of-key-equalities reads (never `id = ANY(?)`).

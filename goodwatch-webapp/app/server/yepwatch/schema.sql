@@ -106,6 +106,8 @@ CREATE TABLE IF NOT EXISTS doc.yepwatch_room (
   "ticket_records" ARRAY(TEXT) NOT NULL,
   "member_intent_records" ARRAY(TEXT) NOT NULL,
   "proposal_record" TEXT,
+  "in_version" BIGINT,
+  "tiebreak_record" TEXT,
   "decision_record" TEXT,
   "history_records" ARRAY(TEXT) NOT NULL,
   "pending_revision" BIGINT NOT NULL,

@@ -240,6 +240,8 @@ export const tables = {
 			ticket_records: array(text(128), 48),
 			member_intent_records: array(text(128), 48),
 			proposal_record: ref,
+			in_version: additive(integer()),
+			tiebreak_record: additive(text(2000000)),
 			decision_record: ref,
 			history_records: array(text(128), 128),
 			pending_revision: integer(),

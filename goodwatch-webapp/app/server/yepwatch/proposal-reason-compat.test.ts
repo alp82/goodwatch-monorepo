@@ -16,7 +16,8 @@ test('actual installed wire parser reads legacy frames; new reasons are delivere
   assert.equal(parseFrame(frame(shared)), null, 'the old strict bundle rejects new fields')
   // What the gateway sends a phone that didn't declare candidateReasons (proposalForClient, tested in
   // yepwatch-realtime/test/proposal-reason.test.ts; its sources don't load under plain node --test).
-  const legacy = { ...shared, candidates: shared.candidates.map(({ reason: _, ...candidate }) => candidate) }
+  const { ins, inVersion, tiebreak, ...withoutMatchesIn } = shared
+  const legacy = { ...withoutMatchesIn, candidates: shared.candidates.map(({ reason: _, ...candidate }) => candidate) }
   assert.ok(parseFrame(frame(legacy)), 'default gateway delivery keeps the installed bundle working')
 })
 test('HTTP read responses omit reasons by default and include them only with candidateReasons=1', async () => {
@@ -33,4 +34,15 @@ test('HTTP read responses omit reasons by default and include them only with can
   }
   assert.equal('reason' in (await read()).shared.candidates[0], false)
   assert.equal((await read('?candidateReasons=1')).shared.candidates[0].reason.code, 'well_liked')
+  const legacy = await read()
+  assert.ok(parseFrame(JSON.stringify({ type: 'room.snapshot', snapshot: legacy.shared })))
+  for (const key of ['ins', 'inVersion', 'tiebreak']) assert.equal(key in legacy.shared, false)
+  for (const key of ['ins', 'favorite']) assert.equal(key in legacy.own, false)
+  const supported = await read('?matchesIn=1')
+  assert.deepEqual(supported.shared.ins, [])
+  assert.equal(supported.shared.inVersion, 0)
+  assert.equal(supported.shared.tiebreak, null)
+  assert.deepEqual(supported.own.ins, { candidateIds: [], revision: 0 })
+  assert.equal(supported.own.favorite, null)
+  assert.equal(parseFrame(JSON.stringify({ type: 'room.snapshot', snapshot: supported.shared })), null)
 })
