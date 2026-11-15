@@ -52,6 +52,8 @@ export class TasteProfileStore {
   private sending: Promise<void> | null = null;
   private reading: Promise<ProfileSummary | null> | null = null;
   private readAt = 0;
+  /** Bumped by Reset: a read that started before it belongs to the forgotten profile and is dropped. */
+  private epoch = 0;
   private restored: Promise<void>;
   private writes: Promise<void> = Promise.resolve();
   /** In front (app active, page visible): only then do failed sends go again by themselves. */
@@ -68,6 +70,8 @@ export class TasteProfileStore {
       this.pending = [...decodeOutbox(raw), ...this.pending];
       this.lastAt = Math.max(this.lastAt, ...this.pending.map((p) => p.at));
       this.publish();
+      // Answers kept from an earlier run go out without waiting for a new answer or Taste mode closing.
+      if (this.pending.length) void this.flush();
     }, () => undefined);
   }
 
@@ -79,13 +83,21 @@ export class TasteProfileStore {
     if (this.reading) return this.reading;
     if (this.summary && this.now() - this.readAt < maxAgeMs) return Promise.resolve(this.summary);
     if (this.view.status === 'idle') this.set({ status: 'loading' });
-    this.reading = this.deps.api.profile().then((summary) => {
+    const epoch = this.epoch;
+    const reading: Promise<ProfileSummary | null> = this.deps.api.profile().then((summary) => {
+      // Reset came in between (the read was of the forgotten profile), or a send already moved past this revision.
+      if (epoch !== this.epoch) return this.summary;
+      if (this.summary && summary.revision < this.summary.revision) return this.summary;
       this.summary = summary;
       this.readAt = this.now();
       this.publish('ready');
       return summary;
-    }, () => { this.publish(this.summary ? 'ready' : 'failed'); return null; }).finally(() => { this.reading = null; });
-    return this.reading;
+    }, () => {
+      if (epoch === this.epoch) this.publish(this.summary ? 'ready' : 'failed');
+      return epoch === this.epoch ? null : this.summary;
+    }).finally(() => { if (this.reading === reading) this.reading = null; });
+    this.reading = reading;
+    return reading;
   }
 
   /** A Taste card answered; `previous` is what this title had before (an answer changed or undone). */
@@ -107,20 +119,29 @@ export class TasteProfileStore {
     return this.sending;
   }
 
-  /** In front again (or not): a failed send waiting out its backoff goes now. */
+  /**
+   * In front again (or not): whatever waits goes now, a failed send waiting out its backoff included. Also when the
+   * send failed while away (no retry was planned then).
+   */
   setFront(front: boolean) {
     this.front = front;
-    if (front && this.cancelRetry) { this.cancelRetry(); this.cancelRetry = null; void this.flush(); }
-    if (!front) void this.flush();
+    this.cancelRetry?.();
+    this.cancelRetry = null;
+    void this.flush();
   }
 
   /** Reset my taste: the server forgets the profile and this device makes a new one next time. */
   async reset() {
     this.cancelRetry?.();
     this.cancelRetry = null;
+    this.epoch += 1;
+    this.reading = null;
     await this.sending?.catch(() => undefined);
     await this.deps.api.deleteProfile();
     await this.deps.forgetSecret();
+    // Reads started while the profile was being deleted were of the old one too.
+    this.epoch += 1;
+    this.reading = null;
     this.pending = [];
     this.inFlight.clear();
     this.answeredFollowUps.clear();

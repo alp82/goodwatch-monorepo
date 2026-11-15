@@ -183,6 +183,52 @@ test('store: answers kept from an earlier run go first', async () => {
   assert.deepEqual(h.sent[0].items, [{ key: 1e12 + 7, answer: 'loved', at: 500 }]);
 });
 
+test('store: a send that failed in the background goes again on coming to the front', async () => {
+  let fail = true;
+  const h = harness({ profileAnswers: async (body) => { h.sent.push(body); if (fail) throw new Error('offline'); return { revision: body.revision + 1, answered: 5 }; } });
+  await h.store.load();
+  h.store.answer(1e12 + 1, 'loved');
+  h.store.setFront(false);
+  await h.store.flush();
+  assert.equal(h.sent.length, 1);
+  assert.equal(h.timers.length, 0);
+  fail = false;
+  h.store.setFront(true);
+  await h.store.flush();
+  assert.equal(h.sent.length, 2);
+  await settle();
+  assert.equal(h.writes.at(-1), null);
+});
+
+test('store: answers kept from an earlier run go out by themselves', async () => {
+  const h = harness({}, encodeOutbox([item(1e12 + 7, 'loved', 500)]));
+  for (let i = 0; i < 5; i++) await settle();
+  assert.deepEqual(h.sent.map((s) => s.items), [[{ key: 1e12 + 7, answer: 'loved', at: 500 }]]);
+});
+
+test('store: a slow read never undoes a newer state', async () => {
+  const reads: ((s: Awaited<ReturnType<TasteProfileApi['profile']>>) => void)[] = [];
+  const summary = (revision: number, answered: number) => ({ answered, loved: answered, notForMe: 0, unseen: 0, revision, followups: [] });
+  const h = harness({ profile: () => new Promise((resolve) => { reads.push(resolve); }) });
+  const first = h.store.load();
+  reads[0](summary(3, 4));
+  await first;
+  // A read leaves, then an answer goes out and moves the revision past it.
+  const slow = h.store.load();
+  h.store.answer(1e12 + 1, 'loved');
+  await h.store.flush();
+  assert.equal(h.store.snapshot().rated, 5);
+  reads[1](summary(3, 4));
+  await slow;
+  assert.equal(h.store.snapshot().rated, 5);
+  // A read of the profile Reset deletes doesn't bring it back.
+  const old = h.store.load();
+  await h.store.reset();
+  reads[2](summary(9, 30));
+  await old;
+  assert.equal(h.store.snapshot().rated, 0);
+});
+
 test('taste words: strength levels, card meta and the next-day label', () => {
   assert.deepEqual([0, 1, 5, 10, 20, 40].map((n) => strength(n).word), ['Empty', 'Getting started', 'Taking shape', 'Good', 'Strong', 'Very strong']);
   assert.equal(strength(11).next, 20);
