@@ -88,7 +88,9 @@ function NewRoomDraft({ account }: { account: ReturnType<typeof useAccount> }) {
     started.current = true;
     resume.pick(text ?? draft.data.text);
   }, [disabled, draft.data, resume, text]);
-  return <NewCouchScreen back={back} note={reconnecting ? RECONNECTING_WORDS : undefined} error={error} disabled={disabled}
+  // A server wait saved from an earlier visit: the same one quiet line once the quiet period is over (no countdown).
+  const waitingLate = useLate(retrySeconds > 0 && !saving, QUIET_OUTAGE_MS);
+  return <NewCouchScreen back={back} note={reconnecting || waitingLate ? RECONNECTING_WORDS : undefined} error={error} disabled={disabled}
     details={error && failure instanceof RoomFailure && failure.diagnostic ? <ConnectionDetails diagnostic={failure.diagnostic} /> : undefined}
     retry={() => resume.pick(text ?? draft.data?.text ?? '')} />;
 }
