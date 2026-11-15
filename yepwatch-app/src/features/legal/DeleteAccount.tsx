@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { continuousApi as api, RoomFailure } from '../../core/continuous/api';
 import { useAccount, signOut } from '../../core/continuous/account';
 import { roomRegistry } from '../../core/continuous/room-registry';
+import { tasteProfile } from '../../core/continuous/taste-profile';
 import type { DeletionRecovery } from '../../core/continuous/room-registry-store';
 import { deletionStateSchema, type DeletionState } from '../../core/continuous/deletion-state';
 import { loadAccess } from '../../core/credentials';
@@ -43,6 +44,8 @@ export function DeleteAccount() {
         try { deadline = deletionStateSchema.parse((await api.deleteGuest(access)).deletion); }
         catch (e) { if (!isGone(e)) throw e; }
       }
+      // The taste profile (Taste answers kept on the server) goes too, with this device's secret for it.
+      await tasteProfile.reset();
       await roomRegistry.confirmDeletion(deadline);
       if (account.member || account.lapsed) await signOut();
       queryClient.clear();
