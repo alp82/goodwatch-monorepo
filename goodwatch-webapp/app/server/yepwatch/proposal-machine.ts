@@ -446,6 +446,7 @@ export function proposalTransition(
 				room.candidates.some(candidate => candidate.id === c.candidateId && candidateEligible(room, candidate))
 			requireRoom(matches(room).some(m => m.id === c.candidateId) || pending, 'conflict', 'Pick a current match')
 			requireRoom(p.inRevision === c.expectedOwnInRevision, 'conflict', "Your I'm in changed")
+			p.matchesCapable = true
 			setIn(room, p, c.candidateId, c.in)
 		} else if (c.type === 'confirm_in') {
 			requireRoom(room.phase === 'choosing' && room.generation === c.generation, 'conflict', 'Pick a current match')
@@ -455,6 +456,7 @@ export function proposalTransition(
 			requireRoom(everyone.length > 0, 'conflict', "The I'm ins changed")
 			if (everyone.length === 1 && room.candidates.find(v => v.id === everyone[0])?.identity.kind === 'show_continue' &&
 					!people.every(m => m.member.state === 'linked' && m.memberGrant && m.memberGrant.expiresAt > now)) memberProgressRequired()
+			p.matchesCapable = true
 			if (everyone.length === 1 && sameIns(room.confirmedIns, everyone) && room.agreement.state === 'unavailable' && agreementCandidate(room)) {
 				room.agreement = { version: room.agreement.version + 1, state: 'checking', error: null }
 				room.revision++

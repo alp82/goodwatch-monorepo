@@ -2008,8 +2008,19 @@ export class ProposalService {
 			)
 				return
 			const candidate = agreementCandidate(old.room)
-			if (!candidate) return
 			const room = structuredClone(old.room)
+			if (!candidate) {
+				room.agreement = { version: room.agreement.version + 1, state: "none", error: null }
+				room.revision++
+				try {
+					if (!(await this.repository.compareAndSwap(old, room, true))) continue
+				} catch (e) {
+					if (!(e instanceof IndeterminateWrite)) throw e
+					continue
+				}
+				await this.notify(id)
+				return
+			}
 			try {
 				// The final offer check reads fresh (never the deck's kept offers); "recheck" on the answer's Server-Timing.
 				const evidence = await timed("recheck", this.catalog.recheck(

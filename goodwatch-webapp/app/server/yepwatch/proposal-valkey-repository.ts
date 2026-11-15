@@ -60,7 +60,7 @@ export class ValkeyRoomRepository implements ProposalRepository {
 			throw fail()
 		}
 		if (room?.id !== id) throw fail()
-		initializeIns(room)
+		initializeIns(room, room.inVersion === undefined)
 		return room
 	}
 	async read(id: string): Promise<ProposalStored | null> {

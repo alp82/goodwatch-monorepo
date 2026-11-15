@@ -40,6 +40,8 @@ export interface AccountRoomsStore {
 }
 /** Storage envelope2 is reused for existing member-read compatibility; flowVersion/table/routes distinguish protocol3. */
 export interface ProposalParticipant extends ContinuousParticipant {
+	/** This seat has used the explicit Matches confirmation flow. Private. */
+	matchesCapable?: boolean
 	ins?: string[]
 	inRevision?: number
 	insAgreementRevision?: number

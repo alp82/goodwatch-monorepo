@@ -3,7 +3,13 @@ import type { ProposalRoom, ProposalParticipant } from './proposal-types.ts'
 import { activeRoom } from './proposal-context.ts'
 
 /** Upgrade stored single-proposal approvals without losing installed clients' selections. */
-export function initializeIns(room: ProposalRoom) {
+export function initializeIns(room: ProposalRoom, legacy = false) {
+	const people = activeRoom(room).participants
+	if (legacy && room.proposal && people.length && (room.agreement.state === 'checking' ||
+		people.every(p => p.approvedProposalVersion === room.proposal!.version))) {
+		room.confirmedIns = [room.proposal.candidateId]
+		for (const p of people) p.ins ??= [room.proposal.candidateId]
+	}
   room.inVersion ??= 0
   room.tiebreak ??= null
   for (const p of room.participants) {
@@ -13,6 +19,7 @@ export function initializeIns(room: ProposalRoom) {
       p.inOrder = {}
       p.favorite = null
       room.tiebreak = null
+			room.confirmedIns = null
     }
     p.ins ??= room.proposal && p.approvedProposalVersion === room.proposal.version ? [room.proposal.candidateId] : []
     p.inRevision ??= p.agreementRevision
@@ -86,6 +93,9 @@ export function reconcileIns(room: ProposalRoom, previous: ProposalRoom, ids: st
       room.inVersion === (previous.inVersion ?? 0)) room.inVersion!++
   const everyone = people.length ? counts.filter(c => c.count === people.length).map(c => c.candidateId) : []
   if (room.confirmedIns && !sameIns(room.confirmedIns, everyone)) room.confirmedIns = null
+	// Installed clients cannot confirm after a roster change removes the last holdout.
+	if (room.rosterVersion !== previous.rosterVersion && everyone.length === 1 &&
+		!people.some(p => p.matchesCapable)) room.confirmedIns = everyone
   const confirmed = sameIns(room.confirmedIns, everyone)
   if (everyone.length >= 2 && confirmed) {
     if (!room.tiebreak || room.tiebreak.candidateIds.length !== everyone.length || room.tiebreak.candidateIds.some(id => !everyone.includes(id))) {

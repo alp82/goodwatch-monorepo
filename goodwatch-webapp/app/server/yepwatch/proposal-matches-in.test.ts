@@ -96,7 +96,7 @@ test('late joiner set_in restores the pending match without confirming it', () =
   const snapshot = proposalSnapshot(room, room.hostId)
   assert.deepEqual(snapshot.shared.matches.map(c => c.candidateId), [ids[0]])
   assert.deepEqual(snapshot.shared.ins, [{ candidateId: ids[0], count: 3 }])
-  assert.equal(room.confirmedIns, before.confirmedIns)
+  assert.equal(room.confirmedIns ?? null, before.confirmedIns ?? null)
   assert.equal(room.agreement.state, 'none'); assert.equal(room.phase, 'choosing')
   assert.equal(agreementCandidate(room), null)
   room = confirm(room, 2)
@@ -392,7 +392,7 @@ test('equal counts project the most recently added in, preserved through storage
 })
 
 test('old API writes invalidate stale ins in whole-room JSON and relational extension records', () => {
-  const original = mark(mark(fixture(), 0, ids[0]), 1, ids[1])
+  const original = confirm(mark(mark(fixture(), 0, ids[0]), 1, ids[0]))
   const record = encodeMatches(original)
   for (const relational of [false, true]) {
     const room = structuredClone(original)
@@ -410,6 +410,7 @@ test('old API writes invalidate stale ins in whole-room JSON and relational exte
     assert.deepEqual(room.participants.map(p => p.ins), [[], [ids[2]]])
     assert.ok(room.participants.every(p => p.insAgreementRevision === p.agreementRevision))
     assert.equal(room.tiebreak, null)
+		assert.equal(room.confirmedIns, null)
   }
 })
 
@@ -507,7 +508,7 @@ test('single-title confirm checks fresh offers and decides through the service',
   assert.deepEqual(checked, [ids[0]])
 })
 
-test('confirm continuing shows checks member grants including expiry and ignores departed seats', () => {
+test('confirm continuing shows checks member grants including expiry and ignores departed seats', async () => {
   const now = Date.now(), room = fixture()
   room.constraints.kinds = ['show_continue']
   room.candidates[0].identity = { kind: 'show_continue', tmdbId: 1, episode: { tmdbId: 2, season: 1, number: 2 } }
@@ -527,4 +528,65 @@ test('confirm continuing shows checks member grants including expiry and ignores
     assert.doesNotThrow(() => confirm(invalid))
   }
   assert.equal(confirm(room).agreement.state, 'checking')
+})
+
+
+test('legacy roster changes confirm the sole everyone-in title only without active Matches-capable seats', async () => {
+	let original = propose(fixture(3), 0, ids[0])
+	original = send(original, 1, { type: 'agree', generation: original.generation, candidateId: ids[0], agreed: true,
+		expectedRosterVersion: original.rosterVersion, expectedProposalVersion: original.proposalVersion,
+		expectedOwnAgreementRevision: original.participants[1].agreementRevision })
+	assert.equal(original.agreement.state, 'none')
+	for (const capable of [false, true]) {
+		let room = capable ? mark(original, 0, ids[0]) : structuredClone(original)
+		const loaded = structuredClone(room)
+		for (const p of loaded.participants) delete p.matchesCapable
+		decodeMatches(loaded, encodeMatches(room))
+		assert.equal(loaded.participants[0].matchesCapable, capable ? true : undefined)
+		room = send(loaded, 2, { type: 'leave' })
+		assert.equal(room.agreement.state, capable ? 'none' : 'checking')
+		assert.equal(agreementCandidate(room)?.id ?? null, capable ? null : ids[0])
+	}
+	const capableHoldout = mark(original, 2, ids[1])
+	assert.equal(send(capableHoldout, 2, { type: 'leave' }).agreement.state, 'checking')
+
+})
+
+test('legacy Matches upgrades preserve agreement and settle clears checking without a candidate', async () => {
+	for (const checking of [false, true]) for (const relational of [false, true]) {
+		const room = fixture()
+		room.proposalVersion = 3
+		room.proposal = { candidateId: ids[0], version: 3, previousCandidateId: null,
+			proposerId: room.hostId, baseParticipantIds: room.participants.map(p => p.id) }
+		room.agreement.state = checking ? 'checking' : 'none'
+		delete room.inVersion; delete room.confirmedIns; delete room.tiebreak
+		for (const p of room.participants) {
+			delete p.ins; delete p.inRevision; delete p.insAgreementRevision
+			p.approvedProposalVersion = checking ? null : 3
+		}
+		if (relational) decodeMatches(room, null)
+		else {
+			const repo = new ValkeyRoomRepository({} as never, {} as never, 'legacy-upgrade-secret-at-least-thirty-two',
+				{ accounts: {} as never, deletions: {} as never, retentionDays: 30 })
+			Object.assign(room, repo.decode(room.id, repo.encode(room)))
+		}
+		assert.deepEqual(room.confirmedIns, [ids[0]])
+		assert.equal(agreementCandidate(room)?.id, ids[0])
+		const repo = new ProposalMemoryRepository()
+		room.agreement.state = 'checking'
+		await repo.insert(room)
+		const service = new ProposalService(repo, proposalFixtureCatalog, 'legacy-settle-secret-at-least-thirty-two')
+		await service.settle(room.id)
+		assert.equal((await repo.read(room.id))!.room.phase, 'decided')
+	}
+	const room = fixture(), repo = new ProposalMemoryRepository()
+	room.agreement = { version: 7, state: 'checking', error: null }
+	await repo.insert(room)
+	const service = new ProposalService(repo, proposalFixtureCatalog, 'missing-candidate-secret-at-least-thirty-two')
+	await service.settle(room.id)
+	const stored = (await repo.read(room.id))!.room
+	assert.deepEqual(stored.agreement, { version: 8, state: 'none', error: null })
+	assert.equal(stored.phase, 'choosing')
+	await service.settle(room.id)
+	assert.deepEqual((await repo.read(room.id))!.room, stored)
 })
