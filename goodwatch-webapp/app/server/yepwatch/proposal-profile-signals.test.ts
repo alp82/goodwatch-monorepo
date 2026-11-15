@@ -80,3 +80,98 @@ test("a member keeps their GoodWatch taste with their YepWatch answers blended i
 	member = null
 	assert.equal(source.stored(f.room, f.person)!.taste?.source, "profile")
 })
+
+test('committed Nopes persist across rooms; Yep and undo remove them without changing taste identity or budget', async () => {
+	const f = setup(), source = profileTasteSource(f.profiles)
+	await f.profiles.touch(f.id)
+	await source.prepare(f.room)
+	const before = source.stored(f.room, f.person)!
+	const original = structuredClone(f.store.rows.get(f.id)!.profile)
+	assert.equal(before.nopes.size, 0, 'dealt but unanswered records nothing')
+	await source.voteCommitted!(f.room, f.person, key(1), 'pass', f.at())
+	assert.deepEqual([...source.stored(f.room, f.person)!.nopes], [[key(1), f.at()]])
+	assert.deepEqual(f.store.rows.get(f.id)!.profile.nopes, [{ key: key(1), at: f.at() }])
+	assert.equal(source.stored(f.room, f.person)!.revision, before.revision)
+	assert.equal(f.store.rows.get(f.id)!.profile.write_count, original.write_count)
+	const otherRoom = rankingRoom()
+	otherRoom.participants[0].profileId = f.id
+	assert.equal(source.stored(otherRoom, otherRoom.participants[0])!.nopes.has(key(1)), true)
+	for (const value of ['watch', null] as const) {
+		await source.voteCommitted!(f.room, f.person, key(1), 'pass', f.at())
+		await source.voteCommitted!(f.room, f.person, key(1), value, f.at())
+		assert.equal(source.stored(f.room, f.person)!.nopes.size, 0)
+	}
+	delete f.person.profileId
+	await source.voteCommitted!(f.room, f.person, key(2), 'pass', f.at())
+	assert.deepEqual(f.store.rows.get(f.id)!.profile.nopes, [])
+})
+
+test('Nope reads ignore expiry and future times; every next profile write prunes history', async () => {
+	const f = setup(), source = profileTasteSource(f.profiles)
+	await f.profiles.touch(f.id)
+	await source.prepare(f.room)
+	await source.voteCommitted!(f.room, f.person, key(1), 'pass', f.at())
+	f.advance(30 * 86400000 + 1)
+	assert.equal(source.stored(f.room, f.person)!.nopes.size, 0)
+	await source.voteCommitted!(f.room, f.person, key(2), 'pass', f.at() + 1)
+	assert.deepEqual(f.store.rows.get(f.id)!.profile.nopes, [])
+	await source.voteCommitted!(f.room, f.person, key(2), 'pass', f.at())
+	assert.deepEqual(f.store.rows.get(f.id)!.profile.nopes, [{ key: key(2), at: f.at() }])
+	f.advance(30 * 86400000 + 1)
+	await f.profiles.answers(f.id, { revision: 0, items: [{ key: key(5), answer: 'loved', at: f.at() }] })
+	assert.deepEqual(f.store.rows.get(f.id)!.profile.nopes, [])
+})
+
+test('Nope bursts coalesce, retain 300 newest unique entries and retry CAS conflicts', async () => {
+	const f = setup(), source = profileTasteSource(f.profiles)
+	await f.profiles.touch(f.id)
+	await source.prepare(f.room)
+	const start = f.at()
+	f.advance(1000)
+	const save = f.store.save.bind(f.store)
+	let writes = 0
+	f.store.save = async (p, old) => { writes++; return writes === 1 ? false : save(p, old) }
+	await Promise.all(Array.from({ length: 350 }, (_, i) => source.voteCommitted!(f.room, f.person, key(i), 'pass', start + i)))
+	assert.equal(writes, 2, 'one coalesced batch plus its CAS retry')
+	const nopes = source.stored(f.room, f.person)!.nopes
+	assert.equal(nopes.size, 300)
+	assert.equal(nopes.has(key(49)), false)
+	assert.equal(nopes.has(key(50)), true)
+	assert.equal(nopes.has(key(349)), true)
+	await source.voteCommitted!(f.room, f.person, key(50), 'pass', f.at())
+	assert.equal(source.stored(f.room, f.person)!.nopes.get(key(50)), f.at())
+})
+
+test('Nope hook silently drops throwing stores and bounded repeated CAS failures', async () => {
+	for (const throwing of [false, true]) {
+		const f = setup(), source = profileTasteSource(f.profiles)
+		await f.profiles.touch(f.id)
+		let writes = 0
+		f.store.save = async () => { writes++; if (throwing) throw new Error('unavailable'); return false }
+		await assert.doesNotReject(source.voteCommitted!(f.room, f.person, key(1), 'pass', f.at()))
+		assert.equal(writes, throwing ? 1 : 3)
+	}
+})
+
+test('votes arriving during a Nope save drain in a subsequent batch, including undo', async () => {
+	const f = setup(), source = profileTasteSource(f.profiles)
+	await f.profiles.touch(f.id)
+	await source.prepare(f.room)
+	const save = f.store.save.bind(f.store)
+	let release!: () => void, entered!: () => void
+	const waiting = new Promise<void>(resolve => { release = resolve })
+	const saving = new Promise<void>(resolve => { entered = resolve })
+	let writes = 0
+	f.store.save = async (p, old) => {
+		if (++writes === 1) { entered(); await waiting }
+		return save(p, old)
+	}
+	const first = source.voteCommitted!(f.room, f.person, key(1), 'pass', f.at())
+	await saving
+	const undo = source.voteCommitted!(f.room, f.person, key(1), null, f.at())
+	const next = source.voteCommitted!(f.room, f.person, key(2), 'pass', f.at())
+	release()
+	await Promise.all([first, undo, next])
+	assert.equal(writes, 2)
+	assert.deepEqual([...source.stored(f.room, f.person)!.nopes], [[key(2), f.at()]])
+})

@@ -110,6 +110,8 @@ reader accepts record hashes predating the nullable column. Run the additive mig
 room signing key. Requests use `x-yepwatch-profile`; the raw secret is never stored. The table has no names, avatars,
 account ids or room ids. The participant record adds nullable `profile_id` and `taste_revision`, both server-only.
 
+The additive nullable `nopes` array holds at most 300 `{key, at}` explicit Nopes, newest first, retained for 30 days. NULL reads as empty. Apply `migrations/20261115-profile-nopes.sql` before deploying; `dealt` is unchanged. Nope writes use CAS without consuming the answer budget or changing taste revision.
+
 Each row has at most 500 latest answer events (including null undo tombstones), 20 follow-ups and 300 dealt keys.
 Answer values are `loved`, `not_for_me`, `unseen` or null. Sources are `taste` or `followup`. A null event fences
 older retries; the 500-event cap also bounds these tombstones. `created_at` prevents a replayed old decision from

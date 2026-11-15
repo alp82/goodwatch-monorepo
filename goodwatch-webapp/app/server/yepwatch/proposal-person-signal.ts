@@ -5,6 +5,8 @@ export interface PersonSignal {
   vector: Float32Array
   /** 119 entries at 0..99, 99.1..99.9, 99.91..99.99, 100 percent. */
   quantiles: Float32Array
+  /** Profile Nope history, attached even when the chosen vector comes from GoodWatch. */
+  nopes?: ReadonlySet<number>
   confidence: number
   unseen: ReadonlySet<number>
   source: 'member' | 'profile'
@@ -26,7 +28,7 @@ export interface RoomTasteSource {
   stored(room: ProposalRoom, participant: ProposalParticipant): PersonalSignals | null
   /** Persist the person's explicit Nope/undo before room vote retirement can discard it. Best effort after CAS. */
   voteCommitted?(room: ProposalRoom, participant: ProposalParticipant, key: number, value: 'watch' | 'pass' | null, at: number): Promise<void>
-  /** Best effort after a committed round end; store a bounded, idempotent dealt/Nope ring here. */
+  /** Optional best-effort round-end fallback using retained private votes; counts cannot reconstruct Nopes. */
   roundEnded?(room: ProposalRoom): Promise<void>
 }
 const levels = [...Array.from({ length: 100 }, (_, i) => i / 100),

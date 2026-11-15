@@ -5,7 +5,7 @@ import { tastePercentile } from './proposal-person-signal.ts'
 import { MAX_RANKED, qualityPriors, roomJitter, unitFingerprint } from './proposal-pool.ts'
 import { feedbackAdjustment, FEEDBACK_RANK_HEAD, type RoundFeedback } from './proposal-feedback.ts'
 
-export const RANKER_VERSION = 'picks-1'
+export const RANKER_VERSION = 'picks-2'
 export const RANK_WEIGHTS = { taste: .45, idea: .35, quality: .25, wishlist: .08, availability: .04 } as const
 export const LEAST_MISERY = .65
 export interface RankIdea { id: string; nickname: string; rankedKeys: readonly number[]; wants: readonly string[]; avoids: readonly string[] }
@@ -16,10 +16,10 @@ export interface RankInput {
   pool: readonly number[]; snapshot: TitleSnapshot; people: readonly PersonSignal[]; ideas: readonly RankIdea[]
   wishlist: ReadonlyMap<number, number>; sharedServiceKeys?: ReadonlyMap<number, string>; excluded: ReadonlySet<number>
   feedback?: RoundFeedback; seed: string; peopleCount: number; refill?: boolean
-  repeatNopes?: ReadonlySet<number>; fingerprintKeys?: readonly string[]; quality?: ReadonlyMap<number, number>
+  fingerprintKeys?: readonly string[]; quality?: ReadonlyMap<number, number>
 }
 export function groupTaste(snapshot: Pick<TitleSnapshot, 'cosine' | 'version'> & Partial<Pick<TitleSnapshot, 'rowOf' | 'cosineAt'>>, key: number, people: readonly PersonSignal[], fingerprint?: Float32Array | null, leastMisery = LEAST_MISERY) {
-  let minimum = 1, sum = 0, n = 0, veto = false, unseen = 0
+  let minimum = 1, sum = 0, rawMinimum = 1, rawSum = 0, n = 0, veto = false, unseen = 0
   const row = snapshot.rowOf?.(key)
   for (const person of people) {
     if (!person.confidence || person.snapshotVersion !== snapshot.version) continue
@@ -29,12 +29,16 @@ export function groupTaste(snapshot: Pick<TitleSnapshot, 'cosine' | 'version'> &
     else { let dot = 0; for (let d = 0; d < fingerprint.length; d++) dot += fingerprint[d] * person.vector[d]; cosine = dot }
     const p = cosine == null ? .5 : tastePercentile(cosine, person.quantiles)
     const c = Math.max(0, Math.min(1, person.confidence)), shrunk = c * p + (1 - c) * .5
-    minimum = Math.min(minimum, shrunk); sum += shrunk; n++
+    const adjusted = Math.max(0, shrunk - (person.nopes?.has(key) ? .1 : 0))
+    rawMinimum = Math.min(rawMinimum, shrunk); rawSum += shrunk
+    minimum = Math.min(minimum, adjusted); sum += adjusted; n++
+    // Repeat avoidance changes contribution only; raw percentile still owns vetoes.
     veto ||= c >= .5 && p < .15
     if (p > .7 && person.unseen.has(key)) unseen = .05
   }
   return { taste: n ? leastMisery * minimum + (1 - leastMisery) * sum / n + unseen : 0,
-    minimum: n ? minimum : 0, count: n, veto }
+    minimum: n ? minimum : 0, count: n, veto,
+    repeat: n ? leastMisery * (minimum - rawMinimum) + (1 - leastMisery) * (sum - rawSum) / n : 0 }
 }
 export function ideaFit(rank: number | undefined, length: number, wants: readonly string[], avoids: readonly string[], fp: Uint8Array | null, dimensions: ReadonlyMap<string, number>) {
   let fit = rank === undefined ? 0 : 1 - rank / Math.max(1, length)
@@ -66,12 +70,13 @@ export function rankDeck(input: RankInput, limit: number): Ranked[] {
     const ideaFits = lanes.map(({ idea, ranks }) => ideaFit(ranks.get(key), idea.rankedKeys.length, idea.wants, idea.avoids, snapshot.fingerprint(key), dimensions))
     fits.set(key, ideaFits)
     const idea = ideaFits.length ? Math.max(...ideaFits) : 0, best = ideaFits.indexOf(idea)
+    // repeat reports the weighted taste delta for diagnostics; taste already includes it.
     const parts: ScoreParts = { taste: taste.taste, minimum: taste.minimum, idea, quality: quality.get(key) ?? 0,
       wishlist: Math.min(1, (input.wishlist.get(key) ?? 0) / 2), availability: Number(input.sharedServiceKeys?.has(key) ?? false),
-      feedback: 0, repeat: input.repeatNopes?.has(key) ? -.1 : 0 }
+      feedback: 0, repeat: weights.taste * taste.repeat }
     const score = weights.taste * parts.taste + (ideas.length ? weights.idea : 0) * parts.idea +
       (weights.quality + (taste.count ? 0 : weights.taste)) * parts.quality + weights.wishlist * parts.wishlist +
-      weights.availability * parts.availability + roomJitter(input.seed, key) + parts.feedback + parts.repeat
+      weights.availability * parts.availability + roomJitter(input.seed, key) + parts.feedback
     return { key, score, parts, veto: taste.veto, reason: candidateReason({ wishlist: parts.wishlist, peopleCount: input.peopleCount,
       tasteCount: taste.count, minimum: taste.minimum, idea, nickname: ideas[best]?.nickname,
       short: key >= 2e12 && !!c.facts?.lengths[row] && c.facts.lengths[row] <= 30,

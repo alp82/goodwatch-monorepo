@@ -27,8 +27,11 @@ test('weights, exclusions, Want to See, repeat Nopes and deterministic seed', ()
   const boosted = rankDeck({ ...i, wishlist: new Map([[1e12 + 3, 2]]) }, 20).find(r => r.key === 1e12 + 3)!
   const original = baseline.find(r => r.key === boosted.key)!
   assert.ok(Math.abs(boosted.score - original.score - RANK_WEIGHTS.wishlist) < 1e-9)
-  const repeat = rankDeck({ ...i, repeatNopes: new Set([1e12 + 3]) }, 20).find(r => r.key === 1e12 + 3)!
-  assert.ok(Math.abs(repeat.score - original.score + .1) < 1e-9)
+  const withTaste = { ...i, people: [person([0, 1])] }
+  const before = rankDeck(withTaste, 20).find(r => r.key === 1e12 + 3)!
+  const repeat = rankDeck({ ...withTaste, people: [{ ...withTaste.people[0], nopes: new Set([1e12 + 3]) }] }, 20).find(r => r.key === 1e12 + 3)!
+  assert.ok(Math.abs(repeat.score - before.score + .1 * RANK_WEIGHTS.taste) < 1e-9)
+  assert.ok(Math.abs(repeat.parts.repeat + .1 * RANK_WEIGHTS.taste) < 1e-9)
   assert.equal(original.parts.repeat, 0)
 })
 test('ideas steer with wants/avoids and each idea gets its highest scoring remaining titles early', () => {
@@ -101,4 +104,20 @@ test('3000 titles, 12 tastes and 120+120 feedback entries: bounded warm refill r
   const budget = process.env.CI ? 30 : 15
   console.info(JSON.stringify({ event: 'test_rank_feedback_speed', medianMs: times[2], targetMs: 15, budgetMs: budget }))
   assert.ok(times[2] < budget, `warm feedback rank budget is ${budget} ms (15 ms target, CI slack)`)
+})
+
+test('repeat avoidance adjusts only the Noper before minimum and mean, without creating vetoes', () => {
+  const snapshot = { version: 'fixture', cosine: (_key: number, vector: Float32Array) => vector[0] }
+  const key = 1e12 + 2, a = person([.2]), b = person([.8])
+  const baseline = groupTaste(snapshot, key, [a, b])
+  const noper = { ...a, nopes: new Set([key]) }
+  const penalized = groupTaste(snapshot, key, [noper, b])
+  assert.ok(Math.abs(baseline.taste - penalized.taste - (.65 * .1 + .35 * .1 / 2)) < 1e-9)
+  assert.ok(Math.abs(baseline.minimum - penalized.minimum - .1) < 1e-9)
+  assert.equal(penalized.veto, false, 'raw .2 stays above the veto threshold')
+  assert.deepEqual(groupTaste(snapshot, key, [b]), groupTaste(snapshot, key, [{ ...b }]), 'absent Noper has no effect')
+  assert.equal(groupTaste(snapshot, key, [b]).taste, groupTaste(snapshot, key, [b, { ...noper, confidence: 0 }]).taste)
+  const clamped = groupTaste(snapshot, key, [{ ...person([.05]), nopes: new Set([key]) }])
+  assert.equal(clamped.minimum, 0)
+  assert.equal(clamped.veto, true, 'existing raw veto remains')
 })

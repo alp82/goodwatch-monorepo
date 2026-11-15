@@ -38,7 +38,7 @@ test('release catalog uses member wishlist, profile/hidden exclusions and shared
   assert.equal(page.candidates.find(c => c.identity.tmdbId === 10)?.reason?.code, 'want_to_see')
   assert.equal(page.candidates.find(c => c.identity.tmdbId === 4)?.reason?.code, 'on_service_for_everyone', 'profile wishlists never produce a Want to See boost')
   assert.equal(page.candidates.find(c => c.identity.tmdbId === 4)?.reason?.text, 'On Service two for everyone')
-  assert.equal(Object.values(page.ranking!).find(r => r.key === 1e12 + 4)?.parts.repeat, -.1)
+  assert.equal(Object.values(page.ranking!).find(r => r.key === 1e12 + 4)?.parts.repeat, 0, 'without taste there is no contribution to penalize')
   assert.equal(Object.values(page.ranking!).find(r => r.key === 1e12 + 10)?.parts.repeat, 0, 'Nopes older than 30 days do not penalize a card')
   room.participants[1].serviceIds = [1]; room.participants[0].serviceIds = [2]
   const mixed = await catalog.page(room)
@@ -61,4 +61,24 @@ test('a taste that lands after a setup change rebuilds the prepared deck once; a
   landing = null
   catalog.refreshExcludedKeys!(room); await settle()
   assert.deepEqual(changed, [room.id], 'the same tastes again: nothing to rebuild')
+})
+
+test('catalog attaches profile Nopes to the chosen member signal only', async () => {
+  const room = rankingRoom(); room.phase = 'setup'; room.participants[0].member = { state: 'linked', prefill: null }
+  room.participants.push({ ...structuredClone(room.participants[0]), id: 'other' })
+  const vector = new Float32Array(74); vector[0] = 1
+  const member = { ...none(), taste: { vector, quantiles: Float32Array.from(Array.from({ length: 119 }, (_, i) => i / 118)),
+    confidence: 1, unseen: new Set<number>(), source: 'member' as const, snapshotVersion: snapshot.version } }
+  const profile = { ...none(), nopes: new Map([[1e12 + 4, Date.now()]]) }
+  let noperPresent = true
+  const profiles: RoomTasteSource = { prepare: async () => {}, stored: (_room, p) => p.id === room.participants[0].id && noperPresent ? profile : none() }
+  const members = { seenOrNone: async () => [], seenStored: async () => [], tasteStored: () => member } as unknown as ContinuousMembers
+  const catalog = guestProposalCatalog(members, profiles)
+  const penalized = await catalog.page(room)
+  const rank = Object.values(penalized.ranking!).find(r => r.key === 1e12 + 4)!
+  assert.ok(Math.abs(rank.parts.repeat + .45 * (.65 * .1 + .35 * .1 / 2)) < 1e-9)
+  noperPresent = false
+  const baseline = Object.values((await catalog.page(room)).ranking!).find(r => r.key === 1e12 + 4)!
+  assert.equal(baseline.parts.repeat, 0)
+  assert.ok(Math.abs(rank.score - baseline.score - rank.parts.repeat) < 1e-9)
 })
