@@ -2,6 +2,10 @@
  * Voting stage geometry: one card size and position for every look, and the display words' widths
  * for fitting YEP, NOPE and MATCH to a width. Stage coordinates: x 0…aw (the content column),
  * y 0…stageH; `ext` is the gutter between the column and the window edge, where looks may paint.
+ *
+ * On desktop the stage may sit off center, with a question column to its right. Looks then paint in a window
+ * centered on the card that reaches the farther screen edge (`vw`, `ext`), so backgrounds still cover the whole
+ * screen, and they read `screen`, `column` and `words` to keep words on screen and clear of the column.
  */
 import { backdropAt } from '../../glow/backdrop-colors';
 
@@ -23,11 +27,22 @@ export interface Geo {
   /** Card size. */
   w: number;
   h: number;
-  /** Content column width and the window width. */
+  /**
+   * Content column width, and the width of a window centered on the card that reaches the farther screen edge
+   * (the window itself when the stage is centered).
+   */
   aw: number;
   vw: number;
-  /** Column edge to window edge. */
+  /** Column edge to the edge of that window. */
   ext: number;
+  /** The stage is centered in the window with nothing beside it (phones, single column): looks paint as designed for that. */
+  centered: boolean;
+  /** The screen's left and right edges in stage x (the left one is 0 or less). */
+  screen: { left: number; right: number };
+  /** Where the question column to the right of the stage starts, in stage x; null without one. */
+  column: number | null;
+  /** The widest a word centered on the card may be: on screen and clear of the question column (`vw` when centered). */
+  words: number;
   stageH: number;
   cardTop: number;
   /** Card center (y). */
@@ -68,8 +83,23 @@ export interface StageGeometry extends Geo {
   lean: number;
 }
 
-/** The card as big as the stage allows (2:3), centered; capped on big windows. */
-export function stageGeometry({ aw, stageH, vw, phone, z, rim = null }: { aw: number; stageH: number; vw: number; phone: boolean; z: (n: number) => number; rim?: Rim | null }): StageGeometry {
+/** Where the stage sits in the window (desktop), in window x. */
+export interface StagePlace {
+  /** The stage's left edge. */
+  left: number;
+  /** The question column to the right of the stage, if the screen has one. */
+  column?: { left: number; width: number } | null;
+}
+
+/** A stage that sits less than this far off center, with no column beside it, counts as centered. */
+const CENTERED_SLACK = 1;
+
+/**
+ * The card as big as the stage allows (2:3), centered in the stage; capped on big windows. `place` (desktop)
+ * says where the stage sits in the window; without it, on a phone, or when the stage is centered with no column,
+ * the geometry is the centered one.
+ */
+export function stageGeometry({ aw, stageH, vw, phone, z, rim = null, place = null }: { aw: number; stageH: number; vw: number; phone: boolean; z: (n: number) => number; rim?: Rim | null; place?: StagePlace | null }): StageGeometry {
   let h = Math.max(0, Math.min(stageH, phone ? 600 : z(720)));
   let w = h / 1.5;
   const maxW = Math.max(0, phone ? aw - 36 : Math.min(aw, vw * 0.34));
@@ -78,12 +108,30 @@ export function stageGeometry({ aw, stageH, vw, phone, z, rim = null }: { aw: nu
     h = w * 1.5;
   }
   const cardTop = Math.max(0, (stageH - h) / 2);
+  const ext = Math.max(0, (vw - aw) / 2);
+  const centered = phone || !place || (!place.column && Math.abs(place.left - ext) < CENTERED_SLACK);
+  const reach = centered ? { vw, ext, screen: { left: -ext, right: aw + ext }, column: null, words: vw } : offCenter(aw, vw, z, place);
   return {
-    w, h, aw, vw, stageH, cardTop, phone, z, rim,
-    ext: Math.max(0, (vw - aw) / 2),
+    w, h, aw, stageH, cardTop, phone, z, rim, centered, ...reach,
     cy: cardTop + h / 2,
     threshold: w * 0.33,
-    off: Math.max(vw * 0.6, w * 1.4) + w,
+    off: Math.max(reach.vw * 0.6, w * 1.4) + w,
     lean: Math.max(120, w * 0.5),
+  };
+}
+
+/** The looks' window for a stage `place.left` px from the window's left edge, its card at the stage's center. */
+function offCenter(aw: number, vw: number, z: (n: number) => number, place: StagePlace) {
+  const screen = { left: -place.left, right: vw - place.left };
+  const cx = aw / 2;
+  const half = Math.max(cx - screen.left, screen.right - cx);
+  const column = place.column ? place.column.left - place.left : null;
+  const clear = Math.min(column ?? screen.right, screen.right);
+  return {
+    vw: 2 * half,
+    ext: half - cx,
+    screen,
+    column,
+    words: Math.max(0, 2 * Math.min(cx - screen.left, clear - cx) - 2 * z(20)),
   };
 }

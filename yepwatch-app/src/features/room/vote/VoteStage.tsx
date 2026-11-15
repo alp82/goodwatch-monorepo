@@ -21,10 +21,10 @@ import type { PeerActivity } from '../../../core/continuous/activity';
 import { CardGlow, CardOver, CardUnder, type CardLayerProps } from './card-looks';
 import type { StageGeometry } from './geometry';
 import { BackLayer, FrontLayer } from './layers';
-import { LOOPING, type Look } from './looks';
+import { LOOPING, crossesColumn, momentCrossesColumn, type Look } from './looks';
 import { Moment } from './moments';
 import { FxView } from './fx-view';
-import { clampI, driver, fill, hidden, same, web, type A, type LayerProps, type Node } from './paint';
+import { clampI, driver, ease, fill, hidden, same, web, type A, type LayerProps, type Node } from './paint';
 
 export interface StageCard {
   /** Stable for one card in one round (Undo brings the same key back). */
@@ -106,6 +106,8 @@ export const ENTRY_MS = 140;
 const ENTRY_FIRST_FRAME = 1 - (1 - 16 / ENTRY_MS) ** 3;
 /** The answered card flies off in this long. */
 export const FLY_MS = 250;
+/** The question column's opacity while a look that paints across it plays at full strength. */
+const VEIL = 0.1;
 /** The answered card's stage look builds in and fades in about 450 ms. */
 const FADE_IN_MS = 120;
 const FADE_OUT_MS = 330;
@@ -238,7 +240,7 @@ const SeatMoment = memo(function SeatMoment({ seat, active, g, loop, reduced }: 
 });
 
 /** Memoized: the voting screen re-renders on every room update; the stage only when what it shows changes. */
-export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disabled, keys, reduced, enter, onEntered, activity, services, moment, controls, onVote, onDetails, onGesture, onPointer, onMomentEnd }: {
+export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disabled, keys, reduced, enter, onEntered, activity, services, moment, controls, onVote, onDetails, onGesture, onPointer, onMomentEnd, onVeil }: {
   geo: StageGeometry;
   /** The live card: the next unanswered one, what every press answers. */
   card: StageCard | null;
@@ -264,6 +266,12 @@ export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disab
   onGesture: (phase: GesturePhase) => void;
   onPointer: (pointer: ActivityPointer | null) => void;
   onMomentEnd: (key: string) => void;
+  /**
+   * With a question column beside the stage (`geo.column`): the opacity for that column, 1 at rest, falling to 0.1
+   * while a look or match moment that paints across it plays; null while nothing can. A new node comes whenever the
+   * looks on the stage change. The stage must sit above the column, so the looks paint over it.
+   */
+  onVeil?: (opacity: A | null) => void;
 }) {
   const { w, h, aw, cardTop, threshold, lean, phone } = geo;
   const [values] = useState(() => ({
@@ -634,6 +642,23 @@ export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disab
   // Behind: the answered look under the live one; in front: the live look under the answered one.
   const backSets = sets.filter((s) => s === fading || s === liveSet);
   const frontSets = [...backSets].sort((a, b) => Number(a === fading) - Number(b === fading));
+  // The question column fades while a look on the stage, or the match moment, paints across it.
+  const momentLook = moment?.look;
+  const veil = useMemo(() => {
+    if (geo.column === null) return null;
+    const parts: Node[] = [];
+    for (const set of [fading, liveSet]) {
+      if (!set) continue;
+      for (const kind of ['yep', 'nope'] as const) if (crossesColumn(set.look, kind)) parts.push(ease(sideDrive(set.drive, kind)));
+    }
+    if (momentLook && momentCrossesColumn(momentLook)) parts.push(ease(values.moment.interpolate({ inputRange: [0, 1, 2], outputRange: [0, 1, 0], ...clampI })));
+    if (!parts.length) return null;
+    return (parts.reduce((a, b) => Animated.add(a, b)) as Animated.Value).interpolate({ inputRange: [0, 1], outputRange: [1, VEIL], ...clampI });
+  }, [geo.column, fading, liveSet, momentLook, values.moment]);
+  const veilTo = useRef(onVeil);
+  useLayoutEffect(() => { veilTo.current = onVeil; });
+  useEffect(() => { veilTo.current?.(veil); }, [veil]);
+  useEffect(() => () => veilTo.current?.(null), []);
   const box = useMemo(() => ({ position: 'absolute', left: (aw - w) / 2, top: cardTop, width: w, height: h } as const), [aw, w, cardTop, h]);
   const under = card ? next : null;
   /** The round's first card rising in (identity at rest). */

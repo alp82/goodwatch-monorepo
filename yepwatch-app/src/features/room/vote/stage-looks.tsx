@@ -1,12 +1,16 @@
 /**
  * Stage layers of giant, split and neon, driven by the stage drive (which lingers a beat after a
  * commit): behind the card (giant's edge glow, split's panels) and in front of it (giant's words,
- * split's phone strip, the neon sign).
+ * split's phone strip or its word, the neon sign).
+ *
+ * A stage off center (desktop, the question column to its right) keeps each side where it can be seen: giant's
+ * glow sits on the real screen edge and its word is centered on the card; split's halves run from the card to
+ * the screen edges and its word rides on its half.
  */
 import { FxView } from './fx-view';
 import { Animated, Easing, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { fitTo, wordW, type VoteWord } from './geometry';
+import { fitTo, wordW, type Geo, type VoteWord } from './geometry';
 import { Outline } from './Outline';
 import { Glow } from './shapes';
 import { Word } from './Word';
@@ -27,8 +31,10 @@ const nopeColors = ['#f87171', red, '#7f1d1d'] as const;
 export function GiantBack({ g, kind, p }: LayerProps) {
   const left = kind === 'nope';
   const color = left ? red : amber;
+  const { screen } = g;
+  const width = Math.max(160, (screen.right - screen.left) * 0.22);
   return (
-    <FxView pointerEvents="none" style={{ position: 'absolute', top: -g.cardTop - 40, height: g.stageH + 200, width: Math.max(160, g.vw * 0.22), [left ? 'left' : 'right']: -g.ext, opacity: p }}>
+    <FxView pointerEvents="none" style={{ position: 'absolute', top: -g.cardTop - 40, height: g.stageH + 200, width, left: left ? screen.left : screen.right - width, opacity: p }}>
       <LinearGradient start={{ x: left ? 0 : 1, y: 0.5 }} end={{ x: left ? 1 : 0, y: 0.5 }} colors={[`${color}55`, `${color}14`, `${color}00`]} style={fill} />
     </FxView>
   );
@@ -52,6 +58,24 @@ export function GiantFront({ g, kind, p, punch }: LayerProps) {
       </FxView>
     );
   }
+  if (!g.centered) {
+    // Centered on the card, as wide as the screen allows there, with room for the commit knock.
+    const size = Math.min(fitTo(text, g.words * 0.94), g.h * 0.5);
+    const ww = wordW(text, size) * 1.04;
+    return (
+      <FxView pointerEvents="none" style={{ position: 'absolute', left: g.aw / 2 - ww / 2, width: ww, top: g.cy - size / 2, height: size, alignItems: 'center', justifyContent: 'center',
+        transform: [{ scale: Animated.add(span(p, 0, 1, 0.86, 1), punch.interpolate({ inputRange: [0, 1], outputRange: [0, 0.04] })) }] }}>
+        {/* A soft shade behind the word, so it reads on any poster. */}
+        <FxView style={{ position: 'absolute', left: -size * 0.3, top: -size * 0.2, opacity: Animated.multiply(ease(p), 0.55) }}>
+          <Glow width={ww + size * 0.6} height={size * 1.4} color="#000" />
+        </FxView>
+        <FxView style={{ position: 'absolute', opacity: p.interpolate({ inputRange: [0, 0.3, 0.85, 1], outputRange: [0, 1, 1, 0], extrapolate: 'clamp' }) }}><Outline text={text} size={size} color={color} width={2.5} /></FxView>
+        <FxView style={{ opacity: span(p, 0.4, 1, 0, 1) }}>
+          <Word text={text} size={size} color={color} style={textGlow(`0 0 ${Math.round(size * 0.3)}px ${left ? '#ef444466' : '#fbbf2466'}, 0 8px 40px #000000c0`, { color: '#000000b0', radius: 24, dy: 8 })} />
+        </FxView>
+      </FxView>
+    );
+  }
   const side = (g.vw - g.w) / 2;
   const inner = g.z(36);
   const outer = g.z(28);
@@ -69,29 +93,65 @@ export function GiantFront({ g, kind, p, punch }: LayerProps) {
   );
 }
 
+/**
+ * The half on the answer's side: centered, the window's half; off center, from the card's center to the screen
+ * edge. `from` is where it slides in from.
+ */
+function splitHalf(g: Geo, yes: boolean) {
+  const seam = g.phone ? 3 : 5;
+  if (g.centered) {
+    const half = g.vw / 2;
+    return { left: yes ? -g.ext + half + seam : -g.ext, width: half - seam, from: yes ? half * 0.3 : -half * 0.3 };
+  }
+  const cx = g.aw / 2;
+  const width = yes ? g.screen.right - cx - seam : cx - seam - g.screen.left;
+  return { left: yes ? cx + seam : g.screen.left, width, from: yes ? width * 0.3 : -width * 0.3 };
+}
+/** The off-center split's word width: the same on both sides, from the narrower gutter beside the card. */
+function splitWordWidth(g: Geo) {
+  const cx = g.aw / 2;
+  return Math.max(86, Math.max(0, Math.min(cx - g.w / 2 - g.screen.left, g.screen.right - cx - g.w / 2)) * 0.6);
+}
+
 /** The stage half you drag toward slides in from its window edge and lights up. */
 export function SplitBack({ g, kind, p }: LayerProps) {
   const yes = kind !== 'nope';
-  const half = g.vw / 2;
+  const box = splitHalf(g, yes);
   const seam = g.phone ? 3 : 5;
   const gutter = (g.vw - g.w) / 2;
   const text: VoteWord = yes ? 'YEP' : 'NOPE';
   const size = Math.min(gutter * 0.48, fitTo(text, g.stageH * 0.84));
   return (
-    <FxView pointerEvents="none" style={{ position: 'absolute', top: 0, height: g.stageH, width: half - seam, left: yes ? -g.ext + half + seam : -g.ext, opacity: ease(p),
-      transform: [{ translateX: span(p, 0, 1, yes ? half * 0.3 : -half * 0.3, 0, Easing.out(Easing.cubic)) }] }}>
+    <FxView pointerEvents="none" style={{ position: 'absolute', top: 0, height: g.stageH, width: box.width, left: box.left, opacity: ease(p),
+      transform: [{ translateX: span(p, 0, 1, box.from, 0, Easing.out(Easing.cubic)) }] }}>
       <View style={{ ...fill, overflow: 'hidden', [yes ? 'borderTopLeftRadius' : 'borderTopRightRadius']: 18, [yes ? 'borderBottomLeftRadius' : 'borderBottomRightRadius']: 18 }}>
         <LinearGradient start={{ x: yes ? 0 : 1, y: 0 }} end={{ x: yes ? 1 : 0, y: 1 }} colors={yes ? yepColors : nopeColors} locations={[0, 0.5, 1]} style={fill} />
       </View>
-      {!g.phone && size > 40 ? <Vertical text={text} size={size} color={yes ? ink : cream} deg={yes ? 90 : -90} cx={yes ? half - seam - gutter * 0.3 : gutter * 0.3} cy={g.stageH / 2} /> : null}
+      {/* Off center the word rides on the half from the front layer (SplitFront). */}
+      {g.centered && !g.phone && size > 40 ? <Vertical text={text} size={size} color={yes ? ink : cream} deg={yes ? 90 : -90} cx={yes ? g.vw / 2 - seam - gutter * 0.3 : gutter * 0.3} cy={g.stageH / 2} /> : null}
     </FxView>
   );
 }
 
-/** Phone: the card fills the width, so the lit edge slides in over it as a strip with the word. */
+/**
+ * Phone: the card fills the width, so the lit edge slides in over it as a strip with the word.
+ * Off center: the word on its half at the screen edge, above the card so a card dragged or flying that way never
+ * covers it. It has no surface of its own and moves and fades exactly as its half does, so the two read as one.
+ */
 export function SplitFront({ g, kind, p }: LayerProps) {
-  if (!g.phone) return null;
   const yes = kind !== 'nope';
+  if (!g.centered) {
+    const box = splitHalf(g, yes);
+    const sw = splitWordWidth(g);
+    const size = Math.min(sw * 0.8, fitTo('NOPE', g.stageH * 0.8));
+    return (
+      <FxView pointerEvents="none" style={{ position: 'absolute', top: 0, height: g.stageH, width: sw, left: yes ? g.screen.right - sw : g.screen.left, opacity: ease(p),
+        transform: [{ translateX: span(p, 0, 1, box.from, 0, Easing.out(Easing.cubic)) }] }}>
+        <Vertical text={yes ? 'YEP' : 'NOPE'} size={size} color={yes ? ink : cream} deg={yes ? 90 : -90} cx={sw / 2} cy={g.stageH / 2} />
+      </FxView>
+    );
+  }
+  if (!g.phone) return null;
   const sw = 86;
   const text: VoteWord = yes ? 'YEP' : 'NOPE';
   const size = Math.min(sw * 0.86, fitTo(text, g.stageH * 0.8));
@@ -110,7 +170,7 @@ export function NeonFront({ g, kind, p, lit }: LayerProps) {
   const text: VoteWord = yes ? 'YEP' : 'NOPE';
   const color = yes ? amber : red;
   const core = yes ? '#fff8e6' : '#fff1ee';
-  const size = Math.min(fitTo(text, g.phone ? g.aw * 0.74 : Math.min(g.w * 1.4, g.vw * 0.5)), g.h * 0.3);
+  const size = Math.min(fitTo(text, g.phone ? g.aw * 0.74 : Math.min(g.w * 1.4, g.vw * 0.5, g.words)), g.h * 0.3);
   const ww = wordW(text, size) * 1.04;
   // The unlit tube warms up with the drag and goes dark the moment the sign lights.
   const tube = Animated.multiply(span(p, 0, 0.97, 0, 0.85, Easing.in(Easing.quad)), span(p, 0.97, 0.98, 1, 0));
