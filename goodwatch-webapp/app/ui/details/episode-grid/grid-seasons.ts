@@ -1,10 +1,15 @@
 import type { EpisodeGrid } from "~/server/episode-grid.server"
 import type { Season } from "~/ui/tracking/store"
 
+/** A read-only season: its episodes keep the language of their names, which an episode link compares (episode-link.ts). */
+type GridSeason = Season & {
+	episodes: (Season["episodes"][number] & { nameLanguage?: string })[]
+}
+
 /** Read-only positions are local UI identities, never submitted as watch identities. */
-export function gridSeasons(grid: EpisodeGrid): Season[] {
+export function gridSeasons(grid: EpisodeGrid): GridSeason[] {
 	let id = 0
-	const seasons: Season[] = grid.seasons.map((season) => ({
+	const seasons: GridSeason[] = grid.seasons.map((season) => ({
 		number: season.number,
 		episodes: season.episodes.map((episode) => ({
 			id: --id,
@@ -12,6 +17,7 @@ export function gridSeasons(grid: EpisodeGrid): Season[] {
 			number: episode.number,
 			airDate: null,
 			name: episode.name,
+			...(episode.nameLanguage ? { nameLanguage: episode.nameLanguage } : {}),
 			runtime: null,
 			still: null,
 			overview: null,

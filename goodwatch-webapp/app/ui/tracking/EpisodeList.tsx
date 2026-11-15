@@ -52,6 +52,7 @@ import {
 	imdbVibe,
 	vibeTileColor,
 } from "~/ui/details/episode-grid/scale"
+import { useEpisodeLink } from "~/ui/details/episode-grid/use-episode-link"
 import { HEADER_HEIGHT } from "~/ui/details/header-height"
 import MediaText from "~/ui/media-text/MediaText"
 import { episodeText } from "~/ui/media-text/media-text"
@@ -286,6 +287,8 @@ function useNav(model: Model): Nav {
 		setSelected(episode.id)
 		setTarget({ id: episode.id, at: Date.now(), ...how })
 	}
+	// A link to one episode (?episode=s5e14) opens it, as the read-only grid does.
+	useEpisodeLink(seasons, (_, episode) => goEpisode(episode, { page: true }))
 	return {
 		seasons,
 		many,

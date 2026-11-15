@@ -5,6 +5,7 @@ import type { EpisodeLayout } from "~/domain/tracking/episode-layout"
 import type { EpisodeGrid as EpisodeGridData } from "~/server/episode-grid.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import EpisodeGrid from "~/ui/details/episode-grid/EpisodeGrid"
+import { linksOutsidePart } from "~/ui/details/episode-grid/use-episode-link"
 import {
 	GridWindowNotice,
 	useWholeEpisodeGrid,
@@ -25,6 +26,11 @@ export function EpisodesSection({
 	const grid = whole.shown
 	// The button for the rest goes when every season is in; the keyboard focus moves to the grid's heading.
 	const partial = Boolean(grid?.window)
+	// A link to an episode in an older season than the part holds (?episode=s1e3) brings in every season first.
+	useEffect(() => {
+		if (grid?.window && linksOutsidePart(grid.seasons.map((s) => s.number)))
+			whole.showAll()
+	}, [])
 	const wasPartial = useRef(partial)
 	useEffect(() => {
 		if (wasPartial.current && !partial)

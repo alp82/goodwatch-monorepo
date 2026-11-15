@@ -10,6 +10,7 @@ import type { GridModel } from "./grid-model"
 import { gridSeasons } from "./grid-seasons"
 import { FOCUS, seasonTitle } from "./presentation"
 import { EPISODE_GRID_ANCHOR } from "./scale"
+import { useEpisodeLink } from "./use-episode-link"
 
 const SeasonDetails = lazy(reloadOnStaleChunk(() => import("./SeasonDetails")))
 const EMPTY_WATCHED = new Set<number>()
@@ -49,6 +50,10 @@ export default function EpisodeGrid({
 		() => seasons.filter((s) => s.number !== 0),
 		[seasons],
 	)
+	useEpisodeLink(regular, (season, episode) => {
+		setOpen(season)
+		setSelected(episode.id)
+	})
 	const { ref: box, width } = useWidth()
 	const step = (delta: -1 | 1) => {
 		const to = regular[regular.findIndex((s) => s.number === open) + delta]
