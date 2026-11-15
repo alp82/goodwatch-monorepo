@@ -308,19 +308,23 @@ function Tabloid({ c, mix = false }: { c: StatsCardContent; mix?: boolean }) {
 	const lines = (mix ? c.fun.mix : c.fun.counts).slice(0, 4)
 	return (
 		<Frame bg={INK}>
-			<div style={col({ position: "absolute", left: SIDE, top: 50, width: 760, gap: 10 })}>
+			<div style={col({ position: "absolute", left: SIDE, top: 0, bottom: 0, width: 790, justifyContent: "center", gap: 18 })}>
 				{lines.map((l) => (
-					<div key={l.text} style={row({ alignItems: "baseline", gap: 22 })}>
-						<Num text={l.n} size={118} />
-						<Num text={l.text} size={l.text.length > 18 ? 46 : 58} color="#fff" />
+					// A fixed number column, so every label starts at the same x; labels sit on the number's baseline.
+					<div key={l.text} style={row({ alignItems: "flex-end", gap: 28 })}>
+						<div style={{ display: "flex", width: 240 }}>
+							<Num text={l.n} size={118} />
+						</div>
+						<div style={{ display: "flex", width: 520, paddingBottom: 4 }}>
+							<Num text={l.text} size={40} color="#fff" />
+						</div>
 					</div>
 				))}
 			</div>
 			<div style={col({ position: "absolute", top: 0, right: 0, bottom: 0, width: 330, backgroundColor: AMBER, padding: "44px 36px", justifyContent: "space-between" })}>
 				<Brand dark size={44} />
 				<div style={col({ gap: 14 })}>
-					<Num text="GoodWatch" size={54} color={INK} />
-					<Num text="stats" size={96} color={INK} />
+					<Num text="Stats" size={120} color={INK} />
 					<Line size={26}>Updated every day.</Line>
 				</div>
 			</div>
