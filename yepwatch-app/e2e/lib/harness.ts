@@ -401,7 +401,7 @@ export class Room {
    * or recorded. */
   /** `network`: the person's browser sends everything through this black hole (lib/blackhole.ts), so a journey can
    * drop their packets silently. */
-  async person(name: string, opts: { device?: Device; member?: string; locale?: string; context?: BrowserContext; trace?: boolean; network?: Blackhole; storageState?: Awaited<ReturnType<BrowserContext['storageState']>> } = {}) {
+  async person(name: string, opts: { device?: Device; member?: string; locale?: string; context?: BrowserContext; trace?: boolean; network?: Blackhole; storageState?: Awaited<ReturnType<BrowserContext['storageState']>>; howTo?: boolean } = {}) {
     const device = opts.device ?? 'phone';
     let context = opts.context;
     if (!context) {
@@ -427,6 +427,9 @@ export class Room {
       // look, or a comma list dealt in order; src/features/room/vote/looks.ts) so a run measures one look's frames.
       if (process.env.E2E_DIAG === '1' || process.env.E2E_DIAG === 'renders') await context.addInitScript(`window.__ywDiag = true;${process.env.E2E_DIAG === 'renders' ? ' window.__ywDiagRenders = true;' : ''}`);
       if (process.env.E2E_LOOK) await context.addInitScript(`window.__YEPWATCH_LOOKS__ = ${JSON.stringify(process.env.E2E_LOOK)};`);
+      // The first-round how-to plays once per browser; journeys judge voting itself, so people have seen it unless
+      // `howTo` (web/voting.spec.ts plays it).
+      if (!opts.howTo) await context.addInitScript(`try { localStorage.setItem('yepwatch.v3.tonight-howto-seen', '1'); } catch {}`);
       await context.addInitScript({ path: RECORDER });
       // The trace keeps actions and console only (the network history goes to a HAR, above). Screenshots (a screencast
       // of every frame) and DOM snapshots (taken around every Playwright call, the recorder polls included) cost the

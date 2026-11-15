@@ -158,10 +158,10 @@ function AnswerTips({ t }: { t: Tutor }) {
   return <>{tip(false)}{tip(true)}</>;
 }
 
-/** Skip: the only part of the how-to that takes a press. */
+/** Skip: the only part of the how-to that takes a press. Centered at the card's top, clear of the poster's Details and Trailer. */
 function Skip({ t }: { t: Tutor }) {
   return (
-    <View style={{ position: 'absolute', left: t.card.x + t.card.w - 72, top: t.card.y + 4 }}>
+    <View style={{ position: 'absolute', left: t.card.x + t.card.w / 2 - 30, top: t.card.y + 4, width: 60, alignItems: 'center' }}>
       <HoverPress label="Skip the how-to" onPress={t.stop} hover={{ backgroundColor: 'rgba(36,32,28,0.95)', borderColor: '#ffffff4d' }}
         visual={{ height: 30, paddingHorizontal: 11, borderRadius: 8, backgroundColor: 'rgba(10,9,8,0.82)', borderWidth: 1, borderColor: '#ffffff2e', justifyContent: 'center' }}>
         <GText bold size={12} color={glow.soft}>Skip</GText>

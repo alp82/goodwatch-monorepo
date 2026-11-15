@@ -8,6 +8,8 @@ export default defineConfig({
     baseURL: 'http://127.0.0.1:8097',
     viewport: { width: 390, height: 844 },
     reducedMotion: 'reduce',
+    // The first-round how-to plays once per browser: tests start with it seen (tonight-howto.spec.ts plays it).
+    storageState: { cookies: [], origins: [{ origin: 'http://127.0.0.1:8097', localStorage: [{ name: 'yepwatch.v3.tonight-howto-seen', value: '1' }] }] },
     trace: 'retain-on-failure',
   },
   webServer: {

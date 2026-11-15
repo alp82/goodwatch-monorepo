@@ -690,7 +690,7 @@ export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disab
       ) : <View style={box}>{empty}</View>}
       {departure ? <Departing key={departure.id} d={departure} geo={geo} tools={cardTools} onDone={departed} /> : null}
       {frontSets.map((set) => lookSet(set, FrontLayer, quietFill))}
-      {card && !plain ? <StampMarks v={v} /> : null}
+      {card ? <StampMarks v={plain ? values.still : v} /> : null}
       {(playing && !seats.includes(playing) ? [...seats, playing] : seats).map((seat) => <SeatMoment key={seat.id} seat={seat} active={seat === playing} g={geo} loop={loop} reduced={reduced} />)}
       {moment && !playing ? <MemoMoment key={moment.key} look={moment.look} g={geo} posterUrl={moment.title.posterUrl} a={values.moment} loop={loop} reduced={reduced} /> : null}
     </View>

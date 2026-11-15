@@ -70,7 +70,7 @@ async function joinLate(p: Person, invite: string, name: string) {
   await p.see({ visible: ['voting', 'poster'] }, 15000, `${name} lands in the running round`);
 }
 
-/** The voting bar's parts on screen: the chip (and whether its text is cut), the faces, "+N" and Undo. */
+/** The voting bar's parts on screen: the faces, "+N" and Undo (and a matches chip, which no longer belongs there). */
 const bar = (p: Person) => p.page.evaluate(() => {
   const root = [...document.querySelectorAll('[data-testid="voting-bar"]')].find((e) => (e as HTMLElement).offsetParent !== null)!;
   const rect = (e: Element | null | undefined) => { if (!e) return null; const r = e.getBoundingClientRect(); return { left: r.left, right: r.right }; };
@@ -94,10 +94,10 @@ type Bar = Awaited<ReturnType<typeof bar>>;
 function fits(b: Bar, what: string) {
   expect(b.bar!.right, `${what}: bar inside the window`).toBeLessThanOrEqual(b.window);
   expect(b.undo!.right, `${what}: Undo inside the bar`).toBeLessThanOrEqual(b.bar!.right + 0.5);
-  expect(b.chip.cut, `${what}: the chip's label is whole`).toBe(false);
+  expect(b.chip.label, `${what}: the matches peek sits under the buttons, not in the bar`).toBeUndefined();
   const facesLeft = Math.min(...b.faces.map((f) => f.left!), b.more?.left ?? Infinity, b.undo!.left);
   const facesRight = Math.max(...b.faces.map((f) => f.right!), b.more?.right ?? -Infinity);
-  expect(b.chip.right!, `${what}: the chip ends before the faces`).toBeLessThanOrEqual(facesLeft + 0.5);
+  expect(facesLeft, `${what}: the faces start inside the bar`).toBeGreaterThanOrEqual(b.bar!.left - 0.5);
   if (b.faces.length) expect(facesRight, `${what}: the faces end before Undo`).toBeLessThanOrEqual(b.undo!.left + 0.5);
 }
 
@@ -114,16 +114,17 @@ test('at 320 px the voting bar fits with 2 and 6 people, and people joining neve
   await start(host, [mia]);
   await voteUntilMatch([host, mia]);
 
-  // Two people: both faces, no "+N", the "1 match" chip and Undo all fit.
+  // Two people: both faces, no "+N" and Undo fit; the match shows on the peek under the buttons.
   for (const p of [host, mia]) {
-    const b = await eventually(() => bar(p), (v) => v.faces.length === 2 && /match/.test(v.chip.label ?? ''), `${p.name}: two faces and a match`, p);
+    const b = await eventually(() => bar(p), (v) => v.faces.length === 2, `${p.name}: two faces`, p);
+    await eventually(() => p.page.getByTestId('matches-peek').filter({ visible: true }).getByRole('button').getAttribute('aria-label'), (v) => /^\d+ match(es)?$/.test(v ?? ''), `${p.name}: the peek shows the match`, p);
     fits(b, `${p.name}, 2 people`);
     expect(b.more).toBeNull();
   }
   await host.page.getByTestId('voting-bar').filter({ visible: true }).screenshot({ path: room.info.outputPath('bar-320-2-people.png') });
   const before = { host: (await shifts(host)).length, mia: (await shifts(mia)).length };
 
-  // Four more arrive during voting: two face slots at 320 px (the chip keeps the proposal dot's room), the rest in "+N".
+  // Four more arrive during voting: two face slots at 320 px, the rest in "+N".
   for (const name of ['Sam', 'Lea', 'Kai', 'Noa']) await joinLate(await room.person(name), invite, name);
   for (const p of [host, mia]) {
     const b = await eventually(() => bar(p), (v) => v.more?.label === 'and 4 more', `${p.name}: two faces and "and 4 more"`, p);

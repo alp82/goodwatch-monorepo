@@ -368,7 +368,7 @@ test('retired history cannot leave an enabled Undo that silently does nothing', 
   await expect(page.getByRole('button', { name: 'Undo', exact: true })).toBeDisabled();
 });
 
-test('late newcomer can inspect and Agree to preserved nonmatch proposal with exact version fences, without exposure input', async ({
+test('late newcomer can inspect and say I’m in to preserved nonmatch proposal with exact version fences, without exposure input', async ({
   page,
 }) => {
   const f = await fixture(page);
@@ -384,9 +384,9 @@ test('late newcomer can inspect and Agree to preserved nonmatch proposal with ex
   };
   f.room.own.agreement = { proposalVersion: 4, agreed: false, revision: 3, isProposer: false };
   await page.reload();
-  await expect(page.getByText('SOMEONE PROPOSES', { exact: true })).toBeVisible();
-  await expect(page.getByText('1 of 2 agree', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Agree', exact: true }).click();
+  await expect(page.getByText('SOMEONE’S IN', { exact: true })).toBeVisible();
+  await expect(page.getByText('1 of 2 in', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'I’m in', exact: true }).click();
   await expect.poll(() => f.commands.at(-1)?.command).toEqual({
     type: 'agree',
     generation: 1,

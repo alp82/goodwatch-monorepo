@@ -420,7 +420,7 @@ function Matches({ id, view, held }: { id: string; view: RoomView; held: boolean
   const [tiebreak, setTiebreak] = useState(false);
   const [favorite, setFavorite] = useState<string | null>(null);
   const pr = view.proposal;
-  const proposal: ProposalIns | null = pr ? { candidateId: pr.candidateId, agreeCount: pr.agreeCount, mine: pr.agreed || pr.mine || pr.pending } : null;
+  const proposal: ProposalIns | null = pr ? { candidateId: pr.candidateId, agreeCount: pr.agreeCount, mine: pr.agreed || pr.pending } : null;
   const required = pr?.requiredCount ?? view.people.filter((p) => p.inRound && !p.dropped).length;
   const matches = view.matches;
   const rows = inRows(matches.map((c) => c.id), proposal, local);

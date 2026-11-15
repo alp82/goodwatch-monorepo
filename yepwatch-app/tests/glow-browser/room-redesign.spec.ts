@@ -203,37 +203,52 @@ test('streaming: yours and the room’s, who brings what, host switches off', as
   await expect(page.getByRole('switch', { name: 'Use Disney+' })).toBeDisabled();
 });
 
-test('matches, proposal for everyone (no names), Keep swiping per version, the matches chip shows it as a card', async ({ page }) => {
+test('Matches: What are we watching now, I’m in toggles; your I’m in keeps you there, a friend’s takes over (no names)', async ({ page }) => {
   const room = choosingRoom();
-  room.shared.matches = [{ candidateId: 'c2', averageYepMs: null }];
+  room.shared.matches = [{ candidateId: 'c1', averageYepMs: null }, { candidateId: 'c2', averageYepMs: null }];
   const f = await fakeRoom(page, room);
   await page.goto('/room/test-room');
-  await button(page, '1 match').click();
+  await button(page, '2 matches').click();
   await expect(page.getByTestId('matches')).toBeVisible();
+  await expect(page.getByText('What are we watching now?', { exact: true })).toBeVisible();
+  await expect(page.getByText('2 matches · Tap every one you’re in for', { exact: true })).toBeVisible();
   await shot(page, '09-matches');
-  await button(page, 'Propose this').click();
-  await expect(page.getByTestId('proposal').filter({ visible: true })).toBeVisible();
-  await expect(page.getByText('YOUR PROPOSAL', { exact: true })).toBeVisible();
-  await expect(page.getByText('You proposed this', { exact: true })).toBeVisible();
-  await expect(page.getByText('1 of 2 agree', { exact: true })).toBeVisible();
-  // A friend's view: someone proposes, no faces.
+  const first = page.getByRole('checkbox', { name: /^I’m in for Isolated test c1/ });
+  const second = page.getByRole('checkbox', { name: /^I’m in for Isolated test c2/ });
+  await expect(first).toHaveAttribute('aria-checked', 'false');
+  // Your I'm in: the room's proposal, and you stay on Matches.
+  await first.click();
+  await expect.poll(() => f.sent().filter((t) => t === 'propose').length).toBe(1);
+  await expect(first).toHaveAttribute('aria-checked', 'true');
+  await expect(first).toHaveAccessibleName('I’m in for Isolated test c1, 1 of 2 in');
+  await expect(page.getByTestId('matches')).toBeVisible();
+  // A second one while nobody else is in: it becomes the proposal, the first stays marked here.
+  await second.click();
+  await expect.poll(() => f.sent().filter((t) => t === 'propose').length).toBe(2);
+  await expect(first).toHaveAttribute('aria-checked', 'true');
+  await expect(second).toHaveAttribute('aria-checked', 'true');
+  // Tapping your proposal again takes your I'm in back.
+  await second.click();
+  await expect.poll(() => f.commands.at(-1)?.command).toMatchObject({ type: 'agree', agreed: false });
+  await expect(second).toHaveAttribute('aria-checked', 'false');
+  // A friend's I'm in: someone's in, no faces, and it takes over the screen.
   f.room.own.agreement = { ...f.room.own.agreement, isProposer: false, agreed: false };
+  f.room.shared.proposal = { ...f.room.shared.proposal!, agreeCount: 1 };
   f.push();
   await page.reload();
-  await expect(page.getByText('SOMEONE PROPOSES', { exact: true })).toBeVisible();
+  await expect(page.getByText('SOMEONE’S IN', { exact: true })).toBeVisible();
+  await expect(page.getByText('1 of 2 in', { exact: true })).toBeVisible();
   await expect(page.getByText(/Alp|Mia/)).toHaveCount(0);
-  await shot(page, '10-proposal');
-  await button(page, 'Agree').click();
-  await expect(page.getByText('You agree', { exact: true })).toBeVisible();
+  await shot(page, '10-someone-in');
+  await button(page, 'I’m in').click();
+  await expect(page.getByText('You’re in', { exact: true })).toBeVisible();
   await button(page, 'Keep swiping').click();
   await expect(page.getByTestId('voting')).toBeVisible();
-  // Set aside: the matches chip opens Matches, with the proposal as a compact card on top.
-  await button(page, '1 match').click();
+  // Set aside: the peek opens Matches, where its row counts both.
+  await button(page, '2 matches').click();
   await expect(page.getByTestId('matches')).toBeVisible();
-  const card = page.getByTestId('proposal-card');
-  await expect(card).toBeVisible();
-  await expect(card.getByText('2 of 2 agree')).toBeVisible();
-  await expect(card.getByText(/Alp|Mia/)).toHaveCount(0);
+  await expect(second).toHaveAccessibleName('I’m in for Isolated test c2, 2 of 2 in');
+  await expect(page.getByText('Everyone’s in for Isolated test c2', { exact: true })).toBeVisible();
 });
 
 test('Tonight: scores, watch button for the first switched-on service, no Cheer button, host Start again', async ({ page }) => {

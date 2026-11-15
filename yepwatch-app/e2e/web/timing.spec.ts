@@ -25,7 +25,7 @@ for (let run = 1; run <= runs; run++) {
     await host.page.waitForTimeout(300);
     await start(host, [mia]); // startToFirstCardMs, startToPeerVotingMs
     for (let i = 0; i < 3; i++) { await vote(host, false); await vote(mia, false); } // swipeNextCardMs
-    // Mia's Yep on a card the host already said Yep to: a match, timed until the host's chip shows it.
+    // Mia's Yep on a card the host already said Yep to: a match, timed until the host's matches peek shows it.
     for (let i = 0; i < 6 && !(host.latest?.matches?.length); i++) {
       await vote(host, true);
       const before = await cardTitle(mia);

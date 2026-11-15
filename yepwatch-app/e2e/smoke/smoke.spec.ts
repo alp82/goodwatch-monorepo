@@ -139,7 +139,7 @@ async function memberSignIn(room: Room): Promise<Person> {
   return member;
 }
 
-/** The match count a person's chip shows now ("2 matches"; "Matches" before the first). */
+/** The match count a person's matches peek shows now ("2 matches"; "Matches" before the first). */
 async function shownMatches(p: Person) {
   return p.page.evaluate(() => {
     const yw = (window as unknown as { __yw: { visible(el: Element): boolean } }).__yw;

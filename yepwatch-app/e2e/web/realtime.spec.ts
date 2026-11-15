@@ -62,7 +62,7 @@ test.describe('live channel after a gateway restart', () => {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-/** The match count the page shows (the chip's label "1 match", "2 matches"; "Matches" before the first). */
+/** The match count the page shows (the matches peek's label "1 match", "2 matches"; "Matches" before the first). */
 async function shownMatches(p: Person) {
   return p.page.evaluate(() => {
     const yw = (window as unknown as { __yw: { visible(el: Element): boolean } }).__yw;
