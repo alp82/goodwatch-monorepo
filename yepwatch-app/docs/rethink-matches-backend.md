@@ -16,15 +16,18 @@ what it needs.
   (plus everyone's Yep, `agreementCandidate`) starts the offer check (`agreement.state = "checking"`), then
   `phase = "decided"` with `decision`.
 
-### How the app maps "I'm in" onto it until the server changes (`matches-in.ts`)
+### The app since the server shipped (2026-11-15)
 
-- Tap on the proposal's title: `agree(!mine)`.
-- Tap on another title while nobody else is in on the proposal: `propose(title)` (nothing of anyone else's is lost;
-  your old title stays marked on this device).
-- Otherwise: marked on this device only (shown as "You're in", counted for you alone), so a tap never wipes
-  friends' agreements.
-- Your own proposal no longer takes over your screen (`showsProposal`); a friend's still does ("Someone's in").
-- Consequence: only one title at a time collects real "I'm in"s, so the tiebreak never opens today.
+The app asks for the new fields (`matchesIn=1` on room reads and commands, `matchesIn: true` in the realtime hello)
+and reads them only: every Matches tap is `set_in` (optimistic: your list, the row's count and your implied Yep at
+once, fenced by `own.ins.revision`); the tiebreak opens by itself from `shared.tiebreak`, favorites are
+`pick_favorite`, and the spin lands on the server's `outcome` before the decided room moves to Tonight. The propose
+mapping and device-only marks are gone. A friend's I'm in still takes over the room page (`showsProposal`, the
+legacy `proposal` aggregate, agreed to with `agree`, which the server maps to `set_in` and which also covers a late
+joiner's implied Yep), but never pulls anyone off Matches and never shows while a tiebreak is open.
+
+Because the server decides the first title everyone's in for at once (the offer check settles before the command
+answers), a tiebreak opens only when two or more titles become everyone's together: in practice when someone leaves.
 
 ## What to add
 
