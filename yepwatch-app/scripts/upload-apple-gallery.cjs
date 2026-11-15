@@ -9,6 +9,10 @@ const Status = require(path.join(base, 'commands/submit/status')).default;
 const { resolveTestFlightAppAsync } = require(path.join(base, 'testflight/app'));
 const config = require('../eas.json');
 const apply = process.argv.includes('--apply');
+// --replace: a new gallery replaces the set (old screenshots are deleted first, so the 10-image cap holds).
+const replace = process.argv.includes('--replace');
+// Version states in which Apple accepts screenshot edits (a withdrawn review is DEVELOPER_REJECTED).
+const EDITABLE = ['PREPARE_FOR_SUBMISSION', 'DEVELOPER_REJECTED', 'REJECTED', 'METADATA_REJECTED', 'INVALID_BINARY'];
 const outputIndex = process.argv.indexOf('--output');
 const output = outputIndex >= 0 ? process.argv[outputIndex + 1] : null;
 
@@ -18,12 +22,13 @@ class Gallery extends Status {
     const app = await resolveTestFlightAppAsync({ actor, graphqlClient, exp, projectId, projectDir, analytics, vcsClient, nonInteractive: true, profileName: 'production' });
     if (app.id !== config.submit.production.ios.ascAppId || app.attributes.bundleId !== config.submit.production.ios.bundleIdentifier) throw new Error('Wrong Apple app.');
     const version = (await app.getAppStoreVersionsAsync()).find(v => v.attributes.versionString === config.build.production.env.APP_VERSION && v.attributes.platform === 'IOS');
-    if (version?.attributes.appStoreState !== 'PREPARE_FOR_SUBMISSION') throw new Error('The intended public draft is not editable.');
+    if (!EDITABLE.includes(version?.attributes.appStoreState)) throw new Error('The intended public version is not editable: ' + version?.attributes.appStoreState);
     const loc = (await version.getLocalizationsAsync()).find(l => l.attributes.locale === 'en-US');
     if (!loc) throw new Error('English version localization missing.');
     const sets = await loc.getAppScreenshotSetsAsync({ query: { includes: ['appScreenshots'] } });
     const results = [];
     const orders = [];
+    const deleted = [];
     const plans = [
       ['ios-iphone-medium', 'APP_IPHONE_61', [1206, 2622]],
       ['ios-iphone', 'APP_IPHONE_67', [1320, 2868]],
@@ -35,8 +40,19 @@ class Gallery extends Status {
       if (!names.length) throw new Error('Missing native gallery: ' + folder);
       let set = sets.find(s => s.attributes.screenshotDisplayType === type);
       let existing = set?.attributes.appScreenshots ?? [];
+      if (replace) {
+        for (const name of names) {
+          const bytes = fs.readFileSync(path.join(dir, name));
+          if (bytes.toString('hex', 0, 8) !== '89504e470d0a1a0a' || bytes.readUInt32BE(16) !== dimensions[0] || bytes.readUInt32BE(20) !== dimensions[1]) throw new Error('Wrong native screenshot dimensions: ' + name);
+        }
+        for (const old of existing) {
+          deleted.push({ type, name: old.attributes.fileName, id: old.id });
+          if (apply) await old.deleteAsync();
+        }
+        if (apply) existing = [];
+      }
       const newNames = names.filter(n => !existing.some(s => s.attributes.fileName === n));
-      if (existing.length + newNames.length > 10) throw new Error('Preserve existing screenshots: the set would exceed 10.');
+      if (!replace && existing.length + newNames.length > 10) throw new Error('Preserve existing screenshots: the set would exceed 10.');
       if (!set && apply) set = await loc.createAppScreenshotSetAsync({ screenshotDisplayType: type });
       const ordered = [];
       for (const name of names) {
@@ -83,7 +99,7 @@ class Gallery extends Status {
     fresh = await loc.getAppScreenshotSetsAsync({ query: { includes: ['appScreenshots'] } });
     for (const result of results) result.complete = fresh.some(s => (s.attributes.appScreenshots ?? []).some(p => p.id === result.id && p.isComplete()));
     const failures = outcomes.filter(r => r.status === 'rejected').map(r => r.reason?.message ?? String(r.reason));
-    const state = { checkedAt: new Date().toISOString(), appId: app.id, version: version.attributes.versionString, applied: apply, screenshots: results.sort((a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name)), sets: fresh.map(s => ({ type: s.attributes.screenshotDisplayType, screenshots: (s.attributes.appScreenshots ?? []).map(p => ({ id: p.id, name: p.attributes.fileName, complete: p.isComplete() })) })), failures, submittedForReview: false };
+    const state = { checkedAt: new Date().toISOString(), appId: app.id, version: version.attributes.versionString, applied: apply, screenshots: results.sort((a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name)), sets: fresh.map(s => ({ type: s.attributes.screenshotDisplayType, screenshots: (s.attributes.appScreenshots ?? []).map(p => ({ id: p.id, name: p.attributes.fileName, complete: p.isComplete() })) })), failures, deleted, replace, submittedForReview: false };
     if (output) fs.writeFileSync(output, JSON.stringify(state, null, 2) + '\n', { mode: 0o600 });
     console.log(JSON.stringify(state, null, 2));
     if (failures.length) throw new Error(failures.join('; '));

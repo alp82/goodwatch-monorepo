@@ -19,7 +19,7 @@ class SyncListing extends Status {
     if (app.id !== config.submit.production.ios.ascAppId || app.attributes.bundleId !== config.submit.production.ios.bundleIdentifier) throw new Error('Apple app identity differs from the production submission profile.');
     const versionString = config.build.production.env.APP_VERSION;
     const version = (await app.getAppStoreVersionsAsync()).find(v => v.attributes.versionString === versionString && v.attributes.platform === 'IOS');
-    if (!version || version.attributes.appStoreState !== 'PREPARE_FOR_SUBMISSION') throw new Error('The intended public draft is not editable.');
+    if (!version || !['PREPARE_FOR_SUBMISSION', 'DEVELOPER_REJECTED', 'REJECTED', 'METADATA_REJECTED', 'INVALID_BINARY'].includes(version.attributes.appStoreState)) throw new Error('The intended public version is not editable: ' + version?.attributes.appStoreState);
     const locale = app.attributes.primaryLocale;
     if (locale !== 'en-US') throw new Error('This copy is English (US); preserve other primary locales.');
     const loc = (await version.getLocalizationsAsync()).find(l => l.attributes.locale === locale);

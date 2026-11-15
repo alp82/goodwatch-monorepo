@@ -62,6 +62,11 @@
       "extends": "store-capture-existing",
       "ios": { "simulator": true, "config": "capture-gallery.yml" }
     },
+    "store-capture-rethink": {
+      "extends": "store-capture-existing",
+      "env": { "YEPWATCH_SIMULATOR_ARCHIVE": "https://expo.dev/artifacts/eas/YVUV6b5sT0jqXLFsbN5oRiBc5kL5DiKPPIpn6YpFxqw.tar.gz", "YEPWATCH_GALLERY_FAMILIES": "iphone-medium iphone-large ipad" },
+      "ios": { "simulator": true, "config": "capture-rethink.yml" }
+    },
     "e2e-ios-simulator": {
       "node": "24.15.0",
       "distribution": "internal",

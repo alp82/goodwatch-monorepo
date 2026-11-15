@@ -1,0 +1,19 @@
+build:
+  name: Capture the rethink store gallery (native simulator, public API)
+  steps:
+    - eas/checkout
+    - run:
+        name: Fetch the simulator app
+        command: |
+          mkdir -p .expo/store-simulator .expo/store-rethink
+          curl --fail --location "$YEPWATCH_SIMULATOR_ARCHIVE" --output .expo/store-simulator.tar.gz
+          tar -xzf .expo/store-simulator.tar.gz -C .expo/store-simulator
+    - eas/install_maestro
+    - run:
+        name: Capture iPhone and iPad
+        command: python3 scripts/capture-store-rethink.py ios --families $YEPWATCH_GALLERY_FAMILIES
+    - eas/upload_artifact:
+        if: ${ always() }
+        inputs:
+          type: build-artifact
+          path: '**/.expo/store-rethink/**/*'
