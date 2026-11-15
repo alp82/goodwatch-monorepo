@@ -9,7 +9,7 @@ export interface HomeRoom {
   label: string;
   /** Open right now (not yet decided). */
   live: boolean;
-  /** "Setting up", "Choosing · 2 matches", "Proposed: Heat", "Tonight: Heat", "Left". */
+  /** "Setting up", "Choosing · 2 matches", "Someone’s in: Heat", "Tonight: Heat", "Left". */
   status: string;
   /** A proposal or Tonight: the status line is amber. */
   hot: boolean;
