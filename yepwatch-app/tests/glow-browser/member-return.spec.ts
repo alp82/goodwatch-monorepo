@@ -32,9 +32,9 @@ test('Continue with GoodWatch on the start page signs in, creates no room and co
   await page.waitForURL((url) => url.pathname === '/');
   await expect(page.getByTestId('member-transition')).toHaveCount(0);
   await expect(page.getByTestId('landing').or(page.getByTestId('home-rooms'))).toBeVisible();
-  // The returning page doesn't replay the startup word and never opens Mood or a room.
+  // The returning page doesn't replay the startup word and never opens New couch or a room.
   expect(await bootSeen(page)).toBe(false);
-  await expect(page.getByLabel('Mood')).toHaveCount(0);
+  await expect(page.getByTestId('new-couch')).toHaveCount(0);
   expect(rooms.count).toBe(0);
   await expect(button(page, 'Continue with GoodWatch')).toHaveCount(0);
   await page.getByRole('button', { name: 'Profile' }).click();
@@ -82,11 +82,10 @@ test('a member pressing New room still creates a room as themselves', async ({ p
   const f = await fakeRoom(page, newRoom(), { member: 'signed-in' });
   const rooms = admissions(page);
   await page.goto('/');
-  await button(page, 'New couch').click();
-  await expect(page.getByLabel('Mood')).toBeVisible();
   expect(rooms.count).toBe(0);
-  await button(page, 'Continue without an idea').click();
+  await button(page, 'New couch').click();
   await expect.poll(() => f.room.own.member.state).toBe('linked');
+  await expect(page.getByTestId('room-setup')).toBeVisible();
   expect(rooms.count).toBe(1);
   expect(f.account.starts).toBe(0);
 });

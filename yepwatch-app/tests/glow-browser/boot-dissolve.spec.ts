@@ -88,5 +88,5 @@ test('a slow home page keeps the arc circling, then dissolves into the loaded ro
   await expect.poll(() => page.locator('.review-boot-wait').evaluate((el) => el.getAnimations().length).catch(() => 0), { timeout: 4000 }).toBeGreaterThan(0);
   await expect(boot).toHaveCount(0, { timeout: 5000 });
   // A couch without ideas is named after whose it is, never "Anything".
-  await expect(page.getByTestId('home-rooms').getByRole('button', { name: /^(Your couch|.+’s couch)$/ })).toBeVisible();
+  await expect(page.getByTestId('home-rooms').getByRole('button', { name: /^(Your couch|(?!Archive ).+’s couch)$/ })).toBeVisible();
 });

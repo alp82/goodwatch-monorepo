@@ -91,8 +91,9 @@ async function guest(
       }
       return route.fulfill({ json: { receipt: {}, snapshot: room } });
     }
-    reads++;
-    if (options.failRead && reads === 2)
+    // Room reads only (the header's taste profile reads its own path).
+    if (path.endsWith('/rooms/test-room')) reads++;
+    if (options.failRead && reads === 2 && path.endsWith('/rooms/test-room'))
       return route.fulfill({
         status: 503,
         json: {
@@ -103,7 +104,7 @@ async function guest(
           },
         },
       });
-    if (options.changeContext && reads === 2) {
+    if (options.changeContext && reads === 2 && path.endsWith('/rooms/test-room')) {
       room.shared.contextVersion++;
       room.shared.screens[0].serviceIds = [337];
       room.shared.revision++;

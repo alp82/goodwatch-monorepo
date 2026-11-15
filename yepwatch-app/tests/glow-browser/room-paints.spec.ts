@@ -27,20 +27,16 @@ const setupRoom = () => { const room = choosingRoom(); room.shared.phase = 'setu
 
 test.beforeEach(async ({ page }) => { await page.addInitScript(recorder); });
 
-test('create: the start page goes straight to Mood, the room page never shows on the way', async ({ page }) => {
+test('create: New couch goes straight to the couch setup, no connection words on the way', async ({ page }) => {
   await fakeRoom(page, newRoom());
   await setUpDevice(page);
   await latency(page, 150);
   await page.goto('/');
   await button(page, 'New couch').click();
-  await expect(page.getByLabel('Mood')).toBeVisible();
+  await expect(page.getByTestId('room-setup')).toBeVisible();
   await page.waitForTimeout(500);
   const seen = await paints(page);
-  // The start page's own film shows rooms too: only what paints after it counts.
-  expect(seen.filter((p) => !/New couch/.test(p.text) && /Who’s here|’s couch|MOOD|Connecting|Not connected/.test(p.text) && !/or try:/.test(p.text))).toEqual([]);
-  // A local draft returns to its caller; no room has been allocated.
-  await button(page, 'Back').click();
-  await expect(button(page, 'New couch')).toBeVisible();
+  expect(seen.filter((p) => /Connecting|Not connected|Couldn|Try again/.test(p.text))).toEqual([]);
 });
 
 test('join: from the invitation straight to Your services, open over the room from its first paint', async ({ page }) => {

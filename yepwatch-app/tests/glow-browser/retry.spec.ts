@@ -2,28 +2,33 @@ import { test, expect, type Page } from '@playwright/test';
 import type { CommandEnvelope, GuestAdmissionRequest } from '@goodwatch/yepwatch-contracts/proposal';
 import { continuousFixture } from '../continuous-fixture';
 import { reading, setUpDevice } from './room-fake';
-const CREATE = /^(Create couch|Try again|Saving…)$/;
 const JOIN = /^(Join|Retry joining|Joining…)$/;
-/** Opening a mood is local; the action returned here explicitly submits it. */
+/** New couch on a set-up start page: the create starts by itself on the New couch screen. */
+async function newCouch(page: Page) {
+  await setUpDevice(page);
+  await page.goto('/');
+  await page.getByRole('button', { name: 'New couch', exact: true }).click();
+}
+/** After a refusal the New couch screen offers Try again. */
+const tryAgain = (page: Page) => page.getByRole('button', { name: 'Try again', exact: true });
+/** The join form filled in; the action returned here explicitly submits it. */
 async function open(page: Page, mode: 'create' | 'join', name: string) {
   if (mode === 'create') {
-    await setUpDevice(page);
-    await page.goto('/');
-    await page.getByRole('button', { name: 'New couch', exact: true }).click();
-    await page.getByLabel('Mood').fill('cheer me up');
+    await newCouch(page);
+    return tryAgain(page);
   }
   if (mode === 'join') {
     await page.goto('/?open=join');
     await page.getByLabel('Couch code or invitation').fill('fixture-invite');
     await page.getByLabel('Your name').fill(name);
   }
-  return page.getByRole('button', { name: mode === 'create' ? CREATE : JOIN });
+  return page.getByRole('button', { name: JOIN });
 }
 async function common(page: Page) {
   const room = continuousFixture();
   room.shared.stream = { state: 'exhausted', version: 1, reason: 'catalog_end' };
   await page.route('**/api/yepwatch/v1/proposal/**', async route => {
-    const url = route.request().url();
+    const url = route.request().url().split('?')[0];
     if (url.endsWith('/realtime-ticket')) return route.fulfill({status:501,json:{error:{code:'not_implemented',message:'Isolated test has no WS',retryable:false}}});
     if (url.endsWith('/guest/resolve-invite')) return route.fulfill({json:{roomId:'test-room'}});
     if (url.endsWith('/commands')) {
@@ -37,35 +42,51 @@ async function common(page: Page) {
   });
   return room;
 }
-for (const mode of ['create','join'] as const) test(`429 ${mode} retains the same bootstrap through reload/cooldown; retries only on manual press`,async({page})=>{
+test('429 create keeps the same request through a reload and sends it again by itself after the server\'s wait',async({page})=>{
+  const room = await common(page);
+  const bodies: GuestAdmissionRequest[]=[];
+  await page.route(/\/proposal\/rooms(\?|$)/,async route=>{
+    bodies.push(route.request().postDataJSON());
+    if (bodies.length >= 2) return route.fulfill({json:{credential:{roomId:'test-room',participantId:'host',token:'',expiresAt:room.shared.expiresAt},snapshot:room,invite:{code:'fixture-invite',path:'/r/fixture-invite'}}});
+    return route.fulfill({status:429,headers:{'Retry-After':'2'},json:{error:{code:'limit_reached',message:'Please wait before retrying.',retryable:true}}});
+  });
+  await newCouch(page);
+  await expect.poll(() => bodies.length).toBe(1); const first=structuredClone(bodies[0]);
+  await page.reload();
+  await expect(tryAgain(page)).toHaveCount(0);
+  await page.waitForURL('**/room/test-room**', { timeout: 15_000 });
+  expect(bodies).toHaveLength(2); expect(bodies[1]).toEqual(first);
+  await expect.poll(()=>page.evaluate(()=>sessionStorage.getItem('yepwatch.v3.admission.'))).toBeNull();
+});
+
+{ const mode = 'join' as const; test(`429 ${mode} retains the same bootstrap through reload/cooldown; retries only on manual press`,async({page})=>{
   const room = await common(page);
   let admitted = false;
-  if (mode === 'join') await page.route('**/proposal/rooms/test-room', route => admitted ? route.fulfill({json:room}) : route.fulfill({status:401,json:{error:{code:'unauthorized',message:'No existing membership in this isolated guest context',retryable:false}}}));
+  await page.route(/\/proposal\/rooms\/test-room(\?|$)/, route => admitted ? route.fulfill({json:room}) : route.fulfill({status:401,json:{error:{code:'unauthorized',message:'No existing membership in this isolated guest context',retryable:false}}}));
   const bodies: GuestAdmissionRequest[]=[];
-  await page.route(mode==='create'?'**/proposal/rooms':'**/proposal/rooms/test-room/join',async route=>{
+  await page.route(/\/proposal\/rooms\/test-room\/join(\?|$)/,async route=>{
     bodies.push(route.request().postDataJSON());
     if (bodies.length === 2) { admitted = true; return route.fulfill({json:{credential:{roomId:'test-room',participantId:'host',token:'',expiresAt:room.shared.expiresAt},snapshot:room,invite:{code:'fixture-invite',path:'/r/fixture-invite'}}}); }
     return route.fulfill({status:429,headers:{'Retry-After':'2'},json:{error:{code:'limit_reached',message:'Please wait before retrying.',retryable:true}}});
   });
   const action = await open(page, mode, 'Guest');
   await action.click(); await expect(action).toBeDisabled();
-  if (mode === 'join') { await expect(page.getByText(/Retry preserves your identity/)).toBeVisible(); await expect(action).not.toHaveText(/\d/); }
-  else await expect(page.getByLabel('Mood')).toHaveValue('cheer me up');
+  await expect(page.getByText(/Retry preserves your identity/)).toBeVisible(); await expect(action).not.toHaveText(/\d/);
   // The saved request (and its words) show before the request goes out: wait for it to have gone.
   await expect.poll(() => bodies.length).toBe(1); const first=structuredClone(bodies[0]);
   await page.reload(); await expect(action).toBeDisabled();
-  if (mode === 'join') await expect(page.getByRole('button', { name: 'Change name', exact: true })).toBeVisible();
-  if(mode==='join') await expect(page.getByLabel('Couch code or invitation')).toHaveValue('fixture-invite');
+  await expect(page.getByRole('button', { name: 'Change name', exact: true })).toBeVisible();
+  await expect(page.getByLabel('Couch code or invitation')).toHaveValue('fixture-invite');
   await expect(action).toBeEnabled(); expect(bodies).toHaveLength(1);
   await page.waitForTimeout(150); expect(bodies).toHaveLength(1);
   await action.click(); await expect.poll(()=>bodies.length).toBe(2); expect(bodies[1]).toEqual(first);
   await page.waitForURL('**/room/test-room');
   await expect.poll(()=>page.evaluate(()=>sessionStorage.getItem('yepwatch.v3.admission.'))).toBeNull();
-});
+}); }
 
 test('retryable command retains exact envelope + cooldown across reload; expiry is manual and no proposal agreement is invented',async({page})=>{
   const room=await common(page); const commands:CommandEnvelope[]=[];
-  await page.route('**/proposal/rooms/test-room/commands',async route=>{
+  await page.route(/\/proposal\/rooms\/test-room\/commands(\?|$)/,async route=>{
     const body=route.request().postDataJSON() as CommandEnvelope;commands.push(body);
     if(commands.length===1)return route.fulfill({status:429,headers:{'Retry-After':'2'},json:{error:{code:'limit_reached',message:'Please wait.',retryable:true}}});
     room.own.nextSequence++;room.shared.revision++;
@@ -85,11 +106,10 @@ test('retryable command retains exact envelope + cooldown across reload; expiry 
 
 test('definitive admission failure clears bootstrap so the next Create is a new request; malformed Retry-After is bounded',async({page})=>{
   await common(page);const bodies:GuestAdmissionRequest[]=[];
-  await page.route('**/proposal/rooms',async route=>{bodies.push(route.request().postDataJSON());return route.fulfill({status:400,headers:{'Retry-After':'999999999999999'},json:{error:{code:'invalid_request',message:'Please try again.',retryable:false}}});});
+  await page.route(/\/proposal\/rooms(\?|$)/,async route=>{bodies.push(route.request().postDataJSON());return route.fulfill({status:400,headers:{'Retry-After':'999999999999999'},json:{error:{code:'invalid_request',message:'Please try again.',retryable:false}}});});
   const action = await open(page, 'create', '');
-  await action.click();
   await expect(page.getByText('Please try again.',{exact:true})).toBeVisible();
-  // Each press sends the create with its setup, then (refused, as by an older server) the plain create
+  // New couch (and each Try again) sends the create with its setup, then (refused, as by an older server) the plain create
   // with the same id: two requests per press.
   expect(bodies).toHaveLength(2); expect(bodies[1].commandId).toBe(bodies[0].commandId);
   await action.click();
@@ -98,14 +118,14 @@ test('definitive admission failure clears bootstrap so the next Create is a new 
 
 test('terminal HTTP status takes precedence over retryable busy and never offers a pending action',async({page})=>{
   await common(page);let commands=0;
-  await page.route('**/proposal/rooms/test-room/commands',async route=>{commands++;return route.fulfill({status:410,headers:{'Retry-After':'60'},json:{error:{code:'expired',message:'Expired',retryable:true}}});});
+  await page.route(/\/proposal\/rooms\/test-room\/commands(\?|$)/,async route=>{commands++;return route.fulfill({status:410,headers:{'Retry-After':'60'},json:{error:{code:'expired',message:'Expired',retryable:true}}});});
   await page.goto('/room/test-room');await page.getByRole('button',{name:'Yep',exact:true}).click();
   await expect(page.getByText('This couch has expired',{exact:false})).toBeVisible();await expect(page.getByRole('button',{name:'Retry',exact:true})).toHaveCount(0);expect(commands).toBe(1);
 });
 
 for (const mode of ['create', 'join'] as const) test(`${mode} must persist the exact bootstrap before every submit after repeated storage failures`, async ({page}) => {
   await common(page);
-  if (mode === 'join') await page.route('**/proposal/rooms/test-room', route => route.fulfill({status:401,json:{error:{code:'unauthorized',message:'No existing membership',retryable:false}}}));
+  if (mode === 'join') await page.route(/\/proposal\/rooms\/test-room(\?|$)/, route => route.fulfill({status:401,json:{error:{code:'unauthorized',message:'No existing membership',retryable:false}}}));
   await page.addInitScript(() => {
     const original = Storage.prototype.setItem;
     const state = { allow: false, writes: [] as string[] };
@@ -119,13 +139,16 @@ for (const mode of ['create', 'join'] as const) test(`${mode} must persist the e
     };
   });
   const bodies: GuestAdmissionRequest[] = [];
-  await page.route(mode === 'create' ? '**/proposal/rooms' : '**/proposal/rooms/test-room/join', route => {
+  await page.route(mode === 'create' ? /\/proposal\/rooms(\?|$)/ : /\/proposal\/rooms\/test-room\/join(\?|$)/, route => {
     bodies.push(route.request().postDataJSON());
     return route.fulfill({status:429,headers:{'Retry-After':'1'},json:{error:{code:'limit_reached',message:'Manual retry only',retryable:true}}});
   });
   const action = await open(page, mode, 'Persist first');
-  await action.click();await expect(page.getByText(mode === 'join' ? /storage is unavailable/ : /Couldn’t save this mood/)).toBeVisible();expect(bodies).toHaveLength(0);
-  await expect(action).toBeEnabled();await action.click();await expect(action).toBeDisabled();await expect(action).not.toHaveText(/\d/);
+  if (mode === 'join') await action.click();
+  await expect(page.getByText(mode === 'join' ? /storage is unavailable/ : /Couldn’t make the couch/)).toBeVisible();expect(bodies).toHaveLength(0);
+  await expect(action).toBeEnabled();await action.click();
+  if (mode === 'join') { await expect(action).toBeDisabled();await expect(action).not.toHaveText(/\d/); }
+  else await expect(page.getByText(/Couldn’t make the couch/)).toBeVisible();
   expect(bodies).toHaveLength(0); // A retained in-memory request is not proof of persistence.
   const first = await page.evaluate(() => {
     const state = (window as unknown as {admissionStorageTest:{allow:boolean;writes:string[]}}).admissionStorageTest;
@@ -139,7 +162,7 @@ for (const mode of ['create', 'join'] as const) test(`${mode} must persist the e
 
 test('Continue with GoodWatch sends no room request; a saved room request still retries unchanged', async ({ page }) => {
   const room = await common(page); const requests: GuestAdmissionRequest[] = []; let signIns = 0;
-  await page.route('**/proposal/rooms', async route => {
+  await page.route(/\/proposal\/rooms(\?|$)/, async route => {
     requests.push(route.request().postDataJSON());
     if (requests.length === 1) return route.fulfill({ status: 429, headers: { 'Retry-After': '2' }, json: { error: { code: 'limit_reached', message: 'Wait then retry', retryable: true } } });
     return route.fulfill({ json: { credential: { roomId: 'test-room', participantId: 'host', token: '', expiresAt: room.shared.expiresAt }, snapshot: room, invite: { code: 'fixture-invite', path: '/r/fixture-invite' } } });
@@ -155,14 +178,9 @@ test('Continue with GoodWatch sends no room request; a saved room request still 
   await expect.poll(() => signIns).toBe(1);
   expect(requests).toHaveLength(0);
   await page.getByRole('button', { name: 'Close', exact: true }).click();
+  // New couch: refused with a wait, then the same saved request goes again by itself.
   await page.getByRole('button', { name: 'New couch', exact: true }).first().click();
-  await page.getByLabel('Mood').fill('cheer me up');
-  await page.getByRole('button', { name: CREATE }).click();
-  await expect(page.getByRole('button', { name: CREATE })).toBeDisabled();
-  await page.reload();
-  await expect(page.getByRole('button', { name: CREATE })).toBeEnabled();
-  await page.getByRole('button', { name: CREATE }).click();
-  await expect.poll(() => requests.length).toBe(2);
+  await expect.poll(() => requests.length, { timeout: 10_000 }).toBe(2);
   expect(requests[1]).toEqual(requests[0]);
 });
 
@@ -184,14 +202,13 @@ for (const mode of ['create', 'join'] as const) test(`Back escapes an unconfirme
   // same saved request each time), with one Reconnecting line after 3 s and no error or Try again.
   test.setTimeout(90_000);
   await common(page); const bodies: GuestAdmissionRequest[]=[];
-  if(mode==='join') await page.route('**/proposal/rooms/test-room', route => route.fulfill({status:401,json:{error:{code:'unauthorized',message:'No existing membership',retryable:false}}}));
-  await page.route(mode==='create'?'**/proposal/rooms':'**/proposal/rooms/test-room/join', route => { bodies.push(route.request().postDataJSON()); return route.abort('failed'); });
+  if(mode==='join') await page.route(/\/proposal\/rooms\/test-room(\?|$)/, route => route.fulfill({status:401,json:{error:{code:'unauthorized',message:'No existing membership',retryable:false}}}));
+  await page.route(mode==='create'?/\/proposal\/rooms(\?|$)/:/\/proposal\/rooms\/test-room\/join(\?|$)/, route => { bodies.push(route.request().postDataJSON()); return route.abort('failed'); });
   const action=await open(page,mode,'Connection check');
-  await action.click();
-  await expect(action).toHaveText(mode === 'join' ? 'Joining…' : 'Saving…');
+  if (mode === 'join') { await action.click(); await expect(action).toHaveText('Joining…'); }
   await expect(page.getByText('Reconnecting…',{exact:true})).toBeVisible({ timeout: 6_000 });
   await expect.poll(()=>bodies.length,{ timeout: 20_000 }).toBeGreaterThanOrEqual(3);
-  await expect(action).toBeDisabled();
+  if (mode === 'join') await expect(action).toBeDisabled(); else await expect(action).toHaveCount(0);
   await expect(page.getByText('Couldn’t reach YepWatch. Your request is saved. Try again.',{exact:true})).toHaveCount(0);
   // Back stops the resends; the saved request stays.
   await page.getByRole('button',{name:'Back',exact:true}).click();
@@ -207,17 +224,21 @@ for (const mode of ['create', 'join'] as const) test(`Back escapes an unconfirme
     await page.getByLabel('Code or invitation link').fill('fixture-invite');
     await page.getByRole('button',{name:'Join as Alp',exact:true}).click();
   } else await page.getByRole('button',{name:'Start with you',exact:true}).click();
-  await expect(action).toBeEnabled();await action.click();
-  await expect.poll(()=>bodies.length).toBe(sent + 1);expect(bodies[sent]).toEqual(bodies[0]);
+  // Create: the New couch screen opens again and sends the saved request by itself. Join: a manual press.
+  if (mode === 'join') { await expect(action).toBeEnabled(); await action.click(); }
+  await expect.poll(()=>bodies.length).toBeGreaterThanOrEqual(sent + 1);expect(bodies[sent]).toEqual(bodies[0]);
 });
 
 test('Back during admission cooldown allows reopening the saved request without a new POST',async({page})=>{
   await common(page);let posts=0;
-  await page.route('**/proposal/rooms',route=>{posts++;return route.fulfill({status:429,headers:{'Retry-After':'60'},json:{error:{code:'limit_reached',message:'Wait before retrying',retryable:true}}});});
-  const action=await open(page,'create','Connection check');await action.click();await expect(action).toBeDisabled();
+  await page.route(/\/proposal\/rooms(\?|$)/,route=>{posts++;return route.fulfill({status:429,headers:{'Retry-After':'60'},json:{error:{code:'limit_reached',message:'Wait before retrying',retryable:true}}});});
+  await newCouch(page);await expect.poll(()=>posts).toBe(1);
   await page.getByRole('button',{name:'Back',exact:true}).click();
   await page.getByRole('button',{name:'New couch',exact:true}).click();
-  await expect(action).toBeDisabled();await expect(action).not.toHaveText(/\d/);expect(posts).toBe(1);
+  await expect(page).toHaveURL(/\/new$/);
+  // The saved wait holds: no new POST, no countdown digits, no Try again while it runs.
+  await page.waitForTimeout(1000);
+  await expect(page.getByText(/\d+ ?s\b/)).toHaveCount(0);await expect(tryAgain(page)).toHaveCount(0);expect(posts).toBe(1);
 });
 
 test('a lost create response followed by proxy 404s keeps the saved request; its resends end in the same room', async ({ page }) => {
@@ -227,7 +248,7 @@ test('a lost create response followed by proxy 404s keeps the saved request; its
   // A fake API that is idempotent per command id, like the real one: it counts rooms actually created.
   const rooms = new Map<string, string>();
   const bodies: GuestAdmissionRequest[] = [];
-  await page.route('**/proposal/rooms', async (route) => {
+  await page.route(/\/proposal\/rooms(\?|$)/, async (route) => {
     const body = route.request().postDataJSON() as GuestAdmissionRequest; bodies.push(body);
     if (bodies.length >= 2 && bodies.length <= 6)
       // The server is restarting: the proxy answers its own 404 page, never reaching the API.
@@ -237,8 +258,7 @@ test('a lost create response followed by proxy 404s keeps the saved request; its
     if (bodies.length === 1) return route.abort('failed');
     return route.fulfill({ json: { credential: { roomId: 'test-room', participantId: 'host', token: '', expiresAt: room.shared.expiresAt }, snapshot: room, invite: { code: 'fixture-invite', path: '/r/fixture-invite' } } });
   });
-  const action = await open(page, 'create', '');
-  await action.click();
+  await newCouch(page);
   await page.waitForURL('**/room/test-room**', { timeout: 90_000 });
   await expect(page.getByText('Couldn’t reach YepWatch. Your request is saved. Try again.', { exact: true })).toHaveCount(0);
   expect(bodies).toHaveLength(7);
@@ -251,10 +271,8 @@ for (const leave of ['panel', 'background'] as const) test(`automatic admission 
   test.setTimeout(60_000);
   await common(page);
   const bodies: GuestAdmissionRequest[] = [];
-  await page.route('**/proposal/rooms', (route) => { bodies.push(route.request().postDataJSON()); return route.abort('failed'); });
-  const action = await open(page, 'create', '');
-  await action.click();
-  await expect(action).toHaveText('Saving…');
+  await page.route(/\/proposal\/rooms(\?|$)/, (route) => { bodies.push(route.request().postDataJSON()); return route.abort('failed'); });
+  await newCouch(page);
   // The first try got no answer; the second waits its backoff (about a second): leave now.
   await expect.poll(() => bodies.length).toBe(1);
   if (leave === 'panel') {
@@ -280,16 +298,12 @@ for (const leave of ['panel', 'background'] as const) test(`automatic admission 
       document.dispatchEvent(new Event('visibilitychange'));
     });
     // Back in front, the paused save goes again by itself (resend-resume.ts), the same request.
-    await expect(action).toHaveText('Saving…');
     await expect.poll(() => bodies.length, { timeout: 10_000 }).toBeGreaterThan(sent);
     expect(bodies[sent]).toEqual(bodies[0]);
     return;
   }
   await page.getByRole('button', { name: 'New couch', exact: true }).click();
-  // The saved request comes back for a manual retry with the same identity.
-  await expect(action).toBeEnabled();
-  await expect(action).toHaveText(/Create couch|Try again/);
-  await action.click();
-  await expect.poll(() => bodies.length).toBe(sent + 1);
+  // New couch again sends the saved request with the same identity.
+  await expect.poll(() => bodies.length).toBeGreaterThanOrEqual(sent + 1);
   expect(bodies[sent]).toEqual(bodies[0]);
 });

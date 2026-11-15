@@ -26,10 +26,10 @@ for (const member of [undefined, 'signed-in'] as const) {
 }
 
 test('Profile on the Mood page keeps the Mood page underneath', async ({ page }) => {
-  await fakeRoom(page, newRoom());
+  const room = newRoom();
+  await fakeRoom(page, room);
   await setUpDevice(page);
-  await page.goto('/');
-  await page.getByRole('button', { name: 'New couch', exact: true }).click();
+  await page.goto(`/room/${room.shared.roomId}/mood`);
   await expect(page.getByLabel('Mood')).toBeVisible();
   const url = page.url();
   await page.getByRole('button', { name: 'Profile', exact: true }).click();

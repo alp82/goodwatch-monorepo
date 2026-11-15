@@ -1,155 +1,27 @@
 import { expect, test } from '@playwright/test';
 import { fakeRoom, newRoom, setUpDevice } from './room-fake';
 
-for (const width of [390, 1440]) test(`choosing a mood is local and keeps the same editor at ${width}px`, async ({ page }) => {
-  await page.setViewportSize({width, height:844});
-  await page.emulateMedia({reducedMotion:'no-preference'});
+for (const width of [390, 1440]) test(`New couch makes one couch without an idea and opens its setup at ${width}px`, async ({ page }) => {
+  await page.setViewportSize({ width, height: 844 });
   const f = await fakeRoom(page, newRoom());
   let posts = 0;
-  page.on('request', (request) => { if (request.method() === 'POST' && request.url().endsWith('/proposal/rooms')) posts++; });
-  const release = f.hold('add_idea');
+  page.on('request', (request) => { if (request.method() === 'POST' && request.url().split('?')[0].endsWith('/proposal/rooms')) posts++; });
   await setUpDevice(page);
   await page.goto('/');
   await page.getByRole('button', { name: 'New couch', exact: true }).click();
-  const mood = page.getByLabel('Mood', { exact: true });
-  await mood.fill('dark and funny');
-  await page.waitForTimeout(100);
-  expect(posts).toBe(0);
-  await page.evaluate(() => {
-    const probe = { watching: true, blank: 0, frames: 0, field: document.querySelector('[aria-label="Mood"]') };
-    (window as unknown as { moodFrames: typeof probe }).moodFrames = probe;
-    const frame = () => {
-      if (!probe.watching) return;
-      probe.frames++;
-      if (!probe.field?.isConnected || probe.field.getBoundingClientRect().height === 0) probe.blank++;
-      requestAnimationFrame(frame);
-    };
-    requestAnimationFrame(frame);
-  });
-  await page.getByRole('button', { name: 'Create couch', exact: true }).click();
-  await expect.poll(() => f.sent().includes('add_idea')).toBe(true);
+  await expect(page.getByTestId('room-setup')).toBeVisible();
+  await expect(page.getByLabel('Describe what you want to watch').filter({ visible: true })).toBeVisible();
   await page.waitForTimeout(200);
-  const frames = await page.evaluate(() => {
-    const probe = (window as unknown as { moodFrames: { watching: boolean; blank: number; frames: number } }).moodFrames;
-    probe.watching = false;
-    return { frames: probe.frames, blank: probe.blank };
-  });
-  expect(frames.frames).toBeGreaterThan(0);
-  expect(frames.blank).toBe(0);
-  await expect(mood).toHaveValue('dark and funny');
-  release();
-  await expect(page.getByTestId('room-setup')).toBeVisible();
-  await expect(page.getByRole('switch', { name: 'dark and funny. Your idea', exact: true })).toBeVisible();
   expect(posts).toBe(1);
-  await page.getByRole('button', { name: 'Back', exact: true }).click();
-  await page.evaluate(() => {
-    const values: string[] = [];
-    (window as unknown as { nextDraftValues: string[] }).nextDraftValues = values;
-    const frame = () => {
-      const field = document.querySelector<HTMLTextAreaElement>('[aria-label="Mood"]');
-      if (field && field.getBoundingClientRect().height > 0) values.push(field.value);
-      requestAnimationFrame(frame);
-    };
-    requestAnimationFrame(frame);
-  });
-  await page.getByRole('button', { name: 'New couch', exact: true }).click();
-  await expect(page.getByLabel('Mood', { exact: true })).toHaveValue('');
-  await page.waitForTimeout(200);
-  const values = await page.evaluate(() => (window as unknown as { nextDraftValues: string[] }).nextDraftValues);
-  expect(values.length).toBeGreaterThan(0);
-  expect(values.every((v) => v === '')).toBe(true);
-  expect(posts).toBe(1);
-});
-
-test('a failed create-and-save keeps the draft and retries in the same room', async ({ page }) => {
-  const f = await fakeRoom(page, newRoom());
-  let rooms = 0, saves = 0;
-  page.on('request', (r) => { if (r.method() === 'POST' && r.url().endsWith('/proposal/rooms')) rooms++; });
-  await page.route('**/commands', async (route) => {
-    if (route.request().postDataJSON().command.type !== 'add_idea' || saves++ > 0) return route.fallback();
-    return route.fulfill({ status: 503, json: { error: { code: 'catalog_unavailable', message: 'Mood matching is unavailable', retryable: false } } });
-  });
-  await page.goto('/new');
-  await page.getByLabel('Mood', { exact: true }).fill('dark and funny');
-  await page.getByRole('button', { name: 'Create couch', exact: true }).click();
-  await expect(page.getByText('Couldn’t save this mood. Try again; your text is kept.', { exact: true })).toBeVisible();
-  await expect(page.getByLabel('Mood', { exact: true })).toHaveValue('dark and funny');
-  await expect(page.getByTestId('room-setup')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Couch, switch couch', exact: true })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Try again', exact: true }).click();
-  await expect(page.getByTestId('room-setup')).toBeVisible();
-  expect(rooms).toBe(1);
-  expect(f.room.shared.ideas.map((i) => i.text)).toEqual(['dark and funny']);
-});
-
-test('an accepted mood whose acknowledgement is lost goes again by itself as the exact command, without another idea', async ({ page }) => {
-  // Owner rule Q16b: a save with no answer keeps going by itself while the page is in front, the same command.
-  const f = await fakeRoom(page, newRoom());
-  let rooms = 0, lose = true;
-  page.on('request', (r) => { if (r.method() === 'POST' && r.url().endsWith('/proposal/rooms')) rooms++; });
-  await page.route('**/commands', async (route) => {
-    if (route.request().postDataJSON().command.type === 'add_idea' && lose) { lose = false; f.lose(); }
-    await route.fallback();
-  });
-  await page.goto('/new');
-  await page.getByLabel('Mood', { exact: true }).fill('dark and funny');
-  await page.getByRole('button', { name: 'Create couch', exact: true }).click();
-  await expect(page.getByTestId('room-setup')).toBeVisible();
-  await expect(page.getByText('Couldn’t reach YepWatch. Your request is saved. Try again.', { exact: true })).toHaveCount(0);
-  const commands = f.commands.filter((c) => c.command.type === 'add_idea');
-  expect(commands).toHaveLength(2);
-  expect(commands[1]).toEqual(commands[0]);
-  expect(rooms).toBe(1); // The room was made once; only the idea command goes again.
-  expect(f.room.shared.ideas).toHaveLength(1);
-});
-
-test('an accepted mood whose acknowledgement is lost survives reload and retries the exact command without another idea', async ({ page }) => {
-  const f = await fakeRoom(page, newRoom());
-  let rooms = 0, lose = true, down = true;
-  page.on('request', (r) => { if (r.method() === 'POST' && r.url().endsWith('/proposal/rooms')) rooms++; });
-  await page.route('**/commands', async (route) => {
-    if (route.request().postDataJSON().command.type === 'add_idea') {
-      // The first one lands but its answer is lost; until the reload the network stays down for the resends.
-      if (lose) { lose = false; f.lose(); return route.fallback(); }
-      if (down) return route.abort('failed');
-    }
-    await route.fallback();
-  });
-  await page.goto('/new');
-  await page.getByLabel('Mood', { exact: true }).fill('dark and funny');
-  await page.getByRole('button', { name: 'Create couch', exact: true }).click();
-  await expect(page.getByText('Reconnecting…', { exact: true })).toBeVisible({ timeout: 6_000 });
-  await page.reload();
-  down = false;
-  await expect(page.getByLabel('Mood')).toHaveValue('dark and funny');
-  await expect(page.getByRole('button', { name: /^(Create couch|Try again)$/, exact: true })).toBeEnabled();
-  await page.getByRole('button', { name: /^(Create couch|Try again)$/, exact: true }).click();
-  await expect(page.getByTestId('room-setup')).toBeVisible();
-  const commands = f.commands.filter((c) => c.command.type === 'add_idea');
-  expect(commands).toHaveLength(2);
-  expect(commands[1]).toEqual(commands[0]);
-  expect(rooms).toBe(2); // Replays the exact bootstrap on reload, so the API returns its original room.
-  expect(f.room.shared.ideas).toHaveLength(1);
-});
-
-test('cancelling a local draft returns to its caller without allocating a room', async ({ page }) => {
-  await fakeRoom(page, newRoom());
-  let rooms = 0;
-  page.on('request', (r) => { if (r.method() === 'POST' && r.url().endsWith('/proposal/rooms')) rooms++; });
-  await setUpDevice(page);
-  await page.goto('/');
-  await page.getByRole('button', { name: 'New couch', exact: true }).click();
-  await page.getByLabel('Mood', { exact: true }).fill('unfinished mood');
-  await page.getByRole('button', { name: 'Back', exact: true }).click();
-  await expect(page).toHaveURL(/\/$/);
-  expect(rooms).toBe(0);
+  expect(f.sent().includes('add_idea')).toBe(false);
+  expect(f.room.shared.ideas).toEqual([]);
 });
 
 test('a refused mood save keeps its text in the editor and explains the mood failure', async ({ page }) => {
   const f = await fakeRoom(page, newRoom());
   let release!: () => void;
   const gate = new Promise<void>((resolve) => { release = resolve; });
-  await page.route('**/commands', async (route) => {
+  await page.route(/\/commands(\?|$)/, async (route) => {
     if (route.request().postDataJSON().command.type !== 'add_idea') return route.fallback();
     await gate;
     return route.fulfill({ status: 503, json: { error: { code: 'catalog_unavailable', message: 'Mood matching is unavailable for now. You can still start without an idea.', retryable: false } } });
@@ -173,7 +45,7 @@ test('a refused mood save keeps its text in the editor and explains the mood fai
 test('an uncertain existing-room mood reconciles its exact write before saving revised text', async ({ page }) => {
   const f = await fakeRoom(page, newRoom());
   let lose = true;
-  await page.route('**/commands', async (route) => {
+  await page.route(/\/commands(\?|$)/, async (route) => {
     if (route.request().postDataJSON().command.type === 'add_idea' && lose) { lose = false; f.lose(); }
     await route.fallback();
   });
@@ -216,7 +88,7 @@ test('an idea from the console whose acknowledgement is lost goes again as the e
   // Owner rule Q16b on the couch setup's describe field: the same command again, never a second idea.
   const f = await fakeRoom(page, newRoom());
   let lose = true;
-  await page.route('**/commands', async (route) => {
+  await page.route(/\/commands(\?|$)/, async (route) => {
     if (route.request().postDataJSON().command.type === 'add_idea' && lose) { lose = false; f.lose(); }
     await route.fallback();
   });
@@ -246,7 +118,7 @@ test('an idea from the console whose acknowledgement is lost goes again as the e
 test('an uncertain console idea reconciles its exact write before a replacement goes', async ({ page }) => {
   const f = await fakeRoom(page, newRoom());
   let lose = true;
-  await page.route('**/commands', async (route) => {
+  await page.route(/\/commands(\?|$)/, async (route) => {
     if (route.request().postDataJSON().command.type === 'add_idea' && lose) { lose = false; f.lose(); }
     await route.fallback();
   });

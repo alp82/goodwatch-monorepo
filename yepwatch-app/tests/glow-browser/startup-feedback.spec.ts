@@ -5,7 +5,7 @@ test('a solo Yep adds a match without a match celebration', async ({ page }) => 
   const room = choosingRoom();
   room.shared.participants = room.shared.participants.slice(0, 1);
   await fakeRoom(page, room);
-  await page.route('**/commands', async (route) => {
+  await page.route(/\/commands(\?|$)/, async (route) => {
     const { command } = route.request().postDataJSON();
     if (command.type === 'vote' && command.value === 'watch') room.shared.matches = [{ candidateId: command.candidateId, averageYepMs: null }];
     await route.fallback();

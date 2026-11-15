@@ -1,4 +1,4 @@
-/** New room's editor works while admission is pending; its draft survives the room taking over. */
+/** New couch makes the couch by itself: a slow admission shows no error or retry, and the couch's setup opens when it lands. */
 import { expect, test, type Page } from '@playwright/test';
 import { choosingRoom, fakeRoom, newRoom, setUpDevice } from './room-fake';
 
@@ -7,7 +7,7 @@ const slowCreate = (page: Page, ms: number) => page.route('**/api/yepwatch/v1/**
   await route.fallback();
 });
 
-test('New room from inside a room accepts a mood before admission finishes', async ({ page }) => {
+test('New couch from inside a room makes the second couch and opens its setup', async ({ page }) => {
   const second = newRoom();
   second.shared.roomId = 'second-room';
   await fakeRoom(page, choosingRoom(), { nextRooms: [second] });
@@ -15,19 +15,20 @@ test('New room from inside a room accepts a mood before admission finishes', asy
   await page.goto(`/room/${choosingRoom().shared.roomId}`);
   await page.getByRole('button', { name: /switch couch/ }).first().click();
   await page.getByRole('button', { name: 'New couch', exact: true }).click();
-  await page.getByLabel('Mood', { exact: true }).fill('space adventure');
   await expect(page).toHaveURL(/\/new$/);
-  await expect(page.getByLabel('Mood', { exact: true })).toHaveValue('space adventure');
+  await expect(page.getByRole('button', { name: 'Try again', exact: true })).toHaveCount(0);
+  await expect(page.getByTestId('room-setup')).toBeVisible({ timeout: 10000 });
+  await expect(page).toHaveURL(/\/room\/second-room/);
 });
 
-test('New room from the start page offers presets before admission finishes', async ({ page }) => {
+test('New couch from the start page waits out a slow create without a retry panel', async ({ page }) => {
   await fakeRoom(page, newRoom());
   await setUpDevice(page);
   await slowCreate(page, 1500);
   await page.goto('/');
   await page.getByRole('button', { name: 'New couch', exact: true }).click();
-  await page.getByRole('button', { name: 'cheer me up', exact: true }).click();
-  await expect(page.getByTestId('retry-panel')).toHaveCount(0);
   await expect(page).toHaveURL(/\/new$/);
-  await expect(page.getByLabel('Mood', { exact: true })).toHaveValue('cheer me up');
+  await expect(page.getByTestId('retry-panel')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Try again', exact: true })).toHaveCount(0);
+  await expect(page.getByTestId('room-setup')).toBeVisible({ timeout: 10000 });
 });

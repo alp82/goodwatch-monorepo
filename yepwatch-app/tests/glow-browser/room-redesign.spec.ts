@@ -4,29 +4,18 @@ import { choosingRoom, fakeRoom, newRoom, reading } from './room-fake';
 const shot = (page: Page, name: string) => page.screenshot({ path: `artifacts/room-redesign/${name}.png` });
 const button = (page: Page, name: string | RegExp) => page.getByRole('button', { name, exact: typeof name === 'string' });
 
-test('guest host: New room opens Mood at once, a preset then Create room, name and services before Start', async ({ page }) => {
+test('guest host: /new makes the couch at once, the idea from the console, name and services before Start', async ({ page }) => {
   const f = await fakeRoom(page, newRoom());
   // A host without a name (a device that never set up opens /new from Your couches): the room asks for it.
   await page.goto('/');
   await page.goto('/new');
-  await expect(page.getByLabel('Mood')).toBeVisible();
-  await expect(page).toHaveURL(/\/new$/);
-  expect(f.room.shared.participants[0].nickname).toBe('');
-  await shot(page, '01-mood');
-  // Create room waits for a mood; a preset fills the field (and shows it picked), Create room continues.
-  // Moods, themes and plots (not titles): two balanced lines on a phone.
-  await expect(page.getByText('Describe a mood,', { exact: true })).toBeVisible();
-  await expect(page.getByText('a theme, or a plot…', { exact: true })).toBeVisible();
-  await expect(button(page, 'Create couch')).toBeDisabled();
-  await page.getByLabel('Mood').fill('cheer me up');
-  await expect(button(page, 'Create couch')).toBeEnabled();
-  await page.getByLabel('Mood').fill('');
-  await button(page, 'cheer me up').click();
-  await expect(page.getByLabel('Mood')).toHaveValue('cheer me up');
-  await expect(button(page, 'cheer me up')).toHaveAttribute('aria-pressed', 'true');
-  await button(page, 'Create couch').click();
   await expect(page.getByTestId('room-setup')).toBeVisible();
   await expect(page).toHaveURL(/\/room\/test-room$/);
+  expect(f.room.shared.participants[0].nickname).toBe('');
+  // The idea goes in from the describe field.
+  const field = page.getByLabel('Describe what you want to watch');
+  await field.fill('cheer me up');
+  await field.press('Enter');
   await expect.poll(() => f.room.shared.ideas.map((i) => [i.text, i.on])).toEqual([['cheer me up', true]]);
   await shot(page, '02-room-setup');
   // Streaming: Start without services opens the picker (the room gets a country), back on the room page.
@@ -303,7 +292,7 @@ test('a friend opens the link: name, Join, then their services, then the waiting
   room.shared.phase = 'setup';
   const f = await fakeRoom(page, room);
   // Before admission the friend can't read the room yet.
-  await page.route('**/proposal/rooms/test-room', (route) => (f.room.shared.participants.some((p) => p.participantId === 'guest')
+  await page.route(/\/proposal\/rooms\/test-room(\?|$)/, (route) => (f.room.shared.participants.some((p) => p.participantId === 'guest')
     ? route.fallback()
     : route.fulfill({ status: 401, json: { error: { code: 'unauthorized', message: 'Not a member yet', retryable: false } } })));
   await page.goto('/r/K7QX');
@@ -387,7 +376,7 @@ test.describe('the join screen shows the room from the invite preview', () => {
   async function openInvite(page: Page, room = choosingRoom(), preview?: 'fail') {
     room.shared.phase = 'setup';
     const f = await fakeRoom(page, room, { preview });
-    await page.route('**/proposal/rooms/test-room', (route) => (f.room.shared.participants.some((p) => p.participantId === 'guest')
+    await page.route(/\/proposal\/rooms\/test-room(\?|$)/, (route) => (f.room.shared.participants.some((p) => p.participantId === 'guest')
       ? route.fallback()
       : route.fulfill({ status: 401, json: { error: { code: 'unauthorized', message: 'Not a member yet', retryable: false } } })));
     await page.goto('/r/K7QX');

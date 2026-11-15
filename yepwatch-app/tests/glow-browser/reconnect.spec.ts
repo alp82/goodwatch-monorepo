@@ -16,7 +16,7 @@ async function live(page: Page) {
     if (control.mode === 'hold') { control.held.push(route); return; }
     return ticket(route);
   });
-  page.on('request', (r) => { if (r.method() === 'GET' && r.url().endsWith('/rooms/test-room')) control.reads++; });
+  page.on('request', (r) => { if (r.method() === 'GET' && r.url().split('?')[0].endsWith('/rooms/test-room')) control.reads++; });
   await page.routeWebSocket('**/realtime', (ws) => {
     control.sockets.push(ws);
     ws.onMessage((raw) => {
@@ -69,10 +69,10 @@ test('a long outage shows one Reconnecting line with no countdown, gone once it 
   await expect(banner(page)).toHaveCount(0);
 });
 
-test('Create during a restart: two 503s are retried with the same request, keeping the editor until the room opens', async ({ page }) => {
+test('Create during a restart: two 503s are retried with the same request, no Try again until the couch opens', async ({ page }) => {
   await fakeRoom(page, newRoom());
   const bodies: GuestAdmissionRequest[] = [];
-  await page.route('**/proposal/rooms', (route) => {
+  await page.route(/\/proposal\/rooms(\?|$)/, (route) => {
     if (route.request().method() !== 'POST') return route.fallback();
     bodies.push(route.request().postDataJSON());
     return bodies.length <= 2 ? busy(route) : route.fallback();
@@ -80,10 +80,8 @@ test('Create during a restart: two 503s are retried with the same request, keepi
   await setUpDevice(page);
   await page.goto('/');
   await page.getByRole('button', { name: 'New couch', exact: true }).click();
-  await page.getByLabel('Mood').fill('cheer me up');
-  await page.getByRole('button', { name: 'Create couch', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Saving…', exact: true })).toBeVisible();
-  await expect(page.getByLabel('Mood')).toHaveValue('cheer me up');
+  await expect(page).toHaveURL(/\/new$/);
+  await expect(page.getByRole('button', { name: 'Try again', exact: true })).toHaveCount(0);
   await expect(page).toHaveURL(/\/room\/test-room$/, { timeout: 15_000 });
   expect(bodies).toHaveLength(3);
   expect(bodies[1]).toEqual(bodies[0]);

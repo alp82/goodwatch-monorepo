@@ -12,7 +12,7 @@ const followup = { key: 1e12 + 27205, title: 'Inception', year: 2010, posterUrl:
 test('first visit: setup (name, Taste cards, Undo) ends on the start page, set up, and creates nothing', async ({ page }) => {
   const f = await fakeRoom(page, newRoom());
   let rooms = 0;
-  page.on('request', (r) => { if (r.method() === 'POST' && r.url().endsWith('/proposal/rooms')) rooms++; });
+  page.on('request', (r) => { if (r.method() === 'POST' && r.url().split('?')[0].endsWith('/proposal/rooms')) rooms++; });
   await page.goto('/');
   await expect(page.getByTestId('landing')).toBeVisible();
   await expect(button(page, 'Continue with GoodWatch')).toBeVisible();

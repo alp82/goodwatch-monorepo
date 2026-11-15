@@ -95,24 +95,20 @@ test.describe('background refill', () => {
   });
 });
 
-test.describe('Continue with GoodWatch never creates a room; New room still opens on Mood', () => {
-  test('after the sign-in round trip the start page is back and New room makes a linked room on Mood', async ({ page }) => {
+test.describe('Continue with GoodWatch never creates a room; New couch still makes one', () => {
+  test('after the sign-in round trip the start page is back and New couch makes a linked couch', async ({ page }) => {
     const f = await fakeRoom(page, newRoom(), { member: 'return' });
     await page.goto('/');
     await button(page, 'Continue with GoodWatch').click();
     await page.waitForURL((url) => url.pathname === '/');
     await expect(button(page, 'Continue with GoodWatch')).toHaveCount(0);
     await button(page, 'New couch').click();
-    await expect(page.getByLabel('Mood')).toBeVisible();
-    await expect(page).toHaveURL(/\/new$/);
-    await button(page, 'cheer me up').click();
-    await button(page, 'Create couch').click();
     await expect(page.getByTestId('room-setup')).toBeVisible();
     await expect.poll(() => f.room.own.member.state).toBe('linked');
-    // Opening the couch again doesn't bring Mood back.
+    // Opening the couch again doesn't make another one.
     await page.reload();
     await expect(page.getByTestId('room-setup')).toBeVisible();
-    await expect(page.getByLabel('Mood')).toHaveCount(0);
+    await expect(page.getByTestId('new-couch')).toHaveCount(0);
   });
 });
 
@@ -155,7 +151,7 @@ test.describe('NEW is acknowledged per room on the host’s device', () => {
 test('a command the server refuses (403) does not end the room', async ({ page }) => {
   const f = await fakeRoom(page, choosingRoom());
   let refused = 0;
-  await page.route('**/api/yepwatch/v1/proposal/rooms/*/commands', async (route) => {
+  await page.route(/\/api\/yepwatch\/v1\/proposal\/rooms\/[^/]+\/commands(\?|$)/, async (route) => {
     if (refused++ > 0) return route.fallback();
     await route.fulfill({ status: 403, contentType: 'application/json', body: JSON.stringify({ error: { code: 'forbidden', message: 'Only the host can change this setting', retryable: false } }) });
   });

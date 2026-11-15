@@ -312,7 +312,7 @@ test('the poster trailer opens externally without changing the card or room choi
 
 test('authoritative Undo survives an accepted vote followed by a full reload', async ({ page }) => {
   const f = await fixture(page);
-  const accepted = page.waitForResponse((r) => r.url().endsWith('/commands'));
+  const accepted = page.waitForResponse((r) => r.url().split('?')[0].endsWith('/commands'));
   await page.getByRole('button', { name: 'Nope', exact: true }).click();
   await accepted;
   await expect(page.getByRole('button', { name: 'Undo', exact: true })).toBeEnabled();
@@ -443,7 +443,7 @@ for (const direction of [-1, 1])
   test(`${reducedMotion} swipe ${direction} never re-enters with the opposite stamp`, async ({ page }) => {
     await page.emulateMedia({ reducedMotion });
     const f = await fixture(page);
-    await page.route('**/commands', async (route) => {
+    await page.route(/\/commands(\?|$)/, async (route) => {
       await new Promise((resolve) => setTimeout(resolve, 450));
       await route.fallback();
     });

@@ -27,7 +27,7 @@ async function openInvite(page: Page) {
   const r = choosingRoom();
   r.shared.phase = 'setup';
   const f = await fakeRoom(page, r);
-  await page.route('**/proposal/rooms/test-room', (route) => (f.room.shared.participants.some((p) => p.participantId === 'guest')
+  await page.route(/\/proposal\/rooms\/test-room(\?|$)/, (route) => (f.room.shared.participants.some((p) => p.participantId === 'guest')
     ? route.fallback()
     : route.fulfill({ status: 401, json: { error: { code: 'unauthorized', message: 'Not a member yet', retryable: false } } })));
   await page.goto('/r/K7QX');

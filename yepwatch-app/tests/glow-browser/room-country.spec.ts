@@ -2,13 +2,11 @@
 import { expect, test } from '@playwright/test';
 import { fakeRoom, newRoom, setUpDevice } from './room-fake';
 
-test('a new room gets its country when the host explicitly creates it', async ({ page }) => {
+test('a new room gets its country when the host presses New couch', async ({ page }) => {
   const f = await fakeRoom(page, newRoom());
   await setUpDevice(page);
   await page.goto('/');
   await page.getByRole('button', { name: 'New couch', exact: true }).click();
-  await expect(page.getByLabel('Mood')).toBeVisible();
-  await page.getByRole('button', { name: 'Continue without an idea', exact: true }).click();
   await expect.poll(() => f.room.shared.screens[0]?.country ?? null).not.toBeNull();
 });
 
@@ -17,7 +15,5 @@ test('the room country is set even when settings changes refuse the first tries'
   await setUpDevice(page);
   await page.goto('/');
   await page.getByRole('button', { name: 'New couch', exact: true }).click();
-  await expect(page.getByLabel('Mood')).toBeVisible();
-  await page.getByRole('button', { name: 'Continue without an idea', exact: true }).click();
   await expect.poll(() => f.room.shared.screens[0]?.country ?? null).not.toBeNull();
 });

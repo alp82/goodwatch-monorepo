@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { continuousFixture } from '../continuous-fixture';
 import { openRoomPage } from './room-fake';
 /** The start page card of a couch without ideas: named after whose it is (never "Anything"). */
-const COUCH_CARD = /^(Your couch|.+’s couch)$/;
+const COUCH_CARD = /^(Your couch|(?!Archive ).+’s couch)$/;
 
 async function fixture(page: Page, setup = false) {
   const room = continuousFixture();
@@ -150,7 +150,7 @@ test('room activity and exposure do not begin behind the boot overlay', async ({
   let coverUp = true;
   let writesUnderCover = 0;
   await page.route('**/api/yepwatch/v1/proposal/**', async route => {
-    if (route.request().method() === 'POST' && route.request().url().endsWith('/commands')) { if (coverUp) writesUnderCover++; }
+    if (route.request().method() === 'POST' && route.request().url().split('?')[0].endsWith('/commands')) { if (coverUp) writesUnderCover++; }
     await route.fulfill({ json: continuousFixture() });
   });
   await page.goto('/room/test-room');
@@ -302,7 +302,7 @@ test('Continue with GoodWatch needs no guest name, shows its G mark and makes no
   const f = await fixture(page, true);
   const requests: any[] = [];
   let signIns = 0;
-  await page.route('**/proposal/rooms', async route => {
+  await page.route(/\/proposal\/rooms(\?|$)/, async route => {
     requests.push(route.request().postDataJSON());
     await route.fulfill({ status: 503, json: { error: {code:'busy', message:'Fixture stops before actual sign-in', retryable:true} } });
   });
