@@ -28,9 +28,9 @@ test('only profile routes and admissions carry the profile header', () => {
   assert.ok(carriesProfile(`${P}/profile/taste-deck?count=10`, 'GET'));
   assert.ok(carriesProfile(`${P}/rooms`, 'POST'));
   assert.ok(carriesProfile(`${P}/rooms/abc/join`, 'POST'));
-  assert.equal(carriesProfile(`${P}/rooms/abc/resume`, 'POST'), false);
-  // Returns and room reads wait for the server's linking fix (profile-paths.ts LINK_AGAIN).
-  assert.equal(carriesProfile(`${P}/rooms/abc`, 'GET'), false);
+  assert.ok(carriesProfile(`${P}/rooms/abc/resume`, 'POST'));
+  // Opening a room, never the own-part reads after a live update.
+  assert.ok(carriesProfile(`${P}/rooms/abc`, 'GET'));
   assert.equal(carriesProfile(`${P}/rooms/abc?known=4`, 'GET'), false);
   assert.equal(carriesProfile(`${P}/rooms`, 'GET'), false);
   assert.equal(carriesProfile(`${P}/rooms/abc/commands`, 'POST'), false);
