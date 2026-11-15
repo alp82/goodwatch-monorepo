@@ -14,6 +14,7 @@
 // - Awards pages: the hub and a category have a row of winners' posters under the headline, a ceremony its year as a
 //   giant number beside the top winner's poster (AwardsCard.tsx); a body and a one-winner category use the movie card.
 // - Hot on socials: amber headline beside the ranking's top five on ink, each with its daily reads (HotCard.tsx).
+// - GoodWatch in numbers: four of the page's numbers on ink beside an amber "Stats" strip (StatsCard.tsx).
 // - By your tropes: a cloud of twelve trope names in three sizes on amber, the same for every link (TropesCard.tsx).
 // - A title's sub-pages: its fingerprint (the poster beside its strongest feelings on ink), tropes (a cloud of the
 //   title's tropes beside a small poster) and at a glance (the poster beside six fact tiles) (TitleSubPageCards.tsx).
@@ -28,6 +29,7 @@ import {
 } from "~/ui/og-image/DiscoveryCard"
 import { ForYouCard, type OgForYouContent } from "~/ui/og-image/ForYouCard"
 import { HotCard, type OgHotContent } from "~/ui/og-image/HotCard"
+import { type OgStatsContent, StatsCard } from "~/ui/og-image/StatsCard"
 import {
 	NewServicesCard,
 	type OgNewServicesContent,
@@ -135,6 +137,7 @@ export type {
 	OgTitleTropesContent,
 	OgAwardsContent,
 	OgHotContent,
+	OgStatsContent,
 	OgTropesContent,
 	OgTasteQuizContent,
 	OgNewServicesContent,
@@ -150,6 +153,7 @@ export type OgContent =
 	| OgTitleGlanceContent
 	| OgAwardsContent
 	| OgHotContent
+	| OgStatsContent
 	| OgTropesContent
 	| OgTasteQuizContent
 	| OgNewServicesContent
@@ -346,6 +350,7 @@ export function OgCard({ content }: { content: OgContent }) {
 	if (content.kind === "taste-quiz") return <TasteQuizCard content={content} />
 	if (content.kind === "awards") return <AwardsCard content={content} />
 	if (content.kind === "hot") return <HotCard content={content} />
+	if (content.kind === "stats") return <StatsCard content={content} />
 	if (content.kind === "tropes") return <TropesCard />
 	if (content.kind === "new-services")
 		return <NewServicesCard content={content} />

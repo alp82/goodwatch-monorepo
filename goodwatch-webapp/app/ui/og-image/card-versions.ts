@@ -15,6 +15,8 @@ export const CARD_VERSIONS: Readonly<Record<string, number>> = {
 	"/map": 2,
 	// 2: the lit taste bar (owner, October 28, 2026).
 	"/taste/quiz": 2,
+	// Its own card: four of the page's numbers (owner, November 16, 2026). Before, the generic page card.
+	"/stats": 1,
 }
 
 /** The card version of a canonical path, or null for a card that has never had its own. */

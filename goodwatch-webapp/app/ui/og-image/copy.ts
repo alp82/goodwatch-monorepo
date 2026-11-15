@@ -116,6 +116,7 @@ export const STATIC_PAGE_COPY: Record<string, PageCopy> = {
 		title: "Why GoodWatch exists",
 		subtitle: "Made by people who watch too much.",
 	},
+	// Drawn as the numbers card (STATS_CARD_COPY). Listed here so the path has a card of its own.
 	"/stats": {
 		tag: "In numbers",
 		title: "GoodWatch in numbers",
@@ -338,6 +339,21 @@ export const HOT_CARD_COPY = {
 	tag: "Talked about now",
 	headline: "Hot on socials",
 	rank: (rank: number) => `#${rank}`,
+} as const
+
+// The card of GoodWatch in numbers (/stats, StatsCard.tsx): four of the page's numbers stacked on ink, each with its
+// words, and "Stats" on an amber strip. The numbers come from the page's daily snapshot.
+export const STATS_CARD_COPY = {
+	strip: "Stats",
+	updated: "Updated every day.",
+	titles: "movies and shows",
+	years: "years to watch all",
+	/** The most common movie title: "173 movies called Home". */
+	commonTitle: (title: string) => `movies called ${title}`,
+	/** The longest movie, by name; `longestShort` when the name doesn't fit beside the number. */
+	longest: (title: string) => `${title}, the longest movie`,
+	longestShort: "the longest movie",
+	hours: (hours: number) => `${hours} h`,
 } as const
 
 // The card of By your tropes (/watch/for-you/tropes, TropesCard.tsx): a cloud of trope names in three sizes. A shared

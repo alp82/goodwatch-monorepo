@@ -25,6 +25,7 @@ import {
 	canonicalBlogPath,
 } from "~/server/og-image/blog-content.server"
 import { hotCardContent } from "~/server/og-image/hot-content.server"
+import { statsCardContent } from "~/server/og-image/stats-content.server"
 import {
 	canonicalNewPath,
 	newServicesContent,
@@ -610,6 +611,11 @@ export async function resolveOgContent(
 	if (first === "new") return newServicesContent(path, newDeps)
 	if (first === "blog" && second) return blogContent(path)
 	if (first === "hot") return hotContent()
+	if (path === "/stats")
+		return statsCardContent({
+			snapshot: async () =>
+				(await import("~/server/stats/stats.server")).readStatsSnapshot(),
+		})
 	if (first === "awards")
 		return awardsContent(path, {
 			body: getAwardBody,

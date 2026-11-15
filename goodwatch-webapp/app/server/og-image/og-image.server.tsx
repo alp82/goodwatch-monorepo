@@ -142,6 +142,7 @@ async function inlineImages(content: OgContent): Promise<OgContent> {
 		case "title-glance":
 			return { ...content, poster: await toDataUri(content.poster) }
 		case "hot":
+		case "stats":
 		case "tropes":
 			return content
 		default:
@@ -186,10 +187,11 @@ function lifetime(value: string | undefined) {
 	const seconds = Number(value)
 	return Number.isFinite(seconds) && seconds > 0 ? seconds : undefined
 }
-// The Hot on socials ranking is made once a day. A request more than an hour after its card's render redraws it in the
+// The Hot on socials ranking and the /stats snapshot are made once a day. A request more than an hour after its card's render redraws it in the
 // background, and a card more than a day old isn't shown: it is drawn again while the request waits.
 const DAILY_CARDS: Record<string, CardFreshness> = {
 	"/hot": { freshMs: 60 * 60 * 1000, maxAgeMs: 24 * 60 * 60 * 1000 },
+	"/stats": { freshMs: 60 * 60 * 1000, maxAgeMs: 24 * 60 * 60 * 1000 },
 }
 const store = createOgStore({
 	firstSeconds: lifetime(process.env.OG_CARD_FIRST_SECONDS),
