@@ -125,11 +125,12 @@ const RETRY_MAX_MS = 15 * 60_000
 const token = () => random().slice(0, 22)
 /**
  * Stores the pending marker with its job in the attribute's text (the key stays PENDING_IDEA_ATTRIBUTE's, so a
- * store query finds pending ideas by it). Snapshots show PENDING_IDEA_ATTRIBUTE itself.
+ * store query finds pending ideas by it). Snapshots show PENDING_IDEA_ATTRIBUTE itself. The idea's ranked titles stay
+ * until the answer lands: a new or edited idea has none, and an idea re-read after a service change keeps steering the
+ * deck with its last reading meanwhile (a Start right after picking services).
  */
 function markPending(idea: StoredIdea, pending: PendingIdea) {
 	idea.attributes = [{ ...PENDING_IDEA_ATTRIBUTE, text: pending.job }]
-	idea.rankedKeys = []
 	idea.interpretedAt = pending.lease
 }
 const refusals = new WeakSet<Promise<unknown>>()
@@ -1485,7 +1486,6 @@ export class ProposalService {
         for (const idea of ideasForServiceReread(room, keys => this.catalog.ideaReadingSize?.(room, keys) ?? keys.length)) {
           room.interpretationCount = (room.interpretationCount ?? 0) + 1
           const reread: PendingIdea = { ideaId: idea.id, text: idea.text, job: token(), lease: this.now() }
-          idea.rankedKeys = []
           markPending(idea, reread)
           rereads.push(reread)
         }

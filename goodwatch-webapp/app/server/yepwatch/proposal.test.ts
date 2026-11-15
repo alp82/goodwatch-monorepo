@@ -14,6 +14,9 @@ import {
 } from "./proposal-test-support.ts"
 import { createProposalHandler } from "./proposal-http.server.ts"
 import { RoomError } from "./errors.ts"
+import { roomIntentKeys } from "./proposal-intent.ts"
+import { rankedKey } from "./proposal-redesign.ts"
+import type { ProposalCatalog } from "./proposal-types.ts"
 const secret = "continuous-tests-secret-at-least-thirty-two"
 const admission = (nickname = "A") => ({
 	contractVersion: 3 as const,
@@ -604,6 +607,48 @@ test("Room prompt is interpreted after the command answers and retained across s
 		interpretedIdeas
 	)
 	assert.equal(interpreted, 3, "country and service changes re-read a short reading within the lifetime budget")
+})
+
+test("A Start while a service change re-reads an idea still deals from the idea's last reading", async () => {
+	// Ideas steer the deck as production's catalog does (proposal-intent.ts): the idea's titles first.
+	const steered: ProposalCatalog = {
+		...proposalFixtureCatalog,
+		async page(room) {
+			const page = await proposalFixtureCatalog.page(room)
+			const order = roomIntentKeys(room, page.candidates.map(rankedKey))
+			return { ...page, candidates: order.map((key) => page.candidates.find((c) => rankedKey(c) === key)!) }
+		},
+	}
+	const show = 2_000_000_000_011
+	let calls = 0
+	let release = () => {}
+	const reading = (prompt: string) => ({ prompt, attributes: [{ text: "Western", kind: "want" as const, key: "western" }], rankedKeys: [show], interpretedAt: Date.now() })
+	const service = new ProposalService(new ProposalMemoryRepository(), steered, secret, undefined, Date.now, undefined, async (prompt) => {
+		// The first reading answers at once; the re-read after the service change is still running at Start.
+		if (++calls > 1) await new Promise<void>((resolve) => (release = resolve))
+		return reading(prompt)
+	})
+	const a = await service.create(admission())
+	const id = a.credential.roomId
+	const send = async (command: RoomCommand) => {
+		const current = await service.read(id, credential(a))
+		return service.command(id, credential(a), { commandId: randomBytes(12).toString("hex"), sequence: current.own.nextSequence, command })
+	}
+	await send({ type: "add_idea", text: "a western" })
+	await service.interpretationsIdle()
+	assert.deepEqual((await service.read(id, credential(a))).shared.ideas[0]?.attributes, reading("").attributes)
+	await send({ type: "configure", expectedContextVersion: (await service.read(id, credential(a))).shared.contextVersion, country: "DE" })
+	await send({ type: "set_services", serviceIds: [1] })
+	assert.equal(calls, 2, "the service change re-reads the short reading")
+	const ready = (await service.read(id, credential(a))).shared
+	assert.deepEqual(ready.ideas[0]?.attributes, [PENDING_IDEA_ATTRIBUTE])
+	await send({ type: "start", expectedContextVersion: ready.contextVersion, expectedRosterVersion: ready.rosterVersion, hostReady: true })
+	const started = (await service.read(id, credential(a))).shared
+	assert.equal(started.phase, "choosing")
+	assert.equal(rankedKey(started.candidates[0]), show, "the idea's last reading leads the deck while it is re-read")
+	release()
+	await service.interpretationsIdle()
+	assert.deepEqual((await service.read(id, credential(a))).shared.ideas[0]?.attributes, reading("").attributes)
 })
 
 test("Dropping out preserves cards and answers; repeated return restores the same identity and host if empty", async () => {
