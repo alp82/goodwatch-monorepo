@@ -59,7 +59,7 @@ test('set up: the next-day question answers once and leaves; Join takes a code o
   await expect(page.getByText('How was Inception?', { exact: true })).toBeVisible();
   await expect(page.getByText('LAST NIGHT’S PICK', { exact: true })).toBeVisible();
   await expect(page.getByTestId('setup-chip')).toContainText('10 rated');
-  await button(page, 'Didn’t watch it').click();
+  await button(page, 'Didn’t watch').click();
   await expect(page.getByText('How was Inception?', { exact: true })).toHaveCount(0);
   await expect.poll(() => f.profile.answers).toEqual([expect.objectContaining({ key: followup.key, answer: 'did_not_watch', source: 'followup', decidedAt: followup.decidedAt })]);
   await expect(page.getByTestId('setup-chip')).toContainText('10 rated');

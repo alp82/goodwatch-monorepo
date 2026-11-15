@@ -1,6 +1,6 @@
 /**
  * The next-day question (rethink-picks.md item 13): one card above the start page for the newest decided pick the
- * profile hasn't rated, "How was <title>?" with Loved it, Not for me and Didn't watch it. Same Taste card look and
+ * profile hasn't rated, "How was <title>?" with Loved it, Not for me and Didn't watch. Same Taste card look and
  * exits; answers stay in YepWatch. The page decides whether it has this slot when it appears, so nothing shifts.
  */
 import { useState } from 'react';

@@ -5,7 +5,7 @@
 export type CardAnswer = 'loved' | 'not_for_me' | 'unseen' | 'did_not_watch';
 export type Exit = 'right' | 'left' | 'down';
 export const EXIT: Record<CardAnswer, Exit> = { loved: 'right', not_for_me: 'left', unseen: 'down', did_not_watch: 'down' };
-export const ANSWER_LABEL: Record<CardAnswer, string> = { loved: 'Loved it', not_for_me: 'Not for me', unseen: 'Haven’t seen', did_not_watch: 'Didn’t watch it' };
+export const ANSWER_LABEL: Record<CardAnswer, string> = { loved: 'Loved it', not_for_me: 'Not for me', unseen: 'Haven’t seen', did_not_watch: 'Didn’t watch' };
 /** The Taste card's buttons, left to right (owner round 3: Haven't seen first, Loved it last). */
 export const TASTE_ANSWERS = ['unseen', 'not_for_me', 'loved'] as const;
 /** The next-day question's buttons, left to right. */
