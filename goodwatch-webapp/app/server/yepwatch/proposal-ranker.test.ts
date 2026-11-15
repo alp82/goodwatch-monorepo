@@ -65,7 +65,9 @@ test('reason precedence and privacy, including the three-person Want to See gate
     if (code !== 'fits_idea') assert.equal(reason.text.includes('Mia'), false)
   }
 })
-test('3000 titles and 12 tastes: measure warm rank budget', () => {
+// Speed is checked on demand only (owner 2026-11-14): YEPWATCH_SPEED=1 runs the two budget tests.
+const speed = { skip: process.env.YEPWATCH_SPEED !== '1' }
+test('3000 titles and 12 tastes: measure warm rank budget', speed, () => {
   const titles = Array.from({ length: 3000 }, (_, i) => ({ key: (i % 2 ? 1e12 : 2e12) + i + 1, fp: [5 + i % 6, 5 + (i * 3) % 6] }))
   const snapshot = rankingSnapshot(titles), quality = qualityPriors(snapshot, titles.map(t => t.key)), i = { ...input(), snapshot, quality, pool: titles.map(t => t.key), people: Array.from({ length: 12 }, () => person([.707, .707])), peopleCount: 12 }
   for (let n = 0; n < 20; n++) rankDeck(i, 200)
@@ -88,7 +90,7 @@ test('feedback promotes Yep neighbors and demotes group Nope neighbors only in t
   }
   assert.ok(baseline.some((r, at) => contenders.has(r.key) && r.key % 2 === 0 && ranked.findIndex(next => next.key === r.key) < at))
 })
-test('3000 titles, 12 tastes and 120+120 feedback entries: bounded warm refill rank budget', () => {
+test('3000 titles, 12 tastes and 120+120 feedback entries: bounded warm refill rank budget', speed, () => {
   const titles = Array.from({ length: 3000 }, (_, i) => ({ key: (i % 2 ? 1e12 : 2e12) + i + 1, fp: [5 + i % 6, 5 + (i * 3) % 6] }))
   const snapshot = rankingSnapshot(titles), pool = titles.map(t => t.key)
   const feedback = { yeps: pool.slice(0, 120).map(key => ({ vector: unitFingerprint(snapshot, key)!, weight: 1 })),
