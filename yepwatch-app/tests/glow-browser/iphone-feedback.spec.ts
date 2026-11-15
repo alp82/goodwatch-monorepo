@@ -78,18 +78,18 @@ test('Back closes matches, returns to Your rooms without leaving, and reopens th
   await page.getByRole('button', { name: 'Back', exact: true }).filter({ visible: true }).click();
   await expect(page.getByTestId('poster')).toHaveText(original, { useInnerText: true });
   await page.getByRole('button', { name: 'Back', exact: true }).filter({ visible: true }).click();
-  await expect(page.getByRole('button', { name: 'Anything', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Host’s couch', exact: true })).toBeVisible();
   await expect(page.getByTestId('yepwatch-boot')).toHaveCount(0);
   await page.reload();
-  await page.getByRole('button', { name: 'Anything', exact: true }).click();
+  await page.getByRole('button', { name: 'Host’s couch', exact: true }).click();
   await expect(page.getByTestId('poster')).toHaveText(original, { useInnerText: true });
   expect(f.writes).toEqual([]);
 });
 
 test('explicit Leave moves the room to History; Return rejoins with the existing identity', async ({ page }) => {
   const f = await fixture(page);
-  await openRoomPage(page, 'Anything');
-  await page.getByRole('button', { name: 'Leave room', exact: true }).click();
+  await openRoomPage(page, 'Host’s couch');
+  await page.getByRole('button', { name: 'Leave couch', exact: true }).click();
   await page.getByRole('button', { name: 'Leave', exact: true }).click();
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByText('YOUR ROOMS', { exact: true })).toHaveCount(0);
@@ -116,7 +116,7 @@ for (const [width, height] of [[320,568], [375,667], [390,844], [844,390], [1440
     await fixture(page);
     await page.getByRole('button', { name: 'Back', exact: true }).click();
     await expect(page).toHaveURL(/\/$/);
-    const back = page.getByRole('button', { name: 'Anything', exact: true });
+    const back = page.getByRole('button', { name: 'Host’s couch', exact: true });
     await expect(back).toBeVisible();
     // The room's card sits under the start tiles; it fits the window once scrolled to.
     await back.evaluate((el) => el.scrollIntoView({ block: 'center' }));
@@ -136,7 +136,7 @@ test('boot reveals YepWatch once, then stays absent during navigation', async ({
   await page.waitForTimeout(850);
   await page.screenshot({ path: '.expo/feedback-boot.png' });
   await expect(boot).toHaveCount(0, { timeout: 5000 });
-  await page.getByRole('button', { name: 'Join a room', exact: true }).click();
+  await page.getByRole('button', { name: 'Join a couch', exact: true }).click();
   await page.getByRole('button', { name: 'Back', exact: true }).click();
   await expect(boot).toHaveCount(0);
 });
@@ -170,10 +170,10 @@ for (const navigation of ['button', 'edge'] as const) test(`Tonight ${navigation
   else { await page.mouse.move(5,350);await page.mouse.down();await page.mouse.move(125,355,{steps:12});await page.mouse.up(); }
   await expect(page).toHaveURL(/\/$/);
   // A decided room leaves the open rooms for the Decided row, which opens History.
-  await expect(page.getByRole('button',{name:'Anything',exact:true})).toHaveCount(0);
+  await expect(page.getByRole('button',{name:'Host’s couch',exact:true})).toHaveCount(0);
   await page.getByRole('button',{name:'Decided, 1, open History',exact:true}).click();
   await expect(page.getByTestId('history-panel').getByText('Isolated test c1 (2020)',{exact:true})).toBeVisible();
-  await page.getByRole('button',{name:'Isolated test c1, Anything',exact:true}).click();
+  await page.getByRole('button',{name:'Isolated test c1, Host’s couch',exact:true}).click();
   await expect(page.getByTestId('tonight')).toBeVisible();
   expect(f.writes).toEqual([]);expect(f.room.shared.decision?.candidateId).toBe('c1');
 });
@@ -200,12 +200,12 @@ for (const input of ['mouse', 'touch'] as const) {
     await swipe(4,350,110,353);
     await expect(page.getByTestId('poster')).toBeVisible();
     expect(f.writes).toEqual([]);
-    await openRoomPage(page, 'Anything');
+    await openRoomPage(page, 'Host’s couch');
     await expect(page.getByTestId('room-sheet')).toBeVisible();
     const edge = page.getByTestId('back-gesture-edge').filter({ visible: true });
     await expect(edge).toBeVisible(); const box = await edge.boundingBox();
     await swipe(box!.x+5,box!.y+70,box!.x+115,box!.y+73);
-    await expect(page.getByRole('button', { name: 'Leave room', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Leave couch', exact: true })).toHaveCount(0);
     const poster = await page.getByTestId('poster').boundingBox();
     await swipe(poster!.x+poster!.width/2,poster!.y+poster!.height*.35,poster!.x+poster!.width*.95,poster!.y+poster!.height*.35);
     await expect.poll(() => f.writes.some(c => c.type === 'vote')).toBe(true);

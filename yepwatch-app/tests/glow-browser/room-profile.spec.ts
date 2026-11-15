@@ -28,7 +28,7 @@ for (const member of [undefined, 'signed-in'] as const) {
 test('Profile on the Mood page keeps the Mood page underneath', async ({ page }) => {
   await fakeRoom(page, newRoom());
   await page.goto('/');
-  await page.getByRole('button', { name: 'New room', exact: true }).click();
+  await page.getByRole('button', { name: 'New couch', exact: true }).click();
   await expect(page.getByLabel('Mood')).toBeVisible();
   const url = page.url();
   await page.getByRole('button', { name: 'Profile', exact: true }).click();

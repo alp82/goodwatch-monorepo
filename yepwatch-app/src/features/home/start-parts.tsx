@@ -4,6 +4,7 @@ import { View } from 'react-native';
 import { GText, Press, glow } from '../glow/theme';
 import { useLayout } from '../shell/layout';
 import { R, warm } from '../shell/tokens';
+import { noun } from '../shell/noun';
 
 export function Headline({ size }: { size: number }) {
   return (
@@ -27,7 +28,7 @@ export interface TileActions {
   quiet?: boolean;
 }
 
-/** The two big start tiles: New room (amber) and Join a room. */
+/** The two big start tiles: New couch (amber) and Join a couch (names from noun.ts). */
 export function Tiles({ newRoom, join, disabled, quiet, height }: TileActions & { height: number }) {
   const { phone, z } = useLayout();
   const box = phone ? 40 : z(52);
@@ -37,13 +38,13 @@ export function Tiles({ newRoom, join, disabled, quiet, height }: TileActions & 
   const icon = { width: box, height: box, borderRadius: 12, alignItems: 'center', justifyContent: 'center' } as const;
   return (
     <View style={{ flexDirection: 'row', gap: phone ? 10 : z(16) }}>
-      <Press label="New room" onPress={newRoom} disabled={disabled} quiet={quiet} style={{ ...tile, backgroundColor: glow.amber }}>
+      <Press label={noun.create} onPress={newRoom} disabled={disabled} quiet={quiet} style={{ ...tile, backgroundColor: glow.amber }}>
         <View style={{ ...icon, backgroundColor: '#20140014' }}><Glyph d={PLUS} size={box * 0.58} color={warm.ink} weight={2.4} /></View>
-        <GText bold size={word} color={warm.ink} style={{ letterSpacing: -0.6 }}>New room</GText>
+        <GText bold size={word} color={warm.ink} style={{ letterSpacing: -0.6 }}>{noun.create}</GText>
       </Press>
-      <Press label="Join a room" onPress={join} disabled={disabled} quiet={quiet} style={{ ...tile, backgroundColor: warm.raised, borderWidth: 1, borderColor: warm.lineStrong }}>
+      <Press label={noun.joinAny} onPress={join} disabled={disabled} quiet={quiet} style={{ ...tile, backgroundColor: warm.raised, borderWidth: 1, borderColor: warm.lineStrong }}>
         <View style={{ ...icon, backgroundColor: warm.amberSoft }}><Glyph d={DOOR} size={box * 0.54} color={glow.amber} /></View>
-        <GText bold size={word} style={{ letterSpacing: -0.6 }}>Join a room</GText>
+        <GText bold size={word} style={{ letterSpacing: -0.6 }}>{noun.joinAny}</GText>
       </Press>
     </View>
   );

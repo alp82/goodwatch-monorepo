@@ -65,9 +65,9 @@ test.describe('room card after a full page reload', () => {
     // Leave: the room asks for no live connection after it.
     await expect.poll(() => channel.live, { message: 'the room is live before Leave' }).toBe(true);
     if (await mia.testId('services-sheet').count()) await mia.tap(mia.button('Done'), { expect: { visible: ['waiting'] } });
-    await mia.tap(mia.button(/, switch room$/));
-    await mia.tap(mia.button(/, Room page$/), { expect: { visible: ['room-sheet'] } });
-    await mia.tap(mia.button('Leave room'));
+    await mia.tap(mia.button(/, switch couch$/));
+    await mia.tap(mia.button(/, Couch page$/), { expect: { visible: ['room-sheet'] } });
+    await mia.tap(mia.button('Leave couch'));
     // The Leave's answer comes late, as on a slow network: the gateway refuses the leaver's socket as soon as the
     // Leave commits, so the live channel's redial (~250 ms later) would come before it.
     await mia.page.route(COMMANDS, async (route) => {

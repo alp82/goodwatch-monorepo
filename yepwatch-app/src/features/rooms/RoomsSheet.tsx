@@ -10,6 +10,7 @@ import { useLayout } from '../shell/layout';
 import { R, warm } from '../shell/tokens';
 import type { HomeRoom } from './home-model';
 import { useHome } from './useHome';
+import { noun } from '../shell/noun';
 
 /** The room the header belongs to. */
 export interface CurrentRoom {
@@ -40,23 +41,23 @@ export function YourRoomsSheet({ current, rooms, loading = false, actions, onClo
     <>
       <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
         <GText bold size={z(18)} lines={1}>{current.label}</GText>
-        <GText size={z(13)} color={glow.amber}>This room</GText>
+        <GText size={z(13)} color={glow.amber}>{noun.This}</GText>
       </View>
-      {current.openRoomPage ? <GText bold size={z(13)} color={glow.muted}>Room</GText> : null}
+      {current.openRoomPage ? <GText bold size={z(13)} color={glow.muted}>{noun.One}</GText> : null}
       <Icon name={current.openRoomPage ? 'right' : 'check'} size={18} color={current.openRoomPage ? glow.muted : glow.amber} />
     </>
   ) : null;
   const hereStyle = { flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center', gap: 12, padding: 14, borderRadius: R.card, backgroundColor: warm.amberSoft, borderWidth: 1, borderColor: warm.amberLine } as const;
   return (
-    <Sheet testID="rooms-sheet" title="Your rooms" onClose={onClose}
+    <Sheet testID="rooms-sheet" title={noun.yours} onClose={onClose}
       actions={<>
-        <Action label="Join a room" onPress={then(actions.join)} style={{ flex: 1 }} />
-        <Action gold label="New room" onPress={then(actions.newRoom)} style={{ flex: 1 }} />
+        <Action label={noun.joinAny} onPress={then(actions.join)} style={{ flex: 1 }} />
+        <Action gold label={noun.create} onPress={then(actions.newRoom)} style={{ flex: 1 }} />
       </>}>
       <View style={{ gap: 8 }}>
         {current ? (current.openRoomPage
-          ? <Press label={`${current.label}, Room page`} onPress={then(current.openRoomPage)} style={hereStyle}>{here}</Press>
-          : <View accessible accessibilityLabel={`${current.label}, this room`} style={hereStyle}>{here}</View>) : null}
+          ? <Press label={`${current.label}, ${noun.One} page`} onPress={then(current.openRoomPage)} style={hereStyle}>{here}</Press>
+          : <View accessible accessibilityLabel={`${current.label}, ${noun.this}`} style={hereStyle}>{here}</View>) : null}
         {others.map((r) => (
           <Press key={r.roomId} label={`${r.label}, ${r.status}`} onPress={then(() => actions.open(r.roomId))}
             style={{ flexDirection: 'row', justifyContent: 'flex-start', gap: 12, padding: 14, borderRadius: R.card, backgroundColor: warm.faint, borderWidth: 1, borderColor: warm.line }}>
@@ -71,7 +72,7 @@ export function YourRoomsSheet({ current, rooms, loading = false, actions, onClo
             <Icon name="right" size={16} color={glow.muted} />
           </Press>
         ))}
-        {!current && !others.length ? <GText color={glow.muted}>{loading ? 'Opening your rooms…' : 'No open rooms'}</GText> : null}
+        {!current && !others.length ? <GText color={glow.muted}>{loading ? `Opening your ${noun.many}…` : `No open ${noun.many}`}</GText> : null}
       </View>
     </Sheet>
   );

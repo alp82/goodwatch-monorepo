@@ -30,14 +30,17 @@ export class WebPeer {
   async createRoom(mood = 'something funny') {
     const p = this.page;
     await p.goto(this.origin);
-    await this.button('New room').click();
+    await this.button('New couch').click();
     await p.getByLabel('Mood').fill(mood); await p.getByLabel('Mood').press('Enter');
     await p.getByTestId('room-setup').waitFor();
     await p.getByLabel('Your name').fill(this.name); await p.getByLabel('Your name').press('Enter');
     await this.button(/^Streaming services/).click();
     await p.getByRole('checkbox', { name: 'Netflix' }).click();
     await this.button('Done').click();
-    const text = await p.getByTestId('share-row').innerText();
+    // The invitation link: Invite opens the QR code, whose name carries the link.
+    await this.button('Invite friends, show QR code and link').click();
+    const text = await p.getByRole('img', { name: /^QR code for / }).getAttribute('aria-label');
+    await p.keyboard.press('Escape');
     return text.match(/\/r\/([A-Z0-9]+)/)[1];
   }
   async join(url) {
@@ -54,7 +57,7 @@ export class WebPeer {
     await this.button('Done').click();
     await p.getByTestId('waiting').waitFor();
   }
-  async start() { await this.button('Start').click(); await this.page.getByTestId('voting').waitFor({ timeout: 15000 }); }
+  async start() { await this.button(/^Start( with \d+)?$/).click(); await this.page.getByTestId('voting').waitFor({ timeout: 15000 }); }
   async waitVoting() { await this.page.getByTestId('voting').waitFor({ timeout: 15000 }); }
   async yep() { await this.button('Yep').click(); }
   async openMatches() { await this.button(/^\d+ match(es)?$/).click(); await this.page.getByTestId('matches').waitFor(); }
@@ -120,7 +123,7 @@ export async function mixedHostAndroid({ phone: A, stack, runDir, timing, journe
   try {
     await web.join(`${stack.app}/r/${code}`);
     await A.waitFor('2 people, people', { timeout: 8000 });
-    await A.tap('Start');
+    await A.tap(/^Start( with \d+)?$/);
     await A.waitFor('poster', { timeout: 10000 }); await web.waitVoting();
     await web.yep(); await sleep(500);
     const yep = await A.find('Yep');
@@ -170,7 +173,7 @@ export async function mixedGateRoom({ phone: A, stack, runDir, B, timing, audit,
   let web = null;
   try {
     await toStart(A);
-    const tile = await A.find('New room', { timeout: 15000 });
+    const tile = await A.find('New couch', { timeout: 15000 });
     const traced = tracing('new-room') ? await startTrace(A, 'new-room', path.join(runDir, 'video')) : null;
     let nr;
     try { nr = await measure({ actor: A, phones: [A], file: vid('new-room'), action: tapAction(A, tile), targets: { A: roiOf(A, 'Mood') } }); }
@@ -178,7 +181,7 @@ export async function mixedGateRoom({ phone: A, stack, runDir, B, timing, audit,
     timing('New room -> Mood page', B.newRoomMs, nr.A);
     await audit(A, 'mood page');
     await A.tap('cheer me up');
-    const create = await A.find('Create room');
+    const create = await A.find('Create couch');
     const cr = await measure({ actor: A, phones: [A], file: vid('create-room'), action: tapAction(A, create), targets: { A: roiOf(A, 'share-row', 10000) } });
     timing('Create room -> room page', B.createRoomMs, cr.A);
     await notStuck(A, 'room page after create');
@@ -198,7 +201,7 @@ export async function mixedGateRoom({ phone: A, stack, runDir, B, timing, audit,
 
     // Start on the phone: the phone's first card from its video; the browser's voting page from inside the
     // page (first animation frame it is shown), both against the touch frame on the host clock.
-    const start = await A.find('Start');
+    const start = await A.find(/^Start( with \d+)?$/);
     const browserVoting = await web.watchVisible(['voting', 'poster'], 10000);
     const st = await measure({ actor: A, phones: [A], file: vid('start'), targets: { A: roiOf(A, 'poster', 10000) }, action: tapAction(A, start) });
     timing('Start -> first card (Android host)', B.startToFirstCardMs, st.A);
@@ -258,11 +261,11 @@ export async function mixedJourneyRoom({ phone: A, stack, audit, notStuck, journ
   };
   try {
     await toStart(A);
-    const tile = await A.find('New room', { timeout: 20000 });
+    const tile = await A.find('New couch', { timeout: 20000 });
     await step(() => A.tapXY(tile.cx, tile.cy), 'Mood');
     await audit(A, 'mood page');
     await A.tap('cheer me up', { timeout: 10000 });
-    const create = await A.find('Create room', { timeout: 10000 });
+    const create = await A.find('Create couch', { timeout: 10000 });
     await step(() => A.tapXY(create.cx, create.cy), 'share-row', 20000);
     await notStuck(A, 'room page after create');
     await audit(A, 'room page (host, before start)');
@@ -277,7 +280,7 @@ export async function mixedJourneyRoom({ phone: A, stack, audit, notStuck, journ
     await joining;
     await A.waitFor('2 people, people', { timeout: 15000 });
 
-    const start = await A.find('Start', { timeout: 10000 });
+    const start = await A.find(/^Start( with \d+)?$/, { timeout: 10000 });
     await step(() => A.tapXY(start.cx, start.cy), 'poster', 20000);
     await web.waitVoting();
     await audit(A, 'voting');

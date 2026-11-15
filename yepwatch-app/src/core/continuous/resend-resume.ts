@@ -1,6 +1,7 @@
 import { unanswered } from './backoff';
 import { browserOffline } from './network';
 import { definitiveRefusal } from './resend';
+import { noun } from '../../features/shell/noun';
 
 /** How one send of a saved admission (New room's create, a join) ended. */
 export type ResendOutcome = 'answered' | 'cancelled' | 'offline' | 'failed';
@@ -30,7 +31,7 @@ export function resendOutcome(error: unknown): ResendOutcome {
  * cleanup the background interrupted isn't sent again; an unanswered failure stays offline when the browser
  * is back before the page's cleanup settled (ResendResume.settled then starts it).
  */
-export function sendFailure(error: unknown, aborted: boolean, cancelledWords = 'Room setup was interrupted.'): Error {
+export function sendFailure(error: unknown, aborted: boolean, cancelledWords = `${noun.One} setup was interrupted.`): Error {
   let failure: Error;
   if (aborted && !definitiveRefusal(error)) {
     failure = new Error(cancelledWords);

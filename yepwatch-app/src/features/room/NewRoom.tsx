@@ -17,6 +17,7 @@ import { useRetryCountdown } from '../../core/continuous/useRetryCountdown';
 import { MoodComposer } from './MoodComposer';
 import { useBackAction } from '../shell/sheet-back';
 import { newRoomInFront, openCreatedRoom, preloadStartPages } from './nav';
+import { noun } from '../shell/noun';
 
 /** The draft owns the screen until the complete create-and-save operation succeeds. */
 export function NewRoom() {
@@ -74,6 +75,6 @@ function NewRoomDraft({ account }: { account: ReturnType<typeof useAccount> }) {
   return <MoodComposer first text={text ?? draft.data?.text ?? ''} onTextChange={setText} pick={(value) => resume.pick(value)} back={back}
     saving={saving} note={reconnecting ? RECONNECTING_WORDS : undefined} disabled={saving || retrySeconds > 0 || !account.ready || draft.isPending}
     error={error} details={error && failure instanceof RoomFailure && failure.diagnostic ? <ConnectionDetails diagnostic={failure.diagnostic} /> : undefined}
-    action={mutation.isError ? 'Try again' : 'Create room'} />;
+    action={mutation.isError ? 'Try again' : noun.make} />;
 }
 

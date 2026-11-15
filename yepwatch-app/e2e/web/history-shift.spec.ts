@@ -65,9 +65,9 @@ test.describe('start page History arrives late', () => {
     await expect(card).toBeVisible({ timeout: 15000 });
     await mia.tap(card, { expect: { any: ['waiting', 'room-status', 'room-setup'] } });
     await lateHome(mia);
-    await mia.tap(mia.button(/, switch room$/));
-    await mia.tap(mia.button(/, Room page$/), { expect: { visible: ['room-sheet'] } });
-    await mia.tap(mia.button('Leave room'));
+    await mia.tap(mia.button(/, switch couch$/));
+    await mia.tap(mia.button(/, Couch page$/), { expect: { visible: ['room-sheet'] } });
+    await mia.tap(mia.button('Leave couch'));
     await watchHome(mia, 'late history heist');
     await mia.tap(mia.button('Leave'), { expect: { visible: ['home-rooms'] }, timeout: 15000 });
     // History is there with the page, not after the late read; the room's card never shows again.
@@ -93,9 +93,9 @@ test.describe('start page History arrives late', () => {
     await lee.open(invite, { settle: false });
     await lee.see({ visible: ['join-screen', 'invite-head'] });
     await lee.tap(lee.button('Join as Lee'), { expect: { any: ['waiting', 'services-sheet'] } });
-    await lee.tap(lee.button(/, switch room$/));
-    await lee.tap(lee.button(/, Room page$/), { expect: { visible: ['room-sheet'] } });
-    await lee.tap(lee.button('Leave room'));
+    await lee.tap(lee.button(/, switch couch$/));
+    await lee.tap(lee.button(/, Couch page$/), { expect: { visible: ['room-sheet'] } });
+    await lee.tap(lee.button('Leave couch'));
     await lee.tap(lee.button('Leave'), { expect: { visible: ['home-rooms'] }, timeout: 15000 });
     await expect(lee.button('History')).toBeVisible({ timeout: 20000 });
     // A cold start page: nothing cached, the account's rooms answer late.

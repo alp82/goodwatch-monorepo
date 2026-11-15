@@ -96,7 +96,7 @@ export function gfxFrames(phone) {
 
 // ---------- stuck / blocking words ----------
 export const BLOCKING = [/Trying again/i, /Try again in \d/i, /Not connected/i, /Reconnecting/i, /Couldn[’']t/i, /Refresh to keep choosing/i,
-  /Something went wrong/i, /Opening the room/i, /Your choice is awaiting confirmation/i, /Retry in \d/i];
+  /Something went wrong/i, /Opening the couch/i, /Your choice is awaiting confirmation/i, /Retry in \d/i];
 export function blockingWords(nodes) {
   return [...new Set(nodes.flatMap(n => [n.desc, n.text]).filter(t => t && BLOCKING.some(r => r.test(t))))];
 }

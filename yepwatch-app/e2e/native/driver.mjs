@@ -18,7 +18,7 @@ export class AndroidPeer {
   async createRoom(opts) { await this.reset(); return createRoom(this.phone, opts); }
   async join(url, name = 'Droid') { this.phone.home(); this.phone.openLink(url); await joinFromJoinScreen(this.phone, name); }
   inviteCode() { return inviteCode(this.phone); }
-  async start() { await this.phone.tap('Start'); await this.phone.waitFor('poster', { timeout: 10000 }); }
+  async start() { await this.phone.tap(/^Start( with \d+)?$/); await this.phone.waitFor('poster', { timeout: 10000 }); }
   async waitVoting() { await this.phone.waitFor('poster', { timeout: 15000 }); }
   async yep() { await this.phone.tap('Yep'); }
   async nope() { await this.phone.tap('Nope'); }

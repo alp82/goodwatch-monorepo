@@ -1,11 +1,12 @@
 import type { RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
 import type { DecisionRecord, RegisteredRoom } from '../../core/continuous/room-registry-state';
 import { roomView, statusLine } from '../room/model';
+import { noun } from '../shell/noun';
 
 /** A room on the personal home. Everything comes from the room's own authoritative snapshot. */
 export interface HomeRoom {
   roomId: string;
-  /** The room's ideas ("cheer me up +1"), or "Anything". */
+  /** The room's ideas ("cheer me up +1"), or its couch name ("Alper’s couch"). */
   label: string;
   /** Open right now (not yet decided). */
   live: boolean;
@@ -81,7 +82,7 @@ export function homeRoom(entry: RegisteredRoom, snapshot: RoomSnapshot): HomeRoo
 /** A room you left: only what this device remembered, since the server no longer shows it to you. */
 export function leftRoom(entry: RegisteredRoom): HomeRoom {
   return {
-    roomId: entry.roomId, label: entry.left?.label || 'A room you left', live: false, status: 'Left', hot: false, poster: null, posters: [],
+    roomId: entry.roomId, label: entry.left?.label || `A ${noun.one} you left`, live: false, status: 'Left', hot: false, poster: null, posters: [],
     people: [{ id: 'self', nickname: entry.nickname, dropped: true, self: true }], hostNickname: null, own: false, openedAt: entry.openedAt,
   };
 }
@@ -89,7 +90,7 @@ export function leftRoom(entry: RegisteredRoom): HomeRoom {
 /** A room whose read failed: only what this device remembered, enough to find it and put it back. */
 export function unreadRoom(entry: RegisteredRoom): HomeRoom {
   return {
-    roomId: entry.roomId, label: 'A room', live: false, status: 'Didn’t load', hot: false, poster: null, posters: [],
+    roomId: entry.roomId, label: noun.One, live: false, status: 'Didn’t load', hot: false, poster: null, posters: [],
     people: [{ id: 'self', nickname: entry.nickname, dropped: false, self: true }], hostNickname: null, own: false, openedAt: entry.openedAt,
   };
 }
