@@ -21,6 +21,7 @@ import { GText, Press, glow, grow, spaceToggles } from '../glow/theme';
 import { useOptionalRoom } from './RoomProvider';
 import type { Kind } from './model';
 import { rankServices, type ServiceChoice } from './services';
+import { noun } from '../shell/noun';
 
 export const T = { hero: 40, title: 28, body: 16, small: 13 } as const;
 export const card = { borderRadius: 10, backgroundColor: '#ffffff08', borderWidth: 1, borderColor: '#ffffff12' } as const;
@@ -43,8 +44,10 @@ export function Label({ children, color = glow.muted }: { children: string; colo
  * action (`footer`) is pinned on phones and sits in the content on bigger windows. The room's open
  * sheet (Room, Your services …) shows over the screen that is in front; leaving that screen closes it.
  */
-export function Screen({ back, right, children, footer, footerPlacement, overlay, sheet, backdrop, testID, scroll = true, covered = false, pill, rooms, me, onProfile, width = SCREEN_WIDTH, gap, noteTop, frameRef }: {
+export function Screen({ back, right, children, footer, footerPlacement, overlay, sheet, backdrop, testID, scroll = true, covered = false, pill, rooms, me, onProfile, width = SCREEN_WIDTH, gap, noteTop, frameRef, strip }: {
   back?: () => void;
+  /** A row under the header that stays with it (the couch setup's Who's here and Invite). */
+  strip?: ReactNode;
   /** A row above the content (voting's Undo and room bar). */
   right?: ReactNode;
   children: ReactNode;
@@ -93,7 +96,7 @@ export function Screen({ back, right, children, footer, footerPlacement, overlay
   const roomSheet = useMemo(() => (openSheet && renderSheet ? renderSheet(openSheet) : null), [openSheet, renderSheet]);
   const scrollGap = gap ?? (scroll ? 22 : 12);
   return (
-    <AppFrame testID={testID} scroll={scroll} covered={covered} overlay={overlay} sheet={sheet ?? roomSheet} backdrop={backdrop} width={width} gap={scrollGap} noteTop={noteTop} frameRef={frameRef}
+    <AppFrame testID={testID} strip={strip} scroll={scroll} covered={covered} overlay={overlay} sheet={sheet ?? roomSheet} backdrop={backdrop} width={width} gap={scrollGap} noteTop={noteTop} frameRef={frameRef}
       header={{ back, pill: pill === undefined ? derived : pill, me: me ?? (view ? { name: view.me.nickname || null, member: view.member } : undefined), onProfile }}
       rooms={rooms ?? (room ? { current, actions: { open: room.openRoom } } : undefined)}
       footer={footer} footerPlacement={footerPlacement}>
@@ -130,7 +133,7 @@ export function Actions({ children, style }: { children: ReactNode; style?: Styl
 export function RoomButton({ onPress }: { onPress: () => void }) {
   const { z } = useLayout();
   return (
-    <Press label="Room" onPress={onPress} style={{ width: z(54), height: z(54), borderRadius: 12, backgroundColor: warm.faint, borderWidth: 1, borderColor: warm.lineStrong }}>
+    <Press label={noun.One} onPress={onPress} style={{ width: z(54), height: z(54), borderRadius: 12, backgroundColor: warm.faint, borderWidth: 1, borderColor: warm.lineStrong }}>
       <Glyph name="dots" size={z(22)} color={glow.soft} />
     </Press>
   );
@@ -151,6 +154,9 @@ const GLYPHS = {
   down: 'm7 10 5 5 5-5',
   dots: 'M5 12h.01M12 12h.01M19 12h.01',
   share: 'M12 15V3M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6',
+  qr: 'M4 3h5a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM15 3h5a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM4 14h5a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1zM14 14h3v3h-3zM18 18h3v3h-3zM14 20h1M20 14h1',
+  copy: 'M11 9h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2zM5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1',
+  up: 'M12 19V5M6 11l6-6 6 6',
 } as const;
 /** Small stroke glyphs the icon sets don't have. */
 export function Glyph({ name, size = 18, color = glow.soft }: { name: keyof typeof GLYPHS; size?: number; color?: string }) {

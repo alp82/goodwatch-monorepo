@@ -37,7 +37,7 @@ async function openInvite(page: Page) {
 test('the join screen is a room screen: Back, the room as the headline, name and Join; no start page underneath', async ({ page }) => {
   const f = await openInvite(page);
   const screen = page.getByTestId('join-screen');
-  await expect(screen.getByTestId('invite-head').getByText('ALP’S ROOM')).toBeVisible();
+  await expect(screen.getByTestId('invite-head').getByText('ALP’S COUCH')).toBeVisible();
   // One short idea is the hero headline (52 px on phones).
   const idea = screen.getByTestId('invite-ideas').getByText('cheer me up');
   expect(await idea.evaluate((el) => parseFloat(getComputedStyle(el).fontSize))).toBe(52);
@@ -46,7 +46,7 @@ test('the join screen is a room screen: Back, the room as the headline, name and
   // The old panel shell and the start page are gone.
   await expect(page.getByTestId('subheader')).toHaveCount(0);
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'New room', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'New couch', exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: /^Back to / })).toHaveCount(0);
   await expect(button(page, 'Join')).toBeDisabled();
   await shot(page, 'join-phone');
@@ -68,7 +68,7 @@ test('the join screen on a desktop window: one centered column, no dark box', as
   // Back returns to the start page.
   await button(page, 'Back').click();
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByRole('button', { name: 'New room', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'New couch', exact: true })).toBeVisible();
 });
 
 /** The first card with GoodWatch's title analysis: essence tags, effect lines in their print colors, Not for, a trailer and a backdrop. */

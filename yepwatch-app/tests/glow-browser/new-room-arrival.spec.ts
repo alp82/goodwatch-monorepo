@@ -13,8 +13,8 @@ test('New room from inside a room accepts a mood before admission finishes', asy
   await fakeRoom(page, choosingRoom(), { nextRooms: [second] });
   await slowCreate(page, 1500);
   await page.goto(`/room/${choosingRoom().shared.roomId}`);
-  await page.getByRole('button', { name: /switch room/ }).first().click();
-  await page.getByRole('button', { name: 'New room', exact: true }).click();
+  await page.getByRole('button', { name: /switch couch/ }).first().click();
+  await page.getByRole('button', { name: 'New couch', exact: true }).click();
   await page.getByLabel('Mood', { exact: true }).fill('space adventure');
   await expect(page).toHaveURL(/\/new$/);
   await expect(page.getByLabel('Mood', { exact: true })).toHaveValue('space adventure');
@@ -24,7 +24,7 @@ test('New room from the start page offers presets before admission finishes', as
   await fakeRoom(page, newRoom());
   await slowCreate(page, 1500);
   await page.goto('/');
-  await page.getByRole('button', { name: 'New room', exact: true }).click();
+  await page.getByRole('button', { name: 'New couch', exact: true }).click();
   await page.getByRole('button', { name: 'cheer me up', exact: true }).click();
   await expect(page.getByTestId('retry-panel')).toHaveCount(0);
   await expect(page).toHaveURL(/\/new$/);

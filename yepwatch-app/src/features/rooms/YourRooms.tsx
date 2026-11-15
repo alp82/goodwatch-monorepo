@@ -16,6 +16,7 @@ import { FaceStack } from '../shell/parts';
 import { useLayout } from '../shell/layout';
 import { R, warm } from '../shell/tokens';
 import { posterAt, timeAgo, type HomeRoom } from './home-model';
+import { noun } from '../shell/noun';
 
 /** Three posters from the room's deck, fanned; three empty slots while the room has none. */
 export function PosterFan({ posters, width, height }: { posters: readonly string[]; width: number; height: number }) {
@@ -55,7 +56,7 @@ function LiveCard({ room, width, now, open, archive, quiet }: { room: HomeRoom; 
           <GText size={z(14)} color={room.hot ? glow.amber : glow.soft} lines={1}>{room.status}</GText>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <FaceStack people={room.people} size={z(22)} max={4} />
-            <GText size={z(13)} color={glow.muted} lines={1} style={{ flex: 1 }}>{!room.own && room.hostNickname ? `${room.hostNickname}’s room` : timeAgo(room.openedAt, now)}</GText>
+            <GText size={z(13)} color={glow.muted} lines={1} style={{ flex: 1 }}>{!room.own && room.hostNickname ? noun.of(room.hostNickname) : timeAgo(room.openedAt, now)}</GText>
           </View>
         </View>
       </Pressable>
@@ -140,9 +141,9 @@ export function YourRooms({ title, rooms, decisions, unavailable, loading, open,
   const signInButton = signIn ? <StartSignIn height={phone ? 54 : z(54)} signIn={signIn} signingIn={signingIn} lapsed={lapsed} disabled={disabled} quiet={quiet} /> : null;
   const notes = (
     <>
-      {archivedRoom ? <Note action={{ label: 'Undo', onPress: undoArchive }}>Room archived</Note> : null}
+      {archivedRoom ? <Note action={{ label: 'Undo', onPress: undoArchive }}>{`${noun.One} archived`}</Note> : null}
       {unavailable.length > 0 && (
-        <TextLink color={glow.muted} onPress={retry} label={unavailable.length === 1 ? 'One room didn’t load. Retry' : `${unavailable.length} rooms didn’t load. Retry`} />
+        <TextLink color={glow.muted} onPress={retry} label={unavailable.length === 1 ? `One ${noun.one} didn’t load. Retry` : `${unavailable.length} ${noun.many} didn’t load. Retry`} />
       )}
     </>
   );
@@ -186,7 +187,7 @@ export function YourRooms({ title, rooms, decisions, unavailable, loading, open,
             {live.map((r) => <LiveCard key={r.roomId} room={r} width={cardWidth} now={now} open={() => open(r.roomId)} archive={() => archive(r.roomId)} quiet={quiet} />)}
           </View>
         </View>
-      ) : loading ? <GText size={13} color={glow.muted}>Opening your rooms…</GText> : null}
+      ) : loading ? <GText size={13} color={glow.muted}>{`Opening your ${noun.many}…`}</GText> : null}
       {notes}
       {decisions.length && history ? <DecidedRow decisions={decisions} onPress={history} />
         : history ? <HistoryButton onPress={history} /> : null}

@@ -3,7 +3,7 @@ appId: ${APP_ID || 'dev.yepwatch.e2e'}
 name: Start and vote
 tags: [gate, host]
 ---
-- tapOn: { text: "Start", waitToSettleTimeoutMs: 300 }
+- tapOn: { text: "Start( with [0-9]+| on my own)", waitToSettleTimeoutMs: 300 }
 - extendedWaitUntil: { visible: { id: "poster" }, timeout: 10000 }
 - tapOn: { text: "Nope", waitToSettleTimeoutMs: 300 }
 - tapOn: { text: "Undo", waitToSettleTimeoutMs: 300 }

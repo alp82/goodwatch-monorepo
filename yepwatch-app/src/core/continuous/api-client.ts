@@ -30,6 +30,7 @@ import { earlyInviteResponse } from './early-invite';
 import { parseRetryAfter } from './retry';
 import { requestSent, yepwatchAnswered } from './network';
 import type { RoomAccess } from '../credentials';
+import { noun } from '../../features/shell/noun';
 /** How long a room create or join waits for an answer before it counts as unanswered (and is kept for a resend). */
 export const ADMISSION_TIMEOUT_MS = 6000;
 export class RoomFailure extends Error {
@@ -113,15 +114,15 @@ export class ContinuousApi {
       // that never came: the room reads again under the current sign-in, a saved command goes again under
       // its same id. A live-channel ticket carries no account data and stays.
       if (outdated()) {
-        if (!access) throw new RoomFailure('unauthorized', 'Sign-in changed. Open the room again.', 401);
+        if (!access) throw new RoomFailure('unauthorized', `Sign-in changed. Open the ${noun.one} again.`, 401);
         if (path !== paths.realtimeTicket(access.roomId))
-          throw new RoomFailure('outcome_unknown', 'Sign-in changed while the room answered.', undefined, undefined, undefined, false, 1);
+          throw new RoomFailure('outcome_unknown', `Sign-in changed while the ${noun.one} answered.`, undefined, undefined, undefined, false, 1);
       }
       if (!response.ok) {
         const e = result as ApiError;
         throw new RoomFailure(
           e.error?.code ?? 'outcome_unknown',
-          e.error?.message ?? 'The room is temporarily unavailable.',
+          e.error?.message ?? `The ${noun.one} is temporarily unavailable.`,
           response.status,
           e.snapshot,
           e.error?.details,
@@ -135,7 +136,7 @@ export class ContinuousApi {
       throw new RoomFailure(
         'outcome_unknown',
         body === undefined
-          ? 'Could not refresh the room. Check your connection.'
+          ? `Could not refresh the ${noun.one}. Check your connection.`
           : 'Your action has not been confirmed. Retry the same action to reconcile it.',
         response?.status,
         undefined,

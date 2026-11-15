@@ -31,15 +31,15 @@ test('create: the start page goes straight to Mood, the room page never shows on
   await fakeRoom(page, newRoom());
   await latency(page, 150);
   await page.goto('/');
-  await button(page, 'New room').click();
+  await button(page, 'New couch').click();
   await expect(page.getByLabel('Mood')).toBeVisible();
   await page.waitForTimeout(500);
   const seen = await paints(page);
   // The start page's own film shows rooms too: only what paints after it counts.
-  expect(seen.filter((p) => !/New room/.test(p.text) && /Just you|YOUR ROOM|MOOD|Connecting|Not connected/.test(p.text) && !/or try:/.test(p.text))).toEqual([]);
+  expect(seen.filter((p) => !/New couch/.test(p.text) && /Who’s here|’s couch|MOOD|Connecting|Not connected/.test(p.text) && !/or try:/.test(p.text))).toEqual([]);
   // A local draft returns to its caller; no room has been allocated.
   await button(page, 'Back').click();
-  await expect(button(page, 'New room')).toBeVisible();
+  await expect(button(page, 'New couch')).toBeVisible();
 });
 
 test('join: from the invitation straight to Your services, open over the room from its first paint', async ({ page }) => {
@@ -78,7 +78,7 @@ test('reopening a room: no opening words and no connection line while it connect
   await page.goto('/room/test-room');
   await expect(page.getByTestId('voting')).toBeVisible();
   await page.waitForTimeout(1200);
-  expect((await paints(page)).filter((p) => /Opening the room|Connecting|Not connected/.test(p.text))).toEqual([]);
+  expect((await paints(page)).filter((p) => /Opening the couch|Connecting|Not connected/.test(p.text))).toEqual([]);
   // A connection that stays away is still mentioned, in one line, once the quiet period is over.
   await expect(page.getByText('Reconnecting…', { exact: true })).toBeVisible({ timeout: 6000 });
 });
@@ -90,44 +90,39 @@ test('sign-in: back from GoodWatch to the start page, no room screen ever paints
   await button(page, 'Continue with GoodWatch').click();
   await page.waitForURL((url) => url.pathname === '/');
   await expect(page.getByTestId('member-transition')).toHaveCount(0);
-  await expect(button(page, 'New room')).toBeVisible();
+  await expect(button(page, 'New couch')).toBeVisible();
   await page.waitForTimeout(300);
-  expect((await paints(page)).filter((p) => /Just you|YOUR ROOM|Opening the room|Describe a mood/.test(p.text))).toEqual([]);
+  expect((await paints(page)).filter((p) => /Who’s here|Opening the couch|What are you in the mood for/.test(p.text))).toEqual([]);
 });
 
-test('an edited mood stays in its editor until accepted, then the confirmed room stays usable', async ({ page }) => {
+test('a replaced idea stays in the field until accepted, then the confirmed room stays usable', async ({ page }) => {
   const f = await fakeRoom(page, setupRoom());
   await page.goto('/room/test-room');
+  const field = page.getByLabel('Describe what you want to watch');
   const release = f.hold('edit_idea');
-  await button(page, 'cheer me up, edit').click();
-  await page.getByLabel('Mood').fill('something funny');
-  await button(page, 'Save').click();
-  await expect(page.getByLabel('Mood')).toHaveValue('something funny');
-  await expect(button(page, 'Saving…')).toBeVisible();
+  await field.fill('something funny');
+  await button(page, 'Replace').click();
+  await expect(field).toHaveValue('something funny');
   expect(f.room.shared.ideas[0].text).toBe('cheer me up');
   release();
-  await expect(page.getByTestId('room-setup')).toBeVisible();
-  await expect(button(page, 'something funny, edit')).toBeVisible();
-  await button(page, 'Add an idea').click();
-  await button(page, 'space adventure').click();
-  await button(page, 'Add idea').click();
-  await expect(page.getByTestId('room-setup').getByTestId('idea-list').getByText('space adventure')).toBeVisible();
-  await page.getByRole('switch', { name: 'Use something funny' }).click();
-  await expect.poll(() => f.sent().filter((t) => t !== 'configure')).toEqual(['edit_idea', 'add_idea', 'set_idea']);
-  await expect.poll(() => f.room.shared.ideas.map((i) => [i.text, i.on])).toEqual([['something funny', false], ['space adventure', true]]);
+  await expect(field).toHaveValue('');
+  const row = page.getByRole('switch', { name: 'something funny. Your idea', exact: true });
+  await expect(row).toHaveAttribute('aria-checked', 'true');
+  await row.click();
+  await expect(row).toHaveAttribute('aria-checked', 'false');
+  await expect.poll(() => f.sent().filter((t) => t !== 'configure')).toEqual(['edit_idea', 'set_idea']);
+  await expect.poll(() => f.room.shared.ideas.map((i) => [i.text, i.on])).toEqual([['something funny', false]]);
 });
 
-test('a refused change stays in the editor and preserves the confirmed room', async ({ page }) => {
+test('a refused replacement stays in the field (with the room’s one line) and preserves the confirmed room', async ({ page }) => {
   const f = await fakeRoom(page, setupRoom(), { interpretations: 24 });
   await page.goto('/room/test-room');
-  await button(page, 'cheer me up, edit').click();
-  await page.getByLabel('Mood').fill('something funny');
-  await button(page, 'Save').click();
-  await expect(page.getByLabel('Mood')).toHaveValue('something funny');
-  await expect(page.getByText('No more new ideas in this room')).toBeVisible();
-  await expect(page.getByTestId('room-note')).toHaveCount(0);
-  await button(page, 'Back').click();
-  await expect(page.getByTestId('room-setup').getByTestId('idea-list').getByText('cheer me up')).toBeVisible();
+  const field = page.getByLabel('Describe what you want to watch');
+  await field.fill('something funny');
+  await button(page, 'Replace').click();
+  await expect(page.getByTestId('field-line').getByText('No more new ideas in this couch')).toBeVisible();
+  await expect(field).toHaveValue('something funny');
+  await expect(page.getByTestId('room-setup').getByTestId('idea-list').getByText('cheer me up', { exact: true })).toBeVisible();
   expect(f.room.shared.ideas[0].text).toBe('cheer me up');
 });
 
@@ -145,17 +140,18 @@ test('voting never waits: the next card shows at once and fast answers go out in
   await expect.poll(() => f.commands.filter((c) => c.command.type === 'vote').map((c) => (c.command as { value: string | null }).value)).toEqual(['watch', null, 'pass']);
 });
 
-test('settings show on the room page the moment their page closes', async ({ page }) => {
+test('Movies or shows shows the choice the moment it’s made, before the server answers', async ({ page }) => {
   const f = await fakeRoom(page, setupRoom());
   await page.goto('/room/test-room');
-  await button(page, 'Movies and shows, change').click();
-  await expect(page.getByTestId('kinds-sheet')).toBeVisible();
+  const shows = page.getByTestId('room-setup').getByRole('radio', { name: 'Shows', exact: true });
+  await expect(shows).toHaveAttribute('aria-checked', 'false');
   const release = f.hold('configure');
-  await page.getByRole('checkbox', { name: 'Shows' }).click();
-  await button(page, 'Done').click();
-  await expect(page.getByTestId('room-setup')).toBeVisible();
-  await expect(page.getByTestId('room-setup').getByRole('button', { name: 'Movies, change', exact: true })).toBeVisible();
+  await shows.click();
+  await expect(shows).toHaveAttribute('aria-checked', 'true');
+  expect(f.room.shared.constraints.kinds).not.toEqual(['show_start']);
   release();
+  await expect.poll(() => f.room.shared.constraints.kinds).toEqual(['show_start']);
+  await expect(shows).toHaveAttribute('aria-checked', 'true');
 });
 
 test('archive: a room moves to History at once, Undo and Restore bring it back, friends never know', async ({ page }) => {
@@ -164,21 +160,21 @@ test('archive: a room moves to History at once, Undo and Restore bring it back, 
   await expect(page.getByTestId('room-setup')).toBeVisible();
   await page.goto('/');
   await button(page, 'Archive cheer me up').click();
-  await expect(page.getByText('Room archived')).toBeVisible();
+  await expect(page.getByText('Couch archived')).toBeVisible();
   await expect(button(page, 'cheer me up')).toHaveCount(0);
   await button(page, 'Undo').click();
   await expect(button(page, 'cheer me up')).toBeVisible();
   await button(page, 'Archive cheer me up').click();
   await page.reload();
   await button(page, 'History').click();
-  await expect(page.getByText('Archived rooms')).toBeVisible();
+  await expect(page.getByText('Archived couches')).toBeVisible();
   await button(page, 'Restore').click();
   await page.getByRole('button', { name: 'Close', exact: true }).click();
   await expect(button(page, 'cheer me up')).toBeVisible();
   // From the Room page too.
   await button(page, 'cheer me up').click();
-  await button(page, 'Room').click();
-  await button(page, 'Archive room').click();
+  await button(page, 'Couch').click();
+  await button(page, 'Archive couch').click();
   // (The page that was underneath stays mounted, hidden.)
   await expect(page.getByText('YOUR ROOMS').filter({ visible: true })).toHaveCount(0);
   expect(f.sent()).not.toContain('leave');

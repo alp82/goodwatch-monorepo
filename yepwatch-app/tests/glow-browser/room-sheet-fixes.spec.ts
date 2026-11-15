@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { choosingRoom, fakeRoom } from './room-fake';
 
 const button = (page: Page, name: string | RegExp) => page.getByRole('button', { name, exact: typeof name === 'string' });
-const pill = (page: Page) => button(page, /switch room$/);
+const pill = (page: Page) => button(page, /switch couch$/);
 
 test.describe('a sheet over the voting card', () => {
   test('arrow keys never answer behind the Room sheet or Your rooms, and the time under a sheet is not exposure', async ({ page }) => {
@@ -12,7 +12,7 @@ test.describe('a sheet over the voting card', () => {
     await expect(page.getByTestId('voting')).toBeVisible();
     // The Room sheet (one of the room's own sheets) over the card.
     await pill(page).click();
-    await button(page, /, Room page$/).click();
+    await button(page, /, Couch page$/).click();
     await expect(page.getByTestId('room-sheet')).toBeVisible();
     await page.keyboard.press('ArrowRight');
     await page.keyboard.press('ArrowLeft');
@@ -46,7 +46,7 @@ test.describe('Back closes the sheet on top first; drafts are never lost', () =>
     await button(page, '1 match').click();
     await expect(page.getByTestId('matches')).toBeVisible();
     await pill(page).click();
-    await button(page, /, Room page$/).click();
+    await button(page, /, Couch page$/).click();
     await button(page, 'Movies and shows, change').click();
     await expect(page.getByTestId('kinds-sheet')).toBeVisible();
     await page.getByRole('checkbox', { name: 'Shows' }).click();
@@ -79,9 +79,9 @@ test.describe('Back closes the sheet on top first; drafts are never lost', () =>
     await page.goto('/room/test-room');
     // Start is with the server: settings changes wait for it. The room's details rest while it starts;
     // the Room sheet still opens.
-    await button(page, 'Start').click();
+    await button(page, 'Start with 2').click();
     await expect.poll(() => f.sent()).toContain('start');
-    await button(page, 'Room').click();
+    await button(page, 'Couch').click();
     await button(page, 'Movies and shows, change').click();
     await page.getByRole('checkbox', { name: 'Shows' }).click();
     // A tap on the header closes the sheets one at a time (the change waits behind Start), then Back leaves

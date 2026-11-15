@@ -5,9 +5,9 @@ import { eventually, type Person, type Room } from '../lib/harness';
 export async function createRoom(host: Person, mood = 'funny space heist') {
   await host.open('/');
   await host.see({ visible: ['landing'] }).catch(() => undefined);
-  await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] }, moment: 'newRoomMs' });
+  await host.tap(host.button('New couch'), { expect: { visible: ['mood-page'] }, moment: 'newRoomMs' });
   await host.fill(host.page.getByLabel('Mood'), mood);
-  await host.tap(host.button('Create room'), { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' });
+  await host.tap(host.button('Create couch'), { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' });
   await eventually(() => host.latest?.ideas.map((i) => i.text), (v) => JSON.stringify(v) === JSON.stringify([mood]), 'the room has exactly the one idea', host);
   return host.page.url();
 }
@@ -27,11 +27,23 @@ export async function pickServices(p: Person, services: string[], open?: () => P
   await p.tap(p.button('Done'), { expect: { hidden: ['services-sheet'] } });
 }
 
+/** The invitation link, as Invite shows it: the QR code's name carries the link. Invite closes again. */
 export async function inviteLink(host: Person) {
-  const text = await host.button('Share').innerText();
+  // A popover on wide windows, a sheet on phones.
+  await host.tap(host.button('Invite friends, show QR code and link'), { expect: { any: ['invite-surface', 'invite-sheet'] } });
+  const text = (await host.page.getByRole('img', { name: /^QR code for / }).filter({ visible: true }).getAttribute('aria-label')) ?? '';
+  await host.page.keyboard.press('Escape');
+  await host.see({ hidden: ['invite-surface', 'invite-sheet'] }, 5000, 'Invite closed');
   const path = text.match(/\/r\/[A-Za-z0-9._-]+/)?.[0];
-  if (!path) host.journeyFailure(`no invitation link in the share row ("${text}")`);
+  if (!path) host.journeyFailure(`no invitation link in Invite ("${text}")`);
   return new URL(path!, host.page.url()).href;
+}
+
+/** Adds (or replaces) your idea from the couch setup's describe field. */
+export async function addIdea(p: Person, text: string, observers?: NonNullable<Parameters<Person['tap']>[1]>['observers']) {
+  const field = p.page.getByLabel('Describe what you want to watch').filter({ visible: true });
+  await p.fill(field, text);
+  await p.tap(p.button(/^(Add|Replace)$/), { expect: { label: { text: `^${text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\.` } }, observers });
 }
 
 /** A friend opens the invitation in a fresh browser, names themselves, joins and picks a service. */
@@ -54,7 +66,7 @@ export async function readyHost(room: Room, name = 'Alp', mood?: string, opts?: 
 }
 
 export async function start(host: Person, friends: Person[]) {
-  await host.tap(host.button('Start'), {
+  await host.tap(host.button(/^Start( with \d+| on my own)$/), {
     expect: { visible: ['voting', 'poster'] },
     moment: 'startToFirstCardMs',
     observers: friends.map((f) => [f, { visible: ['voting', 'poster'] }, 'startToPeerVotingMs'] as [Person, { visible: string[] }, string]),

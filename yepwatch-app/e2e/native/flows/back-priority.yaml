@@ -9,7 +9,7 @@ tags: [full]
 - back
 - assertNotVisible: { id: "profile-panel" }
 - assertVisible: { id: "voting" }
-- tapOn: { text: ".*, switch room", waitToSettleTimeoutMs: 300 }
+- tapOn: { text: ".*, switch couch", waitToSettleTimeoutMs: 300 }
 - extendedWaitUntil: { visible: { id: "rooms-sheet" }, timeout: 4000 }
 - back
 - assertNotVisible: { id: "rooms-sheet" }
@@ -18,4 +18,4 @@ tags: [full]
 - back
 - assertVisible: { id: "voting" }
 - back
-- extendedWaitUntil: { visible: "New room", timeout: 5000 }
+- extendedWaitUntil: { visible: "New couch", timeout: 5000 }

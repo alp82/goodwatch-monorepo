@@ -34,6 +34,7 @@ import { continuousKey } from './keys';
 import { browserEvents, browserOffline, onYepwatchAnswer, unansweredFor } from './network';
 import { confirmRoom, readSavedRoom, saveRoom, snapshotGeneration } from './room-snapshot';
 import { SAVED_ROOM_GRACE_MS } from './room-snapshot-state';
+import { noun } from '../../features/shell/noun';
 export { continuousKey } from './keys';
 /** Your rooms keeps one query per room; room snapshots update it directly. */
 export const homeRoomKey = (roomId: string) => ['home-room', roomId] as const;
@@ -191,7 +192,7 @@ export function useContinuousRoom(roomId: string) {
     enabled: Boolean(access) && !terminal,
     queryFn: async () => {
       try {
-        if (expired()) throw new RoomFailure('expired', 'This room has expired.');
+        if (expired()) throw new RoomFailure('expired', `${noun.This} has expired.`);
         const asked = snapshotGeneration();
         const value = await api.snapshot(access!);
         apply(value);
@@ -199,7 +200,7 @@ export function useContinuousRoom(roomId: string) {
         if (terminalRef.current)
           throw new RoomFailure(
             terminalRef.current === 'expired' ? 'expired' : 'unauthorized',
-            'Room access ended.'
+            `${noun.One} access ended.`
           );
         setPrivateError(false);
         return mergeRoom(cached(), value);
@@ -283,7 +284,7 @@ export function useContinuousRoom(roomId: string) {
       roomId,
       // After a Leave that went through (or ended access) the channel is stopped: no ticket is asked for then.
       ticket: () => leaveSettled.current.then(() => {
-        if (left.current || terminalRef.current) throw new RoomFailure('forbidden', 'You have left this room.');
+        if (left.current || terminalRef.current) throw new RoomFailure('forbidden', `You have left ${noun.this}.`);
         return api.ticket(accessRef.current!);
       }),
       socket: (path) => new WebSocket(continuousRealtimeUrl(path)),

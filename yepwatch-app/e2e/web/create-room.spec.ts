@@ -1,15 +1,15 @@
 import { expect } from '@playwright/test';
 import { test, eventually, issuer, type Person } from '../lib/harness';
-import { cardTitle, createRoom, hostName, pageTap, pickServices, recordPage, start } from './flows';
+import { addIdea, cardTitle, createRoom, hostName, pageTap, pickServices, recordPage, start } from './flows';
 
 const roomCountry = (p: Person) => (p.latest?.screens as { country: string | null }[] | undefined)?.[0]?.country;
 
 /** Create room, untimed: the compatibility paths take extra round trips and aren't the createRoomMs moment. */
 async function createWithoutTiming(host: Person, mood: string) {
   await host.open('/');
-  await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] } });
+  await host.tap(host.button('New couch'), { expect: { visible: ['mood-page'] } });
   await host.fill(host.page.getByLabel('Mood'), mood);
-  await host.tap(host.button('Create room'), { expect: { visible: ['room-setup'] } });
+  await host.tap(host.button('Create couch'), { expect: { visible: ['room-setup'] } });
   await eventually(() => host.latest?.ideas.map((i) => i.text), (v) => JSON.stringify(v) === JSON.stringify([mood]), 'the room has exactly the one idea', host);
 }
 
@@ -19,11 +19,11 @@ test.describe('create and set up a room', () => {
     await host.open('/');
     await host.see({ visible: ['landing'] });
     await host.audit('start page (first visit)');
-    await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] }, moment: 'newRoomMs' });
+    await host.tap(host.button('New couch'), { expect: { visible: ['mood-page'] }, moment: 'newRoomMs' });
     await host.audit('Mood page');
     await host.fill(host.page.getByLabel('Mood'), 'funny space heist');
     const sent = host.commandLog.length;
-    await host.tap(host.button('Create room'), { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' });
+    await host.tap(host.button('Create couch'), { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' });
     // One round trip: the create request carries the country and the first idea (no configure/add_idea after it).
     if (room.fault === 'none') expect(host.commandLog.slice(sent).map((c) => c.path.replace(/^.*\/proposal/, '')).filter((path) => !path.endsWith('/realtime-ticket'))).toEqual(['/rooms']);
     expect(roomCountry(host)).toMatch(/^[A-Z]{2}$/);
@@ -75,10 +75,10 @@ test.describe('create and set up a room', () => {
       await route.fulfill({ response }).catch(() => undefined); // the app stopped waiting for the slow ones
     });
     await host.open('/');
-    await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] } });
+    await host.tap(host.button('New couch'), { expect: { visible: ['mood-page'] } });
     await host.fill(host.page.getByLabel('Mood'), 'slow server heist');
     const stop = await recordPage(host, 'mood-page', /Couldn|Try again|offline/i);
-    await host.tap(host.button('Create room'), { expect: {} });
+    await host.tap(host.button('Create couch'), { expect: {} });
     // Q24a: quiet at first, then one small floating line; never "Couldn't reach" or Try again.
     await expect(host.page.getByTestId('room-note').filter({ visible: true })).toHaveText('Reconnecting…', { timeout: 12000 });
     await host.see({ visible: ['room-setup'] }, 30000, 'the room opens by itself');
@@ -121,10 +121,10 @@ test.describe('create and set up a room', () => {
       await route.fulfill({ response });
     });
     await host.open('/');
-    await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] } });
+    await host.tap(host.button('New couch'), { expect: { visible: ['mood-page'] } });
     await host.fill(host.page.getByLabel('Mood'), 'short outage heist');
     const stop = await recordPage(host, 'mood-page', /Couldn|Try again|offline/i);
-    await host.tap(host.button('Create room'), { expect: {} });
+    await host.tap(host.button('Create couch'), { expect: {} });
     await host.see({ visible: ['room-setup'] }, 10000, 'the room opens by itself');
     room.noteOutage(first, answered);
     const samples = await stop().catch(() => null);
@@ -165,7 +165,7 @@ test.describe('create and set up a room', () => {
       return Date.now();
     }, state);
     await host.open('/');
-    await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] } });
+    await host.tap(host.button('New couch'), { expect: { visible: ['mood-page'] } });
     await host.fill(host.page.getByLabel('Mood'), 'rate limited heist');
     const stop = await recordPage(host, 'mood-page', /Couldn|Try again|offline/i);
     // Away as soon as the app holds the server's wait: it has read the 429 and saved the deadline with its request.
@@ -185,7 +185,7 @@ test.describe('create and set up a room', () => {
         w.__awayAt = Date.now();
       }, 5);
     });
-    await host.tap(host.button('Create room'), { expect: {} });
+    await host.tap(host.button('Create couch'), { expect: {} });
     const awayAt = () => host.page.evaluate(() => (window as unknown as { __awayAt?: number }).__awayAt ?? 0);
     await expect.poll(awayAt, { intervals: [10], timeout: 10000 }).toBeGreaterThan(0);
     const away = await awayAt();
@@ -218,27 +218,25 @@ test.describe('create and set up a room', () => {
     await issuer(`/_e2e/search-budget?prompt=${encodeURIComponent(second)}`);
     try {
       await host.open('/');
-      await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] } });
+      await host.tap(host.button('New couch'), { expect: { visible: ['mood-page'] } });
       await host.fill(host.page.getByLabel('Mood'), mood);
       const stop = await recordPage(host, 'mood-page', /Couldn|Try again|unavailable/i);
       const sent = host.commandLog.length;
-      await host.tap(host.button('Create room'), { expect: { visible: ['room-setup'] } });
+      await host.tap(host.button('Create couch'), { expect: { visible: ['room-setup'] } });
       const samples = await stop().catch(() => null);
       expect(samples, 'the Mood page was sampled').not.toBeNull();
       expect(samples!.filter((s) => s.error), 'no error or Try again on the Mood page').toEqual([]);
       // Still one round trip: the server keeps the idea, so the app sends no add_idea after the create.
       if (room.fault === 'none') expect(host.commandLog.slice(sent).map((c) => c.path.replace(/^.*\/proposal/, '')).filter((path) => !path.endsWith('/realtime-ticket'))).toEqual(['/rooms']);
       await eventually(() => host.latest?.ideas.map((i) => [i.text, i.on, i.attributes.length]), (v) => JSON.stringify(v) === JSON.stringify([[mood, true, 0]]), 'the idea is kept, uninterpreted', host);
-      await expect(host.page.getByTestId('idea-unmatched').filter({ visible: true })).toHaveText('Mood matching is unavailable for now.');
-      // The author's own edit button says so too: the note is inside it, so its accessible name carries it.
-      await expect(host.button(`${mood}, edit, mood matching is unavailable for now`)).toBeVisible();
+      await expect(host.page.getByTestId('idea-unmatched').filter({ visible: true })).toHaveText('Mood matching is unavailable for now');
+      // The idea's switch says so too: the note is inside it, so its accessible name carries it.
+      await expect(host.page.getByRole('switch', { name: `${mood}. Your idea. Mood matching is unavailable for now`, exact: true }).filter({ visible: true })).toBeVisible();
       await room.point('room');
       await host.audit('room page with an unmatched idea');
-      // Another idea while search is still refused is added too (the command path).
-      await host.tap(host.button('Add an idea'), { expect: { visible: ['mood-page'] } });
-      await host.fill(host.page.getByLabel('Mood', { exact: true }), second);
-      await host.tap(host.page.getByLabel('Mood', { exact: true }), { key: 'Enter', expect: { visible: ['room-setup'] } });
-      await eventually(() => host.latest?.ideas.map((i) => i.text), (v) => JSON.stringify(v) === JSON.stringify([mood, second]), 'the second idea is kept too', host);
+      // Replacing the idea while search is still refused is kept too (the command path).
+      await addIdea(host, second);
+      await eventually(() => host.latest?.ideas.map((i) => i.text), (v) => JSON.stringify(v) === JSON.stringify([second]), 'the replacement is kept too', host);
       await hostName(host, 'Alp');
       await pickServices(host, ['Netflix'], () => host.tap(host.button('Streaming services, add'), { expect: { visible: ['services-sheet'] } }));
       await start(host, []);
@@ -257,10 +255,10 @@ test.describe('create and set up a room', () => {
     await issuer(`/_e2e/search-delay?prompt=${encodeURIComponent(mood)}&ms=4000`);
     try {
       await host.open('/');
-      await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] } });
+      await host.tap(host.button('New couch'), { expect: { visible: ['mood-page'] } });
       await host.fill(host.page.getByLabel('Mood'), mood);
       const stop = await recordPage(host, 'room-setup', /Mood matching is unavailable/i);
-      await host.tap(host.button('Create room'), { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' });
+      await host.tap(host.button('Create couch'), { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' });
       const created = host.samples.filter((x) => x.moment === 'createRoomMs').at(-1);
       // Behaviour, not speed: a room page before the 4 s search answered means Create room didn't wait for it.
       if (room.fault === 'none') expect(created?.ms, 'Create room → room page before the 4 s search answers').toBeLessThan(4000);
@@ -280,53 +278,57 @@ test.describe('create and set up a room', () => {
     }
   });
 
-  test('create room from a preset chip ("Anything goes")', async ({ room }) => {
+  test('create a couch without an idea', async ({ room }) => {
     const host = await room.person('Alp');
     await host.open('/');
-    await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] } });
-    await host.tap(host.button('Anything goes'), { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' });
-    await eventually(() => host.latest?.ideas.length, (n) => n === 0, 'Anything goes makes a room without ideas', host);
+    await host.tap(host.button('New couch'), { expect: { visible: ['mood-page'] } });
+    await host.tap(host.button('Continue without an idea'), { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' });
+    await eventually(() => host.latest?.ideas.length, (n) => n === 0, 'Continue without an idea makes a couch without ideas', host);
   });
 
-  test('setup: name, services, movies and shows, ideas on/off, edit mood', async ({ room }) => {
+  test('setup: name, services, movies or shows, your idea on/off and replaced, a friend-free Start', async ({ room }) => {
     const host = await room.person('Alp');
     await createRoom(host, 'rainy day whodunit');
     await room.point('room');
     // Start opens the first missing step instead of starting.
-    await host.tap(host.button('Start'), { expect: { visible: ['services-sheet'] } });
+    await host.tap(host.button('Start on my own'), { expect: { visible: ['services-sheet'] } });
     await host.audit('Your services sheet');
     await pickServices(host, ['Netflix', 'Disney+']);
     await eventually(() => (host.latest?.screens as { serviceIds: number[]; country: string }[] | undefined)?.[0]?.serviceIds.length ?? 0, (n) => n > 0, 'services saved on the screen', host);
     // Name is the next missing step: Start focuses the field.
-    await host.tap(host.button('Start'), { expect: {} });
+    await host.tap(host.button('Start on my own'), { expect: {} });
     await hostName(host, 'Alp');
-    // Movies and shows
-    await host.tap(host.button(/^Movies and shows, change$|, change$/).filter({ hasText: /Movies|shows/i }).first(), { expect: { visible: ['kinds-sheet'] } });
-    await host.audit('Movies and shows sheet');
-    await host.tap(host.button('Done'), { expect: { hidden: ['kinds-sheet'] } });
-    // A second idea, then switch it off and on.
-    await host.tap(host.button('Add an idea'), { expect: { visible: ['mood-page'] } });
-    await host.fill(host.page.getByLabel('Mood'), 'space adventure');
-    await host.tap(host.page.getByLabel('Mood'), { key: 'Enter', expect: { visible: ['room-setup'] } });
-    await eventually(() => host.latest?.ideas.map((i) => i.text), (v) => JSON.stringify(v) === JSON.stringify(['rainy day whodunit', 'space adventure']), 'two ideas, no duplicates', host);
-    const sw = host.page.getByRole('switch', { name: 'Use space adventure' }).filter({ visible: true });
+    // Movies or shows: one switch in the console.
+    const shows = host.page.getByRole('radio', { name: 'Shows', exact: true }).filter({ visible: true });
+    await host.tap(shows, { expect: {} });
+    await eventually(() => JSON.stringify((host.latest?.constraints as { kinds: string[] } | undefined)?.kinds), (k) => k === JSON.stringify(['show_start']), 'shows only', host);
+    await host.tap(host.page.getByRole('radio', { name: 'Movies and shows', exact: true }).filter({ visible: true }), { expect: {} });
+    // Your idea switches off and on.
+    // Its name goes on with what the server read in it.
+    const sw = host.page.getByRole('switch', { name: /^rainy day whodunit\. Your idea/ }).filter({ visible: true });
     await host.tap(sw, { expect: {} });
-    await eventually(() => host.latest?.ideas.find((i) => i.text === 'space adventure')?.on, (on) => on === false, 'idea switched off', host);
+    await eventually(() => host.latest?.ideas.find((i) => i.text === 'rainy day whodunit')?.on, (on) => on === false, 'idea switched off', host);
     await host.tap(sw, { expect: {} });
-    await eventually(() => host.latest?.ideas.find((i) => i.text === 'space adventure')?.on, (on) => on === true, 'idea switched on again', host);
-    // Edit the mood.
-    await host.tap(host.button('rainy day whodunit, edit'), { expect: { visible: ['mood-page'] } });
-    await host.fill(host.page.getByLabel('Mood'), 'rainy day mystery');
-    await host.tap(host.page.getByLabel('Mood'), { key: 'Enter', expect: { visible: ['room-setup'] } });
-    await eventually(() => host.latest?.ideas.map((i) => i.text).sort(), (v) => JSON.stringify(v) === JSON.stringify(['rainy day mystery', 'space adventure']), 'mood edited in place', host);
+    await eventually(() => host.latest?.ideas.find((i) => i.text === 'rainy day whodunit')?.on, (on) => on === true, 'idea switched on again', host);
+    // One idea each: another one replaces yours in place.
+    await addIdea(host, 'rainy day mystery');
+    await eventually(() => host.latest?.ideas.map((i) => i.text), (v) => JSON.stringify(v) === JSON.stringify(['rainy day mystery']), 'idea replaced in place', host);
+    // How it works and Invite.
+    await host.tap(host.button('How it works'), { expect: { visible: ['how-sheet'] } });
+    await host.audit('How it works');
+    await host.tap(host.button('Close').last(), { expect: { hidden: ['how-sheet'] } });
+    await host.tap(host.button('Invite friends, show QR code and link'), { expect: { any: ['invite-surface', 'invite-sheet'] } });
+    await host.audit('Invite friends');
+    await host.page.keyboard.press('Escape');
+    await host.see({ hidden: ['invite-surface', 'invite-sheet'] }, 5000, 'Invite closed');
     // Room sheet and Streaming sheet.
-    await host.tap(host.button('Room'), { expect: { visible: ['room-sheet'] } });
+    await host.tap(host.button('Couch'), { expect: { visible: ['room-sheet'] } });
     await host.audit('Room sheet');
     await host.tap(host.button('Close').last(), { expect: { hidden: ['room-sheet'] } });
     await host.tap(host.button(/^Netflix.*, change$/), { expect: { visible: ['streaming-sheet'] } });
     await host.audit('Streaming sheet');
     await host.tap(host.button('Done'), { expect: { hidden: ['streaming-sheet'] } });
-    await host.tap(host.button('Just you, people'), { expect: { visible: ['people-sheet'] } });
+    await host.tap(host.button('Who’s here: 1 person'), { expect: { visible: ['people-sheet'] } });
     await host.audit('People sheet');
     await host.tap(host.button('Done'), { expect: { hidden: ['people-sheet'] } });
   });

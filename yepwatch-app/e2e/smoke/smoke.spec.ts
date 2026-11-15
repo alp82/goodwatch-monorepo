@@ -164,9 +164,9 @@ async function tidy(p: Person, how: 'leave' | 'archive') {
       await page.getByRole('button', { name: MARK, exact: true }).filter({ visible: true }).waitFor({ state: 'detached', timeout: 8000 });
       return;
     } else {
-      await visible(/, switch room$/).click({ timeout: 5000 });
-      await visible(/, Room page$/).click({ timeout: 5000 });
-      await visible('Leave room').click({ timeout: 5000 });
+      await visible(/, switch couch$/).click({ timeout: 5000 });
+      await visible(/, Couch page$/).click({ timeout: 5000 });
+      await visible('Leave couch').click({ timeout: 5000 });
       await visible('Leave').click({ timeout: 5000 });
     }
     await page.getByTestId(/^(landing|home-rooms)$/).first().waitFor({ timeout: 8000 });
@@ -245,7 +245,7 @@ async function journey(room: Room, people: [Person, 'leave' | 'archive'][]) {
   if (CHANGE_BEFORE_START) {
     const services = () => new Set(host.latest?.screens.flatMap((s) => s.serviceIds) ?? []).size;
     const before = services();
-    await pickServices(friend, ['Disney+'], () => friend.tap(friend.button('Your services'), { expect: { visible: ['services-sheet'] } }));
+    await pickServices(friend, ['Disney+'], () => friend.tap(friend.button(/, change$/).filter({ visible: true }).first(), { expect: { visible: ['services-sheet'] } }));
     await eventually(services, (n) => n > before, 'the host\'s room has the friend\'s new service', host);
   }
   // The host presses Start a beat after the last person is in the room, as people do (web journeys do the same):
@@ -254,7 +254,7 @@ async function journey(room: Room, people: [Person, 'leave' | 'archive'][]) {
   await host.page.waitForTimeout(300);
 
   // Start: first card for the host and on both other phones.
-  await host.tap(host.button('Start'), {
+  await host.tap(host.button(/^Start( with \d+| on my own)$/), {
     expect: { visible: ['voting', 'poster'] },
     observers: [[friend, { visible: ['voting', 'poster'] }, 'voting'], ...(member ? [[member, { visible: ['voting', 'poster'] }, 'voting'] as const] : [])],
     timeout: 20000,

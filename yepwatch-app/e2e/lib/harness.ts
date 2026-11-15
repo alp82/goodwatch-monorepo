@@ -4,7 +4,7 @@
 //     const host = await room.person('Alp');                       // phone 390×844
 //     const desk = await room.person('Dee', { device: 'desktop' }); // 1440×900
 //     await host.open('/');
-//     await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] }, moment: 'newRoomMs' });
+//     await host.tap(host.button('New couch'), { expect: { visible: ['mood-page'] }, moment: 'newRoomMs' });
 //     await room.point('room');                                     // fault hook (restart, offline, hide, …)
 //   });
 //

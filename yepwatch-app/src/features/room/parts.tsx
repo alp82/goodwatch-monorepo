@@ -1,18 +1,15 @@
-/** Room pieces shared by several screens and sheets: ideas, the share and people rows, services, country and kinds. */
+/** Room pieces shared by several screens and sheets: idea acknowledgement, rows, services, country and kinds. */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Image, Platform, Pressable, TextInput, View, useWindowDimensions, type TextStyle } from 'react-native';
 import { deviceCountryHint, rankedCountries } from '../../core/lobby';
-import { shareInvitation } from '../../core/share-invitation';
 import { FaceStack } from '../shell/parts';
-import { useGlide } from '../shell/glide';
 import { useLayout } from '../shell/layout';
 import { R, warm } from '../shell/tokens';
 import { GText, Icon, Press, glow, grow, spaceToggles } from '../glow/theme';
 import type { Kind, RoomView } from './model';
-import { openPage } from './nav';
-import { roomPart, useRoom } from './RoomProvider';
+import { useRoom } from './RoomProvider';
 import { firstTiles, pickedIn, type ServiceChoice } from './services';
-import { Glyph, HeroIcon, KindIcons, NewBadge, Small, Switch, TextLink } from './ui';
+import { Glyph, KindIcons, Small, TextLink } from './ui';
 
 export const flag = (code: string) =>
   /^[A-Z]{2}$/.test(code) ? String.fromCodePoint(...[...code].map((c) => 127397 + c.charCodeAt(0))) : '🌐';
@@ -21,19 +18,6 @@ export const flag = (code: string) =>
 export const webField = (Platform.OS === 'web' ? { outlineStyle: 'none', caretColor: glow.amber } : {}) as TextStyle;
 /** Gabarito Bold: average glyph width per em, with the -3% tracking. */
 export const CHAR_EM = 0.52;
-
-/**
- * Size for a headline idea: the whole text on one row while that keeps it at least `oneRowMin`,
- * otherwise sized so the longest word fits and the text takes about two lines.
- */
-export function headlineSize(text: string, width: number, max: number, oneRowMin: number, min = 30) {
-  const oneRow = Math.floor(width / (Math.max(1, text.length) * CHAR_EM));
-  if (oneRow >= oneRowMin) return Math.min(oneRow, max);
-  const longest = Math.max(1, ...text.split(/\s+/).map((w) => w.length));
-  const byWord = width / (longest * 0.56);
-  const byLines = (width * 2) / (Math.max(text.length, 1) * 0.5);
-  return Math.round(Math.max(min, Math.min(max, byWord, byLines)));
-}
 
 /**
  * The host has seen the friend ideas shown while this is mounted: NEW stays on them during this
@@ -46,134 +30,6 @@ export function useAcknowledgeShownIdeas(view: RoomView | null, acknowledgeIdeas
     for (const i of view.ideas) if (i.fresh) shown.current.add(i.id);
   }, [view]);
   useEffect(() => () => acknowledgeIdeas([...shown.current]), [acknowledgeIdeas]);
-}
-
-/**
- * The ideas as the headline: the first huge, the others big, each with its switch. Everyone sees the
- * same list; only the host's switches work. A friend's idea carries its author's name and, until
- * the host has seen it, NEW. Your own ideas open Mood to edit or remove them.
- */
-export const IdeaStack = roomPart('IdeaStack', (r) => ({ id: r.id, view: r.view, cmd: r.cmd, disabled: r.disabled }), function IdeaStack({ id, view, cmd, disabled }) {
-  const { phone, wide, max, z } = useLayout();
-  // Start from the column RoomBefore gives the ideas (measured below), so the first frame already has the
-  // final headline size instead of resizing a frame later.
-  const [width, setWidth] = useState(() => (wide ? max - Math.min(z(420), max * 0.4) - z(56) : max));
-  // An idea arriving above glides Add an idea down instead of pushing it.
-  const add = useGlide();
-  if (!view) return null;
-  const top = phone ? 54 : z(92);
-  const rest = phone ? 30 : z(48);
-  const many = view.ideas.length > 1;
-  const addLabel = view.isHost ? 'Add an idea' : 'Suggest an idea';
-  return (
-    <View testID="idea-list" onLayout={(e) => { if (e.nativeEvent.layout.width > 0) setWidth(e.nativeEvent.layout.width); }} style={{ gap: phone ? 18 : z(26) }}>
-      {!view.ideas.length && <GText bold size={top} color={glow.soft} style={{ letterSpacing: -top * 0.032, lineHeight: top * 1.06 }}>Anything</GText>}
-      {view.ideas.map((i, n) => {
-        const size = n === 0 ? headlineSize(i.text, Math.max(120, width - 70), top, phone ? 40 : z(60)) : Math.min(rest, headlineSize(i.text, Math.max(120, width - 70), rest, 0, 22));
-        const fresh = view.isHost && i.fresh && !i.mine;
-        const meta = !i.mine
-          ? (i.author?.nickname || fresh ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              {i.author?.nickname ? <GText size={z(13)} color={glow.muted}>{i.author.nickname}</GText> : null}
-              {fresh ? <NewBadge /> : null}
-            </View>
-          ) : null)
-          : many ? <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><HeroIcon name="pencil" size={z(14)} color={glow.muted} /><GText size={z(13)} color={glow.muted}>Yours</GText></View> : null;
-        const text = <GText bold size={size} color={i.on ? glow.ink : '#8c8478'} style={{ letterSpacing: -size * 0.032, lineHeight: size * 1.06 }}>{i.text}</GText>;
-        // Small and non-blocking: the room goes on with the usual picks for this idea.
-        const note = i.unmatched ? <View testID="idea-unmatched"><GText size={z(13)} color={glow.muted}>Mood matching is unavailable for now.</GText></View> : null;
-        const body = { flex: 1, minWidth: 0, gap: 6, alignItems: 'flex-start', justifyContent: 'flex-start' } as const;
-        return (
-          <IdeaRow key={i.id}
-            body={i.mine
-              ? <Press label={`${i.text}, edit${i.unmatched ? ', mood matching is unavailable for now' : ''}`} onPress={() => openPage(id, 'mood', { idea: i.id })} style={body}>{text}{meta}{note}</Press>
-              : <View accessible accessibilityLabel={`${i.text}${i.author?.nickname ? `, from ${i.author.nickname}` : ''}${fresh ? ', new' : ''}${i.unmatched ? ', mood matching is unavailable for now' : ''}`} style={body}>{text}{meta}{note}</View>}
-            control={<Switch on={i.on} disabled={!view.isHost || disabled} label={`Use ${i.text}`} onPress={() => void cmd.setIdea(i.id, !i.on)} />} />
-        );
-      })}
-      {view.canAddIdea && (
-        <View ref={add} style={{ alignSelf: 'flex-start' }}>
-          <Press label={addLabel} onPress={() => openPage(id, 'mood', { idea: 'new' })} style={{ ...grow(z(44)), flexDirection: 'row', gap: 8, paddingRight: 8 }}>
-            <Glyph name="plus" size={z(18)} color={glow.amber} /><GText bold size={z(17)} color={glow.amber}>{addLabel}</GText>
-          </Press>
-        </View>
-      )}
-    </View>
-  );
-});
-
-/** One idea and its switch. A line appearing under the idea (Yours, a name) glides the switch to the new centre. */
-function IdeaRow({ body, control }: { body: ReactNode; control: ReactNode }) {
-  const { z } = useLayout();
-  const switchRef = useGlide();
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: z(18) }}>
-      {body}
-      <View ref={switchRef}>{control}</View>
-    </View>
-  );
-}
-
-/** The invitation link as one control: the whole row copies or shares it and says Copied or Shared. */
-export const ShareRow = roomPart('ShareRow', (r) => ({ inviteUrl: r.inviteUrl }), function ShareRow({ inviteUrl }) {
-  const { z } = useLayout();
-  const [state, setState] = useState<'' | 'copied' | 'shared' | 'manual'>('');
-  useEffect(() => {
-    if (state !== 'copied' && state !== 'shared') return;
-    const timer = setTimeout(() => setState(''), 2400);
-    return () => clearTimeout(timer);
-  }, [state]);
-  const link = inviteUrl ? inviteUrl.replace(/^https?:\/\//, '') : 'Link unavailable';
-  const done = state === 'copied' || state === 'shared';
-  const word = state === 'copied' ? 'Copied' : state === 'shared' ? 'Shared' : 'Share';
-  return (
-    <View testID="share-row" style={{ gap: 6 }}>
-      <Press label={word} disabled={!inviteUrl} onPress={() => { if (inviteUrl) void shareInvitation(inviteUrl).then((r) => setState(r === 'cancelled' ? '' : r)); }}
-        style={{ minHeight: z(56), borderRadius: 12, paddingLeft: 14, paddingRight: 8, flexDirection: 'row', justifyContent: 'flex-start', gap: 12, backgroundColor: done ? warm.amberSoft : warm.faint, borderWidth: 1, borderColor: done ? warm.amberLine : warm.line }}>
-        <Glyph name="link" size={z(18)} color={done ? glow.amber : glow.muted} />
-        <GText size={z(15)} color={glow.soft} lines={1} style={{ flex: 1 }}>{link}</GText>
-        {inviteUrl ? (
-          <View style={{ height: z(40), paddingHorizontal: 14, borderRadius: R.control, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: done ? 'transparent' : glow.amber }}>
-            {done ? <Icon name="check" size={z(16)} color={glow.amber} /> : <Glyph name="share" size={z(16)} color={warm.ink} />}
-            <GText bold size={z(15)} color={done ? glow.amber : warm.ink}>{word}</GText>
-          </View>
-        ) : null}
-      </Press>
-      {state === 'manual' && inviteUrl ? <><Small>Select and copy the link</Small><GText size={z(15)} selectable>{inviteUrl}</GText></> : null}
-    </View>
-  );
-});
-
-/** Who's in (and who's still picking services); opens People. */
-export const PeopleRow = roomPart<{ view: RoomView | null }, { onPress: () => void }>('PeopleRow', (r) => ({ view: r.view }), function PeopleRow({ view, onPress }) {
-  const { z } = useLayout();
-  // Someone joins: the words glide over as the faces widen.
-  const words = useGlide({ axis: 'x' });
-  if (!view) return null;
-  const people = view.faces;
-  const text = people.length < 2 ? 'Just you' : `${people.length} people`;
-  const picking = view.picking.map((p) => p.nickname || '?');
-  return (
-    <Press label={`${text}, people`} onPress={onPress}
-      style={{ minHeight: z(56), borderRadius: 12, paddingHorizontal: 14, flexDirection: 'row', justifyContent: 'flex-start', gap: 12, backgroundColor: warm.faint, borderWidth: 1, borderColor: warm.line }}>
-      <FaceStack people={people} size={z(30)} max={5} />
-      <View ref={words} style={{ flex: 1, minWidth: 0 }}>
-        <GText size={z(15)} color={glow.soft} lines={1}>
-          {text}
-          {picking.length ? <GText size={z(15)} color={glow.muted}>{` · ${picking.join(', ')} picking`}</GText> : null}
-        </GText>
-      </View>
-      <Icon name="right" size={16} color={glow.muted} />
-    </Press>
-  );
-});
-
-/** A setting as a whole-row control: content, then Change (amber when something is missing). */
-export function Chip({ label, onPress, children, warn = false, action }: { label: string; onPress?: () => void; children: ReactNode; warn?: boolean; /** The word at the end ("Change"); none when absent. */ action?: string }) {
-  const { z } = useLayout();
-  const style = { minHeight: z(52), borderRadius: 12, paddingHorizontal: 14, flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center', gap: 10, backgroundColor: warn ? warm.amberSoft : 'transparent', borderWidth: 1, borderColor: warn ? warm.amberLine : warm.line } as const;
-  const inner = <>{children}{action ? <GText bold size={z(13)} color={warn ? glow.amber : glow.muted}>{action}</GText> : null}</>;
-  return onPress ? <Press label={label} onPress={onPress} style={style}>{inner}</Press> : <View accessible accessibilityLabel={label} style={style}>{inner}</View>;
 }
 
 /** A row in a sheet: content, then a switch or a chevron. */

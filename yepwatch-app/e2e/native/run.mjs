@@ -126,13 +126,13 @@ async function main() {
     const traced = tracing('cold-start') ? await startTrace(A, 'cold-start', path.join(RUN, 'video'), 12000) : null;
     let first;
     try {
-      first = await measure({ actor: A, phones: [A], file: vid('cold-first'), targets: { A: roiOf(A, 'New room', 20000) },
+      first = await measure({ actor: A, phones: [A], file: vid('cold-first'), targets: { A: roiOf(A, 'New couch', 20000) },
         action: hostAction(() => { am = A.launch(); }), appWindowMs: () => am?.totalTime, allowIntermediate: 0, settleMs: 800 });
     } finally { if (traced) await traced(); }
     timing('cold start, first visit -> start page usable', B.native.coldStartUsableMs, first.A, { amStartTotalTime: am.totalTime, use: 'settled' });
     await audit(A, 'start page (first visit)');
     A.forceStop(); await sleep(500);
-    const again = await measure({ actor: A, phones: [A], file: vid('cold-again'), targets: { A: roiOf(A, 'New room', 20000) },
+    const again = await measure({ actor: A, phones: [A], file: vid('cold-again'), targets: { A: roiOf(A, 'New couch', 20000) },
       action: hostAction(() => { am = A.launch(); }), appWindowMs: () => am?.totalTime, allowIntermediate: 0, settleMs: 800 });
     timing('cold start, returning -> start page usable', B.native.coldStartUsableMs, again.A, { amStartTotalTime: am.totalTime, use: 'settled' });
     if (again.A?.ok) S.coldReturningMs = again.A.settledMs;
@@ -142,7 +142,7 @@ async function main() {
   await scenario('cold-start-journey', async () => {
     A.forceStop(); A.sh(`pm clear ${PACKAGE}`);
     const am = A.launch();
-    await A.find('New room', { timeout: 30000 });
+    await A.find('New couch', { timeout: 30000 });
     result.coldStart = { amStartTotalTime: am.totalTime };
     await audit(A, 'start page (first visit)');
     await notStuck(A, 'start page (first visit)');
@@ -160,12 +160,12 @@ async function main() {
 
   // ---- create room on A, with New room / Create room timings, a11y, back priority ----
   await scenario('create-room', async () => {
-    const tile = await A.find('New room', { timeout: 15000 });
+    const tile = await A.find('New couch', { timeout: 15000 });
     const nr = await measure({ actor: A, phones: [A], file: vid('new-room'), action: tapAction(A, tile), targets: { A: roiOf(A, 'Mood') } });
     timing('New room -> Mood page', B.newRoomMs, nr.A);
     await audit(A, 'mood page');
     await A.tap('cheer me up');
-    const create = await A.find('Create room');
+    const create = await A.find('Create couch');
     const cr = await measure({ actor: A, phones: [A], file: vid('create-room'), action: tapAction(A, create), targets: { A: roiOf(A, 'share-row', 10000) } });
     timing('Create room -> room page', B.createRoomMs, cr.A);
     await notStuck(A, 'room page after create');
@@ -204,7 +204,7 @@ async function main() {
 
   // ---- Start -> first card on host and friend ----
   await scenario('start-round', async () => {
-    const start = await A.find('Start');
+    const start = await A.find(/^Start( with \d+| on my own)$/);
     const r = await measure({ actor: A, phones: [A, Bp], file: vid('start'), action: tapAction(A, start),
       targets: { A: roiOf(A, 'poster', 10000), B: roiOf(Bp, 'poster', 10000) } });
     timing('Start -> first card (host)', B.startToFirstCardMs, r.A);
@@ -308,7 +308,7 @@ async function main() {
   await scenario('restart-round', async () => {
     await A.tap('Start again');
     await A.waitFor('room-setup', { timeout: 8000 });
-    await A.tap('Start');
+    await A.tap(/^Start( with \d+| on my own)$/);
     await A.waitFor('poster', { timeout: 8000 });
     await Bp.waitFor('poster', { timeout: 8000 });
   }, { modes: ['full'] });
@@ -324,7 +324,7 @@ async function main() {
 
   await scenario('back-everywhere', async () => {
     // Each sheet: Back closes the sheet and keeps the screen under it.
-    for (const [open, sheet] of [['Profile', 'profile-panel'], [/switch room$/, 'rooms-sheet']]) {
+    for (const [open, sheet] of [['Profile', 'profile-panel'], [/switch couch$/, 'rooms-sheet']]) {
       await A.tap(open); await A.waitFor(sheet, { timeout: 4000 });
       await audit(A, `sheet ${sheet}`);
       A.back(); await A.waitGone(sheet, { timeout: 3000 });
@@ -334,7 +334,7 @@ async function main() {
     A.back(); await sleep(800);
     const top = A.foreground();
     if (!top.includes(PACKAGE)) journeyFail('back', `Back from voting left the app: ${top}`);
-    else { await A.waitFor('New room', { timeout: 4000 }).catch(() => journeyFail('back', 'Back from voting did not reach the start page')); }
+    else { await A.waitFor('New couch', { timeout: 4000 }).catch(() => journeyFail('back', 'Back from voting did not reach the start page')); }
     await audit(A, 'start page (returning)');
     // Return to the room through the open-room card.
     await A.tap(/cheer me up/);
@@ -376,15 +376,15 @@ async function main() {
 
   await scenario('leave-archive-restore', async () => {
     // B leaves through the room sheet.
-    await Bp.tap(/switch room$/); await Bp.tap(/Room page$/); await Bp.waitFor('room-sheet');
+    await Bp.tap(/switch couch$/); await Bp.tap(/Couch page$/); await Bp.waitFor('room-sheet');
     await audit(Bp, 'room sheet (friend)');
-    await Bp.tap('Leave room');
-    if (await Bp.has('leave-confirm')) { await audit(Bp, 'leave confirm'); await Bp.tap({ desc: 'Leave room', index: 1 }).catch(() => Bp.tap('Leave')); }
-    await Bp.waitFor('New room', { timeout: 8000 });
+    await Bp.tap('Leave couch');
+    if (await Bp.has('leave-confirm')) { await audit(Bp, 'leave confirm'); await Bp.tap({ desc: 'Leave couch', index: 1 }).catch(() => Bp.tap('Leave')); }
+    await Bp.waitFor('New couch', { timeout: 8000 });
     // A archives, then restores from History.
-    await A.tap(/switch room$/); await A.tap(/Room page$/); await A.waitFor('room-sheet');
-    await A.tap('Archive room');
-    await A.waitFor('New room', { timeout: 8000 });
+    await A.tap(/switch couch$/); await A.tap(/Couch page$/); await A.waitFor('room-sheet');
+    await A.tap('Archive couch');
+    await A.waitFor('New couch', { timeout: 8000 });
     await A.tap(/^Decided, |History/, { timeout: 5000 }).catch(() => journeyFail('archive', 'no History entry on the start page after archiving'));
     if (await A.has('history-panel')) { await audit(A, 'history'); await A.tap(/^Restore/).catch(() => journeyFail('archive', 'no Restore in History')); }
   }); // gate too: Leave and Archive once tore React Native down on Android (black window)

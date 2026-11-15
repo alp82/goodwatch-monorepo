@@ -16,7 +16,7 @@ export const rules = {
 
 // Room notes and on-screen words that mean the user is blocked or told something went wrong.
 export const BLOCKING_WORDS = [
-  /Couldn[’']t/i, /Refresh to keep choosing/i, /Something went wrong/i, /YepWatch is starting/i, /Opening the room/i,
+  /Couldn[’']t/i, /Refresh to keep choosing/i, /Something went wrong/i, /YepWatch is starting/i, /Opening the couch/i,
 ];
 // Words about the connection or a retry. One rule (owner Q24a, app: core/continuous/connection-words.ts):
 // none while an outage is younger than connectionQuietMs (so none at all for a shorter fault, a hidden tab,

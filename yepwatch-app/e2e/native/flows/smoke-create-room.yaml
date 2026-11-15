@@ -4,8 +4,8 @@ name: Create a room
 tags: [gate, single]
 ---
 - launchApp: { clearState: true }
-- extendedWaitUntil: { visible: "New room", timeout: 20000 }
-- tapOn: { text: "New room", waitToSettleTimeoutMs: 300 }
+- extendedWaitUntil: { visible: "New couch", timeout: 20000 }
+- tapOn: { text: "New couch", waitToSettleTimeoutMs: 300 }
 - tapOn: { text: "cheer me up", waitToSettleTimeoutMs: 300 }
 - tapOn: { text: "Create room", waitToSettleTimeoutMs: 300 }
 - extendedWaitUntil: { visible: { id: "share-row" }, timeout: 10000 }
@@ -13,5 +13,5 @@ tags: [gate, single]
 - tapOn: { text: "Your name", waitToSettleTimeoutMs: 300 }
 - inputText: ${NAME || 'Ann'}
 - pressKey: Enter
-- assertVisible: "Start"
+- assertVisible: "Start( with [0-9]+| on my own)"
 - assertVisible: { text: ".*/r/[A-Z0-9]+" }

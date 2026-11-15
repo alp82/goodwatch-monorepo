@@ -7,12 +7,12 @@ test.describe('rooms: leave, archive, history, back', () => {
     const mia = await room.person('Mia');
     await join(mia, await inviteLink(host), 'Mia');
     await eventually(() => host.latest?.participants.length, (n) => n === 2, 'two people', host);
-    await mia.tap(mia.button(/, switch room$/), { expect: { visible: ['rooms-sheet'] } });
+    await mia.tap(mia.button(/, switch couch$/), { expect: { visible: ['rooms-sheet'] } });
     await mia.audit('Your rooms sheet (in a room)');
-    await mia.tap(mia.button(/, Room page$/), { expect: { visible: ['room-sheet'] } });
-    await mia.tap(mia.button('Leave room'), { expect: { visible: ['leave-confirm'] } });
+    await mia.tap(mia.button(/, Couch page$/), { expect: { visible: ['room-sheet'] } });
+    await mia.tap(mia.button('Leave couch'), { expect: { visible: ['leave-confirm'] } });
     await mia.audit('Leave confirmation');
-    await mia.tap(mia.button('Leave'), { expect: { hidden: ['room-sheet'] }, observers: [[host, { label: { text: 'Just you, people', exact: true } }, 'leaveToPeerMs']] });
+    await mia.tap(mia.button('Leave'), { expect: { hidden: ['room-sheet'] }, observers: [[host, { label: { text: 'Who’s here: 1 person', exact: true } }, 'leaveToPeerMs']] });
     await mia.see({ any: ['landing', 'home-rooms'] }, 10000, 'start page after leaving');
 
   });
@@ -21,8 +21,8 @@ test.describe('rooms: leave, archive, history, back', () => {
     const host = await room.person('Alp');
     await createRoom(host, 'cosy family night');
     await room.point('room');
-    await host.tap(host.button('Room'), { expect: { visible: ['room-sheet'] } });
-    await host.tap(host.button('Archive room'), { expect: { visible: ['home-rooms'] } });
+    await host.tap(host.button('Couch'), { expect: { visible: ['room-sheet'] } });
+    await host.tap(host.button('Archive couch'), { expect: { visible: ['home-rooms'] } });
     await host.audit('start page (returning, after archive)');
     await host.tap(host.button('History'), { expect: { visible: ['history-panel'] } });
     await host.audit('History sheet');
@@ -47,15 +47,15 @@ test.describe('rooms: leave, archive, history, back', () => {
     const host = await readyHost(room);
     // With a sheet open the header is inert (modal sheet: no focus or screen reader behind it); a tap on it,
     // where Back is included, closes the sheet only.
-    await host.tap(host.button('Room'), { expect: { visible: ['room-sheet'] } });
+    await host.tap(host.button('Couch'), { expect: { visible: ['room-sheet'] } });
     await expect(host.button('Back')).toHaveCount(0);
     await host.tap(host.testId('header-shade'), { expect: { hidden: ['room-sheet'], visible: ['room-setup'] } });
     // Browser Back with a sheet open closes the sheet only.
-    await host.tap(host.button('Just you, people'), { expect: { visible: ['people-sheet'] } });
+    await host.tap(host.button('Who’s here: 1 person'), { expect: { visible: ['people-sheet'] } });
     await host.back();
     await host.see({ hidden: ['people-sheet'], visible: ['room-setup'] }, 5000, 'browser Back closes the People sheet first');
     // Escape closes a sheet on desktop web.
-    await host.tap(host.button('Room'), { expect: { visible: ['room-sheet'] } });
+    await host.tap(host.button('Couch'), { expect: { visible: ['room-sheet'] } });
     await host.page.keyboard.press('Escape');
     await host.see({ hidden: ['room-sheet'] }, 3000, 'Escape closes the Room sheet');
     // Back from the room goes to the start page with the room listed.
@@ -66,11 +66,11 @@ test.describe('rooms: leave, archive, history, back', () => {
   test('two rooms: switch between them from the header pill', async ({ room }) => {
     const host = await readyHost(room, 'Alp', 'heist night');
     await start(host, []);
-    await host.tap(host.button(/, switch room$/), { expect: { visible: ['rooms-sheet'] } });
-    await host.tap(host.button('New room').last(), { expect: { visible: ['mood-page'] }, moment: 'newRoomMs' });
+    await host.tap(host.button(/, switch couch$/), { expect: { visible: ['rooms-sheet'] } });
+    await host.tap(host.button('New couch').last(), { expect: { visible: ['mood-page'] }, moment: 'newRoomMs' });
     await host.fill(host.page.getByLabel('Mood'), 'western');
-    await host.tap(host.button('Create room'), { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' });
-    await host.tap(host.button(/, switch room$/), { expect: { visible: ['rooms-sheet'] } });
+    await host.tap(host.button('Create couch'), { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' });
+    await host.tap(host.button(/, switch couch$/), { expect: { visible: ['rooms-sheet'] } });
     await host.audit('Your rooms sheet (two rooms)');
     const other = host.testId('rooms-sheet').getByRole('button', { name: /^heist night/ }).first();
     if (!(await other.isVisible())) host.journeyFailure(`the other room is not listed in Your rooms: ${await host.testId('rooms-sheet').ariaSnapshot()}`);

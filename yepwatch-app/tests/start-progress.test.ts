@@ -12,7 +12,7 @@ test('the host’s Start: a lost answer going out again still works, a failure r
   assert.equal(hostStartPhase({ attempt: 'starting', retrying: false }), 'starting');
   assert.equal(hostStartPhase({ attempt: 'failed', retrying: true }), 'starting');
   assert.equal(hostStartPhase({ attempt: 'failed', retrying: false }), 'failed');
-  assert.deepEqual((['idle', 'starting', 'failed'] as const).map((p) => hostStartLabel(p, 1)), ['Start', 'Finding titles…', 'Try again']);
+  assert.deepEqual((['idle', 'starting', 'failed'] as const).map((p) => hostStartLabel(p, 1)), ['Start on my own', 'Finding titles…', 'Try again']);
 });
 
 test('only a round that starts while the screen watches plays the first card’s entry; opening a running room doesn’t', () => {

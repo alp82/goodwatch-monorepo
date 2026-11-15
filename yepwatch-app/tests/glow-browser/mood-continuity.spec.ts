@@ -9,7 +9,7 @@ for (const width of [390, 1440]) test(`choosing a mood is local and keeps the sa
   page.on('request', (request) => { if (request.method() === 'POST' && request.url().endsWith('/proposal/rooms')) posts++; });
   const release = f.hold('add_idea');
   await page.goto('/');
-  await page.getByRole('button', { name: 'New room', exact: true }).click();
+  await page.getByRole('button', { name: 'New couch', exact: true }).click();
   const mood = page.getByLabel('Mood', { exact: true });
   await mood.fill('dark and funny');
   await page.waitForTimeout(100);
@@ -25,7 +25,7 @@ for (const width of [390, 1440]) test(`choosing a mood is local and keeps the sa
     };
     requestAnimationFrame(frame);
   });
-  await page.getByRole('button', { name: 'Create room', exact: true }).click();
+  await page.getByRole('button', { name: 'Create couch', exact: true }).click();
   await expect.poll(() => f.sent().includes('add_idea')).toBe(true);
   await page.waitForTimeout(200);
   const frames = await page.evaluate(() => {
@@ -38,7 +38,7 @@ for (const width of [390, 1440]) test(`choosing a mood is local and keeps the sa
   await expect(mood).toHaveValue('dark and funny');
   release();
   await expect(page.getByTestId('room-setup')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'dark and funny, edit', exact: true })).toBeVisible();
+  await expect(page.getByRole('switch', { name: 'dark and funny. Your idea', exact: true })).toBeVisible();
   expect(posts).toBe(1);
   await page.getByRole('button', { name: 'Back', exact: true }).click();
   await page.evaluate(() => {
@@ -51,7 +51,7 @@ for (const width of [390, 1440]) test(`choosing a mood is local and keeps the sa
     };
     requestAnimationFrame(frame);
   });
-  await page.getByRole('button', { name: 'New room', exact: true }).click();
+  await page.getByRole('button', { name: 'New couch', exact: true }).click();
   await expect(page.getByLabel('Mood', { exact: true })).toHaveValue('');
   await page.waitForTimeout(200);
   const values = await page.evaluate(() => (window as unknown as { nextDraftValues: string[] }).nextDraftValues);
@@ -70,11 +70,11 @@ test('a failed create-and-save keeps the draft and retries in the same room', as
   });
   await page.goto('/new');
   await page.getByLabel('Mood', { exact: true }).fill('dark and funny');
-  await page.getByRole('button', { name: 'Create room', exact: true }).click();
+  await page.getByRole('button', { name: 'Create couch', exact: true }).click();
   await expect(page.getByText('Couldn’t save this mood. Try again; your text is kept.', { exact: true })).toBeVisible();
   await expect(page.getByLabel('Mood', { exact: true })).toHaveValue('dark and funny');
   await expect(page.getByTestId('room-setup')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: /Anything, switch room/ })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Couch, switch couch', exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Try again', exact: true }).click();
   await expect(page.getByTestId('room-setup')).toBeVisible();
   expect(rooms).toBe(1);
@@ -92,7 +92,7 @@ test('an accepted mood whose acknowledgement is lost goes again by itself as the
   });
   await page.goto('/new');
   await page.getByLabel('Mood', { exact: true }).fill('dark and funny');
-  await page.getByRole('button', { name: 'Create room', exact: true }).click();
+  await page.getByRole('button', { name: 'Create couch', exact: true }).click();
   await expect(page.getByTestId('room-setup')).toBeVisible();
   await expect(page.getByText('Couldn’t reach YepWatch. Your request is saved. Try again.', { exact: true })).toHaveCount(0);
   const commands = f.commands.filter((c) => c.command.type === 'add_idea');
@@ -116,13 +116,13 @@ test('an accepted mood whose acknowledgement is lost survives reload and retries
   });
   await page.goto('/new');
   await page.getByLabel('Mood', { exact: true }).fill('dark and funny');
-  await page.getByRole('button', { name: 'Create room', exact: true }).click();
+  await page.getByRole('button', { name: 'Create couch', exact: true }).click();
   await expect(page.getByText('Reconnecting…', { exact: true })).toBeVisible({ timeout: 6_000 });
   await page.reload();
   down = false;
   await expect(page.getByLabel('Mood')).toHaveValue('dark and funny');
-  await expect(page.getByRole('button', { name: /^(Create room|Try again)$/, exact: true })).toBeEnabled();
-  await page.getByRole('button', { name: /^(Create room|Try again)$/, exact: true }).click();
+  await expect(page.getByRole('button', { name: /^(Create couch|Try again)$/, exact: true })).toBeEnabled();
+  await page.getByRole('button', { name: /^(Create couch|Try again)$/, exact: true }).click();
   await expect(page.getByTestId('room-setup')).toBeVisible();
   const commands = f.commands.filter((c) => c.command.type === 'add_idea');
   expect(commands).toHaveLength(2);
@@ -136,7 +136,7 @@ test('cancelling a local draft returns to its caller without allocating a room',
   let rooms = 0;
   page.on('request', (r) => { if (r.method() === 'POST' && r.url().endsWith('/proposal/rooms')) rooms++; });
   await page.goto('/');
-  await page.getByRole('button', { name: 'New room', exact: true }).click();
+  await page.getByRole('button', { name: 'New couch', exact: true }).click();
   await page.getByLabel('Mood', { exact: true }).fill('unfinished mood');
   await page.getByRole('button', { name: 'Back', exact: true }).click();
   await expect(page).toHaveURL(/\/$/);
@@ -155,8 +155,8 @@ test('a refused mood save keeps its text in the editor and explains the mood fai
   await page.goto('/room/test-room/mood?idea=new');
   const mood = page.getByLabel('Mood', { exact: true });
   await mood.fill('dark and funny');
-  await expect(page.getByRole('button', { name: 'Create room', exact: true })).toBeEnabled();
-  await page.getByRole('button', { name: 'Create room', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Create couch', exact: true })).toBeEnabled();
+  await page.getByRole('button', { name: 'Create couch', exact: true }).click();
   try {
     await expect(mood).toBeVisible();
     await expect(mood).toHaveValue('dark and funny');
@@ -177,7 +177,7 @@ test('an uncertain existing-room mood reconciles its exact write before saving r
   });
   await page.goto('/room/test-room/mood?idea=new');
   await page.getByLabel('Mood').fill('dark and funny');
-  await page.getByRole('button', { name: 'Create room', exact: true }).click();
+  await page.getByRole('button', { name: 'Create couch', exact: true }).click();
   await expect(page.getByText('Couldn’t save this mood. Try again; your text is kept.', { exact: true })).toBeVisible();
   await page.getByLabel('Mood').fill('rainy day mystery');
   const retry = page.getByRole('button', { name: 'Try again', exact: true });
@@ -195,9 +195,10 @@ test('a completed save cannot pull someone back after they leave the editor and 
   const f = await fakeRoom(page, newRoom());
   const release = f.hold('add_idea');
   await page.goto('/room/test-room');
-  await page.getByRole('button', { name: 'Add an idea', exact: true }).click();
+  await expect(page.getByTestId('room-setup')).toBeVisible();
+  await page.goto('/room/test-room/mood?idea=new');
   await page.getByLabel('Mood').fill('dark and funny');
-  await page.getByRole('button', { name: 'Create room', exact: true }).click();
+  await page.getByRole('button', { name: 'Create couch', exact: true }).click();
   await expect.poll(() => f.sent().includes('add_idea')).toBe(true);
   await page.getByRole('button', { name: 'Back', exact: true }).click();
   await expect(page.getByTestId('room-setup')).toBeVisible();
@@ -207,4 +208,56 @@ test('a completed save cannot pull someone back after they leave the editor and 
   await expect.poll(() => f.room.shared.ideas.length).toBe(1);
   await page.waitForTimeout(200);
   await expect(page).toHaveURL(/\/$/);
+});
+
+test('an idea from the console whose acknowledgement is lost goes again as the exact command, then the field replaces it', async ({ page }) => {
+  // Owner rule Q16b on the couch setup's describe field: the same command again, never a second idea.
+  const f = await fakeRoom(page, newRoom());
+  let lose = true;
+  await page.route('**/commands', async (route) => {
+    if (route.request().postDataJSON().command.type === 'add_idea' && lose) { lose = false; f.lose(); }
+    await route.fallback();
+  });
+  await page.goto('/room/test-room');
+  const field = page.getByLabel('Describe what you want to watch');
+  await field.fill('dark and funny');
+  await page.getByRole('button', { name: 'Add', exact: true }).click();
+  // The answer was lost: the field keeps the words and says so (as the Mood page does). The press again
+  // sends the saved command, never a second add.
+  await expect(page.getByText('Couldn’t save this mood. Try again; your text is kept.', { exact: true })).toBeVisible();
+  await expect(field).toHaveValue('dark and funny');
+  await page.getByRole('button', { name: 'Add', exact: true }).click();
+  await expect(page.getByRole('switch', { name: 'dark and funny. Your idea', exact: true })).toBeVisible();
+  await expect(field).toHaveValue('');
+  await expect(field).toHaveAttribute('placeholder', 'Replace your idea');
+  const adds = f.commands.filter((c) => c.command.type === 'add_idea');
+  expect(adds.length).toBeGreaterThanOrEqual(1);
+  expect(adds.every((c) => JSON.stringify(c) === JSON.stringify(adds[0]))).toBe(true);
+  expect(f.room.shared.ideas).toHaveLength(1);
+  // A second idea from the same person replaces the first one: edit_idea, never another add.
+  await field.fill('rainy day mystery');
+  await page.getByRole('button', { name: 'Replace', exact: true }).click();
+  await expect.poll(() => f.room.shared.ideas.map((i) => i.text)).toEqual(['rainy day mystery']);
+  expect(f.sent().filter((c) => c === 'edit_idea')).toHaveLength(1);
+});
+
+test('an uncertain console idea reconciles its exact write before a replacement goes', async ({ page }) => {
+  const f = await fakeRoom(page, newRoom());
+  let lose = true;
+  await page.route('**/commands', async (route) => {
+    if (route.request().postDataJSON().command.type === 'add_idea' && lose) { lose = false; f.lose(); }
+    await route.fallback();
+  });
+  await page.goto('/room/test-room');
+  const field = page.getByLabel('Describe what you want to watch');
+  await field.fill('dark and funny');
+  await page.getByRole('button', { name: 'Add', exact: true }).click();
+  // Either the outbox already resent it (the idea shows) or the field says so and keeps the words.
+  await expect.poll(async () => (await field.inputValue()) === '' || await page.getByText('Couldn’t save this mood. Try again; your text is kept.', { exact: true }).isVisible()).toBe(true);
+  await field.fill('rainy day mystery');
+  await page.getByRole('button', { name: /^(Add|Replace)$/ }).click();
+  await expect.poll(() => f.room.shared.ideas.map((i) => i.text)).toEqual(['rainy day mystery']);
+  const adds = f.commands.filter((c) => c.command.type === 'add_idea');
+  expect(new Set(adds.map((c) => c.commandId)).size).toBe(1);
+  expect(f.sent().filter((c) => c === 'edit_idea')).toHaveLength(1);
 });

@@ -82,10 +82,10 @@ test('a member pressing New room still creates a room as themselves', async ({ p
   const f = await fakeRoom(page, newRoom(), { member: 'signed-in' });
   const rooms = admissions(page);
   await page.goto('/');
-  await button(page, 'New room').click();
+  await button(page, 'New couch').click();
   await expect(page.getByLabel('Mood')).toBeVisible();
   expect(rooms.count).toBe(0);
-  await button(page, 'Anything goes').click();
+  await button(page, 'Continue without an idea').click();
   await expect.poll(() => f.room.own.member.state).toBe('linked');
   expect(rooms.count).toBe(1);
   expect(f.account.starts).toBe(0);
@@ -149,9 +149,9 @@ test('a room link that keeps failing says so quietly and Retry links it', async 
     ws.onMessage((raw) => { if (JSON.parse(String(raw)).type === 'authenticate') ws.send(JSON.stringify({ type: 'room.snapshot', snapshot: f.room.shared })); });
   });
   await page.goto('/room/test-room');
-  await expect(page.getByText('Couldn’t connect GoodWatch to this room.')).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText('Couldn’t connect GoodWatch to this couch.')).toBeVisible({ timeout: 15_000 });
   expect(f.account.links).toBe(3);
   await button(page, 'Retry').click();
   await expect.poll(() => f.room.own.member.state).toBe('linked');
-  await expect(page.getByText('Couldn’t connect GoodWatch to this room.')).toHaveCount(0);
+  await expect(page.getByText('Couldn’t connect GoodWatch to this couch.')).toHaveCount(0);
 });

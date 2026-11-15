@@ -36,9 +36,9 @@ export function hostStartPhase({ attempt, retrying }: { attempt: 'starting' | 'f
   return attempt === 'failed' ? 'failed' : 'idle';
 }
 
-/** The words and accessible name on the host's Start. */
-export function hostStartLabel(phase: StartPhase, beat: number) {
-  return phase === 'failed' ? 'Try again' : phase === 'starting' ? startWords(beat) : 'Start';
+/** The words and accessible name on the host's Start: "Start on my own", then "Start with 4" once friends are in (`people` counts you too). */
+export function hostStartLabel(phase: StartPhase, beat: number, people = 1) {
+  return phase === 'failed' ? 'Try again' : phase === 'starting' ? startWords(beat) : people > 1 ? `Start with ${people}` : 'Start on my own';
 }
 
 /**

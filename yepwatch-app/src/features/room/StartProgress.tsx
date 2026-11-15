@@ -115,7 +115,7 @@ function Working({ phase, width, tone }: { phase: StartPhase; width: number; ton
 }
 
 /** Words that change with a short cross-fade (and a little rise, unless motion is reduced). */
-function Words({ text, color, size }: { text: string; color: string; size: number }) {
+function Words({ text, color, size, width }: { text: string; color: string; size: number; /** A set width, the words from its left edge: other words never move them or the icon beside them. */ width?: number }) {
   const reduced = useReducedMotion();
   const [v] = useState(() => new Animated.Value(1));
   const first = useRef(true);
@@ -128,18 +128,18 @@ function Words({ text, color, size }: { text: string; color: string; size: numbe
     return () => a.stop();
   }, [text]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <Animated.View style={{ flexShrink: 1, opacity: v, transform: [{ translateY: reduced ? 0 : v.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }] }}>
+    <Animated.View style={{ flexShrink: 1, width, opacity: v, transform: [{ translateY: reduced ? 0 : v.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }] }}>
       <GText bold size={size} color={color} lines={1}>{text}</GText>
     </Animated.View>
   );
 }
 
-/** The host's Start: Start, the start's words while it works, Try again after a failure. */
-export function StartButton({ phase, onPress, disabled }: { phase: StartPhase; onPress: () => void; disabled?: boolean }) {
+/** The host's Start ("Start on my own", "Start with 4" once friends are in), the start's words while it works, Try again after a failure. */
+export function StartButton({ phase, onPress, disabled, people = 1 }: { phase: StartPhase; onPress: () => void; disabled?: boolean; people?: number }) {
   const { z } = useLayout();
   const [width, setWidth] = useState(240);
   const busy = phase === 'starting';
-  const label = hostStartLabel(phase, useStartBeat(busy));
+  const label = hostStartLabel(phase, useStartBeat(busy), people);
   const icon = busy ? <LoadingDots color={warm.ink} /> : <Icon name="play" size={16} color={warm.ink} />;
   return (
     <Live busy={busy} announce={phase === 'idle' ? null : label} style={{ flexGrow: 1, flexShrink: 1, flexBasis: 0 }}>
@@ -148,7 +148,7 @@ export function StartButton({ phase, onPress, disabled }: { phase: StartPhase; o
           style={{ minHeight: z(54), borderRadius: 12, paddingHorizontal: 16, flexDirection: 'row', gap: 10, backgroundColor: glow.amber, borderWidth: 1, borderColor: glow.amber }}>
           <Working phase={phase} width={width} tone="amber" />
           {icon}
-          <Words text={label} color={warm.ink} size={z(17)} />
+          <Words text={label} color={warm.ink} size={z(17)} width={z(132)} />
         </Press>
       </View>
     </Live>

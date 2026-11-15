@@ -255,7 +255,7 @@ test('authoritative expiry is terminal and a delayed room response cannot resurr
   const f = await fixture(page);
   f.room.shared.phase = 'expired';
   await page.getByRole('button', { name: 'Refresh', exact: true }).click();
-  await expect(page.getByText('This room has expired', { exact: true })).toBeVisible();
+  await expect(page.getByText('This couch has expired', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Yep', exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Refresh', exact: true })).toHaveCount(0);
 });
@@ -285,11 +285,10 @@ test('the creator invitation survives a full navigation/reload without bearer st
     )
   );
   await page.reload();
-  await openRoomPage(page, 'Anything');
-  await expect(page.getByRole('button', { name: 'Share', exact: true })).toBeEnabled();
-  await expect(
-    page.getByText(`${new URL(page.url()).host}/r/isolated-invite`, { exact: true })
-  ).toBeVisible();
+  await openRoomPage(page, 'Host’s couch');
+  await page.getByRole('button', { name: 'Invite friends, show QR code and link', exact: true }).click();
+  await expect(page.getByRole('button', { name: `Copy link ${new URL(page.url()).host}/r/isolated-invite`, exact: true })).toBeEnabled();
+  await expect(page.getByRole('img', { name: `QR code for ${new URL(page.url()).host}/r/isolated-invite`, exact: true })).toBeVisible();
 });
 
 test('the poster trailer opens externally without changing the card or room choices', async ({ page, context }) => {
@@ -576,17 +575,17 @@ test('leaving the room sends one explicit command and returns to the entrance', 
   page,
 }) => {
   const f = await fixture(page);
-  await openRoomPage(page, 'Anything');
-  await page.getByRole('button', { name: 'Leave room', exact: true }).click();
+  await openRoomPage(page, 'Host’s couch');
+  await page.getByRole('button', { name: 'Leave couch', exact: true }).click();
   // Leave asks first; Stay keeps the room and sends nothing.
   await page.getByRole('button', { name: 'Stay', exact: true }).click();
   await expect(page.getByTestId('leave-confirm')).toHaveCount(0);
   expect(f.commands.some((e) => e.command.type === 'leave')).toBe(false);
-  await page.getByRole('button', { name: 'Leave room', exact: true }).click();
+  await page.getByRole('button', { name: 'Leave couch', exact: true }).click();
   await page.getByRole('button', { name: 'Leave', exact: true }).click();
   // The server refuses the left person's read of the answer: that still goes home, never "access ended".
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByText('Your room access ended')).toHaveCount(0);
+  await expect(page.getByText('Your couch access ended')).toHaveCount(0);
   expect(f.commands.filter((e) => e.command.type === 'leave')).toHaveLength(1);
   expect(f.commands.some((e) => e.command.type === 'agree')).toBe(false);
 });
@@ -595,7 +594,7 @@ test('dropped people do not count as in the room', async ({page}) => {
   const f = await fixture(page);
   f.room.shared.participants.push({participantId:'dropped-friend',nickname:'Sam',serviceIds:null,screenId:'tv',ready:true,dropped:true});
   await page.reload();
-  await openRoomPage(page, 'Anything');
+  await openRoomPage(page, 'Host’s couch');
   await expect(page.getByText('Just you',{exact:true})).toBeVisible();
   await expect(page.getByText('2 people',{exact:true})).toHaveCount(0);
 });
@@ -613,15 +612,16 @@ for (const mode of ['no-share', 'rejected', 'cancelled', 'manual'] as const) {
       } } });
     }, mode);
     await fixture(page);
-    await openRoomPage(page, 'Anything');
-    await page.getByRole('button', { name: 'Share', exact: true }).click();
+    await openRoomPage(page, 'Host’s couch');
+    await page.getByRole('button', { name: 'Invite friends, show QR code and link', exact: true }).click();
+    await page.getByRole('button', { name: 'Share link', exact: true }).click();
     if (mode === 'no-share' || mode === 'rejected') {
-      await expect(page.getByRole('button', { name: 'Copied', exact: true })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Share link', exact: true }).getByText('Copied', { exact: true })).toBeVisible();
       expect(await page.evaluate(() => sessionStorage.getItem('test-copied-invitation'))).toBe(`${new URL(page.url()).origin}/r/ABC234`);
     } else if (mode === 'manual') {
-      await expect(page.getByText('Select and copy the link', { exact: true })).toBeVisible();
+      await expect(page.getByText(/^Select and copy the link: /)).toBeVisible();
     } else {
-      await expect(page.getByRole('button', { name: 'Copied', exact: true })).toHaveCount(0);
+      await expect(page.getByRole('button', { name: 'Share link', exact: true }).getByText('Copied', { exact: true })).toHaveCount(0);
       expect(await page.evaluate(() => sessionStorage.getItem('test-copied-invitation'))).toBeNull();
     }
     await expect(page.getByText(/Sharing could not open/)).toHaveCount(0);
@@ -677,8 +677,8 @@ test('Tonight cheers send real activity: tap, renewed hold with one seed, all-ho
 
 test('tapping outside a field dismisses the keyboard in panels', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Join a room', exact: true }).click();
-  const code = page.getByLabel('Room code or invitation');
+  await page.getByRole('button', { name: 'Join a couch', exact: true }).click();
+  const code = page.getByLabel('Couch code or invitation');
   await code.focus();
   await expect(code).toBeFocused();
   await page.getByText('Your name', { exact: true }).click();

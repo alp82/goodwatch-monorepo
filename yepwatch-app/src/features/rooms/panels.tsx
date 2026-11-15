@@ -24,6 +24,7 @@ import { R, warm } from '../shell/tokens';
 import { posterAt, timeAgo, type HomeRoom } from './home-model';
 import { useHome } from './useHome';
 import { LegalLinks } from '../legal/LegalLinks';
+import { noun } from '../shell/noun';
 
 const MAX_NAME = 40;
 /** Browsers draw their own focus outline and caret; the amber border and caret replace them. */
@@ -53,12 +54,14 @@ function ErrorText({ children }: { children?: string }) {
 
 /** Room label, ideas and people take this much before the preview arrives, so the form doesn't move. */
 const HEAD_HEIGHT = 150;
-/** The host's possessive for the room label: "ALP’S ROOM", or "YOUR FRIEND’S ROOM" without a name. */
-export const roomLabel = (hostName: string | null) => `${(hostName || 'Your friend').toUpperCase()}’S ROOM`;
+/** The host's possessive for the couch label: "ALP’S COUCH", or "YOUR FRIEND’S COUCH" without a name. */
+export const roomLabel = (hostName: string | null) => noun.of(hostName || 'Your friend').toUpperCase();
+/** What the host wants, as the friend reads it before joining. */
+export const friendHeading = (hostName: string | null) => `${hostName || 'Your friend'} wants to pick something to watch with you`;
 
 /**
  * What a friend sees before joining: whose room it is, the switched-on ideas as the headline (one
- * idea big, several stacked and fitted, none "Anything"), then the people and the kinds. `undefined`
+ * idea big, several stacked and fitted, none: what the host wants), then the people and the kinds. `undefined`
  * is still loading: the space is kept.
  */
 export function InviteHead({ preview }: { preview: InvitePreview | undefined }) {
@@ -76,7 +79,10 @@ export function InviteHead({ preview }: { preview: InvitePreview | undefined }) 
     <View testID="invite-head" onLayout={(e) => { if (e.nativeEvent.layout.width > 0) setWidth(e.nativeEvent.layout.width); }} style={{ minHeight: HEAD_HEIGHT, justifyContent: 'flex-end', alignItems: 'center', gap: z(12) }}>
       <Label color={glow.amber}>{roomLabel(preview.hostName)}</Label>
       <View testID="invite-ideas" style={{ gap: 6, alignItems: 'center' }}>
-        {!preview.ideas.length ? <GText bold size={hero} color={glow.soft} style={{ letterSpacing: -1.5, lineHeight: hero * 1.04 }}>Anything</GText> : preview.ideas.map((idea, i) => {
+        {!preview.ideas.length ? (() => {
+          const fs = fitSize(friendHeading(preview.hostName), width, hero * 0.6);
+          return <GText bold size={fs} color={glow.soft} style={{ textAlign: 'center', letterSpacing: -fs * 0.03, lineHeight: fs * 1.04 }}>{friendHeading(preview.hostName)}</GText>;
+        })() : preview.ideas.map((idea, i) => {
           const fs = fitSize(idea.text, width, many ? hero * 0.6 : hero);
           return <GText key={i} bold size={fs} style={{ textAlign: 'center', letterSpacing: -fs * 0.03, lineHeight: fs * 1.04 }}>{idea.text}</GText>;
         })}
@@ -134,11 +140,11 @@ export function JoinScreen({ invite, checking = false, nickname, nameLocked = fa
   return (
     <Screen testID="join-screen" back={back} pill={null} me={me} onProfile={editName} width={z(640)} gap={phone ? 28 : z(36)}>
       {head ?? (
-        <GText bold size={phone ? 40 : z(56)} style={{ textAlign: 'center', letterSpacing: -1.4 }}>{invite ? 'Join the room' : 'Join a room'}</GText>
+        <GText bold size={phone ? 40 : z(56)} style={{ textAlign: 'center', letterSpacing: -1.4 }}>{invite ? noun.joinThe : noun.joinAny}</GText>
       )}
       <View style={{ gap: z(18), opacity: checking ? 0 : 1 }} pointerEvents={checking ? 'none' : 'auto'}>
         {showCode ? (
-          <Field big code autoFocus={!initialCode} label="Room code or invitation" value={code} onChange={setCode} placeholder="Code or link" returnKey={fixedName ? 'go' : 'next'} onSubmit={go} />
+          <Field big code autoFocus={!initialCode} label={`${noun.One} code or invitation`} value={code} onChange={setCode} placeholder="Code or link" returnKey={fixedName ? 'go' : 'next'} onSubmit={go} />
         ) : null}
         {fixedName ? (
           <>
@@ -197,13 +203,13 @@ export function ProfileSheet({ nickname, save, member = false, lapsed = false, s
       <View style={{ gap: 8 }}>
         <Label>Your name</Label>
         <Field label="Your name" value={value} onChange={setValue} placeholder="Your name" returnKey="done" onSubmit={go} />
-        <GText size={13} color={glow.muted}>Used for new rooms</GText>
+        <GText size={13} color={glow.muted}>{`Used for new ${noun.many}`}</GText>
       </View>
-      {!member && !lapsed && signIn ? <View style={{ gap: 14 }}><Or /><GoodWatchButton detail="Brings your streaming services to new rooms" onPress={signIn} disabled={busy} /></View> : null}
+      {!member && !lapsed && signIn ? <View style={{ gap: 14 }}><Or /><GoodWatchButton detail={`Brings your streaming services to new ${noun.many}`} onPress={signIn} disabled={busy} /></View> : null}
       {(member || lapsed) && logOut ? (
         <View style={{ gap: 8 }}>
           <Action label="Log out" onPress={logOut} disabled={busy} small />
-          <GText size={13} color={glow.muted}>Your rooms stay as they are. GoodWatch stays signed in.</GText>
+          <GText size={13} color={glow.muted}>{`Your ${noun.many} stay as they are. GoodWatch stays signed in.`}</GText>
         </View>
       ) : null}
       <ErrorText>{error}</ErrorText>
@@ -276,7 +282,7 @@ export function HistorySheet({ decisions, left, archived, restore, openRoom, can
       ) : null}
       {archived.length > 0 && (
         <View style={{ gap: 8 }}>
-          <Label>Archived rooms</Label>
+          <Label>{`Archived ${noun.many}`}</Label>
           {archived.map((r) => (
             <View key={r.roomId} style={row}>
               <Press label={r.label} onPress={() => openRoom(r.roomId)} style={{ flex: 1, minWidth: 0, alignItems: 'flex-start', gap: 4 }}>
@@ -290,7 +296,7 @@ export function HistorySheet({ decisions, left, archived, restore, openRoom, can
       )}
       {left.length > 0 && (
         <View style={{ gap: 8 }}>
-          <Label>Left rooms</Label>
+          <Label>{`Left ${noun.many}`}</Label>
           {left.map((r) => (
             <View key={r.roomId} style={row}>
               <View style={{ flex: 1, gap: 4 }}>

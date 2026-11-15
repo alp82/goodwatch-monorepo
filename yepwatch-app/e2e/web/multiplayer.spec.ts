@@ -47,9 +47,9 @@ test('a third person joins, votes and leaves during voting: the voting bar never
 
   // Sam leaves through the room page.
   const visible = (name: string | RegExp) => sam.page.getByRole('button', { name, exact: typeof name === 'string' }).filter({ visible: true }).first();
-  await visible(/, switch room$/).click();
-  await visible(/, Room page$/).click();
-  await visible('Leave room').click();
+  await visible(/, switch couch$/).click();
+  await visible(/, Couch page$/).click();
+  await visible('Leave couch').click();
   await visible('Leave').click();
   for (const p of [host, mia]) await eventually(() => faces(p), (v) => !v.some((l) => l.startsWith('Sam')), `${p.name} sees Sam go`, p);
   await host.page.waitForTimeout(800);

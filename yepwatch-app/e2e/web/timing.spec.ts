@@ -1,7 +1,7 @@
 // Key timing moments, repeated E2E_TIMING_RUNS times (each run its own test, so runs spread over workers).
 // `node run.mjs speed` compares each moment's p95 with its target (budgets.mjs).
 import { eventually, test, type Person } from '../lib/harness';
-import { cardTitle, createRoom, inviteLink, join, readyHost, start, vote } from './flows';
+import { addIdea, cardTitle, createRoom, inviteLink, join, readyHost, start, vote } from './flows';
 
 const runs = Number(process.env.E2E_TIMING_RUNS ?? 3);
 for (let run = 1; run <= runs; run++) {
@@ -16,9 +16,7 @@ for (let run = 1; run <= runs; run++) {
     await mia.tap(mia.button('Join'), { expect: { visible: ['services-sheet'] } });
     await mia.tap(mia.page.getByRole('checkbox', { name: 'Netflix', exact: true }).filter({ visible: true }), { repeatable: true });
     await mia.tap(mia.button('Done'), { expect: { visible: ['waiting'] } });
-    await mia.tap(mia.button('Suggest an idea'), { expect: { visible: ['mood-page'] } });
-    await mia.fill(mia.page.getByLabel('Mood'), 'space adventure');
-    await mia.tap(mia.page.getByLabel('Mood'), { key: 'Enter', expect: { visible: ['waiting'] }, observers: [[host, { label: { text: 'Use space adventure', exact: true } }, 'ideaToPeerMs']] });
+    await addIdea(mia, 'space adventure', [[host, { label: { text: '^space adventure\\. Mia’s wish' } }, 'ideaToPeerMs']]);
     // The host presses Start a beat after Mia is back in the room, as people do: with no Ready hold her
     // room screen now lasts exactly until the round arrives, and a Start within ~150 ms of her return
     // would show that room for less than a flash's length.

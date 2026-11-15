@@ -8,17 +8,17 @@ export const INVITE_RE = /\/r\/([A-Z0-9]{4,12})\b/;
 export async function freshStart(p) {
   p.forceStop(); clearApp(p.serial);
   const launch = p.launch();
-  await p.find('New room', { timeout: 20000 });
+  await p.find('New couch', { timeout: 20000 });
   return launch;
 }
 /** Get to the start page without clearing data (relaunch if Back would leave the app). */
 export async function toStart(p) {
   for (let i = 0; i < 3; i++) {
-    if (await p.has('New room') && !(await p.has(/switch room$/))) return;
+    if (await p.has('New couch') && !(await p.has(/switch couch$/))) return;
     if (!p.foreground().includes('dev.yepwatch.e2e')) break;
     p.back(); await sleep(700);
   }
-  p.launch(); await p.find('New room', { timeout: 20000 });
+  p.launch(); await p.find('New couch', { timeout: 20000 });
 }
 /** Commit a text field the way a keyboard user does (IME action). */
 export async function fillAndSubmit(p, sel, text) {
@@ -37,10 +37,10 @@ export async function inviteCode(p) {
 }
 /** Start page -> configured room (mood, Netflix, name). Returns the invitation code. */
 export async function createRoom(p, { name = 'Ann', mood = 'cheer me up' } = {}) {
-  await p.tap('New room');
+  await p.tap('New couch');
   await p.tap(mood, { timeout: 8000 });
-  await p.tap('Create room', { timeout: 8000 });
-  await p.waitFor('Start', { timeout: 10000 });
+  await p.tap('Create couch', { timeout: 8000 });
+  await p.waitFor(/^Start( with \d+| on my own)$/, { timeout: 10000 });
   await p.tap(/^Streaming services/);
   await pickNetflix(p);
   if (name) await fillAndSubmit(p, 'Your name', name);

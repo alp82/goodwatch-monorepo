@@ -8,12 +8,20 @@ import { GText, Icon, Press, glow, grow, native } from '../glow/theme';
 import { IDEA_LIMITS } from './model';
 import { CHAR_EM, webField } from './parts';
 import { Actions, Button, Screen, TextLink, usePinnedActions } from './ui';
+import { noun } from '../shell/noun';
 
 /** Moods, themes and plots, not titles. */
 export const MOOD_PLACEHOLDER = 'Describe a mood, a theme, or a plot…';
 /** The placeholder on narrow windows: two near-equal lines. */
 const PLACEHOLDER_LINES = ['Describe a mood,', 'a theme, or a plot…'] as const;
 export const PRESETS = ['cheer me up', 'rainy day whodunit', 'twist ending', 'family night', 'space adventure', 'severance but funny', 'grown up cartoons', 'something short'];
+/** Natural phrases between the presets, so the setup's rotating Try examples read like something you'd say. */
+const PHRASES = [
+  'something short and funny', 'a heist with a great crew', 'scary, but not too scary', 'feel-good with a big finale',
+  'a true story', 'one we can all quote', 'slow burn thriller', 'so bad it’s good', '90s action', 'a road trip',
+];
+/** The couch setup's "Try …" examples: the presets with the phrases in between. */
+export const TRY_EXAMPLES: readonly string[] = PRESETS.flatMap((m, i) => (PHRASES[i] ? [m, PHRASES[i]] : [m])).concat(PHRASES.slice(PRESETS.length));
 
 /**
  * Placeholder size: the whole line on one row, fitted to the column; two lines when one row would
@@ -34,7 +42,7 @@ function typedSize(text: string, col: number, phone: boolean, z: (n: number) => 
 }
 
 /** The editor is local: room creation and saves never prevent typing or picking a preset. */
-export function MoodComposer({ initialText = '', text: controlledText, first = false, action = 'Create room', editing = false, disabled = false, saving = false, error, note, details, pick, back, onTextChange }: {
+export function MoodComposer({ initialText = '', text: controlledText, first = false, action = noun.make, editing = false, disabled = false, saving = false, error, note, details, pick, back, onTextChange }: {
   initialText?: string; first?: boolean; action?: string; editing?: boolean; disabled?: boolean;
   text?: string;
   saving?: boolean; error?: string; details?: ReactNode;
@@ -84,7 +92,7 @@ export function MoodComposer({ initialText = '', text: controlledText, first = f
   };
   const font = { fontFamily: 'GabaritoBold', fontSize: size, lineHeight: size * 1.2, letterSpacing: -size * 0.03 } as const;
   return (
-    <Screen testID="mood-page" back={back} pill={first ? { label: 'New room', state: 'new' } : undefined} width={col} gap={0}
+    <Screen testID="mood-page" back={back} pill={first ? { label: noun.create, state: 'new' } : undefined} width={col} gap={0}
       footer={pinned ? create : undefined}>
       {note ? <BusyNote text={note} /> : null}
       <View style={{ gap: phone ? 30 : z(44), alignItems: 'center' }}>
@@ -127,7 +135,7 @@ export function MoodComposer({ initialText = '', text: controlledText, first = f
         {!pinned ? <Actions style={{ width: Math.min(col, z(340)) }}>{create}</Actions> : null}
         {first || editing ? (
           <View>
-            {first ? <TextLink label="Anything goes" color={glow.muted} disabled={disabled} onPress={() => pick('')} />
+            {first ? <TextLink label="Continue without an idea" color={glow.muted} disabled={disabled} onPress={() => pick('')} />
               : <TextLink label="Remove this idea" color={glow.muted} disabled={disabled} onPress={() => pick('')} />}
           </View>
         ) : null}

@@ -9,6 +9,7 @@ import { exitRoom, toRooms } from './nav';
 import { useRoom, useRoomLive } from './RoomProvider';
 import { NoteLine, useFrameNote, type FrameNote } from '../shell/floating-note';
 import { Actions, Button, Screen } from './ui';
+import { noun } from '../shell/noun';
 
 /** While the room's first read is out, nothing but the page itself: most opens never need words. */
 const OPENING_WORDS_AFTER_MS = 900;
@@ -22,8 +23,8 @@ export function RoomStatus() {
   const quiet = !ended && !state.room.error && !late;
   const failed = !ended && Boolean(state.room.error);
   const title = ended
-    ? state.terminal === 'expired' ? 'This room has expired' : state.access === null ? 'Reopen your invitation' : 'Your room access ended'
-    : failed ? 'Couldn’t load the room' : 'Opening the room…';
+    ? state.terminal === 'expired' ? `${noun.This} has expired` : state.access === null ? 'Reopen your invitation' : `Your ${noun.one} access ended`
+    : failed ? `Couldn’t load the ${noun.one}` : `Opening the ${noun.one}…`;
   return (
     <Screen testID="room-status" back={toRooms} pill={null} width={z(640)}>
       {quiet ? null : (
@@ -33,7 +34,7 @@ export function RoomStatus() {
           {ended || failed ? (
             <Actions style={{ width: phone ? '100%' : z(320), paddingTop: 8 }}>
               {failed ? <Button label="Retry" onPress={() => void state.refetch().catch(() => undefined)} /> : null}
-              <Button secondary={failed} label="Your rooms" onPress={exitRoom} />
+              <Button secondary={failed} label={noun.yours} onPress={exitRoom} />
             </Actions>
           ) : null}
         </View>
@@ -55,10 +56,10 @@ export function RoomNotes() {
   const text = state.offline ? connectionWords
     : notice || entry.error || (state.privateError ? 'Refresh to keep choosing.'
       : noServices ? 'Pick a streaming service'
-      : ideaLimit ? ((view?.ideas.length ?? 0) >= IDEA_LIMITS.perRoom ? `Up to ${IDEA_LIMITS.perRoom} ideas. Remove one first.` : 'No more new ideas in this room')
-      : state.error || connectionWords || (linkFailed ? 'Couldn’t connect GoodWatch to this room.' : ''));
+      : ideaLimit ? ((view?.ideas.length ?? 0) >= IDEA_LIMITS.perRoom ? `Up to ${IDEA_LIMITS.perRoom} ideas. Remove one first.` : `No more new ideas in ${noun.this}`)
+      : state.error || connectionWords || (linkFailed ? `Couldn’t connect GoodWatch to ${noun.this}.` : ''));
   const connectionLine = Boolean(text) && text === connectionWords;
-  const linkLine = linkFailed && text === 'Couldn’t connect GoodWatch to this room.';
+  const linkLine = linkFailed && text === `Couldn’t connect GoodWatch to ${noun.this}.`;
   // The connection line's action says Retry for the whole outage, whether it resends a saved action or reconnects: a
   // label that changed when an action got saved mid-outage moved the line's words (layout shift).
   const label = linkLine || entry.error || connectionLine ? 'Retry' : noServices ? 'Your services' : ideaLimit ? 'OK' : 'Refresh';

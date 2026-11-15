@@ -14,6 +14,7 @@ import { GoodWatchMark } from './marks';
 import { useLayout } from './layout';
 import { Avatar, LiveDot } from './parts';
 import { R, warm } from './tokens';
+import { noun } from './noun';
 
 /** What the room switcher pill shows. */
 export interface HeaderPill {
@@ -41,6 +42,8 @@ export interface AppHeaderProps {
   onProfile?: () => void;
   /** Profile is resting for a moment (rooms are loading): it doesn't react, without dimming. */
   profileQuiet?: boolean;
+  /** A strip continues the header below (the couch setup's Who's here): it draws the bottom line instead. */
+  joined?: boolean;
 }
 
 /** The header wordmark. */
@@ -70,7 +73,7 @@ export function RoomPill({ pill, onPress }: { pill: HeaderPill; onPress?: () => 
   // A longer label (another idea, a NEW count): the chevron glides over instead of jumping.
   const chevron = useGlide({ axis: 'x' });
   return (
-    <Press label={`${pill.label}${fresh ? `, ${fresh} new` : ''}, switch room`} onPress={onPress ?? (() => undefined)} disabled={!onPress}
+    <Press label={`${pill.label}${fresh ? `, ${fresh} new` : ''}, switch ${noun.one}`} onPress={onPress ?? (() => undefined)} disabled={!onPress}
       style={{ ...grow(Math.max(44, z(40))), maxWidth: phone ? undefined : z(420), flexShrink: 1, minWidth: 0, alignItems: 'stretch' }}
       visual={{ height: Math.max(44, z(40)), minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 14, paddingRight: 10, borderRadius: 12, backgroundColor: '#ffffff0a', borderWidth: 1, borderColor: fresh ? '#fbbf2499' : pill.state === 'live' ? '#ffffff22' : warm.line }}>
       {pill.state === 'live' || pill.state === 'rooms' ? <LiveDot beat={pill.beat} /> : pill.state === 'decided' ? <Icon name="tickets" size={z(15)} color={glow.amber} /> : <Plus size={z(15)} color={glow.amber} />}
@@ -100,11 +103,11 @@ function sameHeader(a: AppHeaderProps, b: AppHeaderProps) {
   const samePill = pa === pb || (pa !== null && pb !== null && pa.label === pb.label && pa.state === pb.state && pa.fresh === pb.fresh && pa.beat === pb.beat);
   const sameMe = a.me === b.me || (a.me !== undefined && b.me !== undefined && a.me.name === b.me.name && a.me.member === b.me.member);
   return samePill && sameMe && a.back === b.back && a.onLogo === b.onLogo && a.logoLabel === b.logoLabel && a.onPill === b.onPill
-    && a.onProfile === b.onProfile && a.profileQuiet === b.profileQuiet;
+    && a.onProfile === b.onProfile && a.profileQuiet === b.profileQuiet && a.joined === b.joined;
 }
 
 /** Memoized (sameHeader): a room update re-renders the screen, not the header. */
-export const AppHeader = memo(function AppHeader({ back, onLogo, logoLabel = 'Your rooms', pill, onPill, me, onProfile, profileQuiet }: AppHeaderProps) {
+export const AppHeader = memo(function AppHeader({ back, onLogo, logoLabel = noun.yours, pill, onPill, me, onProfile, profileQuiet, joined = false }: AppHeaderProps) {
   const { phone, gutter, max, header, z } = useLayout();
   const brand = <BrandMark size={phone ? 21 : z(23)} />;
   // The same box whether or not it's pressable (a panel opening by itself makes it a control): the
@@ -118,7 +121,7 @@ export const AppHeader = memo(function AppHeader({ back, onLogo, logoLabel = 'Yo
   const pillEl = pill ? <View style={{ flexShrink: 1, minWidth: 0 }}><RoomPill pill={pill} onPress={onPill} /></View> : null;
   const profile = <ProfileButton me={me} onPress={onProfile} quiet={profileQuiet} />;
   return (
-    <View testID="app-header" style={{ height: header, zIndex: 30, borderBottomWidth: 1, borderBottomColor: warm.line, backgroundColor: warm.bar, paddingHorizontal: phone ? gutter - 4 : gutter, ...(Platform.OS === 'web' ? { backdropFilter: 'blur(14px)' } : null) } as ViewStyle}>
+    <View testID="app-header" style={{ height: header, zIndex: 30, borderBottomWidth: joined ? 0 : 1, borderBottomColor: warm.line, backgroundColor: warm.bar, paddingHorizontal: phone ? gutter - 4 : gutter, ...(Platform.OS === 'web' ? { backdropFilter: 'blur(14px)' } : null) } as ViewStyle}>
       {phone ? (
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           {backButton ?? <View style={{ paddingLeft: 4 }}>{logo}</View>}

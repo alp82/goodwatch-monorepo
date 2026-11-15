@@ -38,6 +38,7 @@ import { useAccount } from '../core/continuous/account';
 import { memberTransition } from '../core/continuous/member-transition';
 import { AppFrame } from './shell/Frame';
 import { openNewRoom, preloadStartPages } from './room/nav';
+import { noun } from './shell/noun';
 
 type PanelKind = 'join' | 'profile' | 'history';
 /** What another screen can open on the start page (`/?open=…`). */
@@ -207,7 +208,7 @@ function useEntrancePage({ invite, open: request, from }: EntranceProps) {
         )
           return;
         setError(
-          'Could not check your existing room membership. Retry before joining so your place is preserved.'
+          `Could not check your existing ${noun.one} membership. Retry before joining so your place is preserved.`
         );
         setRecoveryBlocked(true);
       } finally {
@@ -270,7 +271,7 @@ function useEntrancePage({ invite, open: request, from }: EntranceProps) {
       outcome = resendOutcome(sendFailure(e, signal.aborted, 'Joining was interrupted.'));
       if (outcome === 'cancelled') return;
       setError(unanswered(e) && browserOffline() ? OFFLINE_WORDS
-        : transientFailure(e) ? 'Couldn’t reach YepWatch. Your request is saved. Try again.' : e instanceof Error ? e.message : 'Could not join this room.');
+        : transientFailure(e) ? 'Couldn’t reach YepWatch. Your request is saved. Try again.' : e instanceof Error ? e.message : `Could not join ${noun.this}.`);
       setDiagnostic(e instanceof ApiFailure ? e.diagnostic : undefined);
       const current = latestAdmission.current ?? saved;
       if (current) {
@@ -384,7 +385,7 @@ function useEntrancePage({ invite, open: request, from }: EntranceProps) {
     <>
       {reconnectLine}
       {shownError && diagnostic && <ConnectionDetails diagnostic={diagnostic} />}
-      {admission && <GText size={12} color={glow.muted}>Retry preserves your identity and room request.</GText>}
+      {admission && <GText size={12} color={glow.muted}>{`Retry preserves your identity and ${noun.one} request.`}</GText>}
       {restoreFailed && <Press label="Retry saved request" onPress={() => { setRestoring(true); setError(''); setRestoreVersion((v) => v + 1); }} style={{ alignSelf: 'flex-start', ...grow(44) }}><GText bold color={glow.amber}>Retry saved request</GText></Press>}
       {recoveryBlocked && <Press label="Retry membership check" onPress={() => { setRecoveryBlocked(false); setCheckingInvite(true); setError(''); setCheckVersion((v) => v + 1); }} style={{ alignSelf: 'flex-start', ...grow(44) }}><GText bold color={glow.amber}>Retry membership check</GText></Press>}
     </>
