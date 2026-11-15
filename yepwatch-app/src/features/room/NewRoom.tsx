@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react';
-import { View } from 'react-native';
-import { AppState } from 'react-native';
+import { AppState, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { transientFailure, unanswered } from '../../core/continuous/backoff';
