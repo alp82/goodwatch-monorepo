@@ -14,9 +14,9 @@
     {
       "file": "store/assets/ios-iphone-medium/gallery-02-couch.png",
       "caption": "Grab a couch. / Bring your people.",
-      "source": "artifacts/store-gallery-rethink/native/iphone-medium/02-couch-setup.png",
-      "sourceSha256": "ae41527e319aa906751c223f9f6890fd29080b343f945bbc734c8a947bc3f748",
-      "sha256": "1acb5569630acc8eab8de53ec9ded80eac683cfee58a103ad2a84f54ba2676e9",
+      "source": "artifacts/store-gallery-rethink/native/iphone-medium/alt-invite.png",
+      "sourceSha256": "af5354b8ff2998508392ca42c0d6b7fc3d061a14078923cb53624ac27c380dca",
+      "sha256": "9d290369c7f0f6853b7e86ce937038b62a6ee62503ada1bae654ce33ad5c5fcb",
       "size": [
         1206,
         2622
@@ -104,9 +104,9 @@
     {
       "file": "store/assets/android/gallery-02-couch.png",
       "caption": "Grab a couch. / Bring your people.",
-      "source": "artifacts/store-gallery-rethink/native/android/02-couch-setup.png",
-      "sourceSha256": "f7cfc00f15377c4533eee09f7224c2f0bd3c7407bc724d777b2e98ef1db100d5",
-      "sha256": "f42fde47be790e47be99b27f576a31c9e491be37721bbbfef6c0d41251a041ae",
+      "source": "artifacts/store-gallery-rethink/native/android/alt-invite.png",
+      "sourceSha256": "fe7ed901395e44898e3a1ec82a9724e8ab31d582c8684e35c96b6a4f23cfe618",
+      "sha256": "802594b17fa083d9b9aca62c17175c07a184955d8c147f513e83ebc81a8f8a4e",
       "size": [
         1080,
         1920
@@ -185,7 +185,7 @@
       "caption": "Grab a couch. / One idea each.",
       "source": "artifacts/store-gallery-rethink/native/ipad/01-couch-setup.png",
       "sourceSha256": "750f5cab020e379d1307189f2cf5433c24518ab010b23d0b21504281515eea22",
-      "sha256": "12dac684d50749f532d807103499225e3a773114893868c75ab391aaf526db33",
+      "sha256": "56a0e6be85d190ebbbf362bf59dbedf020f43ee2e829510c3c7106dc79eca2d2",
       "size": [
         2064,
         2752
@@ -204,10 +204,10 @@
     },
     {
       "file": "store/assets/ios-ipad/gallery-03-invite.png",
-      "caption": "Friends join with / a code, link or QR",
+      "caption": "Friends join with / a link or QR",
       "source": "artifacts/store-gallery-rethink/native/ipad/alt-invite.png",
       "sourceSha256": "46f97fb8e2f54c1486df212e9a42a7f4ffd8476ab716230e450fb609d5a7abbf",
-      "sha256": "0a8a7e3bba30db4575ec681796a040c3fd6dabf22c0802b7da42221df8225ca8",
+      "sha256": "df4eea99baf09586394f53f6fc650123da5a181f1900224acead727b39654ba2",
       "size": [
         2064,
         2752
@@ -250,10 +250,10 @@
   "iphone-large": [
     {
       "file": "store/assets/ios-iphone/gallery-01-couch.png",
-      "caption": "Grab a couch. / One idea each.",
-      "source": "artifacts/store-gallery-rethink/native/iphone-large/01-couch-setup.png",
-      "sourceSha256": "dd1b7d63462cbb84019a86d2d8e8c44b1da83f4b74e8885dc952328f248609f6",
-      "sha256": "05d8705b32dd99f98fa3feec5bb20d00ade662fbf3be9022e3809484954be9a1",
+      "caption": "Grab a couch. / Bring your people.",
+      "source": "artifacts/store-gallery-rethink/native/iphone-large/alt-invite.png",
+      "sourceSha256": "9534e8146d2782190cf53dd2fecc8f1de7b6debcbeff523365c33b8b03bf9c47",
+      "sha256": "8142acb52faf6e1309380bedcbf2177dab046c3168c3a36b344be2c48661bedd",
       "size": [
         1320,
         2868

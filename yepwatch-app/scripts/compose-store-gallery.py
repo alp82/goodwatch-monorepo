@@ -1,6 +1,9 @@
 """Store frames: a caption headline over one unretouched native screenshot, on a YepWatch-palette background.
 
-The screenshot is scaled as a whole (never cropped, edited or redrawn); only the frame around it is drawn here.
+The screenshot is scaled as a whole, or, with "crop", one rectangle of it is enlarged (never edited or redrawn);
+only the frame around it is drawn here. "crop": [x0, y0, x1, y1] as fractions of the screenshot. Edges that are real
+screen edges keep the device bezel; cut edges fade into the background ("cropStyle": "fade") or the crop sits on a
+rounded card ("cropStyle": "card"). "zoomWidth" is the share of the frame width the enlarged crop may fill.
 Usage: python3 scripts/compose-store-gallery.py store/gallery-rethink.json [--only android]
 Spec: {"families": {"<family>": {"size": [w, h], "out": "store/assets/<dir>", "frames": [
   {"file": "gallery-01-x.png", "source": "<native png>", "caption": ["Line one", "line *two*"], "bg": "amber", "tilt": 0}]}}}
@@ -79,6 +82,8 @@ def frame(spec, size, source):
     canvas = gradient(size, style['top'], style['bottom']).convert('RGBA')
     glow(canvas, (int(w * 0.5), int(h * 0.62)), int(w * 0.55), style['glow'], 90)
     shot = Image.open(source).convert('RGB')
+    if spec.get('crop'):
+        return cropped_frame(spec, size, shot, canvas, style)
     caption_h = int(h * spec.get('captionShare', 0.19))
     margin = int(h * 0.025)
     avail_h = h - caption_h - margin * 2
@@ -98,6 +103,63 @@ def frame(spec, size, source):
     tilt = spec.get('tilt', 0)
     if tilt:
         panel = panel.rotate(tilt, resample=Image.BICUBIC, expand=True)
+    x = (w - panel.width) // 2
+    y = caption_h + margin + (avail_h + border * 2 - panel.height) // 2
+    shadow = Image.new('RGBA', canvas.size, (0, 0, 0, 0))
+    shadow.paste((0, 0, 0, 150), (x + int(w * 0.01), y + int(h * 0.012)), panel.split()[3])
+    canvas.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(int(w * 0.02))))
+    canvas.alpha_composite(panel, (x, y))
+    caption(canvas, spec['caption'], style, margin, caption_h)
+    return canvas.convert('RGB')
+
+
+def fade_mask(size, cuts, share):
+    """Alpha mask that ramps to 0 on the cut sides ('l', 't', 'r', 'b')."""
+    w, h = size
+    mask = Image.new('L', size, 255)
+    ramp = max(1, int(min(w, h) * share))
+    px = mask.load()
+    for y in range(h):
+        for x in range(w):
+            a = 1.0
+            if 'l' in cuts: a = min(a, x / ramp)
+            if 'r' in cuts: a = min(a, (w - 1 - x) / ramp)
+            if 't' in cuts: a = min(a, y / ramp)
+            if 'b' in cuts: a = min(a, (h - 1 - y) / ramp)
+            if a < 1:
+                px[x, y] = int(255 * max(0.0, a) ** 1.4)
+    return mask
+
+
+def cropped_frame(spec, size, shot, canvas, style):
+    w, h = size
+    x0, y0, x1, y1 = spec['crop']
+    box = (round(x0 * shot.width), round(y0 * shot.height), round(x1 * shot.width), round(y1 * shot.height))
+    part = shot.crop(box)
+    caption_h = int(h * spec.get('captionShare', 0.19))
+    margin = int(h * 0.025)
+    avail_h = h - caption_h - margin * 2
+    avail_w = int(w * spec.get('zoomWidth', 0.92))
+    scale = min(avail_h / part.height, avail_w / part.width)
+    sw, sh = round(part.width * scale), round(part.height * scale)
+    part = part.resize((sw, sh), Image.LANCZOS)
+    cuts = ''.join(side for side, cut in (('l', x0 > 0), ('t', y0 > 0), ('r', x1 < 1), ('b', y1 < 1)) if cut)
+    card = spec.get('cropStyle', 'fade') == 'card'
+    # Device bezel scaled with the zoom, so the enlarged screen still reads as a phone or tablet.
+    radius = int(shot.width * scale * (0.075 if shot.width / shot.height < 0.6 else 0.035))
+    if card:
+        radius = int(min(sw, sh) * 0.06)
+    border = max(4, int(sw * 0.012))
+    panel = Image.new('RGBA', (sw + border * 2, sh + border * 2), (0, 0, 0, 0))
+    pd = ImageDraw.Draw(panel)
+    pd.rounded_rectangle([0, 0, panel.width - 1, panel.height - 1], radius=radius + border, fill=(12, 12, 12, 255), outline=(60, 60, 60, 255), width=max(1, border // 3))
+    mask = Image.new('L', (sw, sh), 0)
+    ImageDraw.Draw(mask).rounded_rectangle([0, 0, sw - 1, sh - 1], radius=radius, fill=255)
+    panel.paste(part, (border, border), mask)
+    if cuts and not card:
+        alpha = panel.split()[3]
+        from PIL import ImageChops
+        panel.putalpha(ImageChops.multiply(alpha, fade_mask(panel.size, cuts, spec.get('fade', 0.16))))
     x = (w - panel.width) // 2
     y = caption_h + margin + (avail_h + border * 2 - panel.height) // 2
     shadow = Image.new('RGBA', canvas.size, (0, 0, 0, 0))

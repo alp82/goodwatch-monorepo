@@ -46,8 +46,8 @@
         {
           "type": "APP_IPAD_PRO_3GEN_129",
           "name": "gallery-01-couch.png",
-          "id": "67c00019-6e2a-84cb-801c-1a84694c13a1",
-          "md5": "ea7e2c981151a824cd5f1d9251806372",
+          "id": "65000019-6e2a-84cb-8022-a6a86cdad5b1",
+          "md5": "0ffd93563f00351e26324c03e8352e70",
           "complete": true
         },
         {
@@ -60,8 +60,8 @@
         {
           "type": "APP_IPAD_PRO_3GEN_129",
           "name": "gallery-03-invite.png",
-          "id": "e0000019-6e2a-84cb-8015-f262ecee0c47",
-          "md5": "3d321a0fefe1ac2dea3a598f9125f93d",
+          "id": "0a000019-6e2a-84cb-8022-18962aa71f69",
+          "md5": "eaea5b3afd201b0ab254fe45de35e7ad",
           "complete": true
         },
         {
@@ -95,8 +95,8 @@
         {
           "type": "APP_IPHONE_61",
           "name": "gallery-02-couch.png",
-          "id": "9dc00019-6e2a-84cb-8023-bfb4fde11d8a",
-          "md5": "cfc82be3f6c4398d70f6b6d43577a6a9",
+          "id": "36000019-6e2a-84cb-8032-6f5c33499dcc",
+          "md5": "495d8401b7c0d5f0a86035adf4e7cd36",
           "complete": true
         },
         {
@@ -144,8 +144,8 @@
         {
           "type": "APP_IPHONE_67",
           "name": "gallery-01-couch.png",
-          "id": "31c00019-6e2a-84cb-8010-bc1d7ddfd3b4",
-          "md5": "5b2b4c6097267b398308d8c96f8cb7e5",
+          "id": "89400019-6e2a-84cb-8024-ba1bc447e7c9",
+          "md5": "c3c1122039c69854c151caa6756e76ef",
           "complete": true
         },
         {
@@ -249,6 +249,114 @@
       "iphone-medium": "3f830a7f-d74e-413b-b379-bf3e55e9b68d",
       "iphone-large": "4f85dd2f-a628-4c1b-a79e-9821f0e9a0cd",
       "ipad": "e1f91fc7-9606-4a94-bfb0-3a77df20698a"
+    }
+  },
+  "simplifyRound": {
+    "checkedAt": "2026-11-15T14:42:14.387Z",
+    "feedback": "Owner: the couch setup frame (whole console) was too crowded; replace with something much easier to understand.",
+    "method": "compose-store-gallery.py gained \"crop\" (one rectangle of a real capture enlarged; real screen edges keep the bezel, cropStyle card or fade). Candidates compared side by side at 230 px wide.",
+    "candidates": {
+      "phoneBringYourPeople": {
+        "A-full": "whole Invite sheet screen scaled: QR small, header and dimmed couch compete",
+        "B-sheet-zoom": "Invite sheet cropped and enlarged: QR, Share link, Leo is here (picked, reads at 230 px)",
+        "C-faces-and-sheet": "Who’s here row + sheet: little zoom, still busy",
+        "D-faces-strip": "Who’s here + Invite strip only: thin band, mostly empty frame",
+        "fade-vs-card": "top fade left dim couch text visible; card edge at the sheet top is cleaner on amber and night, used on all phones"
+      },
+      "iphoneLarge1": {
+        "invite-sheet": "picked: the 6.9-inch set had no invite frame",
+        "ideas-crop": "describe field + Movies/Streaming + cut-off idea cards: still crowded"
+      },
+      "ipad1": {
+        "ideas-card": "picked: Ideas column only, four rows with faces and names",
+        "describe-plus-ideas": "whole console top: tiny at thumbnail"
+      },
+      "ipad3": {
+        "popover-card": "picked: Invite popover enlarged",
+        "header-plus-popover": "faces + console + popover: tiny"
+      }
+    },
+    "changedFrames": [
+      {
+        "family": "android",
+        "file": "gallery-02-couch.png",
+        "caption": "Grab a couch. / Bring your people.",
+        "shows": "Invite friends sheet enlarged (QR, Share link, Leo is here. 5 people so far.)",
+        "source": "native/android/alt-invite.png",
+        "crop": [
+          0,
+          0.5,
+          1,
+          1
+        ]
+      },
+      {
+        "family": "iphone-medium",
+        "file": "gallery-02-couch.png",
+        "caption": "Grab a couch. / Bring your people.",
+        "shows": "Invite friends sheet enlarged",
+        "source": "native/iphone-medium/alt-invite.png",
+        "crop": [
+          0,
+          0.4657,
+          1,
+          1
+        ]
+      },
+      {
+        "family": "iphone-large",
+        "file": "gallery-01-couch.png",
+        "caption": "Grab a couch. / Bring your people.",
+        "shows": "Invite friends sheet enlarged (was One idea each. over the whole console)",
+        "source": "native/iphone-large/alt-invite.png",
+        "crop": [
+          0,
+          0.5115,
+          1,
+          1
+        ]
+      },
+      {
+        "family": "ipad",
+        "file": "gallery-01-couch.png",
+        "caption": "Grab a couch. / One idea each.",
+        "shows": "Ideas column enlarged: four ideas, each with its person",
+        "source": "native/ipad/01-couch-setup.png",
+        "crop": [
+          0.625,
+          0.215,
+          0.93,
+          0.44
+        ]
+      },
+      {
+        "family": "ipad",
+        "file": "gallery-03-invite.png",
+        "caption": "Friends join with / a link or QR",
+        "shows": "Invite popover enlarged (was the whole couch with a small popover; caption dropped code, which the crop does not show)",
+        "source": "native/ipad/alt-invite.png",
+        "crop": [
+          0.612,
+          0.09,
+          0.952,
+          0.448
+        ]
+      }
+    ],
+    "scanOtherFrames": "Phone matches lists (Tap every one you’re in for) are dense but rows and posters read; iPad matches and spin frames show small text but the posters carry them. Left as is.",
+    "apple": {
+      "stateBefore": "DEVELOPER_REJECTED",
+      "stateAfter": "DEVELOPER_REJECTED",
+      "mode": "upload-apple-gallery.cjs --changed --apply (only differing same-named screenshots deleted and re-uploaded)",
+      "replaced": 4,
+      "orderVerified": true,
+      "allProcessed": true,
+      "submittedForReview": false,
+      "note": "First apply uploaded the 4 frames but the reorder failed (deleted id still listed); fixed and rerun, which reordered and read back all 20."
+    },
+    "google": {
+      "uploaded": false,
+      "reason": "still no Play Developer API credential; store/assets/android/gallery-02-couch.png updated for manual upload"
     }
   }
 }

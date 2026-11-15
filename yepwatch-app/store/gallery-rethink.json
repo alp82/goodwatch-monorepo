@@ -19,12 +19,20 @@
         },
         {
           "file": "gallery-02-couch.png",
-          "source": "artifacts/store-gallery-rethink/native/android/02-couch-setup.png",
+          "source": "artifacts/store-gallery-rethink/native/android/alt-invite.png",
           "caption": [
             "Grab a *couch*.",
             "Bring your people."
           ],
-          "bg": "night"
+          "bg": "night",
+          "crop": [
+            0,
+            0.5,
+            1,
+            1
+          ],
+          "cropStyle": "card",
+          "zoomWidth": 0.94
         },
         {
           "file": "gallery-03-yep.png",
@@ -100,12 +108,20 @@
         },
         {
           "file": "gallery-02-couch.png",
-          "source": "artifacts/store-gallery-rethink/native/iphone-medium/02-couch-setup.png",
+          "source": "artifacts/store-gallery-rethink/native/iphone-medium/alt-invite.png",
           "caption": [
             "Grab a *couch*.",
             "Bring your people."
           ],
-          "bg": "night"
+          "bg": "night",
+          "crop": [
+            0,
+            0.4657,
+            1,
+            1
+          ],
+          "cropStyle": "card",
+          "zoomWidth": 0.94
         },
         {
           "file": "gallery-03-yep.png",
@@ -178,7 +194,15 @@
             "One idea each."
           ],
           "bg": "night",
-          "captionShare": 0.16
+          "captionShare": 0.16,
+          "crop": [
+            0.625,
+            0.215,
+            0.93,
+            0.44
+          ],
+          "cropStyle": "card",
+          "zoomWidth": 0.86
         },
         {
           "file": "gallery-02-yep.png",
@@ -195,10 +219,18 @@
           "source": "artifacts/store-gallery-rethink/native/ipad/alt-invite.png",
           "caption": [
             "Friends join with",
-            "a *code*, link or QR"
+            "a *link* or QR"
           ],
           "bg": "warm",
-          "captionShare": 0.16
+          "captionShare": 0.16,
+          "crop": [
+            0.612,
+            0.09,
+            0.952,
+            0.448
+          ],
+          "cropStyle": "card",
+          "zoomWidth": 0.8
         },
         {
           "file": "gallery-04-matches.png",
@@ -241,12 +273,20 @@
       "frames": [
         {
           "file": "gallery-01-couch.png",
-          "source": "artifacts/store-gallery-rethink/native/iphone-large/01-couch-setup.png",
+          "source": "artifacts/store-gallery-rethink/native/iphone-large/alt-invite.png",
           "caption": [
             "Grab a *couch*.",
-            "One idea each."
+            "Bring your people."
           ],
-          "bg": "amber"
+          "bg": "amber",
+          "crop": [
+            0,
+            0.5115,
+            1,
+            1
+          ],
+          "cropStyle": "card",
+          "zoomWidth": 0.94
         },
         {
           "file": "gallery-02-yep.png",

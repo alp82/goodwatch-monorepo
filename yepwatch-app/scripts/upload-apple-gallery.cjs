@@ -11,6 +11,8 @@ const config = require('../eas.json');
 const apply = process.argv.includes('--apply');
 // --replace: a new gallery replaces the set (old screenshots are deleted first, so the 10-image cap holds).
 const replace = process.argv.includes('--replace');
+// --changed: a same-named screenshot whose bytes differ is deleted and re-uploaded in place; unchanged ones stay.
+const changed = process.argv.includes('--changed');
 // Version states in which Apple accepts screenshot edits (a withdrawn review is DEVELOPER_REJECTED).
 const EDITABLE = ['PREPARE_FOR_SUBMISSION', 'DEVELOPER_REJECTED', 'REJECTED', 'METADATA_REJECTED', 'INVALID_BINARY'];
 const outputIndex = process.argv.indexOf('--output');
@@ -61,7 +63,13 @@ class Gallery extends Status {
         if (bytes.toString('hex', 0, 8) !== '89504e470d0a1a0a' || bytes.readUInt32BE(16) !== dimensions[0] || bytes.readUInt32BE(20) !== dimensions[1]) throw new Error('Wrong native screenshot dimensions: ' + name);
         const checksum = crypto.createHash('md5').update(bytes).digest('hex');
         let shot = existing.find(s => s.attributes.fileName === name);
-        if (shot && shot.attributes.sourceFileChecksum !== checksum) throw new Error('Preserve differing existing screenshot: ' + name);
+        if (shot && shot.attributes.sourceFileChecksum !== checksum) {
+          if (!changed) throw new Error('Preserve differing existing screenshot: ' + name);
+          deleted.push({ type, name, id: shot.id });
+          if (apply) await shot.deleteAsync();
+          existing = existing.filter(s => s.id !== shot.id);
+          shot = undefined;
+        }
         if (!shot && apply) shot = await set.uploadScreenshot({ filePath, waitForProcessing: false });
         if (shot?.isFailed()) throw new Error('Screenshot processing failed: ' + name + ': ' + shot.getErrorMessages().join('; '));
         if (shot) ordered.push(shot.id);
@@ -99,7 +107,7 @@ class Gallery extends Status {
     fresh = await loc.getAppScreenshotSetsAsync({ query: { includes: ['appScreenshots'] } });
     for (const result of results) result.complete = fresh.some(s => (s.attributes.appScreenshots ?? []).some(p => p.id === result.id && p.isComplete()));
     const failures = outcomes.filter(r => r.status === 'rejected').map(r => r.reason?.message ?? String(r.reason));
-    const state = { checkedAt: new Date().toISOString(), appId: app.id, version: version.attributes.versionString, applied: apply, screenshots: results.sort((a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name)), sets: fresh.map(s => ({ type: s.attributes.screenshotDisplayType, screenshots: (s.attributes.appScreenshots ?? []).map(p => ({ id: p.id, name: p.attributes.fileName, complete: p.isComplete() })) })), failures, deleted, replace, submittedForReview: false };
+    const state = { checkedAt: new Date().toISOString(), appId: app.id, version: version.attributes.versionString, applied: apply, screenshots: results.sort((a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name)), sets: fresh.map(s => ({ type: s.attributes.screenshotDisplayType, screenshots: (s.attributes.appScreenshots ?? []).map(p => ({ id: p.id, name: p.attributes.fileName, complete: p.isComplete() })) })), failures, deleted, replace, changed, submittedForReview: false };
     if (output) fs.writeFileSync(output, JSON.stringify(state, null, 2) + '\n', { mode: 0o600 });
     console.log(JSON.stringify(state, null, 2));
     if (failures.length) throw new Error(failures.join('; '));
