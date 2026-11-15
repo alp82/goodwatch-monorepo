@@ -72,8 +72,8 @@ AI crawlers (Q57), as applied:
   PetalBot and GoogleOther. That would change the app's `robots.txt` after the flip. With it off, `robots.txt` through
   Cloudflare is byte-identical to the origin's.
 - `Google-Extended` isn't a crawler, only a `robots.txt` token that Googlebot honors, so no edge rule can block it.
-  To opt out of Google's training, the app's `robots.txt` needs a `User-agent: Google-Extended` / `Disallow: /`
-  group. Not done yet.
+  Owner decision 2026-11-15: don't add a `Google-Extended` group. GoodWatch stays usable by Google so it can
+  appear in Google's AI answers.
 - Managed robots.txt, AI Labyrinth, Bot Fight Mode and JS detections stay off.
 
 Undo values for every change are kept outside the repository. In short: SSL back to Full, Minimum TLS back to 1.0,
@@ -226,7 +226,7 @@ Owner to do or decide:
    and carry either user agent. Skipping only the managed phase didn't help: the training block runs in the
    `http_request_sbfm` phase, though Security Events label it as managed. A spoofed Applebot still gets 403 from
    "Fake search engines". A spoofed PetalBot gets 200 because the training block only matches the verified one. The training policy itself stays **block**. `robots.txt` now has a
-   `User-agent: Applebot-Extended` / `Disallow: /` group, Apple's training opt-out. Google-Extended is still open.
+   `User-agent: Applebot-Extended` / `Disallow: /` group, Apple's training opt-out. Google-Extended stays allowed (owner decision 2026-11-15).
 3. The 48-hour checks: Search Console crawl stats and host status, Bing crawl errors, verified bots in Security Events.
 
 ## Rules for this rollout
