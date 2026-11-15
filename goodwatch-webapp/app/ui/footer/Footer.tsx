@@ -1,16 +1,18 @@
 // The site footer: the wordmark with a caption that names the link under the pointer, four link columns that one
 // highlight glides through, the Discord invite card, the credits, and a large faint wordmark that closes the page.
-// The columns and the card rise into place the first time the footer scrolls into view.
+// The columns and the card rise into place the first time the footer scrolls into view. A projector peeks out of the
+// bottom-right corner: pressing it starts a short show in a movie palace (cinema/).
 import { ArrowUpRightIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import { useRef, useState } from "react"
+import { countryPath } from "~/domain/new-on-services"
 import justwatchLogo from "~/img/justwatch-logo.svg"
 import tmdbLogo from "~/img/tmdb-logo.svg"
 import { GoodWatchWordmark } from "~/ui/brand/GoodWatchWordmark"
 import { assetUrl } from "~/utils/asset-url"
-import { InviteCard } from "./InviteCard"
-import { countryPath } from "~/domain/new-on-services"
 import useLocale from "~/utils/locale"
+import { InviteCard } from "./InviteCard"
+import { CinemaSlot } from "./cinema/CinemaSlot"
 import {
 	CREATOR_URL,
 	FOOTER_COLUMNS,
@@ -68,7 +70,7 @@ function CreatedBy() {
 			onPointerLeave={() => setActive(false)}
 			onFocus={() => setActive(true)}
 			onBlur={() => setActive(false)}
-			className="group inline-flex items-center gap-2 rounded-full bg-white/[0.05] py-1 pr-3 pl-1 text-xs text-gray-400 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] transition-colors hover:bg-white/[0.1] hover:text-white"
+			className="group relative z-[8] inline-flex items-center gap-2 rounded-full bg-white/[0.05] py-1 pr-3 pl-1 text-xs text-gray-400 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] transition-colors hover:bg-white/[0.1] hover:text-white"
 		>
 			<span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-black transition-transform duration-500 group-hover:rotate-[360deg] motion-reduce:transition-none">
 				<XMark className="h-3 w-3" />
@@ -83,15 +85,17 @@ function CreatedBy() {
 	)
 }
 
+// The bottom row's links sit above the cinema projector's button (z-[7]), which can reach over them on phones once
+// it is up; the projector's drawing (z-[9]) still shows over them.
 function PoweredBy() {
 	return (
-		<span className="flex items-center gap-2 whitespace-nowrap">
+		<span className="flex items-center justify-center gap-2 whitespace-nowrap sm:justify-start">
 			Powered by
 			<a
 				href="https://www.themoviedb.org"
 				target="_blank"
 				rel="noreferrer"
-				className="opacity-70 transition-opacity hover:opacity-100"
+				className="relative z-[8] opacity-70 transition-opacity hover:opacity-100"
 			>
 				<img alt="TMDB" className="h-2.5 w-auto" src={assetUrl(tmdbLogo)} />
 			</a>
@@ -100,7 +104,7 @@ function PoweredBy() {
 				href="https://www.justwatch.com"
 				target="_blank"
 				rel="noreferrer"
-				className="opacity-70 transition-opacity hover:opacity-100"
+				className="relative z-[8] opacity-70 transition-opacity hover:opacity-100"
 			>
 				<img
 					alt="JustWatch"
@@ -260,8 +264,9 @@ export default function Footer() {
 					<GoodWatchWordmark fontSize="clamp(64px, 16vw, 220px)" />
 				</div>
 			</div>
-			{/* Room for the phone dock, which covers the bottom of the page below lg. */}
-			<div className="h-24 lg:hidden" aria-hidden />
+			{/* Room for the phone dock, which covers the bottom of the page below lg. The cinema's projector sits above it. */}
+			<div className="h-24 lg:hidden" aria-hidden data-footer-dock />
+			<CinemaSlot footer={ref} />
 		</footer>
 	)
 }

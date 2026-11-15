@@ -1,9 +1,8 @@
-import { TASTE_FALLBACK_PATH } from "~/domain/member-paths"
-import { WATCH_PATHS } from "../../domain/member-paths.ts"
 // Where the footer links go, grouped into its four columns, with the icon and the line that the footer's caption
 // shows while a link is pointed at.
 import {
 	CalendarDaysIcon,
+	ChartBarIcon,
 	CpuChipIcon,
 	FilmIcon,
 	FingerPrintIcon,
@@ -20,6 +19,8 @@ import {
 	UserCircleIcon,
 } from "@heroicons/react/24/solid"
 import type { ComponentType } from "react"
+import { TASTE_FALLBACK_PATH } from "~/domain/member-paths"
+import { WATCH_PATHS } from "../../domain/member-paths.ts"
 
 /** The "New on streaming" link's address until the footer puts the viewer's country in: /new/us. */
 export const NEW_ON_STREAMING = "/new"
@@ -184,6 +185,12 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
 				href: "/how-it-works",
 				blurb: "Where the scores come from",
 				icon: LightBulbIcon,
+			},
+			{
+				name: "Stats",
+				href: "/stats",
+				blurb: "GoodWatch in numbers",
+				icon: ChartBarIcon,
 			},
 			{
 				name: "Use with AI",

@@ -2,7 +2,8 @@
 // taste bar stays usable beside its drawers):
 // - on opening, focus moves into the scope (unless it is already there);
 // - while open, Tab and Shift+Tab cycle through the scope's elements only, and focus that lands outside goes back in;
-// - on closing, focus returns to where it came from (or to `returnTo`), unless it has moved somewhere else since.
+// - on closing, focus returns to where it came from (or to `returnTo`), unless it has moved somewhere else since or
+//   `returnTo` gives false.
 // Escape stays with each surface, which closes itself.
 import { useEffect, useRef } from "react"
 import { inNestedOverlay } from "~/ui/overlay"
@@ -46,8 +47,8 @@ export function useFocusScope({
 	scope: () => (HTMLElement | null | undefined)[]
 	/** Where focus goes on opening: usually the dialog itself (tabIndex -1). */
 	initial: () => HTMLElement | null | undefined
-	/** Where focus goes on closing; the element focused before opening when this gives nothing. */
-	returnTo?: () => HTMLElement | null | undefined
+	/** Where focus goes on closing; the element focused before opening when this gives nothing; false leaves it be. */
+	returnTo?: () => HTMLElement | null | undefined | false
 }) {
 	const latest = useRef({ scope, initial, returnTo })
 	latest.current = { scope, initial, returnTo }
@@ -109,7 +110,8 @@ export function useFocusScope({
 	useEffect(() => {
 		if (active || !pending.current) return
 		pending.current = false
-		const to = latest.current.returnTo?.() ?? trigger.current
+		const back = latest.current.returnTo?.()
+		const to = back === false ? null : (back ?? trigger.current)
 		trigger.current = null
 		const now = document.activeElement
 		const scoped = latest.current
