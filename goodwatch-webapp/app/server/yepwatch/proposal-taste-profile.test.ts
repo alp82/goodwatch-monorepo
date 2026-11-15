@@ -4,6 +4,7 @@ import { randomBytes } from "node:crypto"
 import {
 	TasteProfiles,
 	ProfileConflict,
+	SqlProfileStore,
 	PROFILE_RETENTION_MS,
 	FOLLOWUP_MIN_MS,
 	FOLLOWUP_MAX_MS,
@@ -210,6 +211,7 @@ test("Follow-ups include members, are idempotent, obey 10h–7d, feed only YepWa
 	await f.profiles.recordDecision(room)
 	assert.equal(f.store.rows.get(f.id)!.profile.followups.length, 1)
 	assert.equal(f.store.rows.get(memberId)!.profile.followups.length, 1)
+	assert.equal((await f.profiles.summary(f.id)).revision, 0, "decisions do not change taste revision")
 	assert.equal((await f.profiles.summary(f.id)).followups.length, 0)
 	const decidedAt = f.now()
 	f.advance(FOLLOWUP_MIN_MS)
@@ -351,6 +353,11 @@ test("HTTP contract: private profiles, admission binding, deck, conflict body, C
 	)
 	assert.match(options.headers.get("access-control-allow-methods")!, /DELETE/)
 	assert.equal((await call(paths.profile, "DELETE")).status, 204)
+	const readRoom = () => handler(new Request(`https://api.test${paths.rooms}/${admission.credential.roomId}`, {
+		headers: { ...headers, authorization: `Bearer ${admission.credential.token}`, "x-yepwatch-participant": admission.credential.participantId },
+	}))
+	assert.equal((await readRoom()).status, 200)
+	assert.equal(f.store.rows.has(f.id), false, "room GET must not recreate a deleted profile")
 	assert.equal((await (await call(paths.profile)).json()).answered, 0)
 	assert.equal((await call(paths.profileTasteDeck + "?count=11")).status, 400)
 })
@@ -443,6 +450,7 @@ test("A committed decision automatically creates a follow-up and retrying its no
 			token: a.credential.token,
 		}
 	await service.bindProfile(id, credential, f.id)
+	const tasteRevision = (await f.profiles.summary(f.id)).revision
 	const send = async (
 		command: import("../../../packages/yepwatch-contracts/proposal.ts").RoomCommand
 	) => {
@@ -495,6 +503,51 @@ test("A committed decision automatically creates a follow-up and retrying its no
 	assert.equal(f.store.rows.get(f.id)!.profile.followups.length, 1)
 	await service.notify(id)
 	assert.equal(f.store.rows.get(f.id)!.profile.followups.length, 1)
+	const beforeRead = (await repo.read(id))!.room.revision
+	await service.read(id, credential)
+	assert.equal((await repo.read(id))!.room.revision, beforeRead)
+	await f.profiles.answers(f.id, { revision: tasteRevision, items: [{ key: key(5), answer: "loved", at: f.now() }] })
 	f.advance(FOLLOWUP_MIN_MS)
 	assert.equal((await f.profiles.summary(f.id)).followups.length, 1)
+})
+
+for (const earlierTaste of [false, true]) {
+	test(`Follow-up dismissal and undo preserve Taste answers (earlier Taste: ${earlierTaste})`, async () => {
+		const f = fixture()
+		await f.profiles.touch(f.id)
+		if (earlierTaste) await f.profiles.answers(f.id, { revision: 0, items: [{ key: key(1), answer: "not_for_me", at: f.now() }] })
+		const row = f.store.rows.get(f.id)!
+		const original = structuredClone(row.profile.answers)
+		const decidedAt = f.now()
+		row.profile.followups.push({ key: key(1), decided_at: decidedAt, state: "pending" })
+		f.advance(FOLLOWUP_MIN_MS)
+		const send = async (answer: "loved" | "did_not_watch" | null) => {
+			const { revision } = await f.profiles.summary(f.id)
+			f.advance(1)
+			return f.profiles.answers(f.id, { revision, items: [{ key: key(1), answer, source: "followup", decidedAt, at: f.now() }] })
+		}
+		await send("did_not_watch")
+		const revision = (await f.profiles.summary(f.id)).revision
+		await send(null)
+		assert.equal((await f.profiles.summary(f.id)).revision, revision)
+		assert.deepEqual(f.store.rows.get(f.id)!.profile.answers, original)
+		await send("loved")
+		await send("did_not_watch")
+		assert.equal(f.store.rows.get(f.id)!.profile.followups[0].state, "dismissed")
+		if (earlierTaste) assert.deepEqual(f.store.rows.get(f.id)!.profile.answers, original)
+		else assert.equal((await f.profiles.summary(f.id)).answered, 0)
+	})
+}
+
+test("Pruning old follow-ups preserves taste revision", async () => {
+	const f = fixture()
+	await f.profiles.touch(f.id)
+	const row = f.store.rows.get(f.id)!
+	row.profile.followups.push({ key: key(1), decided_at: f.now() - FOLLOWUP_MAX_MS, state: "pending" })
+	const store = new SqlProfileStore(async (statement) => ({ rows: statement.includes("array_min") ? [[f.id]] : [], rowcount: 0 }))
+	store.read = f.store.read.bind(f.store)
+	store.save = f.store.save.bind(f.store)
+	await store.expire(f.now())
+	assert.deepEqual(f.store.rows.get(f.id)!.profile.followups, [])
+	assert.equal(f.store.rows.get(f.id)!.profile.revision, 0)
 })

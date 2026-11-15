@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS doc.yepwatch_taste_profile (
   "expires_at" BIGINT NOT NULL,
   "write_window" BIGINT NOT NULL,
   "write_count" BIGINT NOT NULL
-) CLUSTERED INTO 4 SHARDS WITH (column_policy='strict',number_of_replicas=1,"write.wait_for_active_shards"='2',refresh_interval=1000);
+) CLUSTERED INTO 4 SHARDS WITH (column_policy='strict',number_of_replicas=2,"write.wait_for_active_shards"='3',refresh_interval=1000);
 
 ALTER TABLE doc.yepwatch_participant ADD COLUMN IF NOT EXISTS profile_id TEXT;
 ALTER TABLE doc.yepwatch_participant ADD COLUMN IF NOT EXISTS taste_revision BIGINT;

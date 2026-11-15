@@ -25,11 +25,11 @@ export function profileTaste(
 		.map((a) => ({ key: a.key, score: a.answer === "loved" ? 9 : 3, at: a.at }))
 	const loved = ratings.filter((r) => r.score === 9).length
 	const notForMe = ratings.length - loved
-	// The explicit negative-only case in rethink-picks steers away with -N; empty/unseen-only stays neutral.
+	// With no usable loved fingerprints, steer away with -N; empty/unseen-only stays neutral.
 	let { vector, liked } = tasteVectorFrom(
 		snapshot,
 		{ ratings, wantToSee: [] },
-		{ minLiked: loved ? 1 : 0 }
+		{ minLiked: 0 }
 	)
 	if (member) {
 		const weight = ratings.length / (ratings.length + 20)

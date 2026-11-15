@@ -58,3 +58,9 @@ test("Member taste keeps its GoodWatch direction with a bounded normalized YepWa
 	assert.deepEqual(profileTaste(snapshot, [], member).vector, member)
 	assert.equal(profileTaste(snapshot, [], null).vector, null)
 })
+
+test("Missing loved fingerprints still permit the negative-only vector", () => {
+	const result = profileTaste(snapshot, [answer(999, "loved"), answer(5, "not_for_me")])
+	assert.equal(result.liked, 0)
+	assert.equal(result.vector![1], -1)
+})

@@ -308,7 +308,7 @@ export function createProposalHandler(
       const profileSecret = request.headers.get(PROFILE_HEADER)
       if (profileSecret && service.profiles) {
         const scoped = { participantId: c.participantId, token: c.token, ...(a ? { accountId: a.userId, sessionId: a.sessionId } : {}) }
-        // The place is already made: a profile store that is slow or down never fails the admission (the next room read links it).
+        // The place is already made: a profile store that is slow or down never fails the admission (a later admission can retry the link).
         const profileId = service.profiles.identity(profileSecret)
         if (await service.bindProfile(c.roomId, scoped, profileId).then(() => true, () => false))
           admission.snapshot = await service.read(c.roomId, scoped)
@@ -654,9 +654,6 @@ export function createProposalHandler(
 				if (request.method === "POST" && operation === "preview")
 					return reply(await service.preview(id, actor, parse(proposalPreviewSchema, await body(request))))
 				if (request.method === "GET" && !operation) {
-          const profileSecret = request.headers.get(PROFILE_HEADER)
-          // Best effort: the read below answers (and refuses a bad credential) whether or not the profile store did.
-          if (profileSecret && service.profiles) await service.bindProfile(id, actor, service.profiles.identity(profileSecret)).catch(() => {})
 					let snapshot = await service.read(id, actor)
 					if (options.members) {
 						const member = await options.members.status(id, snapshot.own.participantId)

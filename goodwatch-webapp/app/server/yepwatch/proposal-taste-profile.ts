@@ -10,7 +10,7 @@ import { z } from "zod"
 import type { Sql } from "./repository.server.ts"
 import { RoomError } from "./errors.ts"
 import { profileTaste, type Answer } from "./proposal-taste.ts"
-import { calibrationKeys, tasteClusters } from "./proposal-taste-deck.ts"
+import { calibrationKeys, readyTasteClusters } from "./proposal-taste-deck.ts"
 import type { TitleSnapshot } from "../title-snapshot/snapshot.server.ts"
 import type {
 	ProfileAnswersRequest,
@@ -173,7 +173,6 @@ export class SqlProfileStore implements ProfileStore {
 				(f) => now - f.decided_at < FOLLOWUP_MAX_MS
 			)
 			if (p.followups.length !== old.profile.followups.length) {
-				p.revision++
 				await this.save(p, old)
 			}
 		}
@@ -388,12 +387,19 @@ export class TasteProfiles {
 				item.decidedAt !== undefined
 			)
 				throw new RoomError("invalid_request", "Invalid taste answer", 400)
-			if (item.answer === "did_not_watch") continue
 			const existing = p.answers.items.find((a) => a.key === item.key)
+			// A follow-up owns only its own signal; dismissal/undo must preserve a Taste answer.
+			if (source === "followup" && existing?.source === "taste") continue
+			if (
+				source === "followup" &&
+				(item.answer === "did_not_watch" || item.answer === null) &&
+				!existing
+			) continue
+			const answer = item.answer === "did_not_watch" ? null : item.answer
 			if (existing && existing.at >= item.at) {
 				if (
 					existing.at === item.at &&
-					(existing.answer !== item.answer || existing.source !== source)
+					(existing.answer !== answer || existing.source !== source)
 				)
 					throw new ProfileConflict(
 						await this.describe(old?.profile ?? this.empty(id))
@@ -403,7 +409,7 @@ export class TasteProfiles {
 			p.answers.items = p.answers.items.filter((a) => a.key !== item.key)
 			p.answers.items.push({
 				key: item.key,
-				answer: item.answer,
+				answer,
 				at: item.at,
 				source,
 			})
@@ -413,9 +419,11 @@ export class TasteProfiles {
 		p.followups = p.followups.filter(
 			(f) => now - f.decided_at < FOLLOWUP_MAX_MS
 		)
+		const tasteChanged =
+			JSON.stringify(p.answers) !==
+			JSON.stringify(old?.profile.answers ?? { items: [] })
 		const identical =
-			JSON.stringify(p.answers) ===
-				JSON.stringify(old?.profile.answers ?? { items: [] }) &&
+			!tasteChanged &&
 			JSON.stringify(p.followups) ===
 				JSON.stringify(old?.profile.followups ?? [])
 		if (identical) {
@@ -444,15 +452,17 @@ export class TasteProfiles {
 				}
 			)
 		p.write_count++
-		p.revision++
+		if (tasteChanged) p.revision++
 		p.updated_at = now
 		p.expires_at = now + PROFILE_RETENTION_MS
 		if (!(await this.store.save(p, old)))
 			throw new ProfileConflict(await this.summary(id))
 		this.remember(p)
 		// Precompute before scheduling a build; a changed callback failure must not turn a committed answer into failure.
-		await this.signal(id)
-		await this.changed(id, p.revision).catch(() => {})
+		if (tasteChanged) {
+			await this.signal(id)
+			await this.changed(id, p.revision).catch(() => {})
+		}
 		return {
 			revision: p.revision,
 			answered: p.answers.items.filter(
@@ -541,7 +551,7 @@ export class TasteProfiles {
 			)
 		const p = (await this.fresh(id))?.profile ?? this.empty(id)
 		const keys = calibrationKeys(
-			await tasteClusters(snapshot),
+			readyTasteClusters(snapshot),
 			p.answers.items,
 			count
 		)
@@ -587,7 +597,6 @@ export class TasteProfiles {
 				]
 					.sort((a, b) => b.decided_at - a.decided_at)
 					.slice(0, 20)
-				p.revision++
 				p.updated_at = this.now()
 				p.expires_at = this.now() + PROFILE_RETENTION_MS
 				if (await this.store.save(p, old)) {

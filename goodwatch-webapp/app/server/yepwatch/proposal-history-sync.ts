@@ -177,7 +177,9 @@ export class HistorySync {
 		// and reconcile adopts it by fingerprint.
 		if (Number(s ?? 0) >= Number(v)) return void (await synced(0))
 		const room = this.d.repository.decode(id, body!)
-    await this.d.followups(room)
+    await this.d.followups(room).catch(() => {
+      this.d.log({ event: "yepwatch_followups_failed", count: 1 })
+    })
 		const base = cs ? { seq: Number(cs), term: Number(ct) } : null
 		if (!base) await this.dependencies(room)
 		const fingerprint = this.d.crate.fingerprint(room)
