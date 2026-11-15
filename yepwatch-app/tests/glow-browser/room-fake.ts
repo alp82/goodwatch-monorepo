@@ -18,8 +18,8 @@ export const reading = (text: string) => [{ text, kind: 'phrase' as const }];
 
 /** Voting has no room row of its own: the header's room pill opens Your rooms, and this room's row opens the Room page. */
 export async function openRoomPage(page: Page, label: string, fresh = 0) {
-  await page.getByRole('button', { name: `${label}${fresh ? `, ${fresh} new` : ''}, switch room`, exact: true }).click();
-  await page.getByRole('button', { name: `${label}, Room page`, exact: true }).click();
+  await page.getByRole('button', { name: `${label}${fresh ? `, ${fresh} new` : ''}, switch couch`, exact: true }).click();
+  await page.getByRole('button', { name: `${label}, Couch page`, exact: true }).click();
 }
 
 export const metadata: CatalogMetadata = {
@@ -99,6 +99,8 @@ export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts:
   function refuse(c: CommandEnvelope['command']): { status: number; code: string; message: string } | null {
     if ((c.type === 'set_services' || c.type === 'set_service_enabled') && !room.shared.screens[0]?.country) return { status: 409, code: 'needs_context', message: 'Choose a country first' };
     if (c.type === 'refill' && !union(room).length) return { status: 409, code: 'needs_context', message: 'Nobody brings a service' };
+    // One idea each: another add from someone who has one is refused (the app sends edit_idea for theirs).
+    if (c.type === 'add_idea' && room.shared.ideas.some((i) => i.authorId === room.own.participantId)) return { status: 409, code: 'conflict', message: 'You already have an idea' };
     if (c.type === 'add_idea' && room.shared.ideas.length >= 8) return { status: 409, code: 'limit_reached', message: 'At most eight ideas' };
     if ((c.type === 'add_idea' || c.type === 'edit_idea') && interpretations >= 24) return { status: 409, code: 'limit_reached', message: 'Room interpretation budget reached' };
     if ((c.type === 'set_idea' || c.type === 'set_service_enabled' || c.type === 'configure') && !room.own.canHost) return { status: 403, code: 'forbidden', message: 'Only the host can change this setting' };
@@ -111,7 +113,8 @@ export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts:
     switch (c.type) {
       // The command id becomes the idea's id; the host's ideas start on.
       case 'add_idea': interpretations++; room.shared.ideas.push({ id: body.commandId, text: c.text, authorId: room.own.participantId, on: true, attributes: reading(c.text) }); break;
-      case 'edit_idea': interpretations++; room.shared.ideas = room.shared.ideas.map((i) => (i.id === c.ideaId ? { ...i, text: c.text, attributes: reading(c.text) } : i)); break;
+      // Replacing your idea switches it back on.
+      case 'edit_idea': interpretations++; room.shared.ideas = room.shared.ideas.map((i) => (i.id === c.ideaId ? { ...i, text: c.text, on: true, attributes: reading(c.text) } : i)); break;
       case 'remove_idea': room.shared.ideas = room.shared.ideas.filter((i) => i.id !== c.ideaId); break;
       case 'set_idea': room.shared.ideas = room.shared.ideas.map((i) => (i.id === c.ideaId ? { ...i, on: c.on } : i)); break;
       case 'set_services': me().serviceIds = c.serviceIds; break;

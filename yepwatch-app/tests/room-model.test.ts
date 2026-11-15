@@ -33,7 +33,8 @@ test('room view: ideas, labels and new suggestions for the host only', () => {
   const friend = roomView(s);
   assert.equal(friend.newSuggestions, 0, 'only the host sees NEW');
   assert.equal(friend.ideas[1].mine, true);
-  assert.equal(ideasLabel([]), 'Anything');
+  assert.equal(ideasLabel([]), 'Couch', 'never a filter default like Anything');
+  assert.equal(ideasLabel([], 'Alp'), 'Alp’s couch');
   assert.equal(ideasLabel([{ text: 'a' }, { text: 'b' }, { text: 'c' }]), 'a +2');
 });
 
@@ -58,10 +59,10 @@ test('room view: a guest host without a name cannot start; nor without a service
   assert.equal(roomView(t).canStart, false, 'every service is switched off');
 });
 
-test('room view: no ideas reads as Anything; seen-titles switch for linked members only', () => {
+test('room view: no ideas reads as the couch name; seen-titles switch for linked members only', () => {
   const s = continuousFixture();
   const v = roomView(s);
-  assert.equal(v.label, 'Anything');
+  assert.equal(v.label, 'Host’s couch');
   assert.deepEqual(v.myServiceIds, [8]);
   assert.equal(v.showSeen, null, 'guests have no seen-titles switch');
   s.own.member = { state: 'linked', prefill: null };

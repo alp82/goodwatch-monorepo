@@ -2,8 +2,9 @@
  * The room as the redesigned screens see it, and the commands they send: ideas, per-person
  * services, host switches, rename and seen titles, straight from contract 3.
  */
-import type { Candidate, RoomCommand, RoomConstraints, RoomIdea, RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
+import { ideaPending, type Candidate, type RoomCommand, type RoomConstraints, type RoomIdea, type RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
 import type { CommandBuild } from '../../core/continuous/optimistic';
+import { noun } from '../shell/noun';
 
 export type Kind = 'movie' | 'show_start';
 export const IDEA_LIMITS = { min: 2, max: 200, perRoom: 8 } as const;
@@ -31,6 +32,8 @@ export interface IdeaView {
   fresh: boolean;
   /** Stored without a reading (search was unavailable): the deck uses the usual ranking for it. */
   unmatched: boolean;
+  /** What the server understood ("comedy, not horror"), "Matching the mood…" while it reads it, '' for none. */
+  reading: string;
 }
 export interface ProposalView {
   candidateId: string;
@@ -58,13 +61,17 @@ export interface RoomView {
   faces: Face[];
   ideas: IdeaView[];
   activeIdeas: IdeaView[];
-  /** Short room name: "cheer me up +1", or "Anything". */
+  /** Short room name: "cheer me up +1", or the couch's name ("Alper’s couch") while no idea is on. */
   label: string;
-  /** Every switched-on idea: "cheer me up · space adventure", or "Anything". */
+  /** Every switched-on idea: "cheer me up · space adventure", or the couch's name while no idea is on. */
   title: string;
   /** New suggestions waiting for the host (0 for everyone else). */
   newSuggestions: number;
   canAddIdea: boolean;
+  /** Your own idea (one each; the first, in a room from before that rule), or null. */
+  myIdea: IdeaView | null;
+  /** Cards the room already holds, for the setup's preview (empty before the first round). */
+  deck: Candidate[];
   kinds: Kind[];
   country: string | null;
   myServiceIds: number[] | null;
@@ -84,8 +91,19 @@ export interface RoomView {
   decision: Candidate | null;
 }
 
-export function ideasLabel(active: readonly { text: string }[]) {
-  return active.length === 0 ? 'Anything' : active.length === 1 ? active[0].text : `${active[0].text} +${active.length - 1}`;
+/** The ideas as a short name; with none on, the couch's name (never a filter default like "Anything"). */
+/** An idea's reading in a few words: what it wants, then what it avoids; nothing that only repeats the idea. */
+export function ideaReading(idea: Pick<RoomIdea, 'text' | 'attributes'>) {
+  if (ideaPending(idea)) return 'Matching the mood…';
+  const same = (t: string) => t.trim().toLowerCase() === idea.text.trim().toLowerCase();
+  return idea.attributes
+    .filter((a) => !(a.kind === 'phrase' && same(a.text)))
+    .map((a) => (a.kind === 'avoid' || a.kind === 'excluded' ? `not ${a.text}` : a.text))
+    .join(', ');
+}
+
+export function ideasLabel(active: readonly { text: string }[], hostName = '') {
+  return active.length === 0 ? noun.named(hostName) : active.length === 1 ? active[0].text : `${active[0].text} +${active.length - 1}`;
 }
 
 const NONE: ReadonlySet<string> = new Set();
@@ -115,7 +133,7 @@ export function roomView(snapshot: RoomSnapshot, seenIdeas: ReadonlySet<string> 
     const author = all.find((p) => p.id === i.authorId) ?? null;
     return { id: i.id, text: i.text, on: i.on, author, mine: i.authorId === own.participantId, fresh: i.authorId !== shared.hostParticipantId && !seenIdeas.has(i.id),
       // The server keeps an idea it couldn't interpret (search down or over its limit) with no attributes.
-      unmatched: i.attributes.length === 0 };
+      unmatched: i.attributes.length === 0, reading: ideaReading(i) };
   });
   const activeIdeas = ideas.filter((i) => i.on);
   const kinds = shared.constraints.kinds.filter((k): k is Kind => k === 'movie' || k === 'show_start');
@@ -135,10 +153,12 @@ export function roomView(snapshot: RoomSnapshot, seenIdeas: ReadonlySet<string> 
     faces: people.map((p) => ({ id: p.id, nickname: p.nickname || (p.self ? 'You' : '?'), self: p.self })),
     ideas,
     activeIdeas,
-    label: ideasLabel(activeIdeas),
-    title: activeIdeas.map((i) => i.text).join(' · ') || 'Anything',
+    label: ideasLabel(activeIdeas, host?.nickname ?? ''),
+    title: activeIdeas.map((i) => i.text).join(' · ') || noun.named(host?.nickname ?? ''),
     newSuggestions: isHost ? ideas.filter((i) => i.fresh).length : 0,
     canAddIdea: ideas.length < IDEA_LIMITS.perRoom,
+    myIdea: ideas.find((i) => i.mine) ?? null,
+    deck: shared.candidates.slice(0, 5),
     kinds,
     country,
     myServiceIds: me.serviceIds,

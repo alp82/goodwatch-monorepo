@@ -134,12 +134,12 @@ function Words({ text, color, size }: { text: string; color: string; size: numbe
   );
 }
 
-/** The host's Start: Start, the start's words while it works, Try again after a failure. */
-export function StartButton({ phase, onPress, disabled }: { phase: StartPhase; onPress: () => void; disabled?: boolean }) {
+/** The host's Start ("Start with 4" once friends are in), the start's words while it works, Try again after a failure. */
+export function StartButton({ phase, onPress, disabled, people = 1 }: { phase: StartPhase; onPress: () => void; disabled?: boolean; people?: number }) {
   const { z } = useLayout();
   const [width, setWidth] = useState(240);
   const busy = phase === 'starting';
-  const label = hostStartLabel(phase, useStartBeat(busy));
+  const label = hostStartLabel(phase, useStartBeat(busy), people);
   const icon = busy ? <LoadingDots color={warm.ink} /> : <Icon name="play" size={16} color={warm.ink} />;
   return (
     <Live busy={busy} announce={phase === 'idle' ? null : label} style={{ flexGrow: 1, flexShrink: 1, flexBasis: 0 }}>

@@ -1,100 +1,90 @@
 /**
- * The room before Start (direction D): the ideas are the headline (left column on wide windows),
- * the share row, people, movies and shows, streaming and the action beside them (below on phones).
- * The host starts; friends wait for the host.
+ * The couch before Start is an invite screen (YepWatch rethink): who's here and Invite in the header
+ * strip, the title, and the console where everyone adds one idea (a friend's is a wish). The host starts;
+ * friends wait for the host.
  */
 import { useCallback, useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { Animated, Keyboard, TextInput, View } from 'react-native';
 import { guestOnly } from '../../core/config';
 import { GoodWatchButton, RECONNECTED_DETAIL, RECONNECT_GOODWATCH } from '../home/Landing';
 import { Or } from '../home/start-parts';
-import { useGlide } from '../shell/glide';
 import { useLayout } from '../shell/layout';
+import { noun } from '../shell/noun';
 import { warm } from '../shell/tokens';
 import { GText, glow } from '../glow/theme';
 import { NAME_MAX } from './model';
 import { toRooms } from './nav';
-import { Chip, IdeaStack, PeopleRow, ShareRow, fieldStyleFor, useAcknowledgeShownIdeas } from './parts';
+import { HowLink } from './HowItWorks';
+import { WhoStrip, setupWidth } from './invite';
+import { fieldStyleFor, useAcknowledgeShownIdeas } from './parts';
 import { roomPart } from './RoomProvider';
 import { RoomNotes } from './RoomStatus';
-import { namesLine, servicesIn } from './services';
+import { ConsoleCard, DeckPreview, DeckStrip, IdeaField, IdeasPanel, IdeasTray, KindSwitch, StreamingRow } from './SetupConsole';
 import { START_FAILED_NOTE, hostStartPhase, type StartPhase } from './start-progress';
 import { StartButton, StartStatus, useEased } from './StartProgress';
-import { Actions, Button, Glyph, KindIcons, Label, Logos, Note, RoomButton, Screen, Small, kindsLabel, usePinnedActions, useServices } from './ui';
+import { Actions, Note, RoomButton, Screen, Small, usePinnedActions } from './ui';
 
-/** Share, people, movies and shows, streaming: whole-row controls that open the room's sheets. */
-const RoomDetails = roomPart('RoomDetails', (r) => ({ view: r.view, inviteUrl: r.inviteUrl, openSheet: r.openSheet }), function RoomDetails({ view, inviteUrl, openSheet }) {
-  const { z } = useLayout();
-  const openPeople = useCallback(() => openSheet('people'), [openSheet]);
-  const { all } = useServices(view?.country);
-  // A friend's services join the line: the names glide over as the logos widen.
-  const names = useGlide({ axis: 'x' });
-  if (!view) return null;
-  const on = servicesIn(all, view.enabledServiceIds);
-  const kinds = kindsLabel(view.kinds);
+const HOST_TITLE = 'Pick something to watch with friends';
+const friendTitle = (host: string) => `${host} wants to pick something to watch with you`;
+
+/** The couch's title: whose couch it is over what it's for, with How it works beside it. Fixed height. */
+function TitleBlock({ over, title, onHow }: { over: string; title: string; onHow: () => void }) {
+  const { phone, z } = useLayout();
+  const size = phone ? 24 : z(30);
+  const lines = phone ? 2 : 1;
   return (
-    <View style={{ gap: z(10) }}>
-      {inviteUrl || view.isHost ? <ShareRow /> : null}
-      <PeopleRow onPress={openPeople} />
-      <Chip label={`${kinds}, ${view.isHost ? 'change' : 'view'}`} action={view.isHost ? 'Change' : undefined} onPress={() => openSheet('kinds')}>
-        <KindIcons kinds={view.kinds} size={z(20)} color={glow.soft} />
-        <GText size={z(15)} color={glow.soft} style={{ flex: 1 }}>{kinds}</GText>
-      </Chip>
-      {on.length || !view.isHost ? (
-        <Chip key="streaming" label={`${on.length ? namesLine(on) : 'Streaming'}, change`} action="Change" onPress={() => openSheet('streaming')}>
-          <Logos services={on} size={z(24)} />
-          <View ref={names} style={{ flex: 1, minWidth: 0 }}><GText size={z(15)} color={glow.soft} lines={1}>{on.length ? namesLine(on) : 'Streaming'}</GText></View>
-        </Chip>
-      ) : (
-        <Chip key="add-services" warn label="Streaming services, add" action="Add" onPress={() => openSheet('services')}>
-          <Glyph name="plus" size={z(18)} color={glow.amber} />
-          <GText bold size={z(15)} color={glow.amber} style={{ flex: 1 }}>Streaming services</GText>
-        </Chip>
-      )}
+    <View testID="head-title" style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+      <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+        <View style={{ height: phone ? 48 : z(22), flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <GText bold size={phone ? 14 : z(14)} color={glow.amber} lines={1} style={{ flex: 1 }}>{over}</GText>
+          {phone ? <HowLink onPress={onHow} /> : null}
+        </View>
+        <View style={{ height: Math.ceil(size * 1.12 * lines) }}>
+          <GText bold size={size} lines={lines} style={{ letterSpacing: -size * 0.025, lineHeight: size * 1.12 }}>{title}</GText>
+        </View>
+      </View>
+      {phone ? null : <HowLink onPress={onHow} />}
     </View>
   );
-});
+}
 
 /**
- * The shared layout: headline (room label and ideas) and the details with the actions, side by side
- * from 900 px. `actions` sit in the side column, or in the phone dock when `pinned`. While the round
- * starts (`start`) the ideas and details rest, dimmed and inert.
+ * The couch before Start, as an invite screen: the header strip (Who's here, Invite), the title with How
+ * it works, then the console (the describe field, Movies or shows, Streaming, the preview, Ideas) with the
+ * main action. Wide windows: one card with two panes, the action under Ideas. Phones: one column, Ideas as
+ * a tray in the dock above the action. While the round starts (`start`) the console rests, dimmed and inert.
  */
-function RoomBefore({ testID, label, actions, pinned, extra, start = 'idle' }: { testID: string; label: string; actions: ReactNode; pinned: boolean; extra?: ReactNode; start?: StartPhase }) {
-  const { phone, wide, max, z } = useLayout();
-  const gap = z(56);
-  const side = Math.min(z(420), max * 0.4);
+function CouchBefore({ testID, over, title, actions, extra, start = 'idle', onHow }: { testID: string; over: string; title: string; actions: ReactNode; extra?: ReactNode; start?: StartPhase; onHow: () => void }) {
+  const { phone, max, z } = useLayout();
+  const pinned = usePinnedActions();
+  const W = setupWidth(max, z);
+  const split = !phone && W >= z(700);
   const resting = start === 'starting';
   const room = useEased(resting ? 0.55 : 1, 360);
-  // Stacked (phones): a friend's idea arriving above glides the details down instead of pushing them.
-  const details = useGlide({ enabled: !wide });
-  const headline = (
-    <Animated.View pointerEvents={resting ? 'none' : 'auto'} style={{ gap: z(16), opacity: room }}>
-      <Label color={glow.amber}>{label}</Label>
-      <IdeaStack />
-    </Animated.View>
+  const left = (
+    <>
+      <IdeaField />
+      <KindSwitch />
+      <StreamingRow />
+      {split ? <DeckPreview /> : null}
+    </>
   );
-  const column = (
-    <View style={{ gap: z(20) }}>
-      <Animated.View pointerEvents={resting ? 'none' : 'auto'} style={{ opacity: room }}><RoomDetails /></Animated.View>
-      {extra ? <Animated.View pointerEvents={resting ? 'none' : 'auto'} style={{ opacity: room }}>{extra}</Animated.View> : null}
-      {pinned ? null : actions}
+  const body = split ? (
+    <ConsoleCard left={left} right={<IdeasPanel />} foot={pinned ? undefined : actions} />
+  ) : (
+    <View testID="console" style={{ gap: phone ? 16 : z(18) }}>
+      {left}
+      {pinned ? null : <IdeasTray />}
+      <DeckStrip />
     </View>
   );
+  const dock = pinned ? (split ? actions : <View style={{ gap: 10 }}><IdeasTray />{actions}</View>) : split ? undefined : actions;
   return (
-    <Screen testID={testID} back={toRooms} width="page" gap={0} footer={pinned ? actions : undefined}>
+    <Screen testID={testID} strip={<WhoStrip />} back={toRooms} width={W} gap={phone ? 16 : z(20)} footer={dock}>
       <RoomNotes />
-      {wide ? (
-        <View style={{ flexDirection: 'row', gap, alignItems: 'flex-start', paddingTop: 4 }}>
-          <View style={{ flex: 1, minWidth: 0 }}>{headline}</View>
-          <View style={{ width: side }}>{column}</View>
-        </View>
-      ) : (
-        <View style={{ gap: phone ? 30 : z(36), paddingTop: 4 }}>
-          {headline}
-          <View ref={details}>{column}</View>
-        </View>
-      )}
+      <TitleBlock over={over} title={title} onHow={onHow} />
+      <Animated.View pointerEvents={resting ? 'none' : 'auto'} style={{ opacity: room }}>{body}</Animated.View>
+      {extra ? <Animated.View pointerEvents={resting ? 'none' : 'auto'} style={{ opacity: room }}>{extra}</Animated.View> : null}
     </Screen>
   );
 }
@@ -113,7 +103,6 @@ export const RoomSetup = roomPart('RoomSetup', (r) => ({
   acknowledgeIdeas: r.acknowledgeIdeas, pending: r.state.pending, privateError: r.state.privateError, retrySeconds: r.state.retrySeconds, send: r.state.send,
 }), function RoomSetup({ view, cmd, latest, disabled, signin, memberBusy, memberLapsed, openSheet, acknowledgeIdeas, pending, privateError, retrySeconds, send }) {
   const { z } = useLayout();
-  const pinned = usePinnedActions();
   const [name, setName] = useState('');
   const [focus, setFocus] = useState(false);
   // A name being saved may still be in flight when Start is pressed: Start waits for it.
@@ -184,7 +173,7 @@ export const RoomSetup = roomPart('RoomSetup', (r) => ({
       {phase === 'failed' ? <Note>{START_FAILED_NOTE}</Note> : null}
       <Actions>
         <RoomButton onPress={() => openSheet('room')} />
-        <StartButton phase={phase} disabled={blocked} onPress={onStart} />
+        <StartButton phase={phase} disabled={blocked} onPress={onStart} people={view.people.length} />
       </Actions>
     </View>
   );
@@ -201,11 +190,11 @@ export const RoomSetup = roomPart('RoomSetup', (r) => ({
   const reconnect = !nameField && memberLapsed && !guestOnly && !view.member
     ? <GoodWatchButton label={RECONNECT_GOODWATCH} detail={RECONNECTED_DETAIL} disabled={memberBusy || disabled} onPress={() => void signin()} />
     : null;
-  return <RoomBefore testID="room-setup" label="Your room" pinned={pinned} actions={actions} extra={nameField ?? reconnect} start={phase} />;
+  return <CouchBefore testID="room-setup" over={view.me.nickname ? noun.of(view.me.nickname) : noun.yourOne} title={HOST_TITLE} actions={actions} extra={nameField ?? reconnect} start={phase} onHow={() => openSheet('how')} />;
 });
 
 /**
- * A friend's room before Start (or while joining a running round): the same room, waiting for the
+ * A friend's couch before Start (or while joining a running round): the same screen, waiting for the
  * host. The server says nothing while the host's start builds the deck; voting takes over the moment
  * the round arrives.
  */
@@ -219,8 +208,7 @@ export const Waiting = roomPart('Waiting', (r) => ({ view: r.view, entryWorking:
         <RoomButton onPress={() => openSheet('room')} />
         <StartStatus host={view.hostName || 'the host'} joining={joining} />
       </Actions>
-      <Actions><Button secondary label="Your services" onPress={() => openSheet('services')} /></Actions>
     </View>
   );
-  return <RoomBefore testID="waiting" label={`${owner}’s room`} pinned={false} actions={actions} start={joining ? 'starting' : 'idle'} />;
+  return <CouchBefore testID="waiting" over={noun.of(owner)} title={friendTitle(owner)} actions={actions} start={joining ? 'starting' : 'idle'} onHow={() => openSheet('how')} />;
 });

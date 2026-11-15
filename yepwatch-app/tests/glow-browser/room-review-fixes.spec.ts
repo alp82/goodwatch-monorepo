@@ -102,14 +102,14 @@ test.describe('Continue with GoodWatch never creates a room; New room still open
     await button(page, 'Continue with GoodWatch').click();
     await page.waitForURL((url) => url.pathname === '/');
     await expect(button(page, 'Continue with GoodWatch')).toHaveCount(0);
-    await button(page, 'New room').click();
+    await button(page, 'New couch').click();
     await expect(page.getByLabel('Mood')).toBeVisible();
     await expect(page).toHaveURL(/\/new$/);
     await button(page, 'cheer me up').click();
-    await button(page, 'Create room').click();
+    await button(page, 'Create couch').click();
     await expect(page.getByTestId('room-setup')).toBeVisible();
     await expect.poll(() => f.room.own.member.state).toBe('linked');
-    // Opening the room again doesn't bring Mood back.
+    // Opening the couch again doesn't bring Mood back.
     await page.reload();
     await expect(page.getByTestId('room-setup')).toBeVisible();
     await expect(page.getByLabel('Mood')).toHaveCount(0);
@@ -126,15 +126,15 @@ test.describe('NEW is acknowledged per room on the host’s device', () => {
   test('opening the Room sheet acknowledges a friend’s idea, also after a reload', async ({ page }) => {
     await fakeRoom(page, withSuggestion());
     await page.goto('/room/test-room');
-    await button(page, 'cheer me up, 1 new, switch room').click();
-    await button(page, 'cheer me up, Room page').click();
+    await button(page, 'cheer me up, 1 new, switch couch').click();
+    await button(page, 'cheer me up, Couch page').click();
     await expect(page.getByTestId('room-sheet')).toBeVisible();
     await expect(page.getByText('NEW', { exact: true })).toBeVisible();
     await button(page, 'Close').click();
-    await expect(button(page, 'cheer me up, switch room')).toBeVisible();
+    await expect(button(page, 'cheer me up, switch couch')).toBeVisible();
     await page.reload();
-    await expect(button(page, 'cheer me up, switch room')).toBeVisible();
-    await expect(button(page, 'cheer me up, 1 new, switch room')).toHaveCount(0);
+    await expect(button(page, 'cheer me up, switch couch')).toBeVisible();
+    await expect(button(page, 'cheer me up, 1 new, switch couch')).toHaveCount(0);
   });
 
   test('an idea switched on and off again is not NEW again', async ({ page }) => {
@@ -148,7 +148,7 @@ test.describe('NEW is acknowledged per room on the host’s device', () => {
     await expect.poll(() => f.room.shared.ideas.find((i) => i.id === 'i2')?.on).toBe(false);
     await expect(page.getByText('NEW', { exact: true })).toHaveCount(0);
     await button(page, 'Close').click();
-    await expect(button(page, 'cheer me up, switch room')).toBeVisible();
+    await expect(button(page, 'cheer me up, switch couch')).toBeVisible();
   });
 });
 

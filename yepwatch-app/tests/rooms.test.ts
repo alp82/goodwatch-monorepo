@@ -80,7 +80,7 @@ test('home classifies active, left and decided rooms from the room’s own snaps
   s.shared.expiresAt = NOW + 1000;
   const active = classify(entry, { snapshot: s }, NOW);
   assert.equal(active.kind, 'active');
-  assert.equal(active.kind === 'active' && active.room.label, 'Anything');
+  assert.equal(active.kind === 'active' && active.room.label, 'Host’s couch');
   assert.equal(active.kind === 'active' && active.room.live, true);
   assert.equal(active.kind === 'active' && active.room.status, 'Choosing · 0 matches');
   const left = structuredClone(s);

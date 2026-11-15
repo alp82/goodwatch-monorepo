@@ -23,12 +23,15 @@ import { warm } from '../shell/tokens';
 import { GText, Icon, Press, glow, grow } from '../glow/theme';
 import { bringers } from './model';
 import { exitRoom, openPage, sheetHref } from './nav';
-import { CountryLine, KindsPick, ServiceGrid, SettingRow, ShareRow, useAcknowledgeShownIdeas } from './parts';
+import { CountryLine, KindsPick, ServiceGrid, SettingRow, useAcknowledgeShownIdeas } from './parts';
 import { useRoom, type RoomSheet } from './RoomProvider';
+import { HowItWorksSheet } from './HowItWorks';
+import { InviteSurface } from './invite';
 import { RoomNotes } from './RoomStatus';
 import { kindsOnLeave, servicesOnLeave, type DraftKey, type Drafts } from './settings-save';
 import { namesLine, servicesIn, toggleService } from './services';
-import { Button, HeroIcon, KindIcons, Label, Logos, NewBadge, Small, Switch, TextLink, kindsLabel, useServices } from './ui';
+import { Button, Glyph, HeroIcon, KindIcons, Label, Logos, NewBadge, Small, Switch, TextLink, kindsLabel, useServices } from './ui';
+import { noun } from '../shell/noun';
 
 /** Draws the room's open sheet (the room layout hands this to the room). */
 export function renderRoomSheet(sheet: RoomSheet) {
@@ -38,6 +41,8 @@ export function renderRoomSheet(sheet: RoomSheet) {
     case 'streaming': return <StreamingSheet />;
     case 'kinds': return <KindsSheet />;
     case 'people': return <PeopleSheet />;
+    case 'invite': return <InviteSurface />;
+    case 'how': return <HowItWorksSheet />;
   }
 }
 
@@ -45,6 +50,18 @@ export function renderRoomSheet(sheet: RoomSheet) {
 export function SheetAddress({ sheet }: { sheet: RoomSheet }) {
   const { id } = useLocalSearchParams<{ id: string }>();
   return <Redirect href={sheetHref(id, sheet)} />;
+}
+
+/** Opens Invite friends (QR code and link) over this sheet. */
+function InviteFriends({ onPress }: { onPress: () => void }) {
+  return (
+    <Press label="Invite friends, show QR code and link" onPress={onPress}
+      style={{ minHeight: 52, borderRadius: 12, paddingHorizontal: 14, flexDirection: 'row', justifyContent: 'flex-start', gap: 12, backgroundColor: warm.faint, borderWidth: 1, borderColor: warm.lineStrong }}>
+      <Glyph name="qr" size={18} color={glow.soft} />
+      <GText bold size={15} style={{ flex: 1 }}>Invite friends</GText>
+      <Icon name="right" size={16} color={glow.muted} />
+    </Press>
+  );
 }
 
 const Done = () => {
@@ -72,12 +89,12 @@ function RoomMenuSheet() {
   };
   const archive = () => {
     void (account.member ? continuousApi.archive(id, true).then(() => accountRoomChanged(id, { archivedAt: Date.now() })) : roomRegistry.archive(id))
-      .then(exitRoom).catch(() => setNotice('Couldn’t archive this room. Try again.'));
+      .then(exitRoom).catch(() => setNotice(`Couldn’t archive ${noun.this}. Try again.`));
   };
   const on = servicesIn(all, view.enabledServiceIds);
   const people = view.faces;
   return (
-    <Sheet testID="room-sheet" title="Room" onClose={closeSheet}>
+    <Sheet testID="room-sheet" title={noun.One} onClose={closeSheet}>
       <RoomNotes />
       <View style={{ gap: 2 }}>
         <Label>Ideas</Label>
@@ -99,7 +116,7 @@ function RoomMenuSheet() {
             </SettingRow>
           );
         })}
-        {!view.ideas.length ? <SettingRow label="Anything"><GText bold size={z(20)} color={glow.soft}>Anything</GText></SettingRow> : null}
+        {!view.ideas.length ? <Small>No ideas yet</Small> : null}
         {view.canAddIdea ? <TextLink label={view.isHost ? 'Add an idea' : 'Suggest an idea'} onPress={() => openPage(id, 'mood', { idea: 'new' })} /> : null}
       </View>
       <View style={{ gap: 10 }}>
@@ -109,7 +126,7 @@ function RoomMenuSheet() {
           <GText size={15} color={glow.soft} style={{ flex: 1 }}>{people.length < 2 ? 'Just you' : `${people.length} people`}</GText>
           <Icon name="right" size={16} color={glow.muted} />
         </Press>
-        <ShareRow />
+        <InviteFriends onPress={() => openSheet('invite')} />
       </View>
       <View>
         <Label>Settings</Label>
@@ -128,12 +145,12 @@ function RoomMenuSheet() {
         <SoundToggle />
       </View>
       <View style={{ flexDirection: 'row', gap: 10 }}>
-        <Press label="Archive room" onPress={archive} style={{ flex: 1, minHeight: 48, borderRadius: 12, borderWidth: 1, borderColor: warm.line }}><GText bold color={glow.soft}>Archive room</GText></Press>
-        <Press label="Leave room" disabled={disabled || Boolean(leaving)} onPress={() => setLeaving('ask')} style={{ flex: 1, minHeight: 48, borderRadius: 12, borderWidth: 1, borderColor: '#f8717140' }}><GText bold color="#f87171">Leave room</GText></Press>
+        <Press label={`Archive ${noun.one}`} onPress={archive} style={{ flex: 1, minHeight: 48, borderRadius: 12, borderWidth: 1, borderColor: warm.line }}><GText bold color={glow.soft}>{`Archive ${noun.one}`}</GText></Press>
+        <Press label={`Leave ${noun.one}`} disabled={disabled || Boolean(leaving)} onPress={() => setLeaving('ask')} style={{ flex: 1, minHeight: 48, borderRadius: 12, borderWidth: 1, borderColor: '#f8717140' }}><GText bold color="#f87171">{`Leave ${noun.one}`}</GText></Press>
       </View>
       {leaving ? (
         <View testID="leave-confirm" accessibilityLiveRegion="polite" style={{ gap: 12, padding: 14, borderRadius: 12, borderWidth: 1, borderColor: '#f8717140', backgroundColor: '#f8717110' }}>
-          <GText bold size={z(18)}>Leave this room?</GText>
+          <GText bold size={z(18)}>{`Leave ${noun.this}?`}</GText>
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <Press label="Stay" disabled={leaving === 'sending'} onPress={() => setLeaving(null)} style={{ flex: 1, minHeight: 48, borderRadius: 12, borderWidth: 1, borderColor: warm.line }}><GText bold color={glow.soft}>Stay</GText></Press>
             <Press label="Leave" disabled={leaving === 'sending'} onPress={leave} style={{ flex: 1, minHeight: 48, borderRadius: 12, backgroundColor: '#f87171' }}><GText bold color="#070707">{leaving === 'sending' ? 'Leaving…' : 'Leave'}</GText></Press>
@@ -215,7 +232,7 @@ function StreamingSheet() {
         </Press>
       </View>
       <View style={{ gap: 2 }}>
-        <Label>In this room</Label>
+        <Label>{`In ${noun.this}`}</Label>
         {inRoom.map((s) => {
           const isOn = !s.ids.every((sid) => view.disabledServiceIds.includes(sid));
           // While choosing, the last service stays on: the deck needs somewhere to watch.
@@ -254,12 +271,12 @@ function KindsSheet() {
 
 /** Everyone in the room, and the link to bring more. */
 function PeopleSheet() {
-  const { view, closeSheet } = useRoom();
+  const { view, closeSheet, openSheet } = useRoom();
   if (!view) return null;
   const picking = new Set(view.picking.map((p) => p.id));
   return (
     <Sheet testID="people-sheet" title="People" onClose={closeSheet} actions={<Done />}>
-      <ShareRow />
+      <InviteFriends onPress={() => openSheet('invite')} />
       <View style={{ gap: 4 }}>
         {view.people.map((p) => (
           <View key={p.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52 }}>

@@ -2,7 +2,7 @@
 // and by keyboard, and the control in use is on screen and not under the pinned dock or the header.
 import { expect } from '@playwright/test';
 import { test, eventually, type Person } from '../lib/harness';
-import { inviteLink, pickServices, start } from './flows';
+import { addIdea, inviteLink, pickServices, start } from './flows';
 
 /**
  * The focused (or given) element's box is inside the window and the topmost thing at its center, once motion has
@@ -59,10 +59,10 @@ for (const device of ['se', 'android'] as const) {
       const host = await room.person('Alp', { device });
       await host.open('/');
       await host.audit('start page (small phone)');
-      await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] } });
+      await host.tap(host.button('New couch'), { expect: { visible: ['mood-page'] } });
       await host.audit('Mood page (small phone)');
       await host.fill(host.page.getByLabel('Mood'), 'funny space heist');
-      await host.tap(host.button('Create room'), { expect: { visible: ['room-setup'] } });
+      await host.tap(host.button('Create couch'), { expect: { visible: ['room-setup'] } });
       await room.point('room');
       await host.audit('room page (small phone)');
       // Name: the field is below the fold. Tapping scrolls it up; it keeps focus through that scroll and
@@ -77,17 +77,13 @@ for (const device of ['se', 'android'] as const) {
       await host.page.keyboard.press('Enter');
       await eventually(() => savedName(host), (v) => v === 'Alp', 'host name saved by Enter', host);
       await host.page.setViewportSize(size);
-      // Services, Movies and shows.
+      // Services, Movies or shows.
       await pickServices(host, ['Netflix'], () => host.tap(host.button('Streaming services, add'), { expect: { visible: ['services-sheet'] } }));
-      await host.tap(host.button('Movies and shows, change'), { expect: { visible: ['kinds-sheet'] } });
-      await host.audit('Movies and shows sheet (small phone)');
-      await host.tap(host.button('Done'), { expect: { hidden: ['kinds-sheet'] } });
-      // A second idea.
-      await host.tap(host.button('Add an idea'), { expect: { visible: ['mood-page'] } });
-      await host.fill(host.page.getByLabel('Mood'), 'space adventure');
-      await host.tap(host.button('Add idea'), { expect: { visible: ['room-setup'] } });
-      await eventually(() => host.latest?.ideas.map((i) => i.text), (v) => JSON.stringify(v) === JSON.stringify(['funny space heist', 'space adventure']), 'two ideas', host);
-      await host.tap(host.button('Room'), { expect: { visible: ['room-sheet'] } });
+      await host.tap(host.page.getByRole('radio', { name: 'Movies', exact: true }).filter({ visible: true }), { expect: {} });
+      // Your idea, replaced from the describe field.
+      await addIdea(host, 'space adventure');
+      await eventually(() => host.latest?.ideas.map((i) => i.text), (v) => JSON.stringify(v) === JSON.stringify(['space adventure']), 'the idea replaced', host);
+      await host.tap(host.button('Couch'), { expect: { visible: ['room-sheet'] } });
       await host.audit('Room sheet (small phone)');
       await host.tap(host.button('Close').last(), { expect: { hidden: ['room-sheet'] } });
       await onScreen(host, 'Start (in the dock)', '[data-testid="frame-dock"] [aria-label="Start"]');
@@ -98,7 +94,7 @@ for (const device of ['se', 'android'] as const) {
     test(`whole setup by keyboard: name, services, idea, Start (${device})`, async ({ room }) => {
       const host = await room.person('Alp', { device });
       await host.open('/');
-      await tabTo(host, 'New room');
+      await tabTo(host, 'New couch');
       await host.tap(host.page.locator(':focus'), { key: 'Enter', expect: { visible: ['mood-page'] } });
       await host.page.keyboard.type('funny space heist');
       await host.tap(host.page.getByLabel('Mood'), { key: 'Enter', expect: { visible: ['room-setup'] } });
@@ -116,14 +112,13 @@ for (const device of ['se', 'android'] as const) {
       await expect(host.page.locator(':focus'), 'Space ticks the focused service').toHaveAttribute('aria-checked', 'true');
       await tabTo(host, 'Done');
       await host.tap(host.page.locator(':focus'), { key: 'Enter', expect: { hidden: ['services-sheet'] } });
-      // An idea: Add an idea, type, Enter.
-      await tabTo(host, 'Add an idea');
-      await host.tap(host.page.locator(':focus'), { key: 'Enter', expect: { visible: ['mood-page'] } });
+      // Your idea: Tab to the describe field, type, Enter replaces it.
+      await tabTo(host, 'Describe what you want to watch');
       await host.page.keyboard.type('space adventure');
-      await host.tap(host.page.getByLabel('Mood'), { key: 'Enter', expect: { visible: ['room-setup'] } });
-      await eventually(() => host.latest?.ideas.map((i) => i.text), (v) => JSON.stringify(v) === JSON.stringify(['funny space heist', 'space adventure']), 'two ideas', host);
+      await host.page.keyboard.press('Enter');
+      await eventually(() => host.latest?.ideas.map((i) => i.text), (v) => JSON.stringify(v) === JSON.stringify(['space adventure']), 'the idea replaced', host);
       // Space switches an idea off and on.
-      await tabTo(host, 'Use space adventure');
+      await tabTo(host, /^space adventure\. Your idea/);
       await host.page.keyboard.press('Space');
       await eventually(() => host.latest?.ideas.find((i) => i.text === 'space adventure')?.on, (on) => on === false, 'Space switched the idea off', host);
       await host.page.keyboard.press('Space');
@@ -136,9 +131,9 @@ for (const device of ['se', 'android'] as const) {
     test(`a friend joins by Enter and waits (${device})`, async ({ room }) => {
       const host = await room.person('Alp', { device });
       await host.open('/');
-      await host.tap(host.button('New room'), { expect: { visible: ['mood-page'] } });
+      await host.tap(host.button('New couch'), { expect: { visible: ['mood-page'] } });
       await host.fill(host.page.getByLabel('Mood'), 'funny space heist');
-      await host.tap(host.button('Create room'), { expect: { visible: ['room-setup'] } });
+      await host.tap(host.button('Create couch'), { expect: { visible: ['room-setup'] } });
       const invite = await inviteLink(host);
       const friend = await room.person('Mia', { device });
       await friend.open(invite, { settle: false });
@@ -152,7 +147,7 @@ for (const device of ['se', 'android'] as const) {
       await pickServices(friend, ['Disney+']);
       await friend.see({ visible: ['waiting'] }, 10000, 'friend waits for the host');
       await friend.audit('waiting (small phone)');
-      await friend.tap(friend.button('Your services'), { expect: { visible: ['services-sheet'] } });
+      await friend.tap(friend.button(/, change$/).first(), { expect: { visible: ['services-sheet'] } });
       await friend.tap(friend.button('Done'), { expect: { hidden: ['services-sheet'] } });
     });
   });

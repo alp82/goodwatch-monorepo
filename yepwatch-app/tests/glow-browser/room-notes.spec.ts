@@ -12,7 +12,7 @@ test('a note floats over the room without moving it, and Dismiss hides it', asyn
   const before = (await ideas.boundingBox())!;
   // A settings refusal belongs to the visible room; mood failures stay inside their editor.
   await page.route('**/commands', (route) => route.fulfill({status:409,json:{error:{code:'conflict',message:'Room settings changed',retryable:false},snapshot:setupRoom()}}));
-  await page.getByRole('switch', { name: 'Use cheer me up' }).click();
+  await page.getByRole('switch', { name: 'cheer me up. Your idea' }).click();
   const note = page.getByTestId('room-note');
   await expect(note).toBeVisible();
   const after = (await ideas.boundingBox())!;

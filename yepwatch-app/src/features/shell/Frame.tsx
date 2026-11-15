@@ -40,6 +40,8 @@ export interface FrameRooms {
 
 export interface AppFrameProps {
   header?: AppHeaderProps;
+  /** A row under the header that stays with it (the couch setup's Who's here and Invite). */
+  strip?: ReactNode;
   rooms?: FrameRooms;
   children: ReactNode;
   /** The screen's main action: pinned on phones and short windows ('auto'), at the end of the content on bigger windows. */
@@ -80,13 +82,15 @@ const webClip = Platform.OS === 'web' ? { overflow: 'hidden' as const } : null;
 // cuts it off at the window like `hidden` without making the frame a scroll container a focused field could scroll.
 const webFrameClip = Platform.OS === 'web' ? ({ overflow: 'clip' } as unknown as ViewStyle) : null;
 
-export function AppFrame({ header = {}, rooms, children, footer, footerPlacement = 'auto', sheet, overlay, backdrop, covered = false, scroll = true, width = 'page', gap = 0, testID, noteTop = 8, frameRef }: AppFrameProps) {
+export function AppFrame({ header = {}, strip, rooms, children, footer, footerPlacement = 'auto', sheet, overlay, backdrop, covered = false, scroll = true, width = 'page', gap = 0, testID, noteTop = 8, frameRef }: AppFrameProps) {
   const layout = useLayout();
   const pathname = usePathname();
   const { phone, short, gutter, max, z } = layout;
   const insets = useSafeAreaInsets();
   const [roomsOpen, setRoomsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  // The header with its strip: a sheet's shade over the header covers the strip too.
+  const [headerHeight, setHeaderHeight] = useState(0);
   const notes = useNoteLayer();
   const pinned = footer ? (footerPlacement === 'pinned' || (footerPlacement === 'auto' && (phone || short))) : false;
   const column = { width: '100%', maxWidth: width === 'page' ? max : Math.min(width, max), alignSelf: 'center' } as const;
@@ -124,9 +128,12 @@ export function AppFrame({ header = {}, rooms, children, footer, footerPlacement
       {/* An open sheet is modal: the header behind it is out of reach for touch, focus and screen readers,
           and a tap on it closes the sheet (as a tap on the shade does), so its Back still closes the sheet first. */}
       <CoveredBody keepView covered={covered || Boolean(shownSheet)} testID="covered-header" style={{ paddingTop: insets.top, backgroundColor: warm.bar, zIndex: 30 }}>
-        <AppHeader {...header} back={back} onPill={header.onPill || header.pill ? openPill : undefined} onProfile={openProfile} />
+        <View onLayout={strip ? (e) => setHeaderHeight(e.nativeEvent.layout.height) : undefined}>
+          <AppHeader {...header} joined={Boolean(strip)} back={back} onPill={header.onPill || header.pill ? openPill : undefined} onProfile={openProfile} />
+          {strip}
+        </View>
       </CoveredBody>
-      {shownSheet && !covered ? <View testID="header-shade" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: insets.top + layout.header, zIndex: 31 }}><Shade onPress={onePress(() => { closeTopSheet(); })} /></View> : null}
+      {shownSheet && !covered ? <View testID="header-shade" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: insets.top + (strip ? Math.max(headerHeight, layout.header) : layout.header), zIndex: 31 }}><Shade onPress={onePress(() => { closeTopSheet(); })} /></View> : null}
       <View style={{ flex: 1, minHeight: 0 }}>
         <CoveredBody keepView covered={covered || Boolean(shownSheet)}>
           <KeyboardRoom {...keyboard} style={{ flex: 1, minHeight: 0 }}>

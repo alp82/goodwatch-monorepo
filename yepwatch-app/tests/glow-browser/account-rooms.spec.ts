@@ -17,8 +17,8 @@ test('a signed-in member can save their name for future rooms', async ({ page })
   await expect(profile.getByLabel('Your name')).toHaveValue('Sam');
   await profile.getByRole('button', { name: 'Close', exact: true }).click();
   const created = page.waitForRequest(request => request.method() === 'POST' && request.url().endsWith('/proposal/rooms'));
-  await page.getByRole('button', { name: 'New room', exact: true }).click();
-  await page.getByRole('button', { name: 'Anything goes', exact: true }).click();
+  await page.getByRole('button', { name: 'New couch', exact: true }).click();
+  await page.getByRole('button', { name: 'Continue without an idea', exact: true }).click();
   expect((await created).postDataJSON().nickname).toBe('Sam');
 });
 
@@ -31,7 +31,7 @@ test('a signed-in browser with empty device storage discovers its hosted room an
   page.on('request', request => { if (request.url().endsWith('/resume')) resumes.push(request.url()); });
   await page.goto('/');
   await expect(page.getByTestId('home-rooms')).toBeVisible();
-  const label = room.shared.ideas.filter(i => i.on).map(i => i.text).join(' + ') || 'Anything';
+  const label = room.shared.ideas.filter(i => i.on).map(i => i.text).join(' + ') || 'Alex’s couch';
   await expect(page.getByTestId('home-rooms').getByRole('button', { name: label, exact: true })).toBeVisible();
   await page.getByRole('button', { name: /Decided, 1, open History/ }).click();
   await expect(page.getByTestId('history-panel')).toContainText('A previous choice');
@@ -56,7 +56,7 @@ test('logging out removes the account room list and history from this browser', 
   await page.getByTestId('profile-panel').getByRole('button', { name: 'Close', exact: true }).click();
   await expect(page.getByRole('button', { name: /Decided, 1/ })).toHaveCount(0);
   await expect(page.getByText('Private past choice', { exact: true })).toHaveCount(0);
-  await expect(page.getByTestId('home-rooms').getByRole('button', { name: 'Anything', exact: true })).toHaveCount(0);
+  await expect(page.getByTestId('home-rooms').getByRole('button', { name: 'cheer me up', exact: true })).toHaveCount(0);
 });
 
 test('server history remains visible without an active room or a GoodWatch display name', async ({ page }) => {
