@@ -40,6 +40,10 @@ export interface AccountRoomsStore {
 }
 /** Storage envelope2 is reused for existing member-read compatibility; flowVersion/table/routes distinguish protocol3. */
 export interface ProposalParticipant extends ContinuousParticipant {
+  /** Server-only device profile identity; never part of a room projection. */
+  profileId?: string | null
+  tasteRevision?: number
+
 	sessions?: ParticipantSession[]
 	joinedAt?: number
 	archivedAt?: number | null

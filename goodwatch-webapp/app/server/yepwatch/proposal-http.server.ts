@@ -1,3 +1,5 @@
+import { PROFILE_HEADER } from "../../../packages/yepwatch-contracts/proposal.ts"
+import { profileAnswersSchema, ProfileConflict } from "./proposal-taste-profile.ts"
 import { timed, timedSync, withServerTiming } from "./server-timing.ts"
 import { z } from "zod"
 import { randomBytes } from 'node:crypto'
@@ -10,7 +12,7 @@ import {
 	type OwnRead,
 } from "../../../packages/yepwatch-contracts/proposal.ts"
 import { isAccountState, type MemberSession } from "./continuous-members.server.ts"
-import { equal, random } from "./crypto.server.ts"
+import { equal, random, keyed } from "./crypto.server.ts"
 import { RoomError } from "./errors.ts"
 import { inviteCardPng, LinkCardBusyError } from "./link-card-renderer.server.ts"
 import { ProposalService } from "./proposal-service.server.ts"
@@ -40,6 +42,7 @@ export interface HttpOptions {
 	allowedOrigins: string[]
 	secureCookies?: boolean
 	members?: ContinuousMembers
+  profileBudget?: import("./proposal-command-budget.ts").CommandBudget
 	/** Draws the room invite link-preview card; defaults to the child process renderer. */
 	inviteCard?: (hostName: string | null) => Promise<Uint8Array>
 }
@@ -304,6 +307,14 @@ export function createProposalHandler(
         const scoped = { participantId: c.participantId, token: c.token, accountId: a.userId, sessionId: a.sessionId }
         admission.snapshot = await service.read(c.roomId, scoped)
       }
+      const profileSecret = request.headers.get(PROFILE_HEADER)
+      if (profileSecret && service.profiles) {
+        const scoped = { participantId: c.participantId, token: c.token, ...(a ? { accountId: a.userId, sessionId: a.sessionId } : {}) }
+        // The place is already made: a profile store that is slow or down never fails the admission (a later admission can retry the link).
+        const profileId = service.profiles.identity(profileSecret)
+        if (await service.bindProfile(c.roomId, scoped, profileId).then(() => true, () => false))
+          admission.snapshot = await service.read(c.roomId, scoped)
+      }
       if (request.headers.get('x-yepwatch-client') !== 'native') {
         setCookie(`yepwatch3_${c.roomId}`, `${c.participantId}.${c.token}`, Math.floor((c.expiresAt - Date.now()) / 1000))
         c.token = ''
@@ -316,10 +327,10 @@ export function createProposalHandler(
 				throw new RoomError("not_found", "Endpoint unavailable", 404)
 			if (request.method === "OPTIONS") {
 				originCheck(true)
-				headers.set("access-control-allow-methods", "GET,POST,OPTIONS")
+				headers.set("access-control-allow-methods", "GET,POST,DELETE,OPTIONS")
 				headers.set(
 					"access-control-allow-headers",
-					`content-type,authorization,x-yepwatch-participant,x-yepwatch-client,${MEMBER_SESSION_HEADER},${CREATOR_HEADER}`
+					`content-type,authorization,x-yepwatch-participant,x-yepwatch-client,${MEMBER_SESSION_HEADER},${CREATOR_HEADER},${PROFILE_HEADER}`
 				)
 				return new Response(null, { status: 204, headers })
 			}
@@ -357,7 +368,25 @@ export function createProposalHandler(
 				}
 				throw new RoomError("not_found", "Endpoint unavailable", 404)
 			}
-			if (request.method === "POST") originCheck(false)
+			if (request.method === "POST" || request.method === "DELETE") originCheck(false)
+      if (request.headers.has(PROFILE_HEADER) && service.profiles) service.profiles.identity(request.headers.get(PROFILE_HEADER))
+      if (([paths.profile, paths.profileAnswers, paths.profileTasteDeck] as string[]).includes(url.pathname)) {
+        const profiles = service.profiles
+        if (!profiles) throw new RoomError("not_implemented", "Taste profiles are not configured", 501)
+        const id = profiles.identity(request.headers.get(PROFILE_HEADER))
+        // Caddy overwrites X-Forwarded-For for untrusted clients; use its final hop. Never retain the raw address.
+        const address = request.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim() ?? "direct"
+        await options.profileBudget?.charge(random(), keyed(options.serviceSecret, "profile-ip", address), { commands: 600, actorCommands: 120 })
+        if (request.method === "GET" && url.pathname === paths.profile) return reply(await profiles.summary(id))
+        if (request.method === "GET" && url.pathname === paths.profileTasteDeck) return reply(await profiles.deck(id, Number(url.searchParams.get("count") ?? 10)))
+        if (request.method === "POST" && url.pathname === paths.profileAnswers) return reply(await profiles.answers(id, parse(profileAnswersSchema, await body(request))))
+        if (request.method === "DELETE" && url.pathname === paths.profile) {
+          originCheck(!nativeRequest())
+          await profiles.delete(id)
+          return new Response(null, { status: 204, headers })
+        }
+        throw new RoomError("not_found", "Endpoint unavailable", 404)
+      }
 			if (url.pathname === paths.account || url.pathname.startsWith(`${paths.account}/`)) {
 				const members = options.members
 				if (!members)
@@ -685,7 +714,8 @@ export function createProposalHandler(
 				headers.set("retry-after", String(retryAfter))
 			return reply(
 				{
-					error: {
+					...(error instanceof ProfileConflict ? { profile: error.profile } : {}),
+          error: {
 						code: e.code,
 						message: e.message,
 						retryable: e.retryable,

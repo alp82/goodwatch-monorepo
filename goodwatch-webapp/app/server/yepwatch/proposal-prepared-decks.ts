@@ -71,6 +71,9 @@ function digest(room: ProposalRoom, membersAsGuests: boolean): string {
 	shape.peopleCount = present.length
 	shape.personalServices = present.map(p => [...(p.serviceIds ?? [])].sort((a,b) => a-b)).sort((a,b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))
 	shape.ideaNames = (room.ideas ?? []).filter(i => i.on).map(i => present.find(p => p.id === i.authorId)?.nickname ?? "Someone")
+  // Even the seen-read fallback must retain profile taste: a stale taste deck cannot be repaired by seen filtering.
+  if (present.some(p => p.profileId)) shape.profileInputs = present.filter(p => p.profileId)
+    .map(p => [p.profileId, p.tasteRevision ?? 0]).sort((a, b) => String(a[0]).localeCompare(String(b[0])))
 	shape.guestScreens = [...new Set(present.filter(guest).map((p) => String(p.screenId)))].sort()
 	shape.participants = present
 		.filter((p) => !guest(p))
@@ -86,7 +89,7 @@ function digest(room: ProposalRoom, membersAsGuests: boolean): string {
 
 /** No personal taste or progress to read; aggregate people/services still affect the deck. */
 const isGuest = (p: ProposalRoom["participants"][number]) =>
-	p.member?.state !== "linked" && !p.memberUserId && !p.memberGrant && !(p as { profileId?: string }).profileId
+	!p.profileId && p.member?.state !== "linked" && !p.memberUserId && !p.memberGrant
 
 const stable = (value: unknown): string =>
 	JSON.stringify(value, (_k, v) =>

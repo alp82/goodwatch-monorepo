@@ -503,6 +503,9 @@ export interface InvitePreview {
 }
 export interface RoomPromptPreview { prompt: string; attributes: RoomDescription["attributes"] }
 export const paths = {
+  profile: `${API_PREFIX}/profile`,
+  profileAnswers: `${API_PREFIX}/profile/answers`,
+  profileTasteDeck: `${API_PREFIX}/profile/taste-deck`,
 	rooms: `${API_PREFIX}/rooms`,
 	metadata: `${API_PREFIX}/catalog/metadata`,
 	resolveInvite: `${API_PREFIX}/guest/resolve-invite`,
@@ -533,3 +536,27 @@ export const paths = {
 
 /** Per-candidate accumulated foreground exposure; client measurement is self-reported, not verified human deliberation. */
 export const EXPOSURE_LIMITS = { maxActiveMs: 1200000 } as const
+
+/** Device secret: 32 random bytes encoded as unpadded base64url, sent only over HTTPS. */
+export const PROFILE_HEADER = "x-yepwatch-profile"
+export type TasteAnswer = "loved" | "not_for_me" | "unseen"
+export interface ProfileAnswerItem {
+  key: number
+  answer: TasteAnswer | "did_not_watch" | null
+  /** Client event time in milliseconds. Preserve it on retries. */
+  at: number
+  source?: "taste" | "followup"
+  /** Required for followup, identifies the specific decision (also on undo). */
+  decidedAt?: number
+}
+export interface ProfileAnswersRequest { revision: number; items: ProfileAnswerItem[] }
+export interface TasteCard {
+  key: number; title: string; year: number | null; posterUrl: string | null
+  mediaType: "movie" | "tv"; overview: string | null; runtimeMinutes: number | null
+}
+export interface ProfileSummary {
+  answered: number; loved: number; notForMe: number; unseen: number; revision: number
+  followups: (TasteCard & { decidedAt: number })[]
+}
+export interface ProfileAnswersResponse { revision: number; answered: number }
+export interface TasteDeckResponse { cards: TasteCard[] }

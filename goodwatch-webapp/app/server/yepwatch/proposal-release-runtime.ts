@@ -1,4 +1,7 @@
 import { expiredRoundOutcomes } from './proposal-expired-outcomes.ts'
+import { TasteProfiles, SqlProfileStore } from "./proposal-taste-profile.ts"
+import type { TitleSnapshot } from "../title-snapshot/snapshot.server.ts"
+import type { TasteCard } from "../../../packages/yepwatch-contracts/proposal.ts"
 import { roomSearch } from "./proposal-intent.ts"
 import { releaseMembers } from "./proposal-release-members.ts"
 import type { ContinuousMembers } from "./continuous-members.server.ts"
@@ -23,7 +26,7 @@ import { ValkeyRoomRepository } from "./proposal-valkey-repository.ts"
 import { ValkeyReleaseControl } from "./proposal-valkey-control.ts"
 import { ValkeyAccountRooms, MirroredDeletionStore } from "./proposal-valkey-accounts.ts"
 import { HistorySync } from "./proposal-history-sync.ts"
-import { ValkeyCommandBudget } from "./proposal-command-budget.ts"
+import { MemoryCommandBudget, ValkeyCommandBudget } from "./proposal-command-budget.ts"
 import type { ReleaseConfig } from "./proposal-release-config.ts"
 export const RELEASE_HEALTH = {
 	live: `${API_PREFIX}/health/live`,
@@ -35,6 +38,8 @@ export interface ReleaseDependencies {
 	memberCatalog?: (members: ContinuousMembers) => ProposalCatalog
 	snapshot(): { count: number; version: string } | null
 	catalogProbe(): Promise<void>
+  profileSnapshot?: () => TitleSnapshot | null
+  profileDisplays?: (keys: number[]) => Promise<Map<number, TasteCard>>
 	/** The messaging connection: revision hints. */
 	bus: {
 		ping(): Promise<unknown>
@@ -82,7 +87,8 @@ export function createReleaseRuntime(
 ) {
 	const now = deps.now ?? Date.now
 	const crateRepository = new RelationalProposalRepository(deps.sql, config.secret)
-	const quotas = new SqlCreationQuotas(deps.sql, config.control.roomsPerPerson ?? 10)
+	const profiles = deps.profileSnapshot && deps.profileDisplays ? new TasteProfiles(new SqlProfileStore(deps.sql), config.secret, deps.profileSnapshot, deps.profileDisplays, now) : undefined
+  const quotas = new SqlCreationQuotas(deps.sql, config.control.roomsPerPerson ?? 10)
 	let repository: ProposalRepository = crateRepository
 	let control: { check(): Promise<void> } & ConstructorParameters<typeof ProposalService>[5]
 	let history: HistorySync | undefined
@@ -103,6 +109,7 @@ export function createReleaseRuntime(
 			accounts: crateRepository.accountStore,
 			deletions,
 			retentionDays: config.roomRetentionDays,
+      followups: room => profiles?.recordDecision(room) ?? Promise.resolve(),
 		})
 		repository = live
 		control = new ValkeyReleaseControl(rooms, config.control, deps.commands ?? new ValkeyCommandBudget(rooms), quotas)
@@ -124,7 +131,7 @@ export function createReleaseRuntime(
 		Date.now,
 		control,
 		roomSearch(process.env),
-		{ tickets }
+		{ tickets, profiles }
 	)
 	// Rooms read before the release is initialized (the live routes, liveRoute) start no background work.
 	service.pauseInterpretations(true)
@@ -133,6 +140,7 @@ export function createReleaseRuntime(
 		allowedOrigins: [config.publicOrigin],
 		secureCookies: true,
 		members,
+    profileBudget: deps.commands ?? (deps.rooms ? new ValkeyCommandBudget(deps.rooms) : new MemoryCommandBudget(now)),
 	})
 	let draining = false
 	let initialized = false
@@ -285,6 +293,7 @@ export function createReleaseRuntime(
 			() => service.deletions.purgeDue(now()),
       () => expiredRoundOutcomes(deps.sql, repository, now(), catalog.roundEnded),
 			() => quotas.purgeExpired(),
+      () => profiles?.expire() ?? Promise.resolve(),
 			async () => {
 				const report = await retention.run()
 				if (hasDeletions(report)) console.log(JSON.stringify({ event: "yepwatch_room_retention", ...report }))
@@ -313,6 +322,7 @@ export function createReleaseRuntime(
 		},
 		/** The history copy's loops, for shutdown (queued jobs stay in Valkey for the next process). */
 		history,
+    profiles,
 		stop() {
 			clearInterval(timer)
 			clearInterval(repair)

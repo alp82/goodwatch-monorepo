@@ -50,6 +50,16 @@
       lb_try_interval 100ms
     }
   }
+  @profile {
+    method GET POST DELETE OPTIONS
+    path /api/yepwatch/v1/proposal/profile /api/yepwatch/v1/proposal/profile/answers /api/yepwatch/v1/proposal/profile/taste-deck
+  }
+  handle @profile {
+    reverse_proxy api:3000 {
+      lb_try_duration 30s
+      lb_try_interval 100ms
+    }
+  }
   @admission {
     method POST
     path /api/yepwatch/v1/proposal/rooms /api/yepwatch/v1/proposal/guest/resolve-invite /api/yepwatch/v1/proposal/invites/preview

@@ -22,6 +22,7 @@ import {
 	deletionTable,
 	creationQuotaTable,
 	creationReservationTable,
+  tasteProfileTable,
 	columns,
 	parseRow,
 	tableDdl,
@@ -95,11 +96,11 @@ const candidateValues = (c: ProposalRoom["candidates"][number]): Row => ({
 	genres: c.genres ?? null
 })
 export async function provisionRelationalRooms(sql: Sql, replicas: 0 | 2) {
-	for (const table of [...Object.values(tables), invitationTable, accountIndexTable, accountHistoryTable, revokedSessionTable, deletionTable, creationQuotaTable, creationReservationTable])
+	for (const table of [...Object.values(tables), invitationTable, accountIndexTable, accountHistoryTable, revokedSessionTable, deletionTable, creationQuotaTable, creationReservationTable, tasteProfileTable])
 		await sql(tableDdl(table, replicas))
 }
 export async function checkRelationalRooms(sql: Sql) {
-	for (const table of [...Object.values(tables), invitationTable, accountIndexTable, accountHistoryTable, revokedSessionTable, deletionTable, creationQuotaTable, creationReservationTable])
+	for (const table of [...Object.values(tables), invitationTable, accountIndexTable, accountHistoryTable, revokedSessionTable, deletionTable, creationQuotaTable, creationReservationTable, tasteProfileTable])
 		await sql(
 			`SELECT ${columns(table).join(",")} FROM ${table.name} WHERE ${
 				table.primary
@@ -183,6 +184,10 @@ export class RelationalProposalRepository implements ProposalRepository {
 	}
 	private recordId(entity: Entity, row: Row) {
 		const { record_id: _, ...values } = row
+		// A participant without a profile has the id it always had: records from before the profile columns stay valid,
+		// and a release that doesn't know the columns (rolling deploy, rollback) reads the ones this release writes.
+		if (entity === "participant")
+			for (const key of ["profile_id", "taste_revision"]) if (values[key] == null) delete values[key]
 		return keyed(this.secret, `yepwatch-row:${entity}`, stable(values))
 	}
 	/**
@@ -351,6 +356,9 @@ export class RelationalProposalRepository implements ProposalRepository {
 				member_state: p.member.state,
 				member_prefill: p.member.prefill,
 				member_user_id: p.memberUserId,
+				// Null without a profile, as the store returns it; recordId leaves null profile columns out.
+				profile_id: p.profileId ?? null,
+				taste_revision: p.tasteRevision ?? null,
 				vote_records: votes,
 				receipt_records: receipts,
 				agreement_record: agreement,
@@ -877,6 +885,8 @@ export class RelationalProposalRepository implements ProposalRepository {
 						agreementRevision: agreement.revision,
 						member: { state: p.member_state, prefill: p.member_prefill },
 						memberUserId: p.member_user_id,
+            ...(p.profile_id ? { profileId: p.profile_id } : {}),
+            ...(p.taste_revision != null ? { tasteRevision: p.taste_revision } : {}),
 						...(grant
 							? {
 									memberGrant: {

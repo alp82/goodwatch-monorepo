@@ -361,7 +361,7 @@ test("Operator provisioning is explicit and idempotent; ordinary startup only re
 	await checkReleaseStore(sql, "test-key", secret)
 	assert.equal(writes, before)
 	await provisionReleaseStore(sql, 0, "test-key", secret)
-	assert.equal(writes, before + 21)
+	assert.equal(writes, before + 22) // Includes the private taste profile table.
 })
 test("Container listener uses configured bind/port and preserves Secure HttpOnly cookie headers", async () => {
 	const server = await releaseHttp(
