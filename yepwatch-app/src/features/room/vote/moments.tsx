@@ -37,7 +37,8 @@ function ClassicMoment({ look, g, posterUrl, a, reduced }: MomentProps) {
   const inOut = a.interpolate({ inputRange: [0, 1, 2], outputRange: [0, 1, 0] });
   const scale = reduced ? 1 : a.interpolate({ inputRange: [0, 1, 2], outputRange: [0.7, 1, 1.08] });
   const full = g.vw;
-  const size = fitTo('MATCH', look === 'giant' ? full - (g.phone ? 20 : g.z(80)) : Math.min(full - 24, g.phone ? full : g.w * 1.5));
+  // Words stay on screen and clear of the question column (`words`, the window width when the stage is centered).
+  const size = fitTo('MATCH', look === 'giant' ? Math.min(full - (g.phone ? 20 : g.z(80)), g.words) : Math.min(full - 24, g.phone ? full : g.w * 1.5, g.words));
   const s = Math.min(size, g.h * 0.42);
   const posterW = g.w * 0.62;
   const left = -g.ext;
@@ -73,7 +74,7 @@ function ClassicMoment({ look, g, posterUrl, a, reduced }: MomentProps) {
   if (look === 'split') {
     // The whole stage lights amber, the poster sits low, MATCH above it.
     const room = g.cardTop + g.h - posterW * 1.5;
-    const ms = Math.min(fitTo('MATCH', g.phone ? g.aw - 32 : Math.min(full * 0.6, g.w * 1.6)), room * 0.62);
+    const ms = Math.min(fitTo('MATCH', g.phone ? g.aw - 32 : Math.min(full * 0.6, g.w * 1.6, g.words)), room * 0.62);
     return (
       <FxView style={{ position: 'absolute', left, width: full, top: 0, height: g.stageH, alignItems: 'center', opacity: inOut }}>
         <LinearGradient colors={[amber, '#f59e0b', '#b45309']} locations={[0, 0.55, 1]} style={fill} />
@@ -83,7 +84,7 @@ function ClassicMoment({ look, g, posterUrl, a, reduced }: MomentProps) {
     );
   }
   // neon: the poster, and a MATCH sign over its top.
-  const ns = Math.min(fitTo('MATCH', g.phone ? g.aw * 0.8 : Math.min(g.w * 1.5, full * 0.55)), g.h * 0.24);
+  const ns = Math.min(fitTo('MATCH', g.phone ? g.aw * 0.8 : Math.min(g.w * 1.5, full * 0.55, g.words)), g.h * 0.24);
   const flick = a.interpolate({ inputRange: [0, 0.15, 0.3, 0.45, 1, 1.8, 2], outputRange: [0, 1, 0.3, 1, 1, 1, 0] });
   const sw = EM.MATCH * ns * 1.1;
   return (

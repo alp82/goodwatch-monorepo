@@ -126,7 +126,9 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
   const frameBox = useRef<React.ComponentRef<typeof View>>(null);
   /** Web: the backdrop's colors at the stage's edges (where it sits in the frame the backdrop spans). */
   const [rim, setRim] = useState<Rim | null>(null);
-  const placeRim = useStableCallback(() => {
+  /** Web: the stage's left edge in the window, so looks can reach both screen edges from a stage off center. */
+  const [stageLeft, setStageLeft] = useState<number | null>(null);
+  const placeStage = useStableCallback(() => {
     const el = stageBox.current as unknown as HTMLElement | null;
     const frame = frameBox.current as unknown as HTMLElement | null;
     if (Platform.OS !== 'web' || !el || !frame || typeof el.offsetTop !== 'number') return;
@@ -139,6 +141,9 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
     }
     const next = at ? stageRim(top, el.offsetHeight, frame.offsetHeight) : null;
     setRim((r) => (JSON.stringify(r) === JSON.stringify(next) ? r : next));
+    let left = 0;
+    for (let node: HTMLElement | null = el; node; node = node.offsetParent as HTMLElement | null) left += node.offsetLeft;
+    setStageLeft(left);
   });
   const ready = Boolean(snapshot && view);
   // The web measures before the first paint, so the first card is drawn where it stays.
@@ -146,9 +151,9 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
     const el = stageBox.current as unknown as HTMLElement | null;
     if (Platform.OS !== 'web' || !el || typeof el.offsetWidth !== 'number') return;
     if (el.offsetWidth > 0 && el.offsetHeight > 0) setArea((a) => (a && a.width === el.offsetWidth && a.height === el.offsetHeight ? a : { width: el.offsetWidth, height: el.offsetHeight }));
-    placeRim();
+    placeStage();
     // The window's height too: a stage held at its least height doesn't resize while the frame (and its backdrop) does.
-  }, [ready, placeRim, windowHeight]);
+  }, [ready, placeStage, windowHeight]);
   const [focused, setFocused] = useState(true);
   const [localReaction, setLocalReaction] = useState<Reaction>({ at: 0 });
   const [dealer] = useState(() => new LookDealer(Math.random, pinnedLook()));
@@ -206,7 +211,7 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
     const offered = servicesIn(all, offeredIds);
     return offered.length ? <Logos services={offered} size={z(22)} /> : undefined;
   }, [all, offeredIds, z]);
-  const geo = useMemo(() => (area ? stageGeometry({ aw: area.width, stageH: area.height, vw: layout.width, phone, z, rim }) : null), [area, layout.width, phone, z, rim]);
+  const geo = useMemo(() => (area ? stageGeometry({ aw: area.width, stageH: area.height, vw: layout.width, phone, z, rim, place: stageLeft === null ? null : { left: stageLeft } }) : null), [area, layout.width, phone, z, rim, stageLeft]);
   const empty = useMemo(() => <FindingMore style={{ flex: 1 }} />, []);
   const nope = useCallback(() => controls.current?.commit(false), []);
   const yep = useCallback(() => controls.current?.commit(true), []);
@@ -273,7 +278,7 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
         </Press>
       </View>
       {/* A page on top hides this one (zero size on the web): keep the last real size. */}
-      <View ref={stageBox} onLayout={(e) => { const { width, height } = e.nativeEvent.layout; if (width > 0 && height > 0) { setArea((a) => (a && a.width === width && a.height === height ? a : { width, height })); placeRim(); } }}
+      <View ref={stageBox} onLayout={(e) => { const { width, height } = e.nativeEvent.layout; if (width > 0 && height > 0) { setArea((a) => (a && a.width === width && a.height === height ? a : { width, height })); placeStage(); } }}
         style={{ flex: 1, minHeight: 80, zIndex: 2 }}>
         {geo ? <VoteStage geo={geo} controls={controls} reduced={reduced} enter={entering} onEntered={onEntered} disabled={!answering} keys={focused && !panel && answering && boot === 'ready'}
           card={stageCard}

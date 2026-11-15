@@ -10,6 +10,24 @@ export type Look = (typeof LOOKS)[number];
 /** Looks that run the shared slow loop (wall rows, burst rays, glitch jitter). */
 export const LOOPING: readonly Look[] = ['wall', 'burst', 'glitch'];
 
+/**
+ * Whether a look's layers for one answer paint across the question column beside an off-center stage (desktop):
+ * the window-wide backgrounds, split's Yep half and echo's trail toward the column. The column fades while they play.
+ */
+export function crossesColumn(look: Look, kind: 'yep' | 'nope' | 'match'): boolean {
+  switch (look) {
+    case 'wall': case 'burst': case 'bleed': case 'glitch': return true;
+    case 'split': return kind === 'yep';
+    case 'echo': return kind !== 'nope';
+    default: return false;
+  }
+}
+
+/** Whether a look's match moment paints across the question column: filter's band, split's lit stage, and the dimmed stage under the other looks' moments. */
+export function momentCrossesColumn(look: Look): boolean {
+  return look !== 'wash' && look !== 'giant' && look !== 'neon';
+}
+
 export function isLook(value: unknown): value is Look {
   return typeof value === 'string' && (LOOKS as readonly string[]).includes(value);
 }

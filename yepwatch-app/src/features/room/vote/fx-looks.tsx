@@ -16,8 +16,8 @@ import { StampInk } from './StampInk';
 import { Word } from './Word';
 import { amber, cream, ease, fill, ink, jitter, pal, range, red, span, textGlow, web, webStyle, type LayerProps, type Node } from './paint';
 
-/** The stage's word size: stage-wide on a phone, about two cards wide on desktop. */
-export const bigSize = (g: Geo, text: VoteWord, f = 1) => Math.min(fitTo(text, (g.phone ? g.aw - 24 : Math.min(g.vw * 0.7, g.w * 2.1)) * f), g.h * 0.5);
+/** The stage's word size: stage-wide on a phone, about two cards wide on desktop (on screen, clear of the question column). */
+export const bigSize = (g: Geo, text: VoteWord, f = 1) => Math.min(fitTo(text, (g.phone ? g.aw - 24 : Math.min(g.vw * 0.7, g.w * 2.1, g.words)) * f), g.h * 0.5);
 
 const FADE = `linear-gradient(to bottom, transparent 0, #000 ${EDGE * 100}%, #000 ${100 - EDGE * 100}%, transparent 100%)`;
 const stageBox = (g: Geo) => ({ position: 'absolute', left: -g.ext, top: 0, width: g.vw, height: g.stageH, overflow: 'hidden' } as const);
@@ -139,7 +139,7 @@ export function BurstFront({ g, kind, p, punch }: LayerProps) {
 // ————— stamp —————
 export function StampFront({ g, kind, p }: LayerProps) {
   const P = pal(kind);
-  const width = g.phone ? g.aw - 70 : Math.min(g.vw * 0.6, g.w * 1.8);
+  const width = g.phone ? g.aw - 70 : Math.min(g.vw * 0.6, g.w * 1.8, g.words);
   const size = Math.min(fitTo(P.text, width * 0.74), g.h * 0.34);
   const border = Math.max(7, Math.round(size * 0.11));
   const boxW = wordW(P.text, size) + size * 0.26 * 2 + border * 2;
@@ -194,10 +194,23 @@ export function BleedFront({ g, kind, p, punch }: LayerProps) {
 
 // ————— echo —————
 const TRAIL = [0, 0.75, 0.52, 0.34, 0.2, 0.1];
+/**
+ * How far apart the trail's copies are. Off center the trail is shortened so its farthest copy (5 steps out, at
+ * 0.8 scale) still ends a margin inside the screen edge on its side; a match trails both ways.
+ */
+function echoStep(g: Geo, kind: LayerProps['kind'], ww: number) {
+  const step = ww * (g.phone ? 0.34 : 0.4);
+  if (g.centered) return step;
+  const cx = g.aw / 2;
+  const reach = (edge: number) => (edge - g.z(16) - 0.42 * ww) / 5;
+  const right = reach(g.screen.right - cx);
+  const left = reach(cx - g.screen.left);
+  return Math.max(0, Math.min(step, kind === 'match' ? Math.min(left, right) : kind === 'nope' ? left : right));
+}
 export function EchoFront({ g, kind, p, punch }: LayerProps) {
   const P = pal(kind);
   const size = bigSize(g, P.text, g.phone ? 0.78 : 0.62);
-  const step = wordW(P.text, size) * (g.phone ? 0.34 : 0.4);
+  const step = echoStep(g, kind, wordW(P.text, size));
   const out = Easing.out(Easing.cubic);
   const trail = (dir: number) => Array.from({ length: TRAIL.length - 1 }, (_, j) => {
     const k = TRAIL.length - 1 - j; // far copies first, so nearer ones paint on top
