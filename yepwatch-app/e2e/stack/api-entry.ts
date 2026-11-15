@@ -243,13 +243,24 @@ const rooms = createRoomsValkey(`redis://127.0.0.1:${roomsPort}`, secret)
 rooms.on("error", () => {})
 void rooms.connect().catch(() => {})
 const tickets = new ValkeyTicketStore(rooms)
+/**
+ * Taste profile requests charge a budget per client address (proposal-http.server.ts: 120 a minute per address, 600 in
+ * all), and every E2E browser arrives from 127.0.0.1: like the other release limits here, that one goes to the schema
+ * maximum. Room commands keep their own limits.
+ */
+const commandBudget = new ValkeyCommandBudget(rooms)
+const PROFILE_LIMITS = { commands: 600, actorCommands: 120 }
+const budget: typeof commandBudget = Object.assign(Object.create(commandBudget), {
+	charge: (op: string, actor: string, limits: { commands: number; actorCommands: number }) =>
+		commandBudget.charge(op, actor, limits.commands === PROFILE_LIMITS.commands && limits.actorCommands === PROFILE_LIMITS.actorCommands ? { commands: 2400, actorCommands: 2400 } : limits),
+})
 const runtime = createReleaseRuntime(config as Parameters<typeof createReleaseRuntime>[0], {
 	sql,
 	catalog: fixtureCatalog(),
 	memberCatalog: (members) => fixtureCatalog(members),
 	bus,
 	tickets,
-	commands: new ValkeyCommandBudget(rooms),
+	commands: budget,
 	rooms,
 	snapshot: () => ({ count: TITLES.length, version: "e2e-fixture" }),
 	profileSnapshot: () => TASTE_SNAPSHOT,

@@ -142,15 +142,16 @@ export function FirstRun({ initialName, me, saveName, back, done }: {
             end={(
               <View style={{ alignItems: 'center', gap: 10, paddingVertical: z(40) }}>
                 <Icon name="check" size={z(30)} color={glow.amber} />
-                <GText bold size={z(20)}>Profile ready</GText>
-                <GText size={z(15)} color={glow.muted}>{`${n} ${n === 1 ? 'answer' : 'answers'}. You can add more any time.`}</GText>
+                <GText bold size={z(20)}>{n ? 'Profile ready' : 'No cards right now'}</GText>
+                <GText size={z(15)} color={glow.muted}>{n ? `${n} ${n === 1 ? 'answer' : 'answers'}. You can add more any time.` : 'You can tune your taste any time from your profile.'}</GText>
               </View>
             )} />
         )}
         <View style={{ height: 48, alignItems: 'center' }}>{n && !deck.done ? <TextAction label="Undo" onPress={deck.undo} /> : null}</View>
       </>
     );
-    footer = deck.done ? null : <MainAction secondary label={n >= ENOUGH_ANSWERS ? 'That’s enough' : 'Skip for now'} onPress={finish} />;
+    // The last answer moves on by itself; an empty deck keeps the way out.
+    footer = deck.done && n ? null : <MainAction secondary label={n >= ENOUGH_ANSWERS ? 'That’s enough' : 'Skip for now'} onPress={finish} />;
   }
   return (
     <AppFrame testID="first-run" header={{ back: step === 'name' ? back : () => setStep('name'), me }} width={z(step === 'taste' ? 760 : 620)} gap={phone ? 22 : z(26)} footer={footer}>

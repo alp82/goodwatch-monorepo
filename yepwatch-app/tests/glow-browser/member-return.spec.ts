@@ -122,7 +122,8 @@ test('a lapsed sign-in keeps the name, offers a small Reconnect on the start pag
   const f = await fakeRoom(page, newRoom(), { member: 'lapsed' });
   await page.goto('/');
   await expect(page.getByTestId('home-rooms')).toBeVisible();
-  await expect(page.getByText(/, Alex$/)).toBeVisible();
+  // The name stays: the setup chip carries it (members' chip says From GoodWatch; lapsed, it counts ratings).
+  await expect(page.getByTestId('setup-chip')).toContainText('Alex');
   // No big guest button mid-session: the small Reconnect GoodWatch with what it brings back.
   await expect(button(page, 'Continue with GoodWatch')).toHaveCount(0);
   await expect(page.getByTestId('start-reconnect').getByText('Brings your streaming services back', { exact: true })).toBeVisible();

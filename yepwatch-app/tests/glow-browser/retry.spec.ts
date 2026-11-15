@@ -93,7 +93,7 @@ test('definitive admission failure clears bootstrap so the next Create is a new 
   // with the same id: two requests per press.
   expect(bodies).toHaveLength(2); expect(bodies[1].commandId).toBe(bodies[0].commandId);
   await action.click();
-  await expect.poll(()=>bodies.length).toBe(4);expect(bodies[2].commandId).not.toBe(bodies[0].commandId);expect(bodies[2].nickname).toBe('');
+  await expect.poll(()=>bodies.length).toBe(4);expect(bodies[2].commandId).not.toBe(bodies[0].commandId);expect(bodies[2].nickname).toBe('Alp');
 });
 
 test('terminal HTTP status takes precedence over retryable busy and never offers a pending action',async({page})=>{

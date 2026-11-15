@@ -30,7 +30,7 @@ import { BusyNote } from './shell/floating-note';
 import { Landing, SetUpStart } from './home/Landing';
 import { FirstRun } from './home/FirstRun';
 import { FollowUpCard } from './home/FollowUpCard';
-import { useTasteProfile } from '../core/continuous/taste-profile';
+import { tasteProfile, useTasteProfile } from '../core/continuous/taste-profile';
 import { BootPageReady, BootPhase } from './home/boot-phase';
 import type { HomeRoom } from './rooms/home-model';
 import { YourRooms } from './rooms/YourRooms';
@@ -93,7 +93,9 @@ function useEntrancePage({ invite, open: request, from }: EntranceProps) {
   // A redirect during the home boot can unmount the navigator before it is retained.
   useEffect(() => { if (boot === 'ready' && home.deletionPending) router.replace('/delete-account'); }, [boot, home.deletionPending]);
   useEffect(() => { if (boot === 'ready') void roomRegistry.recovery().then(value => { if (value?.confirmed) router.replace('/delete-account'); }); }, [boot]);
-  useFocusEffect(useCallback(() => { home.reload(); }, [])); // eslint-disable-line react-hooks/exhaustive-deps
+  // Back in front, a set-up page reads the profile again (at most once a minute) for its next-day question.
+  const readsProfile = useRef(false);
+  useFocusEffect(useCallback(() => { home.reload(); if (readsProfile.current) void tasteProfile.load(60_000); }, [])); // eslint-disable-line react-hooks/exhaustive-deps
   // Once the start page is up, the pages its actions open load in the background.
   useEffect(() => { if (boot === 'ready') preloadStartPages(); }, [boot]);
   const [panel, setPanel] = useState<PanelKind | null>(invite ? 'join' : request && request !== 'new' ? request : null);
@@ -164,6 +166,7 @@ function useEntrancePage({ invite, open: request, from }: EntranceProps) {
   const setUpPage = account.member || home.hasRooms || home.decisions.length > 0 || home.unavailable.length > 0 || Boolean(knownName);
   // A first visit asks the server nothing about a profile (there is none to ask about yet).
   const profile = useTasteProfile(60_000, setUpPage && !invite);
+  useEffect(() => { readsProfile.current = setUpPage && !invite; });
   const [profileWaitOver, setProfileWaitOver] = useState(false);
   useEffect(() => { const t = setTimeout(() => setProfileWaitOver(true), PROFILE_WAIT_MS); return () => clearTimeout(t); }, []);
   const profileKnown = profileWaitOver || profile.status === 'ready' || profile.status === 'failed';

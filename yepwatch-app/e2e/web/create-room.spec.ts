@@ -310,8 +310,7 @@ test.describe('create and set up a room', () => {
     await host.audit('Your services sheet');
     await pickServices(host, ['Netflix', 'Disney+']);
     await eventually(() => (host.latest?.screens as { serviceIds: number[]; country: string }[] | undefined)?.[0]?.serviceIds.length ?? 0, (n) => n > 0, 'services saved on the screen', host);
-    // Name is the next missing step: Start focuses the field.
-    await host.tap(host.button('Start'), { expect: {} });
+    // The name came with setup (the room asks only a host without one).
     await hostName(host, 'Alp');
     // Movies and shows
     await host.tap(host.button(/^Movies and shows, change$|, change$/).filter({ hasText: /Movies|shows/i }).first(), { expect: { visible: ['kinds-sheet'] } });

@@ -41,11 +41,11 @@ test('first visit: setup (name, Taste cards, Undo) ends on the start page, set u
   // The setup chip: the name and the rated count (Loved it and Not for me; Haven't seen doesn't count).
   await expect(page.getByTestId('setup-chip')).toContainText('Alp');
   await expect(page.getByTestId('setup-chip')).toContainText('6 rated');
-  // Every answer went to the profile with the device secret; the undone one as a later null.
-  await expect.poll(() => f.profile.answers.length).toBe(8);
-  expect(f.profile.answers.map((a) => a.answer)).toEqual(['loved', 'not_for_me', 'unseen', null, 'loved', 'loved', 'loved', 'loved']);
-  expect(f.profile.answers[3].key).toBe(f.profile.answers[2].key);
-  expect(new Set(f.profile.answers.map((a) => a.at)).size).toBe(8);
+  // The answers went to the profile with the device secret.
+  // Haven't seen, its Undo and the new answer on that card were still on the device together: one item goes.
+  await expect.poll(() => f.profile.answers.length).toBe(6);
+  expect(f.profile.answers.map((a) => a.answer)).toEqual(['loved', 'not_for_me', 'loved', 'loved', 'loved', 'loved']);
+  expect(new Set(f.profile.answers.map((a) => a.key)).size).toBe(6);
   expect(f.profile.headers.every((h) => /^[A-Za-z0-9_-]{43}$/.test(h))).toBe(true);
   expect(new Set(f.profile.headers).size).toBe(1);
   expect(rooms).toBe(0);
@@ -66,9 +66,9 @@ test('set up: the next-day question answers once and leaves; Join takes a code o
   // Join right on the start page: the code, then Join as the saved name.
   await expect(button(page, 'Join as Alp')).toBeDisabled();
   await page.getByLabel('Code or invitation link').fill('K7QX');
-  const joined = page.waitForRequest((r) => r.method() === 'POST' && r.url().endsWith('/join'));
+  const resolved = page.waitForRequest((r) => r.method() === 'POST' && r.url().endsWith('/guest/resolve-invite'));
   await button(page, 'Join as Alp').click();
-  expect((await joined).postDataJSON().nickname).toBe('Alp');
+  expect((await resolved).postDataJSON().code).toBe('K7QX');
   await expect(page).toHaveURL(/\/room\//);
 });
 
