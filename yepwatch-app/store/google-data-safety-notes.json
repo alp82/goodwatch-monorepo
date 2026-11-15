@@ -45,7 +45,7 @@
         "PSL_PERSONALIZATION"
       ],
       "share": [],
-      "reason": "Room participation, votes, matches and decisions provide app functionality and personalized suggestions. Current versions do not embed YouTube or send player interactions to Google."
+      "reason": "Room participation, votes, matches and decisions provide app functionality and personalized suggestions. Current versions do not embed YouTube or send player interactions to Google. Taste answers (Loved it, Not for me, Haven't seen) are stored server-side in a per-device taste profile without an account, expire 180 days after last use and personalize suggestions; they are never sent to GoodWatch."
     },
     "PSL_IN_APP_SEARCH_HISTORY": {
       "optional": true,
@@ -82,7 +82,7 @@
         "PSL_PERSONALIZATION"
       ],
       "share": [],
-      "reason": "Required random Expo installation ID and room-allowance identifier for updates, installation diagnostics, room allowance and security. No advertising identifier or embedded-player identifiers."
+      "reason": "Required random Expo installation ID and room-allowance identifier for updates, installation diagnostics, room allowance and security. No advertising identifier or embedded-player identifiers. A random per-device taste-profile secret identifies the taste profile (personalization, already declared)."
     }
   },
   "accountCreation": [
@@ -98,8 +98,8 @@
     "https://policies.google.com/privacy",
     "https://support.google.com/youtube/answer/132596"
   ],
-  "separateDataDeletionWithoutAccountDeletion": false,
-  "selectiveDeletionReason": "The published flow deletes all YepWatch data, with a 30-day recovery window, while preserving the separate GoodWatch account. No granular partial-data deletion control is offered.",
+  "separateDataDeletionWithoutAccountDeletion": true,
+  "selectiveDeletionReason": "Profile > Reset my taste deletes the server taste profile (all Taste answers) immediately without deleting anything else. Account deletion at https://yepwatch.com/delete-account removes all YepWatch data with a 30-day recovery window; GoodWatch stays intact.",
   "candidateBuild": "19",
   "containsAds": false
 }

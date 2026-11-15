@@ -1,9 +1,9 @@
 {
   "name": "YepWatch",
   "apple": {
-    "subtitle": "Pick movies & shows together",
-    "keywords": "tv,film,night,friends,couple,date,swipe,match,streaming,group,picker,decide,recommendations",
-    "promotionalText": "Turn “what should we watch?” into “press play.” Share a room, swipe Yep or Nope, and find a movie or show everyone wants to watch.",
+    "subtitle": "Pick what to watch, together",
+    "keywords": "movie night,couch,friends,couple,date,swipe,match,tv shows,streaming,group,decide,film,taste",
+    "promotionalText": "Start a couch, invite your friends and swipe the same cards. Say Yep or Nope. When everyone says Yep, it’s a match. Pick one and press play.",
     "marketingUrl": "https://yepwatch.com",
     "supportUrl": "https://yepwatch.com/support",
     "privacyPolicyUrl": "https://yepwatch.com/privacy",
@@ -11,9 +11,10 @@
     "copyright": "2026 Alper Ortac"
   },
   "google": {
-    "shortDescription": "Swipe Yep or Nope. Find a movie or show you all want to watch.",
+    "shortDescription": "Start a couch, swipe Yep or Nope, and find something you all want to watch.",
     "privacyPolicyUrl": "https://yepwatch.com/privacy",
     "accountDeletionUrl": "https://yepwatch.com/delete-account"
   },
-  "description": "What should we watch? Settle it with a Yep.\n\nYepWatch makes choosing a movie or TV show part of the fun. Create a room, invite your people, and swipe from your own phones. Big Yep. Big Nope. A shared pick you actually agree on.\n\nSWIPE WITH FEELING\nSay Yep to something you would watch, or Nope to something you wouldn’t. Expressive reactions bring every choice to life. Your individual votes stay private while shared matches appear as you go.\n\nBRING YOUR IDEAS\nA feel-good comedy? Something tense? A particular genre or a whole different mood? Add ideas to the room and explore movies and shows together.\n\nMAKE THE FINAL PICK TOGETHER\nOpen your matches, propose a title, and agree on it as a group. Once everyone agrees, YepWatch checks streaming availability again before confirming your choice.\n\nYOUR PEOPLE, YOUR PHONES\nChoose on your own, plan a date night, or get the whole group involved. Share an invitation link so friends can join from their phones or in a browser.\n\nFIND WHERE TO WATCH\nChoose your country and bring your streaming services. See which services offer a title and follow a link when you are ready to watch.\n\nCOME BACK FOR ANOTHER NIGHT\nStart as a guest, return to your rooms, and revisit past decisions. Optional GoodWatch sign-in brings your saved services and keeps your rooms and decision history available across devices.\n\nYepWatch helps you choose what to watch. Movies and shows play on the streaming provider’s service, which may require its own subscription. Availability varies by country and can change."
+  "releaseNotes": "A fresh YepWatch. Start a couch and invite friends with a QR code, a link or a code. Everyone adds one idea, then swipes the same cards: would you watch this tonight? When everyone says Yep, it’s a match. On Matches, tap every one you’re in for. If you all like more than one, pick a favorite and let a fair spin decide. Quick Taste cards at the start make the picks fit you better.",
+  "description": "What should we watch? Settle it on the couch.\n\nYepWatch turns choosing a movie or show into a quick game you play together. Start a couch, invite your friends and swipe the same cards from your own phones. When everyone says Yep, it’s a match.\n\nSTART WITH YOU\nPick a name and answer a few Taste cards: Loved it, Not for me or Haven’t seen. That’s about a minute, and your picks fit you better from the first card. Tune your taste any time from your profile.\n\nGRAB A COUCH\nTap New couch and invite people with a QR code, a link or a short code. Friends can join from the app or a browser. Everyone sees who’s here.\n\nONE IDEA EACH\nA cozy mystery? A twisty heist? 90s action? Everyone adds one idea and the cards follow the mood. Choose movies, shows or both, and add the streaming services you have.\n\nWOULD YOU WATCH THIS TONIGHT?\nEvery card asks one question. Say Yep or Nope with a tap or a swipe, and enjoy a different reaction almost every time. Your votes stay private. Titles everyone said Yep to become matches.\n\nWHAT ARE WE WATCHING NOW?\nOpen your matches and tap every one you’re in for. When everyone’s in on one title, tap Watch. Everyone’s in on two? Each person picks a favorite, and if the picks tie, a fair spin decides.\n\nPRESS PLAY\nYepWatch checks where your pick is streaming in your country and links you to it.\n\nBRING GOODWATCH IF YOU LIKE\nYepWatch works without an account. Optional GoodWatch sign-in brings your taste and streaming services and keeps your couches and past picks on every device. Your Taste answers stay in YepWatch.\n\nYepWatch helps you choose what to watch. Movies and shows play on the streaming provider’s service, which may require its own subscription. Availability varies by country and can change."
 }

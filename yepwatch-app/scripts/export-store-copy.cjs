@@ -12,8 +12,9 @@ const fields = {
   'apple-copyright': listing.apple.copyright,
   'google-short-description': listing.google.shortDescription,
   'full-description': listing.description,
+  'release-notes': listing.releaseNotes,
 };
-for (const [key, max] of [['app-name', 30], ['apple-subtitle', 30], ['apple-promotional-text', 170], ['apple-keywords', 100], ['google-short-description', 80], ['full-description', 4000]]) {
+for (const [key, max] of [['app-name', 30], ['apple-subtitle', 30], ['apple-promotional-text', 170], ['apple-keywords', 100], ['google-short-description', 80], ['full-description', 4000], ['release-notes', 500]]) {
   if (fields[key].length > max) throw new Error(key + ' exceeds its store limit.');
 }
 fs.mkdirSync(destination, { recursive: true });

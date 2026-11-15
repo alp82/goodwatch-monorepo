@@ -57,7 +57,8 @@
     "Device ID": {
       "purposes": [
         "App Functionality",
-        "Analytics"
+        "Analytics",
+        "Product Personalization"
       ],
       "linkedToUser": true,
       "usedForTracking": false
@@ -85,7 +86,8 @@
     "contactAndSupport": "Names identify room participants; optional support and account-support correspondence can include email and customer-support data. YepWatch\u2019s GoodWatch account link does not expose the GoodWatch email or password.",
     "coarseLocation": "Selected streaming region only; no location permission or embedded-player location processing in build 19.",
     "roomIdeas": "Private room-authored ideas and optional search prompts are data collection. They are not a broad public UGC feed; Apple\u2019s age-questionnaire UGC definition covers broad distribution, unlike its privacy data category.",
-    "publication": "Each category is saved in App Store Connect. Publish and fresh readback are tracked separately in the release record."
+    "publication": "Each category is saved in App Store Connect. Publish and fresh readback are tracked separately in the release record.",
+    "tasteProfiles": "Rethink (2026-11-15): Taste answers (Loved it, Not for me, Haven't seen, per title) are stored on YepWatch's server in a taste profile keyed by a random per-device profile secret, without an account, and used to personalize the cards. They expire 180 days after the last use, are deleted by Profile > Reset my taste or by account deletion, and are never written to GoodWatch. Covered by Product Interaction and Other User Content (already App Functionality + Product Personalization, linked). New: the profile secret is a device-level identifier used for personalization, so Device ID adds Product Personalization. No new data type."
   },
   "sources": [
     "https://developer.apple.com/app-store/app-privacy-details/",
