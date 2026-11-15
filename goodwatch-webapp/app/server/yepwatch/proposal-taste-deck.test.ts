@@ -74,3 +74,28 @@ test("The first profile deck request after a snapshot swap completes before k-me
 		await tasteClusters(snapshot)
 	}
 })
+
+test("Display misses are backfilled without repeats until the available pool is exhausted", async () => {
+	const snapshot = tasteFixture()
+	await tasteClusters(snapshot)
+	const attempted = new Set<number>()
+	let calls = 0
+	const profiles = new TasteProfiles(new MemoryProfileStore(), "test-profile-secret-at-least-32-bytes", () => snapshot, async keys => {
+		calls++
+		for (const key of keys) {
+			assert.ok(!attempted.has(key), "a missing display is attempted only once")
+			attempted.add(key)
+		}
+		// The first two batches miss every display; the rest supply enough cards.
+		return calls <= 2 ? new Map() : tasteDisplays(keys)
+	})
+	const deck = await profiles.deck("profile", 10)
+	assert.equal(deck.cards.length, 10)
+	assert.equal(new Set(deck.cards.map(c => c.key)).size, 10)
+	assert.ok(calls >= 3)
+
+	const available = new Set(calibrationKeys(readyTasteClusters(snapshot), []).slice(0, 3))
+	const sparse = new TasteProfiles(new MemoryProfileStore(), "test-profile-secret-at-least-32-bytes", () => snapshot,
+		keys => tasteDisplays(keys.filter(key => available.has(key))))
+	assert.equal((await sparse.deck("profile", 10)).cards.length, 3)
+})

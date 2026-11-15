@@ -175,6 +175,7 @@ export class ProposalService {
 	/** Private profile access for HTTP routes and catalog preparation. */
 	readonly profiles?: TasteProfiles
 	private profileRooms = new Map<string, Set<string>>()
+	private profileWarmups = new Map<string, Promise<void>>()
 	/** First decks built during setup, so Start doesn't wait for the catalog. */
 	readonly decks: PreparedDecks
 	/** Refill pages being built ahead of their commands' lane (refillPage), by room, sender and command. */
@@ -242,15 +243,20 @@ export class ProposalService {
 			...options.decks,
 		})
 	}
-  /** Warm profile copies in one batch before a prepared build. Ranker signal() then does no Crate read. */
+  /** Use held revisions immediately. Cold reads warm a later build without delaying rooms or admissions. */
   async prepareProfiles(room: ProposalRoom) {
     if (!this.profiles) return
+    const profiles = this.profiles
     const people = activeRoom(room).participants.filter(p => p.profileId)
-    // Best effort: a profile store that doesn't answer leaves the held copies in use; Start never fails on it.
-    await this.profiles.signals(people.map(p => p.profileId!)).catch(() => {})
     this.trackProfiles(room)
-    // Only the revision: the taste itself is built on an answer write or a deck build, never here (Start calls this).
-    for (const p of people) p.tasteRevision = this.profiles.revisionHeld(p.profileId!) ?? p.tasteRevision
+    for (const p of people) p.tasteRevision = profiles.revisionHeld(p.profileId!) ?? p.tasteRevision
+    if (!people.length || this.profileWarmups.has(room.id)) return
+    const revisions = new Map(people.map(p => [p.profileId!, profiles.revisionHeld(p.profileId!)]))
+    const warming = profiles.signals([...revisions.keys()]).then(() => {
+      // Never mutate a room after returning it to its caller. A later build picks up the warmed revisions.
+      if ([...revisions].some(([id, revision]) => profiles.revisionHeld(id) !== revision)) this.decks.schedule(room.id)
+    }).catch(() => {}).finally(() => { this.profileWarmups.delete(room.id) })
+    this.profileWarmups.set(room.id, warming)
   }
   /** Which rooms a profile's answer rebuilds the prepared deck of (bounded, this process only). */
   private trackProfiles(room: ProposalRoom) {
@@ -266,23 +272,23 @@ export class ProposalService {
   /** Attaches only after authenticating this device's room credential. The profile secret never enters the room. */
   async bindProfile(id: string, credential: ActorCredential, profileId: string) {
     if (!this.profiles) return
-    // Already linked at the revision this process holds: no profile store read and no wait in the room's write lane
-    // (a room read must not queue behind a Start).
-    const known = this.profiles.known(profileId)
-    if (known !== null) {
-      const { room } = await this.get(id)
-      const p = this.auth(room, credential)
-      if (p.profileId === profileId && p.tasteRevision === known) return this.trackProfiles(room)
-    }
+    // Authenticate and check the link before entering the room lane, even with a cold profile cache.
+    // Revision refresh belongs to preparation; a repeated admission never needs a room write.
+    const { room } = await this.get(id)
+    const participant = this.auth(room, credential)
+    if (participant.profileId === profileId) return this.trackProfiles(room)
+    // Store latency must not hold up room commands. HTTP runs this whole best-effort link in the background.
+    let revision: number
+    try { revision = await this.profiles.touch(profileId) } catch { return }
     await this.write(id, async () => {
       for (let i = 0; i < 6; i++) {
         const old = await this.get(id), room = structuredClone(old.room)
         const p = this.auth(room, credential)
-        const revision = await this.profiles!.touch(profileId)
-        if (p.profileId === profileId && p.tasteRevision === revision) { await this.prepareProfiles(room); return }
+        if (p.profileId === profileId) return this.trackProfiles(room)
         p.profileId = profileId; p.tasteRevision = revision; room.revision++
         if (!(await this.repository.compareAndSwap(old, room, true))) continue
-        await this.prepareProfiles(room)
+        this.trackProfiles(room)
+        this.decks.schedule(id)
         await this.notify(id)
         return
       }

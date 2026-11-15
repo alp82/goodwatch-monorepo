@@ -481,7 +481,7 @@ export class TasteProfiles {
 		this.remember(p)
 		// Precompute before scheduling a build; a changed callback failure must not turn a committed answer into failure.
 		if (tasteChanged) {
-			await this.signal(id)
+			await this.signal(id).catch(() => {})
 			await this.changed(id, p.revision).catch(() => {})
 		}
 		return {
@@ -579,18 +579,22 @@ export class TasteProfiles {
 				true
 			)
 		const p = (await this.fresh(id))?.profile ?? this.empty(id)
-		const keys = calibrationKeys(
-			readyTasteClusters(snapshot),
-			p.answers.items,
-			count
-		)
-		const displays = await this.displays(keys)
-		return {
-			cards: keys.flatMap((key) => {
-				const d = displays.get(key)
-				return d ? [d] : []
-			}),
+		let clusters = readyTasteClusters(snapshot)
+		const cards: TasteCard[] = []
+		// Discard attempted candidates, including display misses, and draw the next calibration candidates.
+		// Continue across exhausted clusters when the remaining pool can still fill the requested count.
+		while (cards.length < count) {
+			const keys = calibrationKeys(clusters, p.answers.items, count - cards.length)
+			if (!keys.length) break
+			const displays = await this.displays(keys)
+			for (const key of keys) {
+				const card = displays.get(key)
+				if (card) cards.push(card)
+			}
+			const attempted = new Set(keys)
+			clusters = clusters.map(c => ({ ...c, titles: c.titles.filter(t => !attempted.has(t.key)) }))
 		}
+		return { cards }
 	}
 	/** Called only after a committed decision. Never creates a missing/deleted profile. Idempotent across retries. */
 	async recordDecision(room: ProposalRoom) {

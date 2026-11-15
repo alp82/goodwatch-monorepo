@@ -318,6 +318,8 @@ test("HTTP contract: private profiles, admission binding, deck, conflict body, C
 	const admissionResponse = await call(paths.rooms, "POST", request())
 	assert.equal(admissionResponse.status, 200)
 	const admission = await admissionResponse.json()
+	// Linking follows the response and completes independently.
+	await new Promise(resolve => setImmediate(resolve))
 	const room = (await repo.read(admission.credential.roomId))!.room
 	assert.equal(room.participants[0].profileId, f.id)
 	assert.ok(!JSON.stringify(admission).includes(f.id))
@@ -422,6 +424,9 @@ test("A profile answer rebuilds only its own setup rooms; delete changes the pre
 	const before = (await repo.read(a.credential.roomId))!.room
 	await service.prepareProfiles(before)
 	await f.profiles.delete(f.id)
+	await service.prepareProfiles(structuredClone(before))
+	// Cold profile reads warm the next preparation without blocking the room.
+	await new Promise(resolve => setImmediate(resolve))
 	const after = structuredClone(before)
 	await service.prepareProfiles(after)
 	assert.notEqual(deckInputs(before), deckInputs(after))
@@ -550,4 +555,121 @@ test("Pruning old follow-ups preserves taste revision", async () => {
 	await store.expire(f.now())
 	assert.deepEqual(f.store.rows.get(f.id)!.profile.followups, [])
 	assert.equal(f.store.rows.get(f.id)!.profile.revision, 0)
+})
+
+test("Cold catalog accepts answers and links; repeated links with a cold cache bypass the write lane", async () => {
+	const f = fixture()
+	let snapshot: ReturnType<typeof tasteFixture> | null = null
+	const profiles = new TasteProfiles(f.store, secret, () => snapshot, tasteDisplays, f.now)
+	const repo = new ProposalMemoryRepository()
+	const service = new ProposalService(repo, proposalFixtureCatalog, secret, undefined, f.now, undefined, undefined, { profiles })
+	const a = await service.create(request())
+	const credential = { participantId: a.credential.participantId, token: a.credential.token }
+	await profiles.answers(f.id, { revision: 0, items: [{ key: key(1), answer: "loved", at: f.now() }] })
+	await service.bindProfile(a.credential.roomId, credential, f.id)
+	assert.equal((await repo.read(a.credential.roomId))!.room.participants[0].profileId, f.id)
+	const room = (await repo.read(a.credential.roomId))!.room
+	await service.prepareProfiles(room)
+	assert.equal(room.participants[0].tasteRevision, 1)
+	snapshot = tasteFixture()
+	assert.ok((await profiles.signal(f.id)).seen.has(key(1)), "saved answers prepare once the snapshot is ready")
+
+	// A restarted service has neither profile cache nor local room state. Block its write lane deliberately.
+	const restarted = new ProposalService(repo, proposalFixtureCatalog, secret, undefined, f.now, undefined, undefined,
+		{ profiles: new TasteProfiles(f.store, secret, () => snapshot, tasteDisplays, f.now) })
+	const reads = f.store.reads
+	const revision = (await repo.read(room.id))!.room.revision
+	const internals = restarted as unknown as { write: () => Promise<never> }
+	internals.write = () => { throw new Error("already linked must not enter the write lane") }
+	await restarted.bindProfile(room.id, credential, f.id)
+	assert.equal(f.store.reads, reads)
+	assert.equal((await repo.read(room.id))!.room.revision, revision)
+})
+
+test("Admissions and room reads finish while the profile store is blocked, then link later", { timeout: 3000 }, async () => {
+	const f = fixture()
+	const repo = new ProposalMemoryRepository()
+	const service = new ProposalService(repo, proposalFixtureCatalog, secret, undefined, f.now, undefined, undefined, { profiles: f.profiles })
+	const handler = createProposalHandler(service, { serviceSecret: secret, allowedOrigins: [] })
+	let release!: () => void
+	const gate = new Promise<void>(resolve => { release = resolve })
+	const read = f.store.read.bind(f.store)
+	f.store.read = async ids => { await gate; return read(ids) }
+	try {
+		const response = await handler(new Request(`https://api.test${paths.rooms}`, {
+			method: "POST", headers: { [PROFILE_HEADER]: f.device, "x-yepwatch-client": "native", "content-type": "application/json" },
+			body: JSON.stringify(request()),
+		}))
+		assert.equal(response.status, 200)
+		const a = await response.json()
+		assert.equal(f.store.rows.size, 0)
+		const joinedResponse = await handler(new Request(`https://api.test${paths.join(a.credential.roomId)}`, {
+			method: "POST", headers: { [PROFILE_HEADER]: f.device, "x-yepwatch-client": "native", "content-type": "application/json" },
+			body: JSON.stringify({ ...request(), inviteCode: a.invite.code }),
+		}))
+		assert.equal(joinedResponse.status, 200)
+		const joined = await joinedResponse.json()
+		const preparing = structuredClone((await repo.read(a.credential.roomId))!.room)
+		preparing.participants[0].profileId = f.id
+		await service.prepareProfiles(preparing)
+		assert.equal((await service.read(a.credential.roomId, a.credential)).shared.phase, "setup")
+		release()
+		for (let i = 0; i < 20; i++) {
+			const room = (await repo.read(a.credential.roomId))!.room
+			if ([a.credential.participantId, joined.credential.participantId].every(id => room.participants.find(p => p.id === id)?.profileId === f.id)) return
+			await new Promise(resolve => setImmediate(resolve))
+		}
+		assert.fail("profile links after the store recovers")
+	} finally { release() }
+})
+
+test("Profile traffic is independent of room commands and venue addresses; batches are limited per profile", async () => {
+	const f = fixture()
+	const repo = new ProposalMemoryRepository()
+	const service = new ProposalService(repo, proposalFixtureCatalog, secret, undefined, f.now, undefined, undefined, { profiles: f.profiles })
+	const handler = createProposalHandler(service, { serviceSecret: secret, allowedOrigins: [] })
+	const call = (device: string, path: string, method = "GET", body?: unknown) => handler(new Request(`https://api.test${path}`, {
+		method, headers: { [PROFILE_HEADER]: device, "x-yepwatch-client": "native", "content-type": "application/json", "x-forwarded-for": "192.0.2.1" },
+		...(body ? { body: JSON.stringify(body) } : {}),
+	}))
+	let revision = 0
+	for (let batch = 0; batch < 120; batch++) {
+		const response = await call(f.device, paths.profileAnswers, "POST", { revision,
+			items: Array.from({ length: 10 }, (_, i) => ({ key: key(i + 1), answer: batch % 2 ? "loved" : "unseen", at: f.now() + batch })),
+		})
+		assert.equal(response.status, 200)
+		revision = (await response.json()).revision
+	}
+	assert.equal((await call(f.device, paths.profileAnswers, "POST", { revision, items: [{ key: key(1), answer: "not_for_me", at: f.now() + 121 }] })).status, 429)
+	for (let person = 0; person < 130; person++) {
+		const device = randomBytes(32).toString("base64url")
+		assert.equal((await call(device, paths.profile)).status, 200)
+		assert.equal((await call(device, paths.profileTasteDeck)).status, 200)
+		assert.equal((await call(device, paths.profileAnswers, "POST", { revision: 0, items: [{ key: key(1), answer: "loved", at: f.now() }] })).status, 200)
+	}
+	assert.equal((await call(f.device, paths.profile)).status, 200, "write limit does not block reads")
+	assert.equal((await call(f.device, paths.profile, "DELETE")).status, 204)
+})
+
+test("Profile lookup SQL uses primary-key equalities for batched reads, touch and answers", async () => {
+	const statements: string[] = []
+	const f = fixture()
+	await f.profiles.touch(f.id)
+	const p = f.store.rows.get(f.id)!.profile
+	const store = new SqlProfileStore(async (statement, args) => {
+		statements.push(statement)
+		if (statement.startsWith("SELECT")) {
+			assert.match(statement, /WHERE id=\?( OR id=\?)*$/)
+			return { rows: args?.includes(f.id) ? [[p.id, p.answers, p.followups, p.dealt, p.revision, p.updated_at, p.expires_at, p.write_window, p.write_count, p.created_at, 1, 1]] : [], rowcount: 1 }
+		}
+		return { rows: [], rowcount: 1 }
+	})
+	const cold = new TasteProfiles(store, secret, () => tasteFixture(), tasteDisplays, f.now)
+	assert.equal(await cold.touch(f.id), 0)
+	await cold.answers(f.id, { revision: 0, items: [{ key: key(1), answer: "loved", at: f.now() }] })
+	await store.read(Array.from({ length: 130 }, (_, i) => `profile-${i}`))
+	const selects = statements.filter(s => s.startsWith("SELECT"))
+	assert.equal(selects.length, 5)
+	assert.equal(selects[2].match(/id=\?/g)!.length, 64)
+	assert.equal(selects[4].match(/id=\?/g)!.length, 2)
 })

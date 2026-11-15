@@ -28,7 +28,7 @@ import { ValkeyRoomRepository } from "./proposal-valkey-repository.ts"
 import { ValkeyReleaseControl } from "./proposal-valkey-control.ts"
 import { ValkeyAccountRooms, MirroredDeletionStore } from "./proposal-valkey-accounts.ts"
 import { HistorySync } from "./proposal-history-sync.ts"
-import { MemoryCommandBudget, ValkeyCommandBudget } from "./proposal-command-budget.ts"
+import { ValkeyCommandBudget } from "./proposal-command-budget.ts"
 import type { ReleaseConfig } from "./proposal-release-config.ts"
 export const RELEASE_HEALTH = {
 	live: `${API_PREFIX}/health/live`,
@@ -145,7 +145,6 @@ export function createReleaseRuntime(
 		allowedOrigins: [config.publicOrigin],
 		secureCookies: true,
 		members,
-    profileBudget: deps.commands ?? (deps.rooms ? new ValkeyCommandBudget(deps.rooms) : new MemoryCommandBudget(now)),
 	})
 	let draining = false
 	let initialized = false
