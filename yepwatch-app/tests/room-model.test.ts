@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import type { CatalogMetadata, RoomCommand, RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
-import { bringers, fitSize, ideasLabel, roomCommands, roomView, showsProposal, statusLine } from '../src/features/room/model';
+import { bringers, fitSize, ideasLabel, proposalKey, roomCommands, roomView, showsProposal, statusLine } from '../src/features/room/model';
 import { firstTiles, namesLine, rankServices, servicesIn, toggleService } from '../src/features/room/services';
 import { continuousFixture } from './continuous-fixture';
 
@@ -73,36 +73,69 @@ test('room view: no ideas reads as the couch name; seen-titles switch for linked
   assert.deepEqual(roomView(s).enabledServiceIds, [], 'null picks contribute nothing');
 });
 
-test('proposal: shown to everyone in the round until set aside for that version; never who proposed', () => {
+test('a late joiner’s takeover: the pending title everyone else is in on, set aside per round and title; never who', () => {
   const s = room();
   s.shared.phase = 'choosing';
-  s.shared.matches = [{ candidateId: 'c2', averageYepMs: null }];
+  // You just joined: the title is no match until you say Yep to it.
+  s.shared.matches = [];
   s.shared.proposalVersion = 3;
   s.shared.proposal = { candidateId: 'c2', version: 3, previousCandidateId: null, agreeCount: 1, requiredCount: 2, averageYepMs: null };
   const v = roomView(s);
   assert.equal(v.proposal?.mine, false);
   assert.equal(v.proposal?.candidate?.id, 'c2');
+  assert.equal(proposalKey(v), `${v.generation}:c2`);
   assert.equal(showsProposal(v, null), true);
-  assert.equal(showsProposal(v, 3), false, 'Keep swiping on this device');
-  assert.equal(showsProposal(v, 2), true, 'a new proposal shows again');
+  assert.equal(showsProposal(v, `${v.generation}:c2`), false, 'Keep swiping on this device');
+  // The room moving the proposal version on (any tap) doesn't bring it back; another title does.
+  s.shared.proposalVersion = 4;
+  s.shared.proposal = { ...s.shared.proposal, version: 4 };
+  assert.equal(showsProposal(roomView(s), `${v.generation}:c2`), false, 'same title, newer version');
+  s.shared.proposal = { ...s.shared.proposal, candidateId: 'c1' };
+  assert.equal(showsProposal(roomView(s), `${v.generation}:c2`), true, 'another title');
   assert.equal(statusLine(v), 'Someone’s in: Isolated test c2');
   s.own.participantId = 'sam';
   assert.equal(showsProposal(roomView(s), null), false, 'not in the round');
   assert.equal(Object.keys(v.proposal!).some((k) => /proposer|by|who/i.test(k)), false);
 });
 
-test('your own I’m in (proposal) never takes over your screen; nor does any while a tiebreak is open', () => {
+test('a friend’s I’m in on a current match never takes over (Matches counts it); nor your own, nor any while a tiebreak is open', () => {
   const s = room();
   s.shared.phase = 'choosing';
   s.shared.matches = [{ candidateId: 'c2', averageYepMs: null }];
   s.shared.proposalVersion = 3;
   s.shared.proposal = { candidateId: 'c2', version: 3, previousCandidateId: null, agreeCount: 1, requiredCount: 2, averageYepMs: null };
-  s.own.agreement = { proposalVersion: 3, agreed: true, revision: 1, isProposer: true };
-  assert.equal(showsProposal(roomView(s), null), false, 'your proposal');
   s.own.agreement = { proposalVersion: 3, agreed: false, revision: 1, isProposer: false };
-  assert.equal(showsProposal(roomView(s), null), true, 'a friend’s');
+  assert.equal(showsProposal(roomView(s), null), false, 'a current match');
+  s.shared.matches = [];
+  assert.equal(showsProposal(roomView(s), null), true, 'a late joiner’s pending title');
+  s.own.agreement = { proposalVersion: 3, agreed: true, revision: 1, isProposer: true };
+  assert.equal(showsProposal(roomView(s), null), false, 'your own');
+  s.own.agreement = { proposalVersion: 3, agreed: false, revision: 1, isProposer: false };
   s.shared.tiebreak = { version: 4, candidateIds: ['c1', 'c2'], favorites: [], outcome: null };
   assert.equal(showsProposal(roomView(s), null), false, 'the tiebreak is settled on Matches');
+});
+
+test('Watch and Pick one of N send confirm_in at the room’s latest inVersion, only while everyone’s still in on what was tapped', async () => {
+  const s = room();
+  s.shared.phase = 'choosing';
+  s.shared.matches = [{ candidateId: 'c1', averageYepMs: null }, { candidateId: 'c2', averageYepMs: null }];
+  s.shared.ins = [{ candidateId: 'c1', count: 3 }, { candidateId: 'c2', count: 2 }];
+  s.shared.inVersion = 6;
+  s.own.ins = { candidateIds: ['c1'], revision: 1 };
+  const queued: ((snapshot: RoomSnapshot) => RoomCommand | null)[] = [];
+  const cmd = roomCommands(async (c) => { if (typeof c === 'function') queued.push(c); return true; }, () => s);
+  await cmd.confirmIn();
+  const [confirm] = queued;
+  assert.deepEqual(confirm(s), { type: 'confirm_in', generation: s.shared.generation, inVersion: 6 });
+  assert.deepEqual(confirm({ ...s, shared: { ...s.shared, inVersion: 7 } }), { type: 'confirm_in', generation: s.shared.generation, inVersion: 7 }, 'a count elsewhere moved on');
+  assert.equal(confirm({ ...s, shared: { ...s.shared, ins: [{ candidateId: 'c1', count: 3 }, { candidateId: 'c2', count: 3 }] } }), null, 'everyone’s in on two now');
+  assert.equal(confirm({ ...s, shared: { ...s.shared, ins: [{ candidateId: 'c1', count: 2 }, { candidateId: 'c2', count: 2 }] } }), null, 'someone took theirs back');
+  assert.equal(confirm({ ...s, shared: { ...s.shared, generation: s.shared.generation + 1 } }), null);
+  // Nobody everyone's in on: nothing to send.
+  queued.length = 0;
+  s.shared.ins = [{ candidateId: 'c1', count: 2 }, { candidateId: 'c2', count: 2 }];
+  await cmd.confirmIn();
+  assert.equal(queued[0](s), null);
 });
 
 test('Matches reads I’m in counts, your own I’m ins and the tiebreak from the room', () => {

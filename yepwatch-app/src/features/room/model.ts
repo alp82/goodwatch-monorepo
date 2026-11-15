@@ -4,7 +4,7 @@
  */
 import { ideaPending, type Candidate, type RoomCommand, type RoomConstraints, type RoomIdea, type RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
 import type { CommandBuild } from '../../core/continuous/optimistic';
-import { inRows, tiebreakView, type InRow, type TiebreakView } from './matches-in';
+import { everyoneIn, inRows, tiebreakView, type InRow, type TiebreakView } from './matches-in';
 import { noun } from '../shell/noun';
 
 export type Kind = 'movie' | 'show_start';
@@ -192,14 +192,18 @@ export function roomView(snapshot: RoomSnapshot, seenIdeas: ReadonlySet<string> 
   };
 }
 
+/** Which late-join I'm in was set aside with Keep swiping: the round and the title, never the proposal version. */
+export const proposalKey = (view: Pick<RoomView, 'generation' | 'proposal'>) => (view.proposal ? `${view.generation}:${view.proposal.candidateId}` : null);
+
 /**
- * A friend's I'm in (the room's proposal: the title with the most I'm ins) takes over the screen of everyone else
- * in the round until it's decided or set aside on this device. Never the screen of the person whose I'm in it is:
- * they said it on Matches, and stay there or keep swiping. Not while a tiebreak is open: that's settled on Matches.
+ * A late joiner's I'm in: the title everyone else was in on stopped being a match when you joined (you haven't
+ * said Yep to it yet). It takes over your screen until you say I'm in or set it aside with Keep swiping. Never
+ * for a title that's a current match: Matches already counts those, and the room's proposal moves with every tap.
  */
-export function showsProposal(view: RoomView, dismissedVersion: number | null) {
+export function showsProposal(view: RoomView, dismissed: string | null) {
   const p = view.proposal;
-  return view.phase === 'choosing' && Boolean(p) && view.me.inRound && !p!.mine && !view.tiebreak && dismissedVersion !== p!.version;
+  return view.phase === 'choosing' && Boolean(p) && view.me.inRound && !p!.mine && !p!.agreed && !view.tiebreak
+    && !view.matches.some((c) => c.id === p!.candidateId) && !view.ins.some((r) => r.id === p!.candidateId && r.mine) && dismissed !== proposalKey(view);
 }
 
 /** The status line under a room's name on the start page. */
@@ -223,6 +227,12 @@ export function fitSize(text: string, width: number, max: number) {
 }
 
 type Send = (command: RoomCommand | CommandBuild) => Promise<boolean>;
+
+/** The matches everyone in the round is in on, as the room counts them. */
+function everyoneInIds(s: RoomSnapshot) {
+  const ids = s.shared.matches.map((m) => m.candidateId);
+  return everyoneIn(inRows(ids, s.shared.ins, s.own.ins), s.shared.participants.filter((p) => !p.dropped).length);
+}
 
 /**
  * Every command the redesigned screens send. Commands wait their turn behind this device's earlier
@@ -275,6 +285,19 @@ export function roomCommands(send: Send, latest: () => RoomSnapshot | undefined,
       const expectedOwnInRevision = seen.own.ins?.revision ?? 0;
       return send((s) => (s.shared.generation !== generation || (s.own.ins?.revision ?? 0) !== expectedOwnInRevision ? null : {
         type: 'set_in', generation, candidateId, in: value, expectedOwnInRevision,
+      }));
+    },
+    /**
+     * Everyone's in, decide (one title: Watch) or open the tiebreak (two or more: Pick one of N). Aimed at the
+     * titles everyone was in on when you tapped: if that set has changed by the time it goes out, it's dropped.
+     */
+    confirmIn: () => {
+      const seen = view();
+      if (!seen) return Promise.resolve(false);
+      const generation = seen.shared.generation;
+      const tied = everyoneInIds(seen).join();
+      return send((s) => (s.shared.generation !== generation || !tied || everyoneInIds(s).join() !== tied ? null : {
+        type: 'confirm_in', generation, inVersion: s.shared.inVersion ?? 0,
       }));
     },
     /** Your favorite in the tiebreak you saw (null takes it back); a changed tiebreak drops it. */

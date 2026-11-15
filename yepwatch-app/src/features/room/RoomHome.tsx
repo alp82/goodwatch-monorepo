@@ -51,7 +51,7 @@ export function RoomHome() {
     if (params.signin || params.fresh) router.setParams({ signin: undefined, fresh: undefined });
   }, [params.signin, params.fresh]);
   const round = useRoundEntry(view);
-  // Everyone's in for two or more and you haven't picked: Matches comes to the front, where the tiebreak is.
+  // Someone opened a tiebreak (Pick one of N) and you haven't picked: Matches comes to the front, where it is.
   const tb = view?.tiebreak;
   const tiebreak = view && view.phase === 'choosing' && view.me.inRound && tb && !tb.outcome && !tb.mine ? `${view.roomId}:${view.generation}:${tb.version}` : null;
   useEffect(() => { if (tiebreak && view) openForTiebreak(view.roomId, tiebreak); }, [tiebreak]); // eslint-disable-line react-hooks/exhaustive-deps

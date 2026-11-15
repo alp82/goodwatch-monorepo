@@ -1,8 +1,8 @@
 /**
- * Matches ("What are we watching now?") and a friend's I'm in taking over the screen. On Matches every match
- * is a checkbox: tap every one you're in for (`set_in`, matches-in.ts). Everyone in for one title decides it
- * (Tonight); everyone in for two or more opens the tiebreak, which the server settles. Privacy: counts, never
- * who; a friend's I'm in reads "Someone's in", with dots and "2 of 3 in".
+ * Matches ("What are we watching now?") and a late joiner's I'm in taking over the screen. On Matches every match
+ * is a checkbox: tap every one you're in for (`set_in`, matches-in.ts). Taps only say I'm in: once everyone's in
+ * on one title, Watch decides it (Tonight); on two or more, Pick one of N opens the tiebreak, which the server
+ * settles. Both send `confirm_in`. Privacy: counts, never who; the late joiner's takeover reads "Someone's in".
  */
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Animated, Image, Pressable, View } from 'react-native';
@@ -13,17 +13,17 @@ import type { Candidate } from '@goodwatch/yepwatch-contracts/proposal';
 import { useLayout } from '../shell/layout';
 import { leaveScreen, useBackAction } from '../shell/sheet-back';
 import { R, warm } from '../shell/tokens';
-import { GText, Icon, Press, glow, spaceToggles } from '../glow/theme';
+import { GText, Icon, glow, spaceToggles } from '../glow/theme';
 import { ScorePill } from '../glow/scores';
-import type { ProposalView, RoomView } from './model';
-import { leavePage, matchesInFront, toRooms } from './nav';
+import { proposalKey, type RoomView } from './model';
+import { leavePage, matchesInFront, openPage, toRooms } from './nav';
 import { useRoom, useRoomLive } from './RoomProvider';
 import { RoomNotes, RoomStatus } from './RoomStatus';
 import { servicesIn } from './services';
 import { everyoneIn } from './matches-in';
 import { useHover, useOn } from './matches-motion';
 import { Tiebreak } from './Tiebreak';
-import { Actions, Button, Dots, Label, Logos, Screen, T, TextLink, usePinnedActions, useServices } from './ui';
+import { Actions, Button, Dots, Label, Logos, Screen, usePinnedActions, useServices } from './ui';
 import { PosterCopy } from './vote/shapes';
 import { cardReason, offeredOn } from './Voting';
 
@@ -47,46 +47,9 @@ function useOffered(c: Candidate | null) {
   return c ? servicesIn(all, offeredOn(c, view?.enabledServiceIds ?? [])) : [];
 }
 
-/**
- * "2 of 3 agree", and in its place while the offers are re-checked before Tonight: "Checking where to
- * watch…" or "Couldn't confirm where to watch" with Try again. One line of one height, so the buttons
- * under it never move.
- */
-function AgreementLine({ pr, size, align }: { pr: ProposalView; size: number; align: 'flex-start' | 'center' }) {
-  const { cmd, disabled } = useRoom();
-  const { snapshot } = useRoomLive();
-  const a = snapshot?.shared.agreement;
-  const line = Math.round(size * 1.4);
-  // Each wording is its own node in a row as wide as the column: a new wording replaces the old one
-  // instead of moving it.
-  const text = (t: string, color: string = glow.soft, small = false) => <GText key={t} size={small ? T.small : size} color={color}>{t}</GText>;
-  return (
-    <View style={{ height: line, alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', justifyContent: align, gap: 10 }}>
-      {a?.state === 'checking' ? text('Checking where to watch…', glow.soft, true)
-        : a?.state === 'unavailable' ? <>{text('Couldn’t confirm where to watch', glow.muted, true)}
-          <Press label="Try again" disabled={disabled} onPress={() => void cmd.retryAgreement()} style={{ minHeight: 48, minWidth: 48, marginVertical: -(48 - line) / 2 }}>
-            <GText size={T.small} bold color={glow.amber}>Try again</GText>
-          </Press></>
-        : text(`${pr.agreeCount} of ${pr.requiredCount} in`)}
-    </View>
-  );
-}
-
-/** "You're in", where I'm in was. */
-function Agreed({ grow = true }: { grow?: boolean }) {
-  const { z } = useLayout();
-  return (
-    <View style={{ ...(grow ? { flexGrow: 1, flexShrink: 1, flexBasis: 0 } : null), minHeight: z(54), paddingHorizontal: 18, borderRadius: 12, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fbbf2414', borderWidth: 1, borderColor: warm.amberLine }}>
-      <Icon name="check" size={18} color={glow.amber} /><GText bold size={z(17)} color={glow.amber}>You’re in</GText>
-    </View>
-  );
-}
-
-const proposalLabel = (pr: ProposalView) => (pr.mine || pr.agreed ? 'You’re in' : 'Someone’s in');
-
-/** A friend's I'm in: shown to everyone else in the round until it's decided or set aside on this device with Keep swiping. */
+/** A late joiner's I'm in (`showsProposal`): the title everyone else is in on, until you're in too or set it aside with Keep swiping. */
 export function Proposal() {
-  const { view, cmd, disabled, dismissProposal, setActivityView } = useRoom();
+  const { id, view, cmd, disabled, dismissProposal, setActivityView } = useRoom();
   const { phone, wide, height, header, max, z } = useLayout();
   const pinned = usePinnedActions();
   useFocusEffect(useCallback(() => { setActivityView('matches'); }, [setActivityView]));
@@ -95,21 +58,22 @@ export function Proposal() {
   const offered = useOffered(pr?.candidate ?? null);
   if (!view || !pr) return null;
   const c = pr.candidate;
-  const keep = () => dismissProposal(pr.version);
-  const agree = <Button label="I’m in" icon={<Icon name="check" size={18} color={warm.ink} />} disabled={disabled} onPress={() => void cmd.agree(true)} />;
+  const key = proposalKey(view);
+  const keep = () => { if (key) dismissProposal(key); };
+  // Your I'm in says your Yep too: the title is a match again, and Matches is where everyone decides.
+  const imIn = async () => { if (await cmd.setIn(pr.candidateId, true)) openPage(id, 'matches'); };
+  const agree = <Button label="I’m in" icon={<Icon name="check" size={18} color={warm.ink} />} disabled={disabled} onPress={() => void imIn()} />;
   const keepButton = <Button secondary label="Keep swiping" onPress={keep} />;
-  const takeBack = <TextLink label="Take back" color={glow.muted} disabled={disabled} onPress={() => void cmd.agree(false)} />;
-  const under = pr.agreed ? takeBack : null;
   const titleSize = wide ? z(56) : 30;
   const info = (
     <View style={{ gap: z(14), alignItems: wide ? 'flex-start' : 'center' }}>
-      <Label color={glow.amber}>{proposalLabel(pr)}</Label>
+      <Label color={glow.amber}>Someone’s in</Label>
       <GText bold size={titleSize} style={{ letterSpacing: -1.2, lineHeight: titleSize * 1.05, textAlign: wide ? 'left' : 'center' }}>{c?.title ?? 'A match'}</GText>
       {c ? <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap', justifyContent: wide ? 'flex-start' : 'center' }}><ScorePill score={c.goodwatchScore} size={wide ? 'L' : 'M'} /><GText size={z(15)} color={glow.soft}>{meta(c)}</GText></View> : null}
       {offered.length ? <Logos services={offered} size={z(28)} /> : null}
       <View style={{ gap: 8, alignSelf: 'stretch', alignItems: wide ? 'flex-start' : 'center', paddingTop: 6 }}>
         <Dots n={pr.agreeCount} of={pr.requiredCount} />
-        <AgreementLine pr={pr} size={z(15)} align={wide ? 'flex-start' : 'center'} />
+        <GText size={z(15)} color={glow.soft}>{`${pr.agreeCount} of ${pr.requiredCount} in`}</GText>
       </View>
     </View>
   );
@@ -123,24 +87,21 @@ export function Proposal() {
           <View style={{ flex: 1, maxWidth: z(560), gap: z(32), paddingTop: z(12) }}>
             {info}
             <View style={{ width: Math.min(z(420), max - pw - z(64)), gap: 8 }}>
-              <Actions>{pr.agreed ? <Agreed /> : agree}{keepButton}</Actions>
-              {under}
+              <Actions>{agree}{keepButton}</Actions>
             </View>
           </View>
         </View>
       </Screen>
     );
   }
-  const main = pr.agreed ? <Agreed /> : agree;
   return (
-    <Screen testID="proposal" back={toRooms} width="page" footer={pinned ? <Actions>{main}</Actions> : undefined}>
+    <Screen testID="proposal" back={toRooms} width="page" footer={pinned ? <Actions>{agree}</Actions> : undefined}>
       <RoomNotes />
       <View style={{ alignItems: 'center', gap: 20 }}>
         <Poster c={c} width={Math.min(phone ? 220 : 280, max * 0.6)} radius={12} />
         {info}
-        {!pinned ? <Actions style={{ alignSelf: 'stretch' }}>{main}</Actions> : null}
+        {!pinned ? <Actions style={{ alignSelf: 'stretch' }}>{agree}</Actions> : null}
         <Actions style={{ alignSelf: 'stretch' }}>{keepButton}</Actions>
-        {under ? <View style={{ alignSelf: 'center' }}>{under}</View> : null}
       </View>
     </Screen>
   );
@@ -340,7 +301,8 @@ function SingleMatch({ c, on, n, of, box, name, onToggle, disabled }: MatchProps
     <View style={{ minHeight: z(56), flexDirection: 'row', alignItems: 'center', gap: 14 }}>
       <Seats on={on} n={n} of={of} box={box} size={z(38)} name={name} />
       <View style={{ flex: 1 }}><InLabel on={on} size={z(18)} align="flex-start" /></View>
-      <GText size={z(13)} color={glow.muted}>{`${n} of ${of} in`}</GText>
+      {/* A set width, right-aligned: a friend getting in changes the digits, never this line's place. */}
+      <GText size={z(13)} color={glow.muted} lines={1} style={{ width: z(84), textAlign: 'right', fontVariant: ['tabular-nums'] }}>{`${n} of ${of} in`}</GText>
     </View>
   );
   return (
@@ -350,7 +312,7 @@ function SingleMatch({ c, on, n, of, box, name, onToggle, disabled }: MatchProps
           <>
             <OnLayer on={on} radius={R.card} />
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <GText bold size={phone ? 12 : z(13)} color={glow.amber} style={{ letterSpacing: 1.4 }}>YOUR MATCH</GText>
+              <GText bold size={phone ? 12 : z(13)} color={glow.amber}>Your match</GText>
               <View style={{ flex: 1, height: 1, backgroundColor: warm.lineStrong }} />
             </View>
             <View style={{ flexDirection: 'row', gap: phone ? 14 : z(32), alignItems: phone ? 'flex-start' : 'stretch' }}>
@@ -370,6 +332,15 @@ function SingleMatch({ c, on, n, of, box, name, onToggle, disabled }: MatchProps
           </>
         )}
       </Toggle>
+    </View>
+  );
+}
+
+/** Small overlapping posters: the titles everyone's in on. */
+function MiniPosters({ cs }: { cs: Candidate[] }) {
+  return (
+    <View accessible={false} style={{ flexDirection: 'row' }}>
+      {cs.slice(0, 4).map((c, k) => <View key={`mp-${c.id}`} style={{ marginLeft: k ? -6 : 0, borderRadius: 4, borderWidth: 1.5, borderColor: '#0d0d0d' }}><Poster c={c} width={18} radius={3} label={false} /></View>)}
     </View>
   );
 }
@@ -418,9 +389,10 @@ const LANDED_BEAT_MS = 1400;
  */
 function Matches({ id, view, tiebreak, held, onLanded, onSkip }: { id: string; view: RoomView; tiebreak: RoomView['tiebreak']; held: boolean; onLanded: () => void | (() => void); onSkip: () => void }) {
   const { cmd, disabled } = useRoom();
+  const agreement = useRoomLive().snapshot?.shared.agreement;
   const { phone, z, max } = useLayout();
-  // The tiebreak opens by itself each time one appears, and again when its outcome comes; closed, "Pick one of N"
-  // opens it again.
+  // The tiebreak opens once someone taps Pick one of N (on every phone on Matches), and again when its outcome comes;
+  // closed, Pick one of N opens it again.
   const [closed, setClosed] = useState<string | null>(null);
   const sheetKey = tiebreak ? `${tiebreak.version}:${tiebreak.outcome ? 'outcome' : 'picking'}` : null;
   const required = view.required;
@@ -443,24 +415,31 @@ function Matches({ id, view, tiebreak, held, onLanded, onSkip }: { id: string; v
   const one = count === 1 ? matches[0] : null;
   const name = view.me.nickname;
   const props = (c: Candidate): MatchProps => ({ c, on: byId.get(c.id)?.mine ?? false, n: byId.get(c.id)?.count ?? 0, of: required, box: box.seats, name, onToggle: () => toggle(c.id), disabled });
-  const decided = tied.length === 1 ? tied[0] : null;
+  const single = tied.length === 1 ? tied[0] : null;
+  const many = tied.length > 1;
+  // Watch starts the room's check of where to watch (then Tonight); it can fail, and Watch tries again.
+  const check = single ? agreement?.state ?? 'none' : 'none';
   const keep = <Button secondary label="Keep swiping" onPress={() => leavePage(id)} />;
+  const confirm = () => { if (!held) void cmd.confirmIn(); };
+  const status = single && check === 'checking' ? <GText size={z(14)} color={glow.soft} lines={1}>Checking where to watch…</GText>
+    : single && check === 'unavailable' ? <GText size={z(14)} color={glow.muted} lines={1}>Couldn’t confirm where to watch</GText>
+    : tied.length ? <>
+      <Icon name="check" size={16} color={glow.amber} />
+      <GText bold size={z(14)} color={glow.amber} lines={1} style={{ flexShrink: 1 }}>{single ? `Everyone’s in on ${single.title}` : `Everyone’s in on ${tied.length}`}</GText>
+      {many ? <MiniPosters cs={tied} /> : null}
+    </> : null;
   const footer = (
-    <View style={{ gap: 10, width: phone ? '100%' : z(400), alignSelf: 'center' }}>
-      {/* One line, always there: everyone getting in on a title, or a tiebreak opening, moves nothing. Closed, the
-          tiebreak opens again from it. */}
-      <View accessibilityLiveRegion="polite" style={{ minHeight: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-        {tied.length > 1 && tiebreak ? (
-          <Press label={`Pick one of ${tied.length}`} onPress={() => setClosed(null)} style={{ minHeight: 48, marginVertical: -12, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 8 }}>
-            <Icon name="dice" size={16} color={glow.amber} />
-            <GText bold size={z(14)} color={glow.amber} lines={1}>{`Everyone’s in for ${tied.length} · Pick one`}</GText>
-          </Press>
-        ) : tied.length ? <>
-          <Icon name="check" size={16} color={glow.amber} />
-          <GText bold size={z(14)} color={glow.amber} lines={1}>{decided ? `Everyone’s in for ${decided.title}` : `Everyone’s in for ${tied.length}`}</GText>
-        </> : null}
-      </View>
-      <Actions>{keep}</Actions>
+    <View style={{ gap: 10, width: phone ? '100%' : z(520), alignSelf: 'center' }}>
+      {/* One line, always there: everyone getting in on a title, or the check of where to watch, moves nothing. */}
+      <View accessibilityLiveRegion="polite" style={{ height: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>{status}</View>
+      {/* Both buttons always there, so everyone getting in moves nothing: Watch waits, quiet, until everyone's in on a
+          title; on two or more it's Pick one of N. */}
+      <Actions>
+        {keep}
+        {many ? <Button key="pick" label={`Pick one of ${tied.length}`} icon={<Icon name="dice" size={17} color={warm.ink} />} disabled={disabled}
+          onPress={() => (tiebreak ? setClosed(null) : confirm())} />
+          : <Button key="watch" label="Watch" name={single ? `Watch ${single.title}` : 'Watch'} secondary={!single} disabled={!single || disabled || check === 'checking'} onPress={confirm} />}
+      </Actions>
     </View>
   );
   return (

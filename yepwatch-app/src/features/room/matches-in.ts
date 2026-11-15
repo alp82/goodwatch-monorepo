@@ -1,9 +1,10 @@
 /**
  * "I'm in" on Matches: which matches each person is in for (counts only, never who) and the tiebreak once
  * everyone's in for two or more. Read straight from the room (contract 3 with matchesIn): `shared.ins` counts
- * every current match, `own.ins` lists yours, a tap sends `set_in`. Everyone in for one title starts the room's
- * offer check (Tonight); everyone in for two or more opens `shared.tiebreak`, where the server counts favorites
- * and settles the outcome (spinning when favorites tie). Pure, so it is unit tested.
+ * every current match, `own.ins` lists yours, a tap sends `set_in`. Taps never decide: once everyone's in for one
+ * title, Watch (`confirm_in`) starts the room's offer check (Tonight); for two or more, Pick one of N
+ * (`confirm_in`) opens `shared.tiebreak`, where the server counts favorites and settles the outcome (spinning
+ * when favorites tie). Pure, so it is unit tested.
  */
 import type { OwnPrivateSnapshot, SharedRoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
 

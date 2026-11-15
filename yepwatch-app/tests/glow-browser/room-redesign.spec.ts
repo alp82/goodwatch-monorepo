@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { choosingRoom, fakeRoom, inRoom, newRoom, reading, settleTie } from './room-fake';
+import { choosingRoom, confirmIn, fakeRoom, inRoom, newRoom, reading, settleTie } from './room-fake';
 
 const shot = (page: Page, name: string) => page.screenshot({ path: `artifacts/room-redesign/${name}.png` });
 const button = (page: Page, name: string | RegExp) => page.getByRole('button', { name, exact: typeof name === 'string' });
@@ -250,7 +250,30 @@ test('Matches: What are we watching now, I’m in toggles every one you’re in 
   await expect(page.getByTestId('frame-body').getByText(/Mia/)).toHaveCount(0);
 });
 
-test('Matches: everyone in for two opens the tiebreak by itself; favorites wait for everyone, the spin lands on the server’s pick, then Tonight', async ({ page }) => {
+test('Matches: everyone in on one shows Watch; the tap alone decides nothing, Watch sends confirm_in and the room goes to Tonight', async ({ page }) => {
+  const room = choosingRoom();
+  room.shared.matches = [{ candidateId: 'c1', averageYepMs: null }, { candidateId: 'c2', averageYepMs: null }];
+  room.own.ins = { candidateIds: [], revision: 0 };
+  const f = await fakeRoom(page, inRoom(room, { c1: 1 }));
+  await page.goto('/room/test-room');
+  await button(page, '2 matches').click();
+  await expect(page.getByTestId('matches')).toBeVisible();
+  await expect(button(page, 'Watch Isolated test c1')).toHaveCount(0);
+  await page.getByRole('checkbox', { name: /^I’m in for Isolated test c1/ }).click();
+  // Everyone's in on it: the footer says so and offers Watch. Nothing is decided yet.
+  await expect(page.getByText('Everyone’s in on Isolated test c1', { exact: true })).toBeVisible();
+  await expect(button(page, 'Watch Isolated test c1')).toBeVisible();
+  await page.waitForTimeout(300);
+  await expect(page.getByTestId('matches')).toBeVisible();
+  expect(f.sent().filter((t) => t === 'confirm_in')).toEqual([]);
+  await shot(page, '09a-watch');
+  await button(page, 'Watch Isolated test c1').click();
+  await expect.poll(() => f.commands.at(-1)?.command).toEqual({ type: 'confirm_in', generation: room.shared.generation, inVersion: f.room.shared.inVersion });
+  await reread(page);
+  await expect(page.getByTestId('tonight')).toBeVisible();
+});
+
+test('Matches: everyone in for two waits for Pick one of 2, which opens the tiebreak; favorites wait for everyone, the spin lands on the server’s pick, then Tonight', async ({ page }) => {
   const room = choosingRoom();
   room.shared.matches = [{ candidateId: 'c1', averageYepMs: null }, { candidateId: 'c2', averageYepMs: null }];
   room.own.ins = { candidateIds: ['c1'], revision: 1 };
@@ -258,20 +281,26 @@ test('Matches: everyone in for two opens the tiebreak by itself; favorites wait 
   await page.goto('/room/test-room');
   await button(page, '2 matches').click();
   await expect(page.getByTestId('matches')).toBeVisible();
-  await expect(page.getByTestId('tiebreak')).toHaveCount(0);
   await page.getByRole('checkbox', { name: /^I’m in for Isolated test c2/ }).click();
-  // The room reports everyone in for both: the tiebreak opens on its own.
+  // Everyone's in for both: the footer says so; the tiebreak waits for someone to open it.
+  await expect(page.getByText('Everyone’s in on 2', { exact: true })).toBeVisible();
+  await page.waitForTimeout(300);
+  await expect(page.getByTestId('tiebreak')).toHaveCount(0);
+  expect(f.sent().filter((t) => t === 'confirm_in')).toEqual([]);
+  const inVersion = f.room.shared.inVersion;
+  await button(page, 'Pick one of 2').click();
+  await expect.poll(() => f.commands.at(-1)?.command).toEqual({ type: 'confirm_in', generation: room.shared.generation, inVersion });
   await expect(page.getByTestId('tiebreak')).toBeVisible();
-  await expect(page.getByText('Everyone’s in for 2', { exact: true }).first()).toBeVisible();
   await shot(page, '09b-tiebreak');
   await page.getByRole('radio', { name: 'Isolated test c2, my favorite' }).click();
   await expect.poll(() => f.commands.at(-1)?.command).toEqual({ type: 'pick_favorite', generation: room.shared.generation, tiebreakVersion: f.room.shared.tiebreak!.version, candidateId: 'c2' });
   await expect(page.getByText('Waiting for 1 more pick', { exact: true })).toBeVisible();
-  // Closed, it opens again from Pick one of 2.
+  // Closed, it opens again from Pick one of 2, without asking the room again.
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('tiebreak')).toHaveCount(0);
   await button(page, 'Pick one of 2').click();
   await expect(page.getByText('Waiting for 1 more pick', { exact: true })).toBeVisible();
+  expect(f.sent().filter((t) => t === 'confirm_in')).toHaveLength(1);
   // The friend picks the other one: favorites tie, the server spins (its outcome: c1) and decides the room.
   f.room.shared.tiebreak!.favorites = f.room.shared.tiebreak!.favorites.map((x) => (x.candidateId === 'c1' ? { ...x, count: 1 } : x));
   settleTie(f.room);
@@ -281,15 +310,21 @@ test('Matches: everyone in for two opens the tiebreak by itself; favorites wait 
   await expect(page.getByTestId('tonight')).toBeVisible();
 });
 
-test('a tiebreak opening while you swipe brings Matches to the front, once', async ({ page }) => {
+test('a tiebreak a friend opens while you swipe brings Matches to the front, once', async ({ page }) => {
   const room = choosingRoom();
   room.shared.matches = [{ candidateId: 'c1', averageYepMs: null }, { candidateId: 'c2', averageYepMs: null }];
   room.own.ins = { candidateIds: ['c1', 'c2'], revision: 2 };
   const f = await fakeRoom(page, inRoom(room, { c1: 0, c2: 0 }));
   await page.goto('/room/test-room');
   await expect(page.getByTestId('voting')).toBeVisible();
-  // A friend left: the one left with you is in for both too.
+  // The friend gets in on both: nothing moves you yet.
   inRoom(f.room, { c1: 1, c2: 1 });
+  f.push();
+  await reread(page);
+  await page.waitForTimeout(300);
+  await expect(page.getByTestId('matches')).toHaveCount(0);
+  // The friend taps Pick one of 2.
+  confirmIn(f.room);
   f.push();
   await reread(page);
   await expect(page.getByTestId('tiebreak')).toBeVisible();
@@ -303,7 +338,7 @@ test('a tiebreak opening while you swipe brings Matches to the front, once', asy
   await expect(page.getByTestId('matches')).toHaveCount(0);
 });
 
-test('a friend’s I’m in takes over the room page: someone’s in, no faces; I’m in agrees to it', async ({ page }) => {
+test('a friend’s I’m in on a match never takes over the room page; Matches counts it', async ({ page }) => {
   const room = choosingRoom();
   room.shared.matches = [{ candidateId: 'c1', averageYepMs: null }, { candidateId: 'c2', averageYepMs: null }];
   room.shared.proposalVersion = 2;
@@ -312,15 +347,32 @@ test('a friend’s I’m in takes over the room page: someone’s in, no faces; 
   room.own.ins = { candidateIds: [], revision: 0 };
   await fakeRoom(page, inRoom(room, { c2: 1 }));
   await page.goto('/room/test-room');
+  await expect(page.getByTestId('voting')).toBeVisible();
+  await page.waitForTimeout(300);
+  await expect(page.getByTestId('proposal')).toHaveCount(0);
+  await button(page, '2 matches').click();
+  await expect(page.getByRole('checkbox', { name: 'I’m in for Isolated test c2, 1 of 2 in' })).toBeVisible();
+});
+
+test('a late joiner: the title everyone else is in on takes over, no faces; I’m in says it with set_in and opens Matches', async ({ page }) => {
+  const room = choosingRoom();
+  // You just joined: the title the friend is in on is no match until you say Yep to it.
+  room.shared.matches = [];
+  room.shared.proposalVersion = 2;
+  room.shared.proposal = { candidateId: 'c2', version: 2, previousCandidateId: null, agreeCount: 1, requiredCount: 2, averageYepMs: null };
+  room.own.agreement = { proposalVersion: 2, agreed: false, revision: 0, isProposer: false };
+  room.own.ins = { candidateIds: [], revision: 0 };
+  const f = await fakeRoom(page, inRoom(room));
+  await page.goto('/room/test-room');
   await expect(page.getByText('SOMEONE’S IN', { exact: true })).toBeVisible();
   await expect(page.getByText('1 of 2 in', { exact: true })).toBeVisible();
   // The header's setup chip carries your own name; the proposal itself names nobody.
   await expect(page.getByTestId('frame-body').getByText(/Alp|Mia/)).toHaveCount(0);
   await shot(page, '10-someone-in');
   await button(page, 'I’m in').click();
-  await expect(page.getByText('You’re in', { exact: true })).toBeVisible();
-  await button(page, 'Keep swiping').click();
-  await expect(page.getByTestId('voting')).toBeVisible();
+  await expect.poll(() => f.commands.at(-1)?.command).toEqual({ type: 'set_in', generation: room.shared.generation, candidateId: 'c2', in: true, expectedOwnInRevision: 0 });
+  await expect(page.getByTestId('matches')).toBeVisible();
+  await expect(page.getByRole('checkbox', { name: /^I’m in for Isolated test c2/, checked: true })).toBeVisible();
 });
 
 test('Tonight: scores, watch button for the first switched-on service, no Cheer button, host Start again', async ({ page }) => {

@@ -3,8 +3,8 @@
  * favorites tie too, a fair spin among the most-picked lands on the server's outcome, the same title on every
  * phone. A bottom sheet on phones, a centered panel on bigger windows. Counts only, never who.
  *
- * Matches opens it by itself when the room reports a tiebreak (`shared.tiebreak`); the server settles the
- * outcome and decides the winner like any title everyone's in for (Tonight).
+ * Someone taps Pick one of N on Matches (`confirm_in`); Matches opens it on every phone once the room reports the
+ * tiebreak (`shared.tiebreak`). The server settles the outcome and decides the winner (Tonight).
  */
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, View } from 'react-native';

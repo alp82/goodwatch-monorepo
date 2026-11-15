@@ -41,8 +41,8 @@ export const ROOM_SHEETS = ['room', 'services', 'streaming', 'kinds', 'people', 
 export type RoomSheet = (typeof ROOM_SHEETS)[number];
 export const isRoomSheet = (value: unknown): value is RoomSheet => typeof value === 'string' && (ROOM_SHEETS as readonly string[]).includes(value);
 
-/** Proposals set aside with Keep swiping, per room and per device, for this app session. */
-const dismissed = new Map<string, number>();
+/** Late-join I'm ins set aside with Keep swiping (`proposalKey`), per room and per device, for this app session. */
+const dismissed = new Map<string, string>();
 /** Each opening of a room on this device: its own live-dot beat. */
 let openings = 0;
 
@@ -90,8 +90,8 @@ export interface RoomContextValue {
   connectionWords: string;
   notice: string;
   setNotice: (text: string) => void;
-  dismissedProposal: number | null;
-  dismissProposal: (version: number) => void;
+  dismissedProposal: string | null;
+  dismissProposal: (key: string) => void;
   reopenProposal: () => void;
   setActivityView: (view: ActivityView) => void;
   /** Your services and Movies and shows: drafts until the server confirms them. */
@@ -192,7 +192,7 @@ function RoomProviderContent({ id, children, renderSheet }: { id: string; childr
   const openSheet = useCallback((sheet: RoomSheet) => setSheets((list) => (list.at(-1) === sheet ? list : [...list.filter((s) => s !== sheet), sheet])), []);
   const closeSheet = useCallback(() => setSheets((list) => list.slice(0, -1)), []);
   const closeSheets = useCallback(() => setSheets((list) => (list.length ? [] : list)), []);
-  const [dismissedProposal, setDismissed] = useState<number | null>(() => dismissed.get(id) ?? null);
+  const [dismissedProposal, setDismissed] = useState<string | null>(() => dismissed.get(id) ?? null);
   const latest = useCallback(() => queryClient.getQueryData<CachedRoom>(continuousKey(id)), [id]);
   // state.send is a new function every render; commands go through a stable ref so timers and effects keyed on them don't restart.
   const sendRef = useRef(state.send);
@@ -376,7 +376,7 @@ function RoomProviderContent({ id, children, renderSheet }: { id: string; childr
     return () => clearInterval(timer);
   }, [empty, cmd]);
 
-  const dismissProposal = useCallback((version: number) => { dismissed.set(id, version); setDismissed(version); }, [id]);
+  const dismissProposal = useCallback((key: string) => { dismissed.set(id, key); setDismissed(key); }, [id]);
   const reopenProposal = useCallback(() => { dismissed.delete(id); setDismissed(null); }, [id]);
   // Someone joining rings the live dot again; it rests otherwise (owner Q41).
   const [opening] = useState(() => ++openings);
@@ -435,7 +435,7 @@ function RoomProviderContent({ id, children, renderSheet }: { id: string; childr
 }
 
 /** Which screen the room shows (RoomHome): a change of it mounts a new screen. */
-function screenOf(view: RoomView | null, state: RoomContextValue['state'], entry: RoomContextValue['entry'], dismissedProposal: number | null) {
+function screenOf(view: RoomView | null, state: RoomContextValue['state'], entry: RoomContextValue['entry'], dismissedProposal: string | null) {
   if (!view) return 'none';
   return `${view.phase}:${view.me.inRound}:${entry.required}:${showsProposal(view, dismissedProposal)}:${Boolean(state.terminal) || state.access === null}`;
 }
