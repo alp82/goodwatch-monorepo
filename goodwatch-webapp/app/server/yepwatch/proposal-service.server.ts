@@ -244,18 +244,31 @@ export class ProposalService {
     if (!this.profiles) return
     const people = activeRoom(room).participants.filter(p => p.profileId)
     await this.profiles.signals(people.map(p => p.profileId!))
-    for (const p of people) {
-      let rooms = this.profileRooms.get(p.profileId!)
-      if (!rooms) this.profileRooms.set(p.profileId!, rooms = new Set())
+    this.trackProfiles(room)
+    for (const p of people) p.tasteRevision = (await this.profiles.signal(p.profileId!)).revision
+  }
+  /** Which rooms a profile's answer rebuilds the prepared deck of (bounded, this process only). */
+  private trackProfiles(room: ProposalRoom) {
+    for (const p of activeRoom(room).participants) {
+      if (!p.profileId) continue
+      let rooms = this.profileRooms.get(p.profileId)
+      if (!rooms) this.profileRooms.set(p.profileId, rooms = new Set())
       rooms.add(room.id)
       if (rooms.size > 100) rooms.delete(rooms.values().next().value!)
-      p.tasteRevision = (await this.profiles.signal(p.profileId!)).revision
     }
     while (this.profileRooms.size > 5000) this.profileRooms.delete(this.profileRooms.keys().next().value!)
   }
   /** Attaches only after authenticating this device's room credential. The profile secret never enters the room. */
   async bindProfile(id: string, credential: ActorCredential, profileId: string) {
     if (!this.profiles) return
+    // Already linked at the revision this process holds: no profile store read and no wait in the room's write lane
+    // (a room read must not queue behind a Start).
+    const known = this.profiles.known(profileId)
+    if (known !== null) {
+      const { room } = await this.get(id)
+      const p = this.auth(room, credential)
+      if (p.profileId === profileId && p.tasteRevision === known) return this.trackProfiles(room)
+    }
     await this.write(id, async () => {
       for (let i = 0; i < 6; i++) {
         const old = await this.get(id), room = structuredClone(old.room)
@@ -2306,9 +2319,10 @@ export class ProposalService {
 				}
 			}
 			if (!room || (!options.committed && !stored?.pendingRevision)) return stored
-			await this.profiles?.recordDecision(room).catch(() => {})
 			await this.accounts.publish(room.history ?? [])
 			if (room.expiresAt > this.now() && !(await options.published)) await this.announce(this.committedEvent(room))
+			// After the announcement: phones never wait for the profile store to hear a decision.
+			await this.profiles?.recordDecision(room).catch(() => {})
 			if (options.yieldToQueued && this.writes.has(id)) return stored
 			await this.repository.acknowledge(id, room.revision)
 		} catch {

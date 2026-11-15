@@ -219,6 +219,13 @@ export class RelationalProposalRepository implements ProposalRepository {
             }
             if (this.recordId(entity, legacy) === id) return true
         }
+		// Records written before the profile columns existed: their ids were computed without them.
+		if (entity === "participant") {
+			for (const key of ["profile_id", "taste_revision"]) {
+				if (legacy[key] == null) delete legacy[key]
+			}
+			if (this.recordId(entity, legacy) === id) return true
+		}
 		for (const key of entity === "participant"
 			? ["service_ids", "show_seen"]
 			: entity === "candidate"
@@ -348,8 +355,9 @@ export class RelationalProposalRepository implements ProposalRepository {
 				member_state: p.member.state,
 				member_prefill: p.member.prefill,
 				member_user_id: p.memberUserId,
-        profile_id: p.profileId,
-        taste_revision: p.tasteRevision,
+				// Stored null without a profile: the record id is computed over exactly what the store returns.
+				profile_id: p.profileId ?? null,
+				taste_revision: p.tasteRevision ?? null,
 				vote_records: votes,
 				receipt_records: receipts,
 				agreement_record: agreement,

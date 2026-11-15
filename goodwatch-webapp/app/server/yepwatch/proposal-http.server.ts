@@ -308,8 +308,10 @@ export function createProposalHandler(
       const profileSecret = request.headers.get(PROFILE_HEADER)
       if (profileSecret && service.profiles) {
         const scoped = { participantId: c.participantId, token: c.token, ...(a ? { accountId: a.userId, sessionId: a.sessionId } : {}) }
-        await service.bindProfile(c.roomId, scoped, service.profiles.identity(profileSecret))
-        admission.snapshot = await service.read(c.roomId, scoped)
+        // The place is already made: a profile store that is slow or down never fails the admission (the next room read links it).
+        const profileId = service.profiles.identity(profileSecret)
+        if (await service.bindProfile(c.roomId, scoped, profileId).then(() => true, () => false))
+          admission.snapshot = await service.read(c.roomId, scoped)
       }
       if (request.headers.get('x-yepwatch-client') !== 'native') {
         setCookie(`yepwatch3_${c.roomId}`, `${c.participantId}.${c.token}`, Math.floor((c.expiresAt - Date.now()) / 1000))
@@ -653,7 +655,8 @@ export function createProposalHandler(
 					return reply(await service.preview(id, actor, parse(proposalPreviewSchema, await body(request))))
 				if (request.method === "GET" && !operation) {
           const profileSecret = request.headers.get(PROFILE_HEADER)
-          if (profileSecret && service.profiles) await service.bindProfile(id, actor, service.profiles.identity(profileSecret))
+          // Best effort: the read below answers (and refuses a bad credential) whether or not the profile store did.
+          if (profileSecret && service.profiles) await service.bindProfile(id, actor, service.profiles.identity(profileSecret)).catch(() => {})
 					let snapshot = await service.read(id, actor)
 					if (options.members) {
 						const member = await options.members.status(id, snapshot.own.participantId)

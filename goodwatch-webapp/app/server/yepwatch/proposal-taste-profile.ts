@@ -251,8 +251,17 @@ export class TasteProfiles {
 		}
 	}
 	private remember(p: Profile) {
+		// The same profile at the same revision has the same answers: keep its built taste (a room read is not a rebuild).
+		const held = this.cache.get(p.id)
+		const signal =
+			held &&
+			held.profile.revision === p.revision &&
+			held.profile.created_at === p.created_at &&
+			JSON.stringify(held.profile.answers) === JSON.stringify(p.answers)
+				? held.signal
+				: undefined
 		this.cache.delete(p.id)
-		this.cache.set(p.id, { at: this.now(), profile: p })
+		this.cache.set(p.id, { at: this.now(), profile: p, ...(signal ? { signal } : {}) })
 		while (this.cache.size > 5000)
 			this.cache.delete(this.cache.keys().next().value!)
 	}
@@ -303,6 +312,17 @@ export class TasteProfiles {
 				return d ? [{ ...d, decidedAt: f.decided_at }] : []
 			}),
 		}
+	}
+	/** The revision this process read or wrote within the last minute, unless the daily expiry touch is due; else null. */
+	known(id: string): number | null {
+		const e = this.cache.get(id),
+			now = this.now()
+		return e &&
+			now - e.at < 60000 &&
+			e.profile.expires_at > now &&
+			now - e.profile.updated_at < 86400000
+			? e.profile.revision
+			: null
 	}
 	async touch(id: string) {
 		for (let i = 0; i < 6; i++) {
@@ -375,7 +395,9 @@ export class TasteProfiles {
 					existing.at === item.at &&
 					(existing.answer !== item.answer || existing.source !== source)
 				)
-					throw new ProfileConflict(await this.describe(old!.profile))
+					throw new ProfileConflict(
+						await this.describe(old?.profile ?? this.empty(id))
+					)
 				continue
 			}
 			p.answers.items = p.answers.items.filter((a) => a.key !== item.key)
@@ -401,7 +423,9 @@ export class TasteProfiles {
 			return { revision: p.revision, answered: s.answered }
 		}
 		if (request.revision !== p.revision)
-			throw new ProfileConflict(await this.describe(old?.profile ?? p))
+			throw new ProfileConflict(
+				await this.describe(old?.profile ?? this.empty(id))
+			)
 		const window = Math.floor(now / 3600000)
 		if (p.write_window !== window) {
 			p.write_window = window

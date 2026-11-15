@@ -14,3 +14,4 @@ CREATE TABLE IF NOT EXISTS doc.yepwatch_taste_profile (
 
 ALTER TABLE doc.yepwatch_participant ADD COLUMN IF NOT EXISTS profile_id TEXT;
 ALTER TABLE doc.yepwatch_participant ADD COLUMN IF NOT EXISTS taste_revision BIGINT;
+GRANT DQL,DML ON TABLE doc.yepwatch_taste_profile TO yepwatch_runtime;

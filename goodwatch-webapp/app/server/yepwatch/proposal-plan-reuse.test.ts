@@ -86,3 +86,17 @@ test("content planned before is still validated: an invalid record fails the wri
 	await assert.rejects(reused.compareAndSwap(structuredClone(last), invalid, true))
 	assert.equal(warm.sent.slice(sent).some(([statement]) => statement.startsWith("UPDATE")), false, "no head names it")
 })
+
+test("participant records written before the profile columns keep their ids once the columns read back null", () => {
+	const repo = new RelationalProposalRepository(recordingSql().sql, secret) as any
+	// As the release before profiles wrote it: no service pick stored as null, inside the id.
+	const before = { room_id: "r", nickname: "Host", service_ids: null, show_seen: false }
+	const read = { ...before, profile_id: null, taste_revision: null }
+	assert.equal(repo.validRecordId("participant", read, repo.recordId("participant", before)), true)
+	// Older still: written before service_ids and show_seen existed.
+	const oldest = { room_id: "r", nickname: "Host" }
+	assert.equal(repo.validRecordId("participant", { ...read, show_seen: null }, repo.recordId("participant", oldest)), true)
+	// A linked profile is content: the id covers it.
+	const linked = { ...before, profile_id: "p".repeat(43), taste_revision: 2 }
+	assert.equal(repo.validRecordId("participant", linked, repo.recordId("participant", before)), false)
+})
