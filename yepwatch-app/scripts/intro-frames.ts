@@ -19,6 +19,8 @@ try {
     const page = await browser.newPage({ viewport: { width: 576, height: 224 }, deviceScaleFactor: scale });
     await page.setContent(nativeIntroHtml);
     await page.evaluate(() => document.fonts.ready);
+    // One play of the parts, without the loop's fade: the frames are the film's own first and last pictures.
+    await page.addStyleTag({ content: '.mini-film{animation:none!important}.mini-film *{animation-iteration-count:1!important}' });
     const suffix = `@${scale}x.png`;
     await page.evaluate(() => document.getAnimations().forEach(a => { a.pause(); a.currentTime = 0; }));
     await page.screenshot({ path: path.join(out, `first-frame${suffix}`) });

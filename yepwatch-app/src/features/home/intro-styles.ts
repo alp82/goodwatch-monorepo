@@ -24,8 +24,8 @@ export const introCss = `
 .mini-person{animation:mini-cards-exit 13.5s ease infinite both}
 @keyframes mini-cards-exit{0%,59%{opacity:1}64%,100%{opacity:0}}
 .mini-tv{position:absolute;top:2px;left:48px;width:184px;height:110px;opacity:0;transform:scale(.65);animation:mini-tv-enter 13.5s cubic-bezier(.2,.8,.25,1) infinite both}
-.mini-tv-screen{position:relative;width:184px;height:100px;border:4px solid #323234;border-bottom-width:7px;border-radius:9px;background:#08080c;overflow:hidden;box-shadow:0 0 30px #8472c32b,0 7px 16px #0008}
-.tv-stand{position:absolute;bottom:0;left:68px;width:48px;height:12px;border-bottom:3px solid #444;background:linear-gradient(90deg,transparent 40%,#303032 40%,#303032 60%,transparent 60%);border-radius:3px}.tv-light{position:absolute;width:2px;height:2px;border-radius:50%;bottom:14px;right:20px;background:#ef4444}
+.mini-tv-screen{box-sizing:border-box;position:relative;width:184px;height:100px;border:4px solid #323234;border-bottom-width:7px;border-radius:9px;background:#08080c;overflow:hidden;box-shadow:0 0 30px #8472c32b,0 7px 16px #0008}
+.tv-stand{box-sizing:border-box;position:absolute;bottom:0;left:68px;width:48px;height:12px;border-bottom:3px solid #444;background:linear-gradient(90deg,transparent 40%,#303032 40%,#303032 60%,transparent 60%);border-radius:3px}.tv-light{position:absolute;width:2px;height:2px;border-radius:50%;bottom:14px;right:20px;background:#ef4444}
 .mini-movie{position:absolute;inset:0;background:linear-gradient(#1e2347,#65517c 70%,#c88b73);overflow:hidden;animation:movie-reveal 13.5s ease infinite both}
 .movie-stars{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;left:18px;top:13px;box-shadow:22px 8px #fff8,49px -4px #fffb,91px 12px #fffa,119px -3px #fff8,137px 20px #fffc,9px 29px #fff7;animation:movie-stars 13.5s linear infinite both}
 .movie-moon{position:absolute;width:34px;height:34px;right:31px;top:12px;border-radius:50%;background:#fff3cc;box-shadow:0 0 24px #ffdf8555;animation:movie-moon 13.5s linear infinite both}
