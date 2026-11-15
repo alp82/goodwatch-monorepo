@@ -1,18 +1,19 @@
 import { test, expect, type Page } from '@playwright/test';
 import type { CommandEnvelope, GuestAdmissionRequest } from '@goodwatch/yepwatch-contracts/proposal';
 import { continuousFixture } from '../continuous-fixture';
-import { reading } from './room-fake';
+import { reading, setUpDevice } from './room-fake';
 const CREATE = /^(Create couch|Try again|Saving…)$/;
 const JOIN = /^(Join|Retry joining|Joining…)$/;
 /** Opening a mood is local; the action returned here explicitly submits it. */
 async function open(page: Page, mode: 'create' | 'join', name: string) {
-  await page.goto('/');
   if (mode === 'create') {
+    await setUpDevice(page);
+    await page.goto('/');
     await page.getByRole('button', { name: 'New couch', exact: true }).click();
     await page.getByLabel('Mood').fill('cheer me up');
   }
   if (mode === 'join') {
-    await page.getByRole('button', { name: 'Join a couch', exact: true }).click();
+    await page.goto('/?open=join');
     await page.getByLabel('Couch code or invitation').fill('fixture-invite');
     await page.getByLabel('Your name').fill(name);
   }
@@ -92,7 +93,7 @@ test('definitive admission failure clears bootstrap so the next Create is a new 
   // with the same id: two requests per press.
   expect(bodies).toHaveLength(2); expect(bodies[1].commandId).toBe(bodies[0].commandId);
   await action.click();
-  await expect.poll(()=>bodies.length).toBe(4);expect(bodies[2].commandId).not.toBe(bodies[0].commandId);expect(bodies[2].nickname).toBe('');
+  await expect.poll(()=>bodies.length).toBe(4);expect(bodies[2].commandId).not.toBe(bodies[0].commandId);expect(bodies[2].nickname).toBe('Alp');
 });
 
 test('terminal HTTP status takes precedence over retryable busy and never offers a pending action',async({page})=>{
@@ -147,10 +148,13 @@ test('Continue with GoodWatch sends no room request; a saved room request still 
     signIns++;
     await route.fulfill({ status: 501, json: { error: { code: 'not_implemented', message: 'No external issuer in this test', retryable: false } } });
   });
+  await setUpDevice(page);
   await page.goto('/');
+  await page.getByRole('button', { name: 'Profile', exact: true }).click();
   await page.getByRole('button', { name: 'Continue with GoodWatch', exact: true }).click();
   await expect.poll(() => signIns).toBe(1);
   expect(requests).toHaveLength(0);
+  await page.getByRole('button', { name: 'Close', exact: true }).click();
   await page.getByRole('button', { name: 'New couch', exact: true }).first().click();
   await page.getByLabel('Mood').fill('cheer me up');
   await page.getByRole('button', { name: CREATE }).click();
@@ -191,14 +195,18 @@ for (const mode of ['create', 'join'] as const) test(`Back escapes an unconfirme
   await expect(page.getByText('Couldn’t reach YepWatch. Your request is saved. Try again.',{exact:true})).toHaveCount(0);
   // Back stops the resends; the saved request stays.
   await page.getByRole('button',{name:'Back',exact:true}).click();
-  await expect(page.getByRole('button',{name:'New couch',exact:true})).toBeVisible();
+  // Create: the device set up before (New couch, the Join field). Join: a first visit (Start with you).
+  await expect(page.getByRole('button',{name:mode==='create'?'New couch':'Start with you',exact:true})).toBeVisible();
   await expect(page.getByLabel('Your name')).toHaveCount(0);
   const sent = bodies.length;
   await page.waitForTimeout(6_000);
   expect(bodies).toHaveLength(sent);
   for (const body of bodies) expect(body).toEqual(bodies[0]);
   // Even the other entry action resumes the original operation, without replacing its identity: a manual press.
-  await page.getByRole('button',{name:mode==='create'?'Join a couch':'New couch',exact:true}).click();
+  if (mode === 'create') {
+    await page.getByLabel('Code or invitation link').fill('fixture-invite');
+    await page.getByRole('button',{name:'Join as Alp',exact:true}).click();
+  } else await page.getByRole('button',{name:'Start with you',exact:true}).click();
   await expect(action).toBeEnabled();await action.click();
   await expect.poll(()=>bodies.length).toBe(sent + 1);expect(bodies[sent]).toEqual(bodies[0]);
 });

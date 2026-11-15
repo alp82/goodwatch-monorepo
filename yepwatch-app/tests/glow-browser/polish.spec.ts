@@ -68,7 +68,7 @@ test('the join screen on a desktop window: one centered column, no dark box', as
   // Back returns to the start page.
   await button(page, 'Back').click();
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByRole('button', { name: 'New couch', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Start with you', exact: true })).toBeVisible();
 });
 
 /** The first card with GoodWatch's title analysis: essence tags, effect lines in their print colors, Not for, a trailer and a backdrop. */

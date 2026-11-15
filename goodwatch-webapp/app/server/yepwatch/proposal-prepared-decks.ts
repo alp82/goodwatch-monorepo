@@ -66,6 +66,9 @@ function digest(room: ProposalRoom, membersAsGuests: boolean): string {
 	const shape: Record<string, unknown> = { ...active }
 	for (const key of ROOM_NOISE) delete shape[key]
 	const present = room.participants.filter((p) => p.leftAt == null)
+  // Even the seen-read fallback must retain profile taste: a stale taste deck cannot be repaired by seen filtering.
+  if (present.some(p => p.profileId)) shape.profileInputs = present.filter(p => p.profileId)
+    .map(p => [p.profileId, p.tasteRevision ?? 0]).sort((a, b) => String(a[0]).localeCompare(String(b[0])))
 	// How many guests watch on a screen, or who they are, never changes a page: only which screens they watch on.
 	shape.guestScreens = [...new Set(present.filter(guest).map((p) => String(p.screenId)))].sort()
 	shape.participants = present
@@ -82,7 +85,7 @@ function digest(room: ProposalRoom, membersAsGuests: boolean): string {
 
 /** Nothing of theirs but their screen reaches a page: no member link, grant or account. */
 const isGuest = (p: ProposalRoom["participants"][number]) =>
-	p.member?.state !== "linked" && !p.memberUserId && !p.memberGrant
+	!p.profileId && p.member?.state !== "linked" && !p.memberUserId && !p.memberGrant
 
 const stable = (value: unknown): string =>
 	JSON.stringify(value, (_k, v) =>

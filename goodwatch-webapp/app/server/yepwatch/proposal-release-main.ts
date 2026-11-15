@@ -1,3 +1,4 @@
+import { tasteClusters } from "./proposal-taste-deck.ts"
 import { createReleaseBus } from "./proposal-release-bus.ts"
 import { createRoomsValkey } from "./proposal-rooms-valkey.ts"
 import { ValkeyTicketStore } from "./proposal-tickets.ts"
@@ -86,6 +87,13 @@ const runtime = createReleaseRuntime(config, {
 	commands: new ValkeyCommandBudget(rooms),
 	...(config.roomsValkeyUrl ? { rooms: rooms as ReturnType<typeof createRoomsValkey> } : {}),
 	snapshot: snapshot.getTitleSnapshot,
+  profileSnapshot: snapshot.getTitleSnapshot,
+  async profileDisplays(keys) {
+    const { getDisplayFields } = await import("../title-cards.server.ts")
+    const rows = await getDisplayFields(keys)
+    return new Map([...rows].map(([key, t]) => [key, { key, title: t.title, year: t.release_year, mediaType: t.media_type === "movie" ? "movie" as const : "tv" as const,
+      posterUrl: t.poster_path ? `https://image.tmdb.org/t/p/w500${t.poster_path}` : null, overview: t.tagline, runtimeMinutes: t.runtime }]))
+  },
 	async catalogProbe() {
 		assertNoSharedCatalogWriter(cache.getRedisCluster)
 		await searchQuery("SELECT tmdb_id FROM streaming_service LIMIT 1")
@@ -99,7 +107,9 @@ const WARM_RANKINGS = ["US", "DE", "GB"].map((country) => ({ country, type: "all
 let warmedVersion: string | undefined
 let warming = false
 const warmNow = () => {
-	const version = snapshot.getTitleSnapshot()?.version
+	const loaded = snapshot.getTitleSnapshot()
+  if (loaded) void tasteClusters(loaded).catch(() => {})
+  const version = loaded?.version
 	if (!version || version === warmedVersion || warming) return
 	warming = true
 	void warmRankings(WARM_RANKINGS)

@@ -676,8 +676,7 @@ test('Tonight cheers send real activity: tap, renewed hold with one seed, all-ho
 });
 
 test('tapping outside a field dismisses the keyboard in panels', async ({ page }) => {
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Join a couch', exact: true }).click();
+  await page.goto('/?open=join');
   const code = page.getByLabel('Couch code or invitation');
   await code.focus();
   await expect(code).toBeFocused();

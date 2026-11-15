@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { fakeRoom, newRoom } from './room-fake';
+import { fakeRoom, newRoom, setUpDevice } from './room-fake';
 
 for (const width of [390, 1440]) test(`choosing a mood is local and keeps the same editor at ${width}px`, async ({ page }) => {
   await page.setViewportSize({width, height:844});
@@ -8,6 +8,7 @@ for (const width of [390, 1440]) test(`choosing a mood is local and keeps the sa
   let posts = 0;
   page.on('request', (request) => { if (request.method() === 'POST' && request.url().endsWith('/proposal/rooms')) posts++; });
   const release = f.hold('add_idea');
+  await setUpDevice(page);
   await page.goto('/');
   await page.getByRole('button', { name: 'New couch', exact: true }).click();
   const mood = page.getByLabel('Mood', { exact: true });
@@ -135,6 +136,7 @@ test('cancelling a local draft returns to its caller without allocating a room',
   await fakeRoom(page, newRoom());
   let rooms = 0;
   page.on('request', (r) => { if (r.method() === 'POST' && r.url().endsWith('/proposal/rooms')) rooms++; });
+  await setUpDevice(page);
   await page.goto('/');
   await page.getByRole('button', { name: 'New couch', exact: true }).click();
   await page.getByLabel('Mood', { exact: true }).fill('unfinished mood');

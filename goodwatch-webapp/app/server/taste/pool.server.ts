@@ -6,7 +6,7 @@
 // asking the snapshot title by title. It also holds the pool's per-key mean and standard deviation of the unit-length
 // fingerprints, the space the taste vector lives in, so reasons and leanings can say where a person or a title stands.
 import type { TitleSnapshot } from "~/server/title-snapshot/index.server"
-import { TASTE_LENGTH } from "./formula.server"
+import { TASTE_LENGTH } from "./formula.server.ts"
 
 const MIN_VOTES = 1000
 const MISSING_SCORE = 255

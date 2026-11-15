@@ -51,7 +51,7 @@ for (const [width, height] of [[375, 667], [390, 844], [1440, 900]]) test(`boot 
   await expect(page.getByTestId('yepwatch-boot')).toBeVisible();
   await expect(page.getByTestId('yepwatch-boot')).toHaveCount(0, { timeout: 6000 });
   await expectOneLogoInPlace(page);
-  await expect(page.getByRole('button', { name: 'New couch', exact: true })).toBeInViewport();
+  await expect(page.getByRole('button', { name: 'Start with you', exact: true })).toBeInViewport();
   expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(true);
 });
 
@@ -87,5 +87,6 @@ test('a slow home page keeps the arc circling, then dissolves into the loaded ro
   await expect(boot).toBeVisible();
   await expect.poll(() => page.locator('.review-boot-wait').evaluate((el) => el.getAnimations().length).catch(() => 0), { timeout: 4000 }).toBeGreaterThan(0);
   await expect(boot).toHaveCount(0, { timeout: 5000 });
-  await expect(page.getByRole('button', { name: 'Host’s couch', exact: true })).toBeVisible();
+  // A couch without ideas is named after whose it is, never "Anything".
+  await expect(page.getByTestId('home-rooms').getByRole('button', { name: /^(Your couch|.+’s couch)$/ })).toBeVisible();
 });

@@ -1,5 +1,5 @@
 import { test, expect, eventually, ORIGIN } from '../lib/harness';
-import { addIdea, inviteLink, join, pageTap, pickServices, readyHost, recordPage } from './flows';
+import { addIdea, inviteLink, join, pageTap, pickServices, readyHost, recordPage, setUp } from './flows';
 
 test.describe('invite and join', () => {
   test('public invite preview: link-preview tags and card image', async ({ room }) => {
@@ -98,11 +98,11 @@ test.describe('invite and join', () => {
     const code = new URL(await inviteLink(host)).pathname.split('/').pop()!;
     const sam = await room.person('Sam', { locale: 'en-US' });
     await sam.open('/');
-    await sam.tap(sam.button('Join a couch'), { expect: { visible: ['join-screen'] } });
-    await sam.audit('join page (by code)');
-    await sam.fill(sam.page.getByLabel('Couch code or invitation'), code);
-    await sam.fill(sam.page.getByLabel('Your name').filter({ visible: true }), 'Sam');
-    await sam.tap(sam.button('Join'), { expect: { visible: ['services-sheet'] } });
+    await setUp(sam, 'Sam');
+    // The start page's own Join field: the code goes in right there, Join is beside it.
+    await sam.fill(sam.page.getByLabel('Code or invitation link'), code);
+    await sam.audit('start page Join field (by code)');
+    await sam.tap(sam.button('Join as Sam'), { expect: { visible: ['services-sheet'] } });
     await pickServices(sam, ['HBO Max']);
     await sam.see({ visible: ['waiting'] });
     await eventually(() => host.latest?.participants.length, (n) => n === 2, 'exactly two people', host);

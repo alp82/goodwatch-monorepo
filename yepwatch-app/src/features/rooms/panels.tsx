@@ -25,6 +25,7 @@ import { posterAt, timeAgo, type HomeRoom } from './home-model';
 import { useHome } from './useHome';
 import { LegalLinks } from '../legal/LegalLinks';
 import { noun } from '../shell/noun';
+import { TasteEntry } from '../taste/TasteEntry';
 
 const MAX_NAME = 40;
 /** Browsers draw their own focus outline and caret; the amber border and caret replace them. */
@@ -205,6 +206,7 @@ export function ProfileSheet({ nickname, save, member = false, lapsed = false, s
         <Field label="Your name" value={value} onChange={setValue} placeholder="Your name" returnKey="done" onSubmit={go} />
         <GText size={13} color={glow.muted}>{`Used for new ${noun.many}`}</GText>
       </View>
+      <TasteEntry member={member} />
       {!member && !lapsed && signIn ? <View style={{ gap: 14 }}><Or /><GoodWatchButton detail={`Brings your streaming services to new ${noun.many}`} onPress={signIn} disabled={busy} /></View> : null}
       {(member || lapsed) && logOut ? (
         <View style={{ gap: 8 }}>

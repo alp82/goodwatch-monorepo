@@ -1,17 +1,16 @@
 /**
- * First visit (direction D): the left-aligned headline, the big New room and Join a room tiles,
- * Continue with GoodWatch for guests, and the intro film. Desktop browsers add the two install QR
- * cards, phone browsers the store buttons; the installed app shows no install section. Wide windows:
- * headline and tiles left, film and codes right.
+ * The start page (rethink.md screens 1 and 2). First visit: the centered headline, the intro film, the one statement
+ * tile that starts setup, "or", then Continue with GoodWatch ("Brings your taste and services"). Set up: the tall New
+ * couch tile and the inline Join field. Desktop browsers add the install QR cards, phone browsers the store buttons;
+ * the installed app shows no install section.
  */
-import { useContext } from 'react';
+import { useContext, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { BootPhase } from './boot-phase';
-import { IntroFilm } from './IntroFilm';
-import { QrCard, StoreButton, installable, stores } from './install';
-import { Headline, Or, Tiles, type TileActions } from './start-parts';
-import { GText, Press, glow, grow } from '../glow/theme';
-import { GoodWatchMark } from '../shell/marks';
+import { JoinCodeField, NewTile, Or, StartPage, StatementTile } from './start-parts';
+import { GText, Icon, Press, glow, grow } from '../glow/theme';
+import { HoverPress, Nudge } from '../shell/hover';
+import { GoodWatchG } from '../shell/marks';
 import { useLayout } from '../shell/layout';
 import { R } from '../shell/tokens';
 
@@ -31,14 +30,15 @@ export function GoodWatchButton({ onPress, detail, label = CONTINUE_WITH_GOODWAT
   const mark = Math.max(24, Math.round(height * 0.42));
   const words = Math.max(16, Math.round(height * 0.3));
   return (
-    <Press label={label} hint={detail} onPress={onPress} disabled={disabled} quiet={quiet}
-      style={{ alignSelf: 'stretch', minHeight: height + 16, paddingVertical: 8, paddingHorizontal: 12, borderRadius: R.control, flexDirection: 'row', gap: 10, backgroundColor: '#242424', borderWidth: 1, borderColor: glow.line }}>
-      <GoodWatchMark size={mark + 4} />
-      <View style={{ flexShrink: 1 }}>
+    <HoverPress label={label} hint={detail} onPress={onPress} disabled={disabled} quiet={quiet}
+      style={{ alignSelf: 'stretch', minHeight: height + 16, paddingVertical: 8, paddingLeft: 14, paddingRight: 16, borderRadius: R.control, flexDirection: 'row', gap: 12, backgroundColor: '#242424', borderWidth: 1, borderColor: glow.line }}>
+      <GoodWatchG size={mark} />
+      <View style={{ flexShrink: 1, flexGrow: 1 }}>
         <GText bold size={words} lines={1}>{label}</GText>
         <GText size={Math.max(13, Math.round(words * 0.78))} color={glow.muted} lines={2}>{detail}</GText>
       </View>
-    </Press>
+      <Nudge><Icon name="right" size={Math.round(words * 0.95)} color={glow.muted} /></Nudge>
+    </HoverPress>
   );
 }
 
@@ -50,7 +50,7 @@ export function ReconnectPrompt({ onPress, disabled }: { onPress: () => void; di
   return (
     <View testID="start-reconnect" style={{ alignItems: 'center', gap: 2, paddingTop: 4 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-        <GoodWatchMark size={18} />
+        <GoodWatchG size={18} />
         <Press label={RECONNECT_GOODWATCH} hint={RECONNECTED_DETAIL} onPress={onPress} disabled={disabled} style={{ ...grow(40), paddingHorizontal: 8 }}>
           <GText size={14} bold color={glow.amber}>{RECONNECT_GOODWATCH}</GText>
         </Press>
@@ -62,59 +62,53 @@ export function ReconnectPrompt({ onPress, disabled }: { onPress: () => void; di
 /** What reconnecting brings back, wherever a lapsed member sees Reconnect GoodWatch. */
 export const RECONNECTED_DETAIL = 'Brings your streaming services back';
 
-export interface LandingActions extends TileActions {
+export interface StartActions {
+  newRoom: () => void;
+  /** Joins with a typed code or a pasted link (the start page's own field). */
+  joinCode: (code: string) => void;
+  /** Starts setup (first visit). */
+  setUp: () => void;
   signIn?: () => void;
   /** A GoodWatch sign-in is already starting: the button waits. */
   signingIn?: boolean;
   /** The session ran out: `signIn` reconnects, as the small Reconnect GoodWatch. */
   lapsed?: boolean;
+  disabled?: boolean;
+  /** A room is opening: the controls rest without dimming. */
+  quiet?: boolean;
 }
 
-/** The start page's GoodWatch prompt: the guest button, or Reconnect for a lapsed member. */
-export function StartSignIn({ signIn, signingIn, lapsed, disabled, quiet, height }: { signIn: () => void; signingIn?: boolean; lapsed?: boolean; disabled?: boolean; quiet?: boolean; height: number }) {
+/** The start page's GoodWatch prompt: Continue with GoodWatch, or Reconnect for a lapsed member. */
+export function StartSignIn({ signIn, signingIn, lapsed, disabled, quiet, height, detail = 'Brings your streaming services' }: { signIn: () => void; signingIn?: boolean; lapsed?: boolean; disabled?: boolean; quiet?: boolean; height: number; detail?: string }) {
   return lapsed
     ? <ReconnectPrompt onPress={signIn} disabled={disabled || signingIn} />
-    : <GoodWatchButton height={height} detail="Brings your streaming services" onPress={signIn} disabled={disabled || signingIn} quiet={quiet && !signingIn} />;
+    : <GoodWatchButton height={height} detail={detail} onPress={signIn} disabled={disabled || signingIn} quiet={quiet && !signingIn} />;
 }
 
-export function Landing(actions: LandingActions) {
+/** First visit: the statement tile that starts setup, or Continue with GoodWatch. */
+export function Landing(actions: StartActions & { top?: ReactNode }) {
   const phase = useContext(BootPhase);
-  const { wide, phone, width, max, z } = useLayout();
-  // The film starts as the page appears, not behind the startup cover.
-  const obscured = phase === 'boot';
-  const signIn = actions.signIn ? <StartSignIn height={z(54)} signIn={actions.signIn} signingIn={actions.signingIn} lapsed={actions.lapsed} disabled={actions.disabled} quiet={actions.quiet} /> : null;
-  if (wide) {
-    const gap = z(64);
-    const col = (max - gap) / 2;
-    const qr = Math.min(z(220), (col - z(16)) / 2);
-    return (
-      <View testID="landing" style={{ flexDirection: 'row', gap, alignItems: 'flex-start' }}>
-        <View style={{ flex: 1, gap: z(32), paddingTop: z(8) }}>
-          <Headline size={z(60)} />
-          <Tiles {...actions} height={z(200)} />
-          {signIn}
-        </View>
-        <View style={{ flex: 1, gap: z(28), alignItems: 'center' }}>
-          <View style={{ alignSelf: 'stretch' }}><IntroFilm obscured={obscured} height={col * 0.56} width={col} /></View>
-          {installable ? <View style={{ flexDirection: 'row', gap: z(16), justifyContent: 'center' }}>{stores.map((st) => <QrCard key={st.platform} store={st} width={qr} />)}</View> : null}
-        </View>
-      </View>
-    );
-  }
-  return (
-    <View testID="landing" style={{ gap: phone ? 20 : 28 }}>
-      <Headline size={phone ? (width < 360 ? 30 : 36) : 52} />
-      <IntroFilm obscured={obscured} height={phone ? 200 : 300} width={max} />
-      <Tiles {...actions} height={phone ? 128 : 180} />
-      {signIn}
-      {installable && phone ? (
-        <View style={{ gap: 20 }}>
-          <Or />
-          <View style={{ flexDirection: 'row', gap: 10 }}>{stores.map((st) => <StoreButton key={st.platform} store={st} />)}</View>
-        </View>
-      ) : installable ? (
-        <View style={{ flexDirection: 'row', gap: 16, justifyContent: 'center' }}>{stores.map((st) => <QrCard key={st.platform} store={st} width={Math.min(220, (max - 16) / 2)} />)}</View>
-      ) : null}
+  const { z } = useLayout();
+  const prompt = actions.signIn ? (
+    <View style={{ gap: z(16) }}>
+      {actions.lapsed ? null : <Or />}
+      <StartSignIn height={z(54)} detail="Brings your taste and services" signIn={actions.signIn} signingIn={actions.signingIn} lapsed={actions.lapsed} disabled={actions.disabled} quiet={actions.quiet} />
     </View>
-  );
+  ) : null;
+  return <StartPage testID="landing" obscured={phase === 'boot'} top={actions.top}
+    actions={<StatementTile onPress={actions.setUp} disabled={actions.disabled} quiet={actions.quiet} />} prompt={prompt} />;
+}
+
+/** Set up: New couch and the Join field; a lapsed member's Reconnect GoodWatch under them. */
+export function SetUpStart(actions: StartActions & { me: string | null; joining?: boolean; top?: ReactNode; code?: string }) {
+  const phase = useContext(BootPhase);
+  const { phone, z } = useLayout();
+  const prompt = actions.signIn && actions.lapsed ? <StartSignIn height={z(54)} signIn={actions.signIn} signingIn={actions.signingIn} lapsed disabled={actions.disabled} quiet={actions.quiet} /> : null;
+  return <StartPage testID="home-start" obscured={phase === 'boot'} top={actions.top} prompt={prompt}
+    actions={(
+      <View style={{ gap: phone ? 12 : z(16) }}>
+        <NewTile onPress={actions.newRoom} disabled={actions.disabled} quiet={actions.quiet} />
+        <JoinCodeField onJoin={actions.joinCode} me={actions.me} busy={actions.joining} disabled={actions.disabled} initial={actions.code} />
+      </View>
+    )} />;
 }

@@ -6,8 +6,9 @@ const button = (page: Page, name: string | RegExp) => page.getByRole('button', {
 
 test('guest host: New room opens Mood at once, a preset then Create room, name and services before Start', async ({ page }) => {
   const f = await fakeRoom(page, newRoom());
+  // A host without a name (a device that never set up opens /new from Your couches): the room asks for it.
   await page.goto('/');
-  await button(page, 'New couch').click();
+  await page.goto('/new');
   await expect(page.getByLabel('Mood')).toBeVisible();
   await expect(page).toHaveURL(/\/new$/);
   expect(f.room.shared.participants[0].nickname).toBe('');
@@ -52,7 +53,7 @@ test('guest host: New room opens Mood at once, a preset then Create room, name a
   await shot(page, '04-voting');
   // Browser back from the room returns to the start page, where the room stays listed with LIVE.
   await page.goBack();
-  await expect(page.getByText('Open', { exact: true })).toBeVisible();
+  await expect(page.getByText('Your couches', { exact: true })).toBeVisible();
   await expect(page.getByLabel('Live')).toBeVisible();
   await shot(page, '05-your-rooms');
 });
@@ -231,7 +232,8 @@ test('matches, proposal for everyone (no names), Keep swiping per version, the m
   f.push();
   await page.reload();
   await expect(page.getByText('SOMEONE PROPOSES', { exact: true })).toBeVisible();
-  await expect(page.getByText(/Alp|Mia/)).toHaveCount(0);
+  // The header's setup chip carries your own name; the proposal itself names nobody.
+  await expect(page.getByTestId('frame-body').getByText(/Alp|Mia/)).toHaveCount(0);
   await shot(page, '10-proposal');
   await button(page, 'Agree').click();
   await expect(page.getByText('You agree', { exact: true })).toBeVisible();

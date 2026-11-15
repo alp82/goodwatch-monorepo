@@ -20,8 +20,15 @@ import {
   type AccountExchangeRequest,
   type AccountStatus,
   type AccountHome,
+  type ProfileAnswersRequest,
+  type ProfileAnswersResponse,
+  type ProfileSummary,
+  type TasteDeckResponse,
   MEMBER_SESSION_HEADER,
+  PROFILE_HEADER,
 } from '@goodwatch/yepwatch-contracts/proposal';
+import { carriesProfile } from './profile-paths';
+import { profileAnswersResponseSchema, profileSummarySchema, tasteDeckSchema } from './taste-wire';
 import { authEpoch } from './account-flow';
 import { connectionDiagnostic, type ConnectionDiagnostic, type ConnectionStage } from './connection-diagnostic';
 import { apiUrl } from '../config';
@@ -53,7 +60,9 @@ export class ContinuousApi {
     private readonly fetcher: typeof fetch = (url, init) => fetch(url, init),
     private readonly native = false,
     private readonly sessions?: { read(): Promise<string | null>; save(value: string): Promise<unknown>; /** The session if already read (no wait); undefined if not yet. */ peek?(): string | null | undefined },
-    private readonly creators?: { read(): Promise<string | null> }
+    private readonly creators?: { read(): Promise<string | null> },
+    /** This device's taste profile secret (profile-secret.ts): sent only where carriesProfile says. */
+    private readonly profiles?: { read(): Promise<string>; peek?(): string | undefined }
   ) {}
   async request<T>(
     path: string,
@@ -62,7 +71,8 @@ export class ContinuousApi {
     signal?: AbortSignal,
     /** The app's sealed GoodWatch session (browsers send theirs as a cookie). */
     memberSession?: string | null,
-    timeoutMs = 15000
+    timeoutMs = 15000,
+    method: 'GET' | 'POST' | 'DELETE' = body === undefined ? 'GET' : 'POST'
   ): Promise<T> {
     const asked = authEpoch.current();
     // Known already: the request leaves in this same task (a vote's request is never queued behind the
@@ -70,6 +80,8 @@ export class ContinuousApi {
     if (this.native && memberSession === undefined) memberSession = this.sessions?.peek?.();
     if (this.native && memberSession === undefined) memberSession = await this.sessions?.read();
     const creator = this.native && path === paths.rooms && body !== undefined ? await this.creators?.read() : null;
+    // A storage failure leaves the header off: the request itself still goes (a profile route then answers 400).
+    const profile = this.profiles && carriesProfile(path, method) ? this.profiles.peek?.() ?? await this.profiles.read().catch(() => null) : null;
     const started = Date.now();
     let stage: ConnectionStage = 'address';
     let timedOut = false;
@@ -83,6 +95,7 @@ export class ContinuousApi {
     if (body !== undefined) headers['Content-Type'] = 'application/json';
     if (this.native) headers['X-YepWatch-Client'] = 'native';
     if (creator) headers['X-YepWatch-Creator'] = creator;
+    if (profile) headers[PROFILE_HEADER] = profile;
     if (this.native && memberSession) headers[MEMBER_SESSION_HEADER] = memberSession;
     if (this.native && access) {
       headers.Authorization = `Bearer ${access.token}`;
@@ -93,7 +106,7 @@ export class ContinuousApi {
       const url = apiUrl(path);
       stage = 'request';
       const init: RequestInit = {
-        method: body === undefined ? 'GET' : 'POST',
+        method,
         body: body === undefined ? undefined : JSON.stringify(body),
         credentials: 'include',
         headers,
@@ -107,7 +120,8 @@ export class ContinuousApi {
       const outdated = () => !authEpoch.isCurrent(asked) || (!authEpoch.settled() && path !== paths.accountLogout);
       const renewed = response.headers.get('x-yepwatch-session');
       if (renewed && !outdated()) await this.sessions?.save(renewed);
-      const result = await response.json();
+      // 204 (DELETE /profile) has no body.
+      const result = response.status === 204 ? undefined : await response.json();
       // An answer asked under an earlier sign-in is outdated: it may carry that account's data (a room's
       // GoodWatch link, prefill, seen titles) after Log out. An account answer is refused. A room answer
       // (same room credential before and after: the server keeps the place) is dropped quietly, like one
@@ -119,7 +133,7 @@ export class ContinuousApi {
           throw new RoomFailure('outcome_unknown', `Sign-in changed while the ${noun.one} answered.`, undefined, undefined, undefined, false, 1);
       }
       if (!response.ok) {
-        const e = result as ApiError;
+        const e = (result ?? {}) as ApiError;
         throw new RoomFailure(
           e.error?.code ?? 'outcome_unknown',
           e.error?.message ?? `The ${noun.one} is temporarily unavailable.`,
@@ -197,4 +211,12 @@ export class ContinuousApi {
     this.request<MemberStartResponse>(paths.memberStart, body, a);
   memberExchange = (a: RoomAccess, body: MemberExchangeRequest) =>
     this.request<MemberStatusResponse>(paths.memberExchange, body, a);
+  /** This device's taste profile: counts, revision and pending next-day questions. */
+  profile = async (signal?: AbortSignal): Promise<ProfileSummary> =>
+    profileSummarySchema.parse(await this.request<unknown>(paths.profile, undefined, undefined, signal));
+  tasteDeck = async (count = 10, signal?: AbortSignal): Promise<TasteDeckResponse> =>
+    tasteDeckSchema.parse(await this.request<unknown>(`${paths.profileTasteDeck}?count=${count}`, undefined, undefined, signal));
+  profileAnswers = async (body: ProfileAnswersRequest, signal?: AbortSignal): Promise<ProfileAnswersResponse> =>
+    profileAnswersResponseSchema.parse(await this.request<unknown>(paths.profileAnswers, body, undefined, signal));
+  deleteProfile = () => this.request<void>(paths.profile, undefined, undefined, undefined, undefined, 15000, 'DELETE');
 }

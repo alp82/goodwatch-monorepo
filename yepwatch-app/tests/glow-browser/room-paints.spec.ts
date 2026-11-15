@@ -3,7 +3,7 @@
  * between), and local changes that show before the server answers.
  */
 import { expect, test, type Page } from '@playwright/test';
-import { choosingRoom, fakeRoom, newRoom } from './room-fake';
+import { choosingRoom, fakeRoom, newRoom, setUpDevice } from './room-fake';
 
 const button = (page: Page, name: string) => page.getByRole('button', { name, exact: true });
 type Paint = { t: number; text: string; dim: number };
@@ -29,6 +29,7 @@ test.beforeEach(async ({ page }) => { await page.addInitScript(recorder); });
 
 test('create: the start page goes straight to Mood, the room page never shows on the way', async ({ page }) => {
   await fakeRoom(page, newRoom());
+  await setUpDevice(page);
   await latency(page, 150);
   await page.goto('/');
   await button(page, 'New couch').click();

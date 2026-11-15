@@ -8,6 +8,7 @@ import { Image, Platform, Pressable, View, type ViewStyle } from 'react-native';
 import { Link } from 'expo-router';
 import codes from './codes.json';
 import { GText, Press, glow, grow } from '../glow/theme';
+import { HoverProvider, Nudge, hoverTransition, liftStyle } from '../shell/hover';
 import { StoreLogo } from '../shell/marks';
 import { useLayout } from '../shell/layout';
 import { R, warm } from '../shell/tokens';
@@ -24,14 +25,25 @@ export const installable = Platform.OS === 'web';
 const externalAttrs = Platform.OS === 'web' ? { hrefAttrs: { target: '_blank', rel: 'noopener noreferrer' } } : {};
 const qrSource = (store: Store) => ({ uri: `data:image/svg+xml,${encodeURIComponent(store.svg)}` });
 
-/** Desktop browsers: the install card (QR code, store, note). */
+/**
+ * Hover and press for a Pressable under `Link asChild`: its Slot spreads the child's style into one object (a style
+ * function or array would be lost), so the style is a plain object from state.
+ */
+function useLinkHover() {
+  const [hover, setHover] = useState(false);
+  const [down, setDown] = useState(false);
+  return { hover, down, props: { onHoverIn: () => setHover(true), onHoverOut: () => setHover(false), onPressIn: () => setDown(true), onPressOut: () => setDown(false) } };
+}
+
+/** Desktop browsers: the install card (QR code, store, note). A big tile: hover lifts it and nudges the arrow. */
 export function QrCard({ store, width }: { store: Store; width: number }) {
   const { z } = useLayout();
-  const [hover, setHover] = useState(false);
+  const { hover, down, props } = useLinkHover();
   return (
     <Link href={store.url as `https://${string}`} target="_blank" rel="noopener noreferrer" asChild>
-      <Pressable {...externalAttrs} accessibilityRole="link" accessibilityLabel={`Install YepWatch on ${store.title}`} onHoverIn={() => setHover(true)} onHoverOut={() => setHover(false)}
-        style={{ width, padding: 12, gap: 10, borderRadius: R.card, borderWidth: 1, borderColor: hover ? glow.amber : '#2a2a2a', backgroundColor: glow.panel }}>
+      <Pressable {...externalAttrs} accessibilityRole="link" accessibilityLabel={`Install YepWatch on ${store.title}`} {...props}
+        style={{ width, padding: 12, gap: 10, borderRadius: R.card, borderWidth: 1, borderColor: '#2a2a2a', backgroundColor: glow.panel, ...liftStyle(hover, down) }}>
+        <HoverProvider value={hover}>
         <View style={{ width: width - 24, height: width - 24, borderRadius: 8, overflow: 'hidden', backgroundColor: '#fff' }}>
           <Image source={qrSource(store)} accessibilityLabel={`${store.title} installation QR code`} style={{ width: '100%', height: '100%' }} />
         </View>
@@ -41,8 +53,9 @@ export function QrCard({ store, width }: { store: Store; width: number }) {
             <GText bold size={z(17)}>{store.title}</GText>
             <GText size={z(12)} color={glow.muted}>{store.note}</GText>
           </View>
-          <GText size={z(20)} color={glow.amber}>↗</GText>
+          <Nudge dx={2} dy={-2}><GText size={z(20)} color={glow.amber}>↗</GText></Nudge>
         </View>
+        </HoverProvider>
       </Pressable>
     </Link>
   );
@@ -66,12 +79,13 @@ export function MiniQr({ store, size }: { store: Store; size: number }) {
   );
 }
 
-/** Phone browsers: a store button. */
+/** Phone browsers: a store button. A short control: hover lightens it. */
 export function StoreButton({ store }: { store: Store }) {
+  const { hover, props } = useLinkHover();
   return (
     <Link href={store.url as `https://${string}`} target="_blank" rel="noopener noreferrer" asChild>
-      <Pressable {...externalAttrs} accessibilityRole="link" accessibilityLabel={`Install YepWatch on ${store.title}`}
-        style={{ flex: 1, minHeight: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 12, borderRadius: 12, borderWidth: 1, borderColor: warm.lineStrong, backgroundColor: warm.faint }}>
+      <Pressable {...externalAttrs} accessibilityRole="link" accessibilityLabel={`Install YepWatch on ${store.title}`} {...props}
+        style={{ flex: 1, minHeight: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 12, borderRadius: 12, borderWidth: 1, borderColor: hover ? '#ffffff38' : warm.lineStrong, backgroundColor: hover ? '#ffffff14' : warm.faint, ...hoverTransition }}>
         <StoreLogo platform={store.platform} size={22} />
         <View>
           <GText bold size={15}>{store.title}</GText>

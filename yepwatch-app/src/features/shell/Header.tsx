@@ -13,6 +13,7 @@ import { useGlide } from './glide';
 import { GoodWatchMark } from './marks';
 import { useLayout } from './layout';
 import { Avatar, LiveDot } from './parts';
+import { SetupChip } from './SetupChip';
 import { R, warm } from './tokens';
 import { noun } from './noun';
 
@@ -84,9 +85,10 @@ export function RoomPill({ pill, onPress }: { pill: HeaderPill; onPress?: () => 
   );
 }
 
-/** Your avatar; members carry the GoodWatch mark. Opens Profile. */
+/** Set up (a name): the setup chip. Before that, your avatar; both open Profile. */
 function ProfileButton({ me, onPress, quiet }: { me?: HeaderMe; onPress?: () => void; quiet?: boolean }) {
   const { z } = useLayout();
+  if (me?.name) return <SetupChip name={me.name} member={me.member} onPress={onPress} quiet={quiet} />;
   return (
     <Press label="Profile" quiet={quiet} onPress={onPress ?? (() => undefined)} disabled={!onPress} style={grow(z(44), z(44))}
       visual={{ width: z(44), height: z(44), alignItems: 'center', justifyContent: 'center' }}>

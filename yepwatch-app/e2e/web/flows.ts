@@ -2,20 +2,41 @@
 // asserts its end state; snapshot checks also catch duplicates (rooms, ideas, votes) under rapid taps.
 import { eventually, type Person, type Room } from '../lib/harness';
 
-export async function createRoom(host: Person, mood = 'funny space heist') {
+/**
+ * Setup from a first visit's start page: Start with you, the name, `answers` Taste cards (Loved it), then Skip for now
+ * (or That's enough), back on the start page, set up.
+ */
+export async function setUp(p: Person, name = p.name, answers = 0) {
+  await p.tap(p.button('Start with you'), { expect: { visible: ['first-run'] } });
+  await p.fill(p.page.getByLabel('Your name').filter({ visible: true }), name);
+  await p.tap(p.button('Continue'), { expect: { text: 'What do you like?' } });
+  for (let i = 0; i < answers; i++) await p.tap(p.button('Loved it').first(), { expect: {}, repeatable: true });
+  await p.tap(p.button(answers >= 5 ? 'That’s enough' : 'Skip for now'), { expect: { visible: ['home-rooms'] } });
+}
+
+/** New couch from the start page (after setup on a first visit). */
+export async function newCouch(p: Person, opts: Parameters<Person['tap']>[1] = { expect: { visible: ['mood-page'] } }, name = p.name) {
+  await p.see({ any: ['landing', 'home-rooms'] }, 15000, 'start page');
+  if (await p.page.getByTestId('landing').filter({ visible: true }).count()) await setUp(p, name);
+  await p.tap(p.button('New couch'), opts);
+}
+
+export async function createRoom(host: Person, mood = 'funny space heist', name = host.name) {
   await host.open('/');
-  await host.see({ visible: ['landing'] }).catch(() => undefined);
-  await host.tap(host.button('New couch'), { expect: { visible: ['mood-page'] }, moment: 'newRoomMs' });
+  await newCouch(host, { expect: { visible: ['mood-page'] }, moment: 'newRoomMs' }, name);
   await host.fill(host.page.getByLabel('Mood'), mood);
   await host.tap(host.button('Create couch'), { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' });
   await eventually(() => host.latest?.ideas.map((i) => i.text), (v) => JSON.stringify(v) === JSON.stringify([mood]), 'the room has exactly the one idea', host);
   return host.page.url();
 }
 
+/** The host's name in the room: set up hosts already have it (the room asks only a host without one). */
 export async function hostName(host: Person, name: string) {
   const field = host.page.getByLabel('Your name').filter({ visible: true });
-  await host.fill(field, name);
-  await field.press('Enter');
+  if (await field.count()) {
+    await host.fill(field, name);
+    await field.press('Enter');
+  }
   await eventually(() => host.latest?.participants.find((p) => p.participantId === host.own?.participantId)?.nickname, (v) => v === name, 'host name saved', host);
 }
 
@@ -59,7 +80,7 @@ export async function join(friend: Person, invite: string, name: string, service
 /** Host has a name and Netflix; a ready room page. */
 export async function readyHost(room: Room, name = 'Alp', mood?: string, opts?: Parameters<Room['person']>[1]) {
   const host = await room.person(name, opts);
-  await createRoom(host, mood);
+  await createRoom(host, mood, name);
   await hostName(host, name);
   await pickServices(host, ['Netflix'], () => host.tap(host.button('Streaming services, add'), { expect: { visible: ['services-sheet'] } }));
   return host;

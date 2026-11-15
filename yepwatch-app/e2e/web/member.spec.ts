@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { test, expect, eventually, issuer } from '../lib/harness';
-import { inviteLink, join, readyHost } from './flows';
+import { inviteLink, join, readyHost, newCouch } from './flows';
 
 const account = (who: string) => `member-${who}-${randomBytes(3).toString('hex')}`;
 
@@ -16,7 +16,7 @@ test.describe('GoodWatch sign-in (local fake issuer)', () => {
     await expect(host.page.getByRole('button', { name: 'Continue with GoodWatch' })).toHaveCount(0);
     await host.audit('start page (member)');
     // A new room links to the account and brings the GoodWatch services.
-    await host.tap(host.button('New couch'), { expect: { visible: ['mood-page'] }, moment: 'newRoomMs' });
+    await newCouch(host, { expect: { visible: ['mood-page'] }, moment: 'newRoomMs' });
     await host.fill(host.page.getByLabel('Mood'), 'heist');
     await host.tap(host.button('Create couch'), { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' });
     await expect(host.button(/^Netflix, Disney\+.*, change$/)).toBeVisible({ timeout: 10000 });
