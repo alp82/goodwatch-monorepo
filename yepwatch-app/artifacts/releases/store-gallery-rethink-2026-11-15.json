@@ -367,5 +367,13 @@
     "phoneScreenshots": 8,
     "readback": "short and full description match, 8 screenshots",
     "notDone": "Data safety (API needs the full form CSV; apply store/google-data-safety-notes.json in Play Console)"
+  },
+  "appleSubmission": {
+    "date": "2026-11-15",
+    "versionId": "8559d593-4117-4002-ae56-2b56e96cb078",
+    "attachedBuild": "19 (b5431509-7c34-448c-ac37-8315fb77fd42), replacing 18",
+    "reviewSubmissionId": "b8d6c674-6000-49b8-95c4-60a367097899",
+    "stateAfter": "WAITING_FOR_REVIEW",
+    "ownerRequest": "submit it"
   }
 }
