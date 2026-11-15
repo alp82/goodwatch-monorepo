@@ -20,7 +20,7 @@ export const titleMeta = (title: GlowTitle) => [
   title.runtimeMinutes ? `${title.runtimeMinutes} min` : null,
 ].filter(Boolean).join(' · ');
 
-export function Poster({ title, width, height, phone, z, showText = true, x, y, pan, halo, under, over, look, services, leaving = false, onDetails }: {
+export function Poster({ title, width, height, phone, z, showText = true, x, y, pan, halo, under, over, look, services, leaving = false, tools = true, onDetails }: {
   title: GlowTitle;
   width: number;
   height: number;
@@ -40,6 +40,8 @@ export function Poster({ title, width, height, phone, z, showText = true, x, y, 
   services?: ReactNode;
   /** An answered card flying off: it looks the same, but it isn't the voting card (no test id or name) and its buttons answer nothing. */
   leaving?: boolean;
+  /** Its Details and Trailer buttons (off where the screen shows them beside the card). */
+  tools?: boolean;
   onDetails: () => void;
 }) {
   const [detailsFocused, setDetailsFocused] = useState(false);
@@ -102,7 +104,7 @@ export function Poster({ title, width, height, phone, z, showText = true, x, y, 
         {/* Catches the pointer above the image so the browser never starts an image drag. */}
         <View style={s.absolute} />
       </View>
-      {title.trailerUrl && (
+      {tools && title.trailerUrl && (
         <TrailerLink url={title.trailerUrl} disabled={leaving}
           style={{ position: 'absolute', right: 16, top: 14, ...grow(44) }}
           visual={{ borderRadius: 10, paddingHorizontal: 12, minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#fff' }}>
@@ -112,7 +114,7 @@ export function Poster({ title, width, height, phone, z, showText = true, x, y, 
           <GText bold color="#151515" size={14}>Trailer ↗</GText>
         </TrailerLink>
       )}
-      <Pressable
+      {tools && <Pressable
         accessibilityRole="button"
         accessibilityLabel={`Details about ${title.title}`}
         disabled={leaving}
@@ -128,7 +130,7 @@ export function Poster({ title, width, height, phone, z, showText = true, x, y, 
         }}>
           <GText size={14} bold color="#18130a">Details ↗</GText>
         </View>
-      </Pressable>
+      </Pressable>}
     </Animated.View>
   );
 }
