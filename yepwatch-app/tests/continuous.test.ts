@@ -188,7 +188,8 @@ test('v3 HTTP namespace, native bearer and browser cookie split are real, and ca
   let headers: HeadersInit | undefined;
   let credentials: RequestCredentials | undefined;
   const fetcher: typeof fetch = async (url, init) => {
-    assert.match(String(url), /\/proposal\/rooms\/room$/);
+    // Room reads ask for each card's reason.
+    assert.match(String(url), /\/proposal\/rooms\/room\?candidateReasons=1$/);
     headers = init?.headers;
     credentials = init?.credentials;
     return Response.json(continuousFixture());
@@ -340,4 +341,14 @@ test('text fingerprint survives the strict snapshot wire parser with bounded cou
   assert.equal(parsed.snapshot.candidates[0].notFor, text.notFor);
   snapshot.candidates[0].effects = Array(6).fill(text.effects[0]);
   assert.equal(parseFrame(JSON.stringify({ type: 'room.snapshot', snapshot })), null);
+});
+
+test('replies that carry candidates ask for card reasons; others do not', async () => {
+  const { withCandidateReasons } = await import('../src/core/continuous/api-client');
+  const P = '/api/yepwatch/v1/proposal';
+  assert.equal(withCandidateReasons(`${P}/rooms`), `${P}/rooms?candidateReasons=1`);
+  assert.equal(withCandidateReasons(`${P}/rooms/abc`), `${P}/rooms/abc?candidateReasons=1`);
+  assert.equal(withCandidateReasons(`${P}/rooms/abc?known=4`), `${P}/rooms/abc?known=4&candidateReasons=1`);
+  for (const tail of ['join', 'resume', 'commands']) assert.equal(withCandidateReasons(`${P}/rooms/abc/${tail}`), `${P}/rooms/abc/${tail}?candidateReasons=1`);
+  for (const path of [`${P}/rooms/abc/realtime-ticket`, `${P}/rooms/abc/member`, `${P}/account/home`, `${P}/profile`]) assert.equal(withCandidateReasons(path), path);
 });

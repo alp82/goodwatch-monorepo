@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { ServerRealtimeFrame } from '@goodwatch/yepwatch-contracts/proposal';
+import { REASON_CODES, type ServerRealtimeFrame } from '@goodwatch/yepwatch-contracts/proposal';
 export const invitePreviewSchema = z.object({
   roomId: z.string().regex(/^[A-Za-z0-9_-]{32}$/),
   hostName: z.string().min(1).max(40).nullable(),
@@ -66,6 +66,8 @@ const candidate = z
     essence: z.array(z.string()).max(6).nullable().optional(),
     effects: z.array(z.object({ line: z.string(), strength: z.number().min(0).max(10), color: z.string().regex(/^#[0-9a-f]{6}$/i) })).max(5).nullable().optional(),
     notFor: z.string().nullable().optional(),
+    // Why the server dealt this card ("Why this <text>"); only for clients that ask (candidateReasons).
+    reason: z.object({ code: z.enum(REASON_CODES), text: z.string().min(1).max(80) }).strict().nullable().optional(),
     tagline: z.string().nullable().optional(),
     certification: z.string().nullable().optional(),
     scores: z

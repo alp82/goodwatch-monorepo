@@ -38,6 +38,19 @@ import { parseRetryAfter } from './retry';
 import { requestSent, yepwatchAnswered } from './network';
 import type { RoomAccess } from '../credentials';
 import { noun } from '../../features/shell/noun';
+
+/**
+ * Replies that carry a room's candidates (create, join, resume, room reads, commands) ask for each card's reason
+ * (`candidateReasons=1`): the server leaves `reason` out for clients that don't, since older bundles reject unknown
+ * Candidate fields. The realtime hello says the same (realtime.ts).
+ */
+export function withCandidateReasons(path: string): string {
+  const [bare] = path.split('?');
+  const rooms = `${paths.rooms}/`;
+  const room = bare.startsWith(rooms) ? bare.slice(rooms.length).split('/') : null;
+  const carries = bare === paths.rooms || (room !== null && (room.length === 1 || (room.length === 2 && ['join', 'resume', 'commands'].includes(room[1]))));
+  return carries ? `${path}${path.includes('?') ? '&' : '?'}candidateReasons=1` : path;
+}
 /** How long a room create or join waits for an answer before it counts as unanswered (and is kept for a resend). */
 export const ADMISSION_TIMEOUT_MS = 6000;
 export class RoomFailure extends Error {
@@ -103,7 +116,7 @@ export class ContinuousApi {
     }
     const settled = requestSent();
     try {
-      const url = apiUrl(path);
+      const url = apiUrl(withCandidateReasons(path));
       stage = 'request';
       const init: RequestInit = {
         method,

@@ -566,6 +566,8 @@ export class ContinuousRealtime {
             pointers: true,
             cheers: true,
             roomDetails: true,
+            // Each card's "why this" reason (api-client.ts withCandidateReasons).
+            candidateReasons: true,
           })
         );
       };

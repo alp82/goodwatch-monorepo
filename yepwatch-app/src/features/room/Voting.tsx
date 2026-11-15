@@ -86,10 +86,10 @@ const measure = (ref: { current: ViewNode | null }) => new Promise<Rect | null>(
 /** A touch screen: the how-to shows a finger and says Swipe; a mouse gets a cursor and Drag. */
 const touchScreen = () => native || (typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches);
 
-/** The card's "why this" line, when the server sends one for it (read defensively: the field is new). */
+/** The card's "why this" line ("Why this <text>"), when the server sends a reason for it. */
 export function cardReason(c: Candidate | undefined): string | null {
-  const reason = (c as { reason?: unknown } | undefined)?.reason;
-  return typeof reason === 'string' && reason.trim() ? reason.trim() : null;
+  const text = c?.reason?.text.trim();
+  return text ? text : null;
 }
 
 /**
