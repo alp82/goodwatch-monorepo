@@ -16,15 +16,13 @@ import type {
 } from "../../../packages/yepwatch-contracts/proposal.ts"
 import { RoomError, requireRoom } from "./errors.ts"
 import { timed } from "./server-timing.ts"
-import { calibrateMemberTaste, type MemberTaste } from './proposal-member-taste.ts'
-import type { PersonalSignals } from './proposal-person-signal.ts'
+import { calibrateMemberTaste, type MemberTaste } from "./proposal-member-taste.ts"
+import type { PersonalSignals } from "./proposal-person-signal.ts"
 import { actor, continuousLive } from "./continuous-machine.ts"
-import type {
-	ContinuousRepository,
-	ContinuousRoom,
-} from "./continuous-types.ts"
+import type { ContinuousRepository, ContinuousRoom } from "./continuous-types.ts"
 /** Only a definitive refusal (revoked grant, another account) ends a device session. */
-const refused = (e: unknown) => e instanceof RoomError && ["unauthorized", "member_required"].includes(e.code)
+const refused = (e: unknown) =>
+	e instanceof RoomError && ["unauthorized", "member_required"].includes(e.code)
 /** A member's taste copy is used for deck builds up to this old, and read again in setup once half that old. */
 const TASTE_COPY_MAX_AGE_MS = 600_000
 const TASTE_REFRESH_AFTER_MS = 300_000
@@ -44,7 +42,9 @@ const SEEN_COPY_KEYS_MAX = 1_000_000
 const SEEN_REFUSALS_MAX = 50_000
 /** Throttled, down, unreachable, a garbled reply: the session is kept for a later try. */
 const unavailable = (e: unknown) =>
-	e instanceof RoomError && e.code === "busy" ? e : new RoomError("busy", "GoodWatch is temporarily unavailable; try again", 503, true)
+	e instanceof RoomError && e.code === "busy"
+		? e
+		: new RoomError("busy", "GoodWatch is temporarily unavailable; try again", 503, true)
 export interface MemberTokens {
 	accessToken: string
 	expiresAt: number
@@ -52,16 +52,8 @@ export interface MemberTokens {
 	refreshToken?: string | null
 }
 export interface MemberIssuer {
-	authorize(input: {
-		state: string
-		challenge: string
-		redirectUri: string
-	}): string
-	exchange(input: {
-		code: string
-		verifier: string
-		redirectUri: string
-	}): Promise<MemberTokens>
+	authorize(input: { state: string; challenge: string; redirectUri: string }): string
+	exchange(input: { code: string; verifier: string; redirectUri: string }): Promise<MemberTokens>
 	verify(token: string): Promise<{ userId: string; expiresAt: number; displayName?: string | null }>
 	/** Renews a device session; issuers without offline access leave it out. */
 	refresh?(input: { refreshToken: string }): Promise<MemberTokens>
@@ -142,10 +134,12 @@ export interface MemberIntent {
 	status: "ready" | "exchanging" | "linked"
 	codeHash: string | null
 }
-export const pkce = (verifier: string) =>
-	createHash("sha256").update(verifier).digest("base64url")
+export const pkce = (verifier: string) => createHash("sha256").update(verifier).digest("base64url")
 const cleanName = (name?: string | null) =>
-	name?.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 40) || null
+	name
+		?.replace(/[\u0000-\u001f\u007f]/g, "")
+		.trim()
+		.slice(0, 40) || null
 /** Never replace a chosen nickname or fall back to an email address. */
 function linkedNickname(current: string, name?: string | null) {
 	const clean = cleanName(name)
@@ -172,12 +166,7 @@ export class ContinuousMembers {
 	}
 	private async get(id: string) {
 		const old = await this.repo.read(id)
-		requireRoom(
-			old && old.room.format === 2,
-			"not_found",
-			"Room unavailable",
-			404,
-		)
+		requireRoom(old && old.room.format === 2, "not_found", "Room unavailable", 404)
 		continuousLive(old.room, this.now())
 		return old
 	}
@@ -191,9 +180,7 @@ export class ContinuousMembers {
 		)
 		if (client === "browser")
 			requireRoom(
-				this.config.browserOrigins.includes(u.origin) &&
-					u.pathname === `/room/${id}` &&
-					!u.search,
+				this.config.browserOrigins.includes(u.origin) && u.pathname === `/room/${id}` && !u.search,
 				"invalid_request",
 				"Return must be this room on an approved app",
 				400,
@@ -223,9 +210,7 @@ export class ContinuousMembers {
 			const old = await this.get(id)
 			const room = structuredClone(old.room)
 			const p = actor(room, participantId)
-			const intents = (room.memberIntents ?? []).filter(
-				(i) => i.expiresAt > this.now(),
-			)
+			const intents = (room.memberIntents ?? []).filter((i) => i.expiresAt > this.now())
 			requireRoom(
 				intents.filter((i) => i.participantId === p.id).length < 4,
 				"limit_reached",
@@ -261,9 +246,7 @@ export class ContinuousMembers {
 	async callbackClient(state: string) {
 		const [id] = state.split(".")
 		const { room } = await this.get(id)
-		const intent = room.memberIntents?.find((i) =>
-			equal(i.stateHash, hash(state)),
-		)
+		const intent = room.memberIntents?.find((i) => equal(i.stateHash, hash(state)))
 		requireRoom(
 			intent && intent.expiresAt > this.now(),
 			"unauthorized",
@@ -275,9 +258,7 @@ export class ContinuousMembers {
 	async nativeReturn(state: string, code: string) {
 		const [id] = state.split(".")
 		const { room } = await this.get(id)
-		const intent = room.memberIntents?.find((i) =>
-			equal(i.stateHash, hash(state)),
-		)
+		const intent = room.memberIntents?.find((i) => equal(i.stateHash, hash(state)))
 		requireRoom(
 			intent &&
 				intent.client === "native" &&
@@ -297,19 +278,8 @@ export class ContinuousMembers {
 		const [id] = state.split(".")
 		return this.finish(id, participantId, state, code, null, "browser")
 	}
-	async exchange(
-		id: string,
-		participantId: string,
-		input: MemberExchangeRequest,
-	) {
-		return this.finish(
-			id,
-			participantId,
-			input.state,
-			input.code,
-			input.codeVerifier,
-			"native",
-		)
+	async exchange(id: string, participantId: string, input: MemberExchangeRequest) {
+		return this.finish(id, participantId, input.state, input.code, input.codeVerifier, "native")
 	}
 	private async finish(
 		id: string,
@@ -330,9 +300,7 @@ export class ContinuousMembers {
 			const old = await this.get(id)
 			const room = structuredClone(old.room)
 			const p = actor(room, participantId)
-			const intent = room.memberIntents?.find((i) =>
-				equal(i.stateHash, hash(state)),
-			)
+			const intent = room.memberIntents?.find((i) => equal(i.stateHash, hash(state)))
 			requireRoom(
 				intent &&
 					intent.participantId === p.id &&
@@ -344,12 +312,7 @@ export class ContinuousMembers {
 				401,
 			)
 			if (intent.status === "linked") {
-				requireRoom(
-					intent.codeHash === hash(code),
-					"unauthorized",
-					"Callback changed",
-					401,
-				)
+				requireRoom(intent.codeHash === hash(code), "unauthorized", "Callback changed", 401)
 				return {
 					returnTo: intent.returnTo,
 					status: await this.status(id, p.id),
@@ -363,9 +326,7 @@ export class ContinuousMembers {
 			)
 			const proof = client === "browser" ? intent.verifier : verifier
 			requireRoom(
-				proof &&
-					/^[A-Za-z0-9_-]{43,128}$/.test(proof) &&
-					equal(pkce(proof), intent.challenge),
+				proof && /^[A-Za-z0-9_-]{43,128}$/.test(proof) && equal(pkce(proof), intent.challenge),
 				"unauthorized",
 				"PKCE verification failed",
 				401,
@@ -384,22 +345,26 @@ export class ContinuousMembers {
 			verifier: claimed.verifier!,
 			redirectUri: this.config.callbackUrl,
 		})
-		const { grant, prefill, seen, seenStarted } = await this.checked(tokens.accessToken, tokens.expiresAt, async () => {
-			const grant = await timed("verify", this.issuer.verify(tokens.accessToken))
-			// Both reads at once, once the grant names the account.
-			const seenStarted = this.seenStart()
-			const prefilling = timed("prefill", this.reads.prefill(grant.userId, tokens.accessToken))
-			const seeing = this.reads.seen ? timed("seen", this.reads.seen(grant.userId, tokens.accessToken)) : undefined
-			seeing?.catch(() => {}) // awaited below, after the prefill's own refusal
-			return { grant, prefill: await prefilling, seen: await seeing, seenStarted }
-		})
+		const { grant, prefill, seen, seenStarted } = await this.checked(
+			tokens.accessToken,
+			tokens.expiresAt,
+			async () => {
+				const grant = await timed("verify", this.issuer.verify(tokens.accessToken))
+				// Both reads at once, once the grant names the account.
+				const seenStarted = this.seenStart()
+				const prefilling = timed("prefill", this.reads.prefill(grant.userId, tokens.accessToken))
+				const seeing = this.reads.seen
+					? timed("seen", this.reads.seen(grant.userId, tokens.accessToken))
+					: undefined
+				seeing?.catch(() => {}) // awaited below, after the prefill's own refusal
+				return { grant, prefill: await prefilling, seen: await seeing, seenStarted }
+			},
+		)
 		for (let attempt = 0; attempt < 6; attempt++) {
 			const old = await this.get(id)
 			const room = structuredClone(old.room)
 			const p = actor(room, participantId)
-			const intent = room.memberIntents?.find((i) =>
-				equal(i.stateHash, hash(state)),
-			)
+			const intent = room.memberIntents?.find((i) => equal(i.stateHash, hash(state)))
 			requireRoom(
 				intent &&
 					intent.status === "exchanging" &&
@@ -422,11 +387,17 @@ export class ContinuousMembers {
 				accessToken: tokens.accessToken,
 				expiresAt: Math.min(tokens.expiresAt, grant.expiresAt),
 			})
-            intent.status = "linked"
+			intent.status = "linked"
 			intent.verifier = null
 			room.revision++
 			if (await this.repo.compareAndSwap(old, room, true)) {
-				if (seen) this.keepSeen(this.seenKey(id, p.id, grant.userId, tokens.accessToken), seenStarted, seen, p.memberGrant!.expiresAt)
+				if (seen)
+					this.keepSeen(
+						this.seenKey(id, p.id, grant.userId, tokens.accessToken),
+						seenStarted,
+						seen,
+						p.memberGrant!.expiresAt,
+					)
 				return {
 					returnTo: intent.returnTo,
 					status: { state: "linked" as const, prefill },
@@ -477,8 +448,7 @@ export class ContinuousMembers {
 			room.stream = { version: room.stream.version + 1, state: "ready", reason: null }
 		}
 		p.memberGrant = { accessToken: link.accessToken, expiresAt: link.expiresAt }
-		if (v3 && this.reads.seen && link.seen)
-			retireIneligible(room as Room, new Set(link.seen))
+		if (v3 && this.reads.seen && link.seen) retireIneligible(room as Room, new Set(link.seen))
 		if (v3) reconcileProposal(room as Room, previous as Room)
 	}
 	private sealer() {
@@ -492,7 +462,10 @@ export class ContinuousMembers {
 		return codec(`member-session\0${secret}`)
 	}
 	sealSession(session: MemberSession) {
-		return this.sealer().encode({ ...session, sessionId: session.sessionId ?? random() }, SESSION_AAD)
+		return this.sealer().encode(
+			{ ...session, sessionId: session.sessionId ?? random() },
+			SESSION_AAD,
+		)
 	}
 	/** A session this server sealed, or null for anything else (tampered, foreign, malformed). */
 	openSession(raw: string | null | undefined): MemberSession | null {
@@ -608,7 +581,10 @@ export class ContinuousMembers {
 		})
 		return this.sessionFrom(tokens)
 	}
-	private async sessionFrom(tokens: MemberTokens, previous?: MemberSession): Promise<MemberSession> {
+	private async sessionFrom(
+		tokens: MemberTokens,
+		previous?: MemberSession,
+	): Promise<MemberSession> {
 		const grant = await this.issuer.verify(tokens.accessToken)
 		requireRoom(
 			!previous || previous.userId === grant.userId,
@@ -637,11 +613,16 @@ export class ContinuousMembers {
 	 * device still sending the replaced session gets the rotated one (it may not have received it yet), and is never
 	 * sent to GoodWatch with its spent refresh token. A network failure keeps nothing: the stored session stays.
 	 */
-	private landed = new Map<string, { outcome: Exclude<RenewalOutcome, { state: "unavailable" }>; until: number }>()
+	private landed = new Map<
+		string,
+		{ outcome: Exclude<RenewalOutcome, { state: "unavailable" }>; until: number }
+	>()
 	/** The renewal key of a rotated session -> the key of the session it replaced (see `delivered`). */
 	private replaced = new Map<string, string>()
 	private renewalKey(session: MemberSession) {
-		return createHash("sha256").update(`${session.accessToken}\0${session.refreshToken ?? ""}`).digest("base64url")
+		return createHash("sha256")
+			.update(`${session.accessToken}\0${session.refreshToken ?? ""}`)
+			.digest("base64url")
 	}
 	private land(key: string, outcome: Exclude<RenewalOutcome, { state: "unavailable" }>) {
 		const now = this.now()
@@ -654,7 +635,10 @@ export class ContinuousMembers {
 			}
 		}
 		this.forget(key)
-		this.landed.set(key, { outcome, until: now + (outcome.state === "renewed" ? RENEWABLE_SESSION_MS : REFUSAL_KEPT_MS) })
+		this.landed.set(key, {
+			outcome,
+			until: now + (outcome.state === "renewed" ? RENEWABLE_SESSION_MS : REFUSAL_KEPT_MS),
+		})
 		// A verification keeps the tokens (the key maps onto itself): the session it replaced stays recorded.
 		const next = outcome.state === "renewed" ? this.renewalKey(outcome.session) : null
 		if (next && next !== key) this.replaced.set(next, key)
@@ -673,14 +657,25 @@ export class ContinuousMembers {
 		let key = this.renewalKey(session)
 		// A verified session also acknowledges the verification that kept its tokens.
 		const verified = this.landed.get(key)
-		if (verified?.outcome.state === "renewed" && !session.unverified && verified.until > until &&
-			this.renewalKey(verified.outcome.session) === key) verified.until = until
+		if (
+			verified?.outcome.state === "renewed" &&
+			!session.unverified &&
+			verified.until > until &&
+			this.renewalKey(verified.outcome.session) === key
+		)
+			verified.until = until
 		const seen = new Set<string>()
 		while (!seen.has(key)) {
 			seen.add(key)
 			const previous = this.replaced.get(key)
 			const kept = previous && this.landed.get(previous)
-			if (!previous || !kept || kept.outcome.state !== "renewed" || this.renewalKey(kept.outcome.session) !== key) break
+			if (
+				!previous ||
+				!kept ||
+				kept.outcome.state !== "renewed" ||
+				this.renewalKey(kept.outcome.session) !== key
+			)
+				break
 			if (kept.until > until) kept.until = until
 			key = previous
 		}
@@ -703,7 +698,12 @@ export class ContinuousMembers {
 			if (kept.outcome.state === "refused") return null
 			const next = kept.outcome.session
 			// A verified session keeps its tokens: it maps onto itself.
-			if (next.accessToken === at.accessToken && next.refreshToken === at.refreshToken && !at.unverified) break
+			if (
+				next.accessToken === at.accessToken &&
+				next.refreshToken === at.refreshToken &&
+				!at.unverified
+			)
+				break
 			at = next
 			moved = true
 		}
@@ -715,13 +715,21 @@ export class ContinuousMembers {
 		const running = this.renewals.get(key)
 		if (running) return running
 		const started = this.now()
-		const work = this.renew(session).then((outcome) => {
-			if (outcome.state !== "unavailable") this.land(key, outcome)
-			console.info(JSON.stringify({ event: "yepwatch_member_renewal", outcome: outcome.state, ms: this.now() - started }))
-			return outcome
-		}).finally(() => {
-			if (this.renewals.get(key) === work) this.renewals.delete(key)
-		})
+		const work = this.renew(session)
+			.then((outcome) => {
+				if (outcome.state !== "unavailable") this.land(key, outcome)
+				console.info(
+					JSON.stringify({
+						event: "yepwatch_member_renewal",
+						outcome: outcome.state,
+						ms: this.now() - started,
+					}),
+				)
+				return outcome
+			})
+			.finally(() => {
+				if (this.renewals.get(key) === work) this.renewals.delete(key)
+			})
 		this.renewals.set(key, work)
 		return work
 	}
@@ -796,7 +804,12 @@ export class ContinuousMembers {
 	async account(
 		raw: string | null | undefined,
 		options: { background?: boolean } = {},
-	): Promise<{ status: AccountStatus; session: MemberSession | null; changed: boolean; renewing?: true }> {
+	): Promise<{
+		status: AccountStatus
+		session: MemberSession | null
+		changed: boolean
+		renewing?: true
+	}> {
 		const opened = this.openSession(raw)
 		if (opened) this.delivered(opened)
 		let fresh
@@ -805,10 +818,15 @@ export class ContinuousMembers {
 		} catch (e) {
 			// Still signed in; GoodWatch just couldn't renew it now. Keep the session untouched.
 			if (opened && e instanceof RoomError && e.code === "busy")
-				return { status: { state: "member", displayName: opened.displayName, unavailable: true }, session: opened, changed: false }
+				return {
+					status: { state: "member", displayName: opened.displayName, unavailable: true },
+					session: opened,
+					changed: false,
+				}
 			throw e
 		}
-		if (!fresh) return { status: { state: "guest", displayName: null }, session: null, changed: Boolean(raw) }
+		if (!fresh)
+			return { status: { state: "guest", displayName: null }, session: null, changed: Boolean(raw) }
 		return {
 			status: {
 				state: "member",
@@ -828,13 +846,22 @@ export class ContinuousMembers {
 	 * attempt (a link answered late must not land after Log out or Leave). Refused, nothing is written: null.
 	 * A linked answer carries the room's context version as the link left it.
 	 */
-	async linkRoom(id: string, participantId: string, raw: string | null | undefined, admit?: (room: ContinuousRoom) => boolean | Promise<boolean>) {
+	async linkRoom(
+		id: string,
+		participantId: string,
+		raw: string | null | undefined,
+		admit?: (room: ContinuousRoom) => boolean | Promise<boolean>,
+	) {
 		const fresh = await this.freshSession(this.openSession(raw))
 		requireRoom(fresh, "member_required", "Sign in with GoodWatch again", 403)
 		const session = fresh.session
 		// Rotated tokens whose identity GoodWatch couldn't confirm yet: keep them, link nothing.
 		if (session.unverified)
-			return { status: { state: "unavailable" as const, prefill: null }, session, renewed: fresh.renewed }
+			return {
+				status: { state: "unavailable" as const, prefill: null },
+				session,
+				renewed: fresh.renewed,
+			}
 		{
 			const { room } = await this.get(id)
 			if (admit && !(await admit(room))) return null
@@ -853,23 +880,39 @@ export class ContinuousMembers {
 				// Already linked with this grant (an app reopening the room, perhaps on a restarted server): a missing or
 				// ageing seen copy is read again in the background.
 				this.refreshSeen(room, p.id)
-				return { status: { state: "linked" as const, prefill: p.member.prefill }, session, renewed: fresh.renewed, contextVersion: room.contextVersion }
+				return {
+					status: { state: "linked" as const, prefill: p.member.prefill },
+					session,
+					renewed: fresh.renewed,
+					contextVersion: room.contextVersion,
+				}
 			}
 		}
 		// The grant check and both reads go to GoodWatch together: the session already names the account, and each
 		// read is checked against it again (GoodWatch answers with the token's account). Nothing read is used before
 		// the grant check passes, and its refusal comes first.
-		const { grant, prefill, seen, seenStarted } = await this.checked(session.accessToken, session.expiresAt, async () => {
-			const seenStarted = this.seenStart()
-			const verifying = timed("verify", this.issuer.verify(session.accessToken))
-			const prefilling = timed("prefill", this.reads.prefill(session.userId, session.accessToken))
-			const seeing = this.reads.seen ? timed("seen", this.reads.seen(session.userId, session.accessToken)) : undefined
-			prefilling.catch(() => {}) // awaited below, after the grant check
-			seeing?.catch(() => {})
-			const grant = await verifying
-			requireRoom(grant.userId === session.userId, "unauthorized", "GoodWatch account changed", 401)
-			return { grant, prefill: await prefilling, seen: await seeing, seenStarted }
-		})
+		const { grant, prefill, seen, seenStarted } = await this.checked(
+			session.accessToken,
+			session.expiresAt,
+			async () => {
+				const seenStarted = this.seenStart()
+				const verifying = timed("verify", this.issuer.verify(session.accessToken))
+				const prefilling = timed("prefill", this.reads.prefill(session.userId, session.accessToken))
+				const seeing = this.reads.seen
+					? timed("seen", this.reads.seen(session.userId, session.accessToken))
+					: undefined
+				prefilling.catch(() => {}) // awaited below, after the grant check
+				seeing?.catch(() => {})
+				const grant = await verifying
+				requireRoom(
+					grant.userId === session.userId,
+					"unauthorized",
+					"GoodWatch account changed",
+					401,
+				)
+				return { grant, prefill: await prefilling, seen: await seeing, seenStarted }
+			},
+		)
 		for (let attempt = 0; attempt < 6; attempt++) {
 			const old = await this.get(id)
 			if (admit && !(await admit(old.room))) return null
@@ -890,8 +933,19 @@ export class ContinuousMembers {
 			})
 			room.revision++
 			if (await this.repo.compareAndSwap(old, room, true)) {
-				if (seen) this.keepSeen(this.seenKey(id, p.id, grant.userId, session.accessToken), seenStarted, seen, p.memberGrant!.expiresAt)
-				return { status: { state: "linked" as const, prefill }, session, renewed: fresh.renewed, contextVersion: room.contextVersion }
+				if (seen)
+					this.keepSeen(
+						this.seenKey(id, p.id, grant.userId, session.accessToken),
+						seenStarted,
+						seen,
+						p.memberGrant!.expiresAt,
+					)
+				return {
+					status: { state: "linked" as const, prefill },
+					session,
+					renewed: fresh.renewed,
+					contextVersion: room.contextVersion,
+				}
 			}
 		}
 		throw new RoomError("busy", "Room busy; try again", 503, true)
@@ -907,12 +961,7 @@ export class ContinuousMembers {
 		const link = p.memberGrant
 		return this.checked(link.accessToken, link.expiresAt, async () => {
 			const grant = await this.issuer.verify(link.accessToken)
-			requireRoom(
-				grant.userId === p.memberUserId,
-				"unauthorized",
-				"Linked identity changed",
-				401,
-			)
+			requireRoom(grant.userId === p.memberUserId, "unauthorized", "Linked identity changed", 401)
 			return grant
 		})
 	}
@@ -921,7 +970,11 @@ export class ContinuousMembers {
 	}
 	/** Repair previously linked Guest names without changing their actor or choices. */
 	private async restoreNickname(
-		id: string, participantId: string, userId: string, token: string, name?: string | null,
+		id: string,
+		participantId: string,
+		userId: string,
+		token: string,
+		name?: string | null,
 	) {
 		for (let attempt = 0; attempt < 6; attempt++) {
 			const old = await this.get(id)
@@ -929,7 +982,9 @@ export class ContinuousMembers {
 			const p = actor(room, participantId)
 			requireRoom(
 				p.memberUserId === userId && p.memberGrant?.accessToken === token,
-				"conflict", "Account changed while restoring its name", 409,
+				"conflict",
+				"Account changed while restoring its name",
+				409,
 			)
 			const nickname = linkedNickname(p.nickname, name)
 			if (nickname === p.nickname) return
@@ -939,20 +994,14 @@ export class ContinuousMembers {
 		}
 		throw new RoomError("busy", "Room busy; refresh your account", 503, true)
 	}
-	async progress(
-		room: ContinuousRoom,
-		participantId: string,
-	): Promise<MemberProgressResponse> {
+	async progress(room: ContinuousRoom, participantId: string): Promise<MemberProgressResponse> {
 		const userId = await this.identity(room, participantId)
-		requireRoom(
-			this.reads.progress,
-			"not_implemented",
-			"Saved progress reader unavailable",
-			501,
-		)
+		requireRoom(this.reads.progress, "not_implemented", "Saved progress reader unavailable", 501)
 		const link = actor(room, participantId).memberGrant!
 		const reads = this.reads
-		return this.checked(link.accessToken, link.expiresAt, () => reads.progress!(userId, link.accessToken))
+		return this.checked(link.accessToken, link.expiresAt, () =>
+			reads.progress!(userId, link.accessToken),
+		)
 	}
 	/**
 	 * Seen reads in flight per room seat, bound to the linked account and its grant: concurrent reads for the same
@@ -964,7 +1013,10 @@ export class ContinuousMembers {
 	 * (a room link), a deck build or a refresh. Only Start reads them (seenStored), and only as exclusions. A link is
 	 * bound to its grant: a renewed grant, another account, a guest seat (Log out) or a seat that left has no copy.
 	 */
-	private seenCopies = new Map<string, { keys: string[]; started: { order: number; at: number }; expiresAt: number; grant: string }>()
+	private seenCopies = new Map<
+		string,
+		{ keys: string[]; started: { order: number; at: number }; expiresAt: number; grant: string }
+	>()
 	private seenCopyKeys = 0
 	/**
 	 * Grants (by token hash) GoodWatch refused on any read (revoked, or answering for another account), until they
@@ -1020,7 +1072,12 @@ export class ContinuousMembers {
 		return false
 	}
 	/** Stores a successful read as the link's copy, unless a newer read is stored or GoodWatch refused the link. */
-	private keepSeen(key: string, started: { order: number; at: number }, keys: string[], expiresAt: number) {
+	private keepSeen(
+		key: string,
+		started: { order: number; at: number },
+		keys: string[],
+		expiresAt: number,
+	) {
 		if (this.refusedSeen(key)) return
 		const old = this.seenCopies.get(key)
 		if (old && old.started.order > started.order) return
@@ -1029,7 +1086,8 @@ export class ContinuousMembers {
 		this.seenCopyKeys += keys.length
 		const now = this.now()
 		if (this.seenCopies.size > SEEN_COPIES_MAX || this.seenCopyKeys > SEEN_COPY_KEYS_MAX)
-			for (const [k, v] of this.seenCopies) if (v.expiresAt <= now || now - v.started.at > this.copyMaxAge()) this.dropSeen(k)
+			for (const [k, v] of this.seenCopies)
+				if (v.expiresAt <= now || now - v.started.at > this.copyMaxAge()) this.dropSeen(k)
 		for (const [k] of this.seenCopies) {
 			if (this.seenCopies.size <= SEEN_COPIES_MAX && this.seenCopyKeys <= SEEN_COPY_KEYS_MAX) break
 			if (k !== key) this.dropSeen(k)
@@ -1062,7 +1120,8 @@ export class ContinuousMembers {
 		if (this.refusedSeen(key)) return undefined
 		const copy = this.seenCopies.get(key)
 		if (!copy) return undefined
-		if (copy.expiresAt > this.now() && this.now() - copy.started.at <= this.copyMaxAge()) return copy
+		if (copy.expiresAt > this.now() && this.now() - copy.started.at <= this.copyMaxAge())
+			return copy
 		this.dropSeen(key)
 		return undefined
 	}
@@ -1071,7 +1130,11 @@ export class ContinuousMembers {
 	 * `fresh` never joins a read that started earlier, so a title marked Seen since then is in the list; other reads
 	 * share any read in flight for the same link.
 	 */
-	async seen(room: ContinuousRoom, participantId: string, options: { fresh?: boolean } = {}): Promise<string[]> {
+	async seen(
+		room: ContinuousRoom,
+		participantId: string,
+		options: { fresh?: boolean } = {},
+	): Promise<string[]> {
 		if (!this.reads.seen) return []
 		const link = this.seenLink(room, participantId)
 		const key = link.key
@@ -1124,17 +1187,29 @@ export class ContinuousMembers {
 	 * `seenReadTimeoutMs` leaves this member's seen titles out (logged); nothing is taken from an earlier read or
 	 * another link.
 	 */
-	async seenOrNone(room: ContinuousRoom, participantId: string, options: { fresh?: boolean } = {}): Promise<string[]> {
+	async seenOrNone(
+		room: ContinuousRoom,
+		participantId: string,
+		options: { fresh?: boolean } = {},
+	): Promise<string[]> {
 		let timer: ReturnType<typeof setTimeout> | undefined
 		const timedOut = new Error("seen read timed out")
 		try {
 			return await Promise.race([
 				this.seen(room, participantId, options),
-				new Promise<never>((_, reject) => { timer = setTimeout(() => reject(timedOut), this.config.seenReadTimeoutMs ?? 300) }),
+				new Promise<never>((_, reject) => {
+					timer = setTimeout(() => reject(timedOut), this.config.seenReadTimeoutMs ?? 300)
+				}),
 			])
 		} catch (e) {
 			const reason = e === timedOut ? "timeout" : refused(e) ? "refused" : "unavailable"
-			console.warn(JSON.stringify({ event: "yepwatch_member_seen_skipped", reason, fresh: Boolean(options.fresh) }))
+			console.warn(
+				JSON.stringify({
+					event: "yepwatch_member_seen_skipped",
+					reason,
+					fresh: Boolean(options.fresh),
+				}),
+			)
 			return []
 		} finally {
 			clearTimeout(timer)
@@ -1148,7 +1223,11 @@ export class ContinuousMembers {
 	 * asking again. No copy (a restarted server, another instance, a sign-in read that failed): a fresh read, as
 	 * Start made before copies existed (seenOrNone: bounded, best effort). `read: false`: the copy or nothing.
 	 */
-	async seenStored(room: ContinuousRoom, participantId: string, options: { read?: boolean } = {}): Promise<string[]> {
+	async seenStored(
+		room: ContinuousRoom,
+		participantId: string,
+		options: { read?: boolean } = {},
+	): Promise<string[]> {
 		if (!this.reads.seen) return []
 		if (options.read === false) {
 			// The copy as it stands now (a refusal since the last look ends it), and no GoodWatch read.
@@ -1162,15 +1241,29 @@ export class ContinuousMembers {
 		try {
 			key = this.seenLink(room, participantId).key
 		} catch (e) {
-			console.warn(JSON.stringify({ event: "yepwatch_member_seen_skipped", reason: refused(e) ? "refused" : "unavailable", stored: true }))
+			console.warn(
+				JSON.stringify({
+					event: "yepwatch_member_seen_skipped",
+					reason: refused(e) ? "refused" : "unavailable",
+					stored: true,
+				}),
+			)
 			return []
 		}
 		if (this.refusedSeen(key)) {
-			console.warn(JSON.stringify({ event: "yepwatch_member_seen_skipped", reason: "refused", stored: true }))
+			console.warn(
+				JSON.stringify({ event: "yepwatch_member_seen_skipped", reason: "refused", stored: true }),
+			)
 			return []
 		}
 		const copy = this.seenCopy(key)
-		console.info(JSON.stringify({ event: "yepwatch_member_seen_start", source: copy ? "copy" : "read", ...(copy ? { ageMs: this.now() - copy.started.at } : {}) }))
+		console.info(
+			JSON.stringify({
+				event: "yepwatch_member_seen_start",
+				source: copy ? "copy" : "read",
+				...(copy ? { ageMs: this.now() - copy.started.at } : {}),
+			}),
+		)
 		return copy ? copy.keys : this.seenOrNone(room, participantId, { fresh: true })
 	}
 	async ownProgress(id: string, participantId: string) {
@@ -1178,23 +1271,29 @@ export class ContinuousMembers {
 	}
 	private tasteCopies = new Map<string, { at: number; value: PersonalSignals }>()
 	private tasteReads = new Map<string, Promise<PersonalSignals | null>>()
-  private tasteKeys = 0
-  private dropTaste(key: string) {
-    const old = this.tasteCopies.get(key)
-    if (old) this.tasteKeys -= old.value.hidden.size + old.value.wishlist.size
-    this.tasteCopies.delete(key)
-  }
+	private tasteKeys = 0
+	private dropTaste(key: string) {
+		const old = this.tasteCopies.get(key)
+		if (old) this.tasteKeys -= old.value.hidden.size + old.value.wishlist.size
+		this.tasteCopies.delete(key)
+	}
 	/**
 	 * The member's taste copy for deck builds, under the same current-grant key and refusal guard as seen. No read:
 	 * a missing copy, or one older than TASTE_COPY_MAX_AGE_MS, is neutral (also at Start).
 	 */
 	tasteStored(room: ContinuousRoom, participantId: string): PersonalSignals | null {
 		try {
-			const { key } = this.seenLink(room, participantId), copy = this.tasteCopies.get(key)
+			const { key } = this.seenLink(room, participantId),
+				copy = this.tasteCopies.get(key)
 			if (!copy) return null
-      if (this.refusedSeen(key) || this.now() - copy.at >= TASTE_COPY_MAX_AGE_MS) { this.dropTaste(key); return null }
-      return copy.value
-		} catch { return null }
+			if (this.refusedSeen(key) || this.now() - copy.at >= TASTE_COPY_MAX_AGE_MS) {
+				this.dropTaste(key)
+				return null
+			}
+			return copy.value
+		} catch {
+			return null
+		}
 	}
 	/**
 	 * Reads the member's taste when no copy is held or the held one is TASTE_REFRESH_AFTER_MS old (a room change in
@@ -1203,43 +1302,67 @@ export class ContinuousMembers {
 	 */
 	async refreshTaste(room: ContinuousRoom, participantId: string): Promise<PersonalSignals | null> {
 		if (!this.reads.taste) return null
-		let link: ReturnType<ContinuousMembers['seenLink']>
-		try { link = this.seenLink(room, participantId) } catch { return null }
+		let link: ReturnType<ContinuousMembers["seenLink"]>
+		try {
+			link = this.seenLink(room, participantId)
+		} catch {
+			return null
+		}
 		if (this.refusedSeen(link.key)) return null
 		const copy = this.tasteStored(room, participantId)
-		if (copy && this.now() - this.tasteCopies.get(link.key)!.at < TASTE_REFRESH_AFTER_MS) return copy
+		if (copy && this.now() - this.tasteCopies.get(link.key)!.at < TASTE_REFRESH_AFTER_MS)
+			return copy
 		const pending = this.tasteReads.get(link.key)
 		if (pending) return pending
 		const started = this.now()
-		const read = this.reads.taste(link.userId, link.accessToken).then(calibrateMemberTaste).then(value => {
-			if (this.refusedSeen(link.key)) return null
-			this.dropTaste(link.key)
-      this.tasteCopies.set(link.key, { at: started, value })
-      this.tasteKeys += value.hidden.size + value.wishlist.size
-      while (this.tasteCopies.size > 2000 || this.tasteKeys > 1000000) this.dropTaste(this.tasteCopies.keys().next().value!)
-			return value
-		}).catch(e => {
-			// A refused grant ends the copy at once; an outage keeps the one held until it is too old.
-			if (refused(e)) { this.dropTaste(link.key); this.refuseGrant(link.accessToken, link.expiresAt) }
-			console.warn(JSON.stringify({ event: 'yepwatch_member_taste_skipped', reason: refused(e) ? 'refused' : 'unavailable' }))
-			return this.tasteStored(room, participantId)
-		}).finally(() => this.tasteReads.delete(link.key))
+		const read = this.reads
+			.taste(link.userId, link.accessToken)
+			.then(calibrateMemberTaste)
+			.then((value) => {
+				if (this.refusedSeen(link.key)) return null
+				this.dropTaste(link.key)
+				this.tasteCopies.set(link.key, { at: started, value })
+				this.tasteKeys += value.hidden.size + value.wishlist.size
+				while (this.tasteCopies.size > 2000 || this.tasteKeys > 1000000)
+					this.dropTaste(this.tasteCopies.keys().next().value!)
+				return value
+			})
+			.catch((e) => {
+				// A refused grant ends the copy at once; an outage keeps the one held until it is too old.
+				if (refused(e)) {
+					this.dropTaste(link.key)
+					this.refuseGrant(link.accessToken, link.expiresAt)
+				}
+				console.warn(
+					JSON.stringify({
+						event: "yepwatch_member_taste_skipped",
+						reason: refused(e) ? "refused" : "unavailable",
+					}),
+				)
+				return this.tasteStored(room, participantId)
+			})
+			.finally(() => this.tasteReads.delete(link.key))
 		this.tasteReads.set(link.key, read)
 		return read
 	}
-	async status(
-		id: string,
-		participantId: string,
-	): Promise<MemberStatusResponse> {
+	async status(id: string, participantId: string): Promise<MemberStatusResponse> {
 		const { room } = await this.get(id)
 		const p = actor(room, participantId)
 		if (!p.memberGrant) return { state: "guest", prefill: null }
 		try {
 			const grant = await this.verifiedIdentity(room, p.id)
 			const link = p.memberGrant
-			const prefill = await this.checked(link.accessToken, link.expiresAt, () => this.reads.prefill(grant.userId, link.accessToken))
+			const prefill = await this.checked(link.accessToken, link.expiresAt, () =>
+				this.reads.prefill(grant.userId, link.accessToken),
+			)
 			if (linkedNickname(p.nickname, grant.displayName) !== p.nickname)
-				await this.restoreNickname(id, p.id, grant.userId, p.memberGrant.accessToken, grant.displayName)
+				await this.restoreNickname(
+					id,
+					p.id,
+					grant.userId,
+					p.memberGrant.accessToken,
+					grant.displayName,
+				)
 			return { state: "linked", prefill }
 		} catch {
 			return { state: "unavailable", prefill: null }

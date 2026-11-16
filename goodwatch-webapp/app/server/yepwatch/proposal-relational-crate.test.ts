@@ -5,14 +5,8 @@ import { execFileSync } from "node:child_process"
 import { randomBytes } from "node:crypto"
 import { crateSql, type Sql } from "./repository.server.ts"
 import { RelationalProposalRepository } from "./proposal-relational-repository.ts"
-import {
-	provisionReleaseStore,
-	checkReleaseStore,
-} from "./proposal-release-store.ts"
-import {
-	provisionControl,
-	DEFAULT_CONTROL,
-} from "./proposal-release-control.ts"
+import { provisionReleaseStore, checkReleaseStore } from "./proposal-release-store.ts"
+import { provisionControl, DEFAULT_CONTROL } from "./proposal-release-control.ts"
 import { ProposalService } from "./proposal-service.server.ts"
 import { proposalFixtureCatalog, untilShardsStarted } from "./proposal-test-support.ts"
 import { tables, tableDdl } from "./proposal-storage-schema.ts"
@@ -51,7 +45,7 @@ test(
 			"crate:5.10.16",
 			"crate",
 			"-Cdiscovery.type=single-node",
-			"-Ccluster.name=" + name
+			"-Ccluster.name=" + name,
 		)
 		t.after(() => {
 			docker("rm", "-f", name)
@@ -83,10 +77,7 @@ test(
 				throw new Error("Injected crash before publish")
 			}
 			const result = await sql(stmt, args)
-			if (
-				stmt.startsWith("INSERT INTO doc.yepwatch_invitation ") &&
-				loseInvite
-			) {
+			if (stmt.startsWith("INSERT INTO doc.yepwatch_invitation ") && loseInvite) {
 				loseInvite = false
 				throw new IndeterminateWrite("Lost invite mapping ack")
 			}
@@ -110,23 +101,20 @@ test(
 		assert.match(admission.invite.code, /^[2-9A-HJKMNP-Z]{6}$/)
 		assert.equal(
 			(await b.resolveInvite(admission.invite.code.toLowerCase())).roomId,
-			admission.credential.roomId
+			admission.credential.roomId,
 		)
-		assert.equal(
-			(await b.create(admissionRequest)).invite.code,
-			admission.invite.code
-		)
+		assert.equal((await b.create(admissionRequest)).invite.code, admission.invite.code)
 		const { hash } = await import("./crypto.server.ts")
 		assert.equal(
 			await otherRepo.rememberInvite(
 				hash(admission.invite.code),
 				"another-room",
-				admission.credential.expiresAt
+				admission.credential.expiresAt,
 			),
-			null
+			null,
 		)
 		t.diagnostic(
-			"Short invite immediately resolves across instances; lost mapping ack, replay and collision checks pass"
+			"Short invite immediately resolves across instances; lost mapping ack, replay and collision checks pass",
 		)
 		const id = admission.credential.roomId,
 			host = credential(admission)
@@ -135,11 +123,7 @@ test(
 			inviteCode: admission.invite.code,
 		})
 		const guest = credential(guestAdmission)
-		async function send(
-			service: ProposalService,
-			actor: typeof host,
-			command: any
-		) {
+		async function send(service: ProposalService, actor: typeof host, command: any) {
 			const s = await service.read(id, actor)
 			return service.command(id, actor, {
 				commandId: randomBytes(16).toString("hex"),
@@ -205,10 +189,7 @@ test(
 			command: vote(hs),
 		}
 		failHead = true
-		await assert.rejects(
-			a.command(id, host, hostEnvelope as any),
-			/Injected crash/
-		)
+		await assert.rejects(a.command(id, host, hostEnvelope as any), /Injected crash/)
 		assert.equal((await b.read(id, host)).own.votes.length, 0)
 		const before = statements.length
 		loseChild = true
@@ -226,19 +207,14 @@ test(
 		assert.equal(after.shared.matches.length, 1)
 		assert.equal((await a.read(id, guest)).own.votes[0].value, "watch")
 		assert.ok(
-			!statements
-				.slice(before)
-				.some((x) => x.startsWith("INSERT INTO doc.yepwatch_candidate ")),
-			"Voting must not rewrite the deck"
+			!statements.slice(before).some((x) => x.startsWith("INSERT INTO doc.yepwatch_candidate ")),
+			"Voting must not rewrite the deck",
 		)
 		assert.ok(
 			!statements.some((x) => /\bpayload\b/i.test(x)),
-			"Release queries contain no generic payload"
+			"Release queries contain no generic payload",
 		)
-		assert.equal(
-			(await a.command(id, host, hostEnvelope as any)).receipt.replayed,
-			true
-		)
+		assert.equal((await a.command(id, host, hostEnvelope as any)).receipt.replayed, true)
 		s = await a.read(id, host)
 		await send(a, host, {
 			type: "propose",
@@ -265,7 +241,7 @@ test(
 					return proposalFixtureCatalog.recheck(room, item)
 				},
 			},
-			secret
+			secret,
 		)
 		s = await delayed.read(id, guest)
 		const approving = send(delayed, guest, {
@@ -306,38 +282,35 @@ test(
 		assert.equal(done.shared.phase, "decided")
 		assert.equal(done.shared.decision?.candidateId, candidate)
 		await sql(
-			"REFRESH TABLE doc.yepwatch_room,doc.yepwatch_participant,doc.yepwatch_vote,doc.yepwatch_proposal,doc.yepwatch_decision"
+			"REFRESH TABLE doc.yepwatch_room,doc.yepwatch_participant,doc.yepwatch_vote,doc.yepwatch_proposal,doc.yepwatch_decision",
 		)
 		const copy = (await repo.read(id))!
 		copy.room.candidates[0].identity.tmdbId = 999999
-		assert.notEqual(
-			(await repo.read(id))!.room.candidates[0].identity.tmdbId,
-			999999
-		)
+		assert.notEqual((await repo.read(id))!.room.candidates[0].identity.tmdbId, 999999)
 		const liveVotes = (
 			await sql(
 				`SELECT p.participant_id,v.candidate_id,v.choice FROM doc.yepwatch_room r JOIN doc.yepwatch_participant p ON p.record_id=ANY(r.participant_records) JOIN doc.yepwatch_vote v ON v.record_id=ANY(p.vote_records) WHERE r.id=?`,
-				[id]
+				[id],
 			)
 		).rows
 		assert.equal(liveVotes.length, 3)
 		assert.ok(liveVotes.every((r) => r[2] === "watch"))
 		const counts = (
 			await sql(
-				"SELECT table_name FROM information_schema.tables WHERE table_schema='doc' AND table_name LIKE 'yepwatch_%' ORDER BY table_name"
+				"SELECT table_name FROM information_schema.tables WHERE table_schema='doc' AND table_name LIKE 'yepwatch_%' ORDER BY table_name",
 			)
 		).rows
 		assert.equal(counts.length, 23)
 		const badColumns = (
 			await sql(
-				"SELECT table_name,column_name FROM information_schema.columns WHERE table_schema='doc' AND table_name LIKE 'yepwatch_%' AND column_name='payload'"
+				"SELECT table_name,column_name FROM information_schema.columns WHERE table_schema='doc' AND table_name LIKE 'yepwatch_%' AND column_name='payload'",
 			)
 		).rows
 		assert.equal(badColumns.length, 0)
 		await assert.rejects(
 			sql(
-				"INSERT INTO doc.yepwatch_vote (record_id,room_id,generation,expires_at,participant_id,candidate_id,choice,revision) VALUES ('bad','bad',0,2000000000000,'p','c','veto',0)"
-			)
+				"INSERT INTO doc.yepwatch_vote (record_id,room_id,generation,expires_at,participant_id,candidate_id,choice,revision) VALUES ('bad','bad',0,2000000000000,'p','c','veto',0)",
+			),
 		)
 		await sql("UPDATE doc.yepwatch_room SET constraints=? WHERE id=?", [
 			{ kinds: ["movie"], maxMinutes: null, moods: [] },
@@ -347,7 +320,7 @@ test(
 			sql("UPDATE doc.yepwatch_room SET constraints=? WHERE id=?", [
 				{ kinds: ["movie"], maxMinutes: null, moods: [], unexpected: "x" },
 				id,
-			])
+			]),
 		)
 		for (const table of Object.values(tables))
 			assert.ok(tableDdl(table, 0).includes("column_policy='strict'"))
@@ -374,58 +347,102 @@ test(
 			},
 		]
 		assert.equal(await repo.compareAndSwap(current, linked, false), true)
-		const memberAccount = { userId: "local-member-fixture", sessionId: "typed-member-session", expiresAt: Date.now() + 600000 }
-        const memberAdmission = await a.resumeAccount(id, memberAccount)
-        Object.assign(host, memberAdmission.credential, { accountId: memberAccount.userId, sessionId: memberAccount.sessionId })
-        const cold = (await new RelationalProposalRepository(sql, secret).read(id))!
-		assert.equal(
-			cold.room.participants[0].memberGrant?.accessToken,
-			"test-grant-secret-only"
-		)
+		const memberAccount = {
+			userId: "local-member-fixture",
+			sessionId: "typed-member-session",
+			expiresAt: Date.now() + 600000,
+		}
+		const memberAdmission = await a.resumeAccount(id, memberAccount)
+		Object.assign(host, memberAdmission.credential, {
+			accountId: memberAccount.userId,
+			sessionId: memberAccount.sessionId,
+		})
+		const cold = (await new RelationalProposalRepository(sql, secret).read(id))!
+		assert.equal(cold.room.participants[0].memberGrant?.accessToken, "test-grant-secret-only")
 		assert.equal(cold.room.memberIntents?.[0].verifier, "local-verifier-secret")
-		await sql(
-			"REFRESH TABLE doc.yepwatch_member_grant,doc.yepwatch_member_intent"
-		)
-		const encrypted = (
-			await sql("SELECT access_token_ciphertext FROM doc.yepwatch_member_grant")
-		).rows
+		await sql("REFRESH TABLE doc.yepwatch_member_grant,doc.yepwatch_member_intent")
+		const encrypted = (await sql("SELECT access_token_ciphertext FROM doc.yepwatch_member_grant"))
+			.rows
 		assert.ok(encrypted.length > 0)
-		assert.ok(
-			encrypted.every((r) => !String(r[0]).includes("test-grant-secret-only"))
-		)
+		assert.ok(encrypted.every((r) => !String(r[0]).includes("test-grant-secret-only")))
 
-        const phone = { userId: "typed-account", sessionId: "typed-phone", expiresAt: Date.now() + 86400000 }
-        const pc = { ...phone, sessionId: "typed-pc" }
-        const accountRoom = await a.create(request("Account host"), phone)
-        const accountId = accountRoom.credential.roomId
-        const otherDevice = await b.resumeAccount(accountId, pc)
-        assert.equal(otherDevice.credential.participantId, accountRoom.credential.participantId)
-        assert.equal((await b.accountHome(pc)).rooms.length, 1, "account room locator survives separate repository instances")
-        const scopedHost = { ...accountRoom.credential, accountId: phone.userId, sessionId: phone.sessionId }
-        const sendAccount = async (command: RoomCommand) => {
-          const state = await a.read(accountId, scopedHost)
-          return a.command(accountId, scopedHost, { commandId: randomBytes(16).toString("hex"), sequence: state.own.nextSequence, command })
-        }
-        let accountState = (await sendAccount({ type: "setup", expectedContextVersion: 1,
-          screens: [{ id: "room", label: "Room", country: "DE", serviceIds: [1], confirmed: true }],
-          constraints: { kinds: ["movie"], moods: [], maxMinutes: null }, screenId: "room" })).snapshot
-        accountState = (await sendAccount({ type: "start", expectedContextVersion: accountState.shared.contextVersion, expectedRosterVersion: accountState.shared.rosterVersion, hostReady: true })).snapshot
-        const accountCandidate = accountState.shared.candidates[0].id
-        accountState = (await sendAccount({ type: "vote", candidateId: accountCandidate, expectedVoteRevision: 0, generation: accountState.shared.generation, value: "watch" })).snapshot
-        accountState = (await sendAccount({ type: "propose", candidateId: accountCandidate, expectedRosterVersion: accountState.shared.rosterVersion, expectedProposalVersion: accountState.shared.proposalVersion, generation: accountState.shared.generation })).snapshot
-        assert.equal(accountState.shared.phase, "decided")
-        const accountHistory = (await b.accountHome(pc)).decisions
-        assert.equal(accountHistory.length, 1)
-        await sendAccount({ type: "restart", expectedRevision: accountState.shared.revision })
-        assert.deepEqual((await b.accountHome(pc)).decisions, accountHistory)
-        await b.logoutAccount(pc)
-        assert.equal(await otherRepo.accountStore.sessionActive(pc.sessionId), false)
+		const phone = {
+			userId: "typed-account",
+			sessionId: "typed-phone",
+			expiresAt: Date.now() + 86400000,
+		}
+		const pc = { ...phone, sessionId: "typed-pc" }
+		const accountRoom = await a.create(request("Account host"), phone)
+		const accountId = accountRoom.credential.roomId
+		const otherDevice = await b.resumeAccount(accountId, pc)
+		assert.equal(otherDevice.credential.participantId, accountRoom.credential.participantId)
+		assert.equal(
+			(await b.accountHome(pc)).rooms.length,
+			1,
+			"account room locator survives separate repository instances",
+		)
+		const scopedHost = {
+			...accountRoom.credential,
+			accountId: phone.userId,
+			sessionId: phone.sessionId,
+		}
+		const sendAccount = async (command: RoomCommand) => {
+			const state = await a.read(accountId, scopedHost)
+			return a.command(accountId, scopedHost, {
+				commandId: randomBytes(16).toString("hex"),
+				sequence: state.own.nextSequence,
+				command,
+			})
+		}
+		let accountState = (
+			await sendAccount({
+				type: "setup",
+				expectedContextVersion: 1,
+				screens: [{ id: "room", label: "Room", country: "DE", serviceIds: [1], confirmed: true }],
+				constraints: { kinds: ["movie"], moods: [], maxMinutes: null },
+				screenId: "room",
+			})
+		).snapshot
+		accountState = (
+			await sendAccount({
+				type: "start",
+				expectedContextVersion: accountState.shared.contextVersion,
+				expectedRosterVersion: accountState.shared.rosterVersion,
+				hostReady: true,
+			})
+		).snapshot
+		const accountCandidate = accountState.shared.candidates[0].id
+		accountState = (
+			await sendAccount({
+				type: "vote",
+				candidateId: accountCandidate,
+				expectedVoteRevision: 0,
+				generation: accountState.shared.generation,
+				value: "watch",
+			})
+		).snapshot
+		accountState = (
+			await sendAccount({
+				type: "propose",
+				candidateId: accountCandidate,
+				expectedRosterVersion: accountState.shared.rosterVersion,
+				expectedProposalVersion: accountState.shared.proposalVersion,
+				generation: accountState.shared.generation,
+			})
+		).snapshot
+		assert.equal(accountState.shared.phase, "decided")
+		const accountHistory = (await b.accountHome(pc)).decisions
+		assert.equal(accountHistory.length, 1)
+		await sendAccount({ type: "restart", expectedRevision: accountState.shared.revision })
+		assert.deepEqual((await b.accountHome(pc)).decisions, accountHistory)
+		await b.logoutAccount(pc)
+		assert.equal(await otherRepo.accountStore.sessionActive(pc.sessionId), false)
 
 		docker("restart", name)
 		sql = crateSql(
 			`http://127.0.0.1:${docker("port", name, "4200/tcp").split(":").at(-1)}`,
 			"crate",
-			""
+			"",
 		)
 		for (let i = 0; ; i++) {
 			try {
@@ -440,32 +457,41 @@ test(
 		const restarted = new ProposalService(
 			new RelationalProposalRepository(sql, secret),
 			proposalFixtureCatalog,
-			secret
+			secret,
 		)
+		assert.deepEqual((await restarted.read(id, host)).shared.decision, done.shared.decision)
 		assert.deepEqual(
-			(await restarted.read(id, host)).shared.decision,
-			done.shared.decision
+			(await restarted.accountHome(phone)).decisions,
+			accountHistory,
+			"account history survives database restart",
 		)
-        assert.deepEqual((await restarted.accountHome(phone)).decisions, accountHistory, "account history survives database restart")
-        assert.equal(await restarted.accounts.sessionActive(pc.sessionId), false, "device logout survives database restart")
+		assert.equal(
+			await restarted.accounts.sessionActive(pc.sessionId),
+			false,
+			"device logout survives database restart",
+		)
 		await send(restarted, guest, { type: "leave" })
 		const beforeRound = (await new RelationalProposalRepository(sql, secret).read(id))!.room
 		const currentRound = await restarted.read(id, host)
 		await send(restarted, host, { type: "restart", expectedRevision: currentRound.shared.revision })
 		const nextRound = (await new RelationalProposalRepository(sql, secret).read(id))!.room
-		assert.equal(nextRound.phase, "setup", "Start again publishes a readable new round after a voter leaves")
+		assert.equal(
+			nextRound.phase,
+			"setup",
+			"Start again publishes a readable new round after a voter leaves",
+		)
 		assert.equal(nextRound.generation, beforeRound.generation + 1)
 		assert.deepEqual(nextRound.candidates, [])
 		assert.deepEqual(nextRound.history, beforeRound.history)
-		const departed = nextRound.participants.find(p => p.id === guest.participantId)!
+		const departed = nextRound.participants.find((p) => p.id === guest.participantId)!
 		assert.notEqual(departed.leftAt, null)
 		assert.deepEqual(departed.votes, {}, "departed votes cannot reference the retired deck")
 		assert.equal(departed.lastVotedId, null)
 		assert.equal(departed.approvedProposalVersion, null)
 		t.diagnostic(
-			"Account identity, session receipts, persistent history and logout; concurrent votes, interrupted publication, lost child/head acknowledgements, exact retry, final decision and database restart PASS"
+			"Account identity, session receipts, persistent history and logout; concurrent votes, interrupted publication, lost child/head acknowledgements, exact retry, final decision and database restart PASS",
 		)
-	}
+	},
 )
 
 test(
@@ -473,7 +499,20 @@ test(
 	{ skip: !enabled, timeout: 180000 },
 	async (t) => {
 		const name = `yepwatch-relational-sweep-test-${process.pid}`
-		docker("run", "-d", "--name", name, "-p", "127.0.0.1::4200", "-e", "CRATE_HEAP_SIZE=512m", "crate:6.4.6", "crate", "-Cdiscovery.type=single-node", "-Ccluster.name=" + name)
+		docker(
+			"run",
+			"-d",
+			"--name",
+			name,
+			"-p",
+			"127.0.0.1::4200",
+			"-e",
+			"CRATE_HEAP_SIZE=512m",
+			"crate:6.4.6",
+			"crate",
+			"-Cdiscovery.type=single-node",
+			"-Ccluster.name=" + name,
+		)
 		t.after(() => {
 			docker("rm", "-f", name)
 		})
@@ -496,27 +535,51 @@ test(
 		let answer = false
 		const interpret = (prompt: string) =>
 			answer
-				? Promise.resolve({ prompt, attributes: [{ text: "heist", kind: "attribute" as const }], rankedKeys: [1], interpretedAt: 7 })
+				? Promise.resolve({
+						prompt,
+						attributes: [{ text: "heist", kind: "attribute" as const }],
+						rankedKeys: [1],
+						interpretedAt: 7,
+					})
 				: new Promise<never>(() => {}) // the creating instance "crashes" mid-search
 		const catalog = {
 			...proposalFixtureCatalog,
 			async metadata() {
-				return { countries: [{ code: "DE", name: "Germany" }], services: [{ id: 1, name: "1", logoUrl: null }], moods: [] }
+				return {
+					countries: [{ code: "DE", name: "Germany" }],
+					services: [{ id: 1, name: "1", logoUrl: null }],
+					moods: [],
+				}
 			},
 		}
 		const service = new ProposalService(repo, catalog, secret, undefined, now, undefined, interpret)
-		const create = (idea?: string) => service.create({ ...request("Host"), setup: { country: "DE", ...(idea ? { idea } : {}) } })
+		const create = (idea?: string) =>
+			service.create({ ...request("Host"), setup: { country: "DE", ...(idea ? { idea } : {}) } })
 		const pending = await create("space heist")
 		const plain = await create()
 		const refresh = () => sql(`REFRESH TABLE ${tables.idea.name}, ${tables.room.name}`)
 		await refresh()
-		assert.deepEqual(await repo.stalePendingIdeas(now() - 15_000, now(), 50), [], "within the lease")
+		assert.deepEqual(
+			await repo.stalePendingIdeas(now() - 15_000, now(), 50),
+			[],
+			"within the lease",
+		)
 		offset = 16_000
-		assert.deepEqual(await repo.stalePendingIdeas(now() - 15_000, now(), 50), [pending.credential.roomId])
-		assert.deepEqual(await repo.stalePendingIdeas(now() - 15_000, now(), 50, pending.credential.roomId), [], "a cursor continues after its room")
+		assert.deepEqual(await repo.stalePendingIdeas(now() - 15_000, now(), 50), [
+			pending.credential.roomId,
+		])
+		assert.deepEqual(
+			await repo.stalePendingIdeas(now() - 15_000, now(), 50, pending.credential.roomId),
+			[],
+			"a cursor continues after its room",
+		)
 		assert.notEqual(plain.credential.roomId, pending.credential.roomId)
 		const expiresAt = (await repo.read(pending.credential.roomId))!.room.expiresAt
-		assert.deepEqual(await repo.stalePendingIdeas(now() - 15_000, expiresAt + 1, 50), [], "expired rooms are left out")
+		assert.deepEqual(
+			await repo.stalePendingIdeas(now() - 15_000, expiresAt + 1, 50),
+			[],
+			"expired rooms are left out",
+		)
 		answer = true
 		const sweeper = new ProposalService(repo, catalog, secret, undefined, now, undefined, interpret)
 		await sweeper.resumeStaleInterpretations()
@@ -526,7 +589,7 @@ test(
 		assert.deepEqual(await repo.stalePendingIdeas(now() - 15_000, now(), 50), [])
 		const room = (await repo.read(pending.credential.roomId))!.room
 		assert.deepEqual(room.ideas![0].attributes, [{ text: "heist", kind: "attribute" }])
-	}
+	},
 )
 
 test(
@@ -534,7 +597,20 @@ test(
 	{ skip: !enabled, timeout: 180000 },
 	async (t) => {
 		const name = `yepwatch-relational-publish-test-${process.pid}`
-		docker("run", "-d", "--name", name, "-p", "127.0.0.1::4200", "-e", "CRATE_HEAP_SIZE=512m", "crate:6.4.6", "crate", "-Cdiscovery.type=single-node", "-Ccluster.name=" + name)
+		docker(
+			"run",
+			"-d",
+			"--name",
+			name,
+			"-p",
+			"127.0.0.1::4200",
+			"-e",
+			"CRATE_HEAP_SIZE=512m",
+			"crate:6.4.6",
+			"crate",
+			"-Cdiscovery.type=single-node",
+			"-Ccluster.name=" + name,
+		)
 		t.after(() => {
 			docker("rm", "-f", name)
 		})
@@ -553,51 +629,88 @@ test(
 		const catalog = {
 			...proposalFixtureCatalog,
 			async metadata() {
-				return { countries: [{ code: "DE", name: "Germany" }], services: [{ id: 1, name: "1", logoUrl: null }], moods: [] }
+				return {
+					countries: [{ code: "DE", name: "Germany" }],
+					services: [{ id: 1, name: "1", logoUrl: null }],
+					moods: [],
+				}
 			},
 		}
 		const events: any[] = []
 		let roomReads = 0
 		const counting: Sql = async (stmt, args) => {
-			if (/^SELECT .* FROM doc\.yepwatch_room WHERE id=\?/s.test(stmt) && !stmt.startsWith("SELECT pending_revision")) roomReads++
+			if (
+				/^SELECT .* FROM doc\.yepwatch_room WHERE id=\?/s.test(stmt) &&
+				!stmt.startsWith("SELECT pending_revision")
+			)
+				roomReads++
 			return sql(stmt, args)
 		}
-		const service = new ProposalService(new RelationalProposalRepository(counting, secret), catalog, secret, async (e) => {
-			events.push(structuredClone(e))
-		})
+		const service = new ProposalService(
+			new RelationalProposalRepository(counting, secret),
+			catalog,
+			secret,
+			async (e) => {
+				events.push(structuredClone(e))
+			},
+		)
 		const host = await service.create(request("Host"))
 		const id = host.credential.roomId
 		const guest = await service.join(id, { ...request("Friend"), inviteCode: host.invite.code })
 		const send = async (who: any, command: any) => {
 			const s = await service.read(id, credential(who))
-			return service.command(id, credential(who), { commandId: randomBytes(16).toString("hex"), sequence: s.own.nextSequence, command })
+			return service.command(id, credential(who), {
+				commandId: randomBytes(16).toString("hex"),
+				sequence: s.own.nextSequence,
+				command,
+			})
 		}
 		let s = await service.read(id, credential(host))
-		await send(host, { type: "configure", expectedContextVersion: s.shared.contextVersion, country: "DE" })
+		await send(host, {
+			type: "configure",
+			expectedContextVersion: s.shared.contextVersion,
+			country: "DE",
+		})
 		await send(host, { type: "set_services", serviceIds: [1] })
 		s = await service.read(id, credential(host))
-		const started = await send(host, { type: "start", expectedContextVersion: s.shared.contextVersion, expectedRosterVersion: s.shared.rosterVersion, hostReady: true })
+		const started = await send(host, {
+			type: "start",
+			expectedContextVersion: s.shared.contextVersion,
+			expectedRosterVersion: s.shared.rosterVersion,
+			hostReady: true,
+		})
 		await new Promise((r) => setTimeout(r, 200))
 		const sequence = (await service.read(id, credential(guest))).own.nextSequence
 		const reads = roomReads
 		const voted = await service.command(id, credential(guest), {
 			commandId: randomBytes(16).toString("hex"),
 			sequence,
-			command: { type: "vote", generation: started.snapshot.shared.generation, candidateId: started.snapshot.shared.candidates[0].id, expectedVoteRevision: 0, value: "watch" },
+			command: {
+				type: "vote",
+				generation: started.snapshot.shared.generation,
+				candidateId: started.snapshot.shared.candidates[0].id,
+				expectedVoteRevision: 0,
+				value: "watch",
+			},
 		})
 		await new Promise((r) => setTimeout(r, 300))
 		assert.equal(roomReads - reads, 1, "only the command's own read of the room")
 		const event = events.find((e) => e.revision === voted.receipt.appliedRevision)
 		assert.ok(event && "snapshot" in event, "the vote published the committed room")
 		// Another instance (its own repository, nothing cached) reads the room as the gateway's refresh would.
-		const fresh = new ProposalService(new RelationalProposalRepository(sql, secret), catalog, secret)
+		const fresh = new ProposalService(
+			new RelationalProposalRepository(sql, secret),
+			catalog,
+			secret,
+		)
 		const attachment = await fresh.attach(id, (await fresh.ticket(id, credential(host))).ticket)
 		const views = await fresh.views(id, [attachment.lease])
 		assert.equal(views.snapshot?.revision, voted.receipt.appliedRevision)
 		assert.deepEqual(event.snapshot, views.snapshot)
-		const pending = (await sql("SELECT pending_revision FROM doc.yepwatch_room WHERE id=?", [id])).rows[0][0]
+		const pending = (await sql("SELECT pending_revision FROM doc.yepwatch_room WHERE id=?", [id]))
+			.rows[0][0]
 		assert.equal(Number(pending), 0, "acknowledged")
 		service.decks.forget(id)
 		fresh.decks.forget(id)
-	}
+	},
 )

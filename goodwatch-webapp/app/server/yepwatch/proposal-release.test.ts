@@ -1,26 +1,10 @@
 import { MemoryTicketStore } from "./proposal-tickets.ts"
-import {
-	controlFingerprint,
-	CONTROL_COLUMNS,
-	controlRow,
-} from "./proposal-release-control.ts"
+import { controlFingerprint, CONTROL_COLUMNS, controlRow } from "./proposal-release-control.ts"
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import {
-	releaseConfig,
-	loadReleaseSecrets,
-	type Env,
-} from "./proposal-release-config.ts"
-import {
-	createReleaseRuntime,
-	liveRoute,
-	RELEASE_HEALTH,
-} from "./proposal-release-runtime.ts"
-import {
-	storeMarker,
-	checkReleaseStore,
-	provisionReleaseStore,
-} from "./proposal-release-store.ts"
+import { releaseConfig, loadReleaseSecrets, type Env } from "./proposal-release-config.ts"
+import { createReleaseRuntime, liveRoute, RELEASE_HEALTH } from "./proposal-release-runtime.ts"
+import { storeMarker, checkReleaseStore, provisionReleaseStore } from "./proposal-release-store.ts"
 import { releaseHttp, RELEASE_KEEP_ALIVE_MS } from "./proposal-release-http.ts"
 import { CONTINUOUS_LIMITS } from "./continuous-types.ts"
 import type { Sql } from "./repository.server.ts"
@@ -35,7 +19,7 @@ test("An already initialized shared writer cannot survive configuration clearing
 	readonlyCatalogEnvironment(input)
 	assert.throws(
 		() => assertNoSharedCatalogWriter(() => ({ alreadyInitialized: true })),
-		/before isolating/
+		/before isolating/,
 	)
 	assert.doesNotThrow(() => assertNoSharedCatalogWriter(() => null))
 })
@@ -50,19 +34,10 @@ test("Source snapshot configuration is captured and all general cache-writer con
 	assert.equal(source.nodes.length, 2)
 	assert.equal(source.password, "reader-value")
 	assert.equal(source.username, "existing_reader")
-	for (const key of [
-		"REDIS_HOST",
-		"REDIS_HOST2",
-		"REDIS_HOST3",
-		"REDIS_USER",
-		"REDIS_PASS",
-	])
+	for (const key of ["REDIS_HOST", "REDIS_HOST2", "REDIS_HOST3", "REDIS_USER", "REDIS_PASS"])
 		assert.equal((input as Env)[key], undefined)
 	assert.equal(input.CRATE_HOSTS, "catalog.invalid")
-	assert.equal(
-		input.YEPWATCH_PROPOSAL_REVISION_REDIS_URL,
-		"redis://127.0.0.1:6379"
-	)
+	assert.equal(input.YEPWATCH_PROPOSAL_REVISION_REDIS_URL, "redis://127.0.0.1:6379")
 })
 function env(): Env {
 	return {
@@ -97,11 +72,11 @@ test("Guest release configuration loads named secret files before catalog import
 				...input,
 				TITLE_SNAPSHOT_REDIS_URL: "redis://sample.invalid",
 			}),
-		/must not configure/
+		/must not configure/,
 	)
 	assert.throws(
 		() => releaseConfig({ ...input, YEPWATCH_LOCAL_MEMBER_FIXTURE: "1" }),
-		/must not configure/
+		/must not configure/,
 	)
 })
 test("Readiness stays red indefinitely without loaded snapshot; probes recover and dependency loss never reports green", async () => {
@@ -117,9 +92,7 @@ test("Readiness stays red indefinitely without loaded snapshot; probes recover a
 		if (!stmt.startsWith("SELECT")) writes++
 		return {
 			rows: stmt.includes(
-				"SELECT " +
-					CONTROL_COLUMNS.join(",") +
-					",_seq_no,_primary_term,CURRENT_TIMESTAMP"
+				"SELECT " + CONTROL_COLUMNS.join(",") + ",_seq_no,_primary_term,CURRENT_TIMESTAMP",
 			)
 				? [
 						[
@@ -132,16 +105,16 @@ test("Readiness stays red indefinitely without loaded snapshot; probes recover a
 										rooms: [],
 										admissions: [],
 										commands: [],
-									})[k]
+									})[k],
 							),
 							0,
 							1,
 							clock,
 						],
-				  ]
+					]
 				: stmt.includes("format_version")
-				? [[3, "test-key", storeMarker(secret), CONTINUOUS_LIMITS.roomMs]]
-				: [],
+					? [[3, "test-key", storeMarker(secret), CONTINUOUS_LIMITS.roomMs]]
+					: [],
 			rowcount: 0,
 		}
 	}
@@ -170,16 +143,14 @@ test("Readiness stays red indefinitely without loaded snapshot; probes recover a
 		await runtime.probe()
 		clock += 100000
 		assert.equal(runtime.readiness().ready, false)
-		const blocked = await runtime.handler(
-			new Request("http://api" + RELEASE_HEALTH.ready)
-		)
+		const blocked = await runtime.handler(new Request("http://api" + RELEASE_HEALTH.ready))
 		assert.equal(blocked.status, 503)
 		const admission = await runtime.handler(
 			new Request("http://api/api/yepwatch/v1/proposal/rooms", {
 				method: "POST",
 				headers: { "content-type": "application/json" },
 				body: "{}",
-			})
+			}),
 		)
 		assert.equal(admission.status, 503)
 		assert.equal(writes, 0)
@@ -194,9 +165,8 @@ test("Readiness stays red indefinitely without loaded snapshot; probes recover a
 		assert.equal(runtime.readiness().ready, false)
 		assert.equal(runtime.initialized(), true)
 		assert.equal(
-			(await runtime.handler(new Request("http://api" + RELEASE_HEALTH.live)))
-				.status,
-			200
+			(await runtime.handler(new Request("http://api" + RELEASE_HEALTH.live))).status,
+			200,
 		)
 		catalogOk = true
 		busOk = false
@@ -217,11 +187,30 @@ test("A startup hold keeps early requests waiting; the live channel's routes go 
 	let count = 0
 	const config = releaseConfig(env())
 	const sql: Sql = async (stmt) => ({
-		rows: stmt.includes("SELECT " + CONTROL_COLUMNS.join(",") + ",_seq_no,_primary_term,CURRENT_TIMESTAMP")
-			? [[...CONTROL_COLUMNS.map((k) => controlRow({ format: 1, fingerprint: controlFingerprint(config.control), window: -1, rooms: [], admissions: [], commands: [] })[k]), 0, 1, Date.now()]]
+		rows: stmt.includes(
+			"SELECT " + CONTROL_COLUMNS.join(",") + ",_seq_no,_primary_term,CURRENT_TIMESTAMP",
+		)
+			? [
+					[
+						...CONTROL_COLUMNS.map(
+							(k) =>
+								controlRow({
+									format: 1,
+									fingerprint: controlFingerprint(config.control),
+									window: -1,
+									rooms: [],
+									admissions: [],
+									commands: [],
+								})[k],
+						),
+						0,
+						1,
+						Date.now(),
+					],
+				]
 			: stmt.includes("format_version")
-			? [[3, "test-key", storeMarker(secret), CONTINUOUS_LIMITS.roomMs]]
-			: [],
+				? [[3, "test-key", storeMarker(secret), CONTINUOUS_LIMITS.roomMs]]
+				: [],
 		rowcount: 0,
 	})
 	const catalog: ProposalCatalog = {
@@ -238,25 +227,41 @@ test("A startup hold keeps early requests waiting; the live channel's routes go 
 		bus: { ping: async () => {}, publish: async () => {} },
 		tickets: new MemoryTicketStore(),
 		startupHoldMs: 5000,
-		warm: new Promise<void>((resolve) => { warm = resolve }),
+		warm: new Promise<void>((resolve) => {
+			warm = resolve
+		}),
 	})
 	try {
 		await runtime.probe()
 		assert.equal(runtime.initialized(), false, "no snapshot yet")
 		assert.equal(runtime.roomsAnswer(), true)
 		// A realtime ticket is a live route: answered by the handler itself (no such room) without waiting for the snapshot.
-		const ticket = await runtime.handler(new Request(`http://api/api/yepwatch/v1/proposal/rooms/${"a".repeat(32)}/realtime-ticket`, {
-			method: "POST", headers: { "content-type": "application/json" }, body: "{}",
-		}))
+		const ticket = await runtime.handler(
+			new Request(`http://api/api/yepwatch/v1/proposal/rooms/${"a".repeat(32)}/realtime-ticket`, {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: "{}",
+			}),
+		)
 		assert.notEqual(ticket.status, 503)
 		// The readiness answer waits for initialization too.
 		let readySettled = false
-		const ready = runtime.handler(new Request("http://api" + RELEASE_HEALTH.ready)).finally(() => { readySettled = true })
+		const ready = runtime.handler(new Request("http://api" + RELEASE_HEALTH.ready)).finally(() => {
+			readySettled = true
+		})
 		// An admission waits for the snapshot and the warm reads, then gets the handler's own answer.
 		let settled = false
-		const admission = runtime.handler(new Request("http://api/api/yepwatch/v1/proposal/rooms", {
-			method: "POST", headers: { "content-type": "application/json" }, body: "{}",
-		})).finally(() => { settled = true })
+		const admission = runtime
+			.handler(
+				new Request("http://api/api/yepwatch/v1/proposal/rooms", {
+					method: "POST",
+					headers: { "content-type": "application/json" },
+					body: "{}",
+				}),
+			)
+			.finally(() => {
+				settled = true
+			})
 		await new Promise((r) => setTimeout(r, 100))
 		assert.equal(settled, false, "held while the release initializes")
 		assert.equal(readySettled, false, "readiness held while the release initializes")
@@ -270,12 +275,21 @@ test("A startup hold keeps early requests waiting; the live channel's routes go 
 		assert.notEqual((await admission).status, 503)
 		// Draining ends a hold at once with the retryable refusal.
 		const late = createReleaseRuntime(config, {
-			sql, catalog, snapshot: () => null, catalogProbe: async () => {},
-			bus: { ping: async () => {}, publish: async () => {} }, tickets: new MemoryTicketStore(), startupHoldMs: 5000,
+			sql,
+			catalog,
+			snapshot: () => null,
+			catalogProbe: async () => {},
+			bus: { ping: async () => {}, publish: async () => {} },
+			tickets: new MemoryTicketStore(),
+			startupHoldMs: 5000,
 		})
-		const held = late.handler(new Request("http://api/api/yepwatch/v1/proposal/rooms", {
-			method: "POST", headers: { "content-type": "application/json" }, body: "{}",
-		}))
+		const held = late.handler(
+			new Request("http://api/api/yepwatch/v1/proposal/rooms", {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: "{}",
+			}),
+		)
 		late.drain()
 		assert.equal((await held).status, 503)
 		late.stop()
@@ -285,34 +299,97 @@ test("A startup hold keeps early requests waiting; the live channel's routes go 
 })
 test("A room read before the release is initialized starts no idea takeover; after it, reads do again", async () => {
 	const { ProposalService } = await import("./proposal-service.server.ts")
-	const { ProposalMemoryRepository, proposalFixtureCatalog } = await import("./proposal-test-support.ts")
-	const { PENDING_IDEA_ATTRIBUTE } = await import("../../../packages/yepwatch-contracts/proposal.ts")
+	const { ProposalMemoryRepository, proposalFixtureCatalog } =
+		await import("./proposal-test-support.ts")
+	const { PENDING_IDEA_ATTRIBUTE } =
+		await import("../../../packages/yepwatch-contracts/proposal.ts")
 	const config = releaseConfig(env())
 	const sql: Sql = async (stmt) => ({
-		rows: stmt.includes("SELECT " + CONTROL_COLUMNS.join(",") + ",_seq_no,_primary_term,CURRENT_TIMESTAMP")
-			? [[...CONTROL_COLUMNS.map((k) => controlRow({ format: 1, fingerprint: controlFingerprint(config.control), window: -1, rooms: [], admissions: [], commands: [] })[k]), 0, 1, Date.now()]]
+		rows: stmt.includes(
+			"SELECT " + CONTROL_COLUMNS.join(",") + ",_seq_no,_primary_term,CURRENT_TIMESTAMP",
+		)
+			? [
+					[
+						...CONTROL_COLUMNS.map(
+							(k) =>
+								controlRow({
+									format: 1,
+									fingerprint: controlFingerprint(config.control),
+									window: -1,
+									rooms: [],
+									admissions: [],
+									commands: [],
+								})[k],
+						),
+						0,
+						1,
+						Date.now(),
+					],
+				]
 			: stmt.includes("format_version")
-			? [[3, "test-key", storeMarker(secret), CONTINUOUS_LIMITS.roomMs]]
-			: [],
+				? [[3, "test-key", storeMarker(secret), CONTINUOUS_LIMITS.roomMs]]
+				: [],
 		rowcount: 0,
 	})
 	const repo = new ProposalMemoryRepository()
 	const seed = new ProposalService(repo, proposalFixtureCatalog, secret)
-	const admitted = await seed.create({ contractVersion: 3, commandId: crypto.randomUUID(), admissionSecret: "a".repeat(43), nickname: "Host" })
+	const admitted = await seed.create({
+		contractVersion: 3,
+		commandId: crypto.randomUUID(),
+		admissionSecret: "a".repeat(43),
+		nickname: "Host",
+	})
 	const room = repo.rows.get(admitted.credential.roomId)!.room
 	// An idea whose search lease ran out (a deploy took its process away): any reader would take it over.
-	room.ideas = [{ id: "idea-1", authorId: room.hostId, text: "space heist", on: true, attributes: [{ ...PENDING_IDEA_ATTRIBUTE }], rankedKeys: [], interpretedAt: Date.now() - 600_000 } as never]
+	room.ideas = [
+		{
+			id: "idea-1",
+			authorId: room.hostId,
+			text: "space heist",
+			on: true,
+			attributes: [{ ...PENDING_IDEA_ATTRIBUTE }],
+			rankedKeys: [],
+			interpretedAt: Date.now() - 600_000,
+		} as never,
+	]
 	let count = 0
 	const runtime = createReleaseRuntime(config, {
-		sql, catalog: proposalFixtureCatalog, snapshot: () => (count ? { count, version: "full" } : null), catalogProbe: async () => {},
-		bus: { ping: async () => {}, publish: async () => {} }, tickets: new MemoryTicketStore(), startupHoldMs: 1000,
+		sql,
+		catalog: proposalFixtureCatalog,
+		snapshot: () => (count ? { count, version: "full" } : null),
+		catalogProbe: async () => {},
+		bus: { ping: async () => {}, publish: async () => {} },
+		tickets: new MemoryTicketStore(),
+		startupHoldMs: 1000,
 	})
-	const service = runtime.service as unknown as { repository: Record<string, unknown>; guard: unknown; interpret: unknown; interpretationsIdle(): Promise<void> }
-	for (const method of ["read", "compareAndSwap", "acknowledge"]) service.repository[method] = (repo as unknown as Record<string, (...a: unknown[]) => unknown>)[method].bind(repo)
+	const service = runtime.service as unknown as {
+		repository: Record<string, unknown>
+		guard: unknown
+		interpret: unknown
+		interpretationsIdle(): Promise<void>
+	}
+	for (const method of ["read", "compareAndSwap", "acknowledge"])
+		service.repository[method] = (repo as unknown as Record<string, (...a: unknown[]) => unknown>)[
+			method
+		].bind(repo)
 	service.guard = undefined
 	let searches = 0
-	service.interpret = async () => { searches++; return null }
-	const read = () => runtime.handler(new Request(`http://api/api/yepwatch/v1/proposal/rooms/${room.id}/realtime-ticket`, { method: "POST", headers: { authorization: "Bearer invalid", "x-yepwatch-participant": room.hostId, "content-type": "application/json" }, body: "{}" }))
+	service.interpret = async () => {
+		searches++
+		return null
+	}
+	const read = () =>
+		runtime.handler(
+			new Request(`http://api/api/yepwatch/v1/proposal/rooms/${room.id}/realtime-ticket`, {
+				method: "POST",
+				headers: {
+					authorization: "Bearer invalid",
+					"x-yepwatch-participant": room.hostId,
+					"content-type": "application/json",
+				},
+				body: "{}",
+			}),
+		)
 	try {
 		await runtime.probe()
 		assert.equal(runtime.initialized(), false)
@@ -333,9 +410,24 @@ test("A room read before the release is initialized starts no idea takeover; aft
 test("Live routes: the realtime ticket and the gateway's attach/view/views, nothing else (not the room read)", () => {
 	const id = "b".repeat(32)
 	const p = "/api/yepwatch/v1/proposal"
-	for (const [method, path] of [["POST", `${p}/rooms/${id}/realtime-ticket`], ["POST", `${p}/realtime/internal/attach`], ["POST", `${p}/realtime/internal/view`], ["POST", `${p}/realtime/internal/views`]])
+	for (const [method, path] of [
+		["POST", `${p}/rooms/${id}/realtime-ticket`],
+		["POST", `${p}/realtime/internal/attach`],
+		["POST", `${p}/realtime/internal/view`],
+		["POST", `${p}/realtime/internal/views`],
+	])
 		assert.equal(liveRoute(method, path), true, `${method} ${path}`)
-	for (const [method, path] of [["GET", `${p}/rooms/${id}`], ["POST", `${p}/rooms`], ["POST", `${p}/rooms/${id}/commands`], ["POST", `${p}/rooms/${id}/join`], ["GET", `${p}/rooms/${id}/member`], ["POST", `${p}/rooms/${id}`], ["GET", `${p}/rooms/${id}/realtime-ticket`], ["GET", `${p}/catalog/metadata`], ["GET", `${p}/rooms/short`]])
+	for (const [method, path] of [
+		["GET", `${p}/rooms/${id}`],
+		["POST", `${p}/rooms`],
+		["POST", `${p}/rooms/${id}/commands`],
+		["POST", `${p}/rooms/${id}/join`],
+		["GET", `${p}/rooms/${id}/member`],
+		["POST", `${p}/rooms/${id}`],
+		["GET", `${p}/rooms/${id}/realtime-ticket`],
+		["GET", `${p}/catalog/metadata`],
+		["GET", `${p}/rooms/short`],
+	])
 		assert.equal(liveRoute(method, path), false, `${method} ${path}`)
 })
 test("Operator provisioning is explicit and idempotent; ordinary startup only reads table configuration", async () => {
@@ -349,10 +441,10 @@ test("Operator provisioning is explicit and idempotent; ordinary startup only re
 				? [["proposal3"]]
 				: []
 			: stmt.includes("SELECT format_version")
-			? installed
-				? [[3, "test-key", storeMarker(secret), CONTINUOUS_LIMITS.roomMs]]
+				? installed
+					? [[3, "test-key", storeMarker(secret), CONTINUOUS_LIMITS.roomMs]]
+					: []
 				: []
-			: []
 		return { rows, rowcount: 1 }
 	}
 	await provisionReleaseStore(sql, 0, "test-key", secret)
@@ -372,7 +464,7 @@ test("Container listener uses configured bind/port and preserves Secure HttpOnly
 				},
 			}),
 		"127.0.0.1",
-		0
+		0,
 	)
 	try {
 		const { port } = server.address() as { port: number }
@@ -414,11 +506,11 @@ test("shared Redis uses explicit cluster nodes and separate messaging credential
 				...input,
 				YEPWATCH_PROPOSAL_REVISION_REDIS_URL: "redis://localhost:6379",
 			}),
-		/not both/
+		/not both/,
 	)
 	assert.throws(
 		() => releaseConfig({ ...input, YEPWATCH_PROPOSAL_REDIS_PASSWORD: "" }),
-		/dedicated/
+		/dedicated/,
 	)
 	assert.throws(
 		() =>
@@ -426,6 +518,6 @@ test("shared Redis uses explicit cluster nodes and separate messaging credential
 				...input,
 				YEPWATCH_PROPOSAL_REDIS_NODES: '[{"host":"r","port":0}]',
 			}),
-		/Invalid/
+		/Invalid/,
 	)
 })

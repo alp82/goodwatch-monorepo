@@ -1,4 +1,4 @@
-import { expiredRoundOutcomes } from './proposal-expired-outcomes.ts'
+import { expiredRoundOutcomes } from "./proposal-expired-outcomes.ts"
 import { TasteProfiles, SqlProfileStore } from "./proposal-taste-profile.ts"
 import { profileTasteSource } from "./proposal-profile-signals.ts"
 import type { RoomTasteSource } from "./proposal-person-signal.ts"
@@ -8,8 +8,8 @@ import { roomSearch } from "./proposal-intent.ts"
 import { releaseMembers } from "./proposal-release-members.ts"
 import type { ContinuousMembers } from "./continuous-members.server.ts"
 import { ReleaseControl } from "./proposal-release-control.ts"
-import { SqlCreationQuotas } from './proposal-creation-quota.ts'
-import { RoomRetention, cleanupRounds, hasDeletions } from './proposal-room-retention.ts'
+import { SqlCreationQuotas } from "./proposal-creation-quota.ts"
+import { RoomRetention, cleanupRounds, hasDeletions } from "./proposal-room-retention.ts"
 import {
 	API_PREFIX,
 	REVISION_CHANNEL,
@@ -41,8 +41,8 @@ export interface ReleaseDependencies {
 	memberCatalog?: (members?: ContinuousMembers, profiles?: RoomTasteSource) => ProposalCatalog
 	snapshot(): { count: number; version: string } | null
 	catalogProbe(): Promise<void>
-  profileSnapshot?: () => TitleSnapshot | null
-  profileDisplays?: (keys: number[]) => Promise<Map<number, TasteCard>>
+	profileSnapshot?: () => TitleSnapshot | null
+	profileDisplays?: (keys: number[]) => Promise<Map<number, TasteCard>>
 	/** The messaging connection: revision hints. */
 	bus: {
 		ping(): Promise<unknown>
@@ -81,23 +81,36 @@ export interface ReleaseDependencies {
 const LIVE_TICKET = new RegExp(`^${API_PREFIX}/rooms/[A-Za-z0-9_-]{32}/realtime-ticket$`)
 export function liveRoute(method: string, path: string) {
 	if (method !== "POST") return false
-	return path === paths.realtimeAttach || path === paths.realtimeView || path === paths.realtimeViews || LIVE_TICKET.test(path)
+	return (
+		path === paths.realtimeAttach ||
+		path === paths.realtimeView ||
+		path === paths.realtimeViews ||
+		LIVE_TICKET.test(path)
+	)
 }
 /** No guest identities, fixtures, DDL or fail-open readiness. Normal handler behavior stays in its existing module. */
-export function createReleaseRuntime(
-	config: ReleaseConfig,
-	deps: ReleaseDependencies
-) {
+export function createReleaseRuntime(config: ReleaseConfig, deps: ReleaseDependencies) {
 	const now = deps.now ?? Date.now
 	const crateRepository = new RelationalProposalRepository(deps.sql, config.secret)
-	const profiles = deps.profileSnapshot && deps.profileDisplays ? new TasteProfiles(new SqlProfileStore(deps.sql), config.secret, deps.profileSnapshot, deps.profileDisplays, now) : undefined
-  const quotas = new SqlCreationQuotas(deps.sql, config.control.roomsPerPerson ?? 10)
+	const profiles =
+		deps.profileSnapshot && deps.profileDisplays
+			? new TasteProfiles(
+					new SqlProfileStore(deps.sql),
+					config.secret,
+					deps.profileSnapshot,
+					deps.profileDisplays,
+					now,
+				)
+			: undefined
+	const quotas = new SqlCreationQuotas(deps.sql, config.control.roomsPerPerson ?? 10)
 	let repository: ProposalRepository = crateRepository
 	let control: { check(): Promise<void> } & ConstructorParameters<typeof ProposalService>[5]
 	let history: HistorySync | undefined
 	if (deps.rooms) {
 		const rooms = deps.rooms
-		const deletions = new MirroredDeletionStore(rooms, crateRepository.deletionStore, () => history!.caughtUp())
+		const deletions = new MirroredDeletionStore(rooms, crateRepository.deletionStore, () =>
+			history!.caughtUp(),
+		)
 		const live = new ValkeyRoomRepository(rooms, crateRepository, config.secret, {
 			accounts: new ValkeyAccountRooms(rooms, crateRepository.accountStore, config.secret),
 			deletions,
@@ -112,16 +125,20 @@ export function createReleaseRuntime(
 			accounts: crateRepository.accountStore,
 			deletions,
 			retentionDays: config.roomRetentionDays,
-      followups: room => profiles?.recordDecision(room) ?? Promise.resolve(),
+			followups: (room) => profiles?.recordDecision(room) ?? Promise.resolve(),
 		})
 		repository = live
-		control = new ValkeyReleaseControl(rooms, config.control, deps.commands ?? new ValkeyCommandBudget(rooms), quotas)
+		control = new ValkeyReleaseControl(
+			rooms,
+			config.control,
+			deps.commands ?? new ValkeyCommandBudget(rooms),
+			quotas,
+		)
 	} else control = new ReleaseControl(deps.sql, config.control, quotas, deps.commands)
 	const members = config.member
 		? releaseMembers(repository, config.member, fetch, config.secret)
 		: undefined
-	if (members && !deps.memberCatalog)
-		throw new Error("Member catalog adapter required")
+	if (members && !deps.memberCatalog) throw new Error("Member catalog adapter required")
 	const tickets = deps.tickets
 	// Device profiles feed the same ranker as members' GoodWatch taste (profileTasteSource blends the two).
 	const taste = profiles && deps.memberCatalog ? profileTasteSource(profiles, members) : undefined
@@ -136,7 +153,7 @@ export function createReleaseRuntime(
 		Date.now,
 		control,
 		roomSearch(process.env),
-		{ tickets, profiles }
+		{ tickets, profiles },
 	)
 	// Rooms read before the release is initialized (the live routes, liveRoute) start no background work.
 	service.pauseInterpretations(true)
@@ -161,7 +178,10 @@ export function createReleaseRuntime(
 	/** With Valkey rooms, the Crate checks once started: they run on their own, never holding up a probe. */
 	let crateChecking: Promise<void> | undefined
 	function checkCrate() {
-		crateChecking ??= Promise.allSettled([deps.catalogProbe(), checkReleaseStore(deps.sql, config.keyId, config.secret)])
+		crateChecking ??= Promise.allSettled([
+			deps.catalogProbe(),
+			checkReleaseStore(deps.sql, config.keyId, config.secret),
+		])
 			.then(([catalog, store]) => {
 				checks.catalog = catalog.status === "fulfilled"
 				checks.history = store.status === "fulfilled"
@@ -182,16 +202,17 @@ export function createReleaseRuntime(
 				started ? Promise.resolve() : deps.catalogProbe(),
 				// Live rooms: in Valkey once its copies of Crate's tables are imported (the first probe imports them),
 				// otherwise the Crate store.
-				history ? control.check().then(() => history!.ensureMirrors()) : checkReleaseStore(deps.sql, config.keyId, config.secret),
+				history
+					? control.check().then(() => history!.ensureMirrors())
+					: checkReleaseStore(deps.sql, config.keyId, config.secret),
 				control.check(),
 				Promise.all([deps.bus.ping(), tickets.check?.()]),
 				// The Crate store (with Valkey rooms: the history copy). Needed to start, not to keep serving.
 				started ? Promise.resolve() : checkReleaseStore(deps.sql, config.keyId, config.secret),
 			])
-			for (const [i, key] of (
-				Object.keys(checks) as (keyof typeof checks)[]
-			).entries())
-				if (!started || (key !== "catalog" && key !== "history")) checks[key] = results[i].status === "fulfilled"
+			for (const [i, key] of (Object.keys(checks) as (keyof typeof checks)[]).entries())
+				if (!started || (key !== "catalog" && key !== "history"))
+					checks[key] = results[i].status === "fulfilled"
 			checkedAt = now()
 			if (Object.values(checks).every(Boolean) && !!deps.snapshot()?.count) {
 				if (!initialized) history?.start()
@@ -223,13 +244,13 @@ export function createReleaseRuntime(
 		return !draining
 	}
 	function readiness() {
-		const recent =
-			checkedAt !== null &&
-			now() - checkedAt <= Math.max(15000, config.probeMs * 3)
+		const recent = checkedAt !== null && now() - checkedAt <= Math.max(15000, config.probeMs * 3)
 		const loaded = !!deps.snapshot()?.count
 		// With Valkey rooms, Crate (the history copy, and the catalog queries once the snapshot is loaded) never takes a
 		// started API out of service: rooms keep working on Valkey.
-		const serving = Object.entries(checks).every(([k, ok]) => ok || ((k === "history" || k === "catalog") && history && initialized))
+		const serving = Object.entries(checks).every(
+			([k, ok]) => ok || ((k === "history" || k === "catalog") && history && initialized),
+		)
 		return {
 			ready: !draining && recent && loaded && serving,
 			status: draining ? "draining" : "running",
@@ -244,7 +265,7 @@ export function createReleaseRuntime(
 		if (path === RELEASE_HEALTH.live && request.method === "GET")
 			return Response.json(
 				{ status: "live", sourceCommit: config.sourceCommit },
-				{ headers: { "cache-control": "no-store" } }
+				{ headers: { "cache-control": "no-store" } },
 			)
 		if (path === RELEASE_HEALTH.ready && request.method === "GET") {
 			// While the release initializes, the readiness answer waits (startup hold) like any request: a deploy's
@@ -259,7 +280,11 @@ export function createReleaseRuntime(
 		// Keep setup/commands truthful while unavailable: do not admit rooms before any startup preflight succeeded.
 		// With a startup hold the request waits for that here; the live channel's routes only for the rooms.
 		const live = liveRoute(request.method, path)
-		if (!admitting() && !(live && roomsAnswer()) && !(await hold(() => admitting() || (live && roomsAnswer()))))
+		if (
+			!admitting() &&
+			!(live && roomsAnswer()) &&
+			!(await hold(() => admitting() || (live && roomsAnswer())))
+		)
 			return Response.json(
 				{
 					error: {
@@ -268,7 +293,7 @@ export function createReleaseRuntime(
 						retryable: true,
 					},
 				},
-				{ status: 503, headers: { "cache-control": "no-store" } }
+				{ status: 503, headers: { "cache-control": "no-store" } },
 			)
 		return handle(request)
 	}
@@ -288,22 +313,27 @@ export function createReleaseRuntime(
 	}, 2000)
 	repair.unref()
 	// Its own repository: rooms read for deletion stay out of the serving cache.
-	const retention = new RoomRetention(deps.sql, new RelationalProposalRepository(deps.sql, config.secret), {
-		retentionDays: config.roomRetentionDays,
-	})
+	const retention = new RoomRetention(
+		deps.sql,
+		new RelationalProposalRepository(deps.sql, config.secret),
+		{
+			retentionDays: config.roomRetentionDays,
+		},
+	)
 	// Every operation settles before the next round starts: a failed sibling never lets a second retention run begin.
 	const cleanup = cleanupRounds(
 		[
 			() => service.deletions.purgeDue(now()),
-      () => expiredRoundOutcomes(deps.sql, repository, now(), catalog.roundEnded),
+			() => expiredRoundOutcomes(deps.sql, repository, now(), catalog.roundEnded),
 			() => quotas.purgeExpired(),
-      () => profiles?.expire() ?? Promise.resolve(),
+			() => profiles?.expire() ?? Promise.resolve(),
 			async () => {
 				const report = await retention.run()
-				if (hasDeletions(report)) console.log(JSON.stringify({ event: "yepwatch_room_retention", ...report }))
+				if (hasDeletions(report))
+					console.log(JSON.stringify({ event: "yepwatch_room_retention", ...report }))
 			},
 		],
-		() => console.error("YepWatch cleanup will retry")
+		() => console.error("YepWatch cleanup will retry"),
 	)
 	const purge = setInterval(() => {
 		// Pending ideas whose lease ran out in rooms nobody reads (bounded; same takeover as a read).
@@ -326,7 +356,7 @@ export function createReleaseRuntime(
 		},
 		/** The history copy's loops, for shutdown (queued jobs stay in Valkey for the next process). */
 		history,
-    profiles,
+		profiles,
 		stop() {
 			clearInterval(timer)
 			clearInterval(repair)

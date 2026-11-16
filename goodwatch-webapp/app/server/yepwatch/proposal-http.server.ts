@@ -2,9 +2,9 @@ import { PROFILE_HEADER } from "../../../packages/yepwatch-contracts/proposal.ts
 import { profileAnswersSchema, ProfileConflict } from "./proposal-taste-profile.ts"
 import { timed, timedSync, withServerTiming } from "./server-timing.ts"
 import { z } from "zod"
-import { randomBytes } from 'node:crypto'
+import { randomBytes } from "node:crypto"
 import type { ContinuousMembers } from "./continuous-members.server.ts"
-import { requireNotDeleting } from './proposal-deletion.ts'
+import { requireNotDeleting } from "./proposal-deletion.ts"
 import {
 	API_PREFIX,
 	MEMBER_SESSION_HEADER,
@@ -35,8 +35,8 @@ export const MEMBER_COOKIE = "yepwatch3_member"
  */
 export const MEMBER_LINK_WAIT_MS = 1500
 export const MEMBER_INTENT_COOKIE = "yepwatch3_member_intent"
-export const CREATOR_COOKIE = 'yepwatch3_creator'
-export const CREATOR_HEADER = 'x-yepwatch-creator'
+export const CREATOR_COOKIE = "yepwatch3_creator"
+export const CREATOR_HEADER = "x-yepwatch-creator"
 export interface HttpOptions {
 	serviceSecret: string
 	allowedOrigins: string[]
@@ -47,9 +47,7 @@ export interface HttpOptions {
 }
 const INVITE_CARD = /^\/api\/yepwatch\/v1\/proposal\/invites\/([A-Za-z0-9._-]{1,200})\/card\.png$/
 async function body(request: Request) {
-	if (
-		!(request.headers.get("content-type") ?? "").startsWith("application/json")
-	)
+	if (!(request.headers.get("content-type") ?? "").startsWith("application/json"))
 		throw new RoomError("invalid_request", "JSON body required", 415)
 	const reader = request.body?.getReader()
 	if (!reader) throw new RoomError("invalid_request", "Body required", 400)
@@ -71,14 +69,9 @@ async function body(request: Request) {
 		throw new RoomError("invalid_request", "Malformed JSON", 400)
 	}
 }
-export function createProposalHandler(
-	service: ProposalService,
-	options: HttpOptions
-) {
+export function createProposalHandler(service: ProposalService, options: HttpOptions) {
 	if (options.serviceSecret.length < 32)
-		throw new Error(
-			"Gateway service secret must contain at least 32 characters"
-		)
+		throw new Error("Gateway service secret must contain at least 32 characters")
 	const allowed = new Set(options.allowedOrigins)
 	/** GoodWatch links in flight, per place and sign-in session (see `link`). */
 	const links = new Map<string, Promise<boolean>>()
@@ -99,11 +92,22 @@ export function createProposalHandler(
 		}
 		const reply = (data: unknown, status = 200) => {
 			deliverRenewal()
-			return new Response(timedSync("json", () => JSON.stringify(data, (key, value) =>
-				url.searchParams.get('matchesIn') !== '1' &&
-				['ins', 'inVersion', 'tiebreak', 'favorite'].includes(key) ? undefined : key === 'candidates' && Array.isArray(value) &&
-        !url.pathname.startsWith(`${API_PREFIX}/realtime/internal/`) && url.searchParams.get('candidateReasons') !== '1'
-          ? value.map(({ reason: _, ...card }) => card) : value)), { status, headers })
+			return new Response(
+				timedSync("json", () =>
+					JSON.stringify(data, (key, value) =>
+						url.searchParams.get("matchesIn") !== "1" &&
+						["ins", "inVersion", "tiebreak", "favorite"].includes(key)
+							? undefined
+							: key === "candidates" &&
+								  Array.isArray(value) &&
+								  !url.pathname.startsWith(`${API_PREFIX}/realtime/internal/`) &&
+								  url.searchParams.get("candidateReasons") !== "1"
+								? value.map(({ reason: _, ...card }) => card)
+								: value,
+					),
+				),
+				{ status, headers },
+			)
 		}
 		const cookie = (name: string) =>
 			(request.headers.get("cookie") ?? "")
@@ -116,16 +120,19 @@ export function createProposalHandler(
 				"set-cookie",
 				`${name}=${value}; Path=${API_PREFIX}; HttpOnly; SameSite=Lax; Max-Age=${Math.max(0, maxAge)}${
 					options.secureCookies === false ? "" : "; Secure"
-				}`
+				}`,
 			)
-		const nativeRequest = () => request.headers.has(MEMBER_SESSION_HEADER) || request.headers.get("x-yepwatch-client") === "native"
+		const nativeRequest = () =>
+			request.headers.has(MEMBER_SESSION_HEADER) ||
+			request.headers.get("x-yepwatch-client") === "native"
 		const guestCreator = () => {
 			const nativeId = request.headers.get(CREATOR_HEADER)
-			if (nativeId && (!nativeRequest() || !/^[a-f0-9]{64}$/.test(nativeId))) throw new RoomError('invalid_request', 'Invalid app installation identifier', 400)
+			if (nativeId && (!nativeRequest() || !/^[a-f0-9]{64}$/.test(nativeId)))
+				throw new RoomError("invalid_request", "Invalid app installation identifier", 400)
 			if (nativeId) return nativeId
 			const previous = cookie(CREATOR_COOKIE)
 			if (previous && /^[a-f0-9]{64}$/.test(previous)) return previous
-			const value = randomBytes(32).toString('hex')
+			const value = randomBytes(32).toString("hex")
 			setCookie(CREATOR_COOKIE, value, 30 * 24 * 60 * 60)
 			return value
 		}
@@ -138,8 +145,14 @@ export function createProposalHandler(
 		 */
 		const keepSession = (session: MemberSession | null, changed: boolean) => {
 			if (!changed || !options.members) return undefined
-			if (request.headers.has(MEMBER_SESSION_HEADER)) return session ? options.members.sealSession(session) : undefined
-			if (session) setCookie(MEMBER_COOKIE, options.members.sealSession(session), options.members.sessionMaxAge(session))
+			if (request.headers.has(MEMBER_SESSION_HEADER))
+				return session ? options.members.sealSession(session) : undefined
+			if (session)
+				setCookie(
+					MEMBER_COOKIE,
+					options.members.sealSession(session),
+					options.members.sessionMaxAge(session),
+				)
 			else setCookie(MEMBER_COOKIE, "", 0)
 			return undefined
 		}
@@ -151,8 +164,7 @@ export function createProposalHandler(
 			const authorization = request.headers.get("authorization")
 			if (authorization?.startsWith("Bearer ")) {
 				const participantId = request.headers.get("x-yepwatch-participant")
-				if (!participantId)
-					throw new RoomError("unauthorized", "Participant ID required", 401)
+				if (!participantId) throw new RoomError("unauthorized", "Participant ID required", 401)
 				return { participantId, token: authorization.slice(7) }
 			}
 			if (request.method !== "GET") originCheck(true)
@@ -167,160 +179,258 @@ export function createProposalHandler(
 				throw new RoomError("unauthorized", "Room credential required", 401)
 			return { participantId, token }
 		}
-    let accountRead: Promise<import('./proposal-types.ts').RoomAccount | null> | undefined
-    let freshMemberSession: MemberSession | null = null
-    /**
-     * Room actions (create, join, Start, votes, reads) run on the YepWatch session alone: a lapsed GoodWatch login
-     * renews in the background, never on their path. Everything else waits for the renewal (joining a running one):
-     * account pages, deleting or restoring an account or a place (a revoked grant must not reach them), and linking a
-     * room, which is GoodWatch work itself.
-     */
-    const renewInline = !(url.pathname === paths.rooms || (url.pathname.startsWith(`${paths.rooms}/`) &&
-      !/\/(member\/link|deletion|restore)$/.test(url.pathname)))
-    /** The session this answer stands on while its renewal runs; a renewal that lands before the answer goes with it. */
-    let renewing: MemberSession | null = null
-    const deliverRenewal = () => {
-      if (!renewing || !options.members) return
-      const landed = options.members.current(renewing)
-      renewing = null
-      // A refusal is left to the next request, which signs the device out as it always has.
-      if (!landed?.moved) return
-      const renewed = keepSession(landed.session, true)
-      if (renewed) headers.set('x-yepwatch-session', renewed)
-    }
-    /** `roomScoped`: a signed-out (revoked) sign-in on a room request is no sign-in; the room credential decides. */
-    const account = (required = false, roomScoped = false) => {
-      accountRead ??= (async () => {
-        const raw = memberSession()
-        if (!raw || !options.members) return null
-        const result = await options.members.account(raw, { background: !renewInline })
-        const renewed = keepSession(result.session, result.changed)
-        if (renewed) headers.set('x-yepwatch-session', renewed)
-        const session = result.session
-        // The account's deletion check reads alongside the session check; a refused session still answers first.
-        const active = session?.sessionId && ![`${paths.account}/deletion`, `${paths.account}/restore`].includes(url.pathname)
-          ? service.requireAccountActive(session.userId)
-          : undefined
-        active?.catch(() => {}) // awaited below
-        if (!session?.sessionId || !(await service.accounts.sessionActive(session.sessionId))) {
-          if (!nativeRequest()) setCookie(MEMBER_COOKIE, '', 0)
-          // Log out keeps this device's room places as guests: a read racing the logout (its cookie not yet
-          // cleared) reads as that guest instead of failing.
-          if (roomScoped && session?.sessionId) return null
-          throw new RoomError('member_required', 'Sign in with GoodWatch again', 403)
-        }
-        if (renewInline && (session.unverified || result.status.unavailable)) throw new RoomError('busy', 'GoodWatch is temporarily unavailable', 503, true)
-        if (result.renewing || session.unverified) renewing = session
-        freshMemberSession = session
-        await active
-        return { userId: session.userId, sessionId: session.sessionId,
-          expiresAt: Date.now() + options.members.sessionMaxAge(session) * 1000 }
-      })()
-      return accountRead.then(value => {
-        if (required && !value) throw new RoomError('member_required', 'Sign in with GoodWatch again', 403)
-        return value
-      })
-    }
-    /** `deferDeletionCheck`: takes a guest's deletion check still running instead of waiting for it here. */
-    const scopedCredential = async (roomId: string, deferDeletionCheck?: (check: Promise<void>) => void) => {
-      const c = credential(roomId)
-      const a = await account(false, true)
-      if (!a && !url.pathname.endsWith('/deletion') && !url.pathname.endsWith('/restore')) {
-        const check = requireNotDeleting(service.deletions, { kind: 'guest', roomId, participantId: c.participantId })
-        if (deferDeletionCheck) { check.catch(() => {}); deferDeletionCheck(check) } else await check
-      }
-      return a ? { ...c, accountId: a.userId, sessionId: a.sessionId } : c
-    }
-    type Account = import('./proposal-types.ts').RoomAccount
-    type Place = { roomId: string; participantId: string; token: string }
-    /**
-     * Whether this place may still take the link of `a`: the same account on a session attached to the place and
-     * not logged out, the place neither left nor revoked, and in the epoch it had when the link began (Leave and
-     * returning move it). Asked again on every write attempt: a link GoodWatch answers late lands only if it still fits.
-     */
-    const linkAdmits = (a: Account, participantId: string) => {
-      let epoch: number | undefined
-      return async (room: import('./continuous-types.ts').ContinuousRoom) => {
-        const p = (room as import('./proposal-types.ts').ProposalRoom).participants.find((x) => x.id === participantId)
-        if (!p || p.revoked || p.leftAt != null || p.memberUserId !== a.userId) return false
-        if (!(p.sessions ?? []).some((s) => s.id === a.sessionId && s.expiresAt > Date.now())) return false
-        epoch ??= p.epoch
-        return p.epoch === epoch && (await service.accounts.sessionActive(a.sessionId))
-      }
-    }
-    /**
-     * Links a place to this request's sign-in. One link per place and session at a time: the room's own member/link
-     * joins the one its admission started instead of asking GoodWatch again. False: the place no longer takes it.
-     *
-     * `created`: a new room's create country and context version. Once linked, the room takes the member's GoodWatch
-     * country over the device's, as the app's own country step does, but only if nothing changed the room's context
-     * between create and the link (the link itself moves it) or since: a country someone chose stays, and a started
-     * room keeps its own. Checked atomically with the write (adoptMemberCountry), also when the link lands late.
-     */
-    const link = (place: Place, a: Account, created?: { country: string; contextVersion: number }) => {
-      const key = `${place.roomId}\0${place.participantId}\0${a.sessionId}`
-      const running = links.get(key)
-      if (running) return running
-      const raw = options.members!.sealSession(freshMemberSession!)
-      const work = (async () => {
-        const admits = linkAdmits(a, place.participantId)
-        let admittedVersion: number | undefined
-        const linked = await options.members!.linkRoom(place.roomId, place.participantId, raw, async (room) => {
-          const ok = await admits(room)
-          if (ok) admittedVersion = room.contextVersion
-          return ok
-        })
-        if (!linked) return false
-        await service.notify(place.roomId)
-        const country = linked.status.prefill?.country
-        if (created && country && admittedVersion === created.contextVersion && linked.contextVersion !== undefined) {
-          const scoped = { participantId: place.participantId, token: place.token, accountId: a.userId, sessionId: a.sessionId }
-          await service.adoptMemberCountry(place.roomId, scoped, { country: created.country, contextVersion: linked.contextVersion }, country)
-            .catch((e: unknown) => { if (!(e instanceof RoomError)) throw e })
-        }
-        return true
-      })().finally(() => links.delete(key))
-      links.set(key, work)
-      return work
-    }
-    /**
-     * `bounded`: an admission (create, join, resume) answers within MEMBER_LINK_WAIT_MS even when GoodWatch is slow
-     * to link it. The place is already made; the link goes on and lands as a room update, and the room links itself
-     * (member/link, which joins it) when the answer says it isn't linked yet.
-     */
-    const sendAdmission = async (admission: import('../../../packages/yepwatch-contracts/proposal.ts').GuestAdmission, a: Account | null, setup?: import('../../../packages/yepwatch-contracts/proposal.ts').RoomSetupRequest, bounded = false) => {
-      const c = admission.credential
-      const linking = a && options.members && freshMemberSession
-        ? link({ roomId: c.roomId, participantId: c.participantId, token: c.token }, a,
-          setup ? { country: setup.country, contextVersion: admission.snapshot.shared.contextVersion } : undefined)
-        : null
-      let timer: ReturnType<typeof setTimeout> | undefined
-      const linked = !linking ? false : !bounded ? await timed("link", linking) : await timed("link", Promise.race([
-        linking,
-        new Promise<undefined>((resolve) => { timer = setTimeout(() => resolve(undefined), MEMBER_LINK_WAIT_MS) }),
-      ])).finally(() => clearTimeout(timer))
-      if (linking && linked === undefined) linking.catch((e: unknown) => {
-        // The room links itself (member/link) and shows a Retry if that fails too. Never the credential or grant.
-        console.warn(JSON.stringify({ event: 'yepwatch_member_link_late_failure', roomId: c.roomId, participantId: c.participantId,
-          error: e instanceof RoomError ? `RoomError:${e.code}` : e instanceof Error ? e.constructor.name : typeof e }))
-      })
-      if (a && linked) {
-        const scoped = { participantId: c.participantId, token: c.token, accountId: a.userId, sessionId: a.sessionId }
-        admission.snapshot = await service.read(c.roomId, scoped)
-      }
-      const profileSecret = request.headers.get(PROFILE_HEADER)
-      if (profileSecret && service.profiles) {
-        const scoped = { participantId: c.participantId, token: c.token, ...(a ? { accountId: a.userId, sessionId: a.sessionId } : {}) }
-        // Profile work runs after admission; neither a cold catalog nor a slow store delays the response.
-        const profileId = service.profiles.identity(profileSecret)
-        void service.bindProfile(c.roomId, scoped, profileId).catch(() => {})
-      }
-      if (request.headers.get('x-yepwatch-client') !== 'native') {
-        setCookie(`yepwatch3_${c.roomId}`, `${c.participantId}.${c.token}`, Math.floor((c.expiresAt - Date.now()) / 1000))
-        c.token = ''
-      }
-      return reply({ ...admission, ...admission.snapshot.own.member })
-    }
+		let accountRead: Promise<import("./proposal-types.ts").RoomAccount | null> | undefined
+		let freshMemberSession: MemberSession | null = null
+		/**
+		 * Room actions (create, join, Start, votes, reads) run on the YepWatch session alone: a lapsed GoodWatch login
+		 * renews in the background, never on their path. Everything else waits for the renewal (joining a running one):
+		 * account pages, deleting or restoring an account or a place (a revoked grant must not reach them), and linking a
+		 * room, which is GoodWatch work itself.
+		 */
+		const renewInline = !(
+			url.pathname === paths.rooms ||
+			(url.pathname.startsWith(`${paths.rooms}/`) &&
+				!/\/(member\/link|deletion|restore)$/.test(url.pathname))
+		)
+		/** The session this answer stands on while its renewal runs; a renewal that lands before the answer goes with it. */
+		let renewing: MemberSession | null = null
+		const deliverRenewal = () => {
+			if (!renewing || !options.members) return
+			const landed = options.members.current(renewing)
+			renewing = null
+			// A refusal is left to the next request, which signs the device out as it always has.
+			if (!landed?.moved) return
+			const renewed = keepSession(landed.session, true)
+			if (renewed) headers.set("x-yepwatch-session", renewed)
+		}
+		/** `roomScoped`: a signed-out (revoked) sign-in on a room request is no sign-in; the room credential decides. */
+		const account = (required = false, roomScoped = false) => {
+			accountRead ??= (async () => {
+				const raw = memberSession()
+				if (!raw || !options.members) return null
+				const result = await options.members.account(raw, { background: !renewInline })
+				const renewed = keepSession(result.session, result.changed)
+				if (renewed) headers.set("x-yepwatch-session", renewed)
+				const session = result.session
+				// The account's deletion check reads alongside the session check; a refused session still answers first.
+				const active =
+					session?.sessionId &&
+					![`${paths.account}/deletion`, `${paths.account}/restore`].includes(url.pathname)
+						? service.requireAccountActive(session.userId)
+						: undefined
+				active?.catch(() => {}) // awaited below
+				if (!session?.sessionId || !(await service.accounts.sessionActive(session.sessionId))) {
+					if (!nativeRequest()) setCookie(MEMBER_COOKIE, "", 0)
+					// Log out keeps this device's room places as guests: a read racing the logout (its cookie not yet
+					// cleared) reads as that guest instead of failing.
+					if (roomScoped && session?.sessionId) return null
+					throw new RoomError("member_required", "Sign in with GoodWatch again", 403)
+				}
+				if (renewInline && (session.unverified || result.status.unavailable))
+					throw new RoomError("busy", "GoodWatch is temporarily unavailable", 503, true)
+				if (result.renewing || session.unverified) renewing = session
+				freshMemberSession = session
+				await active
+				return {
+					userId: session.userId,
+					sessionId: session.sessionId,
+					expiresAt: Date.now() + options.members.sessionMaxAge(session) * 1000,
+				}
+			})()
+			return accountRead.then((value) => {
+				if (required && !value)
+					throw new RoomError("member_required", "Sign in with GoodWatch again", 403)
+				return value
+			})
+		}
+		/** `deferDeletionCheck`: takes a guest's deletion check still running instead of waiting for it here. */
+		const scopedCredential = async (
+			roomId: string,
+			deferDeletionCheck?: (check: Promise<void>) => void,
+		) => {
+			const c = credential(roomId)
+			const a = await account(false, true)
+			if (!a && !url.pathname.endsWith("/deletion") && !url.pathname.endsWith("/restore")) {
+				const check = requireNotDeleting(service.deletions, {
+					kind: "guest",
+					roomId,
+					participantId: c.participantId,
+				})
+				if (deferDeletionCheck) {
+					check.catch(() => {})
+					deferDeletionCheck(check)
+				} else await check
+			}
+			return a ? { ...c, accountId: a.userId, sessionId: a.sessionId } : c
+		}
+		type Account = import("./proposal-types.ts").RoomAccount
+		type Place = { roomId: string; participantId: string; token: string }
+		/**
+		 * Whether this place may still take the link of `a`: the same account on a session attached to the place and
+		 * not logged out, the place neither left nor revoked, and in the epoch it had when the link began (Leave and
+		 * returning move it). Asked again on every write attempt: a link GoodWatch answers late lands only if it still fits.
+		 */
+		const linkAdmits = (a: Account, participantId: string) => {
+			let epoch: number | undefined
+			return async (room: import("./continuous-types.ts").ContinuousRoom) => {
+				const p = (room as import("./proposal-types.ts").ProposalRoom).participants.find(
+					(x) => x.id === participantId,
+				)
+				if (!p || p.revoked || p.leftAt != null || p.memberUserId !== a.userId) return false
+				if (!(p.sessions ?? []).some((s) => s.id === a.sessionId && s.expiresAt > Date.now()))
+					return false
+				epoch ??= p.epoch
+				return p.epoch === epoch && (await service.accounts.sessionActive(a.sessionId))
+			}
+		}
+		/**
+		 * Links a place to this request's sign-in. One link per place and session at a time: the room's own member/link
+		 * joins the one its admission started instead of asking GoodWatch again. False: the place no longer takes it.
+		 *
+		 * `created`: a new room's create country and context version. Once linked, the room takes the member's GoodWatch
+		 * country over the device's, as the app's own country step does, but only if nothing changed the room's context
+		 * between create and the link (the link itself moves it) or since: a country someone chose stays, and a started
+		 * room keeps its own. Checked atomically with the write (adoptMemberCountry), also when the link lands late.
+		 */
+		const link = (
+			place: Place,
+			a: Account,
+			created?: { country: string; contextVersion: number },
+		) => {
+			const key = `${place.roomId}\0${place.participantId}\0${a.sessionId}`
+			const running = links.get(key)
+			if (running) return running
+			const raw = options.members!.sealSession(freshMemberSession!)
+			const work = (async () => {
+				const admits = linkAdmits(a, place.participantId)
+				let admittedVersion: number | undefined
+				const linked = await options.members!.linkRoom(
+					place.roomId,
+					place.participantId,
+					raw,
+					async (room) => {
+						const ok = await admits(room)
+						if (ok) admittedVersion = room.contextVersion
+						return ok
+					},
+				)
+				if (!linked) return false
+				await service.notify(place.roomId)
+				const country = linked.status.prefill?.country
+				if (
+					created &&
+					country &&
+					admittedVersion === created.contextVersion &&
+					linked.contextVersion !== undefined
+				) {
+					const scoped = {
+						participantId: place.participantId,
+						token: place.token,
+						accountId: a.userId,
+						sessionId: a.sessionId,
+					}
+					await service
+						.adoptMemberCountry(
+							place.roomId,
+							scoped,
+							{ country: created.country, contextVersion: linked.contextVersion },
+							country,
+						)
+						.catch((e: unknown) => {
+							if (!(e instanceof RoomError)) throw e
+						})
+				}
+				return true
+			})().finally(() => links.delete(key))
+			links.set(key, work)
+			return work
+		}
+		/**
+		 * `bounded`: an admission (create, join, resume) answers within MEMBER_LINK_WAIT_MS even when GoodWatch is slow
+		 * to link it. The place is already made; the link goes on and lands as a room update, and the room links itself
+		 * (member/link, which joins it) when the answer says it isn't linked yet.
+		 */
+		const sendAdmission = async (
+			admission: import("../../../packages/yepwatch-contracts/proposal.ts").GuestAdmission,
+			a: Account | null,
+			setup?: import("../../../packages/yepwatch-contracts/proposal.ts").RoomSetupRequest,
+			bounded = false,
+		) => {
+			const c = admission.credential
+			const linking =
+				a && options.members && freshMemberSession
+					? link(
+							{ roomId: c.roomId, participantId: c.participantId, token: c.token },
+							a,
+							setup
+								? {
+										country: setup.country,
+										contextVersion: admission.snapshot.shared.contextVersion,
+									}
+								: undefined,
+						)
+					: null
+			let timer: ReturnType<typeof setTimeout> | undefined
+			const linked = !linking
+				? false
+				: !bounded
+					? await timed("link", linking)
+					: await timed(
+							"link",
+							Promise.race([
+								linking,
+								new Promise<undefined>((resolve) => {
+									timer = setTimeout(() => resolve(undefined), MEMBER_LINK_WAIT_MS)
+								}),
+							]),
+						).finally(() => clearTimeout(timer))
+			if (linking && linked === undefined)
+				linking.catch((e: unknown) => {
+					// The room links itself (member/link) and shows a Retry if that fails too. Never the credential or grant.
+					console.warn(
+						JSON.stringify({
+							event: "yepwatch_member_link_late_failure",
+							roomId: c.roomId,
+							participantId: c.participantId,
+							error:
+								e instanceof RoomError
+									? `RoomError:${e.code}`
+									: e instanceof Error
+										? e.constructor.name
+										: typeof e,
+						}),
+					)
+				})
+			if (a && linked) {
+				const scoped = {
+					participantId: c.participantId,
+					token: c.token,
+					accountId: a.userId,
+					sessionId: a.sessionId,
+				}
+				admission.snapshot = await service.read(c.roomId, scoped)
+			}
+			const profileSecret = request.headers.get(PROFILE_HEADER)
+			if (profileSecret && service.profiles) {
+				const scoped = {
+					participantId: c.participantId,
+					token: c.token,
+					...(a ? { accountId: a.userId, sessionId: a.sessionId } : {}),
+				}
+				// Profile work runs after admission; neither a cold catalog nor a slow store delays the response.
+				const profileId = service.profiles.identity(profileSecret)
+				void service.bindProfile(c.roomId, scoped, profileId).catch(() => {})
+			}
+			if (request.headers.get("x-yepwatch-client") !== "native") {
+				setCookie(
+					`yepwatch3_${c.roomId}`,
+					`${c.participantId}.${c.token}`,
+					Math.floor((c.expiresAt - Date.now()) / 1000),
+				)
+				c.token = ""
+			}
+			return reply({ ...admission, ...admission.snapshot.own.member })
+		}
 
 		try {
 			if (!url.pathname.startsWith(`${API_PREFIX}/`))
@@ -330,30 +440,16 @@ export function createProposalHandler(
 				headers.set("access-control-allow-methods", "GET,POST,DELETE,OPTIONS")
 				headers.set(
 					"access-control-allow-headers",
-					`content-type,authorization,x-yepwatch-participant,x-yepwatch-client,${MEMBER_SESSION_HEADER},${CREATOR_HEADER},${PROFILE_HEADER}`
+					`content-type,authorization,x-yepwatch-participant,x-yepwatch-client,${MEMBER_SESSION_HEADER},${CREATOR_HEADER},${PROFILE_HEADER}`,
 				)
 				return new Response(null, { status: 204, headers })
 			}
 			if (url.pathname.startsWith(`${API_PREFIX}/realtime/internal/`)) {
-				if (
-					!equal(
-						request.headers.get("authorization") ?? "",
-						`Bearer ${options.serviceSecret}`
-					)
-				)
-					throw new RoomError(
-						"unauthorized",
-						"Gateway service credential required",
-						401
-					)
+				if (!equal(request.headers.get("authorization") ?? "", `Bearer ${options.serviceSecret}`))
+					throw new RoomError("unauthorized", "Gateway service credential required", 401)
 				if (origin)
-					throw new RoomError(
-						"forbidden",
-						"Internal endpoint disallows browser Origin",
-						403
-					)
-				if (request.method !== "POST")
-					throw new RoomError("not_found", "Endpoint unavailable", 404)
+					throw new RoomError("forbidden", "Internal endpoint disallows browser Origin", 403)
+				if (request.method !== "POST") throw new RoomError("not_found", "Endpoint unavailable", 404)
 				if (url.pathname === paths.realtimeAttach) {
 					const value = parse(attachSchema, await body(request))
 					return reply(await service.attach(value.roomId, value.ticket))
@@ -369,33 +465,45 @@ export function createProposalHandler(
 				throw new RoomError("not_found", "Endpoint unavailable", 404)
 			}
 			if (request.method === "POST" || request.method === "DELETE") originCheck(false)
-      if (request.headers.has(PROFILE_HEADER) && service.profiles) service.profiles.identity(request.headers.get(PROFILE_HEADER))
-      if (([paths.profile, paths.profileAnswers, paths.profileTasteDeck] as string[]).includes(url.pathname)) {
-        const profiles = service.profiles
-        if (!profiles) throw new RoomError("not_implemented", "Taste profiles are not configured", 501)
-        const id = profiles.identity(request.headers.get(PROFILE_HEADER))
-        // Reads are uncharged. answers() enforces its durable per-profile write window, independent of rooms/IPs.
-        if (request.method === "GET" && url.pathname === paths.profile) return reply(await profiles.summary(id))
-        if (request.method === "GET" && url.pathname === paths.profileTasteDeck) return reply(await profiles.deck(id, Number(url.searchParams.get("count") ?? 10)))
-        if (request.method === "POST" && url.pathname === paths.profileAnswers) return reply(await profiles.answers(id, parse(profileAnswersSchema, await body(request))))
-        if (request.method === "DELETE" && url.pathname === paths.profile) {
-          originCheck(!nativeRequest())
-          await profiles.delete(id)
-          return new Response(null, { status: 204, headers })
-        }
-        throw new RoomError("not_found", "Endpoint unavailable", 404)
-      }
+			if (request.headers.has(PROFILE_HEADER) && service.profiles)
+				service.profiles.identity(request.headers.get(PROFILE_HEADER))
+			if (
+				([paths.profile, paths.profileAnswers, paths.profileTasteDeck] as string[]).includes(
+					url.pathname,
+				)
+			) {
+				const profiles = service.profiles
+				if (!profiles)
+					throw new RoomError("not_implemented", "Taste profiles are not configured", 501)
+				const id = profiles.identity(request.headers.get(PROFILE_HEADER))
+				// Reads are uncharged. answers() enforces its durable per-profile write window, independent of rooms/IPs.
+				if (request.method === "GET" && url.pathname === paths.profile)
+					return reply(await profiles.summary(id))
+				if (request.method === "GET" && url.pathname === paths.profileTasteDeck)
+					return reply(await profiles.deck(id, Number(url.searchParams.get("count") ?? 10)))
+				if (request.method === "POST" && url.pathname === paths.profileAnswers)
+					return reply(await profiles.answers(id, parse(profileAnswersSchema, await body(request))))
+				if (request.method === "DELETE" && url.pathname === paths.profile) {
+					originCheck(!nativeRequest())
+					await profiles.delete(id)
+					return new Response(null, { status: 204, headers })
+				}
+				throw new RoomError("not_found", "Endpoint unavailable", 404)
+			}
 			if (url.pathname === paths.account || url.pathname.startsWith(`${paths.account}/`)) {
 				const members = options.members
 				if (!members)
 					throw new RoomError(
 						"not_implemented",
 						"GoodWatch sign-in is not configured on this runtime",
-						501
+						501,
 					)
 				if (request.method === "GET" && url.pathname === paths.account) {
 					const result = await members.account(memberSession())
-					if (result.session?.sessionId && !(await service.accounts.sessionActive(result.session.sessionId))) {
+					if (
+						result.session?.sessionId &&
+						!(await service.accounts.sessionActive(result.session.sessionId))
+					) {
 						setCookie(MEMBER_COOKIE, "", 0)
 						return reply({ state: "guest", displayName: null })
 					}
@@ -408,20 +516,24 @@ export function createProposalHandler(
 				}
 				if (url.pathname === `${paths.account}/deletion`) {
 					const a = (await account(true))!
-					if (request.method === 'GET') return reply({ deletion: await service.deletions.get({ kind: 'account', userId: a.userId }), accountTag: service.accountDeletionTag(a.userId) })
-					if (request.method === 'POST') {
+					if (request.method === "GET")
+						return reply({
+							deletion: await service.deletions.get({ kind: "account", userId: a.userId }),
+							accountTag: service.accountDeletionTag(a.userId),
+						})
+					if (request.method === "POST") {
 						originCheck(!nativeRequest())
-						parse(z.object({ confirm: z.literal('DELETE') }).strict(), await body(request))
+						parse(z.object({ confirm: z.literal("DELETE") }).strict(), await body(request))
 						const deletion = await service.deleteAccount(a)
-						setCookie(MEMBER_COOKIE, '', 0)
+						setCookie(MEMBER_COOKIE, "", 0)
 						return reply({ deletion })
 					}
 				}
-				if (request.method === 'POST' && url.pathname === `${paths.account}/restore`) {
+				if (request.method === "POST" && url.pathname === `${paths.account}/restore`) {
 					originCheck(!nativeRequest())
-					parse(z.object({ confirm: z.literal('RESTORE') }).strict(), await body(request))
+					parse(z.object({ confirm: z.literal("RESTORE") }).strict(), await body(request))
 					const a = (await account(true))!
-					await service.deletions.restore({ kind: 'account', userId: a.userId }, Date.now())
+					await service.deletions.restore({ kind: "account", userId: a.userId }, Date.now())
 					return reply({ restored: true })
 				}
 				if (request.method === "POST" && url.pathname === paths.accountStart) {
@@ -436,7 +548,7 @@ export function createProposalHandler(
 									.optional(),
 							})
 							.strict(),
-						await body(request)
+						await body(request),
 					)
 					if (value.client === "browser") originCheck(true)
 					const started = members.startAccount(value)
@@ -456,7 +568,7 @@ export function createProposalHandler(
 								codeVerifier: z.string().regex(/^[A-Za-z0-9_-]{43,128}$/),
 							})
 							.strict(),
-						await body(request)
+						await body(request),
 					)
 					const session = await members.accountExchange(value)
 					return reply({
@@ -469,7 +581,13 @@ export function createProposalHandler(
 					originCheck(!nativeRequest())
 					const opened = members.openSession(memberSession())
 					// This device stays in its rooms as a guest; the app lists them on the device again.
-					const keptRooms = opened?.sessionId ? await service.logoutAccount({ userId: opened.userId, sessionId: opened.sessionId, expiresAt: Date.now() + 90 * 86400000 }) : []
+					const keptRooms = opened?.sessionId
+						? await service.logoutAccount({
+								userId: opened.userId,
+								sessionId: opened.sessionId,
+								expiresAt: Date.now() + 90 * 86400000,
+							})
+						: []
 					// Ends this device's sign-in for YepWatch only. GoodWatch's own session is untouched.
 					setCookie(MEMBER_COOKIE, "", 0)
 					setCookie(MEMBER_INTENT_COOKIE, "", 0)
@@ -477,12 +595,24 @@ export function createProposalHandler(
 				}
 				throw new RoomError("not_found", "Endpoint unavailable", 404)
 			}
-			if (request.method === 'POST' && /^\/api\/yepwatch\/v1\/proposal\/rooms\/[A-Za-z0-9_-]+\/(deletion|restore)$/.test(url.pathname)) {
-				const id = url.pathname.split('/').at(-2)!
-				const restoring = url.pathname.endsWith('/restore')
-				parse(z.object({ confirm: z.literal(restoring ? 'RESTORE' : 'DELETE') }).strict(), await body(request))
+			if (
+				request.method === "POST" &&
+				/^\/api\/yepwatch\/v1\/proposal\/rooms\/[A-Za-z0-9_-]+\/(deletion|restore)$/.test(
+					url.pathname,
+				)
+			) {
+				const id = url.pathname.split("/").at(-2)!
+				const restoring = url.pathname.endsWith("/restore")
+				parse(
+					z.object({ confirm: z.literal(restoring ? "RESTORE" : "DELETE") }).strict(),
+					await body(request),
+				)
 				const access = await scopedCredential(id)
-				return reply(restoring ? await service.restoreGuest(id, access) : { deletion: await service.deleteGuest(id, access) })
+				return reply(
+					restoring
+						? await service.restoreGuest(id, access)
+						: { deletion: await service.deleteGuest(id, access) },
+				)
 			}
 			if (url.pathname.startsWith(`${API_PREFIX}/member/`)) {
 				const members = options.members
@@ -490,27 +620,32 @@ export function createProposalHandler(
 					throw new RoomError(
 						"not_implemented",
 						"GoodWatch sign-in is not configured on this runtime",
-						501
+						501,
 					)
 				if (request.method === "GET" && url.pathname === paths.memberCallback) {
 					const state = url.searchParams.get("state") ?? ""
 					const code = url.searchParams.get("code") ?? ""
 					if (!state || state.length > 160 || !code || code.length > 4096)
-						throw new RoomError(
-							"unauthorized",
-							"Sign-in did not complete; restart sign-in",
-							401
+						throw new RoomError("unauthorized", "Sign-in did not complete; restart sign-in", 401)
+					if (!isAccountState(state))
+						throw new RoomError("unauthorized", "Restart GoodWatch sign-in", 401)
+					const kind = members.accountClient(state)
+					let destination: string
+					if (kind === "native") destination = members.accountNativeReturn(state, code)
+					else {
+						const signedIn = await members.accountCallback(
+							state,
+							code,
+							cookie(MEMBER_INTENT_COOKIE),
 						)
-          if (!isAccountState(state)) throw new RoomError("unauthorized", "Restart GoodWatch sign-in", 401)
-          const kind = members.accountClient(state)
-          let destination: string
-          if (kind === "native") destination = members.accountNativeReturn(state, code)
-          else {
-            const signedIn = await members.accountCallback(state, code, cookie(MEMBER_INTENT_COOKIE))
-            setCookie(MEMBER_INTENT_COOKIE, "", 0)
-            setCookie(MEMBER_COOKIE, members.sealSession(signedIn.session), members.sessionMaxAge(signedIn.session))
-            destination = signedIn.returnTo
-          }
+						setCookie(MEMBER_INTENT_COOKIE, "", 0)
+						setCookie(
+							MEMBER_COOKIE,
+							members.sealSession(signedIn.session),
+							members.sessionMaxAge(signedIn.session),
+						)
+						destination = signedIn.returnTo
+					}
 					// End the issuer's consent form navigation at its allowlisted API
 					// callback. A further HTTP redirect (app origin or native scheme) can
 					// violate form-action. This document starts a new checked navigation.
@@ -521,7 +656,7 @@ export function createProposalHandler(
 					headers.set("x-frame-options", "DENY")
 					headers.set(
 						"content-security-policy",
-						`default-src 'none'; script-src 'nonce-${nonce}'; base-uri 'none'; frame-ancestors 'none'`
+						`default-src 'none'; script-src 'nonce-${nonce}'; base-uri 'none'; frame-ancestors 'none'`,
 					)
 					const safe = destination.replace(
 						/[&<>"']/g,
@@ -532,33 +667,45 @@ export function createProposalHandler(
 								">": "&gt;",
 								'"': "&quot;",
 								"'": "&#39;",
-							}[c]!)
+							})[c]!,
 					)
 					return new Response(
 						`<!doctype html><meta name="viewport" content="width=device-width"><title>Return to YepWatch</title><p>GoodWatch connection ready. <a href="${safe}">Return to YepWatch</a></p><script nonce="${nonce}">location.replace(${JSON.stringify(
-							destination
+							destination,
 						).replace(/</g, "\\u003c")})</script>`,
-						{ headers }
+						{ headers },
 					)
 				}
 				throw new RoomError("not_found", "Endpoint unavailable", 404)
 			}
-			const card = request.method === "GET" || request.method === "HEAD" ? url.pathname.match(INVITE_CARD) : null
+			const card =
+				request.method === "GET" || request.method === "HEAD"
+					? url.pathname.match(INVITE_CARD)
+					: null
 			if (card) {
 				// Link-preview bots fetch this for yepwatch.com/r/<code>. An unknown or ended invite still gets the generic card.
 				let hostName: string | null = null
 				try {
 					hostName = (await service.invitePreview(card[1]!)).hostName
 				} catch (error) {
-					if (!(error instanceof RoomError && (error.status === 404 || error.status === 410))) throw error
+					if (!(error instanceof RoomError && (error.status === 404 || error.status === 410)))
+						throw error
 				}
 				try {
 					const png = await (options.inviteCard ?? inviteCardPng)(hostName)
 					return new Response(png, {
-						headers: { "content-type": "image/png", "cache-control": "public, max-age=86400", "x-content-type-options": "nosniff" },
+						headers: {
+							"content-type": "image/png",
+							"cache-control": "public, max-age=86400",
+							"x-content-type-options": "nosniff",
+						},
 					})
 				} catch (error) {
-					if (error instanceof LinkCardBusyError) return new Response(null, { status: 503, headers: { "retry-after": "5", "cache-control": "no-store" } })
+					if (error instanceof LinkCardBusyError)
+						return new Response(null, {
+							status: 503,
+							headers: { "retry-after": "5", "cache-control": "no-store" },
+						})
 					throw error
 				}
 			}
@@ -568,25 +715,27 @@ export function createProposalHandler(
 					throw new RoomError("invalid_request", "Invalid country", 400)
 				return reply(await service.catalog.metadata(country))
 			}
-			if (request.method === "POST" &&
-				(url.pathname === paths.resolveInvite || url.pathname === paths.invitePreview)) {
+			if (
+				request.method === "POST" &&
+				(url.pathname === paths.resolveInvite || url.pathname === paths.invitePreview)
+			) {
 				const value = parse(resolveSchema, await body(request))
-				if (url.pathname === paths.invitePreview) return reply(await service.invitePreview(value.code))
+				if (url.pathname === paths.invitePreview)
+					return reply(await service.invitePreview(value.code))
 				const resolved = await service.resolveInvite(value.code)
 				// Whether this request carries a credential for the room: a browser without one skips the
 				// membership read before joining (it could only answer 401).
-				const credential = request.headers.has("authorization") || (request.headers.get("cookie") ?? "")
-					.split(";")
-					.some((c) => c.trim().startsWith(`yepwatch3_${resolved.roomId}=`))
+				const credential =
+					request.headers.has("authorization") ||
+					(request.headers.get("cookie") ?? "")
+						.split(";")
+						.some((c) => c.trim().startsWith(`yepwatch3_${resolved.roomId}=`))
 				return reply({ ...resolved, credential })
 			}
 			const match = url.pathname.match(
-				/^\/api\/yepwatch\/v1\/proposal\/rooms\/([A-Za-z0-9_-]{32})(?:\/(join|resume|archive|commands|preview|realtime-ticket|member(?:\/progress|\/link)?))?$/
+				/^\/api\/yepwatch\/v1\/proposal\/rooms\/([A-Za-z0-9_-]{32})(?:\/(join|resume|archive|commands|preview|realtime-ticket|member(?:\/progress|\/link)?))?$/,
 			)
-			if (
-				request.method === "POST" &&
-				(url.pathname === paths.rooms || match?.[2] === "join")
-			) {
+			if (request.method === "POST" && (url.pathname === paths.rooms || match?.[2] === "join")) {
 				const native = request.headers.get("x-yepwatch-client") === "native"
 				if (!native) originCheck(true)
 				const value = await body(request)
@@ -605,97 +754,134 @@ export function createProposalHandler(
 						(request.headers.get("cookie") ?? "")
 							.split(";")
 							.some((c) => c.trim().startsWith(`yepwatch3_${roomId}=`))
-          // A signed-in join can still carry this device's earlier guest credential.
-          // Claim that place before allocating anything, including after a lost create acknowledgement.
-          if (a && hasCredential) {
-            const resolved = await service.resolveInvite(join.inviteCode)
-            if (resolved.roomId !== roomId) throw new RoomError("not_found", "Invite unavailable", 404)
-            const scoped = await scopedCredential(roomId)
-            try {
-              await service.read(roomId, scoped)
-              return sendAdmission(await service.linkAccount(roomId, scoped, a), a, undefined, true)
-            } catch (e) {
-              if (!(e instanceof RoomError) || !["unauthorized", "forbidden", "not_found"].includes(e.code)) throw e
-            }
-          }
+					// A signed-in join can still carry this device's earlier guest credential.
+					// Claim that place before allocating anything, including after a lost create acknowledgement.
+					if (a && hasCredential) {
+						const resolved = await service.resolveInvite(join.inviteCode)
+						if (resolved.roomId !== roomId)
+							throw new RoomError("not_found", "Invite unavailable", 404)
+						const scoped = await scopedCredential(roomId)
+						try {
+							await service.read(roomId, scoped)
+							return sendAdmission(await service.linkAccount(roomId, scoped, a), a, undefined, true)
+						} catch (e) {
+							if (
+								!(e instanceof RoomError) ||
+								!["unauthorized", "forbidden", "not_found"].includes(e.code)
+							)
+								throw e
+						}
+					}
 					// A reopened invite is a return to the existing participant.
 					admission = a
 						? await service.join(roomId, join, a)
 						: hasCredential
-						? await service.resumeOrJoin(roomId, credential(roomId), join)
-						: await service.join(roomId, join)
+							? await service.resumeOrJoin(roomId, credential(roomId), join)
+							: await service.join(roomId, join)
 				}
 				return sendAdmission(admission, a, setup, true)
 			}
 			if (match) {
 				const [, id, operation] = match
-        if (request.method === 'POST' && operation === 'resume') {
-          originCheck(!nativeRequest())
-          const value = parse(z.object({ returnAfterLeave: z.boolean().optional() }).strict(), await body(request))
-          const a = (await account(true))!
-          return sendAdmission(await service.resumeAccount(id, a, value.returnAfterLeave === true), a, undefined, true)
-        }
-        if (request.method === 'POST' && operation === 'archive') {
-          originCheck(!nativeRequest())
-          const value = parse(z.object({ archived: z.boolean() }).strict(), await body(request))
-          await service.archiveAccountRoom(id, (await account(true))!, value.archived)
-          return reply({ ok: true })
-        }
+				if (request.method === "POST" && operation === "resume") {
+					originCheck(!nativeRequest())
+					const value = parse(
+						z.object({ returnAfterLeave: z.boolean().optional() }).strict(),
+						await body(request),
+					)
+					const a = (await account(true))!
+					return sendAdmission(
+						await service.resumeAccount(id, a, value.returnAfterLeave === true),
+						a,
+						undefined,
+						true,
+					)
+				}
+				if (request.method === "POST" && operation === "archive") {
+					originCheck(!nativeRequest())
+					const value = parse(z.object({ archived: z.boolean() }).strict(), await body(request))
+					await service.archiveAccountRoom(id, (await account(true))!, value.archived)
+					return reply({ ok: true })
+				}
 				if (request.method === "POST" && operation === "commands") {
 					// The sign-in and its checks (session, deletion) run alongside the body, and then the command's room read.
 					// Their refusals still answer in that order and before the command's own, and nothing is written before
 					// they pass (ProposalService.command).
 					let deletionCheck: Promise<void> | undefined
-					const actor = timed("auth", scopedCredential(id, (check) => { deletionCheck = timed("deletion", check) }))
-					const envelope = timed("body", body(request).then((value) => parse(commandSchema, value)))
-					return reply(await service.command(id, actor, envelope, actor.then(() => deletionCheck)))
+					const actor = timed(
+						"auth",
+						scopedCredential(id, (check) => {
+							deletionCheck = timed("deletion", check)
+						}),
+					)
+					const envelope = timed(
+						"body",
+						body(request).then((value) => parse(commandSchema, value)),
+					)
+					return reply(
+						await service.command(
+							id,
+							actor,
+							envelope,
+							actor.then(() => deletionCheck),
+						),
+					)
 				}
 				const actor = await timed("auth", scopedCredential(id))
 				if (request.method === "POST" && operation === "preview")
-					return reply(await service.preview(id, actor, parse(proposalPreviewSchema, await body(request))))
+					return reply(
+						await service.preview(id, actor, parse(proposalPreviewSchema, await body(request))),
+					)
 				if (request.method === "GET" && !operation) {
 					let snapshot = await service.read(id, actor)
 					if (options.members) {
 						const member = await options.members.status(id, snapshot.own.participantId)
 						// Status may repair a legacy Guest name; return its newly committed roster.
-						if (member.state === "linked" && ["Guest", ""].includes(snapshot.shared.participants.find(
-							(p) => p.participantId === snapshot.own.participantId,
-						)?.nickname ?? "unknown")) snapshot = await service.read(id, actor)
+						if (
+							member.state === "linked" &&
+							["Guest", ""].includes(
+								snapshot.shared.participants.find(
+									(p) => p.participantId === snapshot.own.participantId,
+								)?.nickname ?? "unknown",
+							)
+						)
+							snapshot = await service.read(id, actor)
 						snapshot.own.member = member
 					}
 					// `known`: the shared revision the asking phone already holds (it reads after each live update for its own
 					// part). Still current: only the own part goes back, a few hundred bytes instead of the whole room again.
 					// Without it, or behind it, the whole room, as for every app before this.
 					const known = url.searchParams.get("known")
-					if (known !== null && /^\d{1,15}$/.test(known) && Number(known) === snapshot.shared.revision)
-						return reply({ own: snapshot.own, sharedRevision: snapshot.shared.revision } satisfies OwnRead)
+					if (
+						known !== null &&
+						/^\d{1,15}$/.test(known) &&
+						Number(known) === snapshot.shared.revision
+					)
+						return reply({
+							own: snapshot.own,
+							sharedRevision: snapshot.shared.revision,
+						} satisfies OwnRead)
 					return reply(snapshot)
 				}
 				if (request.method === "GET" && operation === "member/progress") {
 					const own = await service.read(id, actor)
 					if (!options.members)
-						throw new RoomError(
-							"not_implemented",
-							"GoodWatch sign-in not configured",
-							501
-						)
-					return reply(
-						await options.members.ownProgress(id, own.own.participantId)
-					)
+						throw new RoomError("not_implemented", "GoodWatch sign-in not configured", 501)
+					return reply(await options.members.ownProgress(id, own.own.participantId))
 				}
 				if (request.method === "GET" && operation === "member") {
 					const own = await service.read(id, actor)
 					return reply(
 						options.members
 							? await options.members.status(id, own.own.participantId)
-							: own.own.member
+							: own.own.member,
 					)
 				}
 				if (request.method === "POST" && operation === "member/link") {
 					if (!options.members)
 						throw new RoomError("not_implemented", "GoodWatch sign-in not configured", 501)
-          const a = (await account(true))!
-          return sendAdmission(await service.linkAccount(id, actor, a), a)
+					const a = (await account(true))!
+					return sendAdmission(await service.linkAccount(id, actor, a), a)
 				}
 				if (request.method === "POST" && operation === "realtime-ticket")
 					return reply(await service.ticket(id, actor))
@@ -703,24 +889,21 @@ export function createProposalHandler(
 			throw new RoomError("not_found", "Endpoint unavailable", 404)
 		} catch (error) {
 			const e =
-				error instanceof RoomError
-					? error
-					: new RoomError("busy", "Service unavailable", 503, true)
-			const retryAfter =
-				"retryAfterSeconds" in e ? Number(e.retryAfterSeconds) : NaN
+				error instanceof RoomError ? error : new RoomError("busy", "Service unavailable", 503, true)
+			const retryAfter = "retryAfterSeconds" in e ? Number(e.retryAfterSeconds) : NaN
 			if (Number.isInteger(retryAfter) && retryAfter > 0)
 				headers.set("retry-after", String(retryAfter))
 			return reply(
 				{
 					...(error instanceof ProfileConflict ? { profile: error.profile } : {}),
-          error: {
+					error: {
 						code: e.code,
 						message: e.message,
 						retryable: e.retryable,
 						...(e.details ? { details: e.details } : {}),
 					},
 				},
-				e.status
+				e.status,
 			)
 		}
 	}

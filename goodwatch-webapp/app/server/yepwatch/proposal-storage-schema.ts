@@ -8,29 +8,29 @@ export interface Field {
 export type Fields = Record<string, Field>
 const text = (max = 16384): Field => ({
 	sql: "TEXT",
-	schema: z.string().max(max)
+	schema: z.string().max(max),
 })
 const integer = (min = 0): Field => ({
 	sql: "BIGINT",
-	schema: z.number().int().safe().min(min)
+	schema: z.number().int().safe().min(min),
 })
 const real: Field = { sql: "DOUBLE PRECISION", schema: z.number().finite() }
 const bool: Field = { sql: "BOOLEAN", schema: z.boolean() }
 const enumeration = (values: [string, ...string[]]): Field => ({
 	sql: "TEXT",
-	schema: z.enum(values)
+	schema: z.enum(values),
 })
 const nullable = (f: Field): Field => ({
 	sql: f.sql,
-	schema: f.schema.nullable()
+	schema: f.schema.nullable(),
 })
 const additive = (f: Field): Field => ({
 	sql: f.sql,
-	schema: f.schema.nullable().optional()
+	schema: f.schema.nullable().optional(),
 })
 const optional = (f: Field): Field => ({
 	sql: f.sql,
-	schema: f.schema.optional()
+	schema: f.schema.optional(),
 })
 export function object(fields: Fields): Field {
 	return {
@@ -38,17 +38,13 @@ export function object(fields: Fields): Field {
 			.map(([k, v]) => `"${k}" ${v.sql}`)
 			.join(",")})`,
 		schema: z
-			.object(
-				Object.fromEntries(
-					Object.entries(fields).map(([k, v]) => [k, v.schema])
-				)
-			)
-			.strict()
+			.object(Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, v.schema])))
+			.strict(),
 	}
 }
 const array = (f: Field, max = 2400): Field => ({
 	sql: `ARRAY(${f.sql})`,
-	schema: z.array(f.schema).max(max)
+	schema: z.array(f.schema).max(max),
 })
 const strings = array(text())
 const ref = nullable(text(128))
@@ -59,18 +55,18 @@ const episode = object({
 	number: integer(),
 	displaySeason: optional(integer()),
 	displayNumber: optional(integer()),
-	presentationVersion: optional(text())
+	presentationVersion: optional(text()),
 })
 const identity = object({
 	kind: enumeration(["movie", "show_start", "show_continue"]),
 	tmdbId: integer(1),
-	episode: optional(episode)
+	episode: optional(episode),
 })
 identity.schema = identity.schema.superRefine((v, ctx) => {
 	if ((v.kind === "movie") === Boolean(v.episode))
 		ctx.addIssue({
 			code: "custom",
-			message: "Movie/episode identity mismatch"
+			message: "Movie/episode identity mismatch",
 		})
 })
 const offer = object({
@@ -78,16 +74,16 @@ const offer = object({
 	name: text(),
 	url: nullable(text()),
 	kind: enumeration(["provider", "where_to_watch", "search"]),
-	offerType: enumeration(["flatrate", "free", "ads"])
+	offerType: enumeration(["flatrate", "free", "ads"]),
 })
 export const availability = array(
 	object({
 		state: enumeration(["watchable", "no_match", "unknown"]),
 		scope: enumeration(["title", "episode"]),
 		checkedAt: nullable(integer()),
-		offers: array(offer, 100)
+		offers: array(offer, 100),
 	}),
-	12
+	12,
 )
 const failure = object({
 	type: enumeration(["deck", "catalog", "access"]),
@@ -108,44 +104,39 @@ const failure = object({
 				serviceIds: array(integer(1), 100),
 				watchable: integer(),
 				noMatch: integer(),
-				unknown: integer()
+				unknown: integer(),
 			}),
-			12
-		)
-	)
+			12,
+		),
+	),
 })
 export const constraints = object({
 	kinds: array(enumeration(["movie", "show_start", "show_continue"]), 3),
 	maxMinutes: nullable(integer(1)),
-	moods: strings
+	moods: strings,
 })
 export const stream = object({
 	version: integer(),
 	state: enumeration(["ready", "exhausted", "unavailable", "capacity"]),
 	reason: nullable(
-		enumeration([
-			"catalog_end",
-			"catalog_incomplete",
-			"room_capacity",
-			"awaiting_answers"
-		])
-	)
+		enumeration(["catalog_end", "catalog_incomplete", "room_capacity", "awaiting_answers"]),
+	),
 })
 export const checkState = object({
 	version: integer(),
 	state: enumeration(["none", "checking", "unavailable"]),
-	error: nullable(object({ code: text(), details: optional(failure) }))
+	error: nullable(object({ code: text(), details: optional(failure) })),
 })
 export const prefill = object({
 	country: nullable(text(2)),
 	serviceIds: array(integer(1), 100),
-	savedProgressAvailable: bool
+	savedProgressAvailable: bool,
 })
 const base: Fields = {
 	record_id: text(128),
 	room_id: text(128),
 	generation: integer(),
-	expires_at: integer()
+	expires_at: integer(),
 }
 export interface Table {
 	name: string
@@ -157,42 +148,87 @@ const entity = (name: string, fields: Fields, checks?: string[]): Table => ({
 	name: `doc.yepwatch_${name}`,
 	fields: { ...base, ...fields },
 	primary: "record_id",
-	checks
+	checks,
 })
-const commandReceipt = object({ commandId: text(128), sequence: integer(1), digest: text(128), revision: integer() })
+const commandReceipt = object({
+	commandId: text(128),
+	sequence: integer(1),
+	digest: text(128),
+	revision: integer(),
+})
 const decisionFields: Fields = {
-	id: text(300), room_id: text(128), room_label: text(2000), title: text(1000),
-	year: nullable(integer()), poster_url: nullable(text()), decided_at: integer(),
-	people: array(text(200), 12), account_ids: array(text(256), 12), participant_ids: array(text(128), 12)
+	id: text(300),
+	room_id: text(128),
+	room_label: text(2000),
+	title: text(1000),
+	year: nullable(integer()),
+	poster_url: nullable(text()),
+	decided_at: integer(),
+	people: array(text(200), 12),
+	account_ids: array(text(256), 12),
+	participant_ids: array(text(128), 12),
 }
 export const accountIndexTable: Table = {
-	name: "doc.yepwatch_account_rooms", primary: "id",
-	fields: { id: text(128), rooms: array(object({ roomId: text(128), expiresAt: integer() }), 512) }
+	name: "doc.yepwatch_account_rooms",
+	primary: "id",
+	fields: { id: text(128), rooms: array(object({ roomId: text(128), expiresAt: integer() }), 512) },
 }
 export const revokedSessionTable: Table = {
-	name: "doc.yepwatch_revoked_session", primary: "id", fields: { id: text(128), expires_at: integer() }
+	name: "doc.yepwatch_revoked_session",
+	primary: "id",
+	fields: { id: text(128), expires_at: integer() },
 }
 export const accountHistoryTable: Table = {
-	name: "doc.yepwatch_account_history", primary: "id", fields: { ...decisionFields }
+	name: "doc.yepwatch_account_history",
+	primary: "id",
+	fields: { ...decisionFields },
 }
 export const deletionTable: Table = {
-	name: "doc.yepwatch_deletion", primary: "id", fields: {
-		id: text(128), kind: enumeration(["account", "guest"]), user_id: nullable(text(256)),
-		room_id: nullable(text(128)), participant_id: nullable(text(128)), requested_at: integer(),
-		purge_after: integer(), phase: enumeration(["pending", "purging"]),
-		lease_until: integer(), purge_token: nullable(text(128)),
+	name: "doc.yepwatch_deletion",
+	primary: "id",
+	fields: {
+		id: text(128),
+		kind: enumeration(["account", "guest"]),
+		user_id: nullable(text(256)),
+		room_id: nullable(text(128)),
+		participant_id: nullable(text(128)),
+		requested_at: integer(),
+		purge_after: integer(),
+		phase: enumeration(["pending", "purging"]),
+		lease_until: integer(),
+		purge_token: nullable(text(128)),
 		targets: array(object({ roomId: text(128), participantId: text(128) }), 10000),
-	}
+	},
 }
 export const tables = {
 	room: {
 		name: "doc.yepwatch_room",
 		primary: "id",
 		fields: {
-      dealt_keys: additive(array(text(), 6000)), started_at: additive(integer()), first_match_at: additive(integer()), outcome_emitted_at: additive(integer()), ranker_version: additive(text(100)),
-      taste_sources: additive(object({ member: integer(), profile: integer(), none: integer() })),
-      outcome: additive(array(object({ position: integer(), reason: nullable(enumeration([...REASON_CODES])),
-        taste: real, idea: real, quality: real, score: real, yep: integer(), nope: integer(), unanswered: integer(), matched: bool, moved: bool }), 6000)),
+			dealt_keys: additive(array(text(), 6000)),
+			started_at: additive(integer()),
+			first_match_at: additive(integer()),
+			outcome_emitted_at: additive(integer()),
+			ranker_version: additive(text(100)),
+			taste_sources: additive(object({ member: integer(), profile: integer(), none: integer() })),
+			outcome: additive(
+				array(
+					object({
+						position: integer(),
+						reason: nullable(enumeration([...REASON_CODES])),
+						taste: real,
+						idea: real,
+						quality: real,
+						score: real,
+						yep: integer(),
+						nope: integer(),
+						unanswered: integer(),
+						matched: bool,
+						moved: bool,
+					}),
+					6000,
+				),
+			),
 			id: text(128),
 			storage_format: integer(2),
 			revision: integer(),
@@ -221,20 +257,14 @@ export const tables = {
 					attributes: array(
 						object({
 							text: text(200),
-							kind: enumeration([
-								"attribute",
-								"excluded",
-								"want",
-								"avoid",
-								"phrase"
-							]),
-							key: optional(text(100))
+							kind: enumeration(["attribute", "excluded", "want", "avoid", "phrase"]),
+							key: optional(text(100)),
 						}),
-						100
+						100,
 					),
 					rankedKeys: array(integer(1), 2000),
-					interpretedAt: integer()
-				})
+					interpretedAt: integer(),
+				}),
 			),
 			candidate_records: array(text(128), 120),
 			ticket_records: array(text(128), 48),
@@ -245,13 +275,9 @@ export const tables = {
 			decision_record: ref,
 			history_records: array(text(128), 128),
 			pending_revision: integer(),
-			pending_agreement: bool
+			pending_agreement: bool,
 		},
-		checks: [
-			"phase IN ('setup','choosing','decided')",
-			"storage_format=2",
-			"revision>=0"
-		]
+		checks: ["phase IN ('setup','choosing','decided')", "storage_format=2", "revision>=0"],
 	} as Table,
 	idea: entity("idea", {
 		idea_id: text(128),
@@ -262,17 +288,26 @@ export const tables = {
 			object({
 				text: text(200),
 				kind: enumeration(["attribute", "excluded", "want", "avoid", "phrase"]),
-				key: optional(text(100))
+				key: optional(text(100)),
 			}),
-			100
+			100,
 		),
 		ranked_keys: array(integer(1), 2000),
-		interpreted_at: integer()
+		interpreted_at: integer(),
 	}),
 	participant: entity("participant", {
-    profile_id: additive(text(43)),
-    taste_revision: additive(integer()),
-		sessions: array(object({ id: text(128), tokenHash: text(128), expiresAt: integer(), nextSequence: integer(1), receipts: array(commandReceipt, 64) }), 12),
+		profile_id: additive(text(43)),
+		taste_revision: additive(integer()),
+		sessions: array(
+			object({
+				id: text(128),
+				tokenHash: text(128),
+				expiresAt: integer(),
+				nextSequence: integer(1),
+				receipts: array(commandReceipt, 64),
+			}),
+			12,
+		),
 		joined_at: integer(),
 		archived_at: nullable(integer()),
 		left_label: nullable(text(2000)),
@@ -297,7 +332,7 @@ export const tables = {
 		grant_record: ref,
 		// Compatibility with member reader interface, never used to finalize proposals.
 		legacy_pick_id: nullable(text(128)),
-		legacy_pick_revision: integer()
+		legacy_pick_revision: integer(),
 	}),
 	vote: entity(
 		"vote",
@@ -307,40 +342,43 @@ export const tables = {
 			choice: nullable(enumeration(["watch", "pass"])),
 			revision: integer(),
 			active_exposure_ms: nullable(integer()),
-			timing_source: nullable(
-				enumeration(["active_exposure", "implied", "unavailable"])
-			)
+			timing_source: nullable(enumeration(["active_exposure", "implied", "unavailable"])),
 		},
 		[
 			"choice IS NULL OR choice IN ('watch','pass')",
 			"revision>=0",
-			"active_exposure_ms IS NULL OR active_exposure_ms>=0"
-		]
+			"active_exposure_ms IS NULL OR active_exposure_ms>=0",
+		],
 	),
 	agreement: entity("agreement", {
 		participant_id: text(128),
 		proposal_version: nullable(integer()),
-		revision: integer()
+		revision: integer(),
 	}),
 	proposal: entity("proposal", {
 		candidate_id: text(128),
 		version: integer(),
 		previous_candidate_id: nullable(text(128)),
 		proposer_id: text(128),
-		base_participant_ids: array(text(128), 12)
+		base_participant_ids: array(text(128), 12),
 	}),
 	decision: entity("decision", {
 		candidate_id: text(128),
 		agreement_version: integer(),
 		decided_at: integer(),
-		availability
+		availability,
 	}),
 	history: entity("history", decisionFields),
 	candidate: entity("candidate", {
-    reason: additive(object({ code: enumeration([...REASON_CODES]), text: { ...text(80), schema: z.string().min(1).max(80) } })),
-        essence: additive(array(text(), 6)),
-        effects: additive(array(object({ line: text(), strength: real, color: text(7) }), 5)),
-        not_for: additive(text()),
+		reason: additive(
+			object({
+				code: enumeration([...REASON_CODES]),
+				text: { ...text(80), schema: z.string().min(1).max(80) },
+			}),
+		),
+		essence: additive(array(text(), 6)),
+		effects: additive(array(object({ line: text(), strength: real, color: text(7) }), 5)),
+		not_for: additive(text()),
 		idea_ids: additive(array(text(128), 24)),
 		candidate_id: text(128),
 		identity,
@@ -350,32 +388,30 @@ export const tables = {
 		poster_url: nullable(text()),
 		runtime_minutes: nullable(real),
 		availability,
-		viewing_duration: nullable(
-			object({ minutes: real, scope: enumeration(["movie", "episode"]) })
-		),
+		viewing_duration: nullable(object({ minutes: real, scope: enumeration(["movie", "episode"]) })),
 		backdrop_url: nullable(text()),
 		trailer_url: nullable(text()),
 		goodwatch_score: nullable(real),
-		genres: nullable(strings)
+		genres: nullable(strings),
 	}),
 	receipt: entity("command_receipt", {
 		participant_id: text(128),
 		command_id: text(128),
 		sequence: integer(),
 		digest: text(128),
-		revision: integer()
+		revision: integer(),
 	}),
 	ticket: entity("ticket", {
 		ticket_hash: text(128),
 		session_id: nullable(text(128)),
 		participant_id: text(128),
 		epoch: integer(),
-		ticket_expires_at: integer()
+		ticket_expires_at: integer(),
 	}),
 	grant: entity("member_grant", {
 		participant_id: text(128),
 		access_token_ciphertext: text(40000),
-		grant_expires_at: integer()
+		grant_expires_at: integer(),
 	}),
 	intent: entity("member_intent", {
 		state_hash: text(128),
@@ -387,13 +423,11 @@ export const tables = {
 		challenge: text(),
 		verifier_ciphertext: nullable(text(40000)),
 		status: enumeration(["ready", "exchanging", "linked"]),
-		code_hash: nullable(text())
-	})
+		code_hash: nullable(text()),
+	}),
 } as const
 export type Entity = Exclude<keyof typeof tables, "room">
-export const entityNames = Object.keys(tables).filter(
-	(k) => k !== "room"
-) as Entity[]
+export const entityNames = Object.keys(tables).filter((k) => k !== "room") as Entity[]
 export function columns(table: Table) {
 	return Object.keys(table.fields)
 }
@@ -411,15 +445,13 @@ export function tableDdl(table: Table, replicas: 0 | 2) {
 				name === table.primary
 					? " PRIMARY KEY"
 					: !f.schema.isNullable() && !f.schema.isOptional()
-					? " NOT NULL"
-					: ""
-			}`
+						? " NOT NULL"
+						: ""
+			}`,
 	)
 	for (const [i, c] of (table.checks ?? []).entries())
 		fields.push(`CONSTRAINT check_${i} CHECK (${c})`)
-	return `CREATE TABLE IF NOT EXISTS ${table.name} (\n  ${fields.join(
-		",\n  "
-	)}\n) CLUSTERED INTO ${
+	return `CREATE TABLE IF NOT EXISTS ${table.name} (\n  ${fields.join(",\n  ")}\n) CLUSTERED INTO ${
 		table.name === "doc.yepwatch_room" || table.name === "doc.yepwatch_taste_profile" ? 4 : 1
 	} SHARDS WITH (column_policy='strict',number_of_replicas=${replicas},"write.wait_for_active_shards"='${
 		replicas + 1
@@ -437,16 +469,13 @@ export const controlTable: Table = {
 			object({
 				room_id: text(128),
 				admission_digest: text(128),
-				expires_at: integer()
+				expires_at: integer(),
 			}),
-			100
+			100,
 		),
 		admission_digests: array(text(128), 120),
-		command_grants: array(
-			object({ command_digest: text(128), actor_digest: text(128) }),
-			2400
-		)
-	}
+		command_grants: array(object({ command_digest: text(128), actor_digest: text(128) }), 2400),
+	},
 }
 
 /** Room-creation allowance, separate from transferable hosting and room membership. */
@@ -457,13 +486,21 @@ export const creationQuotaTable: Table = {
 		creator_digest: text(64),
 		format: integer(1),
 		expires_at: integer(),
-		reservations: array(object({ room_id: text(128), admission_digest: text(128), expires_at: integer() }), 100),
+		reservations: array(
+			object({ room_id: text(128), admission_digest: text(128), expires_at: integer() }),
+			100,
+		),
 	},
 }
 export const creationReservationTable: Table = {
 	name: "doc.yepwatch_creation_reservation",
 	primary: "room_id",
-	fields: { room_id: text(128), creator_digest: text(64), admission_digest: text(128), expires_at: integer() },
+	fields: {
+		room_id: text(128),
+		creator_digest: text(64),
+		admission_digest: text(128),
+		expires_at: integer(),
+	},
 }
 
 export const runtimeTable: Table = {
@@ -474,27 +511,51 @@ export const runtimeTable: Table = {
 		format_version: integer(1),
 		key_id: text(128),
 		key_check: text(128),
-		room_ttl_ms: integer(1)
-	}
+		room_ttl_ms: integer(1),
+	},
 }
 /** Durable invite lookup. No plaintext key or room state is stored here. */
 export const invitationTable: Table = {
 	name: "doc.yepwatch_invitation",
 	primary: "code_hash",
-	fields: { code_hash: text(64), room_id: text(128), expires_at: integer() }
+	fields: { code_hash: text(64), room_id: text(128), expires_at: integer() },
 }
 export const tasteProfileTable: Table = {
- name: "doc.yepwatch_taste_profile", primary: "id", fields: {
-  id: text(43),
-  answers: object({ items: array(object({ key: integer(), answer: nullable(enumeration(["loved", "not_for_me", "unseen"])), source: enumeration(["taste", "followup"]), at: integer() }), 500) }),
-  followups: array(object({ key: integer(), decided_at: integer(), state: enumeration(["pending", "answered", "dismissed"]) }), 20),
-  nopes: additive(array(object({ key: integer(), at: integer() }), 300)),
-  dealt: array(integer(), 300), revision: integer(), created_at: integer(), updated_at: integer(), expires_at: integer(),
-  write_window: integer(-1), write_count: integer(),
- }
+	name: "doc.yepwatch_taste_profile",
+	primary: "id",
+	fields: {
+		id: text(43),
+		answers: object({
+			items: array(
+				object({
+					key: integer(),
+					answer: nullable(enumeration(["loved", "not_for_me", "unseen"])),
+					source: enumeration(["taste", "followup"]),
+					at: integer(),
+				}),
+				500,
+			),
+		}),
+		followups: array(
+			object({
+				key: integer(),
+				decided_at: integer(),
+				state: enumeration(["pending", "answered", "dismissed"]),
+			}),
+			20,
+		),
+		nopes: additive(array(object({ key: integer(), at: integer() }), 300)),
+		dealt: array(integer(), 300),
+		revision: integer(),
+		created_at: integer(),
+		updated_at: integer(),
+		expires_at: integer(),
+		write_window: integer(-1),
+		write_count: integer(),
+	},
 }
 export const storageTables: Table[] = [
-  tasteProfileTable,
+	tasteProfileTable,
 	creationQuotaTable,
 	creationReservationTable,
 	deletionTable,
@@ -504,5 +565,5 @@ export const storageTables: Table[] = [
 	invitationTable,
 	...Object.values(tables),
 	runtimeTable,
-	controlTable
+	controlTable,
 ]
