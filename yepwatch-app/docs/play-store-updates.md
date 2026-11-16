@@ -24,7 +24,9 @@ uses `requireOptionalNativeModule`, so they remain usable but cannot show the
 link. This feature requires a new Android binary and a changed Android runtime;
 do not publish it as an OTA to an old runtime or start a new release build without
 the approval required by [the release preference](ota-updates.md#release-preference).
-No store version or build number has been incremented by this implementation.
+The owner approved an Android binary on 16 November 2026; the production profile
+now prepares version 1.0.0, build 20. Beta profile values remain unchanged. No iOS
+binary was requested or built for this Android feature.
 
 Validation: run the app's typecheck, lint and unit tests, verify Android
 autolinking discovers the module, and compile its Kotlin library. The real Play
