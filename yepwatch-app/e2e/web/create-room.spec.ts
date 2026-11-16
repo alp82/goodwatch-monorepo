@@ -25,9 +25,11 @@ test.describe('create and set up a room', () => {
     await host.tap(host.button('Continue'), { expect: { text: 'What do you like?' } });
     await host.see({ text: '1 of \\d+' }, 15000, 'the first Taste card');
     await host.audit('setup: Taste cards');
-    for (const answer of ['Loved it', 'Not for me', 'Haven’t seen']) await host.tap(host.button(answer).first(), { expect: {}, repeatable: true });
+    for (const [i, answer] of ['Loved it', 'Not for me', 'Haven’t seen'].entries())
+      await host.tap(host.button(answer).first(), { expect: { text: `${i + 2} of \\d+` }, repeatable: true });
     await host.tap(host.button('Undo'), { expect: { text: '3 of \\d+' } });
-    for (let i = 0; i < 3; i++) await host.tap(host.button('Loved it').first(), { expect: {}, repeatable: true });
+    for (let i = 0; i < 3; i++)
+      await host.tap(host.button('Loved it').first(), { expect: { text: `${i + 4} of \\d+` }, repeatable: true });
     await host.tap(host.button('That’s enough'), { expect: { visible: ['home-rooms'] } });
     expect(host.commandLog.filter((c) => c.path.endsWith('/rooms')).length, 'setup creates no couch').toBe(0);
     await host.audit('start page (set up)');
