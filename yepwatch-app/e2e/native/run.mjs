@@ -226,9 +226,9 @@ async function main() {
     for (const p of [A, Bp]) {
       await p.waitFor('poster', { timeout: 10000 });
       // Audit resting targets, after exercising the first-round tutorial's explicit Skip action.
-      if (await p.has('Skip')) {
-        await p.tap('Skip');
-        await p.waitGone('Skip');
+      if (await p.has('Skip the how-to')) {
+        await p.tap('Skip the how-to');
+        await p.waitGone('Skip the how-to');
         if (await p.has('details-panel')) journeyFail('tutorial Skip', 'Skip opened title details', p);
       }
     }
