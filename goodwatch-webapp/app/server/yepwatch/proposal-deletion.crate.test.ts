@@ -1,3 +1,4 @@
+import { SqlMemberSessions } from "./member-session-store.ts"
 import test from "node:test"
 import assert from "node:assert/strict"
 import { randomBytes } from "node:crypto"
@@ -70,6 +71,25 @@ test(
 				accountIds: [account.userId, peerId],
 			},
 		])
+		const sessions = new SqlMemberSessions(sql, secret)
+		const value = {
+			session: {
+				v: 1 as const,
+				sessionId: account.sessionId,
+				userId: account.userId,
+				displayName: null,
+				accessToken: "delete-access",
+				expiresAt: now + 300000,
+				refreshToken: "delete-refresh",
+			},
+			expiresAt: now + 90 * 86400000,
+		}
+		await sessions.compareAndSwap(account.sessionId, null, value)
+		await sessions.compareAndSwap(`${account.sessionId}-second`, null, value)
+		await sessions.compareAndSwap(`peer-${runId}`, null, {
+			...value,
+			session: { ...value.session, userId: peerId },
+		})
 		const first = await service.deleteAccount(account)
 		const restarted = new SqlDeletionStore(sql, secret)
 		assert.deepEqual(await restarted.get({ kind: "account", userId: account.userId }), first)
@@ -106,6 +126,9 @@ test(
 			).rows,
 			[],
 		)
+		assert.equal(await sessions.read(account.sessionId), null)
+		assert.equal(await sessions.read(`${account.sessionId}-second`), null)
+		assert.ok(await sessions.read(`peer-${runId}`), "another user keeps their sign-in")
 		assert.deepEqual(await repo.accountStore.rooms(account.userId), [])
 		assert.deepEqual(await repo.accountStore.history(account.userId), [])
 		const peer = await repo.accountStore.history(peerId)

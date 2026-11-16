@@ -1,3 +1,4 @@
+import { SqlMemberSessions } from "./member-session-store.ts"
 import { expiredRoundOutcomes } from "./proposal-expired-outcomes.ts"
 import { TasteProfiles, SqlProfileStore } from "./proposal-taste-profile.ts"
 import { profileTasteSource } from "./proposal-profile-signals.ts"
@@ -135,8 +136,9 @@ export function createReleaseRuntime(config: ReleaseConfig, deps: ReleaseDepende
 			quotas,
 		)
 	} else control = new ReleaseControl(deps.sql, config.control, quotas, deps.commands)
+	const memberSessions = config.member ? new SqlMemberSessions(deps.sql, config.secret) : undefined
 	const members = config.member
-		? releaseMembers(repository, config.member, fetch, config.secret)
+		? releaseMembers(repository, config.member, fetch, config.secret, memberSessions)
 		: undefined
 	if (members && !deps.memberCatalog) throw new Error("Member catalog adapter required")
 	const tickets = deps.tickets
@@ -324,6 +326,7 @@ export function createReleaseRuntime(config: ReleaseConfig, deps: ReleaseDepende
 	const cleanup = cleanupRounds(
 		[
 			() => service.deletions.purgeDue(now()),
+			() => memberSessions?.purgeExpired(now()) ?? Promise.resolve(),
 			() => expiredRoundOutcomes(deps.sql, repository, now(), catalog.roundEnded),
 			() => quotas.purgeExpired(),
 			() => profiles?.expire() ?? Promise.resolve(),

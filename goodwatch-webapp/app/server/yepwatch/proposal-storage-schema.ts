@@ -554,7 +554,19 @@ export const tasteProfileTable: Table = {
 		write_count: integer(),
 	},
 }
+export const memberSessionTable: Table = {
+	name: "doc.yepwatch_member_session",
+	primary: "id",
+	fields: {
+		id: text(43),
+		session_ciphertext: text(100000),
+		version: integer(1),
+		user_key: text(43),
+		expires_at: integer(),
+	},
+}
 export const storageTables: Table[] = [
+	memberSessionTable,
 	tasteProfileTable,
 	creationQuotaTable,
 	creationReservationTable,

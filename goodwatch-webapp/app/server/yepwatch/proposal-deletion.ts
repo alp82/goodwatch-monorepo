@@ -1,3 +1,4 @@
+import { SqlMemberSessions } from "./member-session-store.ts"
 import { keyed, hash, random } from "./crypto.server.ts"
 import { RoomError } from "./errors.ts"
 import { z } from "zod"
@@ -491,9 +492,11 @@ export class SqlDeletionStore implements DeletionStore {
 		// flight at this moment (see docs/adr/yepwatch-account-deletion.md).
 		if (roomIds.length) await scrub()
 		await heartbeat()
-		if (subject.kind === "account")
+		if (subject.kind === "account") {
+			await new SqlMemberSessions(this.sql, this.secret).deleteUser(subject.userId)
 			await this.sql(`DELETE FROM ${accountIndexTable.name} WHERE id=?`, [
 				keyed(this.secret, "account-rooms", subject.userId),
 			])
+		}
 	}
 }

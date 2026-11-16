@@ -1,8 +1,9 @@
+import { MemoryMemberSessions } from "./member-session-store.ts"
 import { test } from "node:test"
 import assert from "node:assert/strict"
 import {
 	ContinuousMembers,
-	RENEWABLE_SESSION_MS,
+	MemberRefreshNotSent,
 	type MemberIssuer,
 } from "./continuous-members.server.ts"
 import type { ContinuousRepository } from "./continuous-types.ts"
@@ -36,22 +37,26 @@ function members() {
 			}
 		},
 	}
-	const m = new ContinuousMembers(
-		{} as ContinuousRepository,
-		issuer,
-		{
-			prefill: async () => {
-				throw new Error("not used")
+	const store = new MemoryMemberSessions()
+	const restart = () =>
+		new ContinuousMembers(
+			{} as ContinuousRepository,
+			issuer,
+			{
+				prefill: async () => {
+					throw new Error("not used")
+				},
 			},
-		},
-		{
-			callbackUrl: "https://yepwatch.example/callback",
-			browserOrigins: ["https://yepwatch.example"],
-			nativeReturnUri: "yepwatch://auth/callback",
-			sessionSecret: "test-renewal-secret-at-least-thirty-two-chars",
-		},
-		() => clock.now,
-	)
+			{
+				callbackUrl: "https://yepwatch.example/callback",
+				browserOrigins: ["https://yepwatch.example"],
+				nativeReturnUri: "yepwatch://auth/callback",
+				sessionSecret: "test-renewal-secret-at-least-thirty-two-chars",
+				sessionStore: store,
+			},
+			() => clock.now,
+		)
+	const m = restart()
 	// Signed in long ago: the access token has lapsed, the refresh grant still holds.
 	const lapsed = m.sealSession({
 		v: 1,
@@ -63,7 +68,7 @@ function members() {
 		refreshToken: "refresh-0",
 	})
 	const settle = () => new Promise((resolve) => setTimeout(resolve, 10))
-	return { m, clock, spent, lapsed, settle }
+	return { m, clock, spent, lapsed, settle, restart, issuer, store }
 }
 
 test("a rotation the device never received is kept for it as long as the refresh grant lasts", async () => {
@@ -78,6 +83,7 @@ test("a rotation the device never received is kept for it as long as the refresh
 	const back = await m.account(lapsed, { background: true })
 	assert.equal(back.changed, true, "the kept rotation goes back to the device")
 	assert.equal(back.session?.refreshToken, "refresh-1")
+	await settle()
 	assert.deepEqual(
 		spent,
 		["refresh-0", "refresh-1"],
@@ -85,22 +91,45 @@ test("a rotation the device never received is kept for it as long as the refresh
 	)
 })
 
-test("once the device sends the rotated session, the replaced one is kept only for requests still in flight", async () => {
-	const { m, clock, lapsed, settle } = members()
-	await m.account(lapsed, { background: true })
-	await settle()
-	const rotated = (await m.account(lapsed)).session!
-	assert.equal(rotated.refreshToken, "refresh-1")
-	await m.account(m.sealSession(rotated))
-	const racing = await m.account(lapsed)
-	assert.equal(
-		racing.session?.refreshToken,
-		"refresh-1",
-		"a request sent before the device kept it still gets it",
-	)
-	clock.now += RENEWABLE_SESSION_MS - 1
-	const replay = await m.account(lapsed)
-	assert.equal(replay.status.state, "guest", "a long-replaced session is GoodWatch's to refuse")
+test("renewal survives a restart with the same store and the old device session", async () => {
+	const { m, clock, lapsed, restart, spent } = members()
+	await m.account(lapsed)
+	clock.now += 301_000
+	const back = await restart().account(lapsed)
+	assert.equal(back.status.state, "member")
+	assert.equal(back.session?.refreshToken, "refresh-2")
+	assert.deepEqual(spent, ["refresh-0", "refresh-1"])
+})
+
+test("concurrent renewals across instances make exactly one GoodWatch refresh", async () => {
+	const { m, lapsed, restart, spent } = members()
+	const results = await Promise.all([m.account(lapsed), restart().account(lapsed)])
+	assert.ok(results.every((r) => r.status.state === "member"))
+	assert.deepEqual(spent, ["refresh-0"])
+	assert.equal((await restart().account(lapsed)).session?.refreshToken, "refresh-1")
+})
+
+test("a timed-out rotation retries inside the 30 second reuse window", async () => {
+	const { m, lapsed, clock, issuer, restart, spent } = members()
+	const refresh = issuer.refresh!
+	let calls = 0
+	let rotated: Awaited<ReturnType<typeof refresh>>
+	const started = clock.now
+	issuer.refresh = async (input) => {
+		calls++
+		if (calls === 1) {
+			rotated = await refresh(input)
+			clock.now += 12_000
+			throw new RoomError("busy", "timeout", 503, true)
+		}
+		assert.ok(clock.now - started < 30_000)
+		return rotated!
+	}
+	const back = await m.account(lapsed)
+	assert.equal(back.status.state, "member")
+	assert.equal(calls, 2)
+	assert.deepEqual(spent, ["refresh-0"])
+	assert.equal((await restart().account(lapsed)).session?.refreshToken, "refresh-1")
 })
 
 test("a long run of rotations the device never received leads it to the newest, never back to a spent token", async () => {
@@ -125,8 +154,7 @@ test("a long run of rotations the device never received leads it to the newest, 
 })
 
 test("verifying a rotated session keeps track of the session it replaced", async () => {
-	const { m, clock, lapsed, settle } = members()
-	const internals = m as unknown as { landed: Map<string, { until: number }> }
+	const { m, lapsed, settle, restart } = members()
 	// GoodWatch's identity check fails once, right after the rotation: the rotated session is kept unverified.
 	const verify = (m as unknown as { issuer: MemberIssuer }).issuer.verify
 	let outage = true
@@ -143,9 +171,234 @@ test("verifying a rotated session keeps track of the session it replaced", async
 	const verified = (await m.account(m.sealSession(unverified))).session!
 	assert.equal(verified.unverified, undefined)
 	await m.account(m.sealSession(verified))
-	const longest = Math.max(...[...internals.landed.values()].map((v) => v.until - clock.now))
-	assert.ok(
-		longest <= 5 * 60_000,
-		`every replaced session is kept only for in-flight requests (${longest} ms)`,
+	const back = await restart().account(lapsed)
+	assert.equal(back.session?.unverified, undefined)
+	assert.equal(back.session?.refreshToken, "refresh-1")
+})
+
+test("lazy migration inserts the legacy pair once and never overwrites a newer stored pair", async () => {
+	const { m, lapsed, store, restart } = members()
+	assert.equal(await store.read("device-1"), null)
+	await m.account(lapsed)
+	const row = (await store.read("device-1"))!
+	assert.equal(row.value.session.refreshToken, "refresh-1")
+	await restart().account(lapsed)
+	assert.equal((await store.read("device-1"))?.version, row.version)
+})
+
+test("a restart during identity verification reads the already-persisted rotated pair", async () => {
+	const { m, lapsed, issuer, store, restart, spent, settle } = members()
+	const verify = issuer.verify
+	let finish!: () => void
+	const waiting = new Promise<void>((resolve) => {
+		finish = resolve
+	})
+	issuer.verify = async (token) => {
+		await waiting
+		return verify(token)
+	}
+	await m.account(lapsed, { background: true })
+	await settle()
+	assert.equal((await store.read("device-1"))?.value.session.refreshToken, "refresh-1")
+	const back = await restart().account(lapsed, { background: true })
+	assert.equal(back.status.state, "member")
+	assert.equal(back.session?.refreshToken, "refresh-1")
+	assert.deepEqual(spent, ["refresh-0"])
+	finish()
+	await settle()
+})
+
+test("an ambiguous rotation recorded before a crash is retried only inside the reuse window", async () => {
+	const { m, lapsed, store, clock, restart, spent } = members()
+	const session = m.openSession(lapsed)!
+	await store.compareAndSwap("device-1", null, {
+		session,
+		owner: "crashed",
+		rotating: true,
+		startedAt: clock.now - 26_000,
+		leaseUntil: clock.now - 1,
+	})
+	assert.equal((await restart().account(lapsed)).status.state, "member")
+	assert.deepEqual(spent, ["refresh-0"])
+})
+
+test("an ambiguous rotation outside the reuse window requires sign-in without revoking other devices", async () => {
+	const { m, lapsed, store, clock, restart, spent } = members()
+	const session = m.openSession(lapsed)!
+	await store.compareAndSwap("device-1", null, {
+		session,
+		owner: "crashed",
+		rotating: true,
+		startedAt: clock.now - 31_000,
+		leaseUntil: clock.now - 1,
+	})
+	const back = await restart().account(lapsed)
+	assert.equal(back.status.state, "guest")
+	assert.equal(await store.read("device-1"), null)
+	assert.deepEqual(spent, [])
+})
+
+test("a lost CAS reply uses the stored winner without another GoodWatch refresh", async () => {
+	const { m, lapsed, store, spent, restart } = members()
+	const swap = store.compareAndSwap.bind(store)
+	store.compareAndSwap = async (...args) => {
+		await swap(...args)
+		return false // Every write landed, but the caller did not receive confirmation.
+	}
+	assert.equal((await m.account(lapsed)).status.state, "member")
+	assert.deepEqual(spent, ["refresh-0"])
+	assert.equal((await restart().account(lapsed)).session?.refreshToken, "refresh-1")
+})
+
+test("a connect outage longer than the replay window releases the claim and recovers", async () => {
+	const { m, lapsed, clock, issuer, store, restart, spent } = members()
+	const refresh = issuer.refresh!
+	issuer.refresh = async () => {
+		throw new MemberRefreshNotSent()
+	}
+	const down = await m.account(lapsed)
+	assert.equal(down.status.state === "member" && down.status.unavailable, true)
+	assert.equal((await store.read("device-1"))?.value.rotating, undefined)
+	clock.now += 60_000
+	issuer.refresh = refresh
+	assert.equal((await restart().account(lapsed)).session?.refreshToken, "refresh-1")
+	assert.deepEqual(spent, ["refresh-0"])
+})
+
+test("an unknown outage longer than the replay window gives a clean sign-in prompt after recovery", async () => {
+	const { m, lapsed, clock, issuer, restart, store } = members()
+	const refresh = issuer.refresh!
+	issuer.refresh = async () => {
+		throw new RoomError("busy", "lost response", 503, true)
+	}
+	await m.account(lapsed)
+	clock.now += 60_000
+	issuer.refresh = refresh
+	assert.equal((await restart().account(lapsed)).status.state, "guest")
+	assert.equal(await store.read("device-1"), null)
+	assert.equal(
+		(await restart().account(lapsed)).status.state,
+		"guest",
+		"the deny receipt survives another restart",
 	)
+})
+
+for (const pending of [false, true])
+	test(`a crashed ${pending ? "pending-save" : "verify-only"} claim starts a fresh refresh window`, async () => {
+		const { m, lapsed, clock, store, spent } = members()
+		await store.compareAndSwap("device-1", null, {
+			session: { ...m.openSession(lapsed)!, ...(pending ? { unverified: true } : {}) },
+			owner: "crashed",
+			rotating: false,
+			startedAt: clock.now - 60_000,
+			leaseUntil: clock.now - 1,
+		})
+		const presented = pending
+			? m.sealSession({ ...m.openSession(lapsed)!, unverified: true })
+			: lapsed
+		assert.equal((await m.account(presented)).session?.refreshToken, "refresh-1")
+		assert.deepEqual(spent, ["refresh-0"])
+	})
+
+test("deploy overlap adopts a newer sealed cookie and never rolls it back", async () => {
+	const { m, lapsed, clock, store } = members()
+	const old = m.openSession(lapsed)!
+	await m.current(old)
+	const newer = {
+		...old,
+		accessToken: "legacy-new",
+		refreshToken: "legacy-refresh",
+		expiresAt: clock.now + 300_000,
+	}
+	assert.equal((await m.current(newer))?.session.refreshToken, "legacy-refresh")
+	assert.equal((await m.current(old))?.session.refreshToken, "legacy-refresh")
+	const row = (await store.read("device-1"))!
+	await store.compareAndSwap("device-1", row, { ...row.value, owner: "refreshing", rotating: true })
+	assert.equal(
+		(await m.current({ ...newer, expiresAt: newer.expiresAt + 1000, refreshToken: "later" }))
+			?.session.refreshToken,
+		"legacy-refresh",
+	)
+})
+
+test("a lost unavailable-write reply preserves unavailable, with the unchanged expired session", async () => {
+	const { m, lapsed, issuer, store } = members()
+	issuer.refresh = async () => {
+		throw new MemberRefreshNotSent()
+	}
+	const swap = store.compareAndSwap.bind(store)
+	store.compareAndSwap = async (...args) => {
+		await swap(...args)
+		return false
+	}
+	const back = await m.account(lapsed)
+	assert.equal(back.status.state === "member" && back.status.unavailable, true)
+	assert.equal(back.session?.refreshToken, "refresh-0")
+})
+
+test("two 12 second refresh attempts then verification outlive the original 25 second lease", async () => {
+	const { m, lapsed, issuer, store, clock, restart, spent } = members()
+	const refresh = issuer.refresh!
+	const verify = issuer.verify
+	let pair: Awaited<ReturnType<typeof refresh>>
+	let attempts = 0
+	issuer.refresh = async (input) => {
+		clock.now += 12_000
+		if (++attempts === 1) {
+			pair = await refresh(input)
+			throw new RoomError("busy", "lost reply", 503, true)
+		}
+		return pair!
+	}
+	issuer.verify = async (token) => {
+		clock.now += 12_000
+		const row = (await store.read("device-1"))!
+		assert.equal(row.value.rotating, false)
+		assert.ok(row.value.leaseUntil! > clock.now, "rotated pair gets its own verification lease")
+		const concurrent = await restart().account(lapsed, { background: true })
+		assert.equal(concurrent.session?.refreshToken, "refresh-1")
+		return verify(token)
+	}
+	assert.equal((await m.account(lapsed)).session?.unverified, undefined)
+	assert.deepEqual(spent, ["refresh-0"])
+})
+
+test("logout, definitive refusal and expiry physically remove stored credentials", async () => {
+	const { m, lapsed, issuer, clock, store } = members()
+	const session = m.openSession(lapsed)!
+	await m.current(session)
+	await m.logout(session)
+	assert.equal(await store.read("device-1"), null)
+	assert.equal(await m.current(session), null)
+	issuer.refresh = async () => {
+		throw new RoomError("unauthorized", "revoked", 401)
+	}
+	const refusedSession = { ...session, sessionId: "refused-device" }
+	assert.equal((await m.account(m.sealSession(refusedSession))).status.state, "guest")
+	assert.equal(await store.read("refused-device"), null)
+	const expiring = { ...session, sessionId: "expired-device" }
+	await store.compareAndSwap("expired-device", null, {
+		session: expiring,
+		expiresAt: clock.now - 1,
+	})
+	assert.equal(await m.current(expiring), null)
+	assert.equal(await store.read("expired-device"), null)
+})
+
+test("refresh expiry advances on rotation and stays fixed during identity-only verification", async () => {
+	const { m, lapsed, issuer, store, clock } = members()
+	const verify = issuer.verify
+	issuer.verify = async () => {
+		throw new RoomError("busy", "identity outage", 503, true)
+	}
+	await m.account(lapsed)
+	const rotated = (await store.read("device-1"))!
+	assert.equal(rotated.value.expiresAt, clock.now + 90 * 86400000)
+	clock.now += 60_000
+	issuer.verify = verify
+	await m.account(m.sealSession(rotated.value.session))
+	assert.equal((await store.read("device-1"))?.value.expiresAt, rotated.value.expiresAt)
+	clock.now += 301_000
+	await m.account(lapsed)
+	assert.equal((await store.read("device-1"))?.value.expiresAt, clock.now + 90 * 86400000)
 })

@@ -90,8 +90,8 @@ export function createProposalHandler(service: ProposalService, options: HttpOpt
 			headers.set("access-control-allow-origin", origin)
 			headers.set("access-control-allow-credentials", "true")
 		}
-		const reply = (data: unknown, status = 200) => {
-			deliverRenewal()
+		const reply = async (data: unknown, status = 200) => {
+			await deliverRenewal()
 			return new Response(
 				timedSync("json", () =>
 					JSON.stringify(data, (key, value) =>
@@ -194,9 +194,9 @@ export function createProposalHandler(service: ProposalService, options: HttpOpt
 		)
 		/** The session this answer stands on while its renewal runs; a renewal that lands before the answer goes with it. */
 		let renewing: MemberSession | null = null
-		const deliverRenewal = () => {
+		const deliverRenewal = async () => {
 			if (!renewing || !options.members) return
-			const landed = options.members.current(renewing)
+			const landed = await options.members.current(renewing).catch(() => null)
 			renewing = null
 			// A refusal is left to the next request, which signs the device out as it always has.
 			if (!landed?.moved) return
@@ -223,7 +223,14 @@ export function createProposalHandler(service: ProposalService, options: HttpOpt
 					if (!nativeRequest()) setCookie(MEMBER_COOKIE, "", 0)
 					// Log out keeps this device's room places as guests: a read racing the logout (its cookie not yet
 					// cleared) reads as that guest instead of failing.
-					if (roomScoped && session?.sessionId) return null
+					if (roomScoped) {
+						const opened = options.members.openSession(raw)
+						if (
+							session?.sessionId ||
+							(opened?.sessionId && !(await service.accounts.sessionActive(opened.sessionId)))
+						)
+							return null
+					}
 					throw new RoomError("member_required", "Sign in with GoodWatch again", 403)
 				}
 				if (renewInline && (session.unverified || result.status.unavailable))
@@ -588,6 +595,7 @@ export function createProposalHandler(service: ProposalService, options: HttpOpt
 								expiresAt: Date.now() + 90 * 86400000,
 							})
 						: []
+					if (opened) await members.logout(opened)
 					// Ends this device's sign-in for YepWatch only. GoodWatch's own session is untouched.
 					setCookie(MEMBER_COOKIE, "", 0)
 					setCookie(MEMBER_INTENT_COOKIE, "", 0)

@@ -1,6 +1,11 @@
+import type { MemberSessionStore } from "./member-session-store.ts"
 import { z } from "zod"
 import { memberTasteSchema } from "./proposal-member-taste.ts"
-import { ContinuousMembers, type MemberIssuer } from "./continuous-members.server.ts"
+import {
+	ContinuousMembers,
+	MemberRefreshNotSent,
+	type MemberIssuer,
+} from "./continuous-members.server.ts"
 import { RoomError } from "./errors.ts"
 import { MEMBER_RESOURCE_PATH } from "./member-resource.server.ts"
 import { paths } from "../../../packages/yepwatch-contracts/proposal.ts"
@@ -82,6 +87,7 @@ export function releaseMembers(
 	config: ReleaseMemberConfig,
 	transport: typeof fetch = fetch,
 	sessionSecret?: string,
+	sessionStore?: MemberSessionStore,
 ) {
 	const tokenResponse = z.object({
 		access_token: z.string().min(1).max(16384),
@@ -103,7 +109,17 @@ export function releaseMembers(
 					...form,
 				}),
 			})
-		} catch {
+		} catch (error) {
+			// These connect-stage errors prove no HTTP request reached GoodWatch. A reset or
+			// timeout after connecting does not: keep that outcome ambiguous.
+			const cause = (error as { cause?: { code?: string } })?.cause
+			if (
+				cause?.code &&
+				/^(ECONNREFUSED|ENOTFOUND|EAI_AGAIN|UND_ERR_CONNECT_TIMEOUT|CERT_HAS_EXPIRED|DEPTH_ZERO_SELF_SIGNED_CERT|UNABLE_TO_VERIFY_LEAF_SIGNATURE|ERR_TLS_CERT_ALTNAME_INVALID)$/.test(
+					cause.code,
+				)
+			)
+				throw new MemberRefreshNotSent()
 			throw new RoomError("busy", "GoodWatch is temporarily unavailable; try again", 503, true)
 		}
 		const unavailable = () =>
@@ -227,6 +243,7 @@ export function releaseMembers(
 			nativeReturnUri: "yepwatch://auth/callback",
 			nativeReturnUris: ["yepwatch-preview://auth/callback"],
 			sessionSecret,
+			sessionStore,
 		},
 	)
 }

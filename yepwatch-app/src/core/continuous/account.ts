@@ -131,7 +131,7 @@ export function useAccount() {
     // so) instead of leaving the start page waiting for a network that may not come.
     networkMode: 'always',
     // GoodWatch couldn't renew the session just now: check again soon, quietly.
-    refetchInterval: (q) => (q.state.data?.unavailable ? 30_000 : false),
+    refetchInterval: (q) => (q.state.data?.unavailable ? 10_000 : false),
   });
   const flow = useSyncExternalStore(accountFlow.subscribe, accountFlow.snapshot, accountFlow.snapshot);
   const [loggingOut, setLoggingOut] = useState(false);

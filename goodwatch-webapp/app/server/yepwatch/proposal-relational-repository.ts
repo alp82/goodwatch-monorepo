@@ -20,6 +20,7 @@ import {
 	creationQuotaTable,
 	creationReservationTable,
 	tasteProfileTable,
+	memberSessionTable,
 	columns,
 	parseRow,
 	tableDdl,
@@ -101,6 +102,7 @@ export async function provisionRelationalRooms(sql: Sql, replicas: 0 | 2) {
 		creationQuotaTable,
 		creationReservationTable,
 		tasteProfileTable,
+		memberSessionTable,
 	])
 		await sql(tableDdl(table, replicas))
 }
@@ -115,6 +117,7 @@ export async function checkRelationalRooms(sql: Sql) {
 		creationQuotaTable,
 		creationReservationTable,
 		tasteProfileTable,
+		memberSessionTable,
 	])
 		await sql(`SELECT ${columns(table).join(",")} FROM ${table.name} WHERE ${table.primary}=?`, [
 			"__typed_storage_health__",

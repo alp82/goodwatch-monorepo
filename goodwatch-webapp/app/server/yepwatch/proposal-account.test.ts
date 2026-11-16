@@ -1438,8 +1438,8 @@ test("a background renewal that fails on the network keeps the stored login and 
 	await new Promise((resolve) => setTimeout(resolve, 50))
 	assert.equal(
 		m.refreshes(m.stored),
-		2,
-		"each later request tries again with the stored refresh token",
+		4,
+		"each request retries immediately inside the refresh-token reuse window",
 	)
 	m.mode.down = false
 	const back = await m.handler(
