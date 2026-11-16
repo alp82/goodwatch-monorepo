@@ -289,6 +289,8 @@ export async function mixedJourneyRoom({ phone: A, stack, audit, notStuck, journ
     await A.waitFor('services-sheet', { timeout: 10000 });
     await audit(A, 'services sheet');
     await pickNetflix(A);
+    A.back();
+    await A.waitGone('room-sheet');
     const code = await inviteCode(A);
     const joining = opening.then(async (w) => { web = w; await w.join(`${stack.app}/r/${code}`); });
     joining.catch(() => {});

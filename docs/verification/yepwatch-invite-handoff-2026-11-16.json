@@ -1,0 +1,126 @@
+{
+  "sourceCommit": "358e880ff9d068bd54118f969f42c6701f0c8be0",
+  "web": {
+    "origin": "https://yepwatch.com",
+    "deployment": "lqehceulrsbersfgvnhbuye6",
+    "status": "finished",
+    "liveReadOnlyHandoffWidths": [
+      320,
+      390,
+      1440
+    ]
+  },
+  "behavior": [
+    "Browser invites offer production and Android Beta app links with the original couch code",
+    "Known native identities join once after membership and saved-request checks",
+    "First-time guests enter a name; saved recovery requests remain available",
+    "Existing membership restores without creating another participant",
+    "Android guest ideas use native accessibility grouping without the unsupported group role"
+  ],
+  "updates": [
+    {
+      "channel": "beta",
+      "id": "01a1e5c0-677a-70e3-b336-0c897fc14bd2",
+      "group": "c5a1057b-77c7-42f4-ab69-06bdc5f4e012",
+      "platform": "ios",
+      "runtimeVersion": "d170fdc5c8fc2b6651fbf0c52f6f90fded747495",
+      "gitCommitHash": "358e880ff9d068bd54118f969f42c6701f0c8be0"
+    },
+    {
+      "channel": "beta-preview",
+      "id": "01a1e5c0-b307-711e-ab9e-1e1518278e7f",
+      "group": "ac6b7c5e-8fb9-4626-ba91-4b6e9d9c291f",
+      "platform": "android",
+      "runtimeVersion": "e602b9da0532d0b6553acc72b771132638acce70",
+      "gitCommitHash": "358e880ff9d068bd54118f969f42c6701f0c8be0"
+    },
+    {
+      "channel": "production",
+      "id": "01a1e5c1-12d1-77b7-9f56-59bddd3327c5",
+      "group": "14e08740-c911-4539-82e5-c216a281303c",
+      "platform": "ios",
+      "runtimeVersion": "d170fdc5c8fc2b6651fbf0c52f6f90fded747495",
+      "gitCommitHash": "358e880ff9d068bd54118f969f42c6701f0c8be0"
+    },
+    {
+      "channel": "production",
+      "id": "01a1e5c1-3414-7d05-8fc7-bf07e0693dc6",
+      "group": "f11ea06f-79ce-4008-9d37-f7c1fc6bc89e",
+      "platform": "android",
+      "runtimeVersion": "8d1264ebe69b509f2f258813b92603f31603f9d5",
+      "gitCommitHash": "358e880ff9d068bd54118f969f42c6701f0c8be0"
+    }
+  ],
+  "verification": {
+    "unitPassed": 397,
+    "typecheck": "pass",
+    "lint": "pass",
+    "browserInviteHandoffAndBrowserJoin": "pass",
+    "nativeInvitationScenarios": [
+      {
+        "name": "cold-start",
+        "pass": true,
+        "ms": 9166
+      },
+      {
+        "name": "create-room",
+        "pass": true,
+        "ms": 22093
+      },
+      {
+        "name": "invite-installed",
+        "pass": true,
+        "ms": 12639
+      },
+      {
+        "name": "cold-invite-link",
+        "pass": true,
+        "ms": 24874
+      }
+    ],
+    "nativeGates": {
+      "scenarios": "4/4",
+      "flash": 0,
+      "errors": 0,
+      "a11y": 0,
+      "stuck": 0,
+      "frames": 0,
+      "journey": 0
+    },
+    "warmInviteAutomaticJoin": "pass",
+    "sameCouchReopenStillTwoParticipants": "pass",
+    "ci": "https://github.com/alp82/goodwatch-monorepo/actions/runs/43934970808",
+    "ciWebVerdict": "pass",
+    "ciAndroidJourney": "CI failed because the test left Settings open before inviting; corrected helper passes the same cold-start and native-host/browser-guest journey locally",
+    "productionSmoke": "https://github.com/alp82/goodwatch-monorepo/actions/runs/43935955128",
+    "productionSmokeStatus": "pass",
+    "androidMixedJourney": {
+      "pass": true,
+      "scenarios": "2/2",
+      "flash": 0,
+      "errors": 0,
+      "a11y": 0,
+      "stuck": 0,
+      "frames": 0,
+      "journey": 0
+    }
+  },
+  "broaderFaultSuite": {
+    "sourceCommit": "6a835dff46756eb7909be8074e64c13e64b89aa9",
+    "status": "failed",
+    "tests": 652,
+    "failed": 43,
+    "gateFailures": 99,
+    "failureCounts": {
+      "('rapid', 'journey')": 1,
+      "('slow', 'journey')": 2,
+      "('hidden', 'flash')": 84,
+      "('hidden', 'layout-shift')": 1,
+      "('twodevice', 'layout-shift')": 7,
+      "('twodevice', 'flash')": 2,
+      "('restart', 'layout-shift')": 2
+    },
+    "note": "The broad fault suite did not pass. Release confidence comes from the separately recorded focused invite checks and web CI; no full regression success is claimed."
+  },
+  "activation": "Open online, allow the OTA download, fully close and reopen. No binary rebuild or store submission."
+}
