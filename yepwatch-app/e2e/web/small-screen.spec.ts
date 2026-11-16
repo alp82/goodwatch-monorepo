@@ -154,6 +154,7 @@ for (const device of ['se', 'android'] as const) {
       await pickServices(friend, ['Disney+']);
       await friend.see({ visible: ['waiting'] }, 10000, 'friend waits for the host');
       await friend.audit('waiting (small phone)');
+      await friend.tap(friend.button(/^Settings/), { expect: { visible: ['room-sheet'] } });
       await friend.tap(friend.button(/, change$/).first(), { expect: { visible: ['services-sheet'] } });
       await friend.tap(friend.button('Done'), { expect: { hidden: ['services-sheet'] } });
     });

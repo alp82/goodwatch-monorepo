@@ -17,7 +17,9 @@ test.describe('GoodWatch sign-in (local fake issuer)', () => {
     await host.audit('start page (member)');
     // A new room links to the account and brings the GoodWatch services.
     await newCouch(host, { expect: { visible: ['room-setup'] }, moment: 'createRoomMs' });
+    await host.tap(host.button(/^Settings/), { expect: { visible: ['room-sheet'] } });
     await expect(host.button(/^Netflix, Disney\+.*, change$/)).toBeVisible({ timeout: 10000 });
+    await host.tap(host.button('Close').last(), { expect: { hidden: ['room-sheet'] } });
     await host.tap(host.button('Profile'), { expect: { visible: ['profile-panel'] } });
     await host.audit('Profile (member)');
     await expect(host.testId('profile-panel').getByText('Signed in with GoodWatch')).toBeVisible();
@@ -26,6 +28,7 @@ test.describe('GoodWatch sign-in (local fake issuer)', () => {
     await host.tap(host.button('Close').last(), { expect: { visible: ['room-setup'], hidden: ['profile-panel'] } });
     await eventually(() => (host.own?.member as { state?: string } | undefined)?.state, (v) => v === 'guest', 'the room reads this device as a guest', host);
     // The linked room keeps its GoodWatch services after logging out.
+    await host.tap(host.button(/^Settings/), { expect: { visible: ['room-sheet'] } });
     await expect(host.button(/^Netflix, Disney\+.*, change$/)).toBeVisible();
   });
 

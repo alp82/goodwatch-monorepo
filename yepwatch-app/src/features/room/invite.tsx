@@ -75,7 +75,8 @@ export const WhoStrip = roomPart('WhoStrip', (r) => ({ view: r.view, inviteUrl: 
   const face = faceOf(l);
   const canInvite = Boolean(inviteUrl) || view.isHost;
   const hot = view.isHost && n < 2;
-  const shown = n > STRIP_FACES ? people.slice(0, STRIP_FACES - 1) : people;
+  const slots = phone ? 3 : STRIP_FACES;
+  const shown = n > slots ? people.slice(0, slots - 1) : people;
   const extra = n - shown.length;
   const ink = hot ? warm.ink : glow.ink;
   const ring = { marginLeft: 0, borderRadius: face / 2 + 2, borderWidth: 2, borderColor: warm.bar };
@@ -84,7 +85,7 @@ export const WhoStrip = roomPart('WhoStrip', (r) => ({ view: r.view, inviteUrl: 
       <View style={{ width, maxWidth: '100%', alignSelf: 'center', height: stripHeight(l), flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <HoverPress label={`Who’s here: ${n} ${n === 1 ? 'person' : 'people'}`} hint={`Shows everyone on the ${noun.one}`} hover="tint" repeatable onPress={() => openSheet('people')}
           style={{ flex: 1, minWidth: 0, height: 48, marginLeft: -4, paddingHorizontal: 4, borderRadius: R.control, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 10 }}>
-          <View style={{ flexDirection: 'row' }}>
+          <View style={{ flexDirection: 'row', width: (face + 4) + (slots - 1) * (face * 0.72 + 4), flexShrink: 0 }}>
             {shown.map((p, i) => (
               <Arrive key={p.id} style={{ ...ring, marginLeft: i ? -face * 0.28 : 0 }}>
                 <Face person={{ id: p.id, nickname: p.nickname || shownName(p), self: p.self }} size={face} />

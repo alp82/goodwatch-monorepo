@@ -230,7 +230,7 @@ test.describe('create and set up a room', () => {
       const stop = await recordPage(host, 'room-setup', /Couldn|Try again/i);
       await addIdea(host, mood);
       await eventually(() => host.latest?.ideas.map((i) => [i.text, i.on, i.attributes.length]), (v) => JSON.stringify(v) === JSON.stringify([[mood, true, 0]]), 'the idea is kept, uninterpreted', host);
-      await expect(host.page.getByTestId('idea-unmatched').filter({ visible: true })).toHaveText('Mood matching is unavailable for now');
+      await expect(host.page.getByTestId('idea-unmatched').filter({ visible: true })).toHaveText('Your idea · Mood matching is unavailable for now');
       const samples = await stop().catch(() => null);
       expect(samples, 'the couch setup was sampled').not.toBeNull();
       expect(samples!.filter((s) => s.error), 'no error or Try again on the couch setup').toEqual([]);
