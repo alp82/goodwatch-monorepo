@@ -1,7 +1,7 @@
 // Release-like APK (JS embedded as Hermes bytecode, no dev menu) pointed at a local stack.
 //
 // Two cache levels:
-//  - native key: native inputs (lockfile, app.json/config, plugins, assets, images under src). A change
+//  - native key: native inputs (lockfile, app.json/config, plugins, local modules, assets, images under src). A change
 //    means expo prebuild + Gradle assembleRelease in a staging copy (minutes).
 //  - js key: src/ + origins. A change with the same native key only re-bundles: expo export:embed,
 //    hermesc, swap assets/index.android.bundle in the cached APK, zipalign + apksigner with the
@@ -18,31 +18,33 @@ const BUILD_ROOT = path.join(HOME, 'build', crypto.createHash('sha1').update(APP
 const STAGE = path.join(BUILD_ROOT, 'app');
 const APK_CACHE = path.join(HOME, 'apk');
 
-function walk(dir, filter, out = []) {
+function walk(dir, filter, out = [], skipDirs = new Set()) {
   if (!fs.existsSync(dir)) return out;
   for (const e of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
     const p = path.join(dir, e.name);
-    if (e.isDirectory()) walk(p, filter, out); else if (filter(p)) out.push(p);
+    if (e.isDirectory()) { if (!skipDirs.has(e.name)) walk(p, filter, out, skipDirs); } else if (filter(p)) out.push(p);
   }
   return out;
 }
-function hashFiles(files, extra = '') {
+function hashFiles(files, extra = '', root = APP_DIR) {
   const h = crypto.createHash('sha256');
-  for (const f of files) { h.update(path.relative(APP_DIR, f)); h.update(fs.readFileSync(f)); }
+  for (const f of files) { h.update(path.relative(root, f)); h.update(fs.readFileSync(f)); }
   h.update(extra);
   return h.digest('hex').slice(0, 16);
 }
 const CODE = /\.(tsx?|jsx?|cjs|mjs|json)$/;
-export function nativeKey() {
+export function nativeKey(appDir = APP_DIR) {
   const files = [
-    ...['package.json', 'package-lock.json', 'app.json', 'app.config.ts'].map(f => path.join(APP_DIR, f)),
-    ...walk(path.join(NATIVE_DIR, 'build'), () => true),
-    ...walk(path.join(APP_DIR, 'plugins'), () => true),
-    ...walk(path.join(APP_DIR, 'assets'), () => true),
+    ...['package.json', 'package-lock.json', 'app.json', 'app.config.ts'].map(f => path.join(appDir, f)),
+    ...walk(path.join(appDir, 'e2e/native/build'), () => true),
+    ...walk(path.join(appDir, 'plugins'), () => true),
+    ...walk(path.join(appDir, 'assets'), () => true),
+    // Local Expo modules are native inputs even when package.json and the lockfile stay unchanged.
+    ...walk(path.join(appDir, 'modules'), () => true, [], new Set(['build', '.gradle', 'node_modules'])),
     // Images/fonts/sounds required from JS become Android resources: a change there needs Gradle.
-    ...walk(path.join(APP_DIR, 'src'), p => !CODE.test(p)),
+    ...walk(path.join(appDir, 'src'), p => !CODE.test(p)),
   ];
-  return hashFiles(files.filter(f => fs.existsSync(f)));
+  return hashFiles(files.filter(f => fs.existsSync(f)), '', appDir);
 }
 export function jsKey(origins) {
   return hashFiles(walk(path.join(APP_DIR, 'src'), p => CODE.test(p)), JSON.stringify(publicEnv(origins)) + nativeKey());
@@ -67,6 +69,7 @@ function syncStage() {
   mkdirp(STAGE);
   // Source tree without heavy/generated dirs; node_modules is a reflink copy, refreshed when the lockfile moves.
   run('rsync', ['-a', '--delete', '--exclude=/node_modules', '--exclude=/android', '--exclude=/ios', '--exclude=/.expo', '--exclude=/artifacts',
+    '--exclude=/modules/**/build', '--exclude=/modules/**/.gradle', '--exclude=/modules/**/node_modules',
     '--exclude=/dist*', '--exclude=/e2e', '--exclude=/e2e-plugins', '--exclude=/test-results', '--exclude=/store', '--exclude=/.env*', `${APP_DIR}/`, `${STAGE}/`]);
   fs.copyFileSync(path.join(NATIVE_DIR, 'build/app.config.e2e.ts'), path.join(STAGE, 'app.config.ts'));
   mkdirp(path.join(STAGE, 'e2e-plugins'));

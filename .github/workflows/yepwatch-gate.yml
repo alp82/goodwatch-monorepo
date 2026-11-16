@@ -240,7 +240,7 @@ jobs:
 
   android-changes:
     # Pushes only: does this push change the APK's native inputs (native/lib/build.mjs nativeKey(): package files,
-    # app config, plugins, assets, non-code files under src/, the APK build scripts) or the Android harness? One
+    # app config, plugins, local modules, assets, non-code files under src/, the APK build scripts) or the Android harness? One
     # GitHub API call, no checkout. A push the compare can't describe (new branch, > 300 files) counts as a change.
     name: Native changes?
     if: github.event_name == 'push'
@@ -259,8 +259,8 @@ jobs:
           if [ -n "$BEFORE" ] && [ "$BEFORE" != "0000000000000000000000000000000000000000" ]; then
             if files=$(gh api "repos/$GITHUB_REPOSITORY/compare/$BEFORE...$AFTER" --jq 'if (.files | length) >= 300 then "TOO-MANY" else .files[] | (.filename, (.previous_filename // empty)) end'); then
               if ! printf '%s\n' "$files" | grep -q TOO-MANY; then
-                # nativeKey(): package files, app config, plugins/, assets/, and every file under src/ that isn't code.
-                if printf '%s\n' "$files" | grep -Eq '^yepwatch-app/(package\.json|package-lock\.json|app\.json|app\.config\.ts|plugins/|assets/|e2e/native/|e2e/ci/native-gate\.mjs)|^\.github/workflows/yepwatch-gate\.yml$' \
+                # nativeKey(): package files, app config, plugins/, modules/, assets/, and every file under src/ that isn't code.
+                if printf '%s\n' "$files" | grep -Eq '^yepwatch-app/(package\.json|package-lock\.json|app\.json|app\.config\.ts|plugins/|modules/|assets/|e2e/native/|e2e/ci/native-gate\.mjs)|^\.github/workflows/yepwatch-gate\.yml$' \
                   || printf '%s\n' "$files" | grep -E '^yepwatch-app/src/' | grep -Evq '\.(tsx?|jsx?|cjs|mjs|json)$'; then native=true; else native=false; fi
               fi
             fi

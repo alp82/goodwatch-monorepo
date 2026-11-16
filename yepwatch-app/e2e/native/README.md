@@ -22,7 +22,7 @@ logcat per phone. Exit code 0 only if every gate passes.
 | | |
 | --- | --- |
 | `lib/env.mjs` | SDK/JDK/Maestro paths (nothing on PATH needed), shared cache `~/.cache/yepwatch-e2e-native` (`YW_E2E_HOME`) |
-| `lib/build.mjs` | APK cache. Native key (lockfile, app config, plugins, assets) -> prebuild + Gradle `assembleRelease` x86_64 in a staging copy (~95 s warm Gradle cache). JS key (src + origins) -> `export:embed` + `hermesc`, swap the bundle in the cached APK, re-sign (~30 s). Unchanged -> 0 s. |
+| `lib/build.mjs` | APK cache. Native key (lockfile, app config, plugins, local modules, assets) -> prebuild + Gradle `assembleRelease` x86_64 in a staging copy (~95 s warm Gradle cache). JS key (src + origins) -> `export:embed` + `hermesc`, swap the bundle in the cached APK, re-sign (~30 s). Unchanged -> 0 s. |
 | `build/` | Staging-only app config: package `dev.yepwatch.e2e`, invitation app links (`https://yepwatch.com/r/`, `http://127.0.0.1/r/`), cleartext allowed for loopback only, no OTA URL (the build refuses one). |
 | `lib/device.mjs` | AVD `yw-e2e` (Pixel 8, API 35, host GPU) with a prepared snapshot (offline: wifi + data off, show touches, Maestro driver installed). Two read-only instances on 5570/5572 boot in 4-10 s. `adb reverse` for stack ports. |
 | `lib/phone.mjs` | Fast driver: hierarchy over gRPC from Maestro's on-device server (~190 ms), taps through `adb shell input tap` (no wait for window animations). |
