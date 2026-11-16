@@ -424,9 +424,9 @@ function Matches({ id, view, tiebreak, held, onLanded, onSkip }: { id: string; v
   const status = single && check === 'checking' ? <GText size={z(14)} color={glow.soft} lines={1}>Checking where to watch…</GText>
     : single && check === 'unavailable' ? <GText size={z(14)} color={glow.muted} lines={1}>Couldn’t confirm where to watch</GText>
     : tied.length ? <>
-      <Icon name="check" size={16} color={glow.amber} />
-      <GText bold size={z(14)} color={glow.amber} lines={1} style={{ flexShrink: 1 }}>{single ? `Everyone’s in on ${single.title}` : `Everyone’s in on ${tied.length}`}</GText>
-      {many ? <MiniPosters cs={tied} /> : null}
+      <View style={{ width: 16 }}><Icon name="check" size={16} color={glow.amber} /></View>
+      <GText bold size={z(14)} color={glow.amber} lines={1} style={{ flex: 1, textAlign: 'center' }}>{single ? `Everyone’s in on ${single.title}` : `Everyone’s in on ${tied.length}`}</GText>
+      <View style={{ width: 54 }}>{many ? <MiniPosters cs={tied} /> : null}</View>
     </> : null;
   const footer = (
     <View style={{ gap: 10, width: phone ? '100%' : z(520), alignSelf: 'center' }}>

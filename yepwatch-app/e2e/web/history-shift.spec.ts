@@ -68,6 +68,8 @@ test.describe('start page History arrives late', () => {
     await mia.tap(mia.button(/, switch couch$/));
     await mia.tap(mia.button(/, Couch page$/), { expect: { visible: ['room-sheet'] } });
     await mia.tap(mia.button('Leave couch'));
+    // The confirmation is intentional content; give the scripted reader time to see it.
+    await mia.page.waitForTimeout(300);
     await watchHome(mia, 'late history heist');
     await mia.tap(mia.button('Leave'), { expect: { visible: ['home-rooms'] }, timeout: 15000 });
     // History is there with the page, not after the late read; the room's card never shows again.
@@ -96,6 +98,7 @@ test.describe('start page History arrives late', () => {
     await lee.tap(lee.button(/, switch couch$/));
     await lee.tap(lee.button(/, Couch page$/), { expect: { visible: ['room-sheet'] } });
     await lee.tap(lee.button('Leave couch'));
+    await lee.page.waitForTimeout(300);
     await lee.tap(lee.button('Leave'), { expect: { visible: ['home-rooms'] }, timeout: 15000 });
     await expect(lee.button('History')).toBeVisible({ timeout: 20000 });
     // A cold start page: nothing cached, the account's rooms answer late.
