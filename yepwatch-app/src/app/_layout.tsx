@@ -43,11 +43,14 @@ export default function Layout() {
   // never shows on the way (useFrontRoom).
   // A new screen ignores the rest of a double or triple tap that opened it.
   useLayoutEffect(() => { surfaceAppeared(); }, [pathname]);
-  const { pending: resuming } = useFrontRoom(pathname);
+  const { pending: resuming, target: resumeTarget } = useFrontRoom(pathname);
   const page = bootPage(pathname);
   const [readyPages, setReadyPages] = useState<ReadonlySet<string>>(() => new Set());
   const markPageReady = useCallback((key: string) => setReadyPages((keys) => (keys.has(key) ? keys : new Set(keys).add(key))), []);
-  const pageReady = !resuming && (page === null || readyPages.has(page));
+  // A native route changes in JS before Android/iOS has presented its screen. Keep Home covered
+  // during that handoff; content readiness alone can arrive before the native stack catches up.
+  const presented = Platform.OS === 'web' || !resumeTarget || readyPages.has(`presented:room:${resumeTarget}`);
+  const pageReady = !resuming && presented && (page === null || readyPages.has(page));
   useAnalytics(pathname, booted && !resuming, tasteOpen);
   const revealed = useCallback(() => setArriving(true), []);
   const done = useCallback(() => setBooted(true), []);
@@ -59,8 +62,11 @@ export default function Layout() {
   // readiness, and a new Stack element re-rendered the whole navigator and the screens in it each time.
   const stack = useMemo(() => fontsReady && <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#070707' } }}>
     {/* Every screen, in expo-router's own order (route-order.ts): a different order re-renders the tree once more after mount. */}
-    {ROOT_SCREENS.map((name) => <Stack.Screen key={name} name={name} {...(name === 'room/[id]' ? { options: arrivalRoom } : null)} />)}
-  </Stack>, [fontsReady]);
+    {ROOT_SCREENS.map((name) => <Stack.Screen key={name} name={name} {...(name === 'room/[id]' ? { options: arrivalRoom, listeners: ({ route }) => ({ transitionEnd: (event) => {
+      const id = (route.params as { id?: string } | undefined)?.id;
+      if (!event.data.closing && id) markPageReady(`presented:room:${id}`);
+    } }) } : null)} />)}
+  </Stack>, [fontsReady, markPageReady]);
   return <BootPageReady.Provider value={markPageReady}><BootPhase.Provider value={booted ? 'ready' : arriving ? 'enter' : 'boot'}><Providers><StatusBar style="light" /><View ref={root} style={{ flex: 1, backgroundColor: '#070707' }} {...(Platform.OS === 'web' ? null : leftoverTouchGuard)}>
     {/* Inert (no focus inside hidden content) until the cover starts to dissolve, and under Taste mode. Native draws the page
         under the opaque cover, so its first (heavy) draw is done before the dissolve and can't stall it;

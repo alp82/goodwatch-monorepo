@@ -1,4 +1,4 @@
-# After a match: Matches -> I'm in on the first match (the room's proposal). Ends on Matches with it checked.
+# After a match: open Matches and choose the first match. The friend stays in voting until they open Matches.
 appId: ${APP_ID || 'dev.yepwatch.e2e'}
 name: I'm in on the match
 tags: [gate, host]

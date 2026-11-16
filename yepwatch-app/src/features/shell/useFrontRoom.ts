@@ -61,5 +61,5 @@ export function useFrontRoom(pathname: string) {
     saved.current = room;
     void saveFrontRoom(room).catch(() => undefined);
   }, [pathname, pending]);
-  return { pending };
+  return { pending, target };
 }

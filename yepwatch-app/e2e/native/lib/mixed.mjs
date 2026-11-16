@@ -9,6 +9,9 @@ import { startTrace, tracing } from './trace.mjs';
 import { createRoom, fillAndSubmit, freshStart, inviteCode, inviteUrl, joinFromJoinScreen, measure, pickNetflix, posterTitle, roiOf, setUpDevice, tapAction, toStart } from './journey.mjs';
 
 const require = createRequire(path.join(APP_DIR, 'package.json'));
+const inTitle = (label) => label.replace(/^I’m in for /, '').replace(/, \d+ of \d+ in$/, '');
+const quoteRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 // The web harness's page recorder: its visible() predicate (viewport, opacity and visibility through every
 // ancestor) is the one the browser friend's timing uses, so an entrance animating from opacity 0 is not "shown".
 const RECORDER = path.join(NATIVE_DIR, '..', 'lib', 'recorder.page.js');
@@ -74,8 +77,17 @@ export class WebPeer {
   async yep() { await this.button('Yep').click(); }
   async openMatches() { await this.button(/^\d+ match(es)?$/).click(); await this.page.getByTestId('matches').waitFor(); }
   /** I'm in on the first match (Matches rows are I'm in toggles). */
-  async propose() { await this.page.getByRole('checkbox', { name: /^I’m in for / }).first().click(); }
-  async agree() { await this.button('I’m in').click(); }
+  async propose(title) {
+    const row = this.page.getByRole('checkbox', { name: title ? new RegExp(`^I’m in for ${quoteRegex(title)},`) : /^I’m in for / }).first();
+    const chosen = inTitle(await row.getAttribute('aria-label'));
+    await row.click();
+    return chosen;
+  }
+  async agree(title) {
+    if (!await this.page.getByTestId('matches').isVisible()) await this.openMatches();
+    const chosen = await this.propose(title);
+    await this.button(`Watch ${chosen}`).click();
+  }
   async waitTonight() { await this.page.getByTestId('tonight').first().waitFor({ timeout: 20000 }); }
   /** The current card's title from its accessible label (as e2e/web/flows.ts cardTitle). */
   card() {
@@ -143,8 +155,10 @@ export async function mixedHostAndroid({ phone: A, stack, runDir, timing, journe
     // The browser sees the match: measured on the phone side only (the browser has its own gates).
     await A.tapXY(yep.cx, yep.cy);
     await web.page.getByRole('button', { name: /^\d+ match(es)?$/ }).waitFor({ timeout: 5000 });
-    await A.tap(/^\d+ match(es)?$/); await A.tap(/^I’m in for /);
-    await web.agree().catch(async () => { await web.openMatches(); await web.agree(); });
+    await A.tap(/^\d+ match(es)?$/);
+    const choice = await A.find(/^I’m in for /);
+    await A.tapXY(choice.cx, choice.cy);
+    await web.agree(inTitle(choice.desc));
     await A.waitFor('tonight-poster', { timeout: 10000 }); await web.waitTonight();
     if (web.errors.length) journeyFail('mixed web errors', web.errors.slice(0, 5).join(' | '));
   } finally { await web.close(); }
@@ -166,8 +180,10 @@ export async function mixedHostWeb({ phone: Bp, stack, runDir, timing, journeyFa
     timing('browser host Start -> first card on Android guest', 200, r.B, { informational: true, note: 'anchor = Playwright click call on the host' });
     await Bp.tap('Yep'); await sleep(400); await web.yep();
     await Bp.waitFor(/^\d+ match(es)?$/, { timeout: 5000 });
-    await web.openMatches(); await web.propose();
-    await Bp.tap('I’m in', { timeout: 8000 });
+    await web.openMatches(); const title = await web.propose();
+    await Bp.tap(/^\d+ match(es)?$/);
+    await Bp.tap(new RegExp(`^I’m in for ${quoteRegex(title)},`));
+    await Bp.tap(`Watch ${title}`);
     await Bp.waitFor('tonight-poster', { timeout: 10000 }); await web.waitTonight();
     if (web.errors.length) journeyFail('mixed web errors', web.errors.slice(0, 5).join(' | '));
   } finally { await web.close(); }

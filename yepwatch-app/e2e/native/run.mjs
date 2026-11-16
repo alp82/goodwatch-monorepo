@@ -37,7 +37,7 @@ function timing(name, budget, r, extra = {}) {
   if (!r?.ok) { row.error = r?.error ?? 'not measured'; if (!extra.informational) journeyFail(name, row.error); }
   else {
     const ms = extra.use === 'settled' ? r.settledMs : r.ms;
-    Object.assign(row, { ms, firstMs: r.ms, settledMs: r.settledMs, onTarget: ms <= budget, resolutionMs: r.resolutionMs, clockErrMs: r.clockErrMs, maxGapMs: r.maxGapMs, video: path.relative(RUN, r.file) });
+    Object.assign(row, { ms, firstMs: r.ms, settledMs: r.settledMs, onTarget: ms <= budget, resolutionMs: r.resolutionMs, clockErrMs: r.clockErrMs, maxGapMs: r.maxGapMs, ...(r.animatedRegions?.length ? { animatedRegions: r.animatedRegions } : {}), video: path.relative(RUN, r.file) });
   }
   result.speed.push(row);
   log(`  timing ${name}: ${row.ms ?? '-'} ms (first change ${row.firstMs ?? '-'}, settled ${row.settledMs ?? '-'}) target ${budget}${row.onTarget === false ? ' (over)' : ''}${row.error ? ' ' + row.error : ''}`);
@@ -67,6 +67,16 @@ async function audit(p, screen) {
 async function notStuck(p, where) {
   const words = blockingWords(await p.nodes());
   if (words.length) { result.gates.stuck.push({ where, phone: p.name, words }); log(`  stuck ${where}: ${words.join(' | ')}`); }
+}
+
+// Settings and History can extend beyond the phone's viewport as the suite creates more rooms.
+async function findByScrolling(p, selector) {
+  for (let i = 0; i < 5; i++) {
+    const node = await p.find(selector, { timeout: 500 }).catch(() => null);
+    if (node) return node;
+    await p.swipe(540, 1800, 540, 600, 250);
+  }
+  return p.find(selector, { timeout: 1000 });
 }
 
 // ---------- scenario runner ----------
@@ -205,9 +215,23 @@ async function main() {
   await scenario('start-round', async () => {
     const start = await A.find(/^Start( with \d+| on my own)$/);
     const r = await measure({ actor: A, phones: [A, Bp], file: vid('start'), action: tapAction(A, start),
-      targets: { A: roiOf(A, 'poster', 10000), B: roiOf(Bp, 'poster', 10000) } });
-    timing('Start -> first card (host)', B.startToFirstCardMs, r.A);
-    timing('Start -> first card (friend)', B.startToPeerVotingMs, r.B);
+      // The tutorial deliberately moves the poster. Measure the stable choice controls; the
+      // real poster and its title are verified separately below, on both phones.
+      targets: { A: roiOf(A, 'Would you watch this tonight?', 10000), B: roiOf(Bp, 'Would you watch this tonight?', 10000) },
+      // The lesson intentionally moves and pauses the real card; screen flashes are judged outside
+      // that animated region. Blank-screen detection still inspects the entire screen.
+      animatedRegions: { A: async () => [(await A.waitFor('poster')).bounds], B: async () => [(await Bp.waitFor('poster')).bounds] } });
+    timing('Start -> voting question (host)', B.startToFirstCardMs, r.A);
+    timing('Start -> voting question (friend)', B.startToPeerVotingMs, r.B);
+    for (const p of [A, Bp]) {
+      await p.waitFor('poster', { timeout: 10000 });
+      // Audit resting targets, after exercising the first-round tutorial's explicit Skip action.
+      if (await p.has('Skip')) {
+        await p.tap('Skip');
+        await p.waitGone('Skip');
+        if (await p.has('details-panel')) journeyFail('tutorial Skip', 'Skip opened title details', p);
+      }
+    }
     await audit(A, 'voting');
     S.firstCard = { A: await posterTitle(A), B: await posterTitle(Bp) };
     if (!S.firstCard.A || !S.firstCard.B) journeyFail('empty deck', JSON.stringify(S.firstCard));
@@ -293,13 +317,20 @@ async function main() {
     if (!last) journeyFail('I’m in at the end of the list', 'no I’m in row on screen after scrolling to the end', A);
     else if (last.bounds[3] > bar) journeyFail('I’m in under the navigation bar', `the last I’m in row ends at y=${last.bounds[3]} px; the navigation bar starts at ${bar}`, A);
     await A.swipe(540, 500, 540, 1800, 250); await sleep(700);
-    await A.tap(/^I’m in for /);
-    await Bp.waitFor('I’m in', { timeout: 5000 });
-    await audit(Bp, 'someone’s in (friend)');
-    const agree = await Bp.find('I’m in');
-    const r = await measure({ actor: Bp, phones: [A, Bp], file: vid('agree'), action: tapAction(Bp, agree),
+    const choice = await A.find(/^I’m in for /);
+    const title = choice.desc.replace(/^I’m in for /, '').replace(/, \d+ of \d+ in$/, '');
+    await A.tapXY(choice.cx, choice.cy);
+    // Someone choosing a match never pulls their friend out of voting.
+    await Bp.waitFor('voting');
+    await Bp.tap(/^\d+ match(es)?$/);
+    await Bp.waitFor('matches');
+    const titlePattern = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    await Bp.tap(new RegExp(`^I’m in for ${titlePattern},`));
+    await audit(Bp, 'everyone’s in (friend)');
+    const watch = await Bp.find(`Watch ${title}`);
+    const r = await measure({ actor: Bp, phones: [A, Bp], file: vid('agree'), action: tapAction(Bp, watch),
       targets: { A: roiOf(A, 'tonight-poster', 8000), B: roiOf(Bp, 'tonight-poster', 8000) } });
-    timing('I’m in on B -> Tonight on A (peer)', B.voteToPeerMs, r.A, { informational: true });
+    timing('Watch on B -> Tonight on A (peer)', B.voteToPeerMs, r.A, { informational: true });
     await audit(A, 'tonight (host)');
   });
 
@@ -380,14 +411,22 @@ async function main() {
     await Bp.tap(/switch couch$/); await Bp.tap(/Couch page$/); await Bp.waitFor('room-sheet');
     await audit(Bp, 'room sheet (friend)');
     await Bp.tap('Leave couch');
-    if (await Bp.has('leave-confirm')) { await audit(Bp, 'leave confirm'); await Bp.tap({ desc: 'Leave couch', index: 1 }).catch(() => Bp.tap('Leave')); }
+    // The confirmation is appended below Settings; bring its actual action into view on a phone.
+    await Bp.swipe(540, 1900, 540, 800, 250);
+    await Bp.waitFor('Leave');
+    await audit(Bp, 'leave confirm');
+    await Bp.tap('Leave');
     await Bp.waitFor(START_RE, { timeout: 8000 });
     // A archives, then restores from History.
     await A.tap(/switch couch$/); await A.tap(/Couch page$/); await A.waitFor('room-sheet');
     await A.tap('Archive couch');
     await A.waitFor('New couch', { timeout: 8000 });
-    await A.tap(/^Decided, |History/, { timeout: 5000 }).catch(() => journeyFail('archive', 'no History entry on the start page after archiving'));
-    if (await A.has('history-panel')) { await audit(A, 'history'); await A.tap(/^Restore/).catch(() => journeyFail('archive', 'no Restore in History')); }
+    const history = await findByScrolling(A, /^Decided, |^History$/);
+    await A.tapXY(history.cx, history.cy);
+    await A.waitFor('history-panel');
+    const restore = await findByScrolling(A, /^Restore/);
+    await audit(A, 'history');
+    await A.tapXY(restore.cx, restore.cy);
   }); // gate too: Leave and Archive once tore React Native down on Android (black window)
 
   await scenario('mixed-android-host-web-guest', async () => {

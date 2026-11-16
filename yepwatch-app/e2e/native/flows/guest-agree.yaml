@@ -1,7 +1,12 @@
 appId: ${APP_ID || 'dev.yepwatch.e2e'}
-name: I'm in and reach Tonight
+name: Choose the match and Watch together
 tags: [gate, guest]
 ---
-- extendedWaitUntil: { visible: "I’m in", timeout: 10000 }
-- tapOn: { text: "I’m in", waitToSettleTimeoutMs: 300 }
+# A friend's choice keeps this phone in voting. Open Matches and choose the same first match.
+- extendedWaitUntil: { visible: "\\d+ match(es)?", timeout: 10000 }
+- tapOn: { text: "\\d+ match(es)?", waitToSettleTimeoutMs: 300 }
+- extendedWaitUntil: { visible: { id: "matches" }, timeout: 5000 }
+- tapOn: { text: "I’m in for .*", index: 0, waitToSettleTimeoutMs: 300 }
+- extendedWaitUntil: { visible: "Watch .+", timeout: 5000 }
+- tapOn: { text: "Watch .+", waitToSettleTimeoutMs: 300 }
 - extendedWaitUntil: { visible: { id: "tonight-poster" }, timeout: 10000 }

@@ -16,6 +16,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseFrame, sharedSchema } from '../../src/core/continuous/wire';
 import { audit } from './a11y';
+import { installWallClockOffset } from './wall-clock';
 import { rules } from './rules.mjs';
 import { serverTimingLine } from './server-timing';
 import { blockingWords, connectionWords, deadButtons, flashes, frameGaps, layoutShifts, type GateFailure, type Outage, type Recording } from './gates';
@@ -439,8 +440,8 @@ export class Room {
       if (process.env.E2E_TRACE !== '0' && opts.trace !== false) await context.tracing.start({ screenshots: full, snapshots: full, title: `${this.info.title} — ${name}` }).catch(() => {});
       // Signed in to (local) GoodWatch: its authorize step comes straight back, as for a returning member.
       if (opts.member) await context.addCookies([{ name: 'gw_e2e_member', value: encodeURIComponent(opts.member), domain: '127.0.0.1', path: '/api/auth/', httpOnly: true, secure: false, sameSite: 'Lax' }]);
-      // Hidden-tab fault: a controllable page clock so "minutes away" takes seconds (time still flows).
-      if (this.fault === 'hidden') await context.clock.install();
+      // Hidden-tab fault: advance wall time without mocking animation, input or performance clocks.
+      if (this.fault === 'hidden') await context.addInitScript(installWallClockOffset);
       if (this.fault === 'nows') {
         // A browser/network that never opens a WebSocket: the realtime handshake is refused.
         await context.route(/\/api\/yepwatch\/v1\/proposal\/realtime/, (r) => r.abort('connectionrefused'));
@@ -532,7 +533,7 @@ export class Room {
         for (const p of actors) {
           const cdp = await p.cdpSession();
           await cdp.send('Page.setWebLifecycleState', { state: 'active' }).catch(() => {});
-          await p.context.clock.fastForward('05:00').catch(() => {});
+          await p.page.evaluate(() => (window as unknown as { __ywAdvanceWallClock(ms: number): void }).__ywAdvanceWallClock(5 * 60_000));
           await p.page.evaluate(() => {
             Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' });
             Object.defineProperty(document, 'hidden', { configurable: true, get: () => false });
@@ -547,7 +548,7 @@ export class Room {
         if (!this.twin && (label === 'room' || label === 'voting')) {
           const main = (await primary.signature()).split(' ').find((m) => ['voting', 'room-setup', 'waiting', 'matches', 'tonight', 'proposal'].includes(m));
           const twin = await this.person(`${primary.name} (2nd device)`, { context: primary.context, device: primary.device });
-          await twin.open(primary.page.url(), { settle: false });
+          await twin.open(primary.page.url());
           await twin.see({ visible: [main ?? 'room-setup'] }, 15000, `the same person's second device shows the room (${main})`);
           this.twin = twin;
           return;

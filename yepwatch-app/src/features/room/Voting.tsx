@@ -11,7 +11,7 @@
  * random looks are off while it runs.
  */
 import { memo, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode } from 'react';
-import { Animated, Platform, View, useWindowDimensions } from 'react-native';
+import { Animated, Platform, View, useWindowDimensions, type GestureResponderEvent } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import type { ActivityPointer, Candidate } from '@goodwatch/yepwatch-contracts/proposal';
 import { fixturesEnabled } from '../../core/config';
@@ -31,6 +31,7 @@ import { TrailerLink } from '../glow/TrailerLink';
 import { GText, Icon, Press, glow, native } from '../glow/theme';
 import { HoverPress } from '../shell/hover';
 import { useLayout } from '../shell/layout';
+import { surfaceAppeared } from '../shell/fresh-surface';
 import { useBackAction } from '../shell/sheet-back';
 import { useSheetEntry } from '../shell/Sheet';
 import { useSheetOpen } from '../shell/sheet-stack';
@@ -385,7 +386,7 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
     return () => clearTimeout(t);
   }, [teaching, geo, tick, windowWidth, windowHeight]);
   const engage = useCallback((on: boolean) => controls.current?.engage(on), []);
-  const stopTutorial = useCallback(() => finishTutorial(), [finishTutorial]);
+  const stopTutorial = useCallback(() => { surfaceAppeared(); finishTutorial(); }, [finishTutorial]);
 
   if (!snapshot || !view) return null;
   const { shared } = snapshot;
@@ -493,7 +494,12 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
     </>
   );
   // Any touch on the screen ends the how-to (the person acts); it doesn't take the touch.
-  const onTouchCapture = () => { if (teaching) finishTutorial(); return false; };
+  const onTouchCapture = (event: GestureResponderEvent) => {
+    // Keep Skip mounted through its press. Removing it on pointerdown retargets the click to the poster.
+    const target = native ? null : event.target as unknown as { closest?: (selector: string) => unknown };
+    if (teaching && !target?.closest?.('[data-testid="tutorial-skip"]')) finishTutorial();
+    return false;
+  };
   if (wide) {
     return (
       <View style={{ flex: 1 }} onStartShouldSetResponderCapture={onTouchCapture}>

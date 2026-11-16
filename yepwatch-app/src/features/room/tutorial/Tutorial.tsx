@@ -162,7 +162,7 @@ function AnswerTips({ t }: { t: Tutor }) {
 function Skip({ t }: { t: Tutor }) {
   return (
     <View style={{ position: 'absolute', left: t.card.x + t.card.w / 2 - 30, top: t.card.y + 4, width: 60, alignItems: 'center' }}>
-      <HoverPress label="Skip the how-to" onPress={t.stop}
+      <HoverPress testID="tutorial-skip" label="Skip the how-to" onPress={t.stop}
         visual={{ height: 30, paddingHorizontal: 11, borderRadius: 8, backgroundColor: 'rgba(10,9,8,0.82)', borderWidth: 1, borderColor: '#ffffff2e', justifyContent: 'center' }}>
         <GText bold size={12} color={glow.soft}>Skip</GText>
       </HoverPress>

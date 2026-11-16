@@ -45,7 +45,16 @@ export function Boot({
   const [slow, setSlow] = useState(false);
   const [held, setHeld] = useState(false);
   const [capped, setCapped] = useState(false);
-  const leaving = ready && (pageReady || capped);
+  const [groundLoaded, setGroundLoaded] = useState(false);
+  const [groundPainted, setGroundPainted] = useState(false);
+  // Layout precedes decoding the cover's image. Keep the system splash until that image has
+  // reached a paint, otherwise a cold invitation can expose one empty dark frame between them.
+  useEffect(() => {
+    if (!groundLoaded) return;
+    const frame = requestAnimationFrame(() => { onLayout(); setGroundPainted(true); });
+    return () => cancelAnimationFrame(frame);
+  }, [groundLoaded, onLayout]);
+  const leaving = ready && groundPainted && (pageReady || capped);
   const leavingRef = useRef(leaving);
   useEffect(() => { leavingRef.current = leaving; }, [leaving]);
   // The word comes only if the page is still loading after the delay; a dissolve already under way keeps the Y.
@@ -120,13 +129,17 @@ export function Boot({
     <Animated.View
       testID="yepwatch-boot"
       accessibilityLabel="YepWatch is starting"
-      onLayout={onLayout}
       pointerEvents="none"
       style={[
         s.absolute,
         { zIndex: 100, alignItems: "center", justifyContent: "center", backgroundColor: glow.bg, opacity: cover },
       ]}
     >
+      <Image
+        source={require("../../../assets/splash-y.png")}
+        onLoadEnd={() => setGroundLoaded(true)}
+        style={{ width: 44, height: 44, position: 'absolute', opacity: shownWord ? 0 : 1 }}
+      />
       {shownWord ? (
         <>
           <View
@@ -168,12 +181,7 @@ export function Boot({
             </View>
           </View>
         </>
-      ) : (
-        <Image
-          source={require("../../../assets/splash-y.png")}
-          style={{ width: 44, height: 44 }}
-        />
-      )}
+      ) : null}
     </Animated.View>
   );
 }

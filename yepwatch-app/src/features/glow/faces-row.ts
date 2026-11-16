@@ -63,7 +63,7 @@ export function matchesChipFrame(z: (n: number) => number, fontScale: number, co
 }
 
 /** The Yeps button's poster stack: three 16 px posters, each after 45 % of the one before. */
-const YEPS_POSTERS = 16 + 2 * 16 * 0.45;
+const YEPS_POSTERS = 16 + 2 * 16 * 0.45 + 3;
 /**
  * The voting bar's Yeps button (room/YourYeps.tsx), in the room the bar keeps for the chip: 10 px padding
  * and a 1 px border each side, the 15 px check, 7 px gaps, a two-digit bold 15 px count and, unless
