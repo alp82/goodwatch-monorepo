@@ -223,15 +223,20 @@ async function journey(room: Room, people: [Person, 'leave' | 'archive'][]) {
   await friend.see({ visible: ['waiting'] }, 10000, 'friend waits for the host');
 
   // Member: opens the invitation and joins as the GoodWatch name. GoodWatch's email
-  // sign-up asks for no name, so an account may have none: then the join form asks for one (the member's Join
-  // keeps its GoodWatch mark). What the account says decides which form is right, so a named member who got
+  // sign-up asks for no name, so an account may have none: then the join form takes the name this device
+  // remembers, or asks for one (the member's Join keeps its GoodWatch mark). What the account says decides which form is right, so a named member who got
   // the nameless form still fails here.
   if (member) {
     const goodwatchName = await accountName(member);
+    // Without a GoodWatch name, the device's own name (the kept session remembers the last run's) is the member's.
+    const remembered = await member.page.evaluate(() => {
+      try { return (JSON.parse(localStorage.getItem('yepwatch.v3.profile') ?? 'null')?.nickname ?? '').trim() || null; } catch { return null; }
+    });
+    const fixedName = goodwatchName ?? remembered;
     await member.open(invite, { settle: false });
     await member.firstShown(['join-screen', 'invite-head']);
-    if (goodwatchName) {
-      await member.tap(member.button(`Join as ${goodwatchName}`), { expect: { any: ['waiting', 'services-sheet'] } });
+    if (fixedName) {
+      await member.tap(member.button(`Join as ${fixedName}`), { expect: { any: ['waiting', 'services-sheet'] } });
     } else {
       await member.fill(member.page.getByLabel('Your name').filter({ visible: true }), 'Smoke member');
       await member.tap(member.button('Join'), { expect: { any: ['waiting', 'services-sheet'] } });
