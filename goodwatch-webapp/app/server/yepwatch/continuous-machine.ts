@@ -25,12 +25,7 @@ function fence(actual: number, expected: number) {
 	requireRoom(actual === expected, "conflict", "State version changed")
 }
 function host(room: ContinuousRoom, p: ContinuousParticipant) {
-	requireRoom(
-		room.hostId === p.id,
-		"forbidden",
-		"Host capability required",
-		403,
-	)
+	requireRoom(room.hostId === p.id, "forbidden", "Host capability required", 403)
 }
 function choosing(room: ContinuousRoom) {
 	requireRoom(room.phase === "choosing", "conflict", "Choosing is not active")
@@ -40,15 +35,11 @@ export function matches(room: ContinuousRoom) {
 	return room.candidates.filter(
 		(c) =>
 			(c.identity.kind !== "show_continue" ||
-				room.participants.every(
-					(p) => p.member.state === "linked" && !!p.memberGrant,
-				)) &&
+				room.participants.every((p) => p.member.state === "linked" && !!p.memberGrant)) &&
 			room.participants.length > 0 &&
 			!screens.has(null) &&
 			[...screens].every((id) =>
-				c.availability.some(
-					(a) => a.screenId === id && a.state === "watchable",
-				),
+				c.availability.some((a) => a.screenId === id && a.state === "watchable"),
 			) &&
 			room.participants.every((p) => p.votes[c.id]?.value === "watch"),
 	)
@@ -77,27 +68,17 @@ function screensReady(room: ContinuousRoom) {
 		(p) =>
 			p.screenId &&
 			room.screens.some(
-				(s) =>
-					s.id === p.screenId &&
-					s.confirmed &&
-					s.country &&
-					s.serviceIds.length > 0,
+				(s) => s.id === p.screenId && s.confirmed && s.country && s.serviceIds.length > 0,
 			),
 	)
 }
 function canContinue(room: ContinuousRoom, now: number) {
 	return room.participants.every(
-		(p) =>
-			p.member.state === "linked" &&
-			p.memberGrant &&
-			p.memberGrant.expiresAt > now,
+		(p) => p.member.state === "linked" && p.memberGrant && p.memberGrant.expiresAt > now,
 	)
 }
 function guestKinds(room: ContinuousRoom, now: number) {
-	if (
-		room.constraints.kinds.includes("show_continue") &&
-		!canContinue(room, now)
-	)
+	if (room.constraints.kinds.includes("show_continue") && !canContinue(room, now))
 		memberProgressRequired()
 }
 function catalogCandidate(c: Candidate): Candidate {
@@ -106,16 +87,11 @@ function catalogCandidate(c: Candidate): Candidate {
 		...projectCandidate(c),
 		...(c.backdropUrl === undefined ? {} : { backdropUrl: c.backdropUrl }),
 		...(c.trailerUrl === undefined ? {} : { trailerUrl: c.trailerUrl }),
-		...(c.goodwatchScore === undefined
-			? {}
-			: { goodwatchScore: c.goodwatchScore }),
+		...(c.goodwatchScore === undefined ? {} : { goodwatchScore: c.goodwatchScore }),
 		...(c.genres === undefined ? {} : { genres: [...c.genres] }),
 	}
 }
-export function continuousSnapshot(
-	room: ContinuousRoom,
-	participantId: string,
-): RoomSnapshot {
+export function continuousSnapshot(room: ContinuousRoom, participantId: string): RoomSnapshot {
 	const p = actor(room, participantId)
 	const current = matches(room)
 	const shared: SharedRoomSnapshot = {
@@ -150,17 +126,14 @@ export function continuousSnapshot(
 		stream: { ...room.stream },
 		matches: current.map((c) => ({
 			candidateId: c.id,
-			pickCount: room.participants.filter((p) => p.pick.candidateId === c.id)
-				.length,
+			pickCount: room.participants.filter((p) => p.pick.candidateId === c.id).length,
 		})),
 		agreement: structuredClone(room.agreement),
 		decision: room.decision
 			? {
 					...room.decision,
 					availability: catalogCandidate({
-						...room.candidates.find(
-							(c) => c.id === room.decision!.candidateId,
-						)!,
+						...room.candidates.find((c) => c.id === room.decision!.candidateId)!,
 						availability: room.decision.availability,
 					}).availability,
 				}
@@ -177,8 +150,7 @@ export function continuousSnapshot(
 				...v,
 			})),
 			pick: { ...p.pick },
-			nextCandidateId:
-				room.candidates.find((c) => p.votes[c.id]?.value == null)?.id ?? null,
+			nextCandidateId: room.candidates.find((c) => p.votes[c.id]?.value == null)?.id ?? null,
 			member: structuredClone(p.member),
 		},
 	}
@@ -200,9 +172,7 @@ export function preflight(
 		guestKinds(room, now)
 		requireRoom(
 			screensReady(room) &&
-				room.participants.every(
-					(m) => m.ready || (m.id === p.id && c.hostReady === true),
-				),
+				room.participants.every((m) => m.ready || (m.id === p.id && c.hostReady === true)),
 			"needs_context",
 			"Confirm every viewing screen and everyone else’s readiness",
 		)
@@ -211,11 +181,7 @@ export function preflight(
 		fence(room.generation, c.generation)
 		fence(room.stream.version, c.expectedStreamVersion)
 		guestKinds(room, now)
-		requireRoom(
-			screensReady(room),
-			"needs_context",
-			"Confirm all viewing screens",
-		)
+		requireRoom(screensReady(room), "needs_context", "Confirm all viewing screens")
 	}
 }
 function reset(room: ContinuousRoom) {
@@ -246,9 +212,7 @@ export function retire(room: ContinuousRoom) {
 	const remove = new Set(
 		room.candidates
 			.filter(
-				(c) =>
-					!pinned.has(c.id) &&
-					room.participants.every((p) => p.votes[c.id]?.value != null),
+				(c) => !pinned.has(c.id) && room.participants.every((p) => p.votes[c.id]?.value != null),
 			)
 			.map((c) => c.id),
 	)
@@ -304,15 +268,8 @@ export function continuousTransition(
 		case "setup":
 			host(room, p)
 			fence(room.contextVersion, c.expectedContextVersion)
-			requireRoom(
-				room.phase !== "decided",
-				"conflict",
-				"Restart before editing a decided room",
-			)
-			if (
-				c.constraints.kinds.includes("show_continue") &&
-				!canContinue(room, now)
-			)
+			requireRoom(room.phase !== "decided", "conflict", "Restart before editing a decided room")
+			if (c.constraints.kinds.includes("show_continue") && !canContinue(room, now))
 				memberProgressRequired()
 			requireRoom(
 				new Set(c.screens.map((s) => s.id)).size === c.screens.length,
@@ -355,11 +312,7 @@ export function continuousTransition(
 			fence(room.contextVersion, c.expectedContextVersion)
 			requireRoom(
 				room.screens.some(
-					(s) =>
-						s.id === p.screenId &&
-						s.confirmed &&
-						s.country &&
-						s.serviceIds.length,
+					(s) => s.id === p.screenId && s.confirmed && s.country && s.serviceIds.length,
 				),
 				"needs_context",
 				"Confirm your viewing screen",
@@ -383,16 +336,8 @@ export function continuousTransition(
 			choosing(room)
 			fence(room.generation, c.generation)
 			const candidate = room.candidates.find((x) => x.id === c.candidateId)
-			requireRoom(
-				candidate,
-				"invalid_request",
-				"Candidate no longer retained",
-				400,
-			)
-			if (
-				candidate.identity.kind === "show_continue" &&
-				!canContinue(room, now)
-			)
+			requireRoom(candidate, "invalid_request", "Candidate no longer retained", 400)
+			if (candidate.identity.kind === "show_continue" && !canContinue(room, now))
 				memberProgressRequired()
 			const old = p.votes[c.candidateId] ?? { value: null, revision: 0 }
 			fence(old.revision, c.expectedVoteRevision)
@@ -413,8 +358,7 @@ export function continuousTransition(
 			fence(room.rosterVersion, c.expectedRosterVersion)
 			fence(p.pick.revision, c.expectedPickRevision)
 			requireRoom(
-				c.candidateId === null ||
-					matches(room).some((m) => m.id === c.candidateId),
+				c.candidateId === null || matches(room).some((m) => m.id === c.candidateId),
 				"conflict",
 				"Pick must be a current match",
 			)
@@ -428,18 +372,10 @@ export function continuousTransition(
 				room.stream = {
 					version: room.stream.version + 1,
 					state: "capacity",
-					reason:
-						room.seenKeys.length >= L.seen
-							? "room_capacity"
-							: "awaiting_answers",
+					reason: room.seenKeys.length >= L.seen ? "room_capacity" : "awaiting_answers",
 				}
 			else {
-				requireRoom(
-					page,
-					"catalog_unavailable",
-					"Catalog page unavailable",
-					503,
-				)
+				requireRoom(page, "catalog_unavailable", "Catalog page unavailable", 503)
 				appendPage(room, page)
 			}
 			break
@@ -447,11 +383,7 @@ export function continuousTransition(
 			choosing(room)
 			fence(room.generation, c.generation)
 			fence(room.agreement.version, c.expectedAgreementVersion)
-			requireRoom(
-				agreementCandidate(room),
-				"conflict",
-				"No unanimous current pick",
-			)
+			requireRoom(agreementCandidate(room), "conflict", "No unanimous current pick")
 			reconcile(room)
 			break
 		case "restart":

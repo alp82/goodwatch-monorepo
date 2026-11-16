@@ -49,12 +49,7 @@ export interface StreamState {
 	version: number
 	state: "ready" | "exhausted" | "unavailable" | "capacity"
 	/** No per-person cursor/completed/answer counts. Bounds are not a full-catalog guarantee. */
-	reason:
-		| "catalog_end"
-		| "catalog_incomplete"
-		| "room_capacity"
-		| "awaiting_answers"
-		| null
+	reason: "catalog_end" | "catalog_incomplete" | "room_capacity" | "awaiting_answers" | null
 }
 export interface SharedRoomSnapshot {
 	contractVersion: 2
