@@ -18,6 +18,7 @@ function harness(script: Attempt, o: { offline?: boolean; onSleep?: (ms: number)
   const sent: Request[] = [];
   const waits: number[] = [];
   const log: string[] = [];
+  const analyticsEvents: string[] = [];
   let admission: unknown = null;
   const create = async (request: Request, signal?: AbortSignal) => {
     sent.push({ commandId: request.commandId, admissionSecret: request.admissionSecret });
@@ -37,6 +38,7 @@ function harness(script: Attempt, o: { offline?: boolean; onSleep?: (ms: number)
   const exports = loadIsolated<{ CreateRoom?: Flow }>(new URL('../src/core/continuous/create-room.ts', import.meta.url), {
     'expo-crypto': { getRandomBytesAsync: async () => new Uint8Array(32).fill(7), randomUUID: () => `uuid-${++uuid}` },
     './api': { continuousApi: { create, command: async () => { throw new Error('no commands expected'); } }, RoomFailure },
+    '../analytics': { analytics: { event: (name: string) => { analyticsEvents.push(name); } } },
     '../credentials': { saveAccess: async () => undefined },
     '../lobby': { deviceCountryHint: () => 'DE' },
     '../providers': { queryClient: { setQueryData: () => undefined } },
@@ -54,7 +56,7 @@ function harness(script: Attempt, o: { offline?: boolean; onSleep?: (ms: number)
     },
   }, { './resend': new URL('../src/core/continuous/resend.ts', import.meta.url) });
   // A relaunch: a new CreateRoom over the same storage and server.
-  return { flow: new exports.CreateRoom!(), relaunch: () => new exports.CreateRoom!(), rooms, sent, waits, log, saved: () => admission as { retryAt: number } | null };
+  return { flow: new exports.CreateRoom!(), relaunch: () => new exports.CreateRoom!(), rooms, sent, waits, log, analyticsEvents, saved: () => admission as { retryAt: number } | null };
 }
 const options = (controller = new AbortController(), onTrouble?: (since: number) => void) => ({ nickname: '', member: false, signal: controller.signal, onTrouble });
 
@@ -63,6 +65,7 @@ test('a create that gets no answer twice while online goes again by itself and o
   const troubles: number[] = [];
   const snapshot = await h.flow.save('', options(undefined, (since) => troubles.push(since)));
   assert.equal(snapshot.shared.roomId, 'room-1');
+  assert.deepEqual(h.analyticsEvents, ['room_created']);
   assert.equal(h.sent.length, 3);
   assert.equal(new Set(h.sent.map((r) => `${r.commandId}:${r.admissionSecret}`)).size, 1, 'every resend is the same command id and secret');
   assert.equal(h.rooms.size, 1, 'no second room although the server made it on the first (unanswered) try');

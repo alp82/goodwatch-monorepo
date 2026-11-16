@@ -1,4 +1,5 @@
 import { continuousApi as api, RoomFailure } from './api';
+import { analytics } from '../analytics';
 import { loadAccess, nativeClient, saveAccess } from '../credentials';
 import { inviteIntent } from '../invites';
 import { queryClient } from '../providers';
@@ -57,6 +58,7 @@ async function admitOnce(saved: AdmissionRecovery, o: JoinOptions): Promise<stri
       o.onSaved?.(null);
       await rememberName(saved.request.nickname);
       await unarchive(roomId);
+      analytics.event('room_returned');
       return roomId;
     } catch (e) {
       if (!(e instanceof RoomFailure) || !NOT_A_MEMBER.includes(e.code)) throw e;
@@ -74,6 +76,7 @@ async function admitOnce(saved: AdmissionRecovery, o: JoinOptions): Promise<stri
   o.onSaved?.(null);
   await rememberName(saved.request.nickname);
   if (saved.code) await unarchive(result.credential.roomId);
+  analytics.event('room_joined');
   return result.credential.roomId;
 }
 

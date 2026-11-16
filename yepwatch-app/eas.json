@@ -50,6 +50,7 @@
     },
     "store-simulator": {
       "extends": "production",
+      "env": { "EXPO_PUBLIC_ANALYTICS_ENABLED": "false" },
       "distribution": "internal",
       "ios": { "simulator": true, "config": "store-screenshots.yml" },
       "channel": "store-simulator"

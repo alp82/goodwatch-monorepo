@@ -17,6 +17,7 @@ import { ROOT_SCREENS } from '../features/shell/route-order';
 import { useVisualViewportFrame } from '../features/shell/visual-viewport';
 import { TasteModeLayer } from '../features/taste/TasteMode';
 import { useTasteMode } from '../features/taste/taste-mode';
+import { useAnalytics } from '../core/useAnalytics';
 installLeftoverTapGuard();
 if (Platform.OS !== 'web') {
   // The startup cover continues the system splash exactly (the Y on the same ground), so the splash can
@@ -47,6 +48,7 @@ export default function Layout() {
   const [readyPages, setReadyPages] = useState<ReadonlySet<string>>(() => new Set());
   const markPageReady = useCallback((key: string) => setReadyPages((keys) => (keys.has(key) ? keys : new Set(keys).add(key))), []);
   const pageReady = !resuming && (page === null || readyPages.has(page));
+  useAnalytics(pathname, booted && !resuming, tasteOpen);
   const revealed = useCallback(() => setArriving(true), []);
   const done = useCallback(() => setBooted(true), []);
   const hideNative = useCallback(() => { if (Platform.OS !== 'web') void SplashScreen.hideAsync().catch(() => undefined); }, []);

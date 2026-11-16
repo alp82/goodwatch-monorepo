@@ -1,4 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
+import { resetAnalyticsIdentity } from '../analytics-transport';
 import * as Crypto from 'expo-crypto';
 import { loadAccess } from '../credentials';
 import { forgetSessionCache } from './member';
@@ -16,4 +17,5 @@ export async function eraseDevice(roomIds: string[]) {
   await SecureStore.deleteItemAsync(`yepwatch.v3.admission.${await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, '')}`);
   for (const key of ['yepwatch.recent-room', 'yepwatch.v3.front-room', 'yepwatch.v2.member-intent', 'yepwatch.v3.account-intent', 'yepwatch.v3.member-session', 'yepwatch.v3.member-name', 'yepwatch.v3.taste-secret', 'yepwatch.v3.taste-outbox', 'yepwatch.v3.tonight-howto-seen']) await SecureStore.deleteItemAsync(key);
   forgetSessionCache();
+  await resetAnalyticsIdentity();
 }

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { trackRoomCommand } from '../analytics';
 import { AppState, Platform } from 'react-native';
 import { hashKey, useQuery } from '@tanstack/react-query';
 import * as Crypto from 'expo-crypto';
@@ -419,6 +420,7 @@ export function useContinuousRoom(roomId: string) {
     setError('');
     setErrorCode(null);
     const leaving = (command ?? queue.current.pending?.command)?.type === 'leave';
+    const commandType = (command ?? queue.current.pending?.command)?.type;
     leavingNow.current = leaving;
     let settleLeave = () => {};
     if (leaving) leaveSettled.current = new Promise((resolve) => { settleLeave = resolve; });
@@ -428,6 +430,7 @@ export function useContinuousRoom(roomId: string) {
         api.command(access, body), commandId
       );
       apply(value);
+      if (commandType) trackRoomCommand(commandType);
       // Left: nothing more comes from this room. The gateway refuses the leaver's socket at once, and its redial a
       // moment later (while the start page takes over) asked for a ticket the server could only refuse (403).
       if (leaving && value.own.left) {

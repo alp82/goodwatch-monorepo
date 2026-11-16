@@ -1,4 +1,5 @@
 import * as Crypto from 'expo-crypto';
+import { analytics } from '../analytics';
 import type { GuestAdmission, RoomCommand, RoomSetupRequest, RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
 import { continuousApi as api, RoomFailure } from './api';
 import { saveAccess } from '../credentials';
@@ -40,6 +41,7 @@ interface SaveOptions {
 
 /** One room per draft, including retries and reloads. Navigation belongs to the successful caller. */
 export class CreateRoom {
+  private analyticsReported = false;
   private request: AdmissionRecovery | null = null;
   private admitted: GuestAdmission | null = null;
   private commands: PersistentCommands | null = null;
@@ -197,6 +199,7 @@ export class CreateRoom {
     // Keep the original admission until the whole workflow succeeds: reload cannot allocate a second room.
     await writeAdmission('', null);
     this.request = null;
+    if (!this.analyticsReported) { this.analyticsReported = true; analytics.event('room_created'); }
     return this.admitted.snapshot;
   }
 }

@@ -157,6 +157,7 @@ function realPage(server: ReturnType<typeof admissionServer>) {
   const { CreateRoom } = loadIsolated<{ CreateRoom: RealFlow }>(new URL('../src/core/continuous/create-room.ts', import.meta.url), {
     'expo-crypto': { getRandomBytesAsync: async () => new Uint8Array(32).fill(7), randomUUID: () => `uuid-${++uuid}` },
     './api': { continuousApi: server.api, RoomFailure },
+    '../analytics': { analytics: { event: () => undefined } },
     '../credentials': { saveAccess: async () => undefined },
     '../lobby': { deviceCountryHint: () => 'DE' },
     '../providers': { queryClient: { setQueryData: () => undefined } },

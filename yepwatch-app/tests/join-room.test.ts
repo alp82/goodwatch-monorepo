@@ -43,6 +43,7 @@ function harness(script: Attempt, o: { offline?: boolean; seated?: number; onSle
   };
   const { joinUntilAnswered } = loadIsolated<{ joinUntilAnswered: Join }>(new URL('../src/core/continuous/join-room.ts', import.meta.url), {
     './api': { continuousApi: { resolve: async () => ({ roomId: 'room-1', credential: false }), snapshot: async () => { throw new Error('no membership read expected'); }, join }, RoomFailure },
+    '../analytics': { analytics: { event: () => undefined } },
     '../credentials': { loadAccess: async () => null, nativeClient: true, saveAccess: async () => undefined },
     '../invites': { inviteIntent: (code: string) => `/r/${code}` },
     '../providers': { queryClient: { setQueryData: () => undefined } },
@@ -205,6 +206,7 @@ function realJoin(server: ReturnType<typeof admissionServer>) {
   const waits: number[] = [];
   const { joinUntilAnswered } = loadIsolated<{ joinUntilAnswered: Join }>(new URL('../src/core/continuous/join-room.ts', import.meta.url), {
     './api': { continuousApi: server.api, RoomFailure },
+    '../analytics': { analytics: { event: () => undefined } },
     '../credentials': { loadAccess: async () => null, nativeClient: true, saveAccess: async () => undefined },
     '../invites': { inviteIntent: (code: string) => `/r/${code}` },
     '../providers': { queryClient: { setQueryData: () => undefined } },
