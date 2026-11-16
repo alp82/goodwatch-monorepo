@@ -12,6 +12,7 @@
     "e2e:gate:android": "node ci/native-gate.mjs --mode=subset"
   },
   "devDependencies": {
-    "axe-core": "4.11.0"
+    "axe-core": "4.11.0",
+    "happy-dom": "20.14.5"
   }
 }

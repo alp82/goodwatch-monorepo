@@ -88,12 +88,14 @@ jobs:
           path: |
             yepwatch-app/node_modules
             yepwatch-realtime/node_modules
-          key: yw-nm-checks-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('yepwatch-app/package-lock.json', 'yepwatch-realtime/package-lock.json', 'goodwatch-webapp/packages/yepwatch-contracts/**') }}
+            yepwatch-app/e2e/node_modules
+          key: yw-nm-checks-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('yepwatch-app/package-lock.json', 'yepwatch-realtime/package-lock.json', 'yepwatch-app/e2e/package-lock.json', 'goodwatch-webapp/packages/yepwatch-contracts/**') }}
       - name: Install (cache miss only)
         if: steps.nm.outputs.cache-hit != 'true'
         run: |
           npm --prefix yepwatch-app ci --install-links --no-audit --no-fund &
           npm --prefix yepwatch-realtime ci --no-audit --no-fund &
+          npm --prefix yepwatch-app/e2e ci --no-audit --no-fund &
           wait
       - name: Typecheck, lint, unit tests, gateway build + tests
         run: |

@@ -24,7 +24,7 @@ test('poster preview GET contract and parser preserve deck presentation fields',
 });
 
 import { build } from 'esbuild';
-import { Window } from '../../goodwatch-webapp/node_modules/happy-dom/lib/index.js';
+import { Window } from '../e2e/node_modules/happy-dom/lib/index.js';
 import { onYepwatchAnswer, unansweredFor } from '../src/core/continuous/network';
 
 const pause = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
