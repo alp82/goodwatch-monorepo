@@ -28,6 +28,7 @@ import { toRooms } from './nav';
 import { useRoom, useRoomLive } from './RoomProvider';
 import { RoomNotes } from './RoomStatus';
 import { Actions, Screen, usePinnedActions } from './ui';
+import { YepsButton, YepsSheet } from './YourYeps';
 
 /** Decisions whose film reveal already ran in this app session; reopening shows it settled. */
 const revealed = new Set<string>();
@@ -76,6 +77,7 @@ export function Tonight() {
   const gesture = usePosterCheer({ enabled, send: state.cheer, spring });
   const { phone, wide, height, header, max, z } = useLayout();
   const pinned = usePinnedActions();
+  const [yepsOpen, setYepsOpen] = useState(false);
   if (!view || !shared || !decision || !c) return null;
   const holders = new Map(cheerHolders);
   if (gesture.holding) holders.set(view.me.id, gesture.seed);
@@ -126,29 +128,33 @@ export function Tonight() {
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><FaceStack people={view.faces} size={z(24)} max={6} /><GText size={z(13)} color={glow.muted}>Everyone agreed</GText></View>
     </View>
   );
+  const yeps = <View style={{ alignSelf: wide ? 'flex-start' : 'center' }}><YepsButton tonight onPress={() => setYepsOpen(true)} /></View>;
+  const yepsSheet = yepsOpen ? <YepsSheet onClose={() => setYepsOpen(false)} /> : undefined;
   const glowLayer = c.posterUrl ? <TonightGlow uri={c.posterUrl} /> : null;
   if (wide) {
     return (
-      <Screen testID="tonight" back={toRooms} width="page" backdrop={glowLayer}>
+      <Screen testID="tonight" back={toRooms} width="page" backdrop={glowLayer} sheet={yepsSheet}>
         <RoomNotes />
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: z(64) }}>
           {posterBlock}
           <View style={{ flex: 1, maxWidth: z(580), gap: z(30), paddingTop: CLAPPER_HEIGHT + z(12) }}>
             {info}
             <View style={{ width: Math.min(z(380), max - pw - z(64)), gap: 8 }}><Actions>{watchButton}</Actions>{again}</View>
+            {yeps}
           </View>
         </View>
       </Screen>
     );
   }
   return (
-    <Screen testID="tonight" back={toRooms} width="page" backdrop={glowLayer} footer={pinned ? <Actions>{watchButton}</Actions> : undefined}>
+    <Screen testID="tonight" back={toRooms} width="page" backdrop={glowLayer} sheet={yepsSheet} footer={pinned ? <Actions>{watchButton}</Actions> : undefined}>
       <RoomNotes />
       <View style={{ alignItems: 'center', gap: phone ? 16 : 22 }}>
         {posterBlock}
         {info}
         {!pinned ? <Actions style={{ alignSelf: 'stretch' }}>{watchButton}</Actions> : null}
         {again}
+        {yeps}
       </View>
     </Screen>
   );

@@ -62,6 +62,18 @@ export function matchesChipFrame(z: (n: number) => number, fontScale: number, co
     : { width: undefined, justifyContent: 'center' as const };
 }
 
+/** The Yeps button's poster stack: three 16 px posters, each after 45 % of the one before. */
+const YEPS_POSTERS = 16 + 2 * 16 * 0.45;
+/**
+ * The voting bar's Yeps button (room/YourYeps.tsx), in the room the bar keeps for the chip: 10 px padding
+ * and a 1 px border each side, the 15 px check, 7 px gaps, a two-digit bold 15 px count and, unless
+ * `compact`, the poster stack. Fixed: a Yep arriving moves nothing.
+ */
+export function yepsButtonWidth(z: (n: number) => number, fontScale: number, compact: boolean) {
+  const base = 2 * 11 + z(15) + 7 + Math.ceil(z(15) * Math.max(1, fontScale) * 0.56 * 2);
+  return compact ? Math.max(base, matchesChipWidth(z, fontScale, COMPACT_LABEL)) : Math.ceil(base + 7 + YEPS_POSTERS);
+}
+
 export interface VotingBarFit {
   /** Face slots the row reserves (1 to MAX_FACES); people beyond them are counted in "+N". */
   slots: number;
@@ -72,8 +84,9 @@ export interface VotingBarFit {
 }
 
 /**
- * How the voting bar shares its width: the Matches chip, the faces row and Undo (`undo` wide), with
- * `gap` between them. The chip keeps room for a two-digit "10 matches"; the faces get what's left,
+ * How the voting bar shares its width: the chip's room, the faces row and Undo (`undo` wide), with
+ * `gap` between them. The chip's room (a two-digit "10 matches", from when the bar held the Matches chip)
+ * now holds the Yeps button (`yepsButtonWidth`, never wider); the faces get what's left,
  * up to four. When even one face doesn't fit beside the full label (narrow phones at a large font
  * scale), the chip drops the word.
  */

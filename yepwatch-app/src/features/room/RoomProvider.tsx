@@ -29,6 +29,7 @@ import { exitRoom } from './nav';
 import { RefillGate } from './refill';
 import { RoomLinkGate, linkOutcome } from './link-gate';
 import { previewDrafts, useSettingsSaves, type SettingsSaves } from './settings-save';
+import { noteOwnYeps } from './own-yeps';
 import { BootPageReady } from '../home/boot-phase';
 
 const COUNTRY_TRIES = 5;
@@ -242,6 +243,8 @@ function RoomProviderContent({ id, children, renderSheet }: { id: string; childr
     return next && lastView.current ? replaceEqualDeep(lastView.current, next) : next;
   }, [snapshot, seenIdeas]);
   useLayoutEffect(() => { lastView.current = view; });
+  // Your Yeps this round, kept before the room retires a card someone said Nope to (own-yeps.ts).
+  useEffect(() => { if (snapshot) noteOwnYeps(snapshot); }, [snapshot]);
 
   // One rule for every connection word (core/continuous/connection-words.ts): nothing for a short outage,
   // then one small line. A hidden page reads as background, so a quick return shows nothing.

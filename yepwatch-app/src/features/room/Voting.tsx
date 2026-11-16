@@ -24,7 +24,7 @@ import { latestRetainedVote, ownCard } from '../../core/continuous/state';
 import { titlePresentation } from '../glow/adapter';
 import type { GesturePhase } from '../glow/model';
 import { LiveFaces } from '../glow/Peers';
-import { votingBarFit } from '../glow/faces-row';
+import { votingBarFit, yepsButtonWidth } from '../glow/faces-row';
 import { useActiveTime } from '../glow/useActiveTime';
 import { TrailerLink } from '../glow/TrailerLink';
 import { GText, Icon, Press, glow, native } from '../glow/theme';
@@ -49,6 +49,7 @@ import type { A } from './vote/paint';
 import { LookDealer, harnessLooksFrom, pinnedLookFrom } from './vote/looks';
 import { answerYep, matchKey, nextCandidate, settleYeps, undoYeps, yepRecord, type YepRecord } from './vote/match';
 import { VoteStage, type DragValues, type MatchMoment, type VoteStageControls } from './vote/VoteStage';
+import { YepsButton, YepsSheet } from './YourYeps';
 
 /** The one question every Tonight card asks. */
 export const TONIGHT_QUESTION = 'Would you watch this tonight?';
@@ -190,6 +191,7 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
   const barHeight = Math.max(48, z(44));
   const reduced = useReducedMotion();
   const [panel, setPanel] = useState<'details' | null>(null);
+  const [yepsOpen, setYepsOpen] = useState(false);
   // The card is placed from the stage's measured size; it isn't drawn before that (a guess would move it).
   const [area, setArea] = useState<{ width: number; height: number } | null>(null);
   const stageBox = useRef<ViewNode>(null);
@@ -427,12 +429,15 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
       {/* Always the same width: the second person arriving moves nothing. */}
       {people.length > 1 ? <LiveFaces people={people} activity={activity} localReaction={localReaction} size={z(26)} slots={fit.slots} fontScale={fontScale} /> : <View style={{ width: fit.facesWidth }} />}
       <View style={{ flex: 1 }} />
+      {/* In the room the bar keeps for it (faces-row.ts): your Yeps arriving move nothing. */}
+      <YepsButton onPress={() => setYepsOpen(true)} compact={fit.compactChip} width={yepsButtonWidth(z, fontScale, fit.compactChip)} />
       <Press label="Undo" disabled={disabled || !undoTarget} onPress={() => { if (!undoTarget) return; setYeps((list) => undoYeps(list, undoTarget.candidateId)); void cmd.undo(undoTarget.candidateId); }}
         visual={{ width: z(40), height: z(36), borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff0a' }}>
         <Icon name="undo" size={z(17)} color={glow.soft} />
       </Press>
     </View>
   );
+  const yepsSheet = yepsOpen ? <YepsSheet onClose={() => setYepsOpen(false)} /> : undefined;
   const stage = (
     // A page on top hides this one (zero size on the web): keep the last real size.
     <View ref={stageBox} collapsable={false} onLayout={(e) => { const { width, height } = e.nativeEvent.layout; if (width > 0 && height > 0) { setArea((a) => (a && a.width === width && a.height === height ? a : { width, height })); placeStage(); relayout(); } }}
@@ -478,7 +483,7 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
   if (wide) {
     return (
       <View style={{ flex: 1 }} onStartShouldSetResponderCapture={onTouchCapture}>
-        <Screen testID="voting" frameRef={frameBox} scroll={false} back={toRooms} covered={Boolean(panel)} width="page" noteTop={z(24) + barHeight + 8} overlay={overlay}>
+        <Screen testID="voting" frameRef={frameBox} scroll={false} back={toRooms} covered={Boolean(panel)} width="page" noteTop={z(24) + barHeight + 8} overlay={overlay} sheet={yepsSheet}>
           <RoomNotes />
           {bar}
           <View style={{ flex: 1, minHeight: 0, flexDirection: 'row', gap: z(ASIDE_GAP), alignItems: 'stretch' }}>
@@ -502,7 +507,7 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
   }
   return (
     <View style={{ flex: 1 }} onStartShouldSetResponderCapture={onTouchCapture}>
-      <Screen testID="voting" frameRef={frameBox} scroll={false} back={toRooms} covered={Boolean(panel)} width="page" noteTop={(phone ? 12 : z(24)) + barHeight + 8} overlay={overlay}
+      <Screen testID="voting" frameRef={frameBox} scroll={false} back={toRooms} covered={Boolean(panel)} width="page" noteTop={(phone ? 12 : z(24)) + barHeight + 8} overlay={overlay} sheet={yepsSheet}
         footer={
           <View onLayout={relayout} style={{ gap: 10, width: phone ? '100%' : rowWidth, alignSelf: 'center' }}>
             <GText bold size={phone ? 20 : z(24)} style={{ letterSpacing: -0.5 }}>{TONIGHT_QUESTION}</GText>

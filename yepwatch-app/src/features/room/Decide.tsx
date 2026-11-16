@@ -28,10 +28,10 @@ import { PosterCopy } from './vote/shapes';
 import { cardReason, offeredOn } from './Voting';
 
 const sized = (url: string | null, w: 185 | 342 | 500) => (url ? url.replace('/w500/', `/w${w}/`) : null);
-export const meta = (c: Candidate) => [c.year, c.identity.kind === 'movie' ? 'Movie' : 'Show', c.viewingDuration ? `${c.viewingDuration.minutes} min` : null].filter(Boolean).join(' · ');
+export const meta = (c: Pick<Candidate, 'year' | 'identity' | 'viewingDuration'>) => [c.year, c.identity.kind === 'movie' ? 'Movie' : 'Show', c.viewingDuration ? `${c.viewingDuration.minutes} min` : null].filter(Boolean).join(' · ');
 
 /** A poster at a width (2:3), a ticket where there's no image. */
-export function Poster({ c, width, radius = 10, label = true }: { c: Candidate | null; width: number; radius?: number; /** Announce it (off where a button around it already names the title). */ label?: boolean }) {
+export function Poster({ c, width, radius = 10, label = true }: { c: Pick<Candidate, 'title' | 'posterUrl'> | null; width: number; radius?: number; /** Announce it (off where a button around it already names the title). */ label?: boolean }) {
   const uri = c ? sized(c.posterUrl, width > 260 ? 500 : width > 130 ? 342 : 185) : null;
   return (
     <View style={{ width, height: width * 1.5, borderRadius: radius, overflow: 'hidden', backgroundColor: warm.well, alignItems: 'center', justifyContent: 'center' }}>

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { COMPACT_LABEL, FULL_LABEL, PROPOSAL_DOT, faceOffset, liveFacesWidth, matchesChipFrame, matchesChipWidth, moreOffset, moreSlot, votingBarFit } from '../src/features/glow/faces-row';
+import { COMPACT_LABEL, FULL_LABEL, PROPOSAL_DOT, faceOffset, liveFacesWidth, matchesChipFrame, matchesChipWidth, moreOffset, moreSlot, votingBarFit, yepsButtonWidth } from '../src/features/glow/faces-row';
 import { layoutFor } from '../src/features/shell/scale';
 
 const UNDO = 48, GAP = 10;
@@ -72,4 +72,14 @@ test('the compact chip has a fixed, start-aligned box: the first match and a pro
   assert.equal(frame.width, matchesChipWidth(z, 2, COMPACT_LABEL), 'same width with no count, "1", "10" and the dot');
   assert.ok(frame.width >= 48, 'at least the touch target, so the minimum width never re-centers it');
   assert.equal(matchesChipFrame(z, 1, false).width, undefined, 'the full chip sizes to its label');
+});
+
+test('the Yeps button fits the room the bar keeps for the chip, at every width and font scale', () => {
+  for (const w of [320, 360, 390, 430, 1440]) for (const fs of [1, 1.3, 1.5, 2]) {
+    const { z } = layoutFor(w, 800);
+    const b = bar(w, fs);
+    const room = matchesChipWidth(z, fs, b.compactChip ? 2 : 10);
+    const button = yepsButtonWidth(z, fs, b.compactChip);
+    assert.ok(button <= room, `${w} px @${fs}: button ${button} > room ${room}`);
+  }
 });
