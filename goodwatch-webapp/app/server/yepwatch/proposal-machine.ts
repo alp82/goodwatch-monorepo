@@ -714,6 +714,10 @@ export function proposalTransition(
 	for (const departed of original.participants.filter((p) => p.leftAt != null))
 		if (!room.participants.some((p) => p.id === departed.id))
 			room.participants.push(structuredClone(departed))
+	// People who left go back to their place: the roster keeps join order (the app colors friends by it).
+	const place = new Map(original.participants.map((p, i) => [p.id, i]))
+	const last = Number.MAX_SAFE_INTEGER
+	room.participants.sort((a, b) => (place.get(a.id) ?? last) - (place.get(b.id) ?? last))
 	if (c.type === "start") {
 		room.startedAt = now
 		room.firstMatchAt = null

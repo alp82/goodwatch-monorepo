@@ -70,3 +70,20 @@ test("left participants retain their own count and do not contribute answers to 
 	room.participants = room.participants.filter((p) => p.id !== "peer")
 	assert.deepEqual(counts(room), [0])
 })
+test("a vote after someone left keeps the roster in join order", () => {
+	let room = fixture()
+	room.participants.push({ ...structuredClone(room.participants[0]), id: "third" })
+	const order = () =>
+		proposalSnapshot(room, room.hostId).shared.participants.map((p) => p.participantId)
+	assert.deepEqual(order(), [room.hostId, "peer", "third"])
+	room = proposalTransition(
+		room,
+		"peer",
+		{ commandId: "leave", sequence: 1, command: { type: "leave" } },
+		Date.now(),
+	)
+	// The roster change re-deals; this fixture has no catalog page, so deal the cards again.
+	room.candidates = cards(3)
+	room = vote(room, "watch")
+	assert.deepEqual(order(), [room.hostId, "peer", "third"])
+})
