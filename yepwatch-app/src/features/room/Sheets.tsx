@@ -37,6 +37,7 @@ import { noun } from '../shell/noun';
 export function renderRoomSheet(sheet: RoomSheet) {
   switch (sheet) {
     case 'room': return <RoomMenuSheet />;
+    case 'settings': return <SettingsSheet />;
     case 'services': return <ServicesSheet />;
     case 'streaming': return <StreamingSheet />;
     case 'kinds': return <KindsSheet />;
@@ -71,27 +72,10 @@ const Done = () => {
 
 /** The room in one place: its ideas, people and link, settings, archive and leave. */
 function RoomMenuSheet() {
-  const { id, view, cmd, disabled, closeSheet, openSheet, setNotice, acknowledgeIdeas } = useRoom();
-  const account = useAccount();
+  const { id, view, cmd, disabled, closeSheet, openSheet, acknowledgeIdeas } = useRoom();
   const { z } = useLayout();
-  const { all } = useServices(view?.country);
-  const [leaving, setLeaving] = useState<'ask' | 'sending' | null>(null);
   useAcknowledgeShownIdeas(view, acknowledgeIdeas);
   if (!view) return null;
-  const leave = () => {
-    setLeaving('sending');
-    void cmd.leave().then(async (ok) => {
-      if (!ok) { setLeaving(null); return; }
-      if (!account.member) await roomRegistry.markLeft(id, view.label).catch(() => undefined);
-      await accountRoomChanged(id, { leftLabel: view.label });
-      exitRoom();
-    });
-  };
-  const archive = () => {
-    void (account.member ? continuousApi.archive(id, true).then(() => accountRoomChanged(id, { archivedAt: Date.now() })) : roomRegistry.archive(id))
-      .then(exitRoom).catch(() => setNotice(`Couldn’t archive ${noun.this}. Try again.`));
-  };
-  const on = servicesIn(all, view.enabledServiceIds);
   const people = view.faces;
   return (
     <Sheet testID="room-sheet" title={noun.One} onClose={closeSheet}>
@@ -128,14 +112,64 @@ function RoomMenuSheet() {
         </Press>
         <InviteFriends onPress={() => openSheet('invite')} />
       </View>
+      <RoomSettings label />
+    </Sheet>
+  );
+}
+
+/** The setup dock's Settings: only what the setup page doesn't show (its ideas and people are on it). */
+function SettingsSheet() {
+  const { closeSheet } = useRoom();
+  return (
+    <Sheet testID="room-sheet" title="Settings" onClose={closeSheet}>
+      <RoomNotes />
+      <RoomSettings />
+    </Sheet>
+  );
+}
+
+/**
+ * The room's settings, then Archive and Leave and Feedback. Streaming reads like the setup page's row
+ * did: a host without services adds them (Your services), a friend brings their own.
+ */
+function RoomSettings({ label = false }: { label?: boolean }) {
+  const { id, view, cmd, disabled, openSheet, setNotice, saves } = useRoom();
+  const account = useAccount();
+  const { z } = useLayout();
+  const { all } = useServices(view?.country);
+  const [leaving, setLeaving] = useState<'ask' | 'sending' | null>(null);
+  if (!view) return null;
+  const leave = () => {
+    setLeaving('sending');
+    void cmd.leave().then(async (ok) => {
+      if (!ok) { setLeaving(null); return; }
+      if (!account.member) await roomRegistry.markLeft(id, view.label).catch(() => undefined);
+      await accountRoomChanged(id, { leftLabel: view.label });
+      exitRoom();
+    });
+  };
+  const archive = () => {
+    void (account.member ? continuousApi.archive(id, true).then(() => accountRoomChanged(id, { archivedAt: Date.now() })) : roomRegistry.archive(id))
+      .then(exitRoom).catch(() => setNotice(`Couldn’t archive ${noun.this}. Try again.`));
+  };
+  const on = servicesIn(all, view.enabledServiceIds);
+  // The catalog is still loading: the row stays blank instead of saying "none" and then changing its words.
+  const loading = !all.length && view.enabledServiceIds.length > 0;
+  const missing = !loading && !on.length && view.isHost;
+  // The host decides the couch's services (Streaming); a friend brings their own (Your services).
+  const streaming = missing || !view.isHost ? 'services' : 'streaming';
+  // A change not yet confirmed shows at once (it waits in the room's drafts until the server answers).
+  const kinds = saves.drafts.kinds ?? view.kinds;
+  return (
+    <>
       <View>
-        <Label>Settings</Label>
-        <SettingRow label={`${kindsLabel(view.kinds)}${view.isHost ? ', change' : ''}`} onPress={view.isHost ? () => openSheet('kinds') : undefined}>
-          <KindIcons kinds={view.kinds} size={20} /><GText color={glow.soft} style={{ flex: 1 }}>{kindsLabel(view.kinds)}</GText>
+        {label ? <Label>Settings</Label> : null}
+        <SettingRow label={`${kindsLabel(kinds)}${view.isHost ? ', change' : ''}`} onPress={view.isHost ? () => openSheet('kinds') : undefined}>
+          <KindIcons kinds={kinds} size={20} /><GText color={glow.soft} style={{ flex: 1 }}>{kindsLabel(kinds)}</GText>
         </SettingRow>
-        <SettingRow label={`${on.length ? namesLine(on) : 'Streaming'}, change`} onPress={() => openSheet('streaming')}>
-          {on.length ? <Logos services={on} /> : null}
-          <GText color={on.length ? glow.soft : glow.amber} lines={1} style={{ flex: 1 }}>{on.length ? namesLine(on) : 'Streaming services'}</GText>
+        <SettingRow label={missing ? 'Streaming services, add' : `${on.length ? namesLine(on) : 'Streaming'}, change`} onPress={() => openSheet(streaming)}>
+          {on.length ? <Logos services={on} /> : missing ? <Glyph name="plus" size={18} color={glow.amber} /> : null}
+          <GText bold={missing} color={on.length ? glow.soft : missing ? glow.amber : glow.muted} lines={1} style={{ flex: 1 }}>{on.length ? namesLine(on) : missing ? 'Add your streaming services' : loading ? '' : 'Nobody’s services yet'}</GText>
         </SettingRow>
         {view.showSeen !== null && (
           <SettingRow label="Show titles I’ve seen" right={<Switch on={view.showSeen} label="Show titles I’ve seen" disabled={disabled} onPress={() => void cmd.setShowSeen(!view.showSeen)} />}>
@@ -158,7 +192,7 @@ function RoomMenuSheet() {
         </View>
       ) : null}
       <Feedback />
-    </Sheet>
+    </>
   );
 }
 

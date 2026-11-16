@@ -36,8 +36,8 @@ const COUNTRY_RETRY_MS = 1200;
 
 /** Opening a room connects within a moment; only a connection that stays away is worth a line. */
 
-/** The room's sheets: Room (its menu), Your services, Streaming, Movies and shows, People, Invite friends, How it works. */
-export const ROOM_SHEETS = ['room', 'services', 'streaming', 'kinds', 'people', 'invite', 'how'] as const;
+/** The room's sheets: Room (its menu), Settings (the setup dock's), Your services, Streaming, Movies and shows, People, Invite friends, How it works. */
+export const ROOM_SHEETS = ['room', 'settings', 'services', 'streaming', 'kinds', 'people', 'invite', 'how'] as const;
 export type RoomSheet = (typeof ROOM_SHEETS)[number];
 export const isRoomSheet = (value: unknown): value is RoomSheet => typeof value === 'string' && (ROOM_SHEETS as readonly string[]).includes(value);
 

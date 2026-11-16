@@ -169,14 +169,20 @@ async function main() {
     await notStuck(A, 'room page after create');
     await audit(A, 'room page (host, before start)');
     await fillAndSubmit(A, 'Describe what you want to watch', 'cheer me up');
+    // Streaming is in the dock's Settings.
+    await A.tap(/^Settings/);
+    await A.waitFor('room-sheet');
     await A.tap(/^Streaming services/);
     await A.waitFor('services-sheet');
     await audit(A, 'services sheet');
-    A.back(); // back priority: the sheet closes, the room stays
+    A.back(); // back priority: the top sheet closes, Settings and the room stay
     await A.waitGone('services-sheet', { timeout: 3000 });
-    if (!(await A.has('room-setup'))) journeyFail('back priority', 'Back on the services sheet left the room page');
+    if (!(await A.has('room-sheet'))) journeyFail('back priority', 'Back on the services sheet closed Settings too');
     await A.tap(/^Streaming services/);
     await pickNetflix(A);
+    A.back();
+    await A.waitGone('room-sheet', { timeout: 3000 });
+    if (!(await A.has('room-setup'))) journeyFail('back priority', 'Back on Settings left the room page');
     // The name came with setup: the couch setup asks only a host without one.
     S.code = await inviteCode(A);
   });

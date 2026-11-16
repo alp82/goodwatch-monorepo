@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
 import { test, eventually, issuer, type Person } from '../lib/harness';
-import { addIdea, cardTitle, createRoom, hostName, newCouch, pageTap, pickServices, recordPage, setUpStart, start } from './flows';
+import { addIdea, cardTitle, createRoom, hostName, newCouch, pageTap, pickServices, recordPage, setUpStart, start, addServices, setKinds } from './flows';
 
 const roomCountry = (p: Person) => (p.latest?.screens as { country: string | null }[] | undefined)?.[0]?.country;
 
@@ -242,7 +242,7 @@ test.describe('create and set up a room', () => {
       await addIdea(host, second);
       await eventually(() => host.latest?.ideas.map((i) => i.text), (v) => JSON.stringify(v) === JSON.stringify([second]), 'the replacement is kept too', host);
       await hostName(host, 'Alp');
-      await pickServices(host, ['Netflix'], () => host.tap(host.button('Streaming services, add'), { expect: { visible: ['services-sheet'] } }));
+      await addServices(host, ['Netflix']);
       await start(host, []);
     } finally {
       await issuer(`/_e2e/search-budget?prompt=${encodeURIComponent(mood)}&on=0`);
@@ -272,7 +272,7 @@ test.describe('create and set up a room', () => {
       await expect(host.page.getByTestId('idea-unmatched')).toHaveCount(0);
       await room.point('room');
       await hostName(host, 'Alp');
-      await pickServices(host, ['Netflix'], () => host.tap(host.button('Streaming services, add'), { expect: { visible: ['services-sheet'] } }));
+      await addServices(host, ['Netflix']);
       await start(host, []);
       // The landed idea leads the deck: its first card is a western.
       expect(await cardTitle(host)).toMatch(/western/i);
@@ -299,11 +299,10 @@ test.describe('create and set up a room', () => {
     await eventually(() => (host.latest?.screens as { serviceIds: number[]; country: string }[] | undefined)?.[0]?.serviceIds.length ?? 0, (n) => n > 0, 'services saved on the screen', host);
     // The name came with setup (the room asks only a host without one).
     await hostName(host, 'Alp');
-    // Movies or shows: one switch in the console.
-    const shows = host.page.getByRole('radio', { name: 'Shows', exact: true }).filter({ visible: true });
-    await host.tap(shows, { expect: {} });
+    // Movies or shows: in Settings.
+    await setKinds(host, { Movies: false, Shows: true });
     await eventually(() => JSON.stringify((host.latest?.constraints as { kinds: string[] } | undefined)?.kinds), (k) => k === JSON.stringify(['show_start']), 'shows only', host);
-    await host.tap(host.page.getByRole('radio', { name: 'Movies and shows', exact: true }).filter({ visible: true }), { expect: {} });
+    await setKinds(host, { Movies: true, Shows: true });
     // Your idea switches off and on.
     // Its name goes on with what the server read in it.
     const sw = host.page.getByRole('switch', { name: /^rainy day whodunit\. Your idea/ }).filter({ visible: true });
@@ -322,13 +321,13 @@ test.describe('create and set up a room', () => {
     await host.audit('Invite friends');
     await host.page.keyboard.press('Escape');
     await host.see({ hidden: ['invite-surface', 'invite-sheet'] }, 5000, 'Invite closed');
-    // Room sheet and Streaming sheet.
-    await host.tap(host.button('Couch'), { expect: { visible: ['room-sheet'] } });
-    await host.audit('Room sheet');
-    await host.tap(host.button('Close').last(), { expect: { hidden: ['room-sheet'] } });
+    // Settings and its Streaming sheet.
+    await host.tap(host.button('Settings'), { expect: { visible: ['room-sheet'] } });
+    await host.audit('Settings sheet');
     await host.tap(host.button(/^Netflix.*, change$/), { expect: { visible: ['streaming-sheet'] } });
     await host.audit('Streaming sheet');
     await host.tap(host.button('Done'), { expect: { hidden: ['streaming-sheet'] } });
+    await host.tap(host.button('Close').last(), { expect: { hidden: ['room-sheet'] } });
     await host.tap(host.button('Who’s here: 1 person'), { expect: { visible: ['people-sheet'] } });
     await host.audit('People sheet');
     await host.tap(host.button('Done'), { expect: { hidden: ['people-sheet'] } });

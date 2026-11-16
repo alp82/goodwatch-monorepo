@@ -136,14 +136,22 @@ const PHONE = { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch:
       await expect.poll(() => shared.get('Alp')?.screens?.[0]?.country).toMatch(/^[A-Z]{2}$/);
       await addIdea(host, 'something funny');
       await expect.poll(() => ideas('Alp')).toEqual([['something funny', true]]);
-      const both = host.getByRole('radio', { name: 'Movies and shows', exact: true }).filter({ visible: true });
-      await both.click();
-      await expect(both).toBeChecked();
+      // Movies or shows: Settings (the dock), its Movies and shows sheet, both on.
+      await button(host, /^Settings/).click();
+      await button(host, /^(Movies|Shows|Movies and shows), change$/).click();
+      for (const name of ['Movies', 'Shows']) {
+        const box = testId(host, 'kinds-sheet').getByRole('checkbox', { name, exact: true });
+        if ((await box.getAttribute('aria-checked')) !== 'true') await box.click();
+      }
+      await testId(host, 'kinds-sheet').getByRole('button', { name: 'Close', exact: true }).click();
+      await expect(button(host, 'Movies and shows, change')).toBeVisible();
     });
 
     await step('host picks Netflix and copies the invitation from Invite', async () => {
       await button(host, 'Streaming services, add').click();
       await pickServices(host, ['Netflix']);
+      await host.getByRole('button', { name: 'Close', exact: true }).last().click();
+      await expect(testId(host, 'room-sheet')).toHaveCount(0);
       await expect.poll(() => me('Alp')?.serviceIds?.length ?? 0).toBeGreaterThan(0);
       await button(host, 'Invite friends, show QR code and link').click();
       const qr = host.getByRole('img', { name: /^QR code for / }).filter({ visible: true });

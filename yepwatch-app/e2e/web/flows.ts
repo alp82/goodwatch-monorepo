@@ -53,6 +53,25 @@ export async function pickServices(p: Person, services: string[], open?: () => P
   await p.tap(p.button('Done'), { expect: { hidden: ['services-sheet'] } });
 }
 
+/** The host's first services, from the dock's Settings (its Streaming row); Settings closes again. */
+export async function addServices(p: Person, services: string[]) {
+  await p.tap(p.button('Settings, services missing'), { expect: { visible: ['room-sheet'] } });
+  await pickServices(p, services, () => p.tap(p.button('Streaming services, add'), { expect: { visible: ['services-sheet'] } }));
+  await p.tap(p.button('Close').last(), { expect: { hidden: ['room-sheet'] } });
+}
+
+/** Movies or shows, from the dock's Settings (its Movies and shows sheet); Settings closes again. */
+export async function setKinds(p: Person, want: { Movies: boolean; Shows: boolean }) {
+  await p.tap(p.button(/^Settings/), { expect: { visible: ['room-sheet'] } });
+  await p.tap(p.button(/^(Movies|Shows|Movies and shows), change$/), { expect: { visible: ['kinds-sheet'] } });
+  for (const [name, on] of Object.entries(want)) {
+    const box = p.testId('kinds-sheet').getByRole('checkbox', { name, exact: true });
+    if ((await box.getAttribute('aria-checked')) !== String(on)) await p.tap(box, { expect: {} });
+  }
+  await p.tap(p.testId('kinds-sheet').getByRole('button', { name: 'Close', exact: true }), { expect: { hidden: ['kinds-sheet'] } });
+  await p.tap(p.button('Close').last(), { expect: { hidden: ['room-sheet'] } });
+}
+
 /** The invitation link, as Invite shows it: the QR code's name carries the link. Invite closes again. */
 export async function inviteLink(host: Person) {
   // A popover on wide windows, a sheet on phones.
@@ -87,7 +106,7 @@ export async function readyHost(room: Room, name = 'Alp', mood?: string, opts?: 
   const host = await room.person(name, opts);
   await createRoom(host, mood, name);
   await hostName(host, name);
-  await pickServices(host, ['Netflix'], () => host.tap(host.button('Streaming services, add'), { expect: { visible: ['services-sheet'] } }));
+  await addServices(host, ['Netflix']);
   return host;
 }
 

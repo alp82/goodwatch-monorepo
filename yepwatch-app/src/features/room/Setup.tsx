@@ -1,13 +1,14 @@
 /**
  * The couch before Start is an invite screen (YepWatch rethink): who's here and Invite in the header
- * strip, the title, and the console where everyone adds one idea (a friend's is a wish). The host starts;
- * friends wait for the host.
+ * strip, the title, and the Ideas card where everyone adds one idea (a friend's is a wish). Settings and
+ * Start share the dock. The host starts; friends wait for the host.
  */
 import { useCallback, useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { Animated, Keyboard, TextInput, View } from 'react-native';
 import { guestOnly } from '../../core/config';
 import { GoodWatchButton, RECONNECTED_DETAIL, RECONNECT_GOODWATCH } from '../home/Landing';
 import { Or } from '../home/start-parts';
+import { HoverPress } from '../shell/hover';
 import { useLayout } from '../shell/layout';
 import { noun } from '../shell/noun';
 import { warm } from '../shell/tokens';
@@ -19,72 +20,69 @@ import { WhoStrip, setupWidth } from './invite';
 import { fieldStyleFor, useAcknowledgeShownIdeas } from './parts';
 import { roomPart } from './RoomProvider';
 import { RoomNotes } from './RoomStatus';
-import { ConsoleCard, DeckPreview, DeckStrip, IdeaField, IdeasPanel, IdeasTray, KindSwitch, StreamingRow } from './SetupConsole';
+import { IdeasCard } from './SetupConsole';
+import { servicesIn } from './services';
 import { START_FAILED_NOTE, hostStartPhase, type StartPhase } from './start-progress';
 import { StartButton, StartStatus, useEased } from './StartProgress';
-import { Actions, Note, RoomButton, Screen, Small, usePinnedActions } from './ui';
+import { Actions, HeroIcon, Note, Screen, Small, useServices } from './ui';
 
 const HOST_TITLE = 'Pick something to watch with friends';
 const friendTitle = (host: string) => `${host} wants to pick something to watch with you`;
 
-/** The couch's title: whose couch it is over what it's for, with How it works beside it. Fixed height. */
+/** The couch's title: whose couch it is with How it works beside it, then what it's for. */
 function TitleBlock({ over, title, onHow }: { over: string; title: string; onHow: () => void }) {
   const { phone, z } = useLayout();
   const size = phone ? 24 : z(30);
-  const lines = phone ? 2 : 1;
   return (
-    <View testID="head-title" style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-      <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
-        <View style={{ height: phone ? 48 : z(22), flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <GText bold size={phone ? 14 : z(14)} color={glow.amber} lines={1} style={{ flex: 1 }}>{over}</GText>
-          {phone ? <HowLink onPress={onHow} /> : null}
-        </View>
-        <View style={{ height: Math.ceil(size * 1.12 * lines) }}>
-          <GText bold size={size} lines={lines} style={{ letterSpacing: -size * 0.025, lineHeight: size * 1.12 }}>{title}</GText>
-        </View>
+    <View testID="head-title" style={{ gap: 2 }}>
+      <View style={{ height: phone ? 40 : Math.max(40, z(36)), flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <GText bold size={phone ? 14 : z(14)} color={glow.amber} lines={1} style={{ flex: 1 }}>{over}</GText>
+        <HowLink onPress={onHow} />
       </View>
-      {phone ? null : <HowLink onPress={onHow} />}
+      <GText bold size={size} style={{ letterSpacing: -size * 0.025, lineHeight: size * 1.15 }}>{title}</GText>
     </View>
   );
 }
 
 /**
- * The couch before Start, as an invite screen: the header strip (Who's here, Invite), the title with How
- * it works, then the console (the describe field, Movies or shows, Streaming, the preview, Ideas) with the
- * main action. Wide windows: one card with two panes, the action under Ideas. Phones: one column, Ideas as
- * a tray in the dock above the action. While the round starts (`start`) the console rests, dimmed and inert.
+ * The dock's Settings: what the page doesn't show (Movies or shows, Streaming, seen titles, sound,
+ * archive, leave). An amber dot while the host's couch has no services yet.
+ */
+const SettingsButton = roomPart('SettingsButton', (r) => ({ view: r.view, openSheet: r.openSheet }), function SettingsButton({ view, openSheet }) {
+  const { phone, z } = useLayout();
+  const { all } = useServices(view?.country);
+  const loading = !all.length && (view?.enabledServiceIds.length ?? 0) > 0;
+  const missing = Boolean(view?.isHost) && !loading && !(view ? servicesIn(all, view.enabledServiceIds) : []).length;
+  const icon = phone ? 20 : z(20);
+  return (
+    <HoverPress label={missing ? 'Settings, services missing' : 'Settings'} hover="lighten" repeatable onPress={() => openSheet('settings')}
+      style={{ height: z(54), paddingHorizontal: phone ? 14 : z(16), borderRadius: 12, flexDirection: 'row', gap: 8, backgroundColor: warm.faint, borderWidth: 1, borderColor: warm.lineStrong }}>
+      <View>
+        <HeroIcon name="sliders" size={icon} color={glow.soft} />
+        {missing ? <View testID="settings-missing" style={{ position: 'absolute', right: -3, top: -3, width: 9, height: 9, borderRadius: 5, backgroundColor: glow.amber, borderWidth: 1.5, borderColor: warm.bar }} /> : null}
+      </View>
+      <GText bold size={phone ? 15 : z(15)} color={glow.soft}>Settings</GText>
+    </HoverPress>
+  );
+});
+
+/**
+ * The couch before Start, as an invite screen: the header strip (faces, Invite), the title with How it
+ * works, then the Ideas card (the fan of cards on its top edge, the describe field, one row per idea), with
+ * Settings and the main action in the dock. One column at every size. While the round starts (`start`)
+ * the card rests, dimmed and inert.
  */
 function CouchBefore({ testID, over, title, actions, extra, start = 'idle', onHow }: { testID: string; over: string; title: string; actions: ReactNode; extra?: ReactNode; start?: StartPhase; onHow: () => void }) {
   const { phone, max, z } = useLayout();
-  const pinned = usePinnedActions();
-  const W = setupWidth(max, z);
-  const split = !phone && W >= z(700);
   const resting = start === 'starting';
   const room = useEased(resting ? 0.55 : 1, 360);
-  const left = (
-    <>
-      <IdeaField />
-      <KindSwitch />
-      <StreamingRow />
-      {split ? <DeckPreview /> : null}
-    </>
-  );
-  const body = split ? (
-    <ConsoleCard left={left} right={<IdeasPanel />} foot={pinned ? undefined : actions} />
-  ) : (
-    <View testID="console" style={{ gap: phone ? 16 : z(18) }}>
-      {left}
-      {pinned ? null : <IdeasTray />}
-      <DeckStrip />
-    </View>
-  );
-  const dock = pinned ? (split ? actions : <View style={{ gap: 10 }}><IdeasTray />{actions}</View>) : split ? undefined : actions;
+  const rest = (node: ReactNode) => <Animated.View pointerEvents={resting ? 'none' : 'auto'} style={{ opacity: room }}>{node}</Animated.View>;
   return (
-    <Screen testID={testID} strip={<WhoStrip />} back={toRooms} width={W} gap={phone ? 16 : z(20)} footer={dock}>
+    <Screen testID={testID} strip={<WhoStrip />} back={toRooms} width={setupWidth(max, z)} gap={phone ? 14 : z(18)} footer={actions}>
       <RoomNotes />
       <TitleBlock over={over} title={title} onHow={onHow} />
-      <Animated.View pointerEvents={resting ? 'none' : 'auto'} style={{ opacity: room }}>{body}</Animated.View>
-      {extra ? <Animated.View pointerEvents={resting ? 'none' : 'auto'} style={{ opacity: room }}>{extra}</Animated.View> : null}
+      {rest(<IdeasCard />)}
+      {extra ? rest(extra) : null}
     </Screen>
   );
 }
@@ -172,7 +170,7 @@ export const RoomSetup = roomPart('RoomSetup', (r) => ({
     <View style={{ gap: 10 }}>
       {phase === 'failed' ? <Note>{START_FAILED_NOTE}</Note> : null}
       <Actions>
-        <RoomButton onPress={() => openSheet('room')} />
+        <SettingsButton />
         <StartButton phase={phase} disabled={blocked} onPress={onStart} people={view.people.length} />
       </Actions>
     </View>
@@ -205,7 +203,7 @@ export const Waiting = roomPart('Waiting', (r) => ({ view: r.view, entryWorking:
   const actions = (
     <View style={{ gap: 10 }}>
       <Actions>
-        <RoomButton onPress={() => openSheet('room')} />
+        <SettingsButton />
         <StartStatus host={view.hostName || 'the host'} joining={joining} />
       </Actions>
     </View>

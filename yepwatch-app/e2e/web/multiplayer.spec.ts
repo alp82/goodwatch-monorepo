@@ -1,5 +1,5 @@
 import { test, expect, eventually, type Person } from '../lib/harness';
-import { createRoom, hostName, inviteLink, join, pickServices, readyHost, start, vote, voteUntilMatch } from './flows';
+import { createRoom, hostName, inviteLink, join, pickServices, readyHost, start, vote, voteUntilMatch, addServices } from './flows';
 
 test('three people: invite, join, start, vote to a match', async ({ room }) => {
   const host = await readyHost(room);
@@ -106,7 +106,7 @@ test('at 320 px the voting bar fits with 2 and 6 people, and people joining neve
   await host.page.setViewportSize({ width: 320, height: 844 });
   await createRoom(host);
   await hostName(host, 'Alp');
-  await pickServices(host, ['Netflix'], () => host.tap(host.button('Streaming services, add'), { expect: { visible: ['services-sheet'] } }));
+  await addServices(host, ['Netflix']);
   const invite = await inviteLink(host);
   const mia = await room.person('Mia');
   await mia.page.setViewportSize({ width: 320, height: 844 });

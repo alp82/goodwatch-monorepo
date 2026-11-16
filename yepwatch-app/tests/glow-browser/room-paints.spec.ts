@@ -140,15 +140,17 @@ test('voting never waits: the next card shows at once and fast answers go out in
 test('Movies or shows shows the choice the moment it’s made, before the server answers', async ({ page }) => {
   const f = await fakeRoom(page, setupRoom());
   await page.goto('/room/test-room');
-  const shows = page.getByTestId('room-setup').getByRole('radio', { name: 'Shows', exact: true });
-  await expect(shows).toHaveAttribute('aria-checked', 'false');
+  await button(page, 'Settings').click();
+  await button(page, 'Movies and shows, change').click();
   const release = f.hold('configure');
-  await shows.click();
-  await expect(shows).toHaveAttribute('aria-checked', 'true');
-  expect(f.room.shared.constraints.kinds).not.toEqual(['show_start']);
+  await page.getByRole('checkbox', { name: 'Shows' }).click();
+  await page.getByTestId('kinds-sheet').getByRole('button', { name: 'Close', exact: true }).click();
+  // Settings shows the change while the server hasn't answered yet.
+  await expect(button(page, 'Movies, change')).toBeVisible();
+  expect(f.room.shared.constraints.kinds).toEqual(['movie', 'show_start']);
   release();
-  await expect.poll(() => f.room.shared.constraints.kinds).toEqual(['show_start']);
-  await expect(shows).toHaveAttribute('aria-checked', 'true');
+  await expect.poll(() => f.room.shared.constraints.kinds).toEqual(['movie']);
+  await expect(button(page, 'Movies, change')).toBeVisible();
 });
 
 test('archive: a room moves to History at once, Undo and Restore bring it back, friends never know', async ({ page }) => {
@@ -170,7 +172,7 @@ test('archive: a room moves to History at once, Undo and Restore bring it back, 
   await expect(button(page, 'cheer me up')).toBeVisible();
   // From the Room page too.
   await button(page, 'cheer me up').click();
-  await button(page, 'Couch').click();
+  await button(page, 'Settings').click();
   await button(page, 'Archive couch').click();
   // (The page that was underneath stays mounted, hidden.)
   await expect(page.getByText('YOUR ROOMS').filter({ visible: true })).toHaveCount(0);

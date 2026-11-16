@@ -2,7 +2,7 @@
 // and by keyboard, and the control in use is on screen and not under the pinned dock or the header.
 import { expect } from '@playwright/test';
 import { test, eventually, type Person } from '../lib/harness';
-import { addIdea, inviteLink, newCouch, pickServices, start } from './flows';
+import { addIdea, inviteLink, newCouch, pickServices, start, addServices, setKinds } from './flows';
 
 /**
  * The focused (or given) element's box is inside the window and the topmost thing at its center, once motion has
@@ -79,14 +79,14 @@ for (const device of ['se', 'android'] as const) {
       await host.audit('room page (small phone)');
       await eventually(() => savedName(host), (v) => v === 'Alp', 'the room has the name from setup', host);
       // Services, Movies or shows.
-      await pickServices(host, ['Netflix'], () => host.tap(host.button('Streaming services, add'), { expect: { visible: ['services-sheet'] } }));
-      await host.tap(host.page.getByRole('radio', { name: 'Movies', exact: true }).filter({ visible: true }), { expect: {} });
+      await addServices(host, ['Netflix']);
+      await setKinds(host, { Movies: true, Shows: false });
       // Your idea from the describe field, then replaced from it.
       await addIdea(host, 'funny space heist');
       await addIdea(host, 'space adventure');
       await eventually(() => host.latest?.ideas.map((i) => i.text), (v) => JSON.stringify(v) === JSON.stringify(['space adventure']), 'the idea replaced', host);
-      await host.tap(host.button('Couch'), { expect: { visible: ['room-sheet'] } });
-      await host.audit('Room sheet (small phone)');
+      await host.tap(host.button('Settings'), { expect: { visible: ['room-sheet'] } });
+      await host.audit('Settings sheet (small phone)');
       await host.tap(host.button('Close').last(), { expect: { hidden: ['room-sheet'] } });
       await onScreen(host, 'Start (in the dock)', '[data-testid="frame-dock"] [aria-label="Start on my own"]');
       await start(host, []);
@@ -108,7 +108,9 @@ for (const device of ['se', 'android'] as const) {
       await host.tap(host.page.locator(':focus'), { key: 'Enter', expect: { visible: ['room-setup'] } });
       await room.point('room');
       await eventually(() => savedName(host), (v) => v === 'Alp', 'the room has the name from setup', host);
-      // Services: Tab to the row, Enter opens the sheet, Space ticks a service, Done closes.
+      // Services: Tab to Settings, Enter opens it, then its Streaming row, Space ticks a service, Done closes.
+      await tabTo(host, 'Settings, services missing');
+      await host.tap(host.page.locator(':focus'), { key: 'Enter', expect: { visible: ['room-sheet'] } });
       await tabTo(host, 'Streaming services, add');
       await host.tap(host.page.locator(':focus'), { key: 'Enter', expect: { visible: ['services-sheet'] } });
       await tabTo(host, 'Netflix');
@@ -116,6 +118,9 @@ for (const device of ['se', 'android'] as const) {
       await expect(host.page.locator(':focus'), 'Space ticks the focused service').toHaveAttribute('aria-checked', 'true');
       await tabTo(host, 'Done');
       await host.tap(host.page.locator(':focus'), { key: 'Enter', expect: { hidden: ['services-sheet'] } });
+      // Settings is still open under it: Escape closes it.
+      await host.page.keyboard.press('Escape');
+      await host.see({ hidden: ['room-sheet'] }, 3000, 'Escape closes Settings');
       // Your idea: Tab to the describe field, type, Enter adds it.
       await tabTo(host, 'Describe what you want to watch');
       await host.page.keyboard.type('space adventure');

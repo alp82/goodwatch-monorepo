@@ -21,7 +21,7 @@ test.describe('rooms: leave, archive, history, back', () => {
     const host = await room.person('Alp');
     await createRoom(host, 'cosy family night');
     await room.point('room');
-    await host.tap(host.button('Couch'), { expect: { visible: ['room-sheet'] } });
+    await host.tap(host.button(/^Settings/), { expect: { visible: ['room-sheet'] } });
     await host.tap(host.button('Archive couch'), { expect: { visible: ['home-rooms'] } });
     await host.audit('start page (returning, after archive)');
     await host.tap(host.button('History'), { expect: { visible: ['history-panel'] } });
@@ -47,7 +47,7 @@ test.describe('rooms: leave, archive, history, back', () => {
     const host = await readyHost(room);
     // With a sheet open the header is inert (modal sheet: no focus or screen reader behind it); a tap on it,
     // where Back is included, closes the sheet only.
-    await host.tap(host.button('Couch'), { expect: { visible: ['room-sheet'] } });
+    await host.tap(host.button(/^Settings/), { expect: { visible: ['room-sheet'] } });
     await expect(host.button('Back')).toHaveCount(0);
     await host.tap(host.testId('header-shade'), { expect: { hidden: ['room-sheet'], visible: ['room-setup'] } });
     // Browser Back with a sheet open closes the sheet only.
@@ -55,7 +55,7 @@ test.describe('rooms: leave, archive, history, back', () => {
     await host.back();
     await host.see({ hidden: ['people-sheet'], visible: ['room-setup'] }, 5000, 'browser Back closes the People sheet first');
     // Escape closes a sheet on desktop web.
-    await host.tap(host.button('Couch'), { expect: { visible: ['room-sheet'] } });
+    await host.tap(host.button(/^Settings/), { expect: { visible: ['room-sheet'] } });
     await host.page.keyboard.press('Escape');
     await host.see({ hidden: ['room-sheet'] }, 3000, 'Escape closes the Room sheet');
     // Back from the room goes to the start page with the room listed.

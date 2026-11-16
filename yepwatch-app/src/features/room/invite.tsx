@@ -1,6 +1,6 @@
 /**
- * Bringing people to the couch: the header strip (Who's here, everyone's face and name, Invite at the
- * end of the row) and what Invite opens: on wide windows a popover under the button (QR code, the link
+ * Bringing people to the couch: the header strip (everyone's face, "Only you" or the names beside them,
+ * Invite at the end of the row) and what Invite opens: on wide windows a popover under the button (QR code, the link
  * with Copy link, who joined last; the page stays as it is behind it), on phones a bottom sheet that adds
  * Share link. Every piece has one size in every state, so nothing moves when people arrive or it opens.
  */
@@ -27,15 +27,13 @@ export const SETUP_COLUMN = 920;
 export const setupWidth = (max: number, z: (n: number) => number) => Math.min(max, z(SETUP_COLUMN));
 
 type Sizes = { phone: boolean; z: (n: number) => number };
-const faceOf = ({ phone, z }: Sizes) => (phone ? 26 : Math.min(34, z(26)));
-const seatOf = ({ phone, z }: Sizes) => (phone ? 46 : z(54));
-const labelOf = ({ phone, z }: Sizes) => (phone ? 20 : z(20));
-const nameOf = ({ phone, z }: Sizes) => (phone ? 11 : Math.min(13, z(11)));
-const rowOf = (l: Sizes) => Math.max(48, faceOf(l) + 6 + Math.ceil(nameOf(l) * 1.35));
-const inviteW = ({ phone, z }: Sizes) => (phone ? 104 : z(120));
+const faceOf = ({ phone, z }: Sizes) => (phone ? 32 : Math.min(40, z(32)));
+const inviteW = ({ phone, z }: Sizes) => (phone ? 112 : z(120));
 const inviteH = ({ phone, z }: Sizes) => (phone ? 48 : Math.max(48, z(44)));
-/** The strip's height: label, the row of faces, and a little room under it. */
-export const stripHeight = (l: Sizes) => labelOf(l) + rowOf(l) + (l.phone ? 8 : l.z(10));
+/** The strip's height: one row of faces and Invite. */
+const stripHeight = ({ phone, z }: Sizes) => (phone ? 64 : Math.max(64, z(64)));
+/** Faces the strip shows before it ends the stack with +N. */
+const STRIP_FACES = 5;
 
 /** A face in the person's color (you: amber). */
 export function Face({ person, size }: { person: { id: string; nickname: string; self?: boolean }; size: number }) {
@@ -46,7 +44,8 @@ export function Face({ person, size }: { person: { id: string; nickname: string;
   );
 }
 const shownName = (p: Pick<RoomPerson, 'nickname' | 'self'>) => (p.self ? 'You' : p.nickname || 'Someone');
-const peopleWords = (n: number) => (n === 1 ? 'Only you so far' : `${n} people`);
+/** Beside the faces: "Only you" while you're alone, then everyone's names. */
+const namesWords = (people: readonly Pick<RoomPerson, 'nickname' | 'self'>[]) => (people.length < 2 ? 'Only you' : people.map(shownName).join(', '));
 
 /** Fades in once on mount (opacity only): a face arriving in the strip. */
 function Arrive({ children, style }: { children: ReactNode; style?: ViewStyle }) {
@@ -62,9 +61,9 @@ function Arrive({ children, style }: { children: ReactNode; style?: ViewStyle })
 }
 
 /**
- * Under the app header: a small label row ("Who's here", how many), then everyone's face with their name
- * and, at the end of the row, Invite. Up to 13 people fit one row on wide windows; phones end the row with
- * +N. The faces open People. Invite is amber while the host is alone; Start takes the amber after that.
+ * Under the app header, one row: everyone's face in an overlapping stack with "Only you" (or the names)
+ * in gray beside it, and Invite at the end. The faces open People. Invite is amber while the host is
+ * alone; Start takes the amber after that.
  */
 export const WhoStrip = roomPart('WhoStrip', (r) => ({ view: r.view, inviteUrl: r.inviteUrl, openSheet: r.openSheet }), function WhoStrip({ view, inviteUrl, openSheet }) {
   const l = useLayout();
@@ -74,49 +73,39 @@ export const WhoStrip = roomPart('WhoStrip', (r) => ({ view: r.view, inviteUrl: 
   const people = view.people;
   const n = people.length;
   const face = faceOf(l);
-  const seat = seatOf(l);
-  const row = rowOf(l);
   const canInvite = Boolean(inviteUrl) || view.isHost;
   const hot = view.isHost && n < 2;
-  const facesW = width - inviteW(l) - 16;
-  const fit = Math.max(1, Math.floor(facesW / seat));
-  const shown = n > fit ? people.slice(0, fit - 1) : people;
+  const shown = n > STRIP_FACES ? people.slice(0, STRIP_FACES - 1) : people;
   const extra = n - shown.length;
-  const small = phone ? 12 : z(12);
   const ink = hot ? warm.ink : glow.ink;
+  const ring = { marginLeft: 0, borderRadius: face / 2 + 2, borderWidth: 2, borderColor: warm.bar };
   return (
     <View testID="who-strip" style={{ borderBottomWidth: 1, borderBottomColor: warm.line, backgroundColor: warm.bar, paddingHorizontal: l.gutter }}>
-      <View style={{ width, maxWidth: '100%', alignSelf: 'center', height: stripHeight(l) }}>
-        <View style={{ height: labelOf(l), flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <GText bold size={small} color={glow.soft} lines={1}>Who’s here</GText>
-          <GText size={small} color={glow.muted} lines={1}>{peopleWords(n)}</GText>
-        </View>
-        <View style={{ height: row, flexDirection: 'row', alignItems: 'center' }}>
-          <HoverPress label={`Who’s here: ${n} ${n === 1 ? 'person' : 'people'}`} hint={`Shows everyone on the ${noun.one}`} hover="tint" repeatable onPress={() => openSheet('people')}
-            style={{ width: Math.min(facesW, (shown.length + (extra ? 1 : 0)) * seat) + 8, height: row, marginLeft: -4, paddingHorizontal: 4, borderRadius: R.control, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'flex-start' }}>
-            {shown.map((p) => (
-              <Arrive key={p.id} style={{ width: seat, height: row, alignItems: 'center', justifyContent: 'center', gap: 3 }}>
+      <View style={{ width, maxWidth: '100%', alignSelf: 'center', height: stripHeight(l), flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <HoverPress label={`Who’s here: ${n} ${n === 1 ? 'person' : 'people'}`} hint={`Shows everyone on the ${noun.one}`} hover="tint" repeatable onPress={() => openSheet('people')}
+          style={{ flex: 1, minWidth: 0, height: 48, marginLeft: -4, paddingHorizontal: 4, borderRadius: R.control, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 10 }}>
+          <View style={{ flexDirection: 'row' }}>
+            {shown.map((p, i) => (
+              <Arrive key={p.id} style={{ ...ring, marginLeft: i ? -face * 0.28 : 0 }}>
                 <Face person={{ id: p.id, nickname: p.nickname || shownName(p), self: p.self }} size={face} />
-                <GText size={nameOf(l)} bold={p.self} color={p.self ? glow.amber : glow.soft} lines={1} style={{ maxWidth: seat - 4 }}>{shownName(p)}</GText>
               </Arrive>
             ))}
             {extra ? (
-              <View style={{ width: seat, height: row, alignItems: 'center', justifyContent: 'center', gap: 3 }}>
-                <View style={{ width: face, height: face, borderRadius: face / 2, backgroundColor: '#2a2520', alignItems: 'center', justifyContent: 'center' }}><GText bold size={face * 0.42}>{`+${extra}`}</GText></View>
-                <GText size={nameOf(l)} color={glow.muted} lines={1}>more</GText>
+              <View style={{ ...ring, marginLeft: -face * 0.28 }}>
+                <View style={{ width: face, height: face, borderRadius: face / 2, backgroundColor: '#2a2520', alignItems: 'center', justifyContent: 'center' }}><GText bold size={face * 0.38}>{`+${extra}`}</GText></View>
               </View>
             ) : null}
-          </HoverPress>
-          <View style={{ flex: 1 }} />
-          <View testID="share-row" style={{ width: inviteW(l), height: inviteH(l) }}>
-            {canInvite ? (
-              <HoverPress label="Invite friends, show QR code and link" hover="lighten" repeatable onPress={() => openSheet('invite')}
-                style={{ width: inviteW(l), height: inviteH(l), borderRadius: 12, flexDirection: 'row', gap: 8, backgroundColor: hot ? glow.amber : warm.faint, borderWidth: 1, borderColor: hot ? glow.amber : warm.lineStrong }}>
-                <Nudge dx={0} dy={-1}><Glyph name="qr" size={phone ? 16 : z(16)} color={ink} /></Nudge>
-                <GText bold size={phone ? 15 : z(15)} color={ink} lines={1}>Invite</GText>
-              </HoverPress>
-            ) : null}
           </View>
+          <GText size={phone ? 14 : z(14)} color={glow.muted} lines={1} style={{ flexShrink: 1 }}>{namesWords(people)}</GText>
+        </HoverPress>
+        <View testID="share-row" style={{ width: inviteW(l), height: inviteH(l) }}>
+          {canInvite ? (
+            <HoverPress label="Invite friends, show QR code and link" hover="lighten" repeatable onPress={() => openSheet('invite')}
+              style={{ width: inviteW(l), height: inviteH(l), borderRadius: 12, flexDirection: 'row', gap: 8, backgroundColor: hot ? glow.amber : warm.faint, borderWidth: 1, borderColor: hot ? glow.amber : warm.lineStrong }}>
+              <Nudge dx={0} dy={-1}><Glyph name="qr" size={phone ? 18 : z(18)} color={ink} /></Nudge>
+              <GText bold size={phone ? 16 : z(16)} color={ink} lines={1}>Invite</GText>
+            </HoverPress>
+          ) : null}
         </View>
       </View>
     </View>

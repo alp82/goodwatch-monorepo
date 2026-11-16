@@ -81,7 +81,7 @@ test.describe('Back closes the sheet on top first; drafts are never lost', () =>
     // the Room sheet still opens.
     await button(page, 'Start with 2').click();
     await expect.poll(() => f.sent()).toContain('start');
-    await button(page, 'Couch').click();
+    await button(page, 'Settings').click();
     await button(page, 'Movies and shows, change').click();
     await page.getByRole('checkbox', { name: 'Shows' }).click();
     // A tap on the header closes the sheets one at a time (the change waits behind Start), then Back leaves

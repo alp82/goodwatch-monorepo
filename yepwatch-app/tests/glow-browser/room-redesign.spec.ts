@@ -37,7 +37,12 @@ test('guest host: /new makes the couch at once, the idea from the console, name 
   await expect.poll(() => [...f.sent()].sort()).toEqual(['add_idea', 'configure', 'set_services']);
   expect(f.sent().indexOf('configure')).toBeLessThan(f.sent().indexOf('set_services'));
   expect(f.commands.find((c) => c.command.type === 'configure')?.command).toMatchObject({ country: 'US' });
+  // Settings (the dock) holds Streaming: its dot is gone, its row names the services.
+  await expect(page.getByTestId('settings-missing')).toHaveCount(0);
+  await button(page, 'Settings').click();
   await expect(button(page, 'Netflix, Prime Video, change')).toBeVisible();
+  await expect(page.getByTestId('room-sheet').getByText('Ideas', { exact: true })).toHaveCount(0);
+  await button(page, 'Close').click();
   // The name, then Start (alone: no count).
   await page.getByLabel('Your name').fill('Alp');
   await page.getByLabel('Your name').press('Enter');
@@ -79,7 +84,7 @@ test('a friend’s wish arrives on in the host’s ideas; the Room sheet shows i
   // One row per person: the friend's wish carries their name and arrives switched on.
   const ideas = page.getByTestId('room-setup').getByTestId('idea-list');
   await expect(ideas.getByRole('switch', { name: 'space adventure. Mia’s wish' })).toHaveAttribute('aria-checked', 'true');
-  await expect(ideas.getByText('2 ideas, 2 on', { exact: true })).toBeVisible();
+  await expect(ideas.getByText(/^Mia’s wish · Steers the cards/)).toBeVisible();
   // The header pill counts it; its Your rooms sheet opens the Room sheet.
   await button(page, 'cheer me up +1, 1 new, switch couch').click();
   await button(page, 'cheer me up +1, Couch page').click();
@@ -430,6 +435,7 @@ test('a friend opens the link: name, Join, then their services, then the waiting
   await button(page, 'Done').click();
   await expect(page.getByTestId('services-sheet')).toHaveCount(0);
   await expect.poll(() => f.room.shared.participants.find((p) => p.participantId === 'guest')?.serviceIds).toEqual([1899]);
+  await button(page, 'Settings').click();
   await button(page, 'Netflix, Disney+ +1, change').click();
   await expect(page.getByTestId('services-sheet').getByRole('checkbox', { name: 'HBO Max' })).toHaveAttribute('aria-checked', 'true');
 });
@@ -481,7 +487,7 @@ test('a Try example writes itself into the field, cursor at the end, and sends n
   room.shared.ideas = [];
   const f = await fakeRoom(page, room);
   await page.goto('/room/test-room');
-  await expect(page.getByText('Leave it empty for well-liked picks, or add an idea to steer the cards.', { exact: true })).toBeVisible();
+  await expect(page.getByTestId('idea-list')).toHaveCount(0);
   const example = page.getByTestId('try').getByRole('button', { name: /^Try / });
   const name = (await example.getAttribute('aria-label'))!.replace(/^Try /, '');
   // The hit area is a full 48 px tall.

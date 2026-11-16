@@ -73,6 +73,12 @@ All paths below are under `yepwatch-app/src/features/prototype-rethink/` on the 
      wish arrives, the invite opens/closes, or a field takes focus. Fixed-size regions, internal scroll.
    - Ideas keep their server reading (what the server understood); show it or the "Mood matching is unavailable
      for now" note without breaking the fixed layout.
+   - **Changed 2026-11-16** (couch setup redesign, lab branch `prototype/yepwatch-room-setup`, variant D): the
+     header row is one line (overlapping faces, gray "Only you" or the names, Invite); one column at every
+     size; the fan of cards rests on the top edge of one Ideas card that holds the describe field and then one
+     compact row per idea ("Mia's wish · Steers the cards: <reading>" / "Off, not used for the cards"). Movies
+     or shows and Streaming moved into **Settings** in the dock (sliders icon + label, amber dot while the host
+     has no services), whose sheet holds only what the page doesn't show. No Preview box, no Ideas tray.
 5. **Tonight** (`tonight/b-peek.tsx`, `tonight/shared.tsx`, `tonight/tutorial.tsx`, `tonight/overlays.tsx`,
    `tonight/matches-peek.tsx`, `tonight/looks/*`):
    - Desktop: card column left, question column right ("Card 3 of 20", "Would you watch this tonight?", "Why this
