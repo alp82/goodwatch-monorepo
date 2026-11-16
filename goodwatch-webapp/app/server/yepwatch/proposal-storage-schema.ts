@@ -24,6 +24,11 @@ const nullable = (f: Field): Field => ({
 	sql: f.sql,
 	schema: f.schema.nullable(),
 })
+/** Large text that is only stored, never searched: not indexed (Crate can't index terms over ~32 KB), no column store. */
+const unindexed = (f: Field): Field => ({
+	sql: `${f.sql} INDEX OFF STORAGE WITH (columnstore = false)`,
+	schema: f.schema,
+})
 const additive = (f: Field): Field => ({
 	sql: f.sql,
 	schema: f.schema.nullable().optional(),
@@ -271,7 +276,7 @@ export const tables = {
 			member_intent_records: array(text(128), 48),
 			proposal_record: ref,
 			in_version: additive(integer()),
-			tiebreak_record: additive(text(2000000)),
+			tiebreak_record: additive(unindexed(text(2000000))),
 			decision_record: ref,
 			history_records: array(text(128), 128),
 			pending_revision: integer(),
