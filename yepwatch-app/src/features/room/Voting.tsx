@@ -44,7 +44,7 @@ import { RoomNotes } from './RoomStatus';
 import { servicesIn } from './services';
 import { TitleDetails } from './TitleDetails';
 import { EdgeGlow } from './tutorial/EdgeGlow';
-import { Tutorial, type Rect } from './tutorial/Tutorial';
+import { Tutorial, tutorialSkipRect, type Rect } from './tutorial/Tutorial';
 import { FindingMore, Label, Logos, Screen, useServices } from './ui';
 import { stageGeometry, stageRim, type Rim } from './vote/geometry';
 import type { A } from './vote/paint';
@@ -305,8 +305,10 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
     const to0 = (a: Animated.Value, ms: number) => Animated.timing(a, { toValue: 0, duration: ms, useNativeDriver: native });
     const back = grabbed.current ? [] : [to0(d.x, 280), to0(d.y, 280), to0(d.v, 280)];
     const run = Animated.parallel([...back, to0(drives.yes, 200), to0(drives.no, 200), to0(drives.pinYes, 200), to0(drives.pinNo, 200)]);
-    run.start(({ finished }) => { if (finished && !grabbed.current) controls.current?.engage(false); });
-    return () => run.stop();
+    // The tutorial's unmount cleanup stops its native animations on these same values. Start the
+    // return after that cleanup; starting inside this effect let the old timeline cancel it at once.
+    const frame = requestAnimationFrame(() => run.start(({ finished }) => { if (finished && !grabbed.current) controls.current?.engage(false); }));
+    return () => { cancelAnimationFrame(frame); run.stop(); };
   }, [teaching, drives]);
   // What the stage and the bar take, kept steady across renders that don't change them (a vote, a
   // confirmation, a friend's activity re-render this screen; the stage and the faces then skip theirs).
@@ -370,6 +372,7 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
 
   // Where the card and the buttons are, for the how-to's layer.
   const [rects, setRects] = useState<{ card: Rect; yes: Rect; no: Rect } | null>(null);
+  const skipBounds = useRef<Rect | null>(null);
   const [tick, setTick] = useState(0);
   const relayout = useCallback(() => setTick((n) => n + 1), []);
   useEffect(() => {
@@ -379,6 +382,10 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
         if (!stage || !root || !yes || !no) return;
         const rel = (r: Rect) => ({ x: r.x - root.x, y: r.y - root.y, w: r.w, h: r.h });
         const next = { card: { x: stage.x - root.x + (geo.aw - geo.w) / 2, y: stage.y - root.y + geo.cardTop, w: geo.w, h: geo.h }, yes: rel(yes), no: rel(no) };
+        // Native touches have no DOM ancestry. Keep the Skip target in window coordinates so it
+        // survives touch-down instead of handing that touch to the moving card underneath.
+        const skip = tutorialSkipRect(next.card);
+        skipBounds.current = { ...skip, x: root.x + skip.x, y: root.y + skip.y };
         // Measuring again with nothing moved keeps the same rects, so the how-to isn't restarted.
         setRects((cur) => (cur && JSON.stringify(cur) === JSON.stringify(next) ? cur : next));
       });
@@ -497,7 +504,10 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
   const onTouchCapture = (event: GestureResponderEvent) => {
     // Keep Skip mounted through its press. Removing it on pointerdown retargets the click to the poster.
     const target = native ? null : event.target as unknown as { closest?: (selector: string) => unknown };
-    if (teaching && !target?.closest?.('[data-testid="tutorial-skip"]')) finishTutorial();
+    const skip = skipBounds.current;
+    const { pageX, pageY } = event.nativeEvent;
+    const nativeSkip = native && skip && pageX >= skip.x && pageX <= skip.x + skip.w && pageY >= skip.y && pageY <= skip.y + skip.h;
+    if (teaching && !nativeSkip && !target?.closest?.('[data-testid="tutorial-skip"]')) finishTutorial();
     return false;
   };
   if (wide) {
