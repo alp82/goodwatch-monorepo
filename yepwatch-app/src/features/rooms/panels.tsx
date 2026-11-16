@@ -26,6 +26,7 @@ import { useHome } from './useHome';
 import { LegalLinks } from '../legal/LegalLinks';
 import { noun } from '../shell/noun';
 import { TasteEntry } from '../taste/TasteEntry';
+import { InviteAppLink } from './InviteAppLink';
 
 const MAX_NAME = 40;
 /** Browsers draw their own focus outline and caret; the amber border and caret replace them. */
@@ -140,6 +141,7 @@ export function JoinScreen({ invite, checking = false, nickname, nameLocked = fa
   );
   return (
     <Screen testID="join-screen" back={back} pill={null} me={me} onProfile={editName} width={z(640)} gap={phone ? 28 : z(36)}>
+      {invite && initialCode ? <InviteAppLink code={initialCode} /> : null}
       {head ?? (
         <GText bold size={phone ? 40 : z(56)} style={{ textAlign: 'center', letterSpacing: -1.4 }}>{invite ? noun.joinThe : noun.joinAny}</GText>
       )}

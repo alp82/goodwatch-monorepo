@@ -17,3 +17,8 @@ export function appInviteUrl(path: string, origin = appOrigin) {
   if (!/^\/r\/[^/?#]+$/.test(path)) throw new Error('Unexpected invitation path.');
   return `${url.origin}${path}`;
 }
+
+/** Three slashes put /r/CODE in the path rather than the URL host. */
+export function nativeInviteUrl(code: string, preview = false) {
+  return `${preview ? 'yepwatch-preview' : 'yepwatch'}://${inviteIntent(code)}`;
+}

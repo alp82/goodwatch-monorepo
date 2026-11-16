@@ -245,12 +245,12 @@ function useEntrancePage({ invite, open: request, from }: EntranceProps) {
     };
   }, [invite, checkVersion, intent]);
   /** Starts a join the person asked for; the page's resend state machine runs it (runJoin). */
-  function joinRoom(member = false, returning?: { code: string; nickname: string }, name?: string, joinCode?: string, inline = false) {
+  const joinRoom = useCallback((member = false, returning?: { code: string; nickname: string }, name?: string, joinCode?: string, inline = false) => {
     if (restoring || restoreFailed || (admission && admission.intent !== intent) || waiting(admission)) return;
     setInlineJoin(inline);
     resume.focus();
     resume.pick({ member, returning, name, code: joinCode });
-  }
+  }, [restoring, restoreFailed, admission, intent, resume]);
   /** One send of the saved join (it resends by itself until answered); a new request is saved first. */
   async function runJoin(ask: JoinAsk) {
     attempt.current?.abort();
@@ -342,6 +342,17 @@ function useEntrancePage({ invite, open: request, from }: EntranceProps) {
   // when back, so no frame of Join or Retry joining meanwhile.
   const joining = busy || (resume.phase === 'paused' && !error);
   const locked = joining || account.busy || checkingInvite || recoveryBlocked || restoring || restoreFailed || retrySeconds > 0;
+  // A native invitation asks to join. Wait for identity, recovery and membership before
+  // using the ordinary durable join once. Browser visitors keep their app/browser choice.
+  const autoJoinedInvite = useRef(false);
+  useEffect(() => {
+    if (!nativeClient || !invite || autoJoinedInvite.current || !focused || panel !== 'join' ||
+        !home.ready || !home.settled || !account.ready || !known?.trim() || locked ||
+        admission || memberOf || error || home.deletionPending) return;
+    autoJoinedInvite.current = true;
+    joinRoom(account.member, undefined, known, invite);
+  }, [invite, focused, panel, home.ready, home.settled, account.ready, known, locked,
+    admission, memberOf, error, home.deletionPending, account.member, joinRoom]);
   // A panel asked for from another screen (a room's header) closes back to that screen.
   const requestedFrom = useRef(Boolean(request && request !== 'new'));
   const closePanel = useCallback(() => {
