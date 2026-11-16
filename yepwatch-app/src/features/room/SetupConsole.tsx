@@ -200,7 +200,7 @@ function DescribeField({ value, onChange, onSubmit, ready, action, placeholder, 
           style={{ flex: 1, minWidth: 0, height: h - 2, padding: 0, borderWidth: 0, backgroundColor: 'transparent', color: glow.ink, fontFamily: 'Gabarito', fontSize: phone ? 17 : z(18), ...webField } as TextStyle} />
         <HoverPress label={action} hover="lighten" repeatable disabled={!ready} onPress={onSubmit}
           style={{ width: phone ? 92 : z(100), height: h - 14, borderRadius: 12, backgroundColor: ready ? glow.amber : warm.faint, borderWidth: 1, borderColor: ready ? glow.amber : warm.lineStrong }}>
-          <GText bold size={phone ? 16 : z(16)} color={ready ? warm.ink : glow.ink}>{action}</GText>
+          {['Add', 'Replace'].map((label) => <GText key={label} bold size={phone ? 16 : z(16)} color={ready ? warm.ink : glow.ink} style={{ position: 'absolute', width: '100%', textAlign: 'center', opacity: action === label ? 1 : 0 }} aria-hidden={action !== label}>{label}</GText>)}
         </HoverPress>
       </View>
       <View testID="try" style={{ height: tryH }}>

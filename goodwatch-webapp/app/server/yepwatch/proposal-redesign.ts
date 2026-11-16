@@ -2,21 +2,25 @@ import type { CommandEnvelope } from "../../../packages/yepwatch-contracts/propo
 import type { ProposalRoom } from "./proposal-types.ts"
 import { requireRoom } from "./errors.ts"
 import { ROOM_CONTEXT } from "./proposal-context.ts"
-import { ideaPending } from '../../../packages/yepwatch-contracts/proposal.ts'
+import { ideaPending } from "../../../packages/yepwatch-contracts/proposal.ts"
 
 export const titleKey = (c: ProposalRoom["candidates"][number]) =>
 	`${c.identity.kind === "movie" ? "movie" : "show"}_${c.identity.tmdbId}`
 export const rankedKey = (c: { identity: { kind: string; tmdbId: number } }) =>
-	(c.identity.kind === "movie" ? 1_000_000_000_000 : 2_000_000_000_000) +
-	c.identity.tmdbId
+	(c.identity.kind === "movie" ? 1_000_000_000_000 : 2_000_000_000_000) + c.identity.tmdbId
 /** Readings a service change may never spend: one new or changed idea for each of the eight people stays possible. */
 export const REREAD_RESERVE = 8
 /**
  * A service change spends the room's lifetime allowance of 24 readings, but only down to REREAD_RESERVE: switching
  * services back and forth must not leave the room unable to read a new idea.
  */
-export function ideasForServiceReread(room: ProposalRoom, count = (keys: readonly number[]) => keys.length) {
-  return (room.ideas ?? []).filter(i => !ideaPending(i) && count(i.rankedKeys) < 100).slice(0, Math.max(0, 24 - REREAD_RESERVE - (room.interpretationCount ?? 0)))
+export function ideasForServiceReread(
+	room: ProposalRoom,
+	count = (keys: readonly number[]) => keys.length,
+) {
+	return (room.ideas ?? [])
+		.filter((i) => !ideaPending(i) && count(i.rankedKeys) < 100)
+		.slice(0, Math.max(0, 24 - REREAD_RESERVE - (room.interpretationCount ?? 0)))
 }
 export const redesignCommands = new Set([
 	"add_idea",
@@ -27,17 +31,15 @@ export const redesignCommands = new Set([
 	"set_service_enabled",
 	"configure",
 	"rename",
-	"set_show_seen"
+	"set_show_seen",
 ])
 /** Null service picks contribute nothing; all present participants still vote and agree. */
 export function refreshServices(room: ProposalRoom) {
 	const disabled = new Set(room.disabledServiceIds ?? [])
 	const services = [
 		...new Set(
-			room.participants
-				.filter((p) => p.leftAt == null)
-				.flatMap((p) => p.serviceIds ?? [])
-		)
+			room.participants.filter((p) => p.leftAt == null).flatMap((p) => p.serviceIds ?? []),
+		),
 	]
 		.filter((id) => !disabled.has(id))
 		.sort((a, b) => a - b)
@@ -49,8 +51,8 @@ export function refreshServices(room: ProposalRoom) {
 			// No silent default: the host sets the country (configure) before anyone picks services.
 			country: first?.country ?? null,
 			serviceIds: services,
-			confirmed: true
-		}
+			confirmed: true,
+		},
 	]
 	for (const p of room.participants) {
 		p.screenId = ROOM_CONTEXT
@@ -58,19 +60,11 @@ export function refreshServices(room: ProposalRoom) {
 	}
 }
 /** Only untouched cards are removed. Undo records count as answers and remain relationally valid. */
-export function retireIneligible(
-	room: ProposalRoom,
-	excluded = new Set<string>()
-) {
+export function retireIneligible(room: ProposalRoom, excluded = new Set<string>()) {
 	const removed = new Set<string>()
 	room.candidates = room.candidates.filter((c) => {
 		const valid = candidateEligible(room, c) && !excluded.has(titleKey(c))
-		if (
-			valid ||
-			room.participants.some((p) =>
-				Object.prototype.hasOwnProperty.call(p.votes, c.id)
-			)
-		)
+		if (valid || room.participants.some((p) => Object.prototype.hasOwnProperty.call(p.votes, c.id)))
 			return true
 		removed.add(titleKey(c))
 		return false
@@ -82,7 +76,7 @@ export function redesignTransition(
 	actorId: string,
 	envelope: CommandEnvelope,
 	now: number,
-	interpretationReserved = false
+	interpretationReserved = false,
 ): ProposalRoom | null {
 	const c = envelope.command
 	if (!redesignCommands.has(c.type)) return null
@@ -91,15 +85,10 @@ export function redesignTransition(
 	requireRoom(
 		room.phase === "setup" || room.phase === "choosing",
 		"conflict",
-		"Room is already decided"
+		"Room is already decided",
 	)
 	const host = () =>
-		requireRoom(
-			room.hostId === actorId,
-			"forbidden",
-			"Only the host can change this setting",
-			403
-		)
+		requireRoom(room.hostId === actorId, "forbidden", "Only the host can change this setting", 403)
 	room.ideas ??= []
 	room.disabledServiceIds ??= []
 	if (c.type === "rename") p.nickname = c.nickname
@@ -108,11 +97,10 @@ export function redesignTransition(
 			p.member.state === "linked" || !!p.profileId,
 			"member_required",
 			"Connect GoodWatch first",
-			403
+			403,
 		)
 		p.showSeen = c.show
-	} else if (c.type === "set_services")
-		p.serviceIds = [...new Set(c.serviceIds)]
+	} else if (c.type === "set_services") p.serviceIds = [...new Set(c.serviceIds)]
 	else if (c.type === "set_service_enabled") {
 		host()
 		const disabled = new Set(room.disabledServiceIds)
@@ -126,7 +114,7 @@ export function redesignTransition(
 		requireRoom(
 			room.contextVersion === c.expectedContextVersion,
 			"conflict",
-			"Room settings changed"
+			"Room settings changed",
 		)
 		if (c.country) {
 			if (!room.screens.length) refreshServices(room)
@@ -137,13 +125,13 @@ export function redesignTransition(
 		requireRoom(
 			!room.ideas.some((idea) => idea.authorId === actorId),
 			"limit_reached",
-			"One idea each. Edit yours to change it."
+			"One idea each. Edit yours to change it.",
 		)
 		requireRoom(room.ideas.length < 8, "limit_reached", "At most eight ideas")
 		requireRoom(
 			interpretationReserved || (room.interpretationCount ?? 0) < 24,
 			"limit_reached",
-			"Room interpretation budget reached"
+			"Room interpretation budget reached",
 		)
 		room.ideas.push({
 			id: envelope.commandId,
@@ -153,15 +141,10 @@ export function redesignTransition(
 			on: true,
 			attributes: [],
 			rankedKeys: [],
-			interpretedAt: now
+			interpretedAt: now,
 		})
-		if (!interpretationReserved)
-			room.interpretationCount = (room.interpretationCount ?? 0) + 1
-	} else if (
-		c.type === "edit_idea" ||
-		c.type === "remove_idea" ||
-		c.type === "set_idea"
-	) {
+		if (!interpretationReserved) room.interpretationCount = (room.interpretationCount ?? 0) + 1
+	} else if (c.type === "edit_idea" || c.type === "remove_idea" || c.type === "set_idea") {
 		const idea = room.ideas.find((i) => i.id === c.ideaId)
 		requireRoom(idea, "conflict", "Idea no longer exists")
 		if (c.type === "set_idea") {
@@ -169,42 +152,28 @@ export function redesignTransition(
 			idea.on = c.on
 		} else {
 			requireRoom(
-				idea.authorId === actorId ||
-					(c.type === "remove_idea" && room.hostId === actorId),
+				idea.authorId === actorId || (c.type === "remove_idea" && room.hostId === actorId),
 				"forbidden",
 				"Only the author can edit this idea",
-				403
+				403,
 			)
-			if (c.type === "remove_idea")
-				room.ideas = room.ideas.filter((i) => i.id !== idea.id)
+			if (c.type === "remove_idea") room.ideas = room.ideas.filter((i) => i.id !== idea.id)
 			else {
-				requireRoom(
-					c.text !== idea.text,
-					"invalid_request",
-					"Change the idea text",
-					400
-				)
+				requireRoom(c.text !== idea.text, "invalid_request", "Change the idea text", 400)
 				requireRoom(
 					interpretationReserved || (room.interpretationCount ?? 0) < 24,
 					"limit_reached",
-					"Room interpretation budget reached"
+					"Room interpretation budget reached",
 				)
 				const replaced = new Set<string>()
 				room.candidates = room.candidates.filter((card) => {
 					if (
 						!card.ideaIds?.includes(idea.id) ||
-						room.participants.some((p) =>
-							Object.prototype.hasOwnProperty.call(p.votes, card.id)
-						)
+						room.participants.some((p) => Object.prototype.hasOwnProperty.call(p.votes, card.id))
 					)
 						return true
 					card.ideaIds = card.ideaIds.filter((id) => id !== idea.id)
-					if (
-						card.ideaIds.some((id) =>
-							room.ideas!.some((i) => i.id === id && i.on)
-						)
-					)
-						return true
+					if (card.ideaIds.some((id) => room.ideas!.some((i) => i.id === id && i.on))) return true
 					replaced.add(titleKey(card))
 					return false
 				})
@@ -215,8 +184,7 @@ export function redesignTransition(
 				idea.rankedKeys = []
 				idea.attributes = []
 				idea.interpretedAt = now
-				if (!interpretationReserved)
-					room.interpretationCount = (room.interpretationCount ?? 0) + 1
+				if (!interpretationReserved) room.interpretationCount = (room.interpretationCount ?? 0) + 1
 			}
 		}
 	}
@@ -225,13 +193,13 @@ export function redesignTransition(
 		requireRoom(
 			room.phase !== "choosing" || room.screens[0].serviceIds.length > 0,
 			"needs_context",
-			"Keep at least one enabled service while voting"
+			"Keep at least one enabled service while voting",
 		)
 		room.contextVersion++
 		room.stream = {
 			version: room.stream.version + 1,
 			state: "ready",
-			reason: null
+			reason: null,
 		}
 		attributeCandidates(room)
 		retireIneligible(room)
@@ -242,7 +210,7 @@ export function redesignTransition(
 
 export function candidateEligible(
 	room: ProposalRoom,
-	c: ProposalRoom["candidates"][number]
+	c: ProposalRoom["candidates"][number],
 ): boolean {
 	const services = new Set(room.screens[0]?.serviceIds ?? [])
 	const on = (room.ideas ?? []).filter((i) => i.on)
@@ -250,19 +218,19 @@ export function candidateEligible(
 		(c.ideaIds === undefined ||
 			c.ideaIds.length === 0 ||
 			c.ideaIds.some((id) => on.some((i) => i.id === id))) &&
+		(on.length === 0 || on.some((idea) => idea.rankedKeys.includes(rankedKey(c)))) &&
 		room.constraints.kinds.includes(c.identity.kind) &&
-        (room.constraints.maxMinutes == null || (c.runtimeMinutes != null && c.runtimeMinutes <= room.constraints.maxMinutes)) &&
+		(room.constraints.maxMinutes == null ||
+			(c.runtimeMinutes != null && c.runtimeMinutes <= room.constraints.maxMinutes)) &&
 		c.availability.some(
-			(a) =>
-				a.state === "watchable" &&
-				a.offers.some((o) => services.has(o.serviceId))
+			(a) => a.state === "watchable" && a.offers.some((o) => services.has(o.serviceId)),
 		)
 	)
 }
 
 export function matchingIdeaIds(
 	room: Pick<ProposalRoom, "ideas">,
-	candidate: Parameters<typeof rankedKey>[0]
+	candidate: Parameters<typeof rankedKey>[0],
 ) {
 	return (room.ideas ?? [])
 		.filter((i) => i.on && i.rankedKeys.includes(rankedKey(candidate)))
@@ -272,11 +240,6 @@ export function matchingIdeaIds(
 export function attributeCandidates(room: ProposalRoom) {
 	for (const c of room.candidates) {
 		if (c.ideaIds === undefined) continue
-		c.ideaIds = [
-			...new Set([
-				...c.ideaIds,
-				...matchingIdeaIds(room, c)
-			])
-		]
+		c.ideaIds = [...new Set([...c.ideaIds, ...matchingIdeaIds(room, c)])]
 	}
 }

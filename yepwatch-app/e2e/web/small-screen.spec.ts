@@ -126,10 +126,14 @@ for (const device of ['se', 'android'] as const) {
       await host.page.keyboard.type('space adventure');
       await host.page.keyboard.press('Enter');
       await eventually(() => host.latest?.ideas.map((i) => i.text), (v) => JSON.stringify(v) === JSON.stringify(['space adventure']), 'your idea', host);
+      // A saved idea can still be disabled while its command/search response settles.
+      const idea = host.page.getByRole('switch', { name: /^space adventure\. Your idea/ }).filter({ visible: true });
+      await expect(idea).toBeEnabled();
       // Space switches an idea off and on.
       await tabTo(host, /^space adventure\. Your idea/);
       await host.page.keyboard.press('Space');
       await eventually(() => host.latest?.ideas.find((i) => i.text === 'space adventure')?.on, (on) => on === false, 'Space switched the idea off', host);
+      await expect(idea).toBeEnabled();
       await host.page.keyboard.press('Space');
       await eventually(() => host.latest?.ideas.find((i) => i.text === 'space adventure')?.on, (on) => on === true, 'Space switched the idea on again', host);
       // Start.

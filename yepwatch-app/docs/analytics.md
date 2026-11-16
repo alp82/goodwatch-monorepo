@@ -49,6 +49,8 @@ four seconds. The web adapter drops failures; the native SDK's queue is in
 memory and is not a durable event log.
 
 Verify with `npm run typecheck`, `npm run lint`, and `npm test` in `yepwatch-app`.
+After changing the in-app privacy content, run `npx tsx scripts/build-store-assets.ts`
+to regenerate the public privacy/support/terms HTML served directly by the website.
 `tests/analytics.test.ts` exercises redaction, exclusions, failure isolation,
 the web request and the actual native SDK against a mocked network. Release the
 web export and mobile update through the normal YepWatch release process.

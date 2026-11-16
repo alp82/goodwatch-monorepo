@@ -10,7 +10,10 @@ test("a room's base ranking is built once per key, shared by concurrent callers,
 		builds++
 		return keys
 	}
-	const [a, b] = await Promise.all([ranked("v1|DE|all", build([1, 2])), ranked("v1|DE|all", build([9]))])
+	const [a, b] = await Promise.all([
+		ranked("v1|DE|all", build([1, 2])),
+		ranked("v1|DE|all", build([9])),
+	])
 	assert.deepEqual(a, [1, 2])
 	assert.equal(b, a)
 	assert.equal(builds, 1)
@@ -25,12 +28,19 @@ test("a room's base ranking is built once per key, shared by concurrent callers,
 
 test("a failed build is not kept", async () => {
 	const ranked = rankedKeysCache()
-	await assert.rejects(ranked("k", async () => { throw new Error("snapshot") }))
+	await assert.rejects(
+		ranked("k", async () => {
+			throw new Error("snapshot")
+		}),
+	)
 	assert.deepEqual(await ranked("k", async () => [7]), [7])
 })
 
 test("seen ids become numeric title keys", () => {
-	assert.deepEqual([...titleKeySet(["movie_12", "show_7", "show_continue_3", "bogus"])], [1_000_000_000_012, 2_000_000_000_007])
+	assert.deepEqual(
+		[...titleKeySet(["movie_12", "show_7", "show_continue_3", "bogus"])],
+		[1_000_000_000_012, 2_000_000_000_007],
+	)
 })
 
 test("idea lanes interleave over the base without copying it, skipping seen and repeated titles", () => {
@@ -44,13 +54,26 @@ test("idea lanes interleave over the base without copying it, skipping seen and 
 			{ on: false, rankedKeys: [m(4)] },
 		],
 	} as unknown as Parameters<typeof roomIntentKeys>[0]
-	assert.deepEqual(roomIntentKeys(room, base), [m(5), m(6), m(1), m(3), m(4)])
+	assert.deepEqual(roomIntentKeys(room, base), [m(5), m(6)])
 	assert.deepEqual(roomIntentKeys({ seenKeys: [], ideas: [] } as never, base), base)
 })
 
 test("titleKeySet takes canonical ids below 1e12 only, so movie and show keys never collide", () => {
-	const keys = titleKeySet(["movie_7", "show_7", "movie_999999999999", "movie_1000000000007", "movie_007", "movie_1e3", "show_ 7", "person_7", "movie_"])
-	assert.deepEqual([...keys].sort((a, b) => a - b), [1_000_000_000_007, 1_999_999_999_999, 2_000_000_000_007])
+	const keys = titleKeySet([
+		"movie_7",
+		"show_7",
+		"movie_999999999999",
+		"movie_1000000000007",
+		"movie_007",
+		"movie_1e3",
+		"show_ 7",
+		"person_7",
+		"movie_",
+	])
+	assert.deepEqual(
+		[...keys].sort((a, b) => a - b),
+		[1_000_000_000_007, 1_999_999_999_999, 2_000_000_000_007],
+	)
 })
 
 test("ranking slice by slice and merging equals ranking the whole universe, and lets other work run in between", async () => {

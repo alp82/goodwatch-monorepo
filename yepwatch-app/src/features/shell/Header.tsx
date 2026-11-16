@@ -79,7 +79,7 @@ export function RoomPill({ pill, onPress }: { pill: HeaderPill; onPress?: () => 
       style={{ ...grow(Math.max(44, z(40))), maxWidth: phone ? undefined : z(420), flexShrink: 1, minWidth: 0, alignItems: 'stretch' }}
       visual={{ height: Math.max(44, z(40)), minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 14, paddingRight: 10, borderRadius: 12, backgroundColor: '#ffffff0a', borderWidth: 1, borderColor: fresh ? '#fbbf2499' : pill.state === 'live' ? '#ffffff22' : warm.line }}>
       {pill.state === 'live' || pill.state === 'rooms' ? <LiveDot beat={pill.beat} /> : pill.state === 'decided' ? <Icon name="tickets" size={z(15)} color={glow.amber} /> : <Plus size={z(15)} color={glow.amber} />}
-      <GText bold size={z(15)} lines={1} style={{ flexShrink: 1 }}>{pill.label}</GText>
+      <GText bold size={z(15)} lines={1} style={{ flex: 1, minWidth: 0 }}>{pill.label}</GText>
       {fresh ? <View style={{ minWidth: 18, height: 18, paddingHorizontal: 5, borderRadius: 9, backgroundColor: glow.amber, alignItems: 'center', justifyContent: 'center' }}><GText bold size={11} color={warm.ink}>{fresh}</GText></View> : null}
       <View ref={chevron}><Chevron size={z(16)} color={glow.muted} /></View>
     </Press>
@@ -122,7 +122,7 @@ export const AppHeader = memo(function AppHeader({ back, onLogo, logoLabel = nou
     <Press label="Back" onPress={back} style={grow(Math.max(44, z(40)), Math.max(44, z(40)))}
       visual={{ width: Math.max(44, z(40)), height: Math.max(44, z(40)), borderRadius: R.control, backgroundColor: '#ffffff0a', alignItems: 'center', justifyContent: 'center' }}><Icon name="left" size={z(20)} color={glow.soft} /></Press>
   ) : null;
-  const pillEl = pill ? <View style={{ flexShrink: 1, minWidth: 0 }}><RoomPill pill={pill} onPress={onPill} /></View> : null;
+  const pillEl = pill ? <View style={{ width: '100%', maxWidth: phone ? undefined : z(420), flexShrink: 1, minWidth: 0 }}><RoomPill pill={pill} onPress={onPill} /></View> : null;
   const profile = <ProfileButton me={me} onPress={onProfile} quiet={profileQuiet} compact={phone && updateAvailable} />;
   const updateLink = updateAvailable ? (
     <Press label="Update YepWatch in Google Play" onPress={() => { void openPlayStoreUpdate(); }}

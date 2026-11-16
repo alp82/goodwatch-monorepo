@@ -219,8 +219,8 @@ test.describe('create and set up a room', () => {
 
   // Production 2026-11-12: GoodWatch's search spend limit was reached (503 interpretation_unavailable, budget).
   // Owner rule: a failing dependency never blocks the user. The idea is kept but unmatched, a small note says so, and
-  // setup and Start go on with the usual ranking: no Try again, no error gate.
-  test('search over its spend limit: the idea is kept, the couch sets up and starts without a tap on Try again', async ({ room }) => {
+  // setup stays available. Popularity requires explicitly switching the unmatched idea off (2026-11-16).
+  test('search over its spend limit: keep the idea and explicitly switch it off before starting popular picks', async ({ room }) => {
     const host = await room.person('Alp');
     const mood = `budget refused heist ${Math.random().toString(36).slice(2, 8)}`;
     const second = `${mood} sequel`;
@@ -243,6 +243,9 @@ test.describe('create and set up a room', () => {
       // Replacing the idea while search is still refused is kept too (the command path).
       await addIdea(host, second);
       await eventually(() => host.latest?.ideas.map((i) => i.text), (v) => JSON.stringify(v) === JSON.stringify([second]), 'the replacement is kept too', host);
+      await expect(host.page.getByTestId('idea-unmatched').filter({ visible: true })).toBeVisible();
+      await host.tap(host.page.getByRole('switch', { name: `${second}. Your idea. Mood matching is unavailable for now`, exact: true }).filter({ visible: true }), { expect: {} });
+      await eventually(() => host.latest?.ideas[0]?.on, (on) => on === false, 'popular picks require switching the unmatched idea off', host);
       await hostName(host, 'Alp');
       await addServices(host, ['Netflix']);
       await start(host, []);

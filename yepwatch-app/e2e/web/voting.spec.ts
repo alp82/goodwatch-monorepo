@@ -265,6 +265,7 @@ test.describe('deck and voting', () => {
     await expect(host.button('Skip the how-to')).toHaveCount(0);
     await sam.tap(sam.button('Skip the how-to'), { expect: {} });
     await expect(sam.button('Skip the how-to')).toHaveCount(0);
+    await expect(sam.testId('details-panel'), 'Skip does not press the poster underneath').toHaveCount(0);
     await vote(sam, false);
     await host.page.reload();
     await host.see({ visible: ['voting', 'poster'] }, 15000, 'voting after a reload');

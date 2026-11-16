@@ -158,11 +158,15 @@ function AnswerTips({ t }: { t: Tutor }) {
   return <>{tip(false)}{tip(true)}</>;
 }
 
+/** The Skip press area, shared with the native touch capture guard. */
+export const tutorialSkipRect = (card: Rect): Rect => ({ x: card.x + card.w / 2 - 30, y: card.y + 4, w: 60, h: 48 });
+
 /** Skip: the only part of the how-to that takes a press. Centered at the card's top, clear of the poster's Details and Trailer. */
 function Skip({ t }: { t: Tutor }) {
+  const rect = tutorialSkipRect(t.card);
   return (
-    <View style={{ position: 'absolute', left: t.card.x + t.card.w / 2 - 30, top: t.card.y + 4, width: 60, alignItems: 'center' }}>
-      <HoverPress label="Skip the how-to" onPress={t.stop}
+    <View style={{ position: 'absolute', left: rect.x, top: rect.y, width: rect.w, height: rect.h, alignItems: 'center' }}>
+      <HoverPress testID="tutorial-skip" label="Skip the how-to" onPress={t.stop}
         visual={{ height: 30, paddingHorizontal: 11, borderRadius: 8, backgroundColor: 'rgba(10,9,8,0.82)', borderWidth: 1, borderColor: '#ffffff2e', justifyContent: 'center' }}>
         <GText bold size={12} color={glow.soft}>Skip</GText>
       </HoverPress>

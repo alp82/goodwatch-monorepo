@@ -6,7 +6,7 @@
  * changed one struck through. Only you see it: friends' answers never show.
  */
 import { useState } from 'react';
-import { View } from 'react-native';
+import { View, useWindowDimensions } from 'react-native';
 import { GText, Icon, glow } from '../glow/theme';
 import { ScorePill } from '../glow/scores';
 import { HoverPress } from '../shell/hover';
@@ -26,17 +26,19 @@ export const yepCount = (n: number) => `${n} ${n === 1 ? 'Yep' : 'Yeps'}`;
 export function YepsButton({ onPress, width, compact = false, tonight = false }: { onPress: () => void; width?: number; compact?: boolean; tonight?: boolean }) {
   const yeps = useOwnYeps(useRoomLive().snapshot);
   const { z } = useLayout();
+  const { fontScale } = useWindowDimensions();
+  const countWidth = Math.ceil(z(15) * Math.max(1, fontScale) * 0.56 * 2);
   const n = yeps.length;
   const pw = tonight ? 20 : 16;
   return (
     <HoverPress testID="yeps-button" label={`Your Yeps, ${n}`} hint="Shows every title you said Yep to" hover="lighten" repeatable onPress={onPress}
       visual={{ width, height: tonight ? z(48) : z(36), paddingHorizontal: 10, borderRadius: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 7, backgroundColor: '#fbbf2414', borderWidth: 1, borderColor: warm.amberLine }}>
       <Icon name="check" size={z(15)} color={glow.amber} />
-      <GText bold size={z(15)} color={glow.amber} lines={1}>{tonight ? `Your ${yepCount(n)}` : String(n)}</GText>
+      <GText bold size={z(15)} color={glow.amber} lines={1} style={tonight ? undefined : { width: countWidth, textAlign: 'center', fontVariant: ['tabular-nums'] }}>{tonight ? `Your ${yepCount(n)}` : String(n)}</GText>
       {!compact && n ? (
-        <View accessible={false} style={{ flexDirection: 'row' }}>
+        <View accessible={false} style={{ position: 'relative', width: pw * 1.9 + 3, height: pw * 1.5 + 3 }}>
           {yeps.slice(0, 3).map((y, k) => (
-            <View key={y.id} style={{ marginLeft: k ? -pw * 0.55 : 0, zIndex: 3 - k, borderRadius: 3, borderWidth: 1.5, borderColor: '#14110d' }}>
+            <View key={y.id} style={{ position: 'absolute', left: 0, top: 0, transform: [{ translateX: k * pw * 0.45 }], zIndex: 3 - k, borderRadius: 3, borderWidth: 1.5, borderColor: '#14110d' }}>
               <Poster c={y} width={pw} radius={2} label={false} />
             </View>
           ))}

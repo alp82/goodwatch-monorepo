@@ -26,7 +26,7 @@ const sized = (url: string | null) => (url ? url.replace('/w500/', '/w185/') : n
 export const matchCount = (n: number) => `${n} ${n === 1 ? 'match' : 'matches'}`;
 
 /** One poster dropping onto the edge (opacity and a short fall), once, as its match arrives. */
-function Drop({ children, left, z, entering }: { children: React.ReactNode; left: number; z: number; entering: boolean }) {
+function Drop({ children, x, z, entering }: { children: React.ReactNode; x: number; z: number; entering: boolean }) {
   const reduced = useReducedMotion();
   const [v] = useState(() => new Animated.Value(entering && !reduced ? 0 : 1));
   useEffect(() => {
@@ -35,7 +35,7 @@ function Drop({ children, left, z, entering }: { children: React.ReactNode; left
     run.start();
     return () => run.stop();
   }, [v, entering, reduced]);
-  return <Animated.View style={{ marginLeft: left, zIndex: z, opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [-8, 0] }) }] }}>{children}</Animated.View>;
+  return <Animated.View style={{ position: 'absolute', left: 0, top: 0, zIndex: z, opacity: v, transform: [{ translateX: x }, { translateY: v.interpolate({ inputRange: [0, 1], outputRange: [-8, 0] }) }] }}>{children}</Animated.View>;
 }
 
 export const MatchesPeek = memo(function MatchesPeek({ roomId, matches, proposal }: { roomId: string; matches: Candidate[]; proposal: boolean }) {
@@ -65,7 +65,7 @@ export const MatchesPeek = memo(function MatchesPeek({ roomId, matches, proposal
                 {n ? shown.map((m, k) => {
                   const uri = sized(m.posterUrl);
                   return (
-                    <Drop key={m.id} left={k ? -pw * (1 - FAN) : 0} z={k} entering={!known.has(m.id)}>
+                    <Drop key={m.id} x={k * pw * FAN} z={k} entering={!known.has(m.id)}>
                       <View style={{ width: pw, height: pw * 1.5, borderRadius: 4, borderWidth: 1.5, borderColor: '#14110d', backgroundColor: warm.well, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }}>
                         {uri ? <Image source={{ uri }} accessible={false} style={{ width: '100%', height: '100%' }} /> : <Icon name="tickets" size={pw * 0.55} color={glow.amber} />}
                       </View>

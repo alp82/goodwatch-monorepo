@@ -56,9 +56,13 @@ const clampRoi = r => {
   const [x1, y1, x2, y2] = r.map(v => Math.round(v / SCALE));
   return [Math.max(0, x1), Math.max(STATUS_ROWS, y1), Math.min(W, Math.max(x1 + 1, x2)), Math.min(H, Math.max(y1 + 1, y2))];
 };
-export function diff(a, b, roi = [0, 0, 1080, 2400]) {
+/** @param {number[][]} [ignored] */
+export function diff(a, b, roi = [0, 0, 1080, 2400], ignored = /** @type {number[][]} */ ([])) {
   const [x1, y1, x2, y2] = clampRoi(roi); let s = 0, c = 0;
-  for (let y = y1; y < y2; y++) for (let x = x1; x < x2; x++) { s += Math.abs(a.px[y * W + x] - b.px[y * W + x]); c++; }
+  const masks = ignored.map(clampRoi);
+  for (let y = y1; y < y2; y++) for (let x = x1; x < x2; x++) {
+    if (masks.some(([l, t, r, b]) => x >= l && x < r && y >= t && y < b)) continue;
+    s += Math.abs(a.px[y * W + x] - b.px[y * W + x]); c++; }
   return c ? s / c : 0;
 }
 function flatness(f) { // std dev of the frame below the status bar
@@ -82,7 +86,7 @@ export function frameAt(video, hostMs) {
 /** First frame >= from where `roi` matches the final frame's roi for `hold` frames. */
 export function arrivalFrame(video, roi, from, { thr = 6, hold = 3 } = {}) {
   const f = video.frames, last = f[f.length - 1];
-  for (let i = Math.max(0, from); i < f.length - hold; i++) {
+  for (let i = Math.max(0, from); i <= f.length - hold; i++) {
     let ok = true;
     for (let k = 0; k < hold && ok; k++) ok = diff(f[i + k], last, roi) < thr;
     if (ok) return i;
@@ -90,27 +94,35 @@ export function arrivalFrame(video, roi, from, { thr = 6, hold = 3 } = {}) {
   return -1;
 }
 
-/** Flash analysis over [from, to]. Returns findings; saves plateau frames as PNG next to the video. */
-export function flashes(video, from, to, { allowIntermediate = 1, saveDir } = {}) {
-  const f = video.frames; const out = { blank: [], spikes: [], plateaus: [] };
+/**
+ * Flash analysis over [from, to]. Returns findings; saves plateau frames as PNG next to the video.
+ * @param {{ allowIntermediate?: number, saveDir?: string, animatedRegions?: number[][] }} [options]
+ */
+export function flashes(video, from, to, { allowIntermediate = 1, saveDir, animatedRegions = /** @type {number[][]} */ ([]) } = {}) {
+  const f = video.frames;
+  /** @type {{ blank: number[], spikes: { i: number, jump: number }[], plateaus: { from: number, to: number, ms: number, dStart: number, dEnd: number }[], failed: boolean }} */
+  const out = { blank: [], spikes: [], plateaus: [], failed: false };
+  const difference = (a, b) => diff(a, b, undefined, animatedRegions);
   const first = f[Math.max(0, from - 1)], last = f[f.length - 1];
   to = Math.min(to, f.length - 1);
   for (let i = from; i <= to; i++) {
     if (flatness(f[i]) < 4 && flatness(first) >= 4 && flatness(last) >= 4) out.blank.push(i);
     if (i >= 1 && i + 2 < f.length) {
-      const jump = diff(f[i], f[i - 1]);
-      if (jump > 10 && (diff(f[i + 1], f[i - 1]) < jump / 4 || diff(f[i + 2], f[i - 1]) < jump / 4)) out.spikes.push({ i, jump: +jump.toFixed(1) });
+      const jump = difference(f[i], f[i - 1]);
+      if (jump > 10 && (difference(f[i + 1], f[i - 1]) < jump / 4 || difference(f[i + 2], f[i - 1]) < jump / 4)) out.spikes.push({ i, jump: +jump.toFixed(1) });
     }
   }
-  // plateaus: runs of >= 3 frames with small frame-to-frame change.
+  // Plateaus hold still across the whole run. Small per-frame motion can accumulate into a
+  // full animation; comparing only adjacent frames misclassified those animations as static screens.
   let runStart = from;
   for (let i = from + 1; i <= to + 1; i++) {
-    const still = i <= to && diff(f[i], f[i - 1]) < 1.5;
+    const still = i <= to && difference(f[i], f[i - 1]) < 1.5;
     if (!still) {
       if (i - runStart >= 3) {
         const mid = f[Math.floor((runStart + i - 1) / 2)];
-        const dStart = diff(mid, first), dEnd = diff(mid, last);
-        if (dStart > 8 && dEnd > 8) out.plateaus.push({ from: runStart, to: i - 1, ms: +(f[i - 1].t - f[runStart].t).toFixed(0), dStart: +dStart.toFixed(1), dEnd: +dEnd.toFixed(1) });
+        const dStart = difference(mid, first), dEnd = difference(mid, last);
+        const heldStill = difference(mid, f[runStart]) < 1.5 && difference(f[i - 1], f[runStart]) < 1.5;
+        if (heldStill && dStart > 8 && dEnd > 8) out.plateaus.push({ from: runStart, to: i - 1, ms: +(f[i - 1].t - f[runStart].t).toFixed(0), dStart: +dStart.toFixed(1), dEnd: +dEnd.toFixed(1) });
       }
       runStart = i;
     }
@@ -137,6 +149,8 @@ export function maxGap(video, from, to) {
  * Measure one action seen on one or more phones. Every phone involved is recorded.
  * action(): returns { anchor: 'touch', tap: {x,y}, hostMs } (tap on `actor`) or { anchor: 'host', hostMs }.
  * targets: { [phoneName]: async () => roi } - the settled element to wait for on that phone.
+ * animatedRegions: optional device-pixel rectangles for intentional motion, excluded from screen
+ * plateau/spike comparisons only. Blank detection always uses the entire frame.
  */
 /**
  * `appWindowMs` (launches): ms after the anchor at which the launched activity drew its first frame
@@ -145,14 +159,15 @@ export function maxGap(video, from, to) {
  * (its splash) is then the start look, so launches pass `allowIntermediate: 0`: any screen between the
  * splash and the target counts.
  */
-export async function measure({ actor, targets, file, action, settleMs = 1200, allowIntermediate = 1, phones, appWindowMs }) {
+export async function measure({ actor, targets, file, action, settleMs = 1200, allowIntermediate = 1, phones, appWindowMs, animatedRegions = {} }) {
   const recs = new Map();
   for (const p of phones) recs.set(p.name, await startRecording(p, file.replace(/\.webm$/, `-${p.name}.webm`)));
   await sleep(350);
-  let act, rois = {};
+  let act, rois = {}, motion = {};
   try {
     act = await action();
     for (const [name, fn] of Object.entries(targets)) rois[name] = await fn();
+    for (const [name, fn] of Object.entries(animatedRegions)) motion[name] = await fn();
     await sleep(settleMs);
   } finally {
     for (const [name, r] of recs) recs.set(name, await stopRecording(r));
@@ -177,9 +192,9 @@ export async function measure({ actor, targets, file, action, settleMs = 1200, a
     const ms = video.t0 + video.frames[fc].t - anchorMs;
     const windowMs = appWindowMs?.();
     const flashFrom = Number.isFinite(windowMs) ? Math.min(arr, Math.max(from, frameAt(video, anchorMs + windowMs))) : from;
-    const fl = flashes(video, flashFrom, arr + 20, { allowIntermediate, saveDir: video.file.replace(/\.webm$/, '-frames') });
+    const fl = flashes(video, flashFrom, arr + 20, { allowIntermediate, animatedRegions: motion[name] ?? [], saveDir: video.file.replace(/\.webm$/, '-frames') });
     out[name] = { ok: true, ms: +ms.toFixed(0), settledMs: +settledMs.toFixed(0), anchorMs: Math.round(anchorMs), anchorFrame: frameAt(video, anchorMs), firstFrame: fc, settledFrame: arr, resolutionMs: 17, clockErrMs: +(video.t0Err + (video === actorVideo || act.anchor === 'host' ? 0 : actorVideo.t0Err)).toFixed(0),
-      maxGapMs: maxGap(video, from, arr), flash: fl, file: video.file };
+      maxGapMs: maxGap(video, from, arr), flash: fl, animatedRegions: motion[name] ?? [], file: video.file };
   }
   return out;
 }
