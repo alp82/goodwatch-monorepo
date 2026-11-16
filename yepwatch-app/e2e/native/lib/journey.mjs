@@ -58,8 +58,12 @@ export async function createRoom(p, { name = 'Ann', mood = 'cheer me up' } = {})
   await p.tap('New couch');
   await p.waitFor(/^Start( with \d+| on my own)$/, { timeout: 10000 });
   if (mood) await fillAndSubmit(p, 'Describe what you want to watch', mood);
+  await p.tap(/^Settings/);
+  await p.waitFor('room-sheet');
   await p.tap(/^Streaming services/);
   await pickNetflix(p);
+  p.back();
+  await p.waitGone('room-sheet');
   // A set-up device brings its name; the field shows only for a host without one.
   if (name && (await p.has('Your name'))) await fillAndSubmit(p, 'Your name', name);
   return inviteCode(p);

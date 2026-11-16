@@ -195,10 +195,14 @@ export async function mixedGateRoom({ phone: A, stack, runDir, B, timing, audit,
     await audit(A, 'room page (host, before start)');
     await fillAndSubmit(A, 'Describe what you want to watch', 'cheer me up');
     // Services first: once a friend with services is in, the row shows theirs ("Netflix, change").
+    await A.tap(/^Settings/);
+    await A.waitFor('room-sheet');
     await A.tap(/^Streaming services/);
     await A.waitFor('services-sheet');
     await audit(A, 'services sheet');
     await pickNetflix(A);
+    A.back();
+    await A.waitGone('room-sheet');
     // The friend joins through the Invite sheet's link (the host's name came with setup).
     const code = await inviteCode(A);
     const joining = opening.then(async (w) => { web = w; await w.join(`${stack.app}/r/${code}`); });
@@ -275,6 +279,8 @@ export async function mixedJourneyRoom({ phone: A, stack, audit, notStuck, journ
     await notStuck(A, 'room page after create');
     await audit(A, 'room page (host, before start)');
     await fillAndSubmit(A, 'Describe what you want to watch', 'cheer me up');
+    await A.tap(/^Settings/);
+    await A.waitFor('room-sheet');
     await A.tap(/^Streaming services/, { timeout: 10000 });
     await A.waitFor('services-sheet', { timeout: 10000 });
     await audit(A, 'services sheet');

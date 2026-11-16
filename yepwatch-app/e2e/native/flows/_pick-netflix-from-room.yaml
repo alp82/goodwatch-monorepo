@@ -1,4 +1,8 @@
 appId: ${APP_ID || 'dev.yepwatch.e2e'}
 ---
+- tapOn: { text: "Settings.*", waitToSettleTimeoutMs: 300 }
+- extendedWaitUntil: { visible: { id: "room-sheet" }, timeout: 5000 }
 - tapOn: { text: "Streaming services.*", waitToSettleTimeoutMs: 300 }
 - runFlow: _pick-netflix.yaml
+- back
+- extendedWaitUntil: { notVisible: { id: "room-sheet" }, timeout: 5000 }
