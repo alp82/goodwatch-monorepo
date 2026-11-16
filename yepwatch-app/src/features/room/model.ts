@@ -97,13 +97,16 @@ export interface RoomView {
 }
 
 /** The ideas as a short name; with none on, the couch's name (never a filter default like "Anything"). */
+/** What an idea avoids, as "not X"; words that already say no ("Not live action", "no gore") keep theirs, lowercased. */
+const avoided = (text: string) => (/^(not|no|without)\b/i.test(text.trim()) ? text.trim().replace(/^./, (c) => c.toLowerCase()) : `not ${text}`);
+
 /** An idea's reading in a few words: what it wants, then what it avoids; nothing that only repeats the idea. */
 export function ideaReading(idea: Pick<RoomIdea, 'text' | 'attributes'>) {
   if (ideaPending(idea)) return 'Matching the mood…';
   const same = (t: string) => t.trim().toLowerCase() === idea.text.trim().toLowerCase();
   return idea.attributes
     .filter((a) => !(a.kind === 'phrase' && same(a.text)))
-    .map((a) => (a.kind === 'avoid' || a.kind === 'excluded' ? `not ${a.text}` : a.text))
+    .map((a) => (a.kind === 'avoid' || a.kind === 'excluded' ? avoided(a.text) : a.text))
     .join(', ');
 }
 

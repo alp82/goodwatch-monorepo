@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import type { CatalogMetadata, RoomCommand, RoomSnapshot } from '@goodwatch/yepwatch-contracts/proposal';
-import { bringers, fitSize, ideasLabel, proposalKey, roomCommands, roomView, showsProposal, statusLine } from '../src/features/room/model';
+import { bringers, fitSize, ideaReading, ideasLabel, proposalKey, roomCommands, roomView, showsProposal, statusLine } from '../src/features/room/model';
 import { firstTiles, namesLine, rankServices, servicesIn, toggleService } from '../src/features/room/services';
 import { continuousFixture } from './continuous-fixture';
 
@@ -375,4 +375,11 @@ test('a refresh shows the agreement changed again before the answer: the old agr
   const shown = overlayRoom(s, { commandId: 'a', sequence: 1, command: agree }, []);
   assert.deepEqual(shown.own.agreement, s.own.agreement);
   assert.equal(shown.shared.proposal?.agreeCount, 0);
+});
+
+test('an avoided trait reads "not X" once, even when its words already say no', () => {
+  const reading = (attributes: { text: string; kind: 'phrase' | 'avoid' | 'excluded' }[]) =>
+    ideaReading({ text: 'grown up cartoons', attributes } as Parameters<typeof ideaReading>[0]);
+  assert.equal(reading([{ text: 'Animated', kind: 'phrase' }, { text: 'Not live action', kind: 'avoid' }]), 'Animated, not live action');
+  assert.equal(reading([{ text: 'gore', kind: 'excluded' }, { text: 'No jump scares', kind: 'avoid' }]), 'not gore, no jump scares');
 });

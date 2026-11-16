@@ -257,7 +257,9 @@ export const IdeaField = roomPart('IdeaField', (r) => ({
 const FAN = 5;
 const fanAt = (i: number) => (i - (FAN - 1) / 2) * 4.5;
 const dropAt = (i: number) => Math.round(((i - (FAN - 1) / 2) ** 2) * 1.6);
-const fanWidth = (w: number) => Math.round(w * (1 + (FAN - 1) * 0.84)) + 14;
+/** Room on each side for the outer cards' tilt (a 9° card leans out about a fifth of its width). */
+const fanPad = (w: number) => Math.ceil(w * 0.25);
+const fanWidth = (w: number) => Math.round(w * (1 + (FAN - 1) * 0.84)) + 2 * fanPad(w);
 
 /** A small poster (or a card back while the couch has no cards yet). */
 function MiniCard({ title, w }: { title: Candidate | null; w: number }) {
@@ -274,7 +276,7 @@ function Fan({ deck, w, show }: { deck: readonly Candidate[]; w: number; show: n
   const cards = Array.from({ length: FAN }, (_, i) => deck[i] ?? null);
   return (
     <View pointerEvents="none" style={{ width: fanWidth(w), height: show, overflow: 'hidden' }}>
-      <View style={{ position: 'absolute', left: 7, top: 9, flexDirection: 'row', height: w * 1.5 }}>
+      <View style={{ position: 'absolute', left: fanPad(w), top: 9, flexDirection: 'row', height: w * 1.5 }}>
         {cards.map((t, i) => (
           <View key={`fan-${i}-${t?.id ?? 'back'}`} style={{ marginLeft: i ? -w * 0.16 : 0 }}>
             <Rise rise={16} delay={i * 30}>
