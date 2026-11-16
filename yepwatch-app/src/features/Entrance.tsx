@@ -171,7 +171,11 @@ function useEntrancePage({ invite, open: request, from }: EntranceProps) {
   const [profileWaitOver, setProfileWaitOver] = useState(false);
   useEffect(() => { const t = setTimeout(() => setProfileWaitOver(true), PROFILE_WAIT_MS); return () => clearTimeout(t); }, []);
   const profileKnown = profileWaitOver || profile.status === 'ready' || profile.status === 'failed';
-  const pageReady = home.ready && home.settled && !restoring && (invite ? preview !== undefined && !checkingInvite && !memberOf : !home.loadingRooms && (!setUpPage || profileKnown));
+  // A known native guest goes straight to the couch under the startup cover. Only a
+  // name request or recoverable failure needs to reveal the invitation form.
+  const autoInvitePending = nativeClient && Boolean(invite) && Boolean(knownName?.trim()) &&
+    !error && !restoreFailed && !recoveryBlocked && !home.deletionPending && (!admission || busy);
+  const pageReady = home.ready && home.settled && !restoring && (invite ? preview !== undefined && !checkingInvite && !memberOf && !autoInvitePending : !home.loadingRooms && (!setUpPage || profileKnown));
   const focused = useIsFocused();
   const [followUpSlot, setFollowUpSlot] = useState<{ open: boolean; focused: boolean } | null>(null);
   if (pageReady && (followUpSlot === null || (focused && !followUpSlot.focused))) setFollowUpSlot({ open: profile.followUps.length > 0, focused });

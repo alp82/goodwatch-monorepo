@@ -42,9 +42,13 @@ export class WebPeer {
     await p.getByTestId('room-setup').waitFor();
     await p.getByLabel('Describe what you want to watch').filter({ visible: true }).fill(mood);
     await this.button('Add').click();
+    await this.button(/^Settings/).click();
+    await p.getByTestId('room-sheet').waitFor();
     await this.button(/^Streaming services/).click();
     await p.getByRole('checkbox', { name: 'Netflix' }).click();
     await this.button('Done').click();
+    await p.keyboard.press('Escape');
+    await p.getByTestId('room-sheet').waitFor({ state: 'hidden' });
     // The invitation link: Invite opens the QR code, whose name carries the link.
     await this.button('Invite friends, show QR code and link').click();
     const text = await p.getByRole('img', { name: /^QR code for / }).getAttribute('aria-label');
@@ -131,7 +135,7 @@ export async function mixedHostAndroid({ phone: A, stack, runDir, timing, journe
   const web = await WebPeer.open({ origin: stack.app, name: 'Webby' });
   try {
     await web.join(`${stack.app}/r/${code}`);
-    await A.waitFor('2 people, people', { timeout: 8000 });
+    await A.waitFor('Who’s here: 2 people', { timeout: 8000 });
     await A.tap(/^Start( with \d+| on my own)$/);
     await A.waitFor('poster', { timeout: 10000 }); await web.waitVoting();
     await web.yep(); await sleep(500);
@@ -208,7 +212,7 @@ export async function mixedGateRoom({ phone: A, stack, runDir, B, timing, audit,
     const joining = opening.then(async (w) => { web = w; await w.join(`${stack.app}/r/${code}`); });
     joining.catch(() => {});
     await joining;
-    await A.waitFor('2 people, people', { timeout: 5000 });
+    await A.waitFor('Who’s here: 2 people', { timeout: 5000 });
 
     // Start on the phone: the phone's first card from its video; the browser's voting page from inside the
     // page (first animation frame it is shown), both against the touch frame on the host clock.
@@ -289,7 +293,7 @@ export async function mixedJourneyRoom({ phone: A, stack, audit, notStuck, journ
     const joining = opening.then(async (w) => { web = w; await w.join(`${stack.app}/r/${code}`); });
     joining.catch(() => {});
     await joining;
-    await A.waitFor('2 people, people', { timeout: 15000 });
+    await A.waitFor('Who’s here: 2 people', { timeout: 15000 });
 
     const start = await A.find(/^Start( with \d+| on my own)$/, { timeout: 10000 });
     await step(() => A.tapXY(start.cx, start.cy), 'poster', 20000);

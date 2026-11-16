@@ -198,7 +198,7 @@ async function main() {
     await audit(Bp, 'join page');
     await joinFromJoinScreen(Bp, 'Bob');
     await audit(Bp, 'room page (friend, waiting)');
-    await A.waitFor('2 people, people', { timeout: 5000 });
+    await A.waitFor('Who’s here: 2 people', { timeout: 5000 });
   });
 
   // ---- Start -> first card on host and friend ----

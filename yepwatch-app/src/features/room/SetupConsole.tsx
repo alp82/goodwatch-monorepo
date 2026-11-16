@@ -6,7 +6,7 @@
  * field takes focus; a new idea adds a row.
  */
 import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
-import { Animated, Easing, Image, TextInput, View, type TextStyle } from 'react-native';
+import { Animated, Easing, Image, Platform, TextInput, View, type TextStyle } from 'react-native';
 import type { Candidate } from '@goodwatch/yepwatch-contracts/proposal';
 import { useReducedMotion } from '../../components/ui';
 import { GText, glow, native } from '../glow/theme';
@@ -341,7 +341,7 @@ function SwitchLook({ on, dim }: { on: boolean; dim: boolean }) {
 function IdeaBox({ idea, host, disabled, toggle, style, children }: { idea: IdeaView; host: boolean; disabled: boolean; toggle: (idea: IdeaView) => void; style: object; children: ReactNode }) {
   return host ? (
     <HoverPress role="switch" checked={idea.on} label={ideaName(idea)} hint={idea.on ? 'Switches it off' : 'Switches it on'} hover="tint" repeatable disabled={disabled} onPress={() => toggle(idea)} style={style}>{children}</HoverPress>
-  ) : <View accessible accessibilityRole="group" accessibilityLabel={`${ideaName(idea)}. ${idea.on ? 'On' : 'Off'}`} style={style}>{children}</View>;
+  ) : <View accessible accessibilityRole={Platform.OS === 'web' ? 'group' : undefined} accessibilityLabel={`${ideaName(idea)}. ${idea.on ? 'On' : 'Off'}`} style={style}>{children}</View>;
 }
 
 /** One idea as a compact row: face, the words, whose it is and what it does to the cards, the switch. */
