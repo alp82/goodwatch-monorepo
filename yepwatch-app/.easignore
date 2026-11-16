@@ -60,3 +60,7 @@ credentials.json
 artifacts/
 test-results/
 dist*/
+
+# Generated local-module outputs
+modules/*/android/build/
+modules/*/android/.gradle/
