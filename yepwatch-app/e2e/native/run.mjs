@@ -366,10 +366,12 @@ async function main() {
     const code = await createRoom(A, { name: '' });
     Bp.forceStop(); await sleep(500);
     let am;
-    const r = await measure({ actor: Bp, phones: [Bp], file: vid('invite-cold'), targets: { B: roiOf(Bp, 'Join', 20000) },
+    const r = await measure({ actor: Bp, phones: [Bp], file: vid('invite-cold'), targets: { B: roiOf(Bp, 'services-sheet', 20000) },
       action: hostAction(() => { am = Bp.openLink(inviteUrl(code)); }), appWindowMs: () => am?.totalTime });
-    timing('invite link (app not running) -> join page', B.native.inviteColdMs, r.B, { amStart: am, use: 'settled' });
-    await joinFromJoinScreen(Bp, 'Bob');
+    timing('invite link (app not running) -> automatically joined', B.native.inviteColdMs, r.B, { amStart: am, use: 'settled' });
+    // Bob's name is remembered: opening the link joins without touching the Join form.
+    await pickNetflix(Bp);
+    await Bp.waitFor(/^Waiting for /, { timeout: 10000 });
     S.code2 = code;
   }, { modes: ['full'] });
 

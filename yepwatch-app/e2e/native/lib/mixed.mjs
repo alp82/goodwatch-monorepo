@@ -153,7 +153,9 @@ export async function mixedHostWeb({ phone: Bp, stack, runDir, timing, journeyFa
     const code = await web.createRoom('space adventure');
     Bp.home(); await sleep(500);
     Bp.openLink(`${stack.app}/r/${code}`);
-    await joinFromJoinScreen(Bp, 'Bob');
+    // This device already knows Bob: the warm link admits him without another Join press.
+    await pickNetflix(Bp);
+    await Bp.waitFor(/^Waiting for /, { timeout: 10000 });
     const start = web.button(/^Start( with \d+| on my own)$/);
     const r = await measure({ actor: Bp, phones: [Bp], file: path.join(runDir, 'video', 'mixed-web-start.webm'), targets: { B: roiOf(Bp, 'poster', 10000) },
       action: async () => { const hostMs = Date.now(); await start.click(); return { anchor: 'host', hostMs }; } });
