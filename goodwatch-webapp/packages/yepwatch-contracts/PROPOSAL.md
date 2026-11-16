@@ -37,12 +37,14 @@ The installed app's shared parser is strict; its HTTP own reads are typed rather
 are gated too, keeping one capability for the complete feature.
 
 Shared fields (optional on the wire for compatibility):
+
 - `ins: { candidateId: string; count: number }[]`: every current match in match order, **including zero counts**.
 - `inVersion: number`: monotonic; increments on changed ins/counts, including roster/match reconciliation.
 - `tiebreak: { version: number; candidateIds: string[]; favorites: { candidateId: string; count: number }[];
   seed?: string; outcome: { candidateId: string; spun: boolean; among: string[] } | null } | null`.
 
 Own fields (also optional without capability):
+
 - `ins: { candidateIds: string[]; revision: number }`.
 - `favorite: { tiebreakVersion: number; candidateId: string | null } | null`.
 

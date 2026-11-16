@@ -83,10 +83,7 @@ export interface ContinuousCatalog {
 	metadata(country: string | null): Promise<CatalogMetadata>
 	page(room: ContinuousRoom): Promise<CandidatePage>
 	refresh?(room: ContinuousRoom): Promise<Candidate[]>
-	recheck(
-		room: ContinuousRoom,
-		candidate: Candidate,
-	): Promise<Candidate["availability"]>
+	recheck(room: ContinuousRoom, candidate: Candidate): Promise<Candidate["availability"]>
 }
 export type ContinuousRepository = RoomRepository<ContinuousRoom>
 export type ContinuousStored = StoredRoom<ContinuousRoom>

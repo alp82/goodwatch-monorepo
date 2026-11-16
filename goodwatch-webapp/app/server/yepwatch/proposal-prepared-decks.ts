@@ -1,5 +1,5 @@
-import { feedbackDigest } from './proposal-feedback.ts'
-import { deckBuildDiagnostics } from './proposal-outcome.ts'
+import { feedbackDigest } from "./proposal-feedback.ts"
+import { deckBuildDiagnostics } from "./proposal-outcome.ts"
 import { createHash } from "node:crypto"
 import { activeRoom } from "./proposal-context.ts"
 import type { ProposalCatalog, ProposalRoom } from "./proposal-types.ts"
@@ -20,8 +20,49 @@ interface Entry {
 // What a participant or the room carries that a catalog page never reads: commands, sessions, sockets, answers and
 // names change these all the time during setup. Only public idea author names affect card reasons.
 // The roster and context versions count changes, not what changed: who is in the room and its screens are inputs below.
-const ROOM_NOISE = ["revision", "tickets", "stream", "agreement", "interpretationCount", "history", "memberIntents", "expiresAt", "inviteHash", "hostId", "proposal", "proposalVersion", "decision", "intent", "rosterVersion", "contextVersion", "startedAt", "firstMatchAt", "outcomeEmittedAt", "dealtKeys", "outcome", "rankerVersion", "tasteSources"] as const
-const PARTICIPANT_NOISE = ["nickname", "sessions", "receipts", "nextSequence", "epoch", "ready", "tokenHash", "admissionHash", "joinedAt", "archivedAt", "leftLabel", "pick", "agreementRevision", "approvedProposalVersion", "lastVotedId", "memberGrant"] as const
+const ROOM_NOISE = [
+	"revision",
+	"tickets",
+	"stream",
+	"agreement",
+	"interpretationCount",
+	"history",
+	"memberIntents",
+	"expiresAt",
+	"inviteHash",
+	"hostId",
+	"proposal",
+	"proposalVersion",
+	"decision",
+	"intent",
+	"rosterVersion",
+	"contextVersion",
+	"startedAt",
+	"firstMatchAt",
+	"outcomeEmittedAt",
+	"dealtKeys",
+	"outcome",
+	"rankerVersion",
+	"tasteSources",
+] as const
+const PARTICIPANT_NOISE = [
+	"nickname",
+	"sessions",
+	"receipts",
+	"nextSequence",
+	"epoch",
+	"ready",
+	"tokenHash",
+	"admissionHash",
+	"joinedAt",
+	"archivedAt",
+	"leftLabel",
+	"pick",
+	"agreementRevision",
+	"approvedProposalVersion",
+	"lastVotedId",
+	"memberGrant",
+] as const
 
 /**
  * The deck inputs of a room: everything of its active part a catalog page can read (constraints, the room's country
@@ -54,11 +95,15 @@ export function deckBase(room: ProposalRoom): string {
  * titles (`seenKeys`, which only a new page changes), and it was built for at least as many cards as the room has (a
  * vote only ever retires cards), so it is never longer than a page built now would be.
  */
-export function refillInputs(room: ProposalRoom, personalRevision = ''): string {
+export function refillInputs(room: ProposalRoom, personalRevision = ""): string {
 	const shape = structuredClone(room)
 	shape.candidates = []
 	for (const p of shape.participants) p.votes = {}
-	return createHash("sha256").update(digest(shape, false)).update(personalRevision).update(JSON.stringify(feedbackDigest(room))).digest("base64url")
+	return createHash("sha256")
+		.update(digest(shape, false))
+		.update(personalRevision)
+		.update(JSON.stringify(feedbackDigest(room)))
+		.digest("base64url")
 }
 
 function digest(room: ProposalRoom, membersAsGuests: boolean): string {
@@ -69,11 +114,18 @@ function digest(room: ProposalRoom, membersAsGuests: boolean): string {
 	const present = room.participants.filter((p) => p.leftAt == null)
 	// Aggregate people/services affect reasons. Identity is needed only for a member or a device profile.
 	shape.peopleCount = present.length
-	shape.personalServices = present.map(p => [...(p.serviceIds ?? [])].sort((a,b) => a-b)).sort((a,b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))
-	shape.ideaNames = (room.ideas ?? []).filter(i => i.on).map(i => present.find(p => p.id === i.authorId)?.nickname ?? "Someone")
-  // Even the seen-read fallback must retain profile taste: a stale taste deck cannot be repaired by seen filtering.
-  if (present.some(p => p.profileId)) shape.profileInputs = present.filter(p => p.profileId)
-    .map(p => [p.profileId, p.tasteRevision ?? 0]).sort((a, b) => String(a[0]).localeCompare(String(b[0])))
+	shape.personalServices = present
+		.map((p) => [...(p.serviceIds ?? [])].sort((a, b) => a - b))
+		.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))
+	shape.ideaNames = (room.ideas ?? [])
+		.filter((i) => i.on)
+		.map((i) => present.find((p) => p.id === i.authorId)?.nickname ?? "Someone")
+	// Even the seen-read fallback must retain profile taste: a stale taste deck cannot be repaired by seen filtering.
+	if (present.some((p) => p.profileId))
+		shape.profileInputs = present
+			.filter((p) => p.profileId)
+			.map((p) => [p.profileId, p.tasteRevision ?? 0])
+			.sort((a, b) => String(a[0]).localeCompare(String(b[0])))
 	shape.guestScreens = [...new Set(present.filter(guest).map((p) => String(p.screenId)))].sort()
 	shape.participants = present
 		.filter((p) => !guest(p))
@@ -94,8 +146,12 @@ const isGuest = (p: ProposalRoom["participants"][number]) =>
 const stable = (value: unknown): string =>
 	JSON.stringify(value, (_k, v) =>
 		v && typeof v === "object" && !Array.isArray(v)
-			? Object.fromEntries(Object.keys(v).sort().map((k) => [k, v[k]]))
-			: v
+			? Object.fromEntries(
+					Object.keys(v)
+						.sort()
+						.map((k) => [k, v[k]]),
+				)
+			: v,
 	)
 
 export interface PreparedDecksOptions {
@@ -144,7 +200,7 @@ export class PreparedDecks {
 	constructor(
 		catalog: ProposalCatalog,
 		read: (roomId: string) => Promise<ProposalRoom | null>,
-		options: PreparedDecksOptions = {}
+		options: PreparedDecksOptions = {},
 	) {
 		this.catalog = catalog
 		this.read = read
@@ -176,10 +232,12 @@ export class PreparedDecks {
 	 */
 	async page(room: ProposalRoom, options: { seenReadFresh?: boolean } = {}): Promise<Page> {
 		// Saved progress moves on without changing the room (an episode watched elsewhere): never remembered or reused.
-		if (activeRoom(room).constraints.kinds.includes("show_continue")) return measuredPage(this.catalog, room, "inline")
+		if (activeRoom(room).constraints.kinds.includes("show_continue"))
+			return measuredPage(this.catalog, room, "inline")
 		const inputs = this.inputs(room)
 		const entry = this.entries.get(room.id)
-		const current = entry && entry.inputs === inputs && this.now() - entry.builtAt < this.maxAgeMs ? entry : null
+		const current =
+			entry && entry.inputs === inputs && this.now() - entry.builtAt < this.maxAgeMs ? entry : null
 		const settled = this.settled.get(room.id)
 		// A finished deck for the same base wins over awaiting a replacement build, even one already running for
 		// exactly these inputs (the member's link scheduled it before Start came in).
@@ -187,7 +245,7 @@ export class PreparedDecks {
 			options.seenReadFresh &&
 			settled &&
 			settled !== current &&
-			settled.base === deckBase(room) + (this.catalog.inputRevision?.(room) ?? '') &&
+			settled.base === deckBase(room) + (this.catalog.inputRevision?.(room) ?? "") &&
 			this.now() - settled.builtAt < this.maxAgeMs
 		)
 			return structuredClone(await settled.page)
@@ -203,11 +261,14 @@ export class PreparedDecks {
 	/** Whether a prepared deck (built or building) matches the room as it is now. For tests and logs. */
 	prepared(room: ProposalRoom) {
 		const entry = this.entries.get(room.id)
-		return !!entry && entry.inputs === this.inputs(room) && this.now() - entry.builtAt < this.maxAgeMs
+		return (
+			!!entry && entry.inputs === this.inputs(room) && this.now() - entry.builtAt < this.maxAgeMs
+		)
 	}
 	/** Resolves once no deck is waiting or building. For tests. */
 	async idle(): Promise<void> {
-		while (this.timers.size || this.queue.length || this.running) await new Promise((resolve) => setTimeout(resolve, 5))
+		while (this.timers.size || this.queue.length || this.running)
+			await new Promise((resolve) => setTimeout(resolve, 5))
 	}
 	forget(roomId: string) {
 		this.entries.delete(roomId)
@@ -215,34 +276,42 @@ export class PreparedDecks {
 		clearTimeout(this.timers.get(roomId))
 		this.timers.delete(roomId)
 	}
-	private inputs(room: ProposalRoom) { return deckInputs(room) + (this.catalog.inputRevision?.(room) ?? '') }
+	private inputs(room: ProposalRoom) {
+		return deckInputs(room) + (this.catalog.inputRevision?.(room) ?? "")
+	}
 	private build(room: ProposalRoom, inputs: string, kind: "inline" | "prepare"): Promise<Page> {
 		const page = measuredPage(this.catalog, room, kind)
-		const entry: Entry = { inputs, base: deckBase(room) + (this.catalog.inputRevision?.(room) ?? ''), page, builtAt: this.now() }
+		const entry: Entry = {
+			inputs,
+			base: deckBase(room) + (this.catalog.inputRevision?.(room) ?? ""),
+			page,
+			builtAt: this.now(),
+		}
 		this.entries.delete(room.id)
 		this.entries.set(room.id, entry)
 		while (this.entries.size > this.maxRooms) this.entries.delete(this.entries.keys().next().value!)
 		page.then(
 			(result) => {
-        // A first profile read can populate its cache during this build. Remember the revision actually ranked.
-        if (result.inputRevision !== undefined) {
-          entry.inputs = deckInputs(room) + result.inputRevision
-          entry.base = deckBase(room) + result.inputRevision
-        }
+				// A first profile read can populate its cache during this build. Remember the revision actually ranked.
+				if (result.inputRevision !== undefined) {
+					entry.inputs = deckInputs(room) + result.inputRevision
+					entry.base = deckBase(room) + result.inputRevision
+				}
 				// A slower, older build never replaces a newer one that finished first.
 				if ((this.settled.get(room.id)?.builtAt ?? -Infinity) > entry.builtAt) return
 				this.settled.delete(room.id)
 				this.settled.set(room.id, entry)
-				while (this.settled.size > this.maxRooms) this.settled.delete(this.settled.keys().next().value!)
+				while (this.settled.size > this.maxRooms)
+					this.settled.delete(this.settled.keys().next().value!)
 			},
 			() => {
 				if (this.entries.get(room.id) === entry) this.entries.delete(room.id)
-			}
+			},
 		)
 		return page
 	}
 	private pump() {
-		for (let i = 0; this.running < this.concurrency && i < this.queue.length; ) {
+		for (let i = 0; this.running < this.concurrency && i < this.queue.length;) {
 			const roomId = this.queue[i]
 			if (this.building.has(roomId)) {
 				i++
@@ -271,17 +340,43 @@ export class PreparedDecks {
 		const inputs = this.inputs(room)
 		const page = await this.build(room, inputs, "prepare").catch(() => null)
 		// Only the room's latest deck: one a newer setup change replaced would only leave rows behind.
-		if (page && this.store && this.entries.get(roomId)?.inputs === deckInputs(room) + (page.inputRevision ?? this.catalog.inputRevision?.(room) ?? '')) await this.store(room, page).catch(() => {})
+		if (
+			page &&
+			this.store &&
+			this.entries.get(roomId)?.inputs ===
+				deckInputs(room) + (page.inputRevision ?? this.catalog.inputRevision?.(room) ?? "")
+		)
+			await this.store(room, page).catch(() => {})
 	}
 }
 
 /** A catalog page for the room under its own marks; every build is logged with where its time went. */
-function measuredPage(catalog: ProposalCatalog, room: ProposalRoom, kind: "inline" | "prepare"): Promise<Page> {
+function measuredPage(
+	catalog: ProposalCatalog,
+	room: ProposalRoom,
+	kind: "inline" | "prepare",
+): Promise<Page> {
 	let diagnostics: Record<string, unknown> = {}
-	return measured(async () => { const page = await catalog.page(structuredClone(activeRoom(room))); diagnostics = deckBuildDiagnostics(page.diagnostics); return page }, (marks, totalMs) => {
-		const event = totalMs >= SLOW_BUILD_MS ? "yepwatch_deck_slow" : "yepwatch_deck_build"
-		console.info(JSON.stringify({ event, kind, totalMs, marks, ...diagnostics, uptimeMs: Math.round(process.uptime() * 1000) }))
-	})
+	return measured(
+		async () => {
+			const page = await catalog.page(structuredClone(activeRoom(room)))
+			diagnostics = deckBuildDiagnostics(page.diagnostics)
+			return page
+		},
+		(marks, totalMs) => {
+			const event = totalMs >= SLOW_BUILD_MS ? "yepwatch_deck_slow" : "yepwatch_deck_build"
+			console.info(
+				JSON.stringify({
+					event,
+					kind,
+					totalMs,
+					marks,
+					...diagnostics,
+					uptimeMs: Math.round(process.uptime() * 1000),
+				}),
+			)
+		},
+	)
 }
 
 /** Whether Start could build a deck now: everyone present is on a confirmed screen with a country and services. */

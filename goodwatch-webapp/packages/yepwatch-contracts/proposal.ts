@@ -31,8 +31,17 @@ export const REVISION_CHANNEL = "yepwatch:v3:revision" as const
 export const ACTIVITY_CHANNEL = "yepwatch:v3:activity" as const
 export type RoomPhase = "setup" | "choosing" | "decided" | "expired"
 export type VoteValue = "watch" | "pass"
-export const REASON_CODES = ['fits_everyone', 'close_to_your_taste', 'fits_idea', 'want_to_see', 'on_service_for_everyone', 'short_episodes', 'well_liked', 'popular_now'] as const
-export type ReasonCode = typeof REASON_CODES[number]
+export const REASON_CODES = [
+	"fits_everyone",
+	"close_to_your_taste",
+	"fits_idea",
+	"want_to_see",
+	"on_service_for_everyone",
+	"short_episodes",
+	"well_liked",
+	"popular_now",
+] as const
+export type ReasonCode = (typeof REASON_CODES)[number]
 export interface Candidate extends BaseCandidate {
 	reason?: { code: ReasonCode; text: string } | null
 	/** Actual movie or canonical episode runtime only; show-average runtime is insufficient. */
@@ -43,14 +52,15 @@ export interface Candidate extends BaseCandidate {
 	goodwatchScore?: number | null
 	genres?: string[]
 	tagline?: string | null
-	certification?: string | null            // age rating in the room's country, e.g. "FSK 16", "PG-13"
-	scores?: {                                // all 0-100 integers, like the GoodWatch MCP/website normalize them
-		imdb?: number | null                    // 78 means IMDb 7.8
-		rtCritics?: number | null               // Rotten Tomatoes critics %
-		rtAudience?: number | null              // Rotten Tomatoes audience %
-		metacritic?: number | null              // Metascore
+	certification?: string | null // age rating in the room's country, e.g. "FSK 16", "PG-13"
+	scores?: {
+		// all 0-100 integers, like the GoodWatch MCP/website normalize them
+		imdb?: number | null // 78 means IMDb 7.8
+		rtCritics?: number | null // Rotten Tomatoes critics %
+		rtAudience?: number | null // Rotten Tomatoes audience %
+		metacritic?: number | null // Metascore
 	} | null
-	highlights?: { key: string; label: string }[] | null   // up to 3 fingerprint highlights, `key` usable with getFingerprintMeta from @goodwatch/yepwatch-contracts/fingerprint for the website colors
+	highlights?: { key: string; label: string }[] | null // up to 3 fingerprint highlights, `key` usable with getFingerprintMeta from @goodwatch/yepwatch-contracts/fingerprint for the website colors
 	people?: { directors: string[]; cast: string[] } | null // directors or show creators (max 2), top-billed cast (max 3)
 	/** GoodWatch title analysis essence tags, as on the title page Summary (max 6). */
 	essence?: string[] | null
@@ -74,25 +84,34 @@ export interface StreamState {
 	version: number
 	state: "ready" | "exhausted" | "unavailable" | "capacity"
 	/** No per-person cursor/completed/answer counts. Bounds are not a full-catalog guarantee. */
-	reason:
-		| "catalog_end"
-		| "catalog_incomplete"
-		| "room_capacity"
-		| "awaiting_answers"
-		| null
+	reason: "catalog_end" | "catalog_incomplete" | "room_capacity" | "awaiting_answers" | null
 }
 export interface RoomDescription {
-  prompt: string
-  attributes: { text: string; kind: "attribute" | "excluded" | "want" | "avoid" | "phrase"; key?: string }[]
+	prompt: string
+	attributes: {
+		text: string
+		kind: "attribute" | "excluded" | "want" | "avoid" | "phrase"
+		key?: string
+	}[]
 }
-export interface RoomIdea { id: string; text: string; authorId: string; on: boolean; attributes: RoomDescription["attributes"] }
+export interface RoomIdea {
+	id: string
+	text: string
+	authorId: string
+	on: boolean
+	attributes: RoomDescription["attributes"]
+}
 /**
  * The one attribute of an idea whose search is still running: create, add_idea and edit_idea answer before
  * GoodWatch has interpreted the idea. Installed apps read an idea without attributes as "mood matching is
  * unavailable", so a pending idea never looks empty; the attributes arrive (or the list empties if search
  * failed) with a later revision. It fits every strict idea schema already shipped.
  */
-export const PENDING_IDEA_ATTRIBUTE = { text: "Matching the mood", kind: "phrase", key: "yepwatch:pending" } as const
+export const PENDING_IDEA_ATTRIBUTE = {
+	text: "Matching the mood",
+	kind: "phrase",
+	key: "yepwatch:pending",
+} as const
 export const ideaPending = (idea: Pick<RoomIdea, "attributes">) =>
 	idea.attributes.length === 1 && idea.attributes[0].key === PENDING_IDEA_ATTRIBUTE.key
 export interface MatchesTiebreak {
@@ -108,8 +127,8 @@ export interface SharedRoomSnapshot {
 	ins?: { candidateId: string; count: number }[]
 	inVersion?: number
 	tiebreak?: MatchesTiebreak | null
-  ideas: RoomIdea[]
-  disabledServiceIds: number[]
+	ideas: RoomIdea[]
+	disabledServiceIds: number[]
 	contractVersion: 3
 	roomId: string
 	revision: number
@@ -153,8 +172,8 @@ export interface SharedRoomSnapshot {
 export interface OwnPrivateSnapshot {
 	ins?: { candidateIds: string[]; revision: number }
 	favorite?: { tiebreakVersion: number; candidateId: string | null } | null
-  showSeen: boolean
-  left?: boolean
+	showSeen: boolean
+	left?: boolean
 	participantId: string
 	nextSequence: number
 	canHost: boolean
@@ -235,21 +254,37 @@ export interface CommandEnvelope<T extends RoomCommand = RoomCommand> {
 	command: T
 }
 export type RoomCommand =
-	| { type: "set_in"; generation: number; candidateId: string; in: boolean; expectedOwnInRevision: number }
+	| {
+			type: "set_in"
+			generation: number
+			candidateId: string
+			in: boolean
+			expectedOwnInRevision: number
+	  }
 	| { type: "confirm_in"; generation: number; inVersion: number }
-	| { type: "pick_favorite"; generation: number; tiebreakVersion: number; candidateId: string | null }
-  | { type: "leave" }
-  | { type: "configure"; expectedContextVersion: number; country?: string; constraints?: RoomConstraints }
-  /** One idea per author; a second one is refused with limit_reached ("One idea each. Edit yours to change it."). */
-  | { type: "add_idea"; text: string }
-  /** Replaces your idea in place and switches it on; consumes one of the room's 24 interpretations. */
-  | { type: "edit_idea"; ideaId: string; text: string }
-  | { type: "remove_idea"; ideaId: string }
-  | { type: "set_idea"; ideaId: string; on: boolean }
-  | { type: "set_services"; serviceIds: number[] }
-  | { type: "set_service_enabled"; serviceIds: number[]; enabled: boolean }
-  | { type: "rename"; nickname: string }
-  | { type: "set_show_seen"; show: boolean }
+	| {
+			type: "pick_favorite"
+			generation: number
+			tiebreakVersion: number
+			candidateId: string | null
+	  }
+	| { type: "leave" }
+	| {
+			type: "configure"
+			expectedContextVersion: number
+			country?: string
+			constraints?: RoomConstraints
+	  }
+	/** One idea per author; a second one is refused with limit_reached ("One idea each. Edit yours to change it."). */
+	| { type: "add_idea"; text: string }
+	/** Replaces your idea in place and switches it on; consumes one of the room's 24 interpretations. */
+	| { type: "edit_idea"; ideaId: string; text: string }
+	| { type: "remove_idea"; ideaId: string }
+	| { type: "set_idea"; ideaId: string; on: boolean }
+	| { type: "set_services"; serviceIds: number[] }
+	| { type: "set_service_enabled"; serviceIds: number[]; enabled: boolean }
+	| { type: "rename"; nickname: string }
+	| { type: "set_show_seen"; show: boolean }
 	| {
 			type: "setup"
 			expectedContextVersion: number
@@ -410,7 +445,7 @@ export type ClientRealtimeFrame =
 			lastRevision: number | null
 			pointers?: true
 			roomDetails?: true
-      candidateReasons?: true
+			candidateReasons?: true
 			matchesIn?: true
 			cheers?: true
 	  }
@@ -504,7 +539,12 @@ export interface AccountDecision {
 	people: string[]
 }
 export interface AccountHome {
-	rooms: { snapshot: RoomSnapshot; joinedAt: number; archivedAt: number | null; leftLabel: string | null }[]
+	rooms: {
+		snapshot: RoomSnapshot
+		joinedAt: number
+		archivedAt: number | null
+		leftLabel: string | null
+	}[]
 	decisions: AccountDecision[]
 }
 /** Native apps send their sealed device session in this header; browsers use an HttpOnly cookie. */
@@ -519,11 +559,14 @@ export interface InvitePreview {
 	phase: "setup" | "choosing" | "decided"
 	people: number
 }
-export interface RoomPromptPreview { prompt: string; attributes: RoomDescription["attributes"] }
+export interface RoomPromptPreview {
+	prompt: string
+	attributes: RoomDescription["attributes"]
+}
 export const paths = {
-  profile: `${API_PREFIX}/profile`,
-  profileAnswers: `${API_PREFIX}/profile/answers`,
-  profileTasteDeck: `${API_PREFIX}/profile/taste-deck`,
+	profile: `${API_PREFIX}/profile`,
+	profileAnswers: `${API_PREFIX}/profile/answers`,
+	profileTasteDeck: `${API_PREFIX}/profile/taste-deck`,
 	rooms: `${API_PREFIX}/rooms`,
 	metadata: `${API_PREFIX}/catalog/metadata`,
 	resolveInvite: `${API_PREFIX}/guest/resolve-invite`,
@@ -559,22 +602,39 @@ export const EXPOSURE_LIMITS = { maxActiveMs: 1200000 } as const
 export const PROFILE_HEADER = "x-yepwatch-profile"
 export type TasteAnswer = "loved" | "not_for_me" | "unseen"
 export interface ProfileAnswerItem {
-  key: number
-  answer: TasteAnswer | "did_not_watch" | null
-  /** Client event time in milliseconds. Preserve it on retries. */
-  at: number
-  source?: "taste" | "followup"
-  /** Required for followup, identifies the specific decision (also on undo). */
-  decidedAt?: number
+	key: number
+	answer: TasteAnswer | "did_not_watch" | null
+	/** Client event time in milliseconds. Preserve it on retries. */
+	at: number
+	source?: "taste" | "followup"
+	/** Required for followup, identifies the specific decision (also on undo). */
+	decidedAt?: number
 }
-export interface ProfileAnswersRequest { revision: number; items: ProfileAnswerItem[] }
+export interface ProfileAnswersRequest {
+	revision: number
+	items: ProfileAnswerItem[]
+}
 export interface TasteCard {
-  key: number; title: string; year: number | null; posterUrl: string | null
-  mediaType: "movie" | "tv"; overview: string | null; runtimeMinutes: number | null
+	key: number
+	title: string
+	year: number | null
+	posterUrl: string | null
+	mediaType: "movie" | "tv"
+	overview: string | null
+	runtimeMinutes: number | null
 }
 export interface ProfileSummary {
-  answered: number; loved: number; notForMe: number; unseen: number; revision: number
-  followups: (TasteCard & { decidedAt: number })[]
+	answered: number
+	loved: number
+	notForMe: number
+	unseen: number
+	revision: number
+	followups: (TasteCard & { decidedAt: number })[]
 }
-export interface ProfileAnswersResponse { revision: number; answered: number }
-export interface TasteDeckResponse { cards: TasteCard[] }
+export interface ProfileAnswersResponse {
+	revision: number
+	answered: number
+}
+export interface TasteDeckResponse {
+	cards: TasteCard[]
+}

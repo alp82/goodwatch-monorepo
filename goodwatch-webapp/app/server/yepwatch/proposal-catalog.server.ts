@@ -4,7 +4,7 @@ import type { ProposalCatalog } from "./proposal-types.ts"
 /** Transport adaptation of established catalog/watchability methods; no episode entitlement inference. */
 export function proposalCatalog(base: ContinuousCatalog): ProposalCatalog {
 	const enrich = (
-		c: import("../../../packages/yepwatch-contracts/continuous.ts").Candidate
+		c: import("../../../packages/yepwatch-contracts/continuous.ts").Candidate,
 	): Candidate => ({
 		...c,
 		viewingDuration:
@@ -25,7 +25,7 @@ export function proposalCatalog(base: ContinuousCatalog): ProposalCatalog {
 			? {
 					refresh: async (room: Parameters<ProposalCatalog["page"]>[0]) =>
 						(await base.refresh!(room)).map(enrich),
-			  }
+				}
 			: {}),
 		recheck: (room, c) => base.recheck(room, c),
 	}

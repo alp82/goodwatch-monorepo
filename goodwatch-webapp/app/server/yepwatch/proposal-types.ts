@@ -1,11 +1,5 @@
-import type {
-	ContinuousRoom,
-	ContinuousParticipant
-} from "./continuous-types.ts"
-import type {
-	Candidate,
-	RoomDescription
-} from "../../../packages/yepwatch-contracts/proposal.ts"
+import type { ContinuousRoom, ContinuousParticipant } from "./continuous-types.ts"
+import type { Candidate, RoomDescription } from "../../../packages/yepwatch-contracts/proposal.ts"
 import type { RoomRepository, StoredRoom } from "./types.ts"
 import type { AccountDecision } from "../../../packages/yepwatch-contracts/proposal.ts"
 export interface ParticipantSession {
@@ -47,9 +41,9 @@ export interface ProposalParticipant extends ContinuousParticipant {
 	insAgreementRevision?: number
 	inOrder?: Record<string, number>
 	favorite?: { tiebreakVersion: number; candidateId: string | null } | null
-  /** Server-only device profile identity; never part of a room projection. */
-  profileId?: string | null
-  tasteRevision?: number
+	/** Server-only device profile identity; never part of a room projection. */
+	profileId?: string | null
+	tasteRevision?: number
 
 	sessions?: ParticipantSession[]
 	joinedAt?: number
@@ -73,19 +67,22 @@ export interface ProposalParticipant extends ContinuousParticipant {
 export interface ProposalRoom extends ContinuousRoom {
 	confirmedIns?: string[] | null
 	inVersion?: number
-	tiebreak?: Omit<import("../../../packages/yepwatch-contracts/proposal.ts").MatchesTiebreak, "favorites" | "seed"> & { seed: string } | null
+	tiebreak?:
+		| (Omit<
+				import("../../../packages/yepwatch-contracts/proposal.ts").MatchesTiebreak,
+				"favorites" | "seed"
+		  > & { seed: string })
+		| null
 	startedAt?: number | null
 	firstMatchAt?: number | null
 	outcomeEmittedAt?: number | null
 	/** Stable dealt positions even when setup changes retire untouched cards and release seenKeys. Private. */
 	dealtKeys?: string[]
-	outcome?: import('./proposal-outcome.ts').CardOutcome[]
+	outcome?: import("./proposal-outcome.ts").CardOutcome[]
 	rankerVersion?: string | null
 	tasteSources?: { member: number; profile: number; none: number } | null
 	history?: HistoricalDecision[]
-	intent?:
-		| (RoomDescription & { rankedKeys: number[]; interpretedAt: number })
-		| null
+	intent?: (RoomDescription & { rankedKeys: number[]; interpretedAt: number }) | null
 	ideas?: (import("../../../packages/yepwatch-contracts/proposal.ts").RoomIdea & {
 		rankedKeys: number[]
 		interpretedAt: number
@@ -105,14 +102,10 @@ export interface ProposalRoom extends ContinuousRoom {
 	} | null
 }
 export type ProposalRepository = RoomRepository<ProposalRoom> & {
-	deletionStore?: import('./proposal-deletion.ts').DeletionStore
+	deletionStore?: import("./proposal-deletion.ts").DeletionStore
 	accountStore?: AccountRoomsStore
 	/** Optional for historical encrypted demo repositories; production uses typed PK lookup. */
-	rememberInvite?(
-		hash: string,
-		roomId: string,
-		expiresAt: number
-	): Promise<number | null>
+	rememberInvite?(hash: string, roomId: string, expiresAt: number): Promise<number | null>
 	findInvite?(hash: string): Promise<string | null>
 	/**
 	 * Stores a prepared deck's cards ahead of Start (as records no head names yet), so Start's write is small. Best
@@ -130,7 +123,12 @@ export type ProposalRepository = RoomRepository<ProposalRoom> & {
 	 * before `leaseBefore`, at most `limit`, ordered by room id and after `after` (a keyset cursor; "" from the
 	 * start). A search, not a typed read: callers read each room.
 	 */
-	stalePendingIdeas?(leaseBefore: number, now: number, limit: number, after?: string): Promise<string[]>
+	stalePendingIdeas?(
+		leaseBefore: number,
+		now: number,
+		limit: number,
+		after?: string,
+	): Promise<string[]>
 }
 export type ProposalStored = StoredRoom<ProposalRoom>
 export interface ExcludedKeysOptions {
@@ -153,18 +151,26 @@ export interface ProposalCatalog {
 	ideaReadingSize?(room: ProposalRoom, keys: readonly number[]): number
 	reorderTail?(room: ProposalRoom): void
 	roundEnded?(room: ProposalRoom): Promise<void>
-	voteCommitted?(room: ProposalRoom, participantId: string, candidateId: string, value: 'watch' | 'pass' | null, at: number): Promise<void>
+	voteCommitted?(
+		room: ProposalRoom,
+		participantId: string,
+		candidateId: string,
+		value: "watch" | "pass" | null,
+		at: number,
+	): Promise<void>
 	metadata: import("./continuous-types.ts").ContinuousCatalog["metadata"]
-	page(
-		room: ProposalRoom
-	): Promise<{ candidates: Candidate[]; exhausted: boolean; inputRevision?: string; ranking?: Record<string, import('./proposal-ranker.ts').Ranked>; tasteSources?: { member: number; profile: number; none: number }; diagnostics?: import('./proposal-outcome.ts').DeckDiagnostics }>
+	page(room: ProposalRoom): Promise<{
+		candidates: Candidate[]
+		exhausted: boolean
+		inputRevision?: string
+		ranking?: Record<string, import("./proposal-ranker.ts").Ranked>
+		tasteSources?: { member: number; profile: number; none: number }
+		diagnostics?: import("./proposal-outcome.ts").DeckDiagnostics
+	}>
 	/** Title keys the room's linked members have seen (and don't want shown). */
 	excludedKeys?(room: ProposalRoom, options?: ExcludedKeysOptions): Promise<string[]>
 	/** A room in setup changed: read members' seen lists again in the background, so Start finds recent copies. */
 	refreshExcludedKeys?(room: ProposalRoom): void
 	refresh?(room: ProposalRoom): Promise<Candidate[]>
-	recheck(
-		room: ProposalRoom,
-		candidate: Candidate
-	): Promise<Candidate["availability"]>
+	recheck(room: ProposalRoom, candidate: Candidate): Promise<Candidate["availability"]>
 }

@@ -1,26 +1,34 @@
-import { initializeIns, setIn } from './proposal-matches-in.ts'
-import { ideasForServiceReread } from './proposal-redesign.ts'
-import { emitRoundOutcome, recordOutcome } from './proposal-outcome.ts'
+import { initializeIns, setIn } from "./proposal-matches-in.ts"
+import { ideasForServiceReread } from "./proposal-redesign.ts"
+import { emitRoundOutcome, recordOutcome } from "./proposal-outcome.ts"
 import type { TasteProfiles } from "./proposal-taste-profile.ts"
 import { mark, timed, timedSync } from "./server-timing.ts"
 import { MemoryTicketStore, type TicketStore } from "./proposal-tickets.ts"
 import { ExclusionKeepAlive } from "./proposal-member-exclusions.ts"
 import { MemoryAccountRooms } from "./proposal-account-store.ts"
-import { MemoryDeletionStore, requireNotDeleting, type DeletionStore } from './proposal-deletion.ts'
+import { MemoryDeletionStore, requireNotDeleting, type DeletionStore } from "./proposal-deletion.ts"
 import type { AccountRoomsStore, RoomAccount } from "./proposal-types.ts"
 import type { AccountHome } from "../../../packages/yepwatch-contracts/proposal.ts"
 import type { RoomCommand } from "../../../packages/yepwatch-contracts/proposal.ts"
-import { PENDING_IDEA_ATTRIBUTE, REVISION_MESSAGE_MAX, ideaPending } from "../../../packages/yepwatch-contracts/proposal.ts"
+import {
+	PENDING_IDEA_ATTRIBUTE,
+	REVISION_MESSAGE_MAX,
+	ideaPending,
+} from "../../../packages/yepwatch-contracts/proposal.ts"
 import {
 	redesignCommands,
 	retireIneligible,
 	refreshServices,
 	attributeCandidates,
-	titleKey
+	titleKey,
 } from "./proposal-redesign.ts"
 import { SearchBusy, type InterpretRoom } from "./proposal-intent.ts"
 import { activeRoom, normalizeRoomContext } from "./proposal-context.ts"
-import { PreparedDecks, refillInputs, type PreparedDecksOptions } from "./proposal-prepared-decks.ts"
+import {
+	PreparedDecks,
+	refillInputs,
+	type PreparedDecksOptions,
+} from "./proposal-prepared-decks.ts"
 import { CONTINUOUS_LIMITS as L } from "./continuous-types.ts"
 import type {
 	CommandEnvelope,
@@ -36,13 +44,13 @@ import type {
 	RealtimeViewsResponse,
 	RoomCommitted,
 	RoomInvalidation,
-	InvitePreview
+	InvitePreview,
 } from "../../../packages/yepwatch-contracts/proposal.ts"
 import {
 	shortInvite,
 	previousInvite,
 	INVITE_ATTEMPTS,
-	normalizeShortInvite
+	normalizeShortInvite,
 } from "./proposal-invites.ts"
 import { hash, equal, keyed, random, sign, verify } from "./crypto.server.ts"
 import { IndeterminateWrite, RoomError, requireRoom } from "./errors.ts"
@@ -55,14 +63,14 @@ import {
 	preflight,
 	reconcile,
 	retire,
-	staleRefill
+	staleRefill,
 } from "./proposal-machine.ts"
 import type {
 	ProposalCatalog,
 	ProposalParticipant,
 	ProposalRepository,
 	ProposalRoom,
-	ProposalStored
+	ProposalStored,
 } from "./proposal-types.ts"
 import type { ActorCredential } from "./service.server.ts"
 interface Lease {
@@ -89,7 +97,7 @@ export interface ProposalOperationGuard {
 		creatorDigest: string,
 		proceed?: Promise<boolean>,
 		/** Receives a last capacity write the guard didn't wait for; the room is stored only once it settled. */
-		deferProof?: (proof: Promise<void>) => void
+		deferProof?: (proof: Promise<void>) => void,
 	): Promise<number | null>
 	join(roomId: string, actorId: string, admissionDigest: string): Promise<void>
 	/** `checked`: what `active` just resolved to for this room, so the guard can start from what it read. */
@@ -209,14 +217,20 @@ export class ProposalService {
 		now: () => number = Date.now,
 		guard?: ProposalOperationGuard,
 		interpret?: InterpretRoom,
-		options: { decks?: PreparedDecksOptions; interpretations?: number; tickets?: TicketStore; profiles?: TasteProfiles } = {}
+		options: {
+			decks?: PreparedDecksOptions
+			interpretations?: number
+			tickets?: TicketStore
+			profiles?: TasteProfiles
+		} = {},
 	) {
 		if (secret.length < 32) throw new Error("Room secret too short")
 		this.profiles = options.profiles
-    if (this.profiles) this.profiles.changed = async (profileId) => {
-      for (const id of this.profileRooms.get(profileId) ?? []) this.decks.schedule(id)
-    }
-    this.repository = repository
+		if (this.profiles)
+			this.profiles.changed = async (profileId) => {
+				for (const id of this.profileRooms.get(profileId) ?? []) this.decks.schedule(id)
+			}
+		this.repository = repository
 		this.accounts = repository.accountStore ?? new MemoryAccountRooms()
 		this.deletions = repository.deletionStore ?? new MemoryDeletionStore()
 		this.catalog = catalog
@@ -233,77 +247,99 @@ export class ProposalService {
 			{ now },
 		)
 		catalog.onInputsChanged?.((id) => this.decks.schedule(id))
-		this.decks = new PreparedDecks(catalog, async (id) => {
-			const stored = await repository.read(id)
-			if (!stored || stored.room.format !== 2 || stored.room.flowVersion !== 3) return null
-      await this.prepareProfiles(stored.room)
-      return stored.room
-		}, {
-			now,
-			// Start then finds the prepared deck's cards already stored and writes only what changed.
-			...(repository.prestore ? { store: (room, page) => repository.prestore!(room, page.candidates) } : {}),
-			...options.decks,
+		this.decks = new PreparedDecks(
+			catalog,
+			async (id) => {
+				const stored = await repository.read(id)
+				if (!stored || stored.room.format !== 2 || stored.room.flowVersion !== 3) return null
+				await this.prepareProfiles(stored.room)
+				return stored.room
+			},
+			{
+				now,
+				// Start then finds the prepared deck's cards already stored and writes only what changed.
+				...(repository.prestore
+					? { store: (room, page) => repository.prestore!(room, page.candidates) }
+					: {}),
+				...options.decks,
+			},
+		)
+	}
+	/** Use held revisions immediately. Cold reads warm a later build without delaying rooms or admissions. */
+	async prepareProfiles(room: ProposalRoom) {
+		if (!this.profiles) return
+		const profiles = this.profiles
+		const people = activeRoom(room).participants.filter((p) => p.profileId)
+		this.trackProfiles(room)
+		for (const p of people) p.tasteRevision = profiles.revisionHeld(p.profileId!) ?? p.tasteRevision
+		if (!people.length || this.profileWarmups.has(room.id)) return
+		const revisions = new Map(
+			people.map((p) => [p.profileId!, profiles.revisionHeld(p.profileId!)]),
+		)
+		const warming = profiles
+			.signals([...revisions.keys()])
+			.then(() => {
+				// Never mutate a room after returning it to its caller. A later build picks up the warmed revisions.
+				if ([...revisions].some(([id, revision]) => profiles.revisionHeld(id) !== revision))
+					this.decks.schedule(room.id)
+			})
+			.catch(() => {})
+			.finally(() => {
+				this.profileWarmups.delete(room.id)
+			})
+		this.profileWarmups.set(room.id, warming)
+	}
+	/** Which rooms a profile's answer rebuilds the prepared deck of (bounded, this process only). */
+	private trackProfiles(room: ProposalRoom) {
+		for (const p of activeRoom(room).participants) {
+			if (!p.profileId) continue
+			let rooms = this.profileRooms.get(p.profileId)
+			if (!rooms) this.profileRooms.set(p.profileId, (rooms = new Set()))
+			rooms.add(room.id)
+			if (rooms.size > 100) rooms.delete(rooms.values().next().value!)
+		}
+		while (this.profileRooms.size > 5000)
+			this.profileRooms.delete(this.profileRooms.keys().next().value!)
+	}
+	/** Attaches only after authenticating this device's room credential. The profile secret never enters the room. */
+	async bindProfile(id: string, credential: ActorCredential, profileId: string) {
+		if (!this.profiles) return
+		// Authenticate and check the link before entering the room lane, even with a cold profile cache.
+		// Revision refresh belongs to preparation; a repeated admission never needs a room write.
+		const { room } = await this.get(id)
+		const participant = this.auth(room, credential)
+		if (participant.profileId === profileId) return this.trackProfiles(room)
+		// Store latency must not hold up room commands. HTTP runs this whole best-effort link in the background.
+		let revision: number
+		try {
+			revision = await this.profiles.touch(profileId)
+		} catch {
+			return
+		}
+		await this.write(id, async () => {
+			for (let i = 0; i < 6; i++) {
+				const old = await this.get(id),
+					room = structuredClone(old.room)
+				const p = this.auth(room, credential)
+				if (p.profileId === profileId) return this.trackProfiles(room)
+				p.profileId = profileId
+				p.tasteRevision = revision
+				room.revision++
+				if (!(await this.repository.compareAndSwap(old, room, true))) continue
+				this.trackProfiles(room)
+				this.decks.schedule(id)
+				await this.notify(id)
+				return
+			}
+			throw new RoomError("busy", "Profile link will need another attempt", 503, true)
 		})
 	}
-  /** Use held revisions immediately. Cold reads warm a later build without delaying rooms or admissions. */
-  async prepareProfiles(room: ProposalRoom) {
-    if (!this.profiles) return
-    const profiles = this.profiles
-    const people = activeRoom(room).participants.filter(p => p.profileId)
-    this.trackProfiles(room)
-    for (const p of people) p.tasteRevision = profiles.revisionHeld(p.profileId!) ?? p.tasteRevision
-    if (!people.length || this.profileWarmups.has(room.id)) return
-    const revisions = new Map(people.map(p => [p.profileId!, profiles.revisionHeld(p.profileId!)]))
-    const warming = profiles.signals([...revisions.keys()]).then(() => {
-      // Never mutate a room after returning it to its caller. A later build picks up the warmed revisions.
-      if ([...revisions].some(([id, revision]) => profiles.revisionHeld(id) !== revision)) this.decks.schedule(room.id)
-    }).catch(() => {}).finally(() => { this.profileWarmups.delete(room.id) })
-    this.profileWarmups.set(room.id, warming)
-  }
-  /** Which rooms a profile's answer rebuilds the prepared deck of (bounded, this process only). */
-  private trackProfiles(room: ProposalRoom) {
-    for (const p of activeRoom(room).participants) {
-      if (!p.profileId) continue
-      let rooms = this.profileRooms.get(p.profileId)
-      if (!rooms) this.profileRooms.set(p.profileId, rooms = new Set())
-      rooms.add(room.id)
-      if (rooms.size > 100) rooms.delete(rooms.values().next().value!)
-    }
-    while (this.profileRooms.size > 5000) this.profileRooms.delete(this.profileRooms.keys().next().value!)
-  }
-  /** Attaches only after authenticating this device's room credential. The profile secret never enters the room. */
-  async bindProfile(id: string, credential: ActorCredential, profileId: string) {
-    if (!this.profiles) return
-    // Authenticate and check the link before entering the room lane, even with a cold profile cache.
-    // Revision refresh belongs to preparation; a repeated admission never needs a room write.
-    const { room } = await this.get(id)
-    const participant = this.auth(room, credential)
-    if (participant.profileId === profileId) return this.trackProfiles(room)
-    // Store latency must not hold up room commands. HTTP runs this whole best-effort link in the background.
-    let revision: number
-    try { revision = await this.profiles.touch(profileId) } catch { return }
-    await this.write(id, async () => {
-      for (let i = 0; i < 6; i++) {
-        const old = await this.get(id), room = structuredClone(old.room)
-        const p = this.auth(room, credential)
-        if (p.profileId === profileId) return this.trackProfiles(room)
-        p.profileId = profileId; p.tasteRevision = revision; room.revision++
-        if (!(await this.repository.compareAndSwap(old, room, true))) continue
-        this.trackProfiles(room)
-        this.decks.schedule(id)
-        await this.notify(id)
-        return
-      }
-      throw new RoomError("busy", "Profile link will need another attempt", 503, true)
-    })
-  }
 	/** Avoid retry storms between this process's joins, votes and socket handshakes.
 	 * Database CAS remains the authority across processes and background repair.
 	 */
 	private async write<T>(id: string, work: () => Promise<T>): Promise<T> {
 		const lane = this.writes.get(id) ?? { tail: Promise.resolve(), count: 0 }
-		if (lane.count >= 32)
-			throw new RoomError("busy", "Room busy; retry shortly", 503, true)
+		if (lane.count >= 32) throw new RoomError("busy", "Room busy; retry shortly", 503, true)
 		const queuedAt = Date.now()
 		const waitStarted = performance.now()
 		const previous = lane.tail
@@ -349,7 +385,7 @@ export class ProposalService {
 		if (!this.guard || expiresAt === undefined) return { stored: await this.repository.read(id) }
 		const early = this.guard.active({ id, expiresAt }).then(
 			(check) => ({ check }),
-			(error: unknown) => ({ error })
+			(error: unknown) => ({ error }),
 		)
 		const stored = await this.repository.read(id)
 		return { stored, early: stored?.room.expiresAt === expiresAt ? early : undefined }
@@ -357,13 +393,13 @@ export class ProposalService {
 	/** live(), also returning what the guard's capacity check read. `early`: that check, already started for this room's expiry. */
 	private async checked(
 		stored: ProposalStored | null,
-		early?: Promise<{ check: unknown } | { error: unknown }>
+		early?: Promise<{ check: unknown } | { error: unknown }>,
 	): Promise<{ stored: ProposalStored; check: unknown }> {
 		requireRoom(
 			stored && stored.room.format === 2 && stored.room.flowVersion === 3,
 			"not_found",
 			"Room unavailable",
-			404
+			404,
 		)
 		continuousLive(stored.room, this.now())
 		this.resumeInterpretations(stored.room)
@@ -374,25 +410,25 @@ export class ProposalService {
 		if ("error" in result) throw result.error
 		return { stored, check: result.check }
 	}
-	private auth(
-		room: ProposalRoom,
-		credential: ActorCredential,
-		allowLeft = false
-	) {
+	private auth(room: ProposalRoom, credential: ActorCredential, allowLeft = false) {
 		const p = actor(room, credential.participantId)
+		requireRoom(allowLeft || p.leftAt == null, "forbidden", "You have left this room", 403)
 		requireRoom(
-			allowLeft || p.leftAt == null,
-			"forbidden",
-			"You have left this room",
-			403
-		)
-		requireRoom(
-			!p.revoked && (p.memberUserId
-				? p.memberUserId === credential.accountId && Boolean((p.sessions ?? []).find(s => s.id === credential.sessionId && s.expiresAt > this.now() && equal(s.tokenHash, hash(credential.token))))
-				: equal(p.tokenHash, hash(credential.token))),
+			!p.revoked &&
+				(p.memberUserId
+					? p.memberUserId === credential.accountId &&
+						Boolean(
+							(p.sessions ?? []).find(
+								(s) =>
+									s.id === credential.sessionId &&
+									s.expiresAt > this.now() &&
+									equal(s.tokenHash, hash(credential.token)),
+							),
+						)
+					: equal(p.tokenHash, hash(credential.token))),
 			"unauthorized",
 			"Invalid room credential",
-			401
+			401,
 		)
 		return p
 	}
@@ -438,14 +474,16 @@ export class ProposalService {
 		const claimed = await this.claimInterpretation(id, ideaId, known)
 		if (!claimed) return null
 		const { room, pending } = claimed
-		const author = room.participants.find((p) => p.id === room.ideas?.find((i) => i.id === ideaId)?.authorId)
+		const author = room.participants.find(
+			(p) => p.id === room.ideas?.find((i) => i.id === ideaId)?.authorId,
+		)
 		let result: Interpretation | null = null
 		try {
 			result = await this.interpret!(
 				pending.text,
 				room.screens[0]?.country ?? "US",
 				room.screens[0]?.serviceIds ?? [],
-				author?.memberUserId ? "member" : "guest"
+				author?.memberUserId ? "member" : "guest",
 			)
 		} catch (error) {
 			if (error instanceof SearchBusy) throw error
@@ -479,11 +517,15 @@ export class ProposalService {
 				const held = heldBy(idea)
 				if (!held) return null
 				const ours = held === known?.job
-				if (ours && now - known.lease < LEASE_START_GRACE_MS) return { room: old.room, pending: known }
+				if (ours && now - known.lease < LEASE_START_GRACE_MS)
+					return { room: old.room, pending: known }
 				if (!ours && now - idea!.interpretedAt < INTERPRETATION_LEASE_MS) return null
 				const room = structuredClone(old.room)
 				const pending: PendingIdea = { ideaId, text: idea!.text, job: token(), lease: now }
-				markPending(room.ideas!.find((i) => i.id === ideaId)!, pending)
+				markPending(
+					room.ideas!.find((i) => i.id === ideaId)!,
+					pending,
+				)
 				room.revision++
 				// An unknown write may have stored the lease or not: either way another reader takes over later.
 				if (await this.repository.compareAndSwap(old, room, true)) {
@@ -503,7 +545,7 @@ export class ProposalService {
 	private async landInterpretation(
 		id: string,
 		pending: PendingIdea,
-		result: Interpretation | null
+		result: Interpretation | null,
 	): Promise<"committed" | "superseded" | "failed"> {
 		return this.write(id, async () => {
 			let unknown: Pick<StoredIdea, "attributes" | "rankedKeys" | "interpretedAt"> | null = null
@@ -531,7 +573,11 @@ export class ProposalService {
 				} catch (e) {
 					if (!(e instanceof IndeterminateWrite)) throw e
 					// Stored or not: the next read tells (still held by this job means not stored).
-					unknown = { attributes: idea.attributes, rankedKeys: idea.rankedKeys, interpretedAt: idea.interpretedAt }
+					unknown = {
+						attributes: idea.attributes,
+						rankedKeys: idea.rankedKeys,
+						interpretedAt: idea.interpretedAt,
+					}
 				}
 			}
 			return "failed"
@@ -549,7 +595,7 @@ export class ProposalService {
 		this.retries.set(id, {
 			failures,
 			at: this.now() + Math.min(RETRY_MAX_MS, RETRY_BASE_MS * 2 ** (failures - 1)),
-			recorded: ++this.attemptClock
+			recorded: ++this.attemptClock,
 		})
 		if (this.retries.size > 4096) this.retries.delete(this.retries.keys().next().value!)
 	}
@@ -620,7 +666,7 @@ export class ProposalService {
 	async preview(
 		id: string,
 		credential: ActorCredential,
-		input: { prompt: string; country: string; serviceIds: number[] }
+		input: { prompt: string; country: string; serviceIds: number[] },
 	) {
 		const { room } = await this.get(id)
 		const p = this.auth(room, credential)
@@ -628,29 +674,18 @@ export class ProposalService {
 			room.hostId === p.id,
 			"forbidden",
 			"Only the host can edit the room description",
-			403
+			403,
 		)
-		requireRoom(
-			room.phase === "setup",
-			"conflict",
-			"Return to setup to edit the room"
-		)
+		requireRoom(room.phase === "setup", "conflict", "Return to setup to edit the room")
 		const metadata = await this.catalog.metadata(input.country)
 		requireRoom(
 			metadata.countries.some((c) => c.code === input.country) &&
-				input.serviceIds.every((id) =>
-					metadata.services.some((s) => s.id === id)
-				),
+				input.serviceIds.every((id) => metadata.services.some((s) => s.id === id)),
 			"invalid_request",
 			"Choose a valid country and services",
-			400
+			400,
 		)
-		requireRoom(
-			this.interpret,
-			"busy",
-			"Room prompts are temporarily unavailable",
-			503
-		)
+		requireRoom(this.interpret, "busy", "Room prompts are temporarily unavailable", 503)
 		await this.guard?.command(id, p.id, hash(`preview:${random()}`))
 		let reserved = false
 		for (let attempt = 0; attempt < 6; attempt++) {
@@ -659,12 +694,12 @@ export class ProposalService {
 			requireRoom(
 				old.room.hostId === person.id && old.room.phase === "setup",
 				"conflict",
-				"Room setup changed"
+				"Room setup changed",
 			)
 			requireRoom(
 				(old.room.interpretationCount ?? 0) < 24,
 				"limit_reached",
-				"Room interpretation budget reached"
+				"Room interpretation budget reached",
 			)
 			const next = structuredClone(old.room)
 			next.interpretationCount = (next.interpretationCount ?? 0) + 1
@@ -679,7 +714,7 @@ export class ProposalService {
 			input.prompt,
 			input.country,
 			input.serviceIds,
-			p.memberUserId ? "member" : "guest"
+			p.memberUserId ? "member" : "guest",
 		)
 		return { prompt: result.prompt, attributes: result.attributes }
 	}
@@ -688,7 +723,7 @@ export class ProposalService {
 		return {
 			id: keyed(this.secret, "proposal-participant", key).slice(0, 32),
 			token: keyed(this.secret, "proposal-token", key),
-			digest: hash(JSON.stringify(request))
+			digest: hash(JSON.stringify(request)),
 		}
 	}
 	private legacyInvite(id: string) {
@@ -704,36 +739,22 @@ export class ProposalService {
 			return { code: this.legacyInvite(id), expiresAt }
 		for (let attempt = 0; attempt < INVITE_ATTEMPTS; attempt++) {
 			const code = shortInvite(this.secret, id, attempt)
-			const reserved = await this.repository.rememberInvite(
-				hash(code),
-				id,
-				expiresAt
-			)
-			if (reserved !== null && (!exact || reserved === expiresAt)) return { code, expiresAt: reserved }
+			const reserved = await this.repository.rememberInvite(hash(code), id, expiresAt)
+			if (reserved !== null && (!exact || reserved === expiresAt))
+				return { code, expiresAt: reserved }
 		}
-		throw new RoomError(
-			"busy",
-			"Room codes are busy. Retry the same request.",
-			503,
-			true
-		)
+		throw new RoomError("busy", "Room codes are busy. Retry the same request.", 503, true)
 	}
 	private async roomInvite(room: ProposalRoom) {
 		const codes = [
 			this.legacyInvite(room.id),
 			previousInvite(this.secret, room.id),
-			...Array.from({ length: INVITE_ATTEMPTS }, (_, i) =>
-				shortInvite(this.secret, room.id, i)
-			)
+			...Array.from({ length: INVITE_ATTEMPTS }, (_, i) => shortInvite(this.secret, room.id, i)),
 		]
 		const code = codes.find((code) => equal(hash(code), room.inviteHash))
 		requireRoom(code, "not_found", "Invite unavailable", 404)
 		if (normalizeShortInvite(code)) {
-			const reserved = await this.repository.rememberInvite!(
-				hash(code),
-				room.id,
-				room.expiresAt
-			)
+			const reserved = await this.repository.rememberInvite!(hash(code), room.id, room.expiresAt)
 			if (reserved !== room.expiresAt)
 				throw new RoomError("busy", "Invitation unavailable", 503, true)
 		}
@@ -742,10 +763,10 @@ export class ProposalService {
 	private async admission(
 		room: ProposalRoom,
 		request: GuestAdmissionRequest,
-		account?: RoomAccount
+		account?: RoomAccount,
 	): Promise<GuestAdmission> {
 		if (account) {
-			const p = room.participants.find(p => p.memberUserId === account.userId)
+			const p = room.participants.find((p) => p.memberUserId === account.userId)
 			requireRoom(p, "unauthorized", "Room membership unavailable", 401)
 			return this.recoverAdmission(room.id, this.accountCredential(room.id, p.id, account))
 		}
@@ -754,21 +775,20 @@ export class ProposalService {
 		// The original bootstrap must still derive the active original credential;
 		// revocation/epoch changes may never disclose a fresh private snapshot.
 		const member = this.auth(room, { participantId: p.id, token: p.token })
-		requireRoom(
-			member.epoch === 1,
-			"unauthorized",
-			"Admission capability changed",
-			401
-		)
+		requireRoom(member.epoch === 1, "unauthorized", "Admission capability changed", 401)
 		requireRoom(
 			equal(actor(room, p.id).admissionHash, p.digest),
 			"conflict",
-			"Admission retry changed"
+			"Admission retry changed",
 		)
 		return this.guestAdmitted(room, request, await this.roomInvite(room))
 	}
 	/** A guest's admission to `room` under its invite `code`. */
-	private guestAdmitted(room: ProposalRoom, request: GuestAdmissionRequest, code: string): GuestAdmission {
+	private guestAdmitted(
+		room: ProposalRoom,
+		request: GuestAdmissionRequest,
+		code: string,
+	): GuestAdmission {
 		const p = this.identity(room.id, request)
 		return {
 			credential: {
@@ -776,19 +796,16 @@ export class ProposalService {
 				roomId: room.id,
 				participantId: p.id,
 				token: p.token,
-				expiresAt: room.expiresAt
+				expiresAt: room.expiresAt,
 			},
 			invite: {
 				code,
-				path: `/r/${code}`
+				path: `/r/${code}`,
 			},
-			snapshot: proposalSnapshot(room, p.id)
+			snapshot: proposalSnapshot(room, p.id),
 		}
 	}
-	private member(
-		roomId: string,
-		request: GuestAdmissionRequest
-	): ProposalParticipant {
+	private member(roomId: string, request: GuestAdmissionRequest): ProposalParticipant {
 		const p = this.identity(roomId, request)
 		return {
 			id: p.id,
@@ -807,7 +824,7 @@ export class ProposalService {
 			agreementRevision: 0,
 			member: { state: "guest", prefill: null },
 			memberUserId: null,
-			receipts: []
+			receipts: [],
 		}
 	}
 	/**
@@ -820,12 +837,23 @@ export class ProposalService {
 	private async withSetup(
 		room: ProposalRoom,
 		setup: RoomSetupRequest,
-		interpretation: { pending?: PendingIdea }
+		interpretation: { pending?: PendingIdea },
 	): Promise<ProposalRoom> {
 		const host = actor(room, room.hostId)
 		const step = (from: ProposalRoom, command: RoomCommand, commandId: string, reserved = true) =>
-			proposalTransition(from, host.id, { commandId, sequence: 0, command }, this.now(), undefined, reserved)
-		let next = step(room, { type: "configure", expectedContextVersion: room.contextVersion, country: setup.country }, "setup-country")
+			proposalTransition(
+				from,
+				host.id,
+				{ commandId, sequence: 0, command },
+				this.now(),
+				undefined,
+				reserved,
+			)
+		let next = step(
+			room,
+			{ type: "configure", expectedContextVersion: room.contextVersion, country: setup.country },
+			"setup-country",
+		)
 		// An unknown country is left out, and so is the idea: an unknown country never spends a search.
 		const metadata = await this.catalog.metadata(setup.country).catch(() => null)
 		if (!metadata?.countries.some((c) => c.code === setup.country)) return room
@@ -839,7 +867,10 @@ export class ProposalService {
 				// One job for every attempt of this create request, so a lost insert's retry stores the same one and
 				// recognizes it as its own. A concurrent identical request draws another and never owns this room.
 				interpretation.pending ??= { ideaId, text: setup.idea, job: token(), lease: this.now() }
-				markPending(next.ideas!.find((i) => i.id === ideaId)!, interpretation.pending)
+				markPending(
+					next.ideas!.find((i) => i.id === ideaId)!,
+					interpretation.pending,
+				)
 			}
 		}
 		if (this.catalog.refresh) next.candidates = await this.catalog.refresh(activeRoom(next))
@@ -871,23 +902,40 @@ export class ProposalService {
 		const id = keyed(
 			this.secret,
 			"proposal-room",
-			JSON.stringify([request.commandId, request.admissionSecret])
+			JSON.stringify([request.commandId, request.admissionSecret]),
 		).slice(0, 32)
 		// A caller without any creator identity (HTTP always sends one) gets an allowance of its own, like a
 		// browser without the creator cookie.
-		const creatorDigest = keyed(this.secret, 'room-creator', account
-			? `account:${account.userId}`
-			: guestCreatorId ? `guest:${guestCreatorId}` : `room:${id}`)
+		const creatorDigest = keyed(
+			this.secret,
+			"room-creator",
+			account
+				? `account:${account.userId}`
+				: guestCreatorId
+					? `guest:${guestCreatorId}`
+					: `room:${id}`,
+		)
 		for (let i = 0; i < 4; i++) {
 			const existingRead = timed("read", this.repository.read(id))
-			const absent = existingRead.then((existing) => !existing, () => false)
-			const proceed = accountActive ? Promise.all([absent, accountActive]).then(([go]) => go, () => false) : absent
+			const absent = existingRead.then(
+				(existing) => !existing,
+				() => false,
+			)
+			const proceed = accountActive
+				? Promise.all([absent, accountActive]).then(
+						([go]) => go,
+						() => false,
+					)
+				: absent
 			let proof: Promise<void> | undefined
 			const reserving = this.guard
-				? timed("guard", this.guard.create(id, hash(JSON.stringify(request)), creatorDigest, proceed, (p) => {
-						proof = timed("proof", p)
-						proof.catch(() => {}) // awaited below, before the head
-					}))
+				? timed(
+						"guard",
+						this.guard.create(id, hash(JSON.stringify(request)), creatorDigest, proceed, (p) => {
+							proof = timed("proof", p)
+							proof.catch(() => {}) // awaited below, before the head
+						}),
+					)
 				: undefined
 			reserving?.catch(() => {}) // awaited below, or settles on its own once `proceed` says no
 			const existing = await existingRead
@@ -895,7 +943,9 @@ export class ProposalService {
 			if (existing) {
 				const pending = interpretation.pending
 				if (uncertain && pending) {
-					if (heldBy(existing.room.ideas?.find((idea) => idea.id === pending.ideaId)) === pending.job)
+					if (
+						heldBy(existing.room.ideas?.find((idea) => idea.id === pending.ideaId)) === pending.job
+					)
 						this.interpretInBackground(id, pending.ideaId, pending)
 				}
 				continuousLive(existing.room, this.now())
@@ -906,26 +956,32 @@ export class ProposalService {
 			const expiresAt = reserved ?? this.now() + L.roomMs
 			// The invite, the room (set up, then its records stored) and the account's room list, together.
 			const build = async (expiry: number) => {
-				const room = await timed("setup", this.newRoom(id, request, account, interpretation, expiry))
+				const room = await timed(
+					"setup",
+					this.newRoom(id, request, account, interpretation, expiry),
+				)
 				if (this.repository.storeRecords) await timed("records", this.repository.storeRecords(room))
 				return room
 			}
 			const [invitation, built] = await Promise.all([
 				timed("invite", this.reserveInvite(id, expiresAt, reserved != null)),
 				build(expiresAt),
-				account && timed("account", this.accounts.remember(account.userId, { roomId: id, expiresAt })),
+				account &&
+					timed("account", this.accounts.remember(account.userId, { roomId: id, expiresAt })),
 				proof,
 			])
 			// Without a guard, an invite reserved earlier for this room with another expiry (an uncertain earlier
 			// attempt) fixes the room's expiry; with one, the reservation's expiry always wins (reserveInvite).
 			const room = invitation.expiresAt === expiresAt ? built : await build(invitation.expiresAt)
-			if (account && room.expiresAt !== expiresAt) await this.accounts.remember(account.userId, { roomId: id, expiresAt: room.expiresAt })
+			if (account && room.expiresAt !== expiresAt)
+				await this.accounts.remember(account.userId, { roomId: id, expiresAt: room.expiresAt })
 			room.inviteHash = hash(invitation.code)
 			uncertain = false
 			try {
 				if (await timed("insert", this.repository.insert(room))) {
 					this.decks.schedule(id)
-					if (interpretation.pending) this.interpretInBackground(id, interpretation.pending.ideaId, interpretation.pending)
+					if (interpretation.pending)
+						this.interpretInBackground(id, interpretation.pending.ideaId, interpretation.pending)
 					this.remember(room)
 					const p = actor(room, room.hostId)
 					return account
@@ -937,12 +993,7 @@ export class ProposalService {
 				uncertain = true
 			}
 		}
-		throw new RoomError(
-			"outcome_unknown",
-			"Retain and retry same admission",
-			503,
-			true
-		)
+		throw new RoomError("outcome_unknown", "Retain and retry same admission", 503, true)
 	}
 	/** A new room for this create request, expiring at `expiresAt`, its first setup applied; its invite is set before it is stored. */
 	private async newRoom(
@@ -950,7 +1001,7 @@ export class ProposalService {
 		request: CreateRoomRequest,
 		account: RoomAccount | undefined,
 		interpretation: { pending?: PendingIdea },
-		expiresAt: number
+		expiresAt: number,
 	): Promise<ProposalRoom> {
 		const p = this.member(id, request)
 		p.joinedAt = this.now()
@@ -977,14 +1028,14 @@ export class ProposalService {
 			constraints: {
 				kinds: ["movie", "show_start"],
 				maxMinutes: null,
-				moods: []
+				moods: [],
 			},
 			candidates: [],
 			seenKeys: [],
 			stream: { version: 0, state: "ready", reason: null },
 			agreement: { version: 0, state: "none", error: null },
 			decision: null,
-			tickets: []
+			tickets: [],
 		}
 		return request.setup ? this.withSetup(blank, request.setup, interpretation) : blank
 	}
@@ -1006,43 +1057,36 @@ export class ProposalService {
 			ideas: (room.ideas ?? []).filter((idea) => idea.on).map(({ text }) => ({ text })),
 			kinds: [...room.constraints.kinds],
 			phase: room.phase,
-			people: room.participants.length
+			people: room.participants.length,
 		}
 	}
 	private async invitedRoom(code: string): Promise<ProposalRoom> {
 		const short = normalizeShortInvite(code)
 		const [legacyId, proof, extra] = code.split(".")
-		const id = short
-			? await this.repository.findInvite?.(hash(short))
-			: legacyId
+		const id = short ? await this.repository.findInvite?.(hash(short)) : legacyId
 		if (short) code = short
 		requireRoom(
 			id && (short || (proof && !extra && /^[A-Za-z0-9_-]{32}$/.test(id))),
 			"not_found",
 			"Invite unavailable",
-			404
+			404,
 		)
 		const { room } = await this.get(id)
-		requireRoom(
-			equal(room.inviteHash, hash(code)),
-			"not_found",
-			"Invite unavailable",
-			404
-		)
+		requireRoom(equal(room.inviteHash, hash(code)), "not_found", "Invite unavailable", 404)
 		return room
 	}
 	async join(id: string, request: JoinRoomRequest, account?: RoomAccount) {
 		return this.write(id, () => this.joinRoom(id, request, account))
 	}
 	private async joinRoom(id: string, request: JoinRoomRequest, account?: RoomAccount) {
-		if (account) await this.requireAccountActive(account.userId);
+		if (account) await this.requireAccountActive(account.userId)
 		const resolved = await this.resolveInvite(request.inviteCode)
 		requireRoom(resolved.roomId === id, "not_found", "Invite unavailable", 404)
 		const { inviteCode: _invite, screenId, ...base } = request
 		for (let i = 0; i < 6; i++) {
 			const old = await this.get(id)
 			const room = structuredClone(old.room)
-			const existing = account && room.participants.find(p => p.memberUserId === account.userId)
+			const existing = account && room.participants.find((p) => p.memberUserId === account.userId)
 			if (existing) return this.resumeAccount(id, account!, true)
 			const p = this.member(id, base)
 			p.joinedAt = this.now()
@@ -1050,25 +1094,15 @@ export class ProposalService {
 				this.connectAccount(id, p, account, room.expiresAt)
 				await this.accounts.remember(account.userId, { roomId: id, expiresAt: room.expiresAt })
 			}
-			if (room.participants.some((m) => m.id === p.id))
-				return this.admission(room, base, account)
+			if (room.participants.some((m) => m.id === p.id)) return this.admission(room, base, account)
 			requireRoom(
 				room.phase !== "decided",
 				"conflict",
-				"This room has chosen; ask the host to restart"
+				"This room has chosen; ask the host to restart",
 			)
-			requireRoom(
-				room.participants.length < L.participants,
-				"limit_reached",
-				"Room is full"
-			)
+			requireRoom(room.participants.length < L.participants, "limit_reached", "Room is full")
 			if (screenId) {
-				requireRoom(
-					room.screens.length === 1,
-					"invalid_request",
-					"Unknown screen",
-					400
-				)
+				requireRoom(room.screens.length === 1, "invalid_request", "Unknown screen", 400)
 				p.screenId = screenId
 			}
 			await this.guard?.join(id, p.id, p.admissionHash)
@@ -1080,14 +1114,11 @@ export class ProposalService {
 			if (room.phase === "choosing" && this.catalog.refresh)
 				room.candidates = await this.catalog.refresh(activeRoom(room))
 			if (room.phase === "choosing") {
-				retireIneligible(
-					room,
-					new Set((await this.catalog.excludedKeys?.(room)) ?? [])
-				)
+				retireIneligible(room, new Set((await this.catalog.excludedKeys?.(room)) ?? []))
 				room.stream = {
 					version: room.stream.version + 1,
 					state: "ready",
-					reason: null
+					reason: null,
 				}
 			}
 			reconcile(room, old.room)
@@ -1100,18 +1131,9 @@ export class ProposalService {
 			await this.notify(id)
 			return this.admission((await this.get(id)).room, base, account)
 		}
-		throw new RoomError(
-			"outcome_unknown",
-			"Retain and retry same admission",
-			503,
-			true
-		)
+		throw new RoomError("outcome_unknown", "Retain and retry same admission", 503, true)
 	}
-	async resumeOrJoin(
-		id: string,
-		credential: ActorCredential,
-		request: JoinRoomRequest
-	) {
+	async resumeOrJoin(id: string, credential: ActorCredential, request: JoinRoomRequest) {
 		const resolved = await this.resolveInvite(request.inviteCode)
 		requireRoom(resolved.roomId === id, "not_found", "Invite unavailable", 404)
 		for (let i = 0; i < 6; i++) {
@@ -1138,18 +1160,10 @@ export class ProposalService {
 			await this.notify(id)
 			return this.recoverAdmission(id, credential)
 		}
-		throw new RoomError(
-			"outcome_unknown",
-			"Retry returning to your saved place",
-			503,
-			true
-		)
+		throw new RoomError("outcome_unknown", "Retry returning to your saved place", 503, true)
 	}
 
-	async recoverAdmission(
-		id: string,
-		credential: ActorCredential
-	): Promise<GuestAdmission> {
+	async recoverAdmission(id: string, credential: ActorCredential): Promise<GuestAdmission> {
 		const { room } = await this.get(id)
 		this.auth(room, credential)
 		return this.admitted(room, credential, await this.roomInvite(room))
@@ -1164,10 +1178,10 @@ export class ProposalService {
 				roomId: room.id,
 				participantId: p.id,
 				token: credential.token,
-				expiresAt: room.expiresAt
+				expiresAt: room.expiresAt,
 			},
 			invite: { code, path: `/r/${code}` },
-			snapshot: this.snapshot(room, credential)
+			snapshot: this.snapshot(room, credential),
 		}
 	}
 	async read(id: string, credential: ActorCredential) {
@@ -1186,14 +1200,17 @@ export class ProposalService {
 		id: string,
 		credential: ActorCredential | Promise<ActorCredential>,
 		envelope: CommandEnvelope | Promise<CommandEnvelope>,
-		allowed: Promise<unknown> = Promise.resolve()
+		allowed: Promise<unknown> = Promise.resolve(),
 	): Promise<CommandResult> {
 		const actorCredential = settles(Promise.resolve(credential))
 		const pendingEnvelope = settles(Promise.resolve(envelope))
 		for (const p of [actorCredential, pendingEnvelope, allowed]) p.catch(() => {}) // awaited below
 		// The room's lane is taken once the body is in: a client that never finishes sending one holds up only itself.
 		// A refused sign-in answers without waiting for the body, as it did before the body was read.
-		const bodyIn = pendingEnvelope.then(() => {}, () => {})
+		const bodyIn = pendingEnvelope.then(
+			() => {},
+			() => {},
+		)
 		await Promise.race([bodyIn, actorCredential.then(() => bodyIn)])
 		// A refused body never takes a place in the lane: it answers once the sign-in did (whose refusal comes first).
 		if (refused(pendingEnvelope)) {
@@ -1204,7 +1221,7 @@ export class ProposalService {
 		// (about a second in production), instead of waiting behind it.
 		const refill = await this.refillPage(id, actorCredential, pendingEnvelope, allowed)
 		const written = this.write(id, () =>
-			this.applyCommand(id, actorCredential, pendingEnvelope, allowed, refill)
+			this.applyCommand(id, actorCredential, pendingEnvelope, allowed, refill),
 		).catch(async (e: unknown) => {
 			await actorCredential
 			await pendingEnvelope
@@ -1223,9 +1240,17 @@ export class ProposalService {
 		// notify (publish + acknowledge) then runs on its own, unless the answer has to wait for it: a decision moved
 		// into the history is stored on the accounts first, and an agreement check settles before it answers.
 		// Fresh availability checks must not block joins or withdrawals that invalidate them.
-		if (room && !(room.committed.phase === "choosing" && room.committed.agreement.state === "checking") && room.published) {
+		if (
+			room &&
+			!(room.committed.phase === "choosing" && room.committed.agreement.state === "checking") &&
+			room.published
+		) {
 			// The room as committed is acknowledged from memory: notify reads nothing.
-			void this.notify(id, { yieldToQueued: true, committed: room.committed, published: room.published })
+			void this.notify(id, {
+				yieldToQueued: true,
+				committed: room.committed,
+				published: room.published,
+			})
 			continuousLive(room.committed, this.now())
 			// The capacity read is in flight while the answer's snapshot is built.
 			const capacity = this.guard?.active(room.committed)
@@ -1236,14 +1261,17 @@ export class ProposalService {
 			return { receipt, snapshot }
 		}
 		let stored = await this.notify(id, { yieldToQueued: true })
-		if (!stored || (stored.room.phase === "choosing" && stored.room.agreement.state === "checking")) {
+		if (
+			!stored ||
+			(stored.room.phase === "choosing" && stored.room.agreement.state === "checking")
+		) {
 			await this.settle(id)
 			stored = await this.repository.read(id)
 		}
 		const committed = (await this.live(stored)).room
 		return {
 			receipt,
-			snapshot: this.snapshot(committed, credential)
+			snapshot: this.snapshot(committed, credential),
 		}
 	}
 	/**
@@ -1258,7 +1286,7 @@ export class ProposalService {
 		id: string,
 		actorCredential: Promise<ActorCredential>,
 		pendingEnvelope: Promise<CommandEnvelope>,
-		allowed: Promise<unknown>
+		allowed: Promise<unknown>,
 	): Promise<RefillPage | undefined> {
 		try {
 			const envelope = await pendingEnvelope
@@ -1266,12 +1294,15 @@ export class ProposalService {
 			const credential = await actorCredential
 			await allowed
 			const stored = await this.repository.read(id)
-			if (!stored || stored.room.phase !== "choosing" || staleRefill(stored.room, envelope)) return undefined
+			if (!stored || stored.room.phase !== "choosing" || staleRefill(stored.room, envelope))
+				return undefined
 			const p = this.auth(stored.room, credential)
-			if (p.leftAt != null || envelope.command.generation !== stored.room.generation) return undefined
+			if (p.leftAt != null || envelope.command.generation !== stored.room.generation)
+				return undefined
 			const digest = hash(JSON.stringify(envelope))
 			const slot = this.sequenceSlot(p, credential, envelope, digest)
-			if ("replayed" in slot || slot.sequence !== this.commandState(p, credential).nextSequence) return undefined
+			if ("replayed" in slot || slot.sequence !== this.commandState(p, credential).nextSequence)
+				return undefined
 			preflight(stored.room, p.id, envelope, this.now())
 			const room = structuredClone(activeRoom(stored.room))
 			retire(room)
@@ -1282,10 +1313,16 @@ export class ProposalService {
 			if (!build) {
 				build = (async () => {
 					await this.guard?.command(id, p.id, digest)
-					return { inputs: refillInputs(room, this.catalog.inputRevision?.(room)), cards: room.candidates.length, page: await timed("deck", this.decks.page(room)) }
+					return {
+						inputs: refillInputs(room, this.catalog.inputRevision?.(room)),
+						cards: room.candidates.length,
+						page: await timed("deck", this.decks.page(room)),
+					}
 				})()
 				this.refills.set(key, build)
-				const done = () => { if (this.refills.get(key) === build) this.refills.delete(key) }
+				const done = () => {
+					if (this.refills.get(key) === build) this.refills.delete(key)
+				}
 				build.then(done, done)
 			}
 			return await build
@@ -1298,8 +1335,11 @@ export class ProposalService {
 		actorCredential: Promise<ActorCredential>,
 		pendingEnvelope: Promise<CommandEnvelope>,
 		allowed: Promise<unknown>,
-		refill?: RefillPage
-	): Promise<{ receipt: CommandResult["receipt"]; room?: { committed: ProposalRoom; published: Promise<boolean> | null } }> {
+		refill?: RefillPage,
+	): Promise<{
+		receipt: CommandResult["receipt"]
+		room?: { committed: ProposalRoom; published: Promise<boolean> | null }
+	}> {
 		// The first read starts now, alongside the request's own checks; what it read is checked once they passed.
 		if (refused(actorCredential)) await actorCredential
 		const first = this.readStored(id)
@@ -1313,9 +1353,10 @@ export class ProposalService {
 		// With no search configured nothing is reserved and the idea stays uninterpreted (normal ranking).
 		const reserved = !this.interpret
 		for (let i = 0; i < 6; i++) {
-			let { stored: old, check } = await timed("read", i
-				? this.readChecked(id)
-				: first.then(({ stored, early }) => this.checked(stored, early)))
+			let { stored: old, check } = await timed(
+				"read",
+				i ? this.readChecked(id) : first.then(({ stored, early }) => this.checked(stored, early)),
+			)
 			let p: ProposalParticipant
 			try {
 				p = this.auth(old.room, credential, envelope.command.type === "leave")
@@ -1333,18 +1374,18 @@ export class ProposalService {
 				sequence >= this.commandState(p, credential).nextSequence,
 				"outcome_unknown",
 				"Receipt no longer retained; reconcile current state",
-				503
+				503,
 			)
 			requireRoom(
 				sequence === this.commandState(p, credential).nextSequence,
 				"conflict",
-				"Commands must be sent in order"
+				"Commands must be sent in order",
 			)
 			requireRoom(
 				p.leftAt == null || envelope.command.type === "leave",
 				"forbidden",
 				"You have left this room",
-				403
+				403,
 			)
 			timedSync("preflight", () => {
 				preflight(old.room, p.id, envelope, this.now())
@@ -1360,36 +1401,28 @@ export class ProposalService {
 					metadata.countries.some((v) => v.code === command.country),
 					"invalid_request",
 					"Choose a valid country",
-					400
+					400,
 				)
 			}
-			if (
-				command.type === "set_services" ||
-				command.type === "set_service_enabled"
-			) {
+			if (command.type === "set_services" || command.type === "set_service_enabled") {
 				const country = old.room.screens[0]?.country ?? null
 				// The app sets the room country right after creation; services are only valid within a country.
 				requireRoom(Boolean(country), "needs_context", "Choose a country first", 409)
 				const metadata = await this.catalog.metadata(country)
 				const countries = new Set<string>()
 				if (command.type === "set_services") {
-					const prefillCountry = p.member.state === "linked"
-						? p.member.prefill?.country
-						: null
-					if (prefillCountry && prefillCountry !== country)
-						countries.add(prefillCountry)
+					const prefillCountry = p.member.state === "linked" ? p.member.prefill?.country : null
+					if (prefillCountry && prefillCountry !== country) countries.add(prefillCountry)
 				}
-				const catalogs = await Promise.all(
-					[...countries].map((c) => this.catalog.metadata(c))
-				)
+				const catalogs = await Promise.all([...countries].map((c) => this.catalog.metadata(c)))
 				const validIds = new Set(
-					[metadata, ...catalogs].flatMap((m) => m.services.map((s) => s.id))
+					[metadata, ...catalogs].flatMap((m) => m.services.map((s) => s.id)),
 				)
 				requireRoom(
 					command.serviceIds.every((id) => validIds.has(id)),
 					"invalid_request",
 					"Choose valid services",
-					400
+					400,
 				)
 			}
 			let page: Awaited<ReturnType<ProposalCatalog["page"]>> | undefined
@@ -1403,50 +1436,61 @@ export class ProposalService {
 				// Members' seen titles are left out again at Start, from the copy read when they signed in and kept up
 				// while the room was set up (a deck prepared before a member linked never had them). A member without a
 				// recent copy is read fresh, alongside the deck rather than after it.
-				const seenRead = wantsPage && envelope.command.type === "start" && this.catalog.excludedKeys
-					? timed("seen", this.catalog.excludedKeys(room, { stored: true }))
-					: null
+				const seenRead =
+					wantsPage && envelope.command.type === "start" && this.catalog.excludedKeys
+						? timed("seen", this.catalog.excludedKeys(room, { stored: true }))
+						: null
 				seenRead?.catch(() => {}) // Awaited below; a failed deck must not leave it unhandled.
 				// Best effort (members time-box and log their own reads): a failed read starts without those exclusions.
 				// Usually prepared during setup; a Start retried after losing its compare-and-swap reuses the same build.
-				if (wantsPage && envelope.command.type === "refill" && refill && refillInputs(room, this.catalog.inputRevision?.(room)) === refill.inputs && room.candidates.length <= refill.cards)
+				if (
+					wantsPage &&
+					envelope.command.type === "refill" &&
+					refill &&
+					refillInputs(room, this.catalog.inputRevision?.(room)) === refill.inputs &&
+					room.candidates.length <= refill.cards
+				)
 					page = structuredClone(refill.page)
 				else if (wantsPage) {
 					await this.prepareProfiles(room)
-					page = await timed("deck", this.decks.page(room, {
-						seenReadFresh: envelope.command.type === "start" && Boolean(this.catalog.excludedKeys),
-					}))
+					page = await timed(
+						"deck",
+						this.decks.page(room, {
+							seenReadFresh:
+								envelope.command.type === "start" && Boolean(this.catalog.excludedKeys),
+						}),
+					)
 				}
 				if (page && seenRead) {
 					await seenRead.catch(() => [] as string[])
 					// Taken again for each deck once it is in hand, from the copies alone (Start's own read above stored a
 					// missing one): a deck build reads GoodWatch, and a grant GoodWatch refused meanwhile no longer counts.
 					const unseen = async (p: NonNullable<typeof page>) => {
-						const excluded = new Set(await this.catalog.excludedKeys!(room, { stored: true, readMissing: false }).catch(() => [] as string[]))
-						return excluded.size ? { ...p, candidates: p.candidates.filter((c) => !excluded.has(titleKey(c))) } : p
+						const excluded = new Set(
+							await this.catalog.excludedKeys!(room, { stored: true, readMissing: false }).catch(
+								() => [] as string[],
+							),
+						)
+						return excluded.size
+							? { ...p, candidates: p.candidates.filter((c) => !excluded.has(titleKey(c))) }
+							: p
 					}
 					page = await unseen(page)
 					// The deck reused across a member's link may hold only titles they've seen; the member-aware deck
 					// reaches past them. A short page still starts: the client refills at two unanswered cards.
-					if (!page.candidates.length) page = await unseen(await timed("deck", this.decks.page(room)))
+					if (!page.candidates.length)
+						page = await unseen(await timed("deck", this.decks.page(room)))
 				}
 			}
 			if (envelope.command.type === "restart") await this.accounts.publish(old.room.history ?? [])
-			const room = timedSync("transition", () => proposalTransition(
-				old.room,
-				p.id,
-				envelope,
-				this.now(),
-				page,
-				reserved
-			))
+			const room = timedSync("transition", () =>
+				proposalTransition(old.room, p.id, envelope, this.now(), page, reserved),
+			)
 			let pending: PendingIdea | undefined
-      const rereads: PendingIdea[] = []
+			const rereads: PendingIdea[] = []
 			if ((command.type === "add_idea" || command.type === "edit_idea") && this.interpret) {
 				const idea = room.ideas!.find(
-					(i) =>
-						i.id ===
-						(command.type === "add_idea" ? envelope.commandId : command.ideaId)
+					(i) => i.id === (command.type === "add_idea" ? envelope.commandId : command.ideaId),
 				)!
 				pending = { ideaId: idea.id, text: idea.text, job: token(), lease: this.now() }
 				markPending(idea, pending)
@@ -1468,7 +1512,10 @@ export class ProposalService {
 					watchScreensChanged(old.room, room)
 				)
 					room.candidates = await this.catalog.refresh(activeRoom(room))
-				const excluded = new Set((await timed("exclusions", this.catalog.excludedKeys?.(room) ?? Promise.resolve([]))) ?? [])
+				const excluded = new Set(
+					(await timed("exclusions", this.catalog.excludedKeys?.(room) ?? Promise.resolve([]))) ??
+						[],
+				)
 				timedSync("reconcile", () => {
 					retireIneligible(room, excluded)
 					reconcile(room, old.room)
@@ -1482,15 +1529,30 @@ export class ProposalService {
 				room.candidates = await this.catalog.refresh(activeRoom(room))
 				reconcile(room, old.room)
 			}
-			if (command.type === 'vote') { recordOutcome(room, undefined, this.now()); this.catalog.reorderTail?.(room) }
-      if (this.interpret && ['set_services', 'set_service_enabled', 'configure'].includes(command.type) && watchScreensChanged(old.room, room)) {
-        for (const idea of ideasForServiceReread(room, keys => this.catalog.ideaReadingSize?.(room, keys) ?? keys.length)) {
-          room.interpretationCount = (room.interpretationCount ?? 0) + 1
-          const reread: PendingIdea = { ideaId: idea.id, text: idea.text, job: token(), lease: this.now() }
-          markPending(idea, reread)
-          rereads.push(reread)
-        }
-      }
+			if (command.type === "vote") {
+				recordOutcome(room, undefined, this.now())
+				this.catalog.reorderTail?.(room)
+			}
+			if (
+				this.interpret &&
+				["set_services", "set_service_enabled", "configure"].includes(command.type) &&
+				watchScreensChanged(old.room, room)
+			) {
+				for (const idea of ideasForServiceReread(
+					room,
+					(keys) => this.catalog.ideaReadingSize?.(room, keys) ?? keys.length,
+				)) {
+					room.interpretationCount = (room.interpretationCount ?? 0) + 1
+					const reread: PendingIdea = {
+						ideaId: idea.id,
+						text: idea.text,
+						job: token(),
+						lease: this.now(),
+					}
+					markPending(idea, reread)
+					rereads.push(reread)
+				}
+			}
 			const changed = actor(room, p.id)
 			if (command.type === "leave") changed.leftLabel = this.label(old.room)
 			const commandState = this.commandState(changed, credential)
@@ -1499,7 +1561,7 @@ export class ProposalService {
 				commandId: envelope.commandId,
 				sequence,
 				digest,
-				revision: room.revision
+				revision: room.revision,
 			})
 			commandState.receipts = commandState.receipts.slice(-L.receipts)
 			try {
@@ -1510,18 +1572,26 @@ export class ProposalService {
 				continue
 			}
 			if (pending) this.interpretInBackground(id, pending.ideaId, pending)
-      if (command.type === 'vote') void this.catalog.voteCommitted?.(room, p.id, command.candidateId, command.value, this.now()).catch(() => {})
-      for (const reread of rereads) this.interpretInBackground(id, reread.ideaId, reread)
+			if (command.type === "vote")
+				void this.catalog
+					.voteCommitted?.(room, p.id, command.candidateId, command.value, this.now())
+					.catch(() => {})
+			for (const reread of rereads) this.interpretInBackground(id, reread.ideaId, reread)
 			return {
-				receipt: { commandId: envelope.commandId, sequence, appliedRevision: room.revision, replayed: false },
-				room: { committed: room, published: this.hintCommitted(old.room, room) }
+				receipt: {
+					commandId: envelope.commandId,
+					sequence,
+					appliedRevision: room.revision,
+					replayed: false,
+				},
+				room: { committed: room, published: this.hintCommitted(old.room, room) },
 			}
 		}
 		throw new RoomError(
 			uncertain ? "outcome_unknown" : "busy",
 			"Retain and retry same command",
 			503,
-			true
+			true,
 		)
 	}
 	/**
@@ -1533,27 +1603,32 @@ export class ProposalService {
 		p: ProposalParticipant,
 		credential: ActorCredential,
 		envelope: CommandEnvelope,
-		digest: string
+		digest: string,
 	): CommandResult["receipt"] | { sequence: number } {
 		const state = this.commandState(p, credential)
 		const own = state.receipts.find((r) => r.commandId === envelope.commandId)
 		if (own) {
 			requireRoom(own.digest === digest, "conflict", "Command ID/sequence reused")
-			return { commandId: own.commandId, sequence: own.sequence, appliedRevision: own.revision, replayed: true }
+			return {
+				commandId: own.commandId,
+				sequence: own.sequence,
+				appliedRevision: own.revision,
+				replayed: true,
+			}
 		}
 		const taken = state.receipts.some((r) => r.sequence === envelope.sequence)
 		return { sequence: taken ? state.nextSequence : envelope.sequence }
 	}
 	private commandState(p: ProposalParticipant, credential: ActorCredential) {
-		return (p.sessions ?? []).find((s) => s.id === credential.sessionId) ?? p;
+		return (p.sessions ?? []).find((s) => s.id === credential.sessionId) ?? p
 	}
 	private snapshot(room: ProposalRoom, credential: ActorCredential) {
-		const snapshot = proposalSnapshot(room, credential.participantId);
+		const snapshot = proposalSnapshot(room, credential.participantId)
 		snapshot.own.nextSequence = this.commandState(
 			actor(room, credential.participantId),
 			credential,
-		).nextSequence;
-		return snapshot;
+		).nextSequence
+		return snapshot
 	}
 	private label(room: ProposalRoom) {
 		return (
@@ -1561,7 +1636,7 @@ export class ProposalService {
 				.filter((i) => i.on)
 				.map((i) => i.text)
 				.join(" + ") || "Anything"
-		);
+		)
 	}
 	private accountCredential(
 		roomId: string,
@@ -1575,14 +1650,9 @@ export class ProposalService {
 			token: keyed(
 				this.secret,
 				"account-room-session",
-				JSON.stringify([
-					roomId,
-					participantId,
-					account.userId,
-					account.sessionId,
-				]),
+				JSON.stringify([roomId, participantId, account.userId, account.sessionId]),
 			),
-		};
+		}
 	}
 	private connectAccount(
 		roomId: string,
@@ -1590,28 +1660,28 @@ export class ProposalService {
 		account: RoomAccount,
 		roomExpiresAt: number,
 	) {
-		const credential = this.accountCredential(roomId, p.id, account);
-		p.memberUserId = account.userId;
-		const sessions = (p.sessions ?? []).filter((s) => s.expiresAt > this.now());
-		const existing = sessions.find((s) => s.id === account.sessionId);
-		if (existing) existing.expiresAt = roomExpiresAt;
+		const credential = this.accountCredential(roomId, p.id, account)
+		p.memberUserId = account.userId
+		const sessions = (p.sessions ?? []).filter((s) => s.expiresAt > this.now())
+		const existing = sessions.find((s) => s.id === account.sessionId)
+		if (existing) existing.expiresAt = roomExpiresAt
 		else {
 			requireRoom(
 				sessions.length < 12,
 				"limit_reached",
 				"Too many devices for this room; sign out on another device",
 				409,
-			);
+			)
 			sessions.push({
 				id: account.sessionId,
 				tokenHash: hash(credential.token),
 				expiresAt: roomExpiresAt,
 				nextSequence: 1,
 				receipts: [],
-			});
+			})
 		}
-		p.sessions = sessions;
-		return credential;
+		p.sessions = sessions
+		return credential
 	}
 	/** Opening an existing membership never changes the roster. Return after Leave is explicit. */
 	async resumeAccount(
@@ -1619,63 +1689,43 @@ export class ProposalService {
 		account: RoomAccount,
 		returnAfterLeave = false,
 	): Promise<GuestAdmission> {
-		await this.requireAccountActive(account.userId);
+		await this.requireAccountActive(account.userId)
 		for (let attempt = 0; attempt < 8; attempt++) {
-			const old = await this.get(id);
-			const p = old.room.participants.find(
-				(p) => p.memberUserId === account.userId,
-			);
-			requireRoom(
-				p && !p.revoked,
-				"not_found",
-				"You have no place in this room",
-				404,
-			);
-			requireRoom(
-				p.leftAt == null || returnAfterLeave,
-				"forbidden",
-				"You have left this room",
-				403,
-			);
-			const credential = this.accountCredential(id, p.id, account);
+			const old = await this.get(id)
+			const p = old.room.participants.find((p) => p.memberUserId === account.userId)
+			requireRoom(p && !p.revoked, "not_found", "You have no place in this room", 404)
+			requireRoom(p.leftAt == null || returnAfterLeave, "forbidden", "You have left this room", 403)
+			const credential = this.accountCredential(id, p.id, account)
 			if (
 				p.leftAt == null &&
-				p.sessions?.some(
-					(s) =>
-						s.id === account.sessionId && s.expiresAt > this.now() + 30_000,
-				)
+				p.sessions?.some((s) => s.id === account.sessionId && s.expiresAt > this.now() + 30_000)
 			)
-				return this.recoverAdmission(id, credential);
-			const room = structuredClone(old.room);
-			const returning = actor(room, p.id);
-			this.connectAccount(id, returning, account, room.expiresAt);
+				return this.recoverAdmission(id, credential)
+			const room = structuredClone(old.room)
+			const returning = actor(room, p.id)
+			this.connectAccount(id, returning, account, room.expiresAt)
 			if (p.leftAt != null) {
-				if (!activeRoom(room).participants.length) room.hostId = p.id;
-				returning.leftAt = null;
-				returning.leftLabel = null;
-				returning.epoch++;
-				room.rosterVersion++;
-				refreshServices(room);
+				if (!activeRoom(room).participants.length) room.hostId = p.id
+				returning.leftAt = null
+				returning.leftLabel = null
+				returning.epoch++
+				room.rosterVersion++
+				refreshServices(room)
 				if (room.phase === "choosing" && this.catalog.refresh)
-					room.candidates = await this.catalog.refresh(activeRoom(room));
-				if (room.phase !== "decided") reconcile(room, old.room);
+					room.candidates = await this.catalog.refresh(activeRoom(room))
+				if (room.phase !== "decided") reconcile(room, old.room)
 			}
-			room.revision++;
+			room.revision++
 			try {
-				if (!(await this.repository.compareAndSwap(old, room, true))) continue;
+				if (!(await this.repository.compareAndSwap(old, room, true))) continue
 			} catch (e) {
-				if (!(e instanceof IndeterminateWrite)) throw e;
-				continue;
+				if (!(e instanceof IndeterminateWrite)) throw e
+				continue
 			}
-			await this.notify(id);
-			return this.recoverAdmission(id, credential);
+			await this.notify(id)
+			return this.recoverAdmission(id, credential)
 		}
-		throw new RoomError(
-			"busy",
-			"Your room could not be restored; retry shortly",
-			503,
-			true,
-		);
+		throw new RoomError("busy", "Your room could not be restored; retry shortly", 503, true)
 	}
 	/** A guest upgrades in place, or relinquishes the temporary place to their existing account place. */
 	async linkAccount(
@@ -1683,214 +1733,175 @@ export class ProposalService {
 		credential: ActorCredential,
 		account: RoomAccount,
 	): Promise<GuestAdmission> {
-		await this.requireAccountActive(account.userId);
+		await this.requireAccountActive(account.userId)
 		for (let attempt = 0; attempt < 8; attempt++) {
-			const old = await this.get(id);
-			let source: ProposalParticipant;
+			const old = await this.get(id)
+			let source: ProposalParticipant
 			try {
-				source = this.auth(old.room, credential);
+				source = this.auth(old.room, credential)
 			} catch (e) {
 				if (
 					e instanceof RoomError &&
 					["unauthorized", "forbidden"].includes(e.code) &&
-					old.room.participants.some(
-						(p) => p.memberUserId === account.userId && !p.revoked,
-					)
+					old.room.participants.some((p) => p.memberUserId === account.userId && !p.revoked)
 				)
-					return this.resumeAccount(id, account);
-				throw e;
+					return this.resumeAccount(id, account)
+				throw e
 			}
 			requireRoom(
 				!source.memberUserId || source.memberUserId === account.userId,
 				"conflict",
 				"You joined this room with another GoodWatch account",
-			);
-			if (source.memberUserId === account.userId)
-				return this.resumeAccount(id, account);
+			)
+			if (source.memberUserId === account.userId) return this.resumeAccount(id, account)
 			await this.accounts.remember(account.userId, {
 				roomId: id,
 				expiresAt: old.room.expiresAt,
-			});
-			const room = structuredClone(old.room);
-			const canonical = room.participants.find(
-				(p) => p.memberUserId === account.userId,
-			);
-			const target = canonical ?? actor(room, source.id);
+			})
+			const room = structuredClone(old.room)
+			const canonical = room.participants.find((p) => p.memberUserId === account.userId)
+			const target = canonical ?? actor(room, source.id)
 			requireRoom(
 				target.leftAt == null,
 				"conflict",
 				"Return to your existing place from History before linking this guest",
-			);
+			)
 			if (canonical) {
 				// The established account's answers win. Never combine two people's approval evidence.
-				room.participants = room.participants.filter((p) => p.id !== source.id);
+				room.participants = room.participants.filter((p) => p.id !== source.id)
 				for (const idea of room.ideas ?? [])
-					if (idea.authorId === source.id) idea.authorId = target.id;
-				if (room.hostId === source.id) room.hostId = target.id;
+					if (idea.authorId === source.id) idea.authorId = target.id
+				if (room.hostId === source.id) room.hostId = target.id
 				if (room.phase !== "decided") {
-					room.proposal = null;
-					room.proposalVersion++;
+					room.proposal = null
+					room.proposalVersion++
 					for (const p of room.participants) {
-						p.approvedProposalVersion = null;
-						p.agreementRevision++;
-						p.insAgreementRevision = p.agreementRevision;
+						p.approvedProposalVersion = null
+						p.agreementRevision++
+						p.insAgreementRevision = p.agreementRevision
 					}
 				} else if (room.proposal) {
-					if (room.proposal.proposerId === source.id)
-						room.proposal.proposerId = target.id;
+					if (room.proposal.proposerId === source.id) room.proposal.proposerId = target.id
 					room.proposal.baseParticipantIds = [
 						...new Set(
-							room.proposal.baseParticipantIds.map((id) =>
-								id === source.id ? target.id : id,
-							),
+							room.proposal.baseParticipantIds.map((id) => (id === source.id ? target.id : id)),
 						),
-					];
+					]
 				}
-				room.rosterVersion++;
+				room.rosterVersion++
 			}
 			if (!canonical) {
-				target.epoch++;
-				target.tokenHash = hash(random());
+				target.epoch++
+				target.tokenHash = hash(random())
 			}
-			const next = this.connectAccount(id, target, account, room.expiresAt);
-			room.tickets = room.tickets.filter((t) => t.participantId !== source.id);
-			room.memberIntents = room.memberIntents?.filter(
-				(t) => t.participantId !== source.id,
-			);
+			const next = this.connectAccount(id, target, account, room.expiresAt)
+			room.tickets = room.tickets.filter((t) => t.participantId !== source.id)
+			room.memberIntents = room.memberIntents?.filter((t) => t.participantId !== source.id)
 			for (const d of room.history ?? [])
-				if (
-					d.participantIds.includes(source.id) &&
-					!d.accountIds.includes(account.userId)
-				)
-					d.accountIds.push(account.userId);
-			refreshServices(room);
+				if (d.participantIds.includes(source.id) && !d.accountIds.includes(account.userId))
+					d.accountIds.push(account.userId)
+			refreshServices(room)
 			if (canonical && room.phase === "choosing") {
-				room.contextVersion++;
-				if (this.catalog.refresh)
-					room.candidates = await this.catalog.refresh(activeRoom(room));
-				retireIneligible(
-					room,
-					new Set((await this.catalog.excludedKeys?.(room)) ?? []),
-				);
+				room.contextVersion++
+				if (this.catalog.refresh) room.candidates = await this.catalog.refresh(activeRoom(room))
+				retireIneligible(room, new Set((await this.catalog.excludedKeys?.(room)) ?? []))
 				room.stream = {
 					version: room.stream.version + 1,
 					state: "ready",
 					reason: null,
-				};
+				}
 			}
-			if (room.phase !== "decided") reconcile(room, old.room);
-			room.revision++;
+			if (room.phase !== "decided") reconcile(room, old.room)
+			room.revision++
 			try {
-				if (!(await this.repository.compareAndSwap(old, room, true))) continue;
+				if (!(await this.repository.compareAndSwap(old, room, true))) continue
 			} catch (e) {
-				if (!(e instanceof IndeterminateWrite)) throw e;
-				continue;
+				if (!(e instanceof IndeterminateWrite)) throw e
+				continue
 			}
-			await this.notify(id);
+			await this.notify(id)
 			return {
 				...(await this.recoverAdmission(id, next)),
 				...(canonical ? { replacedGuest: true } : {}),
-			};
+			}
 		}
-		throw new RoomError(
-			"busy",
-			"Your account could not be linked; retry shortly",
-			503,
-			true,
-		);
+		throw new RoomError("busy", "Your account could not be linked; retry shortly", 503, true)
 	}
 	async accountHome(account: RoomAccount): Promise<AccountHome> {
-		await this.requireAccountActive(account.userId);
-		const rooms: AccountHome["rooms"] = [];
+		await this.requireAccountActive(account.userId)
+		const rooms: AccountHome["rooms"] = []
 		for (const entry of await this.accounts.rooms(account.userId)) {
-			if (entry.expiresAt <= this.now()) continue;
-			const stored = await this.repository.read(entry.roomId);
+			if (entry.expiresAt <= this.now()) continue
+			const stored = await this.repository.read(entry.roomId)
 			const p = stored?.room.participants.find(
 				(p) => p.memberUserId === account.userId && !p.revoked,
-			);
-			if (!stored || stored.room.expiresAt <= this.now() || !p) continue;
-			await this.accounts.publish(stored.room.history ?? []);
+			)
+			if (!stored || stored.room.expiresAt <= this.now() || !p) continue
+			await this.accounts.publish(stored.room.history ?? [])
 			rooms.push({
 				snapshot: proposalSnapshot(stored.room, p.id),
 				joinedAt: p.joinedAt ?? 0,
 				archivedAt: p.archivedAt ?? null,
 				leftLabel: p.leftLabel ?? null,
-			});
+			})
 		}
 		rooms.sort(
 			(a, b) =>
-				b.joinedAt - a.joinedAt ||
-				b.snapshot.shared.roomId.localeCompare(a.snapshot.shared.roomId),
-		);
-		return { rooms, decisions: await this.accounts.history(account.userId) };
+				b.joinedAt - a.joinedAt || b.snapshot.shared.roomId.localeCompare(a.snapshot.shared.roomId),
+		)
+		return { rooms, decisions: await this.accounts.history(account.userId) }
 	}
-	async archiveAccountRoom(
-		id: string,
-		account: RoomAccount,
-		archived: boolean,
-	) {
+	async archiveAccountRoom(id: string, account: RoomAccount, archived: boolean) {
 		for (let attempt = 0; attempt < 8; attempt++) {
-			const old = await this.get(id);
-			const room = structuredClone(old.room);
-			const p = room.participants.find(
-				(p) => p.memberUserId === account.userId && !p.revoked,
-			);
-			requireRoom(p, "not_found", "You have no place in this room", 404);
-			p.archivedAt = archived ? this.now() : null;
-			room.revision++;
+			const old = await this.get(id)
+			const room = structuredClone(old.room)
+			const p = room.participants.find((p) => p.memberUserId === account.userId && !p.revoked)
+			requireRoom(p, "not_found", "You have no place in this room", 404)
+			p.archivedAt = archived ? this.now() : null
+			room.revision++
 			try {
-				if (!(await this.repository.compareAndSwap(old, room, true))) continue;
+				if (!(await this.repository.compareAndSwap(old, room, true))) continue
 			} catch (e) {
-				if (!(e instanceof IndeterminateWrite)) throw e;
-				continue;
+				if (!(e instanceof IndeterminateWrite)) throw e
+				continue
 			}
-			await this.notify(id);
-			return;
+			await this.notify(id)
+			return
 		}
-		throw new RoomError(
-			"busy",
-			"Your room list could not be updated",
-			503,
-			true,
-		);
+		throw new RoomError("busy", "Your room list could not be updated", 503, true)
 	}
 	/** Returns the rooms this device stays in as a guest. */
 	async logoutAccount(account: RoomAccount) {
-		const kept: { roomId: string; nickname: string; expiresAt: number }[] = [];
+		const kept: { roomId: string; nickname: string; expiresAt: number }[] = []
 		for (const entry of await this.accounts.rooms(account.userId)) {
-			if (entry.expiresAt <= this.now()) continue;
+			if (entry.expiresAt <= this.now()) continue
 			for (let attempt = 0; attempt < 8; attempt++) {
-				const old = await this.repository.read(entry.roomId);
-				if (!old || old.room.expiresAt <= this.now()) break;
-				const room = structuredClone(old.room);
-				const p = room.participants.find(
-					(p) => p.memberUserId === account.userId,
-				);
-				const session = p?.sessions?.find((s) => s.id === account.sessionId);
-				if (!p || !session) break;
-				p.sessions = p.sessions!.filter((s) => s.id !== account.sessionId);
-				room.tickets = room.tickets.filter(
-					(t) => t.sessionId !== account.sessionId,
-				);
-				const guest = p.leftAt == null && !p.sessions.some((s) => s.expiresAt > this.now());
-				if (guest) this.keepDeviceAsGuest(p, session);
-				room.revision++;
+				const old = await this.repository.read(entry.roomId)
+				if (!old || old.room.expiresAt <= this.now()) break
+				const room = structuredClone(old.room)
+				const p = room.participants.find((p) => p.memberUserId === account.userId)
+				const session = p?.sessions?.find((s) => s.id === account.sessionId)
+				if (!p || !session) break
+				p.sessions = p.sessions!.filter((s) => s.id !== account.sessionId)
+				room.tickets = room.tickets.filter((t) => t.sessionId !== account.sessionId)
+				const guest = p.leftAt == null && !p.sessions.some((s) => s.expiresAt > this.now())
+				if (guest) this.keepDeviceAsGuest(p, session)
+				room.revision++
 				try {
-					if (!(await this.repository.compareAndSwap(old, room, true)))
-						continue;
+					if (!(await this.repository.compareAndSwap(old, room, true))) continue
 				} catch (e) {
-					if (!(e instanceof IndeterminateWrite)) throw e;
-					continue;
+					if (!(e instanceof IndeterminateWrite)) throw e
+					continue
 				}
-				if (guest) kept.push({ roomId: room.id, nickname: p.nickname, expiresAt: room.expiresAt });
-				await this.notify(entry.roomId);
-				break;
+				if (guest) kept.push({ roomId: room.id, nickname: p.nickname, expiresAt: room.expiresAt })
+				await this.notify(entry.roomId)
+				break
 			}
 		}
 		// Revoked after the rooms are guest places: a room read racing Log out reads the guest place, never a
 		// refusal. Once revoked, replaying the old sealed sign-in cannot resume or link anything.
-		await this.accounts.revokeSession(account.sessionId, account.expiresAt);
-		return kept;
+		await this.accounts.revokeSession(account.sessionId, account.expiresAt)
+		return kept
 	}
 	/**
 	 * Log out on the account's last device in a room: that device keeps its seat (name, votes, host role)
@@ -1901,83 +1912,113 @@ export class ProposalService {
 		p: ProposalParticipant,
 		session: NonNullable<ProposalParticipant["sessions"]>[number],
 	) {
-		p.memberUserId = null;
-		delete p.memberGrant;
-		p.member = { state: "guest", prefill: null };
-		p.showSeen = false;
-		p.sessions = [];
-		p.tokenHash = session.tokenHash;
-		p.nextSequence = session.nextSequence;
-		p.receipts = session.receipts;
+		p.memberUserId = null
+		delete p.memberGrant
+		p.member = { state: "guest", prefill: null }
+		p.showSeen = false
+		p.sessions = []
+		p.tokenHash = session.tokenHash
+		p.nextSequence = session.nextSequence
+		p.receipts = session.receipts
 	}
 	async requireAccountActive(userId: string) {
-		await requireNotDeleting(this.deletions, { kind: 'account', userId });
+		await requireNotDeleting(this.deletions, { kind: "account", userId })
 	}
-	accountDeletionTag(userId: string) { return keyed(this.secret, 'deletion-account-tag', userId); }
+	accountDeletionTag(userId: string) {
+		return keyed(this.secret, "deletion-account-tag", userId)
+	}
 	/** The durable deletion marker fences new admissions before the recoverable room departures begin. */
 	async deleteAccount(account: RoomAccount) {
-		const state = await this.deletions.schedule({ kind: 'account', userId: account.userId }, this.now());
+		const state = await this.deletions.schedule(
+			{ kind: "account", userId: account.userId },
+			this.now(),
+		)
 		for (const entry of await this.accounts.rooms(account.userId)) {
-			await this.departForDeletion(entry.roomId, p => p.memberUserId === account.userId);
+			await this.departForDeletion(entry.roomId, (p) => p.memberUserId === account.userId)
 		}
 		// End this device's sealed YepWatch session. Restoring requires a fresh GoodWatch authentication.
-		await this.accounts.revokeSession(account.sessionId, account.expiresAt);
-		return state;
+		await this.accounts.revokeSession(account.sessionId, account.expiresAt)
+		return state
 	}
 	async deleteGuest(id: string, credential: ActorCredential) {
-		const stored = await this.get(id);
-		const p = this.auth(stored.room, credential, true);
-		requireRoom(!p.memberUserId, 'forbidden', 'Use account deletion for a signed-in participant', 403);
-		const state = await this.deletions.schedule({ kind: 'guest', roomId: id, participantId: p.id }, this.now());
-		await this.departForDeletion(id, person => person.id === p.id);
-		return state;
+		const stored = await this.get(id)
+		const p = this.auth(stored.room, credential, true)
+		requireRoom(
+			!p.memberUserId,
+			"forbidden",
+			"Use account deletion for a signed-in participant",
+			403,
+		)
+		const state = await this.deletions.schedule(
+			{ kind: "guest", roomId: id, participantId: p.id },
+			this.now(),
+		)
+		await this.departForDeletion(id, (person) => person.id === p.id)
+		return state
 	}
 	async restoreGuest(id: string, credential: ActorCredential) {
-		const stored = await this.get(id);
-		const p = this.auth(stored.room, credential, true);
-		requireRoom(!p.memberUserId, 'forbidden', 'Use account restoration for a signed-in participant', 403);
-		await this.deletions.restore({ kind: 'guest', roomId: id, participantId: p.id }, this.now());
+		const stored = await this.get(id)
+		const p = this.auth(stored.room, credential, true)
+		requireRoom(
+			!p.memberUserId,
+			"forbidden",
+			"Use account restoration for a signed-in participant",
+			403,
+		)
+		await this.deletions.restore({ kind: "guest", roomId: id, participantId: p.id }, this.now())
 		for (let i = 0; i < 8; i++) {
-			const old = await this.get(id);
-			const room = structuredClone(old.room);
-			const person = this.auth(room, credential, true);
-			person.leftAt = null; person.epoch++; room.rosterVersion++; room.revision++;
-			refreshServices(room);
-			if (room.phase !== 'decided') reconcile(room, old.room);
-			if (!(await this.repository.compareAndSwap(old, room, true))) continue;
-			await this.notify(id);
-			return { restored: true };
+			const old = await this.get(id)
+			const room = structuredClone(old.room)
+			const person = this.auth(room, credential, true)
+			person.leftAt = null
+			person.epoch++
+			room.rosterVersion++
+			room.revision++
+			refreshServices(room)
+			if (room.phase !== "decided") reconcile(room, old.room)
+			if (!(await this.repository.compareAndSwap(old, room, true))) continue
+			await this.notify(id)
+			return { restored: true }
 		}
-		throw new RoomError('busy', 'Restoration will need another attempt.', 503, true);
+		throw new RoomError("busy", "Restoration will need another attempt.", 503, true)
 	}
 	private async departForDeletion(id: string, matches: (p: ProposalParticipant) => boolean) {
 		for (let i = 0; i < 12; i++) {
-			const stored = await this.repository.read(id);
-			if (!stored || stored.room.expiresAt <= this.now()) return;
-			const room = structuredClone(stored.room);
-			const departing = room.participants.filter(matches);
-			if (!departing.length) return;
+			const stored = await this.repository.read(id)
+			if (!stored || stored.room.expiresAt <= this.now()) return
+			const room = structuredClone(stored.room)
+			const departing = room.participants.filter(matches)
+			if (!departing.length) return
 			for (const p of departing) {
-				p.leftAt ??= this.now(); p.epoch++; p.sessions = []; delete p.memberGrant;
-				room.tickets = room.tickets.filter(t => t.participantId !== p.id);
-				room.memberIntents = room.memberIntents?.filter(t => t.participantId !== p.id);
+				p.leftAt ??= this.now()
+				p.epoch++
+				p.sessions = []
+				delete p.memberGrant
+				room.tickets = room.tickets.filter((t) => t.participantId !== p.id)
+				room.memberIntents = room.memberIntents?.filter((t) => t.participantId !== p.id)
 			}
-			const remaining = activeRoom(room).participants;
-			if (departing.some(p => p.id === room.hostId) && remaining.length) room.hostId = remaining[0].id;
-			refreshServices(room);
-			room.rosterVersion++; room.revision++;
-			if (room.phase !== 'decided') reconcile(room, stored.room);
-			try { if (!(await this.repository.compareAndSwap(stored, room, true))) continue; }
-			catch (e) { if (!(e instanceof IndeterminateWrite)) throw e; continue; }
-			await this.notify(id);
-			return;
+			const remaining = activeRoom(room).participants
+			if (departing.some((p) => p.id === room.hostId) && remaining.length)
+				room.hostId = remaining[0].id
+			refreshServices(room)
+			room.rosterVersion++
+			room.revision++
+			if (room.phase !== "decided") reconcile(room, stored.room)
+			try {
+				if (!(await this.repository.compareAndSwap(stored, room, true))) continue
+			} catch (e) {
+				if (!(e instanceof IndeterminateWrite)) throw e
+				continue
+			}
+			await this.notify(id)
+			return
 		}
-		throw new RoomError('busy', 'Deletion is scheduled; retry to finish leaving rooms.', 503, true);
+		throw new RoomError("busy", "Deletion is scheduled; retry to finish leaving rooms.", 503, true)
 	}
 	private recordDecision(room: ProposalRoom) {
-		const d = room.decision!;
-		const candidate = room.candidates.find((c) => c.id === d.candidateId)!;
-		const participants = activeRoom(room).participants;
+		const d = room.decision!
+		const candidate = room.candidates.find((c) => c.id === d.candidateId)!
+		const participants = activeRoom(room).participants
 		const record = {
 			id: `${room.id}:${room.generation}:${d.decidedAt}`,
 			roomId: room.id,
@@ -1988,25 +2029,16 @@ export class ProposalService {
 			decidedAt: d.decidedAt,
 			people: participants.map((p) => p.nickname),
 			participantIds: participants.map((p) => p.id),
-			accountIds: participants.flatMap((p) =>
-				p.memberUserId ? [p.memberUserId] : [],
-			),
-		};
-		room.history = [
-			...(room.history ?? []).filter((h) => h.id !== record.id),
-			record,
-		].slice(-128);
+			accountIds: participants.flatMap((p) => (p.memberUserId ? [p.memberUserId] : [])),
+		}
+		room.history = [...(room.history ?? []).filter((h) => h.id !== record.id), record].slice(-128)
 	}
 
 	/** Bounded automatic repair, including after process restart; public errors contain no catalog/actor/private inputs. */
 	async settle(id: string) {
 		for (let i = 0; i < 3; i++) {
 			const old = await this.get(id)
-			if (
-				old.room.phase !== "choosing" ||
-				old.room.agreement.state !== "checking"
-			)
-				return
+			if (old.room.phase !== "choosing" || old.room.agreement.state !== "checking") return
 			const candidate = agreementCandidate(old.room)
 			const room = structuredClone(old.room)
 			if (!candidate) {
@@ -2023,31 +2055,29 @@ export class ProposalService {
 			}
 			try {
 				// The final offer check reads fresh (never the deck's kept offers); "recheck" on the answer's Server-Timing.
-				const evidence = await timed("recheck", this.catalog.recheck(
-					activeRoom(old.room),
-					candidate
-				))
+				const evidence = await timed(
+					"recheck",
+					this.catalog.recheck(activeRoom(old.room), candidate),
+				)
 				requireRoom(
 					evidence.length > 0 && evidence.every((e) => e.state === "watchable"),
 					"no_intersection",
-					"Current offers do not cover every screen"
+					"Current offers do not cover every screen",
 				)
-				const screens = new Set(
-					activeRoom(room).participants.map((p) => p.screenId)
-				)
+				const screens = new Set(activeRoom(room).participants.map((p) => p.screenId))
 				requireRoom(
 					!screens.has(null) &&
 						evidence.length === screens.size &&
 						[...screens].every((id) => evidence.some((e) => e.screenId === id)),
 					"needs_context",
-					"Evidence must cover every occupied screen"
+					"Evidence must cover every occupied screen",
 				)
 				continuousLive(room, this.now())
 				room.decision = {
 					candidateId: candidate.id,
 					agreementVersion: room.agreement.version,
 					decidedAt: this.now(),
-					availability: evidence
+					availability: evidence,
 				}
 				room.outcomeEmittedAt = this.now()
 				room.phase = "decided"
@@ -2062,7 +2092,7 @@ export class ProposalService {
 				room.agreement = {
 					version: room.agreement.version,
 					state: "unavailable",
-					error: { code: e.code, ...(e.details ? { details: e.details } : {}) }
+					error: { code: e.code, ...(e.details ? { details: e.details } : {}) },
 				}
 			}
 			room.revision++
@@ -2072,10 +2102,10 @@ export class ProposalService {
 				if (!(e instanceof IndeterminateWrite)) throw e
 				continue
 			}
-      if (room.phase === 'decided') {
-        emitRoundOutcome(room, 'decision')
-        void this.catalog.roundEnded?.(room).catch(() => {})
-      }
+			if (room.phase === "decided") {
+				emitRoundOutcome(room, "decision")
+				void this.catalog.roundEnded?.(room).catch(() => {})
+			}
 			await this.notify(id)
 			return
 		}
@@ -2084,33 +2114,45 @@ export class ProposalService {
 	 * A one-use realtime ticket. It is kept in the ticket store, not the room: issuing one reads the room (to
 	 * authenticate) and writes nothing to it, so it never waits in the room's write lane or makes a vote wait there.
 	 */
-	async ticket(
-		id: string,
-		credential: ActorCredential
-	): Promise<RealtimeTicket> {
+	async ticket(id: string, credential: ActorCredential): Promise<RealtimeTicket> {
 		const { room } = await timed("read", this.get(id))
 		const p = this.auth(room, credential)
 		const ticket = random()
 		const now = this.now()
 		const expiresAt = Math.min(now + 30_000, room.expiresAt)
-		const issued = await timed("ticket", this.tickets.issue(id, hash(ticket), {
-			participantId: p.id,
-			epoch: p.epoch,
-			expiresAt,
-			...(credential.sessionId ? { sessionId: credential.sessionId } : {}),
-			...(p.memberUserId ? { member: true } : {}),
-		}, L.tickets, now))
+		const issued = await timed(
+			"ticket",
+			this.tickets.issue(
+				id,
+				hash(ticket),
+				{
+					participantId: p.id,
+					epoch: p.epoch,
+					expiresAt,
+					...(credential.sessionId ? { sessionId: credential.sessionId } : {}),
+					...(p.memberUserId ? { member: true } : {}),
+				},
+				L.tickets,
+				now,
+			),
+		)
 		requireRoom(issued, "limit_reached", "Too many connection tickets")
 		return {
 			ticket,
 			expiresAt,
-			websocketPath: "/api/yepwatch/v1/proposal/realtime"
+			websocketPath: "/api/yepwatch/v1/proposal/realtime",
 		}
 	}
 	private attachment(room: ProposalRoom, id: string, sessionId?: string): RealtimeAttachment {
 		const p = actor(room, id)
 		requireRoom(p.leftAt == null, "forbidden", "You have left this room", 403)
-		if (p.memberUserId) requireRoom((p.sessions ?? []).some(s => s.id === sessionId && s.expiresAt > this.now()), "forbidden", "Session ended", 403)
+		if (p.memberUserId)
+			requireRoom(
+				(p.sessions ?? []).some((s) => s.id === sessionId && s.expiresAt > this.now()),
+				"forbidden",
+				"Session ended",
+				403,
+			)
 		const expiresAt = Math.min(this.now() + 60_000, room.expiresAt)
 		const lease: Lease = {
 			format: 3,
@@ -2119,7 +2161,7 @@ export class ProposalService {
 			participantId: id,
 			epoch: p.epoch,
 			expiresAt,
-			scope: "shared:read"
+			scope: "shared:read",
 		}
 		return {
 			roomId: room.id,
@@ -2128,7 +2170,7 @@ export class ProposalService {
 			leaseExpiresAt: expiresAt,
 			roomExpiresAt: room.expiresAt,
 			capabilityEpoch: p.epoch,
-			scope: "shared:read"
+			scope: "shared:read",
 		}
 	}
 	/**
@@ -2148,7 +2190,7 @@ export class ProposalService {
 				(e: unknown) => {
 					if (e instanceof RoomError && ["not_found", "expired"].includes(e.code)) return false
 					throw e
-				}
+				},
 			)
 			requireRoom(legacy, "unauthorized", "Ticket expired or consumed", 401)
 			return this.write(id, () => this.consumeTicket(id, ticket))
@@ -2162,7 +2204,12 @@ export class ProposalService {
 		const p = actor(room, t.participantId)
 		requireRoom(p.epoch === t.epoch, "forbidden", "Access revoked", 403)
 		if (t.member)
-			requireRoom((p.sessions ?? []).some((s) => s.id === t.sessionId && s.expiresAt > this.now()), "forbidden", "Session ended", 403)
+			requireRoom(
+				(p.sessions ?? []).some((s) => s.id === t.sessionId && s.expiresAt > this.now()),
+				"forbidden",
+				"Session ended",
+				403,
+			)
 		if (t.sessionId && !p.memberUserId) session = this.accounts.sessionActive(t.sessionId)
 		if (session) requireRoom(await session, "forbidden", "Session ended", 403)
 		return this.attachment(room, t.participantId, t.sessionId)
@@ -2173,17 +2220,12 @@ export class ProposalService {
 			const old = await this.get(id)
 			const room = structuredClone(old.room)
 			const t = room.tickets.find((t) => equal(t.hash, hash(ticket)))
-			requireRoom(
-				t && t.expiresAt > this.now(),
-				"unauthorized",
-				"Ticket expired or consumed",
-				401
-			)
+			requireRoom(t && t.expiresAt > this.now(), "unauthorized", "Ticket expired or consumed", 401)
 			requireRoom(
 				actor(room, t.participantId).epoch === t.epoch,
 				"forbidden",
 				"Access revoked",
-				403
+				403,
 			)
 			room.tickets = room.tickets.filter((x) => x !== t)
 			try {
@@ -2193,9 +2235,15 @@ export class ProposalService {
 					actor(committed, t.participantId).epoch === t.epoch,
 					"forbidden",
 					"Access revoked",
-					403
+					403,
 				)
-				if (t.sessionId) requireRoom(await this.accounts.sessionActive(t.sessionId), "forbidden", "Session ended", 403)
+				if (t.sessionId)
+					requireRoom(
+						await this.accounts.sessionActive(t.sessionId),
+						"forbidden",
+						"Session ended",
+						403,
+					)
 				return this.attachment(committed, t.participantId, t.sessionId)
 			} catch (e) {
 				if (!(e instanceof IndeterminateWrite)) throw e
@@ -2203,7 +2251,7 @@ export class ProposalService {
 					"outcome_unknown",
 					"Ticket consumption uncertain; request fresh ticket",
 					503,
-					true
+					true,
 				)
 			}
 		}
@@ -2234,7 +2282,8 @@ export class ProposalService {
 				sessions.set(lease.sessionId, active)
 			}
 		const refusal = (e: unknown) => {
-			const error = e instanceof RoomError ? e : new RoomError("busy", "Service unavailable", 503, true)
+			const error =
+				e instanceof RoomError ? e : new RoomError("busy", "Service unavailable", 503, true)
 			return { error: { code: error.code, status: error.status } }
 		}
 		const invalid = refusal(new RoomError("unauthorized", "Invalid lease", 401))
@@ -2248,12 +2297,14 @@ export class ProposalService {
 		const views = await Promise.all(
 			leases.map(async (lease) => {
 				const result = lease
-					? await this.leaseView(room, lease, lease.sessionId ? sessions.get(lease.sessionId) : undefined).catch(
-							() => new RoomError("busy", "Service unavailable", 503, true)
-						)
+					? await this.leaseView(
+							room,
+							lease,
+							lease.sessionId ? sessions.get(lease.sessionId) : undefined,
+						).catch(() => new RoomError("busy", "Service unavailable", 503, true))
 					: null
 				return result === null ? invalid : result instanceof RoomError ? refusal(result) : result
-			})
+			}),
 		)
 		const viewer = leases.find((lease, i) => lease && !("error" in views[i]))
 		return { snapshot: viewer ? proposalSnapshot(room, viewer.participantId).shared : null, views }
@@ -2277,16 +2328,23 @@ export class ProposalService {
 	 * it revokes it. A participant that is a guest now may have become one by that very Log out, after the early
 	 * check, so its session is checked again after the read.
 	 */
-	private async leaseView(room: ProposalRoom, lease: Lease, session?: Promise<boolean>): Promise<RealtimeAttachment | RoomError> {
+	private async leaseView(
+		room: ProposalRoom,
+		lease: Lease,
+		session?: Promise<boolean>,
+	): Promise<RealtimeAttachment | RoomError> {
 		try {
-			if (lease.sessionId && !room.participants.find((p) => p.id === lease.participantId)?.memberUserId)
+			if (
+				lease.sessionId &&
+				!room.participants.find((p) => p.id === lease.participantId)?.memberUserId
+			)
 				session = this.accounts.sessionActive(lease.sessionId)
 			if (session) requireRoom(await session, "forbidden", "Session ended", 403)
 			requireRoom(
 				actor(room, lease.participantId).epoch === lease.epoch,
 				"forbidden",
 				"Access revoked",
-				403
+				403,
 			)
 			return this.attachment(room, lease.participantId, lease.sessionId)
 		} catch (e) {
@@ -2301,16 +2359,23 @@ export class ProposalService {
 	 * waits for notify too). Resolves whether the gateway was told (notify publishes again if not; repair retries).
 	 */
 	private hintCommitted(old: ProposalRoom, room: ProposalRoom): Promise<boolean> | null {
-    if (old.startedAt != null && old.phase !== 'decided' && ((room.phase === 'decided') || room.generation !== old.generation)) {
-      const ended = room.phase === 'decided' ? room : old
-      emitRoundOutcome(ended, room.phase === 'decided' ? 'decision' : 'restart')
-      void this.catalog.roundEnded?.(ended).catch(() => {})
-    }
+		if (
+			old.startedAt != null &&
+			old.phase !== "decided" &&
+			(room.phase === "decided" || room.generation !== old.generation)
+		) {
+			const ended = room.phase === "decided" ? room : old
+			emitRoundOutcome(ended, room.phase === "decided" ? "decision" : "restart")
+			void this.catalog.roundEnded?.(ended).catch(() => {})
+		}
 		if (JSON.stringify(room.history ?? []) !== JSON.stringify(old.history ?? [])) return null
 		if (room.expiresAt <= this.now()) return Promise.resolve(true)
-		return timed("publish", this.announce(timedSync("publish", () => this.committedEvent(room)))).then(
+		return timed(
+			"publish",
+			this.announce(timedSync("publish", () => this.committedEvent(room))),
+		).then(
 			() => true,
-			() => false
+			() => false,
 		)
 	}
 	/**
@@ -2330,7 +2395,10 @@ export class ProposalService {
 	private committedEvent(room: ProposalRoom): RoomInvalidation | RoomCommitted {
 		const now = this.now()
 		const viewers = room.participants.filter(
-			(p) => p.leftAt == null && !p.revoked && (!p.memberUserId || (p.sessions ?? []).some((s) => s.expiresAt > now))
+			(p) =>
+				p.leftAt == null &&
+				!p.revoked &&
+				(!p.memberUserId || (p.sessions ?? []).some((s) => s.expiresAt > now)),
 		)
 		const hint = { roomId: room.id, revision: room.revision }
 		if (!viewers.length) return hint
@@ -2354,7 +2422,11 @@ export class ProposalService {
 	 */
 	async notify(
 		id: string,
-		options: { yieldToQueued?: boolean; committed?: ProposalRoom; published?: Promise<boolean> } = {}
+		options: {
+			yieldToQueued?: boolean
+			committed?: ProposalRoom
+			published?: Promise<boolean>
+		} = {},
 	): Promise<ProposalStored | null> {
 		let stored: ProposalStored | null = null
 		try {
@@ -2370,7 +2442,8 @@ export class ProposalService {
 			}
 			if (!room || (!options.committed && !stored?.pendingRevision)) return stored
 			await this.accounts.publish(room.history ?? [])
-			if (room.expiresAt > this.now() && !(await options.published)) await this.announce(this.committedEvent(room))
+			if (room.expiresAt > this.now() && !(await options.published))
+				await this.announce(this.committedEvent(room))
 			// After the announcement: phones never wait for the profile store to hear a decision.
 			await this.profiles?.recordDecision(room).catch(() => {})
 			if (options.yieldToQueued && this.writes.has(id)) return stored
@@ -2391,7 +2464,7 @@ export class ProposalService {
 		id: string,
 		credential: ActorCredential,
 		expected: { country: string; contextVersion: number },
-		country: string
+		country: string,
 	): Promise<boolean> {
 		if (country === expected.country) return false
 		const metadata = await this.catalog.metadata(country).catch(() => null)
@@ -2407,8 +2480,17 @@ export class ProposalService {
 					old.room.contextVersion !== expected.contextVersion
 				)
 					return false
-				const command: RoomCommand = { type: "configure", expectedContextVersion: old.room.contextVersion, country }
-				const room = proposalTransition(old.room, p.id, { commandId: "member-country", sequence: 0, command }, this.now())
+				const command: RoomCommand = {
+					type: "configure",
+					expectedContextVersion: old.room.contextVersion,
+					country,
+				}
+				const room = proposalTransition(
+					old.room,
+					p.id,
+					{ commandId: "member-country", sequence: 0, command },
+					this.now(),
+				)
 				if (this.catalog.refresh && watchScreensChanged(old.room, room))
 					room.candidates = await this.catalog.refresh(activeRoom(room))
 				retireIneligible(room, new Set((await this.catalog.excludedKeys?.(room)) ?? []))
@@ -2466,8 +2548,10 @@ export class ProposalService {
 function watchScreensChanged(old: ProposalRoom, next: ProposalRoom) {
 	const screens = (room: ProposalRoom) => {
 		const active = activeRoom(room)
-		return JSON.stringify([active.screens, [...new Set(active.participants.map((p) => p.screenId))].sort()])
+		return JSON.stringify([
+			active.screens,
+			[...new Set(active.participants.map((p) => p.screenId))].sort(),
+		])
 	}
 	return screens(old) !== screens(next)
 }
-

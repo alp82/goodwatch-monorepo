@@ -1,14 +1,14 @@
-import type { EpisodeIdentity } from "../../../packages/yepwatch-contracts/continuous.ts";
-import { createDeckAdapter, type CatalogReads } from "./catalog-adapter.ts";
-import type { CatalogPort, Room } from "./types.ts";
+import type { EpisodeIdentity } from "../../../packages/yepwatch-contracts/continuous.ts"
+import { createDeckAdapter, type CatalogReads } from "./catalog-adapter.ts"
+import type { CatalogPort, Room } from "./types.ts"
 import {
 	CONTINUOUS_LIMITS as L,
 	type ContinuousCatalog,
 	type ContinuousRoom,
-} from "./continuous-types.ts";
-import { RoomError } from "./errors.ts";
-import { titleKeySet } from "./ranked-keys-cache.ts";
-import { timed } from "./server-timing.ts";
+} from "./continuous-types.ts"
+import { RoomError } from "./errors.ts"
+import { titleKeySet } from "./ranked-keys-cache.ts"
+import { timed } from "./server-timing.ts"
 /** Structural adapter only; existing GoodWatch filters/evidence/episode rules remain authoritative. */
 export function catalogRoom(room: ContinuousRoom): Room {
 	return {
@@ -41,118 +41,98 @@ export function catalogRoom(room: ContinuousRoom): Room {
 		proposedId: null,
 		decision: null,
 		tickets: [],
-	};
+	}
 }
 export function createContinuousCatalog(
 	reads: CatalogReads,
 	metadata: CatalogPort["metadata"],
 	options: {
 		/** Orders the room's base ranking. `limit`: only the first `limit` keys are read (see CatalogReads). */
-		rank?: (room: ContinuousRoom, keys: number[], limit?: number) => Promise<number[]>;
-		savedContinuations?: (
-			room: ContinuousRoom,
-		) => Promise<ReadonlyMap<number, EpisodeIdentity>>;
+		rank?: (room: ContinuousRoom, keys: number[], limit?: number) => Promise<number[]>
+		savedContinuations?: (room: ContinuousRoom) => Promise<ReadonlyMap<number, EpisodeIdentity>>
 	} = {},
 ): ContinuousCatalog {
 	return {
 		metadata,
 		async page(room) {
-			const seen = new Set(room.seenKeys);
-			const seenKeys = titleKeySet(seen);
-			let complete = false;
+			const seen = new Set(room.seenKeys)
+			const seenKeys = titleKeySet(seen)
+			let complete = false
 			const saved = room.constraints.kinds.includes("show_continue")
 				? await options.savedContinuations?.(room)
-				: undefined;
+				: undefined
 			if (room.constraints.kinds.includes("show_continue") && !saved)
-				throw new RoomError(
-					"member_required",
-					"Sign in with GoodWatch saved progress",
-					403,
-				);
+				throw new RoomError("member_required", "Sign in with GoodWatch saved progress", 403)
 			const adapter = createDeckAdapter(
 				{
 					...reads,
 					rankedKeys: async (old, limit) => {
-						const base = await reads.rankedKeys(old);
+						const base = await reads.rankedKeys(old)
 						// Saved continuations are looked up in the whole ranking; seen keys are dropped below.
-						const need = limit === undefined || saved ? undefined : limit + seenKeys.size;
-						const full = options.rank ? await options.rank(room, base, need) : base;
-						const ranked = need !== undefined && full.length > need ? full.slice(0, need) : full;
+						const need = limit === undefined || saved ? undefined : limit + seenKeys.size
+						const full = options.rank ? await options.rank(room, base, need) : base
+						const ranked = need !== undefined && full.length > need ? full.slice(0, need) : full
 						const continued = saved
 							? [...saved.keys()]
 									.map((id) => 2_000_000_000_000 + id)
 									.filter((key) => ranked.includes(key))
-							: [];
-						const keys = continued.length ? [...new Set([...continued, ...ranked])] : ranked;
-						return seenKeys.size ? keys.filter((key) => !seenKeys.has(key)) : keys;
+							: []
+						const keys = continued.length ? [...new Set([...continued, ...ranked])] : ranked
+						return seenKeys.size ? keys.filter((key) => !seenKeys.has(key)) : keys
 					},
 				},
 				{
-					limit: Math.min(
-						L.page,
-						L.active - room.candidates.length,
-						L.seen - room.seenKeys.length,
-					),
+					limit: Math.min(L.page, L.active - room.candidates.length, L.seen - room.seenKeys.length),
 					onComplete: (value) => {
-						complete = value;
+						complete = value
 					},
 					savedContinuations: saved,
 					excludeTitleKeys: seen,
 				},
-			);
+			)
 			try {
 				return {
 					// "scan": the pool and window checks, reads included (each read also has its own mark).
 					candidates: await timed("scan", adapter.candidates(catalogRoom(room))),
 					exhausted: complete,
-				};
+				}
 			} catch (e) {
 				if (e instanceof RoomError && e.code === "no_intersection")
-					return { candidates: [], exhausted: true };
-				throw e;
+					return { candidates: [], exhausted: true }
+				throw e
 			}
 		},
 		async refresh(room) {
-			const ids = new Set(room.participants.map((p) => p.screenId));
+			const ids = new Set(room.participants.map((p) => p.screenId))
 			const screens = room.screens.filter(
 				(s) => ids.has(s.id) && s.confirmed && s.country && s.serviceIds.length,
-			);
+			)
 			const keys = room.candidates.map(
 				(c) =>
-					(c.identity.kind === "movie"
-						? 1_000_000_000_000
-						: 2_000_000_000_000) + c.identity.tmdbId,
-			);
+					(c.identity.kind === "movie" ? 1_000_000_000_000 : 2_000_000_000_000) + c.identity.tmdbId,
+			)
 			try {
-				const displays = await reads.displays(keys);
-				const evidence = await reads.availability(
-					[...displays.values()],
-					screens,
-					false,
-				);
+				const displays = await reads.displays(keys)
+				const evidence = await reads.availability([...displays.values()], screens, false)
 				return room.candidates.map((c, i) => ({
 					...c,
 					availability: evidence.get(keys[i]) ?? [],
-				}));
+				}))
 			} catch {
-				return room.candidates.map((c) => ({ ...c, availability: [] }));
+				return room.candidates.map((c) => ({ ...c, availability: [] }))
 			} // Unknown evidence removes matches; admission never invents a usable offer.
 		},
 		async recheck(room, candidate) {
 			const saved =
 				candidate.identity.kind === "show_continue"
 					? await options.savedContinuations?.(room)
-					: undefined;
+					: undefined
 			if (candidate.identity.kind === "show_continue" && !saved)
-				throw new RoomError(
-					"member_required",
-					"Verified saved progress required",
-					403,
-				);
+				throw new RoomError("member_required", "Verified saved progress required", 403)
 			return createDeckAdapter(reads, { savedContinuations: saved }).recheck(
 				catalogRoom(room),
 				candidate,
-			);
+			)
 		},
-	};
+	}
 }
