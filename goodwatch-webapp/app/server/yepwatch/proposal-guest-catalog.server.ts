@@ -139,10 +139,10 @@ export function guestProposalCatalog(
 					feedbackAdjustment(snapshot!, key, feedback, unitFingerprint(snapshot!, key)),
 			)
 		},
-		async page(room) {
+		async page(room, options = {}) {
 			const active = room.participants.filter((p) => p.leftAt == null)
 			// Both sources prepare/calibrate outside Start's prepared-deck path. Start only uses stored exclusions.
-			await timed("taste", Promise.all([profiles?.prepare(room)]))
+			if (!options.preview) await timed("taste", Promise.all([profiles?.prepare(room)]))
 			const sources = active.map((p) => ({
 				member: p.member.state === "linked" ? members?.tasteStored(room, p.id) : null,
 				profile: profiles?.stored(room, p),
@@ -177,7 +177,13 @@ export function guestProposalCatalog(
 				for (const key of source.member?.wishlist ?? [])
 					wishlist.set(key, (wishlist.get(key) ?? 0) + 1)
 			}
-			const excluded = titleKeySet([...(await exclusions.excludedKeys(room)), ...room.seenKeys])
+			const excluded = titleKeySet([
+				...(await exclusions.excludedKeys(
+					room,
+					options.preview ? { stored: true, readMissing: false } : undefined,
+				)),
+				...room.seenKeys,
+			])
 			const ranked = new Map<number, Ranked>()
 			let poolSize = 0,
 				poolStep = 0
@@ -224,7 +230,15 @@ export function guestProposalCatalog(
 					wants: i.attributes.filter((a) => a.kind === "want" && a.key).map((a) => a.key!),
 					avoids: i.attributes.filter((a) => a.kind === "avoid" && a.key).map((a) => a.key!),
 				}))
-			const base = createContinuousCatalog(reads, goodwatchCatalog.metadata, {
+			// Preview enriches only its five selected cards; don't warm extras for every scanned title.
+			const pageReads = options.preview
+				? ({
+						...reads,
+						availability: (titles, screens, fresh) =>
+							timed("availability", goodwatchReads.availability(titles, screens, fresh)),
+					} satisfies CatalogReads)
+				: reads
+			const base = createContinuousCatalog(pageReads, goodwatchCatalog.metadata, {
 				...(members
 					? {
 							savedContinuations: async (r) =>
@@ -313,7 +327,7 @@ export function guestProposalCatalog(
 					return result.map((r) => r.key)
 				},
 			})
-			const page = await proposalCatalog(base).page(room)
+			const page = await proposalCatalog(base).page(room, options)
 			const attributed = page.candidates.map((c) => ({
 				...c,
 				ideaIds: matchingIdeaIds(room, c),

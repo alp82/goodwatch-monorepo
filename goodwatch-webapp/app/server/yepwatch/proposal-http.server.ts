@@ -836,6 +836,8 @@ export function createProposalHandler(service: ProposalService, options: HttpOpt
 					)
 				}
 				const actor = await timed("auth", scopedCredential(id))
+				if (request.method === "GET" && operation === "preview")
+					return reply(await service.posterPreview(id, actor))
 				if (request.method === "POST" && operation === "preview")
 					return reply(
 						await service.preview(id, actor, parse(proposalPreviewSchema, await body(request))),

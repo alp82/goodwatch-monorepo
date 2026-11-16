@@ -2,6 +2,7 @@ import {
   paths,
   type ApiError,
   type InvitePreview,
+  type RoomPosterPreview,
   type CommandEnvelope,
   type CommandResult,
   type GuestAdmission,
@@ -32,7 +33,7 @@ import { profileAnswersResponseSchema, profileSummarySchema, tasteDeckSchema } f
 import { authEpoch } from './account-flow';
 import { connectionDiagnostic, type ConnectionDiagnostic, type ConnectionStage } from './connection-diagnostic';
 import { apiUrl } from '../config';
-import { invitePreviewSchema } from './wire';
+import { invitePreviewSchema, roomPosterPreviewSchema } from './wire';
 import { earlyInviteResponse } from './early-invite';
 import { parseRetryAfter } from './retry';
 import { requestSent, yepwatchAnswered } from './network';
@@ -115,7 +116,8 @@ export class ContinuousApi {
       headers.Authorization = `Bearer ${access.token}`;
       headers['X-YepWatch-Participant'] = access.participantId;
     }
-    const settled = requestSent();
+    const preview = Boolean(method === 'GET' && access && path === paths.roomPreview(access.roomId));
+    const settled = preview ? () => undefined : requestSent();
     try {
       const url = apiUrl(withRoomOptIns(path));
       stage = 'request';
@@ -129,7 +131,7 @@ export class ContinuousApi {
       response = await (earlyInviteResponse(url, init, this.fetcher) ?? this.fetcher(url, init));
       stage = 'response';
       // The network works: the live channel stops waiting out its backoff (ContinuousRealtime.answered).
-      yepwatchAnswered(response.status, Boolean(access) && path === paths.realtimeTicket(access!.roomId));
+      if (!preview) yepwatchAnswered(response.status, Boolean(access) && path === paths.realtimeTicket(access!.roomId));
       // While Log out runs, the server may still answer as the account: only Log out's own answer counts.
       const outdated = () => !authEpoch.isCurrent(asked) || (!authEpoch.settled() && path !== paths.accountLogout);
       const renewed = response.headers.get('x-yepwatch-session');
@@ -188,6 +190,8 @@ export class ContinuousApi {
     invitePreviewSchema.parse(await this.request<unknown>(paths.invitePreview, { code }));
   join = (id: string, body: JoinRoomRequest, access?: RoomAccess, signal?: AbortSignal) =>
     this.request<GuestAdmission>(paths.join(id), body, access, signal, undefined, ADMISSION_TIMEOUT_MS);
+  roomPreview = async (a: RoomAccess, signal?: AbortSignal): Promise<RoomPosterPreview> =>
+    roomPosterPreviewSchema.parse(await this.request<unknown>(paths.roomPreview(a.roomId), undefined, a, signal, undefined, 3000));
   snapshot = (a: RoomAccess, signal?: AbortSignal) => this.request<RoomSnapshot>(paths.snapshot(a.roomId), undefined, a, signal);
   /** The room, or only the own part while the room is still at `known`, the shared revision held (an API before
    * this answers the whole room either way). */

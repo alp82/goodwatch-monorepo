@@ -54,7 +54,7 @@ export function createContinuousCatalog(
 ): ContinuousCatalog {
 	return {
 		metadata,
-		async page(room) {
+		async page(room, pageOptions = {}) {
 			const seen = new Set(room.seenKeys)
 			const seenKeys = titleKeySet(seen)
 			let complete = false
@@ -82,7 +82,12 @@ export function createContinuousCatalog(
 					},
 				},
 				{
-					limit: Math.min(L.page, L.active - room.candidates.length, L.seen - room.seenKeys.length),
+					...(pageOptions.preview ? { scanLimit: 120, deadlineMs: 600 } : {}),
+					limit: Math.min(
+						pageOptions.limit ?? L.page,
+						L.active - room.candidates.length,
+						L.seen - room.seenKeys.length,
+					),
 					onComplete: (value) => {
 						complete = value
 					},

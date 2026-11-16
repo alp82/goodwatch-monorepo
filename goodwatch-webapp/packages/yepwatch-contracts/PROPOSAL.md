@@ -73,3 +73,16 @@ A final decision remains historical across later roster changes. If its tied set
 snapshots omit that obsolete tiebreak (`null`) and own favorite while retaining the final decision.
 
 Internal realtime calls also require `?matchesIn=1` for these fields. Both API/gateway deployment orders work; gateway first is preferred.
+
+Setup poster preview: `GET /api/yepwatch/v1/proposal/rooms/:id/preview` uses the
+same participant credentials as the room snapshot and returns `{ candidates: Candidate[] }`
+(at most five, including poster URLs and the deck's public presentation fields).
+It is an uncharged read: it never reserves an interpretation or command budget, starts
+idea jobs, or records cards, seen keys or votes. A matching prepared Start deck supplies
+its first five cards in Start order; otherwise it ranks stored enabled idea readings
+and held personal signals through the Start catalog path. No services, rooms outside
+setup, and continuing shows return an empty list. Busy, failed or timed-out builds
+return a retryable `503 catalog_unavailable`; successful builds remain cached even
+when their first reader times out. Shared participants include optional `showSeen`
+and `memberState` fields so setup input changes refresh previews. `POST` on this path
+retains the existing draft interpretation operation and its budget.

@@ -279,3 +279,73 @@ for (const confidence of [null, 0] as const) {
 		assert.ok(penalized.score < target.score, "a participant without taste still lowers the score")
 	})
 }
+
+test("five-card preview uses the Start ranking, stored idea attributes and kinds without preparing profiles or reading members", async () => {
+	const room = rankingRoom()
+	room.phase = "setup"
+	room.ideas = [
+		{
+			id: "comedy",
+			text: "witty",
+			authorId: room.hostId,
+			on: true,
+			attributes: [{ kind: "want", key: "wit_wordplay", text: "witty" }],
+			rankedKeys: [1e12 + 10],
+			interpretedAt: 1,
+		},
+	]
+	let prepares = 0
+	const profiles: RoomTasteSource = {
+		prepare: async () => {
+			prepares++
+		},
+		stored: () => null,
+	}
+	const catalog = guestProposalCatalog(undefined, profiles)
+	const before = structuredClone(room)
+	const full = await catalog.page(room)
+	const preview = await catalog.page(room, { limit: 5, preview: true })
+	assert.equal(prepares, 1, "preview only uses held tastes; Start preparation ran once")
+	assert.equal(preview.candidates.length, 5)
+	assert.deepEqual(preview.candidates, full.candidates.slice(0, 5))
+	assert.ok(
+		preview.candidates.some((c) => c.identity.tmdbId === 10),
+		"stored idea reading participates in ranking",
+	)
+	assert.deepEqual(room, before)
+	room.ideas[0].on = false
+	const off = await catalog.page(room, { limit: 5, preview: true })
+	assert.ok(Object.values(preview.ranking!).find((r) => r.key === 1e12 + 10)!.parts.idea > 0)
+	assert.ok(
+		Object.values(off.ranking!).every((r) => r.parts.idea === 0),
+		"switching the idea off removes its boost",
+	)
+	const availability = globals.picksReads.availability
+	globals.picksReads.availability = async (titles, screens, fresh) => {
+		const found = await availability(titles, screens, fresh)
+		return new Map(
+			[...found].map(([key, rows]) => [
+				key,
+				rows.map((r, i) =>
+					screens[i].serviceIds.includes(1) ? r : { ...r, state: "no_match", offers: [] },
+				),
+			]),
+		)
+	}
+	try {
+		room.screens[0].serviceIds = [2]
+		assert.deepEqual(
+			(await catalog.page(room, { limit: 5, preview: true })).candidates,
+			[],
+			"unavailable titles cannot leak into another service selection",
+		)
+	} finally {
+		globals.picksReads.availability = availability
+	}
+	room.constraints.kinds = ["show_start"]
+	assert.deepEqual(
+		(await catalog.page(room, { limit: 5, preview: true })).candidates,
+		[],
+		"movie-only fixture cannot leak into show preview",
+	)
+})

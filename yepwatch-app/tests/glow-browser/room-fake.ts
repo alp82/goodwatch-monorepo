@@ -273,6 +273,12 @@ export async function fakeRoom(page: Page, room: FakeSnapshot = newRoom(), opts:
   const handler = async (route: Route) => {
     const url = new URL(route.request().url());
     const path = url.pathname;
+    if (route.request().method() === 'GET' && /\/rooms\/[^/]+\/preview$/.test(path)) {
+      const base = continuousFixture().shared.candidates[0];
+      const cards = tasteCards(5, true).map((t, i) => ({ ...base, id: `preview-${i}`, title: t.title, year: t.year,
+        identity: { kind: 'movie', tmdbId: 1000 + i }, posterUrl: t.posterUrl }));
+      return route.fulfill({ json: { candidates: room.shared.screens.some(s => s.serviceIds.length) ? cards : [] } });
+    }
     if (path.endsWith('/catalog/metadata')) return route.fulfill({ json: metadata });
     if (/\/proposal\/profile(\/|$)/.test(path)) {
       const method = route.request().method();

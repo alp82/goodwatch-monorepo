@@ -18,9 +18,10 @@ import { IDEA_LIMITS, type IdeaView } from './model';
 import { TRY_EXAMPLES } from './MoodComposer';
 import { useIdeaSave } from './idea-save';
 import { webField } from './parts';
-import { roomPart } from './RoomProvider';
+import { roomPart, useRoomLive } from './RoomProvider';
 import { Face } from './invite';
 import { Glyph } from './ui';
+import { usePosterPreview } from './poster-preview';
 
 // ————— Motion (transform and opacity only) —————
 
@@ -292,7 +293,11 @@ function Fan({ deck, w, show }: { deck: readonly Candidate[]; w: number; show: n
 const previewName = (deck: readonly Candidate[]) => (deck.length ? `Preview: cards like ${deck.slice(0, FAN).map((t) => t.title).join(', ')}` : 'Preview: cards get dealt when you start');
 
 /** The fan, centered, its lower part tucked behind the top edge of the Ideas card. */
-const DeckFan = roomPart('DeckFan', (r) => ({ deck: r.view?.deck }), function DeckFan({ deck = [] }) {
+const DeckFan = roomPart('DeckFan', (r) => ({ deck: r.view?.deck, access: r.state.access }), function DeckFan({ deck: dealt = [], access }) {
+  const { confirmed } = useRoomLive();
+  const shared = confirmed?.shared;
+  const preview = usePosterPreview(access, shared);
+  const deck = dealt.length ? dealt : preview;
   const { phone, z } = useLayout();
   const w = phone ? 62 : z(70);
   const tuck = Math.round(w * 0.22);

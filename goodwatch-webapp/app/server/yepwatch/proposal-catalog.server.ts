@@ -17,8 +17,8 @@ export function proposalCatalog(base: ContinuousCatalog): ProposalCatalog {
 	})
 	return {
 		metadata: base.metadata,
-		page: async (room) => {
-			const page = await base.page(room)
+		page: async (room, options) => {
+			const page = await base.page(room, options)
 			return { ...page, candidates: page.candidates.map(enrich) }
 		},
 		...(base.refresh

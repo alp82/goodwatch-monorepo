@@ -174,7 +174,7 @@ export function reconcile(room: ProposalRoom, previous: ProposalRoom) {
 		error: allApproved && !readyScreens(room) ? { code: "needs_context" } : null,
 	}
 }
-function projectedCandidate(c: Candidate): Candidate {
+export function projectedCandidate(c: Candidate): Candidate {
 	const base = continuousSnapshotCandidate(c)
 	return {
 		...base,

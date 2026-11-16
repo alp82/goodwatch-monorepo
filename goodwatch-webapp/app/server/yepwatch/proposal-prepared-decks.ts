@@ -14,6 +14,7 @@ interface Entry {
 	/** deckInputs with every member counted as a guest (see deckBase). */
 	base: string
 	page: Promise<Page>
+	result?: Page
 	builtAt: number
 }
 
@@ -258,6 +259,17 @@ export class PreparedDecks {
 		}
 		return structuredClone(await this.build(room, inputs, "inline"))
 	}
+	/** Detached, exact prepared cards only. Never builds, claims, consumes or refreshes an entry. */
+	peek(room: ProposalRoom): Page | null {
+		if (room.phase !== "setup" || activeRoom(room).constraints.kinds.includes("show_continue"))
+			return null
+		const entry = this.settled.get(room.id)
+		return entry?.result &&
+			entry.inputs === this.inputs(room) &&
+			this.now() - entry.builtAt < this.maxAgeMs
+			? structuredClone(entry.result)
+			: null
+	}
 	/** Whether a prepared deck (built or building) matches the room as it is now. For tests and logs. */
 	prepared(room: ProposalRoom) {
 		const entry = this.entries.get(room.id)
@@ -292,6 +304,7 @@ export class PreparedDecks {
 		while (this.entries.size > this.maxRooms) this.entries.delete(this.entries.keys().next().value!)
 		page.then(
 			(result) => {
+				entry.result = result
 				// A first profile read can populate its cache during this build. Remember the revision actually ranked.
 				if (result.inputRevision !== undefined) {
 					entry.inputs = deckInputs(room) + result.inputRevision

@@ -81,7 +81,10 @@ export interface CandidatePage {
 }
 export interface ContinuousCatalog {
 	metadata(country: string | null): Promise<CatalogMetadata>
-	page(room: ContinuousRoom): Promise<CandidatePage>
+	page(
+		room: ContinuousRoom,
+		options?: { limit?: number; preview?: boolean },
+	): Promise<CandidatePage>
 	refresh?(room: ContinuousRoom): Promise<Candidate[]>
 	recheck(room: ContinuousRoom, candidate: Candidate): Promise<Candidate["availability"]>
 }

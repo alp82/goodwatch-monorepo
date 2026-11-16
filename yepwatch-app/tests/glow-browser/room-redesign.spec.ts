@@ -481,6 +481,16 @@ test('the host replaces their idea from the console: Replace sends edit_idea and
   await expect(page.getByRole('switch', { name: 'twist ending. Your idea' })).toHaveAttribute('aria-checked', 'true');
 });
 
+test('before Start the fan shows posters like the ones the couch will get', async ({ page }) => {
+  const room = choosingRoom();
+  room.shared.phase = 'setup';
+  room.shared.candidates = [];
+  await fakeRoom(page, room);
+  await page.goto('/room/test-room');
+  await expect(page.getByTestId('preview')).toHaveAttribute('aria-label', /^Preview: cards like /);
+  await expect(page.getByTestId('preview').locator('img')).toHaveCount(5);
+});
+
 test('a Try example writes itself into the field, cursor at the end, and sends nothing', async ({ page }) => {
   const room = choosingRoom();
   room.shared.phase = 'setup';

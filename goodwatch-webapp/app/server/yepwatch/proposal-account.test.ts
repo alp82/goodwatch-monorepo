@@ -1469,3 +1469,41 @@ test("deleting an account waits for the renewal: a grant revoked meanwhile delet
 	assert.equal((await deletion.json()).error.code, "member_required")
 	assert.equal(await m.service.deletions.get({ kind: "account", userId: "account-1" }), null)
 })
+
+test("poster preview accepts the member room cookie and refuses a departed member place", async () => {
+	const env = setup()
+	const session = cookies((await signIn(env.handler, `${origin}/`)).callback)[MEMBER_COOKIE].value
+	const created = await env.handler(
+		new Request(api("/rooms"), {
+			method: "POST",
+			headers: {
+				origin,
+				"content-type": "application/json",
+				cookie: `${MEMBER_COOKIE}=${session}`,
+			},
+			body: JSON.stringify({
+				contractVersion: 3,
+				commandId: randomBytes(16).toString("hex"),
+				admissionSecret: randomBytes(32).toString("base64url"),
+				nickname: "Host",
+				setup: { country: "DE" },
+			}),
+		}),
+	)
+	assert.equal(created.status, 200)
+	const admission = await created.json()
+	const id = admission.credential.roomId
+	const roomCookie = `yepwatch3_${id}=${cookies(created)[`yepwatch3_${id}`].value}`
+	const read = (cookie = `${roomCookie}; ${MEMBER_COOKIE}=${session}`) =>
+		env.handler(new Request(api(`/rooms/${id}/preview`), { headers: { cookie } }))
+	assert.equal((await read()).status, 200)
+	assert.equal(
+		(await read(roomCookie)).status,
+		401,
+		"member room credentials require their account session",
+	)
+	const person = env.repo.rows.get(id)!.room.participants[0]
+	assert.ok(person.memberUserId)
+	person.leftAt = Date.now()
+	assert.equal((await read()).status, 403, "a member identity never bypasses Leave")
+})

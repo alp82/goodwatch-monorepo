@@ -69,6 +69,10 @@ export interface Candidate extends BaseCandidate {
 	/** GoodWatch's "Not for …" line, or null when nothing a viewer might expect is weak. */
 	notFor?: string | null
 }
+/** Read-only setup poster suggestions; never dealt or recorded as seen. */
+export interface RoomPosterPreview {
+	candidates: Candidate[]
+}
 export interface Match {
 	candidateId: string
 	/** Mean client-reported active exposure of every current participant’s explicit Yep; otherwise null. */
@@ -587,6 +591,8 @@ export const paths = {
 	realtimeViews: `${API_PREFIX}/realtime/internal/views`,
 	snapshot: (id: string) => room(id),
 	join: (id: string) => `${room(id)}/join`,
+	/** GET: poster preview. POST on the same path retains draft interpretation. */
+	roomPreview: (id: string) => `${room(id)}/preview`,
 	preview: (id: string) => `${room(id)}/preview`,
 	commands: (id: string) => `${room(id)}/commands`,
 	realtimeTicket: (id: string) => `${room(id)}/realtime-ticket`,

@@ -104,6 +104,17 @@
       lb_try_interval 100ms
     }
   }
+  # Read-only setup poster preview; room credentials are checked by the API.
+  @room_preview {
+    method GET
+    path_regexp room_preview ^/api/yepwatch/v1/proposal/rooms/[A-Za-z0-9_-]{1,256}/preview$
+  }
+  handle @room_preview {
+    reverse_proxy api:3000 {
+      lb_try_duration 30s
+      lb_try_interval 100ms
+    }
+  }
   @member_read {
     method GET
     path_regexp member ^/api/yepwatch/v1/proposal/(rooms/[A-Za-z0-9_-]{1,256}/member(/progress)?|account(/home|/deletion)?)$

@@ -159,7 +159,10 @@ export interface ProposalCatalog {
 		at: number,
 	): Promise<void>
 	metadata: import("./continuous-types.ts").ContinuousCatalog["metadata"]
-	page(room: ProposalRoom): Promise<{
+	page(
+		room: ProposalRoom,
+		options?: { limit?: number; preview?: boolean },
+	): Promise<{
 		candidates: Candidate[]
 		exhausted: boolean
 		inputRevision?: string

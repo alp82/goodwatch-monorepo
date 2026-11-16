@@ -90,6 +90,7 @@ const candidate = z
     people: z.object({ directors: z.array(z.string()), cast: z.array(z.string()) }).nullable().optional(),
   })
   .strict();
+export const roomPosterPreviewSchema = z.object({ candidates: z.array(candidate).max(5) });
 const code = z.enum([
   'invalid_request',
   'unauthorized',

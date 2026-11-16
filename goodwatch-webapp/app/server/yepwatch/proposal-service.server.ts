@@ -1,3 +1,4 @@
+import { PosterPreviews } from "./proposal-poster-preview.ts"
 import { initializeIns, setIn } from "./proposal-matches-in.ts"
 import { ideasForServiceReread } from "./proposal-redesign.ts"
 import { emitRoundOutcome, recordOutcome } from "./proposal-outcome.ts"
@@ -187,6 +188,7 @@ export class ProposalService {
 	private profileRooms = new Map<string, Set<string>>()
 	private profileWarmups = new Map<string, Promise<void>>()
 	/** First decks built during setup, so Start doesn't wait for the catalog. */
+	private readonly posterPreviews: PosterPreviews
 	readonly decks: PreparedDecks
 	/** Refill pages being built ahead of their commands' lane (refillPage), by room, sender and command. */
 	private refills = new Map<string, Promise<RefillPage>>()
@@ -264,6 +266,7 @@ export class ProposalService {
 				...options.decks,
 			},
 		)
+		this.posterPreviews = new PosterPreviews(catalog, now, this.decks)
 	}
 	/** Use held revisions immediately. Cold reads warm a later build without delaying rooms or admissions. */
 	async prepareProfiles(room: ProposalRoom) {
@@ -1183,6 +1186,23 @@ export class ProposalService {
 			invite: { code, path: `/r/${code}` },
 			snapshot: this.snapshot(room, credential),
 		}
+	}
+	/** Same participant authorization as read(), without resuming interpretation jobs or preparing decks. */
+	async posterPreview(id: string, credential: ActorCredential) {
+		const { stored, early } = await this.readStored(id)
+		requireRoom(
+			stored && stored.room.format === 2 && stored.room.flowVersion === 3,
+			"not_found",
+			"Room unavailable",
+			404,
+		)
+		const room = stored.room
+		continuousLive(room, this.now())
+		const result = early ? await early : { check: await this.guard?.active(room) }
+		if ("error" in result) throw result.error
+		const p = this.auth(room, credential)
+		requireRoom(p.leftAt == null, "forbidden", "You have left this room", 403)
+		return this.posterPreviews.read(room)
 	}
 	async read(id: string, credential: ActorCredential) {
 		const { room } = await this.get(id)
