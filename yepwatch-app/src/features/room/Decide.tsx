@@ -425,7 +425,7 @@ function Matches({ id, view, tiebreak, held, onLanded, onSkip }: { id: string; v
     : single && check === 'unavailable' ? <GText size={z(14)} color={glow.muted} lines={1}>Couldn’t confirm where to watch</GText>
     : tied.length ? <>
       <View style={{ width: 16 }}><Icon name="check" size={16} color={glow.amber} /></View>
-      <GText bold size={z(14)} color={glow.amber} lines={1} style={{ flex: 1, textAlign: 'center' }}>{single ? `Everyone’s in on ${single.title}` : `Everyone’s in on ${tied.length}`}</GText>
+      <GText key={single?.id ?? `many-${tied.length}`} bold size={z(14)} color={glow.amber} lines={1} style={{ flex: 1, textAlign: 'center' }}>{single ? `Everyone’s in on ${single.title}` : `Everyone’s in on ${tied.length}`}</GText>
       <View style={{ width: 54 }}>{many ? <MiniPosters cs={tied} /> : null}</View>
     </> : null;
   const footer = (
