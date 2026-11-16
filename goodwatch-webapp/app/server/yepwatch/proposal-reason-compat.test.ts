@@ -21,6 +21,11 @@ test("actual installed wire parser reads legacy frames; new reasons are delivere
 	const { ins, inVersion, tiebreak, ...withoutMatchesIn } = shared
 	const legacy = {
 		...withoutMatchesIn,
+		participants: shared.participants.map((p) => {
+			const legacy = { ...p }
+			delete legacy.answered
+			return legacy
+		}),
 		candidates: shared.candidates.map(({ reason: _, ...candidate }) => candidate),
 	}
 	assert.ok(
@@ -64,6 +69,13 @@ test("HTTP read responses omit reasons by default and include them only with can
 		return response.json()
 	}
 	assert.equal("reason" in (await read()).shared.candidates[0], false)
+	assert.equal("answered" in (await read()).shared.participants[0], false)
+	assert.equal(
+		"answered" in (await read("?matchesIn=1&candidateReasons=1")).shared.participants[0],
+		false,
+	)
+	assert.equal((await read("?answeredCounts=1")).shared.participants[0].answered, 0)
+	assert.equal("ins" in (await read("?answeredCounts=1")).shared, false)
 	assert.equal((await read("?candidateReasons=1")).shared.candidates[0].reason.code, "well_liked")
 	const legacy = await read()
 	assert.ok(parseFrame(JSON.stringify({ type: "room.snapshot", snapshot: legacy.shared })))
@@ -90,7 +102,7 @@ test("HTTP read responses omit reasons by default and include them only with can
 	)
 })
 
-test("internal single and batched views require matchesIn=1 to emit matches fields", async () => {
+test("internal views gate matches and answered counts; attach stays attachment-only", async () => {
 	const repo = new ProposalMemoryRepository(),
 		service = new ProposalService(
 			repo,
@@ -110,10 +122,10 @@ test("internal single and batched views require matchesIn=1 to emit matches fiel
 		serviceSecret: "s".repeat(32),
 		allowedOrigins: [],
 	})
-	for (const path of [paths.realtimeView, paths.realtimeViews])
+	for (const path of [paths.realtimeAttach, paths.realtimeView, paths.realtimeViews])
 		for (const optIn of [false, true]) {
 			const response = await handler(
-				new Request(`https://api.example${path}${optIn ? "?matchesIn=1" : ""}`, {
+				new Request(`https://api.example${path}${optIn ? "?matchesIn=1&answeredCounts=1" : ""}`, {
 					method: "POST",
 					headers: {
 						authorization: `Bearer ${"s".repeat(32)}`,
@@ -121,14 +133,21 @@ test("internal single and batched views require matchesIn=1 to emit matches fiel
 					},
 					body: JSON.stringify({
 						roomId: id,
-						...(path === paths.realtimeView
-							? { lease: attached.lease }
-							: { leases: [attached.lease] }),
+						...(path === paths.realtimeAttach
+							? { ticket: (await service.ticket(id, admission.credential)).ticket }
+							: path === paths.realtimeView
+								? { lease: attached.lease }
+								: { leases: [attached.lease] }),
 					}),
 				}),
 			)
 			assert.equal(response.status, 200)
 			const value = await response.json()
+			if (path === paths.realtimeAttach) {
+				assert.equal(value.snapshot, undefined)
+				continue
+			}
 			for (const key of ["ins", "inVersion", "tiebreak"]) assert.equal(key in value.snapshot, optIn)
+			assert.equal("answered" in value.snapshot.participants[0], optIn)
 		}
 })

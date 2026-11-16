@@ -107,6 +107,7 @@ test('gateway authority opts into matchesIn on attach, view and batched views', 
     await authority.views!({ roomId: 'room-1', leases: ['l'.repeat(43)] })
     assert.deepEqual(urls.map(url => url.pathname), [paths.realtimeAttach, paths.realtimeView, paths.realtimeViews])
     assert.ok(urls.every(url => url.searchParams.get('matchesIn') === '1'))
+    assert.ok(urls.every(url => url.searchParams.get('answeredCounts') === '1'))
   } finally { globalThis.fetch = originalFetch }
 })
 
@@ -118,3 +119,18 @@ test('unconfirmed everyone-in sets with one or multiple titles accept no tiebrea
   assert.deepEqual(proposalProjection(s, s.roomId), s)
   assert.equal(s.participants.filter(p => !p.dropped).length, 2)
 })
+
+ test('answeredCounts is independent, optional for old APIs, and validates bounded nonnegative integer counts', () => {
+  const s = snapshot()
+  s.participants[0].answered = 1
+  assert.equal(proposalProjection(s, s.roomId).participants[0].answered, 1)
+  for (const reasons of [false, true]) for (const matches of [false, true]) for (const counts of [false, true]) {
+    assert.equal('answered' in proposalForClient(s, reasons, matches, counts).participants[0], counts)
+  }
+  for (const answered of [-1, 0.5, 3, Number.MAX_SAFE_INTEGER + 1]) {
+    assert.throws(() => proposalProjection({ ...s, participants: s.participants.map(p => ({ ...p, answered })) }, s.roomId))
+  }
+  delete s.participants[0].answered
+  assert.doesNotThrow(() => proposalProjection(s, s.roomId))
+  assert.equal('answered' in proposalForClient(s, false, false, true).participants[0], false)
+ })

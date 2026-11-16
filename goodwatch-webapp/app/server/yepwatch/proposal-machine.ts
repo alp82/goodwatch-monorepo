@@ -221,7 +221,7 @@ function continuousSnapshotCandidate(c: Candidate): Omit<Candidate, "viewingDura
 	}
 }
 export function proposalSnapshot(room: ProposalRoom, participantId: string): RoomSnapshot {
-	const legacy = continuousSnapshot(room, participantId)
+	const legacy = continuousSnapshot(room, participantId, true)
 	const active = activeRoom(room)
 	const p = actor(room, participantId)
 	const proposal = room.proposal

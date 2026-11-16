@@ -106,6 +106,16 @@ test("a vote publishes the committed room: the snapshot the gateway would read, 
 		attachments.map((x) => x.lease),
 	)
 	assert.deepEqual(event.snapshot, views.snapshot)
+	assert.equal(
+		event.snapshot.participants.find((p) => p.participantId === r.b.credential.participantId)
+			?.answered,
+		1,
+	)
+	assert.equal(
+		event.snapshot.participants.find((p) => p.participantId === r.a.credential.participantId)
+			?.answered,
+		0,
+	)
 	const byId = (x: { participantId: string }, y: { participantId: string }) =>
 		x.participantId.localeCompare(y.participantId)
 	assert.deepEqual(
@@ -254,4 +264,29 @@ test("a room read that names the shared revision it holds gets only its own part
 	await r.vote(r.a)
 	const after = await read(`?known=${revision}`)
 	assert.ok(after.body.shared.revision > revision, "a newer room comes whole")
+})
+
+test("Undo publishes the reduced count to peers with a legacy revision hint", async () => {
+	const r = await started()
+	await r.vote(r.b)
+	const result = await r.send(
+		{
+			type: "vote",
+			generation: r.start.snapshot.shared.generation,
+			candidateId: r.start.snapshot.shared.candidates[0].id,
+			value: null,
+			expectedVoteRevision: 1,
+		},
+		r.b,
+	)
+	await new Promise((resolve) => setTimeout(resolve, 20))
+	const published = r.events.filter((e) => e.revision === result.receipt.appliedRevision)
+	assert.equal(published.length, 2)
+	assert.ok(isCommitted(published[0]))
+	assert.equal(
+		published[0].snapshot.participants.find((p) => p.participantId === r.b.credential.participantId)
+			?.answered,
+		0,
+	)
+	assert.deepEqual(published[1], { roomId: r.id, revision: result.receipt.appliedRevision })
 })

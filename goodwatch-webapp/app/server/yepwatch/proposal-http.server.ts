@@ -95,15 +95,23 @@ export function createProposalHandler(service: ProposalService, options: HttpOpt
 			return new Response(
 				timedSync("json", () =>
 					JSON.stringify(data, (key, value) =>
-						url.searchParams.get("matchesIn") !== "1" &&
-						["ins", "inVersion", "tiebreak", "favorite"].includes(key)
-							? undefined
-							: key === "candidates" &&
-								  Array.isArray(value) &&
-								  !url.pathname.startsWith(`${API_PREFIX}/realtime/internal/`) &&
-								  url.searchParams.get("candidateReasons") !== "1"
-								? value.map(({ reason: _, ...card }) => card)
-								: value,
+						key === "participants" &&
+						Array.isArray(value) &&
+						url.searchParams.get("answeredCounts") !== "1"
+							? value.map((person) => {
+									const legacy = { ...person }
+									delete legacy.answered
+									return legacy
+								})
+							: url.searchParams.get("matchesIn") !== "1" &&
+								  ["ins", "inVersion", "tiebreak", "favorite"].includes(key)
+								? undefined
+								: key === "candidates" &&
+									  Array.isArray(value) &&
+									  !url.pathname.startsWith(`${API_PREFIX}/realtime/internal/`) &&
+									  url.searchParams.get("candidateReasons") !== "1"
+									? value.map(({ reason: _, ...card }) => card)
+									: value,
 					),
 				),
 				{ status, headers },

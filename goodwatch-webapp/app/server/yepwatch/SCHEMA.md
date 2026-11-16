@@ -6,27 +6,27 @@ The release stores interactions in **19 explicit typed tables**, not three opaqu
 
 All names below are in the `doc` schema. Every immutable domain record has `record_id TEXT PRIMARY KEY`, `room_id TEXT`, `generation BIGINT` and `expires_at BIGINT`. The remaining columns describe that entity explicitly.
 
-| Table | Main fields / purpose |
-|---|---|
-| `yepwatch_invitation` | `code_hash` primary key, `room_id`, `expires_at`; short invitation lookup with no plaintext key |
-| `yepwatch_room` | `id`, `revision`, `phase`, `expires_at`, `host_id`, roster/context/generation counters; shared country/service IDs/confirmation, typed prompt interpretation, constraints, stream and final-check state; exact references to current domain records; pending notification/check markers |
-| `yepwatch_participant` | Participant ID, optional GoodWatch account ID, nickname, joined/archive/leave metadata, independent device sessions with credential hashes and command sequences/receipts; references to shared private votes, agreement and grant |
-| `yepwatch_vote` | Participant ID, candidate ID, `choice` (`watch`, `pass`, NULL), vote revision, active exposure milliseconds and timing source |
-| `yepwatch_proposal` | Candidate ID, proposal version, proposer ID, previous candidate ID, participant IDs present when proposed |
-| `yepwatch_agreement` | Participant ID, approved proposal version (nullable), agreement revision |
-| `yepwatch_decision` | Candidate ID, agreement-check version, decision time, strictly typed availability evidence |
-| `yepwatch_candidate` | Candidate ID, typed movie/show/episode identity, title/year, summary, poster/backdrop/trailer URLs, score/genres/runtime, typed availability and viewing duration |
-| `yepwatch_command_receipt` | Participant ID, command ID, sequence, request digest and accepted room revision |
-| `yepwatch_ticket` | Ticket hash, participant ID, optional login session ID, participant epoch and ticket expiry. Only rooms written before 2026-11-13 reference any: realtime tickets now live in Valkey (`proposal-tickets.ts`), outside the room |
-| `yepwatch_member_grant` | Participant ID, encrypted access token and grant expiry |
-| `yepwatch_member_intent` | State hash, participant ID, epoch, client/return URI, PKCE challenge and encrypted verifier, connection status, code hash and intent expiry |
-| `yepwatch_idea` | Authored room idea, enabled state and immutable interpretation |
-| `yepwatch_history` | Immutable decision snapshot, account and participant entitlements; referenced by the committed room head before projection |
-| `yepwatch_account_rooms` | Hashed account locator with live room IDs and expiries; membership always checked against the room head |
-| `yepwatch_account_history` | Durable confirmed decision snapshots and account entitlements, independent of room expiry |
-| `yepwatch_revoked_session` | Hashed login session ID and revocation time horizon; prevents signed-out credentials from minting new access |
-| `yepwatch_runtime` | Compatibility marker, key ID/check (not the key), fixed room TTL |
-| `yepwatch_control` | Explicit configuration fingerprint/window, typed room reservations, admission digests and typed command grants; bounded capacity/rate bookkeeping |
+| Table                      | Main fields / purpose                                                                                                                                                                                                                                                                   |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `yepwatch_invitation`      | `code_hash` primary key, `room_id`, `expires_at`; short invitation lookup with no plaintext key                                                                                                                                                                                         |
+| `yepwatch_room`            | `id`, `revision`, `phase`, `expires_at`, `host_id`, roster/context/generation counters; shared country/service IDs/confirmation, typed prompt interpretation, constraints, stream and final-check state; exact references to current domain records; pending notification/check markers |
+| `yepwatch_participant`     | Participant ID, optional GoodWatch account ID, nickname, joined/archive/leave metadata, independent device sessions with credential hashes and command sequences/receipts; references to shared private votes, agreement and grant                                                      |
+| `yepwatch_vote`            | Participant ID, candidate ID, `choice` (`watch`, `pass`, NULL), vote revision, active exposure milliseconds and timing source                                                                                                                                                           |
+| `yepwatch_proposal`        | Candidate ID, proposal version, proposer ID, previous candidate ID, participant IDs present when proposed                                                                                                                                                                               |
+| `yepwatch_agreement`       | Participant ID, approved proposal version (nullable), agreement revision                                                                                                                                                                                                                |
+| `yepwatch_decision`        | Candidate ID, agreement-check version, decision time, strictly typed availability evidence                                                                                                                                                                                              |
+| `yepwatch_candidate`       | Candidate ID, typed movie/show/episode identity, title/year, summary, poster/backdrop/trailer URLs, score/genres/runtime, typed availability and viewing duration                                                                                                                       |
+| `yepwatch_command_receipt` | Participant ID, command ID, sequence, request digest and accepted room revision                                                                                                                                                                                                         |
+| `yepwatch_ticket`          | Ticket hash, participant ID, optional login session ID, participant epoch and ticket expiry. Only rooms written before 2026-11-13 reference any: realtime tickets now live in Valkey (`proposal-tickets.ts`), outside the room                                                          |
+| `yepwatch_member_grant`    | Participant ID, encrypted access token and grant expiry                                                                                                                                                                                                                                 |
+| `yepwatch_member_intent`   | State hash, participant ID, epoch, client/return URI, PKCE challenge and encrypted verifier, connection status, code hash and intent expiry                                                                                                                                             |
+| `yepwatch_idea`            | Authored room idea, enabled state and immutable interpretation                                                                                                                                                                                                                          |
+| `yepwatch_history`         | Immutable decision snapshot, account and participant entitlements; referenced by the committed room head before projection                                                                                                                                                              |
+| `yepwatch_account_rooms`   | Hashed account locator with live room IDs and expiries; membership always checked against the room head                                                                                                                                                                                 |
+| `yepwatch_account_history` | Durable confirmed decision snapshots and account entitlements, independent of room expiry                                                                                                                                                                                               |
+| `yepwatch_revoked_session` | Hashed login session ID and revocation time horizon; prevents signed-out credentials from minting new access                                                                                                                                                                            |
+| `yepwatch_runtime`         | Compatibility marker, key ID/check (not the key), fixed room TTL                                                                                                                                                                                                                        |
+| `yepwatch_control`         | Explicit configuration fingerprint/window, typed room reservations, admission digests and typed command grants; bounded capacity/rate bookkeeping                                                                                                                                       |
 
 **Time-column detail:** common record `expires_at` is the room lifetime. Ticket/grant/intent deadlines use their own `ticket_expires_at`, `grant_expires_at`, `intent_expires_at` columns. These are separate so cleanup cannot delete a currently referenced record merely because a credential expires.
 
@@ -75,7 +75,6 @@ For an already provisioned typed store, apply only [migrations/20261023-short-in
 
 `yepwatch_room.intent` declares prompt text, interpretation chips (text/kind/key), ranked numeric catalog keys and interpretation time as a strict typed object. Country and providers are direct room columns. The old screen table and selection/evidence screen-ID columns are removed by the explicit migration. A singleton context is derived for old wire/catalog adapters only. `yepwatch_participant.left_at` records departure; departed people are excluded from the active group but their credentials/receipts remain bounded records for retry recovery.
 
-
 ## Account identity and history
 
 One room-head CAS publishes account membership uniqueness. Account indexes are registered first and may contain harmless references to failed admissions; a primary-key room read must confirm the account participant before exposing any state. Device sessions share the participant's votes/approval but have separate credentials and ordered command receipts. Every account HTTP operation also requires a current sealed GoodWatch login; a room credential alone cannot recover account access after logout. Logout on the account's last device in a room turns that participant into a guest (link, grant and sessions removed; the session's token hash, sequence and receipts become the guest's), so the device keeps its seat without account access. Session expiry follows the room lifetime, while the GoodWatch login is renewed independently, so access-token rotation does not lose pending-command receipts.
@@ -83,7 +82,6 @@ One room-head CAS publishes account membership uniqueness. Account indexes are r
 A final decision adds a typed snapshot and its participant/account entitlements to the same room publication. The existing pending marker remains set until these committed snapshots have been copied idempotently to account history. Repair also projects expired rooms. Restart projects retained history before clearing the round; expired-room cleanup does likewise before removing the head. Unpublished history preparations are never copied. Guest upgrades may add account entitlement to a retained decision without changing its title or participants. Decision history never records GoodWatch watches, Seen or taste.
 
 Account history listing explicitly refreshes the archive index before the account-filtered query, making a just-confirmed choice visible to another device. Existing DQL privileges cover REFRESH ([CrateDB privileges](https://docs.cratedb.com/projects/crate-reference/en/latest/admin/privileges.html)); no runtime DDL privilege is needed.
-
 
 ## Picks quality additions (2026-11-15)
 
@@ -167,3 +165,19 @@ until outcome is set. Internal realtime responses omit ins/inVersion/tiebreak/fa
 sends `?matchesIn=1` on attach/view/views; the new gateway always sends it. Either API/gateway deployment
 order works after the migration; **gateway first is preferred**. Installed gateways continue receiving their
 strict legacy response shape when the API deploys first.
+
+### Participant answered counts
+
+Proposal HTTP responses include `shared.participants[].answered` only with
+`?answeredCounts=1`. It counts non-null votes (Yep or Nope) on the current
+`shared.candidates`, so Undo reduces it and retirement removes those cards from
+both the count and the deck. Dropped places retain their own count. This is
+count-only: no answered title IDs or answer values are shared.
+
+The gateway requests `answeredCounts=1` on internal attach/view/views and forwards
+`answered` only to clients declaring `answeredCounts: true` on authentication,
+independently of `matchesIn` and `candidateReasons`. Either deploy order works:
+old gateways receive legacy HTTP shapes and can fall back from an unrecognized
+committed snapshot to the following revision hint; new gateways accept an absent
+count from old APIs. Vote and Undo commits already publish room revisions, which
+reach other attached clients as `room.updated`; no new polling is required.

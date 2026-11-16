@@ -10,7 +10,7 @@ export const proposalSharedSchema = continuousSharedSchema.extend({
   contractVersion: z.literal(3),
   ideas: z.array(z.strictObject({id:z.string(),text:z.string().min(2).max(200),authorId:z.string(),on:z.boolean(),attributes:z.array(z.strictObject({text:z.string(),kind:z.enum(['attribute','excluded','want','avoid','phrase']),key:z.string().optional()})).max(100)})).max(8),
   disabledServiceIds: z.array(z.number().int().positive()).max(1200),
-  participants: z.array(continuousSharedSchema.shape.participants.element.extend({ nickname: z.string().max(40), serviceIds:z.array(z.number().int().positive()).max(100).nullable(), dropped:z.boolean().optional() })).max(12),
+  participants: z.array(continuousSharedSchema.shape.participants.element.extend({ nickname: z.string().max(40), serviceIds:z.array(z.number().int().positive()).max(100).nullable(), dropped:z.boolean().optional(), answered:count.optional() })).max(12),
   candidates: z.array(continuousSharedSchema.shape.candidates.element.extend({
     reason: z.strictObject({ code: z.enum(REASON_CODES), text: z.string().min(1).max(80) }).nullable().optional(),
     tagline: z.string().nullable().optional(),
@@ -55,6 +55,7 @@ export function proposalProjection(input: unknown, roomId: string): SharedRoomSn
       value.matches.some(m => !candidates.has(m.candidateId))) throw new Error('Ambiguous proposal projection')
   if (value.candidates.some(c => c.viewingDuration && c.viewingDuration.scope !== (c.identity.kind === 'movie' ? 'movie' : 'episode')))
     throw new Error('Invalid duration scope')
+  if (value.participants.some(p => p.answered !== undefined && p.answered > value.candidates.length)) throw new Error('Invalid answered count')
   const ins = value.ins, tie = value.tiebreak
   if ((ins === undefined) !== (value.inVersion === undefined) || (ins === undefined) !== (tie === undefined)) throw new Error('Incomplete matches in projection')
   const unique = (ids: string[]) => new Set(ids).size === ids.length
@@ -81,8 +82,8 @@ export function proposalProjection(input: unknown, roomId: string): SharedRoomSn
 }
 
 /** Installed strict bundles receive only fields covered by their declared capabilities. */
-export function proposalForClient(snapshot: SharedRoomSnapshot, candidateReasons = false, matchesIn = false): SharedRoomSnapshot {
-  if (candidateReasons && (matchesIn || !('ins' in snapshot || 'inVersion' in snapshot || 'tiebreak' in snapshot))) return snapshot
+export function proposalForClient(snapshot: SharedRoomSnapshot, candidateReasons = false, matchesIn = false, answeredCounts = false): SharedRoomSnapshot {
+  if (candidateReasons && (answeredCounts || !snapshot.participants.some(p => 'answered' in p)) && (matchesIn || !('ins' in snapshot || 'inVersion' in snapshot || 'tiebreak' in snapshot))) return snapshot
   const { ins, inVersion, tiebreak, ...legacy } = snapshot
-  return { ...(matchesIn ? snapshot : legacy), candidates: candidateReasons ? snapshot.candidates : snapshot.candidates.map(({ reason: _, ...candidate }) => candidate) }
+  return { ...(matchesIn ? snapshot : legacy), participants: answeredCounts ? snapshot.participants : snapshot.participants.map(({ answered: _, ...person }) => person), candidates: candidateReasons ? snapshot.candidates : snapshot.candidates.map(({ reason: _, ...candidate }) => candidate) }
 }

@@ -66,6 +66,8 @@ export interface SharedRoomSnapshot {
 		nickname: string
 		screenId: string | null
 		ready: boolean
+		/** Opt-in count of non-null votes on current shared candidates; no answer identities. */
+		answered?: number
 	}[]
 	screens: ScreenContext[]
 	constraints: RoomConstraints

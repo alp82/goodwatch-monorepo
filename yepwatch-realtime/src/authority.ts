@@ -85,6 +85,7 @@ export class HttpAuthority implements Authority {
     try {
       const url = new URL(path, this.base)
       url.searchParams.set('matchesIn', '1')
+      url.searchParams.set('answeredCounts', '1')
       const response = await fetch(url, {
         method: 'POST', redirect: 'error', signal: AbortSignal.any([AbortSignal.timeout(this.timeoutMs), this.shutdown.signal]),
         headers: { Authorization: `Bearer ${this.secret}`, 'Content-Type': 'application/json' },

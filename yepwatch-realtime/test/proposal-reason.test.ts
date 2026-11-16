@@ -10,7 +10,7 @@ test('strict candidate projection accepts optional reasons and rejects unknown c
   for (const reason of [{ code: 'unknown', text: 'Unknown' }, { code: 'well_liked', text: '' }, { code: 'well_liked', text: 'a'.repeat(81) }, { code: 'well_liked', text: 'Hi', person: 'private' }]) assert.equal(schema.safeParse({ ...card, reason }).success, false)
 })
 test('a phone that did not declare candidateReasons gets cards without a reason; one that did gets the snapshot as it is', () => {
-  const snapshot = { candidates: [{ ...card, reason: { code: 'well_liked', text: 'Well liked on GoodWatch' } }, card] } as unknown as SharedRoomSnapshot
+  const snapshot = { participants: [], candidates: [{ ...card, reason: { code: 'well_liked', text: 'Well liked on GoodWatch' } }, card] } as unknown as SharedRoomSnapshot
   const legacy = proposalForClient(snapshot)
   assert.equal(legacy.candidates.some(c => 'reason' in c), false)
   assert.equal(legacy.candidates[0].title, 'Fixture')

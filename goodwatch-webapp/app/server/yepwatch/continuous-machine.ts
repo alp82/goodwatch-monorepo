@@ -91,7 +91,11 @@ function catalogCandidate(c: Candidate): Candidate {
 		...(c.genres === undefined ? {} : { genres: [...c.genres] }),
 	}
 }
-export function continuousSnapshot(room: ContinuousRoom, participantId: string): RoomSnapshot {
+export function continuousSnapshot(
+	room: ContinuousRoom,
+	participantId: string,
+	answeredCounts = false,
+): RoomSnapshot {
 	const p = actor(room, participantId)
 	const current = matches(room)
 	const shared: SharedRoomSnapshot = {
@@ -109,6 +113,9 @@ export function continuousSnapshot(room: ContinuousRoom, participantId: string):
 			nickname: p.nickname,
 			screenId: p.screenId,
 			ready: p.ready,
+			...(answeredCounts
+				? { answered: room.candidates.filter((c) => p.votes[c.id]?.value != null).length }
+				: {}),
 		})),
 		screens: room.screens.map((s) => ({
 			id: s.id,

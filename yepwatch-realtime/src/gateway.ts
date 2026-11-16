@@ -36,6 +36,7 @@ interface Client {
   roomDetails?: boolean
   candidateReasons?: boolean
   matchesIn?: boolean
+  answeredCounts?: boolean
   inspectionMatches?: { matches: { candidateId: string }[] }
 }
 /** `known`: the newest revision any read or committed room has shown for this room (a committed room older is stale). */
@@ -225,9 +226,9 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
   type Frames = WeakMap<object, Map<string, string>>
   /** Sends `snapshot` to one phone (validated already); phones sharing a snapshot share its serialized frame. */
   function present(room: Room, client: Client, snapshot: SharedRoomSnapshot | ContinuousSnapshot | ProposalSnapshot, type: 'room.snapshot' | 'room.updated', frames: Frames, participantId: string) {
-    const shape = `${type}:${client.roomDetails === true}:${client.candidateReasons === true}:${client.matchesIn === true}`
-    const compatible = continuous?.proposal ? proposalForClient(snapshot as ProposalSnapshot, client.candidateReasons, client.matchesIn) : snapshot
-    const frame = { type, snapshot: client.roomDetails ? compatible : { ...compatible, participants: snapshot.participants.filter(p => !('dropped' in p && p.dropped)).map(p => Object.fromEntries(Object.entries(p).filter(([key]) => key !== 'dropped'))) } as typeof snapshot } as OutputFrame
+    const shape = `${type}:${client.roomDetails === true}:${client.candidateReasons === true}:${client.matchesIn === true}:${client.answeredCounts === true}`
+    const compatible = continuous?.proposal ? proposalForClient(snapshot as ProposalSnapshot, client.candidateReasons, client.matchesIn, client.answeredCounts) : snapshot
+    const frame = { type, snapshot: client.roomDetails ? compatible : { ...compatible, participants: compatible.participants.filter(p => !('dropped' in p && p.dropped)).map(p => Object.fromEntries(Object.entries(p).filter(([key]) => key !== 'dropped'))) } as typeof snapshot } as OutputFrame
     const shapes = frames.get(snapshot) ?? new Map<string, string>()
     frames.set(snapshot, shapes)
     const data = shapes.get(shape) ?? JSON.stringify(frame)
@@ -358,11 +359,12 @@ export function createGateway(authority: Authority, bus: RevisionBus, overrides:
         // Exactly one application frame is allowed before authentication completes.
         if (client.authenticating) { fail(client, 'unauthorized'); return }
         client.authenticating = true
-        const parsed = (continuous?.proposal ? authenticateSchema.extend({ pointers: z.literal(true).optional(), cheers: z.literal(true).optional(), roomDetails: z.literal(true).optional(), candidateReasons: z.literal(true).optional(), matchesIn: z.literal(true).optional() }) : authenticateSchema).safeParse(input)
+        const parsed = (continuous?.proposal ? authenticateSchema.extend({ pointers: z.literal(true).optional(), cheers: z.literal(true).optional(), roomDetails: z.literal(true).optional(), candidateReasons: z.literal(true).optional(), matchesIn: z.literal(true).optional(), answeredCounts: z.literal(true).optional() }) : authenticateSchema).safeParse(input)
         if (!parsed.success) { fail(client, 'invalid_request'); return }
         client.pointers = 'pointers' in parsed.data && parsed.data.pointers === true
         client.cheers = 'cheers' in parsed.data && parsed.data.cheers === true
         client.roomDetails = 'roomDetails' in parsed.data && parsed.data.roomDetails === true
+        client.answeredCounts = 'answeredCounts' in parsed.data && parsed.data.answeredCounts === true
         client.matchesIn = 'matchesIn' in parsed.data && parsed.data.matchesIn === true
         client.candidateReasons = 'candidateReasons' in parsed.data && parsed.data.candidateReasons === true
         void (async () => {

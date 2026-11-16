@@ -148,6 +148,8 @@ export interface SharedRoomSnapshot {
 		serviceIds: number[] | null
 		screenId: string | null
 		ready: boolean
+		/** Opt-in count of non-null votes on current shared candidates; no answer identities. */
+		answered?: number
 		dropped?: boolean
 	}[]
 	screens: ScreenContext[]
@@ -451,6 +453,7 @@ export type ClientRealtimeFrame =
 			roomDetails?: true
 			candidateReasons?: true
 			matchesIn?: true
+			answeredCounts?: true
 			cheers?: true
 	  }
 	| { type: "ping" }
