@@ -12,6 +12,15 @@ See docs/agents/triage-labels.md.
 Use single-context domain documentation.
 See docs/agents/domain.md.
 
+## Code quality (Claude Code and Codex)
+
+- Follow [the shared coding workflow](docs/agents/code-quality.md). These instructions apply to both agents; do not maintain a separate Claude-specific copy.
+- Install root tools with `npm ci` and webapp dependencies with `npm --prefix goodwatch-webapp ci`. Root installation enables the staged-file pre-commit hook.
+- After editing webapp code, run `npm run format` (changed files only), then `npm run check` and the relevant tests. For committed branch changes, pass `-- --base <task-base-commit>` to format/check. Commands also work from `goodwatch-webapp/`.
+- Do not disable rules or increase `scripts/code-quality-baseline.json` to make a task pass. Report existing debt separately from new failures. `npm --prefix goodwatch-webapp run typecheck` remains the unfiltered compiler check.
+- YepWatch keeps Expo ESLint and its existing typecheck/test commands. Run those checks when changing YepWatch; do not replace its rules with the webapp configuration.
+- Review lint fixes. Never use dangerous autofixes or format unrelated files as a side effect of a task.
+
 ## Git worktrees
 
 - Before repository work, run `git fetch origin main`. Base new task branches and worktrees on the fetched `origin/main`; preserve existing local work.

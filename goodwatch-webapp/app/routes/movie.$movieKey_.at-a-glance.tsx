@@ -22,5 +22,5 @@ export default function MovieAtAGlancePage() {
 }
 
 // Page changes read this route's data from the browser's cache when they can (docs/navigation-cache.md).
-// biome-ignore format: cached-routes.test.ts reads this export as one line
+// prettier-ignore -- cached-routes.test.ts reads this export as one line
 export const clientLoader = cachedClientLoader("routes/movie.$movieKey_.at-a-glance")

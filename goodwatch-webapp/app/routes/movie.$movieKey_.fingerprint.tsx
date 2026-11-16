@@ -2,10 +2,7 @@
 // title page's frame (ui/details/sub-page/). The trailing underscore keeps it out of the title page's layout.
 import type { LoaderFunctionArgs } from "@remix-run/node"
 import { cachedClientLoader } from "~/navigation/instant-navigation"
-import {
-	FingerprintSubPage,
-	fingerprintMeta,
-} from "~/ui/details/sub-page/SubPages"
+import { FingerprintSubPage, fingerprintMeta } from "~/ui/details/sub-page/SubPages"
 import { fingerprintPageLoader } from "~/ui/details/sub-page/sub-page-loaders.server"
 import { withRequestTiming } from "~/utils/request-work"
 import { START_AFTER_PAINT } from "~/utils/start-after-paint"
@@ -25,5 +22,5 @@ export default function MovieFingerprintPage() {
 }
 
 // Page changes read this route's data from the browser's cache when they can (docs/navigation-cache.md).
-// biome-ignore format: cached-routes.test.ts reads this export as one line
+// prettier-ignore -- cached-routes.test.ts reads this export as one line
 export const clientLoader = cachedClientLoader("routes/movie.$movieKey_.fingerprint")

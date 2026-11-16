@@ -29,7 +29,13 @@
 		"lab:discover": "node scripts/discover-query-lab/server.mjs",
 		"lab:discover:check": "node scripts/discover-query-lab/evaluate-cli.mjs",
 		"lab:discover:browser": "node scripts/discover-query-lab/browser-check.mjs",
-		"lab:discover:assertions": "node --test scripts/discover-query-lab/evaluate.test.mjs"
+		"lab:discover:assertions": "node --test scripts/discover-query-lab/evaluate.test.mjs",
+		"format": "node ../scripts/code-quality.mjs format",
+		"format:check": "node ../scripts/code-quality.mjs format:check",
+		"lint": "node ../scripts/code-quality.mjs lint",
+		"lint:fix": "node ../scripts/code-quality.mjs lint:fix",
+		"check": "node ../scripts/code-quality.mjs check",
+		"typecheck:baseline": "node ../scripts/code-quality.mjs typecheck"
 	},
 	"dependencies": {
 		"@faststats/web": "^0.13.2",
@@ -92,19 +98,17 @@
 		"zod4": "npm:zod@4.6.7"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^1.9.4",
 		"@mdx-js/rollup": "3.1.1",
 		"@remix-run/dev": "^2.17.2",
-		"@remix-run/eslint-config": "^2.17.2",
 		"@tailwindcss/vite": "^4.1.5",
-		"@tanstack/eslint-plugin-query": "^5.60.1",
+		"@tanstack/eslint-plugin-query": "5.107.1",
 		"@types/node-crate": "^2.0.5",
 		"@types/nodemailer": "8.0.2",
 		"@types/pg": "8.23.1",
 		"@types/react": "^18.3.12",
 		"@types/react-dom": "^18.3.1",
 		"esbuild": "0.25.3",
-		"eslint": "^8.57.1",
+		"eslint": "9.39.5",
 		"happy-dom": "20.14.5",
 		"remark-gfm": "4.0.1",
 		"remix-development-tools": "^4.7.7",

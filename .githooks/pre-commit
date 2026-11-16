@@ -1,0 +1,3 @@
+if [ "$SKIP_GIT_HOOKS" != "1" ]; then
+  node node_modules/lint-staged/bin/lint-staged.js
+fi

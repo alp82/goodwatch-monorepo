@@ -1,0 +1,23 @@
+{
+	"name": "goodwatch-code-quality",
+	"private": true,
+	"type": "module",
+	"engines": {
+		"node": ">=24"
+	},
+	"scripts": {
+		"prepare": "node scripts/code-quality-hooks.mjs",
+		"format": "node scripts/code-quality.mjs format",
+		"format:check": "node scripts/code-quality.mjs format:check",
+		"lint": "node scripts/code-quality.mjs lint",
+		"lint:fix": "node scripts/code-quality.mjs lint:fix",
+		"typecheck": "node scripts/code-quality.mjs typecheck",
+		"check": "node scripts/code-quality.mjs check",
+		"test:tooling": "node --test scripts/code-quality.test.mjs"
+	},
+	"devDependencies": {
+		"lint-staged": "16.4.0",
+		"oxfmt": "0.78.0",
+		"oxlint": "1.93.0"
+	}
+}

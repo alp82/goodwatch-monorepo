@@ -18,10 +18,7 @@ import { buildMeta } from "~/utils/meta"
 
 export const loader = presentCatalogLoader(
 	async ({ request, params }: LoaderFunctionArgs) => {
-		const data = await getAwardCategory(
-			params.body ?? "",
-			params.category ?? "",
-		)
+		const data = await getAwardCategory(params.body ?? "", params.category ?? "")
 		if (!data) throw notFound()
 		return {
 			...data,
@@ -34,11 +31,7 @@ export const loader = presentCatalogLoader(
 	{ live: true },
 )
 
-const crumbs = (d: {
-	body: { slug: string; name: string }
-	slug: string
-	name: string
-}) => [
+const crumbs = (d: { body: { slug: string; name: string }; slug: string; name: string }) => [
 	{ label: "Awards", path: "/awards" },
 	{ label: d.body.name, path: `/awards/${d.body.slug}` },
 	{ label: d.name, path: `/awards/${d.body.slug}/category/${d.slug}` },
@@ -90,10 +83,7 @@ export default function AwardCategory() {
 							</div>
 							<div className="flex min-w-0 flex-col gap-1">
 								{y.winners.map((w) => (
-									<div
-										key={`${w.media_type}${w.tmdb_id}`}
-										className="flex flex-col gap-0.5"
-									>
+									<div key={`${w.media_type}${w.tmdb_id}`} className="flex flex-col gap-0.5">
 										<WonMark />
 										<Link
 											to={w.path}
@@ -120,5 +110,5 @@ export default function AwardCategory() {
 }
 
 // Page changes read this route's data from the browser's cache when they can (docs/navigation-cache.md).
-// biome-ignore format: cached-routes.test.ts reads this export as one line
+// prettier-ignore -- cached-routes.test.ts reads this export as one line
 export const clientLoader = cachedClientLoader("routes/awards.$body.category.$category")

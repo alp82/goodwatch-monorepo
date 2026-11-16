@@ -1,0 +1,14 @@
+{
+	"$schema": "./node_modules/oxlint/configuration_schema.json",
+	"plugins": ["typescript", "oxc"],
+	"categories": { "correctness": "error" },
+	"env": { "node": true, "es2024": true },
+	"ignorePatterns": [
+		"yepwatch-app/**",
+		"yepwatch-realtime/**",
+		"**/node_modules/**",
+		"**/public/**",
+		"**/build/**",
+		"**/dist/**"
+	]
+}

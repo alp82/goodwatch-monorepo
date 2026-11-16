@@ -1,0 +1,49 @@
+{
+	"$schema": "../node_modules/oxlint/configuration_schema.json",
+	"plugins": ["typescript", "react", "jsx-a11y", "import", "oxc"],
+	"jsPlugins": ["@tanstack/eslint-plugin-query"],
+	"categories": {
+		"correctness": "error"
+	},
+	"env": {
+		"browser": true,
+		"node": true,
+		"es2024": true
+	},
+	"rules": {
+		"react/rules-of-hooks": "error",
+		"react/exhaustive-deps": "error",
+		"react/no-array-index-key": "warn",
+		"react/no-danger": "warn",
+		"jsx-a11y/prefer-tag-over-role": "warn",
+		"jsx-a11y/click-events-have-key-events": "error",
+		"jsx-a11y/interactive-supports-focus": "error",
+		"jsx-a11y/no-autofocus": "warn",
+		"@tanstack/query/exhaustive-deps": "error",
+		"@tanstack/query/no-rest-destructuring": "warn",
+		"@tanstack/query/stable-query-client": "error",
+		"@tanstack/query/no-unstable-deps": "error",
+		"@tanstack/query/infinite-query-property-order": "error",
+		"@tanstack/query/mutation-property-order": "error",
+		"react/error-boundaries": "off",
+		"react/globals": "off",
+		"react/immutability": "off",
+		"react/incompatible-library": "off",
+		"react/preserve-manual-memoization": "off",
+		"react/purity": "off",
+		"react/refs": "off",
+		"react/set-state-in-effect": "off",
+		"react/set-state-in-render": "off",
+		"react/static-components": "off",
+		"react/use-memo": "off"
+	},
+	"ignorePatterns": [
+		"node_modules/**",
+		"**/.venv/**",
+		"build/**",
+		"dist/**",
+		"public/**",
+		"**/results/**",
+		"**/artifacts/**"
+	]
+}

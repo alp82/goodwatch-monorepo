@@ -1,0 +1,63 @@
+name: Code quality
+
+on:
+  pull_request:
+    paths: &quality-paths
+      - "goodwatch-webapp/**"
+      - "scripts/code-quality*"
+      - "package.json"
+      - "package-lock.json"
+      - ".ox*.json"
+      - "lint-staged.config.mjs"
+      - ".githooks/**"
+      - ".vscode/**"
+      - "AGENTS.md"
+      - "docs/agents/code-quality.md"
+      - ".github/workflows/code-quality.yml"
+  push:
+    branches: [main]
+    paths: *quality-paths
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: code-quality-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SKIP_GIT_HOOKS: "1"
+      SHARP_IGNORE_GLOBAL_LIBVIPS: "1"
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            goodwatch-webapp/package-lock.json
+      - name: Install locked tools and webapp dependencies
+        run: |
+          npm ci
+          npm --prefix goodwatch-webapp ci
+      - name: Test the commands and real staged-file hook
+        run: npm run test:tooling
+      - name: Check changed formatting and full lint/type regressions
+        env:
+          EVENT_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [ -n "$EVENT_BASE" ] && [ "$EVENT_BASE" != "0000000000000000000000000000000000000000" ]; then
+            export QUALITY_BASE="$EVENT_BASE"
+          else
+            export QUALITY_BASE="$(git rev-parse HEAD^)"
+          fi
+          npm run check
