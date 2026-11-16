@@ -65,8 +65,9 @@ export function YepsSheet({ onClose }: { onClose: () => void }) {
   if (!snapshot) return null;
   const voting = snapshot.shared.phase === 'choosing';
   const held = new Set(snapshot.shared.candidates.map((c) => c.id));
-  const answer = (id: string) => snapshot.own.votes.find((v) => v.candidateId === id)?.value ?? null;
-  const yes = (y: OwnYep) => !held.has(y.id) || answer(y.id) === 'watch';
+  // Still a Yep: in your Yeps now (a row changed to Nope stays out even after the room retires its card).
+  const now = new Set(yeps.map((y) => y.id));
+  const yes = (y: OwnYep) => now.has(y.id);
   const matches = new Set(snapshot.shared.matches.map((m) => m.candidateId));
   const decided = snapshot.shared.decision?.candidateId ?? null;
   const n = rows.filter(yes).length;
