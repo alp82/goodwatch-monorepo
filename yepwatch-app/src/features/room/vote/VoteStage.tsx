@@ -111,12 +111,12 @@ export const ENTRY_MS = 140;
  */
 const ENTRY_FIRST_FRAME = 1 - (1 - 16 / ENTRY_MS) ** 3;
 /** The answered card flies off in this long. */
-export const FLY_MS = 250;
+export const FLY_MS = 450;
 /** The question column's opacity while a look that paints across it plays at full strength. */
 const VEIL = 0.1;
-/** The answered card's stage look builds in and fades in about 450 ms. */
-const FADE_IN_MS = 120;
-const FADE_OUT_MS = 330;
+/** The answered card's stage look builds, holds briefly, then fades over about a second. */
+const FADE_IN_MS = 220;
+const FADE_OUT_MS = 600;
 
 function flicker(a: Animated.Value) {
   return Animated.sequence([
@@ -494,6 +494,7 @@ export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disab
       ...(wasLit ? [] : [flicker(set.fadeLit)]),
       Animated.sequence([
         Animated.timing(set.fadeV, { toValue: answer ? 1 : -1, duration: FADE_IN_MS, easing: Easing.out(Easing.cubic), useNativeDriver: driver }),
+        Animated.delay(120),
         Animated.timing(set.fadeV, { toValue: 0, duration: FADE_OUT_MS, easing: Easing.out(Easing.quad), useNativeDriver: driver }),
       ]),
       // Stamp: the stage takes a short knock as the stamp lands.
