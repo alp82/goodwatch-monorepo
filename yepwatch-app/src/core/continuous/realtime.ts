@@ -570,6 +570,8 @@ export class ContinuousRealtime {
             candidateReasons: true,
             // Matches "I'm in" counts and the tiebreak (api-client.ts withRoomOptIns).
             matchesIn: true,
+            // Each person's answered count for the voting track (api-client.ts withRoomOptIns).
+            answeredCounts: true,
           })
         );
       };

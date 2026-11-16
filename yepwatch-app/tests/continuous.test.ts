@@ -189,7 +189,7 @@ test('v3 HTTP namespace, native bearer and browser cookie split are real, and ca
   let credentials: RequestCredentials | undefined;
   const fetcher: typeof fetch = async (url, init) => {
     // Room reads ask for each card's reason.
-    assert.match(String(url), /\/proposal\/rooms\/room\?candidateReasons=1&matchesIn=1$/);
+    assert.match(String(url), /\/proposal\/rooms\/room\?candidateReasons=1&matchesIn=1&answeredCounts=1$/);
     headers = init?.headers;
     credentials = init?.credentials;
     return Response.json(continuousFixture());
@@ -346,9 +346,9 @@ test('text fingerprint survives the strict snapshot wire parser with bounded cou
 test('replies that carry a room ask for card reasons and matches ins; others do not', async () => {
   const { withRoomOptIns } = await import('../src/core/continuous/api-client');
   const P = '/api/yepwatch/v1/proposal';
-  assert.equal(withRoomOptIns(`${P}/rooms`), `${P}/rooms?candidateReasons=1&matchesIn=1`);
-  assert.equal(withRoomOptIns(`${P}/rooms/abc`), `${P}/rooms/abc?candidateReasons=1&matchesIn=1`);
-  assert.equal(withRoomOptIns(`${P}/rooms/abc?known=4`), `${P}/rooms/abc?known=4&candidateReasons=1&matchesIn=1`);
-  for (const tail of ['join', 'resume', 'commands']) assert.equal(withRoomOptIns(`${P}/rooms/abc/${tail}`), `${P}/rooms/abc/${tail}?candidateReasons=1&matchesIn=1`);
+  assert.equal(withRoomOptIns(`${P}/rooms`), `${P}/rooms?candidateReasons=1&matchesIn=1&answeredCounts=1`);
+  assert.equal(withRoomOptIns(`${P}/rooms/abc`), `${P}/rooms/abc?candidateReasons=1&matchesIn=1&answeredCounts=1`);
+  assert.equal(withRoomOptIns(`${P}/rooms/abc?known=4`), `${P}/rooms/abc?known=4&candidateReasons=1&matchesIn=1&answeredCounts=1`);
+  for (const tail of ['join', 'resume', 'commands']) assert.equal(withRoomOptIns(`${P}/rooms/abc/${tail}`), `${P}/rooms/abc/${tail}?candidateReasons=1&matchesIn=1&answeredCounts=1`);
   for (const path of [`${P}/rooms/abc/realtime-ticket`, `${P}/rooms/abc/member`, `${P}/account/home`, `${P}/profile`]) assert.equal(withRoomOptIns(path), path);
 });

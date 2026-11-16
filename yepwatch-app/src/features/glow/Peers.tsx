@@ -131,7 +131,8 @@ function FaceSlot({ x, arriving, children }: { x: number; arriving: boolean; chi
     </Animated.View>
   );
 }
-const Avatar = memo(function Avatar({
+/** One face with its live reactions; the faces row and the voting track (VoteTrack) both draw it. */
+export const Avatar = memo(function Avatar({
   size,
   person,
   pulse,

@@ -203,6 +203,8 @@ export const sharedSchema = z
           screenId: id.nullable(),
           ready: z.boolean(),
           dropped: z.boolean().optional(),
+          // Cards of the current deck this person has answered (count only); only for clients that ask (answeredCounts).
+          answered: n.optional(),
         })
         .strict()
     ),

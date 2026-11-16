@@ -24,6 +24,7 @@ import { latestRetainedVote, ownCard } from '../../core/continuous/state';
 import { titlePresentation } from '../glow/adapter';
 import type { GesturePhase } from '../glow/model';
 import { LiveFaces } from '../glow/Peers';
+import { VoteTrack } from '../glow/VoteTrack';
 import { votingBarFit, yepsButtonWidth } from '../glow/faces-row';
 import { useActiveTime } from '../glow/useActiveTime';
 import { TrailerLink } from '../glow/TrailerLink';
@@ -423,14 +424,29 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
       <VoteKey yes disabled={!answering || !card} onPress={yep} lit={lit.yes} box={yesBox} />
     </View>
   );
+  // The track needs everyone's count: a server without them (mid-deploy) keeps the plain faces row.
+  const answeredBy = new Map(shared.participants.map((p) => [p.participantId, p.answered]));
+  const riders = people.flatMap((p) => {
+    const answered = p.self ? done : answeredBy.get(p.id);
+    return typeof answered === 'number' ? [{ ...p, answered }] : [];
+  });
+  const tracked = people.length > 1 && riders.length === people.length;
+  const undoWidth = Math.max(48, z(40));
+  const yepsWidth = yepsButtonWidth(z, fontScale, fit.compactChip);
   const peek = <MatchesPeek roomId={id} matches={view.matches} proposal={Boolean(view.proposal)} />;
   const bar = (
     <View testID="voting-bar" style={{ height: barHeight, flexDirection: 'row', alignItems: 'center', gap: 10, width: rowWidth, alignSelf: 'center', zIndex: 3 }}>
       {/* Always the same width: the second person arriving moves nothing. */}
-      {people.length > 1 ? <LiveFaces people={people} activity={activity} localReaction={localReaction} size={z(26)} slots={fit.slots} fontScale={fontScale} /> : <View style={{ width: fit.facesWidth }} />}
-      <View style={{ flex: 1 }} />
+      {tracked ? (
+        <VoteTrack people={riders} dealt={shared.candidates.length} activity={activity} localReaction={localReaction} width={rowWidth - undoWidth - yepsWidth - 20} size={z(26)} fontScale={fontScale} />
+      ) : (
+        <>
+          {people.length > 1 ? <LiveFaces people={people} activity={activity} localReaction={localReaction} size={z(26)} slots={fit.slots} fontScale={fontScale} /> : <View style={{ width: fit.facesWidth }} />}
+          <View style={{ flex: 1 }} />
+        </>
+      )}
       {/* In the room the bar keeps for it (faces-row.ts): your Yeps arriving move nothing. */}
-      <YepsButton onPress={() => setYepsOpen(true)} compact={fit.compactChip} width={yepsButtonWidth(z, fontScale, fit.compactChip)} />
+      <YepsButton onPress={() => setYepsOpen(true)} compact={fit.compactChip} width={yepsWidth} />
       <Press label="Undo" disabled={disabled || !undoTarget} onPress={() => { if (!undoTarget) return; setYeps((list) => undoYeps(list, undoTarget.candidateId)); void cmd.undo(undoTarget.candidateId); }}
         visual={{ width: z(40), height: z(36), borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff0a' }}>
         <Icon name="undo" size={z(17)} color={glow.soft} />
