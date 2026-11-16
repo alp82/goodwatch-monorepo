@@ -16,6 +16,7 @@ import { Avatar, LiveDot } from './parts';
 import { SetupChip } from './SetupChip';
 import { R, warm } from './tokens';
 import { noun } from './noun';
+import { openPlayStoreUpdate, usePlayStoreUpdate } from '../../core/usePlayStoreUpdate';
 
 /** What the room switcher pill shows. */
 export interface HeaderPill {
@@ -86,9 +87,9 @@ export function RoomPill({ pill, onPress }: { pill: HeaderPill; onPress?: () => 
 }
 
 /** Set up (a name): the setup chip. Before that, your avatar; both open Profile. */
-function ProfileButton({ me, onPress, quiet }: { me?: HeaderMe; onPress?: () => void; quiet?: boolean }) {
+function ProfileButton({ me, onPress, quiet, compact }: { me?: HeaderMe; onPress?: () => void; quiet?: boolean; compact?: boolean }) {
   const { z } = useLayout();
-  if (me?.name) return <SetupChip name={me.name} member={me.member} onPress={onPress} quiet={quiet} />;
+  if (me?.name) return <SetupChip name={me.name} member={me.member} onPress={onPress} quiet={quiet} compact={compact} />;
   return (
     <Press label="Profile" quiet={quiet} onPress={onPress ?? (() => undefined)} disabled={!onPress} style={grow(z(44), z(44))}
       visual={{ width: z(44), height: z(44), alignItems: 'center', justifyContent: 'center' }}>
@@ -111,6 +112,7 @@ function sameHeader(a: AppHeaderProps, b: AppHeaderProps) {
 /** Memoized (sameHeader): a room update re-renders the screen, not the header. */
 export const AppHeader = memo(function AppHeader({ back, onLogo, logoLabel = noun.yours, pill, onPill, me, onProfile, profileQuiet, joined = false }: AppHeaderProps) {
   const { phone, gutter, max, header, z } = useLayout();
+  const updateAvailable = usePlayStoreUpdate();
   const brand = <BrandMark size={phone ? 21 : z(23)} />;
   // The same box whether or not it's pressable (a panel opening by itself makes it a control): the
   // wordmark never moves.
@@ -121,20 +123,28 @@ export const AppHeader = memo(function AppHeader({ back, onLogo, logoLabel = nou
       visual={{ width: Math.max(44, z(40)), height: Math.max(44, z(40)), borderRadius: R.control, backgroundColor: '#ffffff0a', alignItems: 'center', justifyContent: 'center' }}><Icon name="left" size={z(20)} color={glow.soft} /></Press>
   ) : null;
   const pillEl = pill ? <View style={{ flexShrink: 1, minWidth: 0 }}><RoomPill pill={pill} onPress={onPill} /></View> : null;
-  const profile = <ProfileButton me={me} onPress={onProfile} quiet={profileQuiet} />;
+  const profile = <ProfileButton me={me} onPress={onProfile} quiet={profileQuiet} compact={phone && updateAvailable} />;
+  const updateLink = updateAvailable ? (
+    <Press label="Update YepWatch in Google Play" onPress={() => { void openPlayStoreUpdate(); }}
+      style={{ minWidth: 56, minHeight: 48, flexShrink: 0, justifyContent: 'center' }}
+      visual={{ minHeight: 40, paddingHorizontal: 10, borderRadius: 12, backgroundColor: '#fbbf2415', alignItems: 'center', justifyContent: 'center' }}>
+      <GText bold size={z(13)} color={glow.amber}>Update</GText>
+    </Press>
+  ) : null;
   return (
     <View testID="app-header" style={{ height: header, zIndex: 30, borderBottomWidth: joined ? 0 : 1, borderBottomColor: warm.line, backgroundColor: warm.bar, paddingHorizontal: phone ? gutter - 4 : gutter, ...(Platform.OS === 'web' ? { backdropFilter: 'blur(14px)' } : null) } as ViewStyle}>
       {phone ? (
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           {backButton ?? <View style={{ paddingLeft: 4 }}>{logo}</View>}
           <View style={{ flex: 1, minWidth: 0, flexDirection: 'row', justifyContent: back ? 'flex-start' : 'center' }}>{pillEl}</View>
+          {updateLink}
           {profile}
         </View>
       ) : (
         <View style={{ flex: 1, width: '100%', maxWidth: max, alignSelf: 'center', flexDirection: 'row', alignItems: 'center' }}>
           <View pointerEvents="box-none" style={{ position: 'absolute', left: z(230), right: z(230), top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>{pillEl}</View>
           <View pointerEvents="box-none" style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 14 }}>{backButton}{logo}</View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: z(12) }}>{installable ? <GetTheApp /> : null}{profile}</View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: z(12) }}>{installable ? <GetTheApp /> : null}{updateLink}{profile}</View>
         </View>
       )}
     </View>

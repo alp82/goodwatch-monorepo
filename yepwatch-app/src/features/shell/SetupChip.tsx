@@ -16,13 +16,13 @@ export function setupDetail(member: boolean, rated: number | null) {
   return member ? 'From GoodWatch' : rated === null ? null : `${rated} rated`;
 }
 
-export function SetupChip({ name, member, onPress, quiet }: { name: string; member: boolean; onPress?: () => void; quiet?: boolean }) {
+export function SetupChip({ name, member, onPress, quiet, compact }: { name: string; member: boolean; onPress?: () => void; quiet?: boolean; compact?: boolean }) {
   const { phone, width, z } = useLayout();
   const { rated } = useTasteProfile();
   const detail = setupDetail(member, rated);
   const face = z(phone ? 30 : 32);
   // Very narrow phones keep the face and the arrow only (the room pill needs the row).
-  const words = !phone || width >= 360;
+  const words = !compact && (!phone || width >= 360);
   return (
     <HoverPress testID="setup-chip" label="Profile" hint={detail ? `${name}, ${detail}` : name} quiet={quiet} onPress={onPress ?? (() => undefined)} disabled={!onPress}
       style={{ ...grow(48), alignItems: 'stretch', flexShrink: 0 }}
