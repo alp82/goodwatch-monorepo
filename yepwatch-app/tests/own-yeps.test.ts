@@ -6,7 +6,7 @@ import { loadIsolated } from './isolated-module';
 import type * as OwnYepsModule from '../src/features/room/own-yeps';
 
 const { mergeOwnYeps } = loadIsolated<typeof OwnYepsModule>(new URL('../src/features/room/own-yeps.ts', import.meta.url), {
-  react: { useSyncExternalStore: () => null }, 'react-native': { Platform: { OS: 'ios' } },
+  react: { useMemo: (f: () => unknown) => f(), useSyncExternalStore: () => null }, 'react-native': { Platform: { OS: 'ios' } },
 });
 
 /** A room holding `held` cards with your answers in order: [id, value, revision]. */
@@ -48,4 +48,19 @@ test('a new round starts empty, and an unchanged room keeps the same list', () =
   const first = mergeOwnYeps(null, room(['a'], [['a', 'watch', 1]]));
   assert.equal(mergeOwnYeps(first, room(['a'], [['a', 'watch', 1]])), first);
   assert.deepEqual(ids(mergeOwnYeps(first, room(['a'], [], 2))), []);
+});
+
+test('another participant on this device starts an empty list', () => {
+  const first = mergeOwnYeps(null, room(['a', 'b'], [['a', 'watch', 1], ['b', 'watch', 1]]));
+  const other = room(['b'], []);
+  other.own.participantId = 'linked-member';
+  assert.deepEqual(ids(mergeOwnYeps(first, other)), []);
+});
+
+test('the kept list only follows confirmed rooms: an unconfirmed Nope laid over it leaves it as it was', () => {
+  const kept = mergeOwnYeps(null, room(['a', 'b', 'c'], [['a', 'watch', 1], ['b', 'watch', 1], ['c', 'watch', 1]]));
+  const shown = mergeOwnYeps(kept, room(['a', 'b', 'c'], [['a', 'watch', 1], ['c', 'watch', 1], ['b', 'pass', 2]]));
+  assert.deepEqual(ids(shown), ['a', 'c']);
+  // Refused: the kept list never saw it, and the room as confirmed shows it unchanged.
+  assert.equal(mergeOwnYeps(kept, room(['a', 'b', 'c'], [['a', 'watch', 1], ['b', 'watch', 1], ['c', 'watch', 1]])), kept);
 });

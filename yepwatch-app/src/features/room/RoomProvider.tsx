@@ -243,8 +243,9 @@ function RoomProviderContent({ id, children, renderSheet }: { id: string; childr
     return next && lastView.current ? replaceEqualDeep(lastView.current, next) : next;
   }, [snapshot, seenIdeas]);
   useLayoutEffect(() => { lastView.current = view; });
-  // Your Yeps this round, kept before the room retires a card someone said Nope to (own-yeps.ts).
-  useEffect(() => { if (snapshot) noteOwnYeps(snapshot); }, [snapshot]);
+  // Your Yeps this round, kept before the room retires a card someone said Nope to (own-yeps.ts). Only what the
+  // room confirmed is kept; screens lay this device's unconfirmed answers over it.
+  useEffect(() => { if (confirmed) noteOwnYeps(confirmed); }, [confirmed]);
 
   // One rule for every connection word (core/continuous/connection-words.ts): nothing for a short outage,
   // then one small line. A hidden page reads as background, so a quick return shows nothing.
