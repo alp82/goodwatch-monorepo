@@ -52,7 +52,7 @@ const tags = [
   ['property', 'og:title', 'Join my YepWatch room'],
   ['property', 'og:description', "Swipe Yep or Nope together. When everyone says Yep, it's a match."],
   ['property', 'og:url', `https://yepwatch.com/r/${code}`],
-  ['property', 'og:image', `https://yepwatch.com/api/yepwatch/v1/proposal/invites/${code}/card.png`],
+  ['property', 'og:image', `https://yepwatch.com/api/yepwatch/v1/proposal/invites/${code}/card.png?v=2`],
   ['property', 'og:image:width', '1200'],
   ['property', 'og:image:height', '630'],
   ['property', 'og:image:alt', 'You are invited to a YepWatch room. Join the room.'],
