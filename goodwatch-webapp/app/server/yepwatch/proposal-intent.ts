@@ -12,13 +12,13 @@ export const roomIntentSchema = z
 					.object({
 						text: z.string().min(1).max(200),
 						kind: z.enum(["attribute", "excluded", "want", "avoid", "phrase"]),
-						key: z.string().max(100).optional()
+						key: z.string().max(100).optional(),
 					})
-					.strip()
+					.strip(),
 			)
 			.max(100),
 		rankedKeys: z.array(z.number().int().positive().safe()).max(2000),
-		interpretedAt: z.number().int().nonnegative()
+		interpretedAt: z.number().int().nonnegative(),
 	})
 	.strip()
 /**
@@ -34,23 +34,18 @@ export type InterpretRoom = (
 	prompt: string,
 	country: string,
 	serviceIds: number[],
-	actor?: "member" | "guest"
+	actor?: "member" | "guest",
 ) => Promise<NonNullable<ProposalRoom["intent"]>>
 /** Dedicated authenticated search-role endpoint; never impersonates a browser Origin or shares account credentials. */
 export function roomSearch(
 	env: Record<string, string | undefined>,
-	transport: typeof fetch = fetch
+	transport: typeof fetch = fetch,
 ): InterpretRoom | undefined {
 	if (!env.YEPWATCH_SEARCH_SECRET) return
 	if (env.YEPWATCH_SEARCH_SECRET.length < 32)
 		throw new Error("Search service secret must be at least 32 characters")
-	const endpoint = new URL(
-		env.YEPWATCH_SEARCH_URL ?? "https://goodwatch.app/api/combined-search"
-	)
-	if (
-		endpoint.protocol !== "https:" &&
-		!["127.0.0.1", "localhost"].includes(endpoint.hostname)
-	)
+	const endpoint = new URL(env.YEPWATCH_SEARCH_URL ?? "https://goodwatch.app/api/combined-search")
+	if (endpoint.protocol !== "https:" && !["127.0.0.1", "localhost"].includes(endpoint.hostname))
 		throw new Error("Search requires HTTPS")
 	return async (prompt, country, serviceIds, actor) => {
 		let response: Response
@@ -63,36 +58,43 @@ export function roomSearch(
 					"content-type": "application/json",
 					"x-goodwatch-consumer": "yepwatch",
 					// Older search roles ignore this header and retain their strict request-body contract.
-					...(actor ? { "x-goodwatch-actor-kind": actor } : {})
+					...(actor ? { "x-goodwatch-actor-kind": actor } : {}),
 				},
 				body: JSON.stringify({ prompt, country, serviceIds }),
-				signal: AbortSignal.timeout(12000)
+				signal: AbortSignal.timeout(12000),
 			})
 		} catch {
 			throw new RoomError(
 				"busy",
 				"GoodWatch could not interpret this prompt. Your previous room description is kept.",
 				503,
-				true
+				true,
 			)
 		}
 		if (!response.ok) {
 			const failure = await response.json().catch(() => null)
-			if (response.status === 503 && failure?.error === 'interpretation_unavailable' && failure?.reason === 'budget')
+			if (
+				response.status === 503 &&
+				failure?.error === "interpretation_unavailable" &&
+				failure?.reason === "budget"
+			)
 				throw new RoomError(
-					'catalog_unavailable',
-					'Mood matching is unavailable for now. You can still start without an idea.',
+					"catalog_unavailable",
+					"Mood matching is unavailable for now. You can still start without an idea.",
 					503,
-					false
+					false,
 				)
 			// Busy (every search slot in flight) or rate limited: GoodWatch asks to come back, it didn't fail.
-			if (response.status === 429 || (response.status === 503 && response.headers.has("retry-after")))
+			if (
+				response.status === 429 ||
+				(response.status === 503 && response.headers.has("retry-after"))
+			)
 				throw new SearchBusy()
 			throw new RoomError(
 				"busy",
 				"GoodWatch search is unavailable. Retry this prompt shortly.",
 				503,
-				true
+				true,
 			)
 		}
 		let intent: NonNullable<ProposalRoom["intent"]>
@@ -103,36 +105,30 @@ export function roomSearch(
 				"busy",
 				"GoodWatch returned an incomplete interpretation. Retry this prompt shortly.",
 				503,
-				true
+				true,
 			)
 		}
 		if (intent.prompt !== prompt)
-			throw new RoomError(
-				"busy",
-				"The search response did not match your prompt",
-				503,
-				true
-			)
+			throw new RoomError("busy", "The search response did not match your prompt", 503, true)
 		return intent
 	}
 }
 
 /**
- * Interleave the remaining idea lanes; each lane falls back to base popularity.
+ * Interleave enabled ideas only; popularity is available when no ideas are on.
  * `limit`: only the first `limit` keys are wanted (a deck scans ~1200), the same as the head of the whole result.
  */
 export function roomIntentKeys(
 	room: Pick<ProposalRoom, "ideas" | "seenKeys">,
 	base: number[],
-	limit = Infinity
+	limit = Infinity,
 ) {
 	// The base is the whole ranked snapshot (200k+ titles): no per-title strings, per-lane copies or sets of it.
 	const seen = titleKeySet(room.seenKeys ?? [])
 	const ideas = (room.ideas ?? []).filter((i) => i.on)
-	// Past its own head a lane passes only keys it takes or skips as already taken: never more than `limit` of them
-	// before the result is full.
+	// Only rooms without enabled ideas need a popularity prefix.
 	let eligible = base
-	if (seen.size || limit < base.length) {
+	if (!ideas.length && (seen.size || limit < base.length)) {
 		eligible = []
 		for (const key of base) {
 			if (eligible.length >= limit) break
@@ -147,21 +143,20 @@ export function roomIntentKeys(
 		if (ideaKeys.has(key) && !seen.has(key)) allowed.add(key)
 		if (allowed.size === ideaKeys.size) break
 	}
-	// A lane is its idea's ranked titles, then the eligible popularity order; titles already taken are skipped.
+	// Each lane contains only its idea results; exhaustion must not broaden the room.
 	const lanes = ideas.map((i) => i.rankedKeys.filter((k) => allowed.has(k)))
 	const at = (lane: number, cursor: number) => {
 		const head = lanes[lane]
-		return cursor < head.length ? head[cursor] : eligible[cursor - head.length]
+		return head[cursor]
 	}
-	const ends = lanes.map((head) => head.length + eligible.length)
+	const ends = lanes.map((head) => head.length)
 	const result: number[] = [],
 		used = new Set<number>()
 	const cursors = lanes.map(() => 0)
 	for (;;) {
 		let changed = false
 		for (let i = 0; i < lanes.length; i++) {
-			while (cursors[i] < ends[i] && used.has(at(i, cursors[i])))
-				cursors[i]++
+			while (cursors[i] < ends[i] && used.has(at(i, cursors[i]))) cursors[i]++
 			if (cursors[i] < ends[i]) {
 				const key = at(i, cursors[i]++)
 				used.add(key)

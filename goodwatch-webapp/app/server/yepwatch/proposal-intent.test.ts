@@ -4,29 +4,55 @@ import { roomSearch, roomIntentKeys, SearchBusy } from "./proposal-intent.ts"
 import { createContinuousCatalog } from "./continuous-catalog.ts"
 import { proposalCatalog } from "./proposal-catalog.server.ts"
 import { ProposalService } from "./proposal-service.server.ts"
-import {
-	ProposalMemoryRepository,
-	proposalFixtureCatalog,
-} from "./proposal-test-support.ts"
+import { ProposalMemoryRepository, proposalFixtureCatalog } from "./proposal-test-support.ts"
 import type { CatalogReads } from "./catalog-adapter.ts"
-import { ideasForServiceReread, redesignTransition } from './proposal-redesign.ts'
-import { rankingRoom } from './proposal-ranking-test-support.ts'
-test('one idea per person; editing re-enables it, clears its reading, and service rereads leave eight readings for ideas', () => {
-  const room = rankingRoom(); room.phase = 'setup'
-  room.ideas = [{ id: 'idea', text: 'Old idea', authorId: room.hostId, on: false, rankedKeys: [1e12 + 1], attributes: [{ text: 'Old', kind: 'want', key: 'romance' }], interpretedAt: 1 }]
-  const envelope = { commandId: 'edit', sequence: 1, command: { type: 'edit_idea' as const, ideaId: 'idea', text: 'New idea' } }
-  const next = redesignTransition(room, room.hostId, envelope, 5)!
-  assert.equal(next.ideas![0].on, true)
-  assert.deepEqual(next.ideas![0].rankedKeys, []); assert.deepEqual(next.ideas![0].attributes, [])
-  assert.equal(next.interpretationCount, 1)
-  assert.throws(() => redesignTransition(next, room.hostId, { ...envelope, command: { type: 'add_idea', text: 'Second idea' } }, 6), { code: 'limit_reached', message: 'One idea each. Edit yours to change it.' })
-  next.interpretationCount = 16
-  assert.deepEqual(ideasForServiceReread(next), [])
-  next.interpretationCount = 15
-  assert.equal(ideasForServiceReread(next).length, 1)
-  next.ideas![0].rankedKeys = Array.from({ length: 100 }, (_, i) => 1e12 + i + 1)
-  assert.equal(ideasForServiceReread(next).length, 0)
-  assert.equal(ideasForServiceReread(next, () => 50).length, 1, 'only keys still on the room services count')
+import { ideasForServiceReread, redesignTransition } from "./proposal-redesign.ts"
+import { rankingRoom } from "./proposal-ranking-test-support.ts"
+test("one idea per person; editing re-enables it, clears its reading, and service rereads leave eight readings for ideas", () => {
+	const room = rankingRoom()
+	room.phase = "setup"
+	room.ideas = [
+		{
+			id: "idea",
+			text: "Old idea",
+			authorId: room.hostId,
+			on: false,
+			rankedKeys: [1e12 + 1],
+			attributes: [{ text: "Old", kind: "want", key: "romance" }],
+			interpretedAt: 1,
+		},
+	]
+	const envelope = {
+		commandId: "edit",
+		sequence: 1,
+		command: { type: "edit_idea" as const, ideaId: "idea", text: "New idea" },
+	}
+	const next = redesignTransition(room, room.hostId, envelope, 5)!
+	assert.equal(next.ideas![0].on, true)
+	assert.deepEqual(next.ideas![0].rankedKeys, [])
+	assert.deepEqual(next.ideas![0].attributes, [])
+	assert.equal(next.interpretationCount, 1)
+	assert.throws(
+		() =>
+			redesignTransition(
+				next,
+				room.hostId,
+				{ ...envelope, command: { type: "add_idea", text: "Second idea" } },
+				6,
+			),
+		{ code: "limit_reached", message: "One idea each. Edit yours to change it." },
+	)
+	next.interpretationCount = 16
+	assert.deepEqual(ideasForServiceReread(next), [])
+	next.interpretationCount = 15
+	assert.equal(ideasForServiceReread(next).length, 1)
+	next.ideas![0].rankedKeys = Array.from({ length: 100 }, (_, i) => 1e12 + i + 1)
+	assert.equal(ideasForServiceReread(next).length, 0)
+	assert.equal(
+		ideasForServiceReread(next, () => 50).length,
+		1,
+		"only keys still on the room services count",
+	)
 })
 const intent = {
 	prompt: "A funny film",
@@ -35,21 +61,18 @@ const intent = {
 	interpretedAt: 123,
 }
 test("Jev interpretation uses its own service authorization and rejects a failed or mismatched reading", async () => {
-	const search = roomSearch(
-		{ YEPWATCH_SEARCH_SECRET: "a".repeat(32) },
-		async (input, init) => {
-			const request = new Request(input, init)
-			assert.equal(request.url, "https://goodwatch.app/api/combined-search")
-			assert.equal(request.headers.get("x-goodwatch-consumer"), "yepwatch")
-			assert.equal(request.headers.get("origin"), null)
-			assert.deepEqual(await request.json(), {
-				prompt: intent.prompt,
-				country: "DE",
-				serviceIds: [8],
-			})
-			return Response.json(intent)
-		}
-	)!
+	const search = roomSearch({ YEPWATCH_SEARCH_SECRET: "a".repeat(32) }, async (input, init) => {
+		const request = new Request(input, init)
+		assert.equal(request.url, "https://goodwatch.app/api/combined-search")
+		assert.equal(request.headers.get("x-goodwatch-consumer"), "yepwatch")
+		assert.equal(request.headers.get("origin"), null)
+		assert.deepEqual(await request.json(), {
+			prompt: intent.prompt,
+			country: "DE",
+			serviceIds: [8],
+		})
+		return Response.json(intent)
+	})!
 	assert.deepEqual(await search(intent.prompt, "DE", [8]), intent)
 	for (const response of [
 		new Response("", { status: 503 }),
@@ -59,7 +82,7 @@ test("Jev interpretation uses its own service authorization and rejects a failed
 	]) {
 		const unavailable = roomSearch(
 			{ YEPWATCH_SEARCH_SECRET: "a".repeat(32) },
-			async () => response
+			async () => response,
 		)!
 		await assert.rejects(unavailable(intent.prompt, "DE", [8]), {
 			code: "busy",
@@ -68,14 +91,33 @@ test("Jev interpretation uses its own service authorization and rejects a failed
 	}
 })
 test("search busy or rate limited (Retry-After) is a SearchBusy; other failures are not", async () => {
-	const answer = (response: Response) => roomSearch({ YEPWATCH_SEARCH_SECRET: "a".repeat(32) }, async () => response)!(intent.prompt, "DE", [8])
+	const answer = (response: Response) =>
+		roomSearch({ YEPWATCH_SEARCH_SECRET: "a".repeat(32) }, async () => response)!(
+			intent.prompt,
+			"DE",
+			[8],
+		)
 	for (const response of [
-		Response.json({ error: "Search is busy right now. Try again in a moment." }, { status: 503, headers: { "Retry-After": "2" } }),
+		Response.json(
+			{ error: "Search is busy right now. Try again in a moment." },
+			{ status: 503, headers: { "Retry-After": "2" } },
+		),
 		Response.json({ error: "Too many searches" }, { status: 429, headers: { "Retry-After": "5" } }),
 	])
 		await assert.rejects(answer(response), (e) => e instanceof SearchBusy)
-	await assert.rejects(answer(Response.json({ error: "Search is unavailable." }, { status: 503 })), (e) => !(e instanceof SearchBusy))
-	await assert.rejects(answer(Response.json({ error: "interpretation_unavailable", reason: "budget" }, { status: 503, headers: { "Retry-After": "60" } })), { code: "catalog_unavailable" })
+	await assert.rejects(
+		answer(Response.json({ error: "Search is unavailable." }, { status: 503 })),
+		(e) => !(e instanceof SearchBusy),
+	)
+	await assert.rejects(
+		answer(
+			Response.json(
+				{ error: "interpretation_unavailable", reason: "budget" },
+				{ status: 503, headers: { "Retry-After": "60" } },
+			),
+		),
+		{ code: "catalog_unavailable" },
+	)
 })
 test("Published prompt ranking changes actual cards, keeps availability checks, and cannot reinsert seen or ineligible titles", async () => {
 	let checked: number[] = []
@@ -97,7 +139,7 @@ test("Published prompt ranking changes actual cards, keeps availability checks, 
 						posterUrl: null,
 						runtimeMinutes: 90,
 					},
-				])
+				]),
 			)
 		},
 		async episodes() {
@@ -123,18 +165,15 @@ test("Published prompt ranking changes actual cards, keeps availability checks, 
 							},
 						],
 					})),
-				])
+				]),
 			)
 		},
 	}
 	const catalog = proposalCatalog(
 		createContinuousCatalog(reads, proposalFixtureCatalog.metadata, {
 			rank: async (room, base) =>
-				roomIntentKeys(
-					room as import("./proposal-types.ts").ProposalRoom,
-					base
-				),
-		})
+				roomIntentKeys(room as import("./proposal-types.ts").ProposalRoom, base),
+		}),
 	)
 	const repo = new ProposalMemoryRepository(),
 		service = new ProposalService(
@@ -144,7 +183,7 @@ test("Published prompt ranking changes actual cards, keeps availability checks, 
 			undefined,
 			Date.now,
 			undefined,
-			async () => intent
+			async () => intent,
 		)
 	const a = await service.create({
 		contractVersion: 3,
@@ -154,9 +193,21 @@ test("Published prompt ranking changes actual cards, keeps availability checks, 
 	})
 	const id = a.credential.roomId,
 		credential = a.credential
-    await service.command(id,credential,{commandId:"country",sequence:1,command:{type:"configure",expectedContextVersion:1,country:"DE"}})
-    await service.command(id,credential,{commandId:"services",sequence:2,command:{type:"set_services",serviceIds:[1]}})
-    await service.command(id,credential,{commandId:"describe",sequence:3,command:{type:"add_idea",text:intent.prompt}})
+	await service.command(id, credential, {
+		commandId: "country",
+		sequence: 1,
+		command: { type: "configure", expectedContextVersion: 1, country: "DE" },
+	})
+	await service.command(id, credential, {
+		commandId: "services",
+		sequence: 2,
+		command: { type: "set_services", serviceIds: [1] },
+	})
+	await service.command(id, credential, {
+		commandId: "describe",
+		sequence: 3,
+		command: { type: "add_idea", text: intent.prompt },
+	})
 	let s = await service.read(id, credential)
 	await service.command(id, credential, {
 		commandId: "start",
@@ -171,9 +222,9 @@ test("Published prompt ranking changes actual cards, keeps availability checks, 
 	s = await service.read(id, credential)
 	assert.deepEqual(
 		s.shared.candidates.map((c) => c.identity.tmdbId),
-		[3, 1, 2]
+		[3, 1],
 	)
-	assert.deepEqual(checked, [1000000000003, 1000000000001, 1000000000002])
+	assert.deepEqual(checked, [1000000000003, 1000000000001])
 	const room = (await repo.read(id))!.room
 	const again = await catalog.page(room)
 	assert.equal(again.candidates.length, 0)
@@ -181,33 +232,80 @@ test("Published prompt ranking changes actual cards, keeps availability checks, 
 })
 
 test("draft Jev preview is host-only, shares the lifetime budget and never publishes ideas", async () => {
-  const { createProposalHandler } = await import('./proposal-http.server.ts')
-  const { paths } = await import('../../../packages/yepwatch-contracts/proposal.ts')
-  const repo = new ProposalMemoryRepository()
-  let calls=0, grants=0
-  const service = new ProposalService(repo, proposalFixtureCatalog, 'preview-tests-secret-at-least-thirty-two', undefined, Date.now, {
-    async active(){}, async create(){return Date.now()+21600000}, async join(){}, async command(){grants++},
-  }, async (prompt,country,services) => {
-    calls++; assert.equal(country,'DE'); assert.deepEqual(services,[])
-    return {...intent,prompt}
-  })
-  const host=await service.create({contractVersion:3,commandId:'host',admissionSecret:'h'.repeat(43),nickname:'Host'})
-  const id=host.credential.roomId
-  const guest=await service.join(id,{contractVersion:3,commandId:'guest',admissionSecret:'g'.repeat(43),nickname:'Guest',inviteCode:host.invite.code})
-  const before=await repo.read(id)
-  const handler=createProposalHandler(service,{serviceSecret:'s'.repeat(32),allowedOrigins:['https://yepwatch.test']})
-  const request=(who:typeof host,input:unknown)=>handler(new Request('https://yepwatch.test'+paths.preview(id),{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${who.credential.token}`,'x-yepwatch-participant':who.credential.participantId},body:JSON.stringify(input)}))
-  const input={prompt:'Sports movies',country:'DE',serviceIds:[]}
-  const response=await request(host,input)
-  assert.equal(response.status,200)
-  assert.deepEqual(await response.json(),{prompt:input.prompt,attributes:intent.attributes})
-  assert.equal((await repo.read(id))!.room.interpretationCount,1)
-  assert.deepEqual((await repo.read(id))!.room.ideas,before!.room.ideas)
-  assert.equal((await repo.read(id))!.room.participants[0].nextSequence,before!.room.participants[0].nextSequence)
-  assert.equal((await request(guest,input)).status,403)
-  assert.equal((await request(host,{...input,prompt:''})).status,400)
-  assert.equal((await request(host,{...input,serviceIds:[987654321]})).status,400)
-  assert.equal(calls,1);assert.equal(grants,1)
+	const { createProposalHandler } = await import("./proposal-http.server.ts")
+	const { paths } = await import("../../../packages/yepwatch-contracts/proposal.ts")
+	const repo = new ProposalMemoryRepository()
+	let calls = 0,
+		grants = 0
+	const service = new ProposalService(
+		repo,
+		proposalFixtureCatalog,
+		"preview-tests-secret-at-least-thirty-two",
+		undefined,
+		Date.now,
+		{
+			async active() {},
+			async create() {
+				return Date.now() + 21600000
+			},
+			async join() {},
+			async command() {
+				grants++
+			},
+		},
+		async (prompt, country, services) => {
+			calls++
+			assert.equal(country, "DE")
+			assert.deepEqual(services, [])
+			return { ...intent, prompt }
+		},
+	)
+	const host = await service.create({
+		contractVersion: 3,
+		commandId: "host",
+		admissionSecret: "h".repeat(43),
+		nickname: "Host",
+	})
+	const id = host.credential.roomId
+	const guest = await service.join(id, {
+		contractVersion: 3,
+		commandId: "guest",
+		admissionSecret: "g".repeat(43),
+		nickname: "Guest",
+		inviteCode: host.invite.code,
+	})
+	const before = await repo.read(id)
+	const handler = createProposalHandler(service, {
+		serviceSecret: "s".repeat(32),
+		allowedOrigins: ["https://yepwatch.test"],
+	})
+	const request = (who: typeof host, input: unknown) =>
+		handler(
+			new Request("https://yepwatch.test" + paths.preview(id), {
+				method: "POST",
+				headers: {
+					"content-type": "application/json",
+					authorization: `Bearer ${who.credential.token}`,
+					"x-yepwatch-participant": who.credential.participantId,
+				},
+				body: JSON.stringify(input),
+			}),
+		)
+	const input = { prompt: "Sports movies", country: "DE", serviceIds: [] }
+	const response = await request(host, input)
+	assert.equal(response.status, 200)
+	assert.deepEqual(await response.json(), { prompt: input.prompt, attributes: intent.attributes })
+	assert.equal((await repo.read(id))!.room.interpretationCount, 1)
+	assert.deepEqual((await repo.read(id))!.room.ideas, before!.room.ideas)
+	assert.equal(
+		(await repo.read(id))!.room.participants[0].nextSequence,
+		before!.room.participants[0].nextSequence,
+	)
+	assert.equal((await request(guest, input)).status, 403)
+	assert.equal((await request(host, { ...input, prompt: "" })).status, 400)
+	assert.equal((await request(host, { ...input, serviceIds: [987654321] })).status, 400)
+	assert.equal(calls, 1)
+	assert.equal(grants, 1)
 })
 
 test("room search accepts extra fields from the search role and stores only text, kind and key", async () => {
@@ -218,36 +316,53 @@ test("room search accepts extra fields from the search role and stores only text
 				JSON.stringify({
 					prompt: "something funny",
 					attributes: [
-						{ text: "Situational Comedy", kind: "want", key: "situational_comedy", weight: 0.8, description: "Humor from everyday scenarios." }
+						{
+							text: "Situational Comedy",
+							kind: "want",
+							key: "situational_comedy",
+							weight: 0.8,
+							description: "Humor from everyday scenarios.",
+						},
 					],
 					rankedKeys: [2000000001400],
 					interpretedAt: 1,
-					extra: true
+					extra: true,
 				}),
-				{ status: 200, headers: { "content-type": "application/json" } }
-			)) as unknown as typeof fetch
+				{ status: 200, headers: { "content-type": "application/json" } },
+			)) as unknown as typeof fetch,
 	)!
 	const intent = await search("something funny", "US", [8])
-	assert.deepEqual(intent.attributes, [{ text: "Situational Comedy", kind: "want", key: "situational_comedy" }])
+	assert.deepEqual(intent.attributes, [
+		{ text: "Situational Comedy", kind: "want", key: "situational_comedy" },
+	])
 	assert.deepEqual(intent.rankedKeys, [2000000001400])
 	assert.equal(Object.prototype.hasOwnProperty.call(intent, "extra"), false)
 })
 
 test("a room's ranking asked for its first keys is the head of the whole ranking", () => {
 	let seed = 7
-	const rand = (n: number) => ((seed = (seed * 1103515245 + 12345) % 2 ** 31) % n)
+	const rand = (n: number) => (seed = (seed * 1103515245 + 12345) % 2 ** 31) % n
 	const base = Array.from({ length: 3000 }, (_, i) => (i % 3 ? 1e12 : 2e12) + i)
 	const id = (key: number) => `${key >= 2e12 ? "show" : "movie"}_${key % 1e12}`
 	for (let round = 0; round < 200; round++) {
 		const ideas = Array.from({ length: rand(4) }, (_, i) => ({
 			on: rand(5) > 0,
 			// Some idea titles aren't in the base ranking (another country or kind).
-			rankedKeys: Array.from({ length: rand(60) }, () => (rand(10) ? base[rand(base.length)] : 3e12 + rand(100))),
+			rankedKeys: Array.from({ length: rand(60) }, () =>
+				rand(10) ? base[rand(base.length)] : 3e12 + rand(100),
+			),
 			id: `i${i}`,
 		}))
-		const room = { ideas, seenKeys: Array.from({ length: rand(50) }, () => id(base[rand(400)])) } as unknown as Parameters<typeof roomIntentKeys>[0]
+		const room = {
+			ideas,
+			seenKeys: Array.from({ length: rand(50) }, () => id(base[rand(400)])),
+		} as unknown as Parameters<typeof roomIntentKeys>[0]
 		const whole = roomIntentKeys(room, base)
 		const limit = rand(4) ? rand(1500) + 1 : 5000
-		assert.deepEqual(roomIntentKeys(room, base, limit), whole.slice(0, limit), `round ${round}, limit ${limit}`)
+		assert.deepEqual(
+			roomIntentKeys(room, base, limit),
+			whole.slice(0, limit),
+			`round ${round}, limit ${limit}`,
+		)
 	}
 })

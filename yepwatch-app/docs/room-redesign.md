@@ -65,10 +65,10 @@ Keep `vote`, `propose`, `agree`, `refill`, `retry_agreement`, `restart`, `leave`
 
 ## Deck
 
-- Each idea that is on has its own ranked key list (from its interpretation). The deck interleaves cards round-robin across the on ideas. With no on ideas, the deck uses the base popularity order (today's no-prompt behavior).
-- When an idea's ranked keys run out (after availability and filters), that idea continues with base popularity order, so the deck never ends. Keep the 2000 seen-keys cap and the 120 active cap as internal limits, but the client never shows an end screen: if a refill returns nothing it shows a "Finding more…" placeholder and retries.
+- Each idea that is on has its own ranked key list (from its interpretation). The deck interleaves cards round-robin across the on ideas, without adding unrelated popularity picks when a lane runs out. With no on ideas, the deck uses the base popularity order (today's no-prompt behavior).
+- When an idea's ranked keys run out (after availability and filters), other enabled ideas continue. When all enabled ideas run out, the deck stops; switching all ideas off explicitly returns to popularity. Keep the 2000 seen-keys cap and the 120 active cap as internal limits, but the client never shows an end screen: if a refill returns nothing it shows a "Finding more…" placeholder and retries.
 - Filters on every candidate: kinds, enabled services (availability), and for each present linked member with `showSeen = false`, the titles that member has seen on GoodWatch.
-- Turning an idea off, removing services or kinds retires unanswered cards that no longer qualify; answered cards and matches stay.
+- Turning an idea off, removing services or kinds retires unanswered cards that no longer qualify; answered cards retain their history, but matches and proposals that no longer qualify become unavailable.
 - Candidates carry the idea id internally (for retiring); the client does not show it.
 
 ## Seen titles (GoodWatch members)
@@ -91,7 +91,7 @@ Write the migration under `goodwatch-webapp/app/server/yepwatch/migrations/` and
 
 ## Test plan
 
-- Server: machine tests for every new command (host checks, no reset, retiring, interleaving, endless fallback, seen filter); proposal concurrency and relational Crate suites; regenerated `schema.sql`.
+- Server: machine tests for every new command (host checks, no reset, retiring, interleaving, idea exhaustion, seen filter); proposal concurrency and relational Crate suites; regenerated `schema.sql`.
 - Gateway: projection tests for the new shared fields.
 - App: typecheck, lint, unit tests, browser tests; a multiplayer browser run (host + 2 friends: create, ideas on/off mid-vote, services merge, propose, agree, Tonight, start again).
 - Release: fingerprint matches build 16 on both platforms before the OTA publish.
