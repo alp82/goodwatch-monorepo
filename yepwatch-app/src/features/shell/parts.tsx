@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode, type ComponentRef } from 'react';
 import { Animated, Platform, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useReducedMotion } from '../../components/ui';
-import { peerColor } from '../glow/model';
+import { usePeerColor } from '../glow/peer-colors';
 import { GText, Icon, Press, glow, grow, native, type IconName } from '../glow/theme';
 import { claimLiveBeat, releaseLiveBeat } from './live-beat';
 import { playLivePulse } from './live-pulse';
@@ -18,11 +18,12 @@ export function Avatar({ name, size = 36 }: { name: string | null; size?: number
 /** Overlapping initials in each person's room colour; people who left are dimmed. */
 export function FaceStack({ people, size = 24, max = 4 }: { people: { id: string; nickname: string; dropped?: boolean; self?: boolean }[]; size?: number; max?: number }) {
   const here = people.filter((p) => !p.dropped).length;
+  const colorOf = usePeerColor();
   // One picture with one name: a label on a plain group is not allowed on the web (axe aria-prohibited-attr).
   return (
     <View accessible accessibilityRole="image" accessibilityLabel={here === 1 ? '1 person' : `${here} people`} style={{ flexDirection: 'row', alignItems: 'center' }}>
       {people.slice(0, max).map((p, i) => (
-        <View key={p.id} style={{ width: size, height: size, borderRadius: size / 2, marginLeft: i ? -size * 0.28 : 0, backgroundColor: p.self ? glow.amber : peerColor(p.id), borderWidth: 2, borderColor: '#0d0d0d', alignItems: 'center', justifyContent: 'center', opacity: p.dropped ? 0.35 : 1 }}>
+        <View key={p.id} style={{ width: size, height: size, borderRadius: size / 2, marginLeft: i ? -size * 0.28 : 0, backgroundColor: p.self ? glow.amber : colorOf(p.id), borderWidth: 2, borderColor: '#0d0d0d', alignItems: 'center', justifyContent: 'center', opacity: p.dropped ? 0.35 : 1 }}>
           <GText bold size={size * 0.42} color="#141008">{(p.nickname || '?')[0].toUpperCase()}</GText>
         </View>
       ))}

@@ -3,7 +3,7 @@ import Svg, { Path } from 'react-native-svg';
 import { Animated, Easing, View } from 'react-native';
 import type { PeerActivity } from '../../core/continuous/activity';
 import type { GlowPerson } from './model';
-import { peerColor } from './model';
+import { usePeerColor } from './peer-colors';
 import { GText, Icon, native } from './theme';
 import { useMotionPreference, useReducedMotion } from '../../components/ui';
 import { faceOffset, liveFacesWidth, moreOffset } from './faces-row';
@@ -244,7 +244,7 @@ export const Avatar = memo(function Avatar({
       wiggle.stopAnimation();
     };
   }, [pulse, action, moving, reduced, y, squash, spark, wiggle]);
-  const color = peerColor(person.id);
+  const color = usePeerColor()(person.id);
   return (
     <View style={{ width: size, height: size, opacity: person.dropped ? 0.45 : 1 }}>
       <Animated.View
@@ -407,7 +407,7 @@ function Ghost({
     animation.start();
     return () => animation.stop();
   }, [pulse, reduced, beat, layer]);
-  const color = peerColor(peer.frame.participantId);
+  const color = usePeerColor()(peer.frame.participantId);
   return (
     <>
       {layer === 'back' && (
@@ -563,7 +563,7 @@ function LivePointer({
     animation.start();
     return () => animation.stop();
   }, [position.x, position.y, width, height, x, y, reduced]);
-  const color = peerColor(peer.frame.participantId);
+  const color = usePeerColor()(peer.frame.participantId);
   return (
     <Animated.View
       testID="peer-live-pointer"

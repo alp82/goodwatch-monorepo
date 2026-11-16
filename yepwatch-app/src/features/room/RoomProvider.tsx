@@ -31,6 +31,7 @@ import { RoomLinkGate, linkOutcome } from './link-gate';
 import { previewDrafts, useSettingsSaves, type SettingsSaves } from './settings-save';
 import { noteOwnYeps } from './own-yeps';
 import { BootPageReady } from '../home/boot-phase';
+import { PeerRoster } from '../glow/peer-colors';
 
 const COUNTRY_TRIES = 5;
 const COUNTRY_RETRY_MS = 1200;
@@ -435,7 +436,10 @@ function RoomProviderContent({ id, children, renderSheet }: { id: string; childr
   // eslint-disable-next-line react-hooks/refs -- the last committed value, read only while a new screen renders
   const shownLive = current ? live : committedLive.current;
   useLayoutEffect(() => { committed.current = shown; committedLive.current = shownLive; });
-  return <RoomContext.Provider value={shown}><RoomLiveContext.Provider value={shownLive}>{children}</RoomLiveContext.Provider></RoomContext.Provider>;
+  // Friends' colors follow the roster's join order (glow/model.ts peerColor); the same ids keep the same array.
+  const rosterKey = shownLive.snapshot?.shared.participants.map((p) => p.participantId).join('\n') ?? '';
+  const roster = useMemo(() => (rosterKey ? rosterKey.split('\n') : null), [rosterKey]);
+  return <RoomContext.Provider value={shown}><RoomLiveContext.Provider value={shownLive}><PeerRoster.Provider value={roster}>{children}</PeerRoster.Provider></RoomLiveContext.Provider></RoomContext.Provider>;
 }
 
 /** Which screen the room shows (RoomHome): a change of it mounts a new screen. */

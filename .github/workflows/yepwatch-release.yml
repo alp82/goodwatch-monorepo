@@ -35,6 +35,8 @@ jobs:
         run: |
           npm --prefix goodwatch-webapp ci --no-audit --no-fund
           npm --prefix yepwatch-app ci --install-links --no-audit --no-fund
+          # The app's unit tests load happy-dom from the e2e package (tests/poster-preview.test.ts), as in the gate.
+          npm --prefix yepwatch-app/e2e ci --no-audit --no-fund
           npm --prefix yepwatch-realtime ci --no-audit --no-fund
       - name: Validate client and gateway
         run: |

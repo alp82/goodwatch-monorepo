@@ -10,7 +10,7 @@ import Svg, { Path } from 'react-native-svg';
 import { useReducedMotion } from '../../components/ui';
 import { qrModules, qrPath } from '../../core/qr';
 import { shareInvitation } from '../../core/share-invitation';
-import { peerColor } from '../glow/model';
+import { usePeerColor } from '../glow/peer-colors';
 import { GText, Icon, glow, native, onePress } from '../glow/theme';
 import { HoverPress, Nudge, webOnly } from '../shell/hover';
 import { useLayout } from '../shell/layout';
@@ -37,8 +37,9 @@ const STRIP_FACES = 5;
 
 /** A face in the person's color (you: amber). */
 export function Face({ person, size }: { person: { id: string; nickname: string; self?: boolean }; size: number }) {
+  const colorOf = usePeerColor();
   return (
-    <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: person.self ? glow.amber : peerColor(person.id), alignItems: 'center', justifyContent: 'center' }}>
+    <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: person.self ? glow.amber : colorOf(person.id), alignItems: 'center', justifyContent: 'center' }}>
       <GText bold size={size * 0.44} color="#141008">{(person.nickname || '?')[0].toUpperCase()}</GText>
     </View>
   );
