@@ -21,7 +21,7 @@ import type { PeerActivity } from '../../../core/continuous/activity';
 import { CardGlow, CardOver, CardUnder, type CardLayerProps } from './card-looks';
 import type { StageGeometry } from './geometry';
 import { BackLayer, FrontLayer } from './layers';
-import { LOOPING, crossesColumn, momentCrossesColumn, type Look } from './looks';
+import { LOOPING, crossesColumn, type Look } from './looks';
 import { Moment } from './moments';
 import { FxView } from './fx-view';
 import { clampI, driver, ease, fill, hidden, same, web, type A, type LayerProps, type Node } from './paint';
@@ -34,20 +34,18 @@ export interface StageCard {
 }
 export interface MatchMoment {
   key: string;
-  /** The key of the card whose Yep made it (`StageCard.key`). */
+  /** The matched card's key (`StageCard.key`): a seat built for that card plays it. */
   cardKey: string;
   title: GlowTitle;
-  look: Look;
 }
 /**
- * A match moment built ahead, hidden, for a card a Yep may still make a match of: the live card, and the card
+ * A match moment built ahead, hidden, for a card a Yep may still make a match of (yours or a friend's): the live card, and the card
  * of the latest Yep until its answer is in. MATCH then only has to show it (opacity and transforms), not build
  * and paint it in its first frame.
  */
 interface Seat {
   id: number;
   cardKey: string;
-  look: Look;
   posterUrl: string | null;
   /** Its own drive: 1 (fully in, so it is painted at full size) while it waits; the moment's run when it plays. */
   a: Animated.Value;
@@ -241,10 +239,10 @@ const LiveCard = memo(function LiveCard({ card, geo, box, entry, x, y, pan, serv
 
 const MemoMoment = memo(Moment);
 /** A seat's moment: hidden while it waits (painted already, on layers of its own), shown as it plays. */
-const SeatMoment = memo(function SeatMoment({ seat, active, g, loop, reduced }: { seat: Seat; active: boolean; g: StageGeometry; loop: Animated.Value; reduced: boolean }) {
+const SeatMoment = memo(function SeatMoment({ seat, active, g, reduced }: { seat: Seat; active: boolean; g: StageGeometry; reduced: boolean }) {
   return (
     <FxView {...hidden} testID={active ? 'match-moment' : undefined} style={[fill, { opacity: active ? 1 : 0 }]}>
-      <MemoMoment look={seat.look} g={g} posterUrl={seat.posterUrl} a={seat.a} loop={loop} reduced={reduced} testID="" />
+      <MemoMoment g={g} posterUrl={seat.posterUrl} a={seat.a} reduced={reduced} testID="" />
     </FxView>
   );
 });
@@ -345,7 +343,7 @@ export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disab
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loops = !reduced && ((engaged && !plain && card !== null && LOOPING.includes(card.look)) || (fade !== null && LOOPING.includes(fade.set.look)) || (moment !== null && LOOPING.includes(moment.look)));
+  const loops = !reduced && ((engaged && !plain && card !== null && LOOPING.includes(card.look)) || (fade !== null && LOOPING.includes(fade.set.look)));
   useEffect(() => {
     if (!loops) return;
     loop.setValue(0);
@@ -375,7 +373,7 @@ export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disab
   const [seats, setSeats] = useState<Seat[]>([]);
   // Chosen once per moment: a seat built while a moment plays without one never takes it over, and the chosen seat
   // stays drawn until its moment ends, even if a deferred build pruned it from the list meanwhile.
-  const playing = useMemo(() => (moment ? seats.find((s) => s.cardKey === moment.cardKey && s.look === moment.look && s.posterUrl === moment.title.posterUrl) : undefined),
+  const playing = useMemo(() => (moment ? seats.find((s) => s.cardKey === moment.cardKey && s.posterUrl === moment.title.posterUrl) : undefined),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [momentKey]);
   const playingSeat = useRef(playing);
@@ -448,9 +446,9 @@ export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disab
     const c = liveCard.current;
     if (!c || !idle || !web) return;
     startTransition(() => setSeats((list) => {
-      if (list.some((s) => s.cardKey === c.key && s.look === c.look && s.posterUrl === c.title.posterUrl)) return list;
+      if (list.some((s) => s.cardKey === c.key && s.posterUrl === c.title.posterUrl)) return list;
       const kept = list.filter((s) => s.cardKey === yepSeat.current || s === playingSeat.current);
-      return [...kept, { id: ++seatSerial.current, cardKey: c.key, look: c.look, posterUrl: c.title.posterUrl, a: new Animated.Value(1) }];
+      return [...kept, { id: ++seatSerial.current, cardKey: c.key, posterUrl: c.title.posterUrl, a: new Animated.Value(1) }];
     }));
   }, [topKey, idle]);
   // A drag shows the live look at once: its set is built now if the background hasn't yet.
@@ -663,7 +661,7 @@ export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disab
   const backSets = plain ? [] : sets.filter((s) => s === fading || s === liveSet);
   const frontSets = [...backSets].sort((a, b) => Number(a === fading) - Number(b === fading));
   // The question column fades while a look on the stage, or the match moment, paints across it.
-  const momentLook = moment?.look;
+  const momentOn = moment !== null;
   const veil = useMemo(() => {
     if (geo.column === null) return null;
     const parts: Node[] = [];
@@ -672,10 +670,10 @@ export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disab
       if (!set) continue;
       for (const kind of ['yep', 'nope'] as const) if (crossesColumn(set.look, kind)) parts.push(ease(sideDrive(set.drive, kind)));
     }
-    if (momentLook && momentCrossesColumn(momentLook)) parts.push(ease(values.moment.interpolate({ inputRange: [0, 1, 2], outputRange: [0, 1, 0], ...clampI })));
+    if (momentOn) parts.push(ease(values.moment.interpolate({ inputRange: [0, 1, 2], outputRange: [0, 1, 0], ...clampI })));
     if (!parts.length) return null;
     return (parts.reduce((a, b) => Animated.add(a, b)) as Animated.Value).interpolate({ inputRange: [0, 1], outputRange: [1, VEIL], ...clampI });
-  }, [geo.column, plain, fading, liveSet, momentLook, values.moment]);
+  }, [geo.column, plain, fading, liveSet, momentOn, values.moment]);
   const veilTo = useRef(onVeil);
   useLayoutEffect(() => { veilTo.current = onVeil; });
   useEffect(() => { veilTo.current?.(veil); }, [veil]);
@@ -696,8 +694,8 @@ export const VoteStage = memo(function VoteStage({ geo, card, next, empty, disab
       {departure ? <Departing key={departure.id} d={departure} geo={geo} tools={cardTools} onDone={departed} /> : null}
       {frontSets.map((set) => lookSet(set, FrontLayer, quietFill))}
       {card ? <StampMarks v={plain ? values.still : v} /> : null}
-      {(playing && !seats.includes(playing) ? [...seats, playing] : seats).map((seat) => <SeatMoment key={seat.id} seat={seat} active={seat === playing} g={geo} loop={loop} reduced={reduced} />)}
-      {moment && !playing ? <MemoMoment key={moment.key} look={moment.look} g={geo} posterUrl={moment.title.posterUrl} a={values.moment} loop={loop} reduced={reduced} /> : null}
+      {(playing && !seats.includes(playing) ? [...seats, playing] : seats).map((seat) => <SeatMoment key={seat.id} seat={seat} active={seat === playing} g={geo} reduced={reduced} />)}
+      {moment && !playing ? <MemoMoment key={moment.key} g={geo} posterUrl={moment.title.posterUrl} a={values.moment} reduced={reduced} /> : null}
     </View>
   );
 });

@@ -88,8 +88,8 @@ function stepped(seed: number, amp: number, sparse = 0, n = 50) {
 export const jitter = (loop: Animated.Value, p: Node, reduced: boolean, seed: number, amp: number, sparse = 0): Node | number =>
   reduced ? 0 : Animated.multiply(loop.interpolate(stepped(seed, amp, sparse)), p);
 
-export type Kind = 'yep' | 'nope' | 'match';
-export const wordOf = (kind: Kind): VoteWord => (kind === 'nope' ? 'NOPE' : kind === 'match' ? 'MATCH' : 'YEP');
+export type Kind = 'yep' | 'nope';
+export const wordOf = (kind: Kind): VoteWord => (kind === 'nope' ? 'NOPE' : 'YEP');
 /** A look's colors for one answer. */
 export const pal = (kind: Kind) => kind === 'nope'
   ? { text: wordOf(kind), main: red, hi: cream, deep: '#7f1d1d', soft: '#ef444433' }

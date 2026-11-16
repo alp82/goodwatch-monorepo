@@ -13,7 +13,7 @@ import type { Look } from './looks';
 
 export interface CardLayerProps {
   look: Look;
-  kind: Exclude<Kind, 'match'>;
+  kind: Kind;
   w: number;
   h: number;
   phone: boolean;

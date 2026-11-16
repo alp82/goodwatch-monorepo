@@ -135,3 +135,24 @@ test('Yep A, then Yep B before A is answered: A’s match still plays MATCH', as
   await expect(page.getByTestId('match-moment')).toHaveCount(1);
   await expect.poll(() => f.sent().filter((t) => t === 'vote')).toHaveLength(2);
 });
+
+test('a friend’s Yep makes a match of a card you passed: MATCH plays here too', async ({ page }) => {
+  const f = await fakeRoom(page, choosingRoom());
+  await page.goto('/room/test-room');
+  await expect(page.getByTestId('voting')).toBeVisible();
+  await page.keyboard.press('ArrowRight');
+  await expect.poll(() => f.sent()).toContain('vote');
+  await page.waitForTimeout(400);
+  await expect(page.getByTestId('match-moment')).toHaveCount(0);
+  // Mia says Yep later: the room lists the match without a Yep of yours in flight.
+  f.room.shared.matches = [{ candidateId: 'c1', averageYepMs: null }];
+  f.push();
+  // The app reads the room again (as on a return to the front).
+  await page.evaluate(() => {
+    for (const state of ['hidden', 'visible']) {
+      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => state });
+      document.dispatchEvent(new Event('visibilitychange'));
+    }
+  });
+  await expect(page.getByTestId('match-moment')).toHaveCount(1);
+});

@@ -5,8 +5,8 @@ import type { LayerProps } from './paint';
 
 export function BackLayer(props: LayerProps) {
   switch (props.look) {
-    case 'giant': return props.kind === 'match' ? null : <GiantBack {...props} />;
-    case 'split': return props.kind === 'match' ? null : <SplitBack {...props} />;
+    case 'giant': return <GiantBack {...props} />;
+    case 'split': return <SplitBack {...props} />;
     case 'wall': return <WallBack {...props} />;
     case 'burst': return <BurstBack {...props} />;
     case 'bleed': return <BleedBack {...props} />;
@@ -17,9 +17,9 @@ export function BackLayer(props: LayerProps) {
 
 export function FrontLayer(props: LayerProps) {
   switch (props.look) {
-    case 'giant': return props.kind === 'match' ? null : <GiantFront {...props} />;
-    case 'split': return props.kind === 'match' ? null : <SplitFront {...props} />;
-    case 'neon': return props.kind === 'match' ? null : <NeonFront {...props} />;
+    case 'giant': return <GiantFront {...props} />;
+    case 'split': return <SplitFront {...props} />;
+    case 'neon': return <NeonFront {...props} />;
     case 'burst': return <BurstFront {...props} />;
     case 'stamp': return <StampFront {...props} />;
     case 'bleed': return <BleedFront {...props} />;

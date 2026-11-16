@@ -48,7 +48,7 @@ import { FindingMore, Label, Logos, Screen, useServices } from './ui';
 import { stageGeometry, stageRim, type Rim } from './vote/geometry';
 import type { A } from './vote/paint';
 import { LookDealer, harnessLooksFrom, pinnedLookFrom } from './vote/looks';
-import { answerYep, matchKey, nextCandidate, settleYeps, undoYeps, yepRecord, type YepRecord } from './vote/match';
+import { gainedMatches, matchList, nextCandidate, sameMatches, type MatchList } from './vote/match';
 import { VoteStage, type DragValues, type MatchMoment, type VoteStageControls } from './vote/VoteStage';
 import { YepsButton, YepsSheet } from './YourYeps';
 
@@ -244,9 +244,10 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
   const [focused, setFocused] = useState(true);
   const [localReaction, setLocalReaction] = useState<Reaction>({ at: 0 });
   const [dealer] = useState(() => new LookDealer(Math.random, pinnedLook()));
-  /** Your Yeps the room hasn't confirmed yet. */
-  const [yeps, setYeps] = useState<readonly YepRecord[]>([]);
-  const yepSerial = useRef(0);
+  /** The confirmed room's matches as this screen last saw them (a new one plays MATCH). */
+  const [seenMatches, setSeenMatches] = useState<MatchList | null>(() => (confirmed ? matchList(confirmed) : null));
+  /** MATCH moments played on this screen: each one's key is new, so a match that comes back after an Undo plays again. */
+  const [plays, setPlays] = useState(0);
   const [moment, setMoment] = useState<MatchMoment | null>(null);
   const controls = useRef<VoteStageControls>(null);
   const pointerAt = useRef(0);
@@ -349,13 +350,7 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
     finishTutorial();
     setLocalReaction(reaction({ answer: yes }));
     state.activity(undefined, 'answer');
-    const sent = cmd.vote(card.id, yes, activeTime());
-    if (!yes) return sent;
-    // Remembered until the room confirms it; a refused one is forgotten.
-    const record = yepRecord(++yepSerial.current, snapshot, card.id, look);
-    setYeps((list) => [...list, record]);
-    void sent.then((ok) => setYeps((list) => answerYep(list, record.serial, ok, room.latest())));
-    return sent;
+    return cmd.vote(card.id, yes, activeTime());
   };
   const onVote = useStableCallback(choose);
 
@@ -394,13 +389,16 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
 
   if (!snapshot || !view) return null;
   const { shared } = snapshot;
-  // A Yep of yours made a match once the confirmed room lists it: MATCH plays in that card's look.
-  const settled = confirmed && yeps.length ? settleYeps(yeps, confirmed) : null;
-  if (settled?.changed) {
-    setYeps(settled.pending);
-    const made = settled.matched[0];
-    const matched = made ? shared.candidates.find((c) => c.id === made.candidateId) : undefined;
-    if (made && matched && view.people.length > 1) setMoment({ key: matchKey(made), cardKey: `${made.generation}:${made.candidateId}`, title: titlePresentation(matched), look: made.look });
+  // The confirmed room got a new match: MATCH plays on every phone, whoever's Yep made it.
+  const matchesNow = confirmed ? matchList(confirmed) : null;
+  if (matchesNow && !sameMatches(seenMatches, matchesNow)) {
+    setSeenMatches(matchesNow);
+    const made = gainedMatches(seenMatches, matchesNow).at(-1);
+    const matched = made ? confirmed!.shared.candidates.find((c) => c.id === made) : undefined;
+    if (matched && view.people.length > 1) {
+      setPlays(plays + 1);
+      setMoment({ key: `${matchesNow.generation}:${matched.id}:${plays + 1}`, cardKey: `${matchesNow.generation}:${matched.id}`, title: titlePresentation(matched) });
+    }
   }
   const rowWidth = wide ? layout.max : area && geo ? Math.min(area.width, Math.max(geo.w, 320)) : phone ? layout.width - 32 : layout.max;
   const undoTarget = latestRetainedVote(snapshot);
@@ -447,7 +445,7 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
       )}
       {/* In the room the bar keeps for it (faces-row.ts): your Yeps arriving move nothing. */}
       <YepsButton onPress={() => setYepsOpen(true)} compact={fit.compactChip} width={yepsWidth} />
-      <Press label="Undo" disabled={disabled || !undoTarget} onPress={() => { if (!undoTarget) return; setYeps((list) => undoYeps(list, undoTarget.candidateId)); void cmd.undo(undoTarget.candidateId); }}
+      <Press label="Undo" disabled={disabled || !undoTarget} onPress={() => { if (undoTarget) void cmd.undo(undoTarget.candidateId); }}
         visual={{ width: z(40), height: z(36), borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff0a' }}>
         <Icon name="undo" size={z(17)} color={glow.soft} />
       </Press>

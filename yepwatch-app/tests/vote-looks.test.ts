@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { LOOKS, LookDealer, crossesColumn, harnessLooksFrom, isLook, momentCrossesColumn, pinnedLookFrom, shuffledBag, type Look } from '../src/features/room/vote/looks';
+import { LOOKS, LookDealer, crossesColumn, harnessLooksFrom, isLook, pinnedLookFrom, shuffledBag, type Look } from '../src/features/room/vote/looks';
 import { EM, fitTo, stageGeometry, stageRim, wordW } from '../src/features/room/vote/geometry';
 
 
@@ -132,13 +132,12 @@ test('a centered stage keeps the centered geometry; one off center reaches both 
 });
 
 test('looks that paint across the question column veil it', () => {
-  for (const look of ['wall', 'burst', 'bleed', 'glitch'] as const) for (const kind of ['yep', 'nope', 'match'] as const) assert.equal(crossesColumn(look, kind), true, `${look} ${kind}`);
+  for (const look of ['wall', 'burst', 'bleed', 'glitch'] as const) for (const kind of ['yep', 'nope'] as const) assert.equal(crossesColumn(look, kind), true, `${look} ${kind}`);
   assert.equal(crossesColumn('split', 'yep'), true);
   assert.equal(crossesColumn('split', 'nope'), false);
   assert.equal(crossesColumn('echo', 'yep'), true);
   assert.equal(crossesColumn('echo', 'nope'), false);
   for (const look of ['wash', 'giant', 'filter', 'neon', 'stamp'] as const) assert.equal(crossesColumn(look, 'yep') || crossesColumn(look, 'nope'), false, look);
-  assert.deepEqual(LOOKS.filter(momentCrossesColumn), ['filter', 'split', 'wall', 'burst', 'stamp', 'bleed', 'echo', 'glitch']);
 });
 
 test("the stage's rim takes the backdrop's colors where the stage sits in the frame", () => {

@@ -105,10 +105,9 @@ export function BurstBack({ g, kind, p, loop, reduced, stacked }: LayerProps) {
       </FxView>
     </>
   );
-  // Native has no mask (hard edges) and stays so. The rim only stands in for the mask over the bare backdrop: the match
-  // moment dims the stage under its back layer as it plays, and the previous card's look may still be playing out under
-  // the live one, so those keep the mask.
-  return <RimClip g={g} rim={web && kind !== 'match' && !stacked ? g.rim : null}>{rays}</RimClip>;
+  // Native has no mask (hard edges) and stays so. The rim only stands in for the mask over the bare backdrop: the
+  // previous card's look may still be playing out under the live one, so that keeps the mask.
+  return <RimClip g={g} rim={web && !stacked ? g.rim : null}>{rays}</RimClip>;
 }
 export function BurstFront({ g, kind, p, punch }: LayerProps) {
   const P = pal(kind);
@@ -196,7 +195,7 @@ export function BleedFront({ g, kind, p, punch }: LayerProps) {
 const TRAIL = [0, 0.75, 0.52, 0.34, 0.2, 0.1];
 /**
  * How far apart the trail's copies are. Off center the trail is shortened so its farthest copy (5 steps out, at
- * 0.8 scale) still ends a margin inside the screen edge on its side; a match trails both ways.
+ * 0.8 scale) still ends a margin inside the screen edge on its side.
  */
 function echoStep(g: Geo, kind: LayerProps['kind'], ww: number) {
   const step = ww * (g.phone ? 0.34 : 0.4);
@@ -205,7 +204,7 @@ function echoStep(g: Geo, kind: LayerProps['kind'], ww: number) {
   const reach = (edge: number) => (edge - g.z(16) - 0.42 * ww) / 5;
   const right = reach(g.screen.right - cx);
   const left = reach(cx - g.screen.left);
-  return Math.max(0, Math.min(step, kind === 'match' ? Math.min(left, right) : kind === 'nope' ? left : right));
+  return Math.max(0, Math.min(step, kind === 'nope' ? left : right));
 }
 export function EchoFront({ g, kind, p, punch }: LayerProps) {
   const P = pal(kind);
@@ -223,8 +222,8 @@ export function EchoFront({ g, kind, p, punch }: LayerProps) {
   const dir = kind === 'nope' ? -1 : 1;
   return (
     <Over g={g}>
-      {kind === 'match' ? <>{trail(-1)}{trail(1)}</> : trail(dir)}
-      <At g={g} size={size} text={P.text} style={{ opacity: ease(p), transform: [{ translateX: range(p, 0, kind === 'match' ? 0 : -dir * step * 0.6, out) }, { scale: Animated.add(range(p, 0.8, 1), punch.interpolate({ inputRange: [0, 1], outputRange: [0, 0.06] })) }] }}>
+      {trail(dir)}
+      <At g={g} size={size} text={P.text} style={{ opacity: ease(p), transform: [{ translateX: range(p, 0, -dir * step * 0.6, out) }, { scale: Animated.add(range(p, 0.8, 1), punch.interpolate({ inputRange: [0, 1], outputRange: [0, 0.06] })) }] }}>
         <Word text={P.text} size={size} color={kind === 'nope' ? cream : P.main} style={textGlow(`0 0 ${Math.round(size * 0.3)}px ${P.soft}, 0 10px 36px #000000c0`, { color: '#000000c0', radius: 20, dy: 8 })} />
       </At>
     </Over>
