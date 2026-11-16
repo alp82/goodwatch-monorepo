@@ -9,7 +9,7 @@ import { Platform, TextInput, View, type TextStyle } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { parseInvite } from '../../core/invites';
 import { GText, Icon, glow } from '../glow/theme';
-import { AMBER_LIFT, HoverPress, Nudge } from '../shell/hover';
+import { AMBER_LIFT, HoverPress, Nudge, useHovered, webOnly } from '../shell/hover';
 import { useLayout } from '../shell/layout';
 import { noun } from '../shell/noun';
 import { R, warm } from '../shell/tokens';
@@ -28,7 +28,6 @@ export function Headline({ size }: { size: number }) {
 function Glyph({ d, size, color, weight = 2 }: { d: string; size: number; color: string; weight?: number }) {
   return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={weight} strokeLinecap="round" strokeLinejoin="round" accessible={false}><Path d={d} /></Svg>;
 }
-const PLUS = 'M12 5v14M5 12h14';
 const DOOR = 'M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M10 16l4-4-4-4M14 12H3';
 
 export function Or() {
@@ -76,43 +75,63 @@ export function StatementTile({ onPress, disabled, quiet }: { onPress: () => voi
   );
 }
 
-/** What New does, in three beats: a list on phones and wide windows, a row in between. */
-function ThreeBeats({ vertical }: { vertical: boolean }) {
-  const { z } = useLayout();
-  const beats = [
-    { word: 'Invite friends', icon: <Icon name="people" size={z(16)} color={warm.ink} /> },
-    { word: 'Everyone swipes', icon: <Heart size={z(15)} color={warm.ink} /> },
-    { word: 'Get a match', icon: <Icon name="check" size={z(16)} color={warm.ink} /> },
+const SPRING = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
+/** A web transition on transform and opacity with its own length and curve. */
+const motion = (ms: number, ease = 'cubic-bezier(0.22, 1, 0.36, 1)') => webOnly({ transitionProperty: 'transform, opacity', transitionDuration: `${ms}ms`, transitionTimingFunction: ease });
+
+/** New couch's ink dot: it swells a little (springy) and its arrow slides while the tile is hovered. */
+function SwellDot({ size }: { size: number }) {
+  const on = useHovered();
+  return (
+    <View style={[{ width: size, height: size, borderRadius: size / 2, backgroundColor: warm.ink, alignItems: 'center', justifyContent: 'center' }, motion(320, SPRING), { transform: [{ scale: on ? 1.14 : 1 }] }]}>
+      <View style={[motion(260), { transform: [{ translateX: on ? 2 : 0 }] }]}><Icon name="right" size={size * 0.42} color={glow.amber} /></View>
+    </View>
+  );
+}
+
+/** A soft amber rim and glow around New couch, fading in on hover (its own layer: only opacity animates). */
+function Halo() {
+  const on = useHovered();
+  return <View pointerEvents="none" aria-hidden style={[{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: R.card, opacity: on ? 1 : 0 }, motion(on ? 280 : 420), webOnly({ boxShadow: '0 0 0 1px rgba(253,230,138,0.6), 0 12px 32px rgba(251,191,36,0.18)' })]} />;
+}
+
+/** What New does, in one line of three steps (short words on phones, so the line never wraps). */
+function Steps({ short, size }: { short: boolean; size: number }) {
+  const color = '#201400b3';
+  const steps = [
+    { word: short ? 'Invite' : 'Invite friends', icon: <Icon name="people" size={size} color={color} /> },
+    { word: short ? 'Swipe' : 'Everyone swipes', icon: <Heart size={size * 0.94} color={color} /> },
+    { word: short ? 'Match' : 'Get a match', icon: <Icon name="check" size={size} color={color} /> },
   ];
   return (
-    <View style={{ flexDirection: vertical ? 'column' : 'row', alignItems: vertical ? 'flex-start' : 'center', gap: vertical ? 8 : z(10), flexWrap: 'wrap' }}>
-      {beats.map((b, k) => (
-        <View key={b.word} style={{ flexDirection: 'row', alignItems: 'center', gap: z(10) }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, height: z(34), paddingLeft: 8, paddingRight: 12, borderRadius: 10, backgroundColor: '#2014001a' }}>
-            <View style={{ width: z(22), height: z(22), borderRadius: z(11), backgroundColor: '#20140014', alignItems: 'center', justifyContent: 'center' }}>{b.icon}</View>
-            <GText bold size={z(15)} color={warm.ink}>{b.word}</GText>
-          </View>
-          {!vertical && k < beats.length - 1 ? <Icon name="right" size={z(14)} color={warm.ink} /> : null}
+    <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', columnGap: 8, rowGap: 4 }}>
+      {steps.map((st, k) => (
+        <View key={st.word} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>{st.icon}<GText bold size={size} color={color}>{st.word}</GText></View>
+          {k < steps.length - 1 ? <Icon name="right" size={size * 0.8} color={color} /> : null}
         </View>
       ))}
     </View>
   );
 }
 
-/** Set up: the tall amber New couch tile with the three beats inside. */
+/** Set up: the amber New couch tile. Its name and arrow on top, the three steps under; hover swells the arrow's dot and fades in a halo. */
 export function NewTile({ onPress, disabled, quiet }: { onPress: () => void; disabled?: boolean; quiet?: boolean }) {
-  const { phone, wide, z } = useLayout();
-  const box = phone ? 40 : z(48);
-  const word = (phone ? 28 : z(38)) * 1.1;
+  const { phone, z } = useLayout();
+  const word = phone ? 34 : z(44);
+  const dot = phone ? 44 : z(52);
+  const pad = phone ? 20 : z(28);
   return (
-    <HoverPress label={noun.create} hint="Invite friends, everyone swipes, get a match" onPress={onPress} disabled={disabled} quiet={quiet} hover="lift" shadow={AMBER_LIFT}
-      style={{ alignSelf: 'stretch', height: phone ? 270 : z(wide ? 320 : 280), alignItems: 'stretch', justifyContent: 'space-between', gap: phone ? 12 : z(16), padding: phone ? 18 : z(26), borderRadius: R.card, backgroundColor: glow.amber, overflow: 'hidden' }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <View style={{ width: box, height: box, borderRadius: 12, backgroundColor: '#20140014', alignItems: 'center', justifyContent: 'center' }}><Glyph d={PLUS} size={box * 0.58} color={warm.ink} weight={2.4} /></View>
-        <ArrowDot size={box} />
+    <HoverPress label={noun.create} hint="Invite friends, everyone swipes, get a match" onPress={onPress} disabled={disabled} quiet={quiet} hover="none"
+      style={{ alignSelf: 'stretch', alignItems: 'stretch', borderRadius: R.card }}>
+      <Halo />
+      <View style={{ alignSelf: 'stretch', minHeight: phone ? 168 : z(200), justifyContent: 'space-between', gap: pad / 2, padding: pad, borderRadius: R.card, backgroundColor: glow.amber }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <GText bold size={word} color={warm.ink} lines={1} style={{ flexShrink: 1, letterSpacing: -word * 0.03, lineHeight: word * 1.05 }}>{noun.create}</GText>
+          <SwellDot size={dot} />
+        </View>
+        <Steps short={phone} size={phone ? 15 : z(15)} />
       </View>
-      <View style={{ flex: 1, minHeight: 0, justifyContent: 'center' }}><ThreeBeats vertical={phone || wide} /></View>
-      <GText bold size={word} color={warm.ink} lines={2} style={{ letterSpacing: -word * 0.03, lineHeight: word * 1.05 }}>{noun.create}</GText>
     </HoverPress>
   );
 }
