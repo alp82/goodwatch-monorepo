@@ -197,6 +197,8 @@ const PHONE = { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch:
     });
 
     await step('everyone’s services merge on the host’s Streaming row', async () => {
+      await button(host, 'Settings').click();
+      await expect(testId(host, 'room-sheet')).toBeVisible();
       const row = button(host, /^Netflix.*, change$/);
       await expect(row).toBeVisible({ timeout: 10000 });
       await row.click();
@@ -205,6 +207,14 @@ const PHONE = { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch:
       await shot(host, '06-host-streaming');
       await button(host, 'Done').click();
       await expect(testId(host, 'streaming-sheet')).toHaveCount(0);
+      await host.getByRole('button', { name: 'Close', exact: true }).last().click();
+      await expect(testId(host, 'room-sheet')).toHaveCount(0);
+    });
+
+    await step('before Start the fan shows posters like the couch will get', async () => {
+      await expect(testId(host, 'preview')).toHaveAttribute('aria-label', /^Preview: cards like /, { timeout: 15000 });
+      await expect(testId(host, 'preview').locator('img')).toHaveCount(5);
+      await shot(host, '06b-host-preview');
     });
 
     await step('host taps Start with 3; everyone gets Tonight; the how-to is skipped', async () => {
