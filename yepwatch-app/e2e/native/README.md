@@ -50,3 +50,5 @@ Start-to-voting video timing uses the stationary Undo control in the voting bar:
 The tutorial poster is an explicitly declared animation region for screen-flash analysis; blank detection still inspects the whole frame. A static intermediate outside that region must still fail.
 
 GitHub's no-video journey renders at half physical resolution and half density, preserving the exact dp viewport, animation behavior and 48 dp accessibility requirement. Full/video runs require full resolution. The release driver can reuse a successful full web stage only after git diff proves subsequent changes are confined to native test tooling; app, backend, shared harness or web-test changes force a new full web run.
+
+CI uses Lavapipe (the SwiftShader backend freezes during Invite) and cold-boots the software-rendered emulator instead of restoring graphics resources from Quick Boot. Hardware-GPU video runs retain their saved snapshot. Both paths apply the same device input, clock and network setup before the app runs.

@@ -48,8 +48,8 @@ export function ensureAvd() {
 
 function startEmulator(port, { readOnly, loadSnapshot }) {
   const logFile = path.join(mkdirp(path.join(HOME, 'logs')), `emulator-${port}.log`);
-  const args = ['-avd', AVD, '-port', String(port), '-no-window', '-no-audio', '-no-boot-anim', '-gpu', GPU, '-accel', 'on', '-netfast',
-    ...(readOnly ? ['-read-only'] : []), ...(loadSnapshot ? ['-snapshot', SNAPSHOT, '-no-snapshot-save'] : ['-no-snapshot-load'])];
+  const args = ['-avd', AVD, '-port', String(port), '-no-window', '-no-audio', '-no-boot-anim', '-no-snapshot-save', '-gpu', GPU, '-accel', 'on', '-netfast',
+    ...(readOnly ? ['-read-only'] : []), ...(loadSnapshot ? ['-snapshot', SNAPSHOT] : ['-no-snapshot-load'])];
   const child = spawn(tools.emulator, args, { env: toolEnv(), stdio: ['ignore', fs.openSync(logFile, 'w'), fs.openSync(logFile, 'a')], detached: true });
   child.unref();
   fs.writeFileSync(path.join(HOME, `emulator-${port}.pid`), String(child.pid));
@@ -69,14 +69,8 @@ function snapshotExists() {
   return fs.existsSync(path.join(HOME, 'avd', `${AVD}.avd`, 'snapshots', SNAPSHOT));
 }
 
-/** One-time: cold boot, configure, save the snapshot every later boot loads (~90 s once). */
-export async function ensureSnapshot() {
-  ensureAvd();
-  if (snapshotExists()) return;
-  log('creating emulator snapshot', SNAPSHOT, '(one time)');
-  const port = PORTS[0];
-  const { serial } = startEmulator(port, { readOnly: false, loadSnapshot: false });
-  await waitBoot(serial, 240000);
+/** Apply the same input, clock and network setup to both cold boots and saved hardware-GPU snapshots. */
+async function configureForTests(serial) {
   await sleep(5000);
   for (const cmd of [
     'svc power stayon true', 'settings put system screen_off_timeout 2147483647', 'locksettings set-disabled true', 'wm dismiss-keyguard',
@@ -85,11 +79,22 @@ export async function ensureSnapshot() {
     'settings put global animator_duration_scale 1', 'settings put system show_touches 1', 'svc wifi disable', 'svc data disable', 'settings put global auto_time 0',
     // No first-run/notification prompts from the app layer.
     'settings put secure immersive_mode_confirmations confirmed', 'settings put global hidden_api_policy 1',
-  ]) { try { shell(serial, cmd); } catch (e) { log('snapshot prep warn', cmd, e.message.split('\n')[0]); } }
-  // Maestro's driver lives in the snapshot, so neither the harness nor `maestro test` installs it per boot.
+  ]) { try { shell(serial, cmd); } catch (e) { log('device prep warn', cmd, e.message.split('\n')[0]); } }
+  // Preinstall the test driver; a saved hardware-GPU snapshot retains it for later boots.
   const { maestroApks } = await import('./phone.mjs');
   for (const apk of maestroApks()) adb(serial, 'install', '-r', '-g', apk);
   await sleep(2000);
+}
+
+/** One-time: cold boot, configure, save the snapshot every later boot loads (~90 s once). */
+export async function ensureSnapshot() {
+  ensureAvd();
+  if (snapshotExists()) return;
+  log('creating emulator snapshot', SNAPSHOT, '(one time)');
+  const port = PORTS[0];
+  const { serial } = startEmulator(port, { readOnly: false, loadSnapshot: false });
+  await waitBoot(serial, 240000);
+  await configureForTests(serial);
   const saved = run(tools.adb, ['-s', serial, 'emu', 'avd', 'snapshot', 'save', SNAPSHOT], { timeout: 120000 });
   if (/^KO\b/m.test(saved)) throw new Error(`emulator refused to save snapshot ${SNAPSHOT}: ${saved.trim().slice(0, 200)}`);
   run(tools.adb, ['-s', serial, 'emu', 'kill']);
@@ -99,22 +104,27 @@ export async function ensureSnapshot() {
   fs.writeFileSync(path.join(HOME, 'avd', `${AVD}.avd`, 'snapshots', SNAPSHOT, SNAPSHOT_MARKER), JSON.stringify({ savedAt: new Date().toISOString() }));
 }
 
-/** Boot (or reuse) `count` emulators from the snapshot. Returns serials and boot timings. */
+/** Boot or reuse `count` emulators; CI can request a fresh writable boot instead of Quick Boot. */
 export async function boot(count = 1) {
   if (PORTS.length < count) throw new Error(`${count} emulators need ${count} ports, YW_E2E_EMU_PORTS has ${PORTS.length} (${PORTS})`);
   ensureAdbServer();
-  await ensureSnapshot();
+  const cold = process.env.YW_E2E_COLD_BOOT === '1';
+  if (cold) ensureAvd(); else await ensureSnapshot();
   const present = devices();
   const out = [];
   await Promise.all(PORTS.slice(0, count).map(async port => {
     const serial = `emulator-${port}`;
     const started = Date.now();
-    if (!present.includes(serial)) { startEmulator(port, { readOnly: true, loadSnapshot: true }); await waitBoot(serial, 120000); }
+    if (!present.includes(serial)) {
+      startEmulator(port, { readOnly: !cold, loadSnapshot: !cold });
+      await waitBoot(serial, cold ? 240000 : 120000);
+      if (cold) await configureForTests(serial);
+    }
     const display = scaledDisplay(shell(serial, 'wm size'), shell(serial, 'wm density'), Number(process.env.YW_E2E_DISPLAY_SCALE ?? 1));
     // Preserve the same dp layout and animations, while CI's software renderer paints fewer pixels.
     shell(serial, display.scale === 1 ? 'wm size reset' : `wm size ${display.width}x${display.height}`);
     shell(serial, display.scale === 1 ? 'wm density reset' : `wm density ${display.density}`);
-    out.push({ serial, bootMs: Date.now() - started, reused: present.includes(serial), display });
+    out.push({ serial, bootMs: Date.now() - started, reused: present.includes(serial), coldBoot: cold, display });
   }));
   return out.sort((a, b) => a.serial.localeCompare(b.serial));
 }

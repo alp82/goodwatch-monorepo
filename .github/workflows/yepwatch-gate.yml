@@ -282,7 +282,7 @@ jobs:
       needs.android-changes.outputs.native == 'true')
     runs-on: ubuntu-latest
     # A warm run takes ~4 min. A cold one (no APK base, Gradle, SDK or AVD cache) builds the release APK and the
-    # emulator snapshot from scratch, which takes longer; its caches are saved even when the gate fails (below), so
+    # emulator from scratch, which takes longer; reusable caches are saved even when the gate fails (below), so
     # it happens once per native key.
     timeout-minutes: 30
     env:
@@ -291,8 +291,10 @@ jobs:
       ANDROID_HOME: /usr/local/lib/android/sdk
       ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
       YW_E2E_SHUTDOWN: '1'
-      # No GPU on GitHub runners: software rendering. Snapshots are saved and loaded with the same mode.
-      YW_E2E_GPU: swiftshader_indirect
+      # Lavapipe passes the Invite QR flow that freezes with SwiftShader on software-only runners.
+      YW_E2E_GPU: lavapipe
+      # Software-rendered snapshots cannot reliably restore graphics resources.
+      YW_E2E_COLD_BOOT: '1'
       # Same dp viewport and 48 dp audits, one quarter of the physical pixels to render.
       YW_E2E_DISPLAY_SCALE: '0.5'
       MAESTRO_VERSION: 2.12.1
@@ -429,6 +431,7 @@ jobs:
           curl -fsSL -o "$RUNNER_TEMP/maestro.zip" "https://github.com/mobile-dev-inc/maestro/releases/download/cli-$MAESTRO_VERSION/maestro.zip"
           unzip -q "$RUNNER_TEMP/maestro.zip" -d "$YW_E2E_HOME/tools"
       - name: Restore AVD + snapshot
+        if: env.YW_E2E_COLD_BOOT != '1'
         # A snapshot only loads on the CPU model and emulator build that saved it. default_boot (the
         # emulator's own quick-boot image, ~1.3 GB) is never loaded by the harness, so it stays out.
         id: avd
