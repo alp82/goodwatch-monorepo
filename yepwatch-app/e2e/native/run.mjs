@@ -142,6 +142,9 @@ async function main() {
     } finally { if (traced) await traced(); }
     timing('cold start, first visit -> start page usable', B.native.coldStartUsableMs, first.A, { amStartTotalTime: am.totalTime, use: 'settled' });
     await audit(A, 'start page (first visit)');
+    // A user cold-launches from the launcher. Force-stop alone can leave the previous app's
+    // surface onscreen; Android's Y starting window then falsely reads as app -> Y -> app.
+    A.home(); await sleep(500);
     A.forceStop(); await sleep(500);
     const again = await measure({ actor: A, phones: [A], file: vid('cold-again'), targets: { A: roiOf(A, START_RE, 20000) },
       action: hostAction(() => { am = A.launch(); }), appWindowMs: () => am?.totalTime, allowIntermediate: 0, settleMs: 800 });
