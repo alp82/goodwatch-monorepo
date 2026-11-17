@@ -208,17 +208,27 @@ export function redesignTransition(
 	return room
 }
 
-export function candidateEligible(
-	room: ProposalRoom,
+/** Current idea membership also applies to cards retained from earlier room settings or releases. */
+export function candidateMatchesIdeas(
+	room: Pick<ProposalRoom, "ideas">,
 	c: ProposalRoom["candidates"][number],
 ): boolean {
-	const services = new Set(room.screens[0]?.serviceIds ?? [])
 	const on = (room.ideas ?? []).filter((i) => i.on)
 	return (
 		(c.ideaIds === undefined ||
 			c.ideaIds.length === 0 ||
 			c.ideaIds.some((id) => on.some((i) => i.id === id))) &&
-		(on.length === 0 || on.some((idea) => idea.rankedKeys.includes(rankedKey(c)))) &&
+		(on.length === 0 || on.some((idea) => idea.rankedKeys.includes(rankedKey(c))))
+	)
+}
+
+export function candidateEligible(
+	room: ProposalRoom,
+	c: ProposalRoom["candidates"][number],
+): boolean {
+	const services = new Set(room.screens[0]?.serviceIds ?? [])
+	return (
+		candidateMatchesIdeas(room, c) &&
 		room.constraints.kinds.includes(c.identity.kind) &&
 		(room.constraints.maxMinutes == null ||
 			(c.runtimeMinutes != null && c.runtimeMinutes <= room.constraints.maxMinutes)) &&

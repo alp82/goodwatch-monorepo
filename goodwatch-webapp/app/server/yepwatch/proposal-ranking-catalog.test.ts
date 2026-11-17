@@ -14,7 +14,7 @@ const snapshot = rankingSnapshot(
 	"catalog-fixture",
 )
 const globals = globalThis as typeof globalThis & {
-	picksSnapshot: typeof snapshot
+	picksSnapshot: typeof snapshot | null
 	picksReads: CatalogReads
 	picksMetadata: () => Promise<unknown>
 }
@@ -280,7 +280,7 @@ for (const confidence of [null, 0] as const) {
 	})
 }
 
-test("five-card preview uses the Start ranking, stored idea attributes and kinds without preparing profiles or reading members", async () => {
+test("preview uses only matching Start results without padding, preparing profiles or reading members", async () => {
 	const room = rankingRoom()
 	room.phase = "setup"
 	room.ideas = [
@@ -306,15 +306,27 @@ test("five-card preview uses the Start ranking, stored idea attributes and kinds
 	const full = await catalog.page(room)
 	const preview = await catalog.page(room, { limit: 5, preview: true })
 	assert.equal(prepares, 1, "preview only uses held tastes; Start preparation ran once")
-	assert.equal(preview.candidates.length, 5)
+	assert.equal(preview.candidates.length, 1)
+	assert.deepEqual(
+		full.candidates.map((c) => c.identity.tmdbId),
+		[10],
+	)
 	assert.deepEqual(preview.candidates, full.candidates.slice(0, 5))
 	assert.ok(
 		preview.candidates.some((c) => c.identity.tmdbId === 10),
 		"stored idea reading participates in ranking",
 	)
 	assert.deepEqual(room, before)
+	room.seenKeys = ["movie_10"]
+	assert.deepEqual(
+		(await catalog.page(room)).candidates,
+		[],
+		"refill never broadens exhausted ideas",
+	)
+	room.seenKeys = []
 	room.ideas[0].on = false
 	const off = await catalog.page(room, { limit: 5, preview: true })
+	assert.equal(off.candidates.length, 5, "turning off all ideas explicitly broadens the preview")
 	assert.ok(Object.values(preview.ranking!).find((r) => r.key === 1e12 + 10)!.parts.idea > 0)
 	assert.ok(
 		Object.values(off.ranking!).every((r) => r.parts.idea === 0),
@@ -348,4 +360,33 @@ test("five-card preview uses the Start ranking, stored idea attributes and kinds
 		[],
 		"movie-only fixture cannot leak into show preview",
 	)
+})
+
+test("catalog without a held taste snapshot still obeys idea membership and exhaustion", async () => {
+	const room = rankingRoom()
+	room.ideas = [
+		{
+			id: "scifi",
+			text: "scifi super epic",
+			authorId: room.hostId,
+			on: true,
+			attributes: [],
+			rankedKeys: [1e12 + 10],
+			interpretedAt: 1,
+		},
+	]
+	globals.picksSnapshot = null
+	try {
+		const catalog = guestProposalCatalog()
+		assert.deepEqual(
+			(await catalog.page(room)).candidates.map((c) => c.identity.tmdbId),
+			[10],
+		)
+		room.seenKeys = ["movie_10"]
+		assert.deepEqual((await catalog.page(room)).candidates, [])
+		room.ideas[0].on = false
+		assert.ok((await catalog.page(room)).candidates.length > 0)
+	} finally {
+		globals.picksSnapshot = snapshot
+	}
 })

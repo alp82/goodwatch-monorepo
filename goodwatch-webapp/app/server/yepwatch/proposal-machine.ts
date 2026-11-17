@@ -12,6 +12,7 @@ import {
 	redesignTransition,
 	refreshServices,
 	candidateEligible,
+	candidateMatchesIdeas,
 	retireIneligible,
 } from "./proposal-redesign.ts"
 import { activeRoom, normalizeRoomContext, ROOM_CONTEXT } from "./proposal-context.ts"
@@ -266,7 +267,10 @@ export function proposalSnapshot(room: ProposalRoom, participantId: string): Roo
 			serviceIds: actor(room, person.participantId).serviceIds ?? null,
 			dropped: actor(room, person.participantId).leftAt != null,
 		})),
-		candidates: room.candidates.map(projectedCandidate),
+		// Preserve durable votes and completed decisions, but never serve stale nonmatching cards in an active deck.
+		candidates: room.candidates
+			.filter((c) => room.phase !== "choosing" || candidateMatchesIdeas(room, c))
+			.map(projectedCandidate),
 		matches: matches(room).map((c) => ({
 			candidateId: c.id,
 			averageYepMs: averageYepMs(room, c.id),
@@ -324,6 +328,7 @@ export function proposalSnapshot(room: ProposalRoom, participantId: string): Roo
 		shared,
 		own: {
 			...own,
+			nextCandidateId: shared.candidates.find((c) => p.votes[c.id]?.value == null)?.id ?? null,
 			ins: {
 				candidateIds:
 					p.leftAt == null

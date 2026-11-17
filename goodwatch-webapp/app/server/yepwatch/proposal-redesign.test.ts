@@ -1210,3 +1210,48 @@ test("agree keeps its round, proposal and own-agreement fences; only the roster 
 	const agreed = await agree({})
 	assert.ok(agreed.snapshot.own.agreement.agreed || agreed.snapshot.shared.phase === "decided")
 })
+
+test("reopening a pre-fix room hides unrelated saved cards while preserving votes and the stored room", async () => {
+	const f = await fixture()
+	await f.start()
+	const room = (await f.repo.read(f.id))!.room
+	const match = room.candidates[0],
+		unrelated = room.candidates[1]
+	room.ideas = [
+		{
+			id: "scifi",
+			text: "scifi super epic",
+			authorId: room.hostId,
+			on: true,
+			attributes: [],
+			rankedKeys: [rankedKey(match)],
+			interpretedAt: 1,
+		},
+	]
+	unrelated.ideaIds = []
+	room.candidates = [unrelated, match]
+	// A friend's answer keeps this old popularity card in history, never in the host's active deck.
+	room.participants.find((p) => p.id !== room.hostId)!.votes[unrelated.id] = {
+		value: "watch",
+		revision: 1,
+	}
+	const before = structuredClone(room)
+	const snapshot = proposalSnapshot(room, room.hostId)
+	assert.deepEqual(
+		snapshot.shared.candidates.map((c) => c.id),
+		[match.id],
+	)
+	assert.equal(snapshot.own.nextCandidateId, match.id)
+	assert.deepEqual(room, before, "projection must not mutate stored votes or candidates")
+	room.phase = "decided"
+	assert.equal(
+		proposalSnapshot(room, room.hostId).shared.candidates.length,
+		2,
+		"completed rooms retain their title history",
+	)
+	room.phase = "choosing"
+	room.ideas[0].on = false
+	assert.ok(
+		proposalSnapshot(room, room.hostId).shared.candidates.some((c) => c.id === unrelated.id),
+	)
+})

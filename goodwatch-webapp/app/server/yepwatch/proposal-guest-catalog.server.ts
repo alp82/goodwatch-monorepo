@@ -1,3 +1,4 @@
+import { roomIntentKeys } from "./proposal-intent.ts"
 import type { CountryServices } from "../availability-index.server.ts"
 import { matchingIdeaIds } from "./proposal-redesign.ts"
 import { rankDeck, RANKER_VERSION, type Ranked } from "./proposal-ranker.ts"
@@ -248,7 +249,7 @@ export function guestProposalCatalog(
 						}
 					: {}),
 				rank: async (_r, base, limit) => {
-					if (!current) return base.filter((k) => !excluded.has(k))
+					if (!current) return roomIntentKeys(room, base).filter((k) => !excluded.has(k))
 					const moodMask = maskOfMoods(room.constraints.moods as Parameters<typeof maskOfMoods>[0])
 					poolStep = poolStepOf(base)
 					const eligible = (key: number) => {
