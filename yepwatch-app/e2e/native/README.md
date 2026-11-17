@@ -46,5 +46,7 @@ logcat per phone. Exit code 0 only if every gate passes.
 - adb's emulator port scan is switched off (`ADB_LOCAL_TRANSPORT_MAX_PORT=5553`): local services on
   5555-5585 otherwise appear as offline emulators and break Maestro's device listing.
 
-Start-to-voting video timing uses the stationary voting question: the first-round tutorial deliberately drags the real poster. The journey separately requires a poster and title on both phones, exercises Skip without opening Details, and audits the resting controls. Video plateau detection compares the whole still run, so gradual animation is not mistaken for a static intermediate screen.
+Start-to-voting video timing uses the stationary Undo control in the voting bar: the first-round tutorial deliberately drags the real poster. The journey separately requires a poster and title on both phones, exercises Skip without opening Details, and audits the resting controls. Video plateau detection compares the whole still run, so gradual animation is not mistaken for a static intermediate screen.
 The tutorial poster is an explicitly declared animation region for screen-flash analysis; blank detection still inspects the whole frame. A static intermediate outside that region must still fail.
+
+GitHub's no-video journey renders at half physical resolution and half density, preserving the exact dp viewport, animation behavior and 48 dp accessibility requirement. Full/video runs require full resolution. The release driver can reuse a successful full web stage only after git diff proves subsequent changes are confined to native test tooling; app, backend, shared harness or web-test changes force a new full web run.

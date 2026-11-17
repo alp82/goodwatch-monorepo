@@ -9,6 +9,7 @@ import http2 from 'node:http2';
 import path from 'node:path';
 import { HOME, log, mkdirp, run, sleep, toolEnv, tools } from './env.mjs';
 import { PACKAGE } from './build.mjs';
+import { currentDensity } from './display.mjs';
 
 const MAESTRO_APKS = path.join(HOME, 'tools/maestro-apks');
 export function maestroApks() {
@@ -61,12 +62,13 @@ export class Phone {
     // Host port for the driver's adb forward, unique per emulator (5570 -> 19500, 5572 -> 19501, 5574 -> 19502 …)
     // so harnesses on different emulators never re-point each other's forward.
     const emu = Number(serial.match(/^emulator-(\d+)$/)?.[1]);
-    this.serial = serial; this.name = name; this.port = emu ? 19500 + (emu - 5570) / 2 : 19500 + index; this.client = null; this.steps = [];
+    this.serial = serial; this.name = name; this.port = emu ? 19500 + (emu - 5570) / 2 : 19500 + index; this.client = null; this.steps = []; this.density = 420;
   }
   adb(...args) { return run(tools.adb, ['-s', this.serial, ...args], { timeout: 60000 }); }
   sh(cmd) { return this.adb('shell', cmd); }
 
   async start() {
+    this.density = currentDensity(this.sh('wm density'));
     const pk = this.sh('pm list packages dev.mobile.maestro');
     if (!pk.includes('dev.mobile.maestro.test')) for (const apk of maestroApks()) this.adb('install', '-r', '-g', apk);
     this.adb('forward', `tcp:${this.port}`, 'tcp:7001');
@@ -84,7 +86,7 @@ export class Phone {
       const frame = Buffer.alloc(5 + body.length); frame.writeUInt32BE(body.length, 1); body.copy(frame, 5);
       const s = this.client.request({ ':method': 'POST', ':path': `/maestro_android.MaestroDriver/${method}`, 'content-type': 'application/grpc', te: 'trailers' });
       const chunks = []; let status = null;
-      const timer = setTimeout(() => { s.close(); reject(new Error(`${method} timed out`)); }, timeoutMs);
+      const timer = setTimeout(() => { s.close(); reject(new Error(`${method} timed out after ${timeoutMs} ms; last action: ${this.steps.at(-1)?.target ?? 'none'}`)); }, timeoutMs);
       s.on('trailers', t => { status = t['grpc-status'] ?? '0'; });
       s.on('response', h => { if (h['grpc-status']) status = h['grpc-status']; });
       s.on('data', d => chunks.push(d));
@@ -160,7 +162,7 @@ export class Phone {
       (e) => (e ? reject(new Error(`${this.name}: input tap ${x},${y} failed: ${e.message.split('\n')[0]}`)) : resolve())));
     this.lastTap = { x, y, at: Date.now() };
   }
-  async tap(sel, opts) { const n = await this.find(sel, opts); await this.tapXY(n.cx, n.cy); return n; }
+  async tap(sel, opts) { this.steps.push({ action: 'tap', target: label(sel), at: Date.now() }); const n = await this.find(sel, opts); await this.tapXY(n.cx, n.cy); return n; }
   async type(text) { await this.call('inputText', fieldStr(1, text)); }
   async fill(sel, text) { await this.tap(sel); await sleep(150); await this.type(text); }
   key(code) { this.sh(`input keyevent ${code}`); }

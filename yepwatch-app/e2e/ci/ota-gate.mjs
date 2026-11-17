@@ -8,6 +8,7 @@
 //   Android full       node e2e/native/run.mjs full      (~6 min; incl. frame pacing on the real GPU)  --no-android skips
 //   iOS (--ios)        EAS Workflows: e2e/native/ci/eas-maestro-ios.yml (simulator build + Maestro, ~25-35 min,
 //                      started first so it runs while the local tiers do)
+//   --reuse-web        reuse a passed web stage only after verified native-runner-only changes
 //   --check            only verifies a passing verdict exists for HEAD with a clean tree (for OTA scripts)
 //
 // Verdict: e2e/.cache/ota-gate.json { commit, pass, ios, at, runs }. Publish only when `--check` exits 0.
@@ -16,6 +17,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { webReuseProblem } from './ota-cache.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const e2eDir = path.resolve(here, '..');
@@ -46,6 +48,20 @@ if (args.has('--check')) {
 if (dirty) { console.error(`OTA gate: commit first; an OTA must publish exactly what was tested.\n${dirty}`); process.exit(1); }
 
 const runs = {};
+let cachedWeb = null;
+if (args.has('--reuse-web')) {
+  let receipt = null;
+  try { receipt = JSON.parse(fs.readFileSync(verdictFile, 'utf8')); } catch { /* refused below */ }
+  const source = receipt?.runs?.['web-full']?.sourceCommit ?? receipt?.commit;
+  const initialProblem = webReuseProblem(receipt, []);
+  if (initialProblem) { console.error(`Cannot reuse web stage: ${initialProblem}`); process.exit(1); }
+  const diff = spawnSync('git', ['diff', '--name-only', source, head, '--'], { cwd: appDir, encoding: 'utf8' });
+  if (diff.status !== 0) { console.error('Cannot verify the recorded web source against HEAD'); process.exit(1); }
+  const problem = webReuseProblem(receipt, diff.stdout.trim().split('\n').filter(Boolean));
+  if (problem) { console.error(`Cannot reuse web stage: ${problem}`); process.exit(1); }
+  cachedWeb = { ...receipt.runs['web-full'], sourceCommit: source, reused: true, verifiedAgainst: head };
+}
+
 function run(name, cmd, argv, cwd) {
   return new Promise((resolve) => {
     log(`${name}: ${cmd} ${argv.join(' ')}`);
@@ -72,7 +88,12 @@ if (args.has('--ios')) {
 }
 
 // ---- local tiers, one after the other (they share the stack; the full tier resets its store) ---------------
-const webOk = await run('web-full', process.execPath, [path.join(e2eDir, 'run.mjs'), 'full'], e2eDir);
+let webOk;
+if (cachedWeb) {
+  runs['web-full'] = cachedWeb;
+  webOk = true;
+  log(`web-full: REUSED passed run for ${cachedWeb.sourceCommit.slice(0, 9)}; git diff verified no web inputs changed`);
+} else webOk = await run('web-full', process.execPath, [path.join(e2eDir, 'run.mjs'), 'full'], e2eDir);
 const androidOk = args.has('--no-android') ? true : await run('android-full', process.execPath, [path.join(e2eDir, 'native/run.mjs'), 'full'], path.join(e2eDir, 'native'));
 
 let iosOk = true;
