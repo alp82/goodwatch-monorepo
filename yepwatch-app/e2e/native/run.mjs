@@ -60,7 +60,7 @@ async function audit(p, screen) {
     if (shape(again) === shape(nodes)) break;
     nodes = again;
   }
-  const found = a11yAudit(nodes, { screen, minDp: B.native.minTargetDp });
+  const found = a11yAudit(nodes, { screen, density: p.density, minDp: B.native.minTargetDp });
   if (found.length) { try { const shot = path.relative(RUN, p.screenshot(path.join(RUN, `a11y-${screen.replace(/\W+/g, '-')}-${p.name}.png`))); for (const f of found) f.shot = shot; } catch { /* best effort */ } }
   for (const f of found) result.gates.a11y.push(f);
 }
@@ -87,7 +87,7 @@ async function scenario(name, fn, { modes = ['gate', 'full'] } = {}) {
   const started = Date.now(); log(`▶ ${name}`);
   const row = { name, pass: true };
   try { await fn(); } catch (e) {
-    row.pass = false; row.error = e.message; if (e.screen) row.screen = e.screen;
+    row.pass = false; row.error = e.message; row.lastActions = phones.map(p => ({ phone: p.name, actions: p.steps.slice(-5) })); if (e.screen) row.screen = e.screen;
     for (const p of phones) { try { row[`shot${p.name}`] = path.relative(RUN, p.screenshot(path.join(RUN, `fail-${name}-${p.name}.png`))); } catch { /* best effort */ } }
     log(`✖ ${name}: ${e.message}`);
   }
@@ -103,6 +103,7 @@ function journeyFail(name, detail, phone) {
 
 // ---------- shared state between scenarios ----------
 const S = {};
+if (mode !== 'journey' && Number(process.env.YW_E2E_DISPLAY_SCALE ?? 1) !== 1) throw new Error('Video journeys require the full-resolution display');
 
 async function main() {
   const stack = resolveStack();
@@ -217,12 +218,12 @@ async function main() {
     const r = await measure({ actor: A, phones: [A, Bp], file: vid('start'), action: tapAction(A, start),
       // The tutorial deliberately moves the poster. Measure the stable choice controls; the
       // real poster and its title are verified separately below, on both phones.
-      targets: { A: roiOf(A, 'Would you watch this tonight?', 10000), B: roiOf(Bp, 'Would you watch this tonight?', 10000) },
+      targets: { A: roiOf(A, 'Undo', 10000), B: roiOf(Bp, 'Undo', 10000) },
       // The lesson intentionally moves and pauses the real card; screen flashes are judged outside
       // that animated region. Blank-screen detection still inspects the entire screen.
       animatedRegions: { A: async () => [(await A.waitFor('poster')).bounds], B: async () => [(await Bp.waitFor('poster')).bounds] } });
-    timing('Start -> voting question (host)', B.startToFirstCardMs, r.A);
-    timing('Start -> voting question (friend)', B.startToPeerVotingMs, r.B);
+    timing('Start -> voting bar (host)', B.startToFirstCardMs, r.A);
+    timing('Start -> voting bar (friend)', B.startToPeerVotingMs, r.B);
     for (const p of [A, Bp]) {
       await p.waitFor('poster', { timeout: 10000 });
       // Audit resting targets, after exercising the first-round tutorial's explicit Skip action.

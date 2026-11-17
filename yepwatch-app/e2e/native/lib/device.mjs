@@ -8,6 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { HOME, SDK, log, mkdirp, run, sleep, toolEnv, tools } from './env.mjs';
 import { PACKAGE } from './build.mjs';
+import { scaledDisplay } from './display.mjs';
 
 export const AVD = process.env.YW_E2E_AVD ?? 'yw-e2e';
 export const SNAPSHOT = 'yw-base-v2';
@@ -109,7 +110,11 @@ export async function boot(count = 1) {
     const serial = `emulator-${port}`;
     const started = Date.now();
     if (!present.includes(serial)) { startEmulator(port, { readOnly: true, loadSnapshot: true }); await waitBoot(serial, 120000); }
-    out.push({ serial, bootMs: Date.now() - started, reused: present.includes(serial) });
+    const display = scaledDisplay(shell(serial, 'wm size'), shell(serial, 'wm density'), Number(process.env.YW_E2E_DISPLAY_SCALE ?? 1));
+    // Preserve the same dp layout and animations, while CI's software renderer paints fewer pixels.
+    shell(serial, display.scale === 1 ? 'wm size reset' : `wm size ${display.width}x${display.height}`);
+    shell(serial, display.scale === 1 ? 'wm density reset' : `wm density ${display.density}`);
+    out.push({ serial, bootMs: Date.now() - started, reused: present.includes(serial), display });
   }));
   return out.sort((a, b) => a.serial.localeCompare(b.serial));
 }

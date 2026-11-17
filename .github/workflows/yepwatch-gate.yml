@@ -293,6 +293,8 @@ jobs:
       YW_E2E_SHUTDOWN: '1'
       # No GPU on GitHub runners: software rendering. Snapshots are saved and loaded with the same mode.
       YW_E2E_GPU: swiftshader_indirect
+      # Same dp viewport and 48 dp audits, one quarter of the physical pixels to render.
+      YW_E2E_DISPLAY_SCALE: '0.5'
       MAESTRO_VERSION: 2.12.1
       SYSTEM_IMAGE: system-images;android-35;google_apis;x86_64
     steps:
@@ -534,6 +536,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: android-gate
+          include-hidden-files: true
           path: |
             ${{ env.YW_E2E_RUNS }}/**/result.json
             ${{ env.YW_E2E_RUNS }}/**/ci-summary.md
