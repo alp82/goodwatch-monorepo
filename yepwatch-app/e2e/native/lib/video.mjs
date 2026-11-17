@@ -16,12 +16,13 @@
 import { execFileSync, spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { mkdirp, run, sleep, tools } from './env.mjs';
+import { mkdirp, run, sleep, toolEnv, tools } from './env.mjs';
 
 export const W = 135, H = 300, SCALE = 1080 / W; // device px per analysed px
 const STATUS_ROWS = Math.ceil(80 / SCALE);
 
-export async function startRecording(phone, file) {
+export async function startRecording(phone, file, recorder = 'host') {
+  if (recorder === 'android') return startAndroidRecording(phone, file.replace(/\.webm$/, '.mp4'));
   mkdirp(path.dirname(file));
   fs.rmSync(file, { force: true });
   const before = Date.now();
@@ -29,7 +30,46 @@ export async function startRecording(phone, file) {
   const after = Date.now();
   return { phone, file, t0: (before + after) / 2, t0Err: (after - before) / 2 };
 }
+// Record the composed Android display for cold launches. The emulator console recorder can
+// insert an old splash buffer after the ready page; Android's display capture avoids that path.
+async function startAndroidRecording(phone, file) {
+  mkdirp(path.dirname(file));
+  fs.rmSync(file, { force: true });
+  const remote = `/data/local/tmp/yw-record-${Date.now()}-${phone.serial}.mp4`;
+  const before = Date.now();
+  const child = spawn(tools.adb, ['-s', phone.serial, 'shell',
+    `screenrecord --size 540x1200 --bit-rate 8000000 ${remote} & recording_pid=$!; echo $recording_pid > ${remote}.pid; wait $recording_pid`],
+    { env: toolEnv(), stdio: 'ignore' });
+  const exited = new Promise(resolve => child.once('close', resolve));
+  for (let i = 0; i < 80; i++) {
+    try {
+      phone.sh(`test -s ${remote}`);
+      const after = Date.now();
+      // Startup lies within this host-clock bracket. Include one display frame of quantisation.
+      return { phone, file, recorder: 'android', remote, exited, t0: (before + after) / 2, t0Err: (after - before) / 2 + 17 };
+    } catch { /* encoder has not written its MP4 header yet */ }
+    if (child.exitCode !== null) throw new Error(`Android screenrecord exited before recording (${child.exitCode})`);
+    await sleep(50);
+  }
+  child.kill('SIGTERM');
+  throw new Error('Android screenrecord did not become ready');
+}
+
 export async function stopRecording(rec) {
+  if (rec.recorder === 'android') {
+    const pid = Number(rec.phone.sh(`cat ${rec.remote}.pid`).trim());
+    if (!Number.isSafeInteger(pid) || pid < 1) throw new Error('Invalid Android recorder PID');
+    rec.phone.sh(`kill -INT ${pid}`);
+    let timer;
+    try {
+      await Promise.race([rec.exited, new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Android recorder did not finish')), 10000); })]);
+      rec.phone.adb('pull', rec.remote, rec.file);
+      rec.phone.sh(`rm -f ${rec.remote} ${rec.remote}.pid`);
+    } finally {
+      clearTimeout(timer);
+    }
+    return decode(rec);
+  }
   run(tools.adb, ['-s', rec.phone.serial, 'emu', 'screenrecord', 'stop']);
   for (let i = 0; i < 50; i++) { // the recorder finalises the file asynchronously
     try { if (fs.statSync(rec.file).size > 0) { await sleep(400); break; } } catch { /* not yet */ }
@@ -159,9 +199,9 @@ export function maxGap(video, from, to) {
  * (its splash) is then the start look, so launches pass `allowIntermediate: 0`: any screen between the
  * splash and the target counts.
  */
-export async function measure({ actor, targets, file, action, settleMs = 1200, allowIntermediate = 1, phones, appWindowMs, animatedRegions = {} }) {
+export async function measure({ actor, targets, file, action, settleMs = 1200, allowIntermediate = 1, phones, appWindowMs, animatedRegions = {}, recorder = 'host' }) {
   const recs = new Map();
-  for (const p of phones) recs.set(p.name, await startRecording(p, file.replace(/\.webm$/, `-${p.name}.webm`)));
+  for (const p of phones) recs.set(p.name, await startRecording(p, file.replace(/\.webm$/, `-${p.name}.webm`), recorder));
   await sleep(350);
   let act, rois = {}, motion = {};
   try {
@@ -192,7 +232,7 @@ export async function measure({ actor, targets, file, action, settleMs = 1200, a
     const ms = video.t0 + video.frames[fc].t - anchorMs;
     const windowMs = appWindowMs?.();
     const flashFrom = Number.isFinite(windowMs) ? Math.min(arr, Math.max(from, frameAt(video, anchorMs + windowMs))) : from;
-    const fl = flashes(video, flashFrom, arr + 20, { allowIntermediate, animatedRegions: motion[name] ?? [], saveDir: video.file.replace(/\.webm$/, '-frames') });
+    const fl = flashes(video, flashFrom, arr + 20, { allowIntermediate, animatedRegions: motion[name] ?? [], saveDir: video.file.replace(/\.(webm|mp4)$/, '-frames') });
     out[name] = { ok: true, ms: +ms.toFixed(0), settledMs: +settledMs.toFixed(0), anchorMs: Math.round(anchorMs), anchorFrame: frameAt(video, anchorMs), firstFrame: fc, settledFrame: arr, resolutionMs: 17, clockErrMs: +(video.t0Err + (video === actorVideo || act.anchor === 'host' ? 0 : actorVideo.t0Err)).toFixed(0),
       maxGapMs: maxGap(video, from, arr), flash: fl, animatedRegions: motion[name] ?? [], file: video.file };
   }

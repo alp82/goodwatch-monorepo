@@ -42,7 +42,7 @@ function timing(name, budget, r, extra = {}) {
   result.speed.push(row);
   log(`  timing ${name}: ${row.ms ?? '-'} ms (first change ${row.firstMs ?? '-'}, settled ${row.settledMs ?? '-'}) target ${budget}${row.onTarget === false ? ' (over)' : ''}${row.error ? ' ' + row.error : ''}`);
   if (r?.ok && r.flash?.failed) {
-    result.gates.flash.push({ name, blankFrames: r.flash.blank.length, spikes: r.flash.spikes, intermediate: r.flash.plateaus, frames: path.relative(RUN, r.file.replace(/\.webm$/, '-frames')) });
+    result.gates.flash.push({ name, blankFrames: r.flash.blank.length, spikes: r.flash.spikes, intermediate: r.flash.plateaus, frames: path.relative(RUN, r.file.replace(/\.(webm|mp4)$/, '-frames')) });
     log(`  flash ${name}: ${JSON.stringify({ blank: r.flash.blank.length, spikes: r.flash.spikes.length, plateaus: r.flash.plateaus.length })}`);
   }
 }
@@ -137,7 +137,7 @@ async function main() {
     const traced = tracing('cold-start') ? await startTrace(A, 'cold-start', path.join(RUN, 'video'), 12000) : null;
     let first;
     try {
-      first = await measure({ actor: A, phones: [A], file: vid('cold-first'), targets: { A: roiOf(A, START_RE, 20000) },
+      first = await measure({ actor: A, phones: [A], file: vid('cold-first'), recorder: 'android', targets: { A: roiOf(A, START_RE, 20000) },
         action: hostAction(() => { am = A.launch(); }), appWindowMs: () => am?.totalTime, allowIntermediate: 0, settleMs: 800 });
     } finally { if (traced) await traced(); }
     timing('cold start, first visit -> start page usable', B.native.coldStartUsableMs, first.A, { amStartTotalTime: am.totalTime, use: 'settled' });
@@ -146,7 +146,7 @@ async function main() {
     // surface onscreen; Android's Y starting window then falsely reads as app -> Y -> app.
     A.home(); await sleep(500);
     A.forceStop(); await sleep(500);
-    const again = await measure({ actor: A, phones: [A], file: vid('cold-again'), targets: { A: roiOf(A, START_RE, 20000) },
+    const again = await measure({ actor: A, phones: [A], file: vid('cold-again'), recorder: 'android', targets: { A: roiOf(A, START_RE, 20000) },
       action: hostAction(() => { am = A.launch(); }), appWindowMs: () => am?.totalTime, allowIntermediate: 0, settleMs: 800 });
     timing('cold start, returning -> start page usable', B.native.coldStartUsableMs, again.A, { amStartTotalTime: am.totalTime, use: 'settled' });
     if (again.A?.ok) S.coldReturningMs = again.A.settledMs;
