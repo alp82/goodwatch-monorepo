@@ -197,6 +197,15 @@ export { inviteUrl, tapAction };
  * transitions, a11y of each screen on the way, no blocking words. The browser's console and page errors
  * count as errors. The browser's own timing, flash and a11y gates are the web gate's (same app, same stack).
  */
+// The first round moves and tilts the real card. Exercise Skip before auditing resting targets,
+// just as the two-phone full journey does; an animation pause is not a settled voting screen.
+async function skipHowTo(phone) {
+  if (!(await phone.has('Skip the how-to'))) return;
+  await phone.tap('Skip the how-to');
+  await phone.waitGone('Skip the how-to');
+  if (await phone.has('details-panel')) throw new Error('Tutorial Skip opened title details');
+}
+
 export async function mixedGateRoom({ phone: A, stack, runDir, B, timing, audit, notStuck, journeyFail, errors, frames }) {
   const vid = name => path.join(runDir, 'video', `${name}.webm`);
   const opening = WebPeer.open({ origin: stack.app, name: 'Webby' }); // Chromium starts while the phone creates the room
@@ -242,6 +251,7 @@ export async function mixedGateRoom({ phone: A, stack, runDir, B, timing, audit,
       const ms = Math.round(seen - st.A.anchorMs);
       timing('Start on Android -> voting in the browser friend', B.startToPeerVotingMs, { ok: true, ms, settledMs: ms, file: st.A.file, resolutionMs: 17, clockErrMs: st.A.clockErrMs });
     }
+    await skipHowTo(A);
     await audit(A, 'voting');
 
     // Vote to a match: the phone says Yep to its next cards, the browser skips to one of them, then the
@@ -316,6 +326,7 @@ export async function mixedJourneyRoom({ phone: A, stack, audit, notStuck, journ
     const start = await A.find(/^Start( with \d+| on my own)$/, { timeout: 10000 });
     await step(() => A.tapXY(start.cx, start.cy), 'poster', 20000);
     await web.waitVoting();
+    await skipHowTo(A);
     await audit(A, 'voting');
 
     // Vote to a match: the phone says Yep to its next cards, the browser skips to one of them and says Yep.
