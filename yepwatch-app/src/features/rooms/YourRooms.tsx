@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { Image, Pressable, View } from 'react-native';
 import type { DecisionRecord } from '../../core/continuous/room-registry-state';
 import { GText, Icon, Press, glow, grow, onePress } from '../glow/theme';
-import { HeroIcon, LiveBadge, Note, TextLink } from '../room/ui';
+import { LiveBadge, Note, TextLink } from '../room/ui';
 import { FaceStack } from '../shell/parts';
 import { useLayout } from '../shell/layout';
 import { R, warm } from '../shell/tokens';
@@ -62,7 +62,7 @@ function LiveCard({ room: given, width, now, open, archive, quiet }: { room: Hom
       </Pressable>
       <Press label={`Archive ${room.label}`} onPress={archive} style={{ position: 'absolute', right: 6, top: 6, width: 48, height: 48 }}
         visual={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: R.control, backgroundColor: '#0a0908cc', borderWidth: 1, borderColor: warm.line }}>
-        <HeroIcon name="archive" size={18} color={glow.soft} />
+        <Icon name="archive" size={18} color={glow.soft} />
       </Press>
     </View>
   );

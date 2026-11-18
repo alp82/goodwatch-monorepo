@@ -9,7 +9,7 @@ import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from '
 import { Animated, Easing, Image, Platform, TextInput, View, type TextStyle } from 'react-native';
 import type { Candidate } from '@goodwatch/yepwatch-contracts/proposal';
 import { useReducedMotion } from '../../components/ui';
-import { GText, glow, native } from '../glow/theme';
+import { GText, Icon, glow, native } from '../glow/theme';
 import { HoverPress, useHovered } from '../shell/hover';
 import { useLayout } from '../shell/layout';
 import { noun } from '../shell/noun';
@@ -20,7 +20,6 @@ import { useIdeaSave } from './idea-save';
 import { webField } from './parts';
 import { roomPart, useRoomLive } from './RoomProvider';
 import { Face } from './invite';
-import { Glyph } from './ui';
 import { usePosterPreview } from './poster-preview';
 
 // ————— Motion (transform and opacity only) —————
@@ -154,7 +153,7 @@ function TryWords({ text }: { text: string }) {
   return (
     <>
       <View style={{ width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: hovered ? TRY_HOVER : '#ffffff40' }}>
-        <Glyph name="up" size={11} color={color} />
+        <Icon name="up" size={11} color={color} />
       </View>
       <GText bold size={phone ? 14 : z(14)} color={color} lines={1} style={{ flexShrink: 1 }}>{`Try “${text}”`}</GText>
     </>

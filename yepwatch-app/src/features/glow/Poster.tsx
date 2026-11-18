@@ -113,7 +113,8 @@ export function Poster({ title, width, height, phone, z, showText = true, x, y, 
           <View style={{ width: 30, height: 30, borderRadius: 20, backgroundColor: '#dc2626', alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="play" size={16} color="#fff" />
           </View>
-          <GText bold color="#151515" size={14}>Trailer ↗</GText>
+          <GText bold color="#151515" size={14}>Trailer</GText>
+          <Icon name="arrowUpRight" size={14} color="#151515" />
         </TrailerLink>
       )}
       {tools && <Pressable
@@ -130,7 +131,8 @@ export function Poster({ title, width, height, phone, z, showText = true, x, y, 
           minWidth: 44, height: 44, borderRadius: 12, paddingHorizontal: 10, alignItems: 'center', justifyContent: 'center',
           backgroundColor: detailsFocused ? '#fbbf24' : '#fbbf24df', borderWidth: 1, borderColor: '#fff5', flexDirection: 'row', gap: 5,
         }}>
-          <GText size={14} bold color="#18130a">Details ↗</GText>
+          <GText size={14} bold color="#18130a">Details</GText>
+          <Icon name="arrowUpRight" size={14} color="#18130a" />
         </View>
       </Pressable>}
     </Animated.View>

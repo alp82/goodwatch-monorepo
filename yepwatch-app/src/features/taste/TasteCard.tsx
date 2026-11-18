@@ -11,8 +11,7 @@ import { GText, Icon, glow, native } from '../glow/theme';
 import { HoverPress, Nudge } from '../shell/hover';
 import { useLayout } from '../shell/layout';
 import { R, warm } from '../shell/tokens';
-import { ANSWER_LABEL, type CardAnswer } from './answers';
-import { AnswerIcon, Heart } from './icons';
+import { ANSWER_ICON, ANSWER_LABEL, type CardAnswer } from './answers';
 
 /** What a card shows of its title. */
 export interface CardTitle { key: number; title: string; posterUrl: string | null; meta: string; overview: string | null }
@@ -26,7 +25,7 @@ export function TasteTab({ label = 'TASTE', right }: { label?: string; right?: s
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, height: z(24), paddingHorizontal: 8, borderRadius: 6, backgroundColor: warm.amberSoft, borderWidth: 1, borderColor: warm.amberLine }}>
-        <Heart size={z(12)} color={glow.amber} filled />
+        <Icon name="heartFilled" size={z(12)} color={glow.amber} />
         <GText bold size={z(11)} color={glow.amber} style={{ letterSpacing: 1.2 }}>{label}</GText>
       </View>
       <View style={{ flex: 1 }} />
@@ -45,7 +44,7 @@ export function AnswerButton({ a, onPress, compact, disabled, tall, low }: { a: 
     <HoverPress label={ANSWER_LABEL[a]} onPress={onPress} disabled={disabled} repeatable hover={quiet ? 'tint' : 'lighten'}
       style={{ flexGrow: 1, flexShrink: 1, flexBasis: 0, minHeight: z(tall ? (low ? 64 : 76) : compact ? 48 : 52), borderRadius: R.control, paddingHorizontal: compact ? 6 : 12, flexDirection: tall ? 'column' : 'row', gap: tall ? 6 : compact ? 5 : 8,
         backgroundColor: loved ? glow.amber : quiet ? 'transparent' : '#ffffff0d', borderWidth: 1, borderColor: loved ? glow.amber : quiet ? 'transparent' : warm.lineStrong }}>
-      <AnswerIcon a={a} size={z(tall ? 22 : compact ? 15 : 17)} color={loved ? warm.ink : quiet ? glow.muted : glow.soft} />
+      <Icon name={ANSWER_ICON[a]} size={z(tall ? 22 : compact ? 15 : 17)} color={loved ? warm.ink : quiet ? glow.muted : glow.soft} />
       <GText bold size={z(compact ? 14 : 16)} color={color} lines={1}>{ANSWER_LABEL[a]}</GText>
     </HoverPress>
   );
@@ -56,7 +55,7 @@ export function Stamp({ a }: { a: CardAnswer }) {
   const loved = a === 'loved';
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, height: 44, borderRadius: 10, backgroundColor: loved ? glow.amber : '#2a251d', borderWidth: 1, borderColor: loved ? glow.amber : warm.lineStrong }}>
-      <AnswerIcon a={a} size={18} color={loved ? warm.ink : glow.soft} />
+      <Icon name={ANSWER_ICON[a]} size={18} color={loved ? warm.ink : glow.soft} />
       <GText bold size={17} color={loved ? warm.ink : glow.soft}>{ANSWER_LABEL[a]}</GText>
     </View>
   );

@@ -9,7 +9,7 @@ import { GText, Icon, Press, glow, grow, spaceToggles } from '../glow/theme';
 import type { Kind, RoomView } from './model';
 import { useRoom } from './RoomProvider';
 import { firstTiles, pickedIn, type ServiceChoice } from './services';
-import { Glyph, KindIcons, Small, TextLink } from './ui';
+import { KindIcons, Small, TextLink } from './ui';
 
 export const flag = (code: string) =>
   /^[A-Z]{2}$/.test(code) ? String.fromCodePoint(...[...code].map((c) => 127397 + c.charCodeAt(0))) : '🌐';
@@ -95,7 +95,7 @@ export function ServiceGrid({ all, loading, selected, toggle }: { all: ServiceCh
         {!more && (
           <View style={cell}>
             <Press label="More services" onPress={() => setMore(true)} style={{ ...tile, borderWidth: 1, borderStyle: 'dashed', borderColor: '#ffffff33' }}>
-              <View style={{ width: logo, height: logo, alignItems: 'center', justifyContent: 'center' }}><Glyph name="plus" size={logo * 0.5} color={glow.soft} /></View>
+              <View style={{ width: logo, height: logo, alignItems: 'center', justifyContent: 'center' }}><Icon name="plus" size={logo * 0.5} color={glow.soft} /></View>
               <GText size={13} color={glow.muted}>More</GText>
             </Press>
           </View>
@@ -116,7 +116,7 @@ export function CountryLine({ country, countries, onChange }: { country: string;
   if (!open) {
     return (
       <Press label={`${flag(country)} ${name}`} onPress={() => setOpen(true)} style={{ ...grow(36), flexDirection: 'row', gap: 6, alignSelf: 'flex-start' }}>
-        <GText color={glow.soft}>{`${flag(country)} ${name}`}</GText><Glyph name="down" size={16} color={glow.muted} />
+        <GText color={glow.soft}>{`${flag(country)} ${name}`}</GText><Icon name="down" size={16} color={glow.muted} />
       </Press>
     );
   }

@@ -30,7 +30,7 @@ import { InviteSurface } from './invite';
 import { RoomNotes } from './RoomStatus';
 import { kindsOnLeave, servicesOnLeave, type DraftKey, type Drafts } from './settings-save';
 import { namesLine, servicesIn, toggleService } from './services';
-import { Button, Glyph, HeroIcon, KindIcons, Label, Logos, NewBadge, Small, Switch, TextLink, kindsLabel, useServices } from './ui';
+import { Button, KindIcons, Label, Logos, NewBadge, Small, Switch, TextLink, kindsLabel, useServices } from './ui';
 import { noun } from '../shell/noun';
 
 /** Draws the room's open sheet (the room layout hands this to the room). */
@@ -58,7 +58,7 @@ function InviteFriends({ onPress }: { onPress: () => void }) {
   return (
     <Press label="Invite friends, show QR code and link" onPress={onPress}
       style={{ minHeight: 52, borderRadius: 12, paddingHorizontal: 14, flexDirection: 'row', justifyContent: 'flex-start', gap: 12, backgroundColor: warm.faint, borderWidth: 1, borderColor: warm.lineStrong }}>
-      <Glyph name="qr" size={18} color={glow.soft} />
+      <Icon name="qr" size={18} color={glow.soft} />
       <GText bold size={15} style={{ flex: 1 }}>Invite friends</GText>
       <Icon name="right" size={16} color={glow.muted} />
     </Press>
@@ -89,7 +89,7 @@ function RoomMenuSheet() {
               <GText bold size={z(20)} color={i.on ? glow.ink : '#8c8478'} lines={2} style={{ flexShrink: 1 }}>{i.text}</GText>
               {fresh ? <NewBadge /> : null}
               {!i.mine && i.author?.nickname ? <Small lines={1}>{i.author.nickname}</Small> : null}
-              {i.mine ? <HeroIcon name="pencil" size={16} color={glow.muted} /> : null}
+              {i.mine ? <Icon name="pencil" size={16} color={glow.muted} /> : null}
               <View style={{ flex: 1 }} />
             </>
           );
@@ -168,7 +168,7 @@ function RoomSettings({ label = false }: { label?: boolean }) {
           <KindIcons kinds={kinds} size={20} /><GText color={glow.soft} style={{ flex: 1 }}>{kindsLabel(kinds)}</GText>
         </SettingRow>
         <SettingRow label={missing ? 'Streaming services, add' : `${on.length ? namesLine(on) : 'Streaming'}, change`} onPress={() => openSheet(streaming)}>
-          {on.length ? <Logos services={on} /> : missing ? <Glyph name="plus" size={18} color={glow.amber} /> : null}
+          {on.length ? <Logos services={on} /> : missing ? <Icon name="plus" size={18} color={glow.amber} /> : null}
           <GText bold={missing} color={on.length ? glow.soft : missing ? glow.amber : glow.muted} lines={1} style={{ flex: 1 }}>{on.length ? namesLine(on) : missing ? 'Add your streaming services' : loading ? '' : 'Nobody’s services yet'}</GText>
         </SettingRow>
         {view.showSeen !== null && (

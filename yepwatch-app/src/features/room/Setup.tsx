@@ -12,7 +12,7 @@ import { HoverPress } from '../shell/hover';
 import { useLayout } from '../shell/layout';
 import { noun } from '../shell/noun';
 import { warm } from '../shell/tokens';
-import { GText, glow } from '../glow/theme';
+import { GText, Icon, glow } from '../glow/theme';
 import { NAME_MAX } from './model';
 import { toRooms } from './nav';
 import { HowLink } from './HowItWorks';
@@ -24,7 +24,7 @@ import { IdeasCard } from './SetupConsole';
 import { servicesIn } from './services';
 import { START_FAILED_NOTE, hostStartPhase, type StartPhase } from './start-progress';
 import { StartButton, StartStatus, useEased } from './StartProgress';
-import { Actions, HeroIcon, Note, Screen, Small, useServices } from './ui';
+import { Actions, Note, Screen, Small, useServices } from './ui';
 
 const HOST_TITLE = 'Pick something to watch with friends';
 const friendTitle = (host: string) => `${host} wants to pick something to watch with you`;
@@ -58,7 +58,7 @@ const SettingsButton = roomPart('SettingsButton', (r) => ({ view: r.view, openSh
     <HoverPress label={missing ? 'Settings, services missing' : 'Settings'} hover="lighten" repeatable onPress={() => openSheet('settings')}
       style={{ height: z(54), paddingHorizontal: phone ? 14 : z(16), borderRadius: 12, flexDirection: 'row', gap: 8, backgroundColor: warm.faint, borderWidth: 1, borderColor: warm.lineStrong }}>
       <View>
-        <HeroIcon name="sliders" size={icon} color={glow.soft} />
+        <Icon name="sliders" size={icon} color={glow.soft} />
         {missing ? <View testID="settings-missing" style={{ position: 'absolute', right: -3, top: -3, width: 9, height: 9, borderRadius: 5, backgroundColor: glow.amber, borderWidth: 1.5, borderColor: warm.bar }} /> : null}
       </View>
       <GText bold size={phone ? 15 : z(15)} color={glow.soft}>Settings</GText>

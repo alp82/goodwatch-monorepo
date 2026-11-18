@@ -17,7 +17,6 @@ import { GoodWatchG } from '../shell/marks';
 import { useLayout } from '../shell/layout';
 import { warm } from '../shell/tokens';
 import { TASTE_ANSWERS } from './answers';
-import { Heart } from './icons';
 import { StrengthMeter } from './StrengthMeter';
 import { LiveDeck, useTasteCards, type DrawCard } from './TasteDeck';
 import { TasteCard } from './TasteCard';
@@ -128,7 +127,7 @@ function TasteMode() {
         <Animated.View style={{ flex: 1, opacity: grow.content, paddingTop: insets.top }}>
           <View style={{ height: header, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: phone ? gutter - 4 : gutter, borderBottomWidth: 1, borderBottomColor: warm.amberLine }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, height: z(28), paddingHorizontal: 10, borderRadius: 8, backgroundColor: glow.amber }}>
-              <Heart size={z(14)} color={warm.ink} filled />
+              <Icon name="heartFilled" size={z(14)} color={warm.ink} />
               {/* The approved amber tab shows in capitals; the text itself (what screen readers say) is sentence case. */}
               <GText bold size={z(13)} color={warm.ink} style={{ letterSpacing: 1.2, textTransform: 'uppercase' }}>Taste mode</GText>
             </View>

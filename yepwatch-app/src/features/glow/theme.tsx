@@ -9,7 +9,7 @@ import {
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
-import Svg, { Path, Rect, Circle, Polyline } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 export const glow = {
   bg: '#070707',
   panel: '#131313',
@@ -57,21 +57,53 @@ export function GText({
     </Text>
   );
 }
-export type IconName =
-  | 'star'
-  | 'clock'
-  | 'dice'
-  | 'cursor'
-  | 'tickets'
-  | 'close'
-  | 'left'
-  | 'right'
-  | 'undo'
-  | 'check'
-  | 'play'
-  | 'people'
-  | 'external'
-  | 'settings';
+const circle = (cx: number, cy: number, r: number) => `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0Z`;
+const box = (x: number, y: number, w: number, h: number, r: number) =>
+  `M${x + r} ${y}h${w - 2 * r}a${r} ${r} 0 0 1 ${r} ${r}v${h - 2 * r}a${r} ${r} 0 0 1 ${-r} ${r}h${-(w - 2 * r)}a${r} ${r} 0 0 1 ${-r} ${-r}v${-(h - 2 * r)}a${r} ${r} 0 0 1 ${r} ${-r}Z`;
+const HEART = 'M12 20s-7.5-4.6-7.5-10.1A4.3 4.3 0 0 1 12 7.3a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20Z';
+/** Line icons: one stroked path each. */
+const LINES = {
+  check: 'M5 12 10 17 20 6',
+  close: 'm6 6 12 12M18 6 6 18',
+  left: 'M15 5 8 12 15 19',
+  right: 'M9 5 16 12 9 19',
+  down: 'm7 10 5 5 5-5',
+  up: 'M12 19V5M6 11l6-6 6 6',
+  plus: 'M12 5v14M5 12h14',
+  undo: 'M4 9h10a6 6 0 1 1 0 12M9 4 4 9 9 14',
+  external: 'M14 3h7v7m0-7L10 14M10 4H4v16h16v-6',
+  arrowUpRight: 'M7 17 17 7M8 7h9v9',
+  people: `${circle(9, 7, 3)}M3 20v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6m3 9v-3a6 6 0 0 0-3-5`,
+  clock: `${circle(12, 12, 9)}M12 7v5l3 2`,
+  tickets: 'M4 11 2 8l8-5 9 14-8 5-2-3M7 6h15v5a2 2 0 0 0 0 4v5H7v-5a2 2 0 0 0 0-4ZM16 8v2m0 3v2m0 2v1',
+  share: 'M12 15V3M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6',
+  qr: 'M4 3h5a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM15 3h5a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM4 14h5a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1zM14 14h3v3h-3zM18 18h3v3h-3zM14 20h1M20 14h1',
+  copy: 'M11 9h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2zM5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1',
+  door: 'M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M10 16l4-4-4-4M14 12H3',
+  heart: HEART,
+  thumbDown: 'M16 14V3M6 10l3.6 10.2A1.8 1.8 0 0 0 13 19.5V15h4.6a2 2 0 0 0 2-2.3l-1.2-7.4A2 2 0 0 0 16.4 3.6H6M3 3.6h3v10H3z',
+  unseen: 'M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12ZM4 4l16 16',
+  sliders: `M4 7h9M17 7h3M4 17h3M11 17h9${circle(15, 7, 2)}${circle(9, 17, 2)}`,
+  film: `${box(3, 4, 18, 16, 3)}M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4M7 12h10`,
+  tv: `${box(3, 4, 18, 13, 3)}M8 21h8M12 17v4`,
+  archive: `${box(3, 4, 18, 5, 1.5)}M5 9v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9M10 13h4`,
+  pencil: 'M4 20h4L19 9a2.83 2.83 0 0 0-4-4L4 16Zm9.5-13.5 4 4',
+} as const;
+/** Icons with a filled part, drawn in the icon's color. */
+const FILLED = {
+  play: (color: string) => <Path d="m9 5 11 7-11 7Z" fill={color} stroke="none" />,
+  heartFilled: (color: string) => <Path d={HEART} fill={color} />,
+  dice: (color: string) => (
+    <>
+      <Path d={box(3, 3, 18, 18, 4)} />
+      <Path d={[[8, 8], [16, 8], [12, 12], [8, 16], [16, 16]].map(([x, y]) => circle(x, y, 1)).join('')} fill={color} />
+    </>
+  ),
+  // The presence cursor: the color with a white edge, so it reads on any poster.
+  cursor: (color: string) => <Path d="M4 3 19 12 12 14 9 21Z" fill={color} stroke="#fff" strokeWidth={1.4} />,
+} as const;
+/** YepWatch's one icon set: a 24 px grid, a 2 px stroke and round caps. Size and color come from the call site. */
+export type IconName = keyof typeof LINES | keyof typeof FILLED;
 export function Icon({
   name,
   size = 22,
@@ -93,44 +125,7 @@ export function Icon({
       strokeLinejoin="round"
       accessible={false}
     >
-      {name === 'star' ? <Path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9Z" /> : name === 'clock' ? <><Circle cx="12" cy="12" r="9" /><Path d="M12 7v5l3 2" /></> : name === 'dice' ? <><Rect x="3" y="3" width="18" height="18" rx="4" /><Circle cx="8" cy="8" r="1" fill={color} /><Circle cx="16" cy="8" r="1" fill={color} /><Circle cx="12" cy="12" r="1" fill={color} /><Circle cx="8" cy="16" r="1" fill={color} /><Circle cx="16" cy="16" r="1" fill={color} /></> : name === 'cursor' ? (
-        <Path d="M4 3 19 12 12 14 9 21Z" fill={color} stroke="#fff" strokeWidth={1.4} />
-      ) : name === 'tickets' ? (
-        <>
-          <Path d="M4 11 2 8l8-5 9 14-8 5-2-3" />
-          <Path d="M7 6h15v5a2 2 0 0 0 0 4v5H7v-5a2 2 0 0 0 0-4Z" />
-          <Path d="M16 8v2m0 3v2m0 2v1" />
-        </>
-      ) : name === 'close' ? (
-        <Path d="m6 6 12 12M18 6 6 18" />
-      ) : name === 'left' ? (
-        <Polyline points="15,5 8,12 15,19" />
-      ) : name === 'right' ? (
-        <Polyline points="9,5 16,12 9,19" />
-      ) : name === 'check' ? (
-        <Polyline points="5,12 10,17 20,6" />
-      ) : name === 'undo' ? (
-        <>
-          <Path d="M4 9h10a6 6 0 1 1 0 12" />
-          <Polyline points="9,4 4,9 9,14" />
-        </>
-      ) : name === 'play' ? (
-        <Path d="m9 5 11 7-11 7Z" fill={color} stroke="none" />
-      ) : name === 'people' ? (
-        <>
-          <Circle cx="9" cy="7" r="3" />
-          <Path d="M3 20v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6m3 9v-3a6 6 0 0 0-3-5" />
-        </>
-      ) : name === 'external' ? (
-        <>
-          <Path d="M14 3h7v7m0-7L10 14M10 4H4v16h16v-6" />
-        </>
-      ) : (
-        <>
-          <Rect x="5" y="4" width="14" height="16" rx="3" />
-          <Path d="M9 9h6m-6 6h6" />
-        </>
-      )}
+      {name in FILLED ? FILLED[name as keyof typeof FILLED](color) : <Path d={LINES[name as keyof typeof LINES]} />}
     </Svg>
   );
 }

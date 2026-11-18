@@ -6,14 +6,12 @@
  */
 import { useState, type ReactNode } from 'react';
 import { Platform, TextInput, View, type TextStyle } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
 import { parseInvite } from '../../core/invites';
 import { GText, Icon, glow } from '../glow/theme';
 import { AMBER_LIFT, HoverPress, Nudge, useHovered, webOnly } from '../shell/hover';
 import { useLayout } from '../shell/layout';
 import { noun } from '../shell/noun';
 import { R, warm } from '../shell/tokens';
-import { Heart } from '../taste/icons';
 import { IntroFilm } from './IntroFilm';
 import { QrCard, StoreButton, installable, stores } from './install';
 
@@ -24,11 +22,6 @@ export function Headline({ size }: { size: number }) {
     </GText>
   );
 }
-
-function Glyph({ d, size, color, weight = 2 }: { d: string; size: number; color: string; weight?: number }) {
-  return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={weight} strokeLinecap="round" strokeLinejoin="round" accessible={false}><Path d={d} /></Svg>;
-}
-const DOOR = 'M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M10 16l4-4-4-4M14 12H3';
 
 export function Or() {
   const { z } = useLayout();
@@ -58,7 +51,7 @@ export function StatementTile({ onPress, disabled, quiet }: { onPress: () => voi
     <HoverPress label="Start with you" hint="Your name and what you like. About a minute." onPress={onPress} disabled={disabled} quiet={quiet} hover="lift" shadow={AMBER_LIFT}
       style={{ alignSelf: 'stretch', minHeight: phone ? 230 : z(300), alignItems: 'stretch', justifyContent: 'space-between', gap: phone ? 18 : z(24), padding: phone ? 20 : z(30), borderRadius: R.card, backgroundColor: glow.amber }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <View style={{ width: box, height: box, borderRadius: 12, backgroundColor: '#20140014', alignItems: 'center', justifyContent: 'center' }}><Heart size={box * 0.5} color={warm.ink} filled /></View>
+        <View style={{ width: box, height: box, borderRadius: 12, backgroundColor: '#20140014', alignItems: 'center', justifyContent: 'center' }}><Icon name="heartFilled" size={box * 0.5} color={warm.ink} /></View>
         <GText bold size={z(14)} color={warm.ink} style={{ opacity: 0.7 }}>About a minute</GText>
       </View>
       <View style={{ gap: phone ? 8 : z(10) }}>
@@ -100,7 +93,7 @@ function Steps({ short, size }: { short: boolean; size: number }) {
   const color = '#201400b3';
   const steps = [
     { word: short ? 'Invite' : 'Invite friends', icon: <Icon name="people" size={size} color={color} /> },
-    { word: short ? 'Swipe' : 'Everyone swipes', icon: <Heart size={size * 0.94} color={color} /> },
+    { word: short ? 'Swipe' : 'Everyone swipes', icon: <Icon name="heart" size={size * 0.94} color={color} /> },
     { word: short ? 'Match' : 'Get a match', icon: <Icon name="check" size={size} color={color} /> },
   ];
   return (
@@ -150,7 +143,7 @@ export function JoinCodeField({ onJoin, me, busy, disabled, initial = '' }: { on
   return (
     <View testID="join-code" style={{ gap: 10, padding: phone ? 14 : z(18), borderRadius: R.card, backgroundColor: warm.raised, borderWidth: 1, borderColor: warm.lineStrong }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-        <View style={{ width: phone ? 34 : z(40), height: phone ? 34 : z(40), borderRadius: 12, backgroundColor: warm.amberSoft, alignItems: 'center', justifyContent: 'center' }}><Glyph d={DOOR} size={(phone ? 34 : z(40)) * 0.54} color={glow.amber} /></View>
+        <View style={{ width: phone ? 34 : z(40), height: phone ? 34 : z(40), borderRadius: 12, backgroundColor: warm.amberSoft, alignItems: 'center', justifyContent: 'center' }}><Icon name="door" size={(phone ? 34 : z(40)) * 0.54} color={glow.amber} /></View>
         <View style={{ flex: 1 }}>
           <GText bold size={phone ? 17 : z(19)}>{noun.joinAny}</GText>
           <GText size={z(13)} color={glow.muted}>Type the code from the invite, or paste the link.</GText>

@@ -2,9 +2,13 @@
  * The answers a Taste card takes and where each sends the card (owner round 4): Loved it flies right, Not for me flies
  * left, Haven't seen (or a next-day "Didn't watch it") drops off the bottom with a quick fade.
  */
+import type { IconName } from '../glow/theme';
+
 export type CardAnswer = 'loved' | 'not_for_me' | 'unseen' | 'did_not_watch';
 export type Exit = 'right' | 'left' | 'down';
 export const EXIT: Record<CardAnswer, Exit> = { loved: 'right', not_for_me: 'left', unseen: 'down', did_not_watch: 'down' };
+/** Each answer's icon: a filled heart, a quiet thumb down (Not Tonight's red cross is the loud no), an eye with a slash. */
+export const ANSWER_ICON: Record<CardAnswer, IconName> = { loved: 'heartFilled', not_for_me: 'thumbDown', unseen: 'unseen', did_not_watch: 'unseen' };
 export const ANSWER_LABEL: Record<CardAnswer, string> = { loved: 'Loved it', not_for_me: 'Not for me', unseen: 'Haven’t seen', did_not_watch: 'Didn’t watch' };
 /** The Taste card's buttons, left to right (owner round 3: Haven't seen first, Loved it last). */
 export const TASTE_ANSWERS = ['unseen', 'not_for_me', 'loved'] as const;

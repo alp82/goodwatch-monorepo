@@ -6,7 +6,6 @@
  */
 import { memo } from 'react';
 import { Platform, Text, View, type ViewStyle } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
 import { GetTheApp, installable } from '../home/install';
 import { GText, Icon, Press, glow, grow } from '../glow/theme';
 import { useGlide } from './glide';
@@ -61,13 +60,6 @@ export function BrandMark({ size }: { size: number }) {
   );
 }
 
-function Chevron({ size, color }: { size: number; color: string }) {
-  return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" accessible={false}><Path d="m7 10 5 5 5-5" /></Svg>;
-}
-function Plus({ size, color }: { size: number; color: string }) {
-  return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2.2} strokeLinecap="round" accessible={false}><Path d="M12 5v14M5 12h14" /></Svg>;
-}
-
 /** The room switcher: the current room (or "N open"), opens Your rooms. */
 export function RoomPill({ pill, onPress }: { pill: HeaderPill; onPress?: () => void }) {
   const { phone, z } = useLayout();
@@ -78,10 +70,10 @@ export function RoomPill({ pill, onPress }: { pill: HeaderPill; onPress?: () => 
     <Press label={`${pill.label}${fresh ? `, ${fresh} new` : ''}, switch ${noun.one}`} onPress={onPress ?? (() => undefined)} disabled={!onPress}
       style={{ ...grow(Math.max(44, z(40))), maxWidth: phone ? undefined : z(420), flexShrink: 1, minWidth: 0, alignItems: 'stretch' }}
       visual={{ height: Math.max(44, z(40)), minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 14, paddingRight: 10, borderRadius: 12, backgroundColor: '#ffffff0a', borderWidth: 1, borderColor: fresh ? '#fbbf2499' : pill.state === 'live' ? '#ffffff22' : warm.line }}>
-      {pill.state === 'live' || pill.state === 'rooms' ? <LiveDot beat={pill.beat} /> : pill.state === 'decided' ? <Icon name="tickets" size={z(15)} color={glow.amber} /> : <Plus size={z(15)} color={glow.amber} />}
+      {pill.state === 'live' || pill.state === 'rooms' ? <LiveDot beat={pill.beat} /> : pill.state === 'decided' ? <Icon name="tickets" size={z(15)} color={glow.amber} /> : <Icon name="plus" size={z(15)} color={glow.amber} />}
       <GText bold size={z(15)} lines={1} style={{ flex: 1, minWidth: 0 }}>{pill.label}</GText>
       {fresh ? <View style={{ minWidth: 18, height: 18, paddingHorizontal: 5, borderRadius: 9, backgroundColor: glow.amber, alignItems: 'center', justifyContent: 'center' }}><GText bold size={11} color={warm.ink}>{fresh}</GText></View> : null}
-      <View ref={chevron}><Chevron size={z(16)} color={glow.muted} /></View>
+      <View ref={chevron}><Icon name="down" size={z(16)} color={glow.muted} /></View>
     </Press>
   );
 }

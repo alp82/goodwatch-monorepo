@@ -7,7 +7,6 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Animated, Image, Pressable, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Path } from 'react-native-svg';
 import { useFocusEffect } from 'expo-router';
 import type { Candidate } from '@goodwatch/yepwatch-contracts/proposal';
 import { useLayout } from '../shell/layout';
@@ -144,11 +143,6 @@ function CheckPoster({ c, width, on, hover, hero }: { c: Candidate; width: numbe
   );
 }
 
-/** A plus sign (the icon set has none). */
-function Plus({ size, color }: { size: number; color: string }) {
-  return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2.4} strokeLinecap="round" accessible={false}><Path d="M12 5v14M5 12h14" /></Svg>;
-}
-
 /**
  * One seat per person: yours first (a dashed amber ring with a plus; your face drops in when you're in),
  * then the others who are in as plain filled seats (counts, never who), then faint empty seats.
@@ -165,7 +159,7 @@ function Seats({ on, n, of, box, size, name }: { on: boolean; n: number; of: num
     <View accessible={false} style={{ flexDirection: 'row', alignItems: 'center', width: size + (room - 1) * (size + overlap) }}>
       <View style={ring}>
         <Animated.View style={[ring, { position: 'absolute', borderWidth: 2, borderStyle: 'dashed', borderColor: glow.amber, backgroundColor: '#0d0d0d', alignItems: 'center', justifyContent: 'center', opacity: v.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }]}>
-          <Plus size={size * 0.5} color={glow.amber} />
+          <Icon name="plus" size={size * 0.5} color={glow.amber} />
         </Animated.View>
         <Animated.View style={[ring, { position: 'absolute', backgroundColor: glow.amber, borderWidth: 2, borderColor: '#0d0d0d', alignItems: 'center', justifyContent: 'center', opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [-size * 0.35, 0] }) }, { scale: v.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }) }] }]}>
           <GText bold size={size * 0.42} color="#141008">{(name || '?').slice(0, 1).toUpperCase()}</GText>

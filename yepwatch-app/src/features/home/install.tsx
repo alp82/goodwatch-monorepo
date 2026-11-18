@@ -7,7 +7,7 @@ import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { Image, Platform, Pressable, View, type ViewStyle } from 'react-native';
 import { Link } from 'expo-router';
 import codes from './codes.json';
-import { GText, Press, glow, grow } from '../glow/theme';
+import { GText, Icon, Press, glow, grow } from '../glow/theme';
 import { HoverProvider, LiftShadow, Nudge, hoverTransition, liftStyle } from '../shell/hover';
 import { StoreLogo } from '../shell/marks';
 import { useLayout } from '../shell/layout';
@@ -54,7 +54,7 @@ export function QrCard({ store, width }: { store: Store; width: number }) {
             <GText bold size={z(17)}>{store.title}</GText>
             <GText size={z(12)} color={glow.muted}>{store.note}</GText>
           </View>
-          <Nudge dx={2} dy={-2}><GText size={z(20)} color={glow.amber}>↗</GText></Nudge>
+          <Nudge dx={2} dy={-2}><Icon name="arrowUpRight" size={z(18)} color={glow.amber} /></Nudge>
         </View>
         </HoverProvider>
       </Pressable>

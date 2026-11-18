@@ -256,7 +256,7 @@ One sheet shell (`shell/Sheet.tsx`): black 70% scrim, Panel surface with a stron
 - **Startup cover:** Night with the YepWatch word in Bold 64 and an amber arc, shown only if loading takes longer than 400ms.
 
 ### Icons
-Every icon comes from the hand-drawn `Icon` set in `glow/theme.tsx` (24px grid, 2px stroke, round caps). Brand marks (`GoodWatchG`, store logos) are drawings, not icons, and stay separate. Decision Y3 (November 18, 2026); five other small SVG sets and a text arrow remain until the follow-up lands.
+Every icon comes from the hand-drawn `Icon` set in `glow/theme.tsx` (24px grid, 2px stroke, round caps), one component with a name union; each call site sets size and color. Links that leave the app end in the drawn `arrowUpRight`, not a text "↗". Brand marks (`GoodWatchG`, store logos) and illustrations (the how-to hand, score and boot rings, the QR code) are drawings, not icons, and stay separate. Decision Y3 (November 18, 2026).
 
 ### Motion
 - **Sheets** enter over 220ms with an ease-out cubic curve.

@@ -6,7 +6,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Animated, Easing, Image, Platform, Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useIsFocused, useNavigation } from 'expo-router';
-import Svg, { Path } from 'react-native-svg';
 import { useQuery } from '@tanstack/react-query';
 import { continuousApi } from '../../core/continuous/api';
 import { useReducedMotion } from '../../components/ui';
@@ -17,7 +16,7 @@ import { useSheetsHoldNavigation } from '../shell/sheet-back';
 import { useFreshSurface } from '../shell/fresh-surface';
 import { closeTopSheet, useSheetOpen } from '../shell/sheet-stack';
 import { warm } from '../shell/tokens';
-import { GText, Press, glow, grow, spaceToggles } from '../glow/theme';
+import { GText, Icon, Press, glow, grow, spaceToggles } from '../glow/theme';
 import { useOptionalRoom } from './RoomProvider';
 import type { Kind } from './model';
 import { rankServices, type ServiceChoice } from './services';
@@ -138,25 +137,6 @@ export function Dots({ n, of }: { n: number; of: number }) {
   );
 }
 
-const GLYPHS = {
-  link: 'M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5',
-  plus: 'M12 5v14M5 12h14',
-  down: 'm7 10 5 5 5-5',
-  dots: 'M5 12h.01M12 12h.01M19 12h.01',
-  share: 'M12 15V3M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6',
-  qr: 'M4 3h5a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM15 3h5a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM4 14h5a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1zM14 14h3v3h-3zM18 18h3v3h-3zM14 20h1M20 14h1',
-  copy: 'M11 9h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2zM5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1',
-  up: 'M12 19V5M6 11l6-6 6 6',
-} as const;
-/** Small stroke glyphs the icon sets don't have. */
-export function Glyph({ name, size = 18, color = glow.soft }: { name: keyof typeof GLYPHS; size?: number; color?: string }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={name === 'dots' ? 3.2 : 2} strokeLinecap="round" strokeLinejoin="round" accessible={false}>
-      <Path d={GLYPHS[name]} />
-    </Svg>
-  );
-}
-
 export function TextLink({ label, onPress, color = glow.amber, disabled }: { label: string; onPress: () => void; color?: string; disabled?: boolean }) {
   return <Press label={label} onPress={onPress} disabled={disabled} style={{ alignSelf: 'flex-start', ...grow(32) }}><GText size={T.small} bold color={color}>{label}</GText></Press>;
 }
@@ -185,19 +165,8 @@ export function Switch({ on, label, onPress, disabled = false }: { on: boolean; 
   );
 }
 
-const HERO_PATHS = {
-  sliders: 'M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75',
-  film: 'M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 0 1-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-3.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-1.5A1.125 1.125 0 0 1 18 18.375M20.625 4.5H3.375m17.25 0c.621 0 1.125.504 1.125 1.125M20.625 4.5h-1.5C18.504 4.5 18 5.004 18 5.625m3.75 0v1.5c0 .621-.504 1.125-1.125 1.125M3.375 4.5c-.621 0-1.125.504-1.125 1.125M3.375 4.5h1.5C5.496 4.5 6 5.004 6 5.625m-3.75 0v1.5c0 .621.504 1.125 1.125 1.125m0 0h1.5m-1.5 0c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125m1.5-3.75C5.496 8.25 6 7.746 6 7.125v-1.5M4.875 8.25C5.496 8.25 6 8.754 6 9.375v1.5m0-5.25v5.25m0-5.25C6 5.004 6.504 4.5 7.125 4.5h9.75c.621 0 1.125.504 1.125 1.125m1.125 2.625h1.5m-1.5 0A1.125 1.125 0 0 1 18 7.125v-1.5m1.125 2.625c-.621 0-1.125.504-1.125 1.125v1.5m2.625-2.625c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125M18 5.625v5.25M7.125 12h9.75m-9.75 0A1.125 1.125 0 0 1 6 10.875M7.125 12C6.504 12 6 12.504 6 13.125m0-2.25C6 11.496 5.496 12 4.875 12M18 10.875c0 .621-.504 1.125-1.125 1.125M18 10.875c0 .621.504 1.125 1.125 1.125m-2.25 0c.621 0 1.125.504 1.125 1.125m-12 5.25v-5.25m0 5.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125m-12 0v-1.5c0-.621-.504-1.125-1.125-1.125M18 18.375v-5.25m0 5.25v-1.5c0-.621.504-1.125 1.125-1.125M18 13.125v1.5c0 .621.504 1.125 1.125 1.125M18 13.125c0-.621.504-1.125 1.125-1.125M6 13.125v1.5c0 .621-.504 1.125-1.125 1.125M6 13.125C6 12.504 5.496 12 4.875 12m-1.5 0h1.5m-1.5 0c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125M19.125 12h1.5m0 0c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125m-17.25 0h1.5m14.25 0h1.5',
-  tv: 'M6 20.25h12m-7.5-3v3m3-3v3m-10.125-3h17.25c.621 0 1.125-.504 1.125-1.125V4.875c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125Z',
-  archive: 'm20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z',
-  pencil: 'm16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125',
-};
-/** Heroicons outline (GoodWatch's icon set). */
-export function HeroIcon({ name, size = 20, color = glow.soft }: { name: keyof typeof HERO_PATHS; size?: number; color?: string }) {
-  return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" accessible={false}><Path d={HERO_PATHS[name]} /></Svg>;
-}
 export function KindIcons({ kinds, size = 18, color = glow.soft }: { kinds: Kind[]; size?: number; color?: string }) {
-  return <View style={{ flexDirection: 'row', gap: 4 }}>{kinds.includes('movie') && <HeroIcon name="film" size={size} color={color} />}{kinds.includes('show_start') && <HeroIcon name="tv" size={size} color={color} />}</View>;
+  return <View style={{ flexDirection: 'row', gap: 4 }}>{kinds.includes('movie') && <Icon name="film" size={size} color={color} />}{kinds.includes('show_start') && <Icon name="tv" size={size} color={color} />}</View>;
 }
 export const kindsLabel = (k: Kind[]) => (k.length === 2 ? 'Movies and shows' : k[0] === 'movie' ? 'Movies' : k.length ? 'Shows' : 'Nothing');
 
