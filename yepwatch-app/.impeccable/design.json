@@ -1,0 +1,345 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-18T04:18:59.279664+00:00",
+  "title": "Design System: YepWatch",
+  "extensions": {
+    "colorMeta": {
+      "amber": {
+        "role": "primary",
+        "displayName": "YepWatch Amber",
+        "tonalRamp": [
+          "#451a03",
+          "#78350f",
+          "#92400e",
+          "#b45309",
+          "#d97706",
+          "#f59e0b",
+          "#fbbf24",
+          "#fde68a"
+        ]
+      },
+      "amber-soft": {
+        "role": "primary",
+        "displayName": "Amber Soft"
+      },
+      "amber-line": {
+        "role": "primary",
+        "displayName": "Amber Line"
+      },
+      "amber-ink": {
+        "role": "primary",
+        "displayName": "Amber Ink"
+      },
+      "bg": {
+        "role": "neutral",
+        "displayName": "Night",
+        "tonalRamp": [
+          "#070707",
+          "#0f0d0b",
+          "#141210",
+          "#1a1610",
+          "#1c1915",
+          "#2a2620",
+          "#6f675b",
+          "#a3a3a3"
+        ]
+      },
+      "panel": {
+        "role": "neutral",
+        "displayName": "Panel"
+      },
+      "raised": {
+        "role": "neutral",
+        "displayName": "Raised"
+      },
+      "well": {
+        "role": "neutral",
+        "displayName": "Well"
+      },
+      "bar": {
+        "role": "neutral",
+        "displayName": "Bar"
+      },
+      "faint": {
+        "role": "neutral",
+        "displayName": "Faint Line"
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Line"
+      },
+      "line-strong": {
+        "role": "neutral",
+        "displayName": "Strong Line"
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink"
+      },
+      "soft": {
+        "role": "neutral",
+        "displayName": "Soft Ink"
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted Ink"
+      },
+      "placeholder": {
+        "role": "neutral",
+        "displayName": "Placeholder"
+      },
+      "nope": {
+        "role": "status",
+        "displayName": "Nope Red"
+      },
+      "error-text": {
+        "role": "status",
+        "displayName": "Error Text"
+      },
+      "red": {
+        "role": "status",
+        "displayName": "Red"
+      },
+      "green": {
+        "role": "status",
+        "displayName": "Green"
+      },
+      "note": {
+        "role": "neutral",
+        "displayName": "Note"
+      },
+      "peer-violet": {
+        "role": "data",
+        "displayName": "Peer Violet"
+      },
+      "peer-sky": {
+        "role": "data",
+        "displayName": "Peer Sky"
+      },
+      "peer-pink": {
+        "role": "data",
+        "displayName": "Peer Pink"
+      },
+      "peer-teal": {
+        "role": "data",
+        "displayName": "Peer Teal"
+      },
+      "peer-lime": {
+        "role": "data",
+        "displayName": "Peer Lime"
+      },
+      "peer-indigo": {
+        "role": "data",
+        "displayName": "Peer Indigo"
+      },
+      "peer-fuchsia": {
+        "role": "data",
+        "displayName": "Peer Fuchsia"
+      },
+      "peer-green": {
+        "role": "data",
+        "displayName": "Peer Green"
+      }
+    },
+    "typographyMeta": {
+      "hero": {
+        "displayName": "Hero",
+        "purpose": "The big statement on a screen."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Screen titles."
+      },
+      "sheet-title": {
+        "displayName": "Sheet title",
+        "purpose": "Sheet headers."
+      },
+      "button": {
+        "displayName": "Button",
+        "purpose": "Button labels."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Running text."
+      },
+      "small": {
+        "displayName": "Small",
+        "purpose": "Hints, counts, metadata."
+      }
+    },
+    "shadows": [
+      {
+        "name": "popover",
+        "value": "0 24px 60px rgba(0,0,0,0.6)",
+        "purpose": "Desktop invite popover."
+      },
+      {
+        "name": "hover-lift",
+        "value": "0 10px 24px rgba(0,0,0,0.38)",
+        "purpose": "Web hover on cards and tiles."
+      },
+      {
+        "name": "note",
+        "value": "0 4px 12px rgba(0,0,0,0.4)",
+        "purpose": "Floating note."
+      }
+    ],
+    "motion": [
+      {
+        "name": "sheet-in",
+        "value": "220ms ease-out cubic",
+        "purpose": "Sheets."
+      },
+      {
+        "name": "fly-off",
+        "value": "450ms ease-in quad",
+        "purpose": "Answered card leaves."
+      },
+      {
+        "name": "next-card",
+        "value": "140ms ease-out cubic",
+        "purpose": "Next card enters."
+      },
+      {
+        "name": "match",
+        "value": "300ms in (back 1.6) / 700ms hold / 300ms out",
+        "purpose": "MATCH band."
+      },
+      {
+        "name": "note-fade",
+        "value": "180ms in / 220ms out",
+        "purpose": "Floating note."
+      },
+      {
+        "name": "drag-return",
+        "value": "spring friction 6, tension 90",
+        "purpose": "Card springs back when not answered."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "screen-max",
+        "value": "560px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The next step.",
+      "html": "<button class=\"ds-yw-btn\">Start voting</button>",
+      "css": ".ds-yw-btn{height:54px;padding:0 22px;border:0;border-radius:12px;background:#fbbf24;color:#201400;font:700 17px Gabarito,system-ui,sans-serif;cursor:pointer;transition:opacity .1s}.ds-yw-btn:active{opacity:.78}.ds-yw-btn:disabled{opacity:.42}.ds-yw-btn:focus-visible{outline:2px solid #fafafa;outline-offset:2px}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Quiet alternative action.",
+      "html": "<button class=\"ds-yw-btn2\">Invite friends</button>",
+      "css": ".ds-yw-btn2{height:54px;padding:0 22px;border:1px solid #ffffff24;border-radius:12px;background:#ffffff08;color:#fafafa;font:700 17px Gabarito,system-ui,sans-serif;cursor:pointer}.ds-yw-btn2:hover{background:#ffffff14}.ds-yw-btn2:focus-visible{outline:2px solid #fbbf24;outline-offset:2px}"
+    },
+    {
+      "name": "Yep and Nope Keys",
+      "kind": "custom",
+      "refersTo": "vote-yep",
+      "description": "Voting keys under the deck.",
+      "html": "<div class=\"ds-yw-keys\"><button class=\"nope\">✕ Nope</button><button class=\"yep\">✓ Yep</button></div>",
+      "css": ".ds-yw-keys{display:flex;gap:12px}.ds-yw-keys button{flex:1;height:64px;border-radius:14px;font:700 18px Gabarito,system-ui,sans-serif;cursor:pointer;transition:transform .12s}.ds-yw-keys .yep{background:#fbbf24;color:#201400;border:0}.ds-yw-keys .nope{background:#ef44440f;border:1px solid #ef444440;color:#f87171}.ds-yw-keys button:active{transform:scale(1.04)}"
+    },
+    {
+      "name": "Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Join code or name field.",
+      "html": "<input class=\"ds-yw-field\" placeholder=\"Code or link\">",
+      "css": ".ds-yw-field{height:52px;width:280px;padding:0 14px;border:1px solid #ffffff24;border-radius:12px;background:#ffffff08;color:#fafafa;font:400 17px Gabarito,system-ui,sans-serif;outline:0}.ds-yw-field::placeholder{color:#6f675b}.ds-yw-field:focus{border-color:#fbbf24}"
+    },
+    {
+      "name": "New Couch Tile",
+      "kind": "card",
+      "refersTo": "new-couch-tile",
+      "description": "Start a new room.",
+      "html": "<div class=\"ds-yw-new\"><b>New couch →</b><small>Pick a mood · Invite · Vote</small></div>",
+      "css": ".ds-yw-new{display:flex;flex-direction:column;justify-content:space-between;width:300px;min-height:168px;padding:18px;border-radius:14px;background:#fbbf24;color:#201400;font-family:Gabarito,system-ui,sans-serif}.ds-yw-new b{font-size:28px}.ds-yw-new small{font-size:15px;color:#201400b3}"
+    },
+    {
+      "name": "Room Tile",
+      "kind": "card",
+      "refersTo": "room-tile",
+      "description": "One of your couches.",
+      "html": "<div class=\"ds-yw-room\"><b>Friday with Mia</b><small>3 people · voting</small></div>",
+      "css": ".ds-yw-room{width:300px;padding:16px;border-radius:14px;background:#141210;border:1px solid #ffffff12;color:#fafafa;font-family:Gabarito,system-ui,sans-serif;display:flex;flex-direction:column;gap:4px}.ds-yw-room:hover{border-color:#fbbf245c}.ds-yw-room b{font-size:16px}.ds-yw-room small{font-size:13px;color:#a3a3a3}"
+    },
+    {
+      "name": "Faces",
+      "kind": "custom",
+      "refersTo": "amber",
+      "description": "You in amber, friends in peer colors.",
+      "html": "<div class=\"ds-yw-faces\"><span style=\"background:#fbbf24\">A</span><span style=\"background:#a78bfa\">M</span><span style=\"background:#38bdf8\">S</span></div>",
+      "css": ".ds-yw-faces{display:flex}.ds-yw-faces span{display:grid;place-items:center;width:36px;height:36px;margin-left:-8px;border-radius:50%;border:2px solid #0d0d0d;color:#141008;font:700 14px Gabarito,system-ui,sans-serif}.ds-yw-faces span:first-child{margin-left:0}"
+    },
+    {
+      "name": "Sheet",
+      "kind": "custom",
+      "refersTo": "sheet",
+      "description": "Bottom sheet shell.",
+      "html": "<div class=\"ds-yw-sheet\"><i></i><b>Settings</b><p>Country, services, Movies and Shows.</p></div>",
+      "css": ".ds-yw-sheet{width:340px;padding:10px 20px 24px;border-radius:14px 14px 0 0;background:#141210;border:1px solid #ffffff24;color:#fafafa;font-family:Gabarito,system-ui,sans-serif}.ds-yw-sheet i{display:block;width:40px;height:4px;margin:0 auto 14px;border-radius:2px;background:#ffffff26}.ds-yw-sheet b{font-size:22px;letter-spacing:-.5px}.ds-yw-sheet p{margin:8px 0 0;font-size:15px;color:#d4d4d4}"
+    },
+    {
+      "name": "Floating Note",
+      "kind": "custom",
+      "refersTo": "floating-note",
+      "description": "Connection status after an outage.",
+      "html": "<div class=\"ds-yw-note\">Reconnecting…</div>",
+      "css": ".ds-yw-note{display:inline-block;padding:8px 12px;border-radius:10px;background:#201c13;border:1px solid #ffffff14;box-shadow:0 4px 12px rgba(0,0,0,.4);color:#fafafa;font:400 12px Gabarito,system-ui,sans-serif}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Couch at Night",
+    "overview": "YepWatch is a game played on a couch: a few friends, their phones, and a stack of posters. The screen is near-black and warm, with brown-tinted panels and no navy or cool grays. Amber is you, your Yep, and the next step. Friends each get their own color. Posters are the content, and the voting deck puts one at a time in front of you, big.\n\nThe tone is playful and physical. Cards tilt as you drag them, stamps slap onto posters, a MATCH band swings in, and popcorn flies when everyone holds the cheer. Under that, the app stays strict: every target is at least 48 × 48, every motion respects Reduce Motion, and individual votes are never shown to the group.",
+    "keyCharacteristics": [
+      "Near-black warm base (#070707) with brown-tinted panels; no navy and no cool grays.",
+      "Amber means \"you\" and the primary action. Friends get eight distinct peer colors, never amber.",
+      "Gabarito for everything, in Regular and Bold only.",
+      "One phone-width column (560 px maximum) on every screen size.",
+      "Physical motion on transform and opacity, with a still fallback for Reduce Motion.",
+      "Sound for feedback, not haptics."
+    ],
+    "rules": [
+      {
+        "name": "The Amber Is You Rule",
+        "body": "Amber marks you: your face, your Yep, your next step. A friend is never amber.",
+        "section": "colors"
+      },
+      {
+        "name": "The No Navy Rule",
+        "body": "Surfaces are warm near-blacks and white veils. No navy, slate, or cool gray, unlike GoodWatch on the web.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Weights Rule",
+        "body": "Use Regular or Bold only. Don't set `fontWeight` on Gabarito text: the font files carry the weight.",
+        "section": "typography"
+      }
+    ],
+    "dos": [
+      "**Do** use `glow` and `warm` tokens and `R` radii instead of writing hex values or numbers.",
+      "**Do** keep every press area at least 48 × 48, using `Press` with `visual` for smaller looks.",
+      "**Do** keep amber for you and the primary action, and peer hues for friends.",
+      "**Do** give every motion a Reduce Motion version.",
+      "**Do** keep one phone-width column on large screens.",
+      "**Do** close the top sheet first on back, on every platform."
+    ],
+    "donts": [
+      "**Don't** use navy, slate, or cool grays.",
+      "**Don't** give a friend amber, or show who voted what.",
+      "**Don't** use the `colors` palette or `Page`, `Panel`, `Button`, `Field`, and `Notice` from `components/ui.tsx` for new screens. They're legacy, used only by `/preview` and the auth callback.",
+      "**Don't** add another icon set or another red.",
+      "**Don't** set font weights other than Gabarito Regular and Bold.",
+      "**Don't** add haptics without a decision; feedback is sound today."
+    ]
+  }
+}

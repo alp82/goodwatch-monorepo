@@ -15,6 +15,8 @@ The owner decides each open decision after seeing its consequences, not from a d
 
 The options listed under each decision are starting points. A prototype can add or drop options.
 
+Two family decisions that affect both GoodWatch on the web and YepWatch, F1 (amber value) and F2 (fonts), are in `docs/design/yepwatch-design-decisions.md`.
+
 ## Open decisions
 
 ### D1: Primary button
