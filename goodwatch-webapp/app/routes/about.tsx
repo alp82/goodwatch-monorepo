@@ -2,12 +2,7 @@
 // does (four tiles into /how-it-works); four numbers, with a link to the rest on /stats; where to find us; where the
 // data comes from. Facts checked on 2026-10-18: since 2023 is the repo's first commit, "free" is the sign-up page's
 // word, the numbers are the start page intro's snapshot (server/living-room/intro/content.json, captured 2026-10-17).
-import {
-	FingerPrintIcon,
-	SparklesIcon,
-	StarIcon,
-	TvIcon,
-} from "@heroicons/react/24/outline"
+import { FingerPrintIcon, SparklesIcon, StarIcon, TvIcon } from "@heroicons/react/24/outline"
 import type { MetaFunction } from "@remix-run/node"
 import { Link } from "@remix-run/react"
 import { CreatorChip, Credits, FindUs } from "~/ui/about/AboutParts"
@@ -68,18 +63,16 @@ export default function About() {
 		<div className="mx-auto flex w-full max-w-2xl flex-col gap-14 px-4 pt-10 pb-24 text-gray-300 sm:px-8 md:pt-20">
 			<header className="flex flex-col gap-6">
 				<Kicker>About GoodWatch</Kicker>
-				<h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
-					Every score, every service,{" "}
-					<span className="text-amber-400">one place.</span>
+				<h1 className="font-display font-bold text-4xl text-white sm:text-6xl">
+					Every score, every service, <span className="text-amber-400">one place.</span>
 				</h1>
 				<div className="flex flex-col gap-3 text-lg leading-relaxed text-gray-300 sm:text-xl">
 					<p>
-						I used to jump between IMDb, Metacritic, Rotten Tomatoes and
-						JustWatch to decide what to watch next.
+						I used to jump between IMDb, Metacritic, Rotten Tomatoes and JustWatch to decide what to
+						watch next.
 					</p>
 					<p>
-						So I built one place for all of it. Now it also learns your taste
-						and picks for you.
+						So I built one place for all of it. Now it also learns your taste and picks for you.
 					</p>
 				</div>
 				<div className="flex flex-wrap items-center gap-3">
@@ -89,10 +82,7 @@ export default function About() {
 			</header>
 
 			<section aria-labelledby="about-what" className="flex flex-col gap-5">
-				<h2
-					id="about-what"
-					className="text-xl font-bold tracking-tight text-white sm:text-2xl"
-				>
+				<h2 id="about-what" className="text-xl font-bold tracking-tight text-white sm:text-2xl">
 					What it does
 				</h2>
 				<ul className="grid gap-3 sm:grid-cols-2">
@@ -103,10 +93,7 @@ export default function About() {
 								prefetch="intent"
 								className="flex h-full items-start gap-3 rounded-2xl bg-white/[0.04] p-4 ring-1 ring-white/10 transition hover:bg-white/[0.08]"
 							>
-								<Icon
-									className="mt-0.5 h-6 w-6 shrink-0 text-amber-400"
-									aria-hidden="true"
-								/>
+								<Icon className="mt-0.5 h-6 w-6 shrink-0 text-amber-400" aria-hidden="true" />
 								<span className="flex flex-col">
 									<span className="font-semibold text-white">{title}</span>
 									<span className="text-sm text-gray-400">{line}</span>
@@ -123,9 +110,7 @@ export default function About() {
 					{NUMBERS.map(({ n, label }) => (
 						<div key={label} className="flex flex-col gap-1">
 							<dt className="order-2 text-sm text-gray-400">{label}</dt>
-							<dd className="text-3xl font-black tracking-tight text-white">
-								{n}
-							</dd>
+							<dd className="text-3xl font-black tracking-tight text-white">{n}</dd>
 						</div>
 					))}
 				</dl>
@@ -133,10 +118,7 @@ export default function About() {
 			</div>
 
 			<section aria-labelledby="about-find" className="flex flex-col gap-4">
-				<h2
-					id="about-find"
-					className="text-xl font-bold tracking-tight text-white sm:text-2xl"
-				>
+				<h2 id="about-find" className="text-xl font-bold tracking-tight text-white sm:text-2xl">
 					Find us
 				</h2>
 				<FindUs />

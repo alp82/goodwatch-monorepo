@@ -1,9 +1,3 @@
-.brand-header {
-	font-family: "Gabarito Brand", "Gabarito Fallback", "Gabarito Fallback Roboto",
-		sans-serif;
-	font-weight: 700;
-}
-
 .accent {
 	color: rgb(255, 204, 51);
 	background-color: rgb(255, 178, 62);
@@ -389,10 +383,18 @@ html[data-tv-transition="out"] .tv-back {
 
 /* Edit profile: the short highlight on Who sees what when the profiles strip leads there (opacity only). */
 @keyframes section-glow {
-	0% { opacity: 0 }
-	15% { opacity: 1 }
-	60% { opacity: 1 }
-	100% { opacity: 0 }
+	0% {
+		opacity: 0;
+	}
+	15% {
+		opacity: 1;
+	}
+	60% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 0;
+	}
 }
 .section-glow {
 	animation: section-glow 1.8s ease-out both;

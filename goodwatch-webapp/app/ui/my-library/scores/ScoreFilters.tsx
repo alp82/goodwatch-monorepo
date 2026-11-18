@@ -1,7 +1,13 @@
 // Your scores' filters in Discover's design: the row (search, Only what I changed, Group, Filters), the removable
 // chips under it, and the Filters side sheet with the groups that fit your own scores. The sheet and the chips are
 // drawn with the shared ui/filter-bar controls (Filters button, the sort menu's items, the switch's knob, Show N titles).
-import { CheckIcon, ChevronDownIcon, MagnifyingGlassIcon, Squares2X2Icon, XMarkIcon } from "@heroicons/react/20/solid"
+import {
+	CheckIcon,
+	ChevronDownIcon,
+	MagnifyingGlassIcon,
+	Squares2X2Icon,
+	XMarkIcon,
+} from "@heroicons/react/20/solid"
 import { AnimatePresence, motion } from "framer-motion"
 import { type ReactNode, useId, useMemo, useRef, useState } from "react"
 import {
@@ -40,8 +46,13 @@ export const VERSUS_LABEL: Record<Versus, string> = {
 	close: "About the same",
 	less: "I like it less",
 }
-const toggle = <T,>(list: T[], value: T) => (list.includes(value) ? list.filter((v) => v !== value) : [...list, value])
-const clearSheet = (f: ScoreFilters): ScoreFilters => ({ ...NO_FILTERS, q: f.q, changedOnly: f.changedOnly })
+const toggle = <T,>(list: T[], value: T) =>
+	list.includes(value) ? list.filter((v) => v !== value) : [...list, value]
+const clearSheet = (f: ScoreFilters): ScoreFilters => ({
+	...NO_FILTERS,
+	q: f.q,
+	changedOnly: f.changedOnly,
+})
 
 interface Option {
 	id: string
@@ -67,11 +78,17 @@ function groupsOf(
 ): Group[] {
 	const counts = optionCounts(titles, f, standingOf)
 	const n = (group: FilterGroup, key: string | number) => counts[group].get(String(key)) ?? 0
-	const genres = [...new Set(titles.flatMap((t) => t.genres))].sort((a, b) => a.localeCompare(b, "en"))
-	const decades = [...new Set(titles.map((t) => (t.release_year ? Math.floor(t.release_year / 10) * 10 : 0)))]
+	const genres = [...new Set(titles.flatMap((t) => t.genres))].sort((a, b) =>
+		a.localeCompare(b, "en"),
+	)
+	const decades = [
+		...new Set(titles.map((t) => (t.release_year ? Math.floor(t.release_year / 10) * 10 : 0))),
+	]
 		.filter(Boolean)
 		.sort((a, b) => b - a)
-	const years = [...new Set(titles.map((t) => t.ratedAt?.slice(0, 4)).filter(Boolean) as string[])].sort().reverse()
+	const years = [...new Set(titles.map((t) => t.ratedAt?.slice(0, 4)).filter(Boolean) as string[])]
+		.sort()
+		.reverse()
 	return [
 		{
 			key: "scores",
@@ -83,7 +100,12 @@ function groupsOf(
 				active: f.scores.includes(s),
 				count: n("scores", s),
 				toggle: () => set({ ...f, scores: toggle(f.scores, s) }),
-				swatch: <span className="h-2 w-2 rounded-full" style={{ background: getVibeColorValue(s as Score) }} />,
+				swatch: (
+					<span
+						className="h-2 w-2 rounded-full"
+						style={{ background: getVibeColorValue(s as Score) }}
+					/>
+				),
 			})),
 		},
 		{
@@ -169,7 +191,9 @@ function OptionChip({ option, counted }: { option: Option; counted: boolean }) {
 		<motion.button
 			type="button"
 			aria-pressed={option.active}
-			aria-label={counted ? `${option.label}, ${option.count.toLocaleString("en")} titles` : option.label}
+			aria-label={
+				counted ? `${option.label}, ${option.count.toLocaleString("en")} titles` : option.label
+			}
 			whileTap={TAP}
 			onClick={option.toggle}
 			className={`flex h-9 cursor-pointer items-center gap-2 whitespace-nowrap rounded-full pl-3 pr-2.5 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${
@@ -183,7 +207,11 @@ function OptionChip({ option, counted }: { option: Option; counted: boolean }) {
 			{option.swatch}
 			{option.label}
 			<span aria-hidden className="text-xs tabular-nums text-gray-500">
-				{option.active ? <CheckIcon className="h-3.5 w-3.5" /> : counted ? option.count.toLocaleString("en") : null}
+				{option.active ? (
+					<CheckIcon className="h-3.5 w-3.5" />
+				) : counted ? (
+					option.count.toLocaleString("en")
+				) : null}
 			</span>
 		</motion.button>
 	)
@@ -198,13 +226,56 @@ interface Chip {
 function chipsOf(f: ScoreFilters): Chip[] {
 	const without = <T,>(list: T[], value: T) => list.filter((v) => v !== value)
 	return [
-		...f.scores.map((s) => ({ key: `s${s}`, group: "scores" as const, label: `My score ${s}`, remove: (x: ScoreFilters) => ({ ...x, scores: without(x.scores, s) }) })),
-		...(f.kind === "all" ? [] : [{ key: "kind", group: "kind" as const, label: f.kind === "movie" ? "Movies" : "Shows", remove: (x: ScoreFilters) => ({ ...x, kind: "all" as const }) }]),
-		...f.versus.map((v) => ({ key: `v${v}`, group: "versus" as const, label: VERSUS_LABEL[v], remove: (x: ScoreFilters) => ({ ...x, versus: without(x.versus, v) }) })),
-		...f.genres.map((g) => ({ key: `g${g}`, group: "genres" as const, label: g, remove: (x: ScoreFilters) => ({ ...x, genres: without(x.genres, g) }) })),
-		...(f.minGw ? [{ key: "gw", group: "minGw" as const, label: `GoodWatch ${f.minGw}+`, remove: (x: ScoreFilters) => ({ ...x, minGw: 0 as const }) }] : []),
-		...f.decades.map((d) => ({ key: `d${d}`, group: "decades" as const, label: `${d}s`, remove: (x: ScoreFilters) => ({ ...x, decades: without(x.decades, d) }) })),
-		...f.rated.map((y) => ({ key: `r${y}`, group: "rated" as const, label: `Rated in ${y}`, remove: (x: ScoreFilters) => ({ ...x, rated: without(x.rated, y) }) })),
+		...f.scores.map((s) => ({
+			key: `s${s}`,
+			group: "scores" as const,
+			label: `My score ${s}`,
+			remove: (x: ScoreFilters) => ({ ...x, scores: without(x.scores, s) }),
+		})),
+		...(f.kind === "all"
+			? []
+			: [
+					{
+						key: "kind",
+						group: "kind" as const,
+						label: f.kind === "movie" ? "Movies" : "Shows",
+						remove: (x: ScoreFilters) => ({ ...x, kind: "all" as const }),
+					},
+				]),
+		...f.versus.map((v) => ({
+			key: `v${v}`,
+			group: "versus" as const,
+			label: VERSUS_LABEL[v],
+			remove: (x: ScoreFilters) => ({ ...x, versus: without(x.versus, v) }),
+		})),
+		...f.genres.map((g) => ({
+			key: `g${g}`,
+			group: "genres" as const,
+			label: g,
+			remove: (x: ScoreFilters) => ({ ...x, genres: without(x.genres, g) }),
+		})),
+		...(f.minGw
+			? [
+					{
+						key: "gw",
+						group: "minGw" as const,
+						label: `GoodWatch ${f.minGw}+`,
+						remove: (x: ScoreFilters) => ({ ...x, minGw: 0 as const }),
+					},
+				]
+			: []),
+		...f.decades.map((d) => ({
+			key: `d${d}`,
+			group: "decades" as const,
+			label: `${d}s`,
+			remove: (x: ScoreFilters) => ({ ...x, decades: without(x.decades, d) }),
+		})),
+		...f.rated.map((y) => ({
+			key: `r${y}`,
+			group: "rated" as const,
+			label: `Rated in ${y}`,
+			remove: (x: ScoreFilters) => ({ ...x, rated: without(x.rated, y) }),
+		})),
 	]
 }
 
@@ -214,11 +285,27 @@ export function FilterChips({ f, set }: { f: ScoreFilters; set: (f: ScoreFilters
 	return (
 		<AnimatePresence initial={false}>
 			{chips.length > 0 && (
-				<motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-					<ul aria-label="Active filters" className="flex flex-wrap items-center gap-2 pt-1" data-filter-chips>
+				<motion.div
+					initial={{ opacity: 0, height: 0 }}
+					animate={{ opacity: 1, height: "auto" }}
+					exit={{ opacity: 0, height: 0 }}
+					className="overflow-hidden"
+				>
+					<ul
+						aria-label="Active filters"
+						className="flex flex-wrap items-center gap-2 pt-1"
+						data-filter-chips
+					>
 						<AnimatePresence initial={false} mode="popLayout">
 							{chips.map((chip) => (
-								<motion.li layout key={chip.key} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.85 }} transition={SPRING}>
+								<motion.li
+									layout
+									key={chip.key}
+									initial={{ opacity: 0, scale: 0.9 }}
+									animate={{ opacity: 1, scale: 1 }}
+									exit={{ opacity: 0, scale: 0.85 }}
+									transition={SPRING}
+								>
 									<motion.button
 										type="button"
 										whileTap={TAP}
@@ -234,7 +321,11 @@ export function FilterChips({ f, set }: { f: ScoreFilters; set: (f: ScoreFilters
 							))}
 						</AnimatePresence>
 						<li>
-							<button type="button" onClick={() => set(clearSheet(f))} className="ml-1 cursor-pointer text-sm text-gray-500 hover:text-white">
+							<button
+								type="button"
+								onClick={() => set(clearSheet(f))}
+								className="ml-1 cursor-pointer text-sm text-gray-500 hover:text-white"
+							>
 								Clear filters
 							</button>
 						</li>
@@ -276,21 +367,32 @@ export function FiltersSheet({
 	const [query, setQuery] = useState("")
 	useModalDialog({ open, onClose, container: panel, initialFocus: search })
 	const groups = useMemo(
-		() => (open ? groupsOf(titles, f, set, standingOf).filter((g) => !only || only.includes(g.key)) : []),
+		() =>
+			open ? groupsOf(titles, f, set, standingOf).filter((g) => !only || only.includes(g.key)) : [],
 		[open, titles, f, set, standingOf, only],
 	)
 	const q = query.trim().toLowerCase()
 	const visible = groups
 		.map((g) => ({
 			...g,
-			options: !q || g.title.toLowerCase().includes(q) ? g.options : g.options.filter((o) => o.label.toLowerCase().includes(q)),
+			options:
+				!q || g.title.toLowerCase().includes(q)
+					? g.options
+					: g.options.filter((o) => o.label.toLowerCase().includes(q)),
 		}))
 		.filter((g) => g.options.length > 0)
 	return (
 		<AnimatePresence>
 			{open && (
 				<>
-					<motion.div aria-hidden className="fixed inset-0 z-[1001] bg-black/60 backdrop-blur-[3px]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
+					<motion.div
+						aria-hidden
+						className="fixed inset-0 z-[1001] bg-black/60 backdrop-blur-[3px]"
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						exit={{ opacity: 0 }}
+						onClick={onClose}
+					/>
 					<motion.aside
 						// biome-ignore lint/a11y/useSemanticElements: an animated sheet with its own focus trap, as Discover's; <dialog> can't animate out
 						ref={panel}
@@ -306,29 +408,50 @@ export function FiltersSheet({
 					>
 						<header className="px-6 pb-4 pt-6">
 							<div className="flex items-center justify-between">
-								<h2 id={titleId} className="brand-header text-2xl text-white">
+								<h2 id={titleId} className="font-display font-bold text-2xl text-white">
 									Filters
 								</h2>
-								<button type="button" onClick={onClose} aria-label="Close filters" className="grid h-9 w-9 cursor-pointer place-items-center rounded-full bg-white/5 text-gray-300 outline-none hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-400">
+								<button
+									type="button"
+									onClick={onClose}
+									aria-label="Close filters"
+									className="grid h-9 w-9 cursor-pointer place-items-center rounded-full bg-white/5 text-gray-300 outline-none hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-400"
+								>
 									<XMarkIcon className="h-5 w-5" />
 								</button>
 							</div>
-							<FilterSearchField value={query} onChange={setQuery} inputRef={search} className="mt-4" />
+							<FilterSearchField
+								value={query}
+								onChange={setQuery}
+								inputRef={search}
+								className="mt-4"
+							/>
 						</header>
 						<div className="flex-1 overflow-y-auto px-6 pb-8 pt-2">
 							{visible.length === 0 ? (
-								<p className="py-10 text-center text-base font-bold text-white">No filter called “{query}”</p>
+								<p className="py-10 text-center text-base font-bold text-white">
+									No filter called “{query}”
+								</p>
 							) : (
 								<div className="flex flex-col gap-7">
 									{visible.map((g) => (
 										<section key={g.key} aria-labelledby={`score-filter-${g.key}`}>
 											<header className="mb-3 flex items-center gap-2.5">
 												<span className={`h-3.5 w-1 rounded-full ${ACCENT[g.key].bar}`} />
-												<h3 id={`score-filter-${g.key}`} className="text-[15px] font-bold text-white">
+												<h3
+													id={`score-filter-${g.key}`}
+													className="text-[15px] font-bold text-white"
+												>
 													{g.title}
 												</h3>
-												{g.badge > 0 && <span className="rounded-full bg-white/10 px-2 text-xs font-bold tabular-nums text-white">{g.badge}</span>}
-												{g.note && <span className="ml-auto truncate text-xs text-gray-500">{g.note}</span>}
+												{g.badge > 0 && (
+													<span className="rounded-full bg-white/10 px-2 text-xs font-bold tabular-nums text-white">
+														{g.badge}
+													</span>
+												)}
+												{g.note && (
+													<span className="ml-auto truncate text-xs text-gray-500">{g.note}</span>
+												)}
 											</header>
 											<div className="flex flex-wrap gap-2">
 												{g.options.map((o) => (
@@ -341,12 +464,20 @@ export function FiltersSheet({
 							)}
 						</div>
 						<footer className="flex items-center gap-4 border-t border-white/5 bg-gray-950/90 px-6 py-4 backdrop-blur">
-							<button type="button" onClick={() => set(clearSheet(f))} className="cursor-pointer text-sm text-gray-400 hover:text-white">
+							<button
+								type="button"
+								onClick={() => set(clearSheet(f))}
+								className="cursor-pointer text-sm text-gray-400 hover:text-white"
+							>
 								Clear all
 							</button>
 							<span className="flex-1" />
 							<ShowTitlesButton
-								counts={shown == null ? null : { total: shown, hidden: 0, recoveries: [], optionCounts: {} as never }}
+								counts={
+									shown == null
+										? null
+										: { total: shown, hidden: 0, recoveries: [], optionCounts: {} as never }
+								}
 								onClick={onClose}
 							/>
 						</footer>
@@ -369,7 +500,9 @@ export function RowSearch({
 	placeholder?: string
 }) {
 	return (
-		<label className={`flex h-12 min-w-0 flex-1 basis-56 items-center gap-2.5 px-3.5 focus-within:ring-amber-500/70 sm:max-w-sm ${SHELL}`}>
+		<label
+			className={`flex h-12 min-w-0 flex-1 basis-56 items-center gap-2.5 px-3.5 focus-within:ring-amber-500/70 sm:max-w-sm ${SHELL}`}
+		>
 			<MagnifyingGlassIcon className="h-4 w-4 shrink-0 text-gray-500" aria-hidden />
 			<span className="sr-only">{placeholder}</span>
 			<input
@@ -382,7 +515,12 @@ export function RowSearch({
 				className="min-w-0 flex-1 border-0 bg-transparent p-0 text-base text-white outline-none placeholder:text-gray-500 focus:ring-0 sm:text-sm [&::-webkit-search-cancel-button]:hidden"
 			/>
 			{q && (
-				<button type="button" onClick={() => onChange("")} aria-label="Clear the search" className="cursor-pointer text-gray-500 hover:text-white">
+				<button
+					type="button"
+					onClick={() => onChange("")}
+					aria-label="Clear the search"
+					className="cursor-pointer text-gray-500 hover:text-white"
+				>
 					<XMarkIcon className="h-4 w-4" />
 				</button>
 			)}
@@ -391,7 +529,15 @@ export function RowSearch({
 }
 
 /** Only what I changed, in the look of Discover's Not seen yet switch. */
-export function ChangedSwitch({ on, count, onChange }: { on: boolean; count: number; onChange: (on: boolean) => void }) {
+export function ChangedSwitch({
+	on,
+	count,
+	onChange,
+}: {
+	on: boolean
+	count: number
+	onChange: (on: boolean) => void
+}) {
 	return (
 		<motion.button
 			type="button"
@@ -403,7 +549,10 @@ export function ChangedSwitch({ on, count, onChange }: { on: boolean; count: num
 			className={`relative flex h-12 shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap px-3.5 text-sm font-bold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${SHELL} ${on ? "text-white" : "text-gray-400 hover:text-gray-200"}`}
 		>
 			<span>Only what I changed</span>
-			<span aria-hidden className={`w-6 text-right text-xs tabular-nums ${count ? "text-amber-300/80" : "text-gray-600"}`}>
+			<span
+				aria-hidden
+				className={`w-6 text-right text-xs tabular-nums ${count ? "text-amber-300/80" : "text-gray-600"}`}
+			>
 				{count}
 			</span>
 			<Knob on={on} />
@@ -447,11 +596,20 @@ export function GroupControl<K extends string>({
 				<Icon className="h-4 w-4 shrink-0 text-gray-400" aria-hidden />
 				{/* On a phone the icon and the choice say it; the name stays in the button's label. */}
 				<span className="hidden text-gray-400 sm:inline">{name}</span>
-				<span className="max-w-24 flex-1 truncate text-left font-bold text-white sm:max-w-none">{label}</span>
-				<ChevronDownIcon className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden />
+				<span className="max-w-24 flex-1 truncate text-left font-bold text-white sm:max-w-none">
+					{label}
+				</span>
+				<ChevronDownIcon
+					className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`}
+					aria-hidden
+				/>
 			</button>
 			{open && (
-				<div role="menu" aria-label={name} className={`absolute right-0 z-40 mt-2 w-72 max-w-[calc(100vw-1.5rem)] origin-top-right p-1.5 ${MENU}`}>
+				<div
+					role="menu"
+					aria-label={name}
+					className={`absolute right-0 z-40 mt-2 w-72 max-w-[calc(100vw-1.5rem)] origin-top-right p-1.5 ${MENU}`}
+				>
 					<SortItems
 						options={options}
 						value={value}

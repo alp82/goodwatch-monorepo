@@ -10,8 +10,7 @@ import { DISPLAY, WRAP } from "./style"
 
 export { DISPLAY, WRAP }
 
-export const tmdbImage = (path: string, size: string) =>
-	`https://image.tmdb.org/t/p/${size}${path}`
+export const tmdbImage = (path: string, size: string) => `https://image.tmdb.org/t/p/${size}${path}`
 
 export const MY_SHOWS = WATCH_PATHS.nextEpisodes
 export const MY_MOVIES = WATCH_PATHS.tonight
@@ -54,8 +53,7 @@ export function PageHead({
 	aside?: ReactNode
 }) {
 	// With one key on a phone, the key stays beside the name and the line under the name wraps in its column.
-	const oneRowOnPhones =
-		!aside && links.filter((link) => !link.fromSm).length <= 1
+	const oneRowOnPhones = !aside && links.filter((link) => !link.fromSm).length <= 1
 	return (
 		<header
 			className={`${WRAP} flex items-end gap-y-3 pb-4 pt-6 ${oneRowOnPhones ? "flex-nowrap gap-x-4 sm:flex-wrap sm:gap-x-6" : "flex-wrap gap-x-6"}`}
@@ -73,7 +71,7 @@ export function PageHead({
 						{back.label}
 					</Link>
 				)}
-				<h1 className={`${DISPLAY} text-4xl text-white md:text-5xl`}>{name}</h1>
+				<h1 className="font-display font-bold text-4xl text-white md:text-5xl">{name}</h1>
 				<p className="mt-1 text-sm text-gray-400">{line}</p>
 			</div>
 			<span className="grow" />
@@ -85,14 +83,8 @@ export function PageHead({
 	)
 }
 
-export const Empty = ({
-	title,
-	children,
-}: { title: string; children: ReactNode }) => (
-	<div
-		className="rounded-2xl border border-dashed border-white/15 p-6"
-		data-empty
-	>
+export const Empty = ({ title, children }: { title: string; children: ReactNode }) => (
+	<div className="rounded-2xl border border-dashed border-white/15 p-6" data-empty>
 		<h2 className={`${DISPLAY} text-2xl text-white`}>{title}</h2>
 		<div className="mt-1 max-w-xl text-sm text-gray-400">{children}</div>
 	</div>
@@ -102,7 +94,11 @@ export const Poster = ({
 	path,
 	size = "w92",
 	className = "",
-}: { path: string | null; size?: string; className?: string }) =>
+}: {
+	path: string | null
+	size?: string
+	className?: string
+}) =>
 	path ? (
 		<img
 			src={tmdbImage(path, size)}
@@ -123,17 +119,16 @@ export function GuestPage({
 	name,
 	line,
 	words,
-}: { name: string; line: string; words: SignUpMessage }) {
+}: {
+	name: string
+	line: string
+	words: SignUpMessage
+}) {
 	return (
 		<div className="pb-24" data-guest-page>
 			<PageHead name={name} line={line} />
 			<div className={WRAP}>
-				<SignUpPrompt
-					feature="watchNext"
-					words={words}
-					size="card"
-					className="max-w-xl"
-				/>
+				<SignUpPrompt feature="watchNext" words={words} size="card" className="max-w-xl" />
 			</div>
 		</div>
 	)

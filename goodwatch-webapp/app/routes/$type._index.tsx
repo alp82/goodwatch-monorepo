@@ -1,9 +1,5 @@
 import { presentCatalogLoader } from "~/server/media-payload.server"
-import {
-	type LoaderFunction,
-	type LoaderFunctionArgs,
-	type MetaFunction,
-} from "@remix-run/node"
+import { type LoaderFunction, type LoaderFunctionArgs, type MetaFunction } from "@remix-run/node"
 import { Link, useLoaderData } from "@remix-run/react"
 import React from "react"
 import { exploreAddressExists, notFound } from "~/ui/explore/address"
@@ -12,12 +8,7 @@ import { mainNavigation } from "~/ui/explore/main-nav"
 import { TileBackdrop, tilePriority } from "~/ui/explore/TileBackdrop"
 import { exploreHubCopy } from "~/ui/explore/page-copy"
 import { listNoun, scoreSourceList } from "~/domain/best-lists"
-import {
-	type PageItem,
-	type PageMeta,
-	buildMeta,
-	plainPageMeta,
-} from "~/utils/meta"
+import { type PageItem, type PageMeta, buildMeta, plainPageMeta } from "~/utils/meta"
 import { cachedClientLoader } from "~/navigation/instant-navigation"
 
 export const meta: MetaFunction = ({ params }) => {
@@ -43,9 +34,7 @@ interface LoaderData {
 	type: NavType
 }
 
-const canonicalLoader: LoaderFunction = async ({
-	params,
-}: LoaderFunctionArgs) => {
+const canonicalLoader: LoaderFunction = async ({ params }: LoaderFunctionArgs) => {
 	const type = params.type || ""
 
 	if (!exploreAddressExists({ type })) throw notFound()
@@ -64,7 +53,7 @@ export default function Movies() {
 
 	return (
 		<div className="max-w-7xl mx-auto p-4">
-			<h1 className="mb-2 text-3xl md:text-4xl font-medium text-gray-100">
+			<h1 className="mb-2 font-display font-bold text-3xl text-gray-100 md:text-4xl">
 				{copy.heading}
 			</h1>
 			<p className="mb-8 text-xl text-gray-400">{copy.intro}</p>

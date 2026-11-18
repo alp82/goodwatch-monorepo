@@ -29,6 +29,12 @@
 @theme {
 	--breakpoint-xs: 475px;
 
+	/* Gabarito (fonts/gabarito.css): page titles in `font-display font-bold`, big brand numbers in `font-black`. "Gabarito
+	   Brand" first, so the text never waits for a share card's slices of "Gabarito"; those still fill in characters the
+	   brand files lack. The fallbacks are metric-matched at weight 700. */
+	--font-display:
+		"Gabarito Brand", "Gabarito", "Gabarito Fallback", "Gabarito Fallback Roboto", sans-serif;
+
 	--container-7xs: 8rem;
 	--container-6xs: 10rem;
 	--container-5xs: 12rem;
@@ -77,7 +83,7 @@
 	--color-vibe-60: #a3a323;
 	--color-vibe-70: #65a32d;
 	--color-vibe-80: #16934a;
-    --color-vibe-90: #15803d;
+	--color-vibe-90: #15803d;
 	--color-vibe-100: #166534;
 
 	--color-imdb: #f6c800;
@@ -225,7 +231,6 @@
 input[type="search"]::-webkit-search-cancel-button {
 	appearance: none;
 }
-
 
 /* The footer's motions (app/ui/footer). Transform and opacity only. */
 @keyframes footer-sheen {

@@ -7,11 +7,7 @@ import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react"
 import { fetchSmartTitles } from "~/routes/api.smart-titles"
 import { useUserData } from "~/routes/api.user-data"
 import type { ImportHandoff } from "~/ui/imports/ImportFileRouting"
-import {
-	type ImportSourceId,
-	importSourceName,
-	lastImported,
-} from "~/ui/imports/ImportSources"
+import { type ImportSourceId, importSourceName, lastImported } from "~/ui/imports/ImportSources"
 import { useSourceImports } from "~/ui/imports/SourceImportHooks"
 import { useImdbImports } from "~/ui/imports/api"
 import { primaryButton } from "~/ui/imports/shared"
@@ -31,16 +27,9 @@ import {
 	useFileTaking,
 } from "./StartImport"
 import { StartStepper } from "./StartStepper"
-import {
-	GOAL,
-	LIKED,
-	type StartState,
-	type StartStep,
-	startWords,
-} from "./steps"
+import { GOAL, LIKED, type StartState, type StartStep, startWords } from "./steps"
 
-const keyOf = (t: { media_type: string; tmdb_id: number }) =>
-	`${t.media_type}-${t.tmdb_id}`
+const keyOf = (t: { media_type: string; tmdb_id: number }) => `${t.media_type}-${t.tmdb_id}`
 const image = (path: string | undefined, size: string) =>
 	path ? `https://image.tmdb.org/t/p/${size}${path}` : undefined
 const linkButton =
@@ -112,13 +101,8 @@ export function TasteStart() {
 	const liked = likedKeys.size
 	const ready = liked >= GOAL
 
-	const imported = lastImported(
-		imdbImports.data?.imports ?? [],
-		sourceImports.data?.imports ?? [],
-	)
-	const importedFrom = [...imported.entries()].sort((a, b) =>
-		b[1].localeCompare(a[1]),
-	)[0]?.[0]
+	const imported = lastImported(imdbImports.data?.imports ?? [], sourceImports.data?.imports ?? [])
+	const importedFrom = [...imported.entries()].sort((a, b) => b[1].localeCompare(a[1]))[0]?.[0]
 
 	// A new step starts at the stepper, not wherever the last one was scrolled to.
 	const top = useRef<HTMLDivElement>(null)
@@ -157,17 +141,13 @@ export function TasteStart() {
 	const state: StartState = {
 		step,
 		liked,
-		source:
-			step === 1 && picked
-				? { name: picked.name, connect: picked.connect }
-				: undefined,
+		source: step === 1 && picked ? { name: picked.name, connect: picked.connect } : undefined,
 		importedFrom: importedFrom ? importSourceName(importedFrom) : undefined,
 		file: !!handoff,
 		short,
 	}
 	const words = startWords(state)
-	const doneStep = (n: StartStep) =>
-		n === 1 ? !!importedFrom : n === 2 ? ready && !short : false
+	const doneStep = (n: StartStep) => (n === 1 ? !!importedFrom : n === 2 ? ready && !short : false)
 
 	return (
 		<div className="text-white">
@@ -184,12 +164,8 @@ export function TasteStart() {
 						onOpen={setStep}
 					/>
 					<header className="max-w-3xl text-center">
-						<h1 className="text-4xl font-extrabold tracking-tight md:text-6xl">
-							{words.title}
-						</h1>
-						<p className="mx-auto mt-4 max-w-2xl text-gray-300 md:text-lg">
-							{words.text}
-						</p>
+						<h1 className="font-display font-bold text-4xl md:text-6xl">{words.title}</h1>
+						<p className="mx-auto mt-4 max-w-2xl text-gray-300 md:text-lg">{words.text}</p>
 					</header>
 
 					{step === 1 && (
@@ -224,25 +200,15 @@ export function TasteStart() {
 								</>
 							)}
 							{ready ? (
-								<button
-									type="button"
-									className={primaryButton}
-									onClick={() => setStep(3)}
-								>
+								<button type="button" className={primaryButton} onClick={() => setStep(3)}>
 									See your taste
 								</button>
 							) : (
 								!picked &&
 								!handoff && (
 									<div className="mt-6 flex flex-col items-center gap-2">
-										<span className="text-gray-400">
-											Never tracked anything? That's fine.
-										</span>
-										<button
-											type="button"
-											className={ghostButton}
-											onClick={() => setStep(2)}
-										>
+										<span className="text-gray-400">Never tracked anything? That's fine.</span>
+										<button type="button" className={ghostButton} onClick={() => setStep(2)}>
 											Nowhere yet. I'll rate a few here
 										</button>
 									</div>
@@ -271,18 +237,14 @@ export function TasteStart() {
 									top={
 										<div className="mb-5 flex flex-col gap-3">
 											<div className="flex justify-end">
-												<button
-													type="button"
-													className={linkButton}
-													onClick={() => setStep(1)}
-												>
+												<button type="button" className={linkButton} onClick={() => setStep(1)}>
 													I do track somewhere
 												</button>
 											</div>
 											{waitingOn && (
 												<p className="rounded-lg border border-slate-700 bg-slate-900/85 px-4 py-3 text-sm text-gray-300">
-													Your {sourceEntry(waitingOn).name} file is on its way.
-													When it's ready, drop it anywhere on this page.
+													Your {sourceEntry(waitingOn).name} file is on its way. When it's ready,
+													drop it anywhere on this page.
 												</p>
 											)}
 										</div>
@@ -298,11 +260,7 @@ export function TasteStart() {
 
 					{step === 3 && (
 						<div className="flex w-full flex-col items-center gap-6">
-							<PosterFan
-								titles={[...met, ...titles].filter((t) =>
-									likedKeys.has(keyOf(t)),
-								)}
-							/>
+							<PosterFan titles={[...met, ...titles].filter((t) => likedKeys.has(keyOf(t)))} />
 							<div className="flex flex-wrap items-center justify-center gap-3">
 								<button
 									type="button"
@@ -310,9 +268,7 @@ export function TasteStart() {
 									onClick={seeTaste}
 									disabled={revalidator.state === "loading"}
 								>
-									{revalidator.state === "loading"
-										? "Building your taste…"
-										: "See your taste"}
+									{revalidator.state === "loading" ? "Building your taste…" : "See your taste"}
 								</button>
 								<button
 									type="button"
@@ -334,10 +290,7 @@ export function TasteStart() {
 }
 
 /** The best-known titles as a dim wall behind the page, fading into the page's own background. */
-function PosterWall({
-	titles,
-	children,
-}: { titles: ScoringMedia[]; children: React.ReactNode }) {
+function PosterWall({ titles, children }: { titles: ScoringMedia[]; children: React.ReactNode }) {
 	const wall = titles.slice(0, WALL)
 	const fade: CSSProperties = {
 		maskImage: "linear-gradient(to bottom, black 45%, transparent)",
@@ -368,9 +321,7 @@ function PosterWall({
 /** Up to seven liked titles fanned out: what the taste is built from. */
 function PosterFan({ titles }: { titles: ScoringMedia[] }) {
 	const seen = new Set<string>()
-	const fan = titles
-		.filter((t) => !seen.has(keyOf(t)) && seen.add(keyOf(t)))
-		.slice(0, 7)
+	const fan = titles.filter((t) => !seen.has(keyOf(t)) && seen.add(keyOf(t))).slice(0, 7)
 	if (fan.length === 0) return null
 	const mid = (fan.length - 1) / 2
 	return (

@@ -14,7 +14,7 @@ export function ListHead({
 	return (
 		<>
 			<div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 pt-4">
-				<h1 className="text-xl font-medium text-gray-100 sm:text-2xl md:text-3xl lg:text-4xl">
+				<h1 className="font-display font-bold text-xl text-gray-100 sm:text-2xl md:text-3xl lg:text-4xl">
 					{heading}
 				</h1>
 				<p className="max-w-4xl text-lg text-gray-400">{intro}</p>

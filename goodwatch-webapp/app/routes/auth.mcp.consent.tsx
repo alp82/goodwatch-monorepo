@@ -13,7 +13,12 @@ import {
 	TvIcon,
 } from "@heroicons/react/24/outline"
 import { ExclamationTriangleIcon, ShieldCheckIcon } from "@heroicons/react/24/solid"
-import type { ActionFunctionArgs, HeadersFunction, LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
+import type {
+	ActionFunctionArgs,
+	HeadersFunction,
+	LoaderFunctionArgs,
+	MetaFunction,
+} from "@remix-run/node"
 import { json } from "@remix-run/node"
 import { Form, useLoaderData, useLocation } from "@remix-run/react"
 import { type ComponentType, type ReactNode, type SVGProps, useState } from "react"
@@ -21,7 +26,12 @@ import { STANDALONE } from "~/utils/standalone"
 import { consentHeaders, mcpConsentAction, mcpConsentLoader } from "~/server/auth/mcp-flow.server"
 import type { ConsentApp, ConsentView } from "~/utils/mcp-connect"
 import { ConnectAppBadge, GoodWatchBadge } from "~/ui/auth/connect"
-import { APP_CAN_CHANGE, APP_CAN_NEVER, APP_CAN_SEE, CONNECTED_APPS_PATH } from "~/ui/connector/connector"
+import {
+	APP_CAN_CHANGE,
+	APP_CAN_NEVER,
+	APP_CAN_SEE,
+	CONNECTED_APPS_PATH,
+} from "~/ui/connector/connector"
 import { Spinner } from "~/ui/wait/Spinner"
 
 export const handle = STANDALONE
@@ -31,7 +41,8 @@ export const meta: MetaFunction = () => [
 	{ name: "robots", content: "noindex, nofollow" },
 ]
 
-export const headers: HeadersFunction = ({ loaderHeaders, actionHeaders }) => (actionHeaders.has("Location") ? actionHeaders : loaderHeaders)
+export const headers: HeadersFunction = ({ loaderHeaders, actionHeaders }) =>
+	actionHeaders.has("Location") ? actionHeaders : loaderHeaders
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
 	const view = await mcpConsentLoader(request)
@@ -47,7 +58,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 export const action = async ({ request }: ActionFunctionArgs) => {
 	const answer = await mcpConsentAction(request)
-	for (const [key, value] of consentHeaders(request)) if (!answer.headers.has(key)) answer.headers.set(key, value)
+	for (const [key, value] of consentHeaders(request))
+		if (!answer.headers.has(key)) answer.headers.set(key, value)
 	if (answer.status >= 300 && answer.status < 400) return answer
 	throw answer
 }
@@ -56,7 +68,10 @@ type Item = { icon: ComponentType<SVGProps<SVGSVGElement>>; text: string }
 const SEE_ICONS = [StarIcon, PlayCircleIcon, ChartBarIcon, TvIcon]
 const CHANGE_ICONS = [PlayCircleIcon, StarIcon, BookmarkIcon, PencilSquareIcon, GlobeAltIcon]
 const CAN_SEE: Item[] = APP_CAN_SEE.map((text, i) => ({ icon: SEE_ICONS[i] ?? StarIcon, text }))
-const CAN_CHANGE: Item[] = APP_CAN_CHANGE.map((text, i) => ({ icon: CHANGE_ICONS[i] ?? PencilSquareIcon, text }))
+const CAN_CHANGE: Item[] = APP_CAN_CHANGE.map((text, i) => ({
+	icon: CHANGE_ICONS[i] ?? PencilSquareIcon,
+	text,
+}))
 
 export default function Consent() {
 	const view = useLoaderData<typeof loader>() as ConsentView
@@ -87,7 +102,13 @@ export default function Consent() {
 									Read-only
 								</label>
 								<label className="flex items-center gap-3">
-									<input form="mcp-consent" type="radio" name="access" value="write" defaultChecked />
+									<input
+										form="mcp-consent"
+										type="radio"
+										name="access"
+										value="write"
+										defaultChecked
+									/>
 									Read and change my GoodWatch
 								</label>
 								<List title="With read and change access" items={CAN_CHANGE} />
@@ -101,7 +122,13 @@ export default function Consent() {
 					</>
 				)}
 				{/* A plain post: the answer is a redirect to the app, which the browser follows. */}
-				<Form id="mcp-consent" method="post" action={pathname + search} reloadDocument className={leaving ? "hidden" : "flex flex-col-reverse gap-3 sm:flex-row"}>
+				<Form
+					id="mcp-consent"
+					method="post"
+					action={pathname + search}
+					reloadDocument
+					className={leaving ? "hidden" : "flex flex-col-reverse gap-3 sm:flex-row"}
+				>
 					<button
 						type="submit"
 						name="decision"
@@ -123,8 +150,9 @@ export default function Consent() {
 				</Form>
 				{!leaving && (
 					<p className="text-center text-xs leading-relaxed text-gray-500">
-						Afterwards you go back to {app.returnsTo === "this computer" ? `${app.name} on this computer` : app.returnsTo}. Disconnect {app.name} any time in
-						Settings, Connected apps.
+						Afterwards you go back to{" "}
+						{app.returnsTo === "this computer" ? `${app.name} on this computer` : app.returnsTo}.
+						Disconnect {app.name} any time in Settings, Connected apps.
 					</p>
 				)}
 			</div>
@@ -144,7 +172,9 @@ function Header({ app }: { app: ConsentApp }) {
 				</span>
 				<GoodWatchBadge />
 			</div>
-			<h1 className="text-2xl font-bold text-white sm:text-3xl">{app.name} wants to access your GoodWatch</h1>
+			<h1 className="font-display font-bold text-2xl text-white sm:text-3xl">
+				{app.name} wants to access your GoodWatch
+			</h1>
 			<p className="mt-2 flex items-center justify-center gap-1.5 text-sm text-gray-400">
 				{app.verified ? (
 					<ShieldCheckIcon className="h-4 w-4 text-emerald-400" aria-hidden="true" />
@@ -159,11 +189,14 @@ function Header({ app }: { app: ConsentApp }) {
 
 function UnverifiedWarning({ app }: { app: ConsentApp }) {
 	return (
-		<div role="alert" className="rounded-xl border border-amber-700 bg-amber-950/50 p-4 text-sm leading-relaxed text-amber-50">
+		<div
+			role="alert"
+			className="rounded-xl border border-amber-700 bg-amber-950/50 p-4 text-sm leading-relaxed text-amber-50"
+		>
 			<p className="font-semibold">GoodWatch can't check who made this app.</p>
 			<p className="mt-1">
-				It calls itself "{app.name}". Only allow it if you started this connection yourself, in an app you trust. It
-				returns to {app.returnsTo}.
+				It calls itself "{app.name}". Only allow it if you started this connection yourself, in an
+				app you trust. It returns to {app.returnsTo}.
 			</p>
 		</div>
 	)
@@ -176,20 +209,34 @@ function SignedInAs({ email, restartUrl }: { email: string; restartUrl: string }
 	const switchAccount = async () => {
 		setBusy(true)
 		try {
-			await fetch("/api/auth/sign-out", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" })
+			await fetch("/api/auth/sign-out", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: "{}",
+			})
 		} catch {}
 		window.location.assign(restartUrl)
 	}
 	return (
 		<div className="flex items-center gap-3 rounded-xl bg-gray-900/70 px-4 py-3 ring-1 ring-gray-700">
-			<span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-700 font-semibold text-white">
+			<span
+				aria-hidden="true"
+				className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-700 font-semibold text-white"
+			>
 				{email.slice(0, 1).toUpperCase()}
 			</span>
 			<div className="min-w-0 flex-1 text-sm">
 				<p className="text-gray-400">Signed in as</p>
-				<p data-feedback-private className="truncate font-medium text-gray-100">{email}</p>
+				<p data-feedback-private className="truncate font-medium text-gray-100">
+					{email}
+				</p>
 			</div>
-			<button type="button" onClick={switchAccount} disabled={busy} className="cursor-pointer text-sm font-medium text-amber-500 hover:text-amber-400">
+			<button
+				type="button"
+				onClick={switchAccount}
+				disabled={busy}
+				className="cursor-pointer text-sm font-medium text-amber-500 hover:text-amber-400"
+			>
 				{busy ? <Spinner size="small" /> : "Not you?"}
 			</button>
 		</div>
@@ -235,17 +282,27 @@ function Leaving({ app, allowed }: { app: ConsentApp; allowed: boolean }): React
 	return (
 		<div aria-live="polite" className="flex flex-col items-center gap-4 py-8 text-center">
 			{allowed ? (
-				<CheckIcon className="h-12 w-12 rounded-full bg-emerald-900 p-2.5 text-emerald-300" aria-hidden="true" />
+				<CheckIcon
+					className="h-12 w-12 rounded-full bg-emerald-900 p-2.5 text-emerald-300"
+					aria-hidden="true"
+				/>
 			) : (
 				<NoSymbolIcon className="h-12 w-12 text-gray-400" aria-hidden="true" />
 			)}
-			<h1 className="text-2xl font-bold text-white">{allowed ? `${app.name} is connected` : `${app.name} was not connected`}</h1>
+			<h1 className="font-display font-bold text-2xl text-white">
+				{allowed ? `${app.name} is connected` : `${app.name} was not connected`}
+			</h1>
 			<div className="flex items-center gap-2 text-gray-400">
-				<Spinner size="small" /> Taking you back to {app.returnsTo === "this computer" ? app.name : app.returnsTo}…
+				<Spinner size="small" /> Taking you back to{" "}
+				{app.returnsTo === "this computer" ? app.name : app.returnsTo}…
 			</div>
 			{allowed && (
 				<p className="text-sm text-gray-500">
-					You can disconnect it in <a href={CONNECTED_APPS_PATH} className="text-amber-500 hover:text-amber-400">Settings, Connected apps</a>.
+					You can disconnect it in{" "}
+					<a href={CONNECTED_APPS_PATH} className="text-amber-500 hover:text-amber-400">
+						Settings, Connected apps
+					</a>
+					.
 				</p>
 			)}
 		</div>

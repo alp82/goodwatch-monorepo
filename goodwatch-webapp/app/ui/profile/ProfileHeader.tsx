@@ -6,15 +6,9 @@
 import { UserCircleIcon } from "@heroicons/react/24/outline"
 import { Link, useLocation } from "@remix-run/react"
 import { EDIT_PROFILE_PATH, type PathViewer } from "~/domain/member-paths"
-import {
-	AUDIENCES,
-	type Audience,
-	type ProfileShell,
-	canSee,
-	seesPart,
-} from "~/domain/profile"
+import { AUDIENCES, type Audience, type ProfileShell, canSee, seesPart } from "~/domain/profile"
 import type { HeaderMatch } from "~/server/profile/header.server"
-import { DISPLAY, WRAP } from "~/ui/my-pages/bits"
+import { WRAP } from "~/ui/my-pages/bits"
 import { TasteTabs } from "~/ui/navigation/AreaTabs"
 import { type TasteTabKey, tasteRow } from "~/ui/navigation/areas"
 import type { ShareTarget } from "./header/Controls"
@@ -31,8 +25,7 @@ import type { WhorlAttribute } from "./taste/Whorl"
  */
 export function asGuestSees(shell: ProfileShell): ProfileShell {
 	if (shell.viewer === "guest") return shell
-	const see = (part: Parameters<typeof canSee>[1]) =>
-		canSee(shell.visibility, part, "guest")
+	const see = (part: Parameters<typeof canSee>[1]) => canSee(shell.visibility, part, "guest")
 	const c = shell.counts
 	return {
 		...shell,
@@ -74,10 +67,7 @@ const partsOf = (tab: TasteTabKey) => {
 function audienceOf(shell: ProfileShell, tab: TasteTabKey): Audience {
 	return partsOf(tab)
 		.map((p) => shell.visibility[p])
-		.reduce<Audience>(
-			(a, b) => (AUDIENCES.indexOf(b) > AUDIENCES.indexOf(a) ? b : a),
-			"everyone",
-		)
+		.reduce<Audience>((a, b) => (AUDIENCES.indexOf(b) > AUDIENCES.indexOf(a) ? b : a), "everyone")
 }
 
 /** In place of the profile header for a member without a handle: the same height, and the way to pick one. */
@@ -85,25 +75,16 @@ export function HandleStrip() {
 	return (
 		<Frame ring={false} strip>
 			<div className={`${WRAP} flex h-full items-center gap-3 sm:gap-5`}>
-				<UserCircleIcon
-					className="size-11 shrink-0 text-gray-500 sm:size-16"
-					aria-hidden
-				/>
+				<UserCircleIcon className="size-11 shrink-0 text-gray-500 sm:size-16" aria-hidden />
 				<div className="min-w-0 flex-1">
-					<h1
-						className={`${DISPLAY} truncate text-xl leading-tight text-white sm:text-3xl`}
-					>
+					<h1 className="font-display font-bold truncate text-xl leading-tight text-white sm:text-3xl">
 						Your taste
 					</h1>
 					<p className="truncate text-xs text-gray-400 sm:text-sm">
 						Pick a handle to get a profile you can share.
 					</p>
 				</div>
-				<Link
-					to={EDIT_PROFILE_PATH}
-					prefetch="intent"
-					className={`${AMBER_BUTTON} shrink-0`}
-				>
+				<Link to={EDIT_PROFILE_PATH} prefetch="intent" className={`${AMBER_BUTTON} shrink-0`}>
 					Pick your handle
 				</Link>
 			</div>
@@ -219,12 +200,7 @@ function shareTargets(
 		return [profile, { name: "This list", path }]
 	const tab = tabs.find((t) => t.here)
 	// Rate more is the owner's own page: nothing there to share but the profile.
-	if (
-		!tab ||
-		tab.key === "profile" ||
-		tab.key === "rate" ||
-		!path.startsWith("/u/")
-	)
+	if (!tab || tab.key === "profile" || tab.key === "rate" || !path.startsWith("/u/"))
 		return [profile]
 	const tabPath = new URL(tab.href, "https://goodwatch.app").pathname
 	return [
@@ -242,10 +218,7 @@ function shareTargets(
 }
 
 /** The handle strip and the Taste row without a profile (/taste, Settings), for a member without a handle. */
-export function NoHandleChrome({
-	pathname,
-	search,
-}: { pathname: string; search: string }) {
+export function NoHandleChrome({ pathname, search }: { pathname: string; search: string }) {
 	const row = tasteRow({
 		pathname,
 		search,

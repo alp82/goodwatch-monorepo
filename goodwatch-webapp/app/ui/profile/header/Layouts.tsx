@@ -6,17 +6,10 @@
 // match with you, with a small percent tag on the closed orbit; without a fingerprint it is a chip next to the handle
 // (Compare.tsx).
 import { Link } from "@remix-run/react"
-import {
-	type ReactNode,
-	useEffect,
-	useId,
-	useMemo,
-	useRef,
-	useState,
-} from "react"
+import { type ReactNode, useEffect, useId, useMemo, useRef, useState } from "react"
 import type { ProfileShell } from "~/domain/profile"
 import type { HeaderMatch } from "~/server/profile/header.server"
-import { DISPLAY, WRAP } from "~/ui/my-pages/bits"
+import { WRAP } from "~/ui/my-pages/bits"
 import type { WhorlAttribute } from "../taste/Whorl"
 import { MatchChip, OrbitMatchTag, matchView } from "./Compare"
 import { ClusterControls, type ControlsProps } from "./Controls"
@@ -84,11 +77,7 @@ function FactText({ fact }: { fact: HeaderFact }) {
 	const body = (
 		<>
 			<b className="font-bold text-gray-100">{fact.value}</b>{" "}
-			{fact.key === "movies" ? (
-				<span className="max-sm:hidden">{fact.label}</span>
-			) : (
-				fact.label
-			)}
+			{fact.key === "movies" ? <span className="max-sm:hidden">{fact.label}</span> : fact.label}
 		</>
 	)
 	return fact.to ? (
@@ -136,11 +125,9 @@ function useMotion(open: boolean): {
 	return {
 		motion: open ? "open" : hover || focus || touched ? "wake" : "rest",
 		handlers: {
-			onPointerEnter: (e: React.PointerEvent) =>
-				e.pointerType === "mouse" && setHover(true),
+			onPointerEnter: (e: React.PointerEvent) => e.pointerType === "mouse" && setHover(true),
 			onPointerLeave: () => setHover(false),
-			onPointerDown: (e: React.PointerEvent) =>
-				e.pointerType !== "mouse" && setTouched(true),
+			onPointerDown: (e: React.PointerEvent) => e.pointerType !== "mouse" && setTouched(true),
 			onFocus: (e: React.FocusEvent<HTMLElement>) =>
 				setFocus(e.currentTarget.matches(":focus-visible")),
 			onBlur: () => setFocus(false),
@@ -170,15 +157,11 @@ export function InlineHeader(props: HeaderProps) {
 	useEffect(() => setOpen(false), [shell.handle])
 	const covers = open && !!facts
 
-	const ring = (
-		<OrbitRing shell={shell} print={print} motion={motion} className={RING} />
-	)
+	const ring = <OrbitRing shell={shell} print={print} motion={motion} className={RING} />
 
 	return (
 		<Frame ring={props.ring}>
-			<div
-				className={`${WRAP} relative flex h-full items-center gap-3 sm:gap-6`}
-			>
+			<div className={`${WRAP} relative flex h-full items-center gap-3 sm:gap-6`}>
 				<div className="relative flex h-full min-w-0 flex-1 items-center gap-3 sm:gap-6">
 					{facts && <PillBackground open={open} />}
 					<div className="relative z-10 shrink-0">
@@ -213,14 +196,10 @@ export function InlineHeader(props: HeaderProps) {
 						>
 							<div className="min-w-0 flex-1">
 								<div className="flex min-w-0 items-center gap-2 sm:gap-3">
-									<h1
-										className={`${DISPLAY} min-w-0 truncate text-xl leading-7 text-white sm:text-[2.125rem] sm:leading-10`}
-									>
+									<h1 className="font-display font-bold min-w-0 truncate text-xl leading-7 text-white sm:text-[2.125rem] sm:leading-10">
 										@{shell.handle}
 									</h1>
-									{match && !facts && (
-										<MatchChip handle={shell.handle} match={match} />
-									)}
+									{match && !facts && <MatchChip handle={shell.handle} match={match} />}
 								</div>
 								{props.since && (
 									<p

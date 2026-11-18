@@ -13,13 +13,9 @@ import {
 } from "~/hooks/useUserDataAccessors"
 import type { TitleSides } from "~/server/title-sides.server"
 import { TmdbImage } from "~/ui/TmdbImage"
-import {
-	TITLE_SIDES_COPY as COPY,
-	titleSidesText,
-} from "~/ui/details/hero/title-sides-copy"
+import { TITLE_SIDES_COPY as COPY, titleSidesText } from "~/ui/details/hero/title-sides-copy"
 import { titleToDashed } from "~/utils/helpers"
 
-const DISPLAY = '"Gabarito", ui-sans-serif, system-ui, sans-serif'
 const TMDB = "https://image.tmdb.org/t/p"
 
 const LOOKS = {
@@ -125,10 +121,7 @@ export function TasteCard({
 						{look === LOOKS.fits ? COPY.fits : COPY.close}
 					</p>
 					{sentence && (
-						<p
-							className="mt-0.5 text-[18px] leading-snug font-bold text-white sm:text-[20px]"
-							style={{ fontFamily: DISPLAY }}
-						>
+						<p className="mt-0.5 font-display text-[18px] leading-snug font-bold text-white sm:text-[20px]">
 							{phone ? (
 								<>
 									<span className="max-sm:hidden">{sentence}</span>

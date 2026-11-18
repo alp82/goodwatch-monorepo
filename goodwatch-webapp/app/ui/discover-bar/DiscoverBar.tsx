@@ -10,13 +10,7 @@ import { MOOD_BY_KEY } from "~/domain/moods"
 import { ServiceStack } from "~/ui/filter-bar/controls"
 import { TAP } from "~/ui/filter-bar/motion"
 import type { StreamingProvider } from "~/ui/filter-bar/useFilterData"
-import {
-	MAIN_TABS,
-	MAIN_TAB_FLEX,
-	type MainTab,
-	SEARCH_PLACEHOLDER,
-	type TabValue,
-} from "./tabs"
+import { MAIN_TABS, MAIN_TAB_FLEX, type MainTab, SEARCH_PLACEHOLDER, type TabValue } from "./tabs"
 
 /** Kept out of analytics, replays and error reports: what a person types. */
 export const PRIVATE = "search-private ph-no-capture sentry-mask"
@@ -31,10 +25,7 @@ export interface BarProviders {
 }
 
 /** A small amber count: the active choices of a tab or sub-tab. */
-export function TabBadge({
-	n,
-	size = "sm",
-}: { n: number; size?: "sm" | "md" }) {
+export function TabBadge({ n, size = "sm" }: { n: number; size?: "sm" | "md" }) {
 	if (!n) return null
 	return (
 		<span
@@ -88,28 +79,19 @@ function Lead({
 	providers: BarProviders
 	phone: boolean
 }) {
-	if (value.tab === "mood")
-		return <MoodHues value={value} size={phone ? 9 : 10} />
+	if (value.tab === "mood") return <MoodHues value={value} size={phone ? 9 : 10} />
 	if (value.tab === "watch" && value.services) {
 		const shown =
 			value.services === "mine"
 				? providers.mine
-				: providers.country.filter((p) =>
-						(value.services as number[]).includes(p.id),
-					)
+				: providers.country.filter((p) => (value.services as number[]).includes(p.id))
 		return <ServiceStack providers={shown} on size={phone ? 14 : 16} />
 	}
 	if (value.tab === "you")
 		return value.locked ? (
-			<LockClosedIcon
-				className="h-3.5 w-3.5 shrink-0 text-amber-500/70"
-				aria-hidden
-			/>
+			<LockClosedIcon className="h-3.5 w-3.5 shrink-0 text-amber-500/70" aria-hidden />
 		) : (
-			<FingerPrintIcon
-				className="h-4 w-4 shrink-0 text-amber-500"
-				aria-hidden
-			/>
+			<FingerPrintIcon className="h-4 w-4 shrink-0 text-amber-500" aria-hidden />
 		)
 	return null
 }
@@ -123,11 +105,7 @@ function ValueText({ value, phone }: { value: TabValue; phone: boolean }) {
 			? "font-semibold text-amber-200/80"
 			: "text-gray-500"
 	return (
-		<span
-			className={`truncate ${phone ? "text-[13px]" : "text-[15px]"} ${tone}`}
-		>
-			{shown}
-		</span>
+		<span className={`truncate ${phone ? "text-[13px]" : "text-[15px]"} ${tone}`}>{shown}</span>
 	)
 }
 
@@ -303,7 +281,7 @@ export function SearchInput({
 					onEscape()
 				}
 			}}
-			className={`brand-header w-full min-w-0 border-0 bg-transparent p-0 leading-tight text-white outline-none placeholder:text-gray-500 focus:ring-0 [&::-webkit-search-cancel-button]:hidden ${PRIVATE} ${size === "lg" ? "mt-0.5 text-[21px]" : "text-[19px]"}`}
+			className={`font-display font-bold w-full min-w-0 border-0 bg-transparent p-0 leading-tight text-white outline-none placeholder:text-gray-500 focus:ring-0 [&::-webkit-search-cancel-button]:hidden ${PRIVATE} ${size === "lg" ? "mt-0.5 text-[21px]" : "text-[19px]"}`}
 		/>
 	)
 }

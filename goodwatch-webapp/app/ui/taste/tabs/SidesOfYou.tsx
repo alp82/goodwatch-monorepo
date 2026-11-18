@@ -8,11 +8,7 @@ import { Link } from "@remix-run/react"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { type KeyboardEvent, type ReactNode, useRef, useState } from "react"
 import { MOOD_BY_KEY } from "~/domain/moods"
-import type {
-	PortraitTitle,
-	Side,
-	SidesView,
-} from "~/server/taste-portrait/view"
+import type { PortraitTitle, Side, SidesView } from "~/server/taste-portrait/view"
 import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
 import { ForYouLink } from "~/ui/for-you/ForYouLink"
 import { PANEL_CARD_SIZES } from "~/ui/profile/ProfileCard"
@@ -40,9 +36,7 @@ export function SidesOfYou({
 	/** A side the person picked. */
 	onOpen?: (id: string) => void
 }) {
-	const [openId, setOpenId] = useState(
-		opening ?? view.openFirst ?? view.sides[0]?.id ?? "",
-	)
+	const [openId, setOpenId] = useState(opening ?? view.openFirst ?? view.sides[0]?.id ?? "")
 	const open = (id: string) => {
 		setOpenId(id)
 		onOpen?.(id)
@@ -52,8 +46,7 @@ export function SidesOfYou({
 	const reduceMotion = useReducedMotion()
 	if (!side) return null
 	// The headline names the two sides least alike, by id.
-	const nameOf = (id: string) =>
-		view.sides.find((s) => s.id === id)?.name.toLowerCase()
+	const nameOf = (id: string) => view.sides.find((s) => s.id === id)?.name.toLowerCase()
 	const first = view.headline && nameOf(view.headline.first)
 	const second = view.headline && nameOf(view.headline.second)
 
@@ -61,21 +54,16 @@ export function SidesOfYou({
 		<>
 			<section className="mx-auto max-w-7xl px-4 pt-10 md:px-8 md:pt-14">
 				{first && second && (
-					<h1 className="max-w-4xl text-3xl font-bold leading-tight md:text-5xl">
-						You love <span className="text-amber-300">{first}</span>, and just
-						as much <span className="text-sky-300">{second}</span>.
+					<h1 className="max-w-4xl font-display font-bold text-3xl leading-tight md:text-5xl">
+						You love <span className="text-amber-300">{first}</span>, and just as much{" "}
+						<span className="text-sky-300">{second}</span>.
 					</h1>
 				)}
 				<p className="mt-3 max-w-2xl text-gray-400">
-					What you rate highly, grouped by what it shares, and close to each,
-					what you've barely tried.
+					What you rate highly, grouped by what it shares, and close to each, what you've barely
+					tried.
 				</p>
-				<SidePicker
-					sides={view.sides}
-					titles={view.titles}
-					openId={side.id}
-					onOpen={open}
-				/>
+				<SidePicker sides={view.sides} titles={view.titles} openId={side.id} onOpen={open} />
 			</section>
 
 			<AnimatePresence mode="wait" initial={false}>
@@ -92,36 +80,20 @@ export function SidesOfYou({
 				>
 					<div className="grid items-stretch gap-3 lg:grid-cols-[1fr_2.5rem_1fr]">
 						<Here side={side} titles={view.titles} />
-						<div
-							className="flex items-center justify-center text-3xl text-gray-500"
-							aria-hidden
-						>
+						<div className="flex items-center justify-center text-3xl text-gray-500" aria-hidden>
 							<span className="rotate-90 lg:rotate-0">→</span>
 						</div>
 						{side.edges.length ? (
-							<JustPastIt
-								side={side}
-								sides={view.sides}
-								titles={view.titles}
-								services={services}
-							/>
+							<JustPastIt side={side} sides={view.sides} titles={view.titles} services={services} />
 						) : (
 							<div className="flex items-center rounded-2xl border border-dashed border-gray-700 p-8 text-gray-400">
-								Nothing you've barely tried is close to {lowerFirst(side.name)}{" "}
-								yet.
+								Nothing you've barely tried is close to {lowerFirst(side.name)} yet.
 							</div>
 						)}
 					</div>
 					<SideChips side={side} className="mt-6" />
-					{side.moods.length > 0 && (
-						<InWatchNext side={side} className="mt-4" />
-					)}
-					<MoreOfThis
-						side={side}
-						view={view}
-						services={services}
-						className="mt-10"
-					/>
+					{side.moods.length > 0 && <InWatchNext side={side} className="mt-4" />}
+					<MoreOfThis side={side} view={view} services={services} className="mt-10" />
 				</motion.section>
 			</AnimatePresence>
 		</>
@@ -191,11 +163,7 @@ function SidePicker({
 						className={`flex w-60 shrink-0 cursor-pointer items-center gap-3 rounded-xl border-2 p-2 pr-4 text-left transition md:w-auto md:flex-1 ${on ? "border-amber-500 bg-amber-950/40" : "border-gray-800 bg-gray-900/40 hover:border-gray-500 hover:bg-gray-900"}`}
 					>
 						{cover?.poster && (
-							<img
-								src={posterUrl(cover, "w185")}
-								alt=""
-								className="w-10 shrink-0 rounded-md"
-							/>
+							<img src={posterUrl(cover, "w185")} alt="" className="w-10 shrink-0 rounded-md" />
 						)}
 						<span className="min-w-0">
 							<span className="block font-bold leading-tight">{s.name}</span>
@@ -238,9 +206,7 @@ function Here({ side, titles }: { side: Side; titles: Titles }) {
 		<Panel image={titlesOf(titles, [side.image])[0]} tone="amber">
 			<div>
 				<p className="text-sm font-semibold text-amber-300">You rated these</p>
-				<h2 className="mt-1 text-3xl font-bold leading-tight md:text-4xl">
-					{side.name}
-				</h2>
+				<h2 className="mt-1 text-3xl font-bold leading-tight md:text-4xl">{side.name}</h2>
 				<ForYouLink recipe={side.id} className="mt-1">
 					Recommend me from these
 				</ForYouLink>
@@ -250,12 +216,7 @@ function Here({ side, titles }: { side: Side; titles: Titles }) {
 				{titlesOf(titles, side.here)
 					.slice(0, 4)
 					.map((t) => (
-						<PortraitCard
-							key={t.key}
-							t={t}
-							posterSizes={PANEL_CARD_SIZES}
-							rated
-						/>
+						<PortraitCard key={t.key} t={t} posterSizes={PANEL_CARD_SIZES} rated />
 					))}
 			</div>
 		</Panel>
@@ -263,11 +224,7 @@ function Here({ side, titles }: { side: Side; titles: Titles }) {
 }
 
 /** An edge's suggestions: on the person's services first, then, if too few, from everywhere, so it never looks empty. */
-function edgeSuggestions(
-	titles: PortraitTitle[],
-	services: ServicesFilter,
-	n: number,
-) {
+function edgeSuggestions(titles: PortraitTitle[], services: ServicesFilter, n: number) {
 	if (!services.onlyMine) return titles.slice(0, n)
 	const mine = titles.filter(services.keep)
 	const rest = titles.filter((t) => !mine.includes(t))
@@ -294,9 +251,7 @@ function JustPastIt({
 		<Panel image={titlesOf(titles, [edge.image])[0]} tone="sky">
 			<div>
 				<div className="flex flex-wrap items-center gap-2">
-					<p className="text-sm font-semibold text-sky-300">
-						Close to your taste
-					</p>
+					<p className="text-sm font-semibold text-sky-300">Close to your taste</p>
 					{edges.length > 1 &&
 						edges.map((e) => (
 							<button
@@ -331,9 +286,7 @@ function JustPastIt({
 					))}
 				</div>
 			) : (
-				<p className="mt-6 text-sm text-gray-300">
-					Nothing from here to suggest yet.
-				</p>
+				<p className="mt-6 text-sm text-gray-300">Nothing from here to suggest yet.</p>
 			)}
 		</Panel>
 	)
@@ -365,10 +318,7 @@ function SideChips({ side, className }: { side: Side; className: string }) {
 					<span
 						className="h-2.5 w-2.5 rounded-full"
 						style={{
-							background: getFingerprintMeta(a.key).color.replace(
-								/[\d.]+\)$/,
-								"1)",
-							),
+							background: getFingerprintMeta(a.key).color.replace(/[\d.]+\)$/, "1)"),
 						}}
 					/>
 					{a.label}
@@ -391,9 +341,7 @@ function MoreOfThis({
 	services: ServicesFilter
 	className: string
 }) {
-	const shown = titlesOf(view.titles, side.moreOfThis)
-		.filter(services.keep)
-		.slice(0, MORE_OF_THIS)
+	const shown = titlesOf(view.titles, side.moreOfThis).filter(services.keep).slice(0, MORE_OF_THIS)
 	return (
 		<div className={className}>
 			<div className="mb-4 flex flex-wrap items-end justify-between gap-3">

@@ -2,27 +2,15 @@ import { HERO_TIMING, START_AFTER_PAINT } from "~/utils/start-after-paint"
 import { imageLoadingProps } from "~/utils/tmdb-image"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { requireCategoryPage } from "~/server/category-page.server"
-import {
-	type LoaderFunction,
-	type LoaderFunctionArgs,
-	type MetaFunction,
-} from "@remix-run/node"
+import { type LoaderFunction, type LoaderFunctionArgs, type MetaFunction } from "@remix-run/node"
 import { Link, useLoaderData } from "@remix-run/react"
 import React from "react"
 import type { GetDiscoverResult } from "~/routes/api.discover"
-import {
-	type DiscoverParams,
-	getDiscoverResults,
-} from "~/server/discover.server"
+import { type DiscoverParams, getDiscoverResults } from "~/server/discover.server"
 import FAQ from "~/ui/explore/FAQ"
 import MovieTvGrid from "~/ui/explore/MovieTvGrid"
 import { exploreAddressExists, notFound } from "~/ui/explore/address"
-import {
-	type NavType,
-	type PageData,
-	defaultDiscoverParams,
-	navLabel,
-} from "~/ui/explore/config"
+import { type NavType, type PageData, defaultDiscoverParams, navLabel } from "~/ui/explore/config"
 import { mainHierarchy, mainNavigation } from "~/ui/explore/main-nav"
 import { explorePageCopy } from "~/ui/explore/page-copy"
 import { DidntWatchCheckbox } from "~/ui/filter/explore/DidntWatchCheckbox"
@@ -30,13 +18,7 @@ import { MyStreamingCheckbox } from "~/ui/filter/explore/MyStreamingCheckbox"
 import Breadcrumbs from "~/ui/nav/Breadcrumbs"
 import { categoryCrumbs } from "~/ui/nav/breadcrumb-trail"
 import { buildDiscoverParams } from "~/utils/discover"
-import {
-	type PageItem,
-	type PageMeta,
-	buildMeta,
-	pagedUrl,
-	plainPageMeta,
-} from "~/utils/meta"
+import { type PageItem, type PageMeta, buildMeta, pagedUrl, plainPageMeta } from "~/utils/meta"
 import { useNav } from "~/utils/navigation"
 import { convertHyphensToWords } from "~/utils/string"
 import { jsonToUrlString } from "~/utils/url"
@@ -56,10 +38,7 @@ export const meta: MetaFunction = ({ params, location }) => {
 		title: `${convertHyphensToWords(page)} ${typeLabel}: Where to Stream Them | ${convertHyphensToWords(category)} | GoodWatch`,
 		description: `Discover the best ${pageData.label} ${typeLabel} to watch right now. ${pageData.subtitle}: ${pageData.description}`,
 		// A later page lists other titles, so it is its own address and not a copy of the first.
-		url: pagedUrl(
-			`https://goodwatch.app/${type}/${category}/${page}`,
-			location.search,
-		),
+		url: pagedUrl(`https://goodwatch.app/${type}/${category}/${page}`, location.search),
 		image: `https://goodwatch.app/images/heroes/hero-${type}.png`,
 		alt: `${convertHyphensToWords(page)} ${typeLabel} on GoodWatch`,
 	}
@@ -81,10 +60,7 @@ interface LoaderData {
 	discoverParams: DiscoverParams
 }
 
-const canonicalLoader: LoaderFunction = async ({
-	params,
-	request,
-}: LoaderFunctionArgs) => {
+const canonicalLoader: LoaderFunction = async ({ params, request }: LoaderFunctionArgs) => {
 	// url input validation
 	const type = params.type || ""
 	const category = params.category || ""
@@ -132,11 +108,7 @@ export default function MoviesCategoryPage() {
 		useLoaderData<LoaderData>()
 
 	const discoverType = type === "movies" ? "movies" : "shows"
-	const copy = explorePageCopy(
-		type,
-		category as keyof typeof mainHierarchy,
-		pageData,
-	)
+	const copy = explorePageCopy(type, category as keyof typeof mainHierarchy, pageData)
 
 	const { currentParams, updateQueryParams } =
 		useNav<
@@ -167,9 +139,7 @@ export default function MoviesCategoryPage() {
 			<Breadcrumbs path={path} label={pageData.label} />
 
 			<div className="max-w-7xl mx-auto p-4 flex flex-col gap-4">
-				<div
-					className="relative py-8 px-4 rounded-lg before:z-10 before:bg-black/70 before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0"
-				>
+				<div className="relative py-8 px-4 rounded-lg before:z-10 before:bg-black/70 before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0">
 					<img
 						src={`https://image.tmdb.org/t/p/w1280/${pageData.backdrop_path}`}
 						alt=""
@@ -178,12 +148,10 @@ export default function MoviesCategoryPage() {
 						className="absolute inset-0 w-full h-full object-cover object-top rounded-lg"
 					/>
 					<div className="relative m-auto ow-full max-w-7xl z-20">
-						<h1 className="mb-4 text-4xl md:text-6xl font-extrabold text-gray-300">
+						<h1 className="mb-4 font-display font-bold text-4xl text-gray-300 md:text-6xl">
 							{copy.heading}
 						</h1>
-						<div className="text-2xl md:text-3xl font-bold text-gray-100">
-							{pageData.subtitle}
-						</div>
+						<div className="text-2xl md:text-3xl font-bold text-gray-100">{pageData.subtitle}</div>
 						<p className="text-lg text-gray-300">{copy.intro}</p>
 						<div className="mt-8 flex items-center justify-between gap-8 flex-wrap">
 							<div className="flex gap-2 flex-wrap">

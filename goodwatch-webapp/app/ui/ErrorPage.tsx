@@ -10,8 +10,7 @@ import {
 import { Link, isRouteErrorResponse } from "@remix-run/react"
 import { useNavigation } from "~/ui/navigation/NavigationContext"
 
-const BUTTON =
-	"flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold"
+const BUTTON = "flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold"
 const PRIMARY = `${BUTTON} bg-amber-400 text-black hover:bg-amber-300`
 const SECONDARY = `${BUTTON} bg-white/[0.07] text-gray-100 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)] hover:bg-white/[0.1]`
 
@@ -33,21 +32,15 @@ export function errorPageProps(error: unknown): {
  * @param status the response's status; 404 for an address that names no page, anything else is a failure.
  * @param detail what a developer needs, shown in development builds only.
  */
-export function ErrorPage({
-	status,
-	detail,
-}: {
-	status: number
-	detail?: string
-}) {
+export function ErrorPage({ status, detail }: { status: number; detail?: string }) {
 	const { setSearchOpen } = useNavigation()
 	const notFound = status === 404
 	return (
 		<div className="relative mx-auto flex w-full max-w-xl flex-col items-center justify-center px-4 py-16 text-center text-neutral-300">
-			<p className="brand-header text-7xl leading-none text-amber-400 sm:text-8xl">
+			<p className="font-display font-bold text-7xl leading-none text-amber-400 sm:text-8xl">
 				{status}
 			</p>
-			<h1 className="mt-5 text-3xl font-bold text-gray-100 sm:text-4xl">
+			<h1 className="mt-5 font-display font-bold text-3xl text-gray-100 sm:text-4xl">
 				{notFound ? "Page not found" : "Something went wrong"}
 			</h1>
 			<p className="mt-3 text-base text-gray-400">
@@ -62,11 +55,7 @@ export function ErrorPage({
 						Home
 					</Link>
 				) : (
-					<button
-						type="button"
-						className={PRIMARY}
-						onClick={() => window.location.reload()}
-					>
+					<button type="button" className={PRIMARY} onClick={() => window.location.reload()}>
 						<ArrowPathIcon className="h-[18px] w-[18px]" aria-hidden />
 						Try again
 					</button>
@@ -81,11 +70,7 @@ export function ErrorPage({
 					<SparklesIcon className="h-[18px] w-[18px]" aria-hidden />
 					Discover
 				</Link>
-				<button
-					type="button"
-					className={SECONDARY}
-					onClick={() => setSearchOpen(true)}
-				>
+				<button type="button" className={SECONDARY} onClick={() => setSearchOpen(true)}>
 					<MagnifyingGlassIcon className="h-[18px] w-[18px]" aria-hidden />
 					Search
 				</button>
@@ -96,13 +81,7 @@ export function ErrorPage({
 }
 
 /** What went wrong, for development builds. Root's boundary shows it under the error page it already drew. */
-export function ErrorDetail({
-	detail,
-	className = "",
-}: {
-	detail: string
-	className?: string
-}) {
+export function ErrorDetail({ detail, className = "" }: { detail: string; className?: string }) {
 	return (
 		<pre
 			className={`max-h-48 w-full overflow-auto rounded-xl bg-gray-950 p-4 text-left text-xs text-gray-400 whitespace-pre-wrap break-words ${className}`}

@@ -1,6 +1,12 @@
 // The pieces of the account pages (#534, #550): the poster scene, fields, buttons and notices, styled like the
 // scene's card from the poster spotlight redesign.
-import { CheckCircleIcon, ExclamationTriangleIcon, EyeIcon, EyeSlashIcon, InformationCircleIcon } from "@heroicons/react/24/solid"
+import {
+	CheckCircleIcon,
+	ExclamationTriangleIcon,
+	EyeIcon,
+	EyeSlashIcon,
+	InformationCircleIcon,
+} from "@heroicons/react/24/solid"
 import { ArrowLeftIcon, WrenchScrewdriverIcon } from "@heroicons/react/24/outline"
 import { Link, useMatches } from "@remix-run/react"
 import { type ReactNode, useEffect, useState } from "react"
@@ -23,7 +29,17 @@ export function AuthSplit({ children, aside }: { children: ReactNode; aside?: Re
 }
 
 /** The page's heading. `srOnly` keeps it for screen readers and search engines where the wordmark heads the card. */
-export function Heading({ title, sub, icon, srOnly }: { title: string; sub?: ReactNode; icon?: ReactNode; srOnly?: boolean }) {
+export function Heading({
+	title,
+	sub,
+	icon,
+	srOnly,
+}: {
+	title: string
+	sub?: ReactNode
+	icon?: ReactNode
+	srOnly?: boolean
+}) {
 	if (srOnly)
 		return (
 			<div className="sr-only">
@@ -33,8 +49,12 @@ export function Heading({ title, sub, icon, srOnly }: { title: string; sub?: Rea
 		)
 	return (
 		<div className="text-center">
-			{icon && <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white/[0.06] ring-1 ring-white/10">{icon}</div>}
-			<h1 className="mb-2 text-2xl font-bold text-white">{title}</h1>
+			{icon && (
+				<div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white/[0.06] ring-1 ring-white/10">
+					{icon}
+				</div>
+			)}
+			<h1 className="mb-2 font-display font-bold text-2xl text-white">{title}</h1>
 			{sub && <p className="text-gray-400">{sub}</p>}
 		</div>
 	)
@@ -141,7 +161,9 @@ export function PasswordField({
 export function PasswordRule({ password }: { password: string }) {
 	const ok = password.length >= PASSWORD_MIN
 	return (
-		<p className={`mt-2 flex items-center gap-1.5 text-sm ${ok ? "text-emerald-400" : "text-gray-400"}`}>
+		<p
+			className={`mt-2 flex items-center gap-1.5 text-sm ${ok ? "text-emerald-400" : "text-gray-400"}`}
+		>
 			<CheckCircleIcon className={`h-4 w-4 ${ok ? "" : "opacity-40"}`} />
 			At least {PASSWORD_MIN} characters
 		</p>
@@ -150,7 +172,17 @@ export function PasswordRule({ password }: { password: string }) {
 
 export { PrimaryButton } from "./PrimaryButton"
 
-export function SecondaryButton({ children, onClick, busy, disabled }: { children: ReactNode; onClick?: () => void; busy?: boolean; disabled?: boolean }) {
+export function SecondaryButton({
+	children,
+	onClick,
+	busy,
+	disabled,
+}: {
+	children: ReactNode
+	onClick?: () => void
+	busy?: boolean
+	disabled?: boolean
+}) {
 	return (
 		<button
 			type="button"
@@ -166,10 +198,22 @@ export function SecondaryButton({ children, onClick, busy, disabled }: { childre
 
 export const googleMark = (
 	<svg viewBox="0 0 48 48" width="22" height="22" aria-hidden="true">
-		<path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
-		<path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" />
-		<path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z" />
-		<path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z" />
+		<path
+			fill="#FFC107"
+			d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"
+		/>
+		<path
+			fill="#FF3D00"
+			d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"
+		/>
+		<path
+			fill="#4CAF50"
+			d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"
+		/>
+		<path
+			fill="#1976D2"
+			d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"
+		/>
 	</svg>
 )
 
@@ -199,15 +243,36 @@ export function OrDivider({ text = "or with email" }: { text?: string }) {
 }
 
 const NOTICE_TONES = {
-	info: { box: "border-sky-700 bg-sky-950/60 text-sky-100", icon: <InformationCircleIcon className="h-5 w-5 shrink-0 text-sky-400" /> },
-	warn: { box: "border-amber-700 bg-amber-950/50 text-amber-100", icon: <ExclamationTriangleIcon className="h-5 w-5 shrink-0 text-amber-400" /> },
-	error: { box: "border-red-700 bg-red-950/50 text-red-100", icon: <ExclamationTriangleIcon className="h-5 w-5 shrink-0 text-red-400" /> },
-	ok: { box: "border-emerald-700 bg-emerald-950/50 text-emerald-100", icon: <CheckCircleIcon className="h-5 w-5 shrink-0 text-emerald-400" /> },
+	info: {
+		box: "border-sky-700 bg-sky-950/60 text-sky-100",
+		icon: <InformationCircleIcon className="h-5 w-5 shrink-0 text-sky-400" />,
+	},
+	warn: {
+		box: "border-amber-700 bg-amber-950/50 text-amber-100",
+		icon: <ExclamationTriangleIcon className="h-5 w-5 shrink-0 text-amber-400" />,
+	},
+	error: {
+		box: "border-red-700 bg-red-950/50 text-red-100",
+		icon: <ExclamationTriangleIcon className="h-5 w-5 shrink-0 text-red-400" />,
+	},
+	ok: {
+		box: "border-emerald-700 bg-emerald-950/50 text-emerald-100",
+		icon: <CheckCircleIcon className="h-5 w-5 shrink-0 text-emerald-400" />,
+	},
 }
 
-export function Notice({ tone, children }: { tone: keyof typeof NOTICE_TONES; children: ReactNode }) {
+export function Notice({
+	tone,
+	children,
+}: {
+	tone: keyof typeof NOTICE_TONES
+	children: ReactNode
+}) {
 	return (
-		<div role={tone === "error" ? "alert" : "status"} className={`flex gap-3 rounded-xl border p-4 text-sm leading-relaxed ${NOTICE_TONES[tone].box}`}>
+		<div
+			role={tone === "error" ? "alert" : "status"}
+			className={`flex gap-3 rounded-xl border p-4 text-sm leading-relaxed ${NOTICE_TONES[tone].box}`}
+		>
 			{NOTICE_TONES[tone].icon}
 			<div className="min-w-0 flex-1">{children}</div>
 		</div>
@@ -228,7 +293,11 @@ export function MaintenanceMessage() {
 export function MaintenanceCard() {
 	return (
 		<AuthSplit>
-			<Heading icon={<WrenchScrewdriverIcon className="h-7 w-7 text-amber-400" />} title={MAINTENANCE_TITLE} sub={MAINTENANCE_SUB} />
+			<Heading
+				icon={<WrenchScrewdriverIcon className="h-7 w-7 text-amber-400" />}
+				title={MAINTENANCE_TITLE}
+				sub={MAINTENANCE_SUB}
+			/>
 			<Link to="/" className={AUTH_SUBMIT_CLASS}>
 				Keep browsing
 			</Link>
@@ -239,14 +308,26 @@ export function MaintenanceCard() {
 /** The notice for a request the server turned away for being too many or for being down. */
 export function ServiceNotice({ failure }: { failure: AuthFailure | null }) {
 	if (failure === "maintenance") return <MaintenanceMessage />
-	if (failure === "throttled") return <Notice tone="warn">Too many tries in a row. Wait a few minutes, then try again.</Notice>
-	if (failure === "unavailable") return <Notice tone="error">Sign-in isn't working right now. Try again in a few minutes.</Notice>
+	if (failure === "throttled")
+		return <Notice tone="warn">Too many tries in a row. Wait a few minutes, then try again.</Notice>
+	if (failure === "unavailable")
+		return (
+			<Notice tone="error">Sign-in isn't working right now. Try again in a few minutes.</Notice>
+		)
 	return null
 }
 
 export const textLink = "cursor-pointer font-medium text-amber-500 hover:text-amber-400"
 
-export function TextLink({ to, children, replace }: { to: string; children: ReactNode; replace?: boolean }) {
+export function TextLink({
+	to,
+	children,
+	replace,
+}: {
+	to: string
+	children: ReactNode
+	replace?: boolean
+}) {
 	return (
 		<Link to={to} replace={replace} rel="nofollow" className={textLink}>
 			{children}
@@ -256,7 +337,11 @@ export function TextLink({ to, children, replace }: { to: string; children: Reac
 
 export function BackToSignIn() {
 	return (
-		<Link to="/sign-in" rel="nofollow" className="mx-auto flex items-center gap-1.5 text-sm text-gray-400 hover:text-white">
+		<Link
+			to="/sign-in"
+			rel="nofollow"
+			className="mx-auto flex items-center gap-1.5 text-sm text-gray-400 hover:text-white"
+		>
 			<ArrowLeftIcon className="h-4 w-4" /> Back to sign in
 		</Link>
 	)

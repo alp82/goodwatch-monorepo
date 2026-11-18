@@ -47,9 +47,9 @@
 }
 .hx-head h1 {
 	margin-top: 0.25rem;
-	font-family: var(--hx-font);
+	font-family: var(--font-display);
 	font-size: clamp(2rem, 6vw, 3.25rem);
-	font-weight: 800;
+	font-weight: 700;
 	line-height: 1;
 	color: #fff;
 }

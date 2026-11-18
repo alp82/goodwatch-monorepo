@@ -13,10 +13,7 @@ import {
 	inCountry,
 	waitedWords,
 } from "~/domain/new-on-services"
-import type {
-	NewPageData,
-	NewTitle,
-} from "~/server/new-on-services-page.server"
+import type { NewPageData, NewTitle } from "~/server/new-on-services-page.server"
 import { TmdbImage } from "~/ui/TmdbImage"
 import ShareButton from "~/ui/button/ShareButton"
 import { DISPLAY, WRAP } from "~/ui/my-pages/bits"
@@ -29,8 +26,7 @@ import { Flag, Logo, PosterImage, PosterRow, RankedRow, Sub } from "./parts"
 /** The page's trail, for the BreadcrumbList. */
 export function crumbsOf(data: NewPageData): Crumb[] {
 	const home = { label: "Home", path: "/" }
-	if (data.kind === "member")
-		return [home, { label: "New on your services", path: "/new" }]
+	if (data.kind === "member") return [home, { label: "New on your services", path: "/new" }]
 	const country = {
 		label: `New ${inCountry(data.country.name)}`,
 		path: countryPath(data.country.code),
@@ -43,8 +39,7 @@ export function crumbsOf(data: NewPageData): Crumb[] {
 /** What a member waited for, in the place of the heading. */
 function Waited({ data }: { data: NewPageData }) {
 	const [first, ...others] = data.waited
-	const name = (title: NewTitle) =>
-		data.services[title.service]?.name ?? "your services"
+	const name = (title: NewTitle) => data.services[title.service]?.name ?? "your services"
 	const words = waitedWords(first, first.wait, name(first), data.now)
 	return (
 		<div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-end">
@@ -53,7 +48,7 @@ function Waited({ data }: { data: NewPageData }) {
 					<span className="h-2 w-2 rounded-full bg-sky-400" aria-hidden />
 					<span>New on your services</span>
 				</p>
-				<h1 className={`${DISPLAY} mt-1 text-4xl text-white md:text-6xl`}>
+				<h1 className="mt-1 font-display font-bold text-4xl text-white md:text-6xl">
 					{first.title} is now on {name(first)}
 				</h1>
 				<p className="mt-2 text-base text-gray-200">
@@ -90,9 +85,7 @@ function Waited({ data }: { data: NewPageData }) {
 										className="h-14 w-[38px] shrink-0 rounded bg-white/5 object-cover"
 									/>
 									<span className="min-w-0 flex-1">
-										<b className="block truncate text-sm text-white">
-											{title.title}
-										</b>
+										<b className="block truncate text-sm text-white">{title.title}</b>
 										<span className="block truncate text-xs text-sky-200">
 											{waitedWords(title, title.wait, name(title), data.now).landed}
 										</span>
@@ -120,10 +113,7 @@ function HowLine({ data }: { data: NewPageData }) {
 		<div className="-mt-2 flex flex-wrap items-center gap-x-2 gap-y-3 text-base text-gray-200">
 			{/* A little more room after the button than between the words. */}
 			<span className="mr-1.5 flex">
-				<CountryChooser
-					choices={data.countryChoices}
-					current={data.country}
-				/>
+				<CountryChooser choices={data.countryChoices} current={data.country} />
 			</span>
 			<span>
 				{mine ? `${mine} ${inCountry(data.country.name)}. ` : ""}
@@ -142,8 +132,7 @@ function HowLine({ data }: { data: NewPageData }) {
 	)
 }
 
-const KEY =
-	"flex h-10 items-center rounded-xl text-sm font-bold ring-1 transition-colors"
+const KEY = "flex h-10 items-center rounded-xl text-sm font-bold ring-1 transition-colors"
 const KEY_ON = "bg-white text-black ring-white"
 const KEY_OFF = "bg-gray-950/60 text-gray-200 ring-white/15 hover:ring-white/40"
 
@@ -199,8 +188,8 @@ function Nothing({ data }: { data: NewPageData }) {
 					Save your services to see what's new on them
 				</h2>
 				<p className="mt-1 max-w-xl text-sm text-gray-400">
-					Pick the streaming services you have, and this page lists what
-					arrived on them in the last 14 days.
+					Pick the streaming services you have, and this page lists what arrived on them in the last
+					14 days.
 				</p>
 				<Link
 					to="/settings/services"
@@ -211,14 +200,12 @@ function Nothing({ data }: { data: NewPageData }) {
 				</Link>
 			</div>
 		)
-	const on =
-		data.kind === "service" && data.brand ? data.brand.name : "these services"
+	const on = data.kind === "service" && data.brand ? data.brand.name : "these services"
 	return (
 		<div className="rounded-2xl border border-dashed border-white/15 p-6">
 			<h2 className={`${DISPLAY} text-2xl text-white`}>{data.copy.tally}</h2>
 			<p className="mt-1 max-w-xl text-sm text-gray-400">
-				GoodWatch found no new movie or show on{" "}
-				{data.kind === "member" ? "your services" : on}{" "}
+				GoodWatch found no new movie or show on {data.kind === "member" ? "your services" : on}{" "}
 				{inCountry(data.country.name)} in that time.
 				{data.kind === "member" &&
 					" When a title you want to see lands, My movies and My shows tell you."}
@@ -238,9 +225,7 @@ function Nothing({ data }: { data: NewPageData }) {
 
 function Ranked({ data }: { data: NewPageData }) {
 	const where =
-		data.kind === "member"
-			? "on your services"
-			: `on ${data.brand ? data.brand.name : "streaming"}`
+		data.kind === "member" ? "on your services" : `on ${data.brand ? data.brand.name : "streaming"}`
 	const heading =
 		data.total > data.ranked.length
 			? `The ${data.ranked.length} best new arrivals`
@@ -257,13 +242,7 @@ function Ranked({ data }: { data: NewPageData }) {
 			</Sub>
 			<ol className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-x-10 lg:grid-flow-col lg:grid-cols-[repeat(2,minmax(0,1fr))] lg:grid-rows-5">
 				{data.ranked.map((title, index) => (
-					<RankedRow
-						key={title.key}
-						title={title}
-						rank={index + 1}
-						data={data}
-						eager={index < 4}
-					/>
+					<RankedRow key={title.key} title={title} rank={index + 1} data={data} eager={index < 4} />
 				))}
 			</ol>
 		</section>
@@ -345,12 +324,8 @@ export function NewOnServicesPage({ data }: { data: NewPageData }) {
 						<Waited data={data} />
 					) : (
 						<div className="flex items-start justify-between gap-4">
-							<h1
-								className={`${DISPLAY} flex flex-wrap items-center gap-x-4 gap-y-2 text-5xl text-white md:text-7xl`}
-							>
-								{brand && (
-									<Logo service={brand} size={56} className="rounded-2xl" />
-								)}
+							<h1 className="font-display font-bold flex flex-wrap items-center gap-x-4 gap-y-2 text-5xl text-white md:text-7xl">
+								{brand && <Logo service={brand} size={56} className="rounded-2xl" />}
 								{data.copy.heading}
 							</h1>
 							{data.share && (
@@ -372,9 +347,7 @@ export function NewOnServicesPage({ data }: { data: NewPageData }) {
 							<ChevronRightIcon className="h-4 w-4" aria-hidden />
 						</Link>
 					)}
-					{(data.kind !== "member" ||
-						data.keys.length > 0 ||
-						data.member?.hasServices) && (
+					{(data.kind !== "member" || data.keys.length > 0 || data.member?.hasServices) && (
 						<ServiceKeys data={data} />
 					)}
 				</div>

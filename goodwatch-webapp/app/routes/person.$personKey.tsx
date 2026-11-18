@@ -1,39 +1,16 @@
-import {
-	ArrowDownIcon,
-	ArrowUpIcon,
-	ChevronDownIcon,
-} from "@heroicons/react/20/solid"
+import { ArrowDownIcon, ArrowUpIcon, ChevronDownIcon } from "@heroicons/react/20/solid"
 // Cast and crew page: who the person is, what their work feels like compared with the
 // catalog, who they work with, and all their titles, filtered and grouped on the server.
 // Links to titles and people are server-rendered <a href>. Filter actions stay buttons after hydration, so they
 // never advertise a graph of combinations. The browser gate normalizes and budgets requests before this route.
 // The type filter is the site's shared control and goes to the filtered URL.
-import {
-	FilmIcon,
-	StarIcon,
-	TvIcon,
-	VideoCameraIcon,
-} from "@heroicons/react/24/solid"
-import {
-	type LoaderFunctionArgs,
-	type MetaFunction,
-	json,
-	redirect,
-} from "@remix-run/node"
-import {
-	Link,
-	useLoaderData,
-	useNavigate,
-	useSearchParams,
-} from "@remix-run/react"
+import { FilmIcon, StarIcon, TvIcon, VideoCameraIcon } from "@heroicons/react/24/solid"
+import { type LoaderFunctionArgs, type MetaFunction, json, redirect } from "@remix-run/node"
+import { Link, useLoaderData, useNavigate, useSearchParams } from "@remix-run/react"
 import type React from "react"
 import { useMemo } from "react"
 import { personMetaText, titleCounts } from "~/domain/person-meta"
-import {
-	type TitleTypeFilter,
-	isAllTitleTypes,
-	titleTypeParams,
-} from "~/domain/title-type"
+import { type TitleTypeFilter, isAllTitleTypes, titleTypeParams } from "~/domain/title-type"
 import { cachedClientLoader } from "~/navigation/instant-navigation"
 import {
 	countCrawlerTurnedAway,
@@ -57,10 +34,7 @@ import {
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import { TmdbImage } from "~/ui/TmdbImage"
 import { whiteMark } from "~/ui/brand/white-mark"
-import {
-	type PersonSubject,
-	usePublishFeedbackSubject,
-} from "~/ui/feedback/subject"
+import { type PersonSubject, usePublishFeedbackSubject } from "~/ui/feedback/subject"
 import { FINGERPRINT_META } from "~/ui/fingerprint/fingerprintMeta"
 import MediaText from "~/ui/media-text/MediaText"
 import { presentedText } from "~/ui/media-text/media-text"
@@ -115,10 +89,7 @@ async function canonicalLoader({ params, request }: LoaderFunctionArgs) {
 	if (url.pathname !== canonical) return redirect(canonical + url.search, 301)
 
 	const filters = parseGridFilters(url.searchParams)
-	const { items, facets, ofAnyType } = applyGridFilters(
-		profile.credits,
-		filters,
-	)
+	const { items, facets, ofAnyType } = applyGridFilters(profile.credits, filters)
 	const slim = ({ fingerprint, essence_tags, genres, ...c }: PersonCredit) => c
 	const groups = groupTitles(items, filters, PER_GROUP).map((g) => ({
 		...g,
@@ -219,10 +190,7 @@ function useFeedbackPerson(data: Data) {
 	const subject = useMemo<PersonSubject>(() => {
 		const p = data.profile
 		const seen = new Set<string>()
-		const credits = [
-			...data.knownFor,
-			...data.groups.flatMap((g: { items: Credit[] }) => g.items),
-		]
+		const credits = [...data.knownFor, ...data.groups.flatMap((g: { items: Credit[] }) => g.items)]
 			.filter((c) => {
 				const key = `${c.media_type}:${c.tmdb_id}`
 				if (seen.has(key)) return false
@@ -231,8 +199,7 @@ function useFeedbackPerson(data: Data) {
 			})
 			.map((c) => ({
 				tmdbId: c.tmdb_id,
-				mediaType:
-					c.media_type === "show" ? ("tv" as const) : ("movie" as const),
+				mediaType: c.media_type === "show" ? ("tv" as const) : ("movie" as const),
 				title: c.title,
 				year: c.release_year ? String(c.release_year) : null,
 				role: subtitle(c),
@@ -287,10 +254,7 @@ export default function PersonPage() {
 					</Section>
 				)}
 				<GenresAndTags data={data} />
-				<Section
-					title="Works often with"
-					note="People in at least two of their main titles."
-				>
+				<Section title="Works often with" note="People in at least two of their main titles.">
 					<CollaboratorCards data={data} />
 				</Section>
 				<Titles data={data} />
@@ -301,8 +265,7 @@ export default function PersonPage() {
 
 // --- Shared helpers ---
 
-const traitLabel = (key: string) =>
-	FINGERPRINT_META[key]?.label ?? key.replace(/_/g, " ")
+const traitLabel = (key: string) => FINGERPRINT_META[key]?.label ?? key.replace(/_/g, " ")
 const traitEmoji = (key: string) => FINGERPRINT_META[key]?.emoji ?? ""
 const titleHref = (c: { media_type: string; tmdb_id: number; title: string }) =>
 	`/${c.media_type}/${c.tmdb_id}-${titleToDashed(canonicalMediaTitle(c))}`
@@ -329,10 +292,7 @@ const FILTER_PARAMS = [
 /** Builds a link to this page with some filters changed; `null` removes a filter. */
 function useFilterHref() {
 	const [params] = useSearchParams()
-	return (
-		patch: Partial<Record<keyof GridFilters, string | null>>,
-		hash = "",
-	) => {
+	return (patch: Partial<Record<keyof GridFilters, string | null>>, hash = "") => {
 		const next = new URLSearchParams()
 		for (const name of FILTER_PARAMS) {
 			const value = params.get(name)
@@ -452,7 +412,7 @@ function Hero({ data, children }: { data: Data; children?: React.ReactNode }) {
 								{p.known_for_department}
 							</p>
 						)}
-						<h1 className="text-4xl font-black sm:text-6xl">{p.name}</h1>
+						<h1 className="font-display font-bold text-4xl sm:text-6xl">{p.name}</h1>
 					</div>
 				</div>
 				{children}
@@ -464,10 +424,7 @@ function Hero({ data, children }: { data: Data; children?: React.ReactNode }) {
 // --- Header facts: each fact gets a presentation that fits it ---
 
 /** The GoodWatch score treatment from RatingBadges: logo on a vibe-colored disc, vibe-colored number. */
-function GoodWatchScore({
-	score,
-	size = "md",
-}: { score: number; size?: "sm" | "md" }) {
+function GoodWatchScore({ score, size = "md" }: { score: number; size?: "sm" | "md" }) {
 	const v = goodwatchVibeIndex(score)
 	return (
 		<span className="inline-flex items-center gap-2">
@@ -477,9 +434,7 @@ function GoodWatchScore({
 				alt="GoodWatch score"
 			/>
 			<span>
-				<span
-					className={`font-semibold text-vibe-${v} ${size === "sm" ? "text-lg" : "text-2xl"}`}
-				>
+				<span className={`font-semibold text-vibe-${v} ${size === "sm" ? "text-lg" : "text-2xl"}`}>
 					{goodwatchScoreDisplay(score)}
 				</span>
 				<span className="text-sm text-gray-300">/100</span>
@@ -496,8 +451,7 @@ function careerSummary(stats: Stats): string | null {
 	const { firstYear: first, lastYear: last, perYear } = stats
 	if (!first || !last || !perYear.length) return null
 	const titles = (n: number) => pluralize(n, "main title")
-	if (first === last)
-		return `Active in ${first} with ${titles(perYear[0].count)}.`
+	if (first === last) return `Active in ${first} with ${titles(perYear[0].count)}.`
 
 	const max = Math.max(...perYear.map((p) => p.count))
 	const peaks = perYear.filter((p) => p.count === max).map((p) => p.year)
@@ -513,8 +467,7 @@ function careerSummary(stats: Stats): string | null {
 	for (let i = 1; i < perYear.length; i++) {
 		const from = perYear[i - 1].year + 1
 		const to = perYear[i].year - 1
-		if (to - from + 1 >= 10 && (!gap || to - from > gap[1] - gap[0]))
-			gap = [from, to]
+		if (to - from + 1 >= 10 && (!gap || to - from > gap[1] - gap[0])) gap = [from, to]
 	}
 	const pause = gap ? `, with a break from ${gap[0]} to ${gap[1]}` : ""
 	return `Active from ${first} to ${last}${pause}, ${busiest}.`
@@ -528,10 +481,7 @@ function CareerSparkline({ stats }: { stats: Stats }) {
 	const first = stats.firstYear
 	if (!first || !stats.lastYear) return null
 	const counts = new Map(stats.perYear.map((p) => [p.year, p.count]))
-	const years = Array.from(
-		{ length: stats.lastYear - first + 1 },
-		(_, i) => first + i,
-	)
+	const years = Array.from({ length: stats.lastYear - first + 1 }, (_, i) => first + i)
 	const max = Math.max(...stats.perYear.map((p) => p.count))
 	const w = 4
 	const gap = 1
@@ -567,7 +517,11 @@ function Fact({
 	label,
 	children,
 	href,
-}: { label: string; children: React.ReactNode; href?: string }) {
+}: {
+	label: string
+	children: React.ReactNode
+	href?: string
+}) {
 	const body = (
 		<>
 			<dt className="text-xs uppercase tracking-wide text-gray-400">{label}</dt>
@@ -579,10 +533,7 @@ function Fact({
 			<dl>{body}</dl>
 		</Link>
 	) : href ? (
-		<PersonFilterButton
-			to={href}
-			className="block rounded-lg px-4 py-3 hover:bg-white/5"
-		>
+		<PersonFilterButton to={href} className="block rounded-lg px-4 py-3 hover:bg-white/5">
 			<dl>{body}</dl>
 		</PersonFilterButton>
 	) : (
@@ -616,9 +567,7 @@ function Facts({ data }: { data: Data }) {
 					))}
 				</div>
 				<div className="text-xs text-gray-400" aria-hidden>
-					{kinds
-						.map(({ n, one, many }) => (n === 1 ? one : many))
-						.join(" and ")}
+					{kinds.map(({ n, one, many }) => (n === 1 ? one : many)).join(" and ")}
 				</div>
 			</Fact>
 			<Fact label="Career">
@@ -630,9 +579,7 @@ function Facts({ data }: { data: Data }) {
 					<span>{s.firstYear}</span>
 					<span>{s.lastYear}</span>
 				</div>
-				{career && (
-					<p className="mt-1 max-w-48 text-xs text-gray-300">{career}</p>
-				)}
+				{career && <p className="mt-1 max-w-48 text-xs text-gray-300">{career}</p>}
 			</Fact>
 			<Fact
 				label={director ? "Directed" : "Leading roles"}
@@ -649,9 +596,7 @@ function Facts({ data }: { data: Data }) {
 					</span>
 				</div>
 				<div className="text-xs text-gray-400">
-					{director
-						? `${s.directed === 1 ? "title" : "titles"} as director`
-						: "top three billing"}
+					{director ? `${s.directed === 1 ? "title" : "titles"} as director` : "top three billing"}
 				</div>
 			</Fact>
 			<Fact label="Average score">
@@ -675,9 +620,7 @@ function Facts({ data }: { data: Data }) {
 						)}
 						<div className="min-w-0">
 							<div className="truncate text-sm font-semibold">
-								<MediaText
-									value={presentedText(s.best, "title", s.best.title)}
-								/>
+								<MediaText value={presentedText(s.best, "title", s.best.title)} />
 							</div>
 							<GoodWatchScore score={s.best.score} size="sm" />
 						</div>
@@ -693,8 +636,7 @@ function Facts({ data }: { data: Data }) {
 function useTraitHref() {
 	const href = useFilterHref()
 	const [params] = useSearchParams()
-	return (key: string) =>
-		href({ trait: params.get("trait") === key ? null : key }, "#titles")
+	return (key: string) => href({ trait: params.get("trait") === key ? null : key }, "#titles")
 }
 
 /** The six fingerprint areas: this person in amber, the catalog average as a gray outline. */
@@ -706,10 +648,7 @@ function Radar({ data }: { data: Data }) {
 	const r = 105
 	const point = (i: number, v: number) => {
 		const a = (Math.PI * 2 * i) / pillars.length - Math.PI / 2
-		return [
-			c + Math.cos(a) * r * (v / 10),
-			c + Math.sin(a) * r * (v / 10),
-		] as const
+		return [c + Math.cos(a) * r * (v / 10), c + Math.sin(a) * r * (v / 10)] as const
 	}
 	const poly = (f: (p: (typeof pillars)[number]) => number) =>
 		pillars.map((p, i) => point(i, f(p)).join(",")).join(" ")
@@ -763,14 +702,7 @@ function Radar({ data }: { data: Data }) {
 					const [lx, ly] = point(i, 12.2)
 					return (
 						<g key={p.name}>
-							<circle
-								cx={x}
-								cy={y}
-								r={4}
-								fill={AMBER}
-								stroke="#030712"
-								strokeWidth={2}
-							>
+							<circle cx={x} cy={y} r={4} fill={AMBER} stroke="#030712" strokeWidth={2}>
 								<title>{`${p.name}: ${p.value.toFixed(1)} versus catalog average ${p.baseline.toFixed(1)}`}</title>
 							</circle>
 							<text
@@ -788,14 +720,10 @@ function Radar({ data }: { data: Data }) {
 			</svg>
 			<figcaption className="mt-2 flex justify-center gap-4 text-xs text-gray-400">
 				<span className="flex items-center gap-1.5">
-					<span className="h-0.5 w-4" style={{ background: AMBER }} />{" "}
-					{data.profile.name}
+					<span className="h-0.5 w-4" style={{ background: AMBER }} /> {data.profile.name}
 				</span>
 				<span className="flex items-center gap-1.5">
-					<span
-						className="h-0 w-4 border-t-2 border-dashed"
-						style={{ borderColor: MUTED }}
-					/>{" "}
+					<span className="h-0 w-4 border-t-2 border-dashed" style={{ borderColor: MUTED }} />{" "}
 					Catalog average
 				</span>
 			</figcaption>
@@ -819,17 +747,11 @@ function TraitCards({ data }: { data: Data }) {
 								<span className="text-xl" aria-hidden>
 									{traitEmoji(t.key)}
 								</span>
-								<span className="text-sm font-semibold leading-tight">
-									{traitLabel(t.key)}
-								</span>
+								<span className="text-sm font-semibold leading-tight">{traitLabel(t.key)}</span>
 							</div>
 							<div className="mt-2 flex items-baseline gap-1.5">
-								<span className="text-xl font-black tabular-nums">
-									{t.value.toFixed(1)}
-								</span>
-								<span className="text-xs text-gray-400">
-									average {t.baseline.toFixed(1)}
-								</span>
+								<span className="text-xl font-black tabular-nums">{t.value.toFixed(1)}</span>
+								<span className="text-xs text-gray-400">average {t.baseline.toFixed(1)}</span>
 							</div>
 							<div className="relative mt-1.5 h-1.5 rounded-full bg-gray-700">
 								<div
@@ -860,9 +782,7 @@ function TraitCards({ data }: { data: Data }) {
 									{traitEmoji(t.key)}
 								</span>
 								<div className="min-w-0 flex-1">
-									<div className="truncate text-sm text-gray-300">
-										{traitLabel(t.key)}
-									</div>
+									<div className="truncate text-sm text-gray-300">{traitLabel(t.key)}</div>
 									<div className="relative mt-1 h-1 rounded-full bg-gray-700">
 										<div
 											className="absolute h-full rounded-full"
@@ -896,10 +816,7 @@ function GenresAndTags({ data }: { data: Data }) {
 					{p.genres.map((g) => (
 						<li key={g.name}>
 							<PersonFilterButton
-								to={href(
-									{ genre: data.filters.genre === g.name ? null : g.name },
-									"#titles",
-								)}
+								to={href({ genre: data.filters.genre === g.name ? null : g.name }, "#titles")}
 								className={`inline-block rounded-full px-3 py-1 text-sm font-semibold ${data.filters.genre === g.name ? "bg-amber-500 text-black" : "bg-gray-700 hover:bg-gray-600"}`}
 							>
 								{g.name} <span className="opacity-60">{g.count}</span>
@@ -1022,16 +939,11 @@ function FilterBox({ data }: { data: Data }) {
 		<div className="rounded-lg border border-gray-700 text-sm">
 			<div className="space-y-2 p-3">
 				<div className="flex items-center gap-x-3">
-					<span className="w-16 shrink-0 text-xs uppercase tracking-wide text-gray-500">
-						Type
-					</span>
+					<span className="w-16 shrink-0 text-xs uppercase tracking-wide text-gray-500">Type</span>
 					<TypeFilter value={typeOf(f)} onChange={setType} size="sm" />
 				</div>
 				{groups.map((g) => (
-					<div
-						key={g.key}
-						className="flex flex-wrap items-baseline gap-x-3 gap-y-1"
-					>
+					<div key={g.key} className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
 						<span className="w-16 shrink-0 text-xs uppercase tracking-wide text-gray-500">
 							{g.label}
 						</span>
@@ -1047,11 +959,7 @@ function FilterBox({ data }: { data: Data }) {
 								}
 							>
 								{o.label}
-								{o.count != null && (
-									<span className="ml-0.5 text-xs text-gray-500">
-										{o.count}
-									</span>
-								)}
+								{o.count != null && <span className="ml-0.5 text-xs text-gray-500">{o.count}</span>}
 							</PersonFilterButton>
 						))}
 					</div>
@@ -1089,9 +997,7 @@ function Arrange({ data }: { data: Data }) {
 		`flex items-center gap-1 px-3 py-1.5 ${active ? "bg-gray-100 font-bold text-gray-900" : "text-gray-300 hover:bg-gray-700"}`
 	return (
 		<div className="flex flex-wrap items-center gap-3 border-t border-gray-700 bg-gray-900/60 px-3 py-2.5">
-			<span className="w-16 shrink-0 text-xs uppercase tracking-wide text-gray-500">
-				Group by
-			</span>
+			<span className="w-16 shrink-0 text-xs uppercase tracking-wide text-gray-500">Group by</span>
 			<div className="flex overflow-hidden rounded-lg border border-gray-600 text-xs">
 				<PersonFilterButton
 					to={href({ group: null, order: null })}
@@ -1131,10 +1037,7 @@ function Arrange({ data }: { data: Data }) {
 }
 
 /** Score band heading: GoodWatch disc in the band's vibe color, score word, numeric range. */
-function ScoreGroupHeading({
-	bandKey,
-	label,
-}: { bandKey: string; label: string }) {
+function ScoreGroupHeading({ bandKey, label }: { bandKey: string; label: string }) {
 	const rated = bandKey !== "unrated"
 	return (
 		<div className="flex items-center gap-3">
@@ -1144,12 +1047,8 @@ function ScoreGroupHeading({
 				className={`h-10 rounded-full p-2 shadow-xl ${rated ? `bg-vibe-${Number(bandKey)}` : "bg-gray-700"}`}
 			/>
 			<div>
-				<h3 className="text-2xl font-black leading-tight">
-					{scoreBandWordsFor(bandKey) ?? label}
-				</h3>
-				{rated && (
-					<p className="text-sm tabular-nums text-gray-300">Score {label}</p>
-				)}
+				<h3 className="text-2xl font-black leading-tight">{scoreBandWordsFor(bandKey) ?? label}</h3>
+				{rated && <p className="text-sm tabular-nums text-gray-300">Score {label}</p>}
 			</div>
 		</div>
 	)
@@ -1162,11 +1061,7 @@ function Titles({ data }: { data: Data }) {
 	const type = typeOf(f)
 	const others = !!(f.role || f.genre || f.decade || f.trait || f.minScore)
 	return (
-		<section
-			id="titles"
-			data-feedback-area="credits"
-			className="scroll-mt-20 space-y-5"
-		>
+		<section id="titles" data-feedback-area="credits" className="scroll-mt-20 space-y-5">
 			<div className="flex items-baseline gap-3">
 				<h2 className="text-2xl font-bold">Movies and TV shows</h2>
 				<span className="text-gray-400">{data.total}</span>

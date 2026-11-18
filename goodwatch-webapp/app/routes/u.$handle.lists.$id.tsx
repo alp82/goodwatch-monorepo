@@ -8,11 +8,7 @@
 // share list lifetime and everything else `private, no-store`, so the stricter of the two keeps the old policy.
 // A toolbar at the page width of the profile header and tab row: Lists on the left, Edit (owner) on the right. Share is
 // the profile header's, which offers this list.
-import {
-	PencilSquareIcon,
-	PlusIcon,
-	Square2StackIcon,
-} from "@heroicons/react/24/outline"
+import { PencilSquareIcon, PlusIcon, Square2StackIcon } from "@heroicons/react/24/outline"
 import type { MetaFunction } from "@remix-run/node"
 import { Link, useLoaderData } from "@remix-run/react"
 import { tastePath } from "~/domain/member-paths"
@@ -23,12 +19,7 @@ import { getOwnerScores } from "~/server/share-lists/owner-scores.server"
 import { createShareListPageLoader } from "~/server/share-lists/page-loaders.server"
 import { getListView } from "~/server/share-lists/store.server"
 import { getUserSettings } from "~/server/user-settings.server"
-import {
-	RowLogos,
-	RowScores,
-	rowMark,
-	useRowMarks,
-} from "~/ui/list-row/RowScores"
+import { RowLogos, RowScores, rowMark, useRowMarks } from "~/ui/list-row/RowScores"
 import { CardFonts, ScaledCard } from "~/ui/share-card/ScaledCard"
 import { designByKey } from "~/ui/share-card/designs"
 import { titleFontPreload } from "~/ui/share-card/font-faces"
@@ -69,9 +60,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 		]
 	const { list, items, share } = data
 	const title = `${list.title} by ${list.byline} · GoodWatch`
-	const description = items
-		.map((item, i) => `${i + 1}. ${item.title}`)
-		.join("  ")
+	const description = items.map((item, i) => `${i + 1}. ${item.title}`).join("  ")
 	const alt = `${list.title}: ${items.map((item) => item.title).join(", ")}`
 	// The card's title is the page's largest text. The preload starts its font's download next to the
 	// stylesheet's, so the title rarely shows in its fallback font first.
@@ -135,9 +124,7 @@ export default function ShareListPage() {
 		maxWidth: Math.round(Math.min(624, 860 * shape)),
 	}
 	return (
-		<div
-			className={`relative isolate min-h-screen pb-24 text-white ${TAB_ROW_H}`}
-		>
+		<div className={`relative isolate min-h-screen pb-24 text-white ${TAB_ROW_H}`}>
 			<CardFonts design={design.key} />
 			<div
 				data-list-toolbar
@@ -184,7 +171,7 @@ export default function ShareListPage() {
 								</span>
 							)}
 						</p>
-						<h1 className="text-3xl font-black break-words sm:text-5xl">
+						<h1 className="font-display font-bold text-3xl break-words sm:text-5xl">
 							<span lang={mediaFieldLanguage(list)}>{list.title}</span>
 						</h1>
 						<p className="text-gray-300">
@@ -217,10 +204,7 @@ export default function ShareListPage() {
 						</div>
 					</header>
 
-					<section
-						aria-labelledby="titles-heading"
-						className="flex flex-col gap-3"
-					>
+					<section aria-labelledby="titles-heading" className="flex flex-col gap-3">
 						<div className="flex items-baseline justify-between gap-3">
 							<h2 id="titles-heading" className="text-lg font-bold">
 								The list
@@ -281,15 +265,10 @@ export default function ShareListPage() {
 													prefetch="intent"
 													className="block truncate font-bold hover:underline hover:underline-offset-4"
 												>
-													<span lang={mediaFieldLanguage(item)}>
-														{item.title}
-													</span>
+													<span lang={mediaFieldLanguage(item)}>{item.title}</span>
 												</Link>
 												<p className="text-xs text-gray-400">
-													{[
-														item.year,
-														item.type === "movie" ? "Movie" : "Series",
-													]
+													{[item.year, item.type === "movie" ? "Movie" : "Series"]
 														.filter(Boolean)
 														.join(" · ")}
 												</p>

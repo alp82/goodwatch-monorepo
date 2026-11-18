@@ -11,7 +11,7 @@ export function NewPreviewPage({ data }: { data: NewPreviewData }) {
 	}, [navigate, data.to])
 	return (
 		<main className="mx-auto max-w-3xl px-4 py-16">
-			<h1 className="text-3xl font-bold">{data.copy.heading}</h1>
+			<h1 className="font-display font-bold text-3xl">{data.copy.heading}</h1>
 			<p className="mt-4">
 				<Link to={data.to} className="text-amber-400 underline">
 					{data.copy.description}

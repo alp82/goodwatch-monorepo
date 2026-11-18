@@ -1,11 +1,7 @@
 // /blog: GoodWatch's posts, newest first. Data studies and notes on how GoodWatch is built. The list is posts.json,
 // read by the loader only, so it stays out of the browser's bundle. Drafts aren't listed. Without a listed post the
 // page shows an empty state and stays out of the index.
-import {
-	type LoaderFunctionArgs,
-	type MetaFunction,
-	json,
-} from "@remix-run/node"
+import { type LoaderFunctionArgs, type MetaFunction, json } from "@remix-run/node"
 import { Link, useLoaderData } from "@remix-run/react"
 import { cachedClientLoader } from "~/navigation/instant-navigation"
 import { blogPosts, listedBlogPosts } from "~/server/blog/posts.server"
@@ -37,9 +33,7 @@ export const loader = ({ request }: LoaderFunctionArgs) => {
 	const withDrafts = new URL(request.url).searchParams.has("drafts")
 	const posts = withDrafts ? blogPosts : listedBlogPosts
 	return json({
-		robots: withDrafts
-			? ("noindex, follow" as const)
-			: blogIndexRobots(listedBlogPosts),
+		robots: withDrafts ? ("noindex, follow" as const) : blogIndexRobots(listedBlogPosts),
 		posts: posts.map((post) => ({
 			slug: post.slug,
 			draft: isDraft(post),
@@ -84,7 +78,7 @@ export default function Blog() {
 			<div className="mx-auto flex w-full max-w-2xl flex-col gap-10 px-4 pt-10 pb-24 text-gray-300 sm:px-8 md:pt-16">
 				<header className="flex flex-col gap-4">
 					<Kicker>Blog</Kicker>
-					<h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
+					<h1 className="font-display font-bold text-4xl text-white sm:text-5xl">
 						Studies and notes
 					</h1>
 					<p className="text-lg leading-relaxed text-gray-300 sm:text-xl">
@@ -102,21 +96,15 @@ export default function Blog() {
 								>
 									<span className="text-xs font-bold uppercase tracking-[0.18em] text-amber-400">
 										{post.kind}
-										{post.draft ? (
-											<span className="ml-2 text-gray-500">· Draft</span>
-										) : null}
+										{post.draft ? <span className="ml-2 text-gray-500">· Draft</span> : null}
 									</span>
 									<span className="text-xl font-bold tracking-tight text-white sm:text-2xl">
 										{post.title}
 									</span>
-									<span className="leading-relaxed text-gray-400">
-										{post.dek}
-									</span>
+									<span className="leading-relaxed text-gray-400">{post.dek}</span>
 									<span className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-sm">
 										<span className="text-gray-500">
-											<span className="font-semibold text-gray-300">
-												GoodWatch
-											</span>
+											<span className="font-semibold text-gray-300">GoodWatch</span>
 											{" · "}
 											<time dateTime={post.published}>{post.dateLabel}</time>
 										</span>
@@ -135,10 +123,7 @@ export default function Blog() {
 				)}
 				<p className="text-sm text-gray-500">
 					Follow along with the{" "}
-					<a
-						href="/blog/rss.xml"
-						className="font-semibold text-amber-500 hover:text-amber-400"
-					>
+					<a href="/blog/rss.xml" className="font-semibold text-amber-500 hover:text-amber-400">
 						RSS feed
 					</a>
 					.

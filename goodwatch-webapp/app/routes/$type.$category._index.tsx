@@ -1,25 +1,13 @@
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { ArrowRightCircleIcon } from "@heroicons/react/24/solid"
-import {
-	type LoaderFunction,
-	type LoaderFunctionArgs,
-	type MetaFunction,
-} from "@remix-run/node"
+import { type LoaderFunction, type LoaderFunctionArgs, type MetaFunction } from "@remix-run/node"
 import { Link, useLoaderData } from "@remix-run/react"
 import React from "react"
 import type { GetDiscoverResult } from "~/routes/api.discover"
-import {
-	type DiscoverParams,
-	getDiscoverResults,
-} from "~/server/discover.server"
+import { type DiscoverParams, getDiscoverResults } from "~/server/discover.server"
 import MovieTvList from "~/ui/explore/MovieTvList"
 import { exploreAddressExists, notFound } from "~/ui/explore/address"
-import {
-	type NavType,
-	type PageData,
-	defaultDiscoverParams,
-	navLabel,
-} from "~/ui/explore/config"
+import { type NavType, type PageData, defaultDiscoverParams, navLabel } from "~/ui/explore/config"
 import { mainHierarchy, mainNavigation } from "~/ui/explore/main-nav"
 import { exploreCategoryCopy } from "~/ui/explore/page-copy"
 import Breadcrumbs from "~/ui/nav/Breadcrumbs"
@@ -65,10 +53,7 @@ interface LoaderData {
 	pageResults: PageResult[]
 }
 
-const canonicalLoader: LoaderFunction = async ({
-	params,
-	request,
-}: LoaderFunctionArgs) => {
+const canonicalLoader: LoaderFunction = async ({ params, request }: LoaderFunctionArgs) => {
 	// url input validation
 	const type = params.type || ""
 	const category = params.category || ""
@@ -80,11 +65,9 @@ const canonicalLoader: LoaderFunction = async ({
 	const requestParams = await buildDiscoverParams(request)
 	const discoverType = type === "shows" ? "show" : type
 
-	const pageItems = Object.values<PageData>(mainHierarchy[category]).filter(
-		(pageData) => {
-			return ["all", type].includes(pageData.type)
-		},
-	)
+	const pageItems = Object.values<PageData>(mainHierarchy[category]).filter((pageData) => {
+		return ["all", type].includes(pageData.type)
+	})
 
 	const pageResults: PageResult[] = await Promise.all(
 		pageItems.map(async (pageData) => {
@@ -122,7 +105,7 @@ export default function MoviesCategory_index() {
 
 			<div className="max-w-7xl mx-auto p-4 flex flex-col gap-12">
 				<div className="flex flex-col gap-2">
-					<h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-medium text-gray-100">
+					<h1 className="font-display font-bold text-xl text-gray-100 sm:text-2xl md:text-3xl lg:text-4xl">
 						{copy.heading}
 					</h1>
 					<p className="text-lg text-gray-400">{copy.intro}</p>

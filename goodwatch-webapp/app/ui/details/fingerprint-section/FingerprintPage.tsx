@@ -9,26 +9,13 @@
 // - for a signed-in member, where it sits in their taste.
 // Pointing works by mouse, focus and tap. Find in this title can point at a line, a section or a scale
 // (find/landing.ts).
-import {
-	type ReactNode,
-	useEffect,
-	useId,
-	useMemo,
-	useRef,
-	useState,
-} from "react"
-import {
-	type EffectReading,
-	strengthWord,
-} from "~/domain/fingerprint-effects/effects"
+import { type ReactNode, useEffect, useId, useMemo, useRef, useState } from "react"
+import { type EffectReading, strengthWord } from "~/domain/fingerprint-effects/effects"
 import { POPULATION_MEDIANS } from "~/domain/fingerprint-effects/population-medians"
 import type { TitleSides } from "~/server/title-sides.server"
 import type { CoreScores } from "~/server/utils/fingerprint"
 import { bridges } from "~/ui/details/find/landing"
-import {
-	RidgeSprite,
-	printGeometry,
-} from "~/ui/details/fingerprint-section/Shape"
+import { RidgeSprite, printGeometry } from "~/ui/details/fingerprint-section/Shape"
 import { TasteCard } from "~/ui/details/fingerprint-section/TasteCard"
 import {
 	type Reading,
@@ -37,11 +24,7 @@ import {
 	printAttributes,
 	readTitle,
 } from "~/ui/details/fingerprint-section/reading"
-import {
-	byId,
-	dialLight,
-	lightOf,
-} from "~/ui/details/fingerprint-section/selection"
+import { byId, dialLight, lightOf } from "~/ui/details/fingerprint-section/selection"
 import { SECTION_STYLE } from "~/ui/details/fingerprint-section/styles"
 import { SCALE_GROUPS } from "~/ui/details/fingerprint/scales"
 import { CAPTION } from "~/ui/details/page-ui"
@@ -59,8 +42,6 @@ import {
 	readSections,
 	sectionRankKey,
 } from "./print-model"
-
-const DISPLAY = '"Gabarito", ui-sans-serif, system-ui, sans-serif'
 
 /**
  * The detail box's height: its tallest explanation's, a section with four effects with every line at its largest size,
@@ -89,12 +70,7 @@ export function FingerprintPage({
 			className="@container/deep flex flex-col gap-16"
 		>
 			<style>{SECTION_STYLE}</style>
-			<FeelingAndPrint
-				reading={reading}
-				type={type}
-				scores={t.fingerprint.scores}
-				ranks={ranks}
-			/>
+			<FeelingAndPrint reading={reading} type={type} scores={t.fingerprint.scores} ranks={ranks} />
 			{sides && (
 				<Part
 					id="fp-taste"
@@ -102,11 +78,7 @@ export function FingerprintPage({
 					line="Where it sits among the titles you love."
 					className="[&:not(:has(section))]:hidden"
 				>
-					<TasteCard
-						sides={sides}
-						mediaType={type}
-						tmdbId={media.details.tmdb_id}
-					/>
+					<TasteCard sides={sides} mediaType={type} tmdbId={media.details.tmdb_id} />
 				</Part>
 			)}
 		</div>
@@ -127,20 +99,11 @@ function Part({
 	className?: string
 }) {
 	return (
-		<section
-			id={id}
-			aria-labelledby={`${id}-h`}
-			className={`min-w-0 scroll-mt-32 ${className}`}
-		>
-			<h2
-				id={`${id}-h`}
-				className="text-[19px] font-semibold tracking-tight text-white sm:text-xl"
-			>
+		<section id={id} aria-labelledby={`${id}-h`} className={`min-w-0 scroll-mt-32 ${className}`}>
+			<h2 id={`${id}-h`} className="text-[19px] font-semibold tracking-tight text-white sm:text-xl">
 				{title}
 			</h2>
-			{line && (
-				<p className="mt-1 max-w-[46rem] text-[15px] text-gray-400">{line}</p>
-			)}
+			{line && <p className="mt-1 max-w-[46rem] text-[15px] text-gray-400">{line}</p>}
 			<div className="mt-5">{children}</div>
 		</section>
 	)
@@ -200,9 +163,7 @@ function FeelingAndPrint({
 		}
 	}, [])
 
-	const scale = scaleName
-		? (reading.scales.find((s) => s.sc.name === scaleName) ?? null)
-		: null
+	const scale = scaleName ? (reading.scales.find((s) => s.sc.name === scaleName) ?? null) : null
 	const rowEffect = !scale && row ? byId(reading, row) : null
 	const pointed = rowEffect || scale ? null : (hover ?? pin)
 	const focus = pointed ? sections.find((s) => s.id === pointed) : undefined
@@ -225,10 +186,7 @@ function FeelingAndPrint({
 	// share of the page's HTML.
 	const hydrated = useHydrated()
 	const geo = useMemo(
-		() =>
-			hydrated
-				? printGeometry(printAttributes(scores, POPULATION_MEDIANS[type]))
-				: null,
+		() => (hydrated ? printGeometry(printAttributes(scores, POPULATION_MEDIANS[type])) : null),
 		[hydrated, scores, type],
 	)
 	const ridges = `fp-deep-${useId().replace(/:/g, "")}`
@@ -256,25 +214,11 @@ function FeelingAndPrint({
 	return (
 		<>
 			{geo && <RidgeSprite id={ridges} geo={geo} />}
-			<section
-				id="fp-effects"
-				aria-label="What it does to you"
-				className="min-w-0"
-			>
-				<Lines
-					rows={reading.rows}
-					size="lg"
-					values
-					active={row}
-					onHover={setRow}
-				/>
+			<section id="fp-effects" aria-label="What it does to you" className="min-w-0">
+				<Lines rows={reading.rows} size="lg" values active={row} onHover={setRow} />
 				<NotFor line={notForLine(reading.not)} className="mt-3" />
 			</section>
-			<section
-				id="fp-print"
-				aria-label="The print"
-				className="min-w-0 scroll-mt-32"
-			>
+			<section id="fp-print" aria-label="The print" className="min-w-0 scroll-mt-32">
 				<div ref={printBox}>
 					<div className="grid items-center gap-x-10 gap-y-8 @min-[760px]/deep:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
 						<div className="mx-auto w-full max-w-[30rem]">{print}</div>
@@ -283,23 +227,14 @@ function FeelingAndPrint({
 						<div aria-live="polite" className={`min-w-0 ${DETAIL_HEIGHT}`}>
 							{shown && (
 								<div data-fp-shown="">
-									<Detail
-										key={shownKey(shown)}
-										shown={shown}
-										type={type}
-										ranks={ranks}
-									/>
+									<Detail key={shownKey(shown)} shown={shown} type={type} ranks={ranks} />
 								</div>
 							)}
 						</div>
 					</div>
 				</div>
 			</section>
-			<section
-				id="fp-scales"
-				aria-label="Twelve scales"
-				className="min-w-0 scroll-mt-32"
-			>
+			<section id="fp-scales" aria-label="Twelve scales" className="min-w-0 scroll-mt-32">
 				<Scales scales={reading.scales} active={scaleName} onHover={setScale} />
 			</section>
 		</>
@@ -361,11 +296,7 @@ function Detail({
 	if (shown.kind === "scale") return <ScaleDetail s={shown.s} />
 	const x = explain(shown)
 	const rank = rankLine(
-		ranks?.ranks[
-			shown.kind === "section"
-				? sectionRankKey(shown.sec.id)
-				: shown.r.effect.id
-		],
+		ranks?.ranks[shown.kind === "section" ? sectionRankKey(shown.sec.id) : shown.r.effect.id],
 		type,
 	)
 	return (
@@ -373,24 +304,17 @@ function Detail({
 			<div>
 				<div className="flex flex-wrap items-baseline gap-x-3">
 					<span
-						className="text-[34px] leading-none font-bold tracking-[-0.02em]"
-						style={{ color: x.color, fontFamily: DISPLAY }}
+						className="font-display text-[34px] leading-none font-bold tracking-[-0.02em]"
+						style={{ color: x.color }}
 					>
 						{x.name}
 					</span>
-					<span
-						className="text-[28px] leading-none font-bold text-white tabular-nums"
-						style={{ fontFamily: DISPLAY }}
-					>
+					<span className="font-display text-[28px] leading-none font-bold text-white tabular-nums">
 						{x.value.toFixed(1)}
 					</span>
-					<span className="text-[14px] font-medium text-gray-400">
-						{x.word}
-					</span>
+					<span className="text-[14px] font-medium text-gray-400">{x.word}</span>
 				</div>
-				<p className="mt-2 line-clamp-2 text-[15px] text-gray-300">
-					{x.meaning}
-				</p>
+				<p className="mt-2 line-clamp-2 text-[15px] text-gray-300">{x.meaning}</p>
 				<Track value={x.value} color={x.color} rank={rank} />
 			</div>
 			{x.effects.length > 0 && (
@@ -411,24 +335,18 @@ function ScaleDetail({ s }: { s: ScaleReading }) {
 			<div>
 				<div className="flex flex-wrap items-baseline gap-x-3">
 					<span
-						className="text-[34px] leading-none font-bold tracking-[-0.02em]"
-						style={{ color: s.color, fontFamily: DISPLAY }}
+						className="font-display text-[34px] leading-none font-bold tracking-[-0.02em]"
+						style={{ color: s.color }}
 					>
 						{s.word}
 					</span>
-					<span className="text-[14px] font-medium text-gray-400">
-						{s.sc.name}
-					</span>
+					<span className="text-[14px] font-medium text-gray-400">{s.sc.name}</span>
 				</div>
 				<p className="mt-2 text-[15px] text-gray-300">
-					On the scale from {s.sc.left.toLowerCase()} to{" "}
-					{s.sc.right.toLowerCase()}.
+					On the scale from {s.sc.left.toLowerCase()} to {s.sc.right.toLowerCase()}.
 				</p>
 				<div className="mt-4 max-w-[34rem]">
-					<div
-						className="relative h-2 rounded-full bg-white/[0.07]"
-						aria-hidden="true"
-					>
+					<div className="relative h-2 rounded-full bg-white/[0.07]" aria-hidden="true">
 						<span
 							className="absolute inset-y-0 rounded-full"
 							style={{
@@ -461,17 +379,10 @@ function ScaleDetail({ s }: { s: ScaleReading }) {
 }
 
 /** 0-10 with this title's value as a glowing dot; under it, where that ranks among popular titles (when known). */
-function Track({
-	value,
-	color,
-	rank,
-}: { value: number; color: string; rank: string | null }) {
+function Track({ value, color, rank }: { value: number; color: string; rank: string | null }) {
 	return (
 		<div className="mt-4 max-w-[34rem]">
-			<div
-				className="relative h-2 rounded-full bg-white/[0.07]"
-				aria-hidden="true"
-			>
+			<div className="relative h-2 rounded-full bg-white/[0.07]" aria-hidden="true">
 				<span
 					className="absolute inset-y-0 left-0 rounded-full"
 					style={{
@@ -488,18 +399,11 @@ function Track({
 					}}
 				/>
 			</div>
-			<div
-				className="mt-1.5 flex justify-between text-[11px] text-gray-500"
-				aria-hidden="true"
-			>
+			<div className="mt-1.5 flex justify-between text-[11px] text-gray-500" aria-hidden="true">
 				<span>0</span>
 				<span>10</span>
 			</div>
-			{rank && (
-				<p className="mt-2 truncate text-[14px] font-medium text-gray-300">
-					{rank}.
-				</p>
-			)}
+			{rank && <p className="mt-2 truncate text-[14px] font-medium text-gray-300">{rank}.</p>}
 		</div>
 	)
 }
@@ -519,10 +423,7 @@ function Scales({
 	const byName = new Map(scales.map((s) => [s.sc.name, s]))
 	const groups = SCALE_GROUPS.map((g) => ({
 		name: g.name,
-		dials: [
-			...g.scales.map((sc) => sc.name),
-			...(g.name === "Look" ? ["Originality"] : []),
-		]
+		dials: [...g.scales.map((sc) => sc.name), ...(g.name === "Look" ? ["Originality"] : [])]
 			.map((n) => byName.get(n))
 			.filter((s): s is ScaleReading => !!s),
 	}))
@@ -551,13 +452,9 @@ function Scales({
 								>
 									<button
 										type="button"
-										onPointerEnter={(e) =>
-											e.pointerType === "mouse" && onHover(id)
-										}
+										onPointerEnter={(e) => e.pointerType === "mouse" && onHover(id)}
 										// Keyboard focus points; a tap's focus leaves it to the click, which would else take it back at once.
-										onFocus={(e) =>
-											e.currentTarget.matches(":focus-visible") && onHover(id)
-										}
+										onFocus={(e) => e.currentTarget.matches(":focus-visible") && onHover(id)}
 										onBlur={() => onHover(null)}
 										onClick={() => onHover(active === id ? null : id)}
 										aria-pressed={active === id}

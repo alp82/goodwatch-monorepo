@@ -7,11 +7,7 @@
 //   under "In these results"), and people (none named: the top actor and the top person behind the camera in these
 //   results under "Most in these results").
 // Every title row steers the list: More like, Less like, Like this (tapping the row). More grows a group in place.
-import {
-	FilmIcon,
-	MagnifyingGlassIcon,
-	UserIcon,
-} from "@heroicons/react/20/solid"
+import { FilmIcon, MagnifyingGlassIcon, UserIcon } from "@heroicons/react/20/solid"
 import { useEffect, useId, useMemo, useRef, useState } from "react"
 import { useQuickTitles } from "~/ui/filter-bar/FilterPickers"
 import { compactCount } from "~/ui/filter-bar/labels"
@@ -65,8 +61,7 @@ export function useSteer(filters: FilterStateBinding): SteerState {
 	const { state, update } = filters
 	return {
 		has: (steer: Steer, key: TitleKey) => (state[steer] ?? []).includes(key),
-		toggle: (steer: Steer, key: TitleKey) =>
-			update((s) => toggleSteer(s, steer, key)),
+		toggle: (steer: Steer, key: TitleKey) => update((s) => toggleSteer(s, steer, key)),
 	}
 }
 
@@ -98,29 +93,22 @@ export function TitlesTab({ view }: { view: SubTabView }) {
 	const baseTitles = phone ? 3 : showing ? 6 : 4
 	const [shown, setShown] = useState({ titles: baseTitles, people: 2 })
 	const reset = `${typed}|${showing}|${phone}`
-	useEffect(
-		() => setShown({ titles: baseTitles, people: 2 }),
-		[reset, baseTitles],
-	)
+	useEffect(() => setShown({ titles: baseTitles, people: 2 }), [reset, baseTitles])
 
 	// No title has this name: the top of what the text returns, to steer by (the running results, else the preview).
 	const named = useMemo(
 		() =>
-			titles.found.map(
-				(t): TitleItem => ({
-					key: t.key,
-					title: t.title,
-					year: t.year,
-					poster: t.poster,
-				}),
-			),
+			titles.found.map((t): TitleItem => ({
+				key: t.key,
+				title: t.title,
+				year: t.year,
+				poster: t.poster,
+			})),
 		[titles.found],
 	)
 	const fallback: TitleItem[] =
 		asking && !titles.loading && named.length === 0
-			? (showing ? page.cards : preview.ready ? preview.cards : []).map(
-					cardItem,
-				)
+			? (showing ? page.cards : preview.ready ? preview.cards : []).map(cardItem)
 			: []
 	// The fallback holds one page of the list; the list may be longer.
 	const fallbackTotal = (showing ? counts?.total : preview.total) ?? 0
@@ -181,12 +169,7 @@ export function TitlesTab({ view }: { view: SubTabView }) {
 							: "run"
 			}`,
 	)
-	const navigation = useListNav(
-		items.length,
-		act,
-		reset,
-		typed !== "" && !showing,
-	)
+	const navigation = useListNav(items.length, act, reset, typed !== "" && !showing)
 	const nav = { ...navigation, rowId: (i: number) => rowIds[i] }
 	useSearchGrid(listId, rowIds[nav.active])
 	const list = useRef<HTMLDivElement>(null)
@@ -202,16 +185,9 @@ export function TitlesTab({ view }: { view: SubTabView }) {
 	const run = ofKind("run")[0]
 	const titleRows = ofKind("title")
 	const personRows = ofKind("person")
-	const columns = phone
-		? "flex flex-col gap-1"
-		: "grid grid-cols-2 gap-x-3 gap-y-1"
+	const columns = phone ? "flex flex-col gap-1" : "grid grid-cols-2 gap-x-3 gap-y-1"
 	const typeBlock = (className: string) => (
-		<TypeBlock
-			filters={filters}
-			counts={counts}
-			fresh={page.countsFresh}
-			className={className}
-		/>
+		<TypeBlock filters={filters} counts={counts} fresh={page.countsFresh} className={className} />
 	)
 
 	if (!typed) {
@@ -225,9 +201,7 @@ export function TitlesTab({ view }: { view: SubTabView }) {
 				role="grid"
 				aria-label="Suggestions"
 				className={
-					phone
-						? "flex flex-col gap-1"
-						: "grid grid-cols-[minmax(0,440px)_minmax(0,1fr)] gap-8"
+					phone ? "flex flex-col gap-1" : "grid grid-cols-[minmax(0,440px)_minmax(0,1fr)] gap-8"
 				}
 			>
 				<div className="flex min-w-0 flex-col gap-1">
@@ -242,13 +216,8 @@ export function TitlesTab({ view }: { view: SubTabView }) {
 							onHover={nav.setActive}
 							onClick={() => go(item.text)}
 						>
-							<MagnifyingGlassIcon
-								className="h-4 w-4 shrink-0 text-amber-400/60"
-								aria-hidden
-							/>
-							<span className="min-w-0 flex-1 truncate text-[15px] text-gray-300">
-								{item.text}
-							</span>
+							<MagnifyingGlassIcon className="h-4 w-4 shrink-0 text-amber-400/60" aria-hidden />
+							<span className="min-w-0 flex-1 truncate text-[15px] text-gray-300">{item.text}</span>
 							<EnterKey show={nav.active === at(item)} />
 						</Row>
 					))}
@@ -286,8 +255,7 @@ export function TitlesTab({ view }: { view: SubTabView }) {
 				? "In these results"
 				: "In this search"
 			: "Titles"
-	const lookingForTitles =
-		titles.loading || (showing ? false : preview.busy && named.length === 0)
+	const lookingForTitles = titles.loading || (showing ? false : preview.busy && named.length === 0)
 	const body = (
 		// biome-ignore lint/a11y/useSemanticElements: the bar's field keeps focus and drives the list
 		// biome-ignore lint/a11y/useFocusableInteractive: the bar's field keeps focus and drives the list
@@ -308,15 +276,10 @@ export function TitlesTab({ view }: { view: SubTabView }) {
 					onClick={() => go(typed)}
 					tall
 				>
-					<MagnifyingGlassIcon
-						className="h-5 w-5 shrink-0 text-amber-400"
-						aria-hidden
-					/>
+					<MagnifyingGlassIcon className="h-5 w-5 shrink-0 text-amber-400" aria-hidden />
 					<span className="flex min-w-0 flex-1 items-baseline gap-1.5 overflow-hidden text-[16px] text-gray-300">
 						<span className="shrink-0">Search</span>
-						<span
-							className={`brand-header truncate text-[18px] text-white ${PRIVATE}`}
-						>
+						<span className={`font-display font-bold truncate text-[18px] text-white ${PRIVATE}`}>
 							{typed}
 						</span>
 					</span>
@@ -324,9 +287,7 @@ export function TitlesTab({ view }: { view: SubTabView }) {
 					<EnterKey show={nav.active === at(run)} />
 				</Row>
 			)}
-			{typeBlock(
-				`max-w-[440px] ${phone ? "" : "px-3"} ${run ? "pt-2 pb-1" : "pb-1"}`,
-			)}
+			{typeBlock(`max-w-[440px] ${phone ? "" : "px-3"} ${run ? "pt-2 pb-1" : "pb-1"}`)}
 			{asking && (
 				<>
 					<GroupHead icon={<FilmIcon />}>{titlesHead}</GroupHead>
@@ -354,9 +315,7 @@ export function TitlesTab({ view }: { view: SubTabView }) {
 							allTitles.length,
 							named.length > 0 ? titles.full : fallback.length < fallbackTotal,
 						)}
-						onMore={() =>
-							setShown((s) => ({ ...s, titles: moreRows(s.titles) }))
-						}
+						onMore={() => setShown((s) => ({ ...s, titles: moreRows(s.titles) }))}
 					/>
 				</>
 			)}
@@ -386,9 +345,7 @@ export function TitlesTab({ view }: { view: SubTabView }) {
 							allPeople.length,
 							people.found.length > 0 && people.full,
 						)}
-						onMore={() =>
-							setShown((s) => ({ ...s, people: moreRows(s.people) }))
-						}
+						onMore={() => setShown((s) => ({ ...s, people: moreRows(s.people) }))}
 					/>
 				</>
 			)}

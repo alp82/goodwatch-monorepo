@@ -72,9 +72,7 @@ export function TabHead({
 	links?: ReactNode
 }) {
 	return (
-		<div
-			className={`${WRAP} flex flex-wrap items-end gap-x-4 gap-y-2 pt-5 pb-4`}
-		>
+		<div className={`${WRAP} flex flex-wrap items-end gap-x-4 gap-y-2 pt-5 pb-4`}>
 			<div className="min-w-0 flex-1 basis-60">
 				{back && (
 					<Link
@@ -86,14 +84,10 @@ export function TabHead({
 						{back.label}
 					</Link>
 				)}
-				<h2 className="text-xl font-bold text-white md:text-2xl">{title}</h2>
+				<h2 className="font-display font-bold text-xl text-white md:text-2xl">{title}</h2>
 				{line && <p className="mt-0.5 text-sm text-gray-400">{line}</p>}
 			</div>
-			{links && (
-				<div className="flex shrink-0 flex-wrap items-center gap-2">
-					{links}
-				</div>
-			)}
+			{links && <div className="flex shrink-0 flex-wrap items-center gap-2">{links}</div>}
 		</div>
 	)
 }
@@ -126,15 +120,9 @@ function LinkLogos({ shell }: { shell: ProfileShell }) {
 							className="flex size-9 items-center justify-center rounded-full bg-white/[0.06] ring-1 ring-white/15 hover:bg-white/[0.12] sm:size-10"
 						>
 							{service.logo ? (
-								<img
-									src={assetUrl(service.logo)}
-									alt=""
-									className="size-5 object-contain"
-								/>
+								<img src={assetUrl(service.logo)} alt="" className="size-5 object-contain" />
 							) : (
-								<span className="text-sm font-black text-gray-200">
-									{service.letter}
-								</span>
+								<span className="text-sm font-black text-gray-200">{service.letter}</span>
 							)}
 						</a>
 					</li>
@@ -152,9 +140,7 @@ export function ProfileAbout({ shell }: { shell: ProfileShell }) {
 	return (
 		<div className="flex flex-wrap items-center gap-x-6 gap-y-3">
 			<div className="min-w-0 flex-1 basis-72">
-				{shell.bio && (
-					<p className="max-w-2xl text-base text-gray-200">{shell.bio}</p>
-				)}
+				{shell.bio && <p className="max-w-2xl text-base text-gray-200">{shell.bio}</p>}
 			</div>
 			<LinkLogos shell={shell} />
 		</div>
@@ -210,11 +196,7 @@ export function ProfileTabPage({
 					<HiddenPart
 						handle={shell.handle}
 						part={part ? PART_NAMES[part] : ""}
-						members={
-							!!part &&
-							shell.visibility[part] === "members" &&
-							shell.viewer === "guest"
-						}
+						members={!!part && shell.visibility[part] === "members" && shell.viewer === "guest"}
 					/>
 				</div>
 			)}

@@ -6,11 +6,7 @@
 // and a table counts the passing titles per band of both. The numbers here change nothing for anyone: to keep a
 // curve, copy them into the constants in app/domain/for-you.ts; to keep a scale, into app/domain/taste-match.ts.
 // Returns 404 in production.
-import {
-	type ActionFunctionArgs,
-	type LoaderFunctionArgs,
-	json,
-} from "@remix-run/node"
+import { type ActionFunctionArgs, type LoaderFunctionArgs, json } from "@remix-run/node"
 import { useFetcher, useLoaderData, useNavigate } from "@remix-run/react"
 import { useEffect, useMemo, useState } from "react"
 import { filterStateFromParams, sortFromParams } from "~/domain/filter-state"
@@ -39,11 +35,7 @@ import {
 	getForYouPreview,
 } from "~/server/discover-results.server"
 import { loadTaste } from "~/server/taste/index.server"
-import {
-	MAX_KEYS,
-	type TitleCard,
-	getTitleCards,
-} from "~/server/title-cards.server"
+import { MAX_KEYS, type TitleCard, getTitleCards } from "~/server/title-cards.server"
 import { type ViewerContext, getViewerContext } from "~/server/viewer.server"
 import { DiscoverControls } from "~/ui/discover-bar/DiscoverControls"
 import { useSubTabContent } from "~/ui/discover-bar/sub-tabs/lazy"
@@ -106,12 +98,10 @@ const BANDS: { label: string; from: number; to: number }[] = [
 ]
 
 /** The share of the pool at or above a percentile, as "top 1%" reads: 2 significant digits. */
-const topShare = (percentile: number) =>
-	`${Number((100 - percentile).toPrecision(2))}%`
+const topShare = (percentile: number) => `${Number((100 - percentile).toPrecision(2))}%`
 
 function notInProduction() {
-	if (process.env.NODE_ENV === "production")
-		throw new Response("Not found", { status: 404 })
+	if (process.env.NODE_ENV === "production") throw new Response("Not found", { status: 404 })
 }
 
 const rowTitle = (card: TitleCard): RowTitle => ({
@@ -121,18 +111,12 @@ const rowTitle = (card: TitleCard): RowTitle => ({
 	poster: card.poster_path,
 })
 
-async function rowTitles(
-	keys: TitleKey[],
-	ctx: ViewerContext,
-): Promise<RowTitle[]> {
+async function rowTitles(keys: TitleKey[], ctx: ViewerContext): Promise<RowTitle[]> {
 	const taste = await loadTaste(ctx.viewer)
 	const unique = [...new Set(keys)]
 	const batches: TitleKey[][] = []
-	for (let at = 0; at < unique.length; at += MAX_KEYS)
-		batches.push(unique.slice(at, at + MAX_KEYS))
-	const cards = await Promise.all(
-		batches.map((batch) => getTitleCards(batch, ctx, taste)),
-	)
+	for (let at = 0; at < unique.length; at += MAX_KEYS) batches.push(unique.slice(at, at + MAX_KEYS))
+	const cards = await Promise.all(batches.map((batch) => getTitleCards(batch, ctx, taste)))
 	return cards.flat().map(rowTitle)
 }
 
@@ -144,8 +128,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	notInProduction()
 	const ctx = await getViewerContext(request)
 	const defaults = discoverFilterDefaults(ctx)
-	if (ctx.viewer.kind !== "member")
-		return json({ member: false as const, defaults })
+	if (ctx.viewer.kind !== "member") return json({ member: false as const, defaults })
 	const params = new URL(request.url).searchParams
 	try {
 		const preview = await getForYouPreview(ctx, {
@@ -243,14 +226,11 @@ export default function DevForYou() {
 	const titles = useMemo(() => {
 		const byKey = new Map<TitleKey, RowTitle>()
 		for (const title of fetched) byKey.set(title.key, title)
-		if (data.member)
-			for (const title of data.titles) byKey.set(title.key, title)
+		if (data.member) for (const title of data.titles) byKey.set(title.key, title)
 		return byKey
 	}, [data, fetched])
 	const top = ranking?.order.slice(0, TOP) ?? []
-	const missing = preview
-		? top.map((i) => preview.keys[i]).filter((key) => !titles.has(key))
-		: []
+	const missing = preview ? top.map((i) => preview.keys[i]).filter((key) => !titles.has(key)) : []
 	const missingKey = missing.join(",")
 	// Asks for the missing row fields once the previous answer is in. A title missing from the catalog stays a key.
 	const [asked, setAsked] = useState("")
@@ -293,7 +273,7 @@ export default function DevForYou() {
 
 	return (
 		<div className="mx-auto max-w-7xl px-4 pt-5 pb-24 lg:pt-8">
-			<h1 className="brand-header text-4xl text-white">For you, tuned</h1>
+			<h1 className="font-display font-bold text-4xl text-white">For you, tuned</h1>
 			<p className="mt-1 text-xs text-gray-500">
 				{preview.keys.length.toLocaleString("en")} titles pass the filters, in{" "}
 				{DISCOVER_SORTS[preview.sortUsed].label} order
@@ -384,13 +364,11 @@ export default function DevForYou() {
 			<LiftPlot tuning={tuning} liked={liked} options={options} />
 
 			<section className="mt-9">
-				<h2 className="text-[15px] font-bold text-white">
-					The scale of the match
-				</h2>
+				<h2 className="text-[15px] font-bold text-white">The scale of the match</h2>
 				<p className="text-xs text-gray-500">
-					The match is linear in log10 of the share of well-known titles that
-					fit at least as well, through these anchors. For you does not read it:
-					it ranks by the percentile, so these numbers move no title.
+					The match is linear in log10 of the share of well-known titles that fit at least as well,
+					through these anchors. For you does not read it: it ranks by the percentile, so these
+					numbers move no title.
 				</p>
 				<div className="mt-3 flex flex-wrap items-end gap-x-6 gap-y-4">
 					{MATCH_ANCHORS.map((anchor, i) => (
@@ -412,8 +390,8 @@ export default function DevForYou() {
 					))}
 				</div>
 				<p className="mt-5 text-xs text-gray-500">
-					The highest match a taste shows, by the liked titles it is built from.
-					The part above 50 is scaled down to it, so titles stay apart.
+					The highest match a taste shows, by the liked titles it is built from. The part above 50
+					is scaled down to it, so titles stay apart.
 				</p>
 				<div className="mt-3 flex flex-wrap items-end gap-x-6 gap-y-4">
 					{MATCH_CEILINGS.map((step, i) => (
@@ -428,9 +406,7 @@ export default function DevForYou() {
 							onChange={(value) =>
 								setScale((now) => ({
 									...now,
-									ceilings: now.ceilings.map((was, j) =>
-										j === i ? value : was,
-									),
+									ceilings: now.ceilings.map((was, j) => (j === i ? value : was)),
 								}))
 							}
 						/>
@@ -457,9 +433,8 @@ export default function DevForYou() {
 				</div>
 				<table className="mt-5 text-sm tabular-nums text-gray-200">
 					<caption className="mb-2 text-left text-xs text-gray-500">
-						{bands.matched.toLocaleString("en")} passing titles with a match,
-						per band: as it was shown, and under the scale above with{" "}
-						{liked.toLocaleString("en")} liked titles
+						{bands.matched.toLocaleString("en")} passing titles with a match, per band: as it was
+						shown, and under the scale above with {liked.toLocaleString("en")} liked titles
 					</caption>
 					<thead>
 						<tr className="text-xs text-gray-500">
@@ -483,10 +458,7 @@ export default function DevForYou() {
 						<tr>
 							<th className="pr-6 text-left font-bold text-amber-200">New</th>
 							{bands.now.map((count, i) => (
-								<td
-									key={BANDS[i].label}
-									className="px-3 text-right text-amber-200"
-								>
+								<td key={BANDS[i].label} className="px-3 text-right text-amber-200">
 									{count.toLocaleString("en")}
 								</td>
 							))}
@@ -505,9 +477,7 @@ export default function DevForYou() {
 					</ol>
 				</section>
 				<section>
-					<h2 className="mb-3 text-[15px] font-bold text-amber-200">
-						With For you
-					</h2>
+					<h2 className="mb-3 text-[15px] font-bold text-amber-200">With For you</h2>
 					<ol className="flex flex-col gap-1">
 						{top.map((index, j) => row(index, j + 1, index + 1))}
 					</ol>
@@ -545,8 +515,7 @@ function NumberField({
 				step={step}
 				onChange={(event) => {
 					const next = event.target.valueAsNumber
-					if (Number.isFinite(next))
-						onChange(Math.max(min, Math.min(max, next)))
+					if (Number.isFinite(next)) onChange(Math.max(min, Math.min(max, next)))
 				}}
 				className="h-10 w-28 rounded-xl border-0 bg-white/[0.06] px-3 text-sm tabular-nums text-white ring-1 ring-white/10 outline-none focus:ring-2 focus:ring-amber-400"
 			/>
@@ -570,9 +539,8 @@ function LiftPlot({
 		<section className="mt-7">
 			<h2 className="text-[15px] font-bold text-white">Lift per percentile</h2>
 			<p className="text-xs text-gray-500">
-				A title at place i of the sort lands at i × (1 − lift). The rule reads
-				the percentile in 50 even steps; the numbers under the bars are
-				percentiles. Hover a bar for its numbers.
+				A title at place i of the sort lands at i × (1 − lift). The rule reads the percentile in 50
+				even steps; the numbers under the bars are percentiles. Hover a bar for its numbers.
 			</p>
 			<div
 				className="mt-3 flex h-28 items-end gap-px"
@@ -600,9 +568,7 @@ function LiftPlot({
 			<div className="mt-1 flex gap-px text-[10px] tabular-nums text-gray-500">
 				{steps.map((step) => (
 					<span key={step} className="flex-1 text-center">
-						{step % 5 === 0 || step === 99
-							? Math.round(percentileOfStep(step))
-							: ""}
+						{step % 5 === 0 || step === 99 ? Math.round(percentileOfStep(step)) : ""}
 					</span>
 				))}
 			</div>
@@ -636,9 +602,7 @@ function Row({
 	const lifted = from !== undefined && from > position
 	return (
 		<li className="flex h-14 items-center gap-3 rounded-xl bg-white/[0.03] pr-3 text-sm ring-1 ring-white/5">
-			<span className="w-9 shrink-0 text-right text-xs tabular-nums text-gray-500">
-				{position}
-			</span>
+			<span className="w-9 shrink-0 text-right text-xs tabular-nums text-gray-500">{position}</span>
 			<span className="h-12 w-8 shrink-0 overflow-hidden rounded bg-white/5">
 				{title?.poster && (
 					<img
@@ -651,9 +615,7 @@ function Row({
 			</span>
 			<span className="min-w-0 flex-1 truncate text-gray-100">
 				{title?.title ?? titleKey}
-				{title?.year && (
-					<span className="ml-1.5 text-xs text-gray-500">{title.year}</span>
-				)}
+				{title?.year && <span className="ml-1.5 text-xs text-gray-500">{title.year}</span>}
 			</span>
 			<span
 				title="GoodWatch score"

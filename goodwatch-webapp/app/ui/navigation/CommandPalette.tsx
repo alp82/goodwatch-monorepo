@@ -43,11 +43,7 @@ import { useGuestInteractions } from "~/utils/guest-progress"
 import useLocale from "~/utils/locale"
 import { useSignUpHref } from "./bits"
 import { currentDestination, searchHref } from "./destinations"
-import {
-	paletteAnswerQuery,
-	paletteStartQuery,
-	shownPaletteAnswer,
-} from "./palette-answer"
+import { paletteAnswerQuery, paletteStartQuery, shownPaletteAnswer } from "./palette-answer"
 import {
 	type Option,
 	type PanelGroup,
@@ -82,14 +78,7 @@ const PANEL_ORDER: PanelGroupKey[] = PALETTE_GROUP_ORDER.flatMap((key) =>
 			: [key],
 )
 /** The moods to start from when nothing matched. */
-const QUICK_MOODS: MoodKey[] = [
-	"funny",
-	"feelgood",
-	"tense",
-	"mind",
-	"romance",
-	"scary",
-]
+const QUICK_MOODS: MoodKey[] = ["funny", "feelgood", "tense", "mind", "romance", "scary"]
 /** The pages to go to before typing: the ones members keep going back to; visitors get the main pages. */
 const GO_TO = {
 	member: ["profile", "wishlist", "myScores", "myLists", "forYou", "settings"],
@@ -120,10 +109,7 @@ function usePaletteGroups(q: string) {
 		!query.isFetching &&
 		(query.isError || (query.isSuccess && !query.isPlaceholderData))
 	const groups = shownPaletteAnswer(typed, query.data).groups
-	return useMemo(
-		() => ({ groups, settled: !typed || settled }),
-		[groups, typed, settled],
-	)
+	return useMemo(() => ({ groups, settled: !typed || settled }), [groups, typed, settled])
 }
 
 /** The panel's width rule (Tailwind's lg): the rail beside the results and two columns only from here. */
@@ -189,12 +175,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 	// "Rate titles" (GuestLock does the same).
 	const guestInteractions = useGuestInteractions()
 	const guestReady =
-		!member &&
-		isReady(
-			tally(
-				guestInteractions.map((i) => (i.type === "score" ? i.score : null)),
-			),
-		)
+		!member && isReady(tally(guestInteractions.map((i) => (i.type === "score" ? i.score : null))))
 	const startData = useMemo((): PaletteStart | undefined => {
 		const data = start.data
 		if (!data || !guestReady || data.forYou.state !== "guest") return data
@@ -215,12 +196,8 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 	const pageOption = useCallback(
 		(page: PalettePage, typed: boolean): Option => {
 			const here = currentDestination(pathname, handle)
-			const isHere = page.destination
-				? here === page.destination
-				: page.href === pathname
-			const pickOn = pick?.href
-				? currentDestination(pick.href.split("#")[0], handle)
-				: null
+			const isHere = page.destination ? here === page.destination : page.href === pathname
+			const pickOn = pick?.href ? currentDestination(pick.href.split("#")[0], handle) : null
 			const upNext = pick && page.destination && page.destination === pickOn
 			return {
 				key: `page-${page.key}`,
@@ -241,10 +218,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 		[pathname, handle, pick],
 	)
 
-	const trending = useMemo(
-		() => (start.data?.trending ?? []).map(titleOption),
-		[start.data],
-	)
+	const trending = useMemo(() => (start.data?.trending ?? []).map(titleOption), [start.data])
 	const tropes = useMemo(
 		() => (start.data?.tropes ?? []).map((item) => itemOption(item, "tropes")),
 		[start.data],
@@ -275,9 +249,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 				key: "pages",
 				label: "Pages",
 				total: matched.length,
-				items: matched
-					.slice(0, MAX_PAGES)
-					.map(({ page }) => pageOption(page, true)),
+				items: matched.slice(0, MAX_PAGES).map(({ page }) => pageOption(page, true)),
 			})
 		const groups = PANEL_ORDER.flatMap((key) => byKey.get(key) ?? [])
 		if (groups.length) return resultsPlan(groups, wide)
@@ -311,18 +283,14 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 	// Typed text has the Search action before the first option (-1): it's active while nothing else is.
 	const floor = trimmed ? -1 : 0
 	const at = Math.max(floor, Math.min(active, options.length - 1))
-	const optionId = (index: number) =>
-		index < 0 ? `${id}-search` : `${id}-option-${index}`
+	const optionId = (index: number) => (index < 0 ? `${id}-search` : `${id}-option-${index}`)
 	const listId = `${id}-list`
 	const showRail = plan.rail && plan.tabs.length > 1
 
 	// Keep the active option in view while the arrow keys move it; the Search action brings the list back to the top.
 	useEffect(() => {
 		if (at < 0) document.getElementById(listId)?.scrollTo({ top: 0 })
-		else
-			document
-				.getElementById(optionId(at))
-				?.scrollIntoView({ block: "nearest" })
+		else document.getElementById(optionId(at))?.scrollIntoView({ block: "nearest" })
 	})
 
 	const showTab = (key: string) => {
@@ -349,7 +317,8 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 			field.current?.focus()
 		} else go(option.href, option.action, trigger)
 	}
-	const search = (trigger: SearchTrigger = "search_button") => go(searchHref(trimmed), undefined, trigger)
+	const search = (trigger: SearchTrigger = "search_button") =>
+		go(searchHref(trimmed), undefined, trigger)
 
 	const ctx: Ctx = {
 		indexOf: (option) => positions.get(option.key) ?? -1,
@@ -366,11 +335,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 	}
 	const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
 		// Tab keeps its usual job (the Search button, the rail, the cards' own buttons); Alt+Left/Right switch groups.
-		if (
-			showRail &&
-			event.altKey &&
-			(event.key === "ArrowLeft" || event.key === "ArrowRight")
-		) {
+		if (showRail && event.altKey && (event.key === "ArrowLeft" || event.key === "ArrowRight")) {
 			event.preventDefault()
 			step(event.key === "ArrowLeft" ? -1 : 1)
 		} else if (event.key === "ArrowDown") {
@@ -396,10 +361,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 		>
 			<header className="shrink-0 border-b border-white/[0.08] px-4 pb-3 lg:p-3.5">
 				<div className="flex h-[54px] items-center gap-2.5 rounded-[14px] bg-white/[0.07] pr-2 pl-4 shadow-[inset_0_0_0_1.5px_rgba(251,191,36,0.6)]">
-					<MagnifyingGlassIcon
-						className="h-5 w-5 shrink-0 text-gray-300"
-						aria-hidden
-					/>
+					<MagnifyingGlassIcon className="h-5 w-5 shrink-0 text-gray-300" aria-hidden />
 					<input
 						ref={field}
 						// The dialog's initial focus (Headless UI): the palette exists to type into this field.
@@ -424,7 +386,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 							setActive(event.target.value.trim() ? -1 : 0)
 						}}
 						onKeyDown={onKeyDown}
-						className="brand-header min-w-0 flex-1 border-0 bg-transparent p-0 text-[22px] text-white outline-none placeholder:text-gray-500 focus:ring-0"
+						className="font-display font-bold min-w-0 flex-1 border-0 bg-transparent p-0 text-[22px] text-white outline-none placeholder:text-gray-500 focus:ring-0"
 					/>
 					{trimmed && (
 						<>
@@ -446,9 +408,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 					)}
 				</div>
 			</header>
-			<div
-				className={`flex min-h-0 flex-1 flex-col ${showRail ? "lg:flex-row" : ""}`}
-			>
+			<div className={`flex min-h-0 flex-1 flex-col ${showRail ? "lg:flex-row" : ""}`}>
 				{showRail && (
 					<Rail
 						tabs={plan.tabs}

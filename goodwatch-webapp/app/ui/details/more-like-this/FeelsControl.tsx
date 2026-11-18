@@ -6,20 +6,9 @@
 // mixes, and the effect lines to make one's own pick, up to three. The same control travels with the shelf into the
 // expanded view. Motion: opacity and transform only, none with reduced motion.
 // transform only.
-import {
-	CheckIcon,
-	ChevronLeftIcon,
-	ChevronRightIcon,
-	XMarkIcon,
-} from "@heroicons/react/20/solid"
+import { CheckIcon, ChevronLeftIcon, ChevronRightIcon, XMarkIcon } from "@heroicons/react/20/solid"
 import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline"
-import {
-	type CSSProperties,
-	type ReactNode,
-	useEffect,
-	useRef,
-	useState,
-} from "react"
+import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import type { EffectReading } from "~/domain/fingerprint-effects/effects"
 import { Print } from "~/ui/details/fingerprint-section/Print"
@@ -29,16 +18,12 @@ import {
 	phraseOf,
 	shortName,
 } from "~/ui/details/fingerprint-section/reading"
-import {
-	lightOf,
-	nextSelection,
-} from "~/ui/details/fingerprint-section/selection"
+import { lightOf, nextSelection } from "~/ui/details/fingerprint-section/selection"
 import { type Recipe, type Sources, fmt } from "./sources"
 
 /** The one RidgeSprite the control's prints draw from (MoreLikeThis.tsx renders it). */
 export const FEELS_RIDGES = "feels-ridges"
 
-const DISPLAY = '"Gabarito", ui-sans-serif, system-ui, sans-serif'
 const lowerFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1)
 const noun = (src: Sources) => src.noun
 
@@ -103,7 +88,11 @@ function RecipeName({
 	r,
 	className = "",
 	style,
-}: { r: Recipe; className?: string; style?: CSSProperties }) {
+}: {
+	r: Recipe
+	className?: string
+	style?: CSSProperties
+}) {
 	return (
 		<span className={className} style={style}>
 			{r.effects.map((e, i) => (
@@ -183,8 +172,7 @@ function useSheet() {
 		if (!open) return
 		const away = (e: PointerEvent) => {
 			const t = e.target as Node
-			if (!box.current?.contains(t) && !panel.current?.contains(t))
-				setOpen(false)
+			if (!box.current?.contains(t) && !panel.current?.contains(t)) setOpen(false)
 		}
 		// Escape closes the Tuner, not the expanded view under it.
 		const esc = (e: KeyboardEvent) => {
@@ -217,7 +205,11 @@ function Tuner({
 	src,
 	sheet,
 	align = "right",
-}: { src: Sources; sheet: Sheet; align?: "left" | "right" }) {
+}: {
+	src: Sources
+	sheet: Sheet
+	align?: "left" | "right"
+}) {
 	if (!sheet.open) return null
 	const body = <TunerBody src={src} onClose={() => sheet.setOpen(false)} />
 	if (sheet.phone)
@@ -255,16 +247,13 @@ function Tuner({
 	)
 }
 
-const LABEL =
-	"text-[11px] font-semibold tracking-[.12em] text-gray-500 uppercase"
+const LABEL = "text-[11px] font-semibold tracking-[.12em] text-gray-500 uppercase"
 
 function TunerBody({ src, onClose }: { src: Sources; onClose: () => void }) {
 	const m = src.mix
 	const reading = m.reading as Reading
 	const [all, setAll] = useState(false)
-	const counted = reading.all
-		.filter((r) => r.counts)
-		.sort((a, b) => b.strength - a.strength)
+	const counted = reading.all.filter((r) => r.counts).sort((a, b) => b.strength - a.strength)
 	const lines = all ? counted : counted.slice(0, 6)
 	const extra = m.effects.filter((r) => !lines.includes(r))
 	const pickAxis = (axis: string) =>
@@ -292,10 +281,8 @@ function TunerBody({ src, onClose }: { src: Sources; onClose: () => void }) {
 				<p className="text-center text-[12px] leading-snug text-gray-500">
 					{m.total !== null && m.selected.length ? (
 						<>
-							<span className="font-semibold text-gray-200 tabular-nums">
-								{fmt(m.total)}
-							</span>{" "}
-							of the {fmt(m.of)} most popular {noun(src)}
+							<span className="font-semibold text-gray-200 tabular-nums">{fmt(m.total)}</span> of
+							the {fmt(m.of)} most popular {noun(src)}
 						</>
 					) : (
 						"Tap a section to add its strongest feeling"
@@ -318,10 +305,7 @@ function TunerBody({ src, onClose }: { src: Sources; onClose: () => void }) {
 											className={`flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-1.5 py-1.5 text-left text-[13.5px] font-semibold transition-colors ${on ? "bg-white/[0.06]" : "hover:bg-white/[0.04]"}`}
 										>
 											<Dots rs={r.effects} />
-											<RecipeName
-												r={r}
-												className="min-w-0 flex-1 leading-snug"
-											/>
+											<RecipeName r={r} className="min-w-0 flex-1 leading-snug" />
 											<span className="shrink-0 text-[12px] font-medium text-gray-500 tabular-nums">
 												1 in {fmt(r.oneIn)}
 											</span>
@@ -337,10 +321,7 @@ function TunerBody({ src, onClose }: { src: Sources; onClose: () => void }) {
 					</>
 				)}
 				<p className={`${LABEL} mt-3`}>Or your own, up to three</p>
-				<ul
-					className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5"
-					style={{ fontFamily: DISPLAY }}
-				>
+				<ul className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 font-display">
 					{[...lines, ...extra].map((r) => (
 						<li key={r.effect.id}>
 							<LineToggle
@@ -383,7 +364,12 @@ function LineToggle({
 	on,
 	onToggle,
 	small = false,
-}: { r: EffectReading; on: boolean; onToggle: () => void; small?: boolean }) {
+}: {
+	r: EffectReading
+	on: boolean
+	onToggle: () => void
+	small?: boolean
+}) {
 	const p = phraseOf(r)
 	const lo = small ? 14 : 16
 	const hi = small ? 17 : 22
@@ -400,9 +386,7 @@ function LineToggle({
 				letterSpacing: `${(-0.004 - 0.018 * p.k).toFixed(3)}em`,
 			}}
 		>
-			<span className={on ? "" : "group-hover/l:text-gray-300"}>
-				{r.effect.name}.
-			</span>
+			<span className={on ? "" : "group-hover/l:text-gray-300"}>{r.effect.name}.</span>
 		</button>
 	)
 }
@@ -430,16 +414,14 @@ function PrintStepper({ src }: { src: Sources }) {
 				className="flex items-center gap-3 sm:gap-4"
 				style={{ touchAction: "pan-y" }}
 				onPointerDown={(e) => {
-					if (e.pointerType !== "mouse")
-						down.current = { x: e.clientX, y: e.clientY }
+					if (e.pointerType !== "mouse") down.current = { x: e.clientX, y: e.clientY }
 				}}
 				onPointerUp={(e) => {
 					const d = down.current
 					down.current = null
 					if (!d) return
 					const dx = e.clientX - d.x
-					if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(e.clientY - d.y))
-						go(dx < 0 ? 1 : -1)
+					if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(e.clientY - d.y)) go(dx < 0 ? 1 : -1)
 				}}
 			>
 				<button
@@ -455,10 +437,7 @@ function PrintStepper({ src }: { src: Sources }) {
 					</span>
 				</button>
 				<div className="min-w-0 flex-1 sm:w-72 sm:flex-none">
-					<div
-						key={`${m.key}`}
-						className={dir === 1 ? "feels-next" : "feels-prev"}
-					>
+					<div key={`${m.key}`} className={dir === 1 ? "feels-next" : "feels-prev"}>
 						<p className={LABEL}>
 							{r
 								? `Rare mix ${at + 1} of ${n}`
@@ -477,9 +456,7 @@ function PrintStepper({ src }: { src: Sources }) {
 								</>
 							) : m.total !== null && m.selected.length ? (
 								<>
-									<span className="font-semibold text-gray-100 tabular-nums">
-										{fmt(m.total)}
-									</span>{" "}
+									<span className="font-semibold text-gray-100 tabular-nums">{fmt(m.total)}</span>{" "}
 									of the {fmt(m.of)} most popular {src.noun}
 								</>
 							) : (
@@ -518,7 +495,11 @@ function Step({
 	label,
 	onClick,
 	children,
-}: { label: string; onClick: () => void; children: ReactNode }) {
+}: {
+	label: string
+	onClick: () => void
+	children: ReactNode
+}) {
 	return (
 		<button
 			type="button"

@@ -5,6 +5,7 @@
 // through the same call. While it saves, both lists are off; a failure keeps the pick shown as not saved, with Retry and
 // Cancel. A country pick saves only the country: no language is offered alongside.
 import { type ReactNode, useEffect } from "react"
+import { DISPLAY } from "~/ui/my-pages/style"
 import { regionName } from "~/utils/display-names"
 import { describePair, useMediaPreference } from "./MediaPreference"
 import { CountryGrid, Flag, LanguageGrid } from "./PickerGrids"
@@ -69,9 +70,7 @@ export function PairStatus() {
 				<span className="text-gray-400">Saving {p.destination}…</span>
 			) : p.readFailed ? (
 				<>
-					<span className="text-gray-400">
-						Couldn't read what is saved. These are this page's.
-					</span>
+					<span className="text-gray-400">Couldn't read what is saved. These are this page's.</span>
 					<button
 						type="button"
 						data-retry-read
@@ -87,9 +86,6 @@ export function PairStatus() {
 		</output>
 	)
 }
-
-/** The heading font of My library (my-pages/bits DISPLAY), copied: that module brings the router along. */
-const DISPLAY = "font-['Gabarito'] font-black tracking-[-0.03em]"
 
 /** The current choice, large: its flag and name, with a line under it. */
 function Current({
@@ -161,7 +157,11 @@ export function ShowTitlesInList({ preview }: { preview?: ReactNode }) {
 				<Current
 					flag={languageFlag(shown)}
 					name={`${englishName(shown)}${failed && p.changed.language ? " · not saved" : ""}`}
-					line={next.language === BROWSER ? ["Follows your browser", own].filter(Boolean).join(" · ") : own || "Chosen by you"}
+					line={
+						next.language === BROWSER
+							? ["Follows your browser", own].filter(Boolean).join(" · ")
+							: own || "Chosen by you"
+					}
 					data={{ "data-titles-current": "" }}
 				/>
 				{preview}
@@ -177,4 +177,3 @@ export function ShowTitlesInList({ preview }: { preview?: ReactNode }) {
 		</fieldset>
 	)
 }
-

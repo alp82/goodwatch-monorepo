@@ -242,14 +242,14 @@ A cool, dark navy room with a warm amber lamp, translucent white layers, and a s
 
 ## Typography
 
-**Display font:** Gabarito, variable 400-900, self-hosted (with metric-matched Arial Bold and Roboto Bold fallbacks). The same files are also registered as "Gabarito Brand" for the wordmark and `.brand-header`.
+**Display font:** Gabarito, variable 400-900, self-hosted (with metric-matched Arial Bold and Roboto Bold fallbacks). The same files are also registered as "Gabarito Brand" for the wordmark and the `--font-display` theme token (`font-display` in Tailwind).
 **Body font:** the system sans (`ui-sans-serif, system-ui`).
 
 **Character:** Gabarito is rounded, friendly, and heavy. It carries the brand and many page titles. The system sans keeps dense data, like scores, years, runtimes, and episode numbers, crisp and native on every device. Numbers in tables and badges use tabular figures.
 
 ### Hierarchy
 
-- **Display** (Gabarito 700, 34-52px, line height 1.1, normal letter spacing): every page h1, including title and person names, member, info, sign-in, and legal pages (D3). Big brand numbers keep Gabarito 900. Pages still on Gabarito 900 or 800 or the system font for their h1 are migrated in follow-up issues.
+- **Display** (Gabarito 700, 34-52px, line height 1.1, normal letter spacing): every page h1, including title and person names, member, info, sign-in, and legal pages (D3). Write it as `font-display font-bold`. Big brand numbers, hero and card names keep Gabarito 900 (`DISPLAY` in `my-pages/style.ts`: `font-display font-black tracking-[-0.03em]`).
 - **Headline** (system 600, 20px on phones and 24px from 640px, -0.025em): every section heading (D4). Group headings are one step smaller. Title pages keep their icon tile; other pages don't add one.
 - **Title** (system 600, 18px): card titles, sheet titles, settings row labels, and list headings.
 - **Body** (system 400, 16-18px, line height 1.625): synopses and long-form text. The blog and info pages run 16px on phones and 18px from `sm` up, in a 672px column.
@@ -262,7 +262,7 @@ A cool, dark navy room with a warm amber lamp, translucent white layers, and a s
 
 **The Heavy Weights Rule.** Hierarchy comes from weight (600-900) and size, not from color. Buttons use 700-900.
 
-**The One Gabarito Source Rule.** Gabarito is declared in `app/fonts/gabarito.css`. Don't add another inline `fontFamily` string for it; seven files already do.
+**The One Gabarito Source Rule.** Gabarito is declared in `app/fonts/gabarito.css`. Components reach it through the `font-display` utility (the `--font-display` theme token), not an inline `fontFamily` string or `font-['Gabarito']`.
 
 ## Layout
 

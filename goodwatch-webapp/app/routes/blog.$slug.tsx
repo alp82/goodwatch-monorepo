@@ -1,11 +1,7 @@
 // /blog/<slug>: one post. Its text is app/content/blog/<slug>/post.mdx, compiled to React at build time; its title,
 // dates and summary are in posts.json, which the sitemap reads too. The page is one narrow column in the about
 // page's look. Charts and tables are in the server's HTML and need no script.
-import {
-	type LoaderFunctionArgs,
-	type MetaFunction,
-	json,
-} from "@remix-run/node"
+import { type LoaderFunctionArgs, type MetaFunction, json } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
 import type { ComponentType } from "react"
 import { cachedClientLoader } from "~/navigation/instant-navigation"
@@ -34,8 +30,7 @@ type PostModule = {
 const POSTS = import.meta.glob<PostModule>("../content/blog/*/post.mdx", {
 	eager: true,
 })
-const postText = (slug: string) =>
-	POSTS[`../content/blog/${slug}/post.mdx`]?.default
+const postText = (slug: string) => POSTS[`../content/blog/${slug}/post.mdx`]?.default
 
 const trail = (post: BlogPost): Crumb[] => [
 	{ label: "Home", path: "/" },
@@ -45,13 +40,10 @@ const trail = (post: BlogPost): Crumb[] => [
 
 export const loader = ({ params }: LoaderFunctionArgs) => {
 	const post = findBlogPost(params.slug)
-	if (!post || !postText(post.slug))
-		throw new Response("Not found", { status: 404 })
+	if (!post || !postText(post.slug)) throw new Response("Not found", { status: 404 })
 	const url = blogPostUrl(post.slug)
 	const dataset = blogDataset(post.slug)
-	const structuredData: Record<string, unknown>[] = [
-		blogPostingJsonLd(post, ogImageUrl(url)),
-	]
+	const structuredData: Record<string, unknown>[] = [blogPostingJsonLd(post, ogImageUrl(url))]
 	if (dataset) structuredData.push(datasetJsonLd(post, dataset))
 	return json({ post, structuredData })
 }
@@ -108,18 +100,13 @@ export default function BlogPostPage() {
 							role="note"
 							className="rounded-2xl bg-white/[0.04] px-4 py-3 text-sm text-gray-400 ring-1 ring-white/10"
 						>
-							<span className="font-semibold text-amber-400">Draft.</span> This
-							post isn't listed on the blog, in the feed or in the sitemap, and
-							search engines don't index it.
+							<span className="font-semibold text-amber-400">Draft.</span> This post isn't listed on
+							the blog, in the feed or in the sitemap, and search engines don't index it.
 						</p>
 					) : null}
 					<Kicker>{post.kind}</Kicker>
-					<h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
-						{post.title}
-					</h1>
-					<p className="text-lg leading-relaxed text-gray-300 sm:text-xl">
-						{post.description}
-					</p>
+					<h1 className="font-display font-bold text-4xl text-white sm:text-5xl">{post.title}</h1>
+					<p className="text-lg leading-relaxed text-gray-300 sm:text-xl">{post.description}</p>
 					<p className="text-sm text-gray-500">
 						By <span className="font-semibold text-gray-300">GoodWatch</span>
 						{" · "}

@@ -14,12 +14,7 @@ import { HERO_TIMING } from "~/utils/start-after-paint"
 import { REPLAY_TAP_SCRIPT } from "~/utils/replay-tap"
 import { useReplayedTap } from "~/utils/useReplayedTap"
 import { tmdbFluidImage } from "~/utils/tmdb-image"
-import {
-	type FlowView,
-	readFlowPress,
-	pastCounting,
-	showsSignUpLine,
-} from "./flow"
+import { type FlowView, readFlowPress, pastCounting, showsSignUpLine } from "./flow"
 import {
 	Label,
 	LockedPanel,
@@ -79,12 +74,7 @@ export function RatingFlow({
 	return view === "taste" ? (
 		<TasteView flow={flow} onKeep={() => onView("rate")} />
 	) : (
-		<RateView
-			flow={flow}
-			backdrop={backdrop}
-			onOpenTaste={openTaste}
-			top={top}
-		/>
+		<RateView flow={flow} backdrop={backdrop} onOpenTaste={openTaste} top={top} />
 	)
 }
 
@@ -97,11 +87,7 @@ type FlowKeys = {
 function useFlowKeys(flow: RatingFlowModel, keys: FlowKeys) {
 	useEffect(() => {
 		const onKey = (e: KeyboardEvent) => {
-			if (
-				(e.target as HTMLElement | null)?.closest?.(
-					"input, textarea, select, [contenteditable]",
-				)
-			)
+			if ((e.target as HTMLElement | null)?.closest?.("input, textarea, select, [contenteditable]"))
 				return
 			if (!flow.title) return
 			const intent = readFlowPress(e)
@@ -139,14 +125,11 @@ function RateView({
 	const locked = flow.locked && re?.answer?.type !== "score"
 	useFlowKeys(flow, { locked })
 	useReplayedTap("rate")
-	const shownScore =
-		a.score ?? (re?.answer?.type === "score" ? (re.answer.score ?? null) : null)
+	const shownScore = a.score ?? (re?.answer?.type === "score" ? (re.answer.score ?? null) : null)
 	const bar = flow.tally && (
 		<>
 			<TasteBar tally={flow.tally} lit={flow.lit} onOpen={onOpenTaste} />
-			{showsSignUpLine(flow.tally, flow.member) && (
-				<SignUpLine rated={flow.tally.rated} />
-			)}
+			{showsSignUpLine(flow.tally, flow.member) && <SignUpLine rated={flow.tally.rated} />}
 		</>
 	)
 	const line = re?.clearFailed ? WORDS.clearFailed : a.line
@@ -188,19 +171,11 @@ function RateView({
 
 				{!t ? (
 					<div className="mt-10">
-						<h1 className="text-2xl font-extrabold">
-							{flow.loadingTitles
-								? WORDS.loading
-								: flow.titlesFailed
-									? WORDS.failed
-									: WORDS.empty}
+						<h1 className="font-display font-bold text-2xl">
+							{flow.loadingTitles ? WORDS.loading : flow.titlesFailed ? WORDS.failed : WORDS.empty}
 						</h1>
 						{flow.titlesFailed && (
-							<button
-								type="button"
-								className={`${ghostButton} mt-5`}
-								onClick={flow.retryTitles}
-							>
+							<button type="button" className={`${ghostButton} mt-5`} onClick={flow.retryTitles}>
 								{WORDS.tryAgain}
 							</button>
 						)}
@@ -226,10 +201,7 @@ function RateView({
 							alt={`Poster for ${t.title}${t.release_year ? ` (${t.release_year})` : ""}`}
 							className={`${leaving} aspect-[2/3] w-full rounded-md border-2 border-gray-800 object-cover shadow-2xl sm:row-span-2`}
 						/>
-						<div
-							key={`h-${tKey}`}
-							className={`${leaving} min-w-0 pb-1 sm:pt-4`}
-						>
+						<div key={`h-${tKey}`} className={`${leaving} min-w-0 pb-1 sm:pt-4`}>
 							<h1 className="mb-2 text-xs font-bold uppercase tracking-wider text-amber-400/90">
 								{WORDS.ask}
 							</h1>
@@ -275,17 +247,11 @@ function RateView({
 							</div>
 							{/* A save that failed: on without saving it. */}
 							{a.failed && (
-								<button
-									type="button"
-									className={`${ghostButton} mt-3`}
-									onClick={flow.pass}
-								>
+								<button type="button" className={`${ghostButton} mt-3`} onClick={flow.pass}>
 									{WORDS.nextTitle}
 								</button>
 							)}
-							<p className="mt-3 hidden text-xs text-gray-500 md:block">
-								{WORDS.keys}
-							</p>
+							<p className="mt-3 hidden text-xs text-gray-500 md:block">{WORDS.keys}</p>
 						</div>
 						<div className="col-span-2 mt-5 min-h-16 md:mt-6">{bar}</div>
 					</div>
@@ -301,10 +267,7 @@ function RateView({
  */
 const FEEDBACK_ROOM = "lg:max-[1080px]:pr-14"
 
-function TasteView({
-	flow,
-	onKeep,
-}: { flow: RatingFlowModel; onKeep: () => void }) {
+function TasteView({ flow, onKeep }: { flow: RatingFlowModel; onKeep: () => void }) {
 	const t = flow.tally
 	return (
 		<section className="score-ack-enter mx-auto max-w-7xl space-y-8 px-4 pt-6 pb-32 text-white md:px-8 md:pt-10">
@@ -314,9 +277,7 @@ function TasteView({
 						{t.rated} rated · {t.liked} liked
 					</div>
 				)}
-				<h1 className="text-2xl font-extrabold md:text-4xl">
-					{WORDS.yourTaste}
-				</h1>
+				<h1 className="font-display font-bold text-2xl md:text-4xl">{WORDS.yourTaste}</h1>
 			</div>
 			{flow.ready ? (
 				<section className="space-y-3">
@@ -341,11 +302,7 @@ function TasteView({
 			)}
 			<div className="flex flex-wrap items-center gap-x-2 gap-y-3">
 				{!flow.member && <SaveTaste />}
-				<button
-					type="button"
-					className={flow.member ? ghostButton : quietButton}
-					onClick={onKeep}
-				>
+				<button type="button" className={flow.member ? ghostButton : quietButton} onClick={onKeep}>
 					{WORDS.keepRating}
 				</button>
 			</div>

@@ -7,28 +7,19 @@
 // starts one that reads the live site's public endpoints as a guest. `?fixture=member` shows the member state of You
 // with a fixture member's taste groups and taste counts (dev-member-fixture.ts) over the guest's results.
 import { type LoaderFunctionArgs, json } from "@remix-run/node"
-import {
-	type ShouldRevalidateFunction,
-	useSearchParams,
-} from "@remix-run/react"
+import { type ShouldRevalidateFunction, useSearchParams } from "@remix-run/react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useEffect, useMemo, useState } from "react"
 import { searchEligibility, searchText } from "~/domain/discover-search"
 import { useDiscoverResults } from "~/routes/api.discover_.results"
 import { DiscoverControls } from "~/ui/discover-bar/DiscoverControls"
 import { GridDim } from "~/ui/discover-bar/DiscoverPanel"
-import {
-	FIXTURE_TASTE_GROUPS,
-	withMemberCounts,
-} from "~/ui/discover-bar/dev-member-fixture"
+import { FIXTURE_TASTE_GROUPS, withMemberCounts } from "~/ui/discover-bar/dev-member-fixture"
 import { renderFind } from "~/ui/discover-bar/find/FindResults"
 import { renderSubTab } from "~/ui/discover-bar/sub-tabs"
 import { useDesktop, useDiscoverBar } from "~/ui/discover-bar/useDiscoverBar"
 import { YouTab } from "~/ui/discover-bar/you/YouTab"
-import {
-	TASTE_GROUPS_FIXTURE_ID,
-	tasteGroupsKey,
-} from "~/ui/discover-bar/you/taste-groups-key"
+import { TASTE_GROUPS_FIXTURE_ID, tasteGroupsKey } from "~/ui/discover-bar/you/taste-groups-key"
 import { useForYou } from "~/ui/discover/useDiscoverBrowse"
 import { useDiscoverSearch } from "~/ui/discover/useDiscoverSearch"
 import { useFilterState } from "~/ui/filter-bar"
@@ -43,8 +34,7 @@ import useLocale from "~/utils/locale"
 const DEFAULTS = { onMyServices: false, notSeenYet: false }
 
 export function loader(_: LoaderFunctionArgs) {
-	if (process.env.NODE_ENV === "production")
-		throw new Response("Not found", { status: 404 })
+	if (process.env.NODE_ENV === "production") throw new Response("Not found", { status: 404 })
 	return json({})
 }
 
@@ -54,10 +44,7 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 	nextUrl,
 	formMethod,
 	defaultShouldRevalidate,
-}) =>
-	formMethod || currentUrl.pathname !== nextUrl.pathname
-		? defaultShouldRevalidate
-		: false
+}) => (formMethod || currentUrl.pathname !== nextUrl.pathname ? defaultShouldRevalidate : false)
 
 export default function DevDiscoverBar() {
 	const { user, loading } = useUser()
@@ -75,9 +62,7 @@ export default function DevDiscoverBar() {
 	}, [fixture, queryClient, locale.language])
 	const q = searchText(params.get("q"))
 	const searching = q !== null
-	const [guest, setGuest] = useState<ReturnType<
-		typeof snapshotGuestProgress
-	> | null>(null)
+	const [guest, setGuest] = useState<ReturnType<typeof snapshotGuestProgress> | null>(null)
 	useEffect(() => {
 		if (!loading && !user && !fixture) setGuest(snapshotGuestProgress())
 	}, [loading, user, fixture])
@@ -95,10 +80,7 @@ export default function DevDiscoverBar() {
 		}),
 		[guest?.country, services.country, services.ids],
 	)
-	const eligibility = useMemo(
-		() => searchEligibility(filters.state, scope),
-		[filters.state, scope],
-	)
+	const eligibility = useMemo(() => searchEligibility(filters.state, scope), [filters.state, scope])
 	const search = useDiscoverSearch({
 		q,
 		filters: eligibility,
@@ -118,23 +100,15 @@ export default function DevDiscoverBar() {
 		enabled: ready && (!searching || Boolean(search.current)),
 	})
 	const data =
-		fixture && results.data
-			? withMemberCounts(results.data, filters.state)
-			: (results.data ?? null)
+		fixture && results.data ? withMemberCounts(results.data, filters.state) : (results.data ?? null)
 	// The ranked list once the search has ranked; a partial list sent ahead of the ranking doesn't count.
-	const ranked =
-		searching && search.current && !search.partial
-			? search.current.ranked
-			: null
+	const ranked = searching && search.current && !search.partial ? search.current.ranked : null
 	const page = useMemo(
 		() => ({
 			scope,
 			ranked,
 			cards: data?.cards ?? [],
-			countsFresh:
-				Boolean(data) &&
-				!results.isPlaceholderData &&
-				(!searching || ranked !== null),
+			countsFresh: Boolean(data) && !results.isPlaceholderData && (!searching || ranked !== null),
 			guest: member || !guest ? null : guest,
 		}),
 		[scope, ranked, data, results.isPlaceholderData, searching, member, guest],
@@ -165,7 +139,7 @@ export default function DevDiscoverBar() {
 		<div className="mx-auto max-w-[1600px] px-4 pt-4 pb-16 lg:px-8 lg:pt-6">
 			<DiscoverControls
 				heading={
-					<h1 className="brand-header text-[23px] leading-tight text-white lg:text-[34px]">
+					<h1 className="font-display font-bold text-[23px] leading-tight text-white lg:text-[34px]">
 						Discover movies and shows
 					</h1>
 				}
@@ -182,11 +156,7 @@ export default function DevDiscoverBar() {
 				forYou={forYou}
 				renderFind={renderFind}
 				renderSubTab={(id, view) =>
-					fixture && id === "taste" ? (
-						<YouTab view={view} fixture />
-					) : (
-						renderSubTab(id, view)
-					)
+					fixture && id === "taste" ? <YouTab view={view} fixture /> : renderSubTab(id, view)
 				}
 				sort={{
 					options: discoverSorts(searching, taste),

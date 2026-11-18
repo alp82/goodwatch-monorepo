@@ -31,43 +31,23 @@ import { TitleBar } from "~/ui/details/TitleBar"
 import { TitleSummary } from "~/ui/details/TitleSummary"
 import { YouBlock } from "~/ui/details/YouBlock"
 import { AwardsLink } from "~/ui/details/at-a-glance/AwardsList"
-import {
-	NearSection,
-	belowFoldProps,
-	useBelowFold,
-} from "~/ui/details/below-fold"
+import { NearSection, belowFoldProps, useBelowFold } from "~/ui/details/below-fold"
 import { FindField, FindResults, useFindItems } from "~/ui/details/find/Find"
 import { useCharacterParam } from "~/ui/details/find/character-param"
-import {
-	FindBus,
-	type FindRequest,
-	useFindBusValue,
-} from "~/ui/details/find/find-bus"
-import {
-	type FindEntry,
-	type FindSection,
-	buildFindIndex,
-} from "~/ui/details/find/find-index"
+import { FindBus, type FindRequest, useFindBusValue } from "~/ui/details/find/find-bus"
+import { type FindEntry, type FindSection, buildFindIndex } from "~/ui/details/find/find-index"
 import { flash, locate } from "~/ui/details/find/highlight"
 import { type PageGo, goSub, takePageGo } from "~/ui/details/find/landing"
 import { markHl, useHlParam } from "~/ui/details/find/marks"
 import { shelfEntries } from "~/ui/details/find/sub-page-index"
-import {
-	keepPageIndex,
-	titleKey,
-	useCrossFind,
-} from "~/ui/details/find/useSubPageFind"
+import { keepPageIndex, titleKey, useCrossFind } from "~/ui/details/find/useSubPageFind"
 import { goodFor } from "~/ui/details/fingerprint/area-details"
 import RatingChips from "~/ui/details/hero/RatingChips"
 import ScoreRing from "~/ui/details/hero/ScoreRing"
 import { HeroPoster } from "~/ui/details/hero/Trailer"
 import { PhoneShelfNav } from "~/ui/details/more-like-this/PhoneShelfNav"
 import type { ShelfTitle } from "~/ui/details/more-like-this/shelf-data"
-import {
-	TrailerBand,
-	hasVideo,
-	openerHeaderClass,
-} from "~/ui/details/opener/TrailerBand"
+import { TrailerBand, hasVideo, openerHeaderClass } from "~/ui/details/opener/TrailerBand"
 import { CAPTION, SectionHeader } from "~/ui/details/page-ui"
 import { TitleRail } from "~/ui/details/rail/TitleRail"
 import { usePublishPageMeta } from "~/ui/details/rail/rail-model"
@@ -84,12 +64,7 @@ import {
 	summaryEntry,
 	useTitleSections,
 } from "~/ui/details/title-sections"
-import {
-	ageRating,
-	fingerprintInput,
-	fitMeta,
-	metaItems,
-} from "~/ui/details/title-words"
+import { ageRating, fingerprintInput, fitMeta, metaItems } from "~/ui/details/title-words"
 import type { TitleQuestion } from "~/ui/details/titleQuestions"
 import ExploreBar from "~/ui/explore/ExploreBar"
 import { skipIf } from "~/ui/fingerprint/fingerprintText"
@@ -175,9 +150,7 @@ export function TitlePage(props: TitlePageProps) {
 	// At a glance's open rows, kept per history entry: Back from a sub-page finds them open.
 	const [openRows, setOpenRows] = useKeptState<string[]>("at-a-glance", [])
 	const toggleRow = (id: string) =>
-		setOpenRows((o) =>
-			o.includes(id) ? o.filter((x) => x !== id) : [...o, id],
-		)
+		setOpenRows((o) => (o.includes(id) ? o.filter((x) => x !== id) : [...o, id]))
 	/** Opens what holds section `id` and says where to scroll. */
 	const reveal = (id: string): string => {
 		const row = GLANCE_ROW[id]
@@ -197,11 +170,7 @@ export function TitlePage(props: TitlePageProps) {
 			return
 		}
 		scrollToTop()
-		history.replaceState(
-			history.state,
-			"",
-			window.location.pathname + window.location.search,
-		)
+		history.replaceState(history.state, "", window.location.pathname + window.location.search)
 	}
 	const sections = useTitleSections({
 		...props,
@@ -217,11 +186,7 @@ export function TitlePage(props: TitlePageProps) {
 				peek: videoPeek(media),
 			}
 		: null
-	const items: IndexItem[] = [
-		...(trailer ? [trailer] : []),
-		summary,
-		...sections,
-	]
+	const items: IndexItem[] = [...(trailer ? [trailer] : []), summary, ...sections]
 	const ids = items.map((i) => i.id)
 	// The bar's meta line, for the header of More like this's expanded view.
 	usePublishPageMeta(fitMeta(media, country))
@@ -243,12 +208,7 @@ export function TitlePage(props: TitlePageProps) {
 	const [query, setQuery] = useState("")
 	const [active, setActive] = useState(0)
 	const searching = query.trim().length > 0
-	const findSections: FindSection[] = [
-		scores,
-		summary,
-		...sections,
-		...FIND_ONLY_SECTIONS,
-	]
+	const findSections: FindSection[] = [scores, summary, ...sections, ...FIND_ONLY_SECTIONS]
 	const buildIndex = (): FindEntry[] =>
 		buildFindIndex({
 			media,
@@ -294,18 +254,14 @@ export function TitlePage(props: TitlePageProps) {
 		requestAnimationFrame(() =>
 			requestAnimationFrame(() => {
 				const section = document.getElementById(id)
-				const picked =
-					selector && section
-						? section.querySelector<HTMLElement>(selector)
-						: null
+				const picked = selector && section ? section.querySelector<HTMLElement>(selector) : null
 				// A poster on a shelf that scrolls sideways: into the row's view first.
 				picked?.scrollIntoView({
 					block: "nearest",
 					inline: "center",
 					behavior: "instant",
 				})
-				const el =
-					picked ?? (needle && section ? locate(section, needle) : null)
+				const el = picked ?? (needle && section ? locate(section, needle) : null)
 				if (el) flash(el)
 				else jumpTo(id)
 			}),
@@ -337,8 +293,7 @@ export function TitlePage(props: TitlePageProps) {
 	useCharacterParam((ask) => {
 		const r: FindRequest = { type: "character", ...ask, nonce: Date.now() }
 		requestAnimationFrame(() => jump("cast"))
-		for (const ms of [0, 450, 1200, 2500])
-			window.setTimeout(() => bus.send(r), ms)
+		for (const ms of [0, 450, 1200, 2500]) window.setTimeout(() => bus.send(r), ms)
 	})
 	const leave = () => {
 		// The picked words are marked where it lands (?hl=).
@@ -365,11 +320,7 @@ export function TitlePage(props: TitlePageProps) {
 			markHl(query)
 			const e = hit.entry
 			// A section found by its gist (no words of its own to ring): ring where the words are in it.
-			open(
-				e.needle || e.selector
-					? e
-					: { section: e.section, needle: query.trim() },
-			)
+			open(e.needle || e.selector ? e : { section: e.section, needle: query.trim() })
 		},
 		onPerson: (kind, row) => {
 			leave()
@@ -403,8 +354,7 @@ export function TitlePage(props: TitlePageProps) {
 	const landPage = (go: PageGo) => {
 		stopRestore()
 		if (go.person) askPeople({ type: "person", ...go.person }, go.person.kind)
-		else if (go.castSearch)
-			askPeople({ type: "cast-search", q: go.castSearch }, "cast")
+		else if (go.castSearch) askPeople({ type: "cast-search", q: go.castSearch }, "cast")
 		else open(go)
 	}
 	const landRef = useRef(landPage)
@@ -453,8 +403,7 @@ export function TitlePage(props: TitlePageProps) {
 			if (!handler || e.defaultPrevented || e.isComposing) return null
 			if (e.ctrlKey || e.metaKey || e.altKey) return null
 			const target = e.target as HTMLElement | null
-			if (target?.closest?.("input, textarea, select, [contenteditable]"))
-				return null
+			if (target?.closest?.("input, textarea, select, [contenteditable]")) return null
 			if (document.querySelector(OVER_PAGE)) return null
 			return handler
 		}
@@ -489,12 +438,8 @@ export function TitlePage(props: TitlePageProps) {
 		const entry = box.querySelector<HTMLElement>(`[aria-current="location"]`)
 		if (!entry) return
 		// Measured on screen: the list's own children put the entry's offsetParent elsewhere.
-		const top =
-			entry.getBoundingClientRect().top -
-			box.getBoundingClientRect().top +
-			box.scrollTop
-		if (top < box.scrollTop + 8)
-			box.scrollTo({ top: top - 8, behavior: "smooth" })
+		const top = entry.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop
+		if (top < box.scrollTop + 8) box.scrollTo({ top: top - 8, behavior: "smooth" })
 		else if (top + entry.offsetHeight > box.scrollTop + box.clientHeight - 24)
 			box.scrollTo({
 				top: top + entry.offsetHeight - box.clientHeight + 24,
@@ -522,21 +467,13 @@ export function TitlePage(props: TitlePageProps) {
 	const title = presentedText(details, "title", details.title)
 	const withCard = hasVideo(media)
 	// Blurred by 64 px across the whole page, so the smallest backdrop is enough.
-	const pageBackdrop = details.backdrop_path
-		? tmdbImageUrl(details.backdrop_path, "w300")
-		: ""
+	const pageBackdrop = details.backdrop_path ? tmdbImageUrl(details.backdrop_path, "w300") : ""
 	// The score ring on its own row above the sites' chips, beside the poster from lg up and full width under the
 	// header on a phone.
 	const ratings = (className: string, ringSize: number) => (
-		<div
-			data-hero-ratings
-			className={`flex flex-col items-start gap-4 ${className}`}
-		>
+		<div data-hero-ratings className={`flex flex-col items-start gap-4 ${className}`}>
 			<ScoreRing media={media} size={ringSize} />
-			<div
-				data-hero-sites
-				className="flex min-w-0 flex-wrap items-center gap-2"
-			>
+			<div data-hero-sites className="flex min-w-0 flex-wrap items-center gap-2">
 				<RatingChips media={media} fill={false} />
 			</div>
 		</div>
@@ -574,13 +511,7 @@ export function TitlePage(props: TitlePageProps) {
 					}}
 				/>
 
-				<TitleBar
-					media={media}
-					title={title}
-					country={country}
-					watchId={OPENER}
-					youId={YOU}
-				>
+				<TitleBar media={media} title={title} country={country} watchId={OPENER} youId={YOU}>
 					{/* While More like this is expanded, the row holds its shelves. */}
 					<PhoneShelfNav>
 						<PhoneBar
@@ -590,8 +521,7 @@ export function TitlePage(props: TitlePageProps) {
 							onJump={jump}
 							setPanel={(p) => {
 								setPhonePanel(p)
-								if (p === "find")
-									requestAnimationFrame(() => phoneFind.current?.focus())
+								if (p === "find") requestAnimationFrame(() => phoneFind.current?.focus())
 								if (p !== "find") setQuery("")
 							}}
 							find={
@@ -621,8 +551,8 @@ export function TitlePage(props: TitlePageProps) {
 											/>
 										) : (
 											<p className="px-2.5 py-2 text-xs text-gray-500">
-												Anyone in the cast or crew, episodes, facts, the
-												fingerprint, tropes and services.
+												Anyone in the cast or crew, episodes, facts, the fingerprint, tropes and
+												services.
 											</p>
 										)}
 									</div>
@@ -656,9 +586,7 @@ export function TitlePage(props: TitlePageProps) {
 							>
 								<HeroPoster
 									media={media}
-									className={
-										withCard ? "w-24 sm:w-32 lg:w-44" : "w-28 sm:w-32 lg:w-44"
-									}
+									className={withCard ? "w-24 sm:w-32 lg:w-44" : "w-28 sm:w-32 lg:w-44"}
 								/>
 								<div className="flex min-w-0 flex-1 flex-col gap-6 pb-1">
 									{/* Who it is: the title, the meta row and the genres, closer together than the scores below. */}
@@ -668,7 +596,7 @@ export function TitlePage(props: TitlePageProps) {
 											value={title}
 											aria-busy={props.textPreview === "loading" || undefined}
 											data-text-preview={props.textPreview ?? undefined}
-											className="text-balance text-2xl font-semibold leading-[1.1] tracking-tight text-white sm:text-3xl lg:text-[2.75rem]"
+											className="font-display font-bold text-balance text-2xl leading-[1.1] text-white sm:text-3xl lg:text-[2.75rem]"
 										/>
 										<p
 											className={`flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm text-gray-300 ${hasAwards ? "lg:text-[15px]" : "lg:text-base"}`}
@@ -726,10 +654,7 @@ export function TitlePage(props: TitlePageProps) {
 													{hasAwards && <Dot />}
 												</span>
 											)}
-											<AwardsLink
-												wins={awardWins}
-												onOpen={() => jump("awards")}
-											/>
+											<AwardsLink wins={awardWins} onOpen={() => jump("awards")} />
 										</p>
 										<div className="max-sm:hidden">
 											<Genres
@@ -760,17 +685,9 @@ export function TitlePage(props: TitlePageProps) {
 										className="block scroll-mt-[208px] lg:scroll-mt-[168px]"
 									/>
 								))}
-								<SectionHeader
-									anchor="summary"
-									icon={DocumentTextIcon}
-									title="Summary"
-								/>
+								<SectionHeader anchor="summary" icon={DocumentTextIcon} title="Summary" />
 								<div className="mt-6 lg:mt-8">
-									<TitleSummary
-										media={media}
-										goodFor={t ? goodFor(t) : []}
-										skip={skip}
-									/>
+									<TitleSummary media={media} goodFor={t ? goodFor(t) : []} skip={skip} />
 								</div>
 							</section>
 						</div>
@@ -780,17 +697,9 @@ export function TitlePage(props: TitlePageProps) {
 							aria-label="You and this page"
 							className="mt-7 min-w-0 max-lg:order-1 lg:sticky lg:top-32 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:mt-0 lg:flex lg:max-h-[calc(100dvh-9rem)] lg:flex-col lg:self-start lg:pt-6"
 						>
-							<section
-								id={YOU}
-								aria-label="You"
-								className="shrink-0 scroll-mt-32"
-							>
+							<section id={YOU} aria-label="You" className="shrink-0 scroll-mt-32">
 								<h2 className={`${CAPTION} mb-2.5 max-lg:hidden`}>You</h2>
-								<YouBlock
-									media={media}
-									country={country}
-									onWatch={() => jump("watch")}
-								/>
+								<YouBlock media={media} country={country} onWatch={() => jump("watch")} />
 							</section>
 
 							<div className="mt-6 hidden min-h-0 flex-1 flex-col border-t border-white/10 pt-5 lg:flex">
@@ -825,12 +734,7 @@ export function TitlePage(props: TitlePageProps) {
 											onClear={() => clearFind(railFind.current)}
 										/>
 									) : (
-										<TitleRail
-											items={items}
-											visible={visible}
-											onJump={jump}
-											media={media}
-										/>
+										<TitleRail items={items} visible={visible} onJump={jump} media={media} />
 									)}
 								</div>
 							</div>
@@ -865,9 +769,7 @@ export function TitlePage(props: TitlePageProps) {
 										subtitle={s.subtitle}
 										aside={s.aside}
 									/>
-									<div className={`mt-6 min-w-0 lg:mt-8 ${s.bodyClass ?? ""}`}>
-										{s.body()}
-									</div>
+									<div className={`mt-6 min-w-0 lg:mt-8 ${s.bodyClass ?? ""}`}>{s.body()}</div>
 								</NearSection>
 							))}
 							{/* Appears only when the title has posts, so it isn't a section of the index. */}

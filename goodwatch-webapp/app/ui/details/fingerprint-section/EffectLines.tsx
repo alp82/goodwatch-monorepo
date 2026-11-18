@@ -1,11 +1,6 @@
 // The fingerprint's effect lines ("Leaves you in awe.", one per line, type size by strength, in the color of the
 // effect's lead family) and a dial to read (an arc, the scale's name and word, nothing to press).
-import type {
-	Phrase,
-	ScaleReading,
-} from "~/ui/details/fingerprint-section/reading"
-
-const DISPLAY = '"Gabarito", ui-sans-serif, system-ui, sans-serif'
+import type { Phrase, ScaleReading } from "~/ui/details/fingerprint-section/reading"
 
 /** The largest type size that still fits every line on one line. */
 function fitHi(rows: Phrase[], extra = 0) {
@@ -55,20 +50,13 @@ export function Lines({
 }) {
 	return (
 		<div
-			className={`@container ${SIZES[size]}`}
+			className={`@container font-display ${SIZES[size]}`}
 			style={{
-				fontFamily: DISPLAY,
 				["--hi" as string]: fitHi(rows, values ? 2 : 0),
 			}}
 		>
 			{/* Only leaving the whole list lets go, so moving from line to line never passes through none. */}
-			<ul
-				onPointerLeave={
-					onHover
-						? (e) => e.pointerType === "mouse" && onHover(null)
-						: undefined
-				}
-			>
+			<ul onPointerLeave={onHover ? (e) => e.pointerType === "mouse" && onHover(null) : undefined}>
 				{rows.map((p) => {
 					const id = p.r.effect.id
 					const body = (
@@ -91,13 +79,9 @@ export function Lines({
 							{onHover ? (
 								<button
 									type="button"
-									onPointerEnter={(e) =>
-										e.pointerType === "mouse" && onHover(id)
-									}
+									onPointerEnter={(e) => e.pointerType === "mouse" && onHover(id)}
 									// Keyboard focus points; a tap's focus leaves it to the click, which would else take it back at once.
-									onFocus={(e) =>
-										e.currentTarget.matches(":focus-visible") && onHover(id)
-									}
+									onFocus={(e) => e.currentTarget.matches(":focus-visible") && onHover(id)}
 									onBlur={() => onHover(null)}
 									onClick={() => onHover(active === id ? null : id)}
 									aria-pressed={active === id}
@@ -119,24 +103,14 @@ export function Lines({
 	)
 }
 
-export function NotFor({
-	line,
-	className = "",
-}: { line: string; className?: string }) {
+export function NotFor({ line, className = "" }: { line: string; className?: string }) {
 	if (!line) return null
-	return (
-		<p className={`text-[15px] font-medium text-gray-500 ${className}`}>
-			{line}
-		</p>
-	)
+	return <p className={`text-[15px] font-medium text-gray-500 ${className}`}>{line}</p>
 }
 
 const BG = "#0c0a09"
 
-export function ArcGlyph({
-	s,
-	className = "h-3.5 w-9",
-}: { s: ScaleReading; className?: string }) {
+export function ArcGlyph({ s, className = "h-3.5 w-9" }: { s: ScaleReading; className?: string }) {
 	const R = 20
 	const half = 0.72
 	const pt = (p: number) => {
@@ -198,20 +172,13 @@ export function ArcGlyph({
 }
 
 /** A dial to read, not press: arc, scale name, word; `ends` adds the scale's two ends under it. */
-export function StaticDial({
-	s,
-	ends = false,
-}: { s: ScaleReading; ends?: boolean }) {
+export function StaticDial({ s, ends = false }: { s: ScaleReading; ends?: boolean }) {
 	return (
 		<div className="flex min-w-0 items-center gap-2.5 py-1">
 			<ArcGlyph s={s} />
 			<span className="min-w-0 leading-tight">
-				<span className="block truncate text-[11px] text-gray-500">
-					{s.sc.name}
-				</span>
-				<span className="block truncate text-[13px] font-semibold text-gray-100">
-					{s.word}
-				</span>
+				<span className="block truncate text-[11px] text-gray-500">{s.sc.name}</span>
+				<span className="block truncate text-[13px] font-semibold text-gray-100">{s.word}</span>
 				{ends && (
 					<span className="block truncate text-[11px] text-gray-600">
 						{s.sc.left} to {s.sc.right.toLowerCase()}

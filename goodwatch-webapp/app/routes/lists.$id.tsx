@@ -1,18 +1,11 @@
 // A collection (a list made in an AI app, any length, with notes) or a private list: /lists/:id. Its address stays
 // (AI apps and imports link it), but it draws inside its owner's profile: the profile header and the Profile row with
 // Lists lit, as the share list pages at /u/:handle/lists/:id do. An owner without a handle gets the handle strip.
-import {
-	type LoaderFunctionArgs,
-	type MetaFunction,
-	json,
-} from "@remix-run/node"
+import { type LoaderFunctionArgs, type MetaFunction, json } from "@remix-run/node"
 import { Link, useFetcher, useLoaderData, useLocation } from "@remix-run/react"
 import { useState } from "react"
 import { handleOf, tastePath } from "~/domain/member-paths"
-import {
-	type ProfileHeaderData,
-	loadProfileHeader,
-} from "~/server/profile/header.server"
+import { type ProfileHeaderData, loadProfileHeader } from "~/server/profile/header.server"
 import { createCollectionPageLoader } from "~/server/share-lists/collection-page.server"
 import { getList } from "~/server/share-lists/store.server"
 import { resolveCardTitles } from "~/server/share-lists/titles.server"
@@ -24,9 +17,7 @@ import { HandlePicker } from "~/ui/share-lists/HandlePicker"
 import { getUserIdFromRequest } from "~/utils/auth"
 
 type CollectionPage = Awaited<
-	ReturnType<
-		Awaited<ReturnType<ReturnType<typeof createCollectionPageLoader>>>["json"]
-	>
+	ReturnType<Awaited<ReturnType<ReturnType<typeof createCollectionPageLoader>>>["json"]>
 >
 
 export async function loader(args: LoaderFunctionArgs) {
@@ -42,9 +33,7 @@ export async function loader(args: LoaderFunctionArgs) {
 	})(args)
 	const page: CollectionPage = await response.json()
 	// The owner's profile header. Without it (no handle, or it fails) the page still shows.
-	const owner = ownerId
-		? await getCachedProfileByUserId(ownerId).catch(() => null)
-		: null
+	const owner = ownerId ? await getCachedProfileByUserId(ownerId).catch(() => null) : null
 	const loaded = owner?.handle
 		? await loadProfileHeader(args.request, owner.handle).catch(() => null)
 		: null
@@ -95,14 +84,11 @@ export default function CollectionList() {
 			{chrome}
 			<main className="mx-auto max-w-3xl space-y-6 px-4 py-8 text-gray-100">
 				{!chrome && (
-					<Link
-						className="text-indigo-300 underline"
-						to={myListsPathFor(handleOf(viewer))}
-					>
+					<Link className="text-indigo-300 underline" to={myListsPathFor(handleOf(viewer))}>
 						My lists
 					</Link>
 				)}
-				<h1 className="break-words text-3xl font-bold">{list.title}</h1>
+				<h1 className="font-display font-bold break-words text-3xl">{list.title}</h1>
 				<p className="text-gray-400">
 					{list.items.length} titles ·{" "}
 					{list.visibility === "private"
@@ -112,9 +98,7 @@ export default function CollectionList() {
 							: "Public"}
 				</p>
 				{list.collection?.description && (
-					<p className="whitespace-pre-wrap break-words">
-						{list.collection.description}
-					</p>
+					<p className="whitespace-pre-wrap break-words">{list.collection.description}</p>
 				)}
 				{isOwner && (
 					<div className="space-y-3">
@@ -143,9 +127,7 @@ export default function CollectionList() {
 									<button
 										className="rounded bg-slate-700 px-4 py-2"
 										type="button"
-										onClick={() =>
-											write({ intent: "visibility", visibility: "private" })
-										}
+										onClick={() => write({ intent: "visibility", visibility: "private" })}
 									>
 										Make private
 									</button>
@@ -169,11 +151,7 @@ export default function CollectionList() {
 								>
 									Confirm delete
 								</button>
-								<button
-									type="button"
-									className="px-4 py-2"
-									onClick={() => setConfirmDelete(false)}
-								>
+								<button type="button" className="px-4 py-2" onClick={() => setConfirmDelete(false)}>
 									Cancel
 								</button>
 							</div>
@@ -193,14 +171,9 @@ export default function CollectionList() {
 					{list.items.map((entry, index) => {
 						const key = `${entry.media_type}:${entry.tmdb_id}`,
 							title = catalog.get(key)
-						const note =
-							list.collection?.entryNotes?.[index] ??
-							list.collection?.notes?.[key]
+						const note = list.collection?.entryNotes?.[index] ?? list.collection?.notes?.[key]
 						return (
-							<li
-								key={`${key}:${index}`}
-								className="rounded-lg border border-slate-700 p-4"
-							>
+							<li key={`${key}:${index}`} className="rounded-lg border border-slate-700 p-4">
 								<div className="flex gap-3">
 									<span>{index + 1}.</span>
 									{title ? (
@@ -216,9 +189,7 @@ export default function CollectionList() {
 									)}
 								</div>
 								{note && (
-									<p className="mt-2 whitespace-pre-wrap break-words text-gray-300">
-										{note}
-									</p>
+									<p className="mt-2 whitespace-pre-wrap break-words text-gray-300">{note}</p>
 								)}
 							</li>
 						)

@@ -1,7 +1,7 @@
 // Shared looks for the Watch next page.
 
-/** The display face for the hero's title and the tier headings (Gabarito, loaded by the route). */
-export const DISPLAY = "font-['Gabarito'] font-black tracking-[-0.03em]"
+/** The display face for the hero's title and the tier headings. */
+export { DISPLAY } from "~/ui/my-pages/style"
 
 /** The page's content width. */
 export const WRAP = "mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8"

@@ -50,12 +50,10 @@ export default function Support() {
 		<div className="mx-auto max-w-5xl px-4 py-6 pb-24 text-gray-300 md:px-8 md:py-10">
 			<header className="flex flex-col gap-5 rounded-2xl bg-gradient-to-br from-amber-950/70 via-gray-900 to-gray-900 p-5 ring-1 ring-amber-500/20 md:flex-row md:items-center md:justify-between md:p-8">
 				<div className="flex flex-col gap-2">
-					<h1 className="text-3xl font-bold tracking-tight text-white md:text-4xl">
-						Support
-					</h1>
+					<h1 className="font-display font-bold text-3xl text-white md:text-4xl">Support</h1>
 					<p className="max-w-xl text-lg leading-relaxed text-gray-300">
-						Something not working, or a question about your account? Write to
-						us. We read every message.
+						Something not working, or a question about your account? Write to us. We read every
+						message.
 					</p>
 				</div>
 				<div className="flex shrink-0 flex-col gap-2">
@@ -81,17 +79,16 @@ export default function Support() {
 					more={{ to: `#${AI_FIXES_ID}`, text: "More fixes" }}
 				>
 					<Fix q="It says GoodWatch isn't connected.">
-						Connect again from the app, for example in Claude under{" "}
-						<Ui>Customize</Ui> → <Ui>Connectors</Ui>. Your GoodWatch data stays
-						as it was.
+						Connect again from the app, for example in Claude under <Ui>Customize</Ui> →{" "}
+						<Ui>Connectors</Ui>. Your GoodWatch data stays as it was.
 					</Fix>
 					<Fix q="New features don't show up.">
-						Start a new chat. If that doesn't help, disconnect GoodWatch in the
-						app and connect it again.
+						Start a new chat. If that doesn't help, disconnect GoodWatch in the app and connect it
+						again.
 					</Fix>
 					<Fix q="It reads my GoodWatch but can't change anything.">
-						You may have picked <Ui>Read-only</Ui> when you connected. Connect
-						again and pick <Ui>Read and change my GoodWatch</Ui>.
+						You may have picked <Ui>Read-only</Ui> when you connected. Connect again and pick{" "}
+						<Ui>Read and change my GoodWatch</Ui>.
 					</Fix>
 					<p className="text-sm text-gray-400">
 						Not connected yet?{" "}
@@ -111,22 +108,18 @@ export default function Support() {
 					<ol className="flex list-decimal flex-col gap-2 pl-5 leading-relaxed marker:font-semibold marker:text-amber-400">
 						<li>
 							Open{" "}
-							<Link
-								to={CONNECTED_APPS_PATH}
-								prefetch="intent"
-								className={linkClass}
-							>
+							<Link to={CONNECTED_APPS_PATH} prefetch="intent" className={linkClass}>
 								Settings → Connected apps
 							</Link>
 							.
 						</li>
 						<li>
-							Next to the app, press <Ui>Disconnect</Ui>. The app loses access
-							right away, and nothing you saved on GoodWatch is lost.
+							Next to the app, press <Ui>Disconnect</Ui>. The app loses access right away, and
+							nothing you saved on GoodWatch is lost.
 						</li>
 						<li>
-							Remove GoodWatch in the app too, so it stops offering it. In a
-							terminal app, for example, run{" "}
+							Remove GoodWatch in the app too, so it stops offering it. In a terminal app, for
+							example, run{" "}
 							<code className="rounded bg-gray-950 px-1.5 py-0.5 font-mono text-[0.9em] text-gray-100 ring-1 ring-gray-700">
 								claude mcp remove goodwatch
 							</code>
@@ -148,16 +141,14 @@ export default function Support() {
 						<Link to="/sign-in" prefetch="intent" className={linkClass}>
 							Sign in
 						</Link>
-						, use the way you signed up: your email and password, or{" "}
-						<Ui>Continue with Google</Ui>. An account made with Google has no
-						password.
+						, use the way you signed up: your email and password, or <Ui>Continue with Google</Ui>.
+						An account made with Google has no password.
 					</Fix>
 					<Fix q="I forgot my password.">
 						<Link to="/forgot-password" prefetch="intent" className={linkClass}>
 							Reset your password
 						</Link>
-						. We email you a link. If it doesn't arrive in a few minutes, look
-						in your spam folder.
+						. We email you a link. If it doesn't arrive in a few minutes, look in your spam folder.
 					</Fix>
 					<Fix q="I want to change my password or delete my account.">
 						Change your password in{" "}
@@ -179,17 +170,15 @@ export default function Support() {
 					more={{ to: "/privacy", text: "Read the privacy policy" }}
 				>
 					<p className="leading-relaxed">
-						We only email you about your account: no newsletters, no ads. A
-						connected app sees your ratings, lists, shows and streaming
-						services, never your email address or password.
+						We only email you about your account: no newsletters, no ads. A connected app sees your
+						ratings, lists, shows and streaming services, never your email address or password.
 					</p>
 					<p className="leading-relaxed">
 						The{" "}
 						<Link to="/privacy" prefetch="intent" className={linkClass}>
 							privacy policy
 						</Link>{" "}
-						explains what we store, how long we keep it, and how to have it
-						deleted.
+						explains what we store, how long we keep it, and how to have it deleted.
 					</p>
 					<p className="leading-relaxed">
 						Our{" "}
@@ -216,44 +205,38 @@ function AiAppFixes() {
 				id={`${AI_FIXES_ID}-heading`}
 				className="mb-4 flex items-center gap-2 text-lg font-semibold text-white"
 			>
-				<ChatBubbleLeftRightIcon
-					className="h-5 w-5 text-amber-400"
-					aria-hidden="true"
-				/>
+				<ChatBubbleLeftRightIcon className="h-5 w-5 text-amber-400" aria-hidden="true" />
 				More fixes for AI apps
 			</h2>
 			<div className="grid gap-x-8 gap-y-5 md:grid-cols-2">
 				<Fix q="I can't find where to add a custom connector.">
-					Your plan or workspace may not allow it. As of October 2026, Claude
-					Free has room for one custom connector, and on Team or Enterprise an
-					owner adds it. ChatGPT allows it on Business, Enterprise and Edu
-					(read-only on Pro), and only on chatgpt.com in a browser. Plans
-					change, so check the app's own help too.
+					Your plan or workspace may not allow it. As of October 2026, Claude Free has room for one
+					custom connector, and on Team or Enterprise an owner adds it. ChatGPT allows it on
+					Business, Enterprise and Edu (read-only on Pro), and only on chatgpt.com in a browser.
+					Plans change, so check the app's own help too.
 				</Fix>
 				<Fix q="The sign-in page opens, but the app never finishes connecting.">
-					Update the app and try again. For desktop and terminal apps, the
-					browser has to run on the same computer, and it may ask whether to
-					open the app: allow it. Never send a code or key from the sign-in to
-					anyone.
+					Update the app and try again. For desktop and terminal apps, the browser has to run on the
+					same computer, and it may ask whether to open the app: allow it. Never send a code or key
+					from the sign-in to anyone.
 				</Fix>
 				<Fix q="New features still don't show up after a new chat.">
-					Refresh the app's list of GoodWatch tools. In ChatGPT, open the
-					GoodWatch plugin and press <Ui>Refresh</Ui>. In Claude, disconnect
-					GoodWatch and connect it again. In Cursor or VS Code, turn GoodWatch
-					off and on in the MCP settings.
+					Refresh the app's list of GoodWatch tools. In ChatGPT, open the GoodWatch plugin and press{" "}
+					<Ui>Refresh</Ui>. In Claude, disconnect GoodWatch and connect it again. In Cursor or VS
+					Code, turn GoodWatch off and on in the MCP settings.
 				</Fix>
 				<Fix q="Searching by description stopped working.">
 					Your assistant can search by description (“
-					{DESCRIPTION_SEARCH_EXAMPLE}”) {RANKED_SEARCHES_PER_DAY} times a day.
-					Finding a title by its name has no daily limit.
+					{DESCRIPTION_SEARCH_EXAMPLE}”) {RANKED_SEARCHES_PER_DAY} times a day. Finding a title by
+					its name has no daily limit.
 				</Fix>
 				<Fix q="It says “too many requests”.">
-					A connected app can ask GoodWatch {REQUESTS_PER_MINUTE} times a minute
-					and {REQUESTS_PER_HOUR} times an hour. Wait a minute and ask again.
+					A connected app can ask GoodWatch {REQUESTS_PER_MINUTE} times a minute and{" "}
+					{REQUESTS_PER_HOUR} times an hour. Wait a minute and ask again.
 				</Fix>
 				<Fix q="GoodWatch calls the app unverified.">
-					Some apps don't say who made them, so GoodWatch can't check. Allow the
-					app only if you started the connection yourself, in an app you trust.
+					Some apps don't say who made them, so GoodWatch can't check. Allow the app only if you
+					started the connection yourself, in an app you trust.
 				</Fix>
 			</div>
 		</section>

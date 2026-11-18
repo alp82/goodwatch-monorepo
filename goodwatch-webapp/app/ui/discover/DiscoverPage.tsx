@@ -14,7 +14,11 @@ import { exactSearchParams } from "~/domain/exact-search"
 // Best match (the sort by taste match) and the Taste match filter need taste; the bar hears from the results whether
 // the viewer has it. For you sits in You's Order block.
 import type { SearchTrigger } from "~/domain/search-attribution"
-import { filterChangeState, navigationSearchOrigin, searchNavigationState } from "~/ui/search/search-attribution"
+import {
+	filterChangeState,
+	navigationSearchOrigin,
+	searchNavigationState,
+} from "~/ui/search/search-attribution"
 import { useLocation, useNavigation, useNavigationType, useSearchParams } from "@remix-run/react"
 import { MotionConfig } from "framer-motion"
 import { Suspense, lazy, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
@@ -38,15 +42,9 @@ import { useDiscoverResults } from "~/routes/api.discover_.results"
 import type { DiscoverResults } from "~/server/discover-results.server"
 import { discoveryProperties } from "~/telemetry/product-events"
 import { useProductExposure } from "~/telemetry/useProductAnalytics"
-import {
-	DiscoverControls,
-	type DiscoverPageContext,
-} from "~/ui/discover-bar/DiscoverControls"
+import { DiscoverControls, type DiscoverPageContext } from "~/ui/discover-bar/DiscoverControls"
 import { GridDim } from "~/ui/discover-bar/DiscoverPanel"
-import {
-	preloadSubTabs,
-	useSubTabContent,
-} from "~/ui/discover-bar/sub-tabs/lazy"
+import { preloadSubTabs, useSubTabContent } from "~/ui/discover-bar/sub-tabs/lazy"
 import { filtersToKeep } from "~/ui/discover-bar/described-search"
 import type { ReadRow } from "~/ui/discover-bar/FilterMix"
 import { useDesktop, useDiscoverBar } from "~/ui/discover-bar/useDiscoverBar"
@@ -83,13 +81,19 @@ const MatchesRead = lazy(reloadOnStaleChunk(() => import("./search-reading/Match
 // The read strip shows only while searching: browsing never loads it. Its reading comes from the browser, so it mounts
 // after hydration (a lazy boundary that hydrates while the reading streams in would throw away the page's HTML).
 const ReadStrip = lazy(
-	reloadOnStaleChunk(() => import("./search-reading/ReadStrip").then((m) => ({ default: m.ReadStrip }))),
+	reloadOnStaleChunk(() =>
+		import("./search-reading/ReadStrip").then((m) => ({ default: m.ReadStrip })),
+	),
 )
 
 /** The read filters' counts as the meter shows them (a share of the results' hidden titles where it applies). */
-function withShownCounts(hides: ReadonlyMap<string, HideCount>, shown: ReadonlyMap<string, number>) {
+function withShownCounts(
+	hides: ReadonlyMap<string, HideCount>,
+	shown: ReadonlyMap<string, number>,
+) {
 	const out = new Map<string, HideCount>()
-	for (const [phrase, count] of hides) out.set(phrase, { ...count, n: shown.get(`read:${phrase}`) ?? count.n })
+	for (const [phrase, count] of hides)
+		out.set(phrase, { ...count, n: shown.get(`read:${phrase}`) ?? count.n })
 	return out
 }
 
@@ -139,19 +143,18 @@ const ids = (value: string | null | undefined) =>
 		.map(Number)
 		.filter((id) => Number.isSafeInteger(id) && id > 0)
 
-export function DiscoverPage({
-	initial,
-	member,
-	savedForYou,
-	searchScope,
-}: DiscoverPageProps) {
+export function DiscoverPage({ initial, member, savedForYou, searchScope }: DiscoverPageProps) {
 	const [params, setParams] = useSearchParams()
 	const hydrated = useHydrated()
 	// The words as typed. An older link keeps them in `asked`, with what they read as the person's own filters.
 	const fullTyped = searchText(params.get("asked") ?? params.get("q"))
 	const invocationLocation = useLocation()
 	const invocationNavigation = useNavigationType()
-	const attribution = navigationSearchOrigin(fullTyped, invocationLocation.state, invocationNavigation)
+	const attribution = navigationSearchOrigin(
+		fullTyped,
+		invocationLocation.state,
+		invocationNavigation,
+	)
 	// Award words that became the awards filter ("oscar winners") leave the search: only the rest is searched.
 	const awardWords = fullTyped && params.get("awards") ? readAwardWords(fullTyped) : null
 	const typed = awardWords ? searchText(awardWords.rest) : fullTyped
@@ -194,7 +197,12 @@ export function DiscoverPage({
 		() => (plan ? filterStateFromParams(plan.filters, filters.defaults) : filters.state),
 		[plan, filters.state, filters.defaults],
 	)
-	const q = !plan || catalogue ? null : plan.branch === "title" ? settled?.text ?? null : settled?.words || null
+	const q =
+		!plan || catalogue
+			? null
+			: plan.branch === "title"
+				? (settled?.text ?? null)
+				: settled?.words || null
 	const forYou = useForYou({ member, saved: savedForYou })
 	const bar = useDiscoverBar(filters.state)
 	const desktop = useDesktop()
@@ -208,19 +216,21 @@ export function DiscoverPage({
 		}),
 		[member, guest?.country, guest?.services, searchScope],
 	)
-	const eligibility = useMemo(
-		() => searchEligibility(listState, scope),
-		[listState, scope],
-	)
+	const eligibility = useMemo(() => searchEligibility(listState, scope), [listState, scope])
 	// A single genre read as a preference widens what the search finds: the original reading's pool comes along, and
 	// each read filter the search applies itself gets a count of what it keeps out.
 	const preferences = useMemo(() => {
 		if (!plan || plan.branch !== "positive") return undefined
-		const original = searchEligibility(filterStateFromParams(plan.original, filters.defaults), scope)
+		const original = searchEligibility(
+			filterStateFromParams(plan.original, filters.defaults),
+			scope,
+		)
 		const own = searchEligibility(filters.state, scope)
-		const differs = (a: unknown, b: unknown) => JSON.stringify(a ?? null) !== JSON.stringify(b ?? null)
+		const differs = (a: unknown, b: unknown) =>
+			JSON.stringify(a ?? null) !== JSON.stringify(b ?? null)
 		const counted: string[] = []
-		if (differs([own.minYear, own.maxYear], [eligibility.minYear, eligibility.maxYear])) counted.push("years")
+		if (differs([own.minYear, own.maxYear], [eligibility.minYear, eligibility.maxYear]))
+			counted.push("years")
 		if (differs(own.type, eligibility.type)) counted.push("type")
 		if (differs(own.anime, eligibility.anime)) counted.push("anime")
 		return {
@@ -244,8 +254,7 @@ export function DiscoverPage({
 		setParams(
 			(previous) => {
 				const base = new URLSearchParams(previous)
-				if (!exact.wholeQuery && plan)
-					for (const [key, value] of plan.filters) base.set(key, value)
+				if (!exact.wholeQuery && plan) for (const [key, value] of plan.filters) base.set(key, value)
 				return exactSearchParams(base, exact)
 			},
 			{ replace: true, preventScrollReset: true },
@@ -262,11 +271,23 @@ export function DiscoverPage({
 		if (!searching || !plan) return filters.query
 		const out = new URLSearchParams(filterQuery(listState, filters.sort, filters.defaults))
 		if (!catalogue && plan.preferences.length) out.set("prefer", preferencesParam(plan.preferences))
-		if (!catalogue && search.current?.originalSet) out.set("originalSet", search.current.originalSet)
-		if (!catalogue && search.current?.identitySet) out.set("identitySet", search.current.identitySet)
+		if (!catalogue && search.current?.originalSet)
+			out.set("originalSet", search.current.originalSet)
+		if (!catalogue && search.current?.identitySet)
+			out.set("identitySet", search.current.identitySet)
 		if (!catalogue) out.set("scope", "1")
 		return out.toString()
-	}, [searching, plan, catalogue, filters.query, filters.sort, filters.defaults, listState, search.current?.originalSet, search.current?.identitySet])
+	}, [
+		searching,
+		plan,
+		catalogue,
+		filters.query,
+		filters.sort,
+		filters.defaults,
+		listState,
+		search.current?.originalSet,
+		search.current?.identitySet,
+	])
 	const shownFilters = useReadFilters(filters, reading.items, searching, listQuery)
 
 	const browse = useDiscoverBrowse({
@@ -300,7 +321,11 @@ export function DiscoverPage({
 				if (entering) out.delete("sort")
 				return out
 			},
-			{ replace: !entering, preventScrollReset: true, state: searchNavigationState(text, "discover", trigger) },
+			{
+				replace: !entering,
+				preventScrollReset: true,
+				state: searchNavigationState(text, "discover", trigger),
+			},
 		)
 	}
 	const clearSearch = () => {
@@ -322,11 +347,7 @@ export function DiscoverPage({
 	const first: DiscoverResults | null = pages[0] ?? null
 	const cards = useMemo(() => pages.flatMap((page) => page.cards), [pages])
 	const answered = !browse.isPlaceholderData && Boolean(first)
-	const stale = searching
-		? catalogue
-			? !answered
-			: !first?.searching || !answered
-		: false
+	const stale = searching ? (catalogue ? !answered : !first?.searching || !answered) : false
 	// From the first keystroke until the results are painted, the field's line runs and the old results dim.
 	const [unsent] = useState(unsentWords)
 	const waitingForWords = useSyncExternalStore(
@@ -357,9 +378,7 @@ export function DiscoverPage({
 	})
 	useProductExposure(
 		"discovery results shown",
-		answered && !stale
-			? `${params.toString()}:${cards.map((c) => c.key).join(",")}`
-			: null,
+		answered && !stale ? `${params.toString()}:${cards.map((c) => c.key).join(",")}` : null,
 		{
 			...discoveryProperties(params),
 			result_count: cards.length,
@@ -395,16 +414,12 @@ export function DiscoverPage({
 	useEffect(() => {
 		if (!flip) return
 		// Another change took over (a filter, the sort): no marks for it. The URL may not have caught up with the flip yet.
-		if (browse.key !== flip.key && browse.key !== flip.from)
-			return setFlip(null)
+		if (browse.key !== flip.key && browse.key !== flip.from) return setFlip(null)
 		if (flip.at === null && answered) setFlip({ ...flip, at: Date.now() })
 	}, [flip, browse.key, answered])
 	useEffect(() => {
 		if (flip?.at == null) return
-		const id = setTimeout(
-			() => setFlip(null),
-			Math.max(0, flip.at + MARKS_MS - Date.now()),
-		)
+		const id = setTimeout(() => setFlip(null), Math.max(0, flip.at + MARKS_MS - Date.now()))
 		return () => clearTimeout(id)
 	}, [flip?.at])
 	// The person may have scrolled several pages down: load as many of the new order.
@@ -435,8 +450,7 @@ export function DiscoverPage({
 			// says how far it came in the whole list. A title that only fell behind them is marked when the person had it
 			// in view before.
 			for (const page of pages)
-				for (const { key, by } of page.moved)
-					if (by > 0 || flip.before.has(key)) moved.set(key, by)
+				for (const { key, by } of page.moved) if (by > 0 || flip.before.has(key)) moved.set(key, by)
 			return moved
 		}
 		// Turned off, the lifted titles leave; the ones that stay say how far they moved among the loaded cards.
@@ -505,26 +519,16 @@ export function DiscoverPage({
 		forYou: forYou.on,
 		guest: guest ?? null,
 		counts: bar.counts,
-		enabled:
-			bar.counts.length > 0 &&
-			guest !== undefined &&
-			(!searching || !!ranked || catalogue),
+		enabled: bar.counts.length > 0 && guest !== undefined && (!searching || !!ranked || catalogue),
 	})
 	// Not the last query's counts while this one's load: the search's own filter counts are this query's.
 	const extraShown =
-		bar.counts.length > 0 && extra.data && !extra.isPlaceholderData
-			? extra.data
-			: null
+		bar.counts.length > 0 && extra.data && !extra.isPlaceholderData ? extra.data : null
 	const listCounts = stale ? null : (extraShown ?? first)
 	// The filters the search applies itself: their counts come from the search (a topic's), else "set in search".
 	const counts =
 		listCounts && searching && ranked
-			? withSearchFilters(
-					listCounts,
-					listState,
-					scope,
-					search.current?.filterHides,
-				)
+			? withSearchFilters(listCounts, listState, scope, search.current?.filterHides)
 			: listCounts
 	// The read parts' switches, on the strip and in Matches alike. Words set aside by the person's own choice aren't
 	// switches. Matches keeps rows only for the person's own filters; the read parts are listed after them.
@@ -545,12 +549,26 @@ export function DiscoverPage({
 		if (streamed) hides.set(item.phrase.toLowerCase(), { n: streamed.hides, approx: true })
 		// One the results apply: its share of their hidden titles (FilterMix shares them out, hidden-allocation.ts).
 		else if (counts && item.group && !inSearch)
-			hides.set(item.phrase.toLowerCase(), { n: own?.titles ?? 0, approx: !catalogue, inHidden: true })
+			hides.set(item.phrase.toLowerCase(), {
+				n: own?.titles ?? 0,
+				approx: !catalogue,
+				inHidden: true,
+			})
 	}
 	const readRows: ReadRow[] = items.flatMap((item) => {
 		const count = hides.get(item.phrase.toLowerCase())
 		if (!count || (!count.inHidden && !count.n)) return []
-		return [{ group: `read:${item.phrase.toLowerCase()}`, label: `${item.field} ${item.label}`.trim(), color: readColor(item), hides: count.n, approx: count.approx, inHidden: count.inHidden, nativeGroup: item.group ?? undefined }]
+		return [
+			{
+				group: `read:${item.phrase.toLowerCase()}`,
+				label: `${item.field} ${item.label}`.trim(),
+				color: readColor(item),
+				hides: count.n,
+				approx: count.approx,
+				inHidden: count.inHidden,
+				nativeGroup: item.group ?? undefined,
+			},
+		]
 	})
 	// The search's scope: titles that pass every filter but that the words don't bring in. One count, on one row.
 	const outside = !stale && first?.scope ? first.scope.outside : null
@@ -568,17 +586,22 @@ export function DiscoverPage({
 		setParams(
 			withOff(
 				params,
-				item.on ? [...off, item.phrase] : off.filter((o) => o.toLowerCase() !== item.phrase.toLowerCase()),
+				item.on
+					? [...off, item.phrase]
+					: off.filter((o) => o.toLowerCase() !== item.phrase.toLowerCase()),
 			),
 			{ replace: true, preventScrollReset: true, state: filterChangeState(params) },
 		)
 	}
 	const allRead = (allOff: boolean) =>
-		setParams(withOff(params, allOff ? items.filter((item) => !item.aside).map((item) => item.phrase) : []), {
-			replace: true,
-			preventScrollReset: true,
-			state: filterChangeState(params),
-		})
+		setParams(
+			withOff(params, allOff ? items.filter((item) => !item.aside).map((item) => item.phrase) : []),
+			{
+				replace: true,
+				preventScrollReset: true,
+				state: filterChangeState(params),
+			},
+		)
 	const page = useMemo<DiscoverPageContext>(
 		() => ({
 			scope,
@@ -613,12 +636,10 @@ export function DiscoverPage({
 		search.loading ||
 		(searching && reading.plan === null) ||
 		(browse.isFetching && !browse.isFetchingNextPage) ||
-		(navigation.state === "loading" &&
-			navigation.location?.pathname === "/discover")
+		(navigation.state === "loading" && navigation.location?.pathname === "/discover")
 	// For crawlers: advance from the last loaded page, including SSR windows beyond page five. Browsing only.
 	const { pathname, search: locationSearch } = useLocation()
-	const nextPage =
-		browse.hasNextPage && !searching ? (pages.at(-1)?.page ?? 0) + 1 : null
+	const nextPage = browse.hasNextPage && !searching ? (pages.at(-1)?.page ?? 0) + 1 : null
 	const nextPageUrl = useMemo(() => {
 		if (!nextPage) return null
 		const next = new URLSearchParams(locationSearch)
@@ -643,7 +664,7 @@ export function DiscoverPage({
 				<div onPointerEnter={warm} onTouchStart={warm} onFocus={warm}>
 					<DiscoverControls
 						heading={
-							<h1 className="brand-header text-[23px] leading-tight text-white lg:text-[34px]">
+							<h1 className="font-display font-bold text-[23px] leading-tight text-white lg:text-[34px]">
 								Discover
 							</h1>
 						}
@@ -665,22 +686,23 @@ export function DiscoverPage({
 						renderFind={renderFind}
 						readStrip={
 							searching
-								? ({ chips, onRemove, onOpen }) => !hydrated ? (
-										<div className="h-9 flex-1" />
-									) : (
-										<Suspense fallback={<div className="h-9 flex-1" />}>
-										<ReadStrip
-											items={items}
-											reading={fingerprint}
-											chips={chips}
-											pending={reading.pending || search.loading}
-											onToggle={toggleRead}
-											onAll={allRead}
-											onRemoveChip={onRemove}
-											onOpenChip={onOpen}
-										/>
-										</Suspense>
-									)
+								? ({ chips, onRemove, onOpen }) =>
+										!hydrated ? (
+											<div className="h-9 flex-1" />
+										) : (
+											<Suspense fallback={<div className="h-9 flex-1" />}>
+												<ReadStrip
+													items={items}
+													reading={fingerprint}
+													chips={chips}
+													pending={reading.pending || search.loading}
+													onToggle={toggleRead}
+													onAll={allRead}
+													onRemoveChip={onRemove}
+													onOpenChip={onOpen}
+												/>
+											</Suspense>
+										)
 								: undefined
 						}
 						matchesRead={
@@ -705,9 +727,7 @@ export function DiscoverPage({
 							options: discoverSorts(searching, taste),
 							value: sortShown(filters.sort, searching, taste),
 							onChange: (key) => filters.setSort(key as SortKey),
-							footnote: searching
-								? undefined
-								: "Relevance joins once you search.",
+							footnote: searching ? undefined : "Relevance joins once you search.",
 							signUp: taste === "signUp" ? <BestMatchSignUp /> : undefined,
 						}}
 					/>
@@ -750,38 +770,38 @@ export function DiscoverPage({
 								<Spinner size="large" />
 							</div>
 						) : (
-								<DiscoverGrid
-									cards={first.total === 0 && !stale ? [] : cards}
-									marks={marks}
-									flipping={Boolean(flip)}
-									dimmed={staleResults}
-								>
-									{/* A partial list without a title is not a search that found nothing: the status line above says what
+							<DiscoverGrid
+								cards={first.total === 0 && !stale ? [] : cards}
+								marks={marks}
+								flipping={Boolean(flip)}
+								dimmed={staleResults}
+							>
+								{/* A partial list without a title is not a search that found nothing: the status line above says what
 							    it still waits for, and the people it names show above the grid. */}
-									{!browse.hasNextPage &&
-										!browse.isPlaceholderData &&
-										!stale &&
-										!(search.partial && first.total === 0) && (
-											<HiddenTitles
-												counts={first}
-												state={filters.state}
-												onDrop={filters.drop}
-												onClear={filters.clearSecondary}
-												canClear={
-													secondaryFilterCount(
-														stateAsApplied(
-															filters.state,
-															first.ladder,
-															member,
-															scope.country,
-															first.facts,
-														),
-													) > 0
-												}
-												searching={searching}
-											/>
-										)}
-								</DiscoverGrid>
+								{!browse.hasNextPage &&
+									!browse.isPlaceholderData &&
+									!stale &&
+									!(search.partial && first.total === 0) && (
+										<HiddenTitles
+											counts={first}
+											state={filters.state}
+											onDrop={filters.drop}
+											onClear={filters.clearSecondary}
+											canClear={
+												secondaryFilterCount(
+													stateAsApplied(
+														filters.state,
+														first.ladder,
+														member,
+														scope.country,
+														first.facts,
+													),
+												) > 0
+											}
+											searching={searching}
+										/>
+									)}
+							</DiscoverGrid>
 						)}
 					</DiscoverRoles>
 					<div
@@ -796,9 +816,7 @@ export function DiscoverPage({
 							</>
 						) : browse.isFetchNextPageError ? (
 							<>
-								<span>
-									Couldn't load more {searching ? "matches" : "titles"}.
-								</span>
+								<span>Couldn't load more {searching ? "matches" : "titles"}.</span>
 								<button
 									type="button"
 									onClick={() => browse.fetchNextPage()}
@@ -808,12 +826,12 @@ export function DiscoverPage({
 								</button>
 							</>
 						) : searching &&
-							first &&
-							!browse.hasNextPage &&
-							!busy &&
-							!search.partial &&
-							!stale &&
-							first.total > 0 ? (
+						  first &&
+						  !browse.hasNextPage &&
+						  !busy &&
+						  !search.partial &&
+						  !stale &&
+						  first.total > 0 ? (
 							<span>You've reached the end of these matches.</span>
 						) : null}
 					</div>

@@ -148,12 +148,12 @@ function Hero() {
 		<header className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,32rem)] lg:gap-14">
 			<div className="flex flex-col gap-5">
 				<Kicker>Discord bot</Kicker>
-				<h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
+				<h1 className="font-display font-bold text-4xl text-white sm:text-5xl">
 					GoodWatch in Discord
 				</h1>
 				<p className="max-w-xl text-lg leading-relaxed text-gray-300 sm:text-xl">
-					Find something to watch, decide as a group, and keep your library up
-					to date without leaving the chat.
+					Find something to watch, decide as a group, and keep your library up to date without
+					leaving the chat.
 				</p>
 				<div className="flex flex-wrap items-center gap-3">
 					<AddButton />
@@ -167,19 +167,12 @@ function Hero() {
 				<ul className="flex flex-col gap-2 text-sm text-gray-400 sm:flex-row sm:flex-wrap sm:gap-x-6">
 					<HeroFact icon={SparklesIcon}>Free</HeroFact>
 					<HeroFact icon={UserIcon}>No GoodWatch account needed</HeroFact>
-					<HeroFact icon={ServerStackIcon}>
-						Servers, DMs, and group DMs
-					</HeroFact>
+					<HeroFact icon={ServerStackIcon}>Servers, DMs, and group DMs</HeroFact>
 				</ul>
 			</div>
 			<DiscordWindow label="The GoodWatch bot answers /search with a title card for Project Hail Mary: backdrop, poster, score, where to watch, and buttons">
 				<BotMessage command="/search" ephemeral>
-					<TitleCard
-						title={PROJECT_HAIL_MARY}
-						country="Germany"
-						flag="🇩🇪"
-						priority
-					/>
+					<TitleCard title={PROJECT_HAIL_MARY} country="Germany" flag="🇩🇪" priority />
 				</BotMessage>
 			</DiscordWindow>
 		</header>
@@ -210,9 +203,8 @@ function Setup() {
 			<ol>
 				<Step n={1} title="Open the install link">
 					<p className="leading-relaxed">
-						Press <strong className="text-white">Add to Discord</strong>.
-						Discord opens and asks where to add GoodWatch. To share the link,
-						copy this address:
+						Press <strong className="text-white">Add to Discord</strong>. Discord opens and asks
+						where to add GoodWatch. To share the link, copy this address:
 					</p>
 					<code className="w-fit max-w-full rounded-lg bg-gray-950 px-3 py-2 font-mono text-[0.95em] break-all text-gray-100 ring-1 ring-gray-700 select-all">
 						{DISCORD_ADD_URL}
@@ -223,30 +215,21 @@ function Setup() {
 				<Step n={2} title="Choose My Apps or Server">
 					<div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
 						<div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
-							<Choice
-								icon={UserIcon}
-								title="Add to My Apps"
-								hint="For you, everywhere"
-							>
-								Use the commands in any server, in DMs, and in group DMs, even
-								where GoodWatch isn't added. The answers are private.
+							<Choice icon={UserIcon} title="Add to My Apps" hint="For you, everywhere">
+								Use the commands in any server, in DMs, and in group DMs, even where GoodWatch isn't
+								added. The answers are private.
 							</Choice>
-							<Choice
-								icon={UserGroupIcon}
-								title="Add to Server"
-								hint="For everyone in a server"
-							>
-								Everyone in the server can use the commands.{" "}
-								<CommandName>/together</CommandName> needs this. Admins can run{" "}
-								<CommandName>/setup</CommandName> to set the server's country
-								and streaming services.
+							<Choice icon={UserGroupIcon} title="Add to Server" hint="For everyone in a server">
+								Everyone in the server can use the commands. <CommandName>/together</CommandName>{" "}
+								needs this. Admins can run <CommandName>/setup</CommandName> to set the server's
+								country and streaming services.
 							</Choice>
 						</div>
 						<InstallDialog />
 					</div>
 					<p className="text-sm text-gray-400">
-						You can do both. To add GoodWatch to a server, you need the Manage
-						Server permission there.
+						You can do both. To add GoodWatch to a server, you need the Manage Server permission
+						there.
 					</p>
 				</Step>
 
@@ -254,14 +237,12 @@ function Setup() {
 					<div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
 						<div className="flex flex-col gap-3 leading-relaxed">
 							<p>
-								In any message box, type <CommandName>/</CommandName> and pick a
-								GoodWatch command. Start with <CommandName>/search</CommandName>{" "}
-								and a title you like, or <CommandName>/watch</CommandName> for a
-								pick to watch.
+								In any message box, type <CommandName>/</CommandName> and pick a GoodWatch command.
+								Start with <CommandName>/search</CommandName> and a title you like, or{" "}
+								<CommandName>/watch</CommandName> for a pick to watch.
 							</p>
 							<p>
-								Only you see the answers. To show a title to everyone in the
-								channel, press{" "}
+								Only you see the answers. To show a title to everyone in the channel, press{" "}
 								<strong className="text-white">Share to channel</strong>.
 							</p>
 						</div>
@@ -278,7 +259,12 @@ function Step({
 	title,
 	last = false,
 	children,
-}: { n: number; title: string; last?: boolean; children: ReactNode }) {
+}: {
+	n: number
+	title: string
+	last?: boolean
+	children: ReactNode
+}) {
 	return (
 		<li className="grid grid-cols-[2.5rem_minmax(0,1fr)] gap-x-4 sm:grid-cols-[3rem_minmax(0,1fr)] sm:gap-x-6">
 			<div className="flex flex-col items-center">
@@ -286,9 +272,7 @@ function Step({
 					<span className="sr-only">Step </span>
 					{n}
 				</span>
-				{!last && (
-					<span aria-hidden="true" className="mt-2 w-px flex-1 bg-white/15" />
-				)}
+				{!last && <span aria-hidden="true" className="mt-2 w-px flex-1 bg-white/15" />}
 			</div>
 			<div className={`flex min-w-0 flex-col gap-4 ${last ? "" : "pb-12"}`}>
 				<h3 className="pt-1.5 text-xl font-bold tracking-tight text-white sm:pt-2.5 sm:text-2xl">
@@ -391,8 +375,8 @@ function Commands() {
 	return (
 		<section aria-labelledby="commands" className="flex flex-col gap-10">
 			<SectionHeading id="commands" title="Commands">
-				Title cards show the GoodWatch score, where to stream on subscription
-				services, and a menu to switch the country.
+				Title cards show the GoodWatch score, where to stream on subscription services, and a menu
+				to switch the country.
 			</SectionHeading>
 			<div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 				<CommandGroup
@@ -458,16 +442,13 @@ function Together() {
 	return (
 		<section aria-labelledby="together" className="flex flex-col gap-10">
 			<SectionHeading id="together" title="Decide what to watch together">
-				Run <CommandName>/together</CommandName> in a channel. Everyone who
-				joins votes Yep or Nope on the same titles in private. A title that
-				everyone likes becomes a match, and when everyone picks the same match,
-				the bot announces it.
+				Run <CommandName>/together</CommandName> in a channel. Everyone who joins votes Yep or Nope
+				on the same titles in private. A title that everyone likes becomes a match, and when
+				everyone picks the same match, the bot announces it.
 			</SectionHeading>
 			<div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
 				<div className="flex min-w-0 flex-col gap-3">
-					<p className="text-sm font-semibold text-gray-400">
-						In the channel, for everyone
-					</p>
+					<p className="text-sm font-semibold text-gray-400">In the channel, for everyone</p>
 					<DiscordWindow label="The public /together message: 4 participants, Spirited Away is a match and Coco is a possible match">
 						<BotMessage command="/together">
 							<TogetherMessage
@@ -488,9 +469,7 @@ function Together() {
 					</DiscordWindow>
 				</div>
 				<div className="flex min-w-0 flex-col gap-3">
-					<p className="text-sm font-semibold text-gray-400">
-						After Join, only for you
-					</p>
+					<p className="text-sm font-semibold text-gray-400">After Join, only for you</p>
 					<DiscordWindow label="A private voting card for Howl's Moving Castle with Yep, Nope, Undo, and Leave">
 						<BotMessage ephemeral>
 							<VoteCard
@@ -506,8 +485,7 @@ function Together() {
 						<li>Nobody sees anyone else's votes.</li>
 						<li>The starter can end the session. It closes after 24 hours.</li>
 						<li>
-							<CommandName>/together</CommandName> needs GoodWatch added to the
-							server.
+							<CommandName>/together</CommandName> needs GoodWatch added to the server.
 						</li>
 					</ul>
 				</div>
@@ -524,37 +502,31 @@ function Linking() {
 		>
 			<div className="flex flex-col gap-6">
 				<SectionHeading id="link" title="Link your GoodWatch account">
-					The bot works without an account. Link one to make every answer fit
-					your taste.
+					The bot works without an account. Link one to make every answer fit your taste.
 				</SectionHeading>
 				<ul className="flex flex-col gap-3 leading-relaxed">
 					<Benefit>Your taste match on every title.</Benefit>
 					<Benefit>
-						Picks from your own streaming services with{" "}
-						<CommandName>/watch</CommandName>.
+						Picks from your own streaming services with <CommandName>/watch</CommandName>.
 					</Benefit>
 					<Benefit>
-						Want to See, Seen, and Rate buttons on every title card, each with
-						Undo.
+						Want to See, Seen, and Rate buttons on every title card, each with Undo.
 					</Benefit>
 					<Benefit>
 						Your next episodes with <CommandName>/next</CommandName>, and{" "}
-						<CommandName>/rate</CommandName> and{" "}
-						<CommandName>/seen</CommandName> from any chat.
+						<CommandName>/rate</CommandName> and <CommandName>/seen</CommandName> from any chat.
 					</Benefit>
 				</ul>
 				<div className="flex flex-col gap-3 leading-relaxed">
 					<p>
-						Run <CommandName>/link</CommandName>. It opens goodwatch.app, where
-						you sign in and continue with Discord. Discord shares only your user
-						ID and username.
+						Run <CommandName>/link</CommandName>. It opens goodwatch.app, where you sign in and
+						continue with Discord. Discord shares only your user ID and username.
 					</p>
 					<p>
-						Only you see your personal answers. When you press Share to channel,
-						the bot posts the card without your personal part.{" "}
-						<CommandName>/profile</CommandName> shares only the parts of your
-						profile that everyone can see. Run{" "}
-						<CommandName>/unlink</CommandName> any time.
+						Only you see your personal answers. When you press Share to channel, the bot posts the
+						card without your personal part. <CommandName>/profile</CommandName> shares only the
+						parts of your profile that everyone can see. Run <CommandName>/unlink</CommandName> any
+						time.
 					</p>
 				</div>
 			</div>
@@ -563,12 +535,7 @@ function Linking() {
 					<LinkCard />
 				</BotMessage>
 				<BotMessage command="/search" ephemeral>
-					<MemberBlock
-						match={88}
-						state="Seen  ·  You rated it 7 · Great"
-						seen
-						rated
-					/>
+					<MemberBlock match={88} state="Seen  ·  You rated it 7 · Great" seen rated />
 				</BotMessage>
 			</DiscordWindow>
 		</section>
@@ -578,10 +545,7 @@ function Linking() {
 function Benefit({ children }: { children: ReactNode }) {
 	return (
 		<li className="flex items-start gap-3">
-			<ArrowRightIcon
-				className="mt-1 h-4 w-4 shrink-0 text-amber-400"
-				aria-hidden="true"
-			/>
+			<ArrowRightIcon className="mt-1 h-4 w-4 shrink-0 text-amber-400" aria-hidden="true" />
 			<span>{children}</span>
 		</li>
 	)
@@ -592,34 +556,27 @@ function Faq() {
 		<section aria-labelledby="faq" className="flex flex-col gap-8">
 			<SectionHeading id="faq" title="Questions" />
 			<div className="flex max-w-3xl flex-col divide-y divide-white/10 rounded-2xl bg-white/[0.04] ring-1 ring-white/10">
-				<Question q="Is it free?">
-					Yes. The bot is free, and so is a GoodWatch account.
-				</Question>
+				<Question q="Is it free?">Yes. The bot is free, and so is a GoodWatch account.</Question>
 				<Question q="Do I need a GoodWatch account?">
-					No. Search, Discover, picks, and <CommandName>/together</CommandName>{" "}
-					work without one. Link an account when you want matches, your own
-					services, and your library.{" "}
+					No. Search, Discover, picks, and <CommandName>/together</CommandName> work without one.
+					Link an account when you want matches, your own services, and your library.{" "}
 					<Link to="/sign-up" prefetch="intent" className={linkClass}>
 						Create an account
 					</Link>
 				</Question>
 				<Question q="Should I add it to My Apps or to a server?">
-					Add it to My Apps to use it yourself anywhere, including DMs. Add it
-					to a server so everyone there can use it and run{" "}
-					<CommandName>/together</CommandName>. You can do both.
+					Add it to My Apps to use it yourself anywhere, including DMs. Add it to a server so
+					everyone there can use it and run <CommandName>/together</CommandName>. You can do both.
 				</Question>
 				<Question q="Who sees the bot's answers?">
-					Only you, unless you press Share to channel. The{" "}
-					<CommandName>/together</CommandName> message is public in the channel,
-					and the votes stay private.
+					Only you, unless you press Share to channel. The <CommandName>/together</CommandName>{" "}
+					message is public in the channel, and the votes stay private.
 				</Question>
 				<Question q="What data does it keep?">
-					For a linked account, your Discord user ID and username and when you
-					linked them. For a server, the country and services set with{" "}
-					<CommandName>/setup</CommandName>. Votes from{" "}
-					<CommandName>/together</CommandName> expire within 48 hours after the
-					session closes. The bot doesn't log message content or what you search
-					for.{" "}
+					For a linked account, your Discord user ID and username and when you linked them. For a
+					server, the country and services set with <CommandName>/setup</CommandName>. Votes from{" "}
+					<CommandName>/together</CommandName> expire within 48 hours after the session closes. The
+					bot doesn't log message content or what you search for.{" "}
 					<Link to={PRIVACY_PATH} className={linkClass}>
 						Read the privacy policy
 					</Link>
@@ -630,12 +587,7 @@ function Faq() {
 						Support
 					</Link>{" "}
 					page, or ask in the{" "}
-					<a
-						href={DISCORD_URL}
-						target="_blank"
-						rel="noreferrer"
-						className={linkClass}
-					>
+					<a href={DISCORD_URL} target="_blank" rel="noreferrer" className={linkClass}>
 						GoodWatch Discord server
 					</a>
 					.

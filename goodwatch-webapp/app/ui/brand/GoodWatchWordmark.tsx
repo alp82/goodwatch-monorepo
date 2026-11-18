@@ -8,7 +8,8 @@ export const WORDMARK_WHITE = "#ffffff"
 export const WORDMARK_YELLOW = "#fbbf24"
 export const WORDMARK_INK = "#0a0a0a"
 
-/** The font stack of `.brand-header` (main.css). Satori has no fallback names: pass `SATORI_FONT_FAMILY` there. */
+/** The `--font-display` stack (tailwind.css) without its share-card fill-in. Satori has no fallback names: pass
+ *  `SATORI_FONT_FAMILY` there. */
 export const BROWSER_FONT_FAMILY =
 	'"Gabarito Brand", "Gabarito Fallback", "Gabarito Fallback Roboto", sans-serif'
 export const SATORI_FONT_FAMILY = "Gabarito"
@@ -59,11 +60,7 @@ export function GoodWatchG({
 			? (height * G_WIDTH) / G_HEIGHT
 			: `calc(${height} * ${G_WIDTH / G_HEIGHT})`
 	return (
-		<span
-			aria-hidden
-			className={className}
-			style={{ display: "flex", flexShrink: 0, ...style }}
-		>
+		<span aria-hidden className={className} style={{ display: "flex", flexShrink: 0, ...style }}>
 			<svg
 				aria-hidden="true"
 				focusable="false"
@@ -75,10 +72,7 @@ export function GoodWatchG({
 			>
 				<g fill={color} transform="translate(-9.3413446,-4.720956)">
 					<path d={G_RING} />
-					<path
-						transform="matrix(0.26458333,0,0,0.26458333,9.3401336,-32.149027)"
-						d={G_PLAY}
-					/>
+					<path transform="matrix(0.26458333,0,0,0.26458333,9.3401336,-32.149027)" d={G_PLAY} />
 				</g>
 			</svg>
 		</span>
@@ -113,8 +107,7 @@ export function GoodWatchWordmark({
 }: GoodWatchWordmarkProps) {
 	const size: Size = gHeight != null ? gHeight / G_EM : (fontSize ?? 36)
 	// Satori gets plain px numbers. A CSS length sets the root's font size and everything else follows in em.
-	const em = (factor: number) =>
-		typeof size === "number" ? size * factor : `${factor}em`
+	const em = (factor: number) => (typeof size === "number" ? size * factor : `${factor}em`)
 	return (
 		<span
 			role="img"
