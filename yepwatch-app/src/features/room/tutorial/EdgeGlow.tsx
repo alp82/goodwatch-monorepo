@@ -14,8 +14,6 @@ import { Word } from '../vote/Word';
 
 const clamp = { extrapolate: 'clamp' } as const;
 const fill = { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 } as const;
-const RED = '#ef4444';
-const RED_TEXT = '#f87171';
 const DIM = '#0a0806';
 
 /** One side's strength, 0 to 1, from `a` to `b` thresholds of the card's lean that way. */
@@ -65,7 +63,7 @@ export function EdgeGlow({ x, T, w, h, touch }: { x: Animated.Value; T: number; 
   const layers = useMemo(() => {
     const side = (yes: boolean) => {
       const shift = counter(x, yes, Math.max(0, (inner - rowEm(yes) * word) / 2), touch);
-      const color = yes ? glow.amber : RED;
+      const color = yes ? glow.amber : glow.nope;
       const glowO = ramp(x, T, yes, 0.04, 1);
       const rim = ramp(x, T, yes, 0.45, 1);
       const from = (yes ? 1 : -1) * w * 0.6;
@@ -74,7 +72,7 @@ export function EdgeGlow({ x, T, w, h, touch }: { x: Animated.Value; T: number; 
         <View key={yes ? 'edge-yep' : 'edge-nope'} pointerEvents="none" style={fill}>
           <Animated.View style={[fill, { opacity: glowO }]}>
             <LinearGradient pointerEvents="none" style={fill} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} locations={[0, 0.3, 0.72, 1]}
-              colors={yes ? ['#fbbf2400', '#fbbf2400', '#fbbf2452', '#fbbf24d6'] : ['#ef4444d6', '#ef444452', '#ef444400', '#ef444400']} />
+              colors={yes ? ['#fbbf2400', '#fbbf2400', '#fbbf2452', '#fbbf24d6'] : [`${glow.nope}d6`, `${glow.nope}52`, `${glow.nope}00`, `${glow.nope}00`]} />
           </Animated.View>
           <Animated.View style={[fill, { borderRadius: 14, borderWidth: 3, borderColor: color, opacity: rim }]} />
           <Animated.View style={[fill, { alignItems: 'center', justifyContent: 'center', gap: 12, transform: [{ translateX: shift }, { translateY: -h * 0.05 }] }]}>
@@ -89,13 +87,13 @@ export function EdgeGlow({ x, T, w, h, touch }: { x: Animated.Value; T: number; 
                   const p = ramp(x, T, yes, a, a + 0.41);
                   return (
                     <Animated.View key={`${yes ? 'y' : 'n'}-${i}`} style={{ opacity: p, transform: [{ translateX: p.interpolate({ inputRange: [0, 1], outputRange: [from, 0] }) }] }}>
-                      <Word text={ch} size={word} color={yes ? glow.amber : RED_TEXT} />
+                      <Word text={ch} size={word} color={yes ? glow.amber : glow.nopeText} />
                     </Animated.View>
                   );
                 })}
               </View>
               <Animated.View style={{ opacity: rim, transform: [{ translateX: rim.interpolate({ inputRange: [0, 1], outputRange: [(yes ? 1 : -1) * 24, 0] }) }] }}>
-                <Icon name={yes ? 'right' : 'left'} size={word * 0.45} color={yes ? glow.amber : RED_TEXT} />
+                <Icon name={yes ? 'right' : 'left'} size={word * 0.45} color={yes ? glow.amber : glow.nopeText} />
               </Animated.View>
             </View>
             <Animated.View style={{ opacity: ramp(x, T, yes, 0.4, 0.8) }}><Hint yes={yes} touch={touch} size={hintSize} /></Animated.View>

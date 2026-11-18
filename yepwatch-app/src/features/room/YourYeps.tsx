@@ -100,8 +100,8 @@ export function YepsSheet({ onClose }: { onClose: () => void }) {
                 {flips ? (
                   <HoverPress label={on ? `Nope instead for ${y.title}` : `Yep again for ${y.title}`} hover="tint" repeatable disabled={disabled}
                     onPress={() => void cmd.vote(y.id, !on, null)}
-                    visual={{ width: z(78), height: z(36), borderRadius: R.control, borderWidth: 1, borderColor: on ? '#ef444440' : warm.amberLine, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
-                    <Icon name={on ? 'close' : 'check'} size={13} color={on ? '#f87171' : glow.amber} />
+                    visual={{ width: z(78), height: z(36), borderRadius: R.control, borderWidth: 1, borderColor: on ? `${glow.nope}40` : warm.amberLine, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+                    <Icon name={on ? 'close' : 'check'} size={13} color={on ? glow.nopeText : glow.amber} />
                     <GText bold size={z(13)} color={on ? glow.soft : glow.amber}>{on ? 'Nope' : 'Yep'}</GText>
                   </HoverPress>
                 ) : null}

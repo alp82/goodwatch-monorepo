@@ -14,7 +14,7 @@ import { newRoomSave } from './new-room-save';
 import { useAccount } from '../../core/continuous/account';
 import { roomRegistry } from '../../core/continuous/room-registry';
 import { useRetryCountdown } from '../../core/continuous/useRetryCountdown';
-import { GText } from '../glow/theme';
+import { ErrorText } from '../glow/theme';
 import { BusyNote } from '../shell/floating-note';
 import { useLayout } from '../shell/layout';
 import { Actions, Button, Screen } from './ui';
@@ -104,7 +104,7 @@ function NewCouchScreen({ back, note, error, details, disabled, retry }: { back:
       {note ? <BusyNote text={note} /> : null}
       {error ? (
         <View style={{ gap: z(18), alignItems: 'center', paddingTop: z(48) }}>
-          <View accessibilityLiveRegion="polite"><GText color="#fca5a5" size={15} style={{ textAlign: 'center' }}>{error}</GText></View>
+          <View accessibilityLiveRegion="polite"><ErrorText size={15} style={{ textAlign: 'center' }}>{error}</ErrorText></View>
           {details}
           <Actions style={{ width: z(340), maxWidth: '100%' }}><Button label="Try again" disabled={disabled} onPress={retry} /></Actions>
         </View>

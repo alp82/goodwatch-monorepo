@@ -90,15 +90,19 @@
       },
       "nope": {
         "role": "status",
-        "displayName": "Nope Red"
+        "displayName": "Nope"
       },
-      "error-text": {
+      "nope-text": {
         "role": "status",
-        "displayName": "Error Text"
+        "displayName": "Nope Text"
       },
-      "red": {
+      "nope-deep": {
         "role": "status",
-        "displayName": "Red"
+        "displayName": "Nope Deep"
+      },
+      "error": {
+        "role": "status",
+        "displayName": "Error"
       },
       "green": {
         "role": "status",

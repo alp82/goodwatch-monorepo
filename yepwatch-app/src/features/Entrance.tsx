@@ -3,7 +3,7 @@ import type { ConnectionDiagnostic } from '../core/continuous/connection-diagnos
 import { guestOnly } from '../core/config';
 import { memo, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AppState, BackHandler, Platform, View } from 'react-native';
-import { GText, Press, glow, grow } from './glow/theme';
+import { ErrorText, GText, Press, glow, grow } from './glow/theme';
 import { router, useFocusEffect, useIsFocused } from 'expo-router';
 import * as Crypto from 'expo-crypto';
 import { continuousApi as api, RoomFailure as ApiFailure } from '../core/continuous/api';
@@ -500,7 +500,7 @@ function useEntrancePage({ invite, open: request, from }: EntranceProps) {
       )}
       {!shown ? reconnectLine : null}
       {!shown && home.notice ? <GText size={14} color={glow.soft}>{home.notice}</GText> : null}
-      {!shown && (shownError || account.error) ? <GText size={14} color="#fca5a5">{shownError || account.error}</GText> : null}
+      {!shown && (shownError || account.error) ? <ErrorText>{shownError || account.error}</ErrorText> : null}
     </AppFrame>
   );
 }

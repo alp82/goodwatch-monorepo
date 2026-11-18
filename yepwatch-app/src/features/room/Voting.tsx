@@ -103,12 +103,12 @@ const VoteKey = memo(function VoteKey({ yes, disabled, onPress, lit, box }: { ye
   const { z } = useLayout();
   return (
     <View ref={box} collapsable={false} style={{ flexGrow: 1, flexShrink: 1, flexBasis: 0, flexDirection: 'row' }}>
-      <Animated.View pointerEvents="none" style={{ position: 'absolute', left: -5, right: -5, top: -5, bottom: -5, borderRadius: R.control + 4, borderWidth: 2, borderColor: yes ? glow.amber : '#f87171', backgroundColor: yes ? '#fbbf2422' : '#f8717122',
+      <Animated.View pointerEvents="none" style={{ position: 'absolute', left: -5, right: -5, top: -5, bottom: -5, borderRadius: R.control + 4, borderWidth: 2, borderColor: yes ? glow.amber : glow.nopeText, backgroundColor: yes ? '#fbbf2422' : `${glow.nopeText}22`,
         opacity: lit, transform: [{ scale: lit.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1.02] }) }] }} />
       <Animated.View style={{ flex: 1, flexDirection: 'row', transform: [{ scale: lit.interpolate({ inputRange: [0, 1], outputRange: [1, 1.04] }) }] }}>
         <HoverPress label={yes ? 'Yep' : 'Nope'} disabled={disabled} onPress={onPress} repeatable
-          style={{ flexGrow: 1, flexShrink: 1, flexBasis: 0, minHeight: z(54), borderRadius: R.control, paddingHorizontal: 16, flexDirection: 'row', gap: 9, backgroundColor: yes ? glow.amber : '#ef44440f', borderWidth: 1, borderColor: yes ? glow.amber : '#ef444440' }}>
-          <Icon name={yes ? 'check' : 'close'} size={18} color={yes ? warm.ink : '#f87171'} />
+          style={{ flexGrow: 1, flexShrink: 1, flexBasis: 0, minHeight: z(54), borderRadius: R.control, paddingHorizontal: 16, flexDirection: 'row', gap: 9, backgroundColor: yes ? glow.amber : `${glow.nope}0f`, borderWidth: 1, borderColor: yes ? glow.amber : `${glow.nope}40` }}>
+          <Icon name={yes ? 'check' : 'close'} size={18} color={yes ? warm.ink : glow.nopeText} />
           <GText bold size={z(17)} color={yes ? warm.ink : glow.ink} lines={1}>{yes ? 'Yep' : 'Nope'}</GText>
         </HoverPress>
       </Animated.View>

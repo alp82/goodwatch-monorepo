@@ -111,7 +111,7 @@ export function Poster({ title, width, height, phone, z, showText = true, x, y, 
         <TrailerLink url={title.trailerUrl} disabled={leaving}
           style={{ position: 'absolute', right: 16, top: 14, ...grow(44) }}
           visual={{ borderRadius: R.control, paddingHorizontal: 12, minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#fff' }}>
-          <View style={{ width: 30, height: 30, borderRadius: 20, backgroundColor: '#dc2626', alignItems: 'center', justifyContent: 'center' }}>
+          <View style={{ width: 30, height: 30, borderRadius: 20, backgroundColor: glow.nope, alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="play" size={16} color="#fff" />
           </View>
           <GText bold color="#151515" size={14}>Trailer</GText>

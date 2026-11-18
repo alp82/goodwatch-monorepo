@@ -12,7 +12,7 @@ export const web = Platform.OS === 'web';
 export const driver = !web;
 
 export const ink = '#201400';
-export const red = glow.red;
+export const red = glow.nope;
 export const cream = '#fff7ec';
 export const amber = glow.amber;
 
@@ -92,7 +92,7 @@ export type Kind = 'yep' | 'nope';
 export const wordOf = (kind: Kind): VoteWord => (kind === 'nope' ? 'NOPE' : 'YEP');
 /** A look's colors for one answer. */
 export const pal = (kind: Kind) => kind === 'nope'
-  ? { text: wordOf(kind), main: red, hi: cream, deep: '#7f1d1d', soft: '#ef444433' }
+  ? { text: wordOf(kind), main: red, hi: cream, deep: glow.nopeDeep, soft: `${red}33` }
   : { text: wordOf(kind), main: amber, hi: '#fff8e6', deep: '#b45309', soft: '#fbbf2433' };
 
 /** Everything a look layer gets. Every drive is 0 at rest. */

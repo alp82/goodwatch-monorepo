@@ -4,8 +4,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { developmentNotice } from '../core/config';
 import { createMotionPreference } from './motion-preference';
 import { R } from '../features/shell/tokens';
+import { glow } from '../features/glow/theme';
 
-export const colors = { bg: '#060606', panel: '#171717', raised: '#262626', line: '#383838', ink: '#fafafa', muted: '#b6b6b6', amber: '#fbbf24', amberInk: '#1c1404', green: '#86d4aa', danger: '#ffb2ad' };
+export const colors = { bg: '#060606', panel: '#171717', raised: '#262626', line: '#383838', ink: '#fafafa', muted: '#b6b6b6', amber: '#fbbf24', amberInk: '#1c1404', green: '#86d4aa', danger: glow.error };
 export function Words({ children, muted = false, style }: { children: ReactNode; muted?: boolean; style?: TextStyle }) {
   return <Text style={[s.text, muted && { color: colors.muted }, style]}>{children}</Text>;
 }

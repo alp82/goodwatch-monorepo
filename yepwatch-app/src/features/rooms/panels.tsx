@@ -14,7 +14,7 @@ import { GoodWatchButton, RECONNECTED_DETAIL, RECONNECT_GOODWATCH } from '../hom
 import { Or } from '../home/start-parts';
 import { fitSize, type Kind } from '../room/model';
 import { KindIcons, Screen, kindsLabel } from '../room/ui';
-import { GText, Icon, Press, glow, grow } from '../glow/theme';
+import { ErrorText, GText, Icon, Press, glow, grow } from '../glow/theme';
 import type { HeaderMe } from '../shell/Header';
 import { Action, Avatar, FaceStack } from '../shell/parts';
 import { GoodWatchMark } from '../shell/marks';
@@ -49,9 +49,6 @@ function Field({ label, value, onChange, placeholder, big = false, code = false,
       maxLength={code ? undefined : MAX_NAME} returnKeyType={returnKey} submitBehavior="blurAndSubmit" onSubmitEditing={onSubmit} selectionColor={glow.amber}
       style={{ height: z(big ? 64 : 52), borderRadius: R.control, paddingHorizontal: 16, backgroundColor: warm.faint, borderWidth: 1, borderColor: focus ? glow.amber : warm.lineStrong, color: glow.ink, fontFamily: code ? 'GabaritoBold' : 'Gabarito', fontSize: z(big ? 26 : 17), letterSpacing: code ? 6 : 0, textAlign: code ? 'center' : 'left', ...webField } as TextStyle} />
   );
-}
-function ErrorText({ children }: { children?: string }) {
-  return children ? <GText size={14} color="#fca5a5">{children}</GText> : null;
 }
 
 /** Room label, ideas and people take this much before the preview arrives, so the form doesn't move. */

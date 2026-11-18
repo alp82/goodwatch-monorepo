@@ -180,14 +180,14 @@ function RoomSettings({ label = false }: { label?: boolean }) {
       </View>
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <Press label={`Archive ${noun.one}`} onPress={archive} style={{ flex: 1, minHeight: 48, borderRadius: R.control, borderWidth: 1, borderColor: warm.line }}><GText bold color={glow.soft}>{`Archive ${noun.one}`}</GText></Press>
-        <Press label={`Leave ${noun.one}`} disabled={disabled || Boolean(leaving)} onPress={() => setLeaving('ask')} style={{ flex: 1, minHeight: 48, borderRadius: R.control, borderWidth: 1, borderColor: '#f8717140' }}><GText bold color="#f87171">{`Leave ${noun.one}`}</GText></Press>
+        <Press label={`Leave ${noun.one}`} disabled={disabled || Boolean(leaving)} onPress={() => setLeaving('ask')} style={{ flex: 1, minHeight: 48, borderRadius: R.control, borderWidth: 1, borderColor: `${glow.error}40` }}><GText bold color={glow.error}>{`Leave ${noun.one}`}</GText></Press>
       </View>
       {leaving ? (
-        <View testID="leave-confirm" accessibilityLiveRegion="polite" style={{ gap: 12, padding: 14, borderRadius: 12, borderWidth: 1, borderColor: '#f8717140', backgroundColor: '#f8717110' }}>
+        <View testID="leave-confirm" accessibilityLiveRegion="polite" style={{ gap: 12, padding: 14, borderRadius: 12, borderWidth: 1, borderColor: `${glow.error}40`, backgroundColor: `${glow.error}10` }}>
           <GText bold size={z(18)}>{`Leave ${noun.this}?`}</GText>
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <Press label="Stay" disabled={leaving === 'sending'} onPress={() => setLeaving(null)} style={{ flex: 1, minHeight: 48, borderRadius: R.control, borderWidth: 1, borderColor: warm.line }}><GText bold color={glow.soft}>Stay</GText></Press>
-            <Press label="Leave" disabled={leaving === 'sending'} onPress={leave} style={{ flex: 1, minHeight: 48, borderRadius: R.control, backgroundColor: '#f87171' }}><GText bold color="#070707">{leaving === 'sending' ? 'Leaving…' : 'Leave'}</GText></Press>
+            <Press label="Leave" disabled={leaving === 'sending'} onPress={leave} style={{ flex: 1, minHeight: 48, borderRadius: R.control, backgroundColor: glow.error }}><GText bold color="#070707">{leaving === 'sending' ? 'Leaving…' : 'Leave'}</GText></Press>
           </View>
         </View>
       ) : null}

@@ -9,6 +9,7 @@ import { fitTo } from './geometry';
 import { PosterCopy } from './shapes';
 import { Word } from './Word';
 import { amber, clampI, cream, fill, ink, red, webStyle, type A, type Kind, type Node } from './paint';
+import { glow } from '../../glow/theme';
 import type { Look } from './looks';
 
 export interface CardLayerProps {
@@ -47,7 +48,7 @@ export function CardUnder({ look, kind, p, posterUrl }: CardLayerProps) {
         tints={yes ? [{ color: '#140c00', opacity: 0.3 }, { color: amber, opacity: 0.5 }] : [{ color: '#0d0d0d', opacity: 0.5 }, { color: red, opacity: 0.42 }]} />
       <View style={[fill, webStyle({ backgroundColor: yes ? amber : red, mixBlendMode: 'multiply' })]} />
       <LinearGradient pointerEvents="none" style={fill} locations={[0.18, 0.36, 0.5, 0.64, 0.82]}
-        colors={yes ? ['#fbbf2400', '#fbbf24cc', '#fbbf24ee', '#fbbf24cc', '#fbbf2400'] : ['#dc262600', '#b91c1ccc', '#991b1bee', '#b91c1ccc', '#dc262600']} />
+        colors={yes ? ['#fbbf2400', '#fbbf24cc', '#fbbf24ee', '#fbbf24cc', '#fbbf2400'] : [`${red}00`, `${red}cc`, `${glow.nopeDeep}ee`, `${red}cc`, `${red}00`]} />
     </Animated.View>
   );
   if (look === 'filter') return yes ? (
@@ -92,7 +93,7 @@ export function CardOver({ look, kind, w, h, x, phone, p, punch, lit }: CardLaye
     );
   }
   if (look === 'neon') {
-    return <Animated.View pointerEvents="none" style={[fill, { borderRadius: 14, borderWidth: 2, borderColor: yes ? '#ffe6a8' : '#ffd0d0', opacity: Animated.multiply(lit, p) }]} />;
+    return <Animated.View pointerEvents="none" style={[fill, { borderRadius: 14, borderWidth: 2, borderColor: yes ? '#ffe6a8' : glow.nopeText, opacity: Animated.multiply(lit, p) }]} />;
   }
   return null;
 }

@@ -18,7 +18,14 @@ export const glow = {
   soft: '#d4d4d4',
   ink: '#fafafa',
   amber: '#fbbf24',
-  red: '#ef4444',
+  /** Nope, the game answer paired with amber Yep: fills, lines, glow, stamps and the trailer play disc. */
+  nope: '#ef4444',
+  /** Nope words and icons. */
+  nopeText: '#f87171',
+  /** Nope's dark shade for the vote looks: band centers, stamp and wall shadows, the bleed tint. */
+  nopeDeep: '#7f1d1d',
+  /** Status, not the game: every inline error, Leave and Reset. */
+  error: '#ffa59e',
   green: '#22c55e',
 };
 export const native = Platform.OS !== 'web';
@@ -56,6 +63,10 @@ export function GText({
       {children}
     </Text>
   );
+}
+/** An inline error message in the status color; nothing when there is no message. */
+export function ErrorText({ children, size = 14, lines, style }: { children?: ReactNode; size?: number; lines?: number; style?: StyleProp<TextStyle> }) {
+  return children ? <GText size={size} color={glow.error} lines={lines} style={style}>{children}</GText> : null;
 }
 const circle = (cx: number, cy: number, r: number) => `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0Z`;
 const box = (x: number, y: number, w: number, h: number, r: number) =>

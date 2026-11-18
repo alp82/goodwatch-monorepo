@@ -9,7 +9,7 @@ import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from '
 import { Animated, Easing, Image, Platform, TextInput, View, type TextStyle } from 'react-native';
 import type { Candidate } from '@goodwatch/yepwatch-contracts/proposal';
 import { useReducedMotion } from '../../components/ui';
-import { GText, Icon, glow, native } from '../glow/theme';
+import { ErrorText, GText, Icon, glow, native } from '../glow/theme';
 import { HoverPress, useHovered } from '../shell/hover';
 import { useLayout } from '../shell/layout';
 import { noun } from '../shell/noun';
@@ -210,7 +210,7 @@ function DescribeField({ value, onChange, onSubmit, ready, action, placeholder, 
         </Animated.View>
         <Animated.View testID="field-line" pointerEvents="none" aria-hidden={showTry || undefined} accessibilityLiveRegion={error ? 'polite' : 'none'}
           style={{ position: 'absolute', left: 0, right: 0, top: 0, height: tryH, opacity: lineFade }}>
-          <View style={row}><GText size={phone ? 14 : z(14)} color={error ? '#fca5a5' : glow.muted} lines={1} style={{ flexShrink: 1 }}>{error ?? hint}</GText></View>
+          <View style={row}>{error ? <ErrorText size={phone ? 14 : z(14)} lines={1} style={{ flexShrink: 1 }}>{error}</ErrorText> : <GText size={phone ? 14 : z(14)} color={glow.muted} lines={1} style={{ flexShrink: 1 }}>{hint}</GText>}</View>
         </Animated.View>
       </View>
     </View>

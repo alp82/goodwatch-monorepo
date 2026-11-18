@@ -12,7 +12,7 @@ import { loadAccess } from '../../core/credentials';
 import { queryClient } from '../../core/providers';
 import { AppFrame } from '../shell/Frame';
 import { Action } from '../shell/parts';
-import { GText, glow } from '../glow/theme';
+import { ErrorText, GText, glow } from '../glow/theme';
 import { R } from '../shell/tokens';
 import { LegalLinks } from './LegalLinks';
 
@@ -97,7 +97,7 @@ export function DeleteAccount() {
     </View>}
     {busy ? <GText>Confirming your request…</GText> : null}
     {message ? <View accessibilityRole="alert"><GText color={glow.amber}>{message}</GText></View> : null}
-    {error || account.error || deletion.error ? <View accessibilityRole="alert"><GText color="#fca5a5">{error || account.error || (deletion.error instanceof Error ? deletion.error.message : '')}</GText></View> : null}
+    {error || account.error || deletion.error ? <View accessibilityRole="alert"><ErrorText size={16}>{error || account.error || (deletion.error instanceof Error ? deletion.error.message : '')}</ErrorText></View> : null}
     <LegalLinks />
   </AppFrame>;
 }

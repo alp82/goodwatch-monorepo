@@ -4,7 +4,7 @@ import { useReducedMotion } from '../../components/ui';
 import { useLayout } from '../shell/layout';
 import { R, warm } from '../shell/tokens';
 import { BusyNote } from '../shell/floating-note';
-import { GText, Icon, Press, glow, grow, native } from '../glow/theme';
+import { ErrorText, GText, Icon, Press, glow, grow, native } from '../glow/theme';
 import { IDEA_LIMITS } from './model';
 import { CHAR_EM, webField } from './parts';
 import { Actions, Button, Screen, TextLink, usePinnedActions } from './ui';
@@ -130,7 +130,7 @@ export function MoodComposer({ initialText = '', text: controlledText, first = f
             ? <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10 }}>{PRESETS.map(chip)}</View>
             : [PRESETS.slice(0, 4), PRESETS.slice(4)].map((row) => <View key={row[0]} style={{ flexDirection: 'row', justifyContent: 'center', gap: z(10) }}>{row.map(chip)}</View>)}
         </View>
-        {error ? <View accessibilityLiveRegion="polite"><GText color="#fca5a5" size={15} style={{ textAlign: 'center' }}>{error}</GText></View> : null}
+        {error ? <View accessibilityLiveRegion="polite"><ErrorText size={15} style={{ textAlign: 'center' }}>{error}</ErrorText></View> : null}
         {details}
         {!pinned ? <Actions style={{ width: Math.min(col, z(340)) }}>{create}</Actions> : null}
         {first || editing ? (

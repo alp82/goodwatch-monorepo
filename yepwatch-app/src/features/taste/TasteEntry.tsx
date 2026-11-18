@@ -5,7 +5,7 @@
 import { useRef, useState, type ComponentRef } from 'react';
 import { View } from 'react-native';
 import { tasteProfile, useTasteProfile } from '../../core/continuous/taste-profile';
-import { GText, Icon, glow } from '../glow/theme';
+import { ErrorText, GText, Icon, glow } from '../glow/theme';
 import { HoverPress, Nudge } from '../shell/hover';
 import { GoodWatchG } from '../shell/marks';
 import { useLayout } from '../shell/layout';
@@ -52,10 +52,10 @@ export function TasteEntry({ member }: { member: boolean }) {
           <View style={{ gap: 6 }}>
             <GText size={z(14)} color={glow.soft}>{`Reset your taste? This removes your ${rated} ${rated === 1 ? 'answer' : 'answers'} from YepWatch.`}</GText>
             <View style={{ flexDirection: 'row', gap: 4 }}>
-              <TextAction label={resetting ? 'Resetting…' : 'Reset'} color="#fca5a5" onPress={reset} />
+              <TextAction label={resetting ? 'Resetting…' : 'Reset'} color={glow.error} onPress={reset} />
               <TextAction label="Cancel" onPress={() => setConfirm(false)} />
             </View>
-            {failed ? <GText size={13} color="#fca5a5">Couldn’t reset your taste. Try again.</GText> : null}
+            {failed ? <ErrorText size={13}>Couldn’t reset your taste. Try again.</ErrorText> : null}
           </View>
         ) : <View style={{ flexDirection: 'row' }}><TextAction label="Reset my taste" onPress={() => setConfirm(true)} /></View>
       ) : null}

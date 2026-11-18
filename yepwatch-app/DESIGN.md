@@ -18,9 +18,10 @@ colors:
   soft: "#d4d4d4"
   muted: "#a3a3a3"
   placeholder: "#6f675b"
-  nope: "#f87171"
-  error-text: "#ffa59e"
-  red: "#ef4444"
+  nope: "#ef4444"
+  nope-text: "#f87171"
+  nope-deep: "#7f1d1d"
+  error: "#ffa59e"
   green: "#22c55e"
   note: "#201c13"
   peer-violet: "#a78bfa"
@@ -91,7 +92,7 @@ components:
     rounded: "{rounded.control}"
   vote-nope:
     backgroundColor: "#ef44440f"
-    textColor: "{colors.nope}"
+    textColor: "{colors.nope-text}"
     rounded: "{rounded.control}"
   sheet:
     backgroundColor: "{colors.panel}"
@@ -160,9 +161,12 @@ A warm, near-black room with an amber spotlight on you and a color for each frie
 - **Ink ramp** (`ink`, `soft`, `muted`): primary text, secondary text, and hints. `placeholder` is for field placeholders and currently fails contrast (2.91:1); cleanup.
 
 ### Status and voting
-- **Nope Red** (`nope`): the Nope key's icon and border. The Nope key fill is red at 6%. Leave moves to `error-text` (decision Y2).
-- **Error Text** (`error-text`): inline error messages, Leave, and Reset.
-- **Red** (`red`) and **Green** (`green`): the base status tokens in `glow`. About 22 reds are in use. Decision Y2 (November 18, 2026): Nope is a game color in three shades (`#ef4444`, `#f87171`, `#7f1d1d`), and errors, Leave, and Reset share the status color `#ffa59e` (`error-text`); the other reds go away in the follow-up.
+Decision Y2 (November 18, 2026): Nope is a game color with three shades, like amber's pair, and errors are a separate status color, so a failed save never reads like a vote. These four are the only reds; code uses `glow.nope`, `glow.nopeText`, `glow.nopeDeep`, and `glow.error`, and alpha variants add a hex alpha suffix to the token (`${glow.nope}40`), never a new literal.
+- **Nope** (`nope`, `#ef4444`): fills, lines, glow, stamps, the how-to edge glow, and the trailer play disc. The Nope key is `nope` at 6% fill and 25% border. The white play glyph on the disc is 3.76:1, fine for an icon but not for text.
+- **Nope Text** (`nope-text`, `#f87171`): Nope words and icons, the lit Nope key's ring, and the neon look's rim.
+- **Nope Deep** (`nope-deep`, `#7f1d1d`): the vote looks' dark shade: the wash band's center, stamp and wall shadows, and the bleed tint.
+- **Error** (`error`, `#ffa59e`): every inline error message (the shared `ErrorText`), Leave (sheet button and the Leave confirm), and Taste Reset. 10.7:1 on `#070707`.
+- **Green** (`green`): the base success token in `glow`.
 - **Note** (`note`): the floating note behind "Reconnecting…" and "You're offline."
 
 ### Peer colors
@@ -229,7 +233,7 @@ Depth comes from warm tonal steps (Night, Panel, Raised) and thin white lines. S
 - Several screens re-implement the primary button (Tonight's Watch link, the join page's Join, the web "Open in YepWatch" link); cleanup.
 
 ### Voting
-- **Yep key:** amber with a dark check. **Nope key:** red at 6% fill, red at 25% border, and a Nope red icon. A lit key gets a 2px ring at 14px corners (the key radius plus 4) and grows to 1.04.
+- **Yep key:** amber with a dark check. **Nope key:** `nope` at 6% fill and 25% border, and a `nope-text` icon. A lit key gets a 2px ring (`nope-text` on Nope) at 14px corners (the key radius plus 4) and grows to 1.04.
 - **Deck card:** the poster fills the card. Dragging tilts it up to 16 degrees. Past a third of the width it answers; otherwise it springs back.
 - **Stamps:** eleven YEP and NOPE looks dealt from a shuffled bag, with stamp corners and a black outline.
 - **Vote track:** the bar above the deck. Friends' faces ride along a rail as they answer, with a Yeps chip (amber outline, a check and count, mini posters) and an Undo button.

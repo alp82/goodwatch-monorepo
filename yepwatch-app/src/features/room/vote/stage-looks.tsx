@@ -15,6 +15,7 @@ import { Outline } from './Outline';
 import { Glow } from './shapes';
 import { Word } from './Word';
 import { amber, cream, ease, fill, ink, red, span, textGlow, type LayerProps } from './paint';
+import { glow } from '../../glow/theme';
 
 /** A word turned on its side, centered on (cx, cy). */
 function Vertical({ text, size, color, deg, cx, cy }: { text: VoteWord; size: number; color: string; deg: number; cx: number; cy: number }) {
@@ -26,7 +27,7 @@ function Vertical({ text, size, color, deg, cx, cy }: { text: VoteWord; size: nu
   );
 }
 const yepColors = [amber, '#f59e0b', '#b45309'] as const;
-const nopeColors = ['#f87171', red, '#7f1d1d'] as const;
+const nopeColors = [glow.nopeText, red, glow.nopeDeep] as const;
 
 export function GiantBack({ g, kind, p }: LayerProps) {
   const left = kind === 'nope';
@@ -71,7 +72,7 @@ export function GiantFront({ g, kind, p, punch }: LayerProps) {
         </FxView>
         <FxView style={{ position: 'absolute', opacity: p.interpolate({ inputRange: [0, 0.3, 0.85, 1], outputRange: [0, 1, 1, 0], extrapolate: 'clamp' }) }}><Outline text={text} size={size} color={color} width={2.5} /></FxView>
         <FxView style={{ opacity: span(p, 0.4, 1, 0, 1) }}>
-          <Word text={text} size={size} color={color} style={textGlow(`0 0 ${Math.round(size * 0.3)}px ${left ? '#ef444466' : '#fbbf2466'}, 0 8px 40px #000000c0`, { color: '#000000b0', radius: 24, dy: 8 })} />
+          <Word text={text} size={size} color={color} style={textGlow(`0 0 ${Math.round(size * 0.3)}px ${left ? `${red}66` : '#fbbf2466'}, 0 8px 40px #000000c0`, { color: '#000000b0', radius: 24, dy: 8 })} />
         </FxView>
       </FxView>
     );
@@ -87,7 +88,7 @@ export function GiantFront({ g, kind, p, punch }: LayerProps) {
       transform: [{ scale: Animated.add(span(p, 0, 1, 0.82, 1.08), punch.interpolate({ inputRange: [0, 1], outputRange: [0, 0.04] })) }] }}>
       <FxView style={{ position: 'absolute', opacity: p.interpolate({ inputRange: [0, 0.3, 0.8, 1], outputRange: [0, 0.9, 0.5, 0], extrapolate: 'clamp' }) }}><Outline text={text} size={size} color={color} width={2} /></FxView>
       <FxView style={{ opacity: span(p, 0.25, 1, 0, 1) }}>
-        <Word text={text} size={size} color={color} style={textGlow(`0 0 ${Math.round(size * 0.35)}px ${left ? '#ffffff22' : '#fbbf2455'}`, { color: left ? '#ef444455' : '#fbbf2466', radius: Math.round(size * 0.2) })} />
+        <Word text={text} size={size} color={color} style={textGlow(`0 0 ${Math.round(size * 0.35)}px ${left ? '#ffffff22' : '#fbbf2455'}`, { color: left ? `${red}55` : '#fbbf2466', radius: Math.round(size * 0.2) })} />
       </FxView>
     </FxView>
   );

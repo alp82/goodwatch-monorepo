@@ -15,6 +15,7 @@ import { Glow, Rays } from './shapes';
 import { StampInk } from './StampInk';
 import { Word } from './Word';
 import { amber, cream, ease, fill, ink, jitter, pal, range, red, span, textGlow, web, webStyle, type LayerProps, type Node } from './paint';
+import { glow } from '../../glow/theme';
 
 /** The stage's word size: stage-wide on a phone, about two cards wide on desktop (on screen, clear of the question column). */
 export const bigSize = (g: Geo, text: VoteWord, f = 1) => Math.min(fitTo(text, (g.phone ? g.aw - 24 : Math.min(g.vw * 0.7, g.w * 2.1, g.words)) * f), g.h * 0.5);
@@ -172,7 +173,7 @@ export function BleedBack({ g, kind, p, posterUrl }: LayerProps) {
         <BlurCopy uri={posterUrl} width={W} height={H} blur={48} rest={nope ? 'grayscale(1) brightness(1.1)' : 'grayscale(1) contrast(0.9) brightness(1.7)'} nativeBlur={40}
           tints={nope ? [{ color: '#1a1a1a', opacity: 0.5 }, { color: red, opacity: 0.42 }] : [{ color: '#2a1c00', opacity: 0.25 }, { color: amber, opacity: 0.6 }]} />
         {web ? <View style={[fill, webStyle({ backgroundColor: nope ? red : amber, mixBlendMode: 'multiply' })]} /> : null}
-        <View style={[fill, { backgroundColor: nope ? '#7f1d1d' : '#f59e0b', opacity: nope ? 0.35 : 0.28 }]} />
+        <View style={[fill, { backgroundColor: nope ? glow.nopeDeep : '#f59e0b', opacity: nope ? 0.35 : 0.28 }]} />
       </FxView>
       <LinearGradient colors={nope ? ['#00000080', '#00000020', '#000000a0'] : ['#20140080', '#20140000', '#201400a0']} locations={[0, 0.5, 1]} style={fill} />
     </Clip>
