@@ -3,15 +3,16 @@
  * stage's drag (`x`, `y`) and tilts with it; the look's layers slot in around the poster: `halo`
  * behind the card, `under` between the poster and the title gradient, `over` above everything.
  */
-import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { Animated, Pressable, View, type GestureResponderHandlers } from 'react-native';
+import { useLayoutEffect, useRef, type ReactNode } from 'react';
+import { Animated, StyleSheet, View, type GestureResponderHandlers, type StyleProp, type ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { playFeedback } from '../feedback/sounds';
 import { FadeImage } from './FadeImage';
 import { ScorePill } from './scores';
-import { GText, Icon, glow, grow, native, s } from './theme';
+import { GText, Icon, glow, native, s } from './theme';
 import type { GlowTitle } from './model';
 import { TrailerLink } from './TrailerLink';
+import { HoverPress } from '../shell/hover';
 import { R } from '../shell/tokens';
 
 export const titleMeta = (title: GlowTitle) => [
@@ -45,7 +46,6 @@ export function Poster({ title, width, height, phone, z, showText = true, x, y, 
   tools?: boolean;
   onDetails: () => void;
 }) {
-  const [detailsFocused, setDetailsFocused] = useState(false);
   const previous = useRef(title.id);
   useLayoutEffect(() => {
     if (previous.current !== title.id) playFeedback('poster');
@@ -93,6 +93,8 @@ export function Poster({ title, width, height, phone, z, showText = true, x, y, 
         )}
         {under}
         <LinearGradient colors={['transparent', '#000000d9']} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: height * 0.42 }} pointerEvents="none" />
+        {/* The scrim behind Details and Trailer: a still layer of the card, so it rides the drag without repainting. */}
+        {tools && <LinearGradient colors={['#00000052', '#00000000']} style={{ position: 'absolute', left: 0, right: 0, top: 0, height: height * 0.2 }} pointerEvents="none" />}
         {showText && (
           <View pointerEvents="none" style={{ position: 'absolute', left: 16, right: 16, bottom: 16, gap: 8 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -108,34 +110,56 @@ export function Poster({ title, width, height, phone, z, showText = true, x, y, 
         <View style={s.absolute} />
       </View>
       {tools && title.trailerUrl && (
-        <TrailerLink url={title.trailerUrl} disabled={leaving}
-          style={{ position: 'absolute', right: 16, top: 14, ...grow(44) }}
-          visual={{ borderRadius: R.control, paddingHorizontal: 12, minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#fff' }}>
-          <View style={{ width: 30, height: 30, borderRadius: 20, backgroundColor: glow.nope, alignItems: 'center', justifyContent: 'center' }}>
-            <Icon name="play" size={16} color="#fff" />
-          </View>
-          <GText bold color="#151515" size={14}>Trailer</GText>
-          <Icon name="arrowUpRight" size={14} color="#151515" />
-        </TrailerLink>
+        <PosterChip trailer={title.trailerUrl} disabled={leaving} onPoster style={{ position: 'absolute', right: 16, top: 14 }} />
       )}
-      {tools && <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`Details about ${title.title}`}
-        disabled={leaving}
-        onPress={onDetails}
-        onFocus={() => setDetailsFocused(true)}
-        onBlur={() => setDetailsFocused(false)}
-        // The press area is the full touch target; the amber box inside keeps its 44 px look.
-        style={{ position: 'absolute', left: 16, top: 14, ...grow(44), justifyContent: 'center' }}
-      >
-        <View style={{
-          minWidth: 44, height: 44, borderRadius: R.control, paddingHorizontal: 10, alignItems: 'center', justifyContent: 'center',
-          backgroundColor: detailsFocused ? '#fbbf24' : '#fbbf24df', borderWidth: 1, borderColor: '#fff5', flexDirection: 'row', gap: 5,
-        }}>
-          <GText size={14} bold color="#18130a">Details</GText>
-          <Icon name="arrowUpRight" size={14} color="#18130a" />
-        </View>
-      </Pressable>}
+      {tools && (
+        <PosterChip details={`Details about ${title.title}`} onPress={onDetails} disabled={leaving} onPoster style={{ position: 'absolute', left: 16, top: 14 }} />
+      )}
     </Animated.View>
+  );
+}
+
+const same = (n: number) => n;
+
+type ChipAction = { trailer: string | null; details?: never; onPress?: never } | { details: string; onPress: () => void; trailer?: never };
+
+/**
+ * Details or Trailer for the voting card: quiet dark glass, white text, a soft shadow, on both
+ * widths. `onPoster` draws it over the poster art (phones and in-between widths); otherwise it sits beside the
+ * card. The chip is 40 px tall inside a press area of at least 48 px. `trailer` opens YouTube outside the app;
+ * `details` is the Details chip's accessible name.
+ */
+export function PosterChip({ disabled = false, onPoster = false, z = same, style, ...action }: ChipAction & {
+  disabled?: boolean;
+  onPoster?: boolean;
+  z?: (n: number) => number;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const look: ViewStyle = {
+    height: z(40), paddingHorizontal: z(12), borderRadius: R.control, flexDirection: 'row', alignItems: 'center', gap: z(8),
+    backgroundColor: onPoster ? '#000000a6' : '#ffffff0d', borderWidth: 1, borderColor: onPoster ? '#ffffff33' : '#ffffff2a',
+    boxShadow: '0 2px 8px #0000004d',
+  };
+  // One flat style: the trailer's Link hands it to the web element as is.
+  const area = StyleSheet.flatten([{ minHeight: 48, minWidth: 48, alignItems: 'center', justifyContent: 'center' }, style]);
+  if (action.details === undefined) {
+    const face = (
+      <>
+        <View style={{ width: z(22), height: z(22), borderRadius: z(11), backgroundColor: glow.nope, alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="play" size={z(12)} color="#fff" />
+        </View>
+        <GText bold size={z(14)} color={glow.ink}>Trailer</GText>
+      </>
+    );
+    // Without a trailer to open it's only the look: a card flying off, or a place kept beside the card.
+    if (!action.trailer || disabled) return <View style={area}><View style={look}>{face}</View></View>;
+    return <TrailerLink url={action.trailer} style={area} visual={look}>{face}</TrailerLink>;
+  }
+  return (
+    // A card flying off keeps its look; beside the card, a chip with no card to act on dims.
+    <HoverPress label={action.details} disabled={disabled} dim={!onPoster} onPress={action.onPress} style={area} visual={look}>
+      <Icon name="external" size={z(13)} color={glow.ink} />
+      <GText bold size={z(14)} color={glow.ink}>Details</GText>
+    </HoverPress>
   );
 }

@@ -27,7 +27,7 @@ import { LiveFaces } from '../glow/Peers';
 import { VoteTrack } from '../glow/VoteTrack';
 import { votingBarFit, yepsButtonWidth } from '../glow/faces-row';
 import { useActiveTime } from '../glow/useActiveTime';
-import { TrailerLink } from '../glow/TrailerLink';
+import { PosterChip } from '../glow/Poster';
 import { GText, Icon, Press, glow, native } from '../glow/theme';
 import { HoverPress } from '../shell/hover';
 import { useLayout } from '../shell/layout';
@@ -116,24 +116,15 @@ const VoteKey = memo(function VoteKey({ yes, disabled, onPress, lit, box }: { ye
   );
 });
 
-/** Details and Trailer beside "Why this" (wide windows; the poster's own buttons are off there). Trailer keeps its place when a card has none. */
+/** Details and Trailer beside "Why this" (wide windows; the poster's own chips are off there). Trailer keeps its place when a card has none. */
 function CardTools({ title, trailerUrl, disabled, onDetails }: { title: string; trailerUrl: string | null; disabled: boolean; onDetails: () => void }) {
   const { z } = useLayout();
-  const look = { height: z(34), paddingHorizontal: 10, borderRadius: R.control, flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: warm.line } as const;
-  const trailer = (
-    <>
-      <Icon name="play" size={z(12)} color={glow.muted} />
-      <GText bold size={z(13)} color={glow.muted}>Trailer</GText>
-    </>
-  );
   return (
-    <View style={{ flexDirection: 'row', gap: 6 }}>
-      <HoverPress label={title ? `Details about ${title}` : 'Details'} disabled={disabled} onPress={onDetails} visual={look}>
-        <Icon name="external" size={z(12)} color={glow.muted} /><GText bold size={z(13)} color={glow.muted}>Details</GText>
-      </HoverPress>
+    <View style={{ flexDirection: 'row', gap: z(8) }}>
+      <PosterChip details={title ? `Details about ${title}` : 'Details'} disabled={disabled} onPress={onDetails} z={z} />
       {trailerUrl && !disabled
-        ? <TrailerLink url={trailerUrl} style={{ minHeight: 48, minWidth: 48, alignItems: 'center', justifyContent: 'center' }} visual={look}>{trailer}</TrailerLink>
-        : <View aria-hidden accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ minHeight: 48, justifyContent: 'center', opacity: 0 }}><View style={look}>{trailer}</View></View>}
+        ? <PosterChip trailer={trailerUrl} z={z} />
+        : <View aria-hidden accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ opacity: 0 }}><PosterChip trailer={null} z={z} /></View>}
     </View>
   );
 }
