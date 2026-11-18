@@ -168,7 +168,7 @@ export const RoomSetup = roomPart('RoomSetup', (r) => ({
   const blocked = !view.country || privateError || retrySeconds > 0 || (Boolean(pending) && !pendingStart);
   const actions = (
     <View style={{ gap: 10 }}>
-      {phase === 'failed' ? <Note>{START_FAILED_NOTE}</Note> : null}
+      {phase === 'failed' ? <Note error>{START_FAILED_NOTE}</Note> : null}
       <Actions>
         <SettingsButton />
         <StartButton phase={phase} disabled={blocked} onPress={onStart} people={view.people.length} />

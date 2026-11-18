@@ -11,7 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useReducedMotion } from '../../components/ui';
 import { useAccount } from '../../core/continuous/account';
 import { tasteProfile, useTasteProfile } from '../../core/continuous/taste-profile';
-import { GText, Icon, glow, native } from '../glow/theme';
+import { ErrorText, GText, Icon, glow, native } from '../glow/theme';
 import { HoverPress } from '../shell/hover';
 import { GoodWatchG } from '../shell/marks';
 import { useLayout } from '../shell/layout';
@@ -102,7 +102,7 @@ function TasteMode() {
       <View style={{ flex: 1, justifyContent: 'center', gap: 6 }}>
         {deck.loading ? <View style={{ minHeight: phone ? 380 : z(520) }} /> : deck.failed ? (
           <View style={{ alignItems: 'center', gap: 10, paddingVertical: 40 }}>
-            <GText bold size={z(18)}>Cards didn’t load</GText>
+            <ErrorText bold size={z(18)}>Cards didn’t load</ErrorText>
             <TextAction label="Try again" color={glow.amber} onPress={deck.retry} />
           </View>
         ) : (

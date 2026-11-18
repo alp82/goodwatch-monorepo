@@ -65,8 +65,8 @@ export function GText({
   );
 }
 /** An inline error message in the status color; nothing when there is no message. */
-export function ErrorText({ children, size = 14, lines, style }: { children?: ReactNode; size?: number; lines?: number; style?: StyleProp<TextStyle> }) {
-  return children ? <GText size={size} color={glow.error} lines={lines} style={style}>{children}</GText> : null;
+export function ErrorText({ children, size = 14, bold, lines, style }: { children?: ReactNode; size?: number; bold?: boolean; lines?: number; style?: StyleProp<TextStyle> }) {
+  return children ? <GText size={size} bold={bold} color={glow.error} lines={lines} style={style}>{children}</GText> : null;
 }
 const circle = (cx: number, cy: number, r: number) => `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0Z`;
 const box = (x: number, y: number, w: number, h: number, r: number) =>

@@ -12,7 +12,7 @@ import type { Candidate } from '@goodwatch/yepwatch-contracts/proposal';
 import { useLayout } from '../shell/layout';
 import { leaveScreen, useBackAction } from '../shell/sheet-back';
 import { R, warm } from '../shell/tokens';
-import { GText, Icon, glow, spaceToggles } from '../glow/theme';
+import { ErrorText, GText, Icon, glow, spaceToggles } from '../glow/theme';
 import { ScorePill } from '../glow/scores';
 import { proposalKey, type RoomView } from './model';
 import { leavePage, matchesInFront, openPage, toRooms } from './nav';
@@ -416,7 +416,7 @@ function Matches({ id, view, tiebreak, held, onLanded, onSkip }: { id: string; v
   const keep = <Button secondary label="Keep swiping" onPress={() => leavePage(id)} />;
   const confirm = () => { if (!held) void cmd.confirmIn(); };
   const status = single && check === 'checking' ? <GText size={z(14)} color={glow.soft} lines={1}>Checking where to watch…</GText>
-    : single && check === 'unavailable' ? <GText size={z(14)} color={glow.muted} lines={1}>Couldn’t confirm where to watch</GText>
+    : single && check === 'unavailable' ? <ErrorText size={z(14)} lines={1}>Couldn’t confirm where to watch</ErrorText>
     : tied.length ? <>
       <View style={{ width: 16 }}><Icon name="check" size={16} color={glow.amber} /></View>
       <GText key={single?.id ?? `many-${tied.length}`} bold size={z(14)} color={glow.amber} lines={1} style={{ flex: 1, textAlign: 'center' }}>{single ? `Everyone’s in on ${single.title}` : `Everyone’s in on ${tied.length}`}</GText>

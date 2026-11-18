@@ -192,7 +192,7 @@ function DescribeField({ value, onChange, onSubmit, ready, action, placeholder, 
   };
   return (
     <View>
-      <View style={{ height: h, borderRadius: 18, paddingLeft: phone ? 16 : z(20), paddingRight: 6, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: focus ? '#ffffff12' : '#ffffff0b', borderWidth: 1, borderColor: focus ? glow.amber : warm.lineStrong, opacity: locked ? 0.6 : 1 }}>
+      <View style={{ height: h, borderRadius: R.control, paddingLeft: phone ? 16 : z(20), paddingRight: 6, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: focus ? '#ffffff12' : '#ffffff0b', borderWidth: 1, borderColor: focus ? glow.amber : warm.lineStrong, opacity: locked ? 0.6 : 1 }}>
         <TextInput ref={input} accessibilityLabel={IDEA_FIELD} value={value} onChangeText={onChange} placeholder={placeholder} placeholderTextColor={warm.placeholder}
           editable={!locked} maxLength={IDEA_LIMITS.max} autoCorrect={false} spellCheck={false} returnKeyType="done" submitBehavior="submit" onSubmitEditing={onSubmit} selectionColor={glow.amber} cursorColor={glow.amber}
           onFocus={() => setFocus(true)} onBlur={() => setFocus(false)}

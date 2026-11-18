@@ -16,7 +16,7 @@ import { useSheetsHoldNavigation } from '../shell/sheet-back';
 import { useFreshSurface } from '../shell/fresh-surface';
 import { closeTopSheet, useSheetOpen } from '../shell/sheet-stack';
 import { R, warm } from '../shell/tokens';
-import { GText, Icon, Press, glow, grow, spaceToggles } from '../glow/theme';
+import { ErrorText, GText, Icon, Press, glow, grow, spaceToggles } from '../glow/theme';
 import { useOptionalRoom } from './RoomProvider';
 import type { Kind } from './model';
 import { rankServices, type ServiceChoice } from './services';
@@ -140,12 +140,12 @@ export function Dots({ n, of }: { n: number; of: number }) {
 export function TextLink({ label, onPress, color = glow.amber, disabled }: { label: string; onPress: () => void; color?: string; disabled?: boolean }) {
   return <Press label={label} onPress={onPress} disabled={disabled} style={{ alignSelf: 'flex-start', ...grow(32) }}><GText size={T.small} bold color={color}>{label}</GText></Press>;
 }
-/** One quiet message where something else would be: errors, connection, saved actions. */
-export function Note({ children, action, busy = false }: { children: ReactNode; action?: { label: string; onPress: () => void; disabled?: boolean }; busy?: boolean }) {
+/** One quiet message where something else would be: errors (in the error color), connection, saved actions. */
+export function Note({ children, action, busy = false, error = false }: { children: ReactNode; action?: { label: string; onPress: () => void; disabled?: boolean }; busy?: boolean; error?: boolean }) {
   return (
     <View accessibilityLiveRegion="polite" aria-busy={busy} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, backgroundColor: '#201c13' }}>
       {busy ? <ActivityIndicator testID="note-spinner" size="small" color={glow.amber} /> : null}
-      <GText size={12} lines={2} style={{ flex: 1 }}>{children}</GText>
+      {error ? <ErrorText size={12} lines={2} style={{ flex: 1 }}>{children}</ErrorText> : <GText size={12} lines={2} style={{ flex: 1 }}>{children}</GText>}
       {action ? <Press label={action.label} onPress={action.onPress} disabled={action.disabled} style={grow(32)}><GText size={12} bold>{action.label}</GText></Press> : null}
     </View>
   );

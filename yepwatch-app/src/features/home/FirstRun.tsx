@@ -10,7 +10,7 @@
 import { useEffect, useState } from 'react';
 import { Platform, TextInput, View, type TextStyle } from 'react-native';
 import { tasteProfile } from '../../core/continuous/taste-profile';
-import { GText, Icon, glow } from '../glow/theme';
+import { ErrorText, GText, Icon, glow } from '../glow/theme';
 import { NAME_MAX } from '../room/model';
 import { fieldStyleFor } from '../room/parts';
 import { AppFrame } from '../shell/Frame';
@@ -134,7 +134,7 @@ export function FirstRun({ initialName, me, saveName, back, done }: {
         <StrengthMeter rated={n} goal={goal} compact />
         {deck.loading ? <View style={{ minHeight: phone ? 400 : z(560) }} /> : deck.failed ? (
           <View style={{ alignItems: 'center', gap: 10, paddingVertical: 40 }}>
-            <GText bold size={z(18)}>Cards didn’t load</GText>
+            <ErrorText bold size={z(18)}>Cards didn’t load</ErrorText>
             <TextAction label="Try again" color={glow.amber} onPress={deck.retry} />
           </View>
         ) : (

@@ -225,7 +225,7 @@ function InvitePopover({ url, people, onClose }: { url: string; people: RoomPers
         <View pointerEvents="none" style={{ position: 'absolute', top: -7, right: inviteW(l) / 2 - 7, width: 13, height: 13, backgroundColor: warm.raised, borderLeftWidth: 1, borderTopWidth: 1, borderColor: warm.lineStrong, transform: [{ rotate: '45deg' }] }} />
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <GText bold size={z(18)} lines={1} style={{ flex: 1 }}>Invite friends</GText>
-          <HoverPress label="Close" hover="tint" repeatable onPress={onClose} style={{ width: 48, height: 48, borderRadius: 24 }}><Icon name="close" size={18} color={glow.soft} /></HoverPress>
+          <HoverPress label="Close" hover="tint" repeatable onPress={onClose} style={{ width: 48, height: 48, borderRadius: R.control }}><Icon name="close" size={18} color={glow.soft} /></HoverPress>
         </View>
         <View style={{ alignItems: 'center', gap: z(10) }}>
           <QrCode value={url} size={z(196)} />
