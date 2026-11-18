@@ -1,0 +1,598 @@
+{
+	"schemaVersion": 2,
+	"generatedAt": "2026-11-18T03:48:30.462568+00:00",
+	"title": "Design System: GoodWatch",
+	"extensions": {
+		"colorMeta": {
+			"amber": {
+				"role": "primary",
+				"displayName": "Lamp Amber",
+				"tonalRamp": [
+					"oklch(41.4% 0.112 45.904)",
+					"oklch(47.3% 0.137 46.201)",
+					"oklch(55.5% 0.163 48.998)",
+					"oklch(66.6% 0.179 58.318)",
+					"oklch(76.9% 0.188 70.08)",
+					"oklch(82.8% 0.189 84.429)",
+					"oklch(87.9% 0.169 91.605)",
+					"oklch(92.4% 0.12 95.746)"
+				]
+			},
+			"amber-light": {
+				"role": "primary",
+				"displayName": "Bright Amber",
+				"tonalRamp": [
+					"oklch(41.4% 0.112 45.904)",
+					"oklch(47.3% 0.137 46.201)",
+					"oklch(55.5% 0.163 48.998)",
+					"oklch(66.6% 0.179 58.318)",
+					"oklch(76.9% 0.188 70.08)",
+					"oklch(82.8% 0.189 84.429)",
+					"oklch(87.9% 0.169 91.605)",
+					"oklch(92.4% 0.12 95.746)"
+				]
+			},
+			"amber-pale": {
+				"role": "primary",
+				"displayName": "Pale Amber",
+				"tonalRamp": [
+					"oklch(41.4% 0.112 45.904)",
+					"oklch(47.3% 0.137 46.201)",
+					"oklch(55.5% 0.163 48.998)",
+					"oklch(66.6% 0.179 58.318)",
+					"oklch(76.9% 0.188 70.08)",
+					"oklch(82.8% 0.189 84.429)",
+					"oklch(87.9% 0.169 91.605)",
+					"oklch(92.4% 0.12 95.746)"
+				]
+			},
+			"amber-deep": {
+				"role": "primary",
+				"displayName": "Deep Amber",
+				"tonalRamp": [
+					"oklch(41.4% 0.112 45.904)",
+					"oklch(47.3% 0.137 46.201)",
+					"oklch(55.5% 0.163 48.998)",
+					"oklch(66.6% 0.179 58.318)",
+					"oklch(76.9% 0.188 70.08)",
+					"oklch(82.8% 0.189 84.429)",
+					"oklch(87.9% 0.169 91.605)",
+					"oklch(92.4% 0.12 95.746)"
+				]
+			},
+			"night": {
+				"role": "neutral",
+				"displayName": "Night",
+				"tonalRamp": [
+					"#060606",
+					"oklch(21% 0.034 264.665)",
+					"oklch(27.8% 0.033 256.848)",
+					"oklch(37.3% 0.034 259.733)",
+					"oklch(44.6% 0.03 256.802)",
+					"oklch(55.1% 0.027 264.364)",
+					"oklch(70.7% 0.022 261.325)",
+					"oklch(87.2% 0.01 258.338)"
+				]
+			},
+			"night-deep": {
+				"role": "neutral",
+				"displayName": "Deep Night",
+				"tonalRamp": [
+					"#060606",
+					"oklch(21% 0.034 264.665)",
+					"oklch(27.8% 0.033 256.848)",
+					"oklch(37.3% 0.034 259.733)",
+					"oklch(44.6% 0.03 256.802)",
+					"oklch(55.1% 0.027 264.364)",
+					"oklch(70.7% 0.022 261.325)",
+					"oklch(87.2% 0.01 258.338)"
+				]
+			},
+			"night-raised": {
+				"role": "neutral",
+				"displayName": "Raised Night",
+				"tonalRamp": [
+					"#060606",
+					"oklch(21% 0.034 264.665)",
+					"oklch(27.8% 0.033 256.848)",
+					"oklch(37.3% 0.034 259.733)",
+					"oklch(44.6% 0.03 256.802)",
+					"oklch(55.1% 0.027 264.364)",
+					"oklch(70.7% 0.022 261.325)",
+					"oklch(87.2% 0.01 258.338)"
+				]
+			},
+			"night-line": {
+				"role": "neutral",
+				"displayName": "Night Line",
+				"tonalRamp": [
+					"#060606",
+					"oklch(21% 0.034 264.665)",
+					"oklch(27.8% 0.033 256.848)",
+					"oklch(37.3% 0.034 259.733)",
+					"oklch(44.6% 0.03 256.802)",
+					"oklch(55.1% 0.027 264.364)",
+					"oklch(70.7% 0.022 261.325)",
+					"oklch(87.2% 0.01 258.338)"
+				]
+			},
+			"ink-strong": {
+				"role": "neutral",
+				"displayName": "White Ink",
+				"tonalRamp": [
+					"#060606",
+					"oklch(21% 0.034 264.665)",
+					"oklch(27.8% 0.033 256.848)",
+					"oklch(37.3% 0.034 259.733)",
+					"oklch(44.6% 0.03 256.802)",
+					"oklch(55.1% 0.027 264.364)",
+					"oklch(70.7% 0.022 261.325)",
+					"oklch(87.2% 0.01 258.338)"
+				]
+			},
+			"ink": {
+				"role": "neutral",
+				"displayName": "Ink",
+				"tonalRamp": [
+					"#060606",
+					"oklch(21% 0.034 264.665)",
+					"oklch(27.8% 0.033 256.848)",
+					"oklch(37.3% 0.034 259.733)",
+					"oklch(44.6% 0.03 256.802)",
+					"oklch(55.1% 0.027 264.364)",
+					"oklch(70.7% 0.022 261.325)",
+					"oklch(87.2% 0.01 258.338)"
+				]
+			},
+			"ink-muted": {
+				"role": "neutral",
+				"displayName": "Muted Ink",
+				"tonalRamp": [
+					"#060606",
+					"oklch(21% 0.034 264.665)",
+					"oklch(27.8% 0.033 256.848)",
+					"oklch(37.3% 0.034 259.733)",
+					"oklch(44.6% 0.03 256.802)",
+					"oklch(55.1% 0.027 264.364)",
+					"oklch(70.7% 0.022 261.325)",
+					"oklch(87.2% 0.01 258.338)"
+				]
+			},
+			"ink-faint": {
+				"role": "neutral",
+				"displayName": "Faint Ink",
+				"tonalRamp": [
+					"#060606",
+					"oklch(21% 0.034 264.665)",
+					"oklch(27.8% 0.033 256.848)",
+					"oklch(37.3% 0.034 259.733)",
+					"oklch(44.6% 0.03 256.802)",
+					"oklch(55.1% 0.027 264.364)",
+					"oklch(70.7% 0.022 261.325)",
+					"oklch(87.2% 0.01 258.338)"
+				]
+			},
+			"info-sky": {
+				"role": "status",
+				"displayName": "Sky",
+				"tonalRamp": [
+					"oklch(15% 0.12 232.661)",
+					"oklch(25% 0.12 232.661)",
+					"oklch(38% 0.12 232.661)",
+					"oklch(50% 0.12 232.661)",
+					"oklch(62% 0.12 232.661)",
+					"oklch(74% 0.12 232.661)",
+					"oklch(85% 0.12 232.661)",
+					"oklch(95% 0.12 232.661)"
+				]
+			},
+			"success-emerald": {
+				"role": "status",
+				"displayName": "Emerald",
+				"tonalRamp": [
+					"oklch(15% 0.13 163.223)",
+					"oklch(25% 0.13 163.223)",
+					"oklch(38% 0.13 163.223)",
+					"oklch(50% 0.13 163.223)",
+					"oklch(62% 0.13 163.223)",
+					"oklch(74% 0.13 163.223)",
+					"oklch(85% 0.13 163.223)",
+					"oklch(95% 0.13 163.223)"
+				]
+			},
+			"error-red": {
+				"role": "status",
+				"displayName": "Soft Red",
+				"tonalRamp": [
+					"oklch(15% 0.12 19.571)",
+					"oklch(25% 0.12 19.571)",
+					"oklch(38% 0.12 19.571)",
+					"oklch(50% 0.12 19.571)",
+					"oklch(62% 0.12 19.571)",
+					"oklch(74% 0.12 19.571)",
+					"oklch(85% 0.12 19.571)",
+					"oklch(95% 0.12 19.571)"
+				]
+			},
+			"source-imdb": {
+				"role": "source",
+				"displayName": "IMDb Yellow"
+			},
+			"source-metacritic": {
+				"role": "source",
+				"displayName": "Metacritic Black"
+			},
+			"source-rotten": {
+				"role": "source",
+				"displayName": "Rotten Tomatoes Red"
+			},
+			"source-letterboxd": {
+				"role": "source",
+				"displayName": "Letterboxd Slate"
+			},
+			"score-0": {
+				"role": "score",
+				"displayName": "Score 0"
+			},
+			"score-10": {
+				"role": "score",
+				"displayName": "Score 10"
+			},
+			"score-20": {
+				"role": "score",
+				"displayName": "Score 20"
+			},
+			"score-30": {
+				"role": "score",
+				"displayName": "Score 30"
+			},
+			"score-40": {
+				"role": "score",
+				"displayName": "Score 40"
+			},
+			"score-50": {
+				"role": "score",
+				"displayName": "Score 50"
+			},
+			"score-60": {
+				"role": "score",
+				"displayName": "Score 60"
+			},
+			"score-70": {
+				"role": "score",
+				"displayName": "Score 70"
+			},
+			"score-80": {
+				"role": "score",
+				"displayName": "Score 80"
+			},
+			"score-90": {
+				"role": "score",
+				"displayName": "Score 90"
+			},
+			"score-100": {
+				"role": "score",
+				"displayName": "Score 100"
+			},
+			"episode-panel": {
+				"role": "neutral",
+				"displayName": "Episode Panel"
+			},
+			"print-feel": {
+				"role": "data",
+				"displayName": "Fingerprint Feel"
+			},
+			"print-humor": {
+				"role": "data",
+				"displayName": "Fingerprint Humor"
+			},
+			"print-world": {
+				"role": "data",
+				"displayName": "Fingerprint World"
+			},
+			"print-story": {
+				"role": "data",
+				"displayName": "Fingerprint Story"
+			},
+			"print-craft": {
+				"role": "data",
+				"displayName": "Fingerprint Craft"
+			}
+		},
+		"typographyMeta": {
+			"display": {
+				"displayName": "Display",
+				"purpose": "Gabarito page titles (open decision D3)."
+			},
+			"headline": {
+				"displayName": "Headline",
+				"purpose": "Section headings (open decision D4)."
+			},
+			"title": {
+				"displayName": "Title",
+				"purpose": "Cards, sheets, settings rows, list headings."
+			},
+			"body": {
+				"displayName": "Body",
+				"purpose": "Synopses and long-form text."
+			},
+			"body-small": {
+				"displayName": "Body small",
+				"purpose": "Controls, metadata, lists."
+			},
+			"caption": {
+				"displayName": "Caption",
+				"purpose": "Uppercase gray section and form labels."
+			},
+			"kicker": {
+				"displayName": "Kicker",
+				"purpose": "Uppercase amber line above page titles."
+			}
+		},
+		"shadows": [
+			{
+				"name": "ring",
+				"value": "0 0 0 1px rgb(255 255 255 / 0.1)",
+				"purpose": "Default surface separation."
+			},
+			{
+				"name": "floating-panel",
+				"value": "0 10px 15px -3px rgb(0 0 0 / 0.5)",
+				"purpose": "Card action grids, dropdowns."
+			},
+			{
+				"name": "sheet",
+				"value": "0 -12px 48px rgb(0 0 0 / 0.6)",
+				"purpose": "Phone bottom sheets."
+			},
+			{
+				"name": "popover",
+				"value": "0 25px 50px -12px rgb(0 0 0 / 0.6)",
+				"purpose": "Account menu, sign-in card, dialogs."
+			},
+			{
+				"name": "quick-view",
+				"value": "0 30px 80px -20px rgb(0 0 0 / 0.95)",
+				"purpose": "Title and character quick views."
+			},
+			{
+				"name": "amber-lift",
+				"value": "0 8px 28px rgb(251 191 36 / 0.28)",
+				"purpose": "Under a hero amber button."
+			},
+			{
+				"name": "switch-glow",
+				"value": "0 0 14px rgb(245 158 11 / 0.55)",
+				"purpose": "Switch on state."
+			}
+		],
+		"motion": [
+			{
+				"name": "fade-in",
+				"value": "120ms ease-out",
+				"purpose": "Drawers and quick views."
+			},
+			{
+				"name": "sheet-in",
+				"value": "260-280ms cubic-bezier(0.2, 0.8, 0.2, 1)",
+				"purpose": "Sheets from the side or bottom."
+			},
+			{
+				"name": "sheet-out",
+				"value": "200ms ease-in",
+				"purpose": "Closing sheets."
+			},
+			{
+				"name": "ease-out-back",
+				"value": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+				"purpose": "Small playful pops."
+			},
+			{
+				"name": "tv-transition",
+				"value": "400-600ms cubic-bezier(0.65, 0, 0.35, 1)",
+				"purpose": "The living room TV page transition."
+			}
+		],
+		"breakpoints": [
+			{
+				"name": "xs",
+				"value": "475px"
+			},
+			{
+				"name": "sm",
+				"value": "640px"
+			},
+			{
+				"name": "md",
+				"value": "768px"
+			},
+			{
+				"name": "lg",
+				"value": "1024px"
+			},
+			{
+				"name": "xl",
+				"value": "1280px"
+			},
+			{
+				"name": "2xl",
+				"value": "1536px"
+			},
+			{
+				"name": "title-page-max",
+				"value": "88rem"
+			}
+		]
+	},
+	"components": [
+		{
+			"name": "Primary Button",
+			"kind": "button",
+			"refersTo": "button-primary",
+			"description": "The one amber action on a screen.",
+			"html": "<button class=\"ds-btn-primary\">Sign up</button>",
+			"css": ".ds-btn-primary{background:oklch(82.8% 0.189 84.429);color:#060606;font:900 14px/1 system-ui,sans-serif;min-height:44px;padding:0 20px;border:0;border-radius:9999px;cursor:pointer;transition:background-color .15s}.ds-btn-primary:hover{background:oklch(87.9% 0.169 91.605)}.ds-btn-primary:focus-visible{outline:2px solid #fff;outline-offset:2px}"
+		},
+		{
+			"name": "Light Button",
+			"kind": "button",
+			"refersTo": "button-light",
+			"description": "Strong secondary action on dark.",
+			"html": "<button class=\"ds-btn-light\">Watch now</button>",
+			"css": ".ds-btn-light{background:#fff;color:#000;font:600 14px/20px system-ui,sans-serif;padding:6px 12px;border:0;border-radius:9999px;cursor:pointer}.ds-btn-light:hover{background:oklch(92.8% 0.006 264.531)}.ds-btn-light:focus-visible{outline:2px solid oklch(82.8% 0.189 84.429);outline-offset:2px}"
+		},
+		{
+			"name": "Ghost Button",
+			"kind": "button",
+			"refersTo": "button-ghost",
+			"description": "Default secondary action.",
+			"html": "<button class=\"ds-btn-ghost\">Want to See</button>",
+			"css": ".ds-btn-ghost{background:rgb(255 255 255/.1);color:oklch(96.7% 0.003 264.542);font:600 12px/16px system-ui,sans-serif;padding:4px 12px;border:0;border-radius:9999px;cursor:pointer;transition:background-color .15s}.ds-btn-ghost:hover{background:rgb(255 255 255/.2)}.ds-btn-ghost:focus-visible{outline:2px solid oklch(82.8% 0.189 84.429);outline-offset:2px}"
+		},
+		{
+			"name": "Action Button",
+			"kind": "button",
+			"refersTo": "button-action",
+			"description": "Title actions such as Want to See and Not interested.",
+			"html": "<button class=\"ds-act\"><svg viewBox=\"0 0 20 20\" width=\"16\" height=\"16\" fill=\"currentColor\"><path d=\"M10 2a.75.75 0 0 1 .75.75v6.5h6.5a.75.75 0 0 1 0 1.5h-6.5v6.5a.75.75 0 0 1-1.5 0v-6.5h-6.5a.75.75 0 0 1 0-1.5h6.5v-6.5A.75.75 0 0 1 10 2Z\"/></svg>Want to See</button>",
+			"css": ".ds-act{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 16px;border:0;border-radius:8px;background:rgb(255 255 255/.06);box-shadow:inset 0 0 0 1px rgb(255 255 255/.1);color:#fff;font:600 14px system-ui,sans-serif;cursor:pointer}.ds-act svg{color:oklch(87.9% 0.169 91.605)}.ds-act:hover{background:rgb(255 255 255/.12)}.ds-act:focus-visible{outline:2px solid oklch(82.8% 0.189 84.429);outline-offset:2px}"
+		},
+		{
+			"name": "Text Field",
+			"kind": "input",
+			"refersTo": "input-text",
+			"description": "Form text field with a caption label.",
+			"html": "<label class=\"ds-field\"><span>Display name</span><input value=\"Alex\"></label>",
+			"css": ".ds-field{display:flex;flex-direction:column;gap:6px;width:280px}.ds-field span{font:600 11px system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:oklch(55.1% 0.027 264.364)}.ds-field input{min-height:44px;padding:0 12px;border:0;border-radius:8px;background:oklch(21% 0.034 264.665);box-shadow:inset 0 0 0 1px rgb(255 255 255/.15);color:#fff;font:400 14px system-ui,sans-serif;outline:0}.ds-field input:focus{box-shadow:inset 0 0 0 2px oklch(82.8% 0.189 84.429)}"
+		},
+		{
+			"name": "Search Field",
+			"kind": "input",
+			"refersTo": "input-search",
+			"description": "Global search pill in the top bar.",
+			"html": "<label class=\"ds-search\"><svg viewBox=\"0 0 20 20\" width=\"16\" height=\"16\" fill=\"currentColor\"><path fill-rule=\"evenodd\" d=\"M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.45 4.39l3.08 3.08a.75.75 0 1 1-1.06 1.06l-3.08-3.08A7 7 0 0 1 2 9Z\"/></svg><input placeholder=\"Search titles, people, moods\"><kbd>Ctrl K</kbd></label>",
+			"css": ".ds-search{display:flex;align-items:center;gap:10px;height:40px;padding:0 8px 0 16px;width:360px;background:rgb(255 255 255/.05);border-radius:9999px;box-shadow:inset 0 0 0 1px rgb(255 255 255/.15);color:oklch(82.8% 0.189 84.429)}.ds-search:focus-within{box-shadow:inset 0 0 0 2px oklch(82.8% 0.189 84.429)}.ds-search input{flex:1;background:none;border:0;outline:0;color:#fff;font:400 14px system-ui,sans-serif}.ds-search input::placeholder{color:oklch(70.7% 0.022 261.325)}.ds-search kbd{font:500 11px system-ui;color:oklch(70.7% 0.022 261.325);background:rgb(255 255 255/.1);padding:2px 6px;border-radius:4px}"
+		},
+		{
+			"name": "Switch",
+			"kind": "custom",
+			"refersTo": "switch-on",
+			"description": "On/off switch, amber with a soft glow when on.",
+			"html": "<button role=\"switch\" aria-checked=\"true\" class=\"ds-switch\"><i></i></button> <button role=\"switch\" aria-checked=\"false\" class=\"ds-switch\"><i></i></button>",
+			"css": ".ds-switch{position:relative;width:48px;height:28px;border:0;border-radius:9999px;background:rgb(255 255 255/.2);box-shadow:inset 0 0 0 1px rgb(255 255 255/.25);cursor:pointer;transition:background-color .2s}.ds-switch i{position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s}.ds-switch[aria-checked=true]{background:oklch(76.9% 0.188 70.08);box-shadow:0 0 14px rgb(245 158 11/.55)}.ds-switch[aria-checked=true] i{transform:translateX(20px)}.ds-switch:focus-visible{outline:2px solid #fff;outline-offset:2px}"
+		},
+		{
+			"name": "Segmented Control",
+			"kind": "chip",
+			"refersTo": "segment-selected",
+			"description": "Pick one option; the selected segment is white.",
+			"html": "<div class=\"ds-seg\"><button aria-pressed=\"true\">All <b>1,015</b></button><button>Movies</button><button>Shows</button></div>",
+			"css": ".ds-seg{display:inline-flex;gap:2px;padding:4px;border-radius:9999px;background:rgb(255 255 255/.06);box-shadow:inset 0 0 0 1px rgb(255 255 255/.1)}.ds-seg button{border:0;background:none;padding:6px 14px;border-radius:9999px;color:oklch(87.2% 0.01 258.338);font:600 14px system-ui,sans-serif;cursor:pointer}.ds-seg button:hover{color:#fff}.ds-seg button[aria-pressed=true]{background:#fff;color:#000}.ds-seg b{font-weight:600;opacity:.55}"
+		},
+		{
+			"name": "Section Tabs",
+			"kind": "nav",
+			"refersTo": "tab-active",
+			"description": "Grouped top-bar tabs; the active one is amber-tinted.",
+			"html": "<nav class=\"ds-tabs\"><a>Watch</a><a aria-current=\"page\">Explore</a><a>Profile</a></nav>",
+			"css": ".ds-tabs{display:inline-flex;gap:4px;padding:4px;border-radius:12px;box-shadow:inset 0 0 0 1px rgb(255 255 255/.1);background:#060606}.ds-tabs a{padding:6px 12px;border-radius:8px;font:600 14px/20px system-ui,sans-serif;color:oklch(87.2% 0.01 258.338);cursor:pointer}.ds-tabs a:hover{background:rgb(255 255 255/.1);color:#fff}.ds-tabs a[aria-current]{background:rgb(251 191 36/.15);color:oklch(87.9% 0.169 91.605)}"
+		},
+		{
+			"name": "Poster Card",
+			"kind": "card",
+			"refersTo": "card-poster",
+			"description": "2:3 poster with score badge and title band.",
+			"html": "<div class=\"ds-poster\"><span class=\"ds-score\">74</span><div class=\"ds-band\"><b>The Mentalist</b><small>2008</small></div></div>",
+			"css": ".ds-poster{position:relative;width:180px;aspect-ratio:2/3;border-radius:8px;overflow:hidden;background:linear-gradient(160deg,oklch(37.3% 0.034 259.733),oklch(27.8% 0.033 256.848));box-shadow:0 0 0 1px rgb(255 255 255/.1)}.ds-score{position:absolute;top:8px;right:8px;background:#65a32d;color:#fff;font:800 13px/1 system-ui;padding:4px 6px;border-radius:6px;box-shadow:0 0 0 2px #060606}.ds-band{position:absolute;inset:auto 0 0;padding:28px 8px 8px;background:linear-gradient(transparent,rgb(6 6 6/.9));display:flex;flex-direction:column;color:#fff;font:700 13px/1.2 system-ui}.ds-band small{font-weight:400;color:oklch(87.2% 0.01 258.338)}"
+		},
+		{
+			"name": "Section Header",
+			"kind": "custom",
+			"refersTo": "headline",
+			"description": "Title page section header with icon tile.",
+			"html": "<div class=\"ds-sh\"><span><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><path d=\"M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z\"/></svg></span><h2>Summary</h2></div>",
+			"css": ".ds-sh{display:flex;align-items:center;gap:12px}.ds-sh span{display:grid;place-items:center;width:36px;height:36px;border-radius:8px;background:rgb(255 255 255/.04);box-shadow:inset 0 0 0 1px rgb(255 255 255/.1);color:rgb(252 211 77/.9)}.ds-sh h2{margin:0;font:600 24px/1.33 system-ui,sans-serif;letter-spacing:-.025em;color:#fff}"
+		},
+		{
+			"name": "Rating Source Chips",
+			"kind": "custom",
+			"refersTo": "source-chip",
+			"description": "IMDb, Letterboxd, and Metacritic scores.",
+			"html": "<div class=\"ds-src\"><span class=\"imdb\">IMDb 9.2</span><span class=\"lb\">4.5 /5</span><span class=\"mc\">100 | 9.2</span></div>",
+			"css": ".ds-src{display:flex;gap:6px}.ds-src span{display:inline-flex;align-items:center;height:28px;padding:0 6px;border-radius:6px;font:600 13px system-ui,sans-serif;font-variant-numeric:tabular-nums}.ds-src .imdb{background:#f6c800;color:#000}.ds-src .lb{background:#2c3440;color:#fff}.ds-src .mc{background:#010101;color:#fff;box-shadow:inset 0 0 0 1px rgb(255 255 255/.15)}"
+		},
+		{
+			"name": "Notice",
+			"kind": "custom",
+			"refersTo": "panel",
+			"description": "Tinted status notice.",
+			"html": "<p class=\"ds-note\">Your services are saved for Germany.</p>",
+			"css": ".ds-note{margin:0;max-width:360px;padding:12px 14px;border-radius:12px;background:rgb(2 44 34/.5);box-shadow:inset 0 0 0 1px rgb(6 95 70/.7);color:oklch(95% 0.05 163);font:400 14px/1.45 system-ui,sans-serif}"
+		}
+	],
+	"narrative": {
+		"northStar": "The Lamp-Lit Shelf",
+		"overview": "GoodWatch looks like a home video shelf in a dark room with a warm lamp on. The room is dark navy. The posters and backdrops are the color. Amber is the lamp: it marks actions, the current place, links, and awards. The interface stays out of the way so that people compare titles, not chrome.\n\nDensity is high but calm. Poster grids, score rows, and episode grids carry a lot of data, so surfaces stay flat, layers come from translucent white, and text steps down through a blue-gray ramp. Title pages take on the color of the title itself: the page sits on the title's own backdrop, blurred and darkened. Brand scenes, such as the start page room, the TV easter eggs, the intro film, and the footer cinema, are illustrated or pixel-art worlds with their own rules. They frame the app but don't set its controls.",
+		"keyCharacteristics": [
+			"Dark navy base for most pages; title pages tint toward their own backdrop.",
+			"Amber as the brand light; open decision D7 settles its exact job.",
+			"Translucent white layers (4-20%) and thin white rings instead of shadows.",
+			"Pills for chips, toggles, and most buttons; 8-16px corners for cards, panels, fields, and action buttons.",
+			"Gabarito for the brand and many page titles, the system sans for data and controls.",
+			"An 11-step score scale that is the app's main data color, plus fixed colors for rating sources and the fingerprint."
+		],
+		"rules": [
+			{
+				"name": "The Score Owns Its Colors Rule",
+				"body": "The score ramp means \"how good\". Don't use its reds and greens for status, errors, or decoration.",
+				"section": "colors"
+			},
+			{
+				"name": "The Readable Score Rule",
+				"body": "White text on a score color uses the darkened tile color, not the raw ramp step. Score words on dark use the lightened text color.",
+				"section": "colors"
+			},
+			{
+				"name": "The Palette Means Something Rule",
+				"body": "Each data palette (sources, fingerprint, moods, genres) appears only with the data it encodes. Don't borrow its colors for chrome.",
+				"section": "colors"
+			},
+			{
+				"name": "The Heavy Weights Rule",
+				"body": "Hierarchy comes from weight (600-900) and size, not from color. Buttons use 700-900.",
+				"section": "typography"
+			},
+			{
+				"name": "The One Gabarito Source Rule",
+				"body": "Gabarito is declared in `app/fonts/gabarito.css`. Don't add another inline `fontFamily` string for it; seven files already do.",
+				"section": "typography"
+			},
+			{
+				"name": "The Ring Before Shadow Rule",
+				"body": "To separate a surface, add a 1px white ring at 10% first. Use a shadow only when the surface overlaps other content.",
+				"section": "elevation"
+			}
+		],
+		"dos": [
+			"**Do** keep page backgrounds on Night, except title pages, which sit on their own darkened backdrop.",
+			"**Do** build layers with white veils at 4-20% and 1px white rings at 10-15%.",
+			"**Do** use pills for chips, toggles, and segmented controls.",
+			"**Do** use the darkened tile color behind white score numbers.",
+			"**Do** let posters and backdrops carry color.",
+			"**Do** use the system sans for data, controls, and body text, with tabular figures for numbers.",
+			"**Do** match the variant the surrounding page already uses wherever an open decision (D1 to D7) applies.",
+			"**Do** animate only transform and opacity, and keep interface motion at 120-300ms.",
+			"**Do** make every interactive element at least 40px tall on touch, with a visible focus ring."
+		],
+		"donts": [
+			"**Don't** add a new variant of a button, selected state, page title, section heading, or eyebrow label. Pick from the ones listed here.",
+			"**Don't** use the score ramp, rating source colors, fingerprint colors, or mood colors outside their data.",
+			"**Don't** put white text on a raw light score color (scores 50-70).",
+			"**Don't** introduce slate, stone, neutral, indigo, or blue for chrome. The neutral ramp is the blue-gray one, and the accent is amber.",
+			"**Don't** use react-toastify's default light theme, the blue `Spinner`, or the `imports/shared.ts` indigo buttons as models. They're cleanup items.",
+			"**Don't** use the raised gradient `Button` component in `app/ui/button/Button.tsx`, or the `primary-*`, `accent-*`, and `drop-shadow-neu*` theme tokens. They're unused leftovers.",
+			"**Don't** add coverage or source disclaimers under data.",
+			"**Don't** crop posters out of their 2:3 shape."
+		]
+	}
+}
