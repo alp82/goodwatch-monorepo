@@ -39,11 +39,11 @@ export const visitorBarStyle = (on: boolean) =>
 
 export const toggleView = ({ own, visitor, on }: ViewLinks) => (on ? own : visitor)
 
-/** The light gray bar right under the site header while the owner views their profile as a visitor. */
+/** The amber bar right under the site header while the owner views their profile as a visitor. */
 export function VisitorBar({ own }: { own: string }) {
 	return (
 		<div
-			className={`sticky top-16 ${STICKY_BAR} ${FOLLOW_PHONE_BAR} bg-gray-200 text-gray-950`}
+			className={`sticky top-16 ${STICKY_BAR} ${FOLLOW_PHONE_BAR} bg-amber-400 text-gray-950`}
 			style={{ height: VISITOR_BAR_H }}
 			data-visitor-bar
 		>
@@ -57,7 +57,7 @@ export function VisitorBar({ own }: { own: string }) {
 					to={own}
 					replace
 					preventScrollReset
-					className="inline-flex h-8 shrink-0 items-center rounded-full bg-gray-950 px-3.5 text-[13px] font-bold text-amber-200 hover:bg-gray-900"
+					className="inline-flex h-8 shrink-0 items-center rounded-full bg-white px-3.5 text-[13px] font-bold text-gray-950 hover:bg-gray-100"
 				>
 					Back to your view
 				</Link>

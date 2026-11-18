@@ -7,9 +7,9 @@ import type { ReactNode } from "react"
  * is a view's main action. */
 export const LIST_TAG_TONE = {
 	/** A show to continue: its next episode. */
-	continue: "bg-gray-200 text-black",
+	continue: "bg-amber-400 text-black",
 	/** A finished show with new episodes. */
-	newEpisodes: "bg-gray-200 text-black",
+	newEpisodes: "bg-amber-400 text-black",
 	/** A show to start. */
 	start: "bg-emerald-400 text-black",
 	wishlist: "bg-sky-400 text-black",

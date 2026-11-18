@@ -237,7 +237,7 @@ function PageStep({
 				</div>
 			)}
 			<div className="flex flex-col items-center">
-				<span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-700 text-lg font-black text-white sm:h-12 sm:w-12 sm:text-xl">
+				<span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-700 text-lg font-black text-white sm:h-12 sm:w-12 sm:text-xl">
 					<span className="sr-only">Step </span>
 					{n}
 				</span>

@@ -354,7 +354,7 @@ function WithStage({
 							<span
 								className={`relative ml-1 block h-1.5 min-w-8 flex-1 rounded-full bg-white/30 ${hint ? "max-sm:hidden" : ""}`}
 							>
-								<span className="absolute -top-[7px] left-0 h-5 w-5 rounded-full bg-gray-200" />
+								<span className="absolute -top-[7px] left-0 h-5 w-5 rounded-full bg-amber-300" />
 							</span>
 							{hint &&
 								(oneKind ? (

@@ -216,7 +216,7 @@
 }
 .tn-new {
 	border-radius: 4px;
-	background: var(--color-gray-200);
+	background: var(--color-amber-300);
 	padding: 0.125rem 0.375rem;
 	font-size: 10px;
 	font-weight: 900;

@@ -186,7 +186,7 @@ export function LivePill({
 		<span
 			ref={r}
 			aria-live="polite"
-			className={`pointer-events-none absolute left-1/2 z-10 -translate-x-1/2 rounded-full bg-gray-200 px-3 py-1 text-sm font-black whitespace-nowrap text-gray-950 opacity-0 transition-opacity ${className}`}
+			className={`pointer-events-none absolute left-1/2 z-10 -translate-x-1/2 rounded-full bg-amber-400 px-3 py-1 text-sm font-black whitespace-nowrap text-gray-950 opacity-0 transition-opacity ${className}`}
 		/>
 	)
 }

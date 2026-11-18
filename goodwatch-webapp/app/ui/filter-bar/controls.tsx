@@ -594,7 +594,7 @@ export function FiltersButton({
 			<span className={compact ? "max-xl:sr-only" : undefined}>{children ?? "Filters"} </span>
 			<span
 				aria-hidden
-				className={`grid h-5 min-w-5 place-items-center rounded-full px-1.5 text-xs tabular-nums ${count ? "bg-gray-200 text-gray-950" : "bg-white/10 text-gray-400"}`}
+				className={`grid h-5 min-w-5 place-items-center rounded-full px-1.5 text-xs tabular-nums ${count ? "bg-amber-500 text-gray-950" : "bg-white/10 text-gray-400"}`}
 			>
 				{count}
 			</span>

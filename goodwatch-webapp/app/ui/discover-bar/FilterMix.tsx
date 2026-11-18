@@ -87,7 +87,7 @@ function Stack({ shown, rows, className }: { shown: number; rows: Row[]; classNa
 			<motion.span
 				layout
 				transition={METER_TRANSITION}
-				className="h-full bg-gray-300"
+				className="h-full bg-amber-500"
 				style={{ width: width(shown) }}
 			/>
 			{live.map((r) => (
@@ -365,7 +365,7 @@ export function FilterMix({
 						{!readSection && (
 							<ul className="mt-3 flex flex-col">
 								<li className="flex h-8 items-center gap-2.5">
-									<span className="h-2.5 w-2.5 shrink-0 rounded-full bg-gray-300" aria-hidden />
+									<span className="h-2.5 w-2.5 shrink-0 rounded-full bg-amber-500" aria-hidden />
 									<span className="flex-1 font-bold text-white">Shown</span>
 									<span className="tabular-nums text-gray-300">{total.toLocaleString("en")}</span>
 									<span className="w-[86px]" aria-hidden />

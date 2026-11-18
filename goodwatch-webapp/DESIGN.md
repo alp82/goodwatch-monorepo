@@ -198,7 +198,7 @@ A cool, dark navy room with a warm amber lamp, translucent white layers, and a s
 
 ### Primary
 
-- **Lamp Amber** (`amber`, `#fbbf24`): the one primary button per view, outline-button rings (at 55%), active tab backgrounds (at 15%), focus rings, the current breadcrumb, pagination's current page, and navigation markers (D2). Count badges, list tags, meters, and decorative dots that aren't buttons are gray (`gray-200` behind text, `gray-300` for bars and dots), not amber (D7). It is the one amber of the family (F1): the `amber-400` utilities, the wordmark, `start.css`, the OG cards, and YepWatch all draw `#fbbf24`; `app/tailwind.css` overrides Tailwind v4's more orange oklch amber-400.
+- **Lamp Amber** (`amber`, `#fbbf24`): the one primary button per view, outline-button rings (at 55%), active tab backgrounds (at 15%), focus rings, the current breadcrumb, pagination's current page, and navigation markers (D2). Status fills that aren't buttons stay amber: the visitor-view bar, count badges, list tags, meters, progress bars and dots, and step numbers (D7 limits only buttons). It is the one amber of the family (F1): the `amber-400` utilities, the wordmark, `start.css`, the OG cards, and YepWatch all draw `#fbbf24`; `app/tailwind.css` overrides Tailwind v4's more orange oklch amber-400.
 - **Bright Amber** (`amber-light`): amber text and icons on dark: active tab labels, section icons (at 90%), award lines, links, counts in selected segments, and the spinner.
 - **Pale Amber** (`amber-pale`): amber text on amber-tinted surfaces, and the "won" award state.
 - **Deep Amber** (`amber-deep`): the switch's on state and reading-progress bars.

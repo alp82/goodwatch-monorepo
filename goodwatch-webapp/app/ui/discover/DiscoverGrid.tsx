@@ -112,7 +112,7 @@ function MoveMark({ delta, reduce }: { delta: number; reduce: boolean }) {
 						animate={{ opacity: 1, scale: 1 }}
 						exit={{ opacity: 0 }}
 						transition={SPRING}
-						className={`absolute top-1.5 left-1.5 z-30 flex h-7 items-center gap-0.5 rounded-full px-2 text-[13px] font-black tabular-nums shadow-lg ring-[3px] ring-gray-900 ${delta > 0 ? "bg-gray-200 text-gray-950" : "bg-gray-700 text-gray-200"}`}
+						className={`absolute top-1.5 left-1.5 z-30 flex h-7 items-center gap-0.5 rounded-full px-2 text-[13px] font-black tabular-nums shadow-lg ring-[3px] ring-gray-900 ${delta > 0 ? "bg-amber-400 text-gray-950" : "bg-gray-700 text-gray-200"}`}
 					>
 						{delta > 0 ? (
 							<ArrowUpIcon className="h-3.5 w-3.5" aria-hidden />

@@ -24,12 +24,12 @@ export interface BarProviders {
 	country: StreamingProvider[]
 }
 
-/** A small light gray count: the active choices of a tab or sub-tab. */
+/** A small amber count: the active choices of a tab or sub-tab. */
 export function TabBadge({ n, size = "sm" }: { n: number; size?: "sm" | "md" }) {
 	if (!n) return null
 	return (
 		<span
-			className={`grid place-items-center rounded-full bg-gray-200 px-1 font-bold tracking-normal text-gray-950 tabular-nums ${size === "md" ? "h-4.5 min-w-4.5 text-[11px]" : "h-4 min-w-4 text-[10px]"}`}
+			className={`grid place-items-center rounded-full bg-amber-500 px-1 font-bold tracking-normal text-gray-950 tabular-nums ${size === "md" ? "h-4.5 min-w-4.5 text-[11px]" : "h-4 min-w-4 text-[10px]"}`}
 		>
 			{n}
 		</span>

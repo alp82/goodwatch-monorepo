@@ -5,7 +5,7 @@ import { FILTER_ACCENTS, METER_COLORS, recoveryLabel } from "./labels"
 import { METER_TRANSITION, TAP } from "./motion"
 import type { FilterBarCounts } from "./types"
 
-/** A thin proportional bar: light gray for what shows, then what each recovery would let back in. */
+/** A thin proportional bar: amber for what shows, then what each recovery would let back in. */
 export function HiddenMeter({
 	counts,
 	className = "",
@@ -22,7 +22,7 @@ export function HiddenMeter({
 			<motion.div
 				layout={layout}
 				transition={METER_TRANSITION}
-				className="h-full bg-gray-300"
+				className="h-full bg-amber-500"
 				style={{ width: share(counts?.total ?? 0) }}
 			/>
 			{counts?.recoveries.map((r) => (

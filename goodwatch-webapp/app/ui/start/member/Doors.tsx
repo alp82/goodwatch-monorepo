@@ -450,7 +450,7 @@ function Strip({ strip }: { strip: StripData }) {
 	)
 }
 
-/** "4 of 10 ratings" with a thin gray bar (a fixed width, nothing animates). */
+/** "4 of 10 ratings" with a thin amber bar (a fixed width, nothing animates). */
 export function RatingsBar({ have, className = "" }: { have: number; className?: string }) {
 	const n = Math.min(have, PERSONAL_AT)
 	return (
@@ -460,7 +460,7 @@ export function RatingsBar({ have, className = "" }: { have: number; className?:
 				aria-hidden
 			>
 				<span
-					className="block h-full origin-left rounded-full bg-gray-300"
+					className="block h-full origin-left rounded-full bg-amber-400"
 					style={{ transform: `scaleX(${n / PERSONAL_AT})` }}
 				/>
 			</span>

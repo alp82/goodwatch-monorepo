@@ -118,7 +118,7 @@ Design diff should show: the title page, the info pages, the footer, the command
 
 ### D7: What amber means
 
-Status: decided on November 18, 2026: **one filled amber button per view**. The view's main action is the only solid amber fill; other amber buttons become amber outline buttons. Solid amber bars, dots, and badges that aren't buttons turn gray. Amber text, icons, links, award lines, light amber tints, and focus rings stay.
+Status: decided on November 18, 2026: **one filled amber button per view**. The view's main action is the only solid amber button; other amber buttons become amber outline buttons. Solid amber bars, dots, and badges that aren't buttons (the visitor-view bar, count badges, list tags, meters, progress) stay amber: the rule limits buttons only (corrected November 18, 2026). Amber text, icons, links, award lines, light amber tints, and focus rings stay.
 
 Amber marks actions, active navigation, links, award lines, section icons, reading-progress bars, counts, and focus, often all on one screen. Discover shows amber on the count bar, the Mode toggle, Search, Sign up, award lines, and the "you" lock at once. The title page shows it on Sign up, award lines, rail progress, active tabs, links, and section icons. Amber also comes in several values: amber-300 (about 109 uses on the title page), amber-400, amber-500, amber-700, `#fcd34d` (`--tn-amber`), `rgb(255,204,51)` (`.accent`), and orange-300 `#fdba74` (TV remote).
 

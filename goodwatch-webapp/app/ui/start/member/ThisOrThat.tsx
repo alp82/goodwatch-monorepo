@@ -120,7 +120,7 @@ function Pair({
 						<span
 							// biome-ignore lint/suspicious/noArrayIndexKey: one mark per round
 							key={i}
-							className={`h-1.5 w-5 rounded-full ${i < taps ? "bg-gray-300" : i === taps ? "bg-gray-300/40" : "bg-white/15"}`}
+							className={`h-1.5 w-5 rounded-full ${i < taps ? "bg-amber-400" : i === taps ? "bg-amber-400/40" : "bg-white/15"}`}
 						/>
 					))}
 				</span>
