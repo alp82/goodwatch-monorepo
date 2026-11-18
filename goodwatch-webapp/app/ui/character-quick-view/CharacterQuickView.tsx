@@ -14,6 +14,7 @@ import { AnimatePresence, motion } from "framer-motion"
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { foldName } from "~/domain/character-portraits"
+import { useFloatSurface } from "~/ui/details/tint-surface"
 import { useFocusScope } from "~/ui/for-you/focus"
 import { DISPLAY } from "~/ui/my-pages/bits"
 import {
@@ -28,11 +29,7 @@ import { personPath, titlePath } from "~/utils/helpers"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 import type { CharacterEntry, OpenCharacter } from "./context"
 import { TvdbCredit } from "./parts"
-import {
-	type CharacterRole,
-	fetchPersonRoles,
-	useTitlePortraits,
-} from "./portraits"
+import { type CharacterRole, fetchPersonRoles, useTitlePortraits } from "./portraits"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 /** The wide view: the portrait (340 × 510) with Previous / Next under it, and the card beside it at that height. */
@@ -44,27 +41,21 @@ const DRAWER_HEIGHT = 580
  * URL, which tmdbImageUrl passes through as it is), then TheTVDB's actor photo.
  */
 const actorSources = (e: CharacterEntry): string[] =>
-	unique([
-		e.actorProfilePath ? tmdbImageUrl(e.actorProfilePath, "h632") : null,
-		e.actorImage,
-	])
+	unique([e.actorProfilePath ? tmdbImageUrl(e.actorProfilePath, "h632") : null, e.actorImage])
 
 const unique = (list: (string | null | undefined)[]): string[] => [
 	...new Set(list.filter((x): x is string => Boolean(x))),
 ]
 
 /** The character has a portrait of their own: not missing, and not the actor's photo again. */
-const hasPortrait = (e: CharacterEntry) =>
-	Boolean(e.image) && !actorSources(e).includes(e.image)
+const hasPortrait = (e: CharacterEntry) => Boolean(e.image) && !actorSources(e).includes(e.image)
 
 const titleHref = (e: CharacterEntry) =>
 	e.title ? titlePath(e.title.mediaType, e.title.tmdbId, e.title.name) : null
 
 /** The actor's page: from the id when the entry knows it (entries from the person page link a title page). */
 const actorHref = (e: CharacterEntry) =>
-	e.moreFrom === "title" && e.personId
-		? personPath(e.personId, e.personName)
-		: e.href
+	e.moreFrom === "title" && e.personId ? personPath(e.personId, e.personName) : e.href
 
 const initials = (name: string) =>
 	name
@@ -76,10 +67,7 @@ const initials = (name: string) =>
 		.toUpperCase()
 
 /** A role from the actor's other characters, as an entry of its own (same person, same page). */
-const roleEntry = (
-	from: CharacterEntry,
-	role: CharacterRole,
-): CharacterEntry => ({
+const roleEntry = (from: CharacterEntry, role: CharacterRole): CharacterEntry => ({
 	anchor: `view-role-${role.mediaType}-${role.tmdbId}-${role.character}`,
 	character: role.character,
 	image: role.image,
@@ -120,6 +108,7 @@ export default function CharacterQuickView({
 	onClose: () => void
 }) {
 	const card = (i: number) => <Card entry={open.list[i]} onRole={onRole} />
+	const surface = useFloatSurface("bg-gray-900")
 	if (!open.wide)
 		return (
 			<QuickView
@@ -136,6 +125,7 @@ export default function CharacterQuickView({
 					name: open.list[i]?.character ?? "",
 				})}
 				height={{ h: 560, drawer: DRAWER_HEIGHT }}
+				surface={surface}
 			>
 				{card}
 			</QuickView>
@@ -149,9 +139,9 @@ export default function CharacterQuickView({
 
 // --- the wide view: a card over the dimmed page, the page behind left as it is -------------------------------
 
-/** The card surface, as the poster quick view's. */
-const SURFACE =
-	"overflow-hidden rounded-2xl bg-gray-900 shadow-[0_30px_80px_-20px_rgba(0,0,0,.95)] ring-1 ring-white/12"
+/** The card, as the poster quick view's; its surface comes from useFloatSurface. */
+const CARD =
+	"overflow-hidden rounded-2xl shadow-[0_30px_80px_-20px_rgba(0,0,0,.95)] ring-1 ring-white/12"
 
 function Stage({
 	open,
@@ -174,10 +164,7 @@ function Stage({
 		const el = layer.current
 		if (!el) return
 		const onWheel = (e: WheelEvent) => {
-			const t =
-				e.target instanceof Element
-					? e.target.closest("[data-view-scroll]")
-					: null
+			const t = e.target instanceof Element ? e.target.closest("[data-view-scroll]") : null
 			if (!t || t.scrollHeight <= t.clientHeight) e.preventDefault()
 		}
 		el.addEventListener("wheel", onWheel, { passive: false })
@@ -191,10 +178,7 @@ function Stage({
 		const now = document.activeElement
 		if (
 			to.isConnected &&
-			(!now ||
-				now === document.body ||
-				!now.isConnected ||
-				layer.current?.contains(now))
+			(!now || now === document.body || !now.isConnected || layer.current?.contains(now))
 		)
 			to.focus({ preventScroll: true })
 		onClose()
@@ -203,8 +187,7 @@ function Stage({
 		(d: -1 | 1) => onIndex((open.index + d + count) % count),
 		[open.index, count, onIndex],
 	)
-	const steps: Steps | null =
-		count > 1 ? { onStep: step, canPrev: true, canNext: true } : null
+	const steps: Steps | null = count > 1 ? { onStep: step, canPrev: true, canNext: true } : null
 	const latest = useRef({ step, close })
 	latest.current = { step, close }
 	useEffect(() => {
@@ -248,16 +231,12 @@ function Stage({
 					// biome-ignore lint/a11y/useSemanticElements: a positioned card over the dimmed page, as the quick view's.
 					role="dialog"
 					aria-modal="true"
-					aria-label={
-						entry ? `${entry.personName} as ${entry.character}` : undefined
-					}
+					aria-label={entry ? `${entry.personName} as ${entry.character}` : undefined}
 					className="relative max-h-[calc(100dvh-6rem)] max-w-full outline-none"
 					style={{ width: STAGE.w, height: STAGE.h }}
 					// The view itself appears (opacity and a slight scale); the page behind stays as it is.
 					initial={{ opacity: 0, scale: 0.97 }}
-					animate={
-						closing ? { opacity: 0, scale: 0.98 } : { opacity: 1, scale: 1 }
-					}
+					animate={closing ? { opacity: 0, scale: 0.98 } : { opacity: 1, scale: 1 }}
 					transition={{ duration: closing ? 0.16 : 0.22, ease: EASE }}
 					onAnimationComplete={() => {
 						if (closing) finish()
@@ -287,10 +266,7 @@ function Stage({
 // --- the pictures and the names ---------------------------------------------------------------------------------
 
 /** The actor's photo, 2:3, a link to their page; initials when no picture loads. */
-function ActorFrame({
-	entry,
-	className = "",
-}: { entry: CharacterEntry; className?: string }) {
+function ActorFrame({ entry, className = "" }: { entry: CharacterEntry; className?: string }) {
 	return (
 		<Link
 			to={actorHref(entry)}
@@ -309,10 +285,7 @@ function ActorFrame({
 }
 
 /** The character's portrait, 2:3; the actor's photo, then initials, when it doesn't load. */
-function CharacterFrame({
-	entry,
-	className = "",
-}: { entry: CharacterEntry; className?: string }) {
+function CharacterFrame({ entry, className = "" }: { entry: CharacterEntry; className?: string }) {
 	return (
 		<div
 			className={`relative aspect-[2/3] shrink-0 overflow-hidden rounded-xl bg-gray-800 ring-1 ring-white/15 ${className}`}
@@ -338,10 +311,7 @@ function Initials({ name, small = false }: { name: string; small?: boolean }) {
 	)
 }
 
-function ActorName({
-	entry,
-	className = "",
-}: { entry: CharacterEntry; className?: string }) {
+function ActorName({ entry, className = "" }: { entry: CharacterEntry; className?: string }) {
 	return (
 		<Link to={actorHref(entry)} className={`hover:text-amber-300 ${className}`}>
 			{entry.personName}
@@ -368,13 +338,7 @@ function Tools() {
 }
 
 /** The title row and the grid of more characters, scrolling when the card is short. */
-function Body({
-	entry,
-	onRole,
-}: {
-	entry: CharacterEntry
-	onRole: (e: CharacterEntry) => void
-}) {
+function Body({ entry, onRole }: { entry: CharacterEntry; onRole: (e: CharacterEntry) => void }) {
 	return (
 		<div
 			data-view-scroll=""
@@ -396,6 +360,7 @@ function Card({
 	onRole: (e: CharacterEntry) => void
 }) {
 	const { form } = useQuickViewFrame()
+	const surface = useFloatSurface("bg-gray-900")
 	if (!entry) return null
 	const two = hasPortrait(entry)
 
@@ -417,7 +382,7 @@ function Card({
 	return (
 		<div className="flex h-full items-stretch gap-5">
 			<div
-				className={`pointer-events-auto relative flex h-full min-w-0 flex-1 flex-col ${SURFACE}`}
+				className={`pointer-events-auto relative flex h-full min-w-0 flex-1 flex-col ${CARD} ${surface}`}
 			>
 				<Tools />
 				<div className="shrink-0 px-4 pt-5 pr-16 pb-2">
@@ -433,10 +398,7 @@ function Card({
 						className="w-full shadow-[0_30px_80px_-20px_rgba(0,0,0,.95)]"
 					/>
 				) : (
-					<ActorFrame
-						entry={entry}
-						className="w-full shadow-[0_30px_80px_-20px_rgba(0,0,0,.95)]"
-					/>
+					<ActorFrame entry={entry} className="w-full shadow-[0_30px_80px_-20px_rgba(0,0,0,.95)]" />
 				)}
 				<PortraitSteps />
 			</div>
@@ -453,15 +415,11 @@ function Heading({ entry, big }: { entry: CharacterEntry; big: boolean }) {
 	return (
 		<div className="flex min-w-0 flex-1 items-end gap-3">
 			{(two || !big) && (
-				<ActorFrame
-					entry={entry}
-					className={big ? "w-16 rounded-lg" : "w-14 rounded-lg"}
-				/>
+				<ActorFrame entry={entry} className={big ? "w-16 rounded-lg" : "w-14 rounded-lg"} />
 			)}
 			<div className="min-w-0 pb-0.5">
 				<p className="truncate text-sm text-gray-400">
-					<ActorName entry={entry} className="font-semibold text-gray-100" />{" "}
-					plays
+					<ActorName entry={entry} className="font-semibold text-gray-100" /> plays
 				</p>
 				<h2
 					className={`${DISPLAY} line-clamp-2 leading-tight text-white ${big ? "text-[1.6rem]" : "text-[1.3rem]"}`}
@@ -547,18 +505,14 @@ function InTitle({ entry }: { entry: CharacterEntry }) {
 				className="group -mx-1.5 flex items-center gap-3 rounded-lg px-1.5 py-1 hover:bg-white/[0.05]"
 			>
 				<span className="aspect-[2/3] w-9 shrink-0 overflow-hidden rounded-md bg-gray-800 ring-1 ring-white/10">
-					{t.posterPath && (
-						<Img sources={[tmdbImageUrl(t.posterPath, "w92")]} />
-					)}
+					{t.posterPath && <Img sources={[tmdbImageUrl(t.posterPath, "w92")]} />}
 				</span>
 				<span className="min-w-0">
 					<span className="block truncate text-sm font-semibold text-gray-100 group-hover:text-amber-300">
 						{t.name}
 					</span>
 					<span className="block text-xs text-gray-500">
-						{[t.year, t.mediaType === "show" ? "TV show" : "Movie"]
-							.filter(Boolean)
-							.join(" · ")}
+						{[t.year, t.mediaType === "show" ? "TV show" : "Movie"].filter(Boolean).join(" · ")}
 					</span>
 				</span>
 			</Link>
@@ -583,10 +537,7 @@ const COLS = 5
 const ROWS = 2
 
 /** The grid of other characters: the actor's roles, or (moreFrom "title") the title's other top characters. */
-function MoreCharacters(props: {
-	entry: CharacterEntry
-	onRole: (e: CharacterEntry) => void
-}) {
+function MoreCharacters(props: { entry: CharacterEntry; onRole: (e: CharacterEntry) => void }) {
 	return props.entry.moreFrom === "title" && props.entry.title ? (
 		<MoreFromTitle {...props} />
 	) : (
@@ -705,10 +656,7 @@ function MoreFromTitle({
 		return true
 	})
 	if (portraits.failed || (ready && !list.length)) return null
-	const toEntry = (
-		p: (typeof list)[number]["p"],
-		i: number,
-	): CharacterEntry => {
+	const toEntry = (p: (typeof list)[number]["p"], i: number): CharacterEntry => {
 		const row = i < rows.length ? rows[i] : undefined
 		return {
 			anchor: `view-title-${t.mediaType}-${t.tmdbId}-${p.character}`,
@@ -753,17 +701,11 @@ function ActorRoles({
 		queryKey: ["character-view-roles", entry.personId ?? 0, entry.personName],
 		// Two full rows, and one more for the role already open.
 		queryFn: () =>
-			fetchPersonRoles(entry.personId, entry.personName, COLS * ROWS + 1).then(
-				(d) => d.characters,
-			),
+			fetchPersonRoles(entry.personId, entry.personName, COLS * ROWS + 1).then((d) => d.characters),
 	})
 	const roles = (q.data ?? []).filter(
 		(r) =>
-			!(
-				entry.title &&
-				r.mediaType === entry.title.mediaType &&
-				r.tmdbId === entry.title.tmdbId
-			),
+			!(entry.title && r.mediaType === entry.title.mediaType && r.tmdbId === entry.title.tmdbId),
 	)
 	// A failed read leaves the optional grid out rather than pulsing on.
 	if (q.isError || (q.isSuccess && !roles.length)) return null

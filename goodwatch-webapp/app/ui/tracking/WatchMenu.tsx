@@ -19,19 +19,13 @@ import {
 	QueueListIcon,
 	XMarkIcon,
 } from "@heroicons/react/24/solid"
-import {
-	type ReactNode,
-	type RefObject,
-	useEffect,
-	useLayoutEffect,
-	useRef,
-	useState,
-} from "react"
+import { type ReactNode, type RefObject, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { episodeCode } from "~/domain/episode-label"
 import type { WatchedWhen } from "~/domain/tracking/machine"
 import type { PageEpisode } from "~/domain/tracking/show-page"
 import type { WatchChoice } from "~/domain/tracking/watch-menu"
+import { TINT_FLOAT } from "~/ui/details/tint-surface"
 import type { Model } from "./EpisodeList"
 import type { MenuMark } from "./actions"
 import { FOCUS } from "./store"
@@ -68,9 +62,7 @@ function choiceWords(choice: WatchChoice, count: number): string {
 /** The episode's latest watch of the current pass, in words: "Watched Jan 8, 2025", "Watched today", "Watched, date unknown". */
 export function watchedWords(model: Model, e: PageEpisode): string {
 	const rows = model.view.watchesOf.get(e.id) ?? []
-	const row =
-		rows.find((r) => r.pass === model.view.derived.pass) ??
-		rows[rows.length - 1]
+	const row = rows.find((r) => r.pass === model.view.derived.pass) ?? rows[rows.length - 1]
 	if (!row || row.watched_at === null || row.watched_at_precision === "unknown")
 		return "Watched, date unknown"
 	const day = new Date(row.watched_at).toISOString().slice(0, 10)
@@ -81,9 +73,7 @@ export function watchedWords(model: Model, e: PageEpisode): string {
 /** The answers the menu shows for a watch made elsewhere: this episode, on its logged day or with no date. */
 function choiceOf(model: Model, e: PageEpisode): WatchChoice {
 	const rows = model.view.watchesOf.get(e.id) ?? []
-	const row =
-		rows.find((r) => r.pass === model.view.derived.pass) ??
-		rows[rows.length - 1]
+	const row = rows.find((r) => r.pass === model.view.derived.pass) ?? rows[rows.length - 1]
 	if (!row || row.watched_at === null || row.watched_at_precision === "unknown")
 		return { upTo: false, when: { precision: "unknown" } }
 	return {
@@ -130,16 +120,9 @@ function Floating({
 			if (!a) return
 			const h = panel.current?.scrollHeight ?? 0
 			// No room below: the page first moves the button up under the sticky headers, as far as that helps.
-			if (
-				first &&
-				window.innerHeight - a.bottom - 14 < h &&
-				a.top > UNDER_HEADERS
-			) {
+			if (first && window.innerHeight - a.bottom - 14 < h && a.top > UNDER_HEADERS) {
 				window.scrollBy({
-					top: Math.min(
-						a.top - UNDER_HEADERS,
-						h + 20 - (window.innerHeight - a.bottom),
-					),
+					top: Math.min(a.top - UNDER_HEADERS, h + 20 - (window.innerHeight - a.bottom)),
 					behavior: "instant" as ScrollBehavior,
 				})
 				a = anchor.current?.getBoundingClientRect() ?? a
@@ -152,10 +135,7 @@ function Floating({
 			const max = Math.max(200, down ? below : above)
 			setAt({
 				top: down ? a.bottom + 6 : a.top - Math.min(h, max) - 6,
-				left: Math.max(
-					8,
-					Math.min(a.right - width, window.innerWidth - width - 8),
-				),
+				left: Math.max(8, Math.min(a.right - width, window.innerWidth - width - 8)),
 				width,
 				max,
 			})
@@ -174,7 +154,7 @@ function Floating({
 			// biome-ignore lint/a11y/useSemanticElements: a panel fixed beside its button; <dialog> would take it to the top layer
 			role="dialog"
 			aria-label="Watched"
-			className={`gw-watch-in fixed ${LAYER} overflow-y-auto rounded-xl bg-gray-900 shadow-2xl shadow-black/60 ring-1 ring-white/10`}
+			className={`gw-watch-in fixed ${LAYER} overflow-y-auto rounded-xl ${TINT_FLOAT} shadow-2xl shadow-black/60 ring-1 ring-white/10`}
 			style={
 				at
 					? { top: at.top, left: at.left, width: at.width, maxHeight: at.max }
@@ -212,15 +192,10 @@ export default function WatchMenu({
 
 	useEffect(() => {
 		if (!open) return
-		const onEscape = (event: KeyboardEvent) =>
-			event.key === "Escape" && setOpen(false)
+		const onEscape = (event: KeyboardEvent) => event.key === "Escape" && setOpen(false)
 		const outside = (event: PointerEvent) => {
 			const target = event.target as Node
-			if (
-				!phone &&
-				!anchor.current?.contains(target) &&
-				!panel.current?.contains(target)
-			)
+			if (!phone && !anchor.current?.contains(target) && !panel.current?.contains(target))
 				setOpen(false)
 		}
 		window.addEventListener("keydown", onEscape)
@@ -310,9 +285,7 @@ export default function WatchMenu({
 					<span className="block text-sm font-bold text-white">{name}</span>
 					<span className="block truncate text-xs text-gray-400">{hint}</span>
 				</span>
-				<CheckIcon
-					className={`h-4 w-4 shrink-0 ${on ? "text-green-300" : "text-transparent"}`}
-				/>
+				<CheckIcon className={`h-4 w-4 shrink-0 ${on ? "text-green-300" : "text-transparent"}`} />
 			</button>
 			{on && extra}
 		</div>
@@ -371,19 +344,14 @@ export default function WatchMenu({
 							<ClockIcon className="h-5 w-5 shrink-0 text-amber-300" />,
 							"Just now",
 							"Today, at this time",
-							() =>
-								kind !== "moment" && change({ when: { precision: "moment" } }),
+							() => kind !== "moment" && change({ when: { precision: "moment" } }),
 						)}
 						{card(
 							kind === "day",
 							<CalendarDaysIcon className="h-5 w-5 shrink-0 text-emerald-300" />,
 							"On a date",
-							current.when.precision === "day"
-								? dayWords(current.when.day)
-								: "Pick the day",
-							() =>
-								kind !== "day" &&
-								change({ when: { precision: "day", day: model.today } }),
+							current.when.precision === "day" ? dayWords(current.when.day) : "Pick the day",
+							() => kind !== "day" && change({ when: { precision: "day", day: model.today } }),
 							current.when.precision === "day" && (
 								<div className="px-3 pb-3">
 									<input
@@ -407,9 +375,7 @@ export default function WatchMenu({
 							<QuestionMarkCircleIcon className="h-5 w-5 shrink-0 text-gray-400" />,
 							"Not sure when",
 							"Saved without a date",
-							() =>
-								kind !== "unknown" &&
-								change({ when: { precision: "unknown" } }),
+							() => kind !== "unknown" && change({ when: { precision: "unknown" } }),
 						)}
 					</div>
 				</div>
@@ -462,9 +428,7 @@ export default function WatchMenu({
 				>
 					<EyeSlashIcon className="h-4 w-4 group-hover:hidden group-focus-visible:hidden" />
 					<CheckIcon className="hidden h-4 w-4 group-hover:block group-focus-visible:block" />
-					<span className="group-hover:hidden group-focus-visible:hidden">
-						Not seen
-					</span>
+					<span className="group-hover:hidden group-focus-visible:hidden">Not seen</span>
 					<span className="hidden group-hover:inline group-focus-visible:inline">
 						Mark as watched
 					</span>
@@ -485,12 +449,9 @@ export default function WatchMenu({
 								// biome-ignore lint/a11y/useSemanticElements: a sheet that slides in; <dialog> can't animate in from the edge here
 								role="dialog"
 								aria-label="Watched"
-								className="gw-watch-sheet relative max-h-[85dvh] overflow-y-auto rounded-t-2xl bg-gray-900 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 shadow-2xl ring-1 ring-white/10"
+								className={`gw-watch-sheet relative max-h-[85dvh] overflow-y-auto rounded-t-2xl ${TINT_FLOAT} px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 shadow-2xl ring-1 ring-white/10`}
 							>
-								<div
-									className="mx-auto mb-2 h-1 w-10 rounded-full bg-white/20"
-									aria-hidden
-								/>
+								<div className="mx-auto mb-2 h-1 w-10 rounded-full bg-white/20" aria-hidden />
 								{body}
 							</div>
 						</div>,

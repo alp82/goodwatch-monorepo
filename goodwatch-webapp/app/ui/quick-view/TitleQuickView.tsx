@@ -3,6 +3,7 @@
 // is the title's tagline and the chips its taste reasons; there is no story (the cards carry none), so the view is
 // SHORT.
 import { useQuery } from "@tanstack/react-query"
+import { useFloatSurface } from "~/ui/details/tint-surface"
 import { QuickView, SHORT } from "./QuickView"
 import { QuickViewCard } from "./QuickViewCard"
 import {
@@ -18,8 +19,7 @@ function Card({ title, loader }: { title: PosterTitle; loader: CardLoader }) {
 	const query = useQuery({
 		queryKey: cardQueryKey(loader.viewer, loader.language, title.key),
 		queryFn: async () =>
-			(await fetchTitleCards([title.key], loader.member, loader.language))[0] ??
-			null,
+			(await fetchTitleCards([title.key], loader.member, loader.language))[0] ?? null,
 		staleTime: CARD_STALE_MS,
 	})
 	const card = query.data
@@ -39,22 +39,17 @@ function Card({ title, loader }: { title: PosterTitle; loader: CardLoader }) {
 				meta: [
 					title.year,
 					title.mediaType === "show" ? "Show" : "Movie",
-					title.mediaType === "movie" && card?.runtime
-						? `${card.runtime} min`
-						: null,
+					title.mediaType === "movie" && card?.runtime ? `${card.runtime} min` : null,
 				]
 					.filter(Boolean)
 					.join(" · "),
 				lang: card?.presentation?.title.language,
 				poster: title.poster,
 				backdrop: card?.backdrop_path,
-				goodwatch:
-					card?.goodwatch_overall_score_normalized_percent ?? title.goodwatch,
+				goodwatch: card?.goodwatch_overall_score_normalized_percent ?? title.goodwatch,
 				match: card?.match ?? null,
 				reason: card?.tagline ? (
-					<p className="line-clamp-2 text-[14px] leading-5 text-gray-300 italic">
-						{card.tagline}
-					</p>
+					<p className="line-clamp-2 text-[14px] leading-5 text-gray-300 italic">{card.tagline}</p>
 				) : undefined,
 				chips: card?.reasons ?? [],
 				services: query.isSuccess ? (card?.services ?? []) : null,
@@ -75,6 +70,7 @@ export default function TitleQuickView({
 	onClose: () => void
 }) {
 	const at = (i: number): PosterTitle | undefined => open.titles[i]
+	const surface = useFloatSurface("bg-gray-900")
 	return (
 		<QuickView
 			count={open.cards.length}
@@ -90,6 +86,7 @@ export default function TitleQuickView({
 				name: at(i)?.title ?? "",
 			})}
 			height={SHORT}
+			surface={surface}
 		>
 			{(i) => {
 				const title = at(i)

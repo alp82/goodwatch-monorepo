@@ -212,7 +212,7 @@ A cool, dark navy room with a warm amber lamp, translucent white layers, and a s
 - **Night Line** (`night-line`, gray-700): solid outlines, such as the poster card frame (gray-800) and old dividers.
 - **Ink** ramp (`ink-strong` to `ink-faint`): white for titles and key numbers, then ink (gray-300) for body text, ink-muted (gray-400) for secondary lines, and ink-faint (gray-500) for captions and metadata.
 - **White veils**: white at 2.5-6% for panels, list containers, and quiet buttons; 10% for rings, borders, and ghost buttons; 12-20% for hover and pressed states.
-- **Title page tint**: the title's backdrop image at `blur(64px) brightness(0.15)` behind the whole title page, with `stone-950` bars. Panels that sit on it (season panel, quick views opened from the title page, menus, sheets, tropes letter headers) are translucent white, `white/4` to `white/7`, with a backdrop blur where they float, not navy or stone (D5).
+- **Title page tint**: the title's backdrop image at `blur(64px) brightness(0.15)` behind the whole title page, with `stone-950` bars. Panels that sit on it (season panel, quick views opened from the title page, menus, sheets, tropes letter headers) are translucent white, `white/4` to `white/7`, with a backdrop blur where they float, not navy or stone (D5). Floating panels put the white layer on a `black/40` base so text stays readable over posters and bright heroes. The classes live in `app/ui/details/tint-surface.ts` (`TINT_PANEL`, `TINT_STICKY`, `TINT_FLOAT`); quick views and the score and Not seen sheets also open on navy pages, so they pick their surface with `useFloatSurface`, which knows from the route handle (`TITLE_TINT`) whether the page is a title page.
 
 ### Status
 

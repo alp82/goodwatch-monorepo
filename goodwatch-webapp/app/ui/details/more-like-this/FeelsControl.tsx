@@ -19,6 +19,7 @@ import {
 	shortName,
 } from "~/ui/details/fingerprint-section/reading"
 import { lightOf, nextSelection } from "~/ui/details/fingerprint-section/selection"
+import { TINT_FLOAT } from "~/ui/details/tint-surface"
 import { type Recipe, type Sources, fmt } from "./sources"
 
 /** The one RidgeSprite the control's prints draw from (MoreLikeThis.tsx renders it). */
@@ -222,7 +223,7 @@ function Tuner({
 					// biome-ignore lint/a11y/useSemanticElements: a sheet with its own motion, not a <dialog>
 					role="dialog"
 					aria-label="Tune what it feels like"
-					className="feels-sheet absolute inset-x-0 bottom-0 max-h-[82vh] overflow-y-auto overscroll-contain rounded-t-2xl bg-stone-900 px-4 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-[0_-16px_40px_rgba(0,0,0,.6)] ring-1 ring-white/10"
+					className={`feels-sheet absolute inset-x-0 bottom-0 max-h-[82vh] overflow-y-auto overscroll-contain rounded-t-2xl ${TINT_FLOAT} px-4 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-[0_-16px_40px_rgba(0,0,0,.6)] ring-1 ring-white/10`}
 				>
 					<span
 						aria-hidden="true"
@@ -239,7 +240,7 @@ function Tuner({
 			// biome-ignore lint/a11y/useSemanticElements: a panel with its own motion, not a <dialog>
 			role="dialog"
 			aria-label="Tune what it feels like"
-			className={`feels-pop absolute top-full z-50 mt-2 w-[34rem] max-w-[calc(100vw-2rem)] rounded-2xl bg-stone-900 p-4 text-left text-sm font-normal tracking-normal normal-case shadow-[0_16px_40px_rgba(0,0,0,.6)] ring-1 ring-white/10 ${align === "right" ? "right-0" : "left-0"}`}
+			className={`feels-pop absolute top-full z-50 mt-2 w-[34rem] max-w-[calc(100vw-2rem)] rounded-2xl ${TINT_FLOAT} p-4 text-left text-sm font-normal tracking-normal normal-case shadow-[0_16px_40px_rgba(0,0,0,.6)] ring-1 ring-white/10 ${align === "right" ? "right-0" : "left-0"}`}
 		>
 			<style>{CSS}</style>
 			{body}

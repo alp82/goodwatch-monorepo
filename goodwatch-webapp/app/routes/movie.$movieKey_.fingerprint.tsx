@@ -5,11 +5,12 @@ import { cachedClientLoader } from "~/navigation/instant-navigation"
 import { FingerprintSubPage, fingerprintMeta } from "~/ui/details/sub-page/SubPages"
 import { fingerprintPageLoader } from "~/ui/details/sub-page/sub-page-loaders.server"
 import { withRequestTiming } from "~/utils/request-work"
+import { TITLE_TINT } from "~/ui/details/tint-surface"
 import { START_AFTER_PAINT } from "~/utils/start-after-paint"
 
 export { pageHeaders as headers } from "~/utils/headers"
 // The page paints from the server's HTML alone; its scripts start after that (utils/start-after-paint.ts).
-export const handle = START_AFTER_PAINT
+export const handle = { ...START_AFTER_PAINT, ...TITLE_TINT }
 
 export const loader = withRequestTiming((args: LoaderFunctionArgs) =>
 	fingerprintPageLoader(args, "movie"),

@@ -2,32 +2,15 @@
 // letters in the margin), and the main column with the signature cards until a trope opens, then one calm article
 // (the write-up at a reading measure, what it is, Also in posters, the next trope). A phone opens the article as a
 // full-screen reading sheet. J and K step through the list, Escape closes.
-import {
-	ChevronLeftIcon,
-	ChevronRightIcon,
-	XMarkIcon,
-} from "@heroicons/react/20/solid"
-import {
-	type ReactNode,
-	type Ref,
-	type RefObject,
-	useEffect,
-	useMemo,
-	useRef,
-} from "react"
+import { ChevronLeftIcon, ChevronRightIcon, XMarkIcon } from "@heroicons/react/20/solid"
+import { type ReactNode, type Ref, type RefObject, useEffect, useMemo, useRef } from "react"
 import { SegmentedTabs } from "~/ui/details/SegmentedTabs"
 import { CAPTION, Kbd, Reveal, SearchField, fmt } from "~/ui/details/page-ui"
 import type { TitleInfo } from "~/ui/details/sub-page/paths"
+import { TINT_STICKY } from "~/ui/details/tint-surface"
 import { SIGNATURE_CARD, SignatureCardFace } from "./TropeCard"
 import type { Skip } from "./TropeCard"
-import {
-	LETTERS,
-	type Row,
-	type TropesPageState,
-	letterId,
-	letterOf,
-	rowId,
-} from "./model"
+import { LETTERS, type Row, type TropesPageState, letterId, letterOf, rowId } from "./model"
 import { Count, Marked } from "./parts"
 import {
 	AlsoIn,
@@ -85,11 +68,7 @@ function Letters({
 }) {
 	if (vertical)
 		return (
-			<nav
-				ref={navRef}
-				aria-label="Jump to a letter"
-				className={`flex flex-col ${className}`}
-			>
+			<nav ref={navRef} aria-label="Jump to a letter" className={`flex flex-col ${className}`}>
 				{LETTERS.map((l) => (
 					<button
 						key={l}
@@ -104,10 +83,7 @@ function Letters({
 			</nav>
 		)
 	return (
-		<nav
-			aria-label="Jump to a letter"
-			className={`flex flex-wrap gap-0.5 ${className}`}
-		>
+		<nav aria-label="Jump to a letter" className={`flex flex-wrap gap-0.5 ${className}`}>
 			{LETTERS.map((l) => (
 				<button
 					key={l}
@@ -133,24 +109,14 @@ function Find({ s }: { s: TropesPageState }) {
 				placeholder={`Find in ${fmt(s.total)} tropes`}
 				className="w-full"
 			/>
-			<SegmentedTabs
-				label="Show"
-				tabs={s.chips}
-				value={s.filter}
-				onChange={s.setFilter}
-			/>
+			<SegmentedTabs label="Show" tabs={s.chips} value={s.filter} onChange={s.setFilter} />
 		</div>
 	)
 }
 
-const isSignature = (s: TropesPageState, t: Row) =>
-	s.signature.some((x) => x.id === t.id)
+const isSignature = (s: TropesPageState, t: Row) => s.signature.some((x) => x.id === t.id)
 const findRow = (s: TropesPageState, id: string | null) =>
-	id
-		? (s.rows.find((r) => r.id === id) ??
-			s.signature.find((r) => r.id === id) ??
-			null)
-		: null
+	id ? (s.rows.find((r) => r.id === id) ?? s.signature.find((r) => r.id === id) ?? null) : null
 
 /** J and K (and the arrow-free Escape) for the opened trope. */
 function useStepKeys(s: TropesPageState, on: boolean) {
@@ -299,7 +265,7 @@ export function TropesReader({ s, info }: Props) {
 									<h2
 										id={`${letterId(l)}-h`}
 										data-trope-letter=""
-										className="sticky top-[116px] z-10 flex items-baseline gap-2 bg-gray-900 px-3 pt-4 pb-1.5 lg:top-0"
+										className={`sticky top-[116px] z-10 flex items-baseline gap-2 ${TINT_STICKY} px-3 pt-4 pb-1.5 lg:top-0`}
 									>
 										<span className="text-sm font-semibold text-white">
 											{l === "#" ? "0–9" : l}
@@ -312,16 +278,10 @@ export function TropesReader({ s, info }: Props) {
 										{rows.map((t) => {
 											const on = sel?.id === t.id
 											return (
-												<li
-													key={t.id}
-													id={rowId(t.id)}
-													className="scroll-mt-28"
-												>
+												<li key={t.id} id={rowId(t.id)} className="scroll-mt-28">
 													<button
 														type="button"
-														onClick={() =>
-															on && !desktop ? s.setOpen(null) : open(t)
-														}
+														onClick={() => (on && !desktop ? s.setOpen(null) : open(t))}
 														aria-current={on || undefined}
 														className={`group relative flex w-full cursor-pointer flex-col rounded-lg px-3 py-2 text-left transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-amber-300 ${on ? "bg-white/[0.07]" : "hover:bg-white/[0.04]"}`}
 													>
@@ -392,25 +352,12 @@ export function TropesReader({ s, info }: Props) {
 							/>
 						</Reveal>
 					) : (
-						<SignatureCards
-							s={s}
-							skip={skip}
-							title={info.title}
-							onPick={open}
-							roomy
-						/>
+						<SignatureCards s={s} skip={skip} title={info.title} onPick={open} roomy />
 					)}
 				</div>
 			</div>
 			{!desktop && sel && (
-				<ReadingSheet
-					t={sel}
-					s={s}
-					info={info}
-					skip={skip}
-					prev={prev}
-					next={next}
-				/>
+				<ReadingSheet t={sel} s={s} info={info} skip={skip} prev={prev} next={next} />
 			)}
 		</div>
 	)
@@ -420,7 +367,11 @@ function StepButtons({
 	s,
 	prev,
 	next,
-}: { s: TropesPageState; prev: Row | null; next: Row | null }) {
+}: {
+	s: TropesPageState
+	prev: Row | null
+	next: Row | null
+}) {
 	const btn =
 		"inline-flex size-9 cursor-pointer items-center justify-center rounded-lg text-gray-300 ring-1 ring-white/10 transition-colors hover:bg-white/[0.06] hover:text-white disabled:cursor-default disabled:text-gray-700 disabled:hover:bg-transparent"
 	return (
@@ -500,9 +451,7 @@ function TropeArticle({
 							{next.name}
 						</span>
 						{next.meaning && (
-							<span className="mt-0.5 block truncate text-sm text-gray-500">
-								{next.meaning}
-							</span>
+							<span className="mt-0.5 block truncate text-sm text-gray-500">{next.meaning}</span>
 						)}
 					</span>
 					<ChevronRightIcon
@@ -577,10 +526,7 @@ function ReadingSheet(props: {
 					</button>
 				</div>
 			</div>
-			<div
-				ref={body}
-				className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-2 pb-16"
-			>
+			<div ref={body} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-2 pb-16">
 				<Reveal key={t.id}>
 					<TropeArticle {...props} />
 				</Reveal>
@@ -608,11 +554,7 @@ function SignatureCards({
 		<section aria-labelledby={`sig-h-${roomy ? "wide" : "phone"}`}>
 			<h2
 				id={`sig-h-${roomy ? "wide" : "phone"}`}
-				className={
-					roomy
-						? "text-xl font-semibold tracking-tight text-white"
-						: `${CAPTION} mb-3`
-				}
+				className={roomy ? "text-xl font-semibold tracking-tight text-white" : `${CAPTION} mb-3`}
 			>
 				Signature tropes
 			</h2>
@@ -621,9 +563,7 @@ function SignatureCards({
 					The ones that say the most about {title}. Pick one to read it.
 				</p>
 			)}
-			<ul
-				className={`grid gap-3 ${roomy ? "xl:grid-cols-2" : "sm:grid-cols-2"}`}
-			>
+			<ul className={`grid gap-3 ${roomy ? "xl:grid-cols-2" : "sm:grid-cols-2"}`}>
 				{s.signature.map((t) => (
 					<li key={t.id} className="min-w-0">
 						<button

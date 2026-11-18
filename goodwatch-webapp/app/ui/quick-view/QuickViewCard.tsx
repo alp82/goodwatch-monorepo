@@ -5,26 +5,15 @@
 // chips, the title's most notable award results, the viewer's own services, the story, and the title's own control as
 // the footer (TitleControl, the title page's). Every part keeps its height whatever the title has, so a step never
 // moves anything, except the awards: a title without reported results has no awards part at all.
-import {
-	ArrowsPointingOutIcon,
-	ChevronRightIcon,
-	XMarkIcon,
-} from "@heroicons/react/24/solid"
+import { ArrowsPointingOutIcon, ChevronRightIcon, XMarkIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
-import { type ReactNode, useLayoutEffect, useRef } from "react"
+import { type ReactNode, useContext, useLayoutEffect, useRef } from "react"
 import { QuickViewAwards } from "~/ui/awards/AwardMarks"
+import { TitleTint } from "~/ui/details/tint-surface"
 import { DISPLAY } from "~/ui/my-pages/bits"
 import { TitleScorePill } from "~/ui/poster-card/ScorePill"
-import {
-	ServiceLogos,
-	type ServiceOffer,
-	useYourServices,
-} from "~/ui/poster-card/services"
-import {
-	type ControlMedia,
-	type TitleChange,
-	TitleControl,
-} from "~/ui/title-actions/TitleControl"
+import { ServiceLogos, type ServiceOffer, useYourServices } from "~/ui/poster-card/services"
+import { type ControlMedia, type TitleChange, TitleControl } from "~/ui/title-actions/TitleControl"
 import { ReasonChips } from "~/ui/title-card/ReasonChips"
 import { HeaderSteps, useCurrentSlot, useQuickViewFrame } from "./QuickView"
 
@@ -126,9 +115,7 @@ function Services({ offers }: { offers: readonly ServiceOffer[] | null }) {
 				) : yours.length ? (
 					<ServiceLogos services={yours} size="L" />
 				) : (
-					<span className="text-[13px] text-gray-500">
-						Not on your services
-					</span>
+					<span className="text-[13px] text-gray-500">Not on your services</span>
 				)}
 			</div>
 		</section>
@@ -144,8 +131,7 @@ function useMenuRoom() {
 	useLayoutEffect(() => {
 		const el = footer.current
 		if (!el) return
-		const set = () =>
-			el.style.setProperty("--menu-room", `${Math.max(0, el.offsetTop - 8)}px`)
+		const set = () => el.style.setProperty("--menu-room", `${Math.max(0, el.offsetTop - 8)}px`)
 		set()
 		const resized = new ResizeObserver(set)
 		if (el.parentElement) resized.observe(el.parentElement)
@@ -157,27 +143,27 @@ function useMenuRoom() {
 /** The head without its controls: backdrop, (on phones) the poster, eyebrow, title, meta, score and match. */
 function HeadBody({ t, card }: { t: QuickViewTitle; card: boolean }) {
 	const name = t.media.details.title
+	// On the title tint the card is translucent, so the image fades out instead of into the navy card.
+	const tint = useContext(TitleTint)
 	return (
 		<>
-			<div
-				className={`relative overflow-hidden ${card ? "h-32" : "h-[4.5rem]"}`}
-			>
+			<div className={`relative overflow-hidden ${card ? "h-32" : "h-[4.5rem]"}`}>
 				{t.backdrop && (
 					<img
 						src={`${TMDB}/w780${t.backdrop}`}
 						alt=""
 						draggable={false}
-						className="size-full object-cover opacity-50"
+						className={`size-full object-cover opacity-50 ${tint ? "[mask-image:linear-gradient(to_bottom,#000_15%,transparent)]" : ""}`}
 						onError={(e) => {
 							e.currentTarget.style.visibility = "hidden"
 						}}
 					/>
 				)}
-				<span className="absolute inset-0 bg-linear-to-b from-gray-900/0 via-gray-900/55 to-gray-900" />
+				{!tint && (
+					<span className="absolute inset-0 bg-linear-to-b from-gray-900/0 via-gray-900/55 to-gray-900" />
+				)}
 			</div>
-			<div
-				className={`relative flex items-end gap-3.5 px-4 ${card ? "-mt-16" : "-mt-12"}`}
-			>
+			<div className={`relative flex items-end gap-3.5 px-4 ${card ? "-mt-16" : "-mt-12"}`}>
 				{!card && (
 					<div className="aspect-[2/3] w-24 shrink-0 overflow-hidden rounded-lg bg-gray-800 shadow-xl ring-1 ring-white/15">
 						{t.poster && (
@@ -219,9 +205,7 @@ function HeadBody({ t, card }: { t: QuickViewTitle; card: boolean }) {
 							/>
 						)}
 					</h2>
-					<p className="mt-1 shrink-0 truncate text-xs text-gray-400">
-						{t.meta}
-					</p>
+					<p className="mt-1 shrink-0 truncate text-xs text-gray-400">{t.meta}</p>
 					<div className="mt-1.5 flex h-7 shrink-0 items-center gap-2">
 						<TitleScorePill
 							mediaType={t.media.mediaType}
@@ -280,9 +264,7 @@ export function QuickViewCard({ title: t }: { title: QuickViewTitle }) {
 				<section className="py-3">
 					<div className="flex min-h-8 items-center">
 						{typeof t.reason === "string" ? (
-							<p className="line-clamp-2 text-[14px] leading-5 text-gray-300">
-								{t.reason}
-							</p>
+							<p className="line-clamp-2 text-[14px] leading-5 text-gray-300">{t.reason}</p>
 						) : (
 							t.reason
 						)}
@@ -295,10 +277,7 @@ export function QuickViewCard({ title: t }: { title: QuickViewTitle }) {
 						</div>
 					)}
 				</section>
-				<QuickViewAwards
-					mediaType={t.media.mediaType}
-					tmdbId={t.media.details.tmdb_id}
-				/>
+				<QuickViewAwards mediaType={t.media.mediaType} tmdbId={t.media.details.tmdb_id} />
 				{t.services !== undefined && <Services offers={t.services} />}
 				{"story" in t && (
 					<section className="py-3">
@@ -324,12 +303,7 @@ export function QuickViewCard({ title: t }: { title: QuickViewTitle }) {
 				data-up=""
 				className="group/menus flex shrink-0 flex-col gap-2 border-t border-white/10 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
 			>
-				<TitleControl
-					media={t.media}
-					place="view"
-					layer="z-[1300]"
-					onChange={t.onChange}
-				/>
+				<TitleControl media={t.media} place="view" layer="z-[1300]" onChange={t.onChange} />
 			</div>
 		</>
 	)

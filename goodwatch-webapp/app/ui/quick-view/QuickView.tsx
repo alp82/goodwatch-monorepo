@@ -17,21 +17,8 @@
 // Both: focus moves in on opening, Tab stays in, Escape closes and focus returns to the poster; an overlay opened from
 // inside (the score picker, the not-seen question, a status menu, the watch log) keeps its own keys and taps, and goes
 // where the view is in the document, so it shows over it in full screen too (ui/overlay.ts).
-import {
-	AnimatePresence,
-	animate,
-	motion,
-	useIsPresent,
-	useMotionValue,
-} from "framer-motion"
-import {
-	type ReactNode,
-	createContext,
-	useContext,
-	useEffect,
-	useRef,
-	useState,
-} from "react"
+import { AnimatePresence, animate, motion, useIsPresent, useMotionValue } from "framer-motion"
+import { type ReactNode, createContext, useContext, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { useFocusScope } from "~/ui/for-you/focus"
 import { OverlayRoot, inNestedOverlay, nestedOverlayOpen } from "~/ui/overlay"
@@ -105,6 +92,8 @@ export interface QuickViewProps {
 	container?: Element | null
 	/** The card's and the drawer's heights, when the place's content is shorter (SHORT). */
 	height?: { h: number; drawer: number }
+	/** The card's and the drawer's surface: navy, or translucent white over a title page (useFloatSurface). */
+	surface?: string
 }
 
 const EASE = [0.22, 1, 0.36, 1] as const
@@ -127,11 +116,7 @@ const DIM = "bg-black/75"
 const TMDB = "https://image.tmdb.org/t/p"
 // A full URL (a TheTVDB character portrait in the character quick view's drawer) is used as it is.
 const src = (path: string | null, size: string) =>
-	path?.startsWith("https://")
-		? path
-		: path
-			? `${TMDB}/${size}${path}`
-			: undefined
+	path?.startsWith("https://") ? path : path ? `${TMDB}/${size}${path}` : undefined
 
 /** The title `d` away from `i`, or null past an end when the steps don't wrap. */
 function stepped(i: number, d: -1 | 1, count: number, wrap = true) {
@@ -140,8 +125,7 @@ function stepped(i: number, d: -1 | 1, count: number, wrap = true) {
 	return wrap && count > 1 ? (n + count) % count : null
 }
 
-const clamp = (v: number, lo: number, hi: number) =>
-	Math.max(lo, Math.min(hi, v))
+const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v))
 
 /** The biggest image in a poster element, or the element itself. */
 function imageRect(el: HTMLElement): DOMRect {
@@ -196,9 +180,7 @@ function geoFor(from: Box | null, height: number): Geo {
 	const vw = document.documentElement.clientWidth
 	const vh = window.innerHeight
 	const ch = Math.min(height, vh - 2 * EDGE)
-	const pw = Math.round(
-		Math.min(340, (vh - 2 * EDGE - ARROWS) / 1.5, vw * 0.24),
-	)
+	const pw = Math.round(Math.min(340, (vh - 2 * EDGE - ARROWS) / 1.5, vw * 0.24))
 	const ph = Math.round(pw * 1.5)
 	const sx = from ? from.x + from.w / 2 : vw / 2
 	const sy = from ? from.y + from.h / 2 : vh / 2
@@ -246,35 +228,23 @@ const toward = (b: Box | null, t: Box, k = 0.2) =>
  * The wheel or the finger moving by `dy` scrolls something between `target` and `root`: a scrolling region of the
  * view (a status menu with the episode picker) keeps its own scroll; nothing else under the view does.
  */
-function scrollsInside(
-	target: EventTarget | null,
-	root: HTMLElement,
-	dy: number,
-) {
+function scrollsInside(target: EventTarget | null, root: HTMLElement, dy: number) {
 	for (
 		let el = target instanceof Element ? target : null;
 		el && el !== root;
 		el = el.parentElement
 	) {
-		if (!(el instanceof HTMLElement) || el.scrollHeight <= el.clientHeight)
-			continue
+		if (!(el instanceof HTMLElement) || el.scrollHeight <= el.clientHeight) continue
 		const { overflowY } = getComputedStyle(el)
 		if (overflowY !== "auto" && overflowY !== "scroll") continue
-		if (
-			dy < 0
-				? el.scrollTop > 0
-				: el.scrollTop + el.clientHeight < el.scrollHeight - 1
-		)
+		if (dy < 0 ? el.scrollTop > 0 : el.scrollTop + el.clientHeight < el.scrollHeight - 1)
 			return true
 	}
 	return false
 }
 
 /** A tap on the dim closes the view, unless it only dismissed something of the view's own. */
-function useCloseTap(
-	view: React.RefObject<HTMLElement | null>,
-	close: () => void,
-) {
+function useCloseTap(view: React.RefObject<HTMLElement | null>, close: () => void) {
 	const nested = useRef(false)
 	return {
 		onPointerDown: () => {
@@ -395,8 +365,7 @@ function LiftCard(p: QuickViewProps) {
 	const hidden = useRef<HTMLElement | null>(null)
 	useEffect(() => {
 		const el = hiddenIndex == null ? null : p.anchorOf(hiddenIndex)
-		if (hidden.current && hidden.current !== el)
-			hidden.current.style.visibility = ""
+		if (hidden.current && hidden.current !== el) hidden.current.style.visibility = ""
 		if (el) el.style.visibility = "hidden"
 		hidden.current = el
 	}, [hiddenIndex])
@@ -491,8 +460,7 @@ function LiftCard(p: QuickViewProps) {
 		scope: () => [layer.current, ...trackingToasts(), ...(p.scope?.() ?? [])],
 		initial: () => view.current,
 		returnTo: () =>
-			p.focusOf?.(state.current.cur.i) ??
-			focusTarget(p.anchorOf(state.current.cur.i)),
+			p.focusOf?.(state.current.cur.i) ?? focusTarget(p.anchorOf(state.current.cur.i)),
 	})
 
 	const pb = geo.poster
@@ -521,9 +489,7 @@ function LiftCard(p: QuickViewProps) {
 					initial={HOME}
 					animate={toward(l.back, l.poster)}
 					transition={OUT}
-					onAnimationComplete={() =>
-						setLeaving((ls) => ls.filter((x) => x.id !== l.id))
-					}
+					onAnimationComplete={() => setLeaving((ls) => ls.filter((x) => x.id !== l.id))}
 				>
 					<PosterImage path={p.posterOf(l.i).path} name="" />
 				</motion.div>
@@ -576,11 +542,9 @@ function LiftCard(p: QuickViewProps) {
 					role="dialog"
 					aria-modal="true"
 					aria-label={t.name}
-					className="relative size-full overflow-hidden rounded-2xl bg-gray-900 shadow-[0_30px_80px_-20px_rgba(0,0,0,.95)] ring-1 ring-white/12 outline-none"
+					className={`relative size-full overflow-hidden rounded-2xl ${p.surface ?? "bg-gray-900"} shadow-[0_30px_80px_-20px_rgba(0,0,0,.95)] ring-1 ring-white/12 outline-none`}
 					initial={{ opacity: 0, x: -16 * geo.side }}
-					animate={
-						closing ? { opacity: 0, x: -16 * geo.side } : { opacity: 1, x: 0 }
-					}
+					animate={closing ? { opacity: 0, x: -16 * geo.side } : { opacity: 1, x: 0 }}
 					transition={{
 						duration: 0.26,
 						ease: EASE,
@@ -588,9 +552,7 @@ function LiftCard(p: QuickViewProps) {
 					}}
 					data-quick-view-card=""
 				>
-					<FrameContext.Provider
-						value={{ form: "card", steps, close: requestClose }}
-					>
+					<FrameContext.Provider value={{ form: "card", steps, close: requestClose }}>
 						<Crossfade k={cur.i}>{p.children(cur.i)}</Crossfade>
 					</FrameContext.Provider>
 				</motion.div>
@@ -637,8 +599,7 @@ function Drawer(p: QuickViewProps) {
 			trackX.set(-vRef.current * widthOf() + (free ? dx : dx * 0.2))
 		},
 		end: (dx: number, vx: number) => {
-			if (Math.abs(dx) > widthOf() * 0.2 || Math.abs(vx) > 0.35)
-				slide(dx < 0 ? 1 : -1)
+			if (Math.abs(dx) > widthOf() * 0.2 || Math.abs(vx) > 0.35) slide(dx < 0 ? 1 : -1)
 			else snapBack()
 		},
 		cancel: () => snapBack(),
@@ -672,9 +633,8 @@ function Drawer(p: QuickViewProps) {
 		if (label === null) return
 		const twin = label
 			? [
-					...(view.current?.querySelectorAll<HTMLElement>(
-						`[aria-label="${CSS.escape(label)}"]`,
-					) ?? []),
+					...(view.current?.querySelectorAll<HTMLElement>(`[aria-label="${CSS.escape(label)}"]`) ??
+						[]),
 				].find((el) => !el.closest("[inert]"))
 			: undefined
 		;(twin && !twin.matches(":disabled") ? twin : view.current)?.focus({
@@ -704,12 +664,9 @@ function Drawer(p: QuickViewProps) {
 	useDrawerDrag(view, dy, swipeRef, closeRef)
 	// The places on the track: this title's, and its neighbors' (a list of two has the other title on both sides).
 	const places = [v - 1, v, v + 1].filter(
-		(place) =>
-			place === v ||
-			stepped(p.index, place < v ? -1 : 1, p.count, p.wrap) !== null,
+		(place) => place === v || stepped(p.index, place < v ? -1 : 1, p.count, p.wrap) !== null,
 	)
-	const titleAt = (place: number) =>
-		(((p.index + place - v) % p.count) + p.count) % p.count
+	const titleAt = (place: number) => (((p.index + place - v) % p.count) + p.count) % p.count
 	const bottom = p.bottom ?? 0
 	const t = p.posterOf(p.index)
 	return (
@@ -734,7 +691,7 @@ function Drawer(p: QuickViewProps) {
 					role="dialog"
 					aria-modal="true"
 					aria-label={t.name}
-					className={`pointer-events-auto absolute inset-x-0 bottom-0 max-h-[min(85dvh,calc(100%-80px))] overflow-hidden rounded-t-2xl bg-gray-900 shadow-[0_-18px_40px_-10px_rgba(0,0,0,.9),inset_0_1px_0_rgba(255,255,255,.14)] outline-none ${STACK_ROOM}`}
+					className={`pointer-events-auto absolute inset-x-0 bottom-0 max-h-[min(85dvh,calc(100%-80px))] overflow-hidden rounded-t-2xl ${p.surface ?? "bg-gray-900"} shadow-[0_-18px_40px_-10px_rgba(0,0,0,.9),inset_0_1px_0_rgba(255,255,255,.14)] outline-none ${STACK_ROOM}`}
 					style={{
 						height: `calc(${p.height?.drawer ?? CARD.drawer}px + var(--stack-room, 0px) + ${bottom ? "0px" : "env(safe-area-inset-bottom)"})`,
 						y: dy,
@@ -747,9 +704,7 @@ function Drawer(p: QuickViewProps) {
 					}}
 					data-quick-view-drawer=""
 				>
-					<FrameContext.Provider
-						value={{ form: "drawer", steps, close: requestClose }}
-					>
+					<FrameContext.Provider value={{ form: "drawer", steps, close: requestClose }}>
 						<motion.div className="absolute inset-0" style={{ x: trackX }}>
 							{places.map((place) => (
 								<Slot key={place} place={place} current={place === v}>
@@ -778,7 +733,11 @@ function Slot({
 	place,
 	current,
 	children,
-}: { place: number; current: boolean; children: ReactNode }) {
+}: {
+	place: number
+	current: boolean
+	children: ReactNode
+}) {
 	const el = useRef<HTMLDivElement>(null)
 	useEffect(() => {
 		if (current) el.current?.removeAttribute("inert")
@@ -815,8 +774,7 @@ function scrollerOf(target: EventTarget | null, root: HTMLElement) {
 		el && el !== root;
 		el = el.parentElement
 	) {
-		if (!(el instanceof HTMLElement) || el.scrollHeight <= el.clientHeight)
-			continue
+		if (!(el instanceof HTMLElement) || el.scrollHeight <= el.clientHeight) continue
 		const { overflowY } = getComputedStyle(el)
 		if (overflowY === "auto" || overflowY === "scroll") return el
 	}
@@ -861,11 +819,7 @@ function useDrawerDrag(
 		let swallowTimer = 0
 		const onStart = (e: TouchEvent) => {
 			swallow = false
-			if (
-				e.touches.length !== 1 ||
-				inNestedOverlay(e.target) ||
-				nestedOverlayOpen(el)
-			) {
+			if (e.touches.length !== 1 || inNestedOverlay(e.target) || nestedOverlayOpen(el)) {
 				s = null
 				return
 			}
@@ -890,14 +844,10 @@ function useDrawerDrag(
 			if (!s.mode) {
 				// The browser must not start its own scroll before the gesture is decided: outside a scrolling region
 				// always, inside one while it is at its top and the finger moves down.
-				if (!s.scroller || (s.scroller.scrollTop <= 0 && d > 0))
-					e.preventDefault()
+				if (!s.scroller || (s.scroller.scrollTop <= 0 && d > 0)) e.preventDefault()
 				if (Math.abs(dx) < 8 && Math.abs(d) < 8) return
 				if (Math.abs(d) >= Math.abs(dx))
-					s.mode =
-						d > 0 && (!s.scroller || s.scroller.scrollTop <= 0)
-							? "drag"
-							: "scroll"
+					s.mode = d > 0 && (!s.scroller || s.scroller.scrollTop <= 0) ? "drag" : "scroll"
 				else s.mode = "x"
 				// The gesture starts where it was decided, so nothing jumps.
 				s.x = t.clientX
@@ -930,8 +880,7 @@ function useDrawerDrag(
 			}, 350)
 			const still = e.timeStamp - st.lastT > FLICK_MS
 			if (st.mode === "drag") {
-				if (!cancelled && (dy.get() > 110 || (!still && st.vy > 0.5)))
-					close.current()
+				if (!cancelled && (dy.get() > 110 || (!still && st.vy > 0.5))) close.current()
 				else animate(dy, 0, { type: "spring", stiffness: 520, damping: 42 })
 				return
 			}
@@ -942,8 +891,7 @@ function useDrawerDrag(
 		const onCancel = (e: TouchEvent) => finish(e, true)
 		// On the window in its capture phase: before the app's own click handlers (React's, on the document).
 		const onClick = (e: MouseEvent) => {
-			if (!swallow || !(e.target instanceof Node) || !el.contains(e.target))
-				return
+			if (!swallow || !(e.target instanceof Node) || !el.contains(e.target)) return
 			swallow = false
 			e.preventDefault()
 			e.stopPropagation()
@@ -1017,11 +965,7 @@ function PosterImage({ path, name }: { path: string | null; name: string }) {
 
 function Chevron({ dir, small = false }: { dir: -1 | 1; small?: boolean }) {
 	return (
-		<svg
-			viewBox="0 0 20 20"
-			className={small ? "size-3.5" : "size-5"}
-			aria-hidden="true"
-		>
+		<svg viewBox="0 0 20 20" className={small ? "size-3.5" : "size-5"} aria-hidden="true">
 			<path
 				d={dir < 0 ? "M12.5 4.5 7 10l5.5 5.5" : "M7.5 4.5 13 10l-5.5 5.5"}
 				fill="none"

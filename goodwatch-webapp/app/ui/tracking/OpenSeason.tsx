@@ -7,11 +7,7 @@
 // season's episodes as tiles; then its rows.
 import { CheckIcon, ChevronDownIcon } from "@heroicons/react/24/solid"
 import type { ReactNode } from "react"
-import {
-	isWholeTmdbSeason,
-	scoredEpisodes,
-	shownScoreLabel,
-} from "~/domain/episode-scores"
+import { isWholeTmdbSeason, scoredEpisodes, shownScoreLabel } from "~/domain/episode-scores"
 import type { EpisodeGrid } from "~/server/episode-grid.server"
 import { ScoreTile } from "~/ui/details/episode-grid/ScoreTile"
 import { SeasonStep } from "~/ui/details/episode-grid/SeasonOverview"
@@ -37,18 +33,13 @@ const MONTH = new Intl.DateTimeFormat("en", {
 const YEAR = new Intl.DateTimeFormat("en", { year: "numeric", timeZone: "UTC" })
 
 /** When a season aired: "Sep 2006 – May 2007", "2016", or "Oct 2026 – airing"; years only when `short`. */
-export function airedRange(
-	season: Season,
-	today: string,
-	short = false,
-): string | null {
+export function airedRange(season: Season, today: string, short = false): string | null {
 	const dates = season.episodes
 		.map((episode) => episode.airDate)
 		.filter((day): day is string => !!day)
 		.sort()
 	if (!dates.length) return null
-	const format = (day: string) =>
-		(short ? YEAR : MONTH).format(new Date(`${day}T00:00:00Z`))
+	const format = (day: string) => (short ? YEAR : MONTH).format(new Date(`${day}T00:00:00Z`))
 	const first = format(dates[0])
 	const lastDay = dates[dates.length - 1]
 	if (lastDay > today) return `${first} – airing`
@@ -83,17 +74,14 @@ export default function OpenSeason({
 	const desktop = useIsDesktop()
 	const float = useFloat()
 	const aired = special ? null : airedRange(season, model.today, !desktop)
-	const sites = grid?.seasons.find(
-		(each) => each.number === season.number,
-	)?.scores
+	const sites = grid?.seasons.find((each) => each.number === season.number)?.scores
 	const score = sites?.imdb?.score ?? model.seasonScore(season.number)
 	const title = special ? "Specials" : seasonTitle(season.number)
 	const scoreTrigger = float.trigger(`season-${season.number}`, () => (
 		<SiteScores number={season.number} scores={sites ?? null} score={score} />
 	))
 	// The head closes the season; its buttons do only their own thing.
-	const own = (event: { stopPropagation: () => void }) =>
-		event.stopPropagation()
+	const own = (event: { stopPropagation: () => void }) => event.stopPropagation()
 	// A season score names a TMDB season: offered where the shown season is one, whole, with an aired episode.
 	const scorable =
 		!special &&
@@ -106,16 +94,12 @@ export default function OpenSeason({
 	const everyEpisode = model.seasons.flatMap((each) => each.episodes)
 	const inThisSeason = (part: Parameters<typeof scoredEpisodes>[0]) => {
 		const here = new Set(season.episodes.map((episode) => episode.id))
-		return scoredEpisodes(part, everyEpisode).some((episode) =>
-			here.has(episode.id),
-		)
+		return scoredEpisodes(part, everyEpisode).some((episode) => here.has(episode.id))
 	}
 	// Part scores, and season scores of a TMDB season the page doesn't draw whole under its number (a show drawn in
 	// IMDb's seasons): those show as a line in each drawn season that holds their episodes.
 	const parts = [
-		...model.scores
-			.parts()
-			.filter((part) => part.scope === "part" && inThisSeason(part)),
+		...model.scores.parts().filter((part) => part.scope === "part" && inThisSeason(part)),
 		...model.scores
 			.seasons()
 			.filter(
@@ -161,7 +145,7 @@ export default function OpenSeason({
 	return (
 		<div
 			data-season-panel={season.number}
-			className={`min-w-0 overflow-hidden rounded-xl border border-white/[0.06] ${SURFACE}`}
+			className={`min-w-0 overflow-hidden rounded-xl border border-white/12 ${SURFACE}`}
 		>
 			{/* biome-ignore lint/a11y/useKeyWithClickEvents: the close button in the head is the keyboard's way */}
 			<div
@@ -244,17 +228,8 @@ export default function OpenSeason({
 				/>
 			))}
 			{tiles}
-			<Rows
-				key={season.number}
-				season={season}
-				nav={nav}
-				model={model}
-				limit={special ? 8 : 20}
-			/>
-			<FloatLayer
-				state={float.state}
-				topInset={() => stickyHeadersBottom(SITE_BAR_HEIGHT)}
-			/>
+			<Rows key={season.number} season={season} nav={nav} model={model} limit={special ? 8 : 20} />
+			<FloatLayer state={float.state} topInset={() => stickyHeadersBottom(SITE_BAR_HEIGHT)} />
 		</div>
 	)
 }
@@ -270,21 +245,14 @@ function SiteScores({
 	/** IMDb's season score, for a show whose grid has no row for this season. */
 	score: number | null
 }) {
-	const value = (
-		entry: { score: number } | null | undefined,
-		format: (n: number) => string,
-	) => (entry ? format(entry.score) : null)
+	const value = (entry: { score: number } | null | undefined, format: (n: number) => string) =>
+		entry ? format(entry.score) : null
 	return (
 		<div className="flex flex-col gap-2">
-			<p className="text-xs font-semibold text-gray-300">
-				{seasonTitle(number)}
-			</p>
+			<p className="text-xs font-semibold text-gray-300">{seasonTitle(number)}</p>
 			<RatingChipRow
 				small
-				imdb={
-					value(scores?.imdb, (n) => n.toFixed(1)) ??
-					(score == null ? null : score.toFixed(1))
-				}
+				imdb={value(scores?.imdb, (n) => n.toFixed(1)) ?? (score == null ? null : score.toFixed(1))}
 				mc={value(scores?.metascore, (n) => String(Math.floor(n)))}
 				mcUser={value(scores?.metacriticUser, (n) => n.toFixed(1))}
 				rt={value(scores?.tomatometer, (n) => `${Math.floor(n)}%`)}

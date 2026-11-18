@@ -1,15 +1,10 @@
 // Shared personal-score sheet/dialog. Callers own their watch, quiz and persistence flows.
 // Phone: bottom sheet. Tablet/desktop: a progressively larger panel beside its opener,
 // or centered when no opener is available. Optional slots preserve contextual next steps.
-import {
-	type ReactNode,
-	type RefObject,
-	useEffect,
-	useLayoutEffect,
-	useRef,
-} from "react"
+import { type ReactNode, type RefObject, useEffect, useLayoutEffect, useRef } from "react"
 import { createPortal } from "react-dom"
 import type { Score } from "~/server/scores.server"
+import { useFloatSurface } from "~/ui/details/tint-surface"
 import { NESTED_OVERLAY, useOverlayRoot } from "~/ui/overlay"
 import { useAnchoredPanel } from "~/ui/scoring/anchor"
 import { ScoreControl } from "~/ui/title-actions/ScoreControl"
@@ -114,9 +109,7 @@ function Panel({
 	useEffect(() => {
 		const from =
 			opener?.current ??
-			(document.activeElement instanceof HTMLElement
-				? document.activeElement
-				: null)
+			(document.activeElement instanceof HTMLElement ? document.activeElement : null)
 		const scroll = document.body.style.overflow
 		document.body.style.overflow = "hidden"
 		panel.current?.focus({ preventScroll: true })
@@ -124,9 +117,7 @@ function Panel({
 			if (event.defaultPrevented) return
 			// A confirmation or sign-in dialog above this one owns its keyboard events.
 			const dialogs = [
-				...document.querySelectorAll<HTMLElement>(
-					'[role="dialog"][aria-modal="true"]',
-				),
+				...document.querySelectorAll<HTMLElement>('[role="dialog"][aria-modal="true"]'),
 			]
 			if (dialogs.at(-1) !== panel.current) return
 			if (event.key === "Escape") {
@@ -135,17 +126,15 @@ function Panel({
 			}
 			if (event.key !== "Tab") return
 			// The focus stays in the dialog while it is up.
-			const stops = [
-				...(panel.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []),
-			].filter((el) => el.getClientRects().length > 0)
+			const stops = [...(panel.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [])].filter(
+				(el) => el.getClientRects().length > 0,
+			)
 			if (!stops.length) return
 			const first = stops[0]
 			const last = stops[stops.length - 1]
 			const at = document.activeElement
 			if (
-				event.shiftKey
-					? at === first || at === panel.current
-					: at === last || at === panel.current
+				event.shiftKey ? at === first || at === panel.current : at === last || at === panel.current
 			) {
 				event.preventDefault()
 				;(event.shiftKey ? last : first).focus()
@@ -159,6 +148,7 @@ function Panel({
 		}
 	}, [opener])
 
+	const surface = useFloatSurface("bg-stone-900")
 	if (!root) return null
 	return createPortal(
 		<div
@@ -167,11 +157,7 @@ function Panel({
 			className={`fixed inset-0 ${layer} flex items-end justify-center md:items-center md:p-4`}
 		>
 			{/* biome-ignore lint/a11y/useKeyWithClickEvents: Escape closes it, and the Close button is the keyboard's way. */}
-			<div
-				ref={shade}
-				onClick={onClose}
-				className="absolute inset-0 bg-black/70 md:bg-black/40"
-			/>
+			<div ref={shade} onClick={onClose} className="absolute inset-0 bg-black/70 md:bg-black/40" />
 			<div
 				ref={panel}
 				// biome-ignore lint/a11y/useSemanticElements: a <dialog> can't be a sheet that comes up from the bottom edge.
@@ -179,19 +165,15 @@ function Panel({
 				aria-modal="true"
 				aria-label={`Your score for ${title}`}
 				tabIndex={-1}
-				style={
-					at ? { position: "absolute", top: at.top, left: at.left } : undefined
-				}
-				className="relative max-h-[calc(100dvh-1rem)] w-full overflow-y-auto overscroll-contain rounded-t-3xl border-t border-white/15 bg-stone-900 px-4 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-3 text-white shadow-[0_-12px_48px_rgba(0,0,0,.6)] outline-none md:w-[36rem] lg:w-[42.5rem] md:max-w-[calc(100vw-2rem)] md:rounded-2xl md:border md:p-5 md:shadow-2xl"
+				style={at ? { position: "absolute", top: at.top, left: at.left } : undefined}
+				className={`relative max-h-[calc(100dvh-1rem)] w-full overflow-y-auto overscroll-contain rounded-t-3xl border-t border-white/15 ${surface} px-4 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-3 text-white shadow-[0_-12px_48px_rgba(0,0,0,.6)] outline-none md:w-[36rem] lg:w-[42.5rem] md:max-w-[calc(100vw-2rem)] md:rounded-2xl md:border md:p-5 md:shadow-2xl`}
 			>
 				<div
 					className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/20 md:hidden"
 					aria-hidden="true"
 				/>
 				<div className="mb-3 flex items-center justify-between gap-3">
-					<h2 className="min-w-0 flex-1 text-base font-bold md:text-xl">
-						{title}
-					</h2>
+					<h2 className="min-w-0 flex-1 text-base font-bold md:text-xl">{title}</h2>
 					{aside}
 					<button
 						type="button"
@@ -215,12 +197,7 @@ function Panel({
 				</div>
 				{step ?? (
 					<>
-						<ScoreControl
-							value={value}
-							busy={busy}
-							onRate={onRate}
-							onClear={onClear}
-						/>
+						<ScoreControl value={value} busy={busy} onRate={onRate} onClear={onClear} />
 						{footer}
 					</>
 				)}

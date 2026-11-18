@@ -1,5 +1,6 @@
 import { isCrawler } from "~/server/crawlers.server"
 import { CharacterQuickViewProvider } from "~/ui/character-quick-view/context"
+import { TitleTint, onTitleTint } from "~/ui/details/tint-surface"
 import { TitleQuickViewProvider } from "~/ui/quick-view/title-quick-view"
 import { authMaintenanceOn } from "~/server/auth/cutover-notice.server"
 import { TelemetryBoot } from "~/telemetry/TelemetryBoot"
@@ -26,11 +27,7 @@ import { getAccountSummary } from "~/server/account/summary.server"
 import { queryKeyAccountSummary } from "~/ui/account/useAccountSummary"
 import { AuthProvider } from "~/ui/auth/AuthProvider"
 import { createAuthCookieMatcher, hasSupabaseCookie } from "~/utils/auth-cookie"
-import type {
-	LinksFunction,
-	LoaderFunction,
-	LoaderFunctionArgs,
-} from "@remix-run/node"
+import type { LinksFunction, LoaderFunction, LoaderFunctionArgs } from "@remix-run/node"
 import {
 	Links,
 	Meta,
@@ -141,9 +138,7 @@ type LoaderData = {
 // A navigation never reruns the root loader: utils/root-revalidation.ts has the rule.
 export { shouldRevalidateRoot as shouldRevalidate } from "~/utils/root-revalidation"
 
-export const loader: LoaderFunction = withRequestTiming(async ({
-	request,
-}: LoaderFunctionArgs) => {
+export const loader: LoaderFunction = withRequestTiming(async ({ request }: LoaderFunctionArgs) => {
 	// The title snapshot loads in the background from the server's first page request on.
 	capLogLines()
 	startTitleSnapshot()
@@ -151,10 +146,7 @@ export const loader: LoaderFunction = withRequestTiming(async ({
 	startMetrics()
 	startBrowserGate()
 	const { user, headers } = await getAuthFromRequest({ request })
-	const { effectiveContext, setCookie } = await resolveMediaContext(
-		request,
-		user?.id,
-	)
+	const { effectiveContext, setCookie } = await resolveMediaContext(request, user?.id)
 	if (setCookie) headers.append("Set-Cookie", setCookie)
 	const betterAuth = process.env.BETTER_AUTH_ENABLED === "true"
 	const queryClient = new QueryClient()
@@ -172,9 +164,7 @@ export const loader: LoaderFunction = withRequestTiming(async ({
 				queryFn: () =>
 					getAccountSummary(
 						user.id,
-						typeof photo === "string" && photo.startsWith("https://")
-							? photo
-							: null,
+						typeof photo === "string" && photo.startsWith("https://") ? photo : null,
 					),
 			}),
 		])
@@ -194,8 +184,7 @@ export const loader: LoaderFunction = withRequestTiming(async ({
 				AUTH_MAINTENANCE: authMaintenanceOn(),
 				FASTSTATS_SITE_KEY: process.env.FASTSTATS_SITE_KEY?.trim() ?? "",
 			},
-			signInAgain:
-				betterAuth && !user && hasSupabaseCookie(request.headers.get("Cookie")),
+			signInAgain: betterAuth && !user && hasSupabaseCookie(request.headers.get("Cookie")),
 		},
 		{ headers },
 	)
@@ -306,9 +295,7 @@ export function ErrorBoundary() {
 								maintenance={root.env.AUTH_MAINTENANCE}
 								initialUser={root.user}
 							>
-								<HydrationBoundary state={root.dehydratedState}>
-									{page}
-								</HydrationBoundary>
+								<HydrationBoundary state={root.dehydratedState}>{page}</HydrationBoundary>
 							</AuthProvider>
 						</LocaleContext.Provider>
 					) : (
@@ -344,15 +331,13 @@ function Root() {
 	const location = useLocation()
 
 	// Add check for custom scroll handling
-	const [shouldUseScrollRestoration, setShouldUseScrollRestoration] =
-		React.useState(true)
+	const [shouldUseScrollRestoration, setShouldUseScrollRestoration] = React.useState(true)
 
 	// Effect to check if we should use scroll restoration
 	React.useEffect(() => {
 		if (typeof document !== "undefined") {
 			const checkScrollAttribute = () => {
-				const hasCustomScroll =
-					document.documentElement.hasAttribute("data-custom-scroll")
+				const hasCustomScroll = document.documentElement.hasAttribute("data-custom-scroll")
 				setShouldUseScrollRestoration(!hasCustomScroll)
 			}
 
@@ -382,18 +367,16 @@ function Root() {
 			}),
 	)
 	const dehydratedState = useDehydratedState()
-	const afterPaint = useMatches().some(
+	const matches = useMatches()
+	const afterPaint = matches.some(
 		(match) =>
-			(match.handle as { scripts?: string } | undefined)?.scripts ===
-			START_AFTER_PAINT.scripts,
+			(match.handle as { scripts?: string } | undefined)?.scripts === START_AFTER_PAINT.scripts,
 	)
+	// Panels that open on a title page, from there or from the providers below, take its tint (ui/details/tint-surface.ts).
+	const titleTint = onTitleTint(matches)
 
 	return (
-		<html
-			lang="en"
-			className="scroll-smooth"
-			style={{ scrollbarGutter: "stable" }}
-		>
+		<html lang="en" className="scroll-smooth" style={{ scrollbarGutter: "stable" }}>
 			<head>
 				<meta charSet="utf-8" />
 				{/* Records the landing URL and early errors until analytics and error tracking load. */}
@@ -415,13 +398,15 @@ function Root() {
 						>
 							<HydrationBoundary state={dehydratedState}>
 								<DiscoveryContinuity />
-								{/* The character quick view, for any page that shows characters. */}
-								<CharacterQuickViewProvider>
-									{/* The title quick view that a tap on a poster card opens on a touch screen. */}
-									<TitleQuickViewProvider>
-										<App />
-									</TitleQuickViewProvider>
-								</CharacterQuickViewProvider>
+								<TitleTint.Provider value={titleTint}>
+									{/* The character quick view, for any page that shows characters. */}
+									<CharacterQuickViewProvider>
+										{/* The title quick view that a tap on a poster card opens on a touch screen. */}
+										<TitleQuickViewProvider>
+											<App />
+										</TitleQuickViewProvider>
+									</CharacterQuickViewProvider>
+								</TitleTint.Provider>
 								{/* <CookieConsent /> */}
 								{/* The Feedback tab; its drawer and fix mode load after the page settles. */}
 								<FeedbackTab />

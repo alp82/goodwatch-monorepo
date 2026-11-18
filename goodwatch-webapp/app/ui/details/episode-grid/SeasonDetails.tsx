@@ -10,7 +10,7 @@ import { ScoreTile } from "./ScoreTile"
 import { SeasonStep } from "./SeasonOverview"
 import SeasonTiles from "./SeasonTiles"
 import type { GridModel } from "./grid-model"
-import { FOCUS, seasonTitle } from "./presentation"
+import { FOCUS, SURFACE, seasonTitle } from "./presentation"
 import { EpisodeTip, SeasonScoreList } from "./shared"
 
 export default function SeasonDetails({
@@ -42,18 +42,13 @@ export default function SeasonDetails({
 	return (
 		<div
 			data-open-season={season.number}
-			className="my-2 overflow-hidden rounded-xl border border-white/10 bg-[#141923]"
+			className={`my-2 overflow-hidden rounded-xl border border-white/10 ${SURFACE}`}
 		>
 			<div className="flex min-h-12 items-center gap-1.5 bg-white/[0.04] py-1.5 pl-3 pr-2">
 				{onStep && <SeasonStep delta={-1} onStep={onStep} disabled={first} />}
 				<h3 className="min-w-0 truncate text-sm">
-					<span className="font-bold text-white">
-						{seasonTitle(season.number)}
-					</span>
-					<span className="text-gray-400">
-						{" "}
-						· {season.episodes.length} episodes
-					</span>
+					<span className="font-bold text-white">{seasonTitle(season.number)}</span>
+					<span className="text-gray-400"> · {season.episodes.length} episodes</span>
 				</h3>
 				{onStep && <SeasonStep delta={1} onStep={onStep} disabled={last} />}
 				<span className="flex-1" />
@@ -87,15 +82,11 @@ export default function SeasonDetails({
 							<button
 								type="button"
 								aria-expanded={selected === episode.id}
-								onClick={() =>
-									onSelect(selected === episode.id ? null : episode.id)
-								}
+								onClick={() => onSelect(selected === episode.id ? null : episode.id)}
 								className={`flex min-h-10 w-full items-center gap-3 rounded px-1 text-left text-sm ${FOCUS}`}
 							>
 								<span className="w-9 shrink-0 text-xs text-gray-400">
-									{original &&
-									"canonicalLabel" in original &&
-									original.canonicalLabel
+									{original && "canonicalLabel" in original && original.canonicalLabel
 										? original.canonicalLabel
 										: `E${episode.number}`}
 								</span>

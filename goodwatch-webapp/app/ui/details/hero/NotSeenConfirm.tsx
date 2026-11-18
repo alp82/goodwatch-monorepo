@@ -6,6 +6,7 @@ import { createPortal } from "react-dom"
 import { memberWatches, withoutWatch } from "~/domain/watch-log"
 import type { Score } from "~/server/scores.server"
 import { TmdbImage } from "~/ui/TmdbImage"
+import { useFloatSurface } from "~/ui/details/tint-surface"
 import { NESTED_OVERLAY, useOverlayRoot } from "~/ui/overlay"
 import { type ScoredMedia, useScoreAction } from "~/ui/user/actions/ScoreAction"
 import { useWatchLog, useWatchLogAction } from "~/ui/watch-log/useWatchLog"
@@ -122,6 +123,7 @@ export default function NotSeenConfirm({
 	}, [])
 
 	const label = "w-10 shrink-0 text-[10px] uppercase tracking-[0.08em]"
+	const surface = useFloatSurface("bg-stone-900")
 	if (!root) return null
 	return createPortal(
 		<div
@@ -129,11 +131,7 @@ export default function NotSeenConfirm({
 			className="fixed inset-0 z-[1300] flex items-end justify-center md:items-center md:p-4"
 		>
 			{/* biome-ignore lint/a11y/useKeyWithClickEvents: Escape and Keep as seen are the keyboard's way out. */}
-			<div
-				ref={shade}
-				onClick={onDone}
-				className="absolute inset-0 bg-black/70 md:bg-black/40"
-			/>
+			<div ref={shade} onClick={onDone} className="absolute inset-0 bg-black/70 md:bg-black/40" />
 			<div
 				ref={panel}
 				role="alertdialog"
@@ -141,24 +139,18 @@ export default function NotSeenConfirm({
 					// Tab stays in the question: it goes round its two buttons.
 					if (event.key !== "Tab") return
 					const stops = [
-						...(panel.current?.querySelectorAll<HTMLButtonElement>(
-							"button:not([disabled])",
-						) ?? []),
+						...(panel.current?.querySelectorAll<HTMLButtonElement>("button:not([disabled])") ?? []),
 					]
 					const at = stops.indexOf(document.activeElement as HTMLButtonElement)
 					event.preventDefault()
-					stops[
-						(at + (event.shiftKey ? -1 : 1) + stops.length) % stops.length
-					]?.focus()
+					stops[(at + (event.shiftKey ? -1 : 1) + stops.length) % stops.length]?.focus()
 				}}
 				aria-modal="true"
 				aria-labelledby="not-seen-title"
 				aria-describedby="not-seen-text"
 				data-not-seen-confirm
-				style={
-					at ? { position: "absolute", top: at.top, left: at.left } : undefined
-				}
-				className="relative w-full rounded-t-3xl border-t border-white/15 bg-stone-900 px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-3 text-white shadow-[0_-12px_48px_rgba(0,0,0,.6)] md:w-[29rem] md:rounded-2xl md:border md:p-5 md:shadow-2xl"
+				style={at ? { position: "absolute", top: at.top, left: at.left } : undefined}
+				className={`relative w-full rounded-t-3xl border-t border-white/15 ${surface} px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-3 text-white shadow-[0_-12px_48px_rgba(0,0,0,.6)] md:w-[29rem] md:rounded-2xl md:border md:p-5 md:shadow-2xl`}
 			>
 				<div
 					className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/20 md:hidden"
@@ -180,31 +172,19 @@ export default function NotSeenConfirm({
 							/>
 						</span>
 					)}
-					<div
-						className="flex min-w-0 flex-1 flex-col gap-2"
-						aria-hidden="true"
-					>
+					<div className="flex min-w-0 flex-1 flex-col gap-2" aria-hidden="true">
 						<p className="truncate text-sm font-bold">
 							{media.details.title}
-							{year && (
-								<span className="font-normal text-gray-400"> · {year}</span>
-							)}
+							{year && <span className="font-normal text-gray-400"> · {year}</span>}
 						</p>
 						<div className="flex flex-col">
 							{/* Now: smaller and faded, it's what goes away. After: full size. */}
 							<div className="flex items-center gap-2">
-								<span className={`${label} font-semibold text-gray-500`}>
-									Now
-								</span>
+								<span className={`${label} font-semibold text-gray-500`}>Now</span>
 								<div className="min-w-0 flex-1 origin-left scale-[.86] opacity-45 saturate-[.35]">
 									<SplitFrame
 										score={score}
-										left={
-											<SeenFace
-												seen
-												count={watches && watches >= 2 ? `${watches}×` : null}
-											/>
-										}
+										left={<SeenFace seen count={watches && watches >= 2 ? `${watches}×` : null} />}
 										right={<ScoreFace score={score} ask="Rate it" />}
 									/>
 								</div>

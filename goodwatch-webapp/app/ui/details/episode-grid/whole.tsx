@@ -6,6 +6,7 @@ import { useState } from "react"
 import type { EpisodeGrid } from "~/server/episode-grid.server"
 import { formatCount } from "~/ui/details/episode-grid/scale"
 import { unpackEpisodeGrid } from "~/utils/episode-grid-wire"
+import { FOCUS, SURFACE } from "./presentation"
 
 const wholeGridQuery = (grid: EpisodeGrid | null) => {
 	const showId = grid?.showId ?? 0
@@ -37,9 +38,7 @@ export interface WholeEpisodeGrid {
 	prefetch: () => void
 }
 
-export function useWholeEpisodeGrid(
-	grid: EpisodeGrid | null,
-): WholeEpisodeGrid {
+export function useWholeEpisodeGrid(grid: EpisodeGrid | null): WholeEpisodeGrid {
 	const queryClient = useQueryClient()
 	const partial = grid?.window ? grid : null
 	const [asked, setAsked] = useState(false)
@@ -66,10 +65,7 @@ export function useWholeEpisodeGrid(
 }
 
 /** The line above a part of the grid: what it shows, and the button for every season. */
-export function GridWindowNotice({
-	grid,
-	whole,
-}: { grid: EpisodeGrid; whole: WholeEpisodeGrid }) {
+export function GridWindowNotice({ grid, whole }: { grid: EpisodeGrid; whole: WholeEpisodeGrid }) {
 	const part = grid.window
 	if (!part) return null
 	const shownText =
@@ -95,7 +91,7 @@ export function GridWindowNotice({
 				onPointerEnter={whole.prefetch}
 				onFocus={whole.prefetch}
 				aria-busy={whole.state === "loading"}
-				className="inline-flex h-8 items-center rounded-lg bg-[#141923] px-2.5 text-xs font-semibold text-gray-200 ring-1 ring-white/20 transition hover:text-white hover:ring-white/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+				className={`inline-flex h-8 items-center rounded-lg ${SURFACE} px-2.5 text-xs font-semibold text-gray-200 ring-1 ring-white/20 transition hover:text-white hover:ring-white/60 ${FOCUS}`}
 			>
 				{buttonText}
 			</button>

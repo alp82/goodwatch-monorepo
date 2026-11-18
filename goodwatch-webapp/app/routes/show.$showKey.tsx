@@ -16,21 +16,14 @@ import { getDetailsForMovie, getDetailsForShow } from "~/server/details.server"
 import { getEpisodeGrid } from "~/server/episode-grid.server"
 import { getEpisodeLayout } from "~/server/episode-layout.server"
 import { overlayAlignedGrid } from "~/server/episode-text-overlay.server"
-import {
-	type GenreRow,
-	genreRow,
-	relatedMapKeys,
-} from "~/server/genre-row/genre-row.server"
+import { type GenreRow, genreRow, relatedMapKeys } from "~/server/genre-row/genre-row.server"
 import { heroHints } from "~/server/hero-hints.server"
 import { INCOMPLETE_PAGE_HEADERS } from "~/server/incomplete-page"
 import { resolveMediaContext } from "~/server/media-context.server"
 import type { NewPagesHere } from "~/server/new-on-services-page.server"
 import { newPagesNow } from "~/server/new-on-services.server"
 import { relatedPrefetchBudgetMs } from "~/server/related-budget"
-import {
-	relatedMapLookup,
-	relatedSectionData,
-} from "~/server/related-map.server"
+import { relatedMapLookup, relatedSectionData } from "~/server/related-map.server"
 import { talkedAboutNowEnabled } from "~/server/talked-about-now/flags.server"
 import { titleBreadcrumb } from "~/server/title-breadcrumb.server"
 import { titleExtrasEmbedded } from "~/server/title-extras-prefetch"
@@ -59,11 +52,7 @@ import type { Crumb } from "~/ui/nav/breadcrumb-trail"
 import { type PageNameHandle, titlePageName } from "~/ui/navigation/page-name"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { detailsMetaTags } from "~/utils/detailsMeta"
-import {
-	type EpisodeGridWire,
-	packEpisodeGrid,
-	unpackEpisodeGrid,
-} from "~/utils/episode-grid-wire"
+import { type EpisodeGridWire, packEpisodeGrid, unpackEpisodeGrid } from "~/utils/episode-grid-wire"
 import { titleRedirectPath } from "~/utils/helpers"
 import { mayAdoptLegacyCountry } from "~/utils/legacy-country"
 import { normalizeCountry } from "~/utils/media-language"
@@ -78,8 +67,10 @@ export { pageHeaders as headers } from "~/utils/headers"
 // The phone's top bar names the title from the start (ui/navigation/page-name.ts).
 export const handle = {
 	...START_AFTER_PAINT,
+	// Panels on the page take its backdrop tint (ui/details/tint-surface.ts, TITLE_TINT).
+	surface: "tint",
 	pageName: titlePageName,
-} satisfies PageNameHandle
+} satisfies PageNameHandle & { surface: "tint" }
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) return [{ title: "Not Found | GoodWatch" }]
@@ -140,10 +131,7 @@ const titleLoader = async ({ params, request }: LoaderFunctionArgs) => {
 	const budgetMs = relatedPrefetchBudgetMs(isCrawler(request))
 	const details = titleDetailsWithin(
 		timeRequestWork(request, "data", () =>
-			getDetailsForShow(
-				{ showId, country, language },
-				{ canonical: canonicalContent },
-			),
+			getDetailsForShow({ showId, country, language }, { canonical: canonicalContent }),
 		),
 	)
 	let episodeGridFailed = false
@@ -186,9 +174,7 @@ const titleLoader = async ({ params, request }: LoaderFunctionArgs) => {
 						? { ...first, window: { ...first.window, language } }
 						: first
 				return {
-					wire: packEpisodeGrid(
-						canonicalContent ? part : await overlayAlignedGrid(part, language),
-					),
+					wire: packEpisodeGrid(canonicalContent ? part : await overlayAlignedGrid(part, language)),
 					// The whole grid's seasons, for the page's season list.
 					seasons: grid.seasons
 						.filter((s) => s.number > 0)
@@ -275,16 +261,8 @@ const titleLoader = async ({ params, request }: LoaderFunctionArgs) => {
 		media.details.title,
 		canonicalContent ? undefined : language,
 	)
-	const [similar, tropes, glance] = await Promise.all([
-		similarWork,
-		tropesWork,
-		glanceWork,
-	])
-	const dehydratedState = mergeDehydratedStates(
-		extrasState,
-		tropes.state,
-		glance.state,
-	)
+	const [similar, tropes, glance] = await Promise.all([similarWork, tropesWork, glanceWork])
+	const dehydratedState = mergeDehydratedStates(extrasState, tropes.state, glance.state)
 
 	const [sides, genre] = await Promise.all([
 		titleSidesWithin(sidesWork, sidesStart, TITLE_BUDGET_MS),

@@ -1,31 +1,20 @@
 import { json, redirect } from "@remix-run/node"
 import { pageAwards } from "~/server/title-awards"
-import type {
-	LoaderFunction,
-	LoaderFunctionArgs,
-	MetaFunction,
-} from "@remix-run/node"
+import type { LoaderFunction, LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
 import React, { useEffect } from "react"
 import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
 import { cachedClientLoader } from "~/navigation/instant-navigation"
 import { isCrawler } from "~/server/crawlers.server"
 import { getDetailsForMovie } from "~/server/details.server"
-import {
-	type GenreRow,
-	genreRow,
-	relatedMapKeys,
-} from "~/server/genre-row/genre-row.server"
+import { type GenreRow, genreRow, relatedMapKeys } from "~/server/genre-row/genre-row.server"
 import { heroHints } from "~/server/hero-hints.server"
 import { INCOMPLETE_PAGE_HEADERS } from "~/server/incomplete-page"
 import { resolveMediaContext } from "~/server/media-context.server"
 import type { NewPagesHere } from "~/server/new-on-services-page.server"
 import { newPagesNow } from "~/server/new-on-services.server"
 import { relatedPrefetchBudgetMs } from "~/server/related-budget"
-import {
-	relatedMapLookup,
-	relatedSectionData,
-} from "~/server/related-map.server"
+import { relatedMapLookup, relatedSectionData } from "~/server/related-map.server"
 import { talkedAboutNowEnabled } from "~/server/talked-about-now/flags.server"
 import { titleBreadcrumb } from "~/server/title-breadcrumb.server"
 import { titleExtrasEmbedded } from "~/server/title-extras-prefetch"
@@ -64,8 +53,10 @@ export { pageHeaders as headers } from "~/utils/headers"
 // The phone's top bar names the title from the start (ui/navigation/page-name.ts).
 export const handle = {
 	...START_AFTER_PAINT,
+	// Panels on the page take its backdrop tint (ui/details/tint-surface.ts, TITLE_TINT).
+	surface: "tint",
 	pageName: titlePageName,
-} satisfies PageNameHandle
+} satisfies PageNameHandle & { surface: "tint" }
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) return [{ title: "Not Found | GoodWatch" }]
@@ -119,10 +110,7 @@ const titleLoader = async ({ params, request }: LoaderFunctionArgs) => {
 	const budgetMs = relatedPrefetchBudgetMs(isCrawler(request))
 	const details = titleDetailsWithin(
 		timeRequestWork(request, "data", () =>
-			getDetailsForMovie(
-				{ movieId, country, language },
-				{ canonical: canonicalContent },
-			),
+			getDetailsForMovie({ movieId, country, language }, { canonical: canonicalContent }),
 		),
 	)
 	const relatedWork = relatedMapLookup({
@@ -172,9 +160,7 @@ const titleLoader = async ({ params, request }: LoaderFunctionArgs) => {
 				mediaType: "movie",
 				tmdbId: media.details.tmdb_id,
 				genres: media.details.genres,
-				exclude: (media.movie_series?.movie_ids ?? []).map((id) =>
-					titleKey("movie", id),
-				),
+				exclude: (media.movie_series?.movie_ids ?? []).map((id) => titleKey("movie", id)),
 				later: relatedWork.then(relatedMapKeys, () => []),
 				budgetMs,
 				language: canonicalContent ? undefined : language,
@@ -207,16 +193,8 @@ const titleLoader = async ({ params, request }: LoaderFunctionArgs) => {
 		media.details.title,
 		canonicalContent ? undefined : language,
 	)
-	const [similar, tropes, glance] = await Promise.all([
-		similarWork,
-		tropesWork,
-		glanceWork,
-	])
-	const dehydratedState = mergeDehydratedStates(
-		extrasState,
-		tropes.state,
-		glance.state,
-	)
+	const [similar, tropes, glance] = await Promise.all([similarWork, tropesWork, glanceWork])
+	const dehydratedState = mergeDehydratedStates(extrasState, tropes.state, glance.state)
 
 	const [sides, genre] = await Promise.all([
 		titleSidesWithin(sidesWork, sidesStart, TITLE_BUDGET_MS),

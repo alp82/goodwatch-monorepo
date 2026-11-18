@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { type ReactNode, useState } from "react"
 import type { TitleCardsAnswer } from "~/server/title-cards-request.server"
+import { TINT_FLOAT } from "~/ui/details/tint-surface"
 import { QuickView, SHORT } from "~/ui/quick-view/QuickView"
 import { QuickViewCard } from "~/ui/quick-view/QuickViewCard"
 import { useUser } from "~/utils/auth"
@@ -37,31 +38,18 @@ async function fetchCards(
 function useCards(list: ShelfTitle[], chunk: number) {
 	const { user } = useUser()
 	const { locale } = useLocale()
-	const keys = list
-		.slice(chunk * CHUNK, (chunk + 1) * CHUNK)
-		.map((t) => titleKey(t.type, t.tmdbId))
+	const keys = list.slice(chunk * CHUNK, (chunk + 1) * CHUNK).map((t) => titleKey(t.type, t.tmdbId))
 	return useQuery({
-		queryKey: [
-			"more-like-this-cards",
-			user?.id ?? "guest",
-			locale.language,
-			keys.join(","),
-		],
+		queryKey: ["more-like-this-cards", user?.id ?? "guest", locale.language, keys.join(",")],
 		queryFn: () => fetchCards(keys, Boolean(user), locale.language),
 		enabled: keys.length > 0,
 	})
 }
 
-function Card({
-	list,
-	index,
-	reason,
-}: { list: ShelfTitle[]; index: number; reason: ReactNode }) {
+function Card({ list, index, reason }: { list: ShelfTitle[]; index: number; reason: ReactNode }) {
 	const t = list[index]
 	const cards = useCards(list, Math.floor(index / CHUNK))
-	const card = cards.data?.cards.find(
-		(c) => c.key === titleKey(t.type, t.tmdbId),
-	)
+	const card = cards.data?.cards.find((c) => c.key === titleKey(t.type, t.tmdbId))
 	return (
 		<QuickViewCard
 			title={{
@@ -85,8 +73,7 @@ function Card({
 				lang: card?.presentation?.title.language,
 				poster: t.poster,
 				backdrop: card?.backdrop_path,
-				goodwatch:
-					card?.goodwatch_overall_score_normalized_percent ?? t.goodwatch,
+				goodwatch: card?.goodwatch_overall_score_normalized_percent ?? t.goodwatch,
 				match: card?.match ?? null,
 				reason: (
 					<p className="line-clamp-2 text-[15px] leading-snug font-semibold text-gray-200">
@@ -128,9 +115,7 @@ export function ShelfQuickView({
 			wide={wide}
 			anchorOf={(i) =>
 				list[i]
-					? document.querySelector<HTMLElement>(
-							`[data-pop-id="${shelfAnchor(shelf, list[i])}"]`,
-						)
+					? document.querySelector<HTMLElement>(`[data-pop-id="${shelfAnchor(shelf, list[i])}"]`)
 					: null
 			}
 			posterOf={(i) => ({
@@ -138,6 +123,8 @@ export function ShelfQuickView({
 				name: list[i]?.title ?? "",
 			})}
 			height={SHORT}
+			// More like this is on the title page: the view takes its tint.
+			surface={TINT_FLOAT}
 		>
 			{(i) => <Card list={list} index={i} reason={reason} />}
 		</QuickView>
