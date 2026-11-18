@@ -9,6 +9,7 @@ import {
 } from "@heroicons/react/24/solid"
 import { Link, isRouteErrorResponse } from "@remix-run/react"
 import { useNavigation } from "~/ui/navigation/NavigationContext"
+import { PageTitle } from "~/ui/heading"
 
 const BUTTON = "flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold"
 const PRIMARY = `${BUTTON} bg-amber-400 text-black hover:bg-amber-300`
@@ -40,9 +41,9 @@ export function ErrorPage({ status, detail }: { status: number; detail?: string 
 			<p className="font-display font-bold text-7xl leading-none text-amber-400 sm:text-8xl">
 				{status}
 			</p>
-			<h1 className="mt-5 font-display font-bold text-3xl text-gray-100 sm:text-4xl">
+			<PageTitle className="mt-5 text-3xl text-gray-100 sm:text-4xl">
 				{notFound ? "Page not found" : "Something went wrong"}
-			</h1>
+			</PageTitle>
 			<p className="mt-3 text-base text-gray-400">
 				{notFound
 					? "This address doesn't lead anywhere. The page may have moved, or the link has a typo."

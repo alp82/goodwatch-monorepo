@@ -58,7 +58,7 @@ import { getPersonRoles } from "~/server/character-portraits.server"
 import { INCOMPLETE_PAGE_HEADERS } from "~/server/incomplete-page"
 import { validPersonId } from "~/server/person-id"
 import { Caption, Kicker } from "~/ui/eyebrow"
-import { SectionHeading } from "~/ui/heading"
+import { PageTitle, SectionHeading } from "~/ui/heading"
 import { SELECTED_SOLID } from "~/ui/selection/selected"
 
 const PER_GROUP = 12
@@ -411,7 +411,7 @@ function Hero({ data, children }: { data: Data; children?: React.ReactNode }) {
 					/>
 					<div className="min-w-0">
 						{p.known_for_department && <Kicker>{p.known_for_department}</Kicker>}
-						<h1 className="font-display font-bold text-4xl sm:text-6xl">{p.name}</h1>
+						<PageTitle className="text-4xl sm:text-6xl">{p.name}</PageTitle>
 					</div>
 				</div>
 				{children}

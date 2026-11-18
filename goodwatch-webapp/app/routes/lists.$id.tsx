@@ -15,6 +15,7 @@ import { NoHandleChrome, ProfileChrome } from "~/ui/profile/ProfileHeader"
 import { myListsPathFor } from "~/ui/share-card/links"
 import { HandlePicker } from "~/ui/share-lists/HandlePicker"
 import { getUserIdFromRequest } from "~/utils/auth"
+import { PageTitle } from "~/ui/heading"
 
 type CollectionPage = Awaited<
 	ReturnType<Awaited<ReturnType<ReturnType<typeof createCollectionPageLoader>>>["json"]>
@@ -88,7 +89,7 @@ export default function CollectionList() {
 						My lists
 					</Link>
 				)}
-				<h1 className="font-display font-bold break-words text-3xl">{list.title}</h1>
+				<PageTitle className="break-words text-3xl">{list.title}</PageTitle>
 				<p className="text-gray-400">
 					{list.items.length} titles ·{" "}
 					{list.visibility === "private"

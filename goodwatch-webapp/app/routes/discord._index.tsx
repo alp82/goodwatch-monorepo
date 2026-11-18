@@ -38,6 +38,7 @@ import { Kicker, Question, SectionIntro } from "~/ui/info-page"
 import { type PageMeta, buildMeta } from "~/utils/meta"
 import { START_AFTER_PAINT } from "~/utils/start-after-paint"
 import { PrimaryButton } from "~/ui/button/PrimaryButton"
+import { PageTitle } from "~/ui/heading"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -150,9 +151,7 @@ function Hero() {
 		<header className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,32rem)] lg:gap-14">
 			<div className="flex flex-col gap-5">
 				<Kicker>Discord bot</Kicker>
-				<h1 className="font-display font-bold text-4xl text-white sm:text-5xl">
-					GoodWatch in Discord
-				</h1>
+				<PageTitle className="text-4xl text-white sm:text-5xl">GoodWatch in Discord</PageTitle>
 				<p className="max-w-xl text-lg leading-relaxed text-gray-300 sm:text-xl">
 					Find something to watch, decide as a group, and keep your library up to date without
 					leaving the chat.

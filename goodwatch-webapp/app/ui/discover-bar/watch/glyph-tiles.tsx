@@ -25,6 +25,7 @@ import {
 	spanRange,
 	togglePreset,
 } from "./stepped-choices"
+import { SELECTED_SOLID } from "~/ui/selection/selected"
 
 export interface Hue {
 	h: number
@@ -51,8 +52,7 @@ export const STATUS_HUES = {
 	canceled: { h: 2, s: 40 },
 } as const
 
-const hsla = (c: Hue, a: number, l = 62) =>
-	`hsla(${c.h}, ${c.s}%, ${l}%, ${a.toFixed(3)})`
+const hsla = (c: Hue, a: number, l = 62) => `hsla(${c.h}, ${c.s}%, ${l}%, ${a.toFixed(3)})`
 
 export interface TileState {
 	active: boolean
@@ -71,16 +71,8 @@ const glyphColor = (c: Hue, { active, dead }: TileState) =>
 function gridTones(c: Hue, { active }: TileState): GridTones {
 	const s = Math.min(c.s + 10, 48)
 	return active
-		? [
-				`hsl(${c.h}, ${s}%, 28%)`,
-				`hsl(${c.h}, ${s - 4}%, 42%)`,
-				`hsl(${c.h}, ${s - 8}%, 58%)`,
-			]
-		: [
-				`hsl(${c.h}, ${s}%, 76%)`,
-				`hsl(${c.h}, ${s - 4}%, 61%)`,
-				`hsl(${c.h}, ${s - 8}%, 47%)`,
-			]
+		? [`hsl(${c.h}, ${s}%, 28%)`, `hsl(${c.h}, ${s - 4}%, 42%)`, `hsl(${c.h}, ${s - 8}%, 58%)`]
+		: [`hsl(${c.h}, ${s}%, 76%)`, `hsl(${c.h}, ${s - 4}%, 61%)`, `hsl(${c.h}, ${s - 8}%, 47%)`]
 }
 
 /** The glow behind the glyph, a faint hue edge, and the picked fill. `strength` runs 0 to 1. */
@@ -154,7 +146,7 @@ export function GlyphTile({
 	const fill = hue
 		? `${dead ? "bg-white/[0.015]" : "bg-white/[0.03] hover:bg-white/[0.06]"} ${active ? "text-gray-950" : dead ? "text-gray-600" : "text-gray-100"}`
 		: active
-			? "bg-white text-gray-950"
+			? SELECTED_SOLID
 			: dead
 				? "bg-white/[0.02] text-gray-600"
 				: "bg-white/[0.06] text-gray-100 hover:bg-white/[0.11]"
@@ -171,13 +163,9 @@ export function GlyphTile({
 			onClick={onClick}
 			className={`group relative isolate flex min-w-0 flex-col items-start gap-1.5 overflow-hidden rounded-xl px-3 py-2.5 text-left cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${fill}`}
 		>
-			{hue && (
-				<Glow hue={hue} strength={strength} active={active} dead={dead} />
-			)}
+			{hue && <Glow hue={hue} strength={strength} active={active} dead={dead} />}
 			<span className="flex h-4 w-full items-center gap-2">
-				<span className={`flex min-w-0 items-center ${tone}`}>
-					{glyph(state)}
-				</span>
+				<span className={`flex min-w-0 items-center ${tone}`}>{glyph(state)}</span>
 				<span
 					className={`ml-auto shrink-0 text-[11px] tabular-nums ${active ? "text-gray-600" : "text-gray-500"}`}
 					style={soft}
@@ -186,9 +174,7 @@ export function GlyphTile({
 				</span>
 			</span>
 			<span className="flex w-full min-w-0 flex-col gap-0.5">
-				<span className="truncate text-[14px] leading-tight font-semibold">
-					{label}
-				</span>
+				<span className="truncate text-[14px] leading-tight font-semibold">{label}</span>
 				<span
 					className={`truncate text-[12px] ${active ? "text-gray-600" : "text-gray-500"}`}
 					style={soft}
@@ -224,7 +210,7 @@ export function MarkChip({
 			onClick={onClick}
 			className={`group flex h-8 items-center gap-1.5 rounded-full pr-3 pl-2.5 text-[13px] font-medium whitespace-nowrap cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
 				active
-					? "bg-white text-gray-950"
+					? SELECTED_SOLID
 					: dead
 						? "bg-white/[0.02] text-gray-600"
 						: "bg-white/[0.06] text-gray-200 hover:bg-white/[0.11] hover:text-white"
@@ -243,33 +229,19 @@ export function MarkChip({
 				<span aria-hidden="true" className="invisible col-start-1 row-start-1">
 					999.9M
 				</span>
-				<span className="col-start-1 row-start-1">
-					{count === null ? "" : compactCount(count)}
-				</span>
+				<span className="col-start-1 row-start-1">{count === null ? "" : compactCount(count)}</span>
 			</span>
 		</motion.button>
 	)
 }
 
 /** A group's glyph in its color. */
-function HueGlyph({
-	field,
-	i,
-	state,
-}: {
-	field: SteppedField
-	i: number
-	state: TileState
-}) {
+function HueGlyph({ field, i, state }: { field: SteppedField; i: number; state: TileState }) {
 	if (field === "hours")
 		return (
 			<span
 				className="flex"
-				style={
-					state.active
-						? { color: `hsl(${HOURS_HUE.h}, ${HOURS_HUE.s}%, 36%)` }
-						: undefined
-				}
+				style={state.active ? { color: `hsl(${HOURS_HUE.h}, ${HOURS_HUE.s}%, 36%)` } : undefined}
 			>
 				<PresetGlyph field={field} i={i} />
 			</span>
@@ -280,9 +252,7 @@ function HueGlyph({
 			<PresetGlyph
 				field={field}
 				i={i}
-				tones={
-					field === "seasons" && !state.dead ? gridTones(hue, state) : undefined
-				}
+				tones={field === "seasons" && !state.dead ? gridTones(hue, state) : undefined}
 			/>
 		</span>
 	)
@@ -298,10 +268,7 @@ export function hueGlyph(hue: Hue, state: TileState, glyph: ReactNode) {
 }
 
 /** The counts block a field reads. */
-export function fieldCounts(
-	view: SubTabView,
-	field: SteppedField,
-): Record<string, number> | null {
+export function fieldCounts(view: SubTabView, field: SteppedField): Record<string, number> | null {
 	return view.counts?.optionCounts[STEPPED[field].group] ?? null
 }
 
@@ -349,9 +316,7 @@ export function SteppedBlock({
 						note={preset.note}
 						count={presetCount(field, counts, preset)}
 						active={isPreset(field, range, preset)}
-						onClick={() =>
-							update((st) => togglePreset(st, field, preset.range))
-						}
+						onClick={() => update((st) => togglePreset(st, field, preset.range))}
 						hue={field === "hours" ? undefined : HUES[field]}
 						strength={presetStrength(field, i)}
 						glyph={(s) => <HueGlyph field={field} i={i} state={s} />}

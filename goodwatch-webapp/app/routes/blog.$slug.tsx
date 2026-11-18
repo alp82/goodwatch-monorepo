@@ -19,6 +19,7 @@ import {
 	datasetJsonLd,
 } from "~/utils/blog-structured-data"
 import { buildMeta, ogImageUrl } from "~/utils/meta"
+import { PageTitle } from "~/ui/heading"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -105,7 +106,7 @@ export default function BlogPostPage() {
 						</p>
 					) : null}
 					<Kicker>{post.kind}</Kicker>
-					<h1 className="font-display font-bold text-4xl text-white sm:text-5xl">{post.title}</h1>
+					<PageTitle className="text-4xl text-white sm:text-5xl">{post.title}</PageTitle>
 					<p className="text-lg leading-relaxed text-gray-300 sm:text-xl">{post.description}</p>
 					<p className="text-sm text-gray-500">
 						By <span className="font-semibold text-gray-300">GoodWatch</span>

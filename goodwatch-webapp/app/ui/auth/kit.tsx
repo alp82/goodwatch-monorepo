@@ -15,6 +15,7 @@ import type { AuthPoster } from "~/ui/auth/PosterSpotlight"
 import { Spinner } from "~/ui/wait/Spinner"
 import { type AuthFailure, PASSWORD_MIN } from "~/utils/auth-client"
 import { MAINTENANCE_SUB, MAINTENANCE_TITLE } from "~/utils/auth-maintenance"
+import { PageTitle } from "~/ui/heading"
 
 // Keep main's poster scene around the Better Auth forms. Every credential form posts so that a submission
 // before hydration can never place a password in the address.
@@ -54,7 +55,7 @@ export function Heading({
 					{icon}
 				</div>
 			)}
-			<h1 className="mb-2 font-display font-bold text-2xl text-white">{title}</h1>
+			<PageTitle className="mb-2 text-2xl text-white">{title}</PageTitle>
 			{sub && <p className="text-gray-400">{sub}</p>}
 		</div>
 	)

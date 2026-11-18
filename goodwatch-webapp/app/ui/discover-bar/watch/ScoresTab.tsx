@@ -26,11 +26,7 @@ import { radioKeys } from "~/ui/filter-bar/controls"
 import { compactCount } from "~/ui/filter-bar/labels"
 import { TAP } from "~/ui/filter-bar/motion"
 import { assetUrl } from "~/utils/asset-url"
-import {
-	getVibeColorValue,
-	goodwatchVibeIndex,
-	scoreWord,
-} from "~/utils/ratings"
+import { getVibeColorValue, goodwatchVibeIndex, scoreWord } from "~/utils/ratings"
 import type { SubTabView } from "../DiscoverControls"
 import { BlockHead, ClearLink, tabPad } from "./parts"
 import {
@@ -39,14 +35,13 @@ import {
 	sourcesSet,
 	stepLit,
 } from "./watch-choices"
+import { SELECTED_SOLID } from "~/ui/selection/selected"
 
 const FOCUS = "outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
 const BASE = "#111418"
 
 const vibeHex = (score: number) =>
-	getVibeColorValue(
-		(goodwatchVibeIndex(score) / 10) as Parameters<typeof getVibeColorValue>[0],
-	)
+	getVibeColorValue((goodwatchVibeIndex(score) / 10) as Parameters<typeof getVibeColorValue>[0])
 
 // ---------------------------------------------------------------------------------------------------------------
 // GoodWatch score
@@ -181,8 +176,7 @@ const ROW_NAME: Partial<Record<SourceKey, string>> = {
 	metacriticUsers: "User score",
 }
 
-const audience = (key: SourceKey) =>
-	key === "rtAudience" || key === "metacriticUsers"
+const audience = (key: SourceKey) => key === "rtAudience" || key === "metacriticUsers"
 
 /** The site's logo on its brand tile, as on the title page's score chips; audience scores carry a small A. */
 function SourceLogo({ source, size }: { source: SourceKey; size: number }) {
@@ -211,9 +205,7 @@ function SourceLogo({ source, size }: { source: SourceKey; size: number }) {
 			style={{ width: size, height: size }}
 		>
 			<img
-				src={assetUrl(
-					site === "Metacritic" ? metacriticLogoIcon : rottenLogoIcon,
-				)}
+				src={assetUrl(site === "Metacritic" ? metacriticLogoIcon : rottenLogoIcon)}
 				alt=""
 				className="h-[62%] w-[62%] object-contain"
 			/>
@@ -226,13 +218,7 @@ function SourceLogo({ source, size }: { source: SourceKey; size: number }) {
 	)
 }
 
-function SourceRow({
-	view,
-	source,
-}: {
-	view: SubTabView
-	source: ScoreSourceInfo
-}) {
+function SourceRow({ view, source }: { view: SubTabView; source: ScoreSourceInfo }) {
 	const { state, set } = view.filters
 	const { phone } = view
 	const look = SOURCE_LOOK[source.key]
@@ -244,15 +230,9 @@ function SourceRow({
 	return (
 		<div className={`flex items-center gap-3 ${phone ? "h-11" : "h-12"}`}>
 			<SourceLogo source={source.key} size={phone ? 26 : 28} />
-			<span
-				className={`shrink-0 leading-tight ${phone ? "w-[104px]" : "w-[124px]"}`}
-			>
-				<span className="block truncate text-[13px] font-semibold text-gray-100">
-					{name}
-				</span>
-				<span className="block truncate text-[11px] text-gray-500">
-					{look.who}
-				</span>
+			<span className={`shrink-0 leading-tight ${phone ? "w-[104px]" : "w-[124px]"}`}>
+				<span className="block truncate text-[13px] font-semibold text-gray-100">{name}</span>
+				<span className="block truncate text-[11px] text-gray-500">{look.who}</span>
 			</span>
 			<div
 				role="radiogroup"
@@ -333,10 +313,7 @@ function GapGlyph({ gap }: { gap: ScoreGap | "any" }) {
 		/>
 	)
 	return (
-		<span
-			aria-hidden
-			className="flex h-5 w-5 shrink-0 items-end justify-center gap-[2px]"
-		>
+		<span aria-hidden className="flex h-5 w-5 shrink-0 items-end justify-center gap-[2px]">
 			{bar(critics, CRITICS)}
 			{bar(audiences, AUDIENCES)}
 		</span>
@@ -347,17 +324,11 @@ function GapLegend() {
 	return (
 		<span className="flex items-center gap-3 text-[11px] text-gray-500">
 			<span className="flex items-center gap-1">
-				<span
-					className="h-2 w-2 rounded-[2px]"
-					style={{ background: CRITICS }}
-				/>
+				<span className="h-2 w-2 rounded-[2px]" style={{ background: CRITICS }} />
 				Critics
 			</span>
 			<span className="flex items-center gap-1">
-				<span
-					className="h-2 w-2 rounded-[2px]"
-					style={{ background: AUDIENCES }}
-				/>
+				<span className="h-2 w-2 rounded-[2px]" style={{ background: AUDIENCES }} />
 				Audiences
 			</span>
 		</span>
@@ -377,9 +348,7 @@ function GapChoices({ view }: { view: SubTabView }) {
 			role="radiogroup"
 			aria-label="Critics vs audiences"
 			onKeyDown={(event) => radioKeys(event, (index) => set(GAPS[index]))}
-			className={
-				phone ? "grid grid-cols-2 gap-1.5" : "grid grid-cols-4 gap-1.5"
-			}
+			className={phone ? "grid grid-cols-2 gap-1.5" : "grid grid-cols-4 gap-1.5"}
 		>
 			{GAPS.map((gap) => {
 				const on = gap === "any" ? !value : value === gap
@@ -394,16 +363,14 @@ function GapChoices({ view }: { view: SubTabView }) {
 						tabIndex={on ? 0 : -1}
 						whileTap={TAP}
 						onClick={() => set(gap)}
-						className={`flex h-14 items-center gap-2.5 rounded-xl px-2.5 text-left cursor-pointer ${FOCUS} ${on ? "bg-white text-gray-950" : "bg-white/[0.05] text-gray-200 hover:bg-white/[0.09]"}`}
+						className={`flex h-14 items-center gap-2.5 rounded-xl px-2.5 text-left cursor-pointer ${FOCUS} ${on ? SELECTED_SOLID : "bg-white/[0.05] text-gray-200 hover:bg-white/[0.09]"}`}
 					>
 						<span
 							className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${on ? "bg-gray-950" : "bg-black/30"}`}
 						>
 							<GapGlyph gap={gap} />
 						</span>
-						<span
-							className={`min-w-0 text-[13px] leading-[1.2] ${on ? "font-semibold" : ""}`}
-						>
+						<span className={`min-w-0 text-[13px] leading-[1.2] ${on ? "font-semibold" : ""}`}>
 							{gap === "any" ? "Any" : GAP_NAMES[gap]}
 							{n !== undefined && !on && (
 								<span className="ml-1.5 text-[11px] font-normal tabular-nums text-gray-500">
@@ -430,12 +397,7 @@ export function ScoresTab({ view }: { view: SubTabView }) {
 				id="discover-score-head"
 				icon={<GoodWatchMark score={state.minScore} />}
 				note="Every source in one"
-				right={
-					<ClearLink
-						show={state.minScore > 0}
-						onClick={() => set({ minScore: 0 })}
-					/>
-				}
+				right={<ClearLink show={state.minScore > 0} onClick={() => set({ minScore: 0 })} />}
 			>
 				GoodWatch score
 			</BlockHead>
@@ -464,12 +426,7 @@ export function ScoresTab({ view }: { view: SubTabView }) {
 			<BlockHead
 				id="discover-sources-head"
 				note={sources ? `${sources} set · each must pass` : "Each must pass"}
-				right={
-					<ClearLink
-						show={sources > 0}
-						onClick={() => set({ sourceScores: undefined })}
-					/>
-				}
+				right={<ClearLink show={sources > 0} onClick={() => set({ sourceScores: undefined })} />}
 			>
 				Scores by source
 			</BlockHead>
@@ -489,16 +446,12 @@ export function ScoresTab({ view }: { view: SubTabView }) {
 			</div>
 		)
 	return (
-		<div
-			className={`grid grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] gap-10 ${tabPad(false)}`}
-		>
+		<div className={`grid grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] gap-10 ${tabPad(false)}`}>
 			<div className="flex min-w-0 flex-col gap-6">
 				{score}
 				{gap}
 			</div>
-			<div className="min-w-0 border-l border-white/[0.06] pl-10">
-				{bySource}
-			</div>
+			<div className="min-w-0 border-l border-white/[0.06] pl-10">{bySource}</div>
 		</div>
 	)
 }

@@ -35,6 +35,7 @@ import {
 import { type RatingFlowModel, useRatingFlow } from "./use-rating-flow"
 import { WORDS } from "./words"
 import { YourRatings } from "./YourRatings"
+import { PageTitle } from "~/ui/heading"
 
 /** Picks shown in the taste view. */
 const PICKS_SHOWN = 6
@@ -171,9 +172,9 @@ function RateView({
 
 				{!t ? (
 					<div className="mt-10">
-						<h1 className="font-display font-bold text-2xl">
+						<PageTitle className="text-2xl">
 							{flow.loadingTitles ? WORDS.loading : flow.titlesFailed ? WORDS.failed : WORDS.empty}
-						</h1>
+						</PageTitle>
 						{flow.titlesFailed && (
 							<button type="button" className={`${ghostButton} mt-5`} onClick={flow.retryTitles}>
 								{WORDS.tryAgain}
@@ -277,7 +278,7 @@ function TasteView({ flow, onKeep }: { flow: RatingFlowModel; onKeep: () => void
 						{t.rated} rated · {t.liked} liked
 					</div>
 				)}
-				<h1 className="font-display font-bold text-2xl md:text-4xl">{WORDS.yourTaste}</h1>
+				<PageTitle className="text-2xl md:text-4xl">{WORDS.yourTaste}</PageTitle>
 			</div>
 			{flow.ready ? (
 				<section className="space-y-3">

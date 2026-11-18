@@ -13,6 +13,7 @@ import {
 	titleKey,
 } from "../format"
 import { Chapter, PANEL } from "../parts"
+import { Kicker } from "~/ui/eyebrow"
 
 type RecordFact = {
 	label: string
@@ -41,9 +42,7 @@ function RecordSide({ r }: { r: RecordFact }) {
 				<span className="text-[11px] font-bold tracking-wider text-gray-500 uppercase">
 					{r.label}
 				</span>
-				<span className="text-3xl font-black text-white tabular-nums">
-					{r.value}
-				</span>
+				<span className="text-3xl font-black text-white tabular-nums">{r.value}</span>
 				<Link
 					to={r.href}
 					prefetch="intent"
@@ -85,10 +84,7 @@ export function Extremes({ s }: { s: StatsSnapshot }) {
 	const metaMovie = r.highestMetascoreMovies[0]
 	const metaShow = r.highestMetascoreShows[0]
 	const perfect = s.charts.metascoreSpread[10] ?? 0
-	const episodeRunners = (
-		rows: typeof ep.mostVoted,
-		text: (e: (typeof rows)[number]) => string,
-	) =>
+	const episodeRunners = (rows: typeof ep.mostVoted, text: (e: (typeof rows)[number]) => string) =>
 		rows.slice(1, 4).map((e) => ({
 			key: `${e.showId}-${e.season}-${e.episode}`,
 			href: episodeHref(e),
@@ -114,10 +110,7 @@ export function Extremes({ s }: { s: StatsSnapshot }) {
 				href: titleHref(longest),
 				name: longest.title,
 				note: `${longest.year}, ${count(longest.runtime)} minutes`,
-				runners: runners(
-					r.longest,
-					(t) => `${hoursMinutes(t.runtime)} · ${t.title}`,
-				),
+				runners: runners(r.longest, (t) => `${hoursMinutes(t.runtime)} · ${t.title}`),
 			},
 		},
 		{
@@ -130,10 +123,7 @@ export function Extremes({ s }: { s: StatsSnapshot }) {
 				href: titleHref(episodes),
 				name: episodes.title,
 				note: `${episodes.seasons} seasons since ${episodes.year}`,
-				runners: runners(
-					r.mostEpisodes,
-					(t) => `${count(t.episodes)} · ${t.title}`,
-				),
+				runners: runners(r.mostEpisodes, (t) => `${count(t.episodes)} · ${t.title}`),
 			},
 			b: {
 				label: "Most-voted episode",
@@ -158,13 +148,8 @@ export function Extremes({ s }: { s: StatsSnapshot }) {
 				poster: grossing.poster,
 				href: titleHref(grossing),
 				name: grossing.title,
-				note: grossing.budget
-					? `On a ${money(grossing.budget)} budget`
-					: undefined,
-				runners: runners(
-					r.highestGrossing,
-					(t) => `${money(t.revenue)} · ${t.title}`,
-				),
+				note: grossing.budget ? `On a ${money(grossing.budget)} budget` : undefined,
+				runners: runners(r.highestGrossing, (t) => `${money(t.revenue)} · ${t.title}`),
 			},
 			b: {
 				label: "Lowest-rated well-known episode",
@@ -176,12 +161,7 @@ export function Extremes({ s }: { s: StatsSnapshot }) {
 				note: `${lowest.show} ${episodeCode(lowest)} · ${count(lowest.votes)} votes`,
 				// IMDb's placeholder names ("Episode #1.12") say nothing in a one-line list.
 				runners: episodeRunners(
-					[
-						lowest,
-						...ep.lowestRated
-							.slice(1)
-							.filter((e) => !e.name.startsWith("Episode #")),
-					],
+					[lowest, ...ep.lowestRated.slice(1).filter((e) => !e.name.startsWith("Episode #"))],
 					(e) => `${e.imdb} · ${episodeName(e)} (${e.show})`,
 				),
 			},
@@ -208,10 +188,7 @@ export function Extremes({ s }: { s: StatsSnapshot }) {
 				href: titleHref(metaShow),
 				name: metaShow.title,
 				note: `${metaShow.year}, from ${metaShow.criticReviews} critic reviews`,
-				runners: runners(
-					r.highestMetascoreShows,
-					(t) => `${t.metascore} · ${t.title}`,
-				),
+				runners: runners(r.highestMetascoreShows, (t) => `${t.metascore} · ${t.title}`),
 			},
 		},
 	]
@@ -227,9 +204,7 @@ export function Extremes({ s }: { s: StatsSnapshot }) {
 			<div className="flex flex-col gap-4">
 				{pairs.map((p) => (
 					<div key={p.theme} className={`${PANEL} p-4 sm:p-6`}>
-						<p className="mb-4 text-xs font-bold tracking-[0.18em] text-amber-400/80 uppercase">
-							{p.theme}
-						</p>
+						<Kicker className="mb-4">{p.theme}</Kicker>
 						<div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-8">
 							<RecordSide r={p.a} />
 							<span aria-hidden className="hidden w-px bg-white/10 md:block" />

@@ -249,20 +249,20 @@ A cool, dark navy room with a warm amber lamp, translucent white layers, and a s
 
 ### Hierarchy
 
-- **Display** (Gabarito 700, 34-52px, line height 1.1, normal letter spacing): every page h1, including title and person names, member, info, sign-in, and legal pages (D3). Write it as `font-display font-bold`. Big brand numbers, hero and card names keep Gabarito 900 (`DISPLAY` in `my-pages/style.ts`: `font-display font-black tracking-[-0.03em]`).
+- **Display** (Gabarito 700, 34-52px, line height 1.1, normal letter spacing): every page h1, including title and person names, member, info, sign-in, and legal pages (D3). Use `<PageTitle>` (`~/ui/heading`; it writes `font-display font-bold`, the page passes size and color). Hot sets the same face in its CSS; the home page's "Find something to watch" h1 is still the system font at 800 (`.start-heading`); the small amber h1s of the rating flow and the quick list are labels, not page titles. Big brand numbers, hero and card names keep Gabarito 900 (`DISPLAY` in `my-pages/style.ts`: `font-display font-black tracking-[-0.03em]`).
 - **Headline** (system 600, 20px on phones and 24px from 640px, -0.025em): every section heading (D4), written as `<SectionHeading>` from `app/ui/heading.tsx`. Group headings are one step smaller (`size="group"`). Title pages keep their icon tile; other pages don't add one.
 - **Title** (system 600, 18px): card titles, sheet titles, settings row labels, and list headings.
 - **Body** (system 400, 16-18px, line height 1.625): synopses and long-form text. The blog and info pages run 16px on phones and 18px from `sm` up, in a 672px column.
 - **Body small** (system 400-600, 14px): the workhorse size for controls, metadata, lists, and settings hints.
 - **Caption** (system 600, 11px, +0.14em, uppercase, ink-faint `gray-500`): section labels such as ON THIS PAGE, footer and settings groups, command palette sections, fact labels, and form labels.
 - **Kicker** (system 700, 12px, +0.18em, uppercase, `amber-400`): the line above a page or card title: info pages, blog posts and cards, the person page's department, share list headers, and quick view eyebrows.
-- Uppercase labels come in these two styles only (D6), written as `<Caption>` and `<Kicker>` from `app/ui/eyebrow.tsx` (`as` for the element, `className` for layout), or the `CAPTION` and `KICKER` class strings where the element can't be the component. Tiny labels inside controls (rail card kinds, "Your score", Discover's "Mode") keep their own look. Badges, pills, and labels whose color carries meaning (taste groups, the sky "new" heads) aren't eyebrows.
+- Uppercase labels come in these two styles only (D6), written as `<Caption>` and `<Kicker>` from `app/ui/eyebrow.tsx` (`as` for the element, `className` for layout), or the `CAPTION` and `KICKER` class strings where the element can't be the component. Tiny labels inside controls (rail card kinds, "Your score", Discover's "Mode") keep their own look. Badges, pills, and labels whose color carries meaning (taste groups, the sky "new" heads) aren't eyebrows. Older hand-written uppercase labels outside the D6 sites (about 90 class strings with their own tracking) haven't moved yet; new work uses the two styles.
 
 ### Named Rules
 
 **The Heavy Weights Rule.** Hierarchy comes from weight (600-900) and size, not from color. Buttons use 700-900.
 
-**The One Gabarito Source Rule.** Gabarito is declared in `app/fonts/gabarito.css`. Components reach it through the `font-display` utility (the `--font-display` theme token), not an inline `fontFamily` string or `font-['Gabarito']`.
+**The One Gabarito Source Rule.** Gabarito is declared in `app/fonts/gabarito.css`. Components reach it through the `font-display` utility (the `--font-display` theme token), not an inline `fontFamily` string or `font-['Gabarito']`. A few places still do (`font-['Gabarito']` in /stats and the start spotlight, `font-family: "Gabarito"` in the start, intro, living room, TV and Hot CSS files); don't add more.
 
 ## Layout
 

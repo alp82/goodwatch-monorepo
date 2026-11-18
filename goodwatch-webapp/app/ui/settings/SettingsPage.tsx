@@ -3,7 +3,7 @@
 // the way around. Elsewhere (Discord's link page) it is a full page of its own with its title.
 import type { ReactNode } from "react"
 import { useInSettingsFrame } from "./SettingsFrame"
-import { SectionHeading } from "~/ui/heading"
+import { PageTitle, SectionHeading } from "~/ui/heading"
 
 export function SettingsPage({
 	title,
@@ -28,7 +28,7 @@ export function SettingsPage({
 	return (
 		<div className="overflow-x-clip pb-32" data-settings-page>
 			<header className="mx-auto max-w-6xl px-4 pt-6 pb-6 md:px-8 md:pt-8">
-				<h1 className="font-display font-bold text-4xl text-white md:text-5xl">{title}</h1>
+				<PageTitle className="text-4xl text-white md:text-5xl">{title}</PageTitle>
 				{intro && <p className="mt-2 max-w-2xl text-base text-gray-400">{intro}</p>}
 			</header>
 			<div className="mx-auto max-w-6xl px-4 text-base text-gray-300 md:px-8">{children}</div>

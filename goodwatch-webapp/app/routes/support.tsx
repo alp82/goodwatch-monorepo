@@ -23,6 +23,7 @@ import { CONTACT_SECTION_ID, ContactSection } from "~/ui/support/ContactSection"
 import { SUPPORT_EMAIL } from "~/ui/support/contact"
 import { type PageMeta, buildMeta } from "~/utils/meta"
 import { PrimaryButton } from "~/ui/button/PrimaryButton"
+import { PageTitle } from "~/ui/heading"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -51,7 +52,7 @@ export default function Support() {
 		<div className="mx-auto max-w-5xl px-4 py-6 pb-24 text-gray-300 md:px-8 md:py-10">
 			<header className="flex flex-col gap-5 rounded-2xl bg-gradient-to-br from-amber-950/70 via-gray-900 to-gray-900 p-5 ring-1 ring-amber-500/20 md:flex-row md:items-center md:justify-between md:p-8">
 				<div className="flex flex-col gap-2">
-					<h1 className="font-display font-bold text-3xl text-white md:text-4xl">Support</h1>
+					<PageTitle className="text-3xl text-white md:text-4xl">Support</PageTitle>
 					<p className="max-w-xl text-lg leading-relaxed text-gray-300">
 						Something not working, or a question about your account? Write to us. We read every
 						message.

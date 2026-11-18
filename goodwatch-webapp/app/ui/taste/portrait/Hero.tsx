@@ -1,6 +1,7 @@
 // The Taste page's opening: the fingerprint drawing once, beside the viewer type, a few numbers, and the way into For
 // you. Sharing is the profile header's Share.
 import { ForYouLink } from "~/ui/for-you/ForYouLink"
+import { PageTitle } from "~/ui/heading"
 import { count } from "~/ui/profile/parts"
 import { Whorl } from "~/ui/profile/taste/Whorl"
 import { useTaste } from "~/ui/profile/taste/model"
@@ -42,12 +43,12 @@ export function TasteHero({
 					<p className="text-xs font-bold tracking-[0.2em] text-amber-400 uppercase">
 						Your viewer type
 					</p>
-					<h1
+					<PageTitle
 						id="viewer-type"
-						className="mt-1 font-display font-bold scroll-mt-44 text-3xl leading-[1.05] text-balance text-white sm:text-5xl"
+						className="mt-1 scroll-mt-44 text-3xl leading-[1.05] text-balance text-white sm:text-5xl"
 					>
 						{taste.identity?.name ?? "Still forming"}
-					</h1>
+					</PageTitle>
 					{taste.line && (
 						<p className="mt-4 max-w-2xl text-lg text-gray-100 sm:text-xl">{taste.line}</p>
 					)}

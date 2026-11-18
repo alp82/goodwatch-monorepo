@@ -75,6 +75,7 @@ import { useHydrated } from "~/utils/hydrated"
 import { awardParam, readAwardWords } from "~/domain/award-filter"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import { searchPending, unsentWords } from "./search-pending"
+import { PageTitle } from "~/ui/heading"
 
 // The Matches popout's read parts: loaded when the popout first shows them.
 const MatchesRead = lazy(reloadOnStaleChunk(() => import("./search-reading/MatchesRead")))
@@ -664,9 +665,9 @@ export function DiscoverPage({ initial, member, savedForYou, searchScope }: Disc
 				<div onPointerEnter={warm} onTouchStart={warm} onFocus={warm}>
 					<DiscoverControls
 						heading={
-							<h1 className="font-display font-bold text-[23px] leading-tight text-white lg:text-[34px]">
+							<PageTitle className="text-[23px] leading-tight text-white lg:text-[34px]">
 								Discover
-							</h1>
+							</PageTitle>
 						}
 						className="mt-3 lg:mt-5"
 						bar={bar}

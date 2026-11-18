@@ -8,6 +8,7 @@ import { FAMILY_COLOR, useTaste } from "~/ui/profile/taste/model"
 import { PANEL } from "~/ui/profile/taste/parts"
 import { TASTE_GROUPS_NAME } from "../taste-groups-name"
 import { SectionHeading } from "~/ui/heading"
+import { Kicker } from "~/ui/eyebrow"
 
 export function TasteGroups({ requested = null }: { requested?: string | null }) {
 	const { taste, title, attributeByKey } = useTaste()
@@ -22,9 +23,7 @@ export function TasteGroups({ requested = null }: { requested?: string | null })
 	const usual = taste.usual
 	return (
 		<section id="sides" aria-labelledby="sides-head" className="scroll-mt-44">
-			<p className="mb-1 text-xs font-bold tracking-[0.18em] text-amber-400/80 uppercase">
-				What you love, grouped
-			</p>
+			<Kicker className="mb-1">What you love, grouped</Kicker>
 			<SectionHeading id="sides-head">{TASTE_GROUPS_NAME.title}</SectionHeading>
 			<ul className="mt-8 grid gap-6 md:grid-cols-2">
 				{groups.map((g) => {

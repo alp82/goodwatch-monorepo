@@ -5,6 +5,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
 import type { TitleCardsAnswer } from "~/server/title-cards-request.server"
+import { useFloatSurface } from "~/ui/details/tint-surface"
 import { QuickView, SHORT } from "~/ui/quick-view/QuickView"
 import { QuickViewCard } from "~/ui/quick-view/QuickViewCard"
 import { useUser } from "~/utils/auth"
@@ -18,8 +19,7 @@ import type { MapView, MapViewTitle } from "./engine"
 const CHUNK = 12
 
 /** The map's poster paths have no leading slash. */
-const posterPath = (t: MapViewTitle) =>
-	t.p ? (t.p.startsWith("/") ? t.p : `/${t.p}`) : null
+const posterPath = (t: MapViewTitle) => (t.p ? (t.p.startsWith("/") ? t.p : `/${t.p}`) : null)
 
 const mediaOf = (t: MapViewTitle) => ({
 	mediaType: t.k.charAt(0) === "s" ? ("show" as const) : ("movie" as const),
@@ -52,12 +52,7 @@ function useCards(titles: MapViewTitle[], chunk: number) {
 		.slice(chunk * CHUNK, (chunk + 1) * CHUNK)
 		.map((t) => titleKey(mediaOf(t).mediaType, mediaOf(t).tmdbId))
 	return useQuery({
-		queryKey: [
-			"related-map-cards",
-			user?.id ?? "guest",
-			locale.language,
-			keys.join(","),
-		],
+		queryKey: ["related-map-cards", user?.id ?? "guest", locale.language, keys.join(",")],
 		queryFn: () => fetchCards(keys, Boolean(user), locale.language),
 		enabled: keys.length > 0,
 		staleTime: 5 * 60_000,
@@ -114,10 +109,7 @@ function MapCard({ titles, index }: { titles: MapViewTitle[]; index: number }) {
 	)
 }
 
-export function RelatedQuickView({
-	view,
-	onClose,
-}: { view: MapView; onClose: () => void }) {
+export function RelatedQuickView({ view, onClose }: { view: MapView; onClose: () => void }) {
 	const { titles, section } = view
 	const [index, setIndex] = useState(0)
 	const [wide] = useState(() => window.matchMedia("(min-width: 768px)").matches)
@@ -134,6 +126,7 @@ export function RelatedQuickView({
 		document.addEventListener("fullscreenchange", off)
 		return () => document.removeEventListener("fullscreenchange", off)
 	}, [container, onClose])
+	const surface = useFloatSurface("bg-gray-900")
 	const anchorOf = (i: number) => {
 		const t = titles[i]
 		if (!t) return null
@@ -153,6 +146,7 @@ export function RelatedQuickView({
 			posterOf={(i) => ({ path: posterPath(titles[i]), name: titles[i].t })}
 			container={container}
 			height={SHORT}
+			surface={surface}
 		>
 			{(i) => <MapCard titles={titles} index={i} />}
 		</QuickView>

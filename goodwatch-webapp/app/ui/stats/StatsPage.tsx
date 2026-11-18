@@ -22,6 +22,7 @@ import { usePageEffects } from "./effects/load"
 import { asOfDate } from "./format"
 import { Hero } from "./hero"
 import { ChapterNav, StatsStyles, useRise } from "./parts"
+import { PageTitle } from "~/ui/heading"
 
 const CHAPTERS = [
 	{ id: "catalog", label: "Catalog" },
@@ -92,9 +93,9 @@ function Counting() {
 	return (
 		<div className={`${WRAP} flex min-h-[60vh] flex-col justify-center gap-6 py-20 text-white`}>
 			<Kicker>GoodWatch in numbers</Kicker>
-			<h1 className="max-w-3xl font-display font-bold text-4xl sm:text-6xl">
+			<PageTitle className="max-w-3xl text-4xl sm:text-6xl">
 				The numbers are being counted.
-			</h1>
+			</PageTitle>
 			<p className="max-w-2xl text-lg text-gray-300" aria-live="polite">
 				Every movie, show, score and streaming offer, added up. This page fills in by itself in a
 				minute or so.

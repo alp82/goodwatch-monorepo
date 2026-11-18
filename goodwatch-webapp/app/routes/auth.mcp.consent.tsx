@@ -34,6 +34,7 @@ import {
 } from "~/ui/connector/connector"
 import { Spinner } from "~/ui/wait/Spinner"
 import { PrimaryButton } from "~/ui/button/PrimaryButton"
+import { PageTitle } from "~/ui/heading"
 
 export const handle = STANDALONE
 
@@ -174,9 +175,9 @@ function Header({ app }: { app: ConsentApp }) {
 				</span>
 				<GoodWatchBadge />
 			</div>
-			<h1 className="font-display font-bold text-2xl text-white sm:text-3xl">
+			<PageTitle className="text-2xl text-white sm:text-3xl">
 				{app.name} wants to access your GoodWatch
-			</h1>
+			</PageTitle>
 			<p className="mt-2 flex items-center justify-center gap-1.5 text-sm text-gray-400">
 				{app.verified ? (
 					<ShieldCheckIcon className="h-4 w-4 text-emerald-400" aria-hidden="true" />
@@ -291,9 +292,9 @@ function Leaving({ app, allowed }: { app: ConsentApp; allowed: boolean }): React
 			) : (
 				<NoSymbolIcon className="h-12 w-12 text-gray-400" aria-hidden="true" />
 			)}
-			<h1 className="font-display font-bold text-2xl text-white">
+			<PageTitle className="text-2xl text-white">
 				{allowed ? `${app.name} is connected` : `${app.name} was not connected`}
-			</h1>
+			</PageTitle>
 			<div className="flex items-center gap-2 text-gray-400">
 				<Spinner size="small" /> Taking you back to{" "}
 				{app.returnsTo === "this computer" ? app.name : app.returnsTo}…

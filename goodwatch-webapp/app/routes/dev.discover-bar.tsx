@@ -30,6 +30,7 @@ import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import { useUser } from "~/utils/auth"
 import { snapshotGuestProgress } from "~/utils/guest-progress"
 import useLocale from "~/utils/locale"
+import { PageTitle } from "~/ui/heading"
 
 const DEFAULTS = { onMyServices: false, notSeenYet: false }
 
@@ -139,9 +140,9 @@ export default function DevDiscoverBar() {
 		<div className="mx-auto max-w-[1600px] px-4 pt-4 pb-16 lg:px-8 lg:pt-6">
 			<DiscoverControls
 				heading={
-					<h1 className="font-display font-bold text-[23px] leading-tight text-white lg:text-[34px]">
+					<PageTitle className="text-[23px] leading-tight text-white lg:text-[34px]">
 						Discover movies and shows
-					</h1>
+					</PageTitle>
 				}
 				className="mt-3 lg:mt-5"
 				bar={bar}

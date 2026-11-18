@@ -7,6 +7,7 @@ import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
 import type { SignUpMessage } from "~/ui/sign-up-prompt/messages"
 import { WATCH_PATHS } from "../../domain/member-paths.ts"
 import { DISPLAY, WRAP } from "./style"
+import { PageTitle } from "~/ui/heading"
 
 export { DISPLAY, WRAP }
 
@@ -71,7 +72,7 @@ export function PageHead({
 						{back.label}
 					</Link>
 				)}
-				<h1 className="font-display font-bold text-4xl text-white md:text-5xl">{name}</h1>
+				<PageTitle className="text-4xl text-white md:text-5xl">{name}</PageTitle>
 				<p className="mt-1 text-sm text-gray-400">{line}</p>
 			</div>
 			<span className="grow" />

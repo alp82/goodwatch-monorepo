@@ -38,7 +38,7 @@ import { mediaFieldLanguage } from "~/utils/media-presentation"
 import { canonicalMediaTitle } from "~/utils/media-presentation"
 import type { SizeRule } from "~/utils/tmdb-image"
 import { Kicker } from "~/ui/eyebrow"
-import { SectionHeading } from "~/ui/heading"
+import { PageTitle, SectionHeading } from "~/ui/heading"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -173,9 +173,9 @@ export default function ShareListPage() {
 								</span>
 							)}
 						</Kicker>
-						<h1 className="font-display font-bold text-3xl break-words sm:text-5xl">
+						<PageTitle className="text-3xl break-words sm:text-5xl">
 							<span lang={mediaFieldLanguage(list)}>{list.title}</span>
-						</h1>
+						</PageTitle>
 						<p className="text-gray-300">
 							By{" "}
 							<Link

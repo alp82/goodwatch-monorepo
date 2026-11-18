@@ -3,6 +3,7 @@ import { useLoaderData } from "@remix-run/react"
 import { isEnabled } from "~/server/features.server"
 import { AccountAndAppsPolicy, DiscordBotPolicy } from "~/ui/privacy/AccountAndAppsPolicy"
 import { type PageMeta, buildMeta } from "~/utils/meta"
+import { PageTitle } from "~/ui/heading"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -35,7 +36,7 @@ export default function Privacy() {
 					: "max-w-7x mx-auto px-8 lmt-0 py-2 md:py-4 lg:py-8"
 			}
 		>
-			<h1 className="mb-8 font-display font-bold text-3xl">Privacy Policy</h1>
+			<PageTitle className="mb-8 text-3xl">Privacy Policy</PageTitle>
 			{updated ? <p>Last updated: October 23, 2026</p> : <p>Last updated: October 23, 2026</p>}
 			<p>
 				This Privacy Policy describes Our policies and procedures on the collection, use and

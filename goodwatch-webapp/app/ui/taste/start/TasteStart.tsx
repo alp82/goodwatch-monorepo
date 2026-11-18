@@ -28,6 +28,7 @@ import {
 } from "./StartImport"
 import { StartStepper } from "./StartStepper"
 import { GOAL, LIKED, type StartState, type StartStep, startWords } from "./steps"
+import { PageTitle } from "~/ui/heading"
 
 const keyOf = (t: { media_type: string; tmdb_id: number }) => `${t.media_type}-${t.tmdb_id}`
 const image = (path: string | undefined, size: string) =>
@@ -164,7 +165,7 @@ export function TasteStart() {
 						onOpen={setStep}
 					/>
 					<header className="max-w-3xl text-center">
-						<h1 className="font-display font-bold text-4xl md:text-6xl">{words.title}</h1>
+						<PageTitle className="text-4xl md:text-6xl">{words.title}</PageTitle>
 						<p className="mx-auto mt-4 max-w-2xl text-gray-300 md:text-lg">{words.text}</p>
 					</header>
 

@@ -237,7 +237,7 @@ function SheetRow({ tab }: { tab: AreaTab }) {
 				/>
 			)}
 			<span className="min-w-0 flex-1">
-				<span className={`block font-semibold text-white`}>{tab.label}</span>
+				<span className="block font-semibold text-white">{tab.label}</span>
 				{tab.sub && <span className="block text-sm text-gray-500">{tab.sub}</span>}
 			</span>
 			{tab.news && (

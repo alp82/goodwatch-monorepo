@@ -3,6 +3,7 @@
 import { Link, useNavigate } from "@remix-run/react"
 import { useEffect } from "react"
 import type { NewPreviewData } from "~/server/new-on-services-page.server"
+import { PageTitle } from "~/ui/heading"
 
 export function NewPreviewPage({ data }: { data: NewPreviewData }) {
 	const navigate = useNavigate()
@@ -11,7 +12,7 @@ export function NewPreviewPage({ data }: { data: NewPreviewData }) {
 	}, [navigate, data.to])
 	return (
 		<main className="mx-auto max-w-3xl px-4 py-16">
-			<h1 className="font-display font-bold text-3xl">{data.copy.heading}</h1>
+			<PageTitle className="text-3xl">{data.copy.heading}</PageTitle>
 			<p className="mt-4">
 				<Link to={data.to} className="text-amber-400 underline">
 					{data.copy.description}

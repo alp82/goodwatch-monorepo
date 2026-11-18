@@ -5,6 +5,7 @@ import { createMyListsPageLoader } from "~/server/share-lists/collection-page.se
 import { getProfileByUserId, listsByUser } from "~/server/share-lists/store.server"
 import { NoHandleChrome } from "~/ui/profile/ProfileHeader"
 import { getUserIdFromRequest } from "~/utils/auth"
+import { PageTitle } from "~/ui/heading"
 export const loader = createMyListsPageLoader({
 	getUserIdFromRequest,
 	getProfileByUserId,
@@ -18,7 +19,7 @@ export default function MyLists() {
 		<>
 			<NoHandleChrome pathname={pathname} search={search} />
 			<main className="mx-auto max-w-3xl space-y-6 px-4 py-8 text-gray-100">
-				<h1 className="font-display font-bold text-3xl">My lists</h1>
+				<PageTitle className="text-3xl">My lists</PageTitle>
 				<p className="text-gray-400">Private lists are only visible to you until you share them.</p>
 				<ul className="space-y-3">
 					{lists.map((list) => (

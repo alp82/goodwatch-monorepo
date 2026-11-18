@@ -22,7 +22,7 @@ import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
 import { CountryChooser } from "./CountryChooser"
 import { MyServicesSwitch } from "./MyServicesSwitch"
 import { Flag, Logo, PosterImage, PosterRow, RankedRow, Sub } from "./parts"
-import { SectionHeading } from "~/ui/heading"
+import { PageTitle, SectionHeading } from "~/ui/heading"
 import { PrimaryButton } from "~/ui/button/PrimaryButton"
 
 /** The page's trail, for the BreadcrumbList. */
@@ -50,9 +50,9 @@ function Waited({ data }: { data: NewPageData }) {
 					<span className="h-2 w-2 rounded-full bg-sky-400" aria-hidden />
 					<span>New on your services</span>
 				</p>
-				<h1 className="mt-1 font-display font-bold text-4xl text-white md:text-6xl">
+				<PageTitle className="mt-1 text-4xl text-white md:text-6xl">
 					{first.title} is now on {name(first)}
-				</h1>
+				</PageTitle>
 				<p className="mt-2 text-base text-gray-200">
 					{/* Without an exact day, the heading already says all there is. */}
 					{words.lead}.{first.exact && ` ${words.landed}.`}
@@ -320,10 +320,10 @@ export function NewOnServicesPage({ data }: { data: NewPageData }) {
 						<Waited data={data} />
 					) : (
 						<div className="flex items-start justify-between gap-4">
-							<h1 className="font-display font-bold flex flex-wrap items-center gap-x-4 gap-y-2 text-5xl text-white md:text-7xl">
+							<PageTitle className="flex flex-wrap items-center gap-x-4 gap-y-2 text-5xl text-white md:text-7xl">
 								{brand && <Logo service={brand} size={56} className="rounded-2xl" />}
 								{data.copy.heading}
-							</h1>
+							</PageTitle>
 							{data.share && (
 								<div className="mt-2 flex shrink-0 items-center gap-2">
 									<ShareButton link={`https://goodwatch.app${data.share}`} />

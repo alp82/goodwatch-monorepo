@@ -10,6 +10,7 @@ import Breadcrumbs from "~/ui/nav/Breadcrumbs"
 import type { Crumb } from "~/ui/nav/breadcrumb-trail"
 import { blogIndexRobots, isDraft } from "~/utils/blog-posts"
 import { buildMeta, ogImageUrl } from "~/utils/meta"
+import { PageTitle } from "~/ui/heading"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -78,9 +79,7 @@ export default function Blog() {
 			<div className="mx-auto flex w-full max-w-2xl flex-col gap-10 px-4 pt-10 pb-24 text-gray-300 sm:px-8 md:pt-16">
 				<header className="flex flex-col gap-4">
 					<Kicker>Blog</Kicker>
-					<h1 className="font-display font-bold text-4xl text-white sm:text-5xl">
-						Studies and notes
-					</h1>
+					<PageTitle className="text-4xl text-white sm:text-5xl">Studies and notes</PageTitle>
 					<p className="text-lg leading-relaxed text-gray-300 sm:text-xl">
 						What we find in the data behind GoodWatch, and how we build it.
 					</p>

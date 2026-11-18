@@ -1,5 +1,6 @@
 import type { MetaFunction } from "@remix-run/node"
 import { type PageMeta, buildMeta } from "~/utils/meta"
+import { PageTitle } from "~/ui/heading"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -18,7 +19,7 @@ export const meta: MetaFunction = () => {
 export default function Disclaimer() {
 	return (
 		<div className="flex flex-col items-center mt-0 py-2 md:py-4 lg:py-8">
-			<h1 className="mb-8 font-display font-bold text-3xl">GoodWatch Disclaimer</h1>
+			<PageTitle className="mb-8 text-3xl">GoodWatch Disclaimer</PageTitle>
 
 			<h2 className="mb-4 text-2xl">Impressum</h2>
 			<section className="prose prose-invert lg:prose-xl mx-auto">

@@ -28,3 +28,25 @@ export function SectionHeading({
 		</Tag>
 	)
 }
+
+/**
+ * The page title (D3): Gabarito 700 (`font-display font-bold`). Sizes and text color vary by page, so `className`
+ * carries them and the layout.
+ */
+export function PageTitle({
+	as: Tag = "h1",
+	id,
+	className = "",
+	children,
+}: {
+	as?: "h1" | "h2" | "p"
+	id?: string
+	className?: string
+	children: ReactNode
+}) {
+	return (
+		<Tag id={id} className={`font-display font-bold ${className}`}>
+			{children}
+		</Tag>
+	)
+}

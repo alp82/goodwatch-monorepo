@@ -17,6 +17,7 @@ import { PillBackground, PillFacts } from "./Pills"
 import { inertUnless } from "./Reveal"
 import { type OrbitMotion, OrbitRing } from "./Ring"
 import { type HeaderFact, keyFacts } from "./facts"
+import { PageTitle } from "~/ui/heading"
 
 /** The header's one height: phones, then from sm up. */
 export const BOX = "h-[120px] sm:h-[164px]"
@@ -196,9 +197,9 @@ export function InlineHeader(props: HeaderProps) {
 						>
 							<div className="min-w-0 flex-1">
 								<div className="flex min-w-0 items-center gap-2 sm:gap-3">
-									<h1 className="font-display font-bold min-w-0 truncate text-xl leading-7 text-white sm:text-[2.125rem] sm:leading-10">
+									<PageTitle className="min-w-0 truncate text-xl leading-7 text-white sm:text-[2.125rem] sm:leading-10">
 										@{shell.handle}
-									</h1>
+									</PageTitle>
 									{match && !facts && <MatchChip handle={shell.handle} match={match} />}
 								</div>
 								{props.since && (

@@ -1,6 +1,7 @@
 import type { MetaFunction } from "@remix-run/node"
 import { Link } from "@remix-run/react"
 import { type PageMeta, buildMeta } from "~/utils/meta"
+import { PageTitle } from "~/ui/heading"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -22,7 +23,7 @@ const headingClass = "mt-8 mb-3 text-xl font-semibold text-white"
 export default function Terms() {
 	return (
 		<article className="mx-auto max-w-3xl px-4 py-8 pb-24 leading-relaxed text-gray-300 sm:px-8 md:py-12 [&_p]:my-3">
-			<h1 className="mb-4 font-display font-bold text-3xl text-white">Terms of Service</h1>
+			<PageTitle className="mb-4 text-3xl text-white">Terms of Service</PageTitle>
 			<p>Effective October 20, 2026</p>
 			<p>
 				These terms cover goodwatch.app and its connected-app integration. GoodWatch is operated by

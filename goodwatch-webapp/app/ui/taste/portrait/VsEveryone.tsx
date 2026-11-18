@@ -11,6 +11,7 @@ import { Pills } from "~/ui/profile/taste/parts"
 import { vibe } from "../tabs/parts"
 import { type GapRow, gapRows } from "./gaps"
 import { SectionHeading } from "~/ui/heading"
+import { Kicker } from "~/ui/eyebrow"
 
 const PAGE = 8
 const MOST = 30
@@ -43,9 +44,7 @@ export function VsEveryone() {
 
 	return (
 		<section id="everyone" aria-labelledby="everyone-head" className="scroll-mt-44">
-			<p className="mb-1 text-xs font-bold tracking-[0.18em] text-amber-400/80 uppercase">
-				Where your scores differ from the GoodWatch score
-			</p>
+			<Kicker className="mb-1">Where your scores differ from the GoodWatch score</Kicker>
 			<SectionHeading id="everyone-head">You vs everyone</SectionHeading>
 			<div className="mt-8 flex flex-wrap items-center gap-2">
 				<Pills

@@ -44,6 +44,7 @@ import { DISCOVER_SORTS, useFilterState } from "~/ui/filter-bar"
 import { discoverSorts, sortShown, tasteStateOf } from "~/ui/filter-bar/labels"
 import { useMyServices } from "~/ui/filter-bar/useFilterData"
 import type { TitleKey } from "~/utils/title-key"
+import { PageTitle } from "~/ui/heading"
 
 /** How many rows each column shows. */
 const TOP = 60
@@ -273,7 +274,7 @@ export default function DevForYou() {
 
 	return (
 		<div className="mx-auto max-w-7xl px-4 pt-5 pb-24 lg:pt-8">
-			<h1 className="font-display font-bold text-4xl text-white">For you, tuned</h1>
+			<PageTitle className="text-4xl text-white">For you, tuned</PageTitle>
 			<p className="mt-1 text-xs text-gray-500">
 				{preview.keys.length.toLocaleString("en")} titles pass the filters, in{" "}
 				{DISCOVER_SORTS[preview.sortUsed].label} order

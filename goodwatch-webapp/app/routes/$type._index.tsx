@@ -10,6 +10,7 @@ import { exploreHubCopy } from "~/ui/explore/page-copy"
 import { listNoun, scoreSourceList } from "~/domain/best-lists"
 import { type PageItem, type PageMeta, buildMeta, plainPageMeta } from "~/utils/meta"
 import { cachedClientLoader } from "~/navigation/instant-navigation"
+import { PageTitle } from "~/ui/heading"
 
 export const meta: MetaFunction = ({ params }) => {
 	const type = params.type || ""
@@ -53,9 +54,7 @@ export default function Movies() {
 
 	return (
 		<div className="max-w-7xl mx-auto p-4">
-			<h1 className="mb-2 font-display font-bold text-3xl text-gray-100 md:text-4xl">
-				{copy.heading}
-			</h1>
+			<PageTitle className="mb-2 text-3xl text-gray-100 md:text-4xl">{copy.heading}</PageTitle>
 			<p className="mb-8 text-xl text-gray-400">{copy.intro}</p>
 			<div className="mt-4 flex flex-col gap-10">
 				{/* The ranked list of the sitemap's titles, in the same look as the category sections below. */}

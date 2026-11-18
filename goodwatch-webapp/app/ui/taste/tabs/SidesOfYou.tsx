@@ -25,6 +25,7 @@ import {
 	useServicesFilter,
 } from "./parts"
 import { SELECTED_QUIET_CARD } from "~/ui/selection/selected"
+import { PageTitle } from "~/ui/heading"
 
 export function SidesOfYou({
 	view,
@@ -55,10 +56,10 @@ export function SidesOfYou({
 		<>
 			<section className="mx-auto max-w-7xl px-4 pt-10 md:px-8 md:pt-14">
 				{first && second && (
-					<h1 className="max-w-4xl font-display font-bold text-3xl leading-tight md:text-5xl">
+					<PageTitle className="max-w-4xl text-3xl leading-tight md:text-5xl">
 						You love <span className="text-amber-300">{first}</span>, and just as much{" "}
 						<span className="text-sky-300">{second}</span>.
-					</h1>
+					</PageTitle>
 				)}
 				<p className="mt-3 max-w-2xl text-gray-400">
 					What you rate highly, grouped by what it shares, and close to each, what you've barely

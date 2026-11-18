@@ -23,6 +23,7 @@ import { useNav } from "~/utils/navigation"
 import { convertHyphensToWords } from "~/utils/string"
 import { jsonToUrlString } from "~/utils/url"
 import { cachedClientLoader } from "~/navigation/instant-navigation"
+import { PageTitle } from "~/ui/heading"
 
 export const meta: MetaFunction = ({ params, location }) => {
 	const type = params.type || ""
@@ -148,9 +149,9 @@ export default function MoviesCategoryPage() {
 						className="absolute inset-0 w-full h-full object-cover object-top rounded-lg"
 					/>
 					<div className="relative m-auto ow-full max-w-7xl z-20">
-						<h1 className="mb-4 font-display font-bold text-4xl text-gray-300 md:text-6xl">
+						<PageTitle className="mb-4 text-4xl text-gray-300 md:text-6xl">
 							{copy.heading}
-						</h1>
+						</PageTitle>
 						<div className="text-2xl md:text-3xl font-bold text-gray-100">{pageData.subtitle}</div>
 						<p className="text-lg text-gray-300">{copy.intro}</p>
 						<div className="mt-8 flex items-center justify-between gap-8 flex-wrap">

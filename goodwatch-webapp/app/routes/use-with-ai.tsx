@@ -51,6 +51,7 @@ import { AppPicker, AppSetup } from "~/ui/use-with-ai/AppSetup"
 import { ChatDemo } from "~/ui/use-with-ai/ChatDemo"
 import { type PageMeta, buildMeta } from "~/utils/meta"
 import { PrimaryButton } from "~/ui/button/PrimaryButton"
+import { PageTitle } from "~/ui/heading"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -130,9 +131,7 @@ function Hero() {
 		<header className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,29rem)] lg:gap-14">
 			<div className="flex flex-col gap-5">
 				<Kicker>MCP server</Kicker>
-				<h1 className="font-display font-bold text-4xl text-white sm:text-5xl">
-					GoodWatch in your AI app
-				</h1>
+				<PageTitle className="text-4xl text-white sm:text-5xl">GoodWatch in your AI app</PageTitle>
 				<p className="max-w-xl text-lg leading-relaxed text-gray-300 sm:text-xl">
 					Ask what to watch tonight, log the episode you finished, and rate what you saw, all by
 					chatting. Every answer fits your taste and your streaming services.

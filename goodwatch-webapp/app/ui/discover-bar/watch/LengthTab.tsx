@@ -28,6 +28,7 @@ import {
 	toggleLengthPatch,
 } from "./length-choices"
 import { BlockHead, ClearLink, tabPad } from "./parts"
+import { SELECTED_SOLID } from "~/ui/selection/selected"
 
 const BLOCKS: {
 	kind: LengthKind
@@ -69,21 +70,17 @@ function Tile({
 			onClick={onClick}
 			className={`flex h-16 min-w-0 flex-col items-start justify-center gap-0.5 rounded-xl px-3.5 text-left cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
 				active
-					? "bg-white text-gray-950"
+					? SELECTED_SOLID
 					: dead
 						? "bg-white/[0.02] text-gray-600"
 						: "bg-white/[0.06] text-gray-100 hover:bg-white/[0.11]"
 			}`}
 		>
-			<span
-				className={`w-full truncate text-[14px] ${active ? "font-semibold" : "font-medium"}`}
-			>
+			<span className={`w-full truncate text-[14px] ${active ? "font-semibold" : "font-medium"}`}>
 				{preset.label}
 			</span>
 			<span className="flex w-full items-baseline gap-2">
-				<span
-					className={`truncate text-[12px] ${active ? "text-gray-600" : "text-gray-500"}`}
-				>
+				<span className={`truncate text-[12px] ${active ? "text-gray-600" : "text-gray-500"}`}>
 					{preset.note}
 				</span>
 				<span
@@ -129,9 +126,7 @@ export function LengthTab({ view }: { view: SubTabView }) {
 						>
 							{block.label}
 						</BlockHead>
-						<div
-							className={`grid gap-2 ${phone ? "grid-cols-2" : "grid-cols-4"}`}
-						>
+						<div className={`grid gap-2 ${phone ? "grid-cols-2" : "grid-cols-4"}`}>
 							{block.presets.map((preset) => (
 								<Tile
 									key={preset.key}

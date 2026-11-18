@@ -8,7 +8,7 @@ import { Link } from "@remix-run/react"
 import { CreatorChip, Credits, FindUs } from "~/ui/about/AboutParts"
 import { Kicker, MoreLink } from "~/ui/info-page"
 import { type PageMeta, buildMeta } from "~/utils/meta"
-import { SectionHeading } from "~/ui/heading"
+import { PageTitle, SectionHeading } from "~/ui/heading"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -64,9 +64,9 @@ export default function About() {
 		<div className="mx-auto flex w-full max-w-2xl flex-col gap-14 px-4 pt-10 pb-24 text-gray-300 sm:px-8 md:pt-20">
 			<header className="flex flex-col gap-6">
 				<Kicker>About GoodWatch</Kicker>
-				<h1 className="font-display font-bold text-4xl text-white sm:text-6xl">
+				<PageTitle className="text-4xl text-white sm:text-6xl">
 					Every score, every service, <span className="text-amber-400">one place.</span>
-				</h1>
+				</PageTitle>
 				<div className="flex flex-col gap-3 text-lg leading-relaxed text-gray-300 sm:text-xl">
 					<p>
 						I used to jump between IMDb, Metacritic, Rotten Tomatoes and JustWatch to decide what to

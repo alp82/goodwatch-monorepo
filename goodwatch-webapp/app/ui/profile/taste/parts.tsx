@@ -7,6 +7,7 @@ import { ProfilePoster } from "../parts"
 import { useTaste } from "./model"
 import { SectionHeading } from "~/ui/heading"
 import { SELECTED_QUIET } from "~/ui/selection/selected"
+import { Kicker } from "~/ui/eyebrow"
 
 export const PANEL = "rounded-2xl bg-white/[0.035] ring-1 ring-white/10"
 
@@ -31,11 +32,7 @@ export function SectionHead({
 	return (
 		<div className="flex flex-wrap items-end gap-x-6 gap-y-3">
 			<div className="min-w-[min(100%,18rem)] flex-1">
-				{eyebrow && (
-					<p className="mb-1 text-xs font-bold tracking-[0.18em] text-amber-400/80 uppercase">
-						{eyebrow}
-					</p>
-				)}
+				{eyebrow && <Kicker className="mb-1">{eyebrow}</Kicker>}
 				<SectionHeading id={id} className="scroll-mt-44">
 					<span className="font-light text-gray-300">{lead} </span>
 					<span className="text-amber-400">{accent}</span>

@@ -9,7 +9,7 @@ import { type Feature, HOW_IT_WORKS_FEATURES } from "~/ui/how-it-works/features"
 import { ActionLink, Kicker, MoreLink } from "~/ui/info-page"
 import { ChatDemo } from "~/ui/use-with-ai/ChatDemo"
 import { type PageMeta, buildMeta } from "~/utils/meta"
-import { SectionHeading } from "~/ui/heading"
+import { PageTitle, SectionHeading } from "~/ui/heading"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -31,9 +31,7 @@ export default function HowItWorks() {
 		<IntroDataProvider>
 			<div className="mx-auto flex w-full max-w-5xl flex-col items-center px-4 pt-10 pb-24 text-center text-gray-300 sm:px-8 md:pt-20">
 				<header className="flex max-w-2xl flex-col items-center gap-4">
-					<h1 className="font-display font-bold text-4xl text-white sm:text-6xl">
-						How GoodWatch works
-					</h1>
+					<PageTitle className="text-4xl text-white sm:text-6xl">How GoodWatch works</PageTitle>
 					<p className="text-lg leading-relaxed text-gray-300 sm:text-xl">
 						Every score, every service, one place. Here's what that looks like.
 					</p>

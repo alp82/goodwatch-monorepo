@@ -25,6 +25,7 @@ import {
 	ratingCountryPatch,
 	spacedAges,
 } from "./watch-choices"
+import { SELECTED_SOLID } from "~/ui/selection/selected"
 
 const FOCUS = "outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
 const LABEL = "text-[11px] font-bold tracking-wide text-gray-500 uppercase"
@@ -44,17 +45,13 @@ function useAge(view: SubTabView) {
 	const ladder = view.data.context.ladder ?? null
 	const steps: readonly LadderStep[] = ladder?.steps ?? []
 	const selected =
-		state.ageLimit === undefined || !steps.length
-			? null
-			: ladderStepFor(steps, state.ageLimit)
+		state.ageLimit === undefined || !steps.length ? null : ladderStepFor(steps, state.ageLimit)
 	const counts = view.counts?.optionCounts.ageLimit
 	const countries = view.counts?.ladder?.countries
 	// A pick shows at once; the server keeps a country only when the snapshot has its ratings.
 	const chosen = state.ratingCountry
 	const country =
-		chosen && (!countries || countries.includes(chosen))
-			? chosen
-			: (ladder?.country ?? "US")
+		chosen && (!countries || countries.includes(chosen)) ? chosen : (ladder?.country ?? "US")
 	return {
 		ladder,
 		steps,
@@ -62,10 +59,7 @@ function useAge(view: SubTabView) {
 		limit: state.ageLimit,
 		country,
 		/** Countries with ratings; the quick picks until the first answer names them. */
-		countries: countriesOf([
-			country,
-			...(countries?.length ? countries : QUICK_RATING_COUNTRIES),
-		]),
+		countries: countriesOf([country, ...(countries?.length ? countries : QUICK_RATING_COUNTRIES)]),
 		stepCount: (age: number) => counts?.[String(age)] ?? null,
 		pick,
 		schedulePick: (age: number) => pending.schedule(age, pick),
@@ -97,14 +91,9 @@ function RatingCountry({
 	term: string
 	setTerm: (term: string) => void
 }) {
-	const quick = quickCountries(
-		age.country,
-		phone ? 4 : QUICK_RATING_COUNTRIES.length,
-	)
+	const quick = quickCountries(age.country, phone ? 4 : QUICK_RATING_COUNTRIES.length)
 	return (
-		<div
-			className={`flex gap-2 ${phone ? "flex-col" : "flex-wrap items-center"}`}
-		>
+		<div className={`flex gap-2 ${phone ? "flex-col" : "flex-wrap items-center"}`}>
 			<div className="flex min-w-0 flex-wrap items-center gap-1.5">
 				<span className="mr-1 shrink-0 text-[12px] whitespace-nowrap text-gray-500">
 					Ratings in
@@ -120,11 +109,7 @@ function RatingCountry({
 				))}
 			</div>
 			<div className={phone ? "" : "ml-auto min-w-[180px] flex-[1_0_200px]"}>
-				<SearchField
-					value={term}
-					onChange={setTerm}
-					placeholder="Find a country"
-				/>
+				<SearchField value={term} onChange={setTerm} placeholder="Find a country" />
 			</div>
 		</div>
 	)
@@ -134,9 +119,7 @@ function RatingCountry({
 function Ladder({ age, phone }: { age: Age; phone: boolean }) {
 	const tile = (active: boolean) =>
 		`flex flex-col items-center justify-center gap-0.5 rounded-2xl cursor-pointer ${FOCUS} ${phone ? "h-20" : "h-[104px]"} ${
-			active
-				? "bg-white text-gray-950"
-				: "bg-white/[0.06] text-gray-100 hover:bg-white/[0.11]"
+			active ? SELECTED_SOLID : "bg-white/[0.06] text-gray-100 hover:bg-white/[0.11]"
 		}`
 	const choices = [null, ...age.steps]
 	return (
@@ -165,9 +148,7 @@ function Ladder({ age, phone }: { age: Age; phone: boolean }) {
 				className={tile(!age.selected)}
 			>
 				<span className="text-[20px] font-semibold">Off</span>
-				<span
-					className={`text-[11px] ${age.selected ? "text-gray-500" : "text-gray-600"}`}
-				>
+				<span className={`text-[11px] ${age.selected ? "text-gray-500" : "text-gray-600"}`}>
 					Every rating
 				</span>
 			</motion.button>
@@ -187,19 +168,13 @@ function Ladder({ age, phone }: { age: Age; phone: boolean }) {
 						onClick={() => age.pick(step.age)}
 						className={tile(on)}
 					>
-						<span
-							className={`text-[11px] ${on ? "text-gray-600" : "text-gray-500"}`}
-						>
-							Up to
-						</span>
+						<span className={`text-[11px] ${on ? "text-gray-600" : "text-gray-500"}`}>Up to</span>
 						<span
 							className={`max-w-full truncate px-1 font-semibold ${phone ? "text-[17px]" : "text-[20px]"}`}
 						>
 							{step.label}
 						</span>
-						<span
-							className={`h-4 text-[12px] ${on ? "text-gray-600" : "text-gray-400"}`}
-						>
+						<span className={`h-4 text-[12px] ${on ? "text-gray-600" : "text-gray-400"}`}>
 							{step.show ?? ""}
 						</span>
 						<span
@@ -239,9 +214,7 @@ function FreeAge({ age, phone }: { age: Age; phone: boolean }) {
 	const on = limit !== undefined
 	const button = `grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-white/[0.06] text-gray-200 cursor-pointer hover:bg-white/[0.11] disabled:opacity-30 ${FOCUS}`
 	return (
-		<div
-			className={`flex ${phone ? "flex-col gap-3" : "flex-wrap items-center gap-x-5 gap-y-3"}`}
-		>
+		<div className={`flex ${phone ? "flex-col gap-3" : "flex-wrap items-center gap-x-5 gap-y-3"}`}>
 			<div className="flex shrink-0 items-center gap-2">
 				<span className="text-[14px] text-gray-300">Watching with a</span>
 				<motion.button
@@ -332,20 +305,13 @@ export function AgeTab({ view }: { view: SubTabView }) {
 		>
 			<div className="min-w-0">
 				<RatingCountry age={age} phone={phone} term={term} setTerm={setTerm} />
-				<div
-					className={`mt-4 mb-2 flex h-5 items-center gap-2 ${finding ? "invisible" : ""}`}
-				>
+				<div className={`mt-4 mb-2 flex h-5 items-center gap-2 ${finding ? "invisible" : ""}`}>
 					<span className={LABEL}>Age limit</span>
-					{!age.ladder.local && (
-						<span className="text-[12px] text-gray-500">Plain ages</span>
-					)}
+					{!age.ladder.local && <span className="text-[12px] text-gray-500">Plain ages</span>}
 				</div>
 				{/* Country matches take the ladder's place, so nothing below moves. */}
 				<div className="relative">
-					<div
-						className={finding ? "invisible" : ""}
-						aria-hidden={finding || undefined}
-					>
+					<div className={finding ? "invisible" : ""} aria-hidden={finding || undefined}>
 						<Ladder age={age} phone={phone} />
 						<div className={phone ? "mt-5" : "mt-6"}>
 							<FreeAge age={age} phone={phone} />

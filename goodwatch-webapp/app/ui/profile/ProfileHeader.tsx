@@ -19,6 +19,7 @@ import { BUTTON_BOX } from "./parts"
 import { PROFILE_TAB_PARTS, type ProfileTab } from "./paths"
 import type { WhorlAttribute } from "./taste/Whorl"
 import { PrimaryButton } from "~/ui/button/PrimaryButton"
+import { PageTitle } from "~/ui/heading"
 
 /**
  * The shell as a signed-out visitor sees it: the owner's own shell with every part guests may not see emptied. The
@@ -78,9 +79,9 @@ export function HandleStrip() {
 			<div className={`${WRAP} flex h-full items-center gap-3 sm:gap-5`}>
 				<UserCircleIcon className="size-11 shrink-0 text-gray-500 sm:size-16" aria-hidden />
 				<div className="min-w-0 flex-1">
-					<h1 className="font-display font-bold truncate text-xl leading-tight text-white sm:text-3xl">
+					<PageTitle className="truncate text-xl leading-tight text-white sm:text-3xl">
 						Your taste
-					</h1>
+					</PageTitle>
 					<p className="truncate text-xs text-gray-400 sm:text-sm">
 						Pick a handle to get a profile you can share.
 					</p>
