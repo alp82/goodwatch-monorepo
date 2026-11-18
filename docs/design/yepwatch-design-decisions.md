@@ -24,7 +24,7 @@ Design diff should show: the YepWatch start page, the GoodWatch start page, both
 
 ### F2: Fonts
 
-Status: decided November 18, 2026, on one condition. Option B: GoodWatch on the web sets body text in Gabarito, if Lighthouse scores don't get worse. A Lighthouse comparison is running; the result goes here. YepWatch keeps Gabarito for everything. Design diff: branch `prototype/yepwatch-design-f2`, page `docs/design/yepwatch-design-diffs/F2/index.html`.
+Status: decided November 18, 2026, on one condition. Option B: GoodWatch on the web sets body text in Gabarito, if Lighthouse scores don't get worse. They don't: on five pages (start, Discover, a title, a person, /movies/best), phone and desktop, Performance, Accessibility, and SEO stayed within run-to-run noise, with no extra font bytes, as long as body text keeps the one preloaded Latin file and gets size-matched fallback faces (report: `docs/design/yepwatch-design-diffs/F2/lighthouse.md` on the prototype branch). Shipped that way in `goodwatch-webapp/app/tailwind.css` (`--font-sans`) and `app/fonts/gabarito.css`. YepWatch keeps Gabarito for everything. Design diff: branch `prototype/yepwatch-design-f2`, page `docs/design/yepwatch-design-diffs/F2/index.html`.
 
 YepWatch sets everything in Gabarito Regular and Bold. GoodWatch on the web uses Gabarito (up to weight 900) for the brand and some page titles and the system sans for everything else (web open decision D3).
 

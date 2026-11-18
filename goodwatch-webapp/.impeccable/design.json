@@ -306,7 +306,7 @@
 			},
 			"headline": {
 				"displayName": "Headline",
-				"purpose": "Every section heading: system 600, -0.025em (D4)."
+				"purpose": "Every section heading: Gabarito 600, -0.025em (D4)."
 			},
 			"title": {
 				"displayName": "Title",
@@ -431,7 +431,7 @@
 			"refersTo": "button-primary",
 			"description": "The one amber action on a screen.",
 			"html": "<button class=\"ds-btn-primary\">Sign up</button>",
-			"css": ".ds-btn-primary{background:#fbbf24;color:#060606;font:900 14px/1 system-ui,sans-serif;min-height:44px;padding:0 20px;border:0;border-radius:9999px;cursor:pointer;transition:background-color .15s}.ds-btn-primary:hover{background:oklch(87.9% 0.169 91.605)}.ds-btn-primary:focus-visible{outline:2px solid #fff;outline-offset:2px}"
+			"css": ".ds-btn-primary{background:#fbbf24;color:#060606;font:900 14px/1 Gabarito,system-ui,sans-serif;min-height:44px;padding:0 20px;border:0;border-radius:9999px;cursor:pointer;transition:background-color .15s}.ds-btn-primary:hover{background:oklch(87.9% 0.169 91.605)}.ds-btn-primary:focus-visible{outline:2px solid #fff;outline-offset:2px}"
 		},
 		{
 			"name": "Light Button",
@@ -439,7 +439,7 @@
 			"refersTo": "button-light",
 			"description": "Strong secondary action on dark.",
 			"html": "<button class=\"ds-btn-light\">Watch now</button>",
-			"css": ".ds-btn-light{background:#fff;color:#000;font:600 14px/20px system-ui,sans-serif;padding:6px 12px;border:0;border-radius:9999px;cursor:pointer}.ds-btn-light:hover{background:oklch(92.8% 0.006 264.531)}.ds-btn-light:focus-visible{outline:2px solid #fbbf24;outline-offset:2px}"
+			"css": ".ds-btn-light{background:#fff;color:#000;font:600 14px/20px Gabarito,system-ui,sans-serif;padding:6px 12px;border:0;border-radius:9999px;cursor:pointer}.ds-btn-light:hover{background:oklch(92.8% 0.006 264.531)}.ds-btn-light:focus-visible{outline:2px solid #fbbf24;outline-offset:2px}"
 		},
 		{
 			"name": "Ghost Button",
@@ -447,7 +447,7 @@
 			"refersTo": "button-ghost",
 			"description": "Default secondary action.",
 			"html": "<button class=\"ds-btn-ghost\">Want to See</button>",
-			"css": ".ds-btn-ghost{background:rgb(255 255 255/.1);color:oklch(96.7% 0.003 264.542);font:600 12px/16px system-ui,sans-serif;padding:4px 12px;border:0;border-radius:9999px;cursor:pointer;transition:background-color .15s}.ds-btn-ghost:hover{background:rgb(255 255 255/.2)}.ds-btn-ghost:focus-visible{outline:2px solid #fbbf24;outline-offset:2px}"
+			"css": ".ds-btn-ghost{background:rgb(255 255 255/.1);color:oklch(96.7% 0.003 264.542);font:600 12px/16px Gabarito,system-ui,sans-serif;padding:4px 12px;border:0;border-radius:9999px;cursor:pointer;transition:background-color .15s}.ds-btn-ghost:hover{background:rgb(255 255 255/.2)}.ds-btn-ghost:focus-visible{outline:2px solid #fbbf24;outline-offset:2px}"
 		},
 		{
 			"name": "Action Button",
@@ -455,7 +455,7 @@
 			"refersTo": "button-action",
 			"description": "Title actions such as Want to See and Not interested.",
 			"html": "<button class=\"ds-act\"><svg viewBox=\"0 0 20 20\" width=\"16\" height=\"16\" fill=\"currentColor\"><path d=\"M10 2a.75.75 0 0 1 .75.75v6.5h6.5a.75.75 0 0 1 0 1.5h-6.5v6.5a.75.75 0 0 1-1.5 0v-6.5h-6.5a.75.75 0 0 1 0-1.5h6.5v-6.5A.75.75 0 0 1 10 2Z\"/></svg>Want to See</button>",
-			"css": ".ds-act{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 16px;border:0;border-radius:8px;background:rgb(255 255 255/.06);box-shadow:inset 0 0 0 1px rgb(255 255 255/.1);color:#fff;font:600 14px system-ui,sans-serif;cursor:pointer}.ds-act svg{color:oklch(87.9% 0.169 91.605)}.ds-act:hover{background:rgb(255 255 255/.12)}.ds-act:focus-visible{outline:2px solid #fbbf24;outline-offset:2px}"
+			"css": ".ds-act{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 16px;border:0;border-radius:8px;background:rgb(255 255 255/.06);box-shadow:inset 0 0 0 1px rgb(255 255 255/.1);color:#fff;font:600 14px Gabarito,system-ui,sans-serif;cursor:pointer}.ds-act svg{color:oklch(87.9% 0.169 91.605)}.ds-act:hover{background:rgb(255 255 255/.12)}.ds-act:focus-visible{outline:2px solid #fbbf24;outline-offset:2px}"
 		},
 		{
 			"name": "Text Field",
@@ -463,7 +463,7 @@
 			"refersTo": "input-text",
 			"description": "Form text field with a caption label.",
 			"html": "<label class=\"ds-field\"><span>Display name</span><input value=\"Alex\"></label>",
-			"css": ".ds-field{display:flex;flex-direction:column;gap:6px;width:280px}.ds-field span{font:600 11px system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:oklch(55.1% 0.027 264.364)}.ds-field input{min-height:44px;padding:0 12px;border:0;border-radius:8px;background:oklch(21% 0.034 264.665);box-shadow:inset 0 0 0 1px rgb(255 255 255/.15);color:#fff;font:400 14px system-ui,sans-serif;outline:0}.ds-field input:focus{box-shadow:inset 0 0 0 2px #fbbf24}"
+			"css": ".ds-field{display:flex;flex-direction:column;gap:6px;width:280px}.ds-field span{font:600 11px Gabarito,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:oklch(55.1% 0.027 264.364)}.ds-field input{min-height:44px;padding:0 12px;border:0;border-radius:8px;background:oklch(21% 0.034 264.665);box-shadow:inset 0 0 0 1px rgb(255 255 255/.15);color:#fff;font:400 14px Gabarito,system-ui,sans-serif;outline:0}.ds-field input:focus{box-shadow:inset 0 0 0 2px #fbbf24}"
 		},
 		{
 			"name": "Search Field",
@@ -471,7 +471,7 @@
 			"refersTo": "input-search",
 			"description": "Global search pill in the top bar.",
 			"html": "<label class=\"ds-search\"><svg viewBox=\"0 0 20 20\" width=\"16\" height=\"16\" fill=\"currentColor\"><path fill-rule=\"evenodd\" d=\"M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.45 4.39l3.08 3.08a.75.75 0 1 1-1.06 1.06l-3.08-3.08A7 7 0 0 1 2 9Z\"/></svg><input placeholder=\"Search titles, people, moods\"><kbd>Ctrl K</kbd></label>",
-			"css": ".ds-search{display:flex;align-items:center;gap:10px;height:40px;padding:0 8px 0 16px;width:360px;background:rgb(255 255 255/.05);border-radius:9999px;box-shadow:inset 0 0 0 1px rgb(255 255 255/.15);color:#fbbf24}.ds-search:focus-within{box-shadow:inset 0 0 0 2px #fbbf24}.ds-search input{flex:1;background:none;border:0;outline:0;color:#fff;font:400 14px system-ui,sans-serif}.ds-search input::placeholder{color:oklch(70.7% 0.022 261.325)}.ds-search kbd{font:500 11px system-ui;color:oklch(70.7% 0.022 261.325);background:rgb(255 255 255/.1);padding:2px 6px;border-radius:4px}"
+			"css": ".ds-search{display:flex;align-items:center;gap:10px;height:40px;padding:0 8px 0 16px;width:360px;background:rgb(255 255 255/.05);border-radius:9999px;box-shadow:inset 0 0 0 1px rgb(255 255 255/.15);color:#fbbf24}.ds-search:focus-within{box-shadow:inset 0 0 0 2px #fbbf24}.ds-search input{flex:1;background:none;border:0;outline:0;color:#fff;font:400 14px Gabarito,system-ui,sans-serif}.ds-search input::placeholder{color:oklch(70.7% 0.022 261.325)}.ds-search kbd{font:500 11px Gabarito,system-ui;color:oklch(70.7% 0.022 261.325);background:rgb(255 255 255/.1);padding:2px 6px;border-radius:4px}"
 		},
 		{
 			"name": "Switch",
@@ -487,7 +487,7 @@
 			"refersTo": "segment-selected",
 			"description": "Pick one option; the selected segment is white.",
 			"html": "<div class=\"ds-seg\"><button aria-pressed=\"true\">All <b>1,015</b></button><button>Movies</button><button>Shows</button></div>",
-			"css": ".ds-seg{display:inline-flex;gap:2px;padding:4px;border-radius:9999px;background:rgb(255 255 255/.06);box-shadow:inset 0 0 0 1px rgb(255 255 255/.1)}.ds-seg button{border:0;background:none;padding:6px 14px;border-radius:9999px;color:oklch(87.2% 0.01 258.338);font:600 14px system-ui,sans-serif;cursor:pointer}.ds-seg button:hover{color:#fff}.ds-seg button[aria-pressed=true]{background:#fff;color:#000}.ds-seg b{font-weight:600;opacity:.55}"
+			"css": ".ds-seg{display:inline-flex;gap:2px;padding:4px;border-radius:9999px;background:rgb(255 255 255/.06);box-shadow:inset 0 0 0 1px rgb(255 255 255/.1)}.ds-seg button{border:0;background:none;padding:6px 14px;border-radius:9999px;color:oklch(87.2% 0.01 258.338);font:600 14px Gabarito,system-ui,sans-serif;cursor:pointer}.ds-seg button:hover{color:#fff}.ds-seg button[aria-pressed=true]{background:#fff;color:#000}.ds-seg b{font-weight:600;opacity:.55}"
 		},
 		{
 			"name": "Section Tabs",
@@ -495,7 +495,7 @@
 			"refersTo": "tab-active",
 			"description": "Grouped top-bar tabs; the active one is amber-tinted.",
 			"html": "<nav class=\"ds-tabs\"><a>Watch</a><a aria-current=\"page\">Explore</a><a>Profile</a></nav>",
-			"css": ".ds-tabs{display:inline-flex;gap:4px;padding:4px;border-radius:12px;box-shadow:inset 0 0 0 1px rgb(255 255 255/.1);background:#060606}.ds-tabs a{padding:6px 12px;border-radius:8px;font:600 14px/20px system-ui,sans-serif;color:oklch(87.2% 0.01 258.338);cursor:pointer}.ds-tabs a:hover{background:rgb(255 255 255/.1);color:#fff}.ds-tabs a[aria-current]{background:rgb(251 191 36/.15);color:oklch(87.9% 0.169 91.605)}"
+			"css": ".ds-tabs{display:inline-flex;gap:4px;padding:4px;border-radius:12px;box-shadow:inset 0 0 0 1px rgb(255 255 255/.1);background:#060606}.ds-tabs a{padding:6px 12px;border-radius:8px;font:600 14px/20px Gabarito,system-ui,sans-serif;color:oklch(87.2% 0.01 258.338);cursor:pointer}.ds-tabs a:hover{background:rgb(255 255 255/.1);color:#fff}.ds-tabs a[aria-current]{background:rgb(251 191 36/.15);color:oklch(87.9% 0.169 91.605)}"
 		},
 		{
 			"name": "Poster Card",
@@ -503,7 +503,7 @@
 			"refersTo": "card-poster",
 			"description": "2:3 poster with score badge and title band.",
 			"html": "<div class=\"ds-poster\"><span class=\"ds-score\">74</span><div class=\"ds-band\"><b>The Mentalist</b><small>2008</small></div></div>",
-			"css": ".ds-poster{position:relative;width:180px;aspect-ratio:2/3;border-radius:8px;overflow:hidden;background:linear-gradient(160deg,oklch(37.3% 0.034 259.733),oklch(27.8% 0.033 256.848));box-shadow:0 0 0 1px rgb(255 255 255/.1)}.ds-score{position:absolute;top:8px;right:8px;background:#65a32d;color:#fff;font:800 13px/1 system-ui;padding:4px 6px;border-radius:6px;box-shadow:0 0 0 2px #060606}.ds-band{position:absolute;inset:auto 0 0;padding:28px 8px 8px;background:linear-gradient(transparent,rgb(6 6 6/.9));display:flex;flex-direction:column;color:#fff;font:700 13px/1.2 system-ui}.ds-band small{font-weight:400;color:oklch(87.2% 0.01 258.338)}"
+			"css": ".ds-poster{position:relative;width:180px;aspect-ratio:2/3;border-radius:8px;overflow:hidden;background:linear-gradient(160deg,oklch(37.3% 0.034 259.733),oklch(27.8% 0.033 256.848));box-shadow:0 0 0 1px rgb(255 255 255/.1)}.ds-score{position:absolute;top:8px;right:8px;background:#65a32d;color:#fff;font:800 13px/1 Gabarito,system-ui;padding:4px 6px;border-radius:6px;box-shadow:0 0 0 2px #060606}.ds-band{position:absolute;inset:auto 0 0;padding:28px 8px 8px;background:linear-gradient(transparent,rgb(6 6 6/.9));display:flex;flex-direction:column;color:#fff;font:700 13px/1.2 Gabarito,system-ui}.ds-band small{font-weight:400;color:oklch(87.2% 0.01 258.338)}"
 		},
 		{
 			"name": "Section Header",
@@ -511,7 +511,7 @@
 			"refersTo": "headline",
 			"description": "Title page section header with icon tile.",
 			"html": "<div class=\"ds-sh\"><span><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><path d=\"M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z\"/></svg></span><h2>Summary</h2></div>",
-			"css": ".ds-sh{display:flex;align-items:center;gap:12px}.ds-sh span{display:grid;place-items:center;width:36px;height:36px;border-radius:8px;background:rgb(255 255 255/.04);box-shadow:inset 0 0 0 1px rgb(255 255 255/.1);color:rgb(252 211 77/.9)}.ds-sh h2{margin:0;font:600 24px/1.33 system-ui,sans-serif;letter-spacing:-.025em;color:#fff}"
+			"css": ".ds-sh{display:flex;align-items:center;gap:12px}.ds-sh span{display:grid;place-items:center;width:36px;height:36px;border-radius:8px;background:rgb(255 255 255/.04);box-shadow:inset 0 0 0 1px rgb(255 255 255/.1);color:rgb(252 211 77/.9)}.ds-sh h2{margin:0;font:600 24px/1.33 Gabarito,system-ui,sans-serif;letter-spacing:-.025em;color:#fff}"
 		},
 		{
 			"name": "Rating Source Chips",
@@ -519,7 +519,7 @@
 			"refersTo": "source-chip",
 			"description": "IMDb, Letterboxd, and Metacritic scores.",
 			"html": "<div class=\"ds-src\"><span class=\"imdb\">IMDb 9.2</span><span class=\"lb\">4.5 /5</span><span class=\"mc\">100 | 9.2</span></div>",
-			"css": ".ds-src{display:flex;gap:6px}.ds-src span{display:inline-flex;align-items:center;height:28px;padding:0 6px;border-radius:6px;font:600 13px system-ui,sans-serif;font-variant-numeric:tabular-nums}.ds-src .imdb{background:#f6c800;color:#000}.ds-src .lb{background:#2c3440;color:#fff}.ds-src .mc{background:#010101;color:#fff;box-shadow:inset 0 0 0 1px rgb(255 255 255/.15)}"
+			"css": ".ds-src{display:flex;gap:6px}.ds-src span{display:inline-flex;align-items:center;height:28px;padding:0 6px;border-radius:6px;font:600 13px Gabarito,system-ui,sans-serif;font-variant-numeric:tabular-nums}.ds-src .imdb{background:#f6c800;color:#000}.ds-src .lb{background:#2c3440;color:#fff}.ds-src .mc{background:#010101;color:#fff;box-shadow:inset 0 0 0 1px rgb(255 255 255/.15)}"
 		},
 		{
 			"name": "Notice",
@@ -527,7 +527,7 @@
 			"refersTo": "panel",
 			"description": "Tinted status notice.",
 			"html": "<p class=\"ds-note\">Your services are saved for Germany.</p>",
-			"css": ".ds-note{margin:0;max-width:360px;padding:12px 14px;border-radius:12px;background:rgb(2 44 34/.5);box-shadow:inset 0 0 0 1px rgb(6 95 70/.7);color:oklch(95% 0.05 163);font:400 14px/1.45 system-ui,sans-serif}"
+			"css": ".ds-note{margin:0;max-width:360px;padding:12px 14px;border-radius:12px;background:rgb(2 44 34/.5);box-shadow:inset 0 0 0 1px rgb(6 95 70/.7);color:oklch(95% 0.05 163);font:400 14px/1.45 Gabarito,system-ui,sans-serif}"
 		}
 	],
 	"narrative": {
@@ -538,7 +538,7 @@
 			"Amber as the brand light; one filled amber button per view, the main action (D7).",
 			"Translucent white layers (4-20%) and thin white rings instead of shadows.",
 			"Pills for chips, toggles, and most buttons; 8-16px corners for cards, panels, fields, and action buttons.",
-			"Gabarito for the brand and many page titles, the system sans for data and controls.",
+			"Gabarito for everything, like YepWatch: the brand, page titles, data, and controls (F2).",
 			"An 11-step score scale that is the app's main data color, plus fixed colors for rating sources and the fingerprint."
 		],
 		"rules": [
@@ -564,7 +564,7 @@
 			},
 			{
 				"name": "The One Gabarito Source Rule",
-				"body": "Gabarito is declared in `app/fonts/gabarito.css`. Don't add another inline `fontFamily` string for it; seven files already do.",
+				"body": "Gabarito and its fallback faces are declared in `app/fonts/gabarito.css`, and `--font-sans` makes it the default. Don't add another inline `fontFamily` string or `font-['Gabarito']` for it; seven files already do, and they are redundant now.",
 				"section": "typography"
 			},
 			{
@@ -579,7 +579,7 @@
 			"**Do** use pills for chips, toggles, and segmented controls.",
 			"**Do** use the darkened tile color behind white score numbers.",
 			"**Do** let posters and backdrops carry color.",
-			"**Do** use the system sans for data, controls, and body text, with tabular figures for numbers.",
+			"**Do** use the default font (Gabarito) for data, controls, and body text, with `tabular-nums` for numbers in columns or numbers that change.",
 			"**Do** follow the decided variant for D1 to D7.",
 			"**Do** animate only transform and opacity, and keep interface motion at 120-300ms.",
 			"**Do** make every interactive element at least 40px tall on touch, with a visible focus ring."

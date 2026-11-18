@@ -57,6 +57,8 @@ Design diff should show: Discover filters, the title page (Stream/Rent/Buy, epis
 
 Status: decided on November 18, 2026: **Gabarito 700 for every page h1**, with no extra letter spacing (the wordmark and Discover weight), including title and person names, member, info, sign-in, and legal pages. Sizes stay as they are.
 
+Since F2 (`docs/design/yepwatch-design-decisions.md`), body text is Gabarito too, so the h1s listed as "System font" below already render in Gabarito at their own weight. What remains for D3 is the weight (700) and letter spacing.
+
 | Variant | Where |
 |---|---|
 | Gabarito 900, -0.03em | Member pages and Watch (`my-pages/style.ts:3`, `watch-next/style.ts:4`), /new |
@@ -71,6 +73,8 @@ Design diff should show: a title page, a person page, Discover, /new, Watch, /mo
 ### D4: Section heading
 
 Status: decided on November 18, 2026: **system font, semibold, -0.025em everywhere**, 20 px on phones and 24 px from 640 px. Group headings are one step smaller. The icon tile stays where it is today (title pages) and isn't added elsewhere.
+
+Since F2, "system font" here means the body font, which is now Gabarito.
 
 | Variant | Where |
 |---|---|

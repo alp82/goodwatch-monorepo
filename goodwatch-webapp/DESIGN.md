@@ -46,34 +46,34 @@ typography:
     lineHeight: 1.1
     letterSpacing: "normal"
   headline:
-    fontFamily: "ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "Gabarito, 'Gabarito Fallback', 'Gabarito Fallback Roboto', ui-sans-serif, system-ui, sans-serif"
     fontSize: "1.5rem"
     fontWeight: 600
     lineHeight: 1.33
     letterSpacing: "-0.025em"
   title:
-    fontFamily: "ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "Gabarito, 'Gabarito Fallback', 'Gabarito Fallback Roboto', ui-sans-serif, system-ui, sans-serif"
     fontSize: "1.125rem"
     fontWeight: 600
     lineHeight: 1.4
   body:
-    fontFamily: "ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "Gabarito, 'Gabarito Fallback', 'Gabarito Fallback Roboto', ui-sans-serif, system-ui, sans-serif"
     fontSize: "1rem"
     fontWeight: 400
     lineHeight: 1.625
   body-small:
-    fontFamily: "ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "Gabarito, 'Gabarito Fallback', 'Gabarito Fallback Roboto', ui-sans-serif, system-ui, sans-serif"
     fontSize: "0.875rem"
     fontWeight: 400
     lineHeight: 1.43
   caption:
-    fontFamily: "ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "Gabarito, 'Gabarito Fallback', 'Gabarito Fallback Roboto', ui-sans-serif, system-ui, sans-serif"
     fontSize: "0.6875rem"
     fontWeight: 600
     lineHeight: 1.45
     letterSpacing: "0.14em"
   kicker:
-    fontFamily: "ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "Gabarito, 'Gabarito Fallback', 'Gabarito Fallback Roboto', ui-sans-serif, system-ui, sans-serif"
     fontSize: "0.75rem"
     fontWeight: 700
     lineHeight: 1.33
@@ -189,7 +189,7 @@ Density is high but calm. Poster grids, score rows, and episode grids carry a lo
 - Amber as the brand light. One filled amber button per view (D7): the view's main action. Amber text, icons, links, award lines, light tints, and focus rings are fine; solid amber that isn't the main action isn't.
 - Translucent white layers (4-20%) and thin white rings instead of shadows.
 - Pills for chips, toggles, and most buttons; 8-16px corners for cards, panels, fields, and action buttons.
-- Gabarito for the brand and many page titles, the system sans for data and controls.
+- Gabarito for everything, like YepWatch: the brand, page titles, data, and controls (F2).
 - An 11-step score scale that is the app's main data color, plus fixed colors for rating sources and the fingerprint.
 
 ## Colors
@@ -242,27 +242,28 @@ A cool, dark navy room with a warm amber lamp, translucent white layers, and a s
 
 ## Typography
 
-**Display font:** Gabarito, variable 400-900, self-hosted (with metric-matched Arial Bold and Roboto Bold fallbacks). The same files are also registered as "Gabarito Brand" for the wordmark and the `--font-display` theme token (`font-display` in Tailwind).
-**Body font:** the system sans (`ui-sans-serif, system-ui`).
+**Display font:** Gabarito, variable 400-900, self-hosted. The same files are also registered as "Gabarito Brand" for the wordmark and the `--font-display` theme token (`font-display` in Tailwind).
+**Body font:** Gabarito too (F2, decided November 18, 2026). Tailwind's `--font-sans` (`app/tailwind.css`) starts with Gabarito, so the page default, `font-sans`, and every text without its own family use it. The system sans (`ui-sans-serif, system-ui`) is only the last fallback. Code stays monospace (`font-mono`).
+**Fallback faces:** until the font arrives (`font-display: swap`), text shows "Gabarito Fallback" (Arial or Liberation Sans) or "Gabarito Fallback Roboto" (Android), scaled to Gabarito's width and given its ascent and descent, with a regular face for 400-599 and a bold face for 600-900 (`app/fonts/gabarito.css`). The swap doesn't move text. The root route preloads the one Latin file; don't add more preloads or weight files. Lighthouse scores weren't worse with this on five pages, phone and desktop (`docs/design/yepwatch-design-decisions.md`, F2).
 
-**Character:** Gabarito is rounded, friendly, and heavy. It carries the brand and many page titles. The system sans keeps dense data, like scores, years, runtimes, and episode numbers, crisp and native on every device. Numbers in tables and badges use tabular figures.
+**Character:** Gabarito is rounded, friendly, and heavy. It carries the brand, page titles, and the dense data, like scores, years, runtimes, and episode numbers, so GoodWatch and YepWatch read as one family. Its default figures are proportional: numbers that line up in columns or change in place need `tabular-nums`.
 
 ### Hierarchy
 
-- **Display** (Gabarito 700, 34-52px, line height 1.1, normal letter spacing): every page h1, including title and person names, member, info, sign-in, and legal pages (D3). Use `<PageTitle>` (`~/ui/heading`; it writes `font-display font-bold`, the page passes size and color). Hot sets the same face in its CSS; the home page's "Find something to watch" h1 is still the system font at 800 (`.start-heading`); the small amber h1s of the rating flow and the quick list are labels, not page titles. Big brand numbers, hero and card names keep Gabarito 900 (`DISPLAY` in `my-pages/style.ts`: `font-display font-black tracking-[-0.03em]`).
-- **Headline** (system 600, 20px on phones and 24px from 640px, -0.025em): every section heading (D4), written as `<SectionHeading>` from `app/ui/heading.tsx`. Group headings are one step smaller (`size="group"`). Title pages keep their icon tile; other pages don't add one.
-- **Title** (system 600, 18px): card titles, sheet titles, settings row labels, and list headings.
-- **Body** (system 400, 16-18px, line height 1.625): synopses and long-form text. The blog and info pages run 16px on phones and 18px from `sm` up, in a 672px column.
-- **Body small** (system 400-600, 14px): the workhorse size for controls, metadata, lists, and settings hints.
-- **Caption** (system 600, 11px, +0.14em, uppercase, ink-faint `gray-500`): section labels such as ON THIS PAGE, footer and settings groups, command palette sections, fact labels, and form labels.
-- **Kicker** (system 700, 12px, +0.18em, uppercase, `amber-400`): the line above a page or card title: info pages, blog posts and cards, the person page's department, share list headers, and quick view eyebrows.
+- **Display** (Gabarito 700, 34-52px, line height 1.1, normal letter spacing): every page h1, including title and person names, member, info, sign-in, and legal pages (D3). Use `<PageTitle>` (`~/ui/heading`; it writes `font-display font-bold`, the page passes size and color). Hot sets the same face in its CSS; the home page's "Find something to watch" h1 is set at 800 (`.start-heading`); the small amber h1s of the rating flow and the quick list are labels, not page titles. Big brand numbers, hero and card names keep Gabarito 900 (`DISPLAY` in `my-pages/style.ts`: `font-display font-black tracking-[-0.03em]`).
+- **Headline** (Gabarito 600, 20px on phones and 24px from 640px, -0.025em): every section heading (D4; D4 said "system font", which means the body font, Gabarito since F2), written as `<SectionHeading>` from `app/ui/heading.tsx`. Group headings are one step smaller (`size="group"`). Title pages keep their icon tile; other pages don't add one.
+- **Title** (Gabarito 600, 18px): card titles, sheet titles, settings row labels, and list headings.
+- **Body** (Gabarito 400, 16-18px, line height 1.625): synopses and long-form text. The blog and info pages run 16px on phones and 18px from `sm` up, in a 672px column.
+- **Body small** (Gabarito 400-600, 14px): the workhorse size for controls, metadata, lists, and settings hints.
+- **Caption** (Gabarito 600, 11px, +0.14em, uppercase, ink-faint `gray-500`): section labels such as ON THIS PAGE, footer and settings groups, command palette sections, fact labels, and form labels.
+- **Kicker** (Gabarito 700, 12px, +0.18em, uppercase, `amber-400`): the line above a page or card title: info pages, blog posts and cards, the person page's department, share list headers, and quick view eyebrows.
 - Uppercase labels come in these two styles only (D6), written as `<Caption>` and `<Kicker>` from `app/ui/eyebrow.tsx` (`as` for the element, `className` for layout), or the `CAPTION` and `KICKER` class strings where the element can't be the component. Tiny labels inside controls (rail card kinds, "Your score", Discover's "Mode") keep their own look. Badges, pills, and labels whose color carries meaning (taste groups, the sky "new" heads) aren't eyebrows. Older hand-written uppercase labels outside the D6 sites (about 90 class strings with their own tracking) haven't moved yet; new work uses the two styles.
 
 ### Named Rules
 
 **The Heavy Weights Rule.** Hierarchy comes from weight (600-900) and size, not from color. Buttons use 700-900.
 
-**The One Gabarito Source Rule.** Gabarito is declared in `app/fonts/gabarito.css`. Components reach it through the `font-display` utility (the `--font-display` theme token), not an inline `fontFamily` string or `font-['Gabarito']`. A few places still do (`font-['Gabarito']` in /stats and the start spotlight, `font-family: "Gabarito"` in the start, intro, living room, TV and Hot CSS files); don't add more.
+**The One Gabarito Source Rule.** Gabarito and its fallback faces are declared in `app/fonts/gabarito.css`. `--font-sans` makes it the default for all text (F2), and the `font-display` utility (the `--font-display` theme token) is for display weights. Don't add an inline `fontFamily` string or `font-['Gabarito']`; the few that remain (`font-['Gabarito']` in /stats and the start spotlight, `font-family: "Gabarito"` in the start, intro, living room, TV and Hot CSS files) are redundant now.
 
 ## Layout
 
@@ -400,7 +401,7 @@ These are separate worlds. They don't set the rules for controls.
 - **Do** use pills for chips, toggles, and segmented controls.
 - **Do** use the darkened tile color behind white score numbers.
 - **Do** let posters and backdrops carry color.
-- **Do** use the system sans for data, controls, and body text, with tabular figures for numbers.
+- **Do** use the default font (Gabarito) for data, controls, and body text, with `tabular-nums` for numbers in columns or numbers that change.
 - **Do** follow the decided variant for D1 to D7.
 - **Do** animate only transform and opacity, and keep interface motion at 120-300ms.
 - **Do** make every interactive element at least 40px tall on touch, with a visible focus ring.

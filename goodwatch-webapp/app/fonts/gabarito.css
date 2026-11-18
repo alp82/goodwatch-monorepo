@@ -1,5 +1,5 @@
-/* Gabarito, the brand font, weights 400 to 900 in one variable file per subset. The files are the ones Google
-   Fonts serves (SIL Open Font License, see public/fonts/share-card/OFL-Gabarito.txt). A browser downloads a
+/* Gabarito, the brand and body font, weights 400 to 900 in one variable file per subset. The files are the ones
+   Google Fonts serves (SIL Open Font License, see public/fonts/share-card/OFL-Gabarito.txt). A browser downloads a
    subset only when the page shows text in it. tailwind.css imports this file, so every page has these rules,
    and the root route preloads the Latin file (#315). Don't import it from a route's stylesheet as well. */
 @font-face {
@@ -50,14 +50,27 @@
 		U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
-/* What brand headers show until the font has loaded (font-display: swap): a local bold font scaled to
-   Gabarito's width at weight 700 and given its ascent and descent, so the swap doesn't move or rewrap text.
-   size-adjust is Gabarito's average advance width over the local font's, weighted by English letter
-   frequency. The overrides are Gabarito's ascent (0.94 em) and descent (0.26 em) over size-adjust.
-   Arial Bold: Windows, macOS, iOS, and Linux (Liberation Sans has Arial's widths). Roboto Bold: Android. */
+/* What Gabarito text shows until the font has loaded (font-display: swap): a local font scaled to Gabarito's
+   width and given its ascent and descent, so the swap doesn't move or rewrap text. Body text (Tailwind's
+   --font-sans, tailwind.css) and brand headers both list these after Gabarito. Each family has a regular face for
+   weights 400 to 599 and a bold face for 600 to 900, so body text and bold titles each get matching widths.
+   size-adjust is Gabarito's average advance width (at 400 or 700) over the local font's, weighted by English
+   letter frequency. The overrides are Gabarito's ascent (0.94 em) and descent (0.26 em) over size-adjust.
+   Arial: Windows, macOS, iOS, and Linux (Liberation Sans has Arial's widths). Roboto: Android. Measured for F2
+   (docs/design/yepwatch-design-decisions.md): with these faces, Gabarito body text didn't shift layout more than
+   the system font did. */
 @font-face {
 	font-family: "Gabarito Fallback";
-	font-weight: 400 900;
+	font-weight: 400 599;
+	src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("LiberationSans");
+	size-adjust: 99.4%;
+	ascent-override: 94.56%;
+	descent-override: 26.16%;
+	line-gap-override: 0%;
+}
+@font-face {
+	font-family: "Gabarito Fallback";
+	font-weight: 600 900;
 	src: local("Arial Bold"), local("Arial-BoldMT"), local("Liberation Sans Bold");
 	size-adjust: 93.98%;
 	ascent-override: 100.02%;
@@ -66,7 +79,16 @@
 }
 @font-face {
 	font-family: "Gabarito Fallback Roboto";
-	font-weight: 400 900;
+	font-weight: 400 599;
+	src: local("Roboto"), local("Roboto-Regular");
+	size-adjust: 100.01%;
+	ascent-override: 93.99%;
+	descent-override: 26%;
+	line-gap-override: 0%;
+}
+@font-face {
+	font-family: "Gabarito Fallback Roboto";
+	font-weight: 600 900;
 	src: local("Roboto Bold"), local("Roboto-Bold");
 	size-adjust: 99.93%;
 	ascent-override: 94.07%;

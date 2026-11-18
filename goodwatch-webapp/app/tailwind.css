@@ -40,6 +40,12 @@
 	--container-5xs: 12rem;
 	--container-4xs: 14rem;
 
+	/* Body text in Gabarito, like YepWatch (F2). Its fallback faces (fonts/gabarito.css) match Gabarito's widths, so
+	   text doesn't move when the font arrives. The root route preloads the one Latin file, weights 400 to 900. */
+	--font-sans:
+		"Gabarito", "Gabarito Fallback", "Gabarito Fallback Roboto", ui-sans-serif, system-ui,
+		sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
 	--color-gray-950: #060606;
 
 	/* One amber for the GoodWatch family: the wordmark, start.css, the OG cards and YepWatch all draw #fbbf24

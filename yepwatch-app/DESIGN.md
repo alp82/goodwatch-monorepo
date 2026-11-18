@@ -124,7 +124,7 @@ components:
 
 This file records YepWatch's visual system as it is in the code on November 18, 2026. Where the app uses competing variants for the same thing, this file names them and points to an open decision in `docs/design/yepwatch-design-decisions.md`. Until a decision is made, new work uses the variant the surrounding screen already uses and doesn't add another.
 
-YepWatch is part of the GoodWatch family but has its own look. Shared family decisions are in the decisions file. The amber is `#fbbf24` across the whole family (decision F1, November 18, 2026).
+YepWatch is part of the GoodWatch family but has its own look. Shared family decisions are in the decisions file. The amber is `#fbbf24` across the whole family (decision F1, November 18, 2026). Gabarito is the text font of the whole family: GoodWatch on the web sets body text in it too (decision F2).
 
 ## Overview
 
