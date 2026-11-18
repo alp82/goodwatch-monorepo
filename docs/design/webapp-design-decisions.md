@@ -37,7 +37,7 @@ Design diff should show: the header, the start page, Discover, a member page wit
 
 ### D2: Selected state
 
-Status: round 2. The owner likes most of today's looks: Stream/Rent/Buy and the episodes Grid/Spread (quiet white 12% tab), Watch status and profile scores (solid white pill), the settings side column (faint white row, amber bar, amber icon), and the amber 15% tint on Best list pagination instead of solid amber. Two options built from those rules are in the design diff: `scope` (a page-wide filter is a solid white pill, a switch inside one section is the quiet white tab, navigation is the amber mark or amber tint) and `shape` (pills are solid white, rectangular tabs and rows are the quiet tab, navigation as in `scope`).
+Status: decided on November 18, 2026: **scope** (round 2, built from the owner's round 1 likes). A choice that filters a whole page's list (Watch status, profile segments, Hot Day/Week, /new service keys, person genres and Group by, View as visitor, Discover filter chips and tiles) is a solid white pill with near-black text. A choice that switches one section inside a page (Stream/Rent/Buy and the other title page tabs, episodes Grid/Spread, taste and stats pills, Count/Per member, Sides of you cards, start page door chips, Hot's picked row) is the quiet tab: `white/12` with white semibold text. Navigation (where you are) is a faint `white/7` row with an amber bar, underline, or dot and an amber icon or label (settings column, area tabs, sub-nav); navigation pills (pagination, header area keys, phone dock, /stats chapters) are the amber 15% tint with `amber-300` text. Nothing selected is solid amber (D7).
 
 | Variant | Where |
 |---|---|

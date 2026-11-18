@@ -173,7 +173,7 @@ components:
 
 # Design System: GoodWatch
 
-This file records the GoodWatch web app's visual system as it is in the code on November 18, 2026. Where the app uses several competing variants for the same thing, this file names them and points to a decision (D1 to D7) in `docs/design/webapp-design-decisions.md`. D1 and D3 to D7 were decided on November 18, 2026: new work follows the decided variant, and the app is migrated to it in follow-up issues. D2 (selected state) is still open: until it's decided, new work uses the variant that the surrounding page already uses.
+This file records the GoodWatch web app's visual system as it is in the code on November 18, 2026. Where the app uses several competing variants for the same thing, this file names them and points to a decision (D1 to D7) in `docs/design/webapp-design-decisions.md`. All seven were decided on November 18, 2026: new work follows the decided variant, and the app is migrated to it in follow-up issues.
 
 ## Overview
 
@@ -308,7 +308,7 @@ Surfaces are flat at rest. Depth comes from tonal steps (Deep Night, Night, Rais
 
 Pills (9999px) are the most common shape: chips, toggles, switches, segmented controls, the search pill, and most buttons. Cards and posters use 8px corners. Action buttons, text fields, and list containers use 8-12px. Panels and settings tiles use 16px. Sheets use 24px top corners, and dialogs 16-24px. Small badges, genre chips, and age ratings use 2-6px. Episode tiles use 4px.
 
-Primary buttons are pills inside the app and 8px rectangles on info pages and the sign-in and sign-up cards (D1). Some chips and pagination are 6px; open decision D2.
+Primary buttons are pills inside the app and 8px rectangles on info pages and the sign-in and sign-up cards (D1). Some chips and pagination are 6px; they keep their shape, only their selected color follows D2.
 
 Posters keep their 2:3 portrait shape everywhere.
 
@@ -329,7 +329,8 @@ Bold, short labels, weight 700-900.
 
 - **Segmented control:** a white 6% pill track with a ring. The selected segment is a white pill with black text; its count dims.
 - **Segmented tabs** (title page Stream / Rent / Buy and episode views): an 8px white 5% box with 32px tabs; the active tab is white 12% and its count turns amber.
-- **Filter chips:** 32px pills with a white 15% ring. Selected chips are solid white with black text on the title page and in filters, and amber 15% with amber text and ring in stats. Open decision D2.
+- **Filter chips:** 32px pills with a white 15% ring. Selected chips are solid white with black text.
+- **Selected state** (D2, decided by scope): a choice that filters the whole page's list is a solid white pill with near-black text. A choice that switches one section inside the page is the quiet tab (`white/12`, white semibold text). Where you are is a faint `white/7` row with an amber bar, underline, or dot and an amber icon or label; navigation pills (pagination, header area keys, phone dock, /stats chapters) are the amber 15% tint with `amber-300` text. Nothing selected is solid amber.
 - **Switch:** a 48 × 28px pill, white 20% when off and amber with a soft glow when on, with a 20px white thumb and a 44px hit area. Four older switches use other sizes and emerald.
 - **Checkboxes and radios:** native, with `accent-amber-400`.
 - **Range sliders:** native, with `accent-amber-400`.
@@ -399,7 +400,7 @@ These are separate worlds. They don't set the rules for controls.
 - **Do** use the darkened tile color behind white score numbers.
 - **Do** let posters and backdrops carry color.
 - **Do** use the system sans for data, controls, and body text, with tabular figures for numbers.
-- **Do** follow the decided variant for D1 and D3 to D7, and match the variant the surrounding page already uses for the selected state (D2, open).
+- **Do** follow the decided variant for D1 to D7.
 - **Do** animate only transform and opacity, and keep interface motion at 120-300ms.
 - **Do** make every interactive element at least 40px tall on touch, with a visible focus ring.
 

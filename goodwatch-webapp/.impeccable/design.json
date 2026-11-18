@@ -580,7 +580,7 @@
 			"**Do** use the darkened tile color behind white score numbers.",
 			"**Do** let posters and backdrops carry color.",
 			"**Do** use the system sans for data, controls, and body text, with tabular figures for numbers.",
-			"**Do** follow the decided variant for D1 and D3 to D7, and match the variant the surrounding page already uses for the selected state (D2, open).",
+			"**Do** follow the decided variant for D1 to D7.",
 			"**Do** animate only transform and opacity, and keep interface motion at 120-300ms.",
 			"**Do** make every interactive element at least 40px tall on touch, with a visible focus ring."
 		],
