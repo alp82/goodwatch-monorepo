@@ -1,6 +1,6 @@
 // Title pages and their sub-pages sit on the title's own backdrop, blurred and darkened (the tint, TitlePage.tsx and
 // SubPageFrame.tsx). Panels on it are translucent white, so they take the title's color instead of clashing with it as
-// navy or stone (D5 in docs/design/webapp-design-decisions.md). Panels that only exist there use the classes below
+// navy or stone (see docs/design/webapp-design-decisions.md). Panels that only exist there use the classes below
 // directly. Quick views and the score and Not seen sheets open on navy pages too, some from providers in root.tsx, so
 // the title routes say so in their handle (TITLE_TINT), root.tsx passes it down (TitleTint), and those panels ask
 // with useFloatSurface. Outside a provider (a test harness) the answer is no.

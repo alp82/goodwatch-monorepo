@@ -1,5 +1,5 @@
-// The one primary button (D1): the flat amber pill inside the app, the amber-700 rectangle on info pages and the
-// sign-in and sign-up cards. A view has one filled amber button, its main action (D7); its other amber buttons are
+// The one primary button: the flat amber pill inside the app, the amber-700 rectangle on info pages and the
+// sign-in and sign-up cards. A view has one filled amber button, its main action; its other amber buttons are
 // outlines in the same shape: `outline` next to pills, `outlineRect` next to rectangles. The look is fill, text color,
 // weight and corners only; each place keeps its own height, padding, gap and text size through `className`.
 import { Link, type LinkProps } from "@remix-run/react"

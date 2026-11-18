@@ -4,7 +4,7 @@
 import type { ReactNode } from "react"
 
 /** Each list's colors: a solid fill with dark text, readable over any poster or backdrop. No amber: a solid amber fill
- * is a view's main action (D7). */
+ * is a view's main action. */
 export const LIST_TAG_TONE = {
 	/** A show to continue: its next episode. */
 	continue: "bg-gray-200 text-black",

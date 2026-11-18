@@ -49,7 +49,7 @@ export function SectionHead({
 	)
 }
 
-/** A section's pill (D2: a choice that switches one section, so the quiet tab when picked). */
+/** A section's pill (a choice that switches one section, so the quiet tab when picked). */
 export const sectionPillClass = (on: boolean) =>
 	`min-h-8 cursor-pointer rounded-full px-3 text-xs font-bold tracking-wide uppercase ring-1 transition-colors ${
 		on ? `${SELECTED_QUIET} ring-white/20` : "text-gray-400 ring-white/10 hover:text-white"

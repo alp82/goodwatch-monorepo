@@ -1,4 +1,4 @@
-// The pill group for a choice that filters the page's whole list (D2's solid white): a white 6% track, the picked
+// The pill group for a choice that filters the page's whole list (the solid white): a white 6% track, the picked
 // option a white pill with near-black text and its count dimmed. With `onChange` the options are ARIA radios; without
 // it each option is a link to its own address (`href`), marked with aria-current.
 import { Link } from "@remix-run/react"

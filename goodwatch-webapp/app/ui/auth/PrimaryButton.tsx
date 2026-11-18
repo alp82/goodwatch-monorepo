@@ -1,4 +1,4 @@
-// The sign-in card's main button: the info pages' amber-700 rectangle (D1), full width, with a spinner while busy.
+// The sign-in card's main button: the info pages' amber-700 rectangle, full width, with a spinner while busy.
 import type { ReactNode } from "react"
 import { primaryButtonClass } from "~/ui/button/PrimaryButton"
 import { Spinner } from "~/ui/wait/Spinner"

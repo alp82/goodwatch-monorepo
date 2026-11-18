@@ -68,7 +68,7 @@ test("the fields and buttons use the card's styling", () => {
 	assert.match(
 		AUTH_SUBMIT_CLASS,
 		/\bbg-amber-700\b.*\brounded-lg\b|\brounded-lg\b.*\bbg-amber-700\b/,
-		"the info pages' amber rectangle (D1)",
+		"the info pages' amber rectangle",
 	)
 	assert.match(html, /id="auth-email"[^>]*class="[^"]*bg-white\/\[0\.06\][^"]*border-white\/10/)
 	assert.match(html, /id="auth-password"[^>]*class="[^"]*bg-white\/\[0\.06\][^"]*border-red-500/)

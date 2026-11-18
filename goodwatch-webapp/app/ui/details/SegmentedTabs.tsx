@@ -1,5 +1,5 @@
 // One-of tabs in a tray: the offer types of Where to watch (Stream 5 · Rent 6 · Buy 4) and any other one-of filter
-// with counts. The picked tab is the quiet tab (D2: a choice that switches one section) with its count in amber;
+// with counts. The picked tab is the quiet tab (a choice that switches one section) with its count in amber;
 // empty tabs stay pressable but quieter.
 import { SELECTED_QUIET } from "~/ui/selection/selected"
 

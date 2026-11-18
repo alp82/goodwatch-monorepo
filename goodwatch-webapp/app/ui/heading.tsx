@@ -6,7 +6,7 @@ const SIZE = {
 }
 
 /**
- * The one section heading (D4): system font, semibold, tight tracking, 20 px on phones and 24 px from `sm`. A `group`
+ * The one section heading: system font, semibold, tight tracking, 20 px on phones and 24 px from `sm`. A `group`
  * heading inside a section (person decades, /new days, Seen months) is one step smaller. `className` is for layout.
  */
 export function SectionHeading({
@@ -30,7 +30,7 @@ export function SectionHeading({
 }
 
 /**
- * The page title (D3): Gabarito 700 (`font-display font-bold`). Sizes and text color vary by page, so `className`
+ * The page title: Gabarito 700 (`font-display font-bold`). Sizes and text color vary by page, so `className`
  * carries them and the layout.
  */
 export function PageTitle({

@@ -1,8 +1,8 @@
 import type { ReactNode } from "react"
 
-/** The caption (D6): a section label such as ON THIS PAGE, a footer group or a form label. */
+/** The caption: a section label such as ON THIS PAGE, a footer group or a form label. */
 export const CAPTION = "text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-500"
-/** The kicker (D6): the amber line above a page or card title. */
+/** The kicker: the amber line above a page or card title. */
 export const KICKER = "text-xs font-bold uppercase tracking-[0.18em] text-amber-400"
 
 type EyebrowProps = {

@@ -1,4 +1,4 @@
-// The selected states (D2, decided by scope). Three looks only, and none of them is solid amber (D7):
+// The selected states (decided by scope). Three looks only, and none of them is solid amber:
 // - choice that filters the whole page's list: the solid white pill (`SELECTED_SOLID`, `<Segmented>`);
 // - choice that switches one section inside the page: the quiet tab (`SELECTED_QUIET`, `<SegmentedTabs>`), and
 //   `SELECTED_QUIET_CARD` for rows and cards a fill would bury;

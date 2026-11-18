@@ -139,7 +139,7 @@ export function SendFooter({ children }: { children: ReactNode }) {
 	)
 }
 
-/** The drawer's Send: the app's primary pill (D1) across the footer. */
+/** The drawer's Send: the app's primary pill across the footer. */
 export function SendButton({
 	sending,
 	disabled,
