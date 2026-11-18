@@ -229,7 +229,7 @@ Depth comes from warm tonal steps (Night, Panel, Raised) and thin white lines. S
 ### Buttons
 - **Primary:** amber, 54px tall (44 small), 10px corners, Bold 17px amber-ink text. Pressed is 78% opacity, disabled 42%. Disabled amber currently fails contrast (2.94:1); cleanup.
 - **Secondary:** white 3% fill with a strong line border and ink text, same size.
-- **Link:** bold amber text, no underline. The join page has an underlined variant; cleanup.
+- **Link:** bold amber text, no underline. The join page has an underlined variant; cleanup. Exception: the static legal pages underline amber links in running text (Y4).
 - Several screens re-implement the primary button (Tonight's Watch link, the join page's Join, the web "Open in YepWatch" link); cleanup.
 
 ### Voting
@@ -278,7 +278,7 @@ YepWatch has no haptics. Feedback is short sounds for swipe, poster, and matches
 
 - **iOS:** edge-swipe back is a custom gesture. The keyboard pushes content up with padding.
 - **Android:** the system back gesture and button close the top sheet, then Taste mode, then the room. The header shows a Play Store Update link when an update is available.
-- **Web (browser guests):** hover lift and lighten, a blurred header, Copy link instead of Share, a QR "Get the app" popover, and a CSS startup cover with an amber glow. The web's terms, privacy, and support pages are static HTML in system-ui, not the in-app pages; open decision Y4.
+- **Web (browser guests):** hover lift and lighten, a blurred header, Copy link instead of Share, a QR "Get the app" popover, and a CSS startup cover with an amber glow. A direct visit to the web's terms, privacy, or support page gets static HTML without JavaScript (`scripts/legal-pages.ts`, written by `scripts/build-store-assets.ts`) in the app's look: Gabarito from the app's own font files, the app's colors, the header wordmark, Bold 32 titles, and a 640px reading column. Its links are amber with a thin underline, because amber next to white body text is only about 1.5:1. Decision Y4 (November 18, 2026).
 
 ## Do's and Don'ts
 

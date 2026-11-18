@@ -2,21 +2,16 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { createRequire } from 'node:module';
-import { legalUpdated, privacySections, supportSections, termsSections, type LegalSection } from '../src/features/legal/content';
+import { legalPages, renderLegalPage } from './legal-pages';
 const root = resolve(import.meta.dirname, '..');
 const requireWeb = createRequire(resolve(root, '../goodwatch-webapp/package.json'));
 const { Resvg } = requireWeb('@resvg/resvg-js');
 const sharp = requireWeb('sharp');
-const escape = (text: string) => text.replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]!);
 async function main() {
   const output = resolve(root, 'store/assets');
   await mkdir(output, { recursive: true });
   await mkdir(resolve(root, 'public'), { recursive: true });
-  for (const [path, title, sections] of [ ['privacy', 'YepWatch privacy policy', privacySections], ['support', 'YepWatch support', supportSections], ['terms', 'YepWatch terms of use', termsSections] ] as const) {
-    const content = sections.map((s: LegalSection) => `<section><h2>${escape(s.title)}</h2>${s.paragraphs.map(p => `<p>${escape(p).replace(/https:\/\/[a-zA-Z0-9./-]+/g, url => `<a href="${url}">${url}</a>`)}</p>`).join('')}</section>`).join('');
-    const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title><link rel="canonical" href="https://yepwatch.com/${path}"><meta name="description" content="${title}: information and contact details."><style>body{margin:0;background:#070707;color:#fafafa;font:17px/1.65 system-ui,sans-serif}main{max-width:760px;margin:auto;padding:32px 22px 64px}h1{font-size:36px;line-height:1.15}h2{font-size:22px;margin-top:32px}a{color:#fbbf24}nav{display:flex;gap:20px;flex-wrap:wrap}footer{margin-top:40px;color:#a3a3a3}</style></head><body><main><nav><a href="/">YepWatch</a><a href="/privacy">Privacy</a><a href="/support">Support</a><a href="/terms">Terms</a><a href="/delete-account">Delete account</a></nav><h1>${title}</h1><p>Updated ${legalUpdated}</p>${content}<footer><a href="mailto:hello@goodwatch.app">hello@goodwatch.app</a></footer></main></body></html>`;
-    await writeFile(resolve(root, `public/${path}.html`), html);
-  }
+  for (const page of legalPages) await writeFile(resolve(root, `public/${page.path}.html`), renderLegalPage(page));
   const icon = await readFile(resolve(root, 'assets/icon.svg'), 'utf8');
   const fonts = [resolve(root, 'assets/Gabarito-Bold.ttf'), resolve(root, 'assets/Gabarito-Regular.ttf')];
   for (const size of [512, 1024]) {

@@ -7,13 +7,14 @@
 //     invitation). A route chunk that already ran is imported synchronously (expo/async-require), so the
 //     route renders in the same frame. The chunks are small (~40 KB gzip together); the fonts are preloaded
 //     because the startup word waits for them.
-//  2. Writes <web dir>/invite.html: that page with link-preview tags for a room invite.
+//  2. Checks that the static legal pages' font URLs exist in the export.
+//  3. Writes <web dir>/invite.html: that page with link-preview tags for a room invite.
 //     Caddy serves it for /r/<code> through its templates handler, which fills in [[ ... ]] from the request path,
 //     so the preview image is that invite's card (the api draws it with the host's name).
 //     Its inline script asks for the room preview and the invite resolution right away, while the app's scripts
 //     download (~0.9 s on fast 4G); the app's first request for each takes that answer
 //     (src/core/continuous/early-invite-core.ts), so the join page shows as soon as the app has started.
-//  3. Precompresses the immutable files (/_expo, /assets) with brotli, zstd and gzip at their highest levels, which
+//  4. Precompresses the immutable files (/_expo, /assets) with brotli, zstd and gzip at their highest levels, which
 //     Caddy serves as they are (file_server precompressed): ~25% fewer bytes than on-the-fly zstd, all on the path
 //     to a fresh browser's first screen.
 //   node scripts/invite-page.cjs /web
@@ -39,6 +40,12 @@ if (!html.includes('data-route-chunk')) {
   const preload = fonts.map((f) => `<link rel="preload" href="/assets/assets/${f}" as="font" type="font/ttf" crossorigin />`).join('\n    ');
   html = html.replace('</title>', `</title>\n    ${preload}`);
   fs.writeFileSync(path.join(dir, 'index.html'), html);
+}
+// The static legal pages (scripts/legal-pages.ts) load the app's own font files by their export names.
+for (const page of ['privacy', 'support', 'terms']) {
+  for (const [, font] of fs.readFileSync(path.join(dir, `${page}.html`), 'utf8').matchAll(/url\((\/assets\/[^)]+)\)/g)) {
+    if (!fs.existsSync(path.join(dir, font))) throw new Error(`${page}.html loads ${font}, which the export doesn't have: run scripts/build-store-assets.ts`);
+  }
 }
 const block = /<!-- link-preview[\s\S]*?-->[\s\S]*?<!-- \/link-preview -->/;
 if (!block.test(html)) throw new Error('index.html has no link-preview block');
