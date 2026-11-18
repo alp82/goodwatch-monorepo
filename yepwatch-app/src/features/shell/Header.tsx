@@ -69,7 +69,7 @@ export function RoomPill({ pill, onPress }: { pill: HeaderPill; onPress?: () => 
   return (
     <Press label={`${pill.label}${fresh ? `, ${fresh} new` : ''}, switch ${noun.one}`} onPress={onPress ?? (() => undefined)} disabled={!onPress}
       style={{ ...grow(Math.max(44, z(40))), maxWidth: phone ? undefined : z(420), flexShrink: 1, minWidth: 0, alignItems: 'stretch' }}
-      visual={{ height: Math.max(44, z(40)), minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 14, paddingRight: 10, borderRadius: 12, backgroundColor: '#ffffff0a', borderWidth: 1, borderColor: fresh ? '#fbbf2499' : pill.state === 'live' ? '#ffffff22' : warm.line }}>
+      visual={{ height: Math.max(44, z(40)), minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 14, paddingRight: 10, borderRadius: R.control, backgroundColor: '#ffffff0a', borderWidth: 1, borderColor: fresh ? '#fbbf2499' : pill.state === 'live' ? '#ffffff22' : warm.line }}>
       {pill.state === 'live' || pill.state === 'rooms' ? <LiveDot beat={pill.beat} /> : pill.state === 'decided' ? <Icon name="tickets" size={z(15)} color={glow.amber} /> : <Icon name="plus" size={z(15)} color={glow.amber} />}
       <GText bold size={z(15)} lines={1} style={{ flex: 1, minWidth: 0 }}>{pill.label}</GText>
       {fresh ? <View style={{ minWidth: 18, height: 18, paddingHorizontal: 5, borderRadius: 9, backgroundColor: glow.amber, alignItems: 'center', justifyContent: 'center' }}><GText bold size={11} color={warm.ink}>{fresh}</GText></View> : null}
@@ -119,7 +119,7 @@ export const AppHeader = memo(function AppHeader({ back, onLogo, logoLabel = nou
   const updateLink = updateAvailable ? (
     <Press label="Update YepWatch in Google Play" onPress={() => { void openPlayStoreUpdate(); }}
       style={{ minWidth: 56, minHeight: 48, flexShrink: 0, justifyContent: 'center' }}
-      visual={{ minHeight: 40, paddingHorizontal: 10, borderRadius: 12, backgroundColor: '#fbbf2415', alignItems: 'center', justifyContent: 'center' }}>
+      visual={{ minHeight: 40, paddingHorizontal: 10, borderRadius: R.control, backgroundColor: '#fbbf2415', alignItems: 'center', justifyContent: 'center' }}>
       <GText bold size={z(13)} color={glow.amber}>Update</GText>
     </Press>
   ) : null;

@@ -17,7 +17,7 @@ import { AppFrame } from '../shell/Frame';
 import type { HeaderMe } from '../shell/Header';
 import { HoverPress, Nudge } from '../shell/hover';
 import { useLayout } from '../shell/layout';
-import { warm } from '../shell/tokens';
+import { R, warm } from '../shell/tokens';
 import { ENOUGH_ANSWERS, FIRST_RUN_CARDS, TASTE_ANSWERS } from '../taste/answers';
 import { StrengthMeter } from '../taste/StrengthMeter';
 import { LiveDeck, useTasteCards, type DrawCard } from '../taste/TasteDeck';
@@ -64,7 +64,7 @@ function MainAction({ label, onPress, disabled, secondary, arrow }: { label: str
   const { z } = useLayout();
   return (
     <HoverPress label={label} onPress={onPress} disabled={disabled}
-      style={{ alignSelf: 'stretch', minHeight: z(54), borderRadius: 12, paddingHorizontal: 18, flexDirection: 'row', gap: 9, backgroundColor: secondary ? warm.faint : glow.amber, borderWidth: 1, borderColor: secondary ? warm.lineStrong : glow.amber }}>
+      style={{ alignSelf: 'stretch', minHeight: z(54), borderRadius: R.control, paddingHorizontal: 18, flexDirection: 'row', gap: 9, backgroundColor: secondary ? warm.faint : glow.amber, borderWidth: 1, borderColor: secondary ? warm.lineStrong : glow.amber }}>
       <GText bold size={z(17)} color={secondary ? glow.ink : warm.ink}>{label}</GText>
       {arrow ? <Nudge><Icon name="right" size={18} color={warm.ink} /></Nudge> : null}
     </HoverPress>

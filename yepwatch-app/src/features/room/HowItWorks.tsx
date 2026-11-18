@@ -20,7 +20,7 @@ export function HowLink({ onPress }: { onPress: () => void }) {
   const f = phone ? 13 : z(15);
   const q = Math.round(f * 1.3);
   return (
-    <HoverPress label="How it works" hover="tint" repeatable onPress={onPress} style={{ height: 48, paddingHorizontal: 8, marginRight: -8, borderRadius: 10, flexDirection: 'row', gap: 7 }}>
+    <HoverPress label="How it works" hover="tint" repeatable onPress={onPress} style={{ height: 48, paddingHorizontal: 8, marginRight: -8, borderRadius: R.control, flexDirection: 'row', gap: 7 }}>
       <View style={{ width: q, height: q, borderRadius: q / 2, borderWidth: 1.5, borderColor: glow.muted, alignItems: 'center', justifyContent: 'center' }}>
         <GText bold size={f * 0.78} color={glow.muted}>?</GText>
       </View>

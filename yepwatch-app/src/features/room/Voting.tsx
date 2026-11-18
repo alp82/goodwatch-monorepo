@@ -36,7 +36,7 @@ import { useBackAction } from '../shell/sheet-back';
 import { useSheetEntry } from '../shell/Sheet';
 import { useSheetOpen } from '../shell/sheet-stack';
 import { useStableCallback, useSteady } from '../shell/steady';
-import { warm } from '../shell/tokens';
+import { R, warm } from '../shell/tokens';
 import { MatchesPeek } from './MatchesPeek';
 import { toRooms } from './nav';
 import { useRoom, useRoomLive } from './RoomProvider';
@@ -103,11 +103,11 @@ const VoteKey = memo(function VoteKey({ yes, disabled, onPress, lit, box }: { ye
   const { z } = useLayout();
   return (
     <View ref={box} collapsable={false} style={{ flexGrow: 1, flexShrink: 1, flexBasis: 0, flexDirection: 'row' }}>
-      <Animated.View pointerEvents="none" style={{ position: 'absolute', left: -5, right: -5, top: -5, bottom: -5, borderRadius: 16, borderWidth: 2, borderColor: yes ? glow.amber : '#f87171', backgroundColor: yes ? '#fbbf2422' : '#f8717122',
+      <Animated.View pointerEvents="none" style={{ position: 'absolute', left: -5, right: -5, top: -5, bottom: -5, borderRadius: R.control + 4, borderWidth: 2, borderColor: yes ? glow.amber : '#f87171', backgroundColor: yes ? '#fbbf2422' : '#f8717122',
         opacity: lit, transform: [{ scale: lit.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1.02] }) }] }} />
       <Animated.View style={{ flex: 1, flexDirection: 'row', transform: [{ scale: lit.interpolate({ inputRange: [0, 1], outputRange: [1, 1.04] }) }] }}>
         <HoverPress label={yes ? 'Yep' : 'Nope'} disabled={disabled} onPress={onPress} repeatable
-          style={{ flexGrow: 1, flexShrink: 1, flexBasis: 0, minHeight: z(54), borderRadius: 12, paddingHorizontal: 16, flexDirection: 'row', gap: 9, backgroundColor: yes ? glow.amber : '#ef44440f', borderWidth: 1, borderColor: yes ? glow.amber : '#ef444440' }}>
+          style={{ flexGrow: 1, flexShrink: 1, flexBasis: 0, minHeight: z(54), borderRadius: R.control, paddingHorizontal: 16, flexDirection: 'row', gap: 9, backgroundColor: yes ? glow.amber : '#ef44440f', borderWidth: 1, borderColor: yes ? glow.amber : '#ef444440' }}>
           <Icon name={yes ? 'check' : 'close'} size={18} color={yes ? warm.ink : '#f87171'} />
           <GText bold size={z(17)} color={yes ? warm.ink : glow.ink} lines={1}>{yes ? 'Yep' : 'Nope'}</GText>
         </HoverPress>
@@ -119,7 +119,7 @@ const VoteKey = memo(function VoteKey({ yes, disabled, onPress, lit, box }: { ye
 /** Details and Trailer beside "Why this" (wide windows; the poster's own buttons are off there). Trailer keeps its place when a card has none. */
 function CardTools({ title, trailerUrl, disabled, onDetails }: { title: string; trailerUrl: string | null; disabled: boolean; onDetails: () => void }) {
   const { z } = useLayout();
-  const look = { height: z(34), paddingHorizontal: 10, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: warm.line } as const;
+  const look = { height: z(34), paddingHorizontal: 10, borderRadius: R.control, flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: warm.line } as const;
   const trailer = (
     <>
       <Icon name="play" size={z(12)} color={glow.muted} />
@@ -454,7 +454,7 @@ export function Voting({ entering = false, onEntered }: { entering?: boolean; on
       {/* In the room the bar keeps for it (faces-row.ts): your Yeps arriving move nothing. */}
       <YepsButton onPress={() => setYepsOpen(true)} compact={fit.compactChip} width={yepsWidth} />
       <Press label="Undo" disabled={disabled || !undoTarget} onPress={() => { if (undoTarget) void cmd.undo(undoTarget.candidateId); }}
-        visual={{ width: z(40), height: z(36), borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff0a' }}>
+        visual={{ width: z(40), height: z(36), borderRadius: R.control, alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff0a' }}>
         <Icon name="undo" size={z(17)} color={glow.soft} />
       </Press>
     </View>

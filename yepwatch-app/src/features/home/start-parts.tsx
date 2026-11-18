@@ -152,9 +152,9 @@ export function JoinCodeField({ onJoin, me, busy, disabled, initial = '' }: { on
       <View style={{ flexDirection: 'row', gap: 8 }}>
         <TextInput accessibilityLabel="Code or invitation link" value={code} onChangeText={setCode} onFocus={() => setFocus(true)} onBlur={() => setFocus(false)} onSubmitEditing={go}
           autoCapitalize="characters" autoCorrect={false} autoComplete="off" placeholder="Code or link" placeholderTextColor={warm.placeholder} returnKeyType="go" enterKeyHint="go" selectionColor={glow.amber} submitBehavior="blurAndSubmit"
-          style={{ flex: 1, minWidth: 0, height: z(52), borderRadius: 12, paddingHorizontal: 16, backgroundColor: warm.faint, borderWidth: 1, borderColor: focus ? glow.amber : warm.lineStrong, color: glow.ink, fontFamily: 'GabaritoBold', fontSize: z(17), letterSpacing: code ? 3 : 0, ...webField } as TextStyle} />
+          style={{ flex: 1, minWidth: 0, height: z(52), borderRadius: R.control, paddingHorizontal: 16, backgroundColor: warm.faint, borderWidth: 1, borderColor: focus ? glow.amber : warm.lineStrong, color: glow.ink, fontFamily: 'GabaritoBold', fontSize: z(17), letterSpacing: code ? 3 : 0, ...webField } as TextStyle} />
         <HoverPress label={busy ? 'Joining…' : me ? `Join as ${me}` : 'Join'} disabled={!ok || disabled} quiet={busy} onPress={go}
-          style={{ height: z(52), minWidth: z(92), paddingHorizontal: phone ? 16 : z(20), borderRadius: 12, flexDirection: 'row', gap: 6, backgroundColor: glow.amber }}>
+          style={{ height: z(52), minWidth: z(92), paddingHorizontal: phone ? 16 : z(20), borderRadius: R.control, flexDirection: 'row', gap: 6, backgroundColor: glow.amber }}>
           <GText bold size={z(16)} color={warm.ink}>{busy ? 'Joining…' : 'Join'}</GText>
           {busy ? null : <Nudge><Icon name="right" size={z(16)} color={warm.ink} /></Nudge>}
         </HoverPress>

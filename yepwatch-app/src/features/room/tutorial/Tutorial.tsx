@@ -13,7 +13,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Animated, Easing, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { GText, glow, native } from '../../glow/theme';
-import { warm } from '../../shell/tokens';
+import { R, warm } from '../../shell/tokens';
 import { HoverPress } from '../../shell/hover';
 import type { DragValues } from '../vote/VoteStage';
 
@@ -167,7 +167,7 @@ function Skip({ t }: { t: Tutor }) {
   return (
     <View style={{ position: 'absolute', left: rect.x, top: rect.y, width: rect.w, height: rect.h, alignItems: 'center' }}>
       <HoverPress testID="tutorial-skip" label="Skip the how-to" onPress={t.stop}
-        visual={{ height: 30, paddingHorizontal: 11, borderRadius: 8, backgroundColor: 'rgba(10,9,8,0.82)', borderWidth: 1, borderColor: '#ffffff2e', justifyContent: 'center' }}>
+        visual={{ height: 30, paddingHorizontal: 11, borderRadius: R.control, backgroundColor: 'rgba(10,9,8,0.82)', borderWidth: 1, borderColor: '#ffffff2e', justifyContent: 'center' }}>
         <GText bold size={12} color={glow.soft}>Skip</GText>
       </HoverPress>
     </View>

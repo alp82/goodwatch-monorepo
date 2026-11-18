@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Animated, Easing, Platform, TextInput, View, type TextStyle } from 'react-native';
 import { useReducedMotion } from '../../components/ui';
 import { useLayout } from '../shell/layout';
-import { warm } from '../shell/tokens';
+import { R, warm } from '../shell/tokens';
 import { BusyNote } from '../shell/floating-note';
 import { GText, Icon, Press, glow, grow, native } from '../glow/theme';
 import { IDEA_LIMITS } from './model';
@@ -84,7 +84,7 @@ export function MoodComposer({ initialText = '', text: controlledText, first = f
     const on = text.toLowerCase() === preset;
     return (
       <Press key={preset} label={preset} selected={on} disabled={saving} onPress={() => change(on ? '' : preset)} style={{ ...grow(z(44)), alignItems: 'stretch' }}
-        visual={{ minHeight: z(44), paddingHorizontal: z(17), borderRadius: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, backgroundColor: on ? warm.amberSoft : '#ffffff07', borderWidth: 1, borderColor: on ? glow.amber : warm.line }}>
+        visual={{ minHeight: z(44), paddingHorizontal: z(17), borderRadius: R.control, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, backgroundColor: on ? warm.amberSoft : '#ffffff07', borderWidth: 1, borderColor: on ? glow.amber : warm.line }}>
         {on ? <Icon name="check" size={z(15)} color={glow.amber} /> : null}
         <GText size={phone ? 15 : z(17)} bold={on} color={on ? glow.amber : glow.soft}>{preset}</GText>
       </Press>

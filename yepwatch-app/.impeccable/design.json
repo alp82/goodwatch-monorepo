@@ -246,7 +246,7 @@
       "refersTo": "vote-yep",
       "description": "Voting keys under the deck.",
       "html": "<div class=\"ds-yw-keys\"><button class=\"nope\">✕ Nope</button><button class=\"yep\">✓ Yep</button></div>",
-      "css": ".ds-yw-keys{display:flex;gap:12px}.ds-yw-keys button{flex:1;height:64px;border-radius:14px;font:700 18px Gabarito,system-ui,sans-serif;cursor:pointer;transition:transform .12s}.ds-yw-keys .yep{background:#fbbf24;color:#201400;border:0}.ds-yw-keys .nope{background:#ef44440f;border:1px solid #ef444440;color:#f87171}.ds-yw-keys button:active{transform:scale(1.04)}"
+      "css": ".ds-yw-keys{display:flex;gap:12px}.ds-yw-keys button{flex:1;height:64px;border-radius:10px;font:700 18px Gabarito,system-ui,sans-serif;cursor:pointer;transition:transform .12s}.ds-yw-keys .yep{background:#fbbf24;color:#201400;border:0}.ds-yw-keys .nope{background:#ef44440f;border:1px solid #ef444440;color:#f87171}.ds-yw-keys button:active{transform:scale(1.04)}"
     },
     {
       "name": "Field",

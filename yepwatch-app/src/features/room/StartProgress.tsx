@@ -11,7 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useReducedMotion } from '../../components/ui';
 import { LiveDot } from '../shell/parts';
 import { useLayout } from '../shell/layout';
-import { warm } from '../shell/tokens';
+import { R, warm } from '../shell/tokens';
 import { GText, Icon, Press, glow, native } from '../glow/theme';
 import { START_BEATS_MS, START_PROGRESS_CAP, START_PROGRESS_MS, hostStartLabel, startBeat, type StartPhase } from './start-progress';
 
@@ -102,7 +102,7 @@ function Working({ phase, width, tone }: { phase: StartPhase; width: number; ton
   const band = Math.max(80, width * 0.45);
   const amber = tone === 'amber';
   return (
-    <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, borderRadius: 12, overflow: 'hidden' }}>
+    <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, borderRadius: R.control, overflow: 'hidden' }}>
       {phase === 'starting' && !reduced ? (
         <Animated.View style={{ position: 'absolute', top: 0, bottom: 0, width: band, transform: [{ translateX: sweep.interpolate({ inputRange: [0, 1], outputRange: [-band, width] }) }] }}>
           <LinearGradient start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} colors={amber ? ['#fff7e000', '#fff7e066', '#fff7e000'] : ['#fbbf2400', '#fbbf2426', '#fbbf2400']} style={{ flex: 1 }} />
@@ -145,7 +145,7 @@ export function StartButton({ phase, onPress, disabled, people = 1 }: { phase: S
     <Live busy={busy} announce={phase === 'idle' ? null : label} style={{ flexGrow: 1, flexShrink: 1, flexBasis: 0 }}>
       <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
         <Press label={label} onPress={onPress} disabled={disabled && !busy} quiet={busy}
-          style={{ minHeight: z(54), borderRadius: 12, paddingHorizontal: 16, flexDirection: 'row', gap: 10, backgroundColor: glow.amber, borderWidth: 1, borderColor: glow.amber }}>
+          style={{ minHeight: z(54), borderRadius: R.control, paddingHorizontal: 16, flexDirection: 'row', gap: 10, backgroundColor: glow.amber, borderWidth: 1, borderColor: glow.amber }}>
           <Working phase={phase} width={width} tone="amber" />
           {icon}
           <Words text={label} color={warm.ink} size={z(17)} width={z(132)} />
@@ -162,7 +162,7 @@ export function WorkingButton({ label }: { label: string }) {
   return (
     <Live busy announce={label} style={{ flexGrow: 1, flexShrink: 1 }}>
       <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)} accessibilityRole="progressbar" accessibilityLabel={label}
-        style={{ minHeight: z(54), borderRadius: 12, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: glow.amber, borderWidth: 1, borderColor: glow.amber }}>
+        style={{ minHeight: z(54), borderRadius: R.control, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: glow.amber, borderWidth: 1, borderColor: glow.amber }}>
         <Working phase="starting" width={width} tone="amber" />
         <LoadingDots color={warm.ink} />
         <Words text={label} color={warm.ink} size={z(17)} />
@@ -186,8 +186,8 @@ export function StartStatus({ host, joining }: { host: string; joining: string |
   return (
     <Live busy={busy} announce={busy ? text : null} style={{ flex: 1 }}>
       <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
-        style={{ minHeight: z(54), borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 12, backgroundColor: warm.faint, overflow: 'hidden' }}>
-        <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, borderRadius: 12, backgroundColor: warm.amberSoft, borderWidth: 1, borderColor: warm.amberLine, opacity: lit }} />
+        style={{ minHeight: z(54), borderRadius: R.control, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 12, backgroundColor: warm.faint, overflow: 'hidden' }}>
+        <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, borderRadius: R.control, backgroundColor: warm.amberSoft, borderWidth: 1, borderColor: warm.amberLine, opacity: lit }} />
         <Working phase={phase} width={width} tone="quiet" />
         {icon}
         <Words text={text} color={busy ? glow.ink : glow.soft} size={z(15)} />

@@ -43,7 +43,7 @@ export function SettingRow({ label, onPress, children, right }: { label: string;
 
 /** A warm text field. */
 export function fieldStyleFor(z: (n: number) => number, focus = false): TextStyle {
-  return { height: z(52), borderRadius: 12, paddingHorizontal: 14, borderWidth: 1, borderColor: focus ? glow.amber : warm.lineStrong, backgroundColor: warm.faint, color: glow.ink, fontFamily: 'Gabarito', fontSize: z(17), ...webField };
+  return { height: z(52), borderRadius: R.control, paddingHorizontal: 14, borderWidth: 1, borderColor: focus ? glow.amber : warm.lineStrong, backgroundColor: warm.faint, color: glow.ink, fontFamily: 'Gabarito', fontSize: z(17), ...webField };
 }
 
 /** Logo tiles: the 8 biggest first, the rest and search after More. */

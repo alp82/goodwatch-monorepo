@@ -88,11 +88,11 @@ components:
   vote-yep:
     backgroundColor: "{colors.amber}"
     textColor: "{colors.amber-ink}"
-    rounded: "{rounded.card}"
+    rounded: "{rounded.control}"
   vote-nope:
     backgroundColor: "#ef44440f"
     textColor: "{colors.nope}"
-    rounded: "{rounded.card}"
+    rounded: "{rounded.control}"
   sheet:
     backgroundColor: "{colors.panel}"
     rounded: "{rounded.card}"
@@ -215,7 +215,7 @@ Depth comes from warm tonal steps (Night, Panel, Raised) and thin white lines. S
 ## Shapes
 
 - **Stamp** (4px, with a 2px black outline): YEP and NOPE stamps on posters, so they read on any image.
-- **Control** (10px, `R.control`): every button, field, and small control, including Undo, sheet Close, and the floating note. Decision Y1 (November 18, 2026); about 42 places still hardcode 12 until the follow-up lands.
+- **Control** (10px, `R.control`): every button, field, and small control, including the Yep and Nope keys, Undo, sheet Close, chips, and the floating note. There is no separate button radius; code uses `R.control`, never a literal. Decision Y1 (November 18, 2026).
 - **Card** (14px): sheets (top corners on phones), room tiles, the New couch tile, and the Ideas card.
 - **Full**: faces, the profile chip, and switches.
 - Posters keep their 2:3 shape. On the voting deck they fill the card.
@@ -229,7 +229,7 @@ Depth comes from warm tonal steps (Night, Panel, Raised) and thin white lines. S
 - Several screens re-implement the primary button (Tonight's Watch link, the join page's Join, the web "Open in YepWatch" link); cleanup.
 
 ### Voting
-- **Yep key:** amber with a dark check. **Nope key:** red at 6% fill, red at 25% border, and a Nope red icon. A lit key gets a 2px ring at 16px corners and grows to 1.04.
+- **Yep key:** amber with a dark check. **Nope key:** red at 6% fill, red at 25% border, and a Nope red icon. A lit key gets a 2px ring at 14px corners (the key radius plus 4) and grows to 1.04.
 - **Deck card:** the poster fills the card. Dragging tilts it up to 16 degrees. Past a third of the width it answers; otherwise it springs back.
 - **Stamps:** eleven YEP and NOPE looks dealt from a shuffled bag, with stamp corners and a black outline.
 - **Vote track:** the bar above the deck. Friends' faces ride along a rail as they answer, with a Yeps chip (amber outline, a check and count, mini posters) and an Undo button.

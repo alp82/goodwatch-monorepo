@@ -15,7 +15,7 @@ import { GText, Icon, glow, native } from '../glow/theme';
 import { HoverPress } from '../shell/hover';
 import { GoodWatchG } from '../shell/marks';
 import { useLayout } from '../shell/layout';
-import { warm } from '../shell/tokens';
+import { R, warm } from '../shell/tokens';
 import { TASTE_ANSWERS } from './answers';
 import { StrengthMeter } from './StrengthMeter';
 import { LiveDeck, useTasteCards, type DrawCard } from './TasteDeck';
@@ -33,7 +33,7 @@ export function TasteModeLayer() {
 /** A link-styled action (Undo, Done on the end card). */
 export function TextAction({ label, onPress, color = glow.muted }: { label: string; onPress: () => void; color?: string }) {
   const { z } = useLayout();
-  return <HoverPress label={label} hover="tint" onPress={onPress} style={{ minHeight: 48, paddingHorizontal: 12, borderRadius: 10 }}><GText bold size={z(14)} color={color}>{label}</GText></HoverPress>;
+  return <HoverPress label={label} hover="tint" onPress={onPress} style={{ minHeight: 48, paddingHorizontal: 12, borderRadius: R.control }}><GText bold size={z(14)} color={color}>{label}</GText></HoverPress>;
 }
 
 function TasteMode() {
@@ -132,7 +132,7 @@ function TasteMode() {
               <GText bold size={z(13)} color={warm.ink} style={{ letterSpacing: 1.2, textTransform: 'uppercase' }}>Taste mode</GText>
             </View>
             <GText bold size={z(16)} lines={1} style={{ flex: 1 }}>Tune your taste</GText>
-            <HoverPress label="Done" hint="Your answers are kept" onPress={close} style={{ minHeight: 48, paddingHorizontal: 8, borderRadius: 10, flexDirection: 'row', gap: 6 }}>
+            <HoverPress label="Done" hint="Your answers are kept" onPress={close} style={{ minHeight: 48, paddingHorizontal: 8, borderRadius: R.control, flexDirection: 'row', gap: 6 }}>
               {phone ? null : <GText bold size={z(14)} color={glow.soft}>Done</GText>}
               <Icon name="close" size={20} color={glow.soft} />
             </HoverPress>

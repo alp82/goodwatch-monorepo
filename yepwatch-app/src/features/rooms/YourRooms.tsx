@@ -96,7 +96,7 @@ function HistoryButton({ onPress }: { onPress: () => void }) {
   const { z } = useLayout();
   return (
     <Press label="History" onPress={onPress} style={{ alignSelf: 'flex-start', ...grow(z(44)), alignItems: 'stretch' }}
-      visual={{ flexDirection: 'row', alignItems: 'center', gap: 8, height: z(44), paddingHorizontal: 14, borderRadius: 12, borderWidth: 1, borderColor: warm.lineStrong }}>
+      visual={{ flexDirection: 'row', alignItems: 'center', gap: 8, height: z(44), paddingHorizontal: 14, borderRadius: R.control, borderWidth: 1, borderColor: warm.lineStrong }}>
       <Icon name="clock" size={z(16)} color={glow.soft} /><GText bold size={z(15)} color={glow.soft}>History</GText>
     </Press>
   );

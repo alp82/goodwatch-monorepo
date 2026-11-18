@@ -86,7 +86,7 @@ export function StoreButton({ store }: { store: Store }) {
   return (
     <Link href={store.url as `https://${string}`} target="_blank" rel="noopener noreferrer" asChild>
       <Pressable {...externalAttrs} accessibilityRole="link" accessibilityLabel={`Install YepWatch on ${store.title}`} {...props}
-        style={{ flex: 1, minHeight: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 12, borderRadius: 12, borderWidth: 1, borderColor: hover ? '#ffffff38' : warm.lineStrong, backgroundColor: hover ? '#ffffff14' : warm.faint, ...hoverTransition }}>
+        style={{ flex: 1, minHeight: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 12, borderRadius: R.control, borderWidth: 1, borderColor: hover ? '#ffffff38' : warm.lineStrong, backgroundColor: hover ? '#ffffff14' : warm.faint, ...hoverTransition }}>
         <StoreLogo platform={store.platform} size={22} />
         <View>
           <GText bold size={15}>{store.title}</GText>

@@ -198,7 +198,7 @@ function DescribeField({ value, onChange, onSubmit, ready, action, placeholder, 
           onFocus={() => setFocus(true)} onBlur={() => setFocus(false)}
           style={{ flex: 1, minWidth: 0, height: h - 2, padding: 0, borderWidth: 0, backgroundColor: 'transparent', color: glow.ink, fontFamily: 'Gabarito', fontSize: phone ? 17 : z(18), ...webField } as TextStyle} />
         <HoverPress label={action} hover="lighten" repeatable disabled={!ready} onPress={onSubmit}
-          style={{ width: phone ? 92 : z(100), height: h - 14, borderRadius: 12, backgroundColor: ready ? glow.amber : warm.faint, borderWidth: 1, borderColor: ready ? glow.amber : warm.lineStrong }}>
+          style={{ width: phone ? 92 : z(100), height: h - 14, borderRadius: R.control, backgroundColor: ready ? glow.amber : warm.faint, borderWidth: 1, borderColor: ready ? glow.amber : warm.lineStrong }}>
           {['Add', 'Replace'].map((label) => <GText key={label} bold size={phone ? 16 : z(16)} color={ready ? warm.ink : glow.ink} style={{ position: 'absolute', width: '100%', textAlign: 'center', opacity: action === label ? 1 : 0 }} aria-hidden={action !== label}>{label}</GText>)}
         </HoverPress>
       </View>
@@ -347,12 +347,12 @@ function IdeaBox({ idea, host, disabled, toggle, style, children }: { idea: Idea
 function IdeaRow({ idea, host, disabled, toggle, line }: { idea: IdeaView; host: boolean; disabled: boolean; toggle: (idea: IdeaView) => void; line: boolean }) {
   const { phone, z } = useLayout();
   const s = (n: number) => (phone ? n : z(n));
-  const box = { minHeight: Math.max(56, s(56)), minWidth: 0, alignSelf: 'stretch', paddingHorizontal: 4, borderRadius: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: s(11) } as const;
+  const box = { minHeight: Math.max(56, s(56)), minWidth: 0, alignSelf: 'stretch', paddingHorizontal: 4, borderRadius: R.control, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: s(11) } as const;
   return (
     <View testID={`idea-${idea.id}`}>
       {line ? <View style={{ height: 1, marginHorizontal: 4, backgroundColor: warm.line }} /> : null}
       <View>
-        <ChangeGlow text={idea.text} radius={10} />
+        <ChangeGlow text={idea.text} radius={R.control} />
         <Rise>
           <IdeaBox idea={idea} host={host} disabled={disabled} toggle={toggle} style={box}>
             {idea.author ? <Face person={idea.author} size={s(26)} /> : null}

@@ -17,7 +17,7 @@ import { GText, Icon, glow, native } from '../glow/theme';
 import { HoverPress, Nudge } from '../shell/hover';
 import { useLayout } from '../shell/layout';
 import { useStableCallback } from '../shell/steady';
-import { warm } from '../shell/tokens';
+import { R, warm } from '../shell/tokens';
 import { openPage } from './nav';
 
 /** Each poster of the stack shows this share of the one under it. */
@@ -56,7 +56,7 @@ export const MatchesPeek = memo(function MatchesPeek({ roomId, matches, proposal
     <View testID="matches-peek" {...(phone ? pan.panHandlers : null)}>
       <HoverPress label={label} hint={lit ? 'Opens your matches' : undefined} disabled={!lit} dim={false} onPress={open}
         style={{ alignItems: 'stretch' }}
-        visual={{ borderRadius: phone ? 14 : 12, borderWidth: 1, borderColor: proposal ? glow.amber : n ? warm.amberLine : warm.line, backgroundColor: n ? '#fbbf240d' : 'transparent', paddingHorizontal: 12, paddingTop: phone ? 6 : 10, paddingBottom: phone ? 8 : 10 }}>
+        visual={{ borderRadius: R.control, borderWidth: 1, borderColor: proposal ? glow.amber : n ? warm.amberLine : warm.line, backgroundColor: n ? '#fbbf240d' : 'transparent', paddingHorizontal: 12, paddingTop: phone ? 6 : 10, paddingBottom: phone ? 8 : 10 }}>
           <View style={{ gap: 6 }}>
             {phone ? <View style={{ alignSelf: 'center', width: 36, height: 4, borderRadius: 2, backgroundColor: n ? '#fbbf2477' : '#ffffff2a' }} /> : null}
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>

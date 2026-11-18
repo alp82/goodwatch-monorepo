@@ -102,7 +102,7 @@ export const WhoStrip = roomPart('WhoStrip', (r) => ({ view: r.view, inviteUrl: 
         <View testID="share-row" style={{ width: inviteW(l), height: inviteH(l) }}>
           {canInvite ? (
             <HoverPress label="Invite friends, show QR code and link" hover="lighten" repeatable onPress={() => openSheet('invite')}
-              style={{ width: inviteW(l), height: inviteH(l), borderRadius: 12, flexDirection: 'row', gap: 8, backgroundColor: hot ? glow.amber : warm.faint, borderWidth: 1, borderColor: hot ? glow.amber : warm.lineStrong }}>
+              style={{ width: inviteW(l), height: inviteH(l), borderRadius: R.control, flexDirection: 'row', gap: 8, backgroundColor: hot ? glow.amber : warm.faint, borderWidth: 1, borderColor: hot ? glow.amber : warm.lineStrong }}>
               <Nudge dx={0} dy={-1}><Icon name="qr" size={phone ? 18 : z(18)} color={ink} /></Nudge>
               <GText bold size={phone ? 16 : z(16)} color={ink} lines={1}>Invite</GText>
             </HoverPress>
@@ -147,7 +147,7 @@ function CopyLink({ url }: { url: string }) {
   return (
     <View style={{ gap: 6 }}>
       <HoverPress label={`Copy link ${link}`} hover="lighten" repeatable onPress={() => void copyText(url).then((ok) => setState(ok ? 'copied' : 'manual'))}
-        style={{ alignSelf: 'stretch', height: Math.max(48, z(50)), borderRadius: 12, paddingHorizontal: 14, flexDirection: 'row', justifyContent: 'flex-start', gap: 10, backgroundColor: warm.faint, borderWidth: 1, borderColor: copied ? warm.amberLine : warm.lineStrong }}>
+        style={{ alignSelf: 'stretch', height: Math.max(48, z(50)), borderRadius: R.control, paddingHorizontal: 14, flexDirection: 'row', justifyContent: 'flex-start', gap: 10, backgroundColor: warm.faint, borderWidth: 1, borderColor: copied ? warm.amberLine : warm.lineStrong }}>
         <GText size={z(15)} color={glow.soft} lines={1} style={{ flex: 1 }}>{link}</GText>
         {copied ? <Icon name="check" size={z(16)} color={glow.amber} /> : <Icon name="copy" size={z(16)} color={glow.ink} />}
         <View>
@@ -172,7 +172,7 @@ function ShareLink({ url }: { url: string }) {
   return (
     <View style={{ gap: 6 }}>
       <HoverPress label="Share link" hint="Opens your phone's share options" hover="lighten" repeatable onPress={() => void shareInvitation(url).then((r) => setSaid(r === 'cancelled' ? '' : r))}
-        style={{ alignSelf: 'stretch', height: 50, borderRadius: 12, flexDirection: 'row', gap: 9, backgroundColor: warm.faint, borderWidth: 1, borderColor: done ? warm.amberLine : warm.lineStrong }}>
+        style={{ alignSelf: 'stretch', height: 50, borderRadius: R.control, flexDirection: 'row', gap: 9, backgroundColor: warm.faint, borderWidth: 1, borderColor: done ? warm.amberLine : warm.lineStrong }}>
         {done ? <Icon name="check" size={18} color={glow.amber} /> : <Icon name="share" size={18} color={glow.ink} />}
         <GText bold size={16} color={done ? glow.amber : glow.ink}>{said === 'copied' ? 'Copied' : said === 'shared' ? 'Shared' : 'Share link'}</GText>
       </HoverPress>

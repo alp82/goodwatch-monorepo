@@ -22,7 +22,7 @@ import { GText, Icon, Press, glow, grow, native } from '../glow/theme';
 import { FaceStack } from '../shell/parts';
 import { useLayout } from '../shell/layout';
 import { useBackAction } from '../shell/sheet-back';
-import { warm } from '../shell/tokens';
+import { R, warm } from '../shell/tokens';
 import { meta } from './Decide';
 import { toRooms } from './nav';
 import { useRoom, useRoomLive } from './RoomProvider';
@@ -88,7 +88,7 @@ export function Tonight() {
   const watchButton = (
     <Link href={watchUrl as `https://${string}`} target="_blank" rel="noopener noreferrer" asChild>
       <Pressable {...externalAttrs} accessibilityRole="link" accessibilityLabel={watch ? `${watch.action} ${watch.name}` : 'Where to watch'}
-        style={{ flexGrow: 1, flexShrink: 1, flexBasis: 0, minHeight: z(56), borderRadius: 12, flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20, backgroundColor: glow.amber }}>
+        style={{ flexGrow: 1, flexShrink: 1, flexBasis: 0, minHeight: z(56), borderRadius: R.control, flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20, backgroundColor: glow.amber }}>
         {watch?.logoUrl ? <Image source={{ uri: watch.logoUrl }} accessible={false} style={{ width: z(26), height: z(26), borderRadius: 6 }} /> : null}
         <GText bold size={z(17)} color={warm.ink} lines={1}>{watch ? `${watch.action} ${watch.name}` : 'Where to watch'}</GText>
       </Pressable>

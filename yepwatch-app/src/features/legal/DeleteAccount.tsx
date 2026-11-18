@@ -13,6 +13,7 @@ import { queryClient } from '../../core/providers';
 import { AppFrame } from '../shell/Frame';
 import { Action } from '../shell/parts';
 import { GText, glow } from '../glow/theme';
+import { R } from '../shell/tokens';
 import { LegalLinks } from './LegalLinks';
 
 const isGone = (error: unknown) => error instanceof RoomFailure && (error.status === 404 || error.status === 410);
@@ -91,7 +92,7 @@ export function DeleteAccount() {
         <Action label="Sign in to delete account data" onPress={() => void account.signIn('/delete-account')} disabled={busy || account.busy} /></> : null}
       <GText>Type DELETE to confirm.</GText>
       <TextInput accessibilityLabel="Type DELETE to confirm" value={confirm} onChangeText={setConfirm} autoCapitalize="characters" autoCorrect={false}
-        style={{ minHeight: 48, padding: 12, color: glow.ink, borderWidth: 1, borderColor: glow.line, borderRadius: 10 }} />
+        style={{ minHeight: 48, padding: 12, color: glow.ink, borderWidth: 1, borderColor: glow.line, borderRadius: R.control }} />
       <Action label={account.member ? 'Delete YepWatch account' : 'Delete this device’s YepWatch data'} onPress={() => void deleteData()} disabled={busy || !account.ready || (account.member && !deletion.data) || confirm !== 'DELETE'} />
     </View>}
     {busy ? <GText>Confirming your request…</GText> : null}

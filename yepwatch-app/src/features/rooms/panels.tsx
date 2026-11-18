@@ -47,7 +47,7 @@ function Field({ label, value, onChange, placeholder, big = false, code = false,
     <TextInput accessibilityLabel={label} value={value} onChangeText={onChange} placeholder={placeholder} placeholderTextColor={warm.placeholder} autoFocus={autoFocus}
       onFocus={() => setFocus(true)} onBlur={() => setFocus(false)} autoCapitalize={code ? 'characters' : 'words'} autoCorrect={false} autoComplete={autoComplete}
       maxLength={code ? undefined : MAX_NAME} returnKeyType={returnKey} submitBehavior="blurAndSubmit" onSubmitEditing={onSubmit} selectionColor={glow.amber}
-      style={{ height: z(big ? 64 : 52), borderRadius: 12, paddingHorizontal: 16, backgroundColor: warm.faint, borderWidth: 1, borderColor: focus ? glow.amber : warm.lineStrong, color: glow.ink, fontFamily: code ? 'GabaritoBold' : 'Gabarito', fontSize: z(big ? 26 : 17), letterSpacing: code ? 6 : 0, textAlign: code ? 'center' : 'left', ...webField } as TextStyle} />
+      style={{ height: z(big ? 64 : 52), borderRadius: R.control, paddingHorizontal: 16, backgroundColor: warm.faint, borderWidth: 1, borderColor: focus ? glow.amber : warm.lineStrong, color: glow.ink, fontFamily: code ? 'GabaritoBold' : 'Gabarito', fontSize: z(big ? 26 : 17), letterSpacing: code ? 6 : 0, textAlign: code ? 'center' : 'left', ...webField } as TextStyle} />
   );
 }
 function ErrorText({ children }: { children?: string }) {
@@ -131,7 +131,7 @@ export function JoinScreen({ invite, checking = false, nickname, nameLocked = fa
   const showCode = !invite || !initialCode;
   const join = (
     <View style={{ flexDirection: 'row' }}>
-      <Press label={label} onPress={go} disabled={!filled} quiet={busy} style={{ flex: 1, minHeight: z(54), borderRadius: 12, flexDirection: 'row', gap: 9, backgroundColor: glow.amber }}>
+      <Press label={label} onPress={go} disabled={!filled} quiet={busy} style={{ flex: 1, minHeight: z(54), borderRadius: R.control, flexDirection: 'row', gap: 9, backgroundColor: glow.amber }}>
         {/* The words fill the button, centered, and the GoodWatch mark keeps a fixed place: a label that
             changes by itself (Join as … → Joining… when a join starts on return from GoodWatch) moves nothing. */}
         {member ? <View style={{ position: 'absolute', left: 16, top: 0, bottom: 0, justifyContent: 'center' }}><GoodWatchMark size={22} /></View> : null}

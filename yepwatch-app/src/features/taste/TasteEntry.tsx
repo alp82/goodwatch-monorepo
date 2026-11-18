@@ -9,7 +9,7 @@ import { GText, Icon, glow } from '../glow/theme';
 import { HoverPress, Nudge } from '../shell/hover';
 import { GoodWatchG } from '../shell/marks';
 import { useLayout } from '../shell/layout';
-import { warm } from '../shell/tokens';
+import { R, warm } from '../shell/tokens';
 import { StrengthMeter } from './StrengthMeter';
 import { TextAction } from './TasteMode';
 import { tasteMode } from './taste-mode';
@@ -42,7 +42,7 @@ export function TasteEntry({ member }: { member: boolean }) {
       ) : <StrengthMeter rated={rated} />}
       <View ref={button} collapsable={false} style={{ flexDirection: 'row' }}>
         <HoverPress label="Tune your taste" hint="Quick cards: seen it, did you like it" onPress={open}
-          style={{ flex: 1, minHeight: z(54), borderRadius: 12, paddingHorizontal: 18, flexDirection: 'row', gap: 9, backgroundColor: glow.amber, borderWidth: 1, borderColor: glow.amber }}>
+          style={{ flex: 1, minHeight: z(54), borderRadius: R.control, paddingHorizontal: 18, flexDirection: 'row', gap: 9, backgroundColor: glow.amber, borderWidth: 1, borderColor: glow.amber }}>
           <Nudge><Icon name="heartFilled" size={16} color={warm.ink} /></Nudge>
           <GText bold size={z(17)} color={warm.ink}>Tune your taste</GText>
         </HoverPress>

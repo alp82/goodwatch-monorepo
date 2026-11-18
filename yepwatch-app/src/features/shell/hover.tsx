@@ -8,6 +8,7 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { glow, native, onePress, s, spaceToggles } from '../glow/theme';
+import { R } from './tokens';
 
 /** Style keys react-native-web understands but React Native's types don't list. */
 export const webOnly = (o: Record<string, unknown>) => (native ? {} : o) as ViewStyle;
@@ -76,12 +77,12 @@ export function HoverPress({ label, onPress, children, disabled = false, quiet =
   const bw = typeof skin.borderWidth === 'number' ? skin.borderWidth : 0;
   const amber = typeof skin.backgroundColor === 'string' && skin.backgroundColor.toLowerCase() === glow.amber.toLowerCase();
   const wash = hover === 'lighten'
-    ? <View pointerEvents="none" style={[{ position: 'absolute', top: -bw, left: -bw, right: -bw, bottom: -bw, borderRadius: skin.borderRadius ?? 10, borderWidth: bw, borderColor: amber ? '#ffffff59' : '#ffffff2e', backgroundColor: amber ? '#ffffff2b' : '#ffffff10' }, hoverTransition, { opacity: live ? 1 : 0 }]} />
-    : hover === 'tint' ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, hoverTransition, { borderRadius: skin.borderRadius ?? 10, backgroundColor: '#ffffff12', opacity: live ? 1 : 0 }]} />
+    ? <View pointerEvents="none" style={[{ position: 'absolute', top: -bw, left: -bw, right: -bw, bottom: -bw, borderRadius: skin.borderRadius ?? R.control, borderWidth: bw, borderColor: amber ? '#ffffff59' : '#ffffff2e', backgroundColor: amber ? '#ffffff2b' : '#ffffff10' }, hoverTransition, { opacity: live ? 1 : 0 }]} />
+    : hover === 'tint' ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, hoverTransition, { borderRadius: skin.borderRadius ?? R.control, backgroundColor: '#ffffff12', opacity: live ? 1 : 0 }]} />
     : null;
   const lift = (pressed: boolean) => hover === 'lift'
     // Shows while hovered, goes while pressed (the tile settles).
-    ? <LiftShadow on={live && !pressed} shadow={shadow} radius={typeof skin.borderRadius === 'number' ? skin.borderRadius : 10} inset={-bw} />
+    ? <LiftShadow on={live && !pressed} shadow={shadow} radius={typeof skin.borderRadius === 'number' ? skin.borderRadius : R.control} inset={-bw} />
     : null;
   const inner = <Hovered.Provider value={live}>{children}</Hovered.Provider>;
   return (

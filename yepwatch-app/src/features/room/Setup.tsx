@@ -11,7 +11,7 @@ import { Or } from '../home/start-parts';
 import { HoverPress } from '../shell/hover';
 import { useLayout } from '../shell/layout';
 import { noun } from '../shell/noun';
-import { warm } from '../shell/tokens';
+import { R, warm } from '../shell/tokens';
 import { GText, Icon, glow } from '../glow/theme';
 import { NAME_MAX } from './model';
 import { toRooms } from './nav';
@@ -56,7 +56,7 @@ const SettingsButton = roomPart('SettingsButton', (r) => ({ view: r.view, openSh
   const icon = phone ? 20 : z(20);
   return (
     <HoverPress label={missing ? 'Settings, services missing' : 'Settings'} hover="lighten" repeatable onPress={() => openSheet('settings')}
-      style={{ height: z(54), paddingHorizontal: phone ? 14 : z(16), borderRadius: 12, flexDirection: 'row', gap: 8, backgroundColor: warm.faint, borderWidth: 1, borderColor: warm.lineStrong }}>
+      style={{ height: z(54), paddingHorizontal: phone ? 14 : z(16), borderRadius: R.control, flexDirection: 'row', gap: 8, backgroundColor: warm.faint, borderWidth: 1, borderColor: warm.lineStrong }}>
       <View>
         <Icon name="sliders" size={icon} color={glow.soft} />
         {missing ? <View testID="settings-missing" style={{ position: 'absolute', right: -3, top: -3, width: 9, height: 9, borderRadius: 5, backgroundColor: glow.amber, borderWidth: 1.5, borderColor: warm.bar }} /> : null}

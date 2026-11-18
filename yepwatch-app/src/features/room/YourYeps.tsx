@@ -12,7 +12,7 @@ import { ScorePill } from '../glow/scores';
 import { HoverPress } from '../shell/hover';
 import { useLayout } from '../shell/layout';
 import { Sheet } from '../shell/Sheet';
-import { warm } from '../shell/tokens';
+import { R, warm } from '../shell/tokens';
 import { Poster, meta } from './Decide';
 import { useOwnYeps, type OwnYep } from './own-yeps';
 import { useRoom, useRoomLive } from './RoomProvider';
@@ -32,7 +32,7 @@ export function YepsButton({ onPress, width, compact = false, tonight = false }:
   const pw = tonight ? 20 : 16;
   return (
     <HoverPress testID="yeps-button" label={`Your Yeps, ${n}`} hint="Shows every title you said Yep to" hover="lighten" repeatable onPress={onPress}
-      visual={{ width, height: tonight ? z(48) : z(36), paddingHorizontal: 10, borderRadius: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 7, backgroundColor: '#fbbf2414', borderWidth: 1, borderColor: warm.amberLine }}>
+      visual={{ width, height: tonight ? z(48) : z(36), paddingHorizontal: 10, borderRadius: R.control, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 7, backgroundColor: '#fbbf2414', borderWidth: 1, borderColor: warm.amberLine }}>
       <Icon name="check" size={z(15)} color={glow.amber} />
       <GText bold size={z(15)} color={glow.amber} lines={1} style={tonight ? undefined : { width: countWidth, textAlign: 'center', fontVariant: ['tabular-nums'] }}>{tonight ? `Your ${yepCount(n)}` : String(n)}</GText>
       {!compact && n ? (
@@ -100,7 +100,7 @@ export function YepsSheet({ onClose }: { onClose: () => void }) {
                 {flips ? (
                   <HoverPress label={on ? `Nope instead for ${y.title}` : `Yep again for ${y.title}`} hover="tint" repeatable disabled={disabled}
                     onPress={() => void cmd.vote(y.id, !on, null)}
-                    visual={{ width: z(78), height: z(36), borderRadius: 8, borderWidth: 1, borderColor: on ? '#ef444440' : warm.amberLine, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+                    visual={{ width: z(78), height: z(36), borderRadius: R.control, borderWidth: 1, borderColor: on ? '#ef444440' : warm.amberLine, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
                     <Icon name={on ? 'close' : 'check'} size={13} color={on ? '#f87171' : glow.amber} />
                     <GText bold size={z(13)} color={on ? glow.soft : glow.amber}>{on ? 'Nope' : 'Yep'}</GText>
                   </HoverPress>

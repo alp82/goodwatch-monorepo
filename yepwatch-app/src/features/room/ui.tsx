@@ -15,7 +15,7 @@ import { useLayout } from '../shell/layout';
 import { useSheetsHoldNavigation } from '../shell/sheet-back';
 import { useFreshSurface } from '../shell/fresh-surface';
 import { closeTopSheet, useSheetOpen } from '../shell/sheet-stack';
-import { warm } from '../shell/tokens';
+import { R, warm } from '../shell/tokens';
 import { GText, Icon, Press, glow, grow, spaceToggles } from '../glow/theme';
 import { useOptionalRoom } from './RoomProvider';
 import type { Kind } from './model';
@@ -116,7 +116,7 @@ export function Button({ label, onPress, disabled, quiet, secondary, icon, name,
   const size = fixed ? { width: fixed } : { flexGrow: 1, flexShrink: 1, flexBasis: 0 };
   return (
     <Press label={name ?? label} onPress={onPress} disabled={disabled} quiet={quiet}
-      style={{ ...size, minHeight: z(54), borderRadius: 12, paddingHorizontal: 16, flexDirection: 'row', gap: 9, backgroundColor: secondary ? warm.faint : glow.amber, borderWidth: 1, borderColor: secondary ? warm.lineStrong : glow.amber }}>
+      style={{ ...size, minHeight: z(54), borderRadius: R.control, paddingHorizontal: 16, flexDirection: 'row', gap: 9, backgroundColor: secondary ? warm.faint : glow.amber, borderWidth: 1, borderColor: secondary ? warm.lineStrong : glow.amber }}>
       {icon}
       <GText bold size={z(17)} color={secondary ? glow.ink : warm.ink} lines={1}>{label}</GText>
       {testID ? <View testID={testID} /> : null}

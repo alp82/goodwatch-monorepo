@@ -81,7 +81,7 @@ function InlineDetails({ t, onClose }: { t: CardTitle; onClose: () => void }) {
       <ScrollView contentContainerStyle={{ padding: z(16), gap: z(8) }}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <GText bold size={z(12)} color={glow.amber} style={{ flex: 1, letterSpacing: 0.2 }}>Details</GText>
-          <HoverPress label="Close details" hover="tint" onPress={onClose} style={{ borderRadius: 12 }}><Icon name="close" size={20} color={glow.soft} /></HoverPress>
+          <HoverPress label="Close details" hover="tint" onPress={onClose} style={{ borderRadius: R.control }}><Icon name="close" size={20} color={glow.soft} /></HoverPress>
         </View>
         <GText bold size={z(20)} style={{ letterSpacing: -0.4 }}>{t.title}</GText>
         {t.meta ? <GText size={z(14)} color={glow.muted}>{t.meta}</GText> : null}
@@ -129,7 +129,7 @@ export function TasteCard({ t, w, answers, onAnswer, count, disabled, dragPictur
             {t.meta ? <GText size={z(14)} color={glow.soft}>{t.meta}</GText> : null}
           </View>
           <HoverPress label="Details" onPress={toggle} disabled={disabled} style={{ minHeight: 48, alignItems: 'stretch' }}
-            visual={{ minHeight: 36, paddingHorizontal: 10, borderRadius: 9, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#000000a0', borderWidth: 1, borderColor: '#ffffff2a' }}>
+            visual={{ minHeight: 36, paddingHorizontal: 10, borderRadius: R.control, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#000000a0', borderWidth: 1, borderColor: '#ffffff2a' }}>
             <GText bold size={z(13)} color={glow.soft}>Details</GText>
             <Nudge dx={2}><Icon name="right" size={z(13)} color={glow.soft} /></Nudge>
           </HoverPress>

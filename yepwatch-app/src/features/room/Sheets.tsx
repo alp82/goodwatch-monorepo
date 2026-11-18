@@ -19,7 +19,7 @@ import { GoodWatchMark } from '../shell/marks';
 import { FaceStack } from '../shell/parts';
 import { Sheet } from '../shell/Sheet';
 import { useLayout } from '../shell/layout';
-import { warm } from '../shell/tokens';
+import { R, warm } from '../shell/tokens';
 import { GText, Icon, Press, glow, grow } from '../glow/theme';
 import { bringers } from './model';
 import { exitRoom, openPage, sheetHref } from './nav';
@@ -57,7 +57,7 @@ export function SheetAddress({ sheet }: { sheet: RoomSheet }) {
 function InviteFriends({ onPress }: { onPress: () => void }) {
   return (
     <Press label="Invite friends, show QR code and link" onPress={onPress}
-      style={{ minHeight: 52, borderRadius: 12, paddingHorizontal: 14, flexDirection: 'row', justifyContent: 'flex-start', gap: 12, backgroundColor: warm.faint, borderWidth: 1, borderColor: warm.lineStrong }}>
+      style={{ minHeight: 52, borderRadius: R.control, paddingHorizontal: 14, flexDirection: 'row', justifyContent: 'flex-start', gap: 12, backgroundColor: warm.faint, borderWidth: 1, borderColor: warm.lineStrong }}>
       <Icon name="qr" size={18} color={glow.soft} />
       <GText bold size={15} style={{ flex: 1 }}>Invite friends</GText>
       <Icon name="right" size={16} color={glow.muted} />
@@ -179,15 +179,15 @@ function RoomSettings({ label = false }: { label?: boolean }) {
         <SoundToggle />
       </View>
       <View style={{ flexDirection: 'row', gap: 10 }}>
-        <Press label={`Archive ${noun.one}`} onPress={archive} style={{ flex: 1, minHeight: 48, borderRadius: 12, borderWidth: 1, borderColor: warm.line }}><GText bold color={glow.soft}>{`Archive ${noun.one}`}</GText></Press>
-        <Press label={`Leave ${noun.one}`} disabled={disabled || Boolean(leaving)} onPress={() => setLeaving('ask')} style={{ flex: 1, minHeight: 48, borderRadius: 12, borderWidth: 1, borderColor: '#f8717140' }}><GText bold color="#f87171">{`Leave ${noun.one}`}</GText></Press>
+        <Press label={`Archive ${noun.one}`} onPress={archive} style={{ flex: 1, minHeight: 48, borderRadius: R.control, borderWidth: 1, borderColor: warm.line }}><GText bold color={glow.soft}>{`Archive ${noun.one}`}</GText></Press>
+        <Press label={`Leave ${noun.one}`} disabled={disabled || Boolean(leaving)} onPress={() => setLeaving('ask')} style={{ flex: 1, minHeight: 48, borderRadius: R.control, borderWidth: 1, borderColor: '#f8717140' }}><GText bold color="#f87171">{`Leave ${noun.one}`}</GText></Press>
       </View>
       {leaving ? (
         <View testID="leave-confirm" accessibilityLiveRegion="polite" style={{ gap: 12, padding: 14, borderRadius: 12, borderWidth: 1, borderColor: '#f8717140', backgroundColor: '#f8717110' }}>
           <GText bold size={z(18)}>{`Leave ${noun.this}?`}</GText>
           <View style={{ flexDirection: 'row', gap: 10 }}>
-            <Press label="Stay" disabled={leaving === 'sending'} onPress={() => setLeaving(null)} style={{ flex: 1, minHeight: 48, borderRadius: 12, borderWidth: 1, borderColor: warm.line }}><GText bold color={glow.soft}>Stay</GText></Press>
-            <Press label="Leave" disabled={leaving === 'sending'} onPress={leave} style={{ flex: 1, minHeight: 48, borderRadius: 12, backgroundColor: '#f87171' }}><GText bold color="#070707">{leaving === 'sending' ? 'Leaving…' : 'Leave'}</GText></Press>
+            <Press label="Stay" disabled={leaving === 'sending'} onPress={() => setLeaving(null)} style={{ flex: 1, minHeight: 48, borderRadius: R.control, borderWidth: 1, borderColor: warm.line }}><GText bold color={glow.soft}>Stay</GText></Press>
+            <Press label="Leave" disabled={leaving === 'sending'} onPress={leave} style={{ flex: 1, minHeight: 48, borderRadius: R.control, backgroundColor: '#f87171' }}><GText bold color="#070707">{leaving === 'sending' ? 'Leaving…' : 'Leave'}</GText></Press>
           </View>
         </View>
       ) : null}
@@ -259,7 +259,7 @@ function StreamingSheet() {
       <View style={{ gap: 8 }}>
         <Label>Yours</Label>
         <Press label={`${mineList.length ? namesLine(mineList) : 'Add yours'}, change`} onPress={() => openSheet('services')}
-          style={{ minHeight: 56, borderRadius: 12, paddingHorizontal: 14, flexDirection: 'row', justifyContent: 'flex-start', gap: 12, backgroundColor: warm.faint, borderWidth: 1, borderColor: warm.line }}>
+          style={{ minHeight: 56, borderRadius: R.control, paddingHorizontal: 14, flexDirection: 'row', justifyContent: 'flex-start', gap: 12, backgroundColor: warm.faint, borderWidth: 1, borderColor: warm.line }}>
           {mineList.length ? <><Logos services={mineList} size={28} /><GText lines={1} style={{ flex: 1 }}>{namesLine(mineList)}</GText></> : <GText color={glow.amber} style={{ flex: 1 }}>Add yours</GText>}
           {view.member ? <GoodWatchMark size={16} /> : null}
           <Icon name="right" size={16} color={glow.muted} />

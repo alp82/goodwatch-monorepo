@@ -3,6 +3,7 @@ import { AccessibilityInfo, Animated, Platform, Pressable, ScrollView, StyleShee
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { developmentNotice } from '../core/config';
 import { createMotionPreference } from './motion-preference';
+import { R } from '../features/shell/tokens';
 
 export const colors = { bg: '#060606', panel: '#171717', raised: '#262626', line: '#383838', ink: '#fafafa', muted: '#b6b6b6', amber: '#fbbf24', amberInk: '#1c1404', green: '#86d4aa', danger: '#ffb2ad' };
 export function Words({ children, muted = false, style }: { children: ReactNode; muted?: boolean; style?: TextStyle }) {
@@ -46,7 +47,7 @@ export const s = StyleSheet.create({
   text: { fontFamily: 'Gabarito', fontSize: 16, lineHeight: 23, color: colors.ink }, heading: { fontFamily: 'GabaritoBold', fontSize: 34, lineHeight: 39, color: colors.ink, letterSpacing: -0.5 },
   brandRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingVertical: 14, marginBottom: 14 }, brand: { fontFamily: 'GabaritoBold', fontSize: 27, color: colors.ink, letterSpacing: -1 },
   panel: { backgroundColor: colors.panel, borderColor: colors.line, borderWidth: 1, borderRadius: 16, padding: 18, gap: 14 }, row: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 10 },
-  button: { minHeight: 48, borderRadius: 12, backgroundColor: colors.amber, paddingVertical: 13, paddingHorizontal: 18, justifyContent: 'center', borderWidth: 1, borderColor: 'transparent' }, secondary: { backgroundColor: colors.raised, borderColor: colors.line }, selected: { borderColor: colors.amber, borderWidth: 2, paddingVertical: 12, paddingHorizontal: 17 }, buttonText: { fontFamily: 'GabaritoBold', fontSize: 16, color: colors.amberInk, textAlign: 'center' },
-  field: { gap: 8 }, input: { minHeight: 48, backgroundColor: '#0f0f0f', borderWidth: 1, borderColor: '#595959', borderRadius: 10, color: colors.ink, padding: 12, fontFamily: 'Gabarito', fontSize: 17 },
+  button: { minHeight: 48, borderRadius: R.control, backgroundColor: colors.amber, paddingVertical: 13, paddingHorizontal: 18, justifyContent: 'center', borderWidth: 1, borderColor: 'transparent' }, secondary: { backgroundColor: colors.raised, borderColor: colors.line }, selected: { borderColor: colors.amber, borderWidth: 2, paddingVertical: 12, paddingHorizontal: 17 }, buttonText: { fontFamily: 'GabaritoBold', fontSize: 16, color: colors.amberInk, textAlign: 'center' },
+  field: { gap: 8 }, input: { minHeight: 48, backgroundColor: '#0f0f0f', borderWidth: 1, borderColor: '#595959', borderRadius: R.control, color: colors.ink, padding: 12, fontFamily: 'Gabarito', fontSize: 17 },
   notice: { padding: 14, borderWidth: 1, borderColor: colors.line, borderRadius: 12, backgroundColor: '#101010' }, footer: { textAlign: 'center', fontSize: 13, marginTop: 20 },
 });

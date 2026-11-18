@@ -17,6 +17,7 @@ import { TrailerLink } from '../glow/TrailerLink';
 import { goodwatchTitleUrl } from '../glow/watch-links';
 import { useLayout, type Layout } from '../shell/layout';
 import { GoodWatchMark } from '../shell/marks';
+import { R } from '../shell/tokens';
 
 // Expo Link's asChild uses HTML attributes; RN Web Pressable needs hrefAttrs.
 const externalAttrs = Platform.OS === 'web' ? { hrefAttrs: { target: '_blank', rel: 'noopener noreferrer' } } : {};
@@ -57,7 +58,7 @@ function Scores({ c, z, ring }: { c: Candidate; z: Z; ring: number }) {
   );
 }
 
-const actionStyle = (z: Z) => ({ flexGrow: 1, flexShrink: 1, flexBasis: 0, minHeight: z(64), borderRadius: 14, paddingHorizontal: z(18), flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: z(10), backgroundColor: '#ffffff12', borderWidth: 1, borderColor: '#ffffff33' }) as const;
+const actionStyle = (z: Z) => ({ flexGrow: 1, flexShrink: 1, flexBasis: 0, minHeight: z(64), borderRadius: R.control, paddingHorizontal: z(18), flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: z(10), backgroundColor: '#ffffff12', borderWidth: 1, borderColor: '#ffffff33' }) as const;
 
 /** Trailer (when there is one) and Full details on GoodWatch: two big, equal actions. */
 function Actions({ c, z, stack }: { c: Candidate; z: Z; stack: boolean }) {
