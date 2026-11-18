@@ -13,7 +13,7 @@
 					"oklch(55.5% 0.163 48.998)",
 					"oklch(66.6% 0.179 58.318)",
 					"oklch(76.9% 0.188 70.08)",
-					"oklch(82.8% 0.189 84.429)",
+					"#fbbf24",
 					"oklch(87.9% 0.169 91.605)",
 					"oklch(92.4% 0.12 95.746)"
 				]
@@ -27,7 +27,7 @@
 					"oklch(55.5% 0.163 48.998)",
 					"oklch(66.6% 0.179 58.318)",
 					"oklch(76.9% 0.188 70.08)",
-					"oklch(82.8% 0.189 84.429)",
+					"#fbbf24",
 					"oklch(87.9% 0.169 91.605)",
 					"oklch(92.4% 0.12 95.746)"
 				]
@@ -41,7 +41,7 @@
 					"oklch(55.5% 0.163 48.998)",
 					"oklch(66.6% 0.179 58.318)",
 					"oklch(76.9% 0.188 70.08)",
-					"oklch(82.8% 0.189 84.429)",
+					"#fbbf24",
 					"oklch(87.9% 0.169 91.605)",
 					"oklch(92.4% 0.12 95.746)"
 				]
@@ -55,7 +55,7 @@
 					"oklch(55.5% 0.163 48.998)",
 					"oklch(66.6% 0.179 58.318)",
 					"oklch(76.9% 0.188 70.08)",
-					"oklch(82.8% 0.189 84.429)",
+					"#fbbf24",
 					"oklch(87.9% 0.169 91.605)",
 					"oklch(92.4% 0.12 95.746)"
 				]
@@ -431,7 +431,7 @@
 			"refersTo": "button-primary",
 			"description": "The one amber action on a screen.",
 			"html": "<button class=\"ds-btn-primary\">Sign up</button>",
-			"css": ".ds-btn-primary{background:oklch(82.8% 0.189 84.429);color:#060606;font:900 14px/1 system-ui,sans-serif;min-height:44px;padding:0 20px;border:0;border-radius:9999px;cursor:pointer;transition:background-color .15s}.ds-btn-primary:hover{background:oklch(87.9% 0.169 91.605)}.ds-btn-primary:focus-visible{outline:2px solid #fff;outline-offset:2px}"
+			"css": ".ds-btn-primary{background:#fbbf24;color:#060606;font:900 14px/1 system-ui,sans-serif;min-height:44px;padding:0 20px;border:0;border-radius:9999px;cursor:pointer;transition:background-color .15s}.ds-btn-primary:hover{background:oklch(87.9% 0.169 91.605)}.ds-btn-primary:focus-visible{outline:2px solid #fff;outline-offset:2px}"
 		},
 		{
 			"name": "Light Button",
@@ -439,7 +439,7 @@
 			"refersTo": "button-light",
 			"description": "Strong secondary action on dark.",
 			"html": "<button class=\"ds-btn-light\">Watch now</button>",
-			"css": ".ds-btn-light{background:#fff;color:#000;font:600 14px/20px system-ui,sans-serif;padding:6px 12px;border:0;border-radius:9999px;cursor:pointer}.ds-btn-light:hover{background:oklch(92.8% 0.006 264.531)}.ds-btn-light:focus-visible{outline:2px solid oklch(82.8% 0.189 84.429);outline-offset:2px}"
+			"css": ".ds-btn-light{background:#fff;color:#000;font:600 14px/20px system-ui,sans-serif;padding:6px 12px;border:0;border-radius:9999px;cursor:pointer}.ds-btn-light:hover{background:oklch(92.8% 0.006 264.531)}.ds-btn-light:focus-visible{outline:2px solid #fbbf24;outline-offset:2px}"
 		},
 		{
 			"name": "Ghost Button",
@@ -447,7 +447,7 @@
 			"refersTo": "button-ghost",
 			"description": "Default secondary action.",
 			"html": "<button class=\"ds-btn-ghost\">Want to See</button>",
-			"css": ".ds-btn-ghost{background:rgb(255 255 255/.1);color:oklch(96.7% 0.003 264.542);font:600 12px/16px system-ui,sans-serif;padding:4px 12px;border:0;border-radius:9999px;cursor:pointer;transition:background-color .15s}.ds-btn-ghost:hover{background:rgb(255 255 255/.2)}.ds-btn-ghost:focus-visible{outline:2px solid oklch(82.8% 0.189 84.429);outline-offset:2px}"
+			"css": ".ds-btn-ghost{background:rgb(255 255 255/.1);color:oklch(96.7% 0.003 264.542);font:600 12px/16px system-ui,sans-serif;padding:4px 12px;border:0;border-radius:9999px;cursor:pointer;transition:background-color .15s}.ds-btn-ghost:hover{background:rgb(255 255 255/.2)}.ds-btn-ghost:focus-visible{outline:2px solid #fbbf24;outline-offset:2px}"
 		},
 		{
 			"name": "Action Button",
@@ -455,7 +455,7 @@
 			"refersTo": "button-action",
 			"description": "Title actions such as Want to See and Not interested.",
 			"html": "<button class=\"ds-act\"><svg viewBox=\"0 0 20 20\" width=\"16\" height=\"16\" fill=\"currentColor\"><path d=\"M10 2a.75.75 0 0 1 .75.75v6.5h6.5a.75.75 0 0 1 0 1.5h-6.5v6.5a.75.75 0 0 1-1.5 0v-6.5h-6.5a.75.75 0 0 1 0-1.5h6.5v-6.5A.75.75 0 0 1 10 2Z\"/></svg>Want to See</button>",
-			"css": ".ds-act{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 16px;border:0;border-radius:8px;background:rgb(255 255 255/.06);box-shadow:inset 0 0 0 1px rgb(255 255 255/.1);color:#fff;font:600 14px system-ui,sans-serif;cursor:pointer}.ds-act svg{color:oklch(87.9% 0.169 91.605)}.ds-act:hover{background:rgb(255 255 255/.12)}.ds-act:focus-visible{outline:2px solid oklch(82.8% 0.189 84.429);outline-offset:2px}"
+			"css": ".ds-act{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 16px;border:0;border-radius:8px;background:rgb(255 255 255/.06);box-shadow:inset 0 0 0 1px rgb(255 255 255/.1);color:#fff;font:600 14px system-ui,sans-serif;cursor:pointer}.ds-act svg{color:oklch(87.9% 0.169 91.605)}.ds-act:hover{background:rgb(255 255 255/.12)}.ds-act:focus-visible{outline:2px solid #fbbf24;outline-offset:2px}"
 		},
 		{
 			"name": "Text Field",
@@ -463,7 +463,7 @@
 			"refersTo": "input-text",
 			"description": "Form text field with a caption label.",
 			"html": "<label class=\"ds-field\"><span>Display name</span><input value=\"Alex\"></label>",
-			"css": ".ds-field{display:flex;flex-direction:column;gap:6px;width:280px}.ds-field span{font:600 11px system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:oklch(55.1% 0.027 264.364)}.ds-field input{min-height:44px;padding:0 12px;border:0;border-radius:8px;background:oklch(21% 0.034 264.665);box-shadow:inset 0 0 0 1px rgb(255 255 255/.15);color:#fff;font:400 14px system-ui,sans-serif;outline:0}.ds-field input:focus{box-shadow:inset 0 0 0 2px oklch(82.8% 0.189 84.429)}"
+			"css": ".ds-field{display:flex;flex-direction:column;gap:6px;width:280px}.ds-field span{font:600 11px system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:oklch(55.1% 0.027 264.364)}.ds-field input{min-height:44px;padding:0 12px;border:0;border-radius:8px;background:oklch(21% 0.034 264.665);box-shadow:inset 0 0 0 1px rgb(255 255 255/.15);color:#fff;font:400 14px system-ui,sans-serif;outline:0}.ds-field input:focus{box-shadow:inset 0 0 0 2px #fbbf24}"
 		},
 		{
 			"name": "Search Field",
@@ -471,7 +471,7 @@
 			"refersTo": "input-search",
 			"description": "Global search pill in the top bar.",
 			"html": "<label class=\"ds-search\"><svg viewBox=\"0 0 20 20\" width=\"16\" height=\"16\" fill=\"currentColor\"><path fill-rule=\"evenodd\" d=\"M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.45 4.39l3.08 3.08a.75.75 0 1 1-1.06 1.06l-3.08-3.08A7 7 0 0 1 2 9Z\"/></svg><input placeholder=\"Search titles, people, moods\"><kbd>Ctrl K</kbd></label>",
-			"css": ".ds-search{display:flex;align-items:center;gap:10px;height:40px;padding:0 8px 0 16px;width:360px;background:rgb(255 255 255/.05);border-radius:9999px;box-shadow:inset 0 0 0 1px rgb(255 255 255/.15);color:oklch(82.8% 0.189 84.429)}.ds-search:focus-within{box-shadow:inset 0 0 0 2px oklch(82.8% 0.189 84.429)}.ds-search input{flex:1;background:none;border:0;outline:0;color:#fff;font:400 14px system-ui,sans-serif}.ds-search input::placeholder{color:oklch(70.7% 0.022 261.325)}.ds-search kbd{font:500 11px system-ui;color:oklch(70.7% 0.022 261.325);background:rgb(255 255 255/.1);padding:2px 6px;border-radius:4px}"
+			"css": ".ds-search{display:flex;align-items:center;gap:10px;height:40px;padding:0 8px 0 16px;width:360px;background:rgb(255 255 255/.05);border-radius:9999px;box-shadow:inset 0 0 0 1px rgb(255 255 255/.15);color:#fbbf24}.ds-search:focus-within{box-shadow:inset 0 0 0 2px #fbbf24}.ds-search input{flex:1;background:none;border:0;outline:0;color:#fff;font:400 14px system-ui,sans-serif}.ds-search input::placeholder{color:oklch(70.7% 0.022 261.325)}.ds-search kbd{font:500 11px system-ui;color:oklch(70.7% 0.022 261.325);background:rgb(255 255 255/.1);padding:2px 6px;border-radius:4px}"
 		},
 		{
 			"name": "Switch",

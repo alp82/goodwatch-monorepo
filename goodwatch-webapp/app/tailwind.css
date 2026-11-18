@@ -42,6 +42,10 @@
 
 	--color-gray-950: #060606;
 
+	/* One amber for the GoodWatch family: the wordmark, start.css, the OG cards and YepWatch all draw #fbbf24
+	   (Tailwind v3 amber-400). Tailwind v4's own amber-400 is a more orange oklch. */
+	--color-amber-400: #fbbf24;
+
 	/* Neumorphic primary colors (dark neutral) */
 	--color-primary-50: #525252;
 	--color-primary-100: #4a4a4a;
@@ -59,7 +63,6 @@
 	--color-accent-100: #fef3c7;
 	--color-accent-200: #fde68a;
 	--color-accent-300: #fcd34d;
-	--color-accent-400: #fbbf24;
 	--color-accent-500: #f59e0b;
 	--color-accent-600: #d97706;
 	--color-accent-700: #b45309;
