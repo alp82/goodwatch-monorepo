@@ -44,11 +44,11 @@ export function CopyField({
 				type="button"
 				onClick={copy}
 				aria-label={copied ? "Copied" : label}
-				className={`flex shrink-0 cursor-pointer items-center gap-1.5 ${size === "lg" ? primaryButtonClass("rect", "justify-center px-4 py-3 text-base sm:py-0") : "rounded-lg bg-gray-700 px-3 text-sm font-semibold text-gray-100 transition hover:bg-gray-600"} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500`}
+				className={`flex shrink-0 cursor-pointer items-center gap-1.5 ${size === "lg" ? primaryButtonClass("outlineRect", "justify-center px-4 py-3 text-base sm:py-0") : "rounded-lg bg-gray-700 px-3 text-sm font-semibold text-gray-100 transition hover:bg-gray-600"} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500`}
 			>
 				{copied ? (
 					<CheckIcon
-						className={`h-4 w-4 ${size === "lg" ? "text-white" : "text-emerald-400"}`}
+						className={`h-4 w-4 ${size === "lg" ? "" : "text-emerald-400"}`}
 						aria-hidden="true"
 					/>
 				) : (

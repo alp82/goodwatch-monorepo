@@ -42,11 +42,7 @@ export function ServiceStack({
 }) {
 	if (!providers.length) return null
 	return (
-		<span
-			className="flex shrink-0 items-center"
-			style={{ height: size }}
-			aria-hidden
-		>
+		<span className="flex shrink-0 items-center" style={{ height: size }} aria-hidden>
 			{providers.slice(0, max).map((p, i) => (
 				<img
 					key={p.id}
@@ -66,16 +62,10 @@ export function ServiceStack({
 }
 
 /** Arrow keys move between a group's radios and pick, as in a native radio group. Put it on the group. */
-export function radioKeys(
-	event: KeyboardEvent<HTMLElement>,
-	pick: (index: number) => void,
-) {
-	if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key))
-		return
+export function radioKeys(event: KeyboardEvent<HTMLElement>, pick: (index: number) => void) {
+	if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return
 	event.preventDefault()
-	const radios = Array.from(
-		event.currentTarget.querySelectorAll<HTMLElement>('[role="radio"]'),
-	)
+	const radios = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('[role="radio"]'))
 	const at = radios.indexOf(document.activeElement as HTMLElement)
 	const forward = event.key === "ArrowRight" || event.key === "ArrowDown"
 	const next = (at + (forward ? 1 : -1) + radios.length) % radios.length
@@ -119,9 +109,7 @@ export function ServicesControl({
 			role="radiogroup"
 			aria-label="Where to watch"
 			onKeyDown={(event) =>
-				radioKeys(event, (index) =>
-					index === 0 ? pickMine() : onChange(false),
-				)
+				radioKeys(event, (index) => (index === 0 ? pickMine() : onChange(false)))
 			}
 			className={`relative flex shrink-0 ${sm ? "h-9 p-0.5" : "h-12 p-1"} ${SHELL}`}
 		>
@@ -217,9 +205,7 @@ export function NotSeenSwitch({
 			role="switch"
 			aria-checked={on}
 			aria-label={
-				shown
-					? `Not seen yet, hides ${shown.toLocaleString("en")} titles`
-					: "Not seen yet"
+				shown ? `Not seen yet, hides ${shown.toLocaleString("en")} titles` : "Not seen yet"
 			}
 			whileTap={TAP}
 			onClick={() => onChange(!on)}
@@ -230,9 +216,7 @@ export function NotSeenSwitch({
 			) : (
 				<EyeIcon className="h-4 w-4 shrink-0" />
 			)}
-			<span className={`flex-1 text-left ${compact ? "max-xl:sr-only" : ""}`}>
-				Not seen yet
-			</span>
+			<span className={`flex-1 text-left ${compact ? "max-xl:sr-only" : ""}`}>Not seen yet</span>
 			{/* The small size has no fixed slot: the count shows only on a surface that counts. */}
 			{(!sm || hides !== null) && (
 				<span
@@ -242,10 +226,7 @@ export function NotSeenSwitch({
 					{hiddenShort(shown)}
 				</span>
 			)}
-			<Knob
-				on={on}
-				onClass="bg-blue-600 shadow-[0_0_14px_rgba(37,99,235,.6)]"
-			/>
+			<Knob on={on} onClass="bg-blue-600 shadow-[0_0_14px_rgba(37,99,235,.6)]" />
 		</motion.button>
 	)
 }
@@ -278,9 +259,7 @@ export function SortItems<K extends string>({
 		if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return
 		event.preventDefault()
 		const items = Array.from(
-			event.currentTarget.querySelectorAll<HTMLElement>(
-				'[role="menuitemradio"]',
-			),
+			event.currentTarget.querySelectorAll<HTMLElement>('[role="menuitemradio"]'),
 		)
 		const at = items.indexOf(document.activeElement as HTMLElement)
 		const next =
@@ -288,14 +267,11 @@ export function SortItems<K extends string>({
 				? 0
 				: event.key === "End"
 					? items.length - 1
-					: (at + (event.key === "ArrowDown" ? 1 : -1) + items.length) %
-						items.length
+					: (at + (event.key === "ArrowDown" ? 1 : -1) + items.length) % items.length
 		items[next]?.focus()
 	}
 	// The sign-up prompt stands in for the sorts that need taste.
-	const shown = signUp
-		? options.filter((s) => !(s.disabled && s.taste))
-		: options
+	const shown = signUp ? options.filter((s) => !(s.disabled && s.taste)) : options
 	return (
 		<div className="flex flex-col" onKeyDown={onKeyDown}>
 			{signUp}
@@ -327,9 +303,7 @@ export function SortItems<K extends string>({
 							/>
 						)}
 						<span className="relative min-w-0 flex-1">
-							<span
-								className={`block text-sm font-bold ${on ? "text-white" : "text-gray-300"}`}
-							>
+							<span className={`block text-sm font-bold ${on ? "text-white" : "text-gray-300"}`}>
 								{s.label}
 							</span>
 							<span className="block text-xs text-gray-500">{s.hint}</span>
@@ -341,9 +315,7 @@ export function SortItems<K extends string>({
 					</motion.button>
 				)
 			})}
-			{footnote && (
-				<p className="px-3 pt-1.5 pb-2 text-xs text-gray-500">{footnote}</p>
-			)}
+			{footnote && <p className="px-3 pt-1.5 pb-2 text-xs text-gray-500">{footnote}</p>}
 			{footer}
 		</div>
 	)
@@ -566,9 +538,7 @@ export function SortControl<K extends string>({
 					/>
 				)}
 				<span className="text-gray-400">Sort </span>
-				<span
-					className={`relative overflow-hidden text-left ${sm ? "" : "flex-1"}`}
-				>
+				<span className={`relative overflow-hidden text-left ${sm ? "" : "flex-1"}`}>
 					<AnimatePresence mode="popLayout" initial={false}>
 						<motion.span
 							key={value}
@@ -621,12 +591,10 @@ export function FiltersButton({
 			className={`flex h-12 shrink-0 items-center gap-2 px-4 text-sm font-bold text-white cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${SHELL} hover:ring-white/25`}
 		>
 			<AdjustmentsHorizontalIcon className="h-4 w-4" />
-			<span className={compact ? "max-xl:sr-only" : undefined}>
-				{children ?? "Filters"}{" "}
-			</span>
+			<span className={compact ? "max-xl:sr-only" : undefined}>{children ?? "Filters"} </span>
 			<span
 				aria-hidden
-				className={`grid h-5 min-w-5 place-items-center rounded-full px-1.5 text-xs tabular-nums ${count ? "bg-amber-500 text-gray-950" : "bg-white/10 text-gray-400"}`}
+				className={`grid h-5 min-w-5 place-items-center rounded-full px-1.5 text-xs tabular-nums ${count ? "bg-gray-200 text-gray-950" : "bg-white/10 text-gray-400"}`}
 			>
 				{count}
 			</span>

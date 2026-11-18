@@ -3,12 +3,13 @@
 // list on a title uses this tag, and a new list gets its color here, distinct from the others.
 import type { ReactNode } from "react"
 
-/** Each list's colors: a solid fill with dark text, readable over any poster or backdrop. */
+/** Each list's colors: a solid fill with dark text, readable over any poster or backdrop. No amber: a solid amber fill
+ * is a view's main action (D7). */
 export const LIST_TAG_TONE = {
 	/** A show to continue: its next episode. */
-	continue: "bg-amber-400 text-black",
+	continue: "bg-gray-200 text-black",
 	/** A finished show with new episodes. */
-	newEpisodes: "bg-amber-400 text-black",
+	newEpisodes: "bg-gray-200 text-black",
 	/** A show to start. */
 	start: "bg-emerald-400 text-black",
 	wishlist: "bg-sky-400 text-black",

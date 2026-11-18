@@ -10,15 +10,7 @@
 // "no effect", and take no share of the hidden total.
 import { XMarkIcon } from "@heroicons/react/20/solid"
 import { AnimatePresence, motion } from "framer-motion"
-import {
-	type ReactNode,
-	Suspense,
-	lazy,
-	useEffect,
-	useId,
-	useRef,
-	useState,
-} from "react"
+import { type ReactNode, Suspense, lazy, useEffect, useId, useRef, useState } from "react"
 import type { FilterState } from "~/domain/filter-state"
 import { Knob, MENU, METER_TRANSITION, TAP } from "~/ui/filter-bar/motion"
 import type { FilterBarCounts } from "~/ui/filter-bar/types"
@@ -85,27 +77,16 @@ function diff(before: FilterState, after: FilterState): Partial<FilterState> {
 	return out as Partial<FilterState>
 }
 
-function Stack({
-	shown,
-	rows,
-	className,
-}: {
-	shown: number
-	rows: Row[]
-	className: string
-}) {
+function Stack({ shown, rows, className }: { shown: number; rows: Row[]; className: string }) {
 	const live = rows.filter((r) => !r.off && r.hides > 0)
 	const all = shown + live.reduce((sum, r) => sum + r.hides, 0)
 	const width = (n: number) => `${all ? Math.max(2, (n / all) * 100) : 0}%`
 	return (
-		<span
-			aria-hidden
-			className={`flex overflow-hidden rounded-full bg-white/5 ${className}`}
-		>
+		<span aria-hidden className={`flex overflow-hidden rounded-full bg-white/5 ${className}`}>
 			<motion.span
 				layout
 				transition={METER_TRANSITION}
-				className="h-full bg-amber-500"
+				className="h-full bg-gray-300"
 				style={{ width: width(shown) }}
 			/>
 			{live.map((r) => (
@@ -143,10 +124,7 @@ export function FilterMix({
 	 * While searching: every part the search read, with its switch, after the filter rows (then no "Shown" row). It
 	 * gets the read rows' counts as the meter shows them, by row group.
 	 */
-	readSection?: (
-		counts: ReadonlyMap<string, number>,
-		own: OwnRow[],
-	) => ReactNode
+	readSection?: (counts: ReadonlyMap<string, number>, own: OwnRow[]) => ReactNode
 	/** Removes the search and every filter: the Filters header's Clear. */
 	onClearAll?: () => void
 	/** Which chips get rows of their own: the person's own filters (the read parts are in `readSection`). */
@@ -163,8 +141,7 @@ export function FilterMix({
 	const ref = useRef<HTMLDivElement>(null)
 	useEffect(() => {
 		if (!open) return
-		const down = (e: Event) =>
-			!ref.current?.contains(e.target as Node) && setOpen(false)
+		const down = (e: Event) => !ref.current?.contains(e.target as Node) && setOpen(false)
 		const key = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false)
 		document.addEventListener("pointerdown", down)
 		document.addEventListener("keydown", key)
@@ -183,9 +160,7 @@ export function FilterMix({
 	const seen = useRef<string[]>([])
 	const total = counts?.total ?? 0
 	const hidden = counts?.hidden ?? 0
-	const sole = new Map(
-		(counts?.recoveries ?? []).map((r) => [r.filter as string, r.titles]),
-	)
+	const sole = new Map((counts?.recoveries ?? []).map((r) => [r.filter as string, r.titles]))
 	const groups: { group: string; chips: BarChip[] }[] = []
 	for (const chip of chips) {
 		if (chip.kind === "query" || !chip.group) continue
@@ -201,8 +176,7 @@ export function FilterMix({
 	const join = (group: string, member: string) =>
 		members.set(group, [...(members.get(group) ?? []), member])
 	for (const g of groups) join(g.group, `own:${g.group}`)
-	for (const r of readRows)
-		if (r.inHidden && r.nativeGroup) join(r.nativeGroup, r.group)
+	for (const r of readRows) if (r.inHidden && r.nativeGroup) join(r.nativeGroup, r.group)
 	const allocated = allocateHidden(
 		hidden,
 		[...members].map(([group, keys]) => ({
@@ -222,10 +196,7 @@ export function FilterMix({
 		.sort((a, b) => b.row.hides - a.row.hides || a.index - b.index)
 		.map(({ row }) => row)
 	const readCounts = new Map(readShown.map((r) => [r.group, r.hides]))
-	const readHidden = readShown.reduce(
-		(sum, r) => sum + (r.inHidden ? 0 : Math.max(0, r.hides)),
-		0,
-	)
+	const readHidden = readShown.reduce((sum, r) => sum + (r.inHidden ? 0 : Math.max(0, r.hides)), 0)
 	const allHidden = hidden + readHidden
 	// A total that includes an estimated read count is itself about: "~".
 	const about = readShown.some((r) => r.approx && r.hides > 0) ? "~" : ""
@@ -251,16 +222,12 @@ export function FilterMix({
 				off: true,
 			})),
 	]
-	for (const row of unsorted)
-		if (!seen.current.includes(row.group)) seen.current.push(row.group)
+	for (const row of unsorted) if (!seen.current.includes(row.group)) seen.current.push(row.group)
 	const rows = [...unsorted].sort(
 		(a, b) => seen.current.indexOf(a.group) - seen.current.indexOf(b.group),
 	)
 	// One meter for the compact bar and the popout: the native rows, then the read hard filters.
-	const meterRows: Row[] = [
-		...rows,
-		...readShown.map((r) => ({ ...r, chips: [], off: false })),
-	]
+	const meterRows: Row[] = [...rows, ...readShown.map((r) => ({ ...r, chips: [], off: false }))]
 
 	const switchOff = (row: Row) => {
 		const restore = diff(state, removeAll(row.chips, state))
@@ -365,9 +332,7 @@ export function FilterMix({
 					<CountText counts={counts} searching={searching} />
 					{!phone && (
 						<span className="text-[11px] whitespace-nowrap text-gray-500">
-							{allHidden > 0
-								? `${hideText(allHidden, about === "~")} hidden`
-								: ""}
+							{allHidden > 0 ? `${hideText(allHidden, about === "~")} hidden` : ""}
 						</span>
 					)}
 				</span>
@@ -386,8 +351,7 @@ export function FilterMix({
 					>
 						<p className="text-sm font-bold text-white">
 							{total.toLocaleString("en")} of {about}
-							{(total + allHidden).toLocaleString("en")}{" "}
-							{searching ? "matches" : "titles"}
+							{(total + allHidden).toLocaleString("en")} {searching ? "matches" : "titles"}
 							{phone && allHidden > 0 && (
 								<span className="font-normal text-gray-500">
 									{" "}
@@ -396,22 +360,13 @@ export function FilterMix({
 							)}
 						</p>
 
-						<Stack
-							shown={total}
-							rows={meterRows}
-							className="mt-2.5 h-2.5 w-full"
-						/>
+						<Stack shown={total} rows={meterRows} className="mt-2.5 h-2.5 w-full" />
 						{!readSection && (
 							<ul className="mt-3 flex flex-col">
 								<li className="flex h-8 items-center gap-2.5">
-									<span
-										className="h-2.5 w-2.5 shrink-0 rounded-full bg-amber-500"
-										aria-hidden
-									/>
+									<span className="h-2.5 w-2.5 shrink-0 rounded-full bg-gray-300" aria-hidden />
 									<span className="flex-1 font-bold text-white">Shown</span>
-									<span className="tabular-nums text-gray-300">
-										{total.toLocaleString("en")}
-									</span>
+									<span className="tabular-nums text-gray-300">{total.toLocaleString("en")}</span>
 									<span className="w-[86px]" aria-hidden />
 								</li>
 							</ul>
@@ -438,9 +393,7 @@ export function FilterMix({
 						) : (
 							<ul className="mt-1 flex flex-col">
 								{rows.map(ownRow)}
-								{rows.length === 0 && (
-									<li className="text-xs text-gray-500">No filters.</li>
-								)}
+								{rows.length === 0 && <li className="text-xs text-gray-500">No filters.</li>}
 							</ul>
 						)}
 					</motion.section>

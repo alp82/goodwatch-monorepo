@@ -1,20 +1,8 @@
 // The start page's search: one line in a pill that echoes the Choose button under it (an amber disc, the same heights),
 // with one example at a time under the placeholder. Examples and typed requests use the same commit rule; the
 // interpretation loads when a request is present and uses that request's actual result, in a box under the pill.
-import {
-	ArrowRightIcon,
-	MagnifyingGlassIcon,
-	XMarkIcon,
-} from "@heroicons/react/20/solid"
-import {
-	type FocusEvent,
-	Suspense,
-	lazy,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-} from "react"
+import { ArrowRightIcon, MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/20/solid"
+import { type FocusEvent, Suspense, lazy, useEffect, useMemo, useRef, useState } from "react"
 import type { SearchTrigger } from "~/domain/search-attribution"
 import { SEARCH_MAX_CHARS } from "~/domain/discover-search"
 import { preloadSearchRequest } from "~/ui/search/search-client"
@@ -24,9 +12,7 @@ import type { StartQuery, StartResults } from "../stage/start-query"
 import { createFieldCommit } from "./field-commit"
 import { PLACEHOLDER, SEARCH_LABEL } from "./presets"
 
-const SearchInterpretation = lazy(
-	reloadOnStaleChunk(() => import("./SearchInterpretation")),
-)
+const SearchInterpretation = lazy(reloadOnStaleChunk(() => import("./SearchInterpretation")))
 export const START_SEARCH_INPUT = "start-search-input"
 
 /** Discover's pace. */
@@ -36,13 +22,7 @@ const EXAMPLE_MS = 3200
  * One example at a time, changing while the field is empty and nothing hovers it. Only the shown example and the one
  * fading out are in the page (the guest's HTML stays small).
  */
-function Example({
-	run,
-	paused,
-}: {
-	run: (text: string) => void
-	paused: boolean
-}) {
+function Example({ run, paused }: { run: (text: string) => void; paused: boolean }) {
 	const [at, setAt] = useState({ index: 0, previous: -1 })
 	const [hovered, setHovered] = useState(false)
 	useEffect(
@@ -97,17 +77,17 @@ export function StartSearchBar({
 	search,
 	clearSearch,
 	onAsk,
+	outline = false,
 }: {
 	query: StartQuery
-	results: Pick<
-		StartResults,
-		"signature" | "status" | "reading" | "interpretation"
-	>
+	results: Pick<StartResults, "signature" | "status" | "reading" | "interpretation">
 	/** Changes on a committed search, explicit clear or URL navigation, including equal text. */
 	searchRevision: number
 	search: (text: string, trigger?: SearchTrigger) => void
 	clearSearch: () => void
 	onAsk?: () => void
+	/** Search as an amber outline, while another button on the page is its main action. */
+	outline?: boolean
 }) {
 	// Live typing stays in this control; the stage and Browse only see committed searches.
 	const [draft, setDraft] = useState(query.draft)
@@ -159,10 +139,7 @@ export function StartSearchBar({
 				<span aria-hidden className="start-pill-disc">
 					<MagnifyingGlassIcon className="h-5 w-5 sm:h-[26px] sm:w-[26px]" />
 				</span>
-				<div
-					className="start-pill-field"
-					{...(filled ? { "data-filled": "" } : {})}
-				>
+				<div className="start-pill-field" {...(filled ? { "data-filled": "" } : {})}>
 					<input
 						ref={field}
 						id={START_SEARCH_INPUT}
@@ -179,15 +156,12 @@ export function StartSearchBar({
 						onKeyDown={(e) => {
 							if (e.key === "Enter") submitTrigger.current = "enter"
 						}}
-					onChange={(e) => {
+						onChange={(e) => {
 							setDraft(e.target.value)
 							commit.type(e.target.value)
 						}}
 					/>
-					<div
-						className="start-pill-examples"
-						{...(filled ? { inert: "" } : {})}
-					>
+					<div className="start-pill-examples" {...(filled ? { inert: "" } : {})}>
 						<Example
 							paused={filled}
 							run={(phrase) => {
@@ -226,6 +200,7 @@ export function StartSearchBar({
 					}}
 					aria-label="Search"
 					className="start-pill-go"
+					{...(outline ? { "data-outline": "" } : {})}
 				>
 					<ArrowRightIcon className="h-5 w-5 sm:hidden" aria-hidden />
 					<span className="hidden sm:inline">Search</span>
@@ -234,11 +209,7 @@ export function StartSearchBar({
 			{query.text && (
 				<div className="start-reading">
 					<Suspense
-						fallback={
-							<div className="px-6 py-3 text-sm text-gray-400">
-								Reading your search…
-							</div>
-						}
+						fallback={<div className="px-6 py-3 text-sm text-gray-400">Reading your search…</div>}
 					>
 						<SearchInterpretation
 							query={query.text}

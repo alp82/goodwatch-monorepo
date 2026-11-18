@@ -12,12 +12,7 @@
 //
 // Nothing on this page writes: "this or that" only moves its round on, and the doors only switch sections.
 import { useEffect, useMemo, useState } from "react"
-import {
-	ListLinks,
-	StartLedge,
-	useCardOpen,
-	useLamp,
-} from "../ledge/StartLedge"
+import { ListLinks, StartLedge, useCardOpen, useLamp } from "../ledge/StartLedge"
 import { listLinks, memberLedge } from "../ledge/ledge-models"
 import { StartMoodPicker } from "../moods/StartMoodPicker"
 import type { ShelfTitle } from "../room/ShelfCovers"
@@ -65,6 +60,13 @@ export function MemberStart({
 	}
 	const searching = hasQuery(start.query)
 	const fresh = !searching && !deck.length && !unread
+	const ledge = memberLedge({
+		query: start.query,
+		results,
+		hasDeck: deck.length > 0,
+		unread,
+		lists,
+	})
 	return (
 		<div className="start-member" {...(fresh ? { "data-first": "" } : {})}>
 			<StartStage
@@ -79,6 +81,8 @@ export function MemberStart({
 						search={start.search}
 						clearSearch={start.clearSearch}
 						onAsk={card.show}
+						// The Choose button, when it shows, is the page's main action.
+						outline={ledge.kind === "choose"}
 					/>
 				}
 				moods={
@@ -95,13 +99,7 @@ export function MemberStart({
 				card={
 					<StartLedge
 						open={card.open}
-						ledge={memberLedge({
-							query: start.query,
-							results,
-							hasDeck: deck.length > 0,
-							unread,
-							lists,
-						})}
+						ledge={ledge}
 						onOpen={card.show}
 						tabs={<ListLinks links={listLinks(lists)} />}
 					>
@@ -136,10 +134,7 @@ export function MemberStart({
  * the page hydrates as it was sent; each list joins when its promise settles, and only while that promise is the
  * loader's current one (`withArrived`).
  */
-function useArrived(
-	data: MemberStartData,
-	later: MemberStartLater | undefined,
-): MemberStartData {
+function useArrived(data: MemberStartData, later: MemberStartLater | undefined): MemberStartData {
 	const [arrived, setArrived] = useState<ArrivedLists>({})
 	const forYou = later?.forYou
 	const hot = later?.hot
@@ -151,8 +146,7 @@ function useArrived(
 		) =>
 			list?.then(
 				(value) => {
-					if (live)
-						setArrived((now) => ({ ...now, [key]: { from: list, value } }))
+					if (live) setArrived((now) => ({ ...now, [key]: { from: list, value } }))
 				},
 				() => {
 					if (live)
@@ -168,22 +162,15 @@ function useArrived(
 			live = false
 		}
 	}, [forYou, hot])
-	return useMemo(
-		() => withArrived(data, { forYou, hot }, arrived),
-		[data, forYou, hot, arrived],
-	)
+	return useMemo(() => withArrived(data, { forYou, hot }, arrived), [data, forYou, hot, arrived])
 }
 
 /** None of the member's lists could be read. */
 function Unread() {
 	return (
 		<div className="start-member-box flex h-full flex-col justify-center pt-3 text-center">
-			<h2 className="text-base font-bold text-white lg:text-lg">
-				Couldn't load your lists
-			</h2>
-			<p className="mt-1 text-sm text-gray-400">
-				Reload the page to try again, or search above.
-			</p>
+			<h2 className="text-base font-bold text-white lg:text-lg">Couldn't load your lists</h2>
+			<p className="mt-1 text-sm text-gray-400">Reload the page to try again, or search above.</p>
 		</div>
 	)
 }

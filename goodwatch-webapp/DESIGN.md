@@ -198,7 +198,7 @@ A cool, dark navy room with a warm amber lamp, translucent white layers, and a s
 
 ### Primary
 
-- **Lamp Amber** (`amber`): primary buttons, active tab backgrounds (at 15%), focus rings, the current breadcrumb, pagination's current page, and small markers.
+- **Lamp Amber** (`amber`): the one primary button per view, outline-button rings (at 55%), active tab backgrounds (at 15%), focus rings, the current breadcrumb, pagination's current page, and navigation markers (D2). Count badges, list tags, meters, and decorative dots that aren't buttons are gray (`gray-200` behind text, `gray-300` for bars and dots), not amber (D7).
 - **Bright Amber** (`amber-light`): amber text and icons on dark: active tab labels, section icons (at 90%), award lines, links, counts in selected segments, and the spinner.
 - **Pale Amber** (`amber-pale`): amber text on amber-tinted surfaces, and the "won" award state.
 - **Deep Amber** (`amber-deep`): the switch's on state and reading-progress bars.
@@ -273,7 +273,7 @@ A cool, dark navy room with a warm amber lamp, translucent white layers, and a s
 
 ### Navigation layers
 
-- **Top bar (desktop):** wordmark, a grouped Watch / Explore / Profile switch, the global search pill with a Ctrl K hint, and Sign in plus Sign up.
+- **Top bar (desktop):** wordmark, a grouped Watch / Explore / Profile switch, the global search pill with a Ctrl K hint, and Sign in plus Sign up (an amber outline button).
 - **Area tabs:** a second row under the top bar, led by an uppercase area label and an amber icon. Explore uses one-line icon-and-label tabs with an amber underline. Watch uses two-line tabs with a 32px icon and an 11px sub-label.
 - **Sub-nav:** a third, 44px row on a lighter band, with 13px items and an amber dot on the active item.
 - **Breadcrumbs:** a `gray-950/70` bar with semibold links; the current item is amber.
@@ -318,7 +318,8 @@ Posters keep their 2:3 portrait shape everywhere.
 
 Bold, short labels, weight 700-900.
 
-- **Primary** (D1): inside the app, the flat `amber-400` pill with near-black bold text, hover `amber-300`. On info pages and the sign-in and sign-up cards, the `amber-700` rectangle (`rounded-lg`, white semibold text, hover `amber-600`). The amber gradient, the orange sign-in gradient, and Discover's white-text gradient Show button are retired. Both come from `<PrimaryButton variant="pill" | "rect">` (`app/ui/button/PrimaryButton.tsx`, `to` for a Remix link, `href` for a plain link), or `primaryButtonClass()` where the element can't be the component; each place sets its own height, padding, and text size. Other amber buttons in the same view are outline buttons (D7).
+- **Primary** (D1): inside the app, the flat `amber-400` pill with near-black bold text, hover `amber-300`. On info pages and the sign-in and sign-up cards, the `amber-700` rectangle (`rounded-lg`, white semibold text, hover `amber-600`). The amber gradient, the orange sign-in gradient, and Discover's white-text gradient Show button are retired. Both come from `<PrimaryButton variant="pill" | "rect">` (`app/ui/button/PrimaryButton.tsx`, `to` for a Remix link, `href` for a plain link), or `primaryButtonClass()` where the element can't be the component; each place sets its own height, padding, and text size.
+- **Outline** (D7): a view has one filled amber button, its main action. Its other amber buttons are outlines in the same shape: transparent, a 1px inset `amber-400` ring at 55%, `amber-300` text, hover `amber-400` at 12% (`variant="outline"` next to pills, `"outlineRect"` next to rectangles). The desktop header's Sign up is always an outline: the header never holds a view's main action. On the start page the Search button is the main action for guests and the Choose button for members (Search turns outline while it shows).
 - **Light:** a white pill with black text for strong secondary actions on dark. Hover goes to light gray. The character quick view's CTA hovers to amber-300.
 - **Ghost:** white at 10% with light text, hovering to 20%. The default for secondary actions.
 - **Action button** (title actions, Want to See, Not interested): 36-44px tall, 8px corners, white 6% fill with a white ring.

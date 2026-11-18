@@ -291,9 +291,10 @@ function EmptyFan({
 					Search above, pick a mood, or roll the dice.
 				</p>
 				<PrimaryButton
+					variant="outline"
 					tabIndex={on ? undefined : -1}
 					onClick={onRoll}
-					className="mt-3 inline-flex min-h-10 cursor-pointer items-center gap-2 pr-5 pl-4 text-[14px] shadow-[0_8px_28px_rgb(251_191_36/.28)] outline-none focus-visible:ring-2 focus-visible:ring-white sm:mt-4 sm:min-h-11 lg:mt-5 lg:text-[15px]"
+					className="mt-3 inline-flex min-h-10 cursor-pointer items-center gap-2 pr-5 pl-4 text-[14px] outline-none focus-visible:ring-2 focus-visible:ring-white sm:mt-4 sm:min-h-11 lg:mt-5 lg:text-[15px]"
 				>
 					<span key={roll} className={`grid place-items-center ${roll ? "spotlight-roll" : ""}`}>
 						<DieIcon className="h-5 w-5" />

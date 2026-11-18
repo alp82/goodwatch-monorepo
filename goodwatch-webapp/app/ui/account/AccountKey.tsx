@@ -103,7 +103,7 @@ export function ProfileKeyIcon({
 	)
 }
 
-/** Desktop, guests: Sign in (quiet) and Sign up (amber) where the Menu button sits. */
+/** Desktop, guests: Sign in (quiet) and Sign up (amber outline: the header never holds a view's main action). */
 export function GuestKeys() {
 	const authHref = useAuthHref()
 	return (
@@ -116,6 +116,7 @@ export function GuestKeys() {
 				Sign in
 			</Link>
 			<PrimaryButton
+				variant="outline"
 				rel="nofollow"
 				to={authHref("sign-up")}
 				className="flex h-10 items-center whitespace-nowrap px-4 text-[14px]"

@@ -38,17 +38,12 @@ export function ThisOrThat({ deck }: { deck: DeckTitle[] }) {
 	const duel = keepDuel(deck, stored)
 	if (duel !== stored) setDuel(duel)
 	const byKey = useMemo(() => new Map(deck.map((t) => [t.card.key, t])), [deck])
-	const of = (key: number | null) =>
-		key === null ? null : (byKey.get(key) ?? null)
+	const of = (key: number | null) => (key === null ? null : (byKey.get(key) ?? null))
 	const rounds = roundsFor(deck)
 	// One title on all of the member's lists: no pair to play, it is simply tonight's pick.
 	const only = deck.length === 1 ? deck[0] : null
 	const done = of(duel.done)
-	const view = only
-		? "only"
-		: done
-			? `done:${done.card.key}`
-			: `pair:${duel.epoch}`
+	const view = only ? "only" : done ? `done:${done.card.key}` : `pair:${duel.epoch}`
 	return (
 		<div className="relative h-full">
 			<AnimatePresence initial={false}>
@@ -125,7 +120,7 @@ function Pair({
 						<span
 							// biome-ignore lint/suspicious/noArrayIndexKey: one mark per round
 							key={i}
-							className={`h-1.5 w-5 rounded-full ${i < taps ? "bg-amber-400" : i === taps ? "bg-amber-400/40" : "bg-white/15"}`}
+							className={`h-1.5 w-5 rounded-full ${i < taps ? "bg-gray-300" : i === taps ? "bg-gray-300/40" : "bg-white/15"}`}
 						/>
 					))}
 				</span>
@@ -141,24 +136,12 @@ function Pair({
 			</div>
 
 			<div className="mt-2 grid grid-cols-2 gap-3 lg:gap-6">
-				<Side
-					title={left}
-					side="left"
-					nod={chose === "left"}
-					onChoose={onChoose}
-				/>
-				<Side
-					title={right}
-					side="right"
-					nod={chose === "right"}
-					onChoose={onChoose}
-				/>
+				<Side title={left} side="left" nod={chose === "left"} onChoose={onChoose} />
+				<Side title={right} side="right" nod={chose === "right"} onChoose={onChoose} />
 			</div>
 
 			<div className="mt-3 flex items-center justify-between gap-3">
-				<p className="text-xs text-gray-400 sm:text-sm">
-					Tap the one you'd rather watch.
-				</p>
+				<p className="text-xs text-gray-400 sm:text-sm">Tap the one you'd rather watch.</p>
 				{canSkip ? (
 					<button type="button" onClick={onNeither} className={QUIET}>
 						Neither
@@ -202,9 +185,7 @@ function Side({
 						className="group mx-auto block w-full min-w-0 max-w-[11.25rem] cursor-pointer text-left outline-none sm:max-w-none"
 						initial={{ opacity: 0, x: side === "left" ? -16 : 16 }}
 						animate={
-							nod
-								? { opacity: 1, x: 0, scale: [1, 1.03, 1] }
-								: { opacity: 1, x: 0, scale: 1 }
+							nod ? { opacity: 1, x: 0, scale: [1, 1.03, 1] } : { opacity: 1, x: 0, scale: 1 }
 						}
 						exit={{ opacity: 0, scale: 0.94 }}
 						transition={{ duration: 0.3, ease: EASE }}
@@ -303,17 +284,11 @@ function TonightsPick({
 					<p className="mt-2 h-6 truncate text-base font-semibold text-white lg:text-lg">
 						{pick.episode ?? ""}
 					</p>
-					<p className="h-5 truncate text-sm text-gray-400">
-						{factsLine(card)}
-					</p>
+					<p className="h-5 truncate text-sm text-gray-400">{factsLine(card)}</p>
 					<div className="mt-4 flex items-center gap-2">
 						<WatchButton title={card} offers={offersOf(card, [])} />
 						{onAgain ? (
-							<button
-								type="button"
-								onClick={onAgain}
-								className={`${QUIET} !h-12 lg:!text-base`}
-							>
+							<button type="button" onClick={onAgain} className={`${QUIET} !h-12 lg:!text-base`}>
 								<ArrowPathIcon className="h-4 w-4" aria-hidden /> Again
 							</button>
 						) : null}

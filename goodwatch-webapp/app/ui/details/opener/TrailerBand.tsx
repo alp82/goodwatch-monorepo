@@ -63,10 +63,7 @@ export const hasVideo = (media: Media) => videosOf(media).length > 0
 export const openerHeaderClass = (withCard: boolean) =>
 	withCard ? "mt-5 lg:-mt-28 lg:mr-4" : "-mt-16 sm:-mt-20 lg:-mt-28"
 
-export function TrailerBand({
-	media,
-	controls,
-}: { media: Media; controls: ReactNode }) {
+export function TrailerBand({ media, controls }: { media: Media; controls: ReactNode }) {
 	const videos = useMemo(() => videosOf(media), [media])
 	return (
 		// "media" was the videos section's id before: old links land on the band, where every video plays now.
@@ -87,14 +84,8 @@ export function TrailerBand({
 
 function Backdrop({ media }: { media: Media }) {
 	return (
-		<div
-			aria-hidden="true"
-			className="pointer-events-none absolute inset-0 -z-10"
-		>
-			<HeroBackdropImage
-				media={media}
-				className="h-full w-full object-cover object-[center_22%]"
-			/>
+		<div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+			<HeroBackdropImage media={media} className="h-full w-full object-cover object-[center_22%]" />
 			<div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/30 to-stone-950/5" />
 			<div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-stone-950/60 to-transparent" />
 		</div>
@@ -105,7 +96,11 @@ function WithStage({
 	media,
 	videos,
 	controls,
-}: { media: Media; videos: Video[]; controls: ReactNode }) {
+}: {
+	media: Media
+	videos: Video[]
+	controls: ReactNode
+}) {
 	const [phase, setPhaseState] = useState<Phase>("idle")
 	const phaseRef = useRef<Phase>("idle")
 	const setPhase = useCallback((p: Phase) => {
@@ -136,18 +131,12 @@ function WithStage({
 	const title = media.details.title
 
 	// The player's scale while the list is open: small enough that the list fits the screen too.
-	const k =
-		geo && listOpen
-			? Math.min(1, Math.max(0.42, (geo.room - listH - 12) / geo.H))
-			: 1
+	const k = geo && listOpen ? Math.min(1, Math.max(0.42, (geo.room - listH - 12) / geo.H)) : 1
 	const kRef = useRef(k)
 	kRef.current = k
 
 	const open = useCallback(
-		({
-			video = null,
-			list: withList = false,
-		}: { video?: Video | null; list?: boolean }) => {
+		({ video = null, list: withList = false }: { video?: Video | null; list?: boolean }) => {
 			if (phaseRef.current !== "idle" || !wrap.current || !card.current) return
 			const g = measure(wrap.current)
 			setGeo(g)
@@ -192,10 +181,7 @@ function WithStage({
 	// The transform's end moves the phase on; a timer covers a missed transitionend.
 	useEffect(() => {
 		if (phase !== "opening" && phase !== "closing") return
-		const id = window.setTimeout(
-			() => setPhase(phase === "opening" ? "open" : "idle"),
-			MS + 80,
-		)
+		const id = window.setTimeout(() => setPhase(phase === "opening" ? "open" : "idle"), MS + 80)
 		return () => window.clearTimeout(id)
 	}, [phase, setPhase])
 	const onEnd = (e: React.TransitionEvent) => {
@@ -235,8 +221,7 @@ function WithStage({
 		if (phase !== "open" && phase !== "opening") return
 		const onKey = (e: KeyboardEvent) => {
 			if (e.key !== "Escape" || e.defaultPrevented) return
-			if ((e.target as HTMLElement | null)?.closest("input, textarea, select"))
-				return
+			if ((e.target as HTMLElement | null)?.closest("input, textarea, select")) return
 			close()
 		}
 		window.addEventListener("keydown", onKey)
@@ -253,18 +238,14 @@ function WithStage({
 			} catch {
 				return
 			}
-			const info = data?.info as
-				| { playerState?: unknown }
-				| number
-				| null
-				| undefined
+			const info = data?.info as { playerState?: unknown } | number | null | undefined
 			const code =
 				data?.event === "onStateChange" && typeof info === "number"
 					? info
 					: data?.event === "infoDelivery" &&
-							info &&
-							typeof info === "object" &&
-							typeof info.playerState === "number"
+						  info &&
+						  typeof info === "object" &&
+						  typeof info.playerState === "number"
 						? info.playerState
 						: null
 			if (code === 1) setState("playing")
@@ -319,8 +300,7 @@ function WithStage({
 
 	// The card: the screen laid out at the band's player size, sitting scaled down in the corner (--s, --i). --h: hover.
 	const cardStyle: CSSProperties = {
-		transform:
-			"translate(var(--i), var(--i)) scale(calc(var(--s) * var(--h, 1)))",
+		transform: "translate(var(--i), var(--i)) scale(calc(var(--s) * var(--h, 1)))",
 		// Hidden while the stage is up; back as the stage shrinks onto it.
 		opacity: phase === "opening" || phase === "open" ? 0 : 1,
 		transition: `transform ${MS}ms ${EASE}, opacity 170ms ease ${phase === "closing" ? MS - 170 : 0}ms`,
@@ -333,9 +313,7 @@ function WithStage({
 
 				{/* The settings strip. On a desktop it lies over the band's top. */}
 				<div className="relative z-10 flex h-12 items-center gap-2 px-4 sm:gap-3 lg:absolute lg:inset-x-0 lg:top-0 lg:h-auto lg:px-5 lg:pt-4">
-					<div className="ml-auto flex items-center gap-2 sm:gap-3">
-						{controls}
-					</div>
+					<div className="ml-auto flex items-center gap-2 sm:gap-3">{controls}</div>
 				</div>
 
 				{/* The card's place: full width 16:9 under the strip (phone), 28rem at the right (tablet), the band's right
@@ -369,16 +347,14 @@ function WithStage({
 						{/* The player's bar: play mark, the kind, an empty track, and "+29 videos" (opens them all). */}
 						<span className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center gap-4 px-7 pb-6">
 							{/* On a phone the card is narrow: with "+29 videos" the bar keeps just the kind and that. */}
-							<PlayIcon
-								className={`h-8 w-8 shrink-0 text-white ${hint ? "max-sm:hidden" : ""}`}
-							/>
+							<PlayIcon className={`h-8 w-8 shrink-0 text-white ${hint ? "max-sm:hidden" : ""}`} />
 							<span className="shrink-0 text-[1.75rem] font-semibold leading-none text-white">
 								{first.kind}
 							</span>
 							<span
 								className={`relative ml-1 block h-1.5 min-w-8 flex-1 rounded-full bg-white/30 ${hint ? "max-sm:hidden" : ""}`}
 							>
-								<span className="absolute -top-[7px] left-0 h-5 w-5 rounded-full bg-amber-300" />
+								<span className="absolute -top-[7px] left-0 h-5 w-5 rounded-full bg-gray-200" />
 							</span>
 							{hint &&
 								(oneKind ? (

@@ -19,9 +19,9 @@ const slotShown = (i: number) =>
 
 const LINK =
 	"inline-flex h-9 shrink-0 items-center rounded-lg px-3 text-sm font-semibold outline-none focus-visible:outline-2 focus-visible:outline-amber-300"
-/** The box's main action: a filled amber button. */
+/** The box's action: an amber outline button (the search above is the page's main action). */
 const ACTION = primaryButtonClass(
-	"pill",
+	"outline",
 	"inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 px-4 text-sm shadow-md shadow-black/30 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300",
 )
 

@@ -2,7 +2,6 @@
    The marks and curves come from start-row.css. */
 .hx {
 	--hx-font: "Gabarito", ui-sans-serif, system-ui, sans-serif;
-	--tn-amber: #fcd34d;
 	--tn-line: rgba(255, 255, 255, 0.1);
 	--hx-card: rgba(255, 255, 255, 0.045);
 	--hx-card-hover: rgba(255, 255, 255, 0.07);
@@ -201,7 +200,7 @@
 	font-size: 13px;
 	font-weight: 700;
 	font-variant-numeric: tabular-nums;
-	color: var(--tn-amber);
+	color: var(--color-amber-300);
 }
 
 /* Cards. */
@@ -227,7 +226,7 @@
 	color: #fff;
 }
 .hx-headline:hover h3 {
-	color: var(--tn-amber);
+	color: var(--color-amber-300);
 }
 .hx-meta {
 	display: flex;
@@ -269,7 +268,7 @@
 	font-weight: 600;
 }
 .hx-tag span {
-	color: var(--tn-amber);
+	color: var(--color-amber-300);
 	font-weight: 700;
 	font-variant-numeric: tabular-nums;
 }
@@ -390,7 +389,7 @@
 	min-width: 1.25rem;
 	height: 1.25rem;
 	border-radius: 999px;
-	background: var(--tn-amber);
+	background: var(--color-gray-200);
 	color: #000;
 	font-size: 11px;
 }
@@ -430,7 +429,7 @@
 .hx .hx-sheet-head button {
 	padding: 0.5rem 1rem;
 	border-radius: 999px;
-	background: var(--tn-amber);
+	background: var(--color-amber-300);
 	color: #000;
 	font-size: 14px;
 	font-weight: 700;
@@ -505,7 +504,7 @@
 	line-height: 1.1;
 }
 .hx-chead a:hover h2 {
-	color: var(--tn-amber);
+	color: var(--color-amber-300);
 }
 .hx-chead p {
 	margin-top: 0.25rem;
@@ -552,7 +551,7 @@
 	margin-top: 0.75rem;
 	font-size: 14px;
 	font-weight: 700;
-	color: var(--tn-amber);
+	color: var(--color-amber-300);
 }
 .hx .hx-back {
 	margin: 1rem 0;

@@ -1,14 +1,20 @@
 // The one primary button (D1): the flat amber pill inside the app, the amber-700 rectangle on info pages and the
-// sign-in and sign-up cards. The look is fill, text color, weight and corners only; each place keeps its own height,
-// padding, gap and text size through `className`.
+// sign-in and sign-up cards. A view has one filled amber button, its main action (D7); its other amber buttons are
+// outlines in the same shape: `outline` next to pills, `outlineRect` next to rectangles. The look is fill, text color,
+// weight and corners only; each place keeps its own height, padding, gap and text size through `className`.
 import { Link, type LinkProps } from "@remix-run/react"
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from "react"
 
-export type PrimaryButtonVariant = "pill" | "rect"
+export type PrimaryButtonVariant = "pill" | "rect" | "outline" | "outlineRect"
+
+const OUTLINE =
+	"bg-transparent text-amber-300 ring-1 ring-inset ring-amber-400/55 transition-colors not-disabled:hover:bg-amber-400/12"
 
 const LOOK: Record<PrimaryButtonVariant, string> = {
 	pill: "rounded-full bg-amber-400 font-bold text-gray-950 transition-colors not-disabled:hover:bg-amber-300",
 	rect: "rounded-lg bg-amber-700 font-semibold text-white transition-colors not-disabled:hover:bg-amber-600",
+	outline: `rounded-full font-bold ${OUTLINE}`,
+	outlineRect: `rounded-lg font-semibold ${OUTLINE}`,
 }
 
 /** The primary look as a class string, for elements that can't be a `<PrimaryButton>` (a motion button, say). */

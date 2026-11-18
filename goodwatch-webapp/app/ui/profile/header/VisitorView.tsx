@@ -13,18 +13,12 @@ import { WRAP } from "~/ui/my-pages/bits"
  * Where the view switch leads from this page. The owner-only pages (Not rated, Rate more) have no visitor view, so
  * they switch to Scores; the visitors-only tabs (Seen, Wishlist, Shows) switch back to the profile.
  */
-export function viewSwitchHref(
-	handle: string,
-	pathname: string,
-	toVisitor: boolean,
-) {
+export function viewSwitchHref(handle: string, pathname: string, toVisitor: boolean) {
 	const query = toVisitor ? { as: "visitor" } : undefined
 	if (!/^\/u\/[^/]+/.test(pathname)) return tastePath(handle, "profile", query)
 	const rest = pathname.replace(/^\/u\/[^/]+/, "").replace(/\/$/, "")
-	if (toVisitor && rest.startsWith("/scores/"))
-		return tastePath(handle, "scores", query)
-	if (!toVisitor && ["/seen", "/want", "/shows"].includes(rest))
-		return tastePath(handle)
+	if (toVisitor && rest.startsWith("/scores/")) return tastePath(handle, "scores", query)
+	if (!toVisitor && ["/seen", "/want", "/shows"].includes(rest)) return tastePath(handle)
 	return `/u/${handle}${rest}${toVisitor ? "?as=visitor" : ""}`
 }
 
@@ -43,14 +37,13 @@ export const VISITOR_BAR_H = "2.75rem"
 export const visitorBarStyle = (on: boolean) =>
 	({ "--visitor-bar-h": on ? VISITOR_BAR_H : "0px" }) as CSSProperties
 
-export const toggleView = ({ own, visitor, on }: ViewLinks) =>
-	on ? own : visitor
+export const toggleView = ({ own, visitor, on }: ViewLinks) => (on ? own : visitor)
 
-/** The amber bar right under the site header while the owner views their profile as a visitor. */
+/** The light gray bar right under the site header while the owner views their profile as a visitor. */
 export function VisitorBar({ own }: { own: string }) {
 	return (
 		<div
-			className={`sticky top-16 ${STICKY_BAR} ${FOLLOW_PHONE_BAR} bg-amber-400 text-gray-950`}
+			className={`sticky top-16 ${STICKY_BAR} ${FOLLOW_PHONE_BAR} bg-gray-200 text-gray-950`}
 			style={{ height: VISITOR_BAR_H }}
 			data-visitor-bar
 		>
@@ -58,9 +51,7 @@ export function VisitorBar({ own }: { own: string }) {
 				<EyeIcon className="size-5 shrink-0" aria-hidden />
 				<p className="min-w-0 flex-1 truncate text-sm font-bold">
 					<span className="sm:hidden">Visitor view</span>
-					<span className="max-sm:hidden">
-						You're viewing your profile as visitors see it
-					</span>
+					<span className="max-sm:hidden">You're viewing your profile as visitors see it</span>
 				</p>
 				<Link
 					to={own}

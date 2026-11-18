@@ -28,42 +28,23 @@
 	   strip and the foot on it. */
 	--start-v: calc(100svh - 4rem);
 	--start-fit: calc(
-		(
-			var(--start-v) -
-			var(--start-foot) -
-			var(--start-headroom) -
-			var(--start-block)
-		) /
-		(var(--start-lb) - var(--start-win))
+		(var(--start-v) - var(--start-foot) - var(--start-headroom) - var(--start-block)) /
+			(var(--start-lb) - var(--start-win))
 	);
 	--start-img-w: clamp(70cqw, calc(var(--start-fit) / var(--start-hw)), 115cqw);
 	--start-img-h: calc(var(--start-img-w) * var(--start-hw));
 	--start-img-top: calc(
-		var(--start-headroom) +
-		var(--start-block) -
-		var(--start-img-h) *
-		var(--start-win)
+		var(--start-headroom) + var(--start-block) - var(--start-img-h) * var(--start-win)
 	);
 	--start-img-left: calc(50cqw - var(--start-img-w) * var(--start-fcx));
-	--start-ledge-top: calc(
-		var(--start-img-top) +
-		var(--start-img-h) *
-		var(--start-lt)
-	);
-	--start-ledge-bottom: calc(
-		var(--start-img-top) +
-		var(--start-img-h) *
-		var(--start-lb)
-	);
+	--start-ledge-top: calc(var(--start-img-top) + var(--start-img-h) * var(--start-lt));
+	--start-ledge-bottom: calc(var(--start-img-top) + var(--start-img-h) * var(--start-lb));
 	/* The open card: as tall as it wants, up to just under the lifted block (less a member's list tabs above it), and
 	   never shorter than its content needs (`--start-card-min`). On a short screen that runs the card past the ledge's
 	   bottom by `--start-card-over`, and the page scrolls; the closed ledge stays on the floor. */
 	--start-card-room: calc(
-		var(--start-ledge-bottom) -
-		var(--start-pad) -
-		var(--start-block) -
-		16px -
-		var(--start-tabs, 0px)
+		var(--start-ledge-bottom) - var(--start-pad) - var(--start-block) - 16px -
+			var(--start-tabs, 0px)
 	);
 	--start-card: max(
 		var(--start-card-min, 0px),
@@ -198,11 +179,7 @@
 	/* The side fade: none while the picture is as wide as the stage or wider. */
 	--start-e: max(
 		0px,
-		min(
-			160px,
-			calc(var(--start-img-w) * 0.12),
-			calc((100cqw - var(--start-img-w)) * 1000)
-		)
+		min(160px, calc(var(--start-img-w) * 0.12), calc((100cqw - var(--start-img-w)) * 1000))
 	);
 	--start-x1: calc(var(--start-img-left) + var(--start-e));
 	--start-x3: calc(var(--start-img-left) + var(--start-img-w));
@@ -211,17 +188,14 @@
 	position: absolute;
 	inset: 0;
 	pointer-events: none;
-	background: linear-gradient(
+	background:
+		linear-gradient(
 			to bottom,
 			#050a16 0,
 			#050a16 var(--start-n0),
 			rgb(5 10 22 / 0) var(--start-n1)
 		),
-		linear-gradient(
-			to bottom,
-			rgb(5 10 22 / 0) var(--start-b0),
-			#050a16 var(--start-b1)
-		),
+		linear-gradient(to bottom, rgb(5 10 22 / 0) var(--start-b0), #050a16 var(--start-b1)),
 		linear-gradient(
 			to right,
 			#050a16 var(--start-img-left),
@@ -229,12 +203,7 @@
 			rgb(5 10 22 / 0) var(--start-x2),
 			#050a16 var(--start-x3)
 		),
-		linear-gradient(
-			to bottom,
-			rgb(3 7 18 / 0) 60%,
-			rgb(3 7 18 / 0.4) 80%,
-			rgb(3 7 18 / 0.9) 100%
-		);
+		linear-gradient(to bottom, rgb(3 7 18 / 0) 60%, rgb(3 7 18 / 0.4) 80%, rgb(3 7 18 / 0.9) 100%);
 }
 
 /* The column over the room: the search block, the gap, the card. Only the controls take pointer events, so the shelf
@@ -283,11 +252,8 @@
 	height: calc(100% + var(--start-pad) + 260px);
 	translate: -50% 0;
 	pointer-events: none;
-	background: radial-gradient(
-			ellipse 34% 30% at 50% 42%,
-			rgb(2 4 10 / 0.55),
-			rgb(2 4 10 / 0) 100%
-		),
+	background:
+		radial-gradient(ellipse 34% 30% at 50% 42%, rgb(2 4 10 / 0.55), rgb(2 4 10 / 0) 100%),
 		radial-gradient(
 			ellipse 50% 46% at 50% 45%,
 			rgb(2 4 10 / 0.82) 0%,
@@ -309,7 +275,9 @@
 	font-weight: 800;
 	letter-spacing: -0.025em;
 	color: #fff;
-	text-shadow: 0 2px 4px rgb(0 0 0 / 0.6), 0 8px 40px rgb(0 0 0 / 0.85);
+	text-shadow:
+		0 2px 4px rgb(0 0 0 / 0.6),
+		0 8px 40px rgb(0 0 0 / 0.85);
 }
 
 .start-search {
@@ -318,7 +286,7 @@
 }
 
 /* The search bar (search/StartSearchBar.tsx): a pill that echoes the Choose button under it (.start-ledge-go): the same
-   heights, an amber disc, Gabarito. Lifted off the room by a deep shadow and a quiet amber floor glow, an amber ring
+   heights, an amber-tinted disc, Gabarito. Lifted off the room by a deep shadow and a quiet amber floor glow, an amber ring
    while focused. */
 .start-bar-floor,
 .start-bar-shadow,
@@ -363,7 +331,9 @@
 .start-bar-glow {
 	z-index: 1;
 	opacity: 0;
-	box-shadow: 0 0 0 2px rgb(251 191 36 / 0.9), 0 0 0 6px rgb(251 191 36 / 0.14),
+	box-shadow:
+		0 0 0 2px rgb(251 191 36 / 0.9),
+		0 0 0 6px rgb(251 191 36 / 0.14),
 		0 0 70px 10px rgb(251 191 36 / 0.3);
 	transition: opacity 0.25s ease-out;
 }
@@ -381,11 +351,13 @@
 	padding: 0 10px;
 	border-radius: 999px;
 	background: rgb(3 7 18 / 0.92);
-	box-shadow: inset 0 0 0 1.5px rgb(251 191 36 / 0.45), inset 0 1px 0 rgb(255 255 255 / 0.08);
+	box-shadow:
+		inset 0 0 0 1.5px rgb(251 191 36 / 0.45),
+		inset 0 1px 0 rgb(255 255 255 / 0.08);
 	backdrop-filter: blur(12px);
 }
 
-/* The Choose button's icon disc, colours swapped. */
+/* The field's icon: an amber-300 glass on an amber tint (it isn't a button, so it isn't filled). */
 .start-pill-disc {
 	display: grid;
 	flex: none;
@@ -393,9 +365,8 @@
 	width: 44px;
 	height: 44px;
 	border-radius: 999px;
-	color: rgb(3 7 18);
-	background: linear-gradient(to bottom, rgb(252 211 77), rgb(245 158 11));
-	box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.5);
+	color: rgb(252 211 77);
+	background: rgb(251 191 36 / 0.15);
 }
 
 /* The text sits a little high while the example shows under it, centred once typed. */
@@ -518,6 +489,8 @@
 	background: rgb(255 255 255 / 0.1);
 }
 
+/* Search: the primary pill (flat amber-400, near-black bold text, hover amber-300). Where the Choose button is the
+   page's main action (a member's start page), an amber outline instead (`data-outline`). */
 .start-pill-go {
 	display: inline-flex;
 	flex: none;
@@ -530,15 +503,25 @@
 	color: rgb(3 7 18);
 	font-family: Gabarito, ui-sans-serif, system-ui, sans-serif;
 	font-size: 18px;
-	font-weight: 900;
-	background: linear-gradient(to bottom, rgb(252 211 77), rgb(245 158 11));
-	box-shadow: 0 8px 24px rgb(251 191 36 / 0.25), inset 0 1px 0 rgb(255 255 255 / 0.5);
+	font-weight: 700;
+	background: rgb(251 191 36);
+	box-shadow: 0 8px 24px rgb(251 191 36 / 0.25);
 	outline: none;
-	transition: scale 0.2s ease-out;
+	transition: background-color 0.15s ease-out;
 }
 
 .start-pill-go:hover {
-	scale: 1.03;
+	background: rgb(252 211 77);
+}
+
+.start-pill-go[data-outline] {
+	color: rgb(252 211 77);
+	background: transparent;
+	box-shadow: inset 0 0 0 1px rgb(251 191 36 / 0.55);
+}
+
+.start-pill-go[data-outline]:hover {
+	background: rgb(251 191 36 / 0.12);
 }
 
 .start-pill-clear:focus-visible,
@@ -618,11 +601,8 @@
 .start-gap {
 	flex: none;
 	height: calc(
-		var(--start-ledge-bottom) +
-		var(--start-card-over) -
-		var(--start-card) -
-		var(--start-pad) -
-		var(--start-block)
+		var(--start-ledge-bottom) + var(--start-card-over) - var(--start-card) - var(--start-pad) -
+			var(--start-block)
 	);
 }
 
@@ -732,18 +712,14 @@
 	overflow: hidden;
 	border-radius: var(--start-ledge-r);
 	pointer-events: none;
-	transform: translateY(
-		calc(var(--start-card) - var(--start-ledge) - var(--start-card-over))
-	);
+	transform: translateY(calc(var(--start-card) - var(--start-ledge) - var(--start-card-over)));
 	transition: transform 0.75s var(--start-ledge-ease);
 }
 
 .start-ledge-inner {
 	position: absolute;
 	inset: 0;
-	transform: translateY(
-		calc(var(--start-ledge) + var(--start-card-over) - var(--start-card))
-	);
+	transform: translateY(calc(var(--start-ledge) + var(--start-card-over) - var(--start-card)));
 	transition: transform 0.75s var(--start-ledge-ease);
 }
 
@@ -782,7 +758,9 @@
 	position: relative;
 	height: 100%;
 	color: #fff;
-	text-shadow: 0 1px 2px rgb(0 0 0 / 0.85), 0 6px 24px rgb(0 0 0 / 0.85);
+	text-shadow:
+		0 1px 2px rgb(0 0 0 / 0.85),
+		0 6px 24px rgb(0 0 0 / 0.85);
 }
 
 /* A soft pool of shadow on the floor under the ledge, so it reads over the rug without a panel. */
@@ -935,8 +913,7 @@
 
 @media (max-width: 639.98px) {
 	/* Phones: the headline may wrap to two lines, the fan's line to one. */
-	.start-ledge-face:is([data-kind="fan"], [data-kind="words"])
-		.start-ledge-headline {
+	.start-ledge-face:is([data-kind="fan"], [data-kind="words"]) .start-ledge-headline {
 		display: -webkit-box;
 		-webkit-line-clamp: 2;
 		-webkit-box-orient: vertical;
@@ -970,7 +947,8 @@
 	}
 }
 
-/* The action's name, as a button's face: the cover under it does the action. */
+/* The action's name, as an amber outline button's face (Search above is the page's main action): the cover under it
+   does the action. */
 .start-ledge-cta {
 	grid-area: cta;
 	position: relative;
@@ -985,17 +963,19 @@
 	pointer-events: none;
 	white-space: nowrap;
 	font-size: 13px;
-	font-weight: 900;
+	font-weight: 700;
 	text-shadow: none;
-	color: rgb(3 7 18);
-	background: rgb(251 191 36);
-	box-shadow: 0 8px 28px rgb(251 191 36 / 0.28);
-	transition: transform 0.2s ease-out;
+	color: rgb(252 211 77);
+	background: transparent;
+	box-shadow: inset 0 0 0 1px rgb(251 191 36 / 0.55);
+	transition:
+		transform 0.2s ease-out,
+		background-color 0.2s ease-out;
 }
 
 .start-ledge-face:hover .start-ledge-cta {
 	transform: translateY(-1px);
-	background: rgb(252 211 77);
+	background: rgb(251 191 36 / 0.12);
 }
 
 .start-ledge-face[data-kind="row"] .start-ledge-cta {
@@ -1015,8 +995,7 @@
 		padding: 0 22px;
 		font-size: 15px;
 	}
-	.start-ledge-face:is([data-kind="fan"], [data-kind="words"])
-		.start-ledge-cta {
+	.start-ledge-face:is([data-kind="fan"], [data-kind="words"]) .start-ledge-cta {
 		justify-self: end;
 	}
 }
@@ -1066,7 +1045,9 @@
 	margin-left: -27px;
 	border-radius: 6px;
 	object-fit: cover;
-	box-shadow: 0 14px 30px rgb(0 0 0 / 0.7), 0 0 0 1px rgb(255 255 255 / 0.14);
+	box-shadow:
+		0 14px 30px rgb(0 0 0 / 0.7),
+		0 0 0 1px rgb(255 255 255 / 0.14);
 	transform-origin: 50% 120%;
 	transform: translateX(calc(var(--d) * 18px)) rotate(calc(var(--d) * 5deg));
 	transition: transform 0.35s var(--start-ledge-ease);
@@ -1115,11 +1096,7 @@
 	height: 100%;
 	min-height: 0;
 	overflow: hidden;
-	-webkit-mask-image: linear-gradient(
-		to right,
-		#000 calc(100% - 56px),
-		transparent
-	);
+	-webkit-mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
 	mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
 }
 
@@ -1130,7 +1107,9 @@
 	aspect-ratio: 2 / 3;
 	border-radius: 6px;
 	object-fit: cover;
-	box-shadow: 0 14px 30px rgb(0 0 0 / 0.7), 0 0 0 1px rgb(255 255 255 / 0.14);
+	box-shadow:
+		0 14px 30px rgb(0 0 0 / 0.7),
+		0 0 0 1px rgb(255 255 255 / 0.14);
 	animation: start-ledge-pop 0.5s var(--start-ledge-ease) both;
 	animation-delay: calc(var(--i) * 35ms);
 }
@@ -1187,6 +1166,7 @@
 	);
 }
 
+/* A member's main action: the primary pill (flat amber-400, near-black bold text, hover amber-300). */
 .start-ledge-go {
 	display: inline-flex;
 	align-items: center;
@@ -1197,21 +1177,27 @@
 	cursor: pointer;
 	text-shadow: none;
 	color: rgb(3 7 18);
-	background: linear-gradient(to bottom, rgb(252 211 77), rgb(245 158 11));
-	box-shadow: 0 18px 40px rgb(0 0 0 / 0.55), 0 10px 40px rgb(251 191 36 / 0.35),
-		inset 0 1px 0 rgb(255 255 255 / 0.5);
+	background: rgb(251 191 36);
+	box-shadow:
+		0 18px 40px rgb(0 0 0 / 0.55),
+		0 10px 40px rgb(251 191 36 / 0.35);
 	outline: none;
 	animation: start-ledge-float 4.5s ease-in-out infinite;
-	transition: scale 0.25s var(--start-ledge-ease);
+	transition:
+		scale 0.25s var(--start-ledge-ease),
+		background-color 0.15s ease-out;
 }
 .start-ledge-go:hover {
 	scale: 1.03;
+	background: rgb(252 211 77);
 }
 .start-ledge-go:active {
 	scale: 0.98;
 }
 .start-ledge-go:focus-visible {
-	box-shadow: 0 0 0 3px #fff, 0 18px 40px rgb(0 0 0 / 0.55);
+	box-shadow:
+		0 0 0 3px #fff,
+		0 18px 40px rgb(0 0 0 / 0.55);
 }
 
 @keyframes start-ledge-float {
@@ -1235,7 +1221,7 @@
 	white-space: nowrap;
 	font-family: Gabarito, ui-sans-serif, system-ui, sans-serif;
 	font-size: 19px;
-	font-weight: 900;
+	font-weight: 700;
 	line-height: 1.1;
 	letter-spacing: -0.02em;
 }
@@ -1285,8 +1271,9 @@
 	font-weight: 800;
 	color: #fff;
 	background: rgb(3 7 18 / 0.78);
-	box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14), 0 8px 22px
-		rgb(0 0 0 / 0.45);
+	box-shadow:
+		inset 0 0 0 1px rgb(255 255 255 / 0.14),
+		0 8px 22px rgb(0 0 0 / 0.45);
 	outline: none;
 }
 .start-list-link:hover {
@@ -1325,7 +1312,9 @@
 	opacity: 0;
 	translate: 0 8px;
 	pointer-events: none;
-	transition: opacity 0.3s ease-out, translate 0.4s var(--start-ledge-ease);
+	transition:
+		opacity 0.3s ease-out,
+		translate 0.4s var(--start-ledge-ease);
 }
 .start-stage[data-open] .start-tabs {
 	opacity: 1;
@@ -1340,8 +1329,10 @@
 	height: 36px;
 	border-radius: 12px 12px 0 0;
 	background: rgb(3 7 18 / 0.86);
-	box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.1), inset 1px 0 0
-		rgb(255 255 255 / 0.06), inset -1px 0 0 rgb(255 255 255 / 0.06);
+	box-shadow:
+		inset 0 1px 0 rgb(255 255 255 / 0.1),
+		inset 1px 0 0 rgb(255 255 255 / 0.06),
+		inset -1px 0 0 rgb(255 255 255 / 0.06);
 }
 .start-tabs .start-list-link:hover {
 	background: rgb(17 24 39 / 0.95);
@@ -1620,8 +1611,9 @@
 	border-radius: 6px;
 	background: #1f2937;
 	object-fit: cover;
-	box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 0 0 1px
-		rgb(255 255 255 / 0.1);
+	box-shadow:
+		0 10px 15px -3px rgb(0 0 0 / 0.5),
+		0 0 0 1px rgb(255 255 255 / 0.1);
 }
 .sb-mood {
 	width: 184px;
@@ -1631,11 +1623,7 @@
 	position: absolute;
 	inset: 0 0 auto;
 	height: 128px;
-	background: linear-gradient(
-		180deg,
-		color-mix(in srgb, var(--hue) 33%, transparent),
-		transparent
-	);
+	background: linear-gradient(180deg, color-mix(in srgb, var(--hue) 33%, transparent), transparent);
 }
 .sb-mood .sb-fan {
 	width: 78%;
@@ -1705,8 +1693,7 @@
 @media (hover: hover) {
 	.sb-tile:hover .sb-fan > *,
 	.sb-tile:focus-visible .sb-fan > * {
-		transform: translateX(calc(-50% + var(--x) * 1.35))
-			rotate(calc(var(--r) * 1.4)) translateY(-4%);
+		transform: translateX(calc(-50% + var(--x) * 1.35)) rotate(calc(var(--r) * 1.4)) translateY(-4%);
 	}
 }
 
@@ -1831,12 +1818,15 @@
 	padding: 8px;
 	border-radius: 12px;
 	background: rgb(3 7 18 / 0.95);
-	box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.6), inset 0 0 0 1px
-		rgb(255 255 255 / 0.15);
+	box-shadow:
+		0 25px 50px -12px rgb(0 0 0 / 0.6),
+		inset 0 0 0 1px rgb(255 255 255 / 0.15);
 	transition: opacity 0.18s ease;
 }
 .sb-glide {
-	transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.18s ease;
+	transition:
+		transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+		opacity 0.18s ease;
 }
 .sb-peek-fan {
 	width: 100%;
@@ -2016,8 +2006,9 @@
 	padding: 0 12px 12px;
 	border-radius: 16px;
 	background: rgb(3 7 18 / 0.82);
-	box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06), 0 24px 60px
-		rgb(0 0 0 / 0.5);
+	box-shadow:
+		inset 0 0 0 1px rgb(255 255 255 / 0.06),
+		0 24px 60px rgb(0 0 0 / 0.5);
 }
 
 .start-member-box {
@@ -2062,9 +2053,7 @@
 	.start-member .start-stage {
 		--start-member-chrome: 215px;
 		--start-card-want: calc(
-			(min(100cqw - 136px, 1960px) - 24px) *
-			0.28125 +
-			var(--start-member-chrome)
+			(min(100cqw - 136px, 1960px) - 24px) * 0.28125 + var(--start-member-chrome)
 		);
 	}
 	.start-member .start-stage::after {
@@ -2088,18 +2077,13 @@
 	}
 	.start-member .start-card {
 		max-width: min(
-			100cqw -
-			96px,
+			100cqw - 96px,
 			2000px,
 			calc((var(--start-card) - var(--start-member-chrome)) * 3.5556 + 64px)
 		);
 	}
 	.start-member-box {
-		max-width: calc(
-			(var(--start-card) - var(--start-member-chrome)) *
-			3.5556 +
-			24px
-		);
+		max-width: calc((var(--start-card) - var(--start-member-chrome)) * 3.5556 + 24px);
 	}
 	/* The results' two rows of 2:3 posters fill the card's height: 80 px of header and padding and a 12 px gap
 	   between the rows leave two poster heights, and eight columns with seven 12 px gaps make the width. */
@@ -2119,13 +2103,13 @@
 .start-member[data-first] .start-ledge-card {
 	padding: 0;
 	overflow: hidden;
-	background: radial-gradient(
-			ellipse 60% 80% at 0% 0%,
-			rgb(251 191 36 / 0.1),
-			transparent 70%
-		), linear-gradient(to bottom, rgb(10 14 26 / 0.97), rgb(3 7 18 / 0.98));
-	box-shadow: 0 40px 100px rgb(0 0 0 / 0.7), inset 0 1px 0
-		rgb(255 255 255 / 0.08), 0 0 0 1px rgb(255 255 255 / 0.07);
+	background:
+		radial-gradient(ellipse 60% 80% at 0% 0%, rgb(251 191 36 / 0.1), transparent 70%),
+		linear-gradient(to bottom, rgb(10 14 26 / 0.97), rgb(3 7 18 / 0.98));
+	box-shadow:
+		0 40px 100px rgb(0 0 0 / 0.7),
+		inset 0 1px 0 rgb(255 255 255 / 0.08),
+		0 0 0 1px rgb(255 255 255 / 0.07);
 }
 @media (min-width: 640px) {
 	.start-member[data-first] .start-stage {
@@ -2159,11 +2143,7 @@
 	overflow: hidden;
 	padding: 18px;
 	border-radius: 18px;
-	background: linear-gradient(
-		110deg,
-		rgb(251 191 36 / 0.12),
-		rgb(251 191 36 / 0.02) 60%
-	);
+	background: linear-gradient(110deg, rgb(251 191 36 / 0.12), rgb(251 191 36 / 0.02) 60%);
 	box-shadow: inset 0 0 0 1px rgb(251 191 36 / 0.28);
 	outline: none;
 }
@@ -2272,14 +2252,15 @@
 	max-width: none;
 	border-radius: 7px;
 	object-fit: cover;
-	box-shadow: 0 12px 28px rgb(0 0 0 / 0.6), 0 0 0 1px rgb(255 255 255 / 0.12);
+	box-shadow:
+		0 12px 28px rgb(0 0 0 / 0.6),
+		0 0 0 1px rgb(255 255 255 / 0.12);
 	transform-origin: 50% 130%;
 	transform: translateX(calc(var(--d) * 22px)) rotate(calc(var(--d) * 7deg));
 	transition: transform 0.4s var(--start-ledge-ease);
 }
 .first-main:hover .first-fan img {
-	transform: translateX(calc(var(--d) * 28px)) translateY(-4px)
-		rotate(calc(var(--d) * 9deg));
+	transform: translateX(calc(var(--d) * 28px)) translateY(-4px) rotate(calc(var(--d) * 9deg));
 }
 .first-fan img:nth-child(n + 4) {
 	display: none;
@@ -2409,8 +2390,7 @@
 		transform: translateX(calc(var(--d) * 34px)) rotate(calc(var(--d) * 7deg));
 	}
 	.first-main:hover .first-fan img {
-		transform: translateX(calc(var(--d) * 42px)) translateY(-6px)
-			rotate(calc(var(--d) * 9deg));
+		transform: translateX(calc(var(--d) * 42px)) translateY(-6px) rotate(calc(var(--d) * 9deg));
 	}
 	.first-fan img:nth-child(n + 4) {
 		display: block;
@@ -2452,8 +2432,7 @@
 		transform: translateX(calc(var(--d) * 40px)) rotate(calc(var(--d) * 7deg));
 	}
 	.first-main:hover .first-fan img {
-		transform: translateX(calc(var(--d) * 50px)) translateY(-6px)
-			rotate(calc(var(--d) * 9deg));
+		transform: translateX(calc(var(--d) * 50px)) translateY(-6px) rotate(calc(var(--d) * 9deg));
 	}
 }
 
@@ -2516,7 +2495,9 @@
 	text-transform: uppercase;
 	color: rgb(252 211 77);
 	background: rgb(3 7 18 / 0.9);
-	box-shadow: inset 0 0 0 1.5px rgb(251 191 36 / 0.45), 0 8px 24px rgb(0 0 0 / 0.5);
+	box-shadow:
+		inset 0 0 0 1.5px rgb(251 191 36 / 0.45),
+		0 8px 24px rgb(0 0 0 / 0.5);
 	text-shadow: 0 2px 8px rgb(0 0 0 / 0.9);
 }
 

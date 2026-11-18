@@ -38,7 +38,8 @@ export function More({ title, children }: { title: string; children: ReactNode }
 	)
 }
 
-// The amber button that opens the other app (an install link) or its settings page.
+// The amber outline button that opens the other app (an install link) or its settings page: a step on a page whose
+// main action is elsewhere.
 export function OpenButton({
 	href,
 	children,
@@ -50,7 +51,7 @@ export function OpenButton({
 }) {
 	return (
 		<PrimaryButton
-			variant="rect"
+			variant="outlineRect"
 			href={href}
 			{...(external ? { target: "_blank", rel: "noreferrer" } : {})}
 			className="inline-flex min-h-12 items-center justify-center gap-2 px-5 py-3 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900"

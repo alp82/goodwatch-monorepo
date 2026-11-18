@@ -94,10 +94,7 @@ export const TasteBar = forwardRef<
 					data-recipe-button=""
 				>
 					<ActiveMark on={sheet === "recipes"} />
-					<span
-						className="relative h-12 w-[3.4rem] shrink-0"
-						aria-hidden="true"
-					>
+					<span className="relative h-12 w-[3.4rem] shrink-0" aria-hidden="true">
 						{[1, 0].map((k) => {
 							const r = posters[k]
 							const path = r ? pool.posters[r.index] : ""
@@ -112,11 +109,7 @@ export const TasteBar = forwardRef<
 									}}
 								>
 									{path && (
-										<img
-											src={posterSrc(path, "w92")}
-											alt=""
-											className="size-full object-cover"
-										/>
+										<img src={posterSrc(path, "w92")} alt="" className="size-full object-cover" />
 									)}
 								</span>
 							)
@@ -185,12 +178,15 @@ function ActiveMark({ on }: { on: boolean }) {
 export function LivePill({
 	r,
 	className,
-}: { r: React.RefObject<HTMLSpanElement>; className: string }) {
+}: {
+	r: React.RefObject<HTMLSpanElement>
+	className: string
+}) {
 	return (
 		<span
 			ref={r}
 			aria-live="polite"
-			className={`pointer-events-none absolute left-1/2 z-10 -translate-x-1/2 rounded-full bg-amber-400 px-3 py-1 text-sm font-black whitespace-nowrap text-gray-950 opacity-0 transition-opacity ${className}`}
+			className={`pointer-events-none absolute left-1/2 z-10 -translate-x-1/2 rounded-full bg-gray-200 px-3 py-1 text-sm font-black whitespace-nowrap text-gray-950 opacity-0 transition-opacity ${className}`}
 		/>
 	)
 }
@@ -234,7 +230,11 @@ export function ResetIcon({
 	on,
 	onClick,
 	className = "",
-}: { on: boolean; onClick: () => void; className?: string }) {
+}: {
+	on: boolean
+	onClick: () => void
+	className?: string
+}) {
 	return (
 		<button
 			type="button"
@@ -264,7 +264,11 @@ export function Dice({
 	rolls,
 	onRoll,
 	small = false,
-}: { rolls: number; onRoll: () => void; small?: boolean }) {
+}: {
+	rolls: number
+	onRoll: () => void
+	small?: boolean
+}) {
 	const [face, setFace] = useState(5)
 	const seen = useRef(rolls)
 	useEffect(() => {

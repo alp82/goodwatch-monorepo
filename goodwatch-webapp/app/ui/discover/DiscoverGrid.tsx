@@ -5,12 +5,7 @@
 // characters strip above the results points at (DiscoverRoles.tsx, wrapped around the results in DiscoverPage.tsx).
 // While a search runs, the cards dim but stay clickable; the one under the pointer or focus shows at full strength.
 import { ArrowDownIcon, ArrowUpIcon } from "@heroicons/react/20/solid"
-import {
-	AnimatePresence,
-	type Transition,
-	motion,
-	useReducedMotion,
-} from "framer-motion"
+import { AnimatePresence, type Transition, motion, useReducedMotion } from "framer-motion"
 import type { ReactNode } from "react"
 import type { TitleCard } from "~/server/title-cards.server"
 import { DiscoverCardRole } from "~/ui/discover/DiscoverRoles"
@@ -57,48 +52,48 @@ export function DiscoverGrid({
 	return (
 		<div className={DISCOVER_GRID}>
 			<HiddenTileContext.Provider value={keeper}>
-			<AnimatePresence initial={false} mode="popLayout">
-				{cards.map((card, index) => {
-					const delta = marks?.get(card.key) ?? 0
-					const priority = gridPosterPriority(index)
-					return (
-						<motion.div
-							key={card.key}
- data-result-position={index + 1}
-							layout={reduce ? false : "position"}
-							initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.9 }}
-							animate={{
-								opacity: 1,
-								scale: 1,
-								transition: { duration: 0.18, ease: EASE_OUT },
-							}}
-							exit={
-								reduce
-									? { opacity: 0, transition: { duration: 0.1 } }
-									: { opacity: 0, scale: 0.96, transition: { duration: 0.1 } }
-							}
-							transition={flipping ? FLIP_GLIDE : GLIDE}
-							className="relative"
-						>
-							{/* A browser requests a lazy image up to 3,000 px ahead, which is ten rows of posters on a
-							    phone. A skipped card holds its poster back until it is about one and a half screens away. */}
-							{/* The card animates its own opacity, so the dim sits on a wrapper. */}
-							<div
-								className={`transition-opacity duration-200 ${dimmed ? "opacity-30 hover:opacity-100 focus-within:opacity-100" : ""}`}
+				<AnimatePresence initial={false} mode="popLayout">
+					{cards.map((card, index) => {
+						const delta = marks?.get(card.key) ?? 0
+						const priority = gridPosterPriority(index)
+						return (
+							<motion.div
+								key={card.key}
+								data-result-position={index + 1}
+								layout={reduce ? false : "position"}
+								initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.9 }}
+								animate={{
+									opacity: 1,
+									scale: 1,
+									transition: { duration: 0.18, ease: EASE_OUT },
+								}}
+								exit={
+									reduce
+										? { opacity: 0, transition: { duration: 0.1 } }
+										: { opacity: 0, scale: 0.96, transition: { duration: 0.1 } }
+								}
+								transition={flipping ? FLIP_GLIDE : GLIDE}
+								className="relative"
 							>
-								<DiscoverCardRole card={card}>
-									<TitlePosterCard
-										card={card}
-										posterPriority={priority}
-										skipOffscreen={priority === "lazy"}
-									/>
-								</DiscoverCardRole>
-							</div>
-							<MoveMark delta={delta} reduce={reduce} />
-						</motion.div>
-					)
-				})}
-			</AnimatePresence>
+								{/* A browser requests a lazy image up to 3,000 px ahead, which is ten rows of posters on a
+							    phone. A skipped card holds its poster back until it is about one and a half screens away. */}
+								{/* The card animates its own opacity, so the dim sits on a wrapper. */}
+								<div
+									className={`transition-opacity duration-200 ${dimmed ? "opacity-30 hover:opacity-100 focus-within:opacity-100" : ""}`}
+								>
+									<DiscoverCardRole card={card}>
+										<TitlePosterCard
+											card={card}
+											posterPriority={priority}
+											skipOffscreen={priority === "lazy"}
+										/>
+									</DiscoverCardRole>
+								</div>
+								<MoveMark delta={delta} reduce={reduce} />
+							</motion.div>
+						)
+					})}
+				</AnimatePresence>
 			</HiddenTileContext.Provider>
 			{children}
 		</div>
@@ -117,7 +112,7 @@ function MoveMark({ delta, reduce }: { delta: number; reduce: boolean }) {
 						animate={{ opacity: 1, scale: 1 }}
 						exit={{ opacity: 0 }}
 						transition={SPRING}
-						className={`absolute top-1.5 left-1.5 z-30 flex h-7 items-center gap-0.5 rounded-full px-2 text-[13px] font-black tabular-nums shadow-lg ring-[3px] ring-gray-900 ${delta > 0 ? "bg-amber-400 text-gray-950" : "bg-gray-700 text-gray-200"}`}
+						className={`absolute top-1.5 left-1.5 z-30 flex h-7 items-center gap-0.5 rounded-full px-2 text-[13px] font-black tabular-nums shadow-lg ring-[3px] ring-gray-900 ${delta > 0 ? "bg-gray-200 text-gray-950" : "bg-gray-700 text-gray-200"}`}
 					>
 						{delta > 0 ? (
 							<ArrowUpIcon className="h-3.5 w-3.5" aria-hidden />
