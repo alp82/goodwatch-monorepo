@@ -5,8 +5,21 @@
 // the heading/field plate morph, the text swaps, the count line and the result grid.
 // framer-motion is already loaded on every page (app.tsx). MotionConfig reducedMotion="user" drops transforms and
 // layout motion for people who ask for less motion; the skeleton beat is skipped for them too.
-import { ArrowDownIcon, ArrowUpIcon, MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/20/solid"
-import { AnimatePresence, LayoutGroup, MotionConfig, type Transition, type Variants, motion, useReducedMotion } from "framer-motion"
+import {
+	ArrowDownIcon,
+	ArrowUpIcon,
+	MagnifyingGlassIcon,
+	XMarkIcon,
+} from "@heroicons/react/20/solid"
+import {
+	AnimatePresence,
+	LayoutGroup,
+	MotionConfig,
+	type Transition,
+	type Variants,
+	motion,
+	useReducedMotion,
+} from "framer-motion"
 import { type ReactNode, useEffect, useRef, useState } from "react"
 import { type D3, matchQuery, useDiscover3 } from "~/ui/prototype-rec-discover-3/rank3"
 import { CoinCard } from "~/ui/prototype-rec-discover/cards"
@@ -14,7 +27,17 @@ import type { Payload, SearchList } from "~/ui/prototype-rec-discover/types"
 import { SPRING, TAP, buzz } from "~/ui/prototype-rec-filter-bar-2/kit2"
 import { GRID } from "~/ui/prototype-rec-filter-bar/kit"
 import { ExplainLine, QueryInput, Recover4, Shell4, useDraft } from "./bar4"
-import { EASE_IN, EASE_OUT, EASE_SPRING, FEELS, type Feel, FeelProvider, Swap, Tick, useFeel } from "./swap4"
+import {
+	EASE_IN,
+	EASE_OUT,
+	EASE_SPRING,
+	FEELS,
+	type Feel,
+	FeelProvider,
+	Swap,
+	Tick,
+	useFeel,
+} from "./swap4"
 
 const LIMIT = 36
 
@@ -44,8 +67,17 @@ function Cards({ d, pop = false }: { d: D3; pop?: boolean }) {
 							key={r.t.ref}
 							layout
 							initial={pop ? { opacity: 0, scale: 0.9 } : { opacity: 0, y: -12 }}
-							animate={{ opacity: 1, y: 0, scale: 1, transition: pop ? { duration: 0.18, ease: EASE_OUT } : { duration: 0.3 } }}
-							exit={{ opacity: 0, scale: pop ? 0.96 : 0.9, transition: { duration: pop ? 0.1 : 0.15 } }}
+							animate={{
+								opacity: 1,
+								y: 0,
+								scale: 1,
+								transition: pop ? { duration: 0.18, ease: EASE_OUT } : { duration: 0.3 },
+							}}
+							exit={{
+								opacity: 0,
+								scale: pop ? 0.96 : 0.9,
+								transition: { duration: pop ? 0.1 : 0.15 },
+							}}
 							transition={pop ? FAST_GLIDE : SLOW_GLIDE}
 						>
 							<CoinCard t={r.t} mine={d.data.mine}>
@@ -59,7 +91,11 @@ function Cards({ d, pop = false }: { d: D3; pop?: boolean }) {
 											transition={SPRING}
 											className={`absolute top-3 left-3 flex h-7 items-center gap-0.5 rounded-full px-2 text-[13px] font-black tabular-nums ring-[3px] ring-gray-900 shadow-lg ${delta > 0 ? "bg-amber-400 text-gray-950" : "bg-gray-700 text-gray-200"}`}
 										>
-											{delta > 0 ? <ArrowUpIcon className="h-3.5 w-3.5" /> : <ArrowDownIcon className="h-3.5 w-3.5" />}
+											{delta > 0 ? (
+												<ArrowUpIcon className="h-3.5 w-3.5" />
+											) : (
+												<ArrowDownIcon className="h-3.5 w-3.5" />
+											)}
 											{Math.abs(delta)}
 										</motion.span>
 									)}
@@ -69,7 +105,12 @@ function Cards({ d, pop = false }: { d: D3; pop?: boolean }) {
 					)
 				})}
 			</AnimatePresence>
-			{d.bar.recoveries.length > 0 && <Recover4 d={d} className={d.bar.results.length ? "aspect-[2/3] scale-95" : "col-span-full py-12"} />}
+			{d.bar.recoveries.length > 0 && (
+				<Recover4
+					d={d}
+					className={d.bar.results.length ? "aspect-[2/3] scale-95" : "col-span-full py-12"}
+				/>
+			)}
 		</div>
 	)
 }
@@ -88,7 +129,11 @@ const GRID_SWAP: Record<"fade" | "slide" | "roll", Variants> = {
 	slide: {
 		enter: (dir: number) => ({ opacity: 0, x: 56 * dir }),
 		center: { opacity: 1, x: 0, transition: { duration: 0.22, ease: EASE_OUT } },
-		leave: (dir: number) => ({ opacity: 0, x: -56 * dir, transition: { duration: 0.14, ease: EASE_IN } }),
+		leave: (dir: number) => ({
+			opacity: 0,
+			x: -56 * dir,
+			transition: { duration: 0.14, ease: EASE_IN },
+		}),
 	},
 	roll: {
 		enter: (dir: number) => ({ opacity: 0, y: 14 * dir }),
@@ -101,7 +146,10 @@ function Skeleton({ n }: { n: number }) {
 	return (
 		<div className={GRID} aria-hidden>
 			{Array.from({ length: n }, (_, i) => (
-				<div key={i} className="d4-skel relative aspect-[2/3] scale-95 overflow-hidden rounded-lg border-4 border-gray-800 bg-gray-900">
+				<div
+					key={i}
+					className="d4-skel relative aspect-[2/3] scale-95 overflow-hidden rounded-lg border-4 border-gray-800 bg-gray-900"
+				>
 					<span className="absolute top-2 right-2 h-11 w-8 rounded-t-full rounded-b-md bg-white/[0.06]" />
 					<span className="absolute bottom-3 left-2 h-3 w-2/3 rounded bg-white/[0.06]" />
 				</div>
@@ -127,11 +175,21 @@ function ShimmerGrid({ d }: { d: D3 }) {
 		<div data-d4-motion="grid" className="relative">
 			<AnimatePresence initial={false} mode="popLayout">
 				{pending ? (
-					<motion.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.08 } }} exit={{ opacity: 0, transition: { duration: 0.1 } }}>
+					<motion.div
+						key="skeleton"
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1, transition: { duration: 0.08 } }}
+						exit={{ opacity: 0, transition: { duration: 0.1 } }}
+					>
 						<Skeleton n={n} />
 					</motion.div>
 				) : (
-					<motion.div key={k} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0, transition: { duration: 0.14, ease: EASE_OUT } }} exit={{ opacity: 0, transition: { duration: 0.08 } }}>
+					<motion.div
+						key={k}
+						initial={{ opacity: 0, y: 6 }}
+						animate={{ opacity: 1, y: 0, transition: { duration: 0.14, ease: EASE_OUT } }}
+						exit={{ opacity: 0, transition: { duration: 0.08 } }}
+					>
 						<Cards d={d} />
 					</motion.div>
 				)}
@@ -153,7 +211,15 @@ function Grid4({ d, kind }: { d: D3; kind: Kind }) {
 	return (
 		<div data-d4-motion="grid" className={`relative ${kind === "slide" ? "overflow-x-clip" : ""}`}>
 			<AnimatePresence initial={false} mode="popLayout" custom={dir}>
-				<motion.div key={k} custom={dir} variants={GRID_SWAP[kind]} initial="enter" animate="center" exit="leave" style={{ transformOrigin: "50% 0" }}>
+				<motion.div
+					key={k}
+					custom={dir}
+					variants={GRID_SWAP[kind]}
+					initial="enter"
+					animate="center"
+					exit="leave"
+					style={{ transformOrigin: "50% 0" }}
+				>
 					<Cards d={d} />
 				</motion.div>
 			</AnimatePresence>
@@ -169,11 +235,17 @@ const warmed = new Set<string>()
 function warm(list: SearchList | null) {
 	if (!list || warmed.has(list.q)) return
 	warmed.add(list.q)
-	for (const t of list.titles) if (t.poster_path) new Image().src = `https://www.themoviedb.org/t/p/w300_and_h450_bestv2${t.poster_path}`
+	for (const t of list.titles)
+		if (t.poster_path)
+			new Image().src = `https://www.themoviedb.org/t/p/w300_and_h450_bestv2${t.poster_path}`
 }
 
 function Title({ children, className = "" }: { children: ReactNode; className?: string }) {
-	return <h1 className={`brand-header text-3xl text-white lg:text-4xl ${className}`}>{children}</h1>
+	return (
+		<h1 className={`font-display font-bold text-3xl text-white lg:text-4xl ${className}`}>
+			{children}
+		</h1>
+	)
 }
 
 // The heading and the field share one plate (layoutId). The plate morphs between the two boxes on the variant's
@@ -200,41 +272,81 @@ function Head4({ d }: { d: D3 }) {
 	}, [q])
 	useEffect(() => () => clearTimeout(closing.current), [])
 	useEffect(() => warm(matchQuery(dr.draft, d.data.search).hit), [dr.draft, d.data.search])
-	const content = { initial: { opacity: 0 }, animate: { opacity: 1, transition: { duration: 0.14, delay: 0.06 } }, exit: { opacity: 0, transition: { duration: 0.06 } } }
+	const content = {
+		initial: { opacity: 0 },
+		animate: { opacity: 1, transition: { duration: 0.14, delay: 0.06 } },
+		exit: { opacity: 0, transition: { duration: 0.06 } },
+	}
 	return (
 		<LayoutGroup id="d4-morph">
-			<div data-d4-motion="head" className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 lg:min-h-16">
+			<div
+				data-d4-motion="head"
+				className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 lg:min-h-16"
+			>
 				<AnimatePresence mode="popLayout" initial={false}>
 					{editing ? (
-						<motion.div key="field" exit={{ opacity: 0, transition: { duration: 0.18 } }} className="relative flex h-14 w-full items-center px-4 lg:h-16 lg:max-w-2xl">
-							<motion.span layoutId="d4-plate" transition={feel.plate} className="absolute inset-0 rounded-2xl bg-white/[0.07] ring-1 ring-white/25 shadow-[0_20px_60px_-24px_rgba(0,0,0,.9)]" />
+						<motion.div
+							key="field"
+							exit={{ opacity: 0, transition: { duration: 0.18 } }}
+							className="relative flex h-14 w-full items-center px-4 lg:h-16 lg:max-w-2xl"
+						>
+							<motion.span
+								layoutId="d4-plate"
+								transition={feel.plate}
+								className="absolute inset-0 rounded-2xl bg-white/[0.07] ring-1 ring-white/25 shadow-[0_20px_60px_-24px_rgba(0,0,0,.9)]"
+							/>
 							<motion.div {...content} className="relative flex h-full min-w-0 flex-1 items-center">
 								<QueryInput
 									d={d}
 									dr={dr}
 									autoFocus
 									className="h-full min-w-0 flex-1"
-									inputClass="brand-header text-2xl lg:text-3xl"
+									inputClass="font-display font-bold text-2xl lg:text-3xl"
 									placeholder="What’s the mood?"
 									popClass="absolute left-0 top-full mt-3 w-full max-w-[340px]"
 									onDone={done}
 								/>
-								<button type="button" onClick={done} className="ml-2 shrink-0 rounded-full px-3 py-1.5 text-sm font-bold text-gray-400 hover:bg-white/10 hover:text-white cursor-pointer">
+								<button
+									type="button"
+									onClick={done}
+									className="ml-2 shrink-0 rounded-full px-3 py-1.5 text-sm font-bold text-gray-400 hover:bg-white/10 hover:text-white cursor-pointer"
+								>
 									Done
 								</button>
 							</motion.div>
 						</motion.div>
 					) : (
-						<motion.div key="head" exit={{ opacity: 0, transition: { duration: 0.18 } }} className="relative flex min-w-0 items-center gap-3">
-							<motion.span layoutId="d4-plate" transition={feel.plate} className="absolute -inset-x-3 -inset-y-2 rounded-2xl bg-white/0 ring-1 ring-white/0" />
+						<motion.div
+							key="head"
+							exit={{ opacity: 0, transition: { duration: 0.18 } }}
+							className="relative flex min-w-0 items-center gap-3"
+						>
+							<motion.span
+								layoutId="d4-plate"
+								transition={feel.plate}
+								className="absolute -inset-x-3 -inset-y-2 rounded-2xl bg-white/0 ring-1 ring-white/0"
+							/>
 							<motion.div {...content} className="relative flex min-w-0 items-center gap-3">
-								<button type="button" onClick={() => (buzz(), setEditing(true))} className="group flex min-w-0 items-center gap-3 text-left cursor-text" aria-label={q ? `Edit search ${q}` : "Search Discover"}>
+								<button
+									type="button"
+									onClick={() => (buzz(), setEditing(true))}
+									className="group flex min-w-0 items-center gap-3 text-left cursor-text"
+									aria-label={q ? `Edit search ${q}` : "Search Discover"}
+								>
 									<Title className={`min-w-0 overflow-hidden ${q ? "!text-4xl lg:!text-5xl" : ""}`}>
-										<Swap k={q ?? "browse"} className="-my-1 max-w-full py-1 align-middle" origin="0% 60%">
+										<Swap
+											k={q ?? "browse"}
+											className="-my-1 max-w-full py-1 align-middle"
+											origin="0% 60%"
+										>
 											<span className="block truncate">{q ?? "Discover"}</span>
 										</Swap>
 									</Title>
-									<motion.span layout="position" transition={feel.plate} className={`grid shrink-0 place-items-center rounded-full ring-1 transition-colors ${q ? "h-9 w-9 text-gray-500 ring-white/10 group-hover:text-white" : "h-11 w-11 bg-white/[0.06] text-gray-200 ring-white/15 group-hover:bg-white/10"}`}>
+									<motion.span
+										layout="position"
+										transition={feel.plate}
+										className={`grid shrink-0 place-items-center rounded-full ring-1 transition-colors ${q ? "h-9 w-9 text-gray-500 ring-white/10 group-hover:text-white" : "h-11 w-11 bg-white/[0.06] text-gray-200 ring-white/15 group-hover:bg-white/10"}`}
+									>
 										<MagnifyingGlassIcon className="h-5 w-5" />
 									</motion.span>
 								</button>
@@ -245,7 +357,11 @@ function Head4({ d }: { d: D3 }) {
 											type="button"
 											layout="position"
 											initial={{ opacity: 0, scale: 0.6 }}
-											animate={{ opacity: 1, scale: 1, transition: { duration: 0.16, ease: EASE_OUT } }}
+											animate={{
+												opacity: 1,
+												scale: 1,
+												transition: { duration: 0.16, ease: EASE_OUT },
+											}}
 											exit={{ opacity: 0, scale: 0.6, transition: { duration: 0.1 } }}
 											whileTap={TAP}
 											onClick={() => (buzz(), d.clear())}
@@ -260,7 +376,11 @@ function Head4({ d }: { d: D3 }) {
 						</motion.div>
 					)}
 				</AnimatePresence>
-				<motion.div layout="position" transition={feel.plate} className="w-full lg:w-auto lg:max-w-[34rem]">
+				<motion.div
+					layout="position"
+					transition={feel.plate}
+					className="w-full lg:w-auto lg:max-w-[34rem]"
+				>
 					<ExplainLine d={d} />
 				</motion.div>
 			</div>
@@ -274,10 +394,15 @@ function RollCount({ d }: { d: D3 }) {
 	const bar = d.bar
 	const n = bar.results.length
 	return (
-		<span data-d4-motion="count" className="inline-flex items-center whitespace-nowrap text-sm text-gray-400">
+		<span
+			data-d4-motion="count"
+			className="inline-flex items-center whitespace-nowrap text-sm text-gray-400"
+		>
 			<Tick value={n} className="font-bold text-white" />
 			&nbsp;
-			<Swap k={d.query ? (n === 1 ? "match" : "matches") : "showing"}>{d.query ? (n === 1 ? "match" : "matches") : "showing"}</Swap>
+			<Swap k={d.query ? (n === 1 ? "match" : "matches") : "showing"}>
+				{d.query ? (n === 1 ? "match" : "matches") : "showing"}
+			</Swap>
 			{bar.hidden > 0 && (
 				<>
 					,&nbsp;
@@ -297,7 +422,15 @@ function make(kind: Kind, feel: Feel) {
 		return (
 			<MotionConfig reducedMotion="user">
 				<FeelProvider feel={feel} dir={d.query ? 1 : -1}>
-					<Shell4 d={d} slots={{ head: <Head4 d={d} />, withQuery: false, reading: false, count: kind === "roll" ? <RollCount d={d} /> : undefined }}>
+					<Shell4
+						d={d}
+						slots={{
+							head: <Head4 d={d} />,
+							withQuery: false,
+							reading: false,
+							count: kind === "roll" ? <RollCount d={d} /> : undefined,
+						}}
+					>
 						<Grid4 d={d} kind={kind} />
 					</Shell4>
 				</FeelProvider>
@@ -311,27 +444,32 @@ export type Variant = { name: string; pitch: string; View: (p: { data: Payload }
 export const VARIANTS: Record<string, Variant> = {
 	shared: {
 		name: "Shared plate, cross-fade",
-		pitch: "The heading and the field are one plate that springs between sizes in about 200 ms while the words cross-fade. The whole result grid cross-fades with a slight scale, all at once.",
+		pitch:
+			"The heading and the field are one plate that springs between sizes in about 200 ms while the words cross-fade. The whole result grid cross-fades with a slight scale, all at once.",
 		View: make("fade", FEELS.fade),
 	},
 	flip: {
 		name: "Cards reflow (FLIP)",
-		pitch: "The grid is never replaced: titles in both lists glide to their new place in 260 ms, new ones pop in, the rest vanish in 100 ms. Text nudges up into place.",
+		pitch:
+			"The grid is never replaced: titles in both lists glide to their new place in 260 ms, new ones pop in, the rest vanish in 100 ms. Text nudges up into place.",
 		View: make("flip", FEELS.nudge),
 	},
 	shimmer: {
 		name: "Skeleton beat",
-		pitch: "The old grid dissolves to a skeleton for 100 ms, as if fetching, then the new list snaps in. Text comes into focus from a light blur.",
+		pitch:
+			"The old grid dissolves to a skeleton for 100 ms, as if fetching, then the new list snaps in. Text comes into focus from a light blur.",
 		View: make("shimmer", FEELS.focus),
 	},
 	slide: {
 		name: "Directional slide",
-		pitch: "Searching moves forward: the grid and every swapped line slide in from the right. Clearing goes back and slides the other way.",
+		pitch:
+			"Searching moves forward: the grid and every swapped line slide in from the right. Clearing goes back and slides the other way.",
 		View: make("slide", FEELS.slide),
 	},
 	roll: {
 		name: "Odometer",
-		pitch: "Heading, explanation and count line roll like an odometer; the numbers count from old to new (62 → 19). The grid lifts in with a short fade.",
+		pitch:
+			"Heading, explanation and count line roll like an odometer; the numbers count from old to new (62 → 19). The grid lifts in with a short fade.",
 		View: make("roll", FEELS.roll),
 	},
 }

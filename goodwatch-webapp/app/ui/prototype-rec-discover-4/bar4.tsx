@@ -4,18 +4,53 @@
 //    "Read as ..." line instead (the tooltip, the phone's tip sheet and the inline line under the heading).
 //    The swap runs in the variant's feel (swap4.tsx). The separate "Read as" line under the count is gone.
 // 2. The count line can be replaced (the `roll` variant counts its numbers).
-import { AdjustmentsHorizontalIcon, ArrowUpIcon, ArrowsUpDownIcon, CheckIcon, ChevronDownIcon, EyeIcon, EyeSlashIcon, GlobeAltIcon, MagnifyingGlassIcon, PlusIcon, XMarkIcon } from "@heroicons/react/20/solid"
+import {
+	AdjustmentsHorizontalIcon,
+	ArrowUpIcon,
+	ArrowsUpDownIcon,
+	CheckIcon,
+	ChevronDownIcon,
+	EyeIcon,
+	EyeSlashIcon,
+	GlobeAltIcon,
+	MagnifyingGlassIcon,
+	PlusIcon,
+	XMarkIcon,
+} from "@heroicons/react/20/solid"
 import { FingerPrintIcon } from "@heroicons/react/24/solid"
 import { AnimatePresence, motion } from "framer-motion"
 import { type ReactNode, useEffect, useId, useRef, useState } from "react"
 import { Knob, MENU, Pop, SEG, SHELL, SlabMenu } from "~/ui/prototype-rec-discover-2/bar2"
 import { listSentence } from "~/ui/prototype-rec-discover/rank"
 import type { SearchList } from "~/ui/prototype-rec-discover/types"
-import { DragSheet, FilterPanel, NavTabs, RecoveryList, RollingNumber, SPRING, SearchField, ServiceStack, ShowButton, TAP, buzz, clearMoreFilters, useCosts, useScrollHide } from "~/ui/prototype-rec-filter-bar-2/kit2"
+import {
+	DragSheet,
+	FilterPanel,
+	NavTabs,
+	RecoveryList,
+	RollingNumber,
+	SPRING,
+	SearchField,
+	ServiceStack,
+	ShowButton,
+	TAP,
+	buzz,
+	clearMoreFilters,
+	useCosts,
+	useScrollHide,
+} from "~/ui/prototype-rec-filter-bar-2/kit2"
 import { activeChips } from "~/ui/prototype-rec-filter-bar/kit"
 import type { Bar } from "~/ui/prototype-rec-filter-bar/model"
 import { EASE_OUT, Swap } from "./swap4"
-import { type D3, SEARCH_MAX_MOVE, matchQuery, sortLabel, sortsFor, suggestions, wantWords } from "~/ui/prototype-rec-discover-3/rank3"
+import {
+	type D3,
+	SEARCH_MAX_MOVE,
+	matchQuery,
+	sortLabel,
+	sortsFor,
+	suggestions,
+	wantWords,
+} from "~/ui/prototype-rec-discover-3/rank3"
 
 export { Knob, MENU, Pop, SEG, SHELL, SlabMenu }
 
@@ -29,21 +64,35 @@ export function ForYouExplain({ d, className = "" }: { d: D3; className?: string
 			<p className="flex items-center gap-2 text-sm font-bold text-white">
 				<FingerPrintIcon className="h-4 w-4 text-amber-400" />
 				For you
-				<span className={`ml-auto rounded-full px-2 py-0.5 text-[11px] font-bold ${d.forYou ? "bg-amber-500 text-gray-950" : "text-gray-400 ring-1 ring-inset ring-white/15"}`}>{d.forYou ? "On" : "Off"}</span>
+				<span
+					className={`ml-auto rounded-full px-2 py-0.5 text-[11px] font-bold ${d.forYou ? "bg-amber-500 text-gray-950" : "text-gray-400 ring-1 ring-inset ring-white/15"}`}
+				>
+					{d.forYou ? "On" : "Off"}
+				</span>
 			</p>
 			<Swap block k={d.query?.q ?? "browse"} className="mt-2">
 				{d.query ? (
 					<p className="text-[13px] leading-relaxed text-gray-300">
-						Read as <span className="font-bold text-white">{listSentence(wantWords(d.query))}</span>. {d.forYou ? `Your search stays in charge; taste only swaps close matches, ${SEARCH_MAX_MOVE} places at most.` : "Pure relevance, taste is off."}
+						Read as <span className="font-bold text-white">{listSentence(wantWords(d.query))}</span>
+						.{" "}
+						{d.forYou
+							? `Your search stays in charge; taste only swaps close matches, ${SEARCH_MAX_MOVE} places at most.`
+							: "Pure relevance, taste is off."}
 					</p>
 				) : (
 					<p className="text-[13px] leading-relaxed text-gray-300">
-						Leans {sortLabel(d)} toward titles you'd likely rate highly, learned from {who.mode === "demo" ? "the demo member's" : "your"} {who.rated.toLocaleString("en")} ratings. It reorders; nothing is hidden.
+						Leans {sortLabel(d)} toward titles you'd likely rate highly, learned from{" "}
+						{who.mode === "demo" ? "the demo member's" : "your"} {who.rated.toLocaleString("en")}{" "}
+						ratings. It reorders; nothing is hidden.
 					</p>
 				)}
 			</Swap>
 			<p className={`mt-2 text-[13px] ${d.forYou ? "text-amber-300" : "text-gray-500"}`}>
-				{!d.forYou ? "Off: the same order everyone sees." : d.moves ? `Right now ${d.moves} ${search ? "results" : "titles"} moved up${search ? `, the furthest by ${d.maxMove}` : ""}.` : "Right now your taste agrees with this order."}
+				{!d.forYou
+					? "Off: the same order everyone sees."
+					: d.moves
+						? `Right now ${d.moves} ${search ? "results" : "titles"} moved up${search ? `, the furthest by ${d.maxMove}` : ""}.`
+						: "Right now your taste agrees with this order."}
 			</p>
 		</div>
 	)
@@ -62,9 +111,17 @@ function FingerTip({ d, on }: { d: D3; on: boolean }) {
 		return () => document.removeEventListener("pointerdown", down)
 	}, [open])
 	const show = () => (clearTimeout(timer.current), setOpen(true))
-	const hide = () => (clearTimeout(timer.current), (timer.current = setTimeout(() => setOpen(false), 120)))
+	const hide = () => (
+		clearTimeout(timer.current),
+		(timer.current = setTimeout(() => setOpen(false), 120))
+	)
 	return (
-		<span ref={ref} className="relative flex h-full items-center" onPointerEnter={(e) => e.pointerType === "mouse" && show()} onPointerLeave={(e) => e.pointerType === "mouse" && hide()}>
+		<span
+			ref={ref}
+			className="relative flex h-full items-center"
+			onPointerEnter={(e) => e.pointerType === "mouse" && show()}
+			onPointerLeave={(e) => e.pointerType === "mouse" && hide()}
+		>
 			<button
 				type="button"
 				aria-label="What For you does"
@@ -99,7 +156,9 @@ function FingerTip({ d, on }: { d: D3; on: boolean }) {
 
 function MovesCount({ d, className = "" }: { d: D3; className?: string }) {
 	return (
-		<span className={`inline-flex items-center gap-0.5 tabular-nums ${d.forYou && d.moves ? "text-amber-300" : "text-transparent"} ${className}`}>
+		<span
+			className={`inline-flex items-center gap-0.5 tabular-nums ${d.forYou && d.moves ? "text-amber-300" : "text-transparent"} ${className}`}
+		>
 			<ArrowUpIcon className="h-3 w-3" />
 			{d.moves}
 		</span>
@@ -137,7 +196,17 @@ export function ForYouDesk({ d }: { d: D3 }) {
 
 // ---------------------------------------------------------------- sort
 
-function SortRows4({ d, onPick, dense = false, id }: { d: D3; onPick?: () => void; dense?: boolean; id: string }) {
+function SortRows4({
+	d,
+	onPick,
+	dense = false,
+	id,
+}: {
+	d: D3
+	onPick?: () => void
+	dense?: boolean
+	id: string
+}) {
 	return (
 		<div className="flex flex-col">
 			<AnimatePresence initial={false}>
@@ -153,9 +222,17 @@ function SortRows4({ d, onPick, dense = false, id }: { d: D3; onPick?: () => voi
 							onClick={() => (buzz(), d.setSort(s.key), onPick?.())}
 							className={`relative flex items-center gap-3 rounded-xl px-3 ${dense ? "py-2" : "py-2.5"} text-left cursor-pointer ${on ? "" : "hover:bg-white/5"}`}
 						>
-							{on && <motion.span layoutId={`d4-sort-hl-${id}`} transition={SPRING} className="absolute inset-0 rounded-xl bg-white/[0.07] ring-1 ring-white/10" />}
+							{on && (
+								<motion.span
+									layoutId={`d4-sort-hl-${id}`}
+									transition={SPRING}
+									className="absolute inset-0 rounded-xl bg-white/[0.07] ring-1 ring-white/10"
+								/>
+							)}
 							<span className="relative flex-1">
-								<span className={`block text-sm font-bold ${on ? "text-white" : "text-gray-300"}`}>{s.label}</span>
+								<span className={`block text-sm font-bold ${on ? "text-white" : "text-gray-300"}`}>
+									{s.label}
+								</span>
 								<span className="block text-xs text-gray-500">{s.hint}</span>
 							</span>
 							<CheckIcon className={`relative h-4 w-4 text-white ${on ? "" : "invisible"}`} />
@@ -163,7 +240,9 @@ function SortRows4({ d, onPick, dense = false, id }: { d: D3; onPick?: () => voi
 					)
 				})}
 			</AnimatePresence>
-			{d.mode === "browse" && <p className="px-3 pt-1.5 pb-2 text-xs text-gray-500">Relevance joins once you search.</p>}
+			{d.mode === "browse" && (
+				<p className="px-3 pt-1.5 pb-2 text-xs text-gray-500">Relevance joins once you search.</p>
+			)}
 		</div>
 	)
 }
@@ -174,17 +253,33 @@ export function SortDesk({ d }: { d: D3 }) {
 		<Pop
 			width={288}
 			trigger={(open, toggle) => (
-				<motion.button type="button" whileTap={TAP} aria-expanded={open} aria-haspopup="menu" onClick={toggle} className={`flex h-12 w-52 items-center gap-2 px-4 text-sm cursor-pointer ${SHELL} ${open ? "ring-white/25" : "hover:ring-white/20"}`}>
+				<motion.button
+					type="button"
+					whileTap={TAP}
+					aria-expanded={open}
+					aria-haspopup="menu"
+					onClick={toggle}
+					className={`flex h-12 w-52 items-center gap-2 px-4 text-sm cursor-pointer ${SHELL} ${open ? "ring-white/25" : "hover:ring-white/20"}`}
+				>
 					<ArrowsUpDownIcon className="h-4 w-4 text-gray-400" />
 					<span className="text-gray-400">Sort</span>
 					<span className="relative flex-1 overflow-hidden text-left">
 						<AnimatePresence mode="popLayout" initial={false}>
-							<motion.span key={d.sort} initial={{ y: 14, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -14, opacity: 0 }} transition={SPRING} className="block truncate font-bold text-white">
+							<motion.span
+								key={d.sort}
+								initial={{ y: 14, opacity: 0 }}
+								animate={{ y: 0, opacity: 1 }}
+								exit={{ y: -14, opacity: 0 }}
+								transition={SPRING}
+								className="block truncate font-bold text-white"
+							>
 								{sortLabel(d)}
 							</motion.span>
 						</AnimatePresence>
 					</span>
-					<ChevronDownIcon className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} />
+					<ChevronDownIcon
+						className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`}
+					/>
 				</motion.button>
 			)}
 		>
@@ -201,16 +296,47 @@ export function SortDesk({ d }: { d: D3 }) {
 
 function ServicesSeg({ bar }: { bar: Bar }) {
 	const on = bar.filters.mine
-	const seg = "relative z-10 flex h-full items-center justify-center gap-2 rounded-xl px-3.5 text-sm font-bold whitespace-nowrap cursor-pointer transition-colors"
+	const seg =
+		"relative z-10 flex h-full items-center justify-center gap-2 rounded-xl px-3.5 text-sm font-bold whitespace-nowrap cursor-pointer transition-colors"
 	return (
-		<div role="radiogroup" aria-label="Where to watch" className={`relative flex h-12 p-1 ${SHELL}`}>
-			<motion.button type="button" whileTap={TAP} role="radio" aria-checked={on} onClick={() => (buzz(), bar.set({ mine: true, providers: [] }))} className={`${seg} w-48 ${on ? "text-white" : "text-gray-400 hover:text-gray-200"}`}>
-				{on && <motion.span layoutId="d4-svc" transition={SPRING} className="absolute inset-0 -z-10 rounded-xl bg-linear-to-b from-emerald-600 to-emerald-800 shadow-[inset_0_1px_0_rgba(255,255,255,.25),0_8px_24px_-8px_rgba(16,185,129,.6)]" />}
+		<div
+			role="radiogroup"
+			aria-label="Where to watch"
+			className={`relative flex h-12 p-1 ${SHELL}`}
+		>
+			<motion.button
+				type="button"
+				whileTap={TAP}
+				role="radio"
+				aria-checked={on}
+				onClick={() => (buzz(), bar.set({ mine: true, providers: [] }))}
+				className={`${seg} w-48 ${on ? "text-white" : "text-gray-400 hover:text-gray-200"}`}
+			>
+				{on && (
+					<motion.span
+						layoutId="d4-svc"
+						transition={SPRING}
+						className="absolute inset-0 -z-10 rounded-xl bg-linear-to-b from-emerald-600 to-emerald-800 shadow-[inset_0_1px_0_rgba(255,255,255,.25),0_8px_24px_-8px_rgba(16,185,129,.6)]"
+					/>
+				)}
 				<ServiceStack bar={bar} on={on} size={20} />
 				On my services
 			</motion.button>
-			<motion.button type="button" whileTap={TAP} role="radio" aria-checked={!on} onClick={() => (buzz(), bar.set({ mine: false }))} className={`${seg} w-32 ${!on ? "text-white" : "text-gray-400 hover:text-gray-200"}`}>
-				{!on && <motion.span layoutId="d4-svc" transition={SPRING} className="absolute inset-0 -z-10 rounded-xl bg-white/10 ring-1 ring-white/15" />}
+			<motion.button
+				type="button"
+				whileTap={TAP}
+				role="radio"
+				aria-checked={!on}
+				onClick={() => (buzz(), bar.set({ mine: false }))}
+				className={`${seg} w-32 ${!on ? "text-white" : "text-gray-400 hover:text-gray-200"}`}
+			>
+				{!on && (
+					<motion.span
+						layoutId="d4-svc"
+						transition={SPRING}
+						className="absolute inset-0 -z-10 rounded-xl bg-white/10 ring-1 ring-white/15"
+					/>
+				)}
 				<GlobeAltIcon className="h-4 w-4" />
 				Everywhere
 			</motion.button>
@@ -232,32 +358,74 @@ function NotSeenSwitch({ bar }: { bar: Bar }) {
 		>
 			{on ? <EyeSlashIcon className="h-4 w-4 text-blue-400" /> : <EyeIcon className="h-4 w-4" />}
 			<span className="flex-1 text-left">Not seen yet</span>
-			<span className={`w-7 text-right text-xs tabular-nums ${on && cost ? "text-blue-300/80" : "text-transparent"}`}>−{cost}</span>
-			<span className={`relative h-5 w-9 rounded-full transition-colors ${on ? "bg-blue-600 shadow-[0_0_14px_rgba(37,99,235,.6)]" : "bg-white/15"}`}>
-				<motion.span layout transition={SPRING} className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow ${on ? "right-0.5" : "left-0.5"}`} />
+			<span
+				className={`w-7 text-right text-xs tabular-nums ${on && cost ? "text-blue-300/80" : "text-transparent"}`}
+			>
+				−{cost}
+			</span>
+			<span
+				className={`relative h-5 w-9 rounded-full transition-colors ${on ? "bg-blue-600 shadow-[0_0_14px_rgba(37,99,235,.6)]" : "bg-white/15"}`}
+			>
+				<motion.span
+					layout
+					transition={SPRING}
+					className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow ${on ? "right-0.5" : "left-0.5"}`}
+				/>
 			</span>
 		</motion.button>
 	)
 }
 
-function FiltersButton({ bar, onClick, compact = false }: { bar: Bar; onClick: () => void; compact?: boolean }) {
+function FiltersButton({
+	bar,
+	onClick,
+	compact = false,
+}: {
+	bar: Bar
+	onClick: () => void
+	compact?: boolean
+}) {
 	return (
-		<motion.button type="button" whileTap={TAP} onClick={onClick} aria-label="Filters" className={`flex h-12 items-center gap-2 text-sm font-bold text-white cursor-pointer ${compact ? "px-3.5" : "px-4"} ${SHELL} hover:ring-white/25`}>
+		<motion.button
+			type="button"
+			whileTap={TAP}
+			onClick={onClick}
+			aria-label="Filters"
+			className={`flex h-12 items-center gap-2 text-sm font-bold text-white cursor-pointer ${compact ? "px-3.5" : "px-4"} ${SHELL} hover:ring-white/25`}
+		>
 			<AdjustmentsHorizontalIcon className="h-4 w-4" />
 			{!compact && "Filters"}
-			<span className={`grid h-5 min-w-5 place-items-center rounded-full px-1.5 text-xs tabular-nums ${bar.moreCount ? "bg-amber-500 text-gray-950" : "bg-white/10 text-gray-400"}`}>{bar.moreCount}</span>
+			<span
+				className={`grid h-5 min-w-5 place-items-center rounded-full px-1.5 text-xs tabular-nums ${bar.moreCount ? "bg-amber-500 text-gray-950" : "bg-white/10 text-gray-400"}`}
+			>
+				{bar.moreCount}
+			</span>
 		</motion.button>
 	)
 }
 
-const DOT: Record<string, string> = { teal: "bg-teal-400", amber: "bg-amber-400", indigo: "bg-indigo-400", slate: "bg-lime-400", cyan: "bg-cyan-400", emerald: "bg-emerald-400", rose: "bg-rose-400", purple: "bg-purple-400" }
+const DOT: Record<string, string> = {
+	teal: "bg-teal-400",
+	amber: "bg-amber-400",
+	indigo: "bg-indigo-400",
+	slate: "bg-lime-400",
+	cyan: "bg-cyan-400",
+	emerald: "bg-emerald-400",
+	rose: "bg-rose-400",
+	purple: "bg-purple-400",
+}
 
 function Tokens({ bar, lead, className = "" }: { bar: Bar; lead?: ReactNode; className?: string }) {
 	const chips = activeChips(bar)
 	return (
 		<AnimatePresence initial={false}>
 			{(chips.length > 0 || lead) && (
-				<motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className={`overflow-hidden ${className}`}>
+				<motion.div
+					initial={{ opacity: 0, height: 0 }}
+					animate={{ opacity: 1, height: "auto" }}
+					exit={{ opacity: 0, height: 0 }}
+					className={`overflow-hidden ${className}`}
+				>
 					<div className="flex flex-wrap items-center gap-2 pt-1">
 						{lead}
 						<AnimatePresence initial={false} mode="popLayout">
@@ -282,7 +450,11 @@ function Tokens({ bar, lead, className = "" }: { bar: Bar; lead?: ReactNode; cla
 							))}
 						</AnimatePresence>
 						{chips.length > 0 && (
-							<button type="button" onClick={() => clearMoreFilters(bar)} className="ml-1 text-sm text-gray-500 hover:text-white cursor-pointer">
+							<button
+								type="button"
+								onClick={() => clearMoreFilters(bar)}
+								className="ml-1 text-sm text-gray-500 hover:text-white cursor-pointer"
+							>
 								Clear filters
 							</button>
 						)}
@@ -299,12 +471,27 @@ function Tokens({ bar, lead, className = "" }: { bar: Bar; lead?: ReactNode; cla
 const METER_T = { duration: 0.24, ease: EASE_OUT }
 function HiddenMeter({ bar, className = "" }: { bar: Bar; className?: string }) {
 	const total = bar.catalog.length
-	const COLORS: Record<string, string> = { mine: "bg-emerald-600", notSeen: "bg-blue-600", providers: "bg-emerald-600" }
+	const COLORS: Record<string, string> = {
+		mine: "bg-emerald-600",
+		notSeen: "bg-blue-600",
+		providers: "bg-emerald-600",
+	}
 	return (
 		<div className={`flex h-1.5 overflow-hidden rounded-full bg-white/5 ${className}`} aria-hidden>
-			<motion.div layout transition={METER_T} className="h-full bg-amber-500" style={{ width: `${(bar.results.length / total) * 100}%` }} />
+			<motion.div
+				layout
+				transition={METER_T}
+				className="h-full bg-amber-500"
+				style={{ width: `${(bar.results.length / total) * 100}%` }}
+			/>
 			{bar.recoveries.map((r) => (
-				<motion.div layout transition={METER_T} key={r.key} className={`h-full ml-px opacity-70 ${COLORS[r.key] ?? "bg-gray-500"}`} style={{ width: `${(r.count / total) * 100}%` }} />
+				<motion.div
+					layout
+					transition={METER_T}
+					key={r.key}
+					className={`h-full ml-px opacity-70 ${COLORS[r.key] ?? "bg-gray-500"}`}
+					style={{ width: `${(r.count / total) * 100}%` }}
+				/>
 			))}
 		</div>
 	)
@@ -345,7 +532,9 @@ export function CountText({ d, withQuery = true }: { d: D3; withQuery?: boolean 
 export function MappedNote({ d, className = "" }: { d: D3; className?: string }) {
 	if (!d.typed || !d.query) return null
 	return (
-		<span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs text-fuchsia-200 border border-dashed border-fuchsia-400/50 ${className}`}>
+		<span
+			className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs text-fuchsia-200 border border-dashed border-fuchsia-400/50 ${className}`}
+		>
 			Prototype: “{d.typed}” shows the captured search “{d.query.q}”
 		</span>
 	)
@@ -357,12 +546,26 @@ export function ReadingLine({ d, className = "" }: { d: D3; className?: string }
 	return (
 		<p className={`text-sm text-gray-500 ${className}`}>
 			Read as <span className="text-gray-300">{listSentence(wants)}</span>.{" "}
-			{d.forYou ? `For you only swaps close matches, ${SEARCH_MAX_MOVE} places at most.` : "Pure relevance, taste is off."}
+			{d.forYou
+				? `For you only swaps close matches, ${SEARCH_MAX_MOVE} places at most.`
+				: "Pure relevance, taste is off."}
 		</p>
 	)
 }
 
-function Insight({ d, lead, withQuery, reading, count }: { d: D3; lead?: ReactNode; withQuery: boolean; reading: boolean; count?: ReactNode }) {
+function Insight({
+	d,
+	lead,
+	withQuery,
+	reading,
+	count,
+}: {
+	d: D3
+	lead?: ReactNode
+	withQuery: boolean
+	reading: boolean
+	count?: ReactNode
+}) {
 	const bar = d.bar
 	const top = bar.recoveries.slice(0, 2)
 	return (
@@ -374,9 +577,19 @@ function Insight({ d, lead, withQuery, reading, count }: { d: D3; lead?: ReactNo
 					{count ?? <CountText d={d} withQuery={withQuery} />}
 				</div>
 				{top.map((r) => (
-					<motion.button key={r.key} type="button" whileTap={TAP} onClick={() => (buzz(), bar.drop(r.key))} className="flex items-center gap-1.5 text-sm font-bold text-amber-400 hover:text-amber-300 cursor-pointer">
+					<motion.button
+						key={r.key}
+						type="button"
+						whileTap={TAP}
+						onClick={() => (buzz(), bar.drop(r.key))}
+						className="flex items-center gap-1.5 text-sm font-bold text-amber-400 hover:text-amber-300 cursor-pointer"
+					>
 						<PlusIcon className="h-3.5 w-3.5" />
-						{r.key === "mine" ? `${r.count} on other services` : r.key === "notSeen" ? `${r.count} you've seen` : `${r.count} ${r.label}`}
+						{r.key === "mine"
+							? `${r.count} on other services`
+							: r.key === "notSeen"
+								? `${r.count} you've seen`
+								: `${r.count} ${r.label}`}
 					</motion.button>
 				))}
 				<MappedNote d={d} />
@@ -398,7 +611,13 @@ function SideSheet({ bar, open, onClose }: { bar: Bar; open: boolean; onClose: (
 		<AnimatePresence>
 			{open && (
 				<>
-					<motion.div className="fixed inset-0 z-[1001] bg-black/60 backdrop-blur-[3px]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
+					<motion.div
+						className="fixed inset-0 z-[1001] bg-black/60 backdrop-blur-[3px]"
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						exit={{ opacity: 0 }}
+						onClick={onClose}
+					/>
 					<motion.aside
 						role="dialog"
 						aria-label="Filters"
@@ -410,8 +629,13 @@ function SideSheet({ bar, open, onClose }: { bar: Bar; open: boolean; onClose: (
 					>
 						<header className="px-6 pt-6 pb-4">
 							<div className="flex items-center justify-between">
-								<h2 className="brand-header text-2xl text-white">Filters</h2>
-								<button type="button" onClick={onClose} aria-label="Close" className="grid h-9 w-9 place-items-center rounded-full bg-white/5 text-gray-300 hover:bg-white/10 cursor-pointer">
+								<h2 className="font-display font-bold text-2xl text-white">Filters</h2>
+								<button
+									type="button"
+									onClick={onClose}
+									aria-label="Close"
+									className="grid h-9 w-9 place-items-center rounded-full bg-white/5 text-gray-300 hover:bg-white/10 cursor-pointer"
+								>
 									<XMarkIcon className="h-5 w-5" />
 								</button>
 							</div>
@@ -421,10 +645,16 @@ function SideSheet({ bar, open, onClose }: { bar: Bar; open: boolean; onClose: (
 							<FilterPanel bar={bar} query={q} />
 						</div>
 						<footer className="flex items-center gap-4 border-t border-white/5 bg-gray-950/90 px-6 py-4 backdrop-blur">
-							<button type="button" onClick={() => clearMoreFilters(bar)} className="text-sm text-gray-400 hover:text-white cursor-pointer">
+							<button
+								type="button"
+								onClick={() => clearMoreFilters(bar)}
+								className="text-sm text-gray-400 hover:text-white cursor-pointer"
+							>
 								Clear all
 							</button>
-							<span className="flex-1 text-right text-xs text-gray-500">{bar.hidden ? `${bar.hidden} hidden` : ""}</span>
+							<span className="flex-1 text-right text-xs text-gray-500">
+								{bar.hidden ? `${bar.hidden} hidden` : ""}
+							</span>
 							<ShowButton bar={bar} onClick={onClose} />
 						</footer>
 					</motion.aside>
@@ -441,17 +671,49 @@ function FirstClass({ bar }: { bar: Bar }) {
 	const costs = useCosts(bar)
 	return (
 		<div className="flex flex-col gap-2.5">
-			<div role="radiogroup" aria-label="Where to watch" className="relative grid h-16 grid-cols-2 rounded-2xl bg-white/[0.05] p-1 ring-1 ring-white/10">
+			<div
+				role="radiogroup"
+				aria-label="Where to watch"
+				className="relative grid h-16 grid-cols-2 rounded-2xl bg-white/[0.05] p-1 ring-1 ring-white/10"
+			>
 				{[true, false].map((mine) => {
 					const on = f.mine === mine
 					return (
-						<motion.button key={String(mine)} type="button" role="radio" aria-checked={on} whileTap={TAP} onClick={() => (buzz(), bar.set({ mine, providers: [] }))} className="relative flex flex-col items-center justify-center rounded-xl cursor-pointer">
-							{on && <motion.span layoutId="d4-fc-svc" transition={SPRING} className={`absolute inset-0 rounded-xl ${mine ? "bg-linear-to-b from-emerald-600 to-emerald-800 shadow-[inset_0_1px_0_rgba(255,255,255,.25)]" : "bg-white/10 ring-1 ring-white/15"}`} />}
-							<span className={`relative flex items-center gap-2 text-sm font-bold ${on ? "text-white" : "text-gray-400"}`}>
-								{mine ? <ServiceStack bar={bar} on={on} size={18} /> : <GlobeAltIcon className="h-4 w-4" />}
+						<motion.button
+							key={String(mine)}
+							type="button"
+							role="radio"
+							aria-checked={on}
+							whileTap={TAP}
+							onClick={() => (buzz(), bar.set({ mine, providers: [] }))}
+							className="relative flex flex-col items-center justify-center rounded-xl cursor-pointer"
+						>
+							{on && (
+								<motion.span
+									layoutId="d4-fc-svc"
+									transition={SPRING}
+									className={`absolute inset-0 rounded-xl ${mine ? "bg-linear-to-b from-emerald-600 to-emerald-800 shadow-[inset_0_1px_0_rgba(255,255,255,.25)]" : "bg-white/10 ring-1 ring-white/15"}`}
+								/>
+							)}
+							<span
+								className={`relative flex items-center gap-2 text-sm font-bold ${on ? "text-white" : "text-gray-400"}`}
+							>
+								{mine ? (
+									<ServiceStack bar={bar} on={on} size={18} />
+								) : (
+									<GlobeAltIcon className="h-4 w-4" />
+								)}
 								{mine ? "My services" : "Everywhere"}
 							</span>
-							<span className={`relative mt-0.5 text-[11px] ${on ? "text-white/70" : "text-gray-500"}`}>{mine ? "Your saved services" : f.mine ? `+${costs.mine} more titles` : "Every service"}</span>
+							<span
+								className={`relative mt-0.5 text-[11px] ${on ? "text-white/70" : "text-gray-500"}`}
+							>
+								{mine
+									? "Your saved services"
+									: f.mine
+										? `+${costs.mine} more titles`
+										: "Every service"}
+							</span>
 						</motion.button>
 					)
 				})}
@@ -464,12 +726,24 @@ function FirstClass({ bar }: { bar: Bar }) {
 				onClick={() => (buzz(), bar.set({ notSeen: !f.notSeen }))}
 				className={`flex h-14 items-center gap-3 rounded-2xl px-4 ring-1 cursor-pointer transition-colors ${f.notSeen ? "bg-blue-900/40 ring-blue-400/30" : "bg-white/[0.05] ring-white/10"}`}
 			>
-				{f.notSeen ? <EyeSlashIcon className="h-5 w-5 text-blue-400" /> : <EyeIcon className="h-5 w-5 text-gray-400" />}
+				{f.notSeen ? (
+					<EyeSlashIcon className="h-5 w-5 text-blue-400" />
+				) : (
+					<EyeIcon className="h-5 w-5 text-gray-400" />
+				)}
 				<span className="flex-1 text-left">
 					<span className="block text-sm font-bold text-white">Not seen yet</span>
-					<span className="block text-[11px] text-gray-400">{f.notSeen ? `Hiding ${costs.notSeen} you watched or rated` : "Showing titles you've seen too"}</span>
+					<span className="block text-[11px] text-gray-400">
+						{f.notSeen
+							? `Hiding ${costs.notSeen} you watched or rated`
+							: "Showing titles you've seen too"}
+					</span>
 				</span>
-				<Knob on={f.notSeen} size="lg" className={f.notSeen ? "!bg-blue-600 !shadow-[0_0_16px_rgba(37,99,235,.55)]" : ""} />
+				<Knob
+					on={f.notSeen}
+					size="lg"
+					className={f.notSeen ? "!bg-blue-600 !shadow-[0_0_16px_rgba(37,99,235,.55)]" : ""}
+				/>
 			</motion.button>
 		</div>
 	)
@@ -489,8 +763,18 @@ function ForYouRow4({ d, compact = false }: { d: D3; compact?: boolean }) {
 		>
 			<FingerPrintIcon className={`h-5 w-5 shrink-0 ${on ? "text-amber-400" : "text-gray-500"}`} />
 			<span className="min-w-0 flex-1">
-				<span className={`block text-sm font-bold ${on ? "text-amber-100" : "text-gray-300"}`}>For you</span>
-				<span className={`${compact ? "hidden" : "block"} text-xs ${on ? "text-amber-200/70" : "text-gray-500"}`}>{!on ? "Same order for everyone" : d.mode === "search" ? `Moves a result ${SEARCH_MAX_MOVE} places at most` : "Titles you'd rate highly rise"}</span>
+				<span className={`block text-sm font-bold ${on ? "text-amber-100" : "text-gray-300"}`}>
+					For you
+				</span>
+				<span
+					className={`${compact ? "hidden" : "block"} text-xs ${on ? "text-amber-200/70" : "text-gray-500"}`}
+				>
+					{!on
+						? "Same order for everyone"
+						: d.mode === "search"
+							? `Moves a result ${SEARCH_MAX_MOVE} places at most`
+							: "Titles you'd rate highly rise"}
+				</span>
 			</span>
 			<Knob on={on} />
 		</motion.button>
@@ -503,9 +787,26 @@ function SortGrid4({ d }: { d: D3 }) {
 			{sortsFor(d.mode).map((s) => {
 				const on = s.key === d.sort
 				return (
-					<motion.button key={s.key} type="button" whileTap={TAP} aria-pressed={on} onClick={() => (buzz(), d.setSort(s.key))} className="relative h-16 rounded-2xl bg-white/[0.03] px-3.5 text-left ring-1 ring-white/10 cursor-pointer">
-						{on && <motion.span layoutId="d4-sort-grid" transition={SPRING} className="absolute inset-0 rounded-2xl bg-white/[0.08] ring-1 ring-white/30" />}
-						<span className={`relative block text-sm font-bold ${on ? "text-white" : "text-gray-300"}`}>{s.label}</span>
+					<motion.button
+						key={s.key}
+						type="button"
+						whileTap={TAP}
+						aria-pressed={on}
+						onClick={() => (buzz(), d.setSort(s.key))}
+						className="relative h-16 rounded-2xl bg-white/[0.03] px-3.5 text-left ring-1 ring-white/10 cursor-pointer"
+					>
+						{on && (
+							<motion.span
+								layoutId="d4-sort-grid"
+								transition={SPRING}
+								className="absolute inset-0 rounded-2xl bg-white/[0.08] ring-1 ring-white/30"
+							/>
+						)}
+						<span
+							className={`relative block text-sm font-bold ${on ? "text-white" : "text-gray-300"}`}
+						>
+							{s.label}
+						</span>
 						<span className="relative block truncate text-[11px] text-gray-500">{s.hint}</span>
 					</motion.button>
 				)
@@ -514,7 +815,15 @@ function SortGrid4({ d }: { d: D3 }) {
 	)
 }
 
-function Block({ title, right, children }: { title: string; right?: ReactNode; children: ReactNode }) {
+function Block({
+	title,
+	right,
+	children,
+}: {
+	title: string
+	right?: ReactNode
+	children: ReactNode
+}) {
 	return (
 		<section className="px-4 pt-5">
 			<div className="mb-2.5 flex items-baseline justify-between">
@@ -532,7 +841,10 @@ function SheetBody({ d }: { d: D3 }) {
 	return (
 		<div className="pb-6">
 			{bar.hidden > 0 && (
-				<Block title={`${bar.hidden} hidden by your filters`} right={<HiddenMeter bar={bar} className="w-24" />}>
+				<Block
+					title={`${bar.hidden} hidden by your filters`}
+					right={<HiddenMeter bar={bar} className="w-24" />}
+				>
 					<div className="-mx-3">
 						<RecoveryList bar={bar} />
 					</div>
@@ -548,7 +860,11 @@ function SheetBody({ d }: { d: D3 }) {
 				title="More filters"
 				right={
 					bar.moreCount > 0 && (
-						<button type="button" onClick={() => clearMoreFilters(bar)} className="text-xs text-gray-400 cursor-pointer">
+						<button
+							type="button"
+							onClick={() => clearMoreFilters(bar)}
+							className="text-xs text-gray-400 cursor-pointer"
+						>
 							Clear {bar.moreCount}
 						</button>
 					)
@@ -571,12 +887,33 @@ function SlabForYou({ d, openTip }: { d: D3; openTip: () => void }) {
 	return (
 		<div className={`${SEG} !flex-[0.85] !p-0 ${on ? "text-gray-950" : "text-gray-400"}`}>
 			<AnimatePresence initial={false}>
-				{on && <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 rounded-[14px] bg-linear-to-b from-amber-400 to-amber-600 shadow-[inset_0_1px_0_rgba(255,255,255,.35),0_0_22px_-4px_rgba(245,158,11,.7)]" />}
+				{on && (
+					<motion.span
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						exit={{ opacity: 0 }}
+						className="absolute inset-0 rounded-[14px] bg-linear-to-b from-amber-400 to-amber-600 shadow-[inset_0_1px_0_rgba(255,255,255,.35),0_0_22px_-4px_rgba(245,158,11,.7)]"
+					/>
+				)}
 			</AnimatePresence>
-			<motion.button type="button" role="switch" aria-checked={on} aria-label="For you" whileTap={TAP} onClick={() => (buzz(), d.setForYou(!on))} className="absolute inset-0 flex flex-col items-center justify-end gap-0.5 rounded-[14px] pb-[7px] cursor-pointer">
+			<motion.button
+				type="button"
+				role="switch"
+				aria-checked={on}
+				aria-label="For you"
+				whileTap={TAP}
+				onClick={() => (buzz(), d.setForYou(!on))}
+				className="absolute inset-0 flex flex-col items-center justify-end gap-0.5 rounded-[14px] pb-[7px] cursor-pointer"
+			>
 				<span className="relative">For you</span>
 			</motion.button>
-			<button type="button" data-slab-trigger aria-label="What For you does" onClick={() => (buzz(), openTip())} className="absolute top-[3px] left-1/2 z-10 flex h-[18px] -translate-x-1/2 items-center justify-center gap-1 rounded-full px-1.5 cursor-pointer">
+			<button
+				type="button"
+				data-slab-trigger
+				aria-label="What For you does"
+				onClick={() => (buzz(), openTip())}
+				className="absolute top-[3px] left-1/2 z-10 flex h-[18px] -translate-x-1/2 items-center justify-center gap-1 rounded-full px-1.5 cursor-pointer"
+			>
 				<FingerPrintIcon className={`h-4 w-4 ${on ? "text-gray-950/80" : "text-amber-500/80"}`} />
 				{on && d.moves > 0 && (
 					<span className="flex items-center text-[10px] font-black tabular-nums">
@@ -604,23 +941,46 @@ function Slab({ d, slots }: { d: D3; slots: SlabSlots }) {
 	return (
 		<>
 			<div className="fixed inset-x-0 bottom-0 z-[60]">
-				<motion.div layout transition={SPRING} className="relative rounded-t-[26px] bg-gray-950/90 ring-1 ring-white/10 backdrop-blur-2xl shadow-[0_-20px_50px_-20px_rgba(0,0,0,.9),inset_0_1px_0_rgba(255,255,255,.07)]">
+				<motion.div
+					layout
+					transition={SPRING}
+					className="relative rounded-t-[26px] bg-gray-950/90 ring-1 ring-white/10 backdrop-blur-2xl shadow-[0_-20px_50px_-20px_rgba(0,0,0,.9),inset_0_1px_0_rgba(255,255,255,.07)]"
+				>
 					{slots.line ? (
 						<div className="px-4 pt-3">{slots.line}</div>
 					) : (
 						<AnimatePresence initial={false}>
 							{!hidden && (bar.hidden > 0 || d.query) && (
-								<motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={SPRING} className="overflow-hidden">
+								<motion.div
+									initial={{ height: 0, opacity: 0 }}
+									animate={{ height: "auto", opacity: 1 }}
+									exit={{ height: 0, opacity: 0 }}
+									transition={SPRING}
+									className="overflow-hidden"
+								>
 									<div className="flex items-center gap-2.5 px-4 pt-3 text-xs">
 										<HiddenMeter bar={bar} className="w-12 shrink-0" />
 										<span className="truncate whitespace-nowrap text-gray-400">
-											<RollingNumber value={d.query ? bar.results.length : bar.hidden} className="font-bold text-white" /> {d.query ? "matches" : "hidden by filters"}
+											<RollingNumber
+												value={d.query ? bar.results.length : bar.hidden}
+												className="font-bold text-white"
+											/>{" "}
+											{d.query ? "matches" : "hidden by filters"}
 											{d.query && bar.hidden > 0 && `, ${bar.hidden} hidden`}
 										</span>
 										{top && (
-											<motion.button type="button" whileTap={TAP} onClick={() => (buzz(), bar.drop(top.key))} className="ml-auto flex shrink-0 items-center gap-1 whitespace-nowrap font-bold text-amber-400 cursor-pointer">
+											<motion.button
+												type="button"
+												whileTap={TAP}
+												onClick={() => (buzz(), bar.drop(top.key))}
+												className="ml-auto flex shrink-0 items-center gap-1 whitespace-nowrap font-bold text-amber-400 cursor-pointer"
+											>
 												<PlusIcon className="h-3 w-3" />
-												{top.key === "mine" ? `${top.count} other services` : top.key === "notSeen" ? `${top.count} you've seen` : `${top.count} more`}
+												{top.key === "mine"
+													? `${top.count} other services`
+													: top.key === "notSeen"
+														? `${top.count} you've seen`
+														: `${top.count} more`}
 											</motion.button>
 										)}
 									</div>
@@ -631,15 +991,53 @@ function Slab({ d, slots }: { d: D3; slots: SlabSlots }) {
 					{slots.above && <div className="px-3 pt-2.5">{slots.above}</div>}
 					<div className="flex items-center gap-2 px-3 pt-2.5 pb-2.5">
 						<div className="flex h-[52px] min-w-0 flex-1 items-stretch gap-1 rounded-[18px] bg-white/[0.05] p-1 ring-1 ring-white/10">
-							<motion.button type="button" whileTap={TAP} aria-pressed={f.mine} onClick={() => (buzz(), bar.set({ mine: !f.mine, providers: [] }))} className={`${SEG} ${f.mine ? "text-white" : "text-gray-400"}`}>
-								{f.mine && <motion.span layoutId="d4-slab-mine" className="absolute inset-0 rounded-[14px] bg-linear-to-b from-emerald-600 to-emerald-800 shadow-[inset_0_1px_0_rgba(255,255,255,.25)]" />}
-								<span className="relative">{f.mine ? <ServiceStack bar={bar} on size={16} /> : <GlobeAltIcon className="h-4 w-4" />}</span>
-								<span className="relative w-full truncate px-0.5 text-center">{f.mine ? "My services" : "Everywhere"}</span>
+							<motion.button
+								type="button"
+								whileTap={TAP}
+								aria-pressed={f.mine}
+								onClick={() => (buzz(), bar.set({ mine: !f.mine, providers: [] }))}
+								className={`${SEG} ${f.mine ? "text-white" : "text-gray-400"}`}
+							>
+								{f.mine && (
+									<motion.span
+										layoutId="d4-slab-mine"
+										className="absolute inset-0 rounded-[14px] bg-linear-to-b from-emerald-600 to-emerald-800 shadow-[inset_0_1px_0_rgba(255,255,255,.25)]"
+									/>
+								)}
+								<span className="relative">
+									{f.mine ? (
+										<ServiceStack bar={bar} on size={16} />
+									) : (
+										<GlobeAltIcon className="h-4 w-4" />
+									)}
+								</span>
+								<span className="relative w-full truncate px-0.5 text-center">
+									{f.mine ? "My services" : "Everywhere"}
+								</span>
 							</motion.button>
-							<motion.button type="button" whileTap={TAP} aria-pressed={f.notSeen} onClick={() => (buzz(), bar.set({ notSeen: !f.notSeen }))} className={`${SEG} ${f.notSeen ? "text-white" : "text-gray-400"}`}>
-								{f.notSeen && <motion.span layoutId="d4-slab-seen" className="absolute inset-0 rounded-[14px] bg-linear-to-b from-blue-600 to-blue-800 shadow-[inset_0_1px_0_rgba(255,255,255,.25)]" />}
-								<span className="relative">{f.notSeen ? <EyeSlashIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}</span>
-								<span className="relative w-full truncate px-0.5 text-center">{f.notSeen ? "Not seen" : "Seen too"}</span>
+							<motion.button
+								type="button"
+								whileTap={TAP}
+								aria-pressed={f.notSeen}
+								onClick={() => (buzz(), bar.set({ notSeen: !f.notSeen }))}
+								className={`${SEG} ${f.notSeen ? "text-white" : "text-gray-400"}`}
+							>
+								{f.notSeen && (
+									<motion.span
+										layoutId="d4-slab-seen"
+										className="absolute inset-0 rounded-[14px] bg-linear-to-b from-blue-600 to-blue-800 shadow-[inset_0_1px_0_rgba(255,255,255,.25)]"
+									/>
+								)}
+								<span className="relative">
+									{f.notSeen ? (
+										<EyeSlashIcon className="h-4 w-4" />
+									) : (
+										<EyeIcon className="h-4 w-4" />
+									)}
+								</span>
+								<span className="relative w-full truncate px-0.5 text-center">
+									{f.notSeen ? "Not seen" : "Seen too"}
+								</span>
 							</motion.button>
 							<SlabForYou d={d} openTip={() => setMenu((m) => (m === "tip" ? null : "tip"))} />
 							<motion.button
@@ -655,16 +1053,33 @@ function Slab({ d, slots }: { d: D3; slots: SlabSlots }) {
 								<ArrowsUpDownIcon className="h-4 w-4 text-gray-400" />
 								<span className="relative w-full overflow-hidden px-1 text-center">
 									<AnimatePresence mode="popLayout" initial={false}>
-										<motion.span key={d.sort} initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -12, opacity: 0 }} transition={SPRING} className="block truncate">
+										<motion.span
+											key={d.sort}
+											initial={{ y: 12, opacity: 0 }}
+											animate={{ y: 0, opacity: 1 }}
+											exit={{ y: -12, opacity: 0 }}
+											transition={SPRING}
+											className="block truncate"
+										>
 											{sortLabel(d)}
 										</motion.span>
 									</AnimatePresence>
 								</span>
 							</motion.button>
 						</div>
-						<motion.button type="button" whileTap={{ scale: 0.9 }} onClick={() => (buzz(), setSheet(0))} aria-label="More filters" className="relative grid h-[52px] w-[52px] shrink-0 place-items-center rounded-[18px] bg-white/[0.08] text-white ring-1 ring-white/10 cursor-pointer">
+						<motion.button
+							type="button"
+							whileTap={{ scale: 0.9 }}
+							onClick={() => (buzz(), setSheet(0))}
+							aria-label="More filters"
+							className="relative grid h-[52px] w-[52px] shrink-0 place-items-center rounded-[18px] bg-white/[0.08] text-white ring-1 ring-white/10 cursor-pointer"
+						>
 							<AdjustmentsHorizontalIcon className="h-5 w-5" />
-							{bar.moreCount > 0 && <span className="absolute -top-1.5 -right-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-amber-500 px-1 text-[11px] font-bold text-gray-950 ring-2 ring-gray-950">{bar.moreCount}</span>}
+							{bar.moreCount > 0 && (
+								<span className="absolute -top-1.5 -right-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-amber-500 px-1 text-[11px] font-bold text-gray-950 ring-2 ring-gray-950">
+									{bar.moreCount}
+								</span>
+							)}
 						</motion.button>
 					</div>
 					<SlabMenu open={menu === "sort"} onClose={() => setMenu(null)}>
@@ -682,7 +1097,13 @@ function Slab({ d, slots }: { d: D3; slots: SlabSlots }) {
 					</SlabMenu>
 					<AnimatePresence initial={false}>
 						{!hidden && (
-							<motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }} transition={SPRING} className="overflow-hidden border-t border-white/5">
+							<motion.div
+								initial={{ height: 0 }}
+								animate={{ height: "auto" }}
+								exit={{ height: 0 }}
+								transition={SPRING}
+								className="overflow-hidden border-t border-white/5"
+							>
 								<NavTabs inlineTaste />
 							</motion.div>
 						)}
@@ -705,7 +1126,11 @@ function Slab({ d, slots }: { d: D3; slots: SlabSlots }) {
 				<SheetBody d={d} />
 			</DragSheet>
 			{/* The slab replaces the site's own bottom nav on phones; the dev-only TanStack button steps aside too. */}
-			<style>{"@media (max-width: 1023px){div.fixed.bottom-0.left-0.z-50.w-full.border-t,.tsqd-open-btn-container{display:none!important}}"}</style>
+			<style>
+				{
+					"@media (max-width: 1023px){div.fixed.bottom-0.left-0.z-50.w-full.border-t,.tsqd-open-btn-container{display:none!important}}"
+				}
+			</style>
 		</>
 	)
 }
@@ -763,11 +1188,23 @@ export function useDraft(d: D3, delay = 650) {
 export type Draft = ReturnType<typeof useDraft>
 
 // The captured searches, taste-fitting ones first. `hint` turns the header into the prototype note.
-export function SuggestList({ d, hint = false, onPick, className = "" }: { d: D3; hint?: boolean; onPick?: () => void; className?: string }) {
+export function SuggestList({
+	d,
+	hint = false,
+	onPick,
+	className = "",
+}: {
+	d: D3
+	hint?: boolean
+	onPick?: () => void
+	className?: string
+}) {
 	const list = suggestions(d)
 	return (
 		<div className={className}>
-			<p className={`px-3 pt-2 pb-1.5 text-xs ${hint ? "text-fuchsia-200" : "text-gray-500"}`}>{hint ? "Prototype: no captured search fits. Pick one of these queries." : "Try a search"}</p>
+			<p className={`px-3 pt-2 pb-1.5 text-xs ${hint ? "text-fuchsia-200" : "text-gray-500"}`}>
+				{hint ? "Prototype: no captured search fits. Pick one of these queries." : "Try a search"}
+			</p>
 			{list.map(({ s, forYou }) => (
 				<button
 					key={s.q}
@@ -778,7 +1215,12 @@ export function SuggestList({ d, hint = false, onPick, className = "" }: { d: D3
 				>
 					<MagnifyingGlassIcon className="h-4 w-4 shrink-0 text-gray-500" />
 					<span className="flex-1 truncate">{s.q}</span>
-					{forYou && <FingerPrintIcon className="h-3.5 w-3.5 shrink-0 text-amber-500/80" aria-label="Fits your taste" />}
+					{forYou && (
+						<FingerPrintIcon
+							className="h-3.5 w-3.5 shrink-0 text-amber-500/80"
+							aria-label="Fits your taste"
+						/>
+					)}
 				</button>
 			))}
 		</div>
@@ -839,7 +1281,13 @@ export function QueryInput({
 					className={`min-w-0 flex-1 border-0 bg-transparent p-0 text-white placeholder:text-gray-500 outline-none focus:ring-0 [&::-webkit-search-cancel-button]:hidden ${inputClass}`}
 				/>
 				{dr.draft && (
-					<button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => (buzz(), dr.clear())} aria-label="Clear search" className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-gray-400 hover:bg-white/10 hover:text-white cursor-pointer">
+					<button
+						type="button"
+						onMouseDown={(e) => e.preventDefault()}
+						onClick={() => (buzz(), dr.clear())}
+						aria-label="Clear search"
+						className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-gray-400 hover:bg-white/10 hover:text-white cursor-pointer"
+					>
 						<XMarkIcon className="h-4 w-4" />
 					</button>
 				)}
@@ -875,11 +1323,18 @@ export function ExplainLine({ d, className = "" }: { d: D3; className?: string }
 				{d.query ? (
 					<p aria-live="polite">
 						Read as <span className="text-gray-100">{listSentence(wantWords(d.query))}</span>.{" "}
-						<span className="text-gray-500">{d.forYou ? `For you only swaps close matches, ${SEARCH_MAX_MOVE} places at most.` : "Pure relevance, taste is off."}</span>
+						<span className="text-gray-500">
+							{d.forYou
+								? `For you only swaps close matches, ${SEARCH_MAX_MOVE} places at most.`
+								: "Pure relevance, taste is off."}
+						</span>
 					</p>
 				) : (
 					<p>
-						Your taste leans to <span className="text-gray-200">{listSentence(d.data.top.slice(0, 3).map((a) => a.phrase))}</span>
+						Your taste leans to{" "}
+						<span className="text-gray-200">
+							{listSentence(d.data.top.slice(0, 3).map((a) => a.phrase))}
+						</span>
 						<span className="text-gray-500">, from {who.rated.toLocaleString("en")} ratings</span>
 					</p>
 				)}
@@ -920,18 +1375,33 @@ export function Shell4({ d, slots, children }: { d: D3; slots: ShellSlots; child
 						<ForYouDesk d={d} />
 						<div className="ml-auto flex items-center gap-2.5">
 							{slots.trail}
-							<FiltersButton bar={bar} compact={slots.compactFilters} onClick={() => setOpen(true)} />
+							<FiltersButton
+								bar={bar}
+								compact={slots.compactFilters}
+								onClick={() => setOpen(true)}
+							/>
 						</div>
 					</div>
 					<Tokens bar={bar} lead={slots.chip} className="mt-3" />
-					<Insight d={d} lead={slots.insightLead} withQuery={slots.withQuery ?? true} reading={slots.reading ?? true} count={slots.count} />
+					<Insight
+						d={d}
+						lead={slots.insightLead}
+						withQuery={slots.withQuery ?? true}
+						reading={slots.reading ?? true}
+						count={slots.count}
+					/>
 				</div>
 				<div className="lg:hidden">
 					{(chips.length > 0 || slots.chipMobile) && (
 						<div className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none]">
 							{slots.chipMobile}
 							{chips.map((c) => (
-								<button key={c.key} type="button" onClick={c.remove} className="flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-white/[0.07] pl-3 pr-2 text-sm text-gray-100 ring-1 ring-white/10 cursor-pointer">
+								<button
+									key={c.key}
+									type="button"
+									onClick={c.remove}
+									className="flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-white/[0.07] pl-3 pr-2 text-sm text-gray-100 ring-1 ring-white/10 cursor-pointer"
+								>
 									{c.label}
 									<XMarkIcon className="h-3.5 w-3.5 text-gray-500" />
 								</button>
@@ -964,8 +1434,12 @@ export function Recover4({ d, className = "" }: { d: D3; className?: string }) {
 	if (!bar.recoveries.length) return null
 	const empty = !bar.results.length
 	return (
-		<div className={`flex flex-col justify-center gap-2 rounded-2xl bg-white/[0.03] p-5 ring-1 ring-white/10 ${className}`}>
-			<p className="text-base font-bold text-white">{empty ? "Nothing matches all your filters" : `${bar.hidden} more hidden by your filters`}</p>
+		<div
+			className={`flex flex-col justify-center gap-2 rounded-2xl bg-white/[0.03] p-5 ring-1 ring-white/10 ${className}`}
+		>
+			<p className="text-base font-bold text-white">
+				{empty ? "Nothing matches all your filters" : `${bar.hidden} more hidden by your filters`}
+			</p>
 			<RecoveryList bar={bar} limit={3} />
 		</div>
 	)
