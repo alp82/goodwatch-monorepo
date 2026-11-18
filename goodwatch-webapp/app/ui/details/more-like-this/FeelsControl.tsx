@@ -20,6 +20,7 @@ import {
 } from "~/ui/details/fingerprint-section/reading"
 import { lightOf, nextSelection } from "~/ui/details/fingerprint-section/selection"
 import { TINT_FLOAT } from "~/ui/details/tint-surface"
+import { CAPTION } from "~/ui/eyebrow"
 import { type Recipe, type Sources, fmt } from "./sources"
 
 /** The one RidgeSprite the control's prints draw from (MoreLikeThis.tsx renders it). */
@@ -248,8 +249,6 @@ function Tuner({
 	)
 }
 
-const LABEL = "text-[11px] font-semibold tracking-[.12em] text-gray-500 uppercase"
-
 function TunerBody({ src, onClose }: { src: Sources; onClose: () => void }) {
 	const m = src.mix
 	const reading = m.reading as Reading
@@ -262,7 +261,7 @@ function TunerBody({ src, onClose }: { src: Sources; onClose: () => void }) {
 	return (
 		<div className="grid gap-x-5 gap-y-4 sm:grid-cols-[176px_minmax(0,1fr)]">
 			<div className="flex items-center justify-between sm:hidden">
-				<span className={LABEL}>Feels the same as</span>
+				<span className={CAPTION}>Feels the same as</span>
 				<button
 					type="button"
 					aria-label="Close"
@@ -293,7 +292,7 @@ function TunerBody({ src, onClose }: { src: Sources; onClose: () => void }) {
 			<div className="min-w-0">
 				{m.recipes.length > 0 && (
 					<>
-						<p className={LABEL}>Its rare mixes</p>
+						<p className={CAPTION}>Its rare mixes</p>
 						<ul className="mt-1.5 -mx-1.5">
 							{m.recipes.map((r, i) => {
 								const on = i === m.recipeAt
@@ -321,7 +320,7 @@ function TunerBody({ src, onClose }: { src: Sources; onClose: () => void }) {
 						</ul>
 					</>
 				)}
-				<p className={`${LABEL} mt-3`}>Or your own, up to three</p>
+				<p className={`${CAPTION} mt-3`}>Or your own, up to three</p>
 				<ul className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 font-display">
 					{[...lines, ...extra].map((r) => (
 						<li key={r.effect.id}>
@@ -439,7 +438,7 @@ function PrintStepper({ src }: { src: Sources }) {
 				</button>
 				<div className="min-w-0 flex-1 sm:w-72 sm:flex-none">
 					<div key={`${m.key}`} className={dir === 1 ? "feels-next" : "feels-prev"}>
-						<p className={LABEL}>
+						<p className={CAPTION}>
 							{r
 								? `Rare mix ${at + 1} of ${n}`
 								: m.selected.length

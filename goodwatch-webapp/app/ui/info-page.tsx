@@ -7,17 +7,7 @@ import type { ReactNode } from "react"
 import { SectionHeading } from "~/ui/heading"
 import { PrimaryButton } from "~/ui/button/PrimaryButton"
 
-export const Kicker = ({
-	children,
-	className = "",
-}: {
-	children: ReactNode
-	className?: string
-}) => (
-	<p className={`text-xs font-bold uppercase tracking-[0.18em] text-amber-400 ${className}`}>
-		{children}
-	</p>
-)
+export { Kicker } from "~/ui/eyebrow"
 
 /** An amber text link with an arrow; links that leave the site open in a new tab. */
 export function MoreLink({

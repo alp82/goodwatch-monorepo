@@ -36,6 +36,7 @@ import {
 	TITLE_LANGUAGE_PATH,
 } from "./paths"
 import { SectionHeading } from "~/ui/heading"
+import { Caption } from "~/ui/eyebrow"
 
 export function SettingsHome({
 	handle,
@@ -67,9 +68,9 @@ export function SettingsHome({
 				<DiscoverAndPrivacyTile />
 			</div>
 
-			<h3 className="mt-10 mb-3 text-xs font-semibold tracking-wide text-gray-500 uppercase">
+			<Caption as="h3" className="mt-10 mb-3">
 				You
-			</h3>
+			</Caption>
 			<div className="grid gap-4 sm:grid-cols-2">
 				<RowLink
 					to={PROFILE_PATH}
@@ -135,7 +136,7 @@ function Tile({
 			data-settings-tile={label}
 			className={`${tileClass} ${className}`}
 		>
-			<span className="text-xs font-semibold tracking-wide text-gray-500 uppercase">{label}</span>
+			<Caption as="span">{label}</Caption>
 			<span className="mb-4 text-sm text-gray-400">{hint}</span>
 			<span>{children}</span>
 			<span className="mt-auto pt-4 text-sm font-semibold text-amber-500 group-hover:text-amber-400">

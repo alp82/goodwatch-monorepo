@@ -12,6 +12,7 @@ import { TmdbImage } from "~/ui/TmdbImage"
 import type { SocialTitleRef, TitleBuzz, TitleSocial, TitleSocialQuery } from "./query"
 import { reportWrongTitle } from "./report"
 import { SectionHeading } from "~/ui/heading"
+import { Caption } from "~/ui/eyebrow"
 
 const FEED_SHOWN = 6
 const HEADLINES_SHOWN = 4
@@ -265,9 +266,7 @@ export default function TitleSocialSection({
 					)}
 					{headlines.length > 0 && (
 						<div className="min-w-0 rounded-2xl bg-white/[.04] px-4 ring-1 ring-white/10 lg:col-start-1">
-							<p className="pt-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
-								More headlines
-							</p>
+							<Caption className="pt-3">More headlines</Caption>
 							<ul>
 								{shownHeadlines.map((item) => (
 									<li key={item.id} className="border-b border-white/10 py-3 last:border-0">

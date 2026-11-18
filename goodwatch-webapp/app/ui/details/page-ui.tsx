@@ -2,10 +2,11 @@
 // search field, the "Show N more" row, keyboard keys, and an in-place reveal.
 import { CheckIcon, LinkIcon, MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline"
 import { type ComponentType, type ReactNode, useEffect, useRef, useState } from "react"
+import { CAPTION } from "~/ui/eyebrow"
 import { SectionHeading } from "~/ui/heading"
 
-/** Small caps caption (sub-headings, rail labels). */
-export const CAPTION = "text-[11px] font-semibold uppercase tracking-[.14em] text-gray-500"
+/** The caption (sub-headings, rail labels) lives with the kicker in `~/ui/eyebrow`; title page modules take it from here. */
+export { CAPTION }
 /** A contained list: rows with hairlines between, on a faint card. Use with rows of h-12 or more. */
 export const LIST =
 	"divide-y divide-white/[0.07] overflow-hidden rounded-xl bg-white/[0.025] ring-1 ring-white/10"

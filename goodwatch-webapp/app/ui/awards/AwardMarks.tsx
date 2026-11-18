@@ -5,11 +5,8 @@
 // domain/award-marks.ts.
 import { TrophyIcon } from "@heroicons/react/20/solid"
 import { useQuery } from "@tanstack/react-query"
-import {
-	type AwardMediaType,
-	type NotableAward,
-	winnerLabel,
-} from "~/domain/award-marks"
+import { type AwardMediaType, type NotableAward, winnerLabel } from "~/domain/award-marks"
+import { Caption } from "~/ui/eyebrow"
 
 /** Heroicons' 20 px solid trophy, the path `TrophyIcon` draws. */
 const TROPHY =
@@ -51,17 +48,11 @@ export function RowAwardSymbol({ id }: { id: string }) {
 }
 
 /** A best-of row's line under the year and kind; `icon` is the list's `RowAwardSymbol` id. */
-export function RowAward({
-	mark,
-	icon,
-}: { mark: string | undefined; icon: string }) {
+export function RowAward({ mark, icon }: { mark: string | undefined; icon: string }) {
 	if (!mark) return null
 	return (
 		<span className="flex min-w-0 items-center gap-1 text-xs font-semibold text-amber-200/85">
-			<svg
-				aria-hidden="true"
-				className="size-3 shrink-0 fill-current text-amber-400"
-			>
+			<svg aria-hidden="true" className="size-3 shrink-0 fill-current text-amber-400">
 				<use href={`#${icon}`} />
 			</svg>
 			<span className="truncate">{winnerLabel(mark)}</span>
@@ -69,13 +60,8 @@ export function RowAward({
 	)
 }
 
-async function fetchAwards(
-	mediaType: AwardMediaType,
-	tmdbId: number,
-): Promise<NotableAward[]> {
-	const response = await fetch(
-		`/api/title-awards?type=${mediaType}&id=${tmdbId}`,
-	)
+async function fetchAwards(mediaType: AwardMediaType, tmdbId: number): Promise<NotableAward[]> {
+	const response = await fetch(`/api/title-awards?type=${mediaType}&id=${tmdbId}`)
 	if (!response.ok) throw new Error(`HTTP ${response.status}`)
 	return ((await response.json()) as { results: NotableAward[] }).results
 }
@@ -84,7 +70,10 @@ async function fetchAwards(
 export function QuickViewAwards({
 	mediaType,
 	tmdbId,
-}: { mediaType: AwardMediaType; tmdbId: number }) {
+}: {
+	mediaType: AwardMediaType
+	tmdbId: number
+}) {
 	const { data: results } = useQuery({
 		queryKey: ["title-awards-v2", mediaType, tmdbId],
 		queryFn: () => fetchAwards(mediaType, tmdbId),
@@ -94,9 +83,7 @@ export function QuickViewAwards({
 	const won = results.some((r) => r.won)
 	return (
 		<section className={`py-3 ${FADE}`} aria-label="Awards">
-			<p className="mb-2 text-[10px] font-bold tracking-[0.16em] text-gray-500 uppercase">
-				{won ? "Award wins" : "Award nominations"}
-			</p>
+			<Caption className="mb-2">{won ? "Award wins" : "Award nominations"}</Caption>
 			<ul className="space-y-1">
 				{results.map((r) => (
 					<li
@@ -107,15 +94,11 @@ export function QuickViewAwards({
 							className={`size-3 shrink-0 translate-y-0.5 ${r.won ? "text-amber-400" : "text-gray-600"}`}
 							aria-hidden
 						/>
-						<span className="shrink-0 font-semibold text-gray-200">
-							{r.award}
-						</span>
+						<span className="shrink-0 font-semibold text-gray-200">{r.award}</span>
 						<span className="min-w-0 truncate text-gray-400">
 							{r.category}, {r.year}
 							{r.sources?.length ? (
-								<span className="ml-1 text-[10px] text-gray-500">
-									({r.sources.join(", ")})
-								</span>
+								<span className="ml-1 text-[10px] text-gray-500">({r.sources.join(", ")})</span>
 							) : null}
 						</span>
 						<span
@@ -126,9 +109,7 @@ export function QuickViewAwards({
 					</li>
 				))}
 			</ul>
-			<p className="mt-2 text-[10px] text-gray-500">
-				Reported results; coverage is incomplete.
-			</p>
+			<p className="mt-2 text-[10px] text-gray-500">Reported results; coverage is incomplete.</p>
 		</section>
 	)
 }

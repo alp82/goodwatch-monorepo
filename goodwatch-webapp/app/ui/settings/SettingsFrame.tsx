@@ -9,6 +9,7 @@ import { WRAP } from "~/ui/my-pages/bits"
 import { UNDER_TABS } from "~/ui/navigation/AreaTabs"
 import { type Place, SETTINGS_COLUMN, placeHere } from "~/ui/navigation/areas"
 import { NAV_ROW } from "~/ui/selection/selected"
+import { Caption } from "~/ui/eyebrow"
 
 const count = (n: number) => n.toLocaleString("en-US")
 
@@ -62,9 +63,7 @@ export function SettingsFrame({ children }: { children: ReactNode }) {
 					>
 						{SETTINGS_COLUMN.map((g) => (
 							<div key={g.name}>
-								<p className="px-2.5 pb-1 text-[11px] font-semibold tracking-wide text-gray-500 uppercase">
-									{g.name}
-								</p>
+								<Caption className="px-2.5 pb-1">{g.name}</Caption>
 								{g.places.map((p) => (
 									<ColumnRow key={p.id} place={p} here={placeHere(p, pathname)} n={countOf(p)} />
 								))}

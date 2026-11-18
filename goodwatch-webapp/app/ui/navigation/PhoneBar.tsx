@@ -17,6 +17,7 @@ import { type PhoneBar as Bar, areaSheetOf, phoneBarOf } from "./phone-bar"
 import { useWatchNews } from "./useWhatsNew"
 import { withWatchNews } from "./watch-news"
 import { NAV_ROW } from "~/ui/selection/selected"
+import { CAPTION, Caption } from "~/ui/eyebrow"
 
 /** The bar's height in px (h-16): the page starts under it, and it slides away by this much. */
 const BAR_PX = 64
@@ -57,10 +58,7 @@ function NameBlock({ page }: { page: PageName }) {
 	return (
 		<div className="flex min-w-0 flex-1 flex-col justify-center self-stretch leading-tight">
 			{page.trail.length > 0 && (
-				<nav
-					aria-label="Breadcrumb"
-					className="flex min-w-0 items-center gap-1 text-[11px] font-semibold tracking-wide text-gray-500 uppercase"
-				>
+				<nav aria-label="Breadcrumb" className={`flex min-w-0 items-center gap-1 ${CAPTION}`}>
 					{page.trail.map((crumb, i) => (
 						<span key={crumb.path} className="flex min-w-0 items-center gap-1">
 							{i > 0 && <span aria-hidden>›</span>}
@@ -196,9 +194,9 @@ function TitleBlock({ bar, title }: { bar: Bar; title: string }) {
 			{Icon && <Icon className="size-6 shrink-0 text-amber-300" aria-hidden />}
 			<span className="flex min-w-0 flex-col leading-tight">
 				{bar.eyebrow && bar.kind !== "settings" && (
-					<span className="truncate text-[11px] font-semibold tracking-wide text-gray-500 uppercase">
+					<Caption as="span" className="truncate">
 						{bar.eyebrow}
-					</span>
+					</Caption>
 				)}
 				<span className="flex min-w-0 items-center gap-1 text-xl font-black text-white">
 					<span className="truncate">{title}</span>
@@ -284,11 +282,7 @@ function TabsSheet({ bar }: { bar: Bar }) {
 			onIndex={(index) => navigation.setTabsOpen(index >= 0)}
 			label={label}
 			snaps={fit.snaps}
-			header={
-				<p className="px-5 pb-2 text-[11px] font-semibold tracking-wide text-gray-500 uppercase">
-					{label}
-				</p>
-			}
+			header={<Caption className="px-5 pb-2">{label}</Caption>}
 		>
 			<nav ref={fit.ref} aria-label={label} className="space-y-1 px-2 pb-6">
 				{tabs.map((t) => (

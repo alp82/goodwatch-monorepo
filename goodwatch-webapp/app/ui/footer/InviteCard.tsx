@@ -7,6 +7,7 @@ import { GoodWatchG } from "~/ui/brand/GoodWatchWordmark"
 import { assetUrl } from "~/utils/asset-url"
 import { DISCORD_URL } from "./links"
 import { Magnet, Sheen, usePrefersReducedMotion } from "./motion"
+import { Caption } from "~/ui/eyebrow"
 
 const CHANNELS = ["main-chat", "recommend-me", "feedback"]
 // A channel row is h-8 with a 2px gap: the highlight moves by this much per row.
@@ -32,18 +33,13 @@ export function InviteCard({ active }: { active: boolean }) {
 	const [channel, setChannel] = useState(0)
 	useEffect(() => {
 		if (!active || reduced) return
-		const timer = window.setInterval(
-			() => setChannel((n) => (n + 1) % CHANNELS.length),
-			2600,
-		)
+		const timer = window.setInterval(() => setChannel((n) => (n + 1) % CHANNELS.length), 2600)
 		return () => window.clearInterval(timer)
 	}, [active, reduced])
 
 	return (
 		<div className="flex flex-col rounded-2xl bg-[#2b2d31] p-4 shadow-[0_24px_60px_-24px_rgba(0,0,0,0.9),inset_0_0_0_1px_rgba(255,255,255,0.06)]">
-			<p className="mb-3 text-[11px] font-bold tracking-wider text-gray-400 uppercase">
-				You're invited to join a server
-			</p>
+			<Caption className="mb-3">You're invited to join a server</Caption>
 			<div className="flex items-center gap-3.5">
 				<span className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#5865F2] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.15)]">
 					<GoodWatchG height={30} color="#ffffff" />
@@ -77,10 +73,7 @@ export function InviteCard({ active }: { active: boolean }) {
 					style={{ transform: `translate3d(0, ${channel * ROW_STEP_PX}px, 0)` }}
 				/>
 				{CHANNELS.map((name, i) => (
-					<li
-						key={name}
-						className="relative flex h-8 items-center gap-2 px-2 text-sm"
-					>
+					<li key={name} className="relative flex h-8 items-center gap-2 px-2 text-sm">
 						<span className="text-lg leading-none text-gray-500">#</span>
 						<span
 							className={`transition-colors ${i === channel ? "font-semibold text-white" : "text-gray-400"}`}

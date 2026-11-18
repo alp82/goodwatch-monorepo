@@ -40,6 +40,7 @@ import { BUTTON_BOX, QUIET_BUTTON, TILE, posterUrl } from "../parts"
 import { PhotoCropper } from "./PhotoCropper"
 import { SectionHeading } from "~/ui/heading"
 import { PrimaryButton } from "~/ui/button/PrimaryButton"
+import { Caption } from "~/ui/eyebrow"
 
 const PARTS: { part: ProfilePart; name: string; line: string }[] = [
 	{
@@ -369,9 +370,7 @@ export function EditProfile({ data }: { data: EditProfileData }) {
 				</div>
 
 				<aside className="lg:sticky lg:top-36 lg:self-start">
-					<p className="mb-2 text-xs font-semibold tracking-wide text-gray-500 uppercase">
-						Preview
-					</p>
+					<Caption className="mb-2">Preview</Caption>
 					<div className={`${TILE} relative isolate overflow-hidden`}>
 						{cover?.backdrop && (
 							<img

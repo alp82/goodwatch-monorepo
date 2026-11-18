@@ -30,6 +30,7 @@ import {
 import { type MemberStartData, PERSONAL_AT } from "./member-data"
 import { primaryButtonClass } from "~/ui/button/PrimaryButton"
 import { SELECTED_QUIET } from "~/ui/selection/selected"
+import { Caption } from "~/ui/eyebrow"
 
 const TEXT_LINK =
 	"group inline-flex shrink-0 items-center gap-1 rounded-md text-sm font-semibold text-amber-400 underline-offset-4 outline-none hover:text-amber-300 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
@@ -69,12 +70,9 @@ export function Doors({ data }: { data: MemberStartData }) {
 
 	return (
 		<section className={`${WRAP} pt-8 pb-28 lg:pt-2`} aria-labelledby="start-doors">
-			<h2
-				id="start-doors"
-				className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400"
-			>
+			<Caption as="h2" id="start-doors" className="mb-3">
 				Go deeper
-			</h2>
+			</Caption>
 			<ul
 				className={`relative grid grid-cols-2 gap-2 sm:gap-3 ${doors.length === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}
 			>

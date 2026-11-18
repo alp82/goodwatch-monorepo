@@ -16,18 +16,12 @@ import type { CSSProperties, MouseEvent, ReactNode } from "react"
 import type { AvatarColor } from "~/domain/profile"
 import { type CardTitle, MovieTvCard } from "~/ui/MovieTvCard"
 import { AccountAvatar } from "~/ui/account/AccountAvatar"
+import { CAPTION } from "~/ui/eyebrow"
 import { Portrait } from "~/ui/person/Portrait"
 import type { PaletteTitle } from "~/utils/command-palette"
 import type { SizeRule } from "~/utils/tmdb-image"
 import { tmdbImage } from "./bits"
-import type {
-	Head,
-	Icon,
-	Layout,
-	Option,
-	PanelGroupKey,
-	Section,
-} from "./palette-layout"
+import type { Head, Icon, Layout, Option, PanelGroupKey, Section } from "./palette-layout"
 
 /** What the pieces need from the palette: where an option sits in the keyboard order, and the active one. */
 export interface Ctx {
@@ -83,11 +77,7 @@ function OptionLink({
 	if (!option.href)
 		return (
 			// The combobox handles the keyboard (Up, Down, Enter from the field); the click is the pointer's way in.
-			<div
-				{...props}
-				onClick={runOnClick(option, ctx)}
-				className={`cursor-pointer ${look}`}
-			>
+			<div {...props} onClick={runOnClick(option, ctx)} className={`cursor-pointer ${look}`}>
 				{children}
 			</div>
 		)
@@ -107,14 +97,13 @@ function OptionLink({
 
 // ---------------------------------------------------------------- header rows
 
-const HEAD_LOOK =
-	"flex items-center justify-between gap-2 rounded-lg px-3 pt-2.5 pb-1.5 text-[11px] font-bold tracking-[0.08em] uppercase"
+const HEAD_LOOK = `flex items-center justify-between gap-2 rounded-lg px-3 pt-2.5 pb-1.5 ${CAPTION}`
 
 /** "MOVIES ……… All 57 ›": the whole row is the option when it leads somewhere, else the name and the count. */
 function HeadRow({ head, ctx }: { head: Head; ctx: Ctx }) {
 	if (!head.option)
 		return (
-			<div className={`${HEAD_LOOK} text-gray-400`}>
+			<div className={HEAD_LOOK}>
 				<span className="truncate">{head.label}</span>
 				{head.count && (
 					<span className="font-semibold tracking-normal text-gray-500 tabular-nums">
@@ -127,7 +116,7 @@ function HeadRow({ head, ctx }: { head: Head; ctx: Ctx }) {
 		<OptionLink
 			option={head.option}
 			ctx={ctx}
-			className={`group/head mt-1 text-gray-400 hover:bg-white/[0.05] hover:text-gray-200 ${HEAD_LOOK}`}
+			className={`group/head mt-1 hover:bg-white/[0.05] hover:text-gray-200 ${HEAD_LOOK}`}
 			activeClassName="bg-white/[0.08] text-gray-200"
 		>
 			<span className="truncate">{head.label}</span>
@@ -211,10 +200,7 @@ function Thumb({ option, size }: { option: Option; size: "sm" | "md" }) {
 				<AccountAvatar
 					url={image.path ?? null}
 					color={(image.hue ?? "amber") as AvatarColor}
-					initial={
-						image.initial ??
-						option.label.replace(/^@/, "").slice(0, 1).toUpperCase()
-					}
+					initial={image.initial ?? option.label.replace(/^@/, "").slice(0, 1).toUpperCase()}
 					size={ROUND_PX[size]}
 				/>
 			)
@@ -223,18 +209,13 @@ function Thumb({ option, size }: { option: Option; size: "sm" | "md" }) {
 				<span
 					className={`flex shrink-0 items-center justify-center ${size === "sm" ? "w-7" : round}`}
 				>
-					<span
-						className="h-3 w-3 rounded-full"
-						style={{ backgroundColor: image.hue }}
-					/>
+					<span className="h-3 w-3 rounded-full" style={{ backgroundColor: image.hue }} />
 				</span>
 			)
 	}
 	const Icon = iconOf(option)
 	return (
-		<span
-			className={`flex shrink-0 items-center justify-center ${size === "sm" ? "w-7" : round}`}
-		>
+		<span className={`flex shrink-0 items-center justify-center ${size === "sm" ? "w-7" : round}`}>
 			{Icon ? (
 				<Icon
 					className={`text-amber-400 ${size === "md" ? "h-6 w-6" : "h-[18px] w-[18px]"}`}
@@ -252,7 +233,12 @@ function Row({
 	ctx,
 	big,
 	compact,
-}: { option: Option; ctx: Ctx; big?: boolean; compact?: boolean }) {
+}: {
+	option: Option
+	ctx: Ctx
+	big?: boolean
+	compact?: boolean
+}) {
 	return (
 		<OptionLink
 			option={option}
@@ -262,9 +248,7 @@ function Row({
 		>
 			<Thumb option={option} size={big ? "md" : "sm"} />
 			<span className="flex min-w-0 flex-1 flex-col">
-				<b
-					className={`truncate ${compact ? "text-[13.5px] font-semibold" : "text-[15px]"}`}
-				>
+				<b className={`truncate ${compact ? "text-[13.5px] font-semibold" : "text-[15px]"}`}>
 					{option.label}
 				</b>
 				{option.sub && (
@@ -324,17 +308,19 @@ function Cards({
 	ctx,
 	cols,
 	wrap,
-}: { items: Option[]; ctx: Ctx; cols: number; wrap?: boolean }) {
+}: {
+	items: Option[]
+	ctx: Ctx
+	cols: number
+	wrap?: boolean
+}) {
 	return (
 		<div
 			className={`gap-2.5 px-1 pt-1 pb-2 lg:grid lg:gap-3 lg:[grid-template-columns:repeat(var(--cols),minmax(0,1fr))] ${wrap ? "grid grid-cols-3" : "flex overflow-x-auto lg:overflow-visible"}`}
 			style={{ "--cols": cols } as CSSProperties}
 		>
 			{items.map((option) => (
-				<div
-					key={option.key}
-					className={wrap ? "min-w-0" : "w-[104px] shrink-0 lg:w-auto"}
-				>
+				<div key={option.key} className={wrap ? "min-w-0" : "w-[104px] shrink-0 lg:w-auto"}>
 					<Card option={option} ctx={ctx} />
 				</div>
 			))}
@@ -365,11 +351,7 @@ function Chip({ option, ctx }: { option: Option; ctx: Ctx }) {
 }
 
 /** One line: a sentence and its button, the button as the option. */
-function CtaLine({
-	text,
-	option,
-	ctx,
-}: { text: string; option: Option; ctx: Ctx }) {
+function CtaLine({ text, option, ctx }: { text: string; option: Option; ctx: Ctx }) {
 	return (
 		<div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-lg px-3 pt-3 pb-2 text-[13.5px] text-gray-300">
 			<span>{text}</span>
@@ -404,8 +386,8 @@ function Nothing({ q, short }: { q: string; short: boolean }) {
 					: `No title, person, or page is called “${q}”`}
 			</b>
 			<p className="max-w-[440px] text-[13.5px] text-gray-400">
-				Discover also reads plots, moods, and descriptions. Press <SearchKey />{" "}
-				to search there, or start from a mood.
+				Discover also reads plots, moods, and descriptions. Press <SearchKey /> to search there, or
+				start from a mood.
 			</p>
 		</div>
 	)
@@ -416,9 +398,7 @@ function Nothing({ q, short }: { q: string; short: boolean }) {
 function SectionView({ section, ctx }: { section: Section; ctx: Ctx }) {
 	switch (section.kind) {
 		case "note":
-			return (
-				<p className="px-3 pt-4 text-[13px] text-gray-500">{section.text}</p>
-			)
+			return <p className="px-3 pt-4 text-[13px] text-gray-500">{section.text}</p>
 		case "nothing":
 			return <Nothing q={section.q} short={section.short} />
 		case "cta":
@@ -426,12 +406,7 @@ function SectionView({ section, ctx }: { section: Section; ctx: Ctx }) {
 	}
 	const body =
 		section.kind === "cards" ? (
-			<Cards
-				items={section.items}
-				ctx={ctx}
-				cols={section.cols}
-				wrap={section.wrap}
-			/>
+			<Cards items={section.items} ctx={ctx} cols={section.cols} wrap={section.wrap} />
 		) : section.kind === "chips" ? (
 			<div className="flex flex-wrap gap-1.5 px-2 pt-0.5 pb-1">
 				{section.items.map((option) => (
@@ -453,11 +428,7 @@ function SectionView({ section, ctx }: { section: Section; ctx: Ctx }) {
 		)
 	return (
 		// biome-ignore lint/a11y/useSemanticElements: a group of options inside the listbox; <fieldset> is for forms
-		<div
-			role="group"
-			aria-label={section.head.label}
-			className="flex min-w-0 flex-col gap-0.5"
-		>
+		<div role="group" aria-label={section.head.label} className="flex min-w-0 flex-col gap-0.5">
 			<HeadRow head={section.head} ctx={ctx} />
 			{body}
 		</div>
@@ -473,10 +444,7 @@ export function LayoutView({ layout, ctx }: { layout: Layout; ctx: Ctx }) {
 			{layout.columns && (
 				<div className="grid gap-x-4 lg:grid-cols-2">
 					{layout.columns.map((column, index) => (
-						<div
-							key={index === 0 ? "left" : "right"}
-							className="flex min-w-0 flex-col"
-						>
+						<div key={index === 0 ? "left" : "right"} className="flex min-w-0 flex-col">
 							{column.map((section) => (
 								<SectionView key={section.key} section={section} ctx={ctx} />
 							))}

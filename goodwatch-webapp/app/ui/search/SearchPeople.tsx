@@ -5,12 +5,10 @@ import { canonicalMediaTitle, mediaFieldLanguage } from "~/utils/media-presentat
 // posters). On phones, one banner with the people as text links below it.
 import { Link } from "@remix-run/react"
 import { type CSSProperties, useEffect, useState } from "react"
-import type {
-	CreditScope,
-	SearchPerson,
-} from "~/server/search-people/people.server"
+import type { CreditScope, SearchPerson } from "~/server/search-people/people.server"
 import { Portrait } from "~/ui/person/Portrait"
 import { personPath, titleToDashed } from "~/utils/helpers"
+import { Kicker } from "~/ui/eyebrow"
 
 // The accordion shows this many people; phones list all of them.
 const ACCORDION_PEOPLE = 6
@@ -20,8 +18,7 @@ const PHOTO_WIDTH = "10rem"
 const GAP = "0.375rem"
 
 const image = tmdbImageUrl
-const backdropOf = (p: SearchPerson) =>
-	p.knownFor.find((t) => t.backdrop)?.backdrop ?? null
+const backdropOf = (p: SearchPerson) => p.knownFor.find((t) => t.backdrop)?.backdrop ?? null
 const noMotion = "motion-reduce:animate-none motion-reduce:transition-none"
 
 function listOfNames(names: string[]) {
@@ -43,8 +40,7 @@ function ScopeNote({
 	if (!scope?.people.some((p) => p.id === person.id)) return null
 	return (
 		<p className="text-gray-300">
-			Showing titles with {listOfNames(scope.people.map((p) => p.name))} that
-			match “{scope.text}”.{" "}
+			Showing titles with {listOfNames(scope.people.map((p) => p.name))} that match “{scope.text}”.{" "}
 			<Link
 				to={allTitlesHref}
 				preventScrollReset
@@ -57,19 +53,16 @@ function ScopeNote({
 }
 
 // Department, name, and "See all titles": one link to the person page.
-function NameBlock({
-	person,
-	size,
-}: { person: SearchPerson; size: "large" | "small" }) {
+function NameBlock({ person, size }: { person: SearchPerson; size: "large" | "small" }) {
 	return (
 		<Link
 			to={personPath(person.id, person.name)}
 			prefetch="intent"
 			className="group/name block min-w-0 cursor-pointer rounded focus-visible:outline focus-visible:outline-cyan-300"
 		>
-			<span className="block text-sm uppercase tracking-[0.2em] text-amber-400">
+			<Kicker as="span" className="block">
 				{person.department}
-			</span>
+			</Kicker>
 			<span
 				className={`line-clamp-2 block font-black break-words text-gray-100 transition-colors duration-200 group-hover/name:text-white ${size === "large" ? "text-3xl sm:text-4xl" : "text-xl sm:text-2xl"}`}
 			>
@@ -118,7 +111,11 @@ function Backdrop({
 	person,
 	size,
 	className,
-}: { person: SearchPerson; size: string; className: string }) {
+}: {
+	person: SearchPerson
+	size: string
+	className: string
+}) {
 	const backdrop = backdropOf(person)
 	return (
 		<>
@@ -147,13 +144,7 @@ interface PeopleProps {
 
 // Opening a person grows their panel in 150 ms. The photo and the drawer have their final size from the start, so
 // the panel only reveals them: nothing stretches. A closing panel drops its drawer at once.
-function Accordion({
-	people,
-	current,
-	select,
-	scope,
-	allTitlesHref,
-}: PeopleProps) {
+function Accordion({ people, current, select, scope, allTitlesHref }: PeopleProps) {
 	const shown = people.slice(0, ACCORDION_PEOPLE)
 	return (
 		<ul
@@ -177,11 +168,7 @@ function Accordion({
 					>
 						{open ? (
 							<>
-								<Backdrop
-									person={p}
-									size="w1280"
-									className="w-(--open-width) max-w-none"
-								/>
+								<Backdrop person={p} size="w1280" className="w-(--open-width) max-w-none" />
 								<Link
 									to={personPath(p.id, p.name)}
 									prefetch="intent"
@@ -189,12 +176,7 @@ function Accordion({
 									aria-hidden="true"
 									className="absolute inset-y-0 left-0 w-(--photo-width) cursor-pointer"
 								>
-									<Portrait
-										path={p.profile}
-										name={p.name}
-										width={160}
-										className="h-full w-full"
-									/>
+									<Portrait path={p.profile} name={p.name} width={160} className="h-full w-full" />
 								</Link>
 								<div className="absolute inset-y-0 left-(--photo-width) w-[calc(var(--open-width)-var(--photo-width))]">
 									<div
@@ -203,11 +185,7 @@ function Accordion({
 										<div className="min-w-0 flex-1 space-y-2">
 											<NameBlock person={p} size="large" />
 											<div className="text-sm">
-												<ScopeNote
-													person={p}
-													scope={scope}
-													allTitlesHref={allTitlesHref}
-												/>
+												<ScopeNote person={p} scope={scope} allTitlesHref={allTitlesHref} />
 											</div>
 										</div>
 										<KnownFor person={p} />
@@ -241,13 +219,7 @@ function Accordion({
 }
 
 // Phones: the open person's banner, the others as text links below it.
-function Banner({
-	people,
-	current,
-	select,
-	scope,
-	allTitlesHref,
-}: PeopleProps) {
+function Banner({ people, current, select, scope, allTitlesHref }: PeopleProps) {
 	return (
 		<>
 			<div className="relative isolate overflow-hidden rounded-xl border border-gray-800 bg-gray-900">
@@ -267,17 +239,10 @@ function Banner({
 							className="h-36 w-24 rounded-lg shadow-2xl"
 						/>
 					</Link>
-					<div
-						key={current.id}
-						className={`min-w-0 flex-1 space-y-2 animate-fade-in ${noMotion}`}
-					>
+					<div key={current.id} className={`min-w-0 flex-1 space-y-2 animate-fade-in ${noMotion}`}>
 						<NameBlock person={current} size="small" />
 						<div className="text-xs">
-							<ScopeNote
-								person={current}
-								scope={scope}
-								allTitlesHref={allTitlesHref}
-							/>
+							<ScopeNote person={current} scope={scope} allTitlesHref={allTitlesHref} />
 						</div>
 					</div>
 				</div>

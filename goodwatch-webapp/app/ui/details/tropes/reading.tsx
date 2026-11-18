@@ -12,13 +12,7 @@ import { DescriptionOpening } from "~/ui/profile/tropes/Opening"
 import { titlePath } from "~/utils/helpers"
 import { canonicalMediaTitle } from "~/utils/media-presentation"
 import type { SizeRule } from "~/utils/tmdb-image"
-import {
-	PosterStack,
-	RarityMeter,
-	type Skip,
-	YoursMark,
-	useSeen,
-} from "./TropeCard"
+import { PosterStack, RarityMeter, type Skip, YoursMark, useSeen } from "./TropeCard"
 import type { Paragraph } from "./excerpt"
 import { type Row, useAlsoIn, useTropeOpening } from "./model"
 
@@ -65,10 +59,7 @@ export function AlsoIn({
 	const titles = q.data?.titles.slice(0, count)
 	if (q.data && !titles?.length) return null
 	return (
-		<section
-			aria-label={`Also in, titles with ${t.name}`}
-			className={className}
-		>
+		<section aria-label={`Also in, titles with ${t.name}`} className={className}>
 			{heading && (
 				<div className="mb-3 flex items-baseline justify-between gap-3">
 					<h3 className={CAPTION}>
@@ -117,7 +108,10 @@ export function AlsoIn({
 export function ReadingText({
 	paragraphs,
 	size = "lg",
-}: { paragraphs: Paragraph[]; size?: "lg" | "md" }) {
+}: {
+	paragraphs: Paragraph[]
+	size?: "lg" | "md"
+}) {
 	const many = paragraphs.length > 1
 	return (
 		<div
@@ -127,10 +121,7 @@ export function ReadingText({
 				// biome-ignore lint/suspicious/noArrayIndexKey: paragraphs never reorder
 				<p key={i} className={many ? "relative pl-5" : ""}>
 					{many && (
-						<span
-							aria-hidden
-							className="absolute top-[0.78em] left-1 h-px w-2 bg-gray-500"
-						/>
+						<span aria-hidden className="absolute top-[0.78em] left-1 h-px w-2 bg-gray-500" />
 					)}
 					{p.map((r, k) =>
 						r.spoiler ? (
@@ -182,10 +173,7 @@ function Spoiler({ text }: { text: string }) {
 }
 
 /** What the trope is: its first sentence, the TV Tropes opening on demand. */
-export function WhatItIs({
-	t,
-	className = "",
-}: { t: Row; className?: string }) {
+export function WhatItIs({ t, className = "" }: { t: Row; className?: string }) {
 	const [more, setMore] = useState(false)
 	const opening = useTropeOpening(t.url, more)
 	if (!t.meaning) return null
@@ -219,10 +207,7 @@ export function WhatItIs({
 }
 
 /** Where next: the member's picks with it, or Discover; and TV Tropes. */
-export function NextLinks({
-	t,
-	className = "",
-}: { t: Row; className?: string }) {
+export function NextLinks({ t, className = "" }: { t: Row; className?: string }) {
 	return (
 		<div className={`flex flex-wrap items-center gap-x-5 gap-y-1 ${className}`}>
 			{t.picks ? (
@@ -260,11 +245,7 @@ export function NextLinks({
 }
 
 /** This title's write-up under a small "In <title>" label, or the plain note when TV Tropes lists the name only. */
-export function InTitle({
-	t,
-	title,
-	size = "lg",
-}: { t: Row; title: string; size?: "lg" | "md" }) {
+export function InTitle({ t, title, size = "lg" }: { t: Row; title: string; size?: "lg" | "md" }) {
 	// The write-up is on its way (the index carries only the signature tropes' own).
 	if (t.paragraphs === undefined)
 		return (
@@ -278,9 +259,7 @@ export function InTitle({
 		)
 	return t.paragraphs ? (
 		<section aria-label={`In ${title}`}>
-			<p className="mb-2 text-[11px] font-semibold tracking-[.14em] text-amber-300/80 uppercase">
-				In {title}
-			</p>
+			<p className={`${CAPTION} mb-2`}>In {title}</p>
 			<ReadingText paragraphs={t.paragraphs} size={size} />
 			{t.length > 950 && t.url && (
 				<p className="mt-2 text-xs text-gray-500">
@@ -297,9 +276,7 @@ export function InTitle({
 			)}
 		</section>
 	) : (
-		<p className="text-[15px] text-gray-500">
-			TV Tropes lists it for {title} without a write-up.
-		</p>
+		<p className="text-[15px] text-gray-500">TV Tropes lists it for {title} without a write-up.</p>
 	)
 }
 
@@ -308,24 +285,23 @@ export function MetaLine({
 	t,
 	signature = false,
 	className = "",
-}: { t: Row; signature?: boolean; className?: string }) {
+}: {
+	t: Row
+	signature?: boolean
+	className?: string
+}) {
 	return (
-		<div
-			className={`flex flex-wrap items-center gap-x-4 gap-y-1.5 ${className}`}
-		>
+		<div className={`flex flex-wrap items-center gap-x-4 gap-y-1.5 ${className}`}>
 			<RarityMeter t={t} />
 			{t.picks && <YoursMark />}
-			{signature && (
-				<span className="text-xs text-gray-500">Signature trope</span>
-			)}
+			{signature && <span className="text-xs text-gray-500">Signature trope</span>}
 		</div>
 	)
 }
 
 /** Prefers reduced motion (read once on the client). */
 export const reducedMotion = () =>
-	typeof window !== "undefined" &&
-	window.matchMedia("(prefers-reduced-motion: reduce)").matches
+	typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
 /** Matches the large breakpoint (1024px), live. False on the server. */
 export function useDesktop() {

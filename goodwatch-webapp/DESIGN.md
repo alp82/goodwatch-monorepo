@@ -254,9 +254,9 @@ A cool, dark navy room with a warm amber lamp, translucent white layers, and a s
 - **Title** (system 600, 18px): card titles, sheet titles, settings row labels, and list headings.
 - **Body** (system 400, 16-18px, line height 1.625): synopses and long-form text. The blog and info pages run 16px on phones and 18px from `sm` up, in a 672px column.
 - **Body small** (system 400-600, 14px): the workhorse size for controls, metadata, lists, and settings hints.
-- **Caption** (system 600, 11px, +0.14em, uppercase, ink-faint): section labels such as ON THIS PAGE, YOUR SCORE, and form labels.
-- **Kicker** (system 700, 12px, +0.18em, uppercase, amber): the line above a page title on info pages and the blog.
-- Uppercase labels come in two styles (D6). **Caption** (11px, 600, 0.14em, `gray-500`): section labels. **Kicker** (12px, 700, 0.18em, `amber-400`): the line above a page or card title. Tiny labels inside controls keep their own look. About 11 letter-spacing values are still in use and are migrated in follow-up issues.
+- **Caption** (system 600, 11px, +0.14em, uppercase, ink-faint `gray-500`): section labels such as ON THIS PAGE, footer and settings groups, command palette sections, fact labels, and form labels.
+- **Kicker** (system 700, 12px, +0.18em, uppercase, `amber-400`): the line above a page or card title: info pages, blog posts and cards, the person page's department, share list headers, and quick view eyebrows.
+- Uppercase labels come in these two styles only (D6), written as `<Caption>` and `<Kicker>` from `app/ui/eyebrow.tsx` (`as` for the element, `className` for layout), or the `CAPTION` and `KICKER` class strings where the element can't be the component. Tiny labels inside controls (rail card kinds, "Your score", Discover's "Mode") keep their own look. Badges, pills, and labels whose color carries meaning (taste groups, the sky "new" heads) aren't eyebrows.
 
 ### Named Rules
 

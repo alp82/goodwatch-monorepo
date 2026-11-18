@@ -16,6 +16,7 @@ import { ServiceLogos, type ServiceOffer, useYourServices } from "~/ui/poster-ca
 import { type ControlMedia, type TitleChange, TitleControl } from "~/ui/title-actions/TitleControl"
 import { ReasonChips } from "~/ui/title-card/ReasonChips"
 import { HeaderSteps, useCurrentSlot, useQuickViewFrame } from "./QuickView"
+import { Caption, Kicker } from "~/ui/eyebrow"
 
 const TMDB = "https://image.tmdb.org/t/p"
 
@@ -52,14 +53,6 @@ export interface QuickViewTitle {
 	details?: string
 	/** What the person changed with the footer's control. */
 	onChange?: (change: TitleChange) => void
-}
-
-function Label({ children }: { children: ReactNode }) {
-	return (
-		<p className="mb-2 text-[10px] font-bold tracking-[0.16em] text-gray-500 uppercase">
-			{children}
-		</p>
-	)
 }
 
 /** Close alone, in the look of the controls beside it. */
@@ -108,7 +101,7 @@ function Services({ offers }: { offers: readonly ServiceOffer[] | null }) {
 	if (!applies) return null
 	return (
 		<section className="py-3" aria-label="On your services">
-			<Label>On your services</Label>
+			<Caption className="mb-2">On your services</Caption>
 			<div className="flex h-8 items-center">
 				{offers === null ? (
 					<span className="h-6 w-24 animate-pulse rounded-md bg-white/[0.06]" />
@@ -180,16 +173,10 @@ function HeadBody({ t, card }: { t: QuickViewTitle; card: boolean }) {
 					className={`flex min-w-0 flex-1 flex-col justify-end ${card ? "h-[8.25rem]" : "h-36"}`}
 				>
 					{card ? (
-						<p className="h-4 shrink-0 truncate text-[11px] font-bold tracking-[0.14em] text-amber-400/85 uppercase">
-							{t.eyebrow}
-						</p>
+						<Kicker className="h-4 shrink-0 truncate">{t.eyebrow}</Kicker>
 					) : (
 						<p className="h-4 shrink-0 truncate text-xs leading-4 text-amber-300">
-							{t.eyebrow && (
-								<span className="font-bold tracking-[0.14em] text-amber-400/85 uppercase">
-									{t.eyebrow} ·{" "}
-								</span>
-							)}
+							{t.eyebrow && <Kicker as="span">{t.eyebrow} · </Kicker>}
 							Open details
 						</p>
 					)}
@@ -281,7 +268,7 @@ export function QuickViewCard({ title: t }: { title: QuickViewTitle }) {
 				{t.services !== undefined && <Services offers={t.services} />}
 				{"story" in t && (
 					<section className="py-3">
-						<Label>Story</Label>
+						<Caption className="mb-2">Story</Caption>
 						{t.story === undefined ? (
 							<div className="h-10 space-y-2 pt-1" aria-hidden="true">
 								<span className="block h-3 w-full animate-pulse rounded bg-white/[0.05]" />

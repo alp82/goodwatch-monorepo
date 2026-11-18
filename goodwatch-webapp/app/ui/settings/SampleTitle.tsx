@@ -6,6 +6,7 @@ import { localizedTextFetcher } from "~/ui/media-preference/useTitlePreview"
 import { localizedTitleQueryKey } from "~/utils/media-presentation"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { titleIsIn } from "./sample-title"
+import { Caption } from "~/ui/eyebrow"
 
 const SAMPLE = { type: "movie", id: 129 } as const
 
@@ -26,7 +27,11 @@ export function SampleTitleLine({ language }: { language: string }) {
 	return (
 		<span className="mt-4 flex items-center gap-3">
 			{title.poster_path && (
-				<img src={tmdbImageUrl(title.poster_path, "w92")} alt="" className="h-12 w-8 shrink-0 rounded object-cover shadow" />
+				<img
+					src={tmdbImageUrl(title.poster_path, "w92")}
+					alt=""
+					className="h-12 w-8 shrink-0 rounded object-cover shadow"
+				/>
 			)}
 			<span
 				lang={title.presentation?.title?.language}
@@ -45,17 +50,32 @@ export function SampleTitleCard({ language }: { language: string }) {
 	if (!title) return null
 	const overview = titleIsIn(title.presentation?.overview, language) ? title.overview : null
 	return (
-		<div className="flex max-w-xl gap-3 rounded-xl bg-black/30 p-3 ring-1 ring-white/10" data-sample-title>
+		<div
+			className="flex max-w-xl gap-3 rounded-xl bg-black/30 p-3 ring-1 ring-white/10"
+			data-sample-title
+		>
 			{title.poster_path && (
-				<img src={tmdbImageUrl(title.poster_path, "w154")} alt="" className="h-20 w-[3.35rem] shrink-0 rounded-md object-cover" />
+				<img
+					src={tmdbImageUrl(title.poster_path, "w154")}
+					alt=""
+					className="h-20 w-[3.35rem] shrink-0 rounded-md object-cover"
+				/>
 			)}
 			<div className="min-w-0">
-				<p className="text-xs font-medium tracking-wide text-gray-500 uppercase">Preview</p>
-				<p lang={title.presentation?.title?.language} dir="auto" className="truncate text-base font-bold text-white">
+				<Caption>Preview</Caption>
+				<p
+					lang={title.presentation?.title?.language}
+					dir="auto"
+					className="truncate text-base font-bold text-white"
+				>
 					{title.title}
 				</p>
 				{overview && (
-					<p lang={title.presentation?.overview?.language} dir="auto" className="mt-1 line-clamp-2 text-sm text-gray-400">
+					<p
+						lang={title.presentation?.overview?.language}
+						dir="auto"
+						className="mt-1 line-clamp-2 text-sm text-gray-400"
+					>
 						{overview}
 					</p>
 				)}

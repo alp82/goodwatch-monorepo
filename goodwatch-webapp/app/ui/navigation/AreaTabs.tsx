@@ -19,6 +19,7 @@ import { STICKY_BAR } from "~/ui/layers"
 import { useNavigation } from "./NavigationContext"
 import type { AreaTab, NavIcon, TasteRow } from "./areas"
 import { TAB_ROW } from "./bar-layers"
+import { Caption } from "~/ui/eyebrow"
 
 /** The page width, as ui/my-pages/bits.tsx (kept here so the header chunk does not pull that module). */
 const WRAP = "mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8"
@@ -58,29 +59,16 @@ export function useCenterCurrent() {
 		const row = box.current
 		const here = row?.querySelector<HTMLElement>("[aria-current='page']")
 		if (!row || !here) return
-		row.scrollLeft = Math.max(
-			0,
-			here.offsetLeft - (row.clientWidth - here.offsetWidth) / 2,
-		)
+		row.scrollLeft = Math.max(0, here.offsetLeft - (row.clientWidth - here.offsetWidth) / 2)
 	})
 	return box
 }
 
 function Mark({ mark }: { mark: AreaTab["mark"] }) {
 	if (mark === "me")
-		return (
-			<LockClosedIcon
-				className="size-3.5 text-amber-300/80"
-				aria-label="Only you see this"
-			/>
-		)
+		return <LockClosedIcon className="size-3.5 text-amber-300/80" aria-label="Only you see this" />
 	if (mark === "members")
-		return (
-			<UserGroupIcon
-				className="size-3.5 text-sky-300/80"
-				aria-label="Members only"
-			/>
-		)
+		return <UserGroupIcon className="size-3.5 text-sky-300/80" aria-label="Members only" />
 	return null
 }
 
@@ -134,9 +122,7 @@ function Label({ tab }: { tab: AreaTab }) {
 /** One tab: one line, or two (label and a smaller line under it) when it has `sub`. The amber underline marks it current. */
 export function TabLink({ tab }: { tab: AreaTab }) {
 	const n = tab.count != null && (
-		<span className="text-xs tabular-nums text-gray-500">
-			{count(tab.count)}
-		</span>
+		<span className="text-xs tabular-nums text-gray-500">{count(tab.count)}</span>
 	)
 	if (tab.sub)
 		return (
@@ -186,9 +172,7 @@ export function TabLink({ tab }: { tab: AreaTab }) {
 	)
 }
 
-const Divider = () => (
-	<span aria-hidden className="mr-1 h-5 w-px self-center bg-white/10" />
-)
+const Divider = () => <span aria-hidden className="mr-1 h-5 w-px self-center bg-white/10" />
 
 /**
  * An area's tab row. `label` names the row at its start on desktop ("Watch", "@handle"); `trailing` tabs sit at the
@@ -228,24 +212,23 @@ export function AreaTabs({
 				ref={scroller}
 				className={`${WRAP} relative flex h-full items-center gap-1 overflow-x-auto [scrollbar-width:none]`}
 			>
-				<span className="hidden shrink-0 items-center gap-1.5 self-center pr-3 text-[11px] font-semibold tracking-wide text-gray-500 uppercase lg:flex">
+				<Caption
+					as="span"
+					className="hidden shrink-0 items-center gap-1.5 self-center pr-3 lg:flex"
+				>
 					{Icon && <Icon className="h-4 w-4 text-amber-400" aria-hidden />}
 					{label}
-				</span>
+				</Caption>
 				{tabs.map((t) => (
 					<TabLink key={t.key} tab={t} />
 				))}
 				{hasTrailing && (
 					<span
 						className={`${trailingEnd === "always" ? "ml-auto" : "lg:ml-auto"} flex h-full items-center gap-1 pl-2 lg:pl-8 ${
-							kind === "two"
-								? "max-md:min-w-0 max-md:flex-1 max-md:pl-0 md:shrink-0"
-								: "shrink-0"
+							kind === "two" ? "max-md:min-w-0 max-md:flex-1 max-md:pl-0 md:shrink-0" : "shrink-0"
 						}`}
 					>
-						<span
-							className={kind === "two" ? "contents max-md:hidden" : "contents"}
-						>
+						<span className={kind === "two" ? "contents max-md:hidden" : "contents"}>
 							<Divider />
 						</span>
 						{trailing.map((t) => (
@@ -314,9 +297,7 @@ export function TasteTabs({
 	/** An item at the row's end before the gear (the profile's Preview key). */
 	before?: ReactNode
 }) {
-	const gear = row.gear && (
-		<SettingsGear href={row.gear.href} here={row.gear.here} />
-	)
+	const gear = row.gear && <SettingsGear href={row.gear.href} here={row.gear.here} />
 	return (
 		<AreaTabs
 			label={row.label}

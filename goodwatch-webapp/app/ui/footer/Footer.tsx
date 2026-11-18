@@ -13,14 +13,9 @@ import { assetUrl } from "~/utils/asset-url"
 import useLocale from "~/utils/locale"
 import { InviteCard } from "./InviteCard"
 import { CinemaSlot } from "./cinema/CinemaSlot"
-import {
-	CREATOR_URL,
-	FOOTER_COLUMNS,
-	type FooterLink,
-	NEW_ON_STREAMING,
-	XMark,
-} from "./links"
+import { CREATOR_URL, FOOTER_COLUMNS, type FooterLink, NEW_ON_STREAMING, XMark } from "./links"
 import { Reveal, ScrambleText, useFooterView } from "./motion"
+import { Caption } from "~/ui/eyebrow"
 
 const TAGLINE = "Every score, every service, one place."
 
@@ -36,20 +31,12 @@ function FooterNavLink({
 	children: React.ReactNode
 }) {
 	const point = {
-		onPointerEnter: (event: React.PointerEvent<HTMLElement>) =>
-			onPoint(event.currentTarget),
-		onFocus: (event: React.FocusEvent<HTMLElement>) =>
-			onPoint(event.currentTarget),
+		onPointerEnter: (event: React.PointerEvent<HTMLElement>) => onPoint(event.currentTarget),
+		onFocus: (event: React.FocusEvent<HTMLElement>) => onPoint(event.currentTarget),
 		onBlur: () => onPoint(null),
 	}
 	return link.external ? (
-		<a
-			href={link.href}
-			target="_blank"
-			rel="noreferrer"
-			className={className}
-			{...point}
-		>
+		<a href={link.href} target="_blank" rel="noreferrer" className={className} {...point}>
 			{children}
 		</a>
 	) : (
@@ -106,12 +93,7 @@ function PoweredBy() {
 				rel="noreferrer"
 				className="relative z-[8] opacity-70 transition-opacity hover:opacity-100"
 			>
-				<img
-					alt="JustWatch"
-					className="h-3 w-auto"
-					loading="lazy"
-					src={assetUrl(justwatchLogo)}
-				/>
+				<img alt="JustWatch" className="h-3 w-auto" loading="lazy" src={assetUrl(justwatchLogo)} />
 			</a>
 		</span>
 	)
@@ -125,9 +107,7 @@ export default function Footer() {
 	// "New on streaming" goes to the page of the viewer's country, which the page's HTML already depends on.
 	const { locale } = useLocale()
 	const inCountry = (link: FooterLink): FooterLink =>
-		link.href === NEW_ON_STREAMING
-			? { ...link, href: countryPath(locale.country) }
-			: link
+		link.href === NEW_ON_STREAMING ? { ...link, href: countryPath(locale.country) } : link
 
 	// One highlight glides to the link under the pointer. It appears in place, then slides between links.
 	const pointAt = (link: FooterLink | null, target: HTMLElement | null) => {
@@ -195,9 +175,9 @@ export default function Footer() {
 						/>
 						{FOOTER_COLUMNS.map((column, i) => (
 							<Reveal key={column.title} hidden={hidden} delay={100 + i * 110}>
-								<h2 className="mb-2 text-xs font-bold tracking-wider text-gray-500 uppercase">
+								<Caption as="h2" className="mb-2">
 									{column.title}
-								</h2>
+								</Caption>
 								<ul className="flex flex-col">
 									{column.links.map((footerLink) => {
 										const link = inCountry(footerLink)
@@ -205,9 +185,7 @@ export default function Footer() {
 											<li key={link.name}>
 												<FooterNavLink
 													link={link}
-													onPoint={(target) =>
-														pointAt(target ? link : null, target)
-													}
+													onPoint={(target) => pointAt(target ? link : null, target)}
 													className="group relative -mx-3 flex h-9 items-center gap-2.5 rounded-lg px-3 text-sm text-gray-400 transition-colors hover:text-white focus-visible:text-white"
 												>
 													<link.icon
@@ -217,13 +195,8 @@ export default function Footer() {
 													<span>{link.name}</span>
 													{link.external && (
 														<>
-															<ArrowUpRightIcon
-																className="h-3.5 w-3.5 text-gray-600"
-																aria-hidden
-															/>
-															<span className="sr-only">
-																(opens in a new tab)
-															</span>
+															<ArrowUpRightIcon className="h-3.5 w-3.5 text-gray-600" aria-hidden />
+															<span className="sr-only">(opens in a new tab)</span>
 														</>
 													)}
 												</FooterNavLink>
@@ -248,9 +221,7 @@ export default function Footer() {
 
 			<div className="mx-auto flex max-w-7xl flex-col-reverse items-center justify-between gap-4 border-t border-white/[0.07] px-4 py-6 text-xs text-gray-500 sm:flex-row sm:px-6 lg:px-8">
 				<span className="flex w-full flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:w-auto sm:justify-start">
-					<span className="whitespace-nowrap">
-						© {new Date().getFullYear()} GoodWatch
-					</span>
+					<span className="whitespace-nowrap">© {new Date().getFullYear()} GoodWatch</span>
 					<PoweredBy />
 				</span>
 				<CreatedBy />

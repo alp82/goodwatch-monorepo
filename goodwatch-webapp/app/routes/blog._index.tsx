@@ -94,10 +94,10 @@ export default function Blog() {
 									prefetch="intent"
 									className="group flex flex-col gap-3 rounded-2xl bg-white/[0.04] p-5 ring-1 ring-white/10 transition hover:bg-white/[0.08]"
 								>
-									<span className="text-xs font-bold uppercase tracking-[0.18em] text-amber-400">
+									<Kicker as="span">
 										{post.kind}
 										{post.draft ? <span className="ml-2 text-gray-500">· Draft</span> : null}
-									</span>
+									</Kicker>
 									<span className="text-xl font-bold tracking-tight text-white sm:text-2xl">
 										{post.title}
 									</span>

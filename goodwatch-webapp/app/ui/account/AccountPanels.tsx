@@ -33,6 +33,7 @@ import { useAuthHref } from "~/utils/auth-href"
 import { AccountAvatar } from "./AccountAvatar"
 import { useAccountSummary } from "./useAccountSummary"
 import { PrimaryButton } from "~/ui/button/PrimaryButton"
+import { Caption } from "~/ui/eyebrow"
 
 const count = (n: number) => n.toLocaleString("en-US")
 
@@ -105,9 +106,7 @@ function PlaceRow({ place, close, big }: PanelProps & { place: Place }) {
 function Group({ name, places, close, big }: PanelProps & { name: string; places: Place[] }) {
 	return (
 		<div>
-			<p className="px-4 pt-3 pb-1 text-[11px] font-semibold tracking-wide text-gray-500 uppercase">
-				{name}
-			</p>
+			<Caption className="px-4 pt-3 pb-1">{name}</Caption>
 			{places.map((place) => (
 				<PlaceRow key={place.id} place={place} close={close} big={big} />
 			))}

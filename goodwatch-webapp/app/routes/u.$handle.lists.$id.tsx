@@ -37,6 +37,7 @@ import { titleToDashed } from "~/utils/helpers"
 import { mediaFieldLanguage } from "~/utils/media-presentation"
 import { canonicalMediaTitle } from "~/utils/media-presentation"
 import type { SizeRule } from "~/utils/tmdb-image"
+import { Kicker } from "~/ui/eyebrow"
 import { SectionHeading } from "~/ui/heading"
 
 export { pageHeaders as headers } from "~/utils/headers"
@@ -164,14 +165,14 @@ export default function ShareListPage() {
 
 				<div className="flex min-w-0 flex-col gap-8">
 					<header className="flex flex-col gap-3">
-						<p className="text-xs font-bold tracking-[0.2em] text-gray-400 uppercase">
+						<Kicker>
 							Top {items.length} · {list.date}
 							{list.unlisted && (
-								<span className="ml-2 rounded-full bg-white/10 px-2 py-0.5 tracking-normal normal-case">
+								<span className="ml-2 rounded-full bg-white/10 px-2 py-0.5 tracking-normal text-gray-400 normal-case">
 									Unlisted
 								</span>
 							)}
-						</p>
+						</Kicker>
 						<h1 className="font-display font-bold text-3xl break-words sm:text-5xl">
 							<span lang={mediaFieldLanguage(list)}>{list.title}</span>
 						</h1>

@@ -5,6 +5,7 @@ import { Link, useMatches, useRevalidator } from "@remix-run/react"
 import { useQueryClient } from "@tanstack/react-query"
 import { type ReactNode, createContext, useContext, useRef, useState } from "react"
 import { PrimaryButton } from "~/ui/button/PrimaryButton"
+import { CAPTION } from "~/ui/eyebrow"
 import { holdBeforeSend, newIdempotencyKey } from "~/ui/support/contact"
 import { clearLoaderCache } from "~/navigation/instant-navigation"
 import {
@@ -19,7 +20,7 @@ import { type Envelope, FAILURE_COPY, OUTCOME_COPY, type SendFailure, sendFailur
 
 export const INPUT =
 	"min-h-11 w-full rounded-lg bg-gray-900 px-3 text-gray-100 ring-1 ring-white/15 placeholder:text-gray-600 focus:ring-2 focus:ring-amber-400 focus:outline-none"
-export const LABEL = "mb-2 block text-[11px] font-semibold uppercase tracking-[.12em] text-gray-500"
+export const LABEL = `mb-2 block ${CAPTION}`
 
 /**
  * What a picked part's questions tell the drawer: a report went out (fix mode's page layer goes, the thanks stay), the

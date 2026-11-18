@@ -14,6 +14,7 @@ import {
 import { motion } from "framer-motion"
 import type { ReactNode } from "react"
 import type { TitleCard } from "~/server/title-cards.server"
+import { CAPTION } from "~/ui/eyebrow"
 import { TAP } from "~/ui/filter-bar/motion"
 import { type TitleKey, parseTitleKey } from "~/utils/title-key"
 import type { Steer } from "./search-tab"
@@ -44,9 +45,6 @@ export interface PersonItem {
 	note?: string
 }
 
-export const SECTION_LABEL =
-	"text-[11px] font-bold uppercase tracking-[0.08em] text-gray-500"
-
 export function GroupHead({
 	icon,
 	children,
@@ -60,15 +58,11 @@ export function GroupHead({
 }) {
 	return (
 		<h3
-			className={`${SECTION_LABEL} ${first ? "" : "mt-2"} flex h-6 shrink-0 items-center gap-1.5 px-3 [&>svg]:h-3.5 [&>svg]:w-3.5`}
+			className={`${CAPTION} ${first ? "" : "mt-2"} flex h-6 shrink-0 items-center gap-1.5 px-3 [&>svg]:h-3.5 [&>svg]:w-3.5`}
 		>
 			{icon}
 			{children}
-			{right && (
-				<span className="ml-auto font-normal tracking-normal normal-case">
-					{right}
-				</span>
-			)}
+			{right && <span className="ml-auto font-normal tracking-normal normal-case">{right}</span>}
 		</h3>
 	)
 }
@@ -103,9 +97,7 @@ export function Row({
 			onMouseEnter={() => onHover(i)}
 			onClick={onClick}
 			className={`flex min-w-0 shrink-0 cursor-pointer items-center gap-3 rounded-xl px-3 ${tall ? "h-12" : "h-11"} ${
-				on
-					? "bg-white/[0.08] ring-1 ring-white/10 ring-inset"
-					: "hover:bg-white/[0.04]"
+				on ? "bg-white/[0.08] ring-1 ring-white/10 ring-inset" : "hover:bg-white/[0.04]"
 			}`}
 		>
 			<div role="gridcell" className="contents">
@@ -304,9 +296,7 @@ export function TitleRow({
 		>
 			<PosterThumb poster={t.poster} title={t.title} />
 			<span className="min-w-0 flex-1">
-				<span className="block truncate text-[14px] font-semibold text-gray-100">
-					{t.title}
-				</span>
+				<span className="block truncate text-[14px] font-semibold text-gray-100">{t.title}</span>
 				<span className="block text-[12px] text-gray-500">
 					{[t.year, kind].filter(Boolean).join(" · ")}
 				</span>
@@ -361,26 +351,16 @@ export function PersonRow({
 			onClick={onToggle}
 			onMouseEnter={onHover}
 			className={`group flex h-11 min-w-0 cursor-pointer items-center gap-2.5 rounded-lg pr-2 pl-1.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
-				on
-					? "bg-purple-400/[0.13]"
-					: active
-						? "bg-white/[0.08]"
-						: "hover:bg-white/[0.05]"
+				on ? "bg-purple-400/[0.13]" : active ? "bg-white/[0.08]" : "hover:bg-white/[0.05]"
 			}`}
 		>
-			<Face
-				src={p.profile}
-				size={32}
-				className={on ? "ring-2 ring-purple-300/80" : ""}
-			/>
+			<Face src={p.profile} size={32} className={on ? "ring-2 ring-purple-300/80" : ""} />
 			<span
 				className={`min-w-0 flex-1 truncate text-[14px] ${on ? "font-semibold text-white" : "text-gray-200"}`}
 			>
 				{p.name}
 			</span>
-			{p.note && (
-				<span className="shrink-0 text-[12px] text-gray-500">{p.note}</span>
-			)}
+			{p.note && <span className="shrink-0 text-[12px] text-gray-500">{p.note}</span>}
 			<span
 				className={`grid h-6 w-6 shrink-0 place-items-center rounded-full ${
 					on
@@ -389,11 +369,7 @@ export function PersonRow({
 				}`}
 				aria-hidden
 			>
-				{on ? (
-					<CheckIcon className="h-3.5 w-3.5" />
-				) : (
-					<PlusIcon className="h-3.5 w-3.5" />
-				)}
+				{on ? <CheckIcon className="h-3.5 w-3.5" /> : <PlusIcon className="h-3.5 w-3.5" />}
 			</span>
 		</motion.button>
 	)
@@ -408,10 +384,7 @@ export function PersonRow({
 	)
 }
 
-export function RowsLoading({
-	n,
-	poster = false,
-}: { n: number; poster?: boolean }) {
+export function RowsLoading({ n, poster = false }: { n: number; poster?: boolean }) {
 	return (
 		<>
 			{Array.from({ length: n }, (_, i) => (
@@ -458,9 +431,7 @@ export function MoreLine({
 				>
 					<PlusIcon className="h-3.5 w-3.5" aria-hidden />
 					{label}
-					<span className="font-normal text-gray-500 tabular-nums">
-						{count}
-					</span>
+					<span className="font-normal text-gray-500 tabular-nums">{count}</span>
 				</motion.button>
 			)}
 			{right && <span className="ml-auto flex min-w-0">{right}</span>}
@@ -484,21 +455,13 @@ export function PickedPeople({
 }) {
 	if (!ids.length) return null
 	return (
-		<div
-			className={`flex min-w-0 items-center gap-2 ${wrap ? "flex-wrap" : "overflow-hidden"}`}
-		>
-			{lead && (
-				<span className="shrink-0 text-[13px] text-gray-500">{lead}</span>
-			)}
+		<div className={`flex min-w-0 items-center gap-2 ${wrap ? "flex-wrap" : "overflow-hidden"}`}>
+			{lead && <span className="shrink-0 text-[13px] text-gray-500">{lead}</span>}
 			{ids.map((id, i) => {
 				const p = known(id)
 				return (
 					<span key={id} className="flex shrink-0 items-center gap-2">
-						{i > 0 && (
-							<span className="text-[13px] font-semibold text-purple-200/70">
-								or
-							</span>
-						)}
+						{i > 0 && <span className="text-[13px] font-semibold text-purple-200/70">or</span>}
 						<span className="inline-flex h-9 shrink-0 items-center rounded-full bg-purple-400/[0.14] pl-1 text-[13px] font-semibold whitespace-nowrap text-white ring-1 ring-purple-300/50 ring-inset">
 							<Face src={p?.profile ?? null} size={28} />
 							<span className="pl-2">{p?.name ?? "…"}</span>

@@ -57,6 +57,7 @@ export { pageHeaders as headers } from "~/utils/headers"
 import { getPersonRoles } from "~/server/character-portraits.server"
 import { INCOMPLETE_PAGE_HEADERS } from "~/server/incomplete-page"
 import { validPersonId } from "~/server/person-id"
+import { Caption, Kicker } from "~/ui/eyebrow"
 import { SectionHeading } from "~/ui/heading"
 import { SELECTED_SOLID } from "~/ui/selection/selected"
 
@@ -409,11 +410,7 @@ function Hero({ data, children }: { data: Data; children?: React.ReactNode }) {
 						className="h-36 w-24 shrink-0 rounded-lg shadow-2xl sm:h-44 sm:w-30"
 					/>
 					<div className="min-w-0">
-						{p.known_for_department && (
-							<p className="text-sm uppercase tracking-[0.2em] text-amber-400">
-								{p.known_for_department}
-							</p>
-						)}
+						{p.known_for_department && <Kicker>{p.known_for_department}</Kicker>}
 						<h1 className="font-display font-bold text-4xl sm:text-6xl">{p.name}</h1>
 					</div>
 				</div>
@@ -526,7 +523,7 @@ function Fact({
 }) {
 	const body = (
 		<>
-			<dt className="text-xs uppercase tracking-wide text-gray-400">{label}</dt>
+			<Caption as="dt">{label}</Caption>
 			<dd className="mt-1.5">{children}</dd>
 		</>
 	)
@@ -771,9 +768,9 @@ function TraitCards({ data }: { data: Data }) {
 			</ul>
 			{below.length > 0 && (
 				<div>
-					<h3 className="mb-2 text-xs uppercase tracking-wide text-gray-400">
+					<Caption as="h3" className="mb-2">
 						Rarely in their work
-					</h3>
+					</Caption>
 					<ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">
 						{below.map((t) => (
 							<li
@@ -941,14 +938,16 @@ function FilterBox({ data }: { data: Data }) {
 		<div className="rounded-lg border border-gray-700 text-sm">
 			<div className="space-y-2 p-3">
 				<div className="flex items-center gap-x-3">
-					<span className="w-16 shrink-0 text-xs uppercase tracking-wide text-gray-500">Type</span>
+					<Caption as="span" className="w-16 shrink-0">
+						Type
+					</Caption>
 					<TypeFilter value={typeOf(f)} onChange={setType} size="sm" />
 				</div>
 				{groups.map((g) => (
 					<div key={g.key} className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-						<span className="w-16 shrink-0 text-xs uppercase tracking-wide text-gray-500">
+						<Caption as="span" className="w-16 shrink-0">
 							{g.label}
-						</span>
+						</Caption>
 						{g.options.map((o) => (
 							<PersonFilterButton
 								key={o.value}
@@ -968,9 +967,9 @@ function FilterBox({ data }: { data: Data }) {
 				))}
 				{f.trait && (
 					<div className="flex items-baseline gap-3">
-						<span className="w-16 shrink-0 text-xs uppercase tracking-wide text-gray-500">
+						<Caption as="span" className="w-16 shrink-0">
 							Trait
-						</span>
+						</Caption>
 						<PersonFilterButton
 							to={href({ trait: null })}
 							preventScrollReset
@@ -999,7 +998,9 @@ function Arrange({ data }: { data: Data }) {
 		`flex items-center gap-1 px-3 py-1.5 ${active ? `${SELECTED_SOLID} font-bold` : "text-gray-300 hover:bg-gray-700"}`
 	return (
 		<div className="flex flex-wrap items-center gap-3 border-t border-gray-700 bg-gray-900/60 px-3 py-2.5">
-			<span className="w-16 shrink-0 text-xs uppercase tracking-wide text-gray-500">Group by</span>
+			<Caption as="span" className="w-16 shrink-0">
+				Group by
+			</Caption>
 			<div className="flex overflow-hidden rounded-lg border border-gray-600 text-xs">
 				<PersonFilterButton
 					to={href({ group: null, order: null })}

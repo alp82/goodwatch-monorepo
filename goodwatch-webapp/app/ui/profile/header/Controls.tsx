@@ -17,6 +17,7 @@ import { EDIT_PROFILE_PATH } from "~/domain/member-paths"
 import { ogImageUrl } from "~/utils/og-image-url"
 import { type ViewLinks, toggleView } from "./VisitorView"
 import { SELECTED_SOLID } from "~/ui/selection/selected"
+import { Caption } from "~/ui/eyebrow"
 
 /** Something the Share menu offers: the profile, or the tab or list you're on. */
 export interface ShareTarget {
@@ -189,9 +190,7 @@ function ShareMenu({ handle, targets }: { handle: string; targets: ShareTarget[]
 					className="absolute top-full right-4 left-4 z-40 mt-2 rounded-2xl bg-gray-900 p-1.5 shadow-2xl ring-1 ring-white/15 sm:right-0 sm:left-auto sm:w-[22rem]"
 					data-share-menu
 				>
-					<p className="px-2.5 pt-1.5 pb-1 text-[11px] font-bold tracking-wider text-gray-500 uppercase">
-						Share
-					</p>
+					<Caption className="px-2.5 pt-1.5 pb-1">Share</Caption>
 					<ul className="flex flex-col gap-1">
 						{targets.map((target) => (
 							<li

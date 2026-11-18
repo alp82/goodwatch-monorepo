@@ -20,6 +20,7 @@ import { hideText } from "./hide-count"
 import { CountText, filterColor } from "./PanelFooter"
 import type { BarChip } from "./chips"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
+import { Caption } from "~/ui/eyebrow"
 
 // The awards row's picker shows only in the open popout: it loads then.
 const AwardsRowPicker = lazy(
@@ -373,9 +374,7 @@ export function FilterMix({
 						)}
 						{listed && (
 							<div className="mt-3 flex items-center justify-between">
-								<span className="text-[11px] font-semibold tracking-[0.06em] text-gray-500 uppercase">
-									Filters
-								</span>
+								<Caption as="span">Filters</Caption>
 								{onClearAll && (
 									<button
 										type="button"

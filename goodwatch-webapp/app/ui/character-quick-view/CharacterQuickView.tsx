@@ -30,6 +30,7 @@ import { tmdbImageUrl } from "~/utils/tmdb-image"
 import type { CharacterEntry, OpenCharacter } from "./context"
 import { TvdbCredit } from "./parts"
 import { type CharacterRole, fetchPersonRoles, useTitlePortraits } from "./portraits"
+import { Caption } from "~/ui/eyebrow"
 
 const EASE = [0.22, 1, 0.36, 1] as const
 /** The wide view: the portrait (340 × 510) with Previous / Next under it, and the card beside it at that height. */
@@ -433,14 +434,6 @@ function Heading({ entry, big }: { entry: CharacterEntry; big: boolean }) {
 
 // --- shared pieces ----------------------------------------------------------------------------------------------
 
-function Label({ children }: { children: ReactNode }) {
-	return (
-		<p className="mb-2 text-[10px] font-bold tracking-[0.16em] text-gray-500 uppercase">
-			{children}
-		</p>
-	)
-}
-
 /** Close, in the look of the poster quick view's Details | close control. */
 function CloseButton() {
 	const { close } = useQuickViewFrame()
@@ -499,7 +492,7 @@ function InTitle({ entry }: { entry: CharacterEntry }) {
 	if (!t || !href) return null
 	return (
 		<section className="py-3">
-			<Label>In</Label>
+			<Caption className="mb-2">In</Caption>
 			<Link
 				to={href}
 				className="group -mx-1.5 flex items-center gap-3 rounded-lg px-1.5 py-1 hover:bg-white/[0.05]"
@@ -558,7 +551,7 @@ type Tile = {
 function Grid({ label, tiles }: { label: string; tiles: Tile[] | null }) {
 	return (
 		<section className="py-3">
-			<Label>{label}</Label>
+			<Caption className="mb-2">{label}</Caption>
 			<div
 				className="grid gap-x-2 gap-y-2.5"
 				style={{ gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))` }}
