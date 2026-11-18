@@ -3,6 +3,7 @@
 // the way around. Elsewhere (Discord's link page) it is a full page of its own with its title.
 import type { ReactNode } from "react"
 import { useInSettingsFrame } from "./SettingsFrame"
+import { SectionHeading } from "~/ui/heading"
 
 export function SettingsPage({
 	title,
@@ -18,7 +19,7 @@ export function SettingsPage({
 		return (
 			<div className="pb-32" data-settings-page>
 				<header className="pt-5 pb-5">
-					<h2 className="text-xl font-bold text-white md:text-2xl">{title}</h2>
+					<SectionHeading>{title}</SectionHeading>
 					{intro && <p className="mt-0.5 max-w-2xl text-sm text-gray-400">{intro}</p>}
 				</header>
 				<div className="text-base text-gray-300">{children}</div>

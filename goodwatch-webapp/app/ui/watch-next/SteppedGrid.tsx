@@ -1,20 +1,12 @@
 // The stepped grid under the hero: the rest of the Wishlist in tiers that get smaller further out, large now and small
 // later. Medium tiers show up to 40 posters and small ones up to 30, then a "+N" button. The server sends cards for
 // the first two tiers; later tiers load as they scroll into view.
-import {
-	BookmarkIcon,
-	CheckIcon,
-	ChevronDownIcon,
-} from "@heroicons/react/24/solid"
+import { BookmarkIcon, CheckIcon, ChevronDownIcon } from "@heroicons/react/24/solid"
 import { useContext, useEffect, useRef, useState } from "react"
 import { TIER_CAPS, type WatchNextTierSize } from "~/domain/watch-next"
 import { useIsNotInterested } from "~/hooks/useUserDataAccessors"
 import type { CardService, TitleCard } from "~/server/title-cards.server"
-import type {
-	WatchNext,
-	WatchNextTier,
-	WatchNextTitle,
-} from "~/server/watch-next.server"
+import type { WatchNext, WatchNextTier, WatchNextTitle } from "~/server/watch-next.server"
 import { FIND_NEW_BELOW, ForYouLink } from "~/ui/for-you/ForYouLink"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import type { TitleKey } from "~/utils/title-key"
@@ -34,6 +26,7 @@ import { misfitWords } from "./labels"
 import { offersOf } from "./services"
 import { DISPLAY } from "./style"
 import { type WatchNextState, useTierCards } from "./useWatchNext"
+import { SectionHeading } from "~/ui/heading"
 
 const ITEM: Record<WatchNextTierSize, string> = {
 	xl: "md:w-56",
@@ -49,10 +42,9 @@ function useNear<T extends Element>() {
 	useEffect(() => {
 		const el = ref.current
 		if (!el || near) return
-		const observer = new IntersectionObserver(
-			([entry]) => entry.isIntersecting && setNear(true),
-			{ rootMargin: "600px 0px" },
-		)
+		const observer = new IntersectionObserver(([entry]) => entry.isIntersecting && setNear(true), {
+			rootMargin: "600px 0px",
+		})
 		observer.observe(el)
 		return () => observer.disconnect()
 	}, [near])
@@ -101,8 +93,7 @@ function TierRow({
 	const meta = (title: WatchNextTitle) => {
 		const offer = offersOf(title, mine)?.[0]
 		return [
-			sortFact(sort, title) ??
-				runtimeLabel(title, movies ? "Movie" : undefined),
+			sortFact(sort, title) ?? runtimeLabel(title, movies ? "Movie" : undefined),
 			offer?.owned ? `on ${offer.name}` : null,
 		]
 			.filter(Boolean)
@@ -116,9 +107,7 @@ function TierRow({
 			data-tier={tier.key}
 		>
 			<div className="md:sticky md:top-32 md:self-start md:text-right">
-				<h3
-					className={`${DISPLAY} leading-none ${tierHeadingClass[tier.size]}`}
-				>
+				<h3 className={`${DISPLAY} leading-none ${tierHeadingClass[tier.size]}`}>
 					{misfits ? (
 						<button
 							type="button"
@@ -158,20 +147,12 @@ function TierRow({
 							className={`relative min-w-0 ${ITEM[tier.size]} ${tier.size === "sm" || misfits ? "opacity-75 hover:opacity-100 focus-within:opacity-100" : ""}`}
 							data-key={key}
 						>
-							<TitlePosterCard
-								card={title}
-								newOn={newOn?.serviceOf(title.tmdb_id)}
-							/>
+							<TitlePosterCard card={title} newOn={newOn?.serviceOf(title.tmdb_id)} />
 							{/* A small poster has no room for logos: the service it just arrived on gets its sticker, top left (the title band fills the foot). */}
 							{!big &&
-								newOn?.sticker(
-									title.tmdb_id,
-									"pointer-events-none absolute top-1 left-1 z-10",
-								)}
+								newOn?.sticker(title.tmdb_id, "pointer-events-none absolute top-1 left-1 z-10")}
 							{tier.size === "xl" && (
-								<div className="mt-1 truncate px-1 text-xs text-gray-400">
-									{meta(title)}
-								</div>
+								<div className="mt-1 truncate px-1 text-xs text-gray-400">{meta(title)}</div>
 							)}
 							{title.misfit && (
 								<span
@@ -199,13 +180,7 @@ function TierRow({
 	)
 }
 
-export function SteppedGrid({
-	data,
-	state,
-}: {
-	data: WatchNext
-	state: WatchNextState
-}) {
+export function SteppedGrid({ data, state }: { data: WatchNext; state: WatchNextState }) {
 	const movies = useMoviesPage()
 	if (!data.tiers.length) return null
 	const picked = data.picker.picks.length > 0
@@ -220,9 +195,7 @@ export function SteppedGrid({
 			<header className="mb-6 md:grid md:grid-cols-[12rem_1fr] md:gap-8">
 				<span className="hidden md:block" />
 				<div>
-					<h2 className={`${DISPLAY} text-2xl text-white md:text-3xl`}>
-						After that
-					</h2>
+					<SectionHeading>After that</SectionHeading>
 					<p className="mt-1 text-sm text-gray-400">
 						{movies
 							? `The rest of your movies that fit, by ${by}. Each step further down gets smaller.`
@@ -264,38 +237,28 @@ export function WorthAdding({
 	const movies = useMoviesPage()
 	const findNew = data.total < FIND_NEW_BELOW
 	if (!data.worthAdding.length)
-		return findNew ? (
-			<ForYouLink className="mt-4">Find something new</ForYouLink>
-		) : null
+		return findNew ? <ForYouLink className="mt-4">Find something new</ForYouLink> : null
 	return (
 		<section aria-label="Suggestions to add" className="mt-4">
 			<div className="mb-3 flex flex-wrap items-end justify-between gap-x-6">
 				<div className="min-w-0">
-					<h2 className="text-lg font-bold text-white md:text-xl">
+					<SectionHeading>
 						{data.total > 0
 							? "Worth adding"
 							: movies
 								? "Movies to start with"
 								: "Start your Wishlist"}
-					</h2>
+					</SectionHeading>
 					<p className="text-sm text-gray-400">
-						{data.onMyServices
-							? "Your best matches on your services. "
-							: "Your best matches. "}
-						Tap Want to See and it joins {movies ? "My movies" : "Watch next"}{" "}
-						under your sort.
+						{data.onMyServices ? "Your best matches on your services. " : "Your best matches. "}
+						Tap Want to See and it joins {movies ? "My movies" : "Watch next"} under your sort.
 					</p>
 				</div>
 				{findNew && <ForYouLink>Find something new</ForYouLink>}
 			</div>
 			<div className="-mx-4 flex snap-x gap-1 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
 				{data.worthAdding.map((card) => (
-					<WorthAddingCard
-						key={card.key}
-						card={card}
-						wanted={isWanted(card)}
-						onWant={onWant}
-					/>
+					<WorthAddingCard key={card.key} card={card} wanted={isWanted(card)} onWant={onWant} />
 				))}
 			</div>
 		</section>
@@ -323,22 +286,11 @@ function WorthAddingCard({
 						type="button"
 						onClick={() => onWant(card)}
 						aria-pressed={wanted}
-						aria-label={
-							wanted
-								? `${card.title} is on your Wishlist`
-								: `Want to See: ${card.title}`
-						}
+						aria-label={wanted ? `${card.title} is on your Wishlist` : `Want to See: ${card.title}`}
 						className={`pointer-events-auto inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-2.5 text-xs font-bold shadow-lg shadow-black/50 transition-colors ${wanted ? "bg-amber-400 text-black hover:bg-amber-300" : "bg-white/95 text-black hover:bg-white"}`}
 					>
-						<BookmarkIcon
-							className={`h-4 w-4 ${wanted ? "" : "text-amber-600"}`}
-							aria-hidden
-						/>
-						{wanted ? (
-							<CheckIcon className="h-3.5 w-3.5" aria-hidden />
-						) : (
-							"Want to See"
-						)}
+						<BookmarkIcon className={`h-4 w-4 ${wanted ? "" : "text-amber-600"}`} aria-hidden />
+						{wanted ? <CheckIcon className="h-3.5 w-3.5" aria-hidden /> : "Want to See"}
 					</button>
 				</div>
 			)}

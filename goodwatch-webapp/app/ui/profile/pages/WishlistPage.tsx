@@ -4,21 +4,11 @@ import { useMemo, useState } from "react"
 // seen first, their own score in each card's pill. Then everything, newest first or by title. The posters are the
 // site's poster cards with the same controls as everywhere, the Wishlist bookmark included.
 import type { LibraryKind } from "~/domain/my-library"
-import type {
-	ProfileShell,
-	ProfileTitle,
-	ProfileWishlistPage,
-} from "~/domain/profile"
-import { DISPLAY } from "~/ui/my-pages/bits"
+import type { ProfileShell, ProfileTitle, ProfileWishlistPage } from "~/domain/profile"
 import { ImportCta } from "../ImportCta"
 import { ProfileCard } from "../ProfileCard"
-import {
-	Segmented,
-	SortSelect,
-	TILE,
-	count,
-	shortDate,
-} from "../parts"
+import { Segmented, SortSelect, TILE, count, shortDate } from "../parts"
+import { SectionHeading } from "~/ui/heading"
 
 type Kind = LibraryKind
 type Sort = "added" | "title"
@@ -38,24 +28,16 @@ export function WishlistPage({
 	const [all, setAll] = useState(false)
 	const owner = shell.viewer === "owner"
 	const rest = useMemo(() => {
-		const list =
-			kind === "all"
-				? page.titles
-				: page.titles.filter((t) => t.mediaType === kind)
+		const list = kind === "all" ? page.titles : page.titles.filter((t) => t.mediaType === kind)
 		const sorted =
 			sort === "title"
 				? [...list].sort((a, b) => a.title.localeCompare(b.title))
 				: [...list].sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""))
 		return you
-			? [
-					...sorted.filter((t) => you[t.key] != null),
-					...sorted.filter((t) => you[t.key] == null),
-				]
+			? [...sorted.filter((t) => you[t.key] != null), ...sorted.filter((t) => you[t.key] == null)]
 			: sorted
 	}, [page.titles, kind, sort, you])
-	const seenByYou = you
-		? page.titles.filter((t) => you[t.key] != null).length
-		: 0
+	const seenByYou = you ? page.titles.filter((t) => you[t.key] != null).length : 0
 	const movies = page.titles.filter((t) => t.mediaType === "movie").length
 	const card = (
 		t: ProfileTitle,
@@ -69,11 +51,7 @@ export function WishlistPage({
 				posterPriority={first && index < 6 ? "high" : "lazy"}
 				skipOffscreen={!first || index >= 6}
 			/>
-			{caption && (
-				<span className="block truncate text-[11px] text-gray-500">
-					{caption}
-				</span>
-			)}
+			{caption && <span className="block truncate text-[11px] text-gray-500">{caption}</span>}
 		</li>
 	)
 
@@ -105,18 +83,13 @@ export function WishlistPage({
 
 			{owner && page.watchNow && page.watchNow.length > 0 && (
 				<section>
-					<h2 className={`${DISPLAY} text-2xl`}>Watch now</h2>
+					<SectionHeading>Watch now</SectionHeading>
 					<p className="mt-1 mb-4 text-sm text-gray-400">
 						On your services today, your best match first. Only you see this.
 					</p>
 					<ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-8">
 						{page.watchNow.map((t, index) =>
-							card(
-								t,
-								t.match ? `${t.match}% match` : shortDate(t.date),
-								index,
-								true,
-							),
+							card(t, t.match ? `${t.match}% match` : shortDate(t.date), index, true),
 						)}
 					</ul>
 				</section>
@@ -124,29 +97,22 @@ export function WishlistPage({
 
 			{seenByYou > 0 && (
 				<p className="rounded-xl bg-sky-400/[0.07] px-4 py-3 text-sm text-sky-100 ring-1 ring-sky-400/25">
-					You've already seen <b>{count(seenByYou)}</b> of the titles @
-					{shell.handle} wants to see. They come first, with your score on the
-					poster.
+					You've already seen <b>{count(seenByYou)}</b> of the titles @{shell.handle} wants to see.
+					They come first, with your score on the poster.
 				</p>
 			)}
 
 			{page.titles.length ? (
 				<section>
 					<h2 className="mb-4 flex items-baseline gap-2 border-b border-white/10 pb-2">
-						<span className={`${DISPLAY} text-2xl`}>Everything</span>
-						<span className="text-sm tabular-nums text-gray-500">
-							{count(page.total)}
-						</span>
+						<SectionHeading as="span">Everything</SectionHeading>
+						<span className="text-sm tabular-nums text-gray-500">{count(page.total)}</span>
 					</h2>
 					<ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-8">
 						{(all ? rest : rest.slice(0, FIRST)).map((t, index) =>
 							card(
 								t,
-								t.date
-									? `Added ${shortDate(t.date)}`
-									: t.year
-										? String(t.year)
-										: undefined,
+								t.date ? `Added ${shortDate(t.date)}` : t.year ? String(t.year) : undefined,
 								index,
 								!(owner && page.watchNow?.length),
 							),
@@ -164,9 +130,7 @@ export function WishlistPage({
 				</section>
 			) : (
 				<p className={`${TILE} px-6 py-14 text-center text-gray-400`}>
-					{owner
-						? "Your Wishlist is empty."
-						: `@${shell.handle}'s Wishlist is empty.`}
+					{owner ? "Your Wishlist is empty." : `@${shell.handle}'s Wishlist is empty.`}
 				</p>
 			)}
 		</>

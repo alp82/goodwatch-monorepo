@@ -4,14 +4,16 @@
 import { ChevronDownIcon } from "@heroicons/react/24/outline"
 import { Link } from "@remix-run/react"
 import type { ReactNode } from "react"
+import { SectionHeading } from "~/ui/heading"
 
 export const Kicker = ({
 	children,
 	className = "",
-}: { children: ReactNode; className?: string }) => (
-	<p
-		className={`text-xs font-bold uppercase tracking-[0.18em] text-amber-400 ${className}`}
-	>
+}: {
+	children: ReactNode
+	className?: string
+}) => (
+	<p className={`text-xs font-bold uppercase tracking-[0.18em] text-amber-400 ${className}`}>
 		{children}
 	</p>
 )
@@ -21,7 +23,11 @@ export function MoreLink({
 	to,
 	children,
 	className = "",
-}: { to: string; children: ReactNode; className?: string }) {
+}: {
+	to: string
+	children: ReactNode
+	className?: string
+}) {
 	const cls = `inline-flex w-fit items-center gap-1 font-semibold text-amber-500 transition hover:text-amber-400 ${className}`
 	return to.startsWith("http") ? (
 		<a href={to} className={cls} target="_blank" rel="noreferrer">
@@ -39,7 +45,11 @@ export function ActionLink({
 	to,
 	primary = false,
 	children,
-}: { to: string; primary?: boolean; children: ReactNode }) {
+}: {
+	to: string
+	primary?: boolean
+	children: ReactNode
+}) {
 	return (
 		<Link
 			to={to}
@@ -55,23 +65,22 @@ export function ActionLink({
 	)
 }
 
-/** A page section's h2 with an optional lead paragraph. */
-export function SectionHeading({
+/** A page section's heading with an optional lead paragraph. */
+export function SectionIntro({
 	id,
 	title,
 	children,
-}: { id?: string; title: string; children?: ReactNode }) {
+}: {
+	id?: string
+	title: string
+	children?: ReactNode
+}) {
 	return (
 		<div className="flex max-w-2xl flex-col gap-3">
-			<h2
-				id={id}
-				className="scroll-mt-24 text-3xl font-bold tracking-tight text-white sm:text-4xl"
-			>
+			<SectionHeading id={id} className="scroll-mt-24">
 				{title}
-			</h2>
-			{children && (
-				<p className="text-lg leading-relaxed text-gray-300">{children}</p>
-			)}
+			</SectionHeading>
+			{children && <p className="text-lg leading-relaxed text-gray-300">{children}</p>}
 		</div>
 	)
 }

@@ -20,37 +20,22 @@ import {
 	placedWords,
 	progressWords,
 } from "~/domain/my-shows"
-import {
-	type Arrival,
-	deviceDay,
-	upcomingWords,
-	waitingWords,
-} from "~/domain/new-episodes"
+import { type Arrival, deviceDay, upcomingWords, waitingWords } from "~/domain/new-episodes"
 import type { LandedTitle, NewOn } from "~/domain/newly-available-words"
-import type {
-	MyShows,
-	MyShowsRow,
-	MyShowsStart,
-} from "~/server/my-shows.server"
+import type { MyShows, MyShowsRow, MyShowsStart } from "~/server/my-shows.server"
 import type { RowService, RowServices } from "~/server/row-services.server"
 import { FIND_NEW_BELOW, ForYouLink } from "~/ui/for-you/ForYouLink"
 import { RowLogos, RowScores, useRowMarks } from "~/ui/list-row/RowScores"
 import { useLandedRowParts } from "~/ui/list-row/landed"
 import { ListTag, type ListTagKind } from "~/ui/list-tag/ListTag"
 import { LandedRow, NewOnWords } from "~/ui/my-pages/LandedRow"
-import {
-	DISPLAY,
-	Empty,
-	Poster,
-	WRAP,
-	plural,
-	tmdbImage,
-} from "~/ui/my-pages/bits"
+import { DISPLAY, Empty, Poster, WRAP, plural, tmdbImage } from "~/ui/my-pages/bits"
 import { useMyShowsVisit } from "~/ui/navigation/useNewEpisodes"
 import { titleToDashed } from "~/utils/helpers"
 import { mediaFieldLanguage } from "~/utils/media-presentation"
 import { canonicalMediaTitle } from "~/utils/media-presentation"
 import { EpisodeAnnouncements } from "./EpisodeAnnouncements"
+import { SectionHeading } from "~/ui/heading"
 
 /** How many shows to start are drawn before "Show more". */
 const START_STEP = 30
@@ -117,10 +102,7 @@ const continueRow = (row: MyShowsRow, now: number): RowWords => ({
 	]
 		.filter(Boolean)
 		.join(" · "),
-	why:
-		row.kind === "seenNew"
-			? `${row.left} new since you saw it`
-			: placedWords(row, now),
+	why: row.kind === "seenNew" ? `${row.left} new since you saw it` : placedWords(row, now),
 })
 
 const startRow = (row: MyShowsStart): RowWords => ({
@@ -133,33 +115,21 @@ const startRow = (row: MyShowsStart): RowWords => ({
 	tagWord: "Start",
 	fresh: false,
 	line: costWords(row) || "A show you want to see",
-	meta: [
-		row.running ? "Still running" : "Has ended",
-		row.service ? `on ${row.service}` : null,
-	]
+	meta: [row.running ? "Still running" : "Has ended", row.service ? `on ${row.service}` : null]
 		.filter(Boolean)
 		.join(" · "),
 	why: row.match ? `${row.match}% taste match` : "No taste match yet",
 })
 
 /** The member's services that carry a show, with the one it is new on (#489) among them. */
-const logosOf = (
-	services: RowService[] | undefined,
-	newOn: NewOn | undefined,
-): RowService[] => {
+const logosOf = (services: RowService[] | undefined, newOn: NewOn | undefined): RowService[] => {
 	const list = services ?? []
 	if (!newOn || list.some((service) => service.id === newOn.id)) return list
-	return [
-		{ id: newOn.id, name: newOn.name, logoPath: newOn.logo_path },
-		...list,
-	]
+	return [{ id: newOn.id, name: newOn.name, logoPath: newOn.logo_path }, ...list]
 }
 
 /** The show's score pill. Every show here is one the member follows: the pill's state icon would repeat the group. */
-function ShowScores({
-	id,
-	goodwatch,
-}: { id: number; goodwatch: number | null }) {
+function ShowScores({ id, goodwatch }: { id: number; goodwatch: number | null }) {
 	const marks = useRowMarks()("show", id)
 	return <RowScores goodwatch={goodwatch} score={marks.score} mark={null} />
 }
@@ -206,15 +176,9 @@ function Row({
 					)}
 				</span>
 				<span className="my-3 shrink-0 sm:hidden">
-					<Poster
-						path={row.poster_path}
-						size="w185"
-						className="h-24 w-16 rounded-md"
-					/>
+					<Poster path={row.poster_path} size="w185" className="h-24 w-16 rounded-md" />
 				</span>
-				<span
-					className={`flex min-w-0 flex-1 flex-col justify-center ${big ? "py-5" : "py-3"}`}
-				>
+				<span className={`flex min-w-0 flex-1 flex-col justify-center ${big ? "py-5" : "py-3"}`}>
 					<span className="flex min-w-0 items-center gap-1.5">
 						<ListTag kind={row.tag}>{row.tagWord}</ListTag>
 						{row.fresh && (
@@ -231,11 +195,7 @@ function Row({
 					<span className="truncate text-sm text-gray-200">{row.line}</span>
 					{/* On a phone the fact that places the row leads its last line; wider, it has a column of its own. */}
 					<span className="flex min-w-0 items-center gap-1.5 text-xs text-gray-400">
-						<RowLogos
-							services={logosOf(services, newOn)}
-							newOn={newOn?.id}
-							max={1}
-						/>
+						<RowLogos services={logosOf(services, newOn)} newOn={newOn?.id} max={1} />
 						<span className="truncate">
 							<b className="font-semibold text-gray-300 md:hidden" data-why>
 								{row.why} ·{" "}
@@ -264,15 +224,18 @@ const GroupLabel = ({
 	name,
 	rule,
 	count,
-}: { id: string; name: string; rule: string; count: number }) => (
+}: {
+	id: string
+	name: string
+	rule: string
+	count: number
+}) => (
 	<li
 		className="flex scroll-mt-24 items-baseline gap-2 px-1 pt-3 first:pt-0"
 		id={id}
 		data-group-label={id}
 	>
-		<h3 className="text-xs font-black uppercase tracking-[0.18em] text-amber-300">
-			{name}
-		</h3>
+		<h3 className="text-xs font-black uppercase tracking-[0.18em] text-amber-300">{name}</h3>
 		<span className="rounded-full bg-white/10 px-2 py-0.5 text-xs font-bold tabular-nums text-gray-300">
 			{count}
 		</span>
@@ -281,11 +244,7 @@ const GroupLabel = ({
 )
 
 /** A show with nothing for tonight: a compact row that opens the show. */
-function QuietRow({
-	row,
-	fact,
-	newOn,
-}: { row: MyShowsRow; fact: string; newOn?: NewOn }) {
+function QuietRow({ row, fact, newOn }: { row: MyShowsRow; fact: string; newOn?: NewOn }) {
 	return (
 		<li data-quiet-row={row.id}>
 			<Link
@@ -293,15 +252,10 @@ function QuietRow({
 				prefetch="intent"
 				className="group flex items-center gap-3 rounded-xl bg-white/[0.03] p-2 ring-1 ring-white/5 hover:bg-white/[0.07] hover:ring-white/20"
 			>
-				<Poster
-					path={row.poster_path}
-					className="h-[60px] w-10 shrink-0 rounded"
-				/>
+				<Poster path={row.poster_path} className="h-[60px] w-10 shrink-0 rounded" />
 				<span className="min-w-0 flex-1">
 					<b className="block truncate text-sm text-white">{row.title}</b>
-					<span className="block truncate text-xs text-gray-400">
-						{progressWords(row)}
-					</span>
+					<span className="block truncate text-xs text-gray-400">{progressWords(row)}</span>
 					{/* The poster is too small for the logo: the words carry it. */}
 					<span className="block truncate text-xs text-gray-500">
 						{newOn && (
@@ -341,12 +295,7 @@ function QuietGroup({
 	const list = (
 		<ul className="grid gap-2 md:grid-cols-2">
 			{rows.map((row) => (
-				<QuietRow
-					key={row.id}
-					row={row}
-					fact={fact(row)}
-					newOn={newOn?.get(row.id)}
-				/>
+				<QuietRow key={row.id} row={row} fact={fact(row)} newOn={newOn?.get(row.id)} />
 			))}
 		</ul>
 	)
@@ -361,9 +310,7 @@ function QuietGroup({
 	if (!closed)
 		return (
 			<div data-group={id}>
-				<h3 className="mb-2 flex items-center gap-2 text-sm font-bold text-gray-300">
-					{head}
-				</h3>
+				<h3 className="mb-2 flex items-center gap-2 text-sm font-bold text-gray-300">{head}</h3>
 				{list}
 			</div>
 		)
@@ -418,16 +365,11 @@ function WaitingRow({ rows, today }: { rows: MyShowsRow[]; today: string }) {
 					<CalendarIcon />
 					<span className="min-w-0 flex-1 text-sm md:flex md:items-baseline md:gap-2">
 						<span className="block truncate text-sky-100" data-waiting-says>
-							{words.title && (
-								<b className="font-bold text-white">{words.title} </b>
-							)}
+							{words.title && <b className="font-bold text-white">{words.title} </b>}
 							{words.says}
 						</span>
 						{words.more && (
-							<span
-								className="block truncate text-xs text-gray-400 md:text-sm"
-								data-waiting-more
-							>
+							<span className="block truncate text-xs text-gray-400 md:text-sm" data-waiting-more>
 								<span className="hidden md:inline" aria-hidden>
 									·{" "}
 								</span>
@@ -460,10 +402,7 @@ function WaitingRow({ rows, today }: { rows: MyShowsRow[]; today: string }) {
 									prefetch="intent"
 									className="group flex items-center gap-3 px-3 py-2 hover:bg-white/[0.05] md:px-5"
 								>
-									<Poster
-										path={row.poster_path}
-										className="h-[54px] w-9 shrink-0 rounded"
-									/>
+									<Poster path={row.poster_path} className="h-[54px] w-9 shrink-0 rounded" />
 									<span className="min-w-0 flex-1">
 										<b className="block truncate text-sm text-white">
 											<span lang={mediaFieldLanguage(row)}>{row.title}</span>
@@ -476,12 +415,7 @@ function WaitingRow({ rows, today }: { rows: MyShowsRow[]; today: string }) {
 														<span className="hidden sm:inline">
 															{" "}
 															·{" "}
-															<span
-																lang={
-																	row.upcoming.textPresentation?.name
-																		.language ?? "en"
-																}
-															>
+															<span lang={row.upcoming.textPresentation?.name.language ?? "en"}>
 																{row.upcoming.name}
 															</span>
 														</span>
@@ -494,14 +428,9 @@ function WaitingRow({ rows, today }: { rows: MyShowsRow[]; today: string }) {
 											</span>
 										</span>
 									</span>
-									<span
-										className="w-[92px] shrink-0 text-right md:w-36"
-										data-waiting-day
-									>
+									<span className="w-[92px] shrink-0 text-right md:w-36" data-waiting-day>
 										{when && <b className="block text-sm text-white">{when}</b>}
-										<span className="block text-xs text-gray-500">
-											{detail}
-										</span>
+										<span className="block text-xs text-gray-500">{detail}</span>
 									</span>
 									<ChevronRightIcon
 										className="h-4 w-4 shrink-0 text-gray-600 group-hover:text-amber-300"
@@ -545,9 +474,7 @@ export function MyShowsPage({
 	const landedParts = useLandedRowParts()
 	useMyShowsVisit()
 	// The server's day first, so that the page hydrates as it was sent; then the member's.
-	const [today, setToday] = useState(() =>
-		new Date(now).toISOString().slice(0, 10),
-	)
+	const [today, setToday] = useState(() => new Date(now).toISOString().slice(0, 10))
 	useEffect(() => setToday(deviceDay()), [])
 	const { hash } = useLocation()
 	// Home's Start door lands on the Start group.
@@ -558,9 +485,7 @@ export function MyShowsPage({
 	const [shown, setShown] = useState(START_STEP)
 	const [pickUpShown, setPickUpShown] = useState(PICK_UP_STEP)
 	const continues = data.continue.map((row) => continueRow(row, now))
-	const pickUps = data.pickUp
-		.slice(0, pickUpShown)
-		.map((row) => continueRow(row, now))
+	const pickUps = data.pickUp.slice(0, pickUpShown).map((row) => continueRow(row, now))
 	const starts = data.start.slice(0, shown).map(startRow)
 	const total = data.continue.length + data.pickUp.length + data.start.length
 	const pickUpLeft = data.pickUp.length - pickUps.length
@@ -568,19 +493,14 @@ export function MyShowsPage({
 	const newOn = useMemo(
 		() =>
 			new Map(
-				landed.flatMap(({ tmdbId, service }) =>
-					service ? [[tmdbId, service] as const] : [],
-				),
+				landed.flatMap(({ tmdbId, service }) => (service ? [[tmdbId, service] as const] : [])),
 			),
 		[landed],
 	)
 	// A show that landed and has a new episode says both: the row names where it is new, its line here the episode.
 	const withNewEpisode = new Set(
 		data.continue
-			.filter(
-				(row) =>
-					row.kind === "seenNew" || isNew(row.next?.airDate ?? null, now),
-			)
+			.filter((row) => row.kind === "seenNew" || isNew(row.next?.airDate ?? null, now))
 			.map((row) => row.id),
 	)
 	const quiet = data.onHold.length + data.dropped.length
@@ -589,29 +509,22 @@ export function MyShowsPage({
 			<div className={`${WRAP} flex flex-col gap-10`}>
 				{notice}
 				<section data-section="tonight">
-					<h2 className={`${DISPLAY} mb-4 text-2xl text-white md:text-3xl`}>
-						Watch next
-					</h2>
+					<SectionHeading className="mb-4">Watch next</SectionHeading>
 					<EpisodeAnnouncements initial={arrival?.announcements ?? []} />
 					<LandedRow
 						landed={landed}
-						note={(show) =>
-							withNewEpisode.has(show.tmdbId) ? "also a new episode" : null
-						}
+						note={(show) => (withNewEpisode.has(show.tmdbId) ? "also a new episode" : null)}
 						parts={landedParts}
 						className="mb-4"
 					/>
 					{total === 0 && (
 						<Empty title="No show to watch next">
-							Want to See on a show puts it here to start, with how long it is
-							and where it streams. Once you mark an episode watched on a show's
-							page, its next episode leads this list.
+							Want to See on a show puts it here to start, with how long it is and where it streams.
+							Once you mark an episode watched on a show's page, its next episode leads this list.
 						</Empty>
 					)}
 					{total + data.waiting.length > 0 && (
-						<ol
-							className={`flex flex-col gap-2.5 ${total === 0 ? "mt-4" : ""}`}
-						>
+						<ol className={`flex flex-col gap-2.5 ${total === 0 ? "mt-4" : ""}`}>
 							{continues.length > 0 && (
 								<GroupLabel
 									id="continue"
@@ -658,9 +571,7 @@ export function MyShowsPage({
 										className="h-11 cursor-pointer rounded-lg bg-white/5 px-4 text-sm font-bold text-gray-300 hover:bg-white/10"
 									>
 										Show {Math.min(pickUpLeft, START_STEP)} more{" "}
-										<span className="font-medium text-gray-500">
-											· {pickUpLeft} left
-										</span>
+										<span className="font-medium text-gray-500">· {pickUpLeft} left</span>
 									</button>
 								</li>
 							)}
@@ -692,9 +603,7 @@ export function MyShowsPage({
 							className="mt-4 h-11 cursor-pointer rounded-lg bg-white/5 px-4 text-sm font-bold text-gray-300 hover:bg-white/10"
 						>
 							Show {Math.min(data.start.length - shown, START_STEP * 2)} more{" "}
-							<span className="font-medium text-gray-500">
-								· {data.start.length - shown} left
-							</span>
+							<span className="font-medium text-gray-500">· {data.start.length - shown} left</span>
 						</button>
 					)}
 					{data.start.length < FIND_NEW_BELOW && (
@@ -715,13 +624,7 @@ export function MyShowsPage({
 							newOn={newOn}
 							closed
 						/>
-						<QuietGroup
-							id="dropped"
-							title="Dropped"
-							rows={data.dropped}
-							fact={lastWatch}
-							closed
-						/>
+						<QuietGroup id="dropped" title="Dropped" rows={data.dropped} fact={lastWatch} closed />
 					</section>
 				)}
 			</div>

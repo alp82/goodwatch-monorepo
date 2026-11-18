@@ -5,17 +5,12 @@ import { Link } from "@remix-run/react"
 import { useState } from "react"
 import type { Score } from "~/server/scores.server"
 import { RowScores, rowMark, useRowMarks } from "~/ui/list-row/RowScores"
-import { DISPLAY } from "~/ui/my-pages/bits"
 import { PosterImg, backdropUrl } from "~/ui/profile/parts"
-import {
-	type CrowdRow,
-	type TasteTitle,
-	signed,
-	useTaste,
-} from "~/ui/profile/taste/model"
+import { type CrowdRow, type TasteTitle, signed, useTaste } from "~/ui/profile/taste/model"
 import { Pills } from "~/ui/profile/taste/parts"
 import { vibe } from "../tabs/parts"
 import { type GapRow, gapRows } from "./gaps"
+import { SectionHeading } from "~/ui/heading"
 
 const PAGE = 8
 const MOST = 30
@@ -34,13 +29,11 @@ export function VsEveryone() {
 	const c = taste.crowd
 	const [kind, setKind] = useState<Kind>("all")
 	const [n, setN] = useState(PAGE)
-	if (c.status !== "ready" || c.higher.length + c.lower.length === 0)
-		return null
+	if (c.status !== "ready" || c.higher.length + c.lower.length === 0) return null
 	const typeOf = (r: CrowdRow) => title(r.key).mediaType
 	const keep = (r: CrowdRow) => kind === "all" || typeOf(r) === kind
 	const count = (k: Kind) =>
-		[...c.higher, ...c.lower].filter((r) => k === "all" || typeOf(r) === k)
-			.length
+		[...c.higher, ...c.lower].filter((r) => k === "all" || typeOf(r) === k).length
 	const gaps = gapRows(c.gapGroups, (id) => {
 		const a = attributeByKey.get(id)
 		return a ? { label: a.label, emoji: a.emoji } : null
@@ -49,17 +42,11 @@ export function VsEveryone() {
 	const empty = kind === "all" ? null : `No ${KIND_WORD[kind]} here yet.`
 
 	return (
-		<section
-			id="everyone"
-			aria-labelledby="everyone-head"
-			className="scroll-mt-44"
-		>
+		<section id="everyone" aria-labelledby="everyone-head" className="scroll-mt-44">
 			<p className="mb-1 text-xs font-bold tracking-[0.18em] text-amber-400/80 uppercase">
 				Where your scores differ from the GoodWatch score
 			</p>
-			<h2 id="everyone-head" className={`${DISPLAY} text-3xl sm:text-4xl`}>
-				You vs everyone
-			</h2>
+			<SectionHeading id="everyone-head">You vs everyone</SectionHeading>
 			<div className="mt-8 flex flex-wrap items-center gap-2">
 				<Pills
 					label="Show"
@@ -73,8 +60,7 @@ export function VsEveryone() {
 				/>
 				<span className="ml-auto flex items-center gap-4 text-xs text-gray-400">
 					<span className="flex items-center gap-1.5">
-						<span className="h-3 w-3 rounded-full border-2 border-gray-300" />{" "}
-						GoodWatch score
+						<span className="h-3 w-3 rounded-full border-2 border-gray-300" /> GoodWatch score
 					</span>
 					<span className="flex items-center gap-1.5">
 						<span className="h-3 w-3 rounded-sm bg-emerald-600" /> Your score
@@ -112,12 +98,10 @@ export function VsEveryone() {
 
 			{(gaps.genres.length > 0 || gaps.traits.length > 0) && (
 				<div className="mt-16">
-					<h3 className="text-2xl font-bold md:text-3xl">
-						Where you part ways
-					</h3>
+					<h3 className="text-2xl font-bold md:text-3xl">Where you part ways</h3>
 					<p className="mt-1 text-gray-400">
-						Your average score against the GoodWatch score, allowing for how
-						generous you are with movies and with shows.
+						Your average score against the GoodWatch score, allowing for how generous you are with
+						movies and with shows.
 					</p>
 					<div className="mt-8 grid gap-x-12 gap-y-10 md:grid-cols-2">
 						<GapList heading="Genres" rows={gaps.genres} max={gaps.max} />
@@ -156,11 +140,7 @@ function Column({
 			)}
 			{all[0] && (
 				<div className={rows[0] ? "" : "invisible"} aria-hidden={!rows[0]}>
-					<Lead
-						row={rows[0] ?? all[0]}
-						tone={tone}
-						t={title((rows[0] ?? all[0]).key)}
-					/>
+					<Lead row={rows[0] ?? all[0]} tone={tone} t={title((rows[0] ?? all[0]).key)} />
 				</div>
 			)}
 			<ul className="space-y-3">
@@ -181,11 +161,7 @@ function Column({
 	)
 }
 
-function Lead({
-	row,
-	tone,
-	t,
-}: { row: CrowdRow; tone: "up" | "down"; t: TasteTitle }) {
+function Lead({ row, tone, t }: { row: CrowdRow; tone: "up" | "down"; t: TasteTitle }) {
 	const backdrop = backdropUrl(t.backdrop, "w780")
 	const delta = points(row)
 	return (
@@ -203,17 +179,11 @@ function Lead({
 			<div className="absolute inset-0 -z-10 bg-linear-to-r from-gray-950 via-gray-950/80 to-transparent" />
 			<div className="flex items-end gap-4 p-4 md:gap-5 md:p-5">
 				<span className="w-20 shrink-0 sm:w-28 md:w-32">
-					<PosterImg
-						title={t}
-						className="rounded-lg border-2 border-gray-700"
-					/>
+					<PosterImg title={t} className="rounded-lg border-2 border-gray-700" />
 				</span>
 				<div className="min-w-0 pb-1">
 					<p className="text-xl leading-tight font-bold md:text-2xl">
-						{t.title}{" "}
-						{t.year && (
-							<span className="font-normal text-gray-400">({t.year})</span>
-						)}
+						{t.title} {t.year && <span className="font-normal text-gray-400">({t.year})</span>}
 					</p>
 					<div className="mt-3 flex flex-wrap items-center gap-3 md:mt-4 md:gap-4">
 						<Scores row={row} t={t} size="L" />
@@ -230,11 +200,7 @@ function Lead({
 }
 
 /** The row's pill: the GoodWatch score and the member's own, as the gap bar below draws them. */
-function Scores({
-	row,
-	t,
-	size,
-}: { row: CrowdRow; t: TasteTitle; size?: "L" }) {
+function Scores({ row, t, size }: { row: CrowdRow; t: TasteTitle; size?: "L" }) {
 	const marks = useRowMarks()(t.mediaType, t.tmdbId)
 	return (
 		<RowScores
@@ -261,10 +227,7 @@ function Row({ row, t }: { row: CrowdRow; t: TasteTitle }) {
 			<div className="min-w-0 self-center">
 				<div className="flex items-center justify-between gap-2">
 					<p className="truncate font-semibold">
-						{t.title}{" "}
-						{t.year && (
-							<span className="font-normal text-gray-400">({t.year})</span>
-						)}
+						{t.title} {t.year && <span className="font-normal text-gray-400">({t.year})</span>}
 					</p>
 					<Scores row={row} t={t} />
 				</div>
@@ -288,17 +251,11 @@ function Row({ row, t }: { row: CrowdRow; t: TasteTitle }) {
 	)
 }
 
-function GapList({
-	heading,
-	rows,
-	max,
-}: { heading: string; rows: GapRow[]; max: number }) {
+function GapList({ heading, rows, max }: { heading: string; rows: GapRow[]; max: number }) {
 	if (!rows.length) return null
 	return (
 		<div>
-			<h4 className="mb-4 text-sm font-bold tracking-wide text-gray-400 uppercase">
-				{heading}
-			</h4>
+			<h4 className="mb-4 text-sm font-bold tracking-wide text-gray-400 uppercase">{heading}</h4>
 			<ul className="flex flex-col gap-3.5">
 				{rows.map((gap) => {
 					const width = `${Math.min(50, (Math.abs(gap.delta) / max) * 50)}%`
@@ -319,11 +276,7 @@ function GapList({
 								<span className="absolute inset-y-0 left-1/2 w-px bg-gray-500" />
 								<span
 									className={`absolute inset-y-0 rounded-full ${gap.delta > 0 ? "bg-emerald-500" : "bg-rose-500"}`}
-									style={
-										gap.delta > 0
-											? { left: "50%", width }
-											: { right: "50%", width }
-									}
+									style={gap.delta > 0 ? { left: "50%", width } : { right: "50%", width }}
 								/>
 							</span>
 							<span

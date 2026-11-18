@@ -4,21 +4,12 @@ import { useMemo, useState } from "react"
 // on another member's profile their score follows it, and a signed-in visitor's services show on what they haven't
 // seen.
 import type { LibraryKind } from "~/domain/my-library"
-import type {
-	ProfileSeenPage,
-	ProfileShell,
-	ProfileTitle,
-} from "~/domain/profile"
+import type { ProfileSeenPage, ProfileShell, ProfileTitle } from "~/domain/profile"
 import type { RowServices } from "~/server/row-services.server"
 import type { Score } from "~/server/scores.server"
-import {
-	RowLogos,
-	RowScores,
-	rowMark,
-	useRowMarks,
-} from "~/ui/list-row/RowScores"
-import { DISPLAY } from "~/ui/my-pages/bits"
+import { RowLogos, RowScores, rowMark, useRowMarks } from "~/ui/list-row/RowScores"
 import { Segmented, TILE, TitleRow, count } from "../parts"
+import { SectionHeading } from "~/ui/heading"
 
 type Kind = LibraryKind
 const FIRST_MONTHS = 6
@@ -46,10 +37,7 @@ export function SeenPage({
 	const [months, setMonths] = useState(FIRST_MONTHS)
 	const [allUndated, setAllUndated] = useState(false)
 	const titles = useMemo(
-		() =>
-			kind === "all"
-				? page.titles
-				: page.titles.filter((t) => t.mediaType === kind),
+		() => (kind === "all" ? page.titles : page.titles.filter((t) => t.mediaType === kind)),
 		[page.titles, kind],
 	)
 	const { groups, undated } = useMemo(() => byMonth(titles), [titles])
@@ -105,10 +93,10 @@ export function SeenPage({
 			{groups.slice(0, months).map(([month, list]) => (
 				<section key={month} className={`${TILE} p-4 sm:p-5`}>
 					<h2 className="flex items-baseline gap-2 border-b border-white/10 pb-2">
-						<span className={`${DISPLAY} text-xl`}>{month}</span>
-						<span className="text-sm tabular-nums text-gray-500">
-							{list.length}
-						</span>
+						<SectionHeading as="span" size="group">
+							{month}
+						</SectionHeading>
+						<span className="text-sm tabular-nums text-gray-500">{list.length}</span>
 					</h2>
 					<ul className="divide-y divide-white/5">
 						{list.map((title) => (
@@ -139,20 +127,18 @@ export function SeenPage({
 			{undated.length > 0 && (
 				<section className={`${TILE} p-4 sm:p-5`}>
 					<h2 className="flex items-baseline gap-2 border-b border-white/10 pb-2">
-						<span className={`${DISPLAY} text-xl`}>No date</span>
-						<span className="text-sm tabular-nums text-gray-500">
-							{count(undated.length)}
-						</span>
+						<SectionHeading as="span" size="group">
+							No date
+						</SectionHeading>
+						<span className="text-sm tabular-nums text-gray-500">{count(undated.length)}</span>
 					</h2>
 					<p className="mt-2 text-xs text-gray-500">
 						Seen before GoodWatch kept dates, or brought in without one.
 					</p>
 					<ul className="divide-y divide-white/5">
-						{(allUndated ? undated : undated.slice(0, FIRST_UNDATED)).map(
-							(title) => (
-								<TitleRow key={title.key} title={title} {...parts(title)} />
-							),
-						)}
+						{(allUndated ? undated : undated.slice(0, FIRST_UNDATED)).map((title) => (
+							<TitleRow key={title.key} title={title} {...parts(title)} />
+						))}
 					</ul>
 					{undated.length > FIRST_UNDATED && (
 						<button

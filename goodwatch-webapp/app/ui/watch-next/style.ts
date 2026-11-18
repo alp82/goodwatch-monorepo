@@ -1,6 +1,6 @@
 // Shared looks for the Watch next page.
 
-/** The display face for the hero's title and the tier headings. */
+/** The display face for the hero's title and the stepped tier headings. */
 export { DISPLAY } from "~/ui/my-pages/style"
 
 /** The page's content width. */

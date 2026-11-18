@@ -37,6 +37,7 @@ import { titleToDashed } from "~/utils/helpers"
 import { mediaFieldLanguage } from "~/utils/media-presentation"
 import { canonicalMediaTitle } from "~/utils/media-presentation"
 import type { SizeRule } from "~/utils/tmdb-image"
+import { SectionHeading } from "~/ui/heading"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -206,9 +207,7 @@ export default function ShareListPage() {
 
 					<section aria-labelledby="titles-heading" className="flex flex-col gap-3">
 						<div className="flex items-baseline justify-between gap-3">
-							<h2 id="titles-heading" className="text-lg font-bold">
-								The list
-							</h2>
+							<SectionHeading id="titles-heading">The list</SectionHeading>
 							{services && (
 								<span className="flex items-center gap-1.5 text-xs text-gray-400">
 									<img

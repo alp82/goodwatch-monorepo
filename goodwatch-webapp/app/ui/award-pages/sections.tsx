@@ -1,24 +1,19 @@
 // The sections of the /awards hub and of a body's page (/awards/<body>).
 import { ArrowRightCircleIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
-import type {
-	AwardBody,
-	CategoryLink,
-	CeremonySummary,
-} from "~/domain/award-pages"
+import type { AwardBody, CategoryLink, CeremonySummary } from "~/domain/award-pages"
 import type { AwardTitle } from "~/server/award-pages.server"
 import { AwardCard, SmallPoster } from "~/ui/award-pages/parts"
+import { SectionHeading } from "~/ui/heading"
 
 const MORE_LINK =
 	"flex shrink-0 items-center gap-1.5 text-sm font-semibold text-indigo-500 hover:text-indigo-400"
 
-export function RecentCeremonies({
-	recent,
-}: { recent: CeremonySummary<AwardTitle>[] }) {
+export function RecentCeremonies({ recent }: { recent: CeremonySummary<AwardTitle>[] }) {
 	if (!recent.length) return null
 	return (
 		<section className="mx-auto mt-8 max-w-7xl px-4">
-			<h2 className="text-2xl font-bold">Latest ceremonies</h2>
+			<SectionHeading>Latest ceremonies</SectionHeading>
 			<div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-x-8 gap-y-6 md:grid-cols-2 xl:grid-cols-3">
 				{recent.map((c, i) => {
 					const href = `/awards/${c.body.slug}/${c.year}`
@@ -55,12 +50,10 @@ export function RecentCeremonies({
 	)
 }
 
-export function BodyList({
-	bodies,
-}: { bodies: { body: AwardBody; years: number[] }[] }) {
+export function BodyList({ bodies }: { bodies: { body: AwardBody; years: number[] }[] }) {
 	return (
 		<section className="mx-auto mt-12 max-w-7xl px-4">
-			<h2 className="text-2xl font-bold">Awards</h2>
+			<SectionHeading>Awards</SectionHeading>
 			<ul className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-x-8 sm:grid-cols-2 lg:grid-cols-3">
 				{bodies.map(({ body, years }) => (
 					<li key={body.slug} className="border-b border-white/5">
@@ -91,10 +84,7 @@ export function BodyList({
 }
 
 /** The body's published years by decade. */
-export function YearsByDecade({
-	slug,
-	years,
-}: { slug: string; years: number[] }) {
+export function YearsByDecade({ slug, years }: { slug: string; years: number[] }) {
 	const decades = new Map<number, number[]>()
 	for (const year of years) {
 		const decade = Math.floor(year / 10) * 10
@@ -102,16 +92,11 @@ export function YearsByDecade({
 	}
 	return (
 		<section className="mx-auto mt-10 max-w-7xl px-4">
-			<h2 className="text-2xl font-bold">Ceremonies by year</h2>
+			<SectionHeading>Ceremonies by year</SectionHeading>
 			<div className="mt-4 flex flex-col gap-3">
 				{[...decades.entries()].map(([decade, list]) => (
-					<div
-						key={decade}
-						className="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:gap-4"
-					>
-						<span className="w-16 shrink-0 text-sm font-bold text-gray-500">
-							{decade}s
-						</span>
+					<div key={decade} className="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:gap-4">
+						<span className="w-16 shrink-0 text-sm font-bold text-gray-500">{decade}s</span>
 						<div className="flex flex-wrap gap-2">
 							{list.map((year) => (
 								<Link
@@ -147,14 +132,10 @@ export function LatestResults({
 	return (
 		<section className="mx-auto mt-8 max-w-7xl px-4">
 			<div className="flex items-baseline justify-between gap-4">
-				<h2 className="text-2xl font-bold">
+				<SectionHeading>
 					{name} {latest.year} winners
-				</h2>
-				<Link
-					to={`/awards/${slug}/${latest.year}`}
-					prefetch="intent"
-					className={MORE_LINK}
-				>
+				</SectionHeading>
+				<Link to={`/awards/${slug}/${latest.year}`} prefetch="intent" className={MORE_LINK}>
 					All categories
 					<ArrowRightCircleIcon className="w-5" aria-hidden="true" />
 				</Link>
@@ -180,11 +161,14 @@ export function LatestResults({
 export function CategoryList({
 	slug,
 	categories,
-}: { slug: string; categories: CategoryLink<AwardTitle>[] }) {
+}: {
+	slug: string
+	categories: CategoryLink<AwardTitle>[]
+}) {
 	if (!categories.length) return null
 	return (
 		<section className="mx-auto mt-12 max-w-7xl px-4">
-			<h2 className="text-2xl font-bold">Winners by category</h2>
+			<SectionHeading>Winners by category</SectionHeading>
 			<ul className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-x-8 sm:grid-cols-2 lg:grid-cols-3">
 				{categories.map((c) => (
 					<li key={c.slug} className="border-b border-white/5">

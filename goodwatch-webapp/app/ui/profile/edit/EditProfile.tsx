@@ -5,19 +5,12 @@ import {
 	TrashIcon,
 	UserGroupIcon,
 	XMarkIcon,
-} from "@heroicons/react/20/solid";
-import { GlobeAltIcon } from "@heroicons/react/24/outline";
-import { Link, useLocation } from "@remix-run/react";
-import { useQueryClient } from "@tanstack/react-query";
-import {
-	type ReactNode,
-	useEffect,
-	useId,
-	useMemo,
-	useRef,
-	useState,
-} from "react";
-import { toast } from "~/ui/toast";
+} from "@heroicons/react/20/solid"
+import { GlobeAltIcon } from "@heroicons/react/24/outline"
+import { Link, useLocation } from "@remix-run/react"
+import { useQueryClient } from "@tanstack/react-query"
+import { type ReactNode, useEffect, useId, useMemo, useRef, useState } from "react"
+import { toast } from "~/ui/toast"
 import {
 	AUDIENCES,
 	AVATAR_COLORS,
@@ -31,23 +24,21 @@ import {
 	type ProfileSettings,
 	type ProfileShell,
 	type ProfileTitle,
-} from "~/domain/profile";
-import { LINK_RULES, normalizeLinkValue } from "~/domain/profile-settings";
-import {
-	queryKeyAccountSummary,
-	useAccountSummary,
-} from "~/ui/account/useAccountSummary";
-import { FOLLOW_PHONE_BAR, STICKY_BAR } from "~/ui/layers";
-import { DISPLAY } from "~/ui/my-pages/bits";
+} from "~/domain/profile"
+import { LINK_RULES, normalizeLinkValue } from "~/domain/profile-settings"
+import { queryKeyAccountSummary, useAccountSummary } from "~/ui/account/useAccountSummary"
+import { FOLLOW_PHONE_BAR, STICKY_BAR } from "~/ui/layers"
+import { DISPLAY } from "~/ui/my-pages/bits"
 // Edit profile (/settings/profile): the picture (an uploaded photo cropped in the browser, the sign-in provider's photo,
 // the handle's initial on a colour, or a favorite's poster), the cover, the bio, links to other profiles, and who sees
 // each part. A live preview beside the form; Save checks with the same rules as the server (domain/profile-settings).
 // No display name: profiles and cards are signed with the permanent @handle (#170).
-import { assetUrl } from "~/utils/asset-url";
-import { ProfileAvatar } from "../ProfileFrame";
-import { LINK_SERVICE_INFO, profileTabPath } from "../links";
-import { AMBER_BUTTON, QUIET_BUTTON, TILE, posterUrl } from "../parts";
-import { PhotoCropper } from "./PhotoCropper";
+import { assetUrl } from "~/utils/asset-url"
+import { ProfileAvatar } from "../ProfileFrame"
+import { LINK_SERVICE_INFO, profileTabPath } from "../links"
+import { AMBER_BUTTON, QUIET_BUTTON, TILE, posterUrl } from "../parts"
+import { PhotoCropper } from "./PhotoCropper"
+import { SectionHeading } from "~/ui/heading"
 
 const PARTS: { part: ProfilePart; name: string; line: string }[] = [
 	{
@@ -82,95 +73,93 @@ const PARTS: { part: ProfilePart; name: string; line: string }[] = [
 		name: "Recent activity",
 		line: "Latest ratings, watching now, newest on the Wishlist",
 	},
-];
+]
 
 const AUDIENCE_LABEL: Record<Audience, string> = {
 	everyone: "Everyone",
 	members: "Members",
 	me: "Only me",
-};
+}
 
 export interface EditProfileData {
-	handle: string;
-	settings: ProfileSettings;
+	handle: string
+	settings: ProfileSettings
 	/** The uploaded photo's address, or null. */
-	photo: string | null;
+	photo: string | null
 	/** The sign-in provider's photo, or null. */
-	providerPhoto: string | null;
+	providerPhoto: string | null
 	/** Their 10s (then 9s) with posters, for the picture. */
-	favorites: ProfileTitle[];
+	favorites: ProfileTitle[]
 	/** Their 9s and 10s with backdrops, for the cover. */
-	covers: ProfileTitle[];
+	covers: ProfileTitle[]
 }
 
 export function EditProfile({ data }: { data: EditProfileData }) {
-	const queryClient = useQueryClient();
-	const [saved, setSaved] = useState(data.settings);
-	const [draft, setDraft] = useState(data.settings);
-	const [photo, setPhoto] = useState(data.photo);
-	const [saving, setSaving] = useState(false);
-	const [error, setError] = useState<string | null>(null);
-	const set = (patch: Partial<ProfileSettings>) =>
-		setDraft((d) => ({ ...d, ...patch }));
-	const dirty = JSON.stringify(draft) !== JSON.stringify(saved);
+	const queryClient = useQueryClient()
+	const [saved, setSaved] = useState(data.settings)
+	const [draft, setDraft] = useState(data.settings)
+	const [photo, setPhoto] = useState(data.photo)
+	const [saving, setSaving] = useState(false)
+	const [error, setError] = useState<string | null>(null)
+	const set = (patch: Partial<ProfileSettings>) => setDraft((d) => ({ ...d, ...patch }))
+	const dirty = JSON.stringify(draft) !== JSON.stringify(saved)
 
 	const linkProblems = draft.links.map((l) => {
-		const value = normalizeLinkValue(l.service, l.value);
+		const value = normalizeLinkValue(l.service, l.value)
 		return value && !LINK_RULES[l.service].pattern.test(value)
 			? `That doesn't look like a ${LINK_RULES[l.service].name} ${LINK_RULES[l.service].placeholder}.`
-			: null;
-	});
-	const valid = draft.bio.length <= BIO_MAX && linkProblems.every((p) => !p);
+			: null
+	})
+	const valid = draft.bio.length <= BIO_MAX && linkProblems.every((p) => !p)
 
 	// The "GoodWatch has profiles now" strip leads here (?confirm=1): scroll to Who sees what and highlight it, each
 	// time the strip is followed. Confirm (or any save) retires the strip.
-	const { profilesStrip } = useAccountSummary();
-	const location = useLocation();
-	const whoRef = useRef<HTMLElement>(null);
-	const [glow, setGlow] = useState(0);
+	const { profilesStrip } = useAccountSummary()
+	const location = useLocation()
+	const whoRef = useRef<HTMLElement>(null)
+	const [glow, setGlow] = useState(0)
 	useEffect(() => {
-		if (!new URLSearchParams(location.search).has("confirm")) return;
+		if (!new URLSearchParams(location.search).has("confirm")) return
 		const timer = setTimeout(() => {
-			whoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-			setGlow((g) => g + 1);
-		}, 250);
-		return () => clearTimeout(timer);
-	}, [location.key, location.search]);
+			whoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+			setGlow((g) => g + 1)
+		}, 250)
+		return () => clearTimeout(timer)
+	}, [location.key, location.search])
 
 	const save = async () => {
-		setSaving(true);
-		setError(null);
+		setSaving(true)
+		setError(null)
 		try {
 			const body: ProfileSettings = {
 				...draft,
 				links: draft.links
 					.map((l) => ({ ...l, value: normalizeLinkValue(l.service, l.value) }))
 					.filter((l) => l.value),
-			};
+			}
 			const res = await fetch("/api/profile/settings", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(body),
-			});
+			})
 			const out = (await res.json().catch(() => ({}))) as {
-				ok?: boolean;
-				error?: string;
-				settings?: ProfileSettings;
-			};
-			if (!res.ok || !out.ok)
-				throw new Error(out.error ?? "Saving failed. Try again.");
-			const next = out.settings ?? body;
-			setSaved(next);
-			setDraft(next);
-			toast.success(profilesStrip ? "All set." : "Profile saved.");
+				ok?: boolean
+				error?: string
+				settings?: ProfileSettings
+			}
+			if (!res.ok || !out.ok) throw new Error(out.error ?? "Saving failed. Try again.")
+			const next = out.settings ?? body
+			setSaved(next)
+			setDraft(next)
+			toast.success(profilesStrip ? "All set." : "Profile saved.")
 			// The account menu shows the chosen picture.
-			void queryClient.invalidateQueries({ queryKey: queryKeyAccountSummary });
+			void queryClient.invalidateQueries({ queryKey: queryKeyAccountSummary })
 		} catch (e) {
-			setError(e instanceof Error ? e.message : "Saving failed. Try again.");
+			setError(e instanceof Error ? e.message : "Saving failed. Try again.")
 		} finally {
-			setSaving(false);
+			setSaving(false)
 		}
-	};
+	}
 
 	const avatarUrl =
 		draft.avatar.kind === "photo"
@@ -179,20 +168,21 @@ export function EditProfile({ data }: { data: EditProfileData }) {
 				? data.providerPhoto
 				: draft.avatar.kind === "poster"
 					? posterUrl(
-							data.favorites.find(
-								(t) => t.key === (draft.avatar as { title: string }).title,
-							)?.poster ?? null,
+							data.favorites.find((t) => t.key === (draft.avatar as { title: string }).title)
+								?.poster ?? null,
 						)
-					: null;
+					: null
 	const previewAvatar: ProfileShell["avatar"] = {
 		url: avatarUrl,
 		color: draft.avatar.kind === "initial" ? draft.avatar.color : "amber",
-	};
-	const cover = data.covers.find((t) => t.key === draft.cover) ?? null;
+	}
+	const cover = data.covers.find((t) => t.key === draft.cover) ?? null
 
 	return (
 		<div className="flex flex-col gap-6">
-			<div className={`sticky top-16 ${STICKY_BAR} ${FOLLOW_PHONE_BAR} -mx-4 flex flex-wrap items-center gap-3 border-b border-white/10 bg-gray-950/95 px-4 py-3 md:top-16 md:-mx-8 md:px-8`}>
+			<div
+				className={`sticky top-16 ${STICKY_BAR} ${FOLLOW_PHONE_BAR} -mx-4 flex flex-wrap items-center gap-3 border-b border-white/10 bg-gray-950/95 px-4 py-3 md:top-16 md:-mx-8 md:px-8`}
+			>
 				<Link
 					to={profileTabPath(data.handle)}
 					className="text-sm font-semibold text-amber-500 hover:text-amber-400"
@@ -226,13 +216,7 @@ export function EditProfile({ data }: { data: EditProfileData }) {
 						title="Picture"
 						line="A photo, your sign-in photo, your initial on a colour, or a poster from your favorites."
 					>
-						<PictureChooser
-							data={data}
-							draft={draft}
-							set={set}
-							photo={photo}
-							setPhoto={setPhoto}
-						/>
+						<PictureChooser data={data} draft={draft} set={set} photo={photo} setPhoto={setPhoto} />
 					</Group>
 
 					{data.covers.length > 0 && (
@@ -338,17 +322,10 @@ export function EditProfile({ data }: { data: EditProfileData }) {
 						>
 							<ul className={`${TILE} divide-y divide-white/5`}>
 								{PARTS.map(({ part, name, line }) => (
-									<li
-										key={part}
-										className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3"
-									>
+									<li key={part} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
 										<span className="min-w-0 flex-1 basis-48">
-											<span className="block font-semibold text-gray-100">
-												{name}
-											</span>
-											<span className="block text-xs text-gray-500">
-												{line}
-											</span>
+											<span className="block font-semibold text-gray-100">{name}</span>
+											<span className="block text-xs text-gray-500">{line}</span>
 										</span>
 										<AudiencePicker
 											name={name}
@@ -365,8 +342,8 @@ export function EditProfile({ data }: { data: EditProfileData }) {
 							{profilesStrip && (
 								<div className="sticky bottom-[calc(88px+env(safe-area-inset-bottom))] z-10 flex flex-wrap items-center gap-3 rounded-2xl bg-[#2a2414] px-4 py-3 shadow-[0_-8px_30px_rgba(0,0,0,.5)] ring-1 ring-amber-300/40 lg:bottom-4">
 									<span className="min-w-0 flex-1 basis-56 text-sm text-amber-50">
-										<b>Happy with who sees what?</b> Confirm and you're all set.
-										You can change it here any time.
+										<b>Happy with who sees what?</b> Confirm and you're all set. You can change it
+										here any time.
 									</span>
 									<button
 										type="button"
@@ -404,20 +381,14 @@ export function EditProfile({ data }: { data: EditProfileData }) {
 						)}
 						<div className="absolute inset-0 -z-10 bg-linear-to-t from-gray-950 via-gray-950/80 to-gray-950/30" />
 						<div className="flex flex-col gap-3 p-5">
-							<ProfileAvatar
-								handle={data.handle}
-								avatar={previewAvatar}
-								size="md"
-							/>
+							<ProfileAvatar handle={data.handle} avatar={previewAvatar} size="md" />
 							<p className={`${DISPLAY} text-2xl text-white`}>@{data.handle}</p>
-							{draft.bio && (
-								<p className="text-sm text-gray-200">{draft.bio}</p>
-							)}
+							{draft.bio && <p className="text-sm text-gray-200">{draft.bio}</p>}
 							<div className="flex gap-1.5">
 								{draft.links
 									.filter((l) => l.value.trim())
 									.map((l) => {
-										const s = LINK_SERVICE_INFO[l.service];
+										const s = LINK_SERVICE_INFO[l.service]
 										return (
 											<span
 												key={l.service}
@@ -433,7 +404,7 @@ export function EditProfile({ data }: { data: EditProfileData }) {
 													<b className="text-xs text-gray-200">{s.letter}</b>
 												)}
 											</span>
-										);
+										)
 									})}
 							</div>
 						</div>
@@ -452,11 +423,11 @@ export function EditProfile({ data }: { data: EditProfileData }) {
 				</aside>
 			</div>
 		</div>
-	);
+	)
 }
 
 const INPUT =
-	"min-h-11 w-full rounded-lg bg-gray-900 px-3 text-gray-100 ring-1 ring-white/15 placeholder:text-gray-600 focus:ring-2 focus:ring-amber-400 focus:outline-none";
+	"min-h-11 w-full rounded-lg bg-gray-900 px-3 text-gray-100 ring-1 ring-white/15 placeholder:text-gray-600 focus:ring-2 focus:ring-amber-400 focus:outline-none"
 
 const COLORS: Record<string, [string, string, string]> = {
 	amber: ["#fbbf24", "#b45309", "#451a03"],
@@ -465,7 +436,7 @@ const COLORS: Record<string, [string, string, string]> = {
 	sky: ["#38bdf8", "#0369a1", "#082f49"],
 	emerald: ["#34d399", "#047857", "#022c22"],
 	slate: ["#e2e8f0", "#64748b", "#0f172a"],
-};
+}
 
 function PictureChooser({
 	data,
@@ -474,71 +445,62 @@ function PictureChooser({
 	photo,
 	setPhoto,
 }: {
-	data: EditProfileData;
-	draft: ProfileSettings;
-	set: (patch: Partial<ProfileSettings>) => void;
-	photo: string | null;
-	setPhoto: (url: string | null) => void;
+	data: EditProfileData
+	draft: ProfileSettings
+	set: (patch: Partial<ProfileSettings>) => void
+	photo: string | null
+	setPhoto: (url: string | null) => void
 }) {
-	const queryClient = useQueryClient();
-	const [file, setFile] = useState<File | null>(null);
-	const [busy, setBusy] = useState(false);
-	const [error, setError] = useState<string | null>(null);
-	const input = useRef<HTMLInputElement>(null);
+	const queryClient = useQueryClient()
+	const [file, setFile] = useState<File | null>(null)
+	const [busy, setBusy] = useState(false)
+	const [error, setError] = useState<string | null>(null)
+	const input = useRef<HTMLInputElement>(null)
 	const ring = (on: boolean) =>
-		`ring-offset-2 ring-offset-gray-950 ${on ? "ring-2 ring-white" : "ring-1 ring-white/10"}`;
+		`ring-offset-2 ring-offset-gray-950 ${on ? "ring-2 ring-white" : "ring-1 ring-white/10"}`
 
 	const upload = async (blob: Blob) => {
-		setBusy(true);
-		setError(null);
+		setBusy(true)
+		setError(null)
 		try {
-			const form = new FormData();
-			form.append(
-				"photo",
-				blob,
-				blob.type === "image/webp" ? "photo.webp" : "photo.jpg",
-			);
+			const form = new FormData()
+			form.append("photo", blob, blob.type === "image/webp" ? "photo.webp" : "photo.jpg")
 			const res = await fetch("/api/profile/avatar", {
 				method: "POST",
 				body: form,
-			});
+			})
 			const out = (await res.json().catch(() => ({}))) as {
-				ok?: boolean;
-				url?: string;
-				error?: string;
-			};
+				ok?: boolean
+				url?: string
+				error?: string
+			}
 			if (!res.ok || !out.ok || !out.url)
-				throw new Error(out.error ?? "Uploading failed. Try again.");
-			setPhoto(out.url);
-			set({ avatar: { kind: "photo" } });
-			void queryClient.invalidateQueries({ queryKey: queryKeyAccountSummary });
-			setFile(null);
+				throw new Error(out.error ?? "Uploading failed. Try again.")
+			setPhoto(out.url)
+			set({ avatar: { kind: "photo" } })
+			void queryClient.invalidateQueries({ queryKey: queryKeyAccountSummary })
+			setFile(null)
 		} catch (e) {
-			setError(e instanceof Error ? e.message : "Uploading failed. Try again.");
+			setError(e instanceof Error ? e.message : "Uploading failed. Try again.")
 		} finally {
-			setBusy(false);
+			setBusy(false)
 		}
-	};
+	}
 	const remove = async () => {
-		setBusy(true);
+		setBusy(true)
 		try {
-			await fetch("/api/profile/avatar", { method: "DELETE" });
-			setPhoto(null);
-			void queryClient.invalidateQueries({ queryKey: queryKeyAccountSummary });
-			if (draft.avatar.kind === "photo")
-				set({ avatar: { kind: "initial", color: "amber" } });
+			await fetch("/api/profile/avatar", { method: "DELETE" })
+			setPhoto(null)
+			void queryClient.invalidateQueries({ queryKey: queryKeyAccountSummary })
+			if (draft.avatar.kind === "photo") set({ avatar: { kind: "initial", color: "amber" } })
 		} finally {
-			setBusy(false);
+			setBusy(false)
 		}
-	};
+	}
 
 	return (
 		<>
-			<div
-				className="flex flex-wrap gap-3"
-				role="radiogroup"
-				aria-label="Picture"
-			>
+			<div className="flex flex-wrap gap-3" role="radiogroup" aria-label="Picture">
 				{photo && (
 					<button
 						type="button"
@@ -572,9 +534,8 @@ function PictureChooser({
 					</button>
 				)}
 				{AVATAR_COLORS.map((c) => {
-					const on =
-						draft.avatar.kind === "initial" && draft.avatar.color === c;
-					const [from, to, ink] = COLORS[c];
+					const on = draft.avatar.kind === "initial" && draft.avatar.color === c
+					const [from, to, ink] = COLORS[c]
 					return (
 						<button
 							key={c}
@@ -592,11 +553,10 @@ function PictureChooser({
 						>
 							{data.handle.charAt(0).toUpperCase()}
 						</button>
-					);
+					)
 				})}
 				{data.favorites.map((t) => {
-					const on =
-						draft.avatar.kind === "poster" && draft.avatar.title === t.key;
+					const on = draft.avatar.kind === "poster" && draft.avatar.title === t.key
 					return (
 						<button
 							key={t.key}
@@ -617,7 +577,7 @@ function PictureChooser({
 								/>
 							)}
 						</button>
-					);
+					)
 				})}
 			</div>
 			<div className="flex flex-wrap items-center gap-2">
@@ -627,13 +587,13 @@ function PictureChooser({
 					accept="image/jpeg,image/png,image/webp"
 					className="sr-only"
 					onChange={(e) => {
-						const f = e.target.files?.[0];
-						e.target.value = "";
-						if (!f) return;
+						const f = e.target.files?.[0]
+						e.target.value = ""
+						if (!f) return
 						if (f.size > 20 * 1024 * 1024)
-							return setError("That photo is too large. Pick one under 20 MB.");
-						setError(null);
-						setFile(f);
+							return setError("That photo is too large. Pick one under 20 MB.")
+						setError(null)
+						setFile(f)
 					}}
 				/>
 				<button
@@ -646,12 +606,7 @@ function PictureChooser({
 					{photo ? "Upload a new photo" : "Upload a photo"}
 				</button>
 				{photo && (
-					<button
-						type="button"
-						onClick={remove}
-						className={QUIET_BUTTON}
-						disabled={busy}
-					>
+					<button type="button" onClick={remove} className={QUIET_BUTTON} disabled={busy}>
 						<TrashIcon className="size-4" aria-hidden />
 						Remove photo
 					</button>
@@ -659,15 +614,10 @@ function PictureChooser({
 				{error && <span className="text-sm text-rose-300">{error}</span>}
 			</div>
 			{file && (
-				<PhotoCropper
-					file={file}
-					busy={busy}
-					onCancel={() => setFile(null)}
-					onCropped={upload}
-				/>
+				<PhotoCropper file={file} busy={busy} onCancel={() => setFile(null)} onCropped={upload} />
 			)}
 		</>
-	);
+	)
 }
 
 function LinksEditor({
@@ -675,30 +625,25 @@ function LinksEditor({
 	set,
 	problems,
 }: {
-	draft: ProfileSettings;
-	set: (patch: Partial<ProfileSettings>) => void;
-	problems: (string | null)[];
+	draft: ProfileSettings
+	set: (patch: Partial<ProfileSettings>) => void
+	problems: (string | null)[]
 }) {
 	const unused = useMemo(
-		() =>
-			LINK_SERVICES.filter((s) => !draft.links.some((l) => l.service === s)),
+		() => LINK_SERVICES.filter((s) => !draft.links.some((l) => l.service === s)),
 		[draft.links],
-	);
+	)
 	return (
 		<>
 			<ul className="flex flex-col gap-2">
 				{draft.links.map((l, i) => {
-					const s = LINK_SERVICE_INFO[l.service];
+					const s = LINK_SERVICE_INFO[l.service]
 					return (
 						<li key={l.service} className="flex flex-col gap-1">
 							<div className="flex items-center gap-2">
 								<span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-white/[0.06] ring-1 ring-white/10">
 									{s.logo ? (
-										<img
-											src={assetUrl(s.logo)}
-											alt=""
-											className="size-6 object-contain"
-										/>
+										<img src={assetUrl(s.logo)} alt="" className="size-6 object-contain" />
 									) : (
 										<b className="text-gray-300">{s.letter}</b>
 									)}
@@ -724,20 +669,16 @@ function LinksEditor({
 								</label>
 								<button
 									type="button"
-									onClick={() =>
-										set({ links: draft.links.filter((_, j) => j !== i) })
-									}
+									onClick={() => set({ links: draft.links.filter((_, j) => j !== i) })}
 									aria-label={`Remove ${s.name}`}
 									className="flex size-11 shrink-0 items-center justify-center rounded-lg text-gray-500 hover:bg-white/[0.06] hover:text-white"
 								>
 									<XMarkIcon className="size-5" aria-hidden />
 								</button>
 							</div>
-							{problems[i] && (
-								<p className="pl-14 text-xs text-rose-300">{problems[i]}</p>
-							)}
+							{problems[i] && <p className="pl-14 text-xs text-rose-300">{problems[i]}</p>}
 						</li>
-					);
+					)
 				})}
 			</ul>
 			{unused.length > 0 && draft.links.length < MAX_LINKS && (
@@ -746,9 +687,7 @@ function LinksEditor({
 						<button
 							key={service}
 							type="button"
-							onClick={() =>
-								set({ links: [...draft.links, { service, value: "" }] })
-							}
+							onClick={() => set({ links: [...draft.links, { service, value: "" }] })}
 							className="inline-flex min-h-9 items-center gap-1 rounded-full bg-white/[0.04] px-3 text-xs font-semibold text-gray-300 ring-1 ring-white/10 hover:text-white"
 						>
 							<PlusIcon className="size-3.5" aria-hidden />
@@ -758,14 +697,11 @@ function LinksEditor({
 				</div>
 			)}
 		</>
-	);
+	)
 }
 
-function Audiences({
-	visibility,
-}: { visibility: ProfileSettings["visibility"] }) {
-	const by = (a: Audience) =>
-		PARTS.filter((p) => visibility[p.part] === a).map((p) => p.name);
+function Audiences({ visibility }: { visibility: ProfileSettings["visibility"] }) {
+	const by = (a: Audience) => PARTS.filter((p) => visibility[p.part] === a).map((p) => p.name)
 	const rows: [string, string[], ReactNode][] = [
 		[
 			"Everyone",
@@ -782,7 +718,7 @@ function Audiences({
 			by("me"),
 			<LockClosedIcon key="o" className="size-4 text-amber-300" aria-hidden />,
 		],
-	];
+	]
 	return (
 		<ul className="flex flex-col gap-1.5">
 			{rows
@@ -796,14 +732,18 @@ function Audiences({
 					</li>
 				))}
 		</ul>
-	);
+	)
 }
 
 function AudiencePicker({
 	name,
 	value,
 	onChange,
-}: { name: string; value: Audience; onChange: (a: Audience) => void }) {
+}: {
+	name: string
+	value: Audience
+	onChange: (a: Audience) => void
+}) {
 	return (
 		<div
 			role="radiogroup"
@@ -832,31 +772,31 @@ function AudiencePicker({
 				</button>
 			))}
 		</div>
-	);
+	)
 }
 
-function Group({
-	title,
-	line,
-	children,
-}: { title: string; line?: string; children: ReactNode }) {
+function Group({ title, line, children }: { title: string; line?: string; children: ReactNode }) {
 	return (
 		<section className="flex flex-col gap-4">
 			<div>
-				<h2 className={`${DISPLAY} text-2xl text-white`}>{title}</h2>
+				<SectionHeading>{title}</SectionHeading>
 				{line && <p className="text-sm text-gray-400">{line}</p>}
 			</div>
 			{children}
 		</section>
-	);
+	)
 }
 
 function Field({
 	label,
 	hint,
 	children,
-}: { label: string; hint?: string; children: (id: string) => ReactNode }) {
-	const id = useId();
+}: {
+	label: string
+	hint?: string
+	children: (id: string) => ReactNode
+}) {
+	const id = useId()
 	return (
 		<div className="flex flex-col gap-1.5">
 			<label htmlFor={id} className="text-sm font-semibold text-gray-200">
@@ -865,5 +805,5 @@ function Field({
 			{children(id)}
 			{hint && <p className="text-xs text-gray-500">{hint}</p>}
 		</div>
-	);
+	)
 }

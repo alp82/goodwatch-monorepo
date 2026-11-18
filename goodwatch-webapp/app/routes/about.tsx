@@ -8,6 +8,7 @@ import { Link } from "@remix-run/react"
 import { CreatorChip, Credits, FindUs } from "~/ui/about/AboutParts"
 import { Kicker, MoreLink } from "~/ui/info-page"
 import { type PageMeta, buildMeta } from "~/utils/meta"
+import { SectionHeading } from "~/ui/heading"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -82,9 +83,7 @@ export default function About() {
 			</header>
 
 			<section aria-labelledby="about-what" className="flex flex-col gap-5">
-				<h2 id="about-what" className="text-xl font-bold tracking-tight text-white sm:text-2xl">
-					What it does
-				</h2>
+				<SectionHeading id="about-what">What it does</SectionHeading>
 				<ul className="grid gap-3 sm:grid-cols-2">
 					{FEATURES.map(({ icon: Icon, title, line, to }) => (
 						<li key={title}>
@@ -118,9 +117,7 @@ export default function About() {
 			</div>
 
 			<section aria-labelledby="about-find" className="flex flex-col gap-4">
-				<h2 id="about-find" className="text-xl font-bold tracking-tight text-white sm:text-2xl">
-					Find us
-				</h2>
+				<SectionHeading id="about-find">Find us</SectionHeading>
 				<FindUs />
 			</section>
 

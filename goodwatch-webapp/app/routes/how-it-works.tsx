@@ -9,6 +9,7 @@ import { type Feature, HOW_IT_WORKS_FEATURES } from "~/ui/how-it-works/features"
 import { ActionLink, Kicker, MoreLink } from "~/ui/info-page"
 import { ChatDemo } from "~/ui/use-with-ai/ChatDemo"
 import { type PageMeta, buildMeta } from "~/utils/meta"
+import { SectionHeading } from "~/ui/heading"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -45,7 +46,7 @@ export default function HowItWorks() {
 				</ol>
 
 				<section className="mt-28 flex flex-col items-center gap-5 sm:mt-36">
-					<h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">Your turn</h2>
+					<SectionHeading>Your turn</SectionHeading>
 					<p className="max-w-md text-lg text-gray-300">
 						Rate a few titles you loved. Your picks are ready in a minute.
 					</p>
@@ -65,7 +66,7 @@ function FeatureRow({ f }: { f: Feature }) {
 	return (
 		<li id={f.id} className="flex scroll-mt-24 flex-col items-center gap-3">
 			<Kicker>{f.kicker}</Kicker>
-			<h2 className="text-3xl font-bold tracking-tight text-white sm:text-5xl">{f.title}</h2>
+			<SectionHeading>{f.title}</SectionHeading>
 			<p className="max-w-xl text-lg leading-relaxed text-gray-300">{f.line}</p>
 			<div className="mt-6 w-full sm:mt-10">
 				{f.picture === "chat" ? (

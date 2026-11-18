@@ -57,6 +57,7 @@ export { pageHeaders as headers } from "~/utils/headers"
 import { getPersonRoles } from "~/server/character-portraits.server"
 import { INCOMPLETE_PAGE_HEADERS } from "~/server/incomplete-page"
 import { validPersonId } from "~/server/person-id"
+import { SectionHeading } from "~/ui/heading"
 
 const PER_GROUP = 12
 
@@ -372,7 +373,7 @@ function Section({
 }) {
 	return (
 		<section className={className} data-feedback-area={area}>
-			<h2 className="text-xl font-bold">{title}</h2>
+			<SectionHeading>{title}</SectionHeading>
 			{note && <p className="mt-0.5 text-sm text-gray-400">{note}</p>}
 			<div className="mt-4">{children}</div>
 		</section>
@@ -1047,7 +1048,9 @@ function ScoreGroupHeading({ bandKey, label }: { bandKey: string; label: string 
 				className={`h-10 rounded-full p-2 shadow-xl ${rated ? `bg-vibe-${Number(bandKey)}` : "bg-gray-700"}`}
 			/>
 			<div>
-				<h3 className="text-2xl font-black leading-tight">{scoreBandWordsFor(bandKey) ?? label}</h3>
+				<SectionHeading as="h3" size="group">
+					{scoreBandWordsFor(bandKey) ?? label}
+				</SectionHeading>
 				{rated && <p className="text-sm tabular-nums text-gray-300">Score {label}</p>}
 			</div>
 		</div>
@@ -1063,7 +1066,7 @@ function Titles({ data }: { data: Data }) {
 	return (
 		<section id="titles" data-feedback-area="credits" className="scroll-mt-20 space-y-5">
 			<div className="flex items-baseline gap-3">
-				<h2 className="text-2xl font-bold">Movies and TV shows</h2>
+				<SectionHeading>Movies and TV shows</SectionHeading>
 				<span className="text-gray-400">{data.total}</span>
 			</div>
 			<FilterBox data={data} />
@@ -1108,7 +1111,9 @@ function Titles({ data }: { data: Data }) {
 							{data.filters.group === "score" ? (
 								<ScoreGroupHeading bandKey={g.key} label={g.label} />
 							) : (
-								<h3 className="text-3xl font-black">{g.label}</h3>
+								<SectionHeading as="h3" size="group">
+									{g.label}
+								</SectionHeading>
 							)}
 							<span className="text-sm text-gray-400">
 								{pluralize(g.total, "title")}

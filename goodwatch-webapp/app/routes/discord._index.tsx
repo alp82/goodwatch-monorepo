@@ -34,7 +34,7 @@ import {
 	DISCORD_PREVIEW_BACKDROP,
 } from "~/ui/discord-bot/links"
 import { DISCORD_URL, DiscordMark } from "~/ui/footer/links"
-import { Kicker, Question, SectionHeading } from "~/ui/info-page"
+import { Kicker, Question, SectionIntro } from "~/ui/info-page"
 import { type PageMeta, buildMeta } from "~/utils/meta"
 import { START_AFTER_PAINT } from "~/utils/start-after-paint"
 
@@ -197,9 +197,9 @@ function HeroFact({
 function Setup() {
 	return (
 		<section aria-labelledby="setup" className="flex flex-col gap-10">
-			<SectionHeading id="setup" title="Set it up in three steps">
+			<SectionIntro id="setup" title="Set it up in three steps">
 				It takes about a minute. You need a Discord account.
-			</SectionHeading>
+			</SectionIntro>
 			<ol>
 				<Step n={1} title="Open the install link">
 					<p className="leading-relaxed">
@@ -374,10 +374,10 @@ const MEMBER: CommandInfo[] = [
 function Commands() {
 	return (
 		<section aria-labelledby="commands" className="flex flex-col gap-10">
-			<SectionHeading id="commands" title="Commands">
+			<SectionIntro id="commands" title="Commands">
 				Title cards show the GoodWatch score, where to stream on subscription services, and a menu
 				to switch the country.
-			</SectionHeading>
+			</SectionIntro>
 			<div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 				<CommandGroup
 					icon={UserIcon}
@@ -441,11 +441,11 @@ function CommandGroup({
 function Together() {
 	return (
 		<section aria-labelledby="together" className="flex flex-col gap-10">
-			<SectionHeading id="together" title="Decide what to watch together">
+			<SectionIntro id="together" title="Decide what to watch together">
 				Run <CommandName>/together</CommandName> in a channel. Everyone who joins votes Yep or Nope
 				on the same titles in private. A title that everyone likes becomes a match, and when
 				everyone picks the same match, the bot announces it.
-			</SectionHeading>
+			</SectionIntro>
 			<div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
 				<div className="flex min-w-0 flex-col gap-3">
 					<p className="text-sm font-semibold text-gray-400">In the channel, for everyone</p>
@@ -501,9 +501,9 @@ function Linking() {
 			className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] lg:gap-14"
 		>
 			<div className="flex flex-col gap-6">
-				<SectionHeading id="link" title="Link your GoodWatch account">
+				<SectionIntro id="link" title="Link your GoodWatch account">
 					The bot works without an account. Link one to make every answer fit your taste.
-				</SectionHeading>
+				</SectionIntro>
 				<ul className="flex flex-col gap-3 leading-relaxed">
 					<Benefit>Your taste match on every title.</Benefit>
 					<Benefit>
@@ -554,7 +554,7 @@ function Benefit({ children }: { children: ReactNode }) {
 function Faq() {
 	return (
 		<section aria-labelledby="faq" className="flex flex-col gap-8">
-			<SectionHeading id="faq" title="Questions" />
+			<SectionIntro id="faq" title="Questions" />
 			<div className="flex max-w-3xl flex-col divide-y divide-white/10 rounded-2xl bg-white/[0.04] ring-1 ring-white/10">
 				<Question q="Is it free?">Yes. The bot is free, and so is a GoodWatch account.</Question>
 				<Question q="Do I need a GoodWatch account?">

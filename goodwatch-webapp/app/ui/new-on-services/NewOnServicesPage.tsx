@@ -22,6 +22,7 @@ import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
 import { CountryChooser } from "./CountryChooser"
 import { MyServicesSwitch } from "./MyServicesSwitch"
 import { Flag, Logo, PosterImage, PosterRow, RankedRow, Sub } from "./parts"
+import { SectionHeading } from "~/ui/heading"
 
 /** The page's trail, for the BreadcrumbList. */
 export function crumbsOf(data: NewPageData): Crumb[] {
@@ -234,9 +235,7 @@ function Ranked({ data }: { data: NewPageData }) {
 				: `The ${data.total} new arrivals, best first`
 	return (
 		<section aria-labelledby="ranked-heading">
-			<h2 id="ranked-heading" className={`${DISPLAY} text-2xl text-white md:text-3xl`}>
-				{heading}
-			</h2>
+			<SectionHeading id="ranked-heading">{heading}</SectionHeading>
 			<Sub>
 				By GoodWatch score, {where} {inCountry(data.country.name)}.
 			</Sub>
@@ -252,9 +251,7 @@ function Ranked({ data }: { data: NewPageData }) {
 function DayByDay({ data }: { data: NewPageData }) {
 	return (
 		<section aria-labelledby="days-heading">
-			<h2 id="days-heading" className={`${DISPLAY} text-2xl text-white md:text-3xl`}>
-				Day by day
-			</h2>
+			<SectionHeading id="days-heading">Day by day</SectionHeading>
 			<Sub>
 				Every arrival, the latest first.
 				{data.more > 0 &&
@@ -263,12 +260,12 @@ function DayByDay({ data }: { data: NewPageData }) {
 			<div className="mt-1 flex flex-wrap gap-x-8">
 				{data.days.map(({ day, titles }) => (
 					<div key={day ?? "unknown"} className="mt-4 w-full sm:w-auto">
-						<h3 className={`${DISPLAY} text-lg text-white`}>
+						<SectionHeading as="h3" size="group">
 							{day === null ? "Also new" : dayHeading(day, data.now)}{" "}
 							<span className="text-sm font-bold tracking-normal text-gray-500">
 								{titles.length}
 							</span>
-						</h3>
+						</SectionHeading>
 						<PosterRow titles={titles} data={data} />
 					</div>
 				))}
@@ -282,9 +279,7 @@ function OtherCountries({ data }: { data: NewPageData }) {
 	const on = data.brand ? data.brand.name : "streaming"
 	return (
 		<section aria-labelledby="elsewhere-heading">
-			<h2 id="elsewhere-heading" className={`${DISPLAY} text-xl text-white`}>
-				New on {on} in other countries
-			</h2>
+			<SectionHeading id="elsewhere-heading">New on {on} in other countries</SectionHeading>
 			<ul className="mt-2 flex flex-wrap gap-2">
 				{data.otherCountries.map((country) => (
 					<li key={country.code}>

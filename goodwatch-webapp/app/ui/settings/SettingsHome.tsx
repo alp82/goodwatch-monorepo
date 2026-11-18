@@ -35,6 +35,7 @@ import {
 	SERVICES_PATH,
 	TITLE_LANGUAGE_PATH,
 } from "./paths"
+import { SectionHeading } from "~/ui/heading"
 
 export function SettingsHome({
 	handle,
@@ -49,7 +50,7 @@ export function SettingsHome({
 	return (
 		<div className="pb-24" data-settings-home>
 			<header className="pt-5 pb-5">
-				<h2 className="text-xl font-bold text-white md:text-2xl">All settings</h2>
+				<SectionHeading>All settings</SectionHeading>
 				{email && (
 					<p data-feedback-private className="mt-0.5 truncate text-sm text-gray-400">
 						Signed in as {email}
@@ -66,24 +67,43 @@ export function SettingsHome({
 				<DiscoverAndPrivacyTile />
 			</div>
 
-			<h3 className="mt-10 mb-3 text-xs font-semibold tracking-wide text-gray-500 uppercase">You</h3>
+			<h3 className="mt-10 mb-3 text-xs font-semibold tracking-wide text-gray-500 uppercase">
+				You
+			</h3>
 			<div className="grid gap-4 sm:grid-cols-2">
 				<RowLink
 					to={PROFILE_PATH}
 					icon={UserCircleIcon}
 					name="Public profile"
-					hint={handle ? `@${handle} · goodwatch.app/u/${handle}` : "Choose the handle that signs your lists"}
+					hint={
+						handle
+							? `@${handle} · goodwatch.app/u/${handle}`
+							: "Choose the handle that signs your lists"
+					}
 				/>
-				<RowLink to={ACCOUNT_PATH} icon={ShieldCheckIcon} name="Account and sign-in" hint="Email, password and sign-in methods" />
+				<RowLink
+					to={ACCOUNT_PATH}
+					icon={ShieldCheckIcon}
+					name="Account and sign-in"
+					hint="Email, password and sign-in methods"
+				/>
 			</div>
 
 			<p className="mt-10 flex flex-wrap items-center gap-x-2 text-sm text-gray-400">
 				GoodWatch in other apps:
-				<Link to="/use-with-ai" prefetch="intent" className="font-semibold text-gray-200 underline decoration-white/20 underline-offset-4 hover:text-white">
+				<Link
+					to="/use-with-ai"
+					prefetch="intent"
+					className="font-semibold text-gray-200 underline decoration-white/20 underline-offset-4 hover:text-white"
+				>
 					Use with AI
 				</Link>
 				<span aria-hidden>·</span>
-				<Link to="/discord" prefetch="intent" className="font-semibold text-gray-200 underline decoration-white/20 underline-offset-4 hover:text-white">
+				<Link
+					to="/discord"
+					prefetch="intent"
+					className="font-semibold text-gray-200 underline decoration-white/20 underline-offset-4 hover:text-white"
+				>
 					Discord bot
 				</Link>
 			</p>
@@ -101,13 +121,26 @@ function Tile({
 	hint,
 	className = "",
 	children,
-}: { to: string; label: string; hint: string; className?: string; children: ReactNode }) {
+}: {
+	to: string
+	label: string
+	hint: string
+	className?: string
+	children: ReactNode
+}) {
 	return (
-		<Link to={to} prefetch="intent" data-settings-tile={label} className={`${tileClass} ${className}`}>
+		<Link
+			to={to}
+			prefetch="intent"
+			data-settings-tile={label}
+			className={`${tileClass} ${className}`}
+		>
 			<span className="text-xs font-semibold tracking-wide text-gray-500 uppercase">{label}</span>
 			<span className="mb-4 text-sm text-gray-400">{hint}</span>
 			<span>{children}</span>
-			<span className="mt-auto pt-4 text-sm font-semibold text-amber-500 group-hover:text-amber-400">Open</span>
+			<span className="mt-auto pt-4 text-sm font-semibold text-amber-500 group-hover:text-amber-400">
+				Open
+			</span>
 		</Link>
 	)
 }
@@ -129,7 +162,11 @@ function WatchingFromTile() {
 	const { next } = useSettingsPair()
 	return (
 		<Tile to={COUNTRY_PATH} label="Watching from" hint="Your country">
-			<FlagName flag={next.country} name={regionName(next.country)} line="Streaming offers and age ratings" />
+			<FlagName
+				flag={next.country}
+				name={regionName(next.country)}
+				line="Streaming offers and age ratings"
+			/>
 		</Tile>
 	)
 }
@@ -138,11 +175,17 @@ function ShowTitlesInTile() {
 	const { p, next } = useSettingsPair()
 	const language = next.language === BROWSER ? p.browserLanguage : next.language
 	return (
-		<Tile to={TITLE_LANGUAGE_PATH} label="Show titles in" hint="The language of titles, posters and descriptions">
+		<Tile
+			to={TITLE_LANGUAGE_PATH}
+			label="Show titles in"
+			hint="The language of titles, posters and descriptions"
+		>
 			<FlagName
 				flag={languageFlag(language)}
 				name={englishName(language)}
-				line={next.language === BROWSER ? "Follows your browser" : ownName(language) || "Chosen by you"}
+				line={
+					next.language === BROWSER ? "Follows your browser" : ownName(language) || "Chosen by you"
+				}
 			/>
 			<SampleTitleLine language={language} />
 		</Tile>
@@ -153,25 +196,50 @@ function YourServicesTile() {
 	const { next } = useSettingsPair()
 	const settings = useUserSettings()
 	const ids = savedServiceIds(settings.data?.streaming_providers_default)
-	const providers = useStreamingProviders({ country: next.country, include: ids, enabled: Boolean(settings.data) })
-	const mine = ids.map((id) => providers.data?.find((p) => String(p.id) === id)).filter((p) => p !== undefined)
+	const providers = useStreamingProviders({
+		country: next.country,
+		include: ids,
+		enabled: Boolean(settings.data),
+	})
+	const mine = ids
+		.map((id) => providers.data?.find((p) => String(p.id) === id))
+		.filter((p) => p !== undefined)
 	const { notice } = useServicesInCountry(next.country)
 	const MAX = 12
 	return (
-		<Tile to={SERVICES_PATH} label="Your services" hint="The streaming services you have" className="md:col-span-2 md:min-h-0">
+		<Tile
+			to={SERVICES_PATH}
+			label="Your services"
+			hint="The streaming services you have"
+			className="md:col-span-2 md:min-h-0"
+		>
 			<span className="flex flex-wrap items-center gap-x-6 gap-y-3">
 				{mine.length > 0 ? (
 					<>
 						<span className="flex flex-wrap items-center gap-1.5">
 							{mine.slice(0, MAX).map((p) => (
-								<span key={p.id} title={p.name} className="h-12 w-12 overflow-hidden rounded-md bg-white/5 ring-1 ring-white/10">
-									<TmdbImage kind="logo" path={p.logo_path} width={48} ratio={1} className="h-full w-full object-cover" alt={p.name} />
+								<span
+									key={p.id}
+									title={p.name}
+									className="h-12 w-12 overflow-hidden rounded-md bg-white/5 ring-1 ring-white/10"
+								>
+									<TmdbImage
+										kind="logo"
+										path={p.logo_path}
+										width={48}
+										ratio={1}
+										className="h-full w-full object-cover"
+										alt={p.name}
+									/>
 								</span>
 							))}
-							{mine.length > MAX && <span className="text-sm text-gray-400">+{mine.length - MAX}</span>}
+							{mine.length > MAX && (
+								<span className="text-sm text-gray-400">+{mine.length - MAX}</span>
+							)}
 						</span>
 						<span className="text-sm text-gray-400">
-							{mine.length === 1 ? "1 service" : `${mine.length} services`} in {regionName(next.country)}
+							{mine.length === 1 ? "1 service" : `${mine.length} services`} in{" "}
+							{regionName(next.country)}
 						</span>
 					</>
 				) : (
@@ -181,7 +249,9 @@ function YourServicesTile() {
 			{notice && (
 				<span className="mt-3 flex items-center gap-1.5 text-sm text-amber-300">
 					<ExclamationTriangleIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
-					{notice.empty ? `None of your services stream in ${regionName(next.country)}` : notice.text}
+					{notice.empty
+						? `None of your services stream in ${regionName(next.country)}`
+						: notice.text}
 				</span>
 			)}
 		</Tile>
@@ -192,9 +262,13 @@ function ImportsTile({ wide }: { wide: boolean }) {
 	const imdb = useImdbImports()
 	const native = useSourceImports()
 	const hydrated = useHydrated()
-	const latest = [...lastImported(imdb.data?.imports ?? [], native.data?.imports ?? [])].sort((a, b) => b[1].localeCompare(a[1]))
+	const latest = [...lastImported(imdb.data?.imports ?? [], native.data?.imports ?? [])].sort(
+		(a, b) => b[1].localeCompare(a[1]),
+	)
 	const marks = latest.length
-		? latest.map(([id]) => IMPORT_SOURCE_LIST.find((s) => s.id === id)).filter((s) => s !== undefined)
+		? latest
+				.map(([id]) => IMPORT_SOURCE_LIST.find((s) => s.id === id))
+				.filter((s) => s !== undefined)
 		: IMPORT_SOURCE_LIST.slice(0, 4)
 	const [lastId, lastAt] = latest[0] ?? []
 	return (
@@ -227,16 +301,24 @@ function ImportsTile({ wide }: { wide: boolean }) {
 
 function ConnectedAppsTile({ apps }: { apps: ConnectedApp[] }) {
 	return (
-		<Tile to={CONNECTED_APPS_PATH} label="Connected apps" hint="Assistants that can reach your GoodWatch">
+		<Tile
+			to={CONNECTED_APPS_PATH}
+			label="Connected apps"
+			hint="Assistants that can reach your GoodWatch"
+		>
 			{apps.length > 0 ? (
 				<span className="flex flex-wrap items-center gap-3">
 					{apps.slice(0, 5).map((connected) => (
 						<ConnectAppBadge key={connected.id} app={connected.app} />
 					))}
-					<span className="text-sm text-gray-400">{apps.length === 1 ? "1 connected" : `${apps.length} connected`}</span>
+					<span className="text-sm text-gray-400">
+						{apps.length === 1 ? "1 connected" : `${apps.length} connected`}
+					</span>
 				</span>
 			) : (
-				<span className="text-sm text-gray-400">No apps connected. Add GoodWatch to Claude or ChatGPT.</span>
+				<span className="text-sm text-gray-400">
+					No apps connected. Add GoodWatch to Claude or ChatGPT.
+				</span>
 			)}
 		</Tile>
 	)
@@ -269,7 +351,11 @@ function DiscoverAndPrivacyTile() {
 				{settings.data && <Chip on={forYou}>{forYou ? "For you on" : "For you off"}</Chip>}
 				{consentGiven !== "" && (
 					<Chip on={consentGiven === "yes"}>
-						{consentGiven === "yes" ? "Cookies allowed" : consentGiven === "no" ? "Cookies declined" : "Cookies not chosen"}
+						{consentGiven === "yes"
+							? "Cookies allowed"
+							: consentGiven === "no"
+								? "Cookies declined"
+								: "Cookies not chosen"}
 					</Chip>
 				)}
 			</span>
@@ -282,7 +368,12 @@ function RowLink({
 	icon: Icon,
 	name,
 	hint,
-}: { to: string; icon: ComponentType<SVGProps<SVGSVGElement>>; name: string; hint: string }) {
+}: {
+	to: string
+	icon: ComponentType<SVGProps<SVGSVGElement>>
+	name: string
+	hint: string
+}) {
 	return (
 		<Link
 			to={to}
@@ -294,7 +385,10 @@ function RowLink({
 				<b className="block text-white">{name}</b>
 				<span className="block truncate text-sm text-gray-400">{hint}</span>
 			</span>
-			<ChevronRightIcon className="h-5 w-5 shrink-0 text-gray-600 group-hover:text-amber-300" aria-hidden />
+			<ChevronRightIcon
+				className="h-5 w-5 shrink-0 text-gray-600 group-hover:text-amber-300"
+				aria-hidden
+			/>
 		</Link>
 	)
 }

@@ -3,9 +3,9 @@
 import type { ReactNode } from "react"
 import type { ProfileTitle } from "~/domain/profile"
 import type { PosterProps } from "~/ui/Poster"
-import { DISPLAY } from "~/ui/my-pages/bits"
 import { ProfilePoster } from "../parts"
 import { useTaste } from "./model"
+import { SectionHeading } from "~/ui/heading"
 
 export const PANEL = "rounded-2xl bg-white/[0.035] ring-1 ring-white/10"
 
@@ -35,10 +35,7 @@ export function SectionHead({
 						{eyebrow}
 					</p>
 				)}
-				<h2
-					id={id}
-					className={`${DISPLAY} scroll-mt-44 text-3xl leading-tight text-white sm:text-4xl`}
-				>
+				<SectionHeading id={id} className="scroll-mt-44">
 					<span className="font-light text-gray-300">{lead} </span>
 					<span className="text-amber-400">{accent}</span>
 					{tail && (
@@ -46,7 +43,7 @@ export function SectionHead({
 							{/^[?!.,]/.test(tail) ? tail : ` ${tail}`}
 						</span>
 					)}
-				</h2>
+				</SectionHeading>
 				{sub && <p className="mt-1.5 max-w-3xl text-sm text-gray-400">{sub}</p>}
 			</div>
 			{right}
@@ -81,9 +78,7 @@ export function Pills<T extends string>({
 					}`}
 				>
 					{o.label}
-					{o.count != null && (
-						<span className="ml-1 tabular-nums opacity-60">{o.count}</span>
-					)}
+					{o.count != null && <span className="ml-1 tabular-nums opacity-60">{o.count}</span>}
 				</button>
 			))}
 		</fieldset>
@@ -102,7 +97,5 @@ export function TastePoster({
 	sizes: PosterProps["sizes"]
 }) {
 	const { owner, handle } = useTaste()
-	return (
-		<ProfilePoster title={title} owner={owner ? null : handle} sizes={sizes} />
-	)
+	return <ProfilePoster title={title} owner={owner ? null : handle} sizes={sizes} />
 }

@@ -250,7 +250,7 @@ A cool, dark navy room with a warm amber lamp, translucent white layers, and a s
 ### Hierarchy
 
 - **Display** (Gabarito 700, 34-52px, line height 1.1, normal letter spacing): every page h1, including title and person names, member, info, sign-in, and legal pages (D3). Write it as `font-display font-bold`. Big brand numbers, hero and card names keep Gabarito 900 (`DISPLAY` in `my-pages/style.ts`: `font-display font-black tracking-[-0.03em]`).
-- **Headline** (system 600, 20px on phones and 24px from 640px, -0.025em): every section heading (D4). Group headings are one step smaller. Title pages keep their icon tile; other pages don't add one.
+- **Headline** (system 600, 20px on phones and 24px from 640px, -0.025em): every section heading (D4), written as `<SectionHeading>` from `app/ui/heading.tsx`. Group headings are one step smaller (`size="group"`). Title pages keep their icon tile; other pages don't add one.
 - **Title** (system 600, 18px): card titles, sheet titles, settings row labels, and list headings.
 - **Body** (system 400, 16-18px, line height 1.625): synopses and long-form text. The blog and info pages run 16px on phones and 18px from `sm` up, in a 672px column.
 - **Body small** (system 400-600, 14px): the workhorse size for controls, metadata, lists, and settings hints.

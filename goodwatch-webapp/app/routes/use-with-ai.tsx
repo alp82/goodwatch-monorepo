@@ -45,7 +45,7 @@ import {
 } from "~/ui/connector/connector"
 import { DESCRIPTION_SEARCH_EXAMPLE, USE_WITH_AI_GROUPS } from "~/ui/connector/example-prompts"
 import { Ui } from "~/ui/connector/help-parts"
-import { Kicker, Question, SectionHeading } from "~/ui/info-page"
+import { Kicker, Question, SectionIntro } from "~/ui/info-page"
 import { AI_CHAT_COPY } from "~/ui/og-image/copy"
 import { AppPicker, AppSetup } from "~/ui/use-with-ai/AppSetup"
 import { ChatDemo } from "~/ui/use-with-ai/ChatDemo"
@@ -173,9 +173,9 @@ function Setup() {
 
 	return (
 		<section aria-labelledby="setup" className="flex flex-col gap-10">
-			<SectionHeading id="setup" title="Set it up in four steps">
+			<SectionIntro id="setup" title="Set it up in four steps">
 				Add the GoodWatch MCP server to your app once. After that, GoodWatch is there in every chat.
-			</SectionHeading>
+			</SectionIntro>
 			<ol className="max-w-3xl">
 				<PageStep n={1} title="Pick your app">
 					<AppPicker selected={guide.key} onSelect={select} />
@@ -255,10 +255,10 @@ function PageStep({
 function UseCases() {
 	return (
 		<section aria-labelledby="ask" className="flex flex-col gap-10">
-			<SectionHeading id="ask" title="What you can ask">
+			<SectionIntro id="ask" title="What you can ask">
 				Type the way you'd text a friend. The GoodWatch MCP server gives your app 25 tools for
 				picks, search, your library, lists, and settings.
-			</SectionHeading>
+			</SectionIntro>
 			<div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 lg:grid-cols-3">
 				{USE_WITH_AI_GROUPS.map((group) => (
 					<AskGroup key={group.key} group={group} />
@@ -308,10 +308,10 @@ function HowItWorks() {
 			className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] lg:gap-14"
 		>
 			<div className="flex flex-col gap-6">
-				<SectionHeading id="mcp" title="How the MCP server works">
+				<SectionIntro id="mcp" title="How the MCP server works">
 					MCP, the Model Context Protocol, is an open standard that lets AI apps use tools from
 					other services.
-				</SectionHeading>
+				</SectionIntro>
 				<ul className="flex flex-col gap-3 leading-relaxed">
 					<Benefit>Your app connects to the GoodWatch MCP server at one address.</Benefit>
 					<Benefit>
@@ -390,7 +390,7 @@ function Access({
 function Faq() {
 	return (
 		<section aria-labelledby="faq" className="flex flex-col gap-8">
-			<SectionHeading id="faq" title="Questions" />
+			<SectionIntro id="faq" title="Questions" />
 			<div className="flex max-w-3xl flex-col divide-y divide-white/10 rounded-2xl bg-white/[0.04] ring-1 ring-white/10">
 				<Question q="Is it free?">
 					Yes. The GoodWatch MCP server is free, and so is a GoodWatch account. Your AI app's own

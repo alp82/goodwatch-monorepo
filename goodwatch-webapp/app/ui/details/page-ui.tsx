@@ -1,22 +1,11 @@
 // The title page's small shared look: the section header, a caption sub-heading, the contained list and its rows, a
 // search field, filter chips with live counts, the "Show N more" row, keyboard keys, and an in-place reveal.
-import {
-	CheckIcon,
-	LinkIcon,
-	MagnifyingGlassIcon,
-	XMarkIcon,
-} from "@heroicons/react/24/outline"
-import {
-	type ComponentType,
-	type ReactNode,
-	useEffect,
-	useRef,
-	useState,
-} from "react"
+import { CheckIcon, LinkIcon, MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline"
+import { type ComponentType, type ReactNode, useEffect, useRef, useState } from "react"
+import { SectionHeading } from "~/ui/heading"
 
 /** Small caps caption (sub-headings, rail labels). */
-export const CAPTION =
-	"text-[11px] font-semibold uppercase tracking-[.14em] text-gray-500"
+export const CAPTION = "text-[11px] font-semibold uppercase tracking-[.14em] text-gray-500"
 /** A contained list: rows with hairlines between, on a faint card. Use with rows of h-12 or more. */
 export const LIST =
 	"divide-y divide-white/[0.07] overflow-hidden rounded-xl bg-white/[0.025] ring-1 ring-white/10"
@@ -88,13 +77,10 @@ export function SectionHeader({
 			</span>
 			<div className="min-w-0 flex-1">
 				<div className="flex items-center gap-1.5">
-					<Heading
-						id={`${anchor}-h`}
-						className="text-xl font-semibold tracking-tight text-white sm:text-2xl"
-					>
+					<SectionHeading as={Heading} id={`${anchor}-h`}>
 						{context && <span className="sr-only">{context} </span>}
 						{title}
-					</Heading>
+					</SectionHeading>
 					<button
 						type="button"
 						onClick={copy}
@@ -106,19 +92,11 @@ export function SectionHeader({
 								: "text-gray-500 opacity-0 hover:text-amber-300 group-hover/h:opacity-100 max-lg:opacity-40"
 						}`}
 					>
-						{copied ? (
-							<CheckIcon className="h-4 w-4" />
-						) : (
-							<LinkIcon className="h-4 w-4" />
-						)}
+						{copied ? <CheckIcon className="h-4 w-4" /> : <LinkIcon className="h-4 w-4" />}
 						{copied && <span>Copied</span>}
 					</button>
 				</div>
-				{subtitle && (
-					<p className="mt-0.5 line-clamp-2 text-sm text-gray-400">
-						{subtitle}
-					</p>
-				)}
+				{subtitle && <p className="mt-0.5 line-clamp-2 text-sm text-gray-400">{subtitle}</p>}
 			</div>
 			{aside}
 		</header>
@@ -130,16 +108,15 @@ export function SubHeading({
 	children,
 	note,
 	id,
-}: { children: ReactNode; note?: ReactNode; id?: string }) {
+}: {
+	children: ReactNode
+	note?: ReactNode
+	id?: string
+}) {
 	return (
 		<h3 id={id} className={`${CAPTION} mb-3`}>
 			{children}
-			{note != null && (
-				<span className="normal-case tracking-normal text-gray-600">
-					{" "}
-					· {note}
-				</span>
-			)}
+			{note != null && <span className="normal-case tracking-normal text-gray-600"> · {note}</span>}
 		</h3>
 	)
 }
@@ -224,11 +201,7 @@ export function FilterChips({
 }) {
 	return (
 		// biome-ignore lint/a11y/useSemanticElements: a row of toggle buttons, not a form; a <fieldset> would need a legend
-		<div
-			role="group"
-			aria-label={label}
-			className={`flex flex-wrap gap-1.5 ${className}`}
-		>
+		<div role="group" aria-label={label} className={`flex flex-wrap gap-1.5 ${className}`}>
 			{chips.map((c) => {
 				const on = c.key === value
 				const empty = c.count === 0 && !on
@@ -292,10 +265,7 @@ export function MoreRow({
 }
 
 /** Fades and lifts its content in when it mounts (opacity and transform only), for things that open in place. */
-export function Reveal({
-	children,
-	className = "",
-}: { children: ReactNode; className?: string }) {
+export function Reveal({ children, className = "" }: { children: ReactNode; className?: string }) {
 	const ref = useRef<HTMLDivElement>(null)
 	useEffect(() => {
 		if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return

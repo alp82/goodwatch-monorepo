@@ -4,13 +4,11 @@
 // view, whose grid then shows the title's other characters.
 import { useState } from "react"
 import type { CharacterRole } from "~/domain/character-portraits"
-import {
-	type CharacterEntry,
-	CharacterLink,
-} from "~/ui/character-quick-view/context"
+import { type CharacterEntry, CharacterLink } from "~/ui/character-quick-view/context"
 import { PortraitImg, TvdbCredit } from "~/ui/character-quick-view/parts"
 import { roleEntry } from "~/ui/character-quick-view/portraits"
 import { RowArrows, useStepRow } from "~/ui/row-arrows"
+import { SectionHeading } from "~/ui/heading"
 
 export function CharactersShelf({
 	person,
@@ -28,7 +26,7 @@ export function CharactersShelf({
 	return (
 		<section data-feedback-area="characters" className="min-w-0">
 			<div className="flex items-center gap-3">
-				<h2 className="text-xl font-bold">Characters</h2>
+				<SectionHeading>Characters</SectionHeading>
 				<span className="text-gray-400">{roles.length}</span>
 				<div className="ml-auto flex items-center gap-3">
 					{(all || row.scrolls) && (
@@ -58,9 +56,7 @@ export function CharactersShelf({
 				{shelf.map(({ role, entry }) => (
 					<div
 						key={entry.anchor}
-						className={
-							all ? "min-w-0" : "w-32 shrink-0 snap-start sm:w-36 lg:w-40"
-						}
+						className={all ? "min-w-0" : "w-32 shrink-0 snap-start sm:w-36 lg:w-40"}
 					>
 						<RoleCard role={role} entry={entry} siblings={entries} />
 					</div>

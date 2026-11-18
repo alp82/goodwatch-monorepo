@@ -5,11 +5,7 @@ import { BookmarkIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import type { ReactNode } from "react"
 import { arrivalWords, waitedWords } from "~/domain/new-on-services"
-import type {
-	NewPageData,
-	NewTitle,
-	PageService,
-} from "~/server/new-on-services-page.server"
+import type { NewPageData, NewTitle, PageService } from "~/server/new-on-services-page.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import { TmdbImage } from "~/ui/TmdbImage"
 import { DISPLAY } from "~/ui/my-pages/bits"
@@ -23,7 +19,11 @@ export const Logo = ({
 	service,
 	size = 28,
 	className = "",
-}: { service: PageService | undefined; size?: number; className?: string }) =>
+}: {
+	service: PageService | undefined
+	size?: number
+	className?: string
+}) =>
 	service?.logo_path ? (
 		<TmdbImage
 			kind="logo"
@@ -52,7 +52,12 @@ export const PosterImage = ({
 	width,
 	eager = false,
 	className,
-}: { path: string | null; width: number; eager?: boolean; className: string }) =>
+}: {
+	path: string | null
+	width: number
+	eager?: boolean
+	className: string
+}) =>
 	path ? (
 		<TmdbImage
 			kind="poster"
@@ -74,10 +79,7 @@ export const PosterImage = ({
 	)
 
 /** The GoodWatch score in its color, as on a poster's tab. */
-export const Score = ({
-	score,
-	className = "",
-}: { score: number | null; className?: string }) =>
+export const Score = ({ score, className = "" }: { score: number | null; className?: string }) =>
 	score === null ? null : (
 		<span
 			className={`inline-flex shrink-0 items-center justify-center rounded-md px-1.5 font-black tabular-nums text-white bg-vibe-${goodwatchVibeIndex(score)} ${className}`}
@@ -100,7 +102,10 @@ export const WantMark = ({ className = "" }: { className?: string }) => (
 export const Flag = ({
 	country,
 	className = "h-4 w-6",
-}: { country: string; className?: string }) => (
+}: {
+	country: string
+	className?: string
+}) => (
 	<img
 		src={countryFlagUrl(country)}
 		alt=""
@@ -108,10 +113,6 @@ export const Flag = ({
 		height={16}
 		className={`shrink-0 rounded-[3px] object-cover ring-1 ring-white/20 ${className}`}
 	/>
-)
-
-export const H2 = ({ children }: { children: ReactNode }) => (
-	<h2 className={`${DISPLAY} text-2xl text-white md:text-3xl`}>{children}</h2>
 )
 
 export const Sub = ({ children }: { children: ReactNode }) => (
@@ -159,7 +160,12 @@ export function RankedRow({
 	rank,
 	data,
 	eager,
-}: { title: NewTitle; rank: number; data: NewPageData; eager: boolean }) {
+}: {
+	title: NewTitle
+	rank: number
+	data: NewPageData
+	eager: boolean
+}) {
 	const wait = waitOf(data, title)
 	const facts = [
 		title.media_type === "movie" ? "Movie" : "Show",
@@ -173,9 +179,7 @@ export function RankedRow({
 				prefetch="intent"
 				className="group flex items-center gap-3 border-b border-white/[0.07] py-2.5 hover:bg-white/[0.04]"
 			>
-				<span
-					className={`${DISPLAY} w-9 shrink-0 text-center text-3xl tabular-nums text-gray-600`}
-				>
+				<span className={`${DISPLAY} w-9 shrink-0 text-center text-3xl tabular-nums text-gray-600`}>
 					{rank}
 				</span>
 				<span className="relative shrink-0">
@@ -191,9 +195,7 @@ export function RankedRow({
 					<b className="block truncate text-base text-white group-hover:text-amber-200">
 						{title.title}
 					</b>
-					<span className="block truncate text-sm text-gray-400">
-						{facts.join(" · ")}
-					</span>
+					<span className="block truncate text-sm text-gray-400">{facts.join(" · ")}</span>
 					<span className="mt-1 flex items-center gap-1.5 text-xs text-gray-400">
 						<Logo service={data.services[title.service]} size={20} />
 						<WhenLine title={title} data={data} wait={wait} />
@@ -217,10 +219,7 @@ const ROW_POSTER_SIZES: SizeRule[] = [
  * the title's current offers with the one it arrived on leading (`newOn`), and the title actions. The name goes under
  * it, so a title without a poster still says what it is.
  */
-export function PosterRow({
-	titles,
-	data,
-}: { titles: NewTitle[]; data: NewPageData }) {
+export function PosterRow({ titles, data }: { titles: NewTitle[]; data: NewPageData }) {
 	return (
 		<ul className="mt-2 flex flex-wrap gap-2">
 			{titles.map((title) => {
@@ -231,10 +230,7 @@ export function PosterRow({
 					return service ? [{ id, name: service.name, logo_path: service.logo_path }] : []
 				})
 				return (
-					<li
-						key={title.key}
-						className="w-[calc(25%-6px)] sm:w-[6.5rem] lg:w-28"
-					>
+					<li key={title.key} className="w-[calc(25%-6px)] sm:w-[6.5rem] lg:w-28">
 						<MovieTvCard
 							details={{
 								tmdb_id: title.tmdb_id,

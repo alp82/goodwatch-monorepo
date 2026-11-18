@@ -14,6 +14,7 @@ import { DISPLAY } from "~/ui/my-pages/bits"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import { PickTap } from "./PickTap"
 import { titleAt, toCard, useForYou } from "./context"
+import { SectionHeading } from "~/ui/heading"
 
 const SPRING = {
 	type: "spring",
@@ -96,12 +97,7 @@ export function Results({ title }: { title: React.ReactNode | null }) {
 			)}
 			{size !== "phone" && (
 				<div className={size ? "" : "max-lg:hidden"}>
-					<DeskList
-						title={title}
-						size={size ?? "xl"}
-						mounted={mounted}
-						eager={size !== null}
-					/>
+					<DeskList title={title} size={size ?? "xl"} mounted={mounted} eager={size !== null} />
 				</div>
 			)}
 		</LayoutGroup>
@@ -110,10 +106,7 @@ export function Results({ title }: { title: React.ReactNode | null }) {
 
 type Mounted = React.MutableRefObject<boolean>
 
-function PhoneList({
-	title,
-	mounted,
-}: { title: React.ReactNode; mounted: Mounted }) {
+function PhoneList({ title, mounted }: { title: React.ReactNode; mounted: Mounted }) {
 	const { ranked, pool } = useForYou()
 	const [more, setMore] = useState(0)
 	const top = ranked.slice(0, STRIP_ALL)
@@ -124,9 +117,7 @@ function PhoneList({
 		<div className="mx-auto max-w-xl">
 			{title != null && (
 				<div className="flex h-8 items-center">
-					<h2
-						className={`${DISPLAY} min-w-0 flex-1 truncate text-[15px] leading-5 text-white`}
-					>
+					<h2 className={`${DISPLAY} min-w-0 flex-1 truncate text-[15px] leading-5 text-white`}>
 						{title}
 					</h2>
 				</div>
@@ -150,11 +141,7 @@ function PhoneList({
 							<PickTap r={r}>
 								{(open) => (
 									<motion.div layout transition={SPRING} className="relative">
-										<TitlePosterCard
-											card={toCard(pool, r)}
-											onOpen={open}
-											posterPriority="eager"
-										/>
+										<TitlePosterCard card={toCard(pool, r)} onOpen={open} posterPriority="eager" />
 										<span className="pointer-events-none absolute top-1 left-1 z-30 rounded-md bg-gray-950/85 px-1 text-[10px] leading-4 font-black text-white tabular-nums">
 											{i + 1}
 										</span>
@@ -177,17 +164,9 @@ function PhoneList({
 			{three.length > 0 && (
 				<div className="mt-3 grid grid-cols-3 gap-2.5">
 					{three.map((r, i) => (
-						<Item
-							key={r.index}
-							r={r}
-							at={STRIP_ALL + i}
-							prefix="phone"
-							mounted={mounted}
-						>
+						<Item key={r.index} r={r} at={STRIP_ALL + i} prefix="phone" mounted={mounted}>
 							<PickTap r={r}>
-								{(open) => (
-									<TitlePosterCard card={toCard(pool, r)} onOpen={open} />
-								)}
+								{(open) => <TitlePosterCard card={toCard(pool, r)} onOpen={open} />}
 							</PickTap>
 						</Item>
 					))}
@@ -196,17 +175,9 @@ function PhoneList({
 			{four.length > 0 && (
 				<div className="mt-2.5 grid grid-cols-4 gap-2">
 					{four.map((r, i) => (
-						<Item
-							key={r.index}
-							r={r}
-							at={STRIP_ALL + 9 + i}
-							prefix="phone"
-							mounted={mounted}
-						>
+						<Item key={r.index} r={r} at={STRIP_ALL + 9 + i} prefix="phone" mounted={mounted}>
 							<PickTap r={r}>
-								{(open) => (
-									<TitlePosterCard card={toCard(pool, r)} onOpen={open} />
-								)}
+								{(open) => <TitlePosterCard card={toCard(pool, r)} onOpen={open} />}
 							</PickTap>
 						</Item>
 					))}
@@ -261,20 +232,10 @@ function DeskList({
 	)
 	return (
 		<>
-			{title != null && (
-				<h2 className={`${DISPLAY} mb-4 truncate text-2xl text-white`}>
-					{title}
-				</h2>
-			)}
-			<div className={`grid gap-5 ${t.big}`}>
-				{big.map((r, i) => item(r, i, eager))}
-			</div>
-			<div className={`mt-8 grid gap-3 ${t.medium}`}>
-				{medium.map((r, i) => item(r, c0 + i))}
-			</div>
-			<div className={`mt-8 grid gap-2.5 ${t.small}`}>
-				{small.map((r, i) => item(r, c1 + i))}
-			</div>
+			{title != null && <SectionHeading className="mb-4 truncate">{title}</SectionHeading>}
+			<div className={`grid gap-5 ${t.big}`}>{big.map((r, i) => item(r, i, eager))}</div>
+			<div className={`mt-8 grid gap-3 ${t.medium}`}>{medium.map((r, i) => item(r, c0 + i))}</div>
+			<div className={`mt-8 grid gap-2.5 ${t.small}`}>{small.map((r, i) => item(r, c1 + i))}</div>
 			{dense.length > 0 && (
 				<div className={`mt-8 grid gap-2 ${t.denseCols}`}>
 					{dense.map((r, i) => item(r, c2 + i))}

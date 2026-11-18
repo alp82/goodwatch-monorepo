@@ -1,10 +1,11 @@
 import type { PersonAwards } from "~/server/person-awards"
+import { SectionHeading } from "~/ui/heading"
 
 export function AwardsShelf({ awards }: { awards: PersonAwards | undefined }) {
 	if (!awards?.results.length) return null
 	return (
 		<section aria-label="Awards" className="space-y-3">
-			<h2 className="text-xl font-semibold text-gray-100">Awards</h2>
+			<SectionHeading>Awards</SectionHeading>
 			<p className="text-xs text-gray-400">{awards.note}</p>
 			<ul className="grid gap-3 sm:grid-cols-2">
 				{awards.results.map((award, index) => (
@@ -34,9 +35,7 @@ export function AwardsShelf({ awards }: { awards: PersonAwards | undefined }) {
 							</p>
 						) : null}
 						{award.sources?.length ? (
-							<p className="mt-1 text-[10px] text-gray-500">
-								Source: {award.sources.join(", ")}
-							</p>
+							<p className="mt-1 text-[10px] text-gray-500">Source: {award.sources.join(", ")}</p>
 						) : null}
 					</li>
 				))}

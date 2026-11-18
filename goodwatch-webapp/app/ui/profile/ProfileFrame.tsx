@@ -9,6 +9,7 @@ import { assetUrl } from "~/utils/asset-url"
 // at the top of a visitor's Taste profile. Nothing here may widen a phone's layout.
 import { LINK_SERVICE_INFO, linkUrl } from "./links"
 import { HiddenPart } from "./parts"
+import { SectionHeading } from "~/ui/heading"
 
 const AVATAR_GRADIENT: Record<string, [string, string, string]> = {
 	amber: ["#fbbf24", "#b45309", "#451a03"],
@@ -84,7 +85,7 @@ export function TabHead({
 						{back.label}
 					</Link>
 				)}
-				<h2 className="font-display font-bold text-xl text-white md:text-2xl">{title}</h2>
+				<SectionHeading>{title}</SectionHeading>
 				{line && <p className="mt-0.5 text-sm text-gray-400">{line}</p>}
 			</div>
 			{links && <div className="flex shrink-0 flex-wrap items-center gap-2">{links}</div>}

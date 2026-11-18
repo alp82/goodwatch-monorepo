@@ -1,11 +1,7 @@
 import { useEffect, useState } from "react"
 import { useSearchParams, useRevalidator } from "@remix-run/react"
 import { useInfiniteQuery } from "@tanstack/react-query"
-import {
-	SCORES_PAGE_SIZE,
-	scoresParams,
-	type ScoresChoice,
-} from "~/domain/profile-scores"
+import { SCORES_PAGE_SIZE, scoresParams, type ScoresChoice } from "~/domain/profile-scores"
 import useLocale from "~/utils/locale"
 // The profile's Scores tab: every score grouped by tier. The spread on top is the tier navigator: a bar jumps to its tier
 // (#tier-N, also Overview's link). Movies/Shows/All and a sort apply to every tier; a large tier shows its first 24 until
@@ -14,19 +10,11 @@ import useLocale from "~/utils/locale"
 // score: their tier's heading says it. On the owner's own page the pill shows the GoodWatch score instead.
 import type { ProfileScoresPage, ProfileShell } from "~/domain/profile"
 import { FOLLOW_PHONE_BAR, STICKY_SUBBAR } from "~/ui/layers"
-import { DISPLAY } from "~/ui/my-pages/bits"
 import { ScorePill } from "~/ui/poster-card/ScorePill"
 import { scoreLabels } from "~/utils/ratings"
 import { ImportCta } from "../ImportCta"
-import {
-	ProfilePoster,
-	ScoreChip,
-	Segmented,
-	SortSelect,
-	SpreadBars,
-	TILE,
-	count,
-} from "../parts"
+import { ProfilePoster, ScoreChip, Segmented, SortSelect, SpreadBars, TILE, count } from "../parts"
+import { SectionHeading } from "~/ui/heading"
 
 const TIER_SIZES: [string | null, string][] = [
 	["(min-width: 1280px)", "120px"],
@@ -60,19 +48,15 @@ export function ScoresPage({
 	const setChoice = (patch: Partial<ScoresChoice>) => {
 		const next = new URLSearchParams(params)
 		for (const key of ["type", "sort", "both"]) next.delete(key)
-		for (const [key, value] of scoresParams({ ...page.choice, ...patch }))
-			next.set(key, value)
+		for (const [key, value] of scoresParams({ ...page.choice, ...patch })) next.set(key, value)
 		setParams(next, { preventScrollReset: true })
 	}
 	const jump = (score: number) =>
-		document
-			.getElementById(`tier-${score}`)
-			?.scrollIntoView({ behavior: "smooth", block: "start" })
+		document.getElementById(`tier-${score}`)?.scrollIntoView({ behavior: "smooth", block: "start" })
 	// Overview links to #tier-N: open there once the page is drawn.
 	useEffect(() => {
 		const hash = window.location.hash.slice(1)
-		if (hash.startsWith("tier-"))
-			document.getElementById(hash)?.scrollIntoView({ block: "start" })
+		if (hash.startsWith("tier-")) document.getElementById(hash)?.scrollIntoView({ block: "start" })
 	}, [])
 
 	if (!page.counts.all && !both)
@@ -80,18 +64,14 @@ export function ScoresPage({
 			<>
 				<ImportCta shell={shell} what="ratings" />
 				<p className={`${TILE} px-6 py-14 text-center text-gray-400`}>
-					{owner
-						? "No scores yet."
-						: `@${shell.handle} hasn't scored anything yet.`}
+					{owner ? "No scores yet." : `@${shell.handle} hasn't scored anything yet.`}
 				</p>
 			</>
 		)
 
 	return (
 		<>
-			<div
-				className={`${TILE} grid gap-4 p-4 pt-7 md:grid-cols-[1fr_auto] md:items-end`}
-			>
+			<div className={`${TILE} grid gap-4 p-4 pt-7 md:grid-cols-[1fr_auto] md:items-end`}>
 				<div>
 					<SpreadBars
 						spread={spread}
@@ -99,25 +79,16 @@ export function ScoresPage({
 						onPick={jump}
 						height="h-16 md:h-20"
 					/>
-					<p className="mt-2 text-xs text-gray-500">
-						Pick a bar to jump to its tier.
-					</p>
+					<p className="mt-2 text-xs text-gray-500">Pick a bar to jump to its tier.</p>
 				</div>
 			</div>
 			<ImportCta shell={shell} what="ratings" />
 			{you && (sharedCount > 0 || both) && (
 				<div className="flex flex-wrap items-center gap-2 rounded-xl bg-sky-400/[0.07] px-4 py-3 text-sm text-sky-100 ring-1 ring-sky-400/25">
 					<span className="min-w-0 flex-1">
-						You rated <b>{count(sharedCount)}</b> of these too, and score within
-						a point of @{shell.handle} on <b>{count(agree)}</b>. Your scores
-						show in each poster's pill, as{" "}
-						<ScorePill
-							score={8}
-							mark={null}
-							size="S"
-							className="align-middle"
-						/>
-						.
+						You rated <b>{count(sharedCount)}</b> of these too, and score within a point of @
+						{shell.handle} on <b>{count(agree)}</b>. Your scores show in each poster's pill, as{" "}
+						<ScorePill score={8} mark={null} size="S" className="align-middle" />.
 					</span>
 					<button
 						type="button"
@@ -125,9 +96,7 @@ export function ScoresPage({
 						onClick={() => setChoice({ both: !both })}
 						className={`min-h-9 rounded-full px-3 text-xs font-bold ring-1 ${both ? "bg-sky-400 text-gray-950 ring-sky-400" : "text-sky-200 ring-sky-400/40 hover:bg-sky-400/10"}`}
 					>
-						{both
-							? "Showing titles you both rated"
-							: "Only titles you both rated"}
+						{both ? "Showing titles you both rated" : "Only titles you both rated"}
 					</button>
 				</div>
 			)}
@@ -161,9 +130,7 @@ export function ScoresPage({
 				/>
 			</div>
 
-			{!tiers.length && (
-				<p className="py-8 text-gray-400">No titles match these filters.</p>
-			)}
+			{!tiers.length && <p className="py-8 text-gray-400">No titles match these filters.</p>}
 			{tiers.map((tier, index) => (
 				<ScoreTier
 					key={`${scoresParams(page.choice)}:${tier.score}`}
@@ -223,28 +190,21 @@ function ScoreTier({
 				`/api/profile/${encodeURIComponent(shell.handle)}/scores?${params}`,
 				{ signal },
 			)
-			if (response.status === 409)
-				throw new Error("Scores changed. Refresh scores to continue.")
-			if (!response.ok)
-				throw new Error("Could not load more scores. Retry to continue.")
+			if (response.status === 409) throw new Error("Scores changed. Refresh scores to continue.")
+			if (!response.ok) throw new Error("Could not load more scores. Retry to continue.")
 			const data = (await response.json()) as {
 				page: ProfileScoresPage
 				you: Record<string, number> | null
 			}
 			const tier = data.page.tiers.find((t) => t.score === initial.score)
-			if (!tier)
-				throw new Error("These scores changed. Refresh the page to continue.")
+			if (!tier) throw new Error("These scores changed. Refresh the page to continue.")
 			return { tier, you: data.you }
 		},
 		getNextPageParam: (last) => last.tier.next ?? undefined,
 	})
 	const pages = result.data.pages
 	// Keep cached batches across title navigation. Deduplicate if a rating moved while the reader was away.
-	const titles = [
-		...new Map(
-			pages.flatMap((p) => p.tier.titles).map((t) => [t.key, t]),
-		).values(),
-	]
+	const titles = [...new Map(pages.flatMap((p) => p.tier.titles).map((t) => [t.key, t])).values()]
 	const shown = collapsed ? titles.slice(0, SCORES_PAGE_SIZE) : titles
 	const total = pages[0].tier.total
 	const remaining = Math.max(0, total - shown.length)
@@ -258,12 +218,8 @@ function ScoreTier({
 				<span className="flex h-10 w-10 shrink-0 scale-125 items-center justify-center">
 					<ScoreChip score={initial.score} />
 				</span>
-				<span className={`${DISPLAY} text-2xl`}>
-					{scoreLabels[initial.score]}
-				</span>
-				<span className="text-sm font-bold tabular-nums text-gray-500">
-					{count(total)}
-				</span>
+				<SectionHeading as="span">{scoreLabels[initial.score]}</SectionHeading>
+				<span className="text-sm font-bold tabular-nums text-gray-500">{count(total)}</span>
 			</h2>
 			<ul className="grid grid-cols-4 gap-2.5 sm:grid-cols-6 md:grid-cols-8 xl:grid-cols-10">
 				{shown.map((title, index) => (
@@ -316,11 +272,7 @@ function ScoreTier({
 			{result.isError && (
 				<p role="alert" className="mt-2 text-sm text-red-300">
 					{result.error.message}{" "}
-					<button
-						type="button"
-						className="underline"
-						onClick={() => revalidator.revalidate()}
-					>
+					<button type="button" className="underline" onClick={() => revalidator.revalidate()}>
 						Refresh scores
 					</button>
 				</p>
