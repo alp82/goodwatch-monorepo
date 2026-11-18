@@ -44,7 +44,7 @@ Design diff should show: setup, the join page, the voting deck bar, Matches, Ton
 
 ### Y2: Reds
 
-Status: decided November 18, 2026, with one change. Option B: Nope is a game color with three shades (`#ef4444`, `#f87171`, `#7f1d1d`), and errors, Leave, and Reset share one status color. The owner asked for an error color slightly redder than the prototype's `#ffb4ab`; candidates are being rendered, and the chosen value goes here. Design diff: branch `prototype/yepwatch-design-y2`, page `docs/design/yepwatch-design-diffs/Y2/index.html`.
+Status: decided November 18, 2026. Option B: Nope is a game color with three shades (`#ef4444`, `#f87171`, `#7f1d1d`), and errors, Leave, and Reset share one status color. The error color is `#ffa59e` (round 2 candidate E2): slightly redder than the prototype's `#ffb4ab`, 10.7:1 on `#070707`, and 11.6 ΔE00 from the Nope red, so a failed save doesn't read like a vote. It's close to today's `#fca5a5`. Design diff: branch `prototype/yepwatch-design-y2`, page `docs/design/yepwatch-design-diffs/Y2/index.html`.
 
 About 22 reds are in use. The main ones: `#ef4444` (`glow.red`, redeclared in `glow/EdgeGlow.tsx:17`), `#f87171` (Nope and Leave: `room/Voting.tsx:106,111`, `room/Sheets.tsx:183-190`, `room/YourYeps.tsx:104`), `#fca5a5` (error text: `room/SetupConsole.tsx:214`, `rooms/NewRoom.tsx:107`, `room/MoodComposer.tsx:133`, `room/panels.tsx:54`, `legal/DeleteAccount.tsx:99`), `#ffb2ad` (`colors.danger`), `#dc2626` (trailer play disc), and `#7f1d1d` (vote looks).
 
@@ -70,7 +70,7 @@ Options to prototype: generate the static pages in the app's look; keep the plai
 
 ### Y5: Detail and trailer controls on the poster
 
-Status: decided November 18, 2026, with one change. Option D: one quiet dark glass chip on both widths (white text, an open-outside icon on Details, a small red play disc on Trailer, no amber), beside the card on desktop. The owner asked for a slight vignette or shadow so the chips lift off the poster; variations are being rendered, and the chosen one goes here. Design diff: branch `prototype/yepwatch-design-y5`, page `docs/design/yepwatch-design-diffs/Y5/index.html`.
+Status: decided November 18, 2026. Option D: one quiet dark glass chip on both widths (white text, an open-outside icon on Details, a small red play disc on Trailer, no amber), beside the card on desktop. Round 2 variant D3 adds the lift the owner asked for: a chip shadow of `0 2px 8px` at 30% black, and on phones a scrim inside the poster from 32% black at the top edge to clear over the top 20% of the card. The scrim is a fixed layer that moves with the card's drag transform. On desktop only the chip shadow applies. Design diff: branch `prototype/yepwatch-design-y5`, page `docs/design/yepwatch-design-diffs/Y5/index.html`.
 
 On phones the voting card shows an amber "Details ↗" chip and a white trailer chip with a red play disc (`glow/Poster.tsx:105-135`). On desktop the same controls are outlined, muted chips (`room/Voting.tsx:120`).
 

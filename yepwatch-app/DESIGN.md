@@ -19,7 +19,7 @@ colors:
   muted: "#a3a3a3"
   placeholder: "#6f675b"
   nope: "#f87171"
-  error-text: "#fca5a5"
+  error-text: "#ffa59e"
   red: "#ef4444"
   green: "#22c55e"
   note: "#201c13"
@@ -160,9 +160,9 @@ A warm, near-black room with an amber spotlight on you and a color for each frie
 - **Ink ramp** (`ink`, `soft`, `muted`): primary text, secondary text, and hints. `placeholder` is for field placeholders and currently fails contrast (2.91:1); cleanup.
 
 ### Status and voting
-- **Nope Red** (`nope`): the Nope key's icon and border, and Leave. The Nope key fill is red at 6%.
-- **Error Text** (`error-text`): inline error messages.
-- **Red** (`red`) and **Green** (`green`): the base status tokens in `glow`. About 22 reds are in use; open decision Y2.
+- **Nope Red** (`nope`): the Nope key's icon and border. The Nope key fill is red at 6%. Leave moves to `error-text` (decision Y2).
+- **Error Text** (`error-text`): inline error messages, Leave, and Reset.
+- **Red** (`red`) and **Green** (`green`): the base status tokens in `glow`. About 22 reds are in use. Decision Y2 (November 18, 2026): Nope is a game color in three shades (`#ef4444`, `#f87171`, `#7f1d1d`), and errors, Leave, and Reset share the status color `#ffa59e` (`error-text`); the other reds go away in the follow-up.
 - **Note** (`note`): the floating note behind "Reconnecting…" and "You're offline."
 
 ### Peer colors
@@ -233,6 +233,7 @@ Depth comes from warm tonal steps (Night, Panel, Raised) and thin white lines. S
 - **Deck card:** the poster fills the card. Dragging tilts it up to 16 degrees. Past a third of the width it answers; otherwise it springs back.
 - **Stamps:** eleven YEP and NOPE looks dealt from a shuffled bag, with stamp corners and a black outline.
 - **Vote track:** the bar above the deck. Friends' faces ride along a rail as they answer, with a Yeps chip (amber outline, a check and count, mini posters) and an Undo button.
+- **Poster chips:** Details and Trailer are quiet dark glass chips with white text on both widths: an open-outside icon on Details, a small red play disc on Trailer, no amber, and a `0 2px 8px` shadow at 30% black. On phones they sit on the poster over a scrim (32% black at the top edge, clear by 20% of the card height); on desktop they sit in the question column beside the card. Decision Y5 (November 18, 2026).
 - **MATCH:** a band swung at -8 degrees across the poster, with an amber-orange tint on the poster.
 
 ### Faces
