@@ -1,18 +1,17 @@
-import { Link } from "@remix-run/react"
 import type { ReactNode } from "react"
 import type { PortraitTab, PortraitViewOf } from "~/server/taste-portrait/view"
 import { FLOW_PATH } from "~/ui/rating-flow/flow"
 import { TasteStart } from "../start/TasteStart"
 import { TasteBanner } from "./TasteBanner"
 import { useTasteView } from "./useTasteView"
+import { PrimaryButton } from "~/ui/button/PrimaryButton"
 
 /** Where a person rates titles they've seen. */
 const RATE_PATH = FLOW_PATH
 
 const EMPTY_LINES: Record<PortraitTab, string> = {
 	sides: "Rate a few more titles you love to see what they have in common.",
-	everyone:
-		"Rate a few more titles you love to see where you and everyone part ways.",
+	everyone: "Rate a few more titles you love to see where you and everyone part ways.",
 	fingerprint: "Rate a few more titles you love to see your fingerprint.",
 }
 
@@ -32,10 +31,7 @@ export function TasteTabFrame<T extends PortraitTab>({
 
 	if (!view)
 		return failed ? (
-			<Notice
-				line="Your taste didn't load."
-				action={<RetryButton onClick={retry} />}
-			/>
+			<Notice line="Your taste didn't load." action={<RetryButton onClick={retry} />} />
 		) : (
 			<Loading />
 		)
@@ -48,21 +44,14 @@ export function TasteTabFrame<T extends PortraitTab>({
 		)
 
 	// A member without a taste yet starts it here, one title at a time.
-	if (
-		tab === "sides" &&
-		view.status === "empty" &&
-		view.subject.kind === "member"
-	)
+	if (tab === "sides" && view.status === "empty" && view.subject.kind === "member")
 		return <TasteStart />
 
 	return (
 		<div className="pb-32 text-white">
 			<TasteBanner member={view.subject.kind === "member"} />
 			{view.status === "empty" ? (
-				<Notice
-					line={EMPTY_LINES[tab]}
-					action={<RateLink>Rate titles</RateLink>}
-				/>
+				<Notice line={EMPTY_LINES[tab]} action={<RateLink>Rate titles</RateLink>} />
 			) : (
 				children(view)
 			)}
@@ -70,17 +59,14 @@ export function TasteTabFrame<T extends PortraitTab>({
 	)
 }
 
-function RateLink({
-	children,
-	small = false,
-}: { children: ReactNode; small?: boolean }) {
+function RateLink({ children, small = false }: { children: ReactNode; small?: boolean }) {
 	return (
-		<Link
+		<PrimaryButton
 			to={RATE_PATH}
-			className={`inline-flex min-h-11 items-center rounded-full bg-linear-to-b from-amber-400 to-amber-600 font-black text-gray-950 hover:brightness-110 md:min-h-9 ${small ? "px-4 text-sm" : "px-5 text-base"}`}
+			className={`inline-flex min-h-11 items-center md:min-h-9 ${small ? "px-4 text-sm" : "px-5 text-base"}`}
 		>
 			{children}
-		</Link>
+		</PrimaryButton>
 	)
 }
 

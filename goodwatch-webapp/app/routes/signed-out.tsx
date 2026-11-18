@@ -1,8 +1,8 @@
 // Where sign-out lands: the little living room says good night, then switches itself off (ui/tv-egg/SignedOutTv).
 import type { MetaFunction } from "@remix-run/node"
-import { Link } from "@remix-run/react"
 import { LazyTv } from "~/ui/tv-egg/LazyTv"
 import { type PageMeta, buildMeta } from "~/utils/meta"
+import { PrimaryButton } from "~/ui/button/PrimaryButton"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -26,9 +26,9 @@ export default function SignedOut() {
 			plain={
 				<div className="mx-auto flex max-w-xl flex-col items-center px-4 py-24 text-center">
 					<p className="text-3xl font-bold text-gray-100">You're signed out</p>
-					<Link to="/sign-in" className="mt-6 rounded-xl bg-amber-400 px-5 py-3 text-sm font-bold text-black hover:bg-amber-300">
+					<PrimaryButton to="/sign-in" className="mt-6 px-5 py-3 text-sm">
 						Sign in
-					</Link>
+					</PrimaryButton>
 				</div>
 			}
 		/>

@@ -4,14 +4,16 @@
 import { ChevronRightIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import type { ReactNode } from "react"
+import { primaryButtonClass } from "~/ui/button/PrimaryButton"
 
 /** The strip's surface, for strips that hold more than one line (onboarding's steps on desktop). */
 export const STRIP_SURFACE =
 	"border-b border-amber-300/20 bg-linear-to-r from-amber-500/20 via-rose-500/10 to-violet-500/20 text-white"
-export const STRIP_INNER =
-	"mx-auto flex max-w-7xl items-center gap-3 px-4 py-2.5 sm:gap-4"
-export const STRIP_BUTTON =
-	"inline-flex min-h-9 cursor-pointer items-center justify-center gap-1 rounded-full bg-amber-400 px-4 text-sm font-black whitespace-nowrap text-gray-950 hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-50"
+export const STRIP_INNER = "mx-auto flex max-w-7xl items-center gap-3 px-4 py-2.5 sm:gap-4"
+export const STRIP_BUTTON = primaryButtonClass(
+	"pill",
+	"inline-flex min-h-9 cursor-pointer items-center justify-center gap-1 px-4 text-sm whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-50",
+)
 export const STRIP_QUIET =
 	"inline-flex min-h-9 cursor-pointer items-center justify-center rounded-full px-3 text-sm font-semibold whitespace-nowrap text-white/75 hover:bg-white/10 hover:text-white"
 
@@ -46,20 +48,13 @@ export function SiteStrip({
 	role?: "status" | "alert"
 }) {
 	return (
-		<aside
-			aria-label={label}
-			role={role}
-			className={`${STRIP_SURFACE} ${className}`}
-		>
+		<aside aria-label={label} role={role} className={`${STRIP_SURFACE} ${className}`}>
 			<div className={`${STRIP_INNER} flex-wrap sm:flex-nowrap`}>
 				{lead}
 				<p className="min-w-0 flex-1 basis-56 text-sm leading-snug">
-					<b>{title}</b>{" "}
-					{children && <span className="text-white/75">{children}</span>}
+					<b>{title}</b> {children && <span className="text-white/75">{children}</span>}
 				</p>
-				{actions && (
-					<div className="flex shrink-0 items-center gap-1">{actions}</div>
-				)}
+				{actions && <div className="flex shrink-0 items-center gap-1">{actions}</div>}
 			</div>
 		</aside>
 	)
@@ -96,10 +91,7 @@ export function SiteStripLink({
 						aria-hidden
 					/>
 				</span>
-				<ChevronRightIcon
-					className="size-5 shrink-0 text-amber-300 sm:hidden"
-					aria-hidden
-				/>
+				<ChevronRightIcon className="size-5 shrink-0 text-amber-300 sm:hidden" aria-hidden />
 			</span>
 		</Link>
 	)

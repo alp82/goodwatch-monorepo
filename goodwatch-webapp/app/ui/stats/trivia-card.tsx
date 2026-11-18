@@ -12,6 +12,7 @@ import { DISPLAY } from "~/ui/my-pages/style"
 import { PosterImg } from "~/ui/profile/parts"
 import { PANEL, Pills } from "~/ui/profile/taste/parts"
 import type { SizeRule } from "~/utils/tmdb-image"
+import { PrimaryButton } from "~/ui/button/PrimaryButton"
 
 /** One ranked answer. `poster` draws the shared card for #1; without it, the answer is a figure. */
 export interface Entry {
@@ -109,23 +110,19 @@ export function TriviaCard({ t }: { t: Trivia }) {
 					<p className="text-sm text-gray-400">{side.fact}</p>
 					{side.below}
 					{runners.length > 0 && (
-						<Runners
-							entries={runners}
-							open={open}
-							onToggle={() => setOpen((o) => !o)}
-						/>
+						<Runners entries={runners} open={open} onToggle={() => setOpen((o) => !o)} />
 					)}
 				</div>
 				{covered && (
 					<div className="absolute inset-0 flex items-start justify-center pt-10">
-						<button
+						<PrimaryButton
 							type="button"
 							data-reveal
 							onClick={() => setShown(true)}
-							className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-linear-to-b from-amber-400 to-amber-600 px-4 text-sm font-black text-gray-950 hover:brightness-110"
+							className="inline-flex min-h-10 items-center gap-1.5 px-4 text-sm"
 						>
 							Show the answer
-						</button>
+						</PrimaryButton>
 					</div>
 				)}
 			</div>
@@ -155,18 +152,12 @@ function Answer({ e }: { e: Entry }) {
 			)}
 			<div className="flex min-w-0 flex-col gap-1.5">
 				<p className="flex flex-col">
-					<span
-						data-figure
-						className="text-4xl font-black text-white tabular-nums sm:text-5xl"
-					>
+					<span data-figure className="text-4xl font-black text-white tabular-nums sm:text-5xl">
 						{e.value}
 					</span>
 					{e.unit && <span className="text-sm text-gray-400">{e.unit}</span>}
 				</p>
-				<NameLink
-					e={e}
-					className="text-base font-bold text-white hover:text-amber-300"
-				/>
+				<NameLink e={e} className="text-base font-bold text-white hover:text-amber-300" />
 				{e.sub && <span className="-mt-1 text-xs text-gray-500">{e.sub}</span>}
 				{e.extra}
 			</div>
@@ -218,10 +209,7 @@ function Runners({
 							</span>
 							{posters && (
 								<span className="block w-7 shrink-0">
-									<PosterImg
-										title={{ poster: e.poster?.poster ?? null }}
-										className="rounded-sm"
-									/>
+									<PosterImg title={{ poster: e.poster?.poster ?? null }} className="rounded-sm" />
 								</span>
 							)}
 							<span className="flex min-w-0 flex-1 flex-col">
@@ -229,11 +217,7 @@ function Runners({
 									e={e}
 									className="truncate text-sm font-semibold text-gray-200 hover:text-white"
 								/>
-								{e.sub && (
-									<span className="truncate text-[11px] text-gray-500">
-										{e.sub}
-									</span>
-								)}
+								{e.sub && <span className="truncate text-[11px] text-gray-500">{e.sub}</span>}
 							</span>
 							<span className="shrink-0 text-xs text-gray-400 tabular-nums">
 								<b className="text-white">{e.value}</b>
@@ -245,17 +229,9 @@ function Runners({
 				<ol className="grid grid-cols-4 gap-2">
 					{entries.map((e, i) => (
 						<li key={e.key} className="min-w-0">
-							<Link
-								to={e.href ?? "#"}
-								prefetch="intent"
-								className="group block"
-								title={e.name}
-							>
+							<Link to={e.href ?? "#"} prefetch="intent" className="group block" title={e.name}>
 								<span className="relative block">
-									<PosterImg
-										title={{ poster: e.poster?.poster ?? null }}
-										className="rounded-sm"
-									/>
+									<PosterImg title={{ poster: e.poster?.poster ?? null }} className="rounded-sm" />
 									<span className="absolute top-1 left-1 rounded bg-gray-950/80 px-1 text-[10px] font-black text-amber-300 tabular-nums">
 										№ {i + 2}
 									</span>

@@ -20,7 +20,7 @@
 // lifts it into its quick view (ForYouQuickView.tsx).
 //
 // No totals or counts anywhere; the recipe tiles never move while you steer.
-import { Link, useRevalidator, useSearchParams } from "@remix-run/react"
+import { useRevalidator, useSearchParams } from "@remix-run/react"
 import { useQueryClient } from "@tanstack/react-query"
 import { AnimatePresence, animate, motion, useMotionValue } from "framer-motion"
 import {
@@ -48,20 +48,10 @@ import { DragHint } from "./DragHint"
 import { type GuestLoader, GuestLock } from "./GuestLock"
 import { HandlePrint } from "./HandlePrint"
 import { Heading, PhoneHeadingRow } from "./Heading"
-import {
-	LazyQuickView,
-	usePreloadDetailSurfaces,
-} from "./LazyDetail"
+import { LazyQuickView, usePreloadDetailSurfaces } from "./LazyDetail"
 import { PickContext } from "./PickTap"
 import { Results } from "./Results"
-import {
-	Dice,
-	LivePill,
-	ResetIcon,
-	SPRING,
-	type Sheet,
-	TasteBar,
-} from "./TasteBar"
+import { Dice, LivePill, ResetIcon, SPRING, type Sheet, TasteBar } from "./TasteBar"
 import {
 	type DetailsLoader,
 	ForYouContext,
@@ -75,6 +65,7 @@ import {
 import { DIM, DIM_IN, DIM_OUT, SHEET_IN, SHEET_OUT } from "./motion"
 import { inNestedDialog, useFocusScope } from "./focus"
 import { DESK_NARROW, type Surface, useSteering } from "./useSteering"
+import { PrimaryButton } from "~/ui/button/PrimaryButton"
 
 const SWAP = { type: "spring", stiffness: 420, damping: 40 } as const
 
@@ -106,12 +97,7 @@ function useSquare(min = 160) {
 	useEffect(() => {
 		if (!el) return
 		const ro = new ResizeObserver(([e]) =>
-			setSide(
-				Math.max(
-					min,
-					Math.floor(Math.min(e.contentRect.width, e.contentRect.height)),
-				),
-			),
+			setSide(Math.max(min, Math.floor(Math.min(e.contentRect.width, e.contentRect.height)))),
 		)
 		ro.observe(el)
 		return () => ro.disconnect()
@@ -122,9 +108,7 @@ function useSquare(min = 160) {
 /** The site's bottom nav height (MobileDock publishes it), 72 px when it isn't there yet. */
 const dockHeight = () =>
 	Number.parseFloat(
-		getComputedStyle(document.documentElement).getPropertyValue(
-			"--nav-dock-height",
-		),
+		getComputedStyle(document.documentElement).getPropertyValue("--nav-dock-height"),
 	) || 72
 
 /** Where the drawer starts: just under the strip's second row, or its first row on short phones. */
@@ -158,11 +142,7 @@ export function ForYouPage({
 	if (data.kind === "guest") return <GuestLock load={loadGuest} />
 	if (data.status === "ready")
 		return (
-			<Steering
-				pool={data.pool}
-				taste={data.taste}
-				loadDetails={loadDetails ?? fetchDetails}
-			/>
+			<Steering pool={data.pool} taste={data.taste} loadDetails={loadDetails ?? fetchDetails} />
 		)
 	return <Unready status={data.status} />
 }
@@ -181,12 +161,12 @@ function Unready({ status }: { status: "empty" | "unavailable" }) {
 						<p className="text-[15px] leading-6 text-gray-300">
 							Rate a few titles you love to get picks.
 						</p>
-						<Link
+						<PrimaryButton
 							to="/taste/quiz"
-							className="mt-4 inline-flex min-h-11 items-center rounded-full bg-amber-400 px-5 text-[14px] font-black text-gray-950 hover:bg-amber-300"
+							className="mt-4 inline-flex min-h-11 items-center px-5 text-[14px]"
 						>
 							Rate titles
-						</Link>
+						</PrimaryButton>
 					</>
 				) : (
 					<>
@@ -220,17 +200,11 @@ function Steering({
 	const pool = useMemo(
 		() => ({
 			...rawPool,
-			fingerprints: decodeFingerprints(
-				rawPool.fingerprints,
-				rawPool.keys.length,
-			),
+			fingerprints: decodeFingerprints(rawPool.fingerprints, rawPool.keys.length),
 		}),
 		[rawPool],
 	)
-	const stats = useMemo(
-		() => poolStats(pool.fingerprints, pool.keys.length),
-		[pool],
-	)
+	const stats = useMemo(() => poolStats(pool.fingerprints, pool.keys.length), [pool])
 	const desk = useIsDesk()
 	const navigation = useNavigation()
 	const [params, setParams] = useSearchParams()
@@ -239,8 +213,7 @@ function Steering({
 	const [sheet, setSheetState] = useState<Sheet>(null)
 	const sheetRef = useRef(sheet)
 	const surface = useCallback(
-		(): Surface =>
-			isDesk() ? "desk" : sheetRef.current === "recipes" ? "drawer" : "bar",
+		(): Surface => (isDesk() ? "desk" : sheetRef.current === "recipes" ? "drawer" : "bar"),
 		[],
 	)
 	// ?recipe= follows the recipe a pick, drag, dice or Reset lands on (replace, no scroll); handle levels stay out of
@@ -309,9 +282,7 @@ function Steering({
 	)
 	const detail = useCallback(
 		(key: string) =>
-			queryClient.getQueryData<ReturnType<ForYouContextValue["detail"]>>(
-				detailQueryKey(key),
-			),
+			queryClient.getQueryData<ReturnType<ForYouContextValue["detail"]>>(detailQueryKey(key)),
 		[queryClient],
 	)
 	const ctx = useMemo<ForYouContextValue>(
@@ -331,8 +302,7 @@ function Steering({
 	const topRef = useRef(ranked)
 	topRef.current = ranked
 	useEffect(() => {
-		const go = () =>
-			prefetch(topRef.current.slice(0, 12).map((r) => pool.keys[r.index]))
+		const go = () => prefetch(topRef.current.slice(0, 12).map((r) => pool.keys[r.index]))
 		if (typeof window.requestIdleCallback === "function") {
 			const id = window.requestIdleCallback(go, { timeout: 3000 })
 			return () => window.cancelIdleCallback(id)
@@ -344,10 +314,7 @@ function Steering({
 	// ---------- the open pick ----------
 	const [openKey, setOpenKey] = useState<string | null>(null)
 	const closePick = useCallback(() => setOpenKey(null), [])
-	const openPick = useCallback(
-		(r: Ranked) => setOpenKey(pool.keys[r.index]),
-		[pool],
-	)
+	const openPick = useCallback((r: Ranked) => setOpenKey(pool.keys[r.index]), [pool])
 	const togglePick = useCallback(
 		(r: Ranked) => {
 			const key = pool.keys[r.index]
@@ -355,10 +322,7 @@ function Steering({
 		},
 		[pool],
 	)
-	const pickApi = useMemo(
-		() => ({ openId: openKey, toggle: togglePick }),
-		[openKey, togglePick],
-	)
+	const pickApi = useMemo(() => ({ openId: openKey, toggle: togglePick }), [openKey, togglePick])
 	// Crossing the desktop breakpoint closes the pick and the drawers: each screen size has its own surfaces.
 	const [deskSeen, setDeskSeen] = useState(desk)
 	if (deskSeen !== desk) {
@@ -403,8 +367,7 @@ function Steering({
 	const openSheet = (s: Exclude<Sheet, null>) => {
 		if (sheetRef.current === s) return closeSheet()
 		const from = document.activeElement
-		if (from instanceof HTMLElement && bar.current?.contains(from))
-			sheetFrom.current = from
+		if (from instanceof HTMLElement && bar.current?.contains(from)) sheetFrom.current = from
 		setOpenKey(null)
 		// The tiles re-sort only on the way in, never under a finger.
 		if (s === "recipes") steering.sortDrawer()
@@ -579,10 +542,7 @@ function Steering({
 			<>
 				{tile?.name ?? "For you"}
 				{tweak && (
-					<span className="font-sans text-[0.8em] font-normal text-gray-400">
-						{" "}
-						· {tweak}
-					</span>
+					<span className="font-sans text-[0.8em] font-normal text-gray-400"> · {tweak}</span>
 				)}
 			</>
 		)
@@ -600,10 +560,7 @@ function Steering({
 
 				{/* Desktop: the print fills a column as tall as the two tile rows; the dice top left, Reset bottom left. */}
 				<div className="hidden lg:grid lg:grid-cols-[19rem_minmax(0,1fr)] lg:gap-8 xl:grid-cols-[20.25rem_minmax(0,1fr)] xl:gap-10">
-					<div
-						ref={deskBox}
-						className="relative grid h-[20.25rem] min-w-0 place-items-center"
-					>
+					<div ref={deskBox} className="relative grid h-[20.25rem] min-w-0 place-items-center">
 						<div
 							ref={deskHost}
 							className="relative"
@@ -626,11 +583,7 @@ function Steering({
 						<div className="absolute top-0 left-0">
 							<Dice rolls={rolls} onRoll={roll} small />
 						</div>
-						<ResetIcon
-							on={touched}
-							onClick={reset}
-							className="absolute bottom-0 left-0"
-						/>
+						<ResetIcon on={touched} onClick={reset} className="absolute bottom-0 left-0" />
 					</div>
 					<div className="grid min-w-0 grid-cols-4 grid-rows-2 gap-3 xl:grid-cols-5">
 						{steering.deskIds.map((id, i) => {
@@ -723,9 +676,7 @@ function Steering({
 							key="sheet"
 							// biome-ignore lint/a11y/useSemanticElements: a sliding drawer, not a modal <dialog>
 							role="dialog"
-							aria-label={
-								sheet === "print" ? "Your taste print" : "Pick a mood"
-							}
+							aria-label={sheet === "print" ? "Your taste print" : "Pick a mood"}
 							ref={sheetEl}
 							tabIndex={-1}
 							initial={{ y: "100%" }}
@@ -744,20 +695,13 @@ function Steering({
 									className="flex h-6 shrink-0 cursor-grab touch-none items-center justify-center"
 									data-sheet-grab=""
 								>
-									<span
-										aria-hidden="true"
-										className="h-1 w-10 rounded-full bg-white/25"
-									/>
+									<span aria-hidden="true" className="h-1 w-10 rounded-full bg-white/25" />
 								</div>
 								<div className="relative min-h-0 flex-1 overflow-hidden">
 									<AnimatePresence initial={false}>
 										{sheet === "recipes" ? (
 											<Panel key="recipes" side={-1}>
-												<PanelHead
-													title="Pick a mood"
-													onDone={closeSheet}
-													grab={grab}
-												>
+												<PanelHead title="Pick a mood" onDone={closeSheet} grab={grab}>
 													<button
 														type="button"
 														onClick={reset}
@@ -804,14 +748,13 @@ function Steering({
 														<LivePill r={liveSheet} className="top-1" />
 														<DragHint host={sheetHost} play={sheetHint} />
 													</div>
-													<button
-														type="button"
+													<PrimaryButton
 														onClick={closeSheet}
-														className="absolute top-0 right-3 min-h-10 rounded-full bg-amber-400 px-3.5 text-[13px] font-black text-gray-950 hover:bg-amber-300"
+														className="absolute top-0 right-3 min-h-10 px-3.5 text-[13px]"
 														data-done=""
 													>
 														Done
-													</button>
+													</PrimaryButton>
 													<ResetIcon
 														on={touched}
 														onClick={reset}
@@ -854,10 +797,7 @@ function Steering({
 
 // ---------- the drawer's middle: one panel per drawer, the recipes on the left, the print on the right ----------
 
-function Panel({
-	side,
-	children,
-}: { side: -1 | 1; children: React.ReactNode }) {
+function Panel({ side, children }: { side: -1 | 1; children: React.ReactNode }) {
 	return (
 		<motion.div
 			initial={{ opacity: 0, x: side * 56 }}
@@ -891,24 +831,14 @@ function PanelHead({
 	children?: React.ReactNode
 }) {
 	return (
-		<div
-			{...grab}
-			className="flex shrink-0 touch-none items-center gap-1.5 px-4 pb-2"
-		>
-			<h2
-				className={`${DISPLAY} min-w-0 flex-1 truncate text-[1.2rem] leading-tight text-white`}
-			>
+		<div {...grab} className="flex shrink-0 touch-none items-center gap-1.5 px-4 pb-2">
+			<h2 className={`${DISPLAY} min-w-0 flex-1 truncate text-[1.2rem] leading-tight text-white`}>
 				{title}
 			</h2>
 			{children}
-			<button
-				type="button"
-				onClick={onDone}
-				className="min-h-11 shrink-0 rounded-full bg-amber-400 px-4 text-[14px] font-black text-gray-950 hover:bg-amber-300"
-				data-done=""
-			>
+			<PrimaryButton onClick={onDone} className="min-h-11 shrink-0 px-4 text-[14px]" data-done="">
 				Done
-			</button>
+			</PrimaryButton>
 		</div>
 	)
 }
@@ -931,15 +861,10 @@ function RecipeGrid({
 	const box = useRef<HTMLDivElement>(null)
 	// Coming back from the print: the picked tile in view.
 	useEffect(() => {
-		box.current
-			?.querySelector('[aria-pressed="true"]')
-			?.scrollIntoView({ block: "nearest" })
+		box.current?.querySelector('[aria-pressed="true"]')?.scrollIntoView({ block: "nearest" })
 	}, [])
 	return (
-		<div
-			ref={box}
-			className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-1 pb-3"
-		>
+		<div ref={box} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-1 pb-3">
 			<div className="grid grid-cols-2 gap-2.5" data-recipe-tiles="">
 				{ids.map((id) => {
 					const m = byId.get(id)
@@ -998,9 +923,7 @@ const RecipeTile = forwardRef<HTMLButtonElement, TileProps>(function RecipeTile(
 				className="pointer-events-none absolute inset-0 rounded-2xl bg-amber-400/[0.08] ring-2 ring-amber-400 ring-inset transition-opacity duration-300"
 				style={{ opacity: on ? 1 : 0 }}
 			/>
-			<span
-				className={`${DISPLAY} relative line-clamp-2 text-[1.02rem] leading-[1.12] text-white`}
-			>
+			<span className={`${DISPLAY} relative line-clamp-2 text-[1.02rem] leading-[1.12] text-white`}>
 				{m.name}
 			</span>
 			<span className="relative mt-auto flex items-end gap-2">
@@ -1036,10 +959,7 @@ const RecipeTile = forwardRef<HTMLButtonElement, TileProps>(function RecipeTile(
 						style={{ color: m.hue }}
 						title="From your taste"
 					>
-						<span
-							className="size-1.5 rounded-full"
-							style={{ background: m.hue }}
-						/>
+						<span className="size-1.5 rounded-full" style={{ background: m.hue }} />
 						Yours
 					</span>
 				)}

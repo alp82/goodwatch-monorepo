@@ -32,7 +32,6 @@ import {
 	useRef,
 	useState,
 } from "react"
-import { PrimaryButton } from "~/ui/auth/PrimaryButton"
 import { useUser } from "~/utils/auth"
 import { AreaFlow } from "./AreaFlow"
 import type { DockProps } from "./FeedbackTab"
@@ -49,15 +48,9 @@ import {
 	INPUT,
 	thanksLine,
 	useSender,
+	SendButton,
 } from "./kit"
-import {
-	Outlines,
-	Spotlight,
-	areaElements,
-	findArea,
-	findSpot,
-	lc,
-} from "./page-layer"
+import { Outlines, Spotlight, areaElements, findArea, findSpot, lc } from "./page-layer"
 import { isRichArea } from "./problems"
 import { buildMessageRequest, emailProblem } from "./request"
 import { captureScreen } from "./screenshot"
@@ -66,9 +59,7 @@ import { useFeedbackSubject } from "./subject"
 type Kind = "bug" | "idea"
 
 function useIsWide() {
-	const [wide, setWide] = useState(
-		() => window.matchMedia("(min-width: 768px)").matches,
-	)
+	const [wide, setWide] = useState(() => window.matchMedia("(min-width: 768px)").matches)
 	useEffect(() => {
 		const m = window.matchMedia("(min-width: 768px)")
 		const on = () => setWide(m.matches)
@@ -84,7 +75,9 @@ function useIsWide() {
 /** A preview of exactly the screenshot that gets sent, taken when the option turns on. */
 function ScreenshotPreview({
 	shot,
-}: { shot: { state: "busy" | "failed" } | { state: "ready"; data: string } }) {
+}: {
+	shot: { state: "busy" | "failed" } | { state: "ready"; data: string }
+}) {
 	return (
 		<div
 			className="relative grid aspect-video max-h-44 w-full place-items-center overflow-hidden rounded-lg bg-gray-900 ring-1 ring-white/15"
@@ -111,7 +104,11 @@ function Switch({
 	on,
 	onChange,
 	label,
-}: { on: boolean; onChange: (v: boolean) => void; label: string }) {
+}: {
+	on: boolean
+	onChange: (v: boolean) => void
+	label: string
+}) {
 	return (
 		<button
 			type="button"
@@ -133,10 +130,7 @@ function Switch({
 	)
 }
 
-function KindTabs({
-	kind,
-	setKind,
-}: { kind: Kind; setKind: (k: Kind) => void }) {
+function KindTabs({ kind, setKind }: { kind: Kind; setKind: (k: Kind) => void }) {
 	return (
 		<fieldset className="flex rounded-full bg-white/8 p-0.5 text-sm">
 			<legend className="sr-only">Kind</legend>
@@ -167,10 +161,7 @@ type Shot =
 	| { state: "ready"; data: string }
 
 /** One text box, bug or idea, an optional screenshot and, for guests, an optional email. */
-function FeedbackForm({
-	onClose,
-	guest,
-}: { onClose: () => void; guest: boolean }) {
+function FeedbackForm({ onClose, guest }: { onClose: () => void; guest: boolean }) {
 	const [kind, setKind] = useState<Kind>("bug")
 	const [text, setText] = useState("")
 	const [shot, setShot] = useState<Shot>({ state: "off" })
@@ -184,8 +175,7 @@ function FeedbackForm({
 		setShot({ state: "busy" })
 		captureScreen().then(
 			(data) => {
-				if (run.current === id)
-					setShot(data ? { state: "ready", data } : { state: "failed" })
+				if (run.current === id) setShot(data ? { state: "ready", data } : { state: "failed" })
 			},
 			() => {
 				if (run.current === id) setShot({ state: "failed" })
@@ -200,12 +190,8 @@ function FeedbackForm({
 						<CheckCircleIcon className="size-6" aria-hidden />
 					</span>
 					<div aria-live="polite">
-						<p className="text-lg font-semibold text-white">
-							Thanks! It's with us.
-						</p>
-						<p className="mt-0.5 text-sm text-gray-400">
-							{thanksLine(guest, email)}
-						</p>
+						<p className="text-lg font-semibold text-white">Thanks! It's with us.</p>
+						<p className="mt-0.5 text-sm text-gray-400">{thanksLine(guest, email)}</p>
 					</div>
 				</div>
 				<div className="flex gap-2">
@@ -256,24 +242,17 @@ function FeedbackForm({
 				maxLength={8000}
 				aria-label="Your message"
 				placeholder={
-					kind === "bug"
-						? "What happened, and where?"
-						: "What would make GoodWatch better for you?"
+					kind === "bug" ? "What happened, and where?" : "What would make GoodWatch better for you?"
 				}
 				className={`${INPUT} py-2.5`}
 			/>
 			<div className="flex flex-col gap-3 rounded-xl bg-white/[0.04] p-3 ring-1 ring-white/10">
-				<Switch
-					on={shot.state !== "off"}
-					onChange={toggleShot}
-					label="Include a screenshot"
-				/>
+				<Switch on={shot.state !== "off"} onChange={toggleShot} label="Include a screenshot" />
 				{shot.state !== "off" ? (
 					<>
 						<ScreenshotPreview shot={shot} />
 						<p className="text-xs text-gray-500">
-							This is what we get. What you type and members' pictures are left
-							out.
+							This is what we get. What you type and members' pictures are left out.
 						</p>
 					</>
 				) : (
@@ -282,29 +261,18 @@ function FeedbackForm({
 					</p>
 				)}
 			</div>
-			{guest && (
-				<GuestEmail
-					value={email}
-					onChange={setEmail}
-					invalid={emailProblem(email)}
-				/>
-			)}
+			{guest && <GuestEmail value={email} onChange={setEmail} invalid={emailProblem(email)} />}
 			<p className="text-xs text-gray-500">
 				We also get the page address, your browser and the app version.
 			</p>
 			<FailureLine failure={sender.failure} />
-			<PrimaryButton
-				type="button"
+			<SendButton
+				sending={sender.sending}
 				disabled={
-					!text.trim() ||
-					shot.state === "busy" ||
-					(guest && emailProblem(email)) ||
-					sender.sending
+					!text.trim() || shot.state === "busy" || (guest && emailProblem(email)) || sender.sending
 				}
 				onClick={send}
-			>
-				{sender.sending ? "Sending…" : "Send"}
-			</PrimaryButton>
+			/>
 		</div>
 	)
 }
@@ -318,7 +286,12 @@ function Choice({
 	title,
 	body,
 	onClick,
-}: { icon: ReactNode; title: string; body: string; onClick: () => void }) {
+}: {
+	icon: ReactNode
+	title: string
+	body: string
+	onClick: () => void
+}) {
 	return (
 		<button
 			type="button"
@@ -349,9 +322,7 @@ function AreaList({ fix }: { fix: FixPath }) {
 		for (const el of document.querySelectorAll("[data-fix-overlay][data-hot]"))
 			el.removeAttribute("data-hot")
 		if (id)
-			document
-				.querySelector(`[data-fix-overlay="${CSS.escape(id)}"]`)
-				?.setAttribute("data-hot", "")
+			document.querySelector(`[data-fix-overlay="${CSS.escape(id)}"]`)?.setAttribute("data-hot", "")
 	}
 	useEffect(() => () => light(null), [])
 	return (
@@ -375,8 +346,7 @@ function AreaList({ fix }: { fix: FixPath }) {
 									fix.setHot(a.id)
 								}}
 								onPointerMove={(e) => {
-									if (e.pointerType !== "mouse" || moved.current === a.id)
-										return
+									if (e.pointerType !== "mouse" || moved.current === a.id) return
 									moved.current = a.id
 									if (fix.hot !== a.id) fix.setHot(a.id)
 									fix.reveal(a.id)
@@ -430,10 +400,8 @@ function AreaList({ fix }: { fix: FixPath }) {
 	)
 }
 
-const useIsoLayoutEffect =
-	typeof window === "undefined" ? useEffect : useLayoutEffect
-const reducedMotion = () =>
-	window.matchMedia("(prefers-reduced-motion: reduce)").matches
+const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect
+const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
 /** Corner radius of the drawer. */
 const R = 16
@@ -451,20 +419,16 @@ function boxFor(tab: HTMLElement, wide: boolean): Box {
 	const T = tab.getBoundingClientRect()
 	// The tab is fixed to the right edge, so the drawer's right edge sits the tab's width further in (layout sizes, so a
 	// scrollbar or a hover transform can't throw it off).
-	const right =
-		(Number.parseFloat(getComputedStyle(tab).right) || 0) + tab.offsetWidth
+	const right = (Number.parseFloat(getComputedStyle(tab).right) || 0) + tab.offsetWidth
 	// Fix mode scrolls the header away; its bottom is then above the window.
 	const header = Math.max(
 		0,
-		document.querySelector("[data-site-header]")?.getBoundingClientRect()
-			.bottom ?? 0,
+		document.querySelector("[data-site-header]")?.getBoundingClientRect().bottom ?? 0,
 	)
 	const dock = wide
 		? 0
 		: Number.parseFloat(
-				getComputedStyle(document.documentElement).getPropertyValue(
-					"--nav-dock-height",
-				),
+				getComputedStyle(document.documentElement).getPropertyValue("--nav-dock-height"),
 			) || 0
 	const top = Math.max(0, header) + 8
 	const left = wide ? Math.max(8, T.left - 384) : 8
@@ -566,19 +530,13 @@ function useDrawer(
 			anims.current = [main]
 		} else {
 			main = p.animate(
-				[
-					{ clipPath: edgeClip(b, s, b.width) },
-					{ clipPath: edgeClip(b, s, 0) },
-				],
+				[{ clipPath: edgeClip(b, s, b.width) }, { clipPath: edgeClip(b, s, 0) }],
 				timing,
 			)
 			anims.current = [
 				main,
 				f.animate(
-					[
-						{ clipPath: surfaceClip(b, s, b.width) },
-						{ clipPath: surfaceClip(b, s, 0) },
-					],
+					[{ clipPath: surfaceClip(b, s, b.width) }, { clipPath: surfaceClip(b, s, 0) }],
 					timing,
 				),
 				c.animate(
@@ -602,14 +560,7 @@ function useDrawer(
 		const from = shape.current
 		const to = shapeFor(t, b, c.offsetHeight + 2)
 		shape.current = to
-		if (
-			from &&
-			from.y === to.y &&
-			from.h === to.h &&
-			from.tr === to.tr &&
-			from.br === to.br
-		)
-			return
+		if (from && from.y === to.y && from.h === to.h && from.tr === to.tr && from.br === to.br) return
 		// Mid-open: aim the running opening at the new shape.
 		if (anims.current.length) {
 			const [m, f, k] = anims.current as [Animation, Animation, Animation?]
@@ -637,16 +588,10 @@ function useDrawer(
 			timing,
 		)
 		surface.current?.animate(
-			[
-				{ clipPath: surfaceClip(b, from, 0) },
-				{ clipPath: surfaceClip(b, to, 0) },
-			],
+			[{ clipPath: surfaceClip(b, from, 0) }, { clipPath: surfaceClip(b, to, 0) }],
 			timing,
 		)
-		c.animate(
-			[{ transform: cardMove(from, 0) }, { transform: cardMove(to, 0) }],
-			timing,
-		)
+		c.animate([{ transform: cardMove(from, 0) }, { transform: cardMove(to, 0) }], timing)
 	}
 	const toggle = (opening: boolean) => {
 		if (want.current === opening) return
@@ -822,10 +767,8 @@ function Drawer({
 		const id = requestAnimationFrame(() => {
 			const body = bodyRef.current
 			if (!body) return
-			if (current === "fix" && !pickedId)
-				return body.focus({ preventScroll: true })
-			const target =
-				body.querySelector<HTMLElement>(FOCUSABLE) ?? closeRef.current
+			if (current === "fix" && !pickedId) return body.focus({ preventScroll: true })
+			const target = body.querySelector<HTMLElement>(FOCUSABLE) ?? closeRef.current
 			target?.focus({ preventScroll: true })
 		})
 		return () => cancelAnimationFrame(id)
@@ -837,9 +780,7 @@ function Drawer({
 			const sheet = document.querySelector("[data-fix-sheet]")
 			sheet
 				?.querySelector<HTMLElement>(
-					pickedId
-						? `[data-fix-panel] .overflow-y-auto ${FOCUSABLE}`
-						: "[data-fix-item]",
+					pickedId ? `[data-fix-panel] .overflow-y-auto ${FOCUSABLE}` : "[data-fix-item]",
 				)
 				?.focus({ preventScroll: true })
 		}, 60)
@@ -903,9 +844,7 @@ function Drawer({
 			<div className="flex flex-col gap-3 pb-1">
 				<p className="text-sm text-gray-300">
 					Pick a part on the page, or here.{" "}
-					<span className="text-gray-400">
-						We check fixes before they show.
-					</span>
+					<span className="text-gray-400">We check fixes before they show.</span>
 				</p>
 				<AreaList fix={fix} />
 				<button
@@ -920,9 +859,7 @@ function Drawer({
 	else
 		body = (
 			<div className="flex flex-col gap-4">
-				<p className="text-sm text-gray-400">
-					Found a bug or have an idea? One message is enough.
-				</p>
+				<p className="text-sm text-gray-400">Found a bug or have an idea? One message is enough.</p>
 				<FeedbackForm guest={guest} onClose={close} />
 			</div>
 		)
@@ -1063,10 +1000,7 @@ export default function FeedbackDock({
 	// out of fix mode fades it, then takes it out of the page.
 	const layer = on && !done
 	const fade = useFadePresence(layer)
-	const live = useMemo(
-		() => areas.filter((a) => found.includes(a.id)),
-		[areas, found],
-	)
+	const live = useMemo(() => areas.filter((a) => found.includes(a.id)), [areas, found])
 	const pickedArea = live.find((a) => a.id === picked) ?? null
 	const liveRef = useRef(live)
 	liveRef.current = live
@@ -1086,8 +1020,7 @@ export default function FeedbackDock({
 	// A hovered chip's part comes into view as it lights up. Not on phones: there the picked part already sits at the
 	// window's top, and a tap on a chip (which also "hovers" it) must not move the page.
 	useEffect(() => {
-		if (layer && spot && window.matchMedia("(min-width: 768px)").matches)
-			reveal(findSpot(spot))
+		if (layer && spot && window.matchMedia("(min-width: 768px)").matches) reveal(findSpot(spot))
 	}, [layer, spot])
 
 	const leave = (v: boolean) => {
@@ -1105,8 +1038,7 @@ export default function FeedbackDock({
 		setSpot(null)
 		setPicked(id)
 		// A part picked on the page may be only partly in view: bring all of it in (phones place it themselves).
-		if (window.matchMedia("(min-width: 768px)").matches)
-			requestAnimationFrame(() => revealArea(id))
+		if (window.matchMedia("(min-width: 768px)").matches) requestAnimationFrame(() => revealArea(id))
 	}
 	const fix: FixPath | undefined = live.length
 		? {
@@ -1124,17 +1056,9 @@ export default function FeedbackDock({
 							title: `${kindOf(pickedArea) === "flag" ? "Flag" : "Fix"} ${lc(pickedArea.name)}`,
 							flow:
 								subject && isRichArea(pickedArea.id, subject) ? (
-									<ReportFlow
-										key={pickedArea.id}
-										area={pickedArea.id}
-										subject={subject}
-									/>
+									<ReportFlow key={pickedArea.id} area={pickedArea.id} subject={subject} />
 								) : (
-									<AreaFlow
-										key={pickedArea.id}
-										area={pickedArea}
-										subject={subject}
-									/>
+									<AreaFlow key={pickedArea.id} area={pickedArea} subject={subject} />
 								),
 						}
 					: null,
@@ -1172,13 +1096,7 @@ export default function FeedbackDock({
 			<DimHeader on={layer} />
 			<Scrim on={layer} />
 			{fade.mounted && (
-				<Outlines
-					areas={live}
-					lit={picked ?? hot}
-					setHot={setHot}
-					shown={fade.shown}
-					pick={pick}
-				/>
+				<Outlines areas={live} lit={picked ?? hot} setHot={setHot} shown={fade.shown} pick={pick} />
 			)}
 			<Spotlight spot={layer ? (spot ?? pinned) : null} />
 		</>

@@ -1,20 +1,10 @@
 // Shared parts of the Feedback drawer: the input style, a guest's email field, the chips, the context a picked part's
 // questions talk to the drawer through, sending with retries that keep their key, and the thanks screen with Undo.
-import {
-	ArrowUturnLeftIcon,
-	CheckCircleIcon,
-	ClockIcon,
-	FlagIcon,
-} from "@heroicons/react/20/solid"
+import { ArrowUturnLeftIcon, CheckCircleIcon, ClockIcon, FlagIcon } from "@heroicons/react/20/solid"
 import { Link, useMatches, useRevalidator } from "@remix-run/react"
 import { useQueryClient } from "@tanstack/react-query"
-import {
-	type ReactNode,
-	createContext,
-	useContext,
-	useRef,
-	useState,
-} from "react"
+import { type ReactNode, createContext, useContext, useRef, useState } from "react"
+import { PrimaryButton } from "~/ui/button/PrimaryButton"
 import { holdBeforeSend, newIdempotencyKey } from "~/ui/support/contact"
 import { clearLoaderCache } from "~/navigation/instant-navigation"
 import {
@@ -25,18 +15,11 @@ import {
 	submitFeedback,
 	undoCorrection,
 } from "~/utils/feedback"
-import {
-	type Envelope,
-	FAILURE_COPY,
-	OUTCOME_COPY,
-	type SendFailure,
-	sendFailure,
-} from "./request"
+import { type Envelope, FAILURE_COPY, OUTCOME_COPY, type SendFailure, sendFailure } from "./request"
 
 export const INPUT =
 	"min-h-11 w-full rounded-lg bg-gray-900 px-3 text-gray-100 ring-1 ring-white/15 placeholder:text-gray-600 focus:ring-2 focus:ring-amber-400 focus:outline-none"
-export const LABEL =
-	"mb-2 block text-[11px] font-semibold uppercase tracking-[.12em] text-gray-500"
+export const LABEL = "mb-2 block text-[11px] font-semibold uppercase tracking-[.12em] text-gray-500"
 
 /**
  * What a picked part's questions tell the drawer: a report went out (fix mode's page layer goes, the thanks stay), the
@@ -60,14 +43,15 @@ export function GuestEmail({
 	value,
 	onChange,
 	invalid = false,
-}: { value: string; onChange: (v: string) => void; invalid?: boolean }) {
+}: {
+	value: string
+	onChange: (v: string) => void
+	invalid?: boolean
+}) {
 	return (
 		<label className="flex flex-col gap-1.5" data-guest-email>
 			<span className="text-sm font-medium text-gray-300">
-				Your email{" "}
-				<span className="font-normal text-gray-500">
-					(if you want an answer)
-				</span>
+				Your email <span className="font-normal text-gray-500">(if you want an answer)</span>
 			</span>
 			<input
 				type="email"
@@ -81,9 +65,7 @@ export function GuestEmail({
 				className={INPUT}
 			/>
 			{invalid && (
-				<span className="text-xs text-amber-300">
-					That doesn't look like an email address.
-				</span>
+				<span className="text-xs text-amber-300">That doesn't look like an email address.</span>
 			)}
 		</label>
 	)
@@ -138,13 +120,11 @@ export function Chip({
 export function BeforeSendLine({ kind }: { kind: "fix" | "flag" }) {
 	return kind === "fix" ? (
 		<p className="flex items-center gap-1.5 text-xs text-gray-400">
-			<ClockIcon className="size-4" aria-hidden /> Fixes may go live now or wait
-			for staff review
+			<ClockIcon className="size-4" aria-hidden /> Fixes may go live now or wait for staff review
 		</p>
 	) : (
 		<p className="flex items-center gap-1.5 text-xs text-gray-400">
-			<FlagIcon className="size-4" aria-hidden /> We look into it. This part
-			isn't edited by hand.
+			<FlagIcon className="size-4" aria-hidden /> We look into it. This part isn't edited by hand.
 		</p>
 	)
 }
@@ -158,12 +138,30 @@ export function SendFooter({ children }: { children: ReactNode }) {
 	)
 }
 
+/** The drawer's Send: the app's primary pill (D1) across the footer. */
+export function SendButton({
+	sending,
+	disabled,
+	onClick,
+}: {
+	sending: boolean
+	disabled: boolean
+	onClick: () => void
+}) {
+	return (
+		<PrimaryButton
+			onClick={onClick}
+			disabled={disabled}
+			className="flex w-full cursor-pointer items-center justify-center px-4 py-3 disabled:cursor-not-allowed disabled:opacity-60"
+		>
+			{sending ? "Sending…" : "Send"}
+		</PrimaryButton>
+	)
+}
+
 export function FailureLine({ failure }: { failure: SendFailure | null }) {
 	return (
-		<p
-			role="alert"
-			className={failure ? "mb-2 text-sm text-amber-300" : "sr-only"}
-		>
+		<p role="alert" className={failure ? "mb-2 text-sm text-amber-300" : "sr-only"}>
 			{failure ? FAILURE_COPY[failure] : ""}
 		</p>
 	)
@@ -219,9 +217,7 @@ export function useSender() {
 		setSending(true)
 		setFailure(null)
 		try {
-			await new Promise((r) =>
-				setTimeout(r, holdBeforeSend(startedAt.current, Date.now())),
-			)
+			await new Promise((r) => setTimeout(r, holdBeforeSend(startedAt.current, Date.now())))
 			const response = await submitFeedback(build(envelope(key.current)))
 			if (response.outcome === "live") refresh()
 			key.current = null
@@ -298,9 +294,7 @@ export function Result({
 					)}
 				</span>
 				<div aria-live="polite">
-					<p className="text-lg font-semibold text-white">
-						{undone ? "Undone" : copy.title}
-					</p>
+					<p className="text-lg font-semibold text-white">{undone ? "Undone" : copy.title}</p>
 					<p className="mt-0.5 text-sm text-gray-400">
 						{undone
 							? outcome === "pending"
@@ -320,18 +314,13 @@ export function Result({
 						{before}
 					</span>
 					<span className="text-gray-500">Now</span>
-					<span className="min-w-0 break-words font-medium text-gray-100">
-						{after}
-					</span>
+					<span className="min-w-0 break-words font-medium text-gray-100">{after}</span>
 				</div>
 			)}
 			{guest && outcome === "pending" && (
 				<p className="text-sm text-gray-400">
 					Signed-in members see their changes go live once we know them.{" "}
-					<Link
-						to="/sign-up"
-						className="font-semibold text-amber-500 hover:text-amber-400"
-					>
+					<Link to="/sign-up" className="font-semibold text-amber-500 hover:text-amber-400">
 						Sign up
 					</Link>
 				</p>

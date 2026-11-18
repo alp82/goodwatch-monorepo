@@ -3,19 +3,14 @@
 // their taste (the viewer type with what draws them and what doesn't, the counts, the print, the taste groups, three
 // titles against everyone), their 10s and their hot takes.
 import { ArrowRightIcon, SparklesIcon } from "@heroicons/react/20/solid"
-import { Link } from "@remix-run/react"
 import { LayoutGroup, motion, useReducedMotion } from "framer-motion"
 import { useMemo } from "react"
-import {
-	type ProfileOverview,
-	type ProfileShell,
-	seesPart,
-} from "~/domain/profile"
+import { type ProfileOverview, type ProfileShell, seesPart } from "~/domain/profile"
 import type { MemberCompare } from "~/domain/profile-taste"
 import { DISPLAY, WRAP } from "~/ui/my-pages/bits"
 import { Overview } from "../Overview"
 import { ProfileAbout } from "../ProfileFrame"
-import { AMBER_BUTTON, TILE } from "../parts"
+import { BUTTON_BOX, TILE } from "../parts"
 import { TasteMatch } from "../taste/Compare"
 import { Whorl } from "../taste/Whorl"
 import {
@@ -28,6 +23,7 @@ import {
 	useTaste,
 } from "../taste/model"
 import { PANEL, TastePoster } from "../taste/parts"
+import { PrimaryButton } from "~/ui/button/PrimaryButton"
 
 const EYEBROW = "text-[11px] font-bold tracking-[0.18em] uppercase"
 
@@ -51,9 +47,7 @@ export function TasteProfilePage({
 	return (
 		<LayoutGroup>
 			<div className={`${WRAP} flex flex-col gap-10 pt-6 pb-32 text-white`}>
-				{shell.viewer === "member" && compare && (
-					<TasteMatch shell={shell} compare={compare} />
-				)}
+				{shell.viewer === "member" && compare && <TasteMatch shell={shell} compare={compare} />}
 				{/* Moves down with "Where your tastes meet" as it opens, by transform only. */}
 				<motion.div
 					layout={still ? false : "position"}
@@ -63,10 +57,10 @@ export function TasteProfilePage({
 					<ProfileAbout shell={shell} />
 					{shell.viewer === "guest" && (
 						<div className="flex flex-wrap items-center gap-3">
-							<Link to="/sign-up" rel="nofollow" className={AMBER_BUTTON}>
+							<PrimaryButton to="/sign-up" rel="nofollow" className={BUTTON_BOX}>
 								Find your own viewer type
 								<ArrowRightIcon className="size-4" aria-hidden />
-							</Link>
+							</PrimaryButton>
 						</div>
 					)}
 					{seesPart(shell, "taste") &&
@@ -74,22 +68,14 @@ export function TasteProfilePage({
 							<TasteContext.Provider value={value}>
 								<TasteSummary
 									counts={{
-										rated: seesPart(shell, "scores")
-											? shell.counts.rated
-											: undefined,
-										seen: seesPart(shell, "seen")
-											? shell.counts.seen
-											: undefined,
-										hours: seesPart(shell, "hours")
-											? shell.counts.hours
-											: undefined,
+										rated: seesPart(shell, "scores") ? shell.counts.rated : undefined,
+										seen: seesPart(shell, "seen") ? shell.counts.seen : undefined,
+										hours: seesPart(shell, "hours") ? shell.counts.hours : undefined,
 									}}
 								/>
 							</TasteContext.Provider>
 						) : (
-							<div
-								className={`${TILE} flex flex-col items-center gap-3 px-6 py-14 text-center`}
-							>
+							<div className={`${TILE} flex flex-col items-center gap-3 px-6 py-14 text-center`}>
 								<SparklesIcon className="size-7 text-amber-400" aria-hidden />
 								<p className="text-lg font-bold text-gray-100">
 									{taste?.status === "empty"
@@ -107,7 +93,9 @@ export function TasteProfilePage({
 
 export function TasteSummary({
 	counts,
-}: { counts: { rated?: number; seen?: number; hours?: number } }) {
+}: {
+	counts: { rated?: number; seen?: number; hours?: number }
+}) {
 	const { taste, owner, handle, attributeByKey, title } = useTaste()
 	const seek = taste.seek
 		.map((k) => attributeByKey.get(k))
@@ -141,11 +129,7 @@ export function TasteSummary({
 	}[]
 	const versus = versusRows.length > 0
 	const print = (
-		<Whorl
-			attributes={taste.attributes}
-			label="Fingerprint"
-			className="h-full w-full"
-		/>
+		<Whorl attributes={taste.attributes} label="Fingerprint" className="h-full w-full" />
 	)
 
 	return (
@@ -176,9 +160,7 @@ export function TasteSummary({
 					<div className="mt-5 flex flex-col gap-3">
 						{seek.length > 0 && (
 							<div className="flex flex-wrap items-center gap-2">
-								<span className="w-16 text-xs font-semibold text-gray-400">
-									Drawn to
-								</span>
+								<span className="w-16 text-xs font-semibold text-gray-400">Drawn to</span>
 								{seek.map((a) => (
 									<Chip
 										key={a.key}
@@ -191,9 +173,7 @@ export function TasteSummary({
 						)}
 						{avoid.length > 0 && (
 							<div className="flex flex-wrap items-center gap-2">
-								<span className="w-16 text-xs font-semibold text-gray-400">
-									Less so
-								</span>
+								<span className="w-16 text-xs font-semibold text-gray-400">Less so</span>
 								{avoid.map((a) => (
 									<Chip
 										key={a.key}
@@ -207,13 +187,9 @@ export function TasteSummary({
 						)}
 					</div>
 					<dl className="mt-6 flex flex-wrap gap-x-8 gap-y-3">
-						{counts.rated != null && (
-							<Count value={counts.rated} label="rated" />
-						)}
+						{counts.rated != null && <Count value={counts.rated} label="rated" />}
 						{counts.seen != null && <Count value={counts.seen} label="seen" />}
-						{counts.hours != null && (
-							<Count value={counts.hours} label="hours watched" />
-						)}
+						{counts.hours != null && <Count value={counts.hours} label="hours watched" />}
 					</dl>
 				</div>
 			</div>
@@ -235,9 +211,7 @@ export function TasteSummary({
 									))}
 								</span>
 								<span className="min-w-0">
-									<span className="block leading-tight font-bold">
-										{g.name}
-									</span>
+									<span className="block leading-tight font-bold">{g.name}</span>
 									<span className="text-sm text-gray-400">
 										{g.count} titles · average {g.average.toFixed(1)}
 									</span>
@@ -253,9 +227,7 @@ export function TasteSummary({
 					id="everyone"
 					className={`flex scroll-mt-44 flex-col gap-4 bg-gray-950 p-5 sm:p-6 ${groups.length > 0 ? "lg:col-span-6" : "lg:col-span-12"}`}
 				>
-					<p className={`${EYEBROW} text-gray-400`}>
-						{owner ? "You" : "Them"} vs everyone
-					</p>
+					<p className={`${EYEBROW} text-gray-400`}>{owner ? "You" : "Them"} vs everyone</p>
 					<ul className="flex flex-col gap-3">
 						{versusRows.map(({ row, tone }) => (
 							<VsRow
@@ -264,9 +236,7 @@ export function TasteSummary({
 								mine={row.mine}
 								everyone={row.everyone}
 								tone={tone}
-								note={
-									tone === "up" ? "Far above everyone" : "Far below everyone"
-								}
+								note={tone === "up" ? "Far above everyone" : "Far below everyone"}
 							/>
 						))}
 					</ul>
@@ -281,7 +251,12 @@ function Chip({
 	label,
 	color,
 	muted = false,
-}: { emoji: string; label: string; color: string; muted?: boolean }) {
+}: {
+	emoji: string
+	label: string
+	color: string
+	muted?: boolean
+}) {
 	return (
 		<span
 			className={`inline-flex items-center gap-1.5 rounded-full bg-white/[0.05] px-2.5 py-1 text-sm ring-1 ring-white/10 ${muted ? "text-gray-400" : "font-semibold text-gray-100"}`}
@@ -303,9 +278,7 @@ function Count({ value, label }: { value: number; label: string }) {
 			<dt className="sr-only">{label}</dt>
 			<dd className={`${DISPLAY} text-2xl tabular-nums`}>
 				{value.toLocaleString("en-US")}
-				<span className="ml-1.5 font-sans text-sm font-normal text-gray-400">
-					{label}
-				</span>
+				<span className="ml-1.5 font-sans text-sm font-normal text-gray-400">{label}</span>
 			</dd>
 		</div>
 	)

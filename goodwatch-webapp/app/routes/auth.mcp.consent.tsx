@@ -33,6 +33,7 @@ import {
 	CONNECTED_APPS_PATH,
 } from "~/ui/connector/connector"
 import { Spinner } from "~/ui/wait/Spinner"
+import { PrimaryButton } from "~/ui/button/PrimaryButton"
 
 export const handle = STANDALONE
 
@@ -138,15 +139,16 @@ export default function Consent() {
 					>
 						Deny
 					</button>
-					<button
+					<PrimaryButton
+						variant="rect"
 						type="submit"
 						name="decision"
 						value="allow"
 						onClick={() => setTimeout(() => setLeaving("allow"))}
-						className="flex-1 cursor-pointer rounded-lg bg-amber-700 px-4 py-3 font-semibold text-white hover:bg-amber-600"
+						className="flex-1 cursor-pointer px-4 py-3"
 					>
 						Allow {app.name}
-					</button>
+					</PrimaryButton>
 				</Form>
 				{!leaving && (
 					<p className="text-center text-xs leading-relaxed text-gray-500">

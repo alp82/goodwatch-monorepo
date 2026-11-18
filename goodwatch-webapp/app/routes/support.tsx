@@ -22,6 +22,7 @@ import { ACCOUNT_PATH } from "~/ui/settings/paths"
 import { CONTACT_SECTION_ID, ContactSection } from "~/ui/support/ContactSection"
 import { SUPPORT_EMAIL } from "~/ui/support/contact"
 import { type PageMeta, buildMeta } from "~/utils/meta"
+import { PrimaryButton } from "~/ui/button/PrimaryButton"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -57,13 +58,14 @@ export default function Support() {
 					</p>
 				</div>
 				<div className="flex shrink-0 flex-col gap-2">
-					<a
+					<PrimaryButton
+						variant="rect"
 						href={`#${CONTACT_SECTION_ID}`}
-						className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-amber-700 px-5 py-3 font-semibold text-white transition hover:bg-amber-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900"
+						className="inline-flex min-h-12 items-center justify-center gap-2 px-5 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900"
 					>
 						<EnvelopeIcon className="h-5 w-5" aria-hidden="true" />
 						Write to us
-					</a>
+					</PrimaryButton>
 				</div>
 			</header>
 

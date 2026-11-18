@@ -11,27 +11,28 @@ import { usePathViewer } from "~/ui/navigation/NavigationContext"
 import { CardFonts } from "~/ui/share-card/ScaledCard"
 import { newListPathFor } from "~/ui/share-card/links"
 import { OwnerListControls } from "~/ui/share-lists/OwnerListControls"
-import {
-	type ShareListSummary,
-	ShareListTile,
-} from "~/ui/share-lists/ShareListTile"
-import { AMBER_BUTTON } from "../parts"
+import { type ShareListSummary, ShareListTile } from "~/ui/share-lists/ShareListTile"
+import { BUTTON_BOX } from "../parts"
+import { PrimaryButton } from "~/ui/button/PrimaryButton"
 
 /** The owner's key in the Lists tab's head. */
 export function NewListKey() {
 	const handle = handleOf(usePathViewer())
 	return (
-		<Link to={newListPathFor(handle)} className={AMBER_BUTTON}>
+		<PrimaryButton to={newListPathFor(handle)} className={BUTTON_BOX}>
 			<PlusIcon className="size-5" aria-hidden />
 			New list
-		</Link>
+		</PrimaryButton>
 	)
 }
 
 export function ListsPage({
 	shell,
 	lists: loaded,
-}: { shell: ProfileShell; lists: ShareListSummary[] }) {
+}: {
+	shell: ProfileShell
+	lists: ShareListSummary[]
+}) {
 	const owner = shell.viewer === "owner"
 	const { lists, patch, removed } = useOwnerLists(loaded)
 	// Straight to the viewer's own editor, without the /lists/new redirect.
@@ -115,9 +116,7 @@ function useOwnerLists(loaded: ShareListSummary[]) {
 				})
 				revalidator.revalidate()
 			} catch (error) {
-				toast.error(
-					error instanceof Error ? error.message : "Restoring the list failed.",
-				)
+				toast.error(error instanceof Error ? error.message : "Restoring the list failed.")
 			}
 		}
 		toast(

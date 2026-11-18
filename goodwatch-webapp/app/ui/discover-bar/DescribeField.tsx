@@ -8,6 +8,7 @@ import { SEARCH_MAX_CHARS } from "~/domain/discover-search"
 import type { SearchTrigger } from "~/domain/search-attribution"
 import { SEARCH_EXAMPLES as TRY } from "~/ui/search/search-examples"
 import { PRIVATE } from "./DiscoverBar"
+import { PrimaryButton } from "~/ui/button/PrimaryButton"
 
 const TRY_MS = 3200
 const PLACEHOLDER = "Describe what you want to watch"
@@ -211,17 +212,17 @@ export function DescribeField({
 			<span className="hidden w-px shrink-0 self-stretch bg-white/10 lg:block" aria-hidden />
 			<div className="flex shrink-0 items-center gap-1 pr-2.5 lg:pr-3 lg:pl-1.5">
 				<div className="hidden h-14 items-center lg:flex">{ready}</div>
-				<button
+				<PrimaryButton
 					type="submit"
 					aria-label="Search"
 					onClick={(event) => {
 						if (event.nativeEvent.isTrusted) press("search_button")
 					}}
-					className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-amber-400 font-bold text-gray-950 outline-none hover:bg-amber-300 focus-visible:ring-2 focus-visible:ring-white lg:h-auto lg:w-auto lg:px-6 lg:py-3.5"
+					className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-white lg:h-auto lg:w-auto lg:px-6 lg:py-3.5"
 				>
 					<ArrowRightIcon className="h-5 w-5 lg:hidden" aria-hidden />
 					<span className="hidden lg:inline">Search</span>
-				</button>
+				</PrimaryButton>
 			</div>
 		</form>
 	)

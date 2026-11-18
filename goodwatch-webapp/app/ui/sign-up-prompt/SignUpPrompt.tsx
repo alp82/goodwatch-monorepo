@@ -8,6 +8,7 @@ import {
 	type SignUpMessage,
 	type SignUpStage,
 } from "./messages"
+import { PrimaryButton } from "~/ui/button/PrimaryButton"
 
 export type SignUpPromptSize = "inline" | "chip" | "card"
 
@@ -62,22 +63,18 @@ export function SignUpPrompt({
 						<UserPlusIcon className="h-5 w-5" aria-hidden />
 					</span>
 					<div className="flex flex-col gap-1">
-						<p className="font-bold leading-snug text-gray-100">
-							{message.title}
-						</p>
-						<p className="text-sm leading-snug text-gray-400">
-							{message.detail}
-						</p>
+						<p className="font-bold leading-snug text-gray-100">{message.title}</p>
+						<p className="text-sm leading-snug text-gray-400">{message.detail}</p>
 					</div>
 				</div>
 				<div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-					<Link
+					<PrimaryButton
 						rel="nofollow"
 						to={signUp}
-						className="inline-flex min-h-11 items-center rounded-full bg-linear-to-b from-amber-400 to-amber-600 px-4 text-sm font-black text-gray-950 hover:brightness-110 md:min-h-9"
+						className="inline-flex min-h-11 items-center px-4 text-sm md:min-h-9"
 					>
 						Sign up
-					</Link>
+					</PrimaryButton>
 					<Link
 						rel="nofollow"
 						to={authHref("sign-in")}

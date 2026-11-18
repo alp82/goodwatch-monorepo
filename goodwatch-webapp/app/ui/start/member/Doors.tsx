@@ -28,6 +28,7 @@ import {
 	tileText,
 } from "./doors"
 import { type MemberStartData, PERSONAL_AT } from "./member-data"
+import { primaryButtonClass } from "~/ui/button/PrimaryButton"
 
 const TEXT_LINK =
 	"group inline-flex shrink-0 items-center gap-1 rounded-md text-sm font-semibold text-amber-400 underline-offset-4 outline-none hover:text-amber-300 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
@@ -35,8 +36,7 @@ const TEXT_LINK =
 const DOOR =
 	"relative flex h-[6.5rem] w-full cursor-pointer flex-col justify-between gap-2 rounded-xl p-3 text-left outline-none transition-opacity duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300 active:scale-[0.98] sm:h-28 sm:p-4"
 /** The open door: an amber fill and a strong amber ring. */
-const DOOR_OPEN =
-	"bg-amber-400/[0.16] shadow-lg shadow-amber-950/40 ring-2 ring-amber-400"
+const DOOR_OPEN = "bg-amber-400/[0.16] shadow-lg shadow-amber-950/40 ring-2 ring-amber-400"
 /** The closed doors: quieter while another is open, full strength on hover or focus. */
 const DOOR_SHUT =
 	"bg-white/[0.05] opacity-60 ring-1 ring-white/5 hover:bg-white/10 hover:opacity-100 hover:ring-white/20 focus-visible:opacity-100"
@@ -64,16 +64,10 @@ export function Doors({ data }: { data: MemberStartData }) {
 	// The section on load is the server's; a section opened later fades in.
 	const [opened, setOpened] = useState(false)
 	const current = doors.find((door) => door.key === open) ?? doors[0]
-	const reserve =
-		current.pending || deferred.has(current.key)
-			? reserveOf(data, current.key)
-			: null
+	const reserve = current.pending || deferred.has(current.key) ? reserveOf(data, current.key) : null
 
 	return (
-		<section
-			className={`${WRAP} pt-8 pb-28 lg:pt-2`}
-			aria-labelledby="start-doors"
-		>
+		<section className={`${WRAP} pt-8 pb-28 lg:pt-2`} aria-labelledby="start-doors">
 			<h2
 				id="start-doors"
 				className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400"
@@ -142,12 +136,7 @@ export function Doors({ data }: { data: MemberStartData }) {
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.2, ease: EASE }}
 				>
-					<DoorSection
-						door={current}
-						reserve={reserve}
-						filter={filter}
-						onFilter={setFilter}
-					/>
+					<DoorSection door={current} reserve={reserve} filter={filter} onFilter={setFilter} />
 				</motion.div>
 			</div>
 		</section>
@@ -172,9 +161,7 @@ export function DoorSection({
 }) {
 	const filters = filtersOf(door)
 	const active = filters?.find((f) => f.key === filter) ?? null
-	const shown = active
-		? door.titles.filter((t) => active.keep(t.card))
-		: door.titles
+	const shown = active ? door.titles.filter((t) => active.keep(t.card)) : door.titles
 	const has = door.titles.length > 0 || door.pending
 	const body =
 		door.pending && reserve ? (
@@ -211,11 +198,7 @@ export function DoorSection({
 				{door.pending ? (
 					<PendingGrid lines={false} />
 				) : has ? (
-					<DoorGrid
-						door={door}
-						titles={shown}
-						filtered={!!active && active.key !== "all"}
-					/>
+					<DoorGrid door={door} titles={shown} filtered={!!active && active.key !== "all"} />
 				) : null}
 			</>
 		)
@@ -252,11 +235,7 @@ export function DoorSection({
 			{reserve && !door.pending ? (
 				// The reserve's room, unseen, and the list's content over it in the same grid cell.
 				<div className="grid grid-cols-1 grid-rows-1">
-					<div
-						aria-hidden
-						data-door-reserve
-						className="invisible col-start-1 row-start-1 min-w-0"
-					>
+					<div aria-hidden data-door-reserve className="invisible col-start-1 row-start-1 min-w-0">
 						<ReservedRoom reserve={reserve} />
 					</div>
 					<div className="col-start-1 row-start-1 min-w-0">{body}</div>
@@ -276,10 +255,7 @@ export function ReservedRoom({ reserve }: { reserve: Reserve }) {
 			{reserve.filters ? (
 				<div aria-hidden className="mb-4 flex h-9 gap-2 overflow-hidden">
 					{["w-14", "w-20", "w-[4.5rem]"].map((width) => (
-						<span
-							key={width}
-							className={`h-9 ${width} shrink-0 rounded-full bg-white/[0.04]`}
-						/>
+						<span key={width} className={`h-9 ${width} shrink-0 rounded-full bg-white/[0.04]`} />
 					))}
 				</div>
 			) : null}
@@ -293,14 +269,7 @@ const shownAt = ([base, sm, lg]: boolean[]) =>
 	`${base ? "" : "hidden"} ${sm ? "sm:block" : "sm:hidden"} ${lg ? "lg:block" : "lg:hidden"}`
 
 /** Ghosts fade as they go, so a short row reads as room for more, not as missing posters. */
-const GHOST_FADE = [
-	"",
-	"opacity-70",
-	"opacity-50",
-	"opacity-40",
-	"opacity-30",
-	"opacity-25",
-]
+const GHOST_FADE = ["", "opacity-70", "opacity-50", "opacity-40", "opacity-30", "opacity-25"]
 
 function DoorGrid({
 	door,
@@ -313,9 +282,7 @@ function DoorGrid({
 }) {
 	// A filtered view isn't the member's whole list, so it never asks for more; it only keeps whole rows.
 	const ghost = filtered ? null : door.ghost
-	const plans = GRID_COLUMNS.map((columns) =>
-		gridPlan(titles.length, columns, !!ghost),
-	)
+	const plans = GRID_COLUMNS.map((columns) => gridPlan(titles.length, columns, !!ghost))
 	const posters = Math.max(...plans.map((p) => p.posters))
 	const ghosts = Math.max(...plans.map((p) => p.ghosts))
 	const blanks = Math.max(...plans.map((p) => p.blanks))
@@ -323,10 +290,7 @@ function DoorGrid({
 	return (
 		<ul className="grid grid-cols-3 gap-x-3 gap-y-5 sm:grid-cols-4 lg:grid-cols-6">
 			{titles.slice(0, posters).map((title, i) => (
-				<li
-					key={title.card.key}
-					className={`min-w-0 ${shownAt(plans.map((p) => i < p.posters))}`}
-				>
+				<li key={title.card.key} className={`min-w-0 ${shownAt(plans.map((p) => i < p.posters))}`}>
 					<TitlePosterCard card={title.card} />
 					{title.line ? <PosterLine line={title.line} /> : null}
 				</li>
@@ -365,12 +329,8 @@ function DoorGrid({
 								className="h-5 w-5 transition-transform duration-200 ease-out group-hover:translate-x-0.5"
 							/>
 						</span>
-						<span className="text-sm font-bold leading-tight text-white">
-							{tile.top}
-						</span>
-						<span className="text-xs leading-tight text-gray-400">
-							{tile.sub}
-						</span>
+						<span className="text-sm font-bold leading-tight text-white">{tile.top}</span>
+						<span className="text-xs leading-tight text-gray-400">{tile.sub}</span>
 					</Link>
 				</li>
 			) : null}
@@ -415,24 +375,14 @@ const TWO_LINES = "h-[calc(2*1.375*0.75rem)]"
 function PosterLine({ line }: { line: NonNullable<DoorTitle["line"]> }) {
 	if (line.rank === undefined)
 		return (
-			<p
-				className="mt-1.5 truncate text-xs font-semibold text-amber-300"
-				title={line.text}
-			>
+			<p className="mt-1.5 truncate text-xs font-semibold text-amber-300" title={line.text}>
 				{line.text}
 			</p>
 		)
 	return (
-		<p
-			className="mt-1.5 flex min-w-0 items-baseline gap-1.5 text-xs"
-			title={line.text}
-		>
-			<span className="shrink-0 font-black tabular-nums text-amber-400">
-				{line.rank}
-			</span>
-			<span className="line-clamp-2 leading-snug text-gray-300">
-				{line.text}
-			</span>
+		<p className="mt-1.5 flex min-w-0 items-baseline gap-1.5 text-xs" title={line.text}>
+			<span className="shrink-0 font-black tabular-nums text-amber-400">{line.rank}</span>
+			<span className="line-clamp-2 leading-snug text-gray-300">{line.text}</span>
 		</p>
 	)
 }
@@ -466,8 +416,10 @@ function Ghost({ cta, labeled }: { cta: Cta; labeled: boolean }) {
 	)
 }
 
-const PILL =
-	"inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full bg-amber-400 px-4 text-sm font-black text-gray-950 outline-none hover:bg-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
+const PILL = primaryButtonClass(
+	"pill",
+	"inline-flex h-9 shrink-0 items-center justify-center gap-1.5 px-4 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300",
+)
 const PILL_QUIET =
 	"inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full px-4 text-sm font-semibold text-gray-200 outline-none ring-1 ring-inset ring-white/15 hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
 
@@ -476,12 +428,8 @@ function Strip({ strip }: { strip: StripData }) {
 	return (
 		<div className="mb-5 flex flex-col gap-3 rounded-xl bg-white/[0.035] px-4 py-3 ring-1 ring-white/10 sm:flex-row sm:items-center sm:gap-6 sm:px-5">
 			<div className="min-w-0 flex-1">
-				<p className="text-sm font-bold text-white sm:text-[15px]">
-					{strip.title}
-				</p>
-				{strip.body ? (
-					<p className="mt-0.5 text-sm text-gray-400">{strip.body}</p>
-				) : null}
+				<p className="text-sm font-bold text-white sm:text-[15px]">{strip.title}</p>
+				{strip.body ? <p className="mt-0.5 text-sm text-gray-400">{strip.body}</p> : null}
 				{strip.progress !== undefined ? (
 					<RatingsBar have={strip.progress} className="mt-1.5" />
 				) : null}
@@ -496,9 +444,7 @@ function Strip({ strip }: { strip: StripData }) {
 							className={`${i === 0 ? PILL : PILL_QUIET} max-sm:flex-1 max-sm:px-2`}
 						>
 							{cta.label}
-							{i === 0 ? (
-								<ArrowRightIcon aria-hidden className="h-4 w-4 max-sm:hidden" />
-							) : null}
+							{i === 0 ? <ArrowRightIcon aria-hidden className="h-4 w-4 max-sm:hidden" /> : null}
 						</Link>
 					))}
 				</div>
@@ -508,10 +454,7 @@ function Strip({ strip }: { strip: StripData }) {
 }
 
 /** "4 of 10 ratings" with a thin amber bar (a fixed width, nothing animates). */
-export function RatingsBar({
-	have,
-	className = "",
-}: { have: number; className?: string }) {
+export function RatingsBar({ have, className = "" }: { have: number; className?: string }) {
 	const n = Math.min(have, PERSONAL_AT)
 	return (
 		<span className={`flex items-center gap-2.5 ${className}`}>

@@ -202,7 +202,7 @@ A cool, dark navy room with a warm amber lamp, translucent white layers, and a s
 - **Bright Amber** (`amber-light`): amber text and icons on dark: active tab labels, section icons (at 90%), award lines, links, counts in selected segments, and the spinner.
 - **Pale Amber** (`amber-pale`): amber text on amber-tinted surfaces, and the "won" award state.
 - **Deep Amber** (`amber-deep`): the switch's on state and reading-progress bars.
-- `amber-700`: the primary button on info pages and the sign-in and sign-up cards (D1). The `amber-400` to `amber-600` gradient is retired (D1); member buttons move to the flat pill. Amber-500 links on info pages and the blog are still in use.
+- `amber-700`: the primary button on info pages and the sign-in and sign-up cards (D1). The `amber-400` to `amber-600` gradient is retired from buttons (D1); it stays only on the taste-match badge and the lit fingerprint icon of the taste strips, which aren't buttons. Amber-500 links on info pages and the blog are still in use.
 
 ### Neutral
 
@@ -318,7 +318,7 @@ Posters keep their 2:3 portrait shape everywhere.
 
 Bold, short labels, weight 700-900.
 
-- **Primary** (D1): inside the app, the flat `amber-400` pill with near-black bold text, at least 44px tall, hover `amber-300`. On info pages and the sign-in and sign-up cards, the `amber-700` rectangle (`rounded-lg`, white semibold text, hover `amber-600`). The amber gradient, the orange sign-in gradient, and Discover's white-text gradient Show button are retired. Other amber buttons in the same view are outline buttons (D7).
+- **Primary** (D1): inside the app, the flat `amber-400` pill with near-black bold text, hover `amber-300`. On info pages and the sign-in and sign-up cards, the `amber-700` rectangle (`rounded-lg`, white semibold text, hover `amber-600`). The amber gradient, the orange sign-in gradient, and Discover's white-text gradient Show button are retired. Both come from `<PrimaryButton variant="pill" | "rect">` (`app/ui/button/PrimaryButton.tsx`, `to` for a Remix link, `href` for a plain link), or `primaryButtonClass()` where the element can't be the component; each place sets its own height, padding, and text size. Other amber buttons in the same view are outline buttons (D7).
 - **Light:** a white pill with black text for strong secondary actions on dark. Hover goes to light gray. The character quick view's CTA hovers to amber-300.
 - **Ghost:** white at 10% with light text, hovering to 20%. The default for secondary actions.
 - **Action button** (title actions, Want to See, Not interested): 36-44px tall, 8px corners, white 6% fill with a white ring.

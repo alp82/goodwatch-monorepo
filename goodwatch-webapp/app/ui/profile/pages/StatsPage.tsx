@@ -3,14 +3,13 @@
 // (viewer type, print, groups, against everyone) is on the Taste profile tab too. The owner also gets the import call to
 // action.
 import { SparklesIcon } from "@heroicons/react/20/solid"
-import { Link } from "@remix-run/react"
 import { useMemo } from "react"
 import { tastePath } from "~/domain/member-paths"
 import type { ProfileShell } from "~/domain/profile"
 import type { MemberCompare } from "~/domain/profile-taste"
 import { WRAP } from "~/ui/my-pages/bits"
 import { ImportCta } from "../ImportCta"
-import { AMBER_BUTTON, TILE } from "../parts"
+import { BUTTON_BOX, TILE } from "../parts"
 import {
 	Eras,
 	Facts,
@@ -20,11 +19,8 @@ import {
 	RatingStyle,
 	World,
 } from "../taste/Stats"
-import {
-	type ProfileTaste,
-	TasteContext,
-	tasteContextValue,
-} from "../taste/model"
+import { type ProfileTaste, TasteContext, tasteContextValue } from "../taste/model"
+import { PrimaryButton } from "~/ui/button/PrimaryButton"
 
 export function StatsPage({
 	shell,
@@ -46,9 +42,7 @@ export function StatsPage({
 	if (taste.status !== "ready")
 		return (
 			<div className={`${WRAP} pt-2 pb-32`}>
-				<div
-					className={`${TILE} flex flex-col items-center gap-3 px-6 py-14 text-center`}
-				>
+				<div className={`${TILE} flex flex-col items-center gap-3 px-6 py-14 text-center`}>
 					<SparklesIcon className="size-7 text-amber-400" aria-hidden />
 					<p className="text-lg font-bold text-gray-100">
 						{taste.status === "unavailable"
@@ -58,9 +52,9 @@ export function StatsPage({
 								: `@${shell.handle}'s taste is still forming.`}
 					</p>
 					{owner && taste.status === "empty" && (
-						<Link to={tastePath(shell.handle, "rate")} className={AMBER_BUTTON}>
+						<PrimaryButton to={tastePath(shell.handle, "rate")} className={BUTTON_BOX}>
 							Rate titles
-						</Link>
+						</PrimaryButton>
 					)}
 				</div>
 			</div>

@@ -1,16 +1,13 @@
 // Pieces every profile page shares: buttons, the member's score chip, posters from TMDB paths, the score spread,
 // the notice for a hidden part, and the "You" tag a signed-in visitor sees on
 // titles they rated too.
-import {
-	CheckIcon,
-	LockClosedIcon,
-	ShareIcon,
-} from "@heroicons/react/20/solid"
+import { CheckIcon, LockClosedIcon, ShareIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import { type ReactNode, useState } from "react"
 import type { ProfileShell, ProfileTitle } from "~/domain/profile"
 import type { Score } from "~/server/scores.server"
 import { type CardTitle, MovieTvCard } from "~/ui/MovieTvCard"
+import { PrimaryButton, primaryButtonClass } from "~/ui/button/PrimaryButton"
 import type { PosterProps } from "~/ui/Poster"
 import { SortControl } from "~/ui/filter-bar/controls"
 import type { SortOption } from "~/ui/filter-bar/labels"
@@ -18,10 +15,9 @@ import { WRAP, tmdbImage } from "~/ui/my-pages/bits"
 import { getVibeColorValue } from "~/utils/ratings"
 
 export const TILE = "rounded-2xl bg-white/[0.04] ring-1 ring-white/10"
-export const AMBER_BUTTON =
-	"inline-flex min-h-10 items-center gap-1.5 rounded-full bg-linear-to-b from-amber-400 to-amber-600 px-4 text-sm font-black text-gray-950 hover:brightness-110"
-export const QUIET_BUTTON =
-	"inline-flex min-h-10 items-center gap-1.5 rounded-full bg-white/[0.06] px-4 text-sm font-bold text-gray-100 ring-1 ring-white/15 hover:bg-white/[0.1]"
+/** The profile's button box (height, padding, gap, text size). The main action is a `<PrimaryButton>` with it. */
+export const BUTTON_BOX = "inline-flex min-h-10 items-center gap-1.5 px-4 text-sm"
+export const QUIET_BUTTON = `${BUTTON_BOX} rounded-full bg-white/[0.06] font-bold text-gray-100 ring-1 ring-white/15 hover:bg-white/[0.1]`
 
 export const count = (n: number) => n.toLocaleString("en-US")
 export const vibe = (score: number) =>
@@ -30,8 +26,7 @@ export const vibe = (score: number) =>
 /** A TMDB poster or backdrop path at a size; a full URL (share-list cards carry those) stays as it is; null stays null. */
 export const posterUrl = (path: string | null, size = "w342") =>
 	!path ? null : /^https?:/.test(path) ? path : tmdbImage(path, size)
-export const backdropUrl = (path: string | null, size = "w1280") =>
-	posterUrl(path, size)
+export const backdropUrl = (path: string | null, size = "w1280") => posterUrl(path, size)
 
 /** "Mar 4, 2025", in UTC so server and browser agree. */
 export const shortDate = (iso: string | null) =>
@@ -45,10 +40,7 @@ export const shortDate = (iso: string | null) =>
 		: "No date"
 
 /** The member's own score in its strip colour, as on Your scores. */
-export function ScoreChip({
-	score,
-	size = "md",
-}: { score: number | null; size?: "sm" | "md" }) {
+export function ScoreChip({ score, size = "md" }: { score: number | null; size?: "sm" | "md" }) {
 	if (!score) return null
 	return (
 		<span
@@ -65,7 +57,10 @@ export function ScoreChip({
 export function PosterImg({
 	title,
 	className = "",
-}: { title: Pick<ProfileTitle, "poster">; className?: string }) {
+}: {
+	title: Pick<ProfileTitle, "poster">
+	className?: string
+}) {
 	const src = posterUrl(title.poster)
 	return src ? (
 		<img
@@ -140,7 +135,7 @@ export function ShareButton({
 	handle,
 	path = "",
 	label = "Share profile",
-	className = AMBER_BUTTON,
+	className = primaryButtonClass("pill", BUTTON_BOX),
 	compact = false,
 	name,
 }: {
@@ -171,9 +166,7 @@ export function ShareButton({
 		<button
 			type="button"
 			onClick={onClick}
-			aria-label={
-				compact || name ? (copied ? "Link copied" : (name ?? label)) : undefined
-			}
+			aria-label={compact || name ? (copied ? "Link copied" : (name ?? label)) : undefined}
 			className={`${className} ${compact ? ICON_ON_PHONE : ""}`}
 		>
 			{copied ? (
@@ -181,9 +174,7 @@ export function ShareButton({
 			) : (
 				<ShareIcon className="size-4" aria-hidden />
 			)}
-			<span className={compact ? "max-sm:hidden" : ""}>
-				{copied ? "Link copied" : label}
-			</span>
+			<span className={compact ? "max-sm:hidden" : ""}>{copied ? "Link copied" : label}</span>
 		</button>
 	)
 }
@@ -246,10 +237,7 @@ export function SpreadBars({
 					</span>
 				)}
 			</div>
-			<div
-				className="flex gap-1 text-[10px] font-bold tabular-nums text-gray-500"
-				aria-hidden
-			>
+			<div className="flex gap-1 text-[10px] font-bold tabular-nums text-gray-500" aria-hidden>
 				{spread.map((_, i) => (
 					// biome-ignore lint/suspicious/noArrayIndexKey: always the ten scores
 					<span key={i} className="flex-1 text-center">
@@ -263,11 +251,7 @@ export function SpreadBars({
 
 /** A page's body under the compact head. */
 export function Body({ children }: { children: ReactNode }) {
-	return (
-		<div className={`${WRAP} flex flex-col gap-6 pt-5 pb-32 text-white`}>
-			{children}
-		</div>
-	)
+	return <div className={`${WRAP} flex flex-col gap-6 pt-5 pb-32 text-white`}>{children}</div>
 }
 
 export function Segmented<T extends string>({
@@ -309,7 +293,11 @@ export function SortSelect<T extends string>({
 	value,
 	onChange,
 	options,
-}: { value: T; onChange: (v: T) => void; options: SortOption<T>[] }) {
+}: {
+	value: T
+	onChange: (v: T) => void
+	options: SortOption<T>[]
+}) {
 	return (
 		<SortControl
 			size="sm"
@@ -328,11 +316,13 @@ export function HiddenPart({
 	handle,
 	part,
 	members,
-}: { handle: string; part: string; members: boolean }) {
+}: {
+	handle: string
+	part: string
+	members: boolean
+}) {
 	return (
-		<div
-			className={`${TILE} flex flex-col items-center gap-3 px-6 py-14 text-center`}
-		>
+		<div className={`${TILE} flex flex-col items-center gap-3 px-6 py-14 text-center`}>
 			<LockClosedIcon className="size-6 text-gray-500" aria-hidden />
 			<p className="text-lg font-bold text-gray-100">
 				{members
@@ -345,9 +335,9 @@ export function HiddenPart({
 					: "Members choose which parts of their profile are public. This one is private."}
 			</p>
 			{members && (
-				<Link to="/sign-up" rel="nofollow" className={AMBER_BUTTON}>
+				<PrimaryButton to="/sign-up" rel="nofollow" className={BUTTON_BOX}>
 					Sign up free
-				</Link>
+				</PrimaryButton>
 			)}
 		</div>
 	)
@@ -384,8 +374,7 @@ export function TitleRow({
 				<span className="flex min-w-0 items-center gap-1.5 text-xs text-gray-500">
 					{logos}
 					<span className="truncate">
-						{title.year ?? "–"} ·{" "}
-						{title.mediaType === "movie" ? "Movie" : "Show"}
+						{title.year ?? "–"} · {title.mediaType === "movie" ? "Movie" : "Show"}
 					</span>
 				</span>
 			</span>

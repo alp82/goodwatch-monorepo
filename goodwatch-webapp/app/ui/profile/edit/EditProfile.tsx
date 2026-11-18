@@ -36,9 +36,10 @@ import { DISPLAY } from "~/ui/my-pages/bits"
 import { assetUrl } from "~/utils/asset-url"
 import { ProfileAvatar } from "../ProfileFrame"
 import { LINK_SERVICE_INFO, profileTabPath } from "../links"
-import { AMBER_BUTTON, QUIET_BUTTON, TILE, posterUrl } from "../parts"
+import { BUTTON_BOX, QUIET_BUTTON, TILE, posterUrl } from "../parts"
 import { PhotoCropper } from "./PhotoCropper"
 import { SectionHeading } from "~/ui/heading"
+import { PrimaryButton } from "~/ui/button/PrimaryButton"
 
 const PARTS: { part: ProfilePart; name: string; line: string }[] = [
 	{
@@ -199,15 +200,15 @@ export function EditProfile({ data }: { data: EditProfileData }) {
 				>
 					Undo changes
 				</button>
-				<button
+				<PrimaryButton
 					type="button"
 					onClick={save}
 					disabled={!dirty || !valid || saving}
-					className={`${AMBER_BUTTON} disabled:opacity-40`}
+					className={`${BUTTON_BOX} disabled:opacity-40`}
 				>
 					<CheckIcon className="size-4" aria-hidden />
 					{saving ? "Saving…" : "Save"}
-				</button>
+				</PrimaryButton>
 			</div>
 
 			<div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem]">
@@ -345,15 +346,15 @@ export function EditProfile({ data }: { data: EditProfileData }) {
 										<b>Happy with who sees what?</b> Confirm and you're all set. You can change it
 										here any time.
 									</span>
-									<button
+									<PrimaryButton
 										type="button"
 										onClick={save}
 										disabled={!valid || saving}
-										className={`${AMBER_BUTTON} disabled:opacity-40`}
+										className={`${BUTTON_BOX} disabled:opacity-40`}
 									>
 										<CheckIcon className="size-4" aria-hidden />
 										{saving ? "Saving…" : "Confirm"}
-									</button>
+									</PrimaryButton>
 								</div>
 							)}
 							<button

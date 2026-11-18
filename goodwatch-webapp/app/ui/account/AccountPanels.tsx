@@ -3,12 +3,7 @@
 // MENU_WATCH and MENU_SETUP), and a footer with Feedback, How it works, About and Sign out. Desktop puts Watch and Set
 // up side by side under the card; phones stack them, with taller rows. Guests on phones get GuestPanel: search, the
 // main pages and Sign in / Sign up.
-import {
-	EyeIcon,
-	PencilSquareIcon,
-	ShareIcon,
-	StarIcon,
-} from "@heroicons/react/24/outline"
+import { EyeIcon, PencilSquareIcon, ShareIcon, StarIcon } from "@heroicons/react/24/outline"
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
 import { useQuery } from "@tanstack/react-query"
@@ -29,12 +24,7 @@ import { openFeedback } from "~/ui/feedback/FeedbackTab"
 import { DiscordMark } from "~/ui/footer/links"
 import { useNavigation } from "~/ui/navigation/NavigationContext"
 import { holdKeyboardForSearch } from "~/ui/navigation/Search"
-import {
-	MENU_FOOTER,
-	MENU_SETUP,
-	MENU_WATCH,
-	type Place,
-} from "~/ui/navigation/areas"
+import { MENU_FOOTER, MENU_SETUP, MENU_WATCH, type Place } from "~/ui/navigation/areas"
 import { guestMenuPages, palettePages } from "~/ui/navigation/palette-pages"
 import { useWatchNews } from "~/ui/navigation/useWhatsNew"
 import { profilePath } from "~/ui/share-card/links"
@@ -42,6 +32,7 @@ import { useUser } from "~/utils/auth"
 import { useAuthHref } from "~/utils/auth-href"
 import { AccountAvatar } from "./AccountAvatar"
 import { useAccountSummary } from "./useAccountSummary"
+import { PrimaryButton } from "~/ui/button/PrimaryButton"
 
 const count = (n: number) => n.toLocaleString("en-US")
 
@@ -94,12 +85,7 @@ function PlaceLink({
 			</button>
 		)
 	return (
-		<Link
-			to={place.href ?? "/"}
-			prefetch="intent"
-			onClick={close}
-			className={className}
-		>
+		<Link to={place.href ?? "/"} prefetch="intent" onClick={close} className={className}>
 			{children}
 		</Link>
 	)
@@ -107,11 +93,7 @@ function PlaceLink({
 
 function PlaceRow({ place, close, big }: PanelProps & { place: Place }) {
 	return (
-		<PlaceLink
-			place={place}
-			close={close}
-			className={`${ROW} ${rowHeight(big)}`}
-		>
+		<PlaceLink place={place} close={close} className={`${ROW} ${rowHeight(big)}`}>
 			<place.icon className="h-5 w-5 shrink-0 text-amber-400" aria-hidden />
 			<span className="grow truncate">{place.label}</span>
 			{place.id === "my-shows" && <WatchBadge kind="shows" />}
@@ -120,12 +102,7 @@ function PlaceRow({ place, close, big }: PanelProps & { place: Place }) {
 	)
 }
 
-function Group({
-	name,
-	places,
-	close,
-	big,
-}: PanelProps & { name: string; places: Place[] }) {
+function Group({ name, places, close, big }: PanelProps & { name: string; places: Place[] }) {
 	return (
 		<div>
 			<p className="px-4 pt-3 pb-1 text-[11px] font-semibold tracking-wide text-gray-500 uppercase">
@@ -253,12 +230,7 @@ function ProfileCard({ close, big }: PanelProps) {
 					onClick={close}
 					className="flex min-w-0 grow items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-white/[0.05]"
 				>
-					<AccountAvatar
-						url={me.avatarUrl}
-						color={me.color}
-						initial={me.initial}
-						size={52}
-					/>
+					<AccountAvatar url={me.avatarUrl} color={me.color} initial={me.initial} size={52} />
 					<span className="min-w-0">
 						<b className="block truncate text-lg text-white">
 							{handle ? `@${handle}` : "Your profile"}
@@ -302,10 +274,7 @@ function ProfileCard({ close, big }: PanelProps) {
 						className="flex flex-col items-center rounded-xl py-2 hover:bg-white/[0.06]"
 					>
 						{stat.star ? (
-							<StarIcon
-								className="my-[3px] h-[22px] w-[22px] text-amber-400"
-								aria-hidden
-							/>
+							<StarIcon className="my-[3px] h-[22px] w-[22px] text-amber-400" aria-hidden />
 						) : (
 							<b className="text-lg leading-tight tabular-nums text-white">
 								{stat.value != null ? count(stat.value) : "–"}
@@ -381,10 +350,7 @@ export function GuestPanel({ close }: { close: () => void }) {
 	const authHref = useAuthHref()
 	const signUp = authHref("sign-up")
 	const pages = useMemo(
-		() =>
-			guestMenuPages(
-				palettePages({ member: false, handle: null, signUpHref: signUp }),
-			),
+		() => guestMenuPages(palettePages({ member: false, handle: null, signUpHref: signUp })),
 		[signUp],
 	)
 	return (
@@ -427,14 +393,14 @@ export function GuestPanel({ close }: { close: () => void }) {
 				>
 					Sign in
 				</Link>
-				<Link
+				<PrimaryButton
 					rel="nofollow"
 					to={signUp}
 					onClick={close}
-					className="flex h-11 flex-1 items-center justify-center rounded-full bg-amber-400 font-bold text-black"
+					className="flex h-11 flex-1 items-center justify-center"
 				>
 					Sign up
-				</Link>
+				</PrimaryButton>
 			</div>
 		</div>
 	)

@@ -26,7 +26,11 @@ registerHooks({
 			format: "module",
 			shortCircuit: true,
 			source: ts.transpileModule(readFileSync(new URL(url), "utf8"), {
-				compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ESNext, jsx: ts.JsxEmit.ReactJSX },
+				compilerOptions: {
+					module: ts.ModuleKind.ESNext,
+					target: ts.ScriptTarget.ESNext,
+					jsx: ts.JsxEmit.ReactJSX,
+				},
 			}).outputText,
 		}
 	},
@@ -39,7 +43,8 @@ const { AUTH_SUBMIT_CLASS, AuthScene } = await import("./AuthScene.tsx")
 const kit = await import("./kit.tsx")
 
 const noop = () => {}
-const card = (...children: ReactNode[]) => renderToStaticMarkup(h(AuthScene, { posters: [], children }))
+const card = (...children: ReactNode[]) =>
+	renderToStaticMarkup(h(AuthScene, { posters: [], children }))
 
 test("the scene keeps the headline, the wordmark and the turning aurora around the forms", () => {
 	const html = card(h(kit.EmailField, { value: "", onChange: noop }))
@@ -56,15 +61,25 @@ test("the fields and buttons use the card's styling", () => {
 		h(kit.OrDivider, {}),
 		h(kit.PrimaryButton, { children: "Sign in" }),
 	)
-	assert.ok(html.includes(`class="${AUTH_SUBMIT_CLASS}"`), "the main button is the card's gradient button")
+	assert.ok(
+		html.includes(`class="${AUTH_SUBMIT_CLASS}"`),
+		"the main button is the card's own button",
+	)
+	assert.match(
+		AUTH_SUBMIT_CLASS,
+		/\bbg-amber-700\b.*\brounded-lg\b|\brounded-lg\b.*\bbg-amber-700\b/,
+		"the info pages' amber rectangle (D1)",
+	)
 	assert.match(html, /id="auth-email"[^>]*class="[^"]*bg-white\/\[0\.06\][^"]*border-white\/10/)
 	assert.match(html, /id="auth-password"[^>]*class="[^"]*bg-white\/\[0\.06\][^"]*border-red-500/)
 	// The older flat look: gray fields, a solid divider label that shows as a patch on the card.
-	assert.doesNotMatch(html, /bg-gray-800|bg-gray-900|bg-amber-700/)
+	assert.doesNotMatch(html, /bg-gray-800|bg-gray-900/)
 })
 
 test("on sign-in and sign-up the wordmark heads the card and the heading is for screen readers", () => {
-	const html = renderToStaticMarkup(h(kit.Heading, { srOnly: true, title: "Sign in", sub: "Welcome back" }))
+	const html = renderToStaticMarkup(
+		h(kit.Heading, { srOnly: true, title: "Sign in", sub: "Welcome back" }),
+	)
 	assert.match(html, /^<div class="sr-only"><h1>Sign in<\/h1>/)
 	for (const page of ["sign-in", "sign-up"]) {
 		const source = readFileSync(new URL(`../../routes/${page}.tsx`, import.meta.url), "utf8")

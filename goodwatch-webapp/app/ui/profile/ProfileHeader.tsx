@@ -4,7 +4,7 @@
 // handle gets a strip of the same height that asks for one. While the owner views as a visitor, the amber bar sticks
 // under the site header (header/VisitorView.tsx).
 import { UserCircleIcon } from "@heroicons/react/24/outline"
-import { Link, useLocation } from "@remix-run/react"
+import { useLocation } from "@remix-run/react"
 import { EDIT_PROFILE_PATH, type PathViewer } from "~/domain/member-paths"
 import { AUDIENCES, type Audience, type ProfileShell, canSee, seesPart } from "~/domain/profile"
 import type { HeaderMatch } from "~/server/profile/header.server"
@@ -15,9 +15,10 @@ import type { ShareTarget } from "./header/Controls"
 import { Frame, InlineHeader } from "./header/Layouts"
 import { VisitorBar, viewSwitchHref } from "./header/VisitorView"
 import { headerFacts, joinedMonth } from "./header/facts"
-import { AMBER_BUTTON } from "./parts"
+import { BUTTON_BOX } from "./parts"
 import { PROFILE_TAB_PARTS, type ProfileTab } from "./paths"
 import type { WhorlAttribute } from "./taste/Whorl"
+import { PrimaryButton } from "~/ui/button/PrimaryButton"
 
 /**
  * The shell as a signed-out visitor sees it: the owner's own shell with every part guests may not see emptied. The
@@ -84,9 +85,13 @@ export function HandleStrip() {
 						Pick a handle to get a profile you can share.
 					</p>
 				</div>
-				<Link to={EDIT_PROFILE_PATH} prefetch="intent" className={`${AMBER_BUTTON} shrink-0`}>
+				<PrimaryButton
+					to={EDIT_PROFILE_PATH}
+					prefetch="intent"
+					className={`${BUTTON_BOX} shrink-0`}
+				>
 					Pick your handle
-				</Link>
+				</PrimaryButton>
 			</div>
 		</Frame>
 	)

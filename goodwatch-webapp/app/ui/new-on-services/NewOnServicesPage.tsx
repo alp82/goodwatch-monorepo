@@ -23,6 +23,7 @@ import { CountryChooser } from "./CountryChooser"
 import { MyServicesSwitch } from "./MyServicesSwitch"
 import { Flag, Logo, PosterImage, PosterRow, RankedRow, Sub } from "./parts"
 import { SectionHeading } from "~/ui/heading"
+import { PrimaryButton } from "~/ui/button/PrimaryButton"
 
 /** The page's trail, for the BreadcrumbList. */
 export function crumbsOf(data: NewPageData): Crumb[] {
@@ -56,16 +57,16 @@ function Waited({ data }: { data: NewPageData }) {
 					{/* Without an exact day, the heading already says all there is. */}
 					{words.lead}.{first.exact && ` ${words.landed}.`}
 				</p>
-				<Link
+				<PrimaryButton
 					to={first.path}
 					prefetch="intent"
 					// The heading already names the title; a screen reader still hears which one.
 					aria-label={`Show details of ${first.title}`}
-					className="mt-4 inline-flex h-11 items-center gap-1 rounded-full bg-linear-to-b from-amber-400 to-amber-600 px-5 text-sm font-black text-gray-950 hover:brightness-110"
+					className="mt-4 inline-flex h-11 items-center gap-1 px-5 text-sm"
 				>
 					Show details
 					<ChevronRightIcon className="h-4 w-4" aria-hidden />
-				</Link>
+				</PrimaryButton>
 			</div>
 			{others.length > 0 && (
 				<div className="rounded-2xl bg-gray-950/85 p-3 ring-1 ring-sky-300/25">

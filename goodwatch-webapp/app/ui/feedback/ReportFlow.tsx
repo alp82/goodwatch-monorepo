@@ -5,13 +5,8 @@ import { FlagIcon } from "@heroicons/react/20/solid"
 import { useEffect, useState } from "react"
 import { useStreamingProviders } from "~/routes/api.streaming-providers"
 import { TmdbImage } from "~/ui/TmdbImage"
-import { PrimaryButton } from "~/ui/auth/PrimaryButton"
 import { regionName } from "~/utils/display-names"
-import {
-	brandName,
-	getShorterProviderLabel,
-	ignoredProviders,
-} from "~/utils/streaming-links"
+import { brandName, getShorterProviderLabel, ignoredProviders } from "~/utils/streaming-links"
 import {
 	BeforeSendLine,
 	Chip,
@@ -23,6 +18,7 @@ import {
 	SendFooter,
 	useFixFlow,
 	useSender,
+	SendButton,
 } from "./kit"
 import {
 	DATE_PROBLEMS,
@@ -43,12 +39,7 @@ import {
 	reportOfDraft,
 	spotOf,
 } from "./problems"
-import {
-	buildReportRequest,
-	emailProblem,
-	fallbackOutcome,
-	linkProblem,
-} from "./request"
+import { buildReportRequest, emailProblem, fallbackOutcome, linkProblem } from "./request"
 import type { FeedbackSubject, PersonSubject, TitleSubject } from "./subject"
 import { type FeedbackOutcome, outcomeOf } from "~/utils/feedback"
 
@@ -62,7 +53,11 @@ function Questions({
 	d,
 	set,
 	subject,
-}: { d: Draft; set: (p: Partial<Draft>) => void; subject: FeedbackSubject }) {
+}: {
+	d: Draft
+	set: (p: Partial<Draft>) => void
+	subject: FeedbackSubject
+}) {
 	const ask = d.problem?.ask ?? []
 	const title = subject.kind === "title" ? subject : null
 	const person = subject.kind === "person" ? subject : null
@@ -75,9 +70,7 @@ function Questions({
 	const other = (q: Question, clear: Partial<Draft> = {}) => (
 		<Chip
 			on={isOther(q)}
-			onClick={() =>
-				set({ ...clear, others: { ...d.others, [q]: d.others[q] ?? "" } })
-			}
+			onClick={() => set({ ...clear, others: { ...d.others, [q]: d.others[q] ?? "" } })}
 		>
 			{SOMETHING_ELSE}
 		</Chip>
@@ -94,8 +87,7 @@ function Questions({
 				className={`${INPUT} mt-2`}
 			/>
 		)
-	const offers: Offer[] =
-		title && ask.includes("provider") ? offersOf(title, d.provider) : OFFERS
+	const offers: Offer[] = title && ask.includes("provider") ? offersOf(title, d.provider) : OFFERS
 	return (
 		<div className="flex flex-col gap-4">
 			{title && ask.includes("provider") && (
@@ -139,8 +131,7 @@ function Questions({
 			{title && ask.includes("missingProvider") && (
 				<MissingService d={d} subject={title} answer={answer} other={other} />
 			)}
-			{ask.includes("missingProvider") &&
-				otherField("missingProvider", "Which service?")}
+			{ask.includes("missingProvider") && otherField("missingProvider", "Which service?")}
 			{ask.includes("offer") && (
 				<div>
 					<span className={LABEL}>How?</span>
@@ -264,8 +255,7 @@ function Questions({
 								onClick={() => answer("source", { source: s.id })}
 								spot={`source:${s.id}`}
 							>
-								{s.label}{" "}
-								<span className="tabular-nums opacity-60">{s.value}</span>
+								{s.label} <span className="tabular-nums opacity-60">{s.value}</span>
 							</Chip>
 						))}
 						{other("source", { source: undefined })}
@@ -286,7 +276,12 @@ function MissingService({
 	subject,
 	answer,
 	other,
-}: { d: Draft; subject: TitleSubject; answer: Answer; other: Other }) {
+}: {
+	d: Draft
+	subject: TitleSubject
+	answer: Answer
+	other: Other
+}) {
 	const { data } = useStreamingProviders({ country: subject.country })
 	const listed = new Set(subject.offers.map((o) => o.providerId))
 	const seen = new Set<string>()
@@ -336,7 +331,12 @@ function CreditChoice({
 	subject,
 	answer,
 	other,
-}: { d: Draft; subject: PersonSubject; answer: Answer; other: Other }) {
+}: {
+	d: Draft
+	subject: PersonSubject
+	answer: Answer
+	other: Other
+}) {
 	return (
 		<div>
 			<span className={LABEL}>Which title?</span>
@@ -350,8 +350,7 @@ function CreditChoice({
 							onClick={() => answer("credit", { credit: key })}
 							spot={`credit:${key}`}
 						>
-							{c.title}{" "}
-							{c.year && <span className="text-xs opacity-60">{c.year}</span>}
+							{c.title} {c.year && <span className="text-xs opacity-60">{c.year}</span>}
 						</Chip>
 					)
 				})}
@@ -366,7 +365,11 @@ function Values({
 	d,
 	set,
 	subject,
-}: { d: Draft; set: (p: Partial<Draft>) => void; subject: FeedbackSubject }) {
+}: {
+	d: Draft
+	set: (p: Partial<Draft>) => void
+	subject: FeedbackSubject
+}) {
 	const p = d.problem
 	if (!p) return null
 	const removing = ["not-there", "not-in-it", "not-theirs"].includes(p.id)
@@ -417,9 +420,7 @@ function Values({
 	const isDate = DATE_PROBLEMS.includes(p.id)
 	return (
 		<div className="flex flex-col gap-4">
-			<div
-				className={p.suggest ? "grid grid-cols-2 gap-2" : "flex flex-col gap-4"}
-			>
+			<div className={p.suggest ? "grid grid-cols-2 gap-2" : "flex flex-col gap-4"}>
 				<div className="min-w-0">
 					<span className={LABEL}>On GoodWatch now</span>
 					<p className="break-words rounded-lg bg-white/[0.04] px-3 py-2.5 text-sm text-gray-300 ring-1 ring-white/10">
@@ -430,9 +431,7 @@ function Values({
 					<label className="min-w-0">
 						<span className={LABEL}>
 							{p.suggest}{" "}
-							<span className="normal-case tracking-normal text-gray-600">
-								· optional
-							</span>
+							<span className="normal-case tracking-normal text-gray-600">· optional</span>
 						</span>
 						<input
 							type={isDate ? "date" : "text"}
@@ -450,9 +449,7 @@ function Values({
 				<label>
 					<span className={LABEL}>
 						What looks off?{" "}
-						<span className="normal-case tracking-normal text-gray-600">
-							· optional
-						</span>
+						<span className="normal-case tracking-normal text-gray-600">· optional</span>
 					</span>
 					<textarea
 						value={d.note}
@@ -469,10 +466,7 @@ function Values({
 	)
 }
 
-export function ReportFlow({
-	area,
-	subject,
-}: { area: RichArea; subject: FeedbackSubject }) {
+export function ReportFlow({ area, subject }: { area: RichArea; subject: FeedbackSubject }) {
 	const flow = useFixFlow()
 	const guest = flow?.guest ?? false
 	const sender = useSender()
@@ -509,10 +503,7 @@ export function ReportFlow({
 	const pick = (problem: Problem) => set({ problem })
 	const kind = d.problem ? (d.problem.flag ? "flag" : "fix") : null
 	const blocked =
-		!ready(d, "send") ||
-		linkProblem(d.link) ||
-		(guest && emailProblem(email)) ||
-		sender.sending
+		!ready(d, "send") || linkProblem(d.link) || (guest && emailProblem(email)) || sender.sending
 	const send = async () => {
 		const report = reportOfDraft(d, subject)
 		const response = await sender.send(
@@ -534,29 +525,17 @@ export function ReportFlow({
 				<span className={LABEL}>What's wrong?</span>
 				<div className="flex flex-wrap gap-2">
 					{problems.map((p) => (
-						<Chip
-							key={p.id}
-							on={d.problem?.id === p.id}
-							onClick={() => pick(p)}
-						>
-							{p.flag && (
-								<FlagIcon className="size-3.5 opacity-60" aria-hidden />
-							)}
+						<Chip key={p.id} on={d.problem?.id === p.id} onClick={() => pick(p)}>
+							{p.flag && <FlagIcon className="size-3.5 opacity-60" aria-hidden />}
 							{p.label}
 						</Chip>
 					))}
 				</div>
 			</div>
 			{d.problem && <Questions d={d} set={set} subject={subject} />}
-			{d.problem && ready(d, "questions") && (
-				<Values d={d} set={set} subject={subject} />
-			)}
+			{d.problem && ready(d, "questions") && <Values d={d} set={set} subject={subject} />}
 			{d.problem && ready(d, "questions") && guest && (
-				<GuestEmail
-					value={email}
-					onChange={setEmail}
-					invalid={emailProblem(email)}
-				/>
+				<GuestEmail value={email} onChange={setEmail} invalid={emailProblem(email)} />
 			)}
 			<SendFooter>
 				<FailureLine failure={sender.failure} />
@@ -565,9 +544,7 @@ export function ReportFlow({
 						<BeforeSendLine kind={kind} />
 					</div>
 				)}
-				<PrimaryButton type="button" onClick={send} disabled={blocked}>
-					{sender.sending ? "Sending…" : "Send"}
-				</PrimaryButton>
+				<SendButton sending={sender.sending} disabled={blocked} onClick={send} />
 			</SendFooter>
 		</div>
 	)

@@ -11,6 +11,7 @@ import { Link, useSearchParams } from "@remix-run/react"
 import { MIN_LIKED } from "~/domain/taste-rules"
 import { useUserData } from "~/routes/api.user-data"
 import { GoogleMark } from "~/ui/brand/GoogleMark"
+import { PrimaryButton } from "~/ui/button/PrimaryButton"
 import {
 	FLOW_PATH,
 	type Tally,
@@ -28,8 +29,7 @@ import { useGuestInteractions } from "~/utils/guest-progress"
 /** Below this many ratings a member is new, and the banner still asks for more. */
 export const NEW_MEMBER_RATINGS = 20
 
-const rateButton =
-	"inline-flex min-h-11 items-center gap-2 rounded-full bg-linear-to-b from-amber-400 to-amber-600 px-5 text-sm font-black text-gray-950 hover:brightness-110 md:min-h-9"
+const rateButton = "inline-flex min-h-11 items-center gap-2 px-5 text-sm md:min-h-9"
 const rateLink =
 	"inline-flex min-h-11 items-center text-sm font-bold text-amber-300 hover:text-amber-200 md:min-h-9"
 
@@ -51,19 +51,16 @@ function MemberBanner() {
 	// Nothing until the account's scores are known: an established member never sees a "not ready" flash.
 	if (!data || (rated >= NEW_MEMBER_RATINGS && isReady(totals))) return null
 	return (
-		<section
-			aria-label="Rate more"
-			className="border-b border-white/10 bg-gray-900/60"
-		>
+		<section aria-label="Rate more" className="border-b border-white/10 bg-gray-900/60">
 			<div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5 md:px-8">
 				<p className="text-sm text-gray-300">
 					{isReady(totals)
 						? `Your taste is from ${rated} ${rated === 1 ? "rating" : "ratings"}. A few more and it gets sharper.`
 						: notReadyLine(totals)}
 				</p>
-				<Link to={FLOW_PATH} className={rateButton}>
+				<PrimaryButton to={FLOW_PATH} className={rateButton}>
 					Rate titles →
-				</Link>
+				</PrimaryButton>
 			</div>
 		</section>
 	)
@@ -71,9 +68,7 @@ function MemberBanner() {
 
 function GuestBanner() {
 	const authHref = useAuthHref()
-	const totals = tally(
-		useGuestInteractions().map((i) => (i.type === "score" ? i.score : null)),
-	)
+	const totals = tally(useGuestInteractions().map((i) => (i.type === "score" ? i.score : null)))
 	const google = useContinueWithGoogle()
 	if (isReady(totals))
 		return (
@@ -84,10 +79,7 @@ function GuestBanner() {
 		)
 	const mid = totals.rated > 0
 	return (
-		<section
-			aria-label="Sample taste"
-			className="border-b border-amber-500/20 bg-amber-950/30"
-		>
+		<section aria-label="Sample taste" className="border-b border-amber-500/20 bg-amber-950/30">
 			<div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-5 gap-y-3 px-4 py-4 md:px-8">
 				<div className="min-w-0 flex-1 basis-64">
 					<div className="flex flex-wrap items-center gap-2">
@@ -103,9 +95,9 @@ function GuestBanner() {
 					</p>
 				</div>
 				<span className="flex flex-wrap items-center gap-x-4 gap-y-1">
-					<Link to={FLOW_PATH} className={rateButton}>
+					<PrimaryButton to={FLOW_PATH} className={rateButton}>
 						Rate titles →
-					</Link>
+					</PrimaryButton>
 					<Link
 						rel="nofollow"
 						to={authHref("sign-in", "/taste")}
@@ -121,10 +113,7 @@ function GuestBanner() {
 
 function YourTaste({ line, save }: { line: string; save?: () => void }) {
 	return (
-		<section
-			aria-label="Your taste"
-			className="border-b border-emerald-500/20 bg-emerald-950/25"
-		>
+		<section aria-label="Your taste" className="border-b border-emerald-500/20 bg-emerald-950/25">
 			<div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 md:px-8">
 				<span className="rounded-full bg-emerald-400 px-2.5 py-0.5 text-xs font-black uppercase tracking-wide text-gray-950">
 					Your taste

@@ -10,8 +10,9 @@ import type { ProfileTitle } from "~/domain/profile"
 import type { MemberCompare } from "~/domain/profile-taste"
 import { DISPLAY } from "~/ui/my-pages/bits"
 import { PANEL_CARD_SIZES, ProfileCard } from "../../ProfileCard"
-import { AMBER_BUTTON, TILE, posterUrl, vibe } from "../../parts"
+import { BUTTON_BOX, TILE, posterUrl, vibe } from "../../parts"
 import { PANEL } from "../parts"
+import { PrimaryButton } from "~/ui/button/PrimaryButton"
 
 export type Ready = Extract<MemberCompare, { status: "ready" }>
 
@@ -43,15 +44,16 @@ export function CountUp({ to, still }: { to: number; still: boolean }) {
 export function ThinMatch({
 	compare,
 	handle,
-}: { compare: Extract<MemberCompare, { status: "thin" }>; handle: string }) {
+}: {
+	compare: Extract<MemberCompare, { status: "thin" }>
+	handle: string
+}) {
 	if (compare.side === "them")
 		return (
 			<div className={`${TILE} flex flex-wrap items-center gap-4 p-4 sm:p-5`}>
 				<SparklesIcon className="size-7 shrink-0 text-gray-500" aria-hidden />
 				<p className="min-w-[12rem] flex-1 text-gray-300">
-					<b className="text-white">
-						@{handle} hasn't rated enough yet to compare.
-					</b>
+					<b className="text-white">@{handle} hasn't rated enough yet to compare.</b>
 				</p>
 			</div>
 		)
@@ -59,13 +61,13 @@ export function ThinMatch({
 		<div className={`${TILE} flex flex-wrap items-center gap-4 p-4 sm:p-5`}>
 			<SparklesIcon className="size-7 shrink-0 text-amber-400" aria-hidden />
 			<p className="min-w-[12rem] flex-1 text-gray-300">
-				<b className="text-white">Rate 5 titles you love to see your match.</b>{" "}
-				You have {compare.liked} so far.
+				<b className="text-white">Rate 5 titles you love to see your match.</b> You have{" "}
+				{compare.liked} so far.
 			</p>
-			<Link to={RATE_FALLBACK_PATH} className={AMBER_BUTTON}>
+			<PrimaryButton to={RATE_FALLBACK_PATH} className={BUTTON_BOX}>
 				Rate titles
 				<ArrowRightIcon className="size-4" aria-hidden />
-			</Link>
+			</PrimaryButton>
 		</div>
 	)
 }
@@ -295,9 +297,7 @@ const gapOf = (r: SplitRow) => Math.abs(r.yours - r.theirs)
 
 /** Titles you both rated 4 or more points apart, widest gap first. */
 export const splitsOf = (c: Ready) =>
-	c.shared
-		.filter((r) => gapOf(r) >= SPLIT_GAP)
-		.sort((a, b) => gapOf(b) - gapOf(a))
+	c.shared.filter((r) => gapOf(r) >= SPLIT_GAP).sort((a, b) => gapOf(b) - gapOf(a))
 
 /** The 1 to 10 scale as a share of the track. */
 export const at = (score: number) => `${((score - 1) / 9) * 100}%`
@@ -339,8 +339,7 @@ export function SplitLegend({ handle }: { handle: string }) {
 	return (
 		<p className="flex shrink-0 items-center gap-2.5 text-[11px] text-gray-500">
 			<span className="inline-flex items-center gap-1">
-				<span className="size-1.5 rounded-full bg-amber-400" aria-hidden />@
-				{handle}
+				<span className="size-1.5 rounded-full bg-amber-400" aria-hidden />@{handle}
 			</span>
 			<span className="inline-flex items-center gap-1">
 				<span className="size-1.5 rounded-full bg-white" aria-hidden />
@@ -366,10 +365,7 @@ function SplitLine({ r, handle }: { r: SplitRow; handle: string }) {
 					/>
 				)}
 			</span>
-			<Link
-				to={r.href}
-				className="truncate text-sm font-semibold text-gray-200 hover:text-white"
-			>
+			<Link to={r.href} className="truncate text-sm font-semibold text-gray-200 hover:text-white">
 				{r.title}
 			</Link>
 			<span
@@ -388,11 +384,7 @@ function SplitLine({ r, handle }: { r: SplitRow; handle: string }) {
 	)
 }
 
-export function Dot({
-	at,
-	score,
-	ring,
-}: { at: string; score: number; ring: string }) {
+export function Dot({ at, score, ring }: { at: string; score: number; ring: string }) {
 	return (
 		<span
 			className={`absolute top-1/2 flex size-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-[11px] font-black text-gray-950 ring-2 ${ring}`}
@@ -405,11 +397,7 @@ export function Dot({
 
 // ---------- Picks for each other ----------
 
-export function Picks({
-	handle,
-	plan,
-	frame = PANEL,
-}: Omit<PanelProps, "c"> & { plan: Plan }) {
+export function Picks({ handle, plan, frame = PANEL }: Omit<PanelProps, "c"> & { plan: Plan }) {
 	const { forThem } = plan
 	if (!forThem.length) return null
 	return (
@@ -426,7 +414,10 @@ export function Picks({
 export function PickRow({
 	title,
 	items,
-}: { title: string; items: { t: ProfileTitle; note: string }[] }) {
+}: {
+	title: string
+	items: { t: ProfileTitle; note: string }[]
+}) {
 	if (!items.length) return null
 	return (
 		<div>
@@ -438,9 +429,7 @@ export function PickRow({
 						className={`flex min-w-0 flex-col gap-1 ${i === 3 ? "max-sm:hidden" : ""}`}
 					>
 						<ProfileCard title={t} posterSizes={PANEL_CARD_SIZES} />
-						<span className="block truncate text-[11px] text-gray-500">
-							{note}
-						</span>
+						<span className="block truncate text-[11px] text-gray-500">{note}</span>
 					</li>
 				))}
 			</ul>

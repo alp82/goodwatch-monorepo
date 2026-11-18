@@ -11,14 +11,10 @@ import {
 } from "@heroicons/react/20/solid"
 import { BookmarkIcon as BookmarkOutlineIcon } from "@heroicons/react/24/outline"
 import { Link } from "@remix-run/react"
-import {
-	type ComponentPropsWithoutRef,
-	type ReactNode,
-	useEffect,
-	useState,
-} from "react"
+import { type ComponentPropsWithoutRef, type ReactNode, useEffect, useState } from "react"
 import type { Score } from "~/server/scores.server"
 import { GoogleMark } from "~/ui/brand/GoogleMark"
+import { PrimaryButton } from "~/ui/button/PrimaryButton"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import type { ScoringMedia } from "~/ui/scoring/types"
 import type { TasteInteraction } from "~/ui/taste/types"
@@ -50,8 +46,7 @@ export const quietButton =
 export const image = (path: string | undefined | null, size: string) =>
 	path ? `https://image.tmdb.org/t/p/${size}${path}` : undefined
 
-const kindWord = (t: { media_type: string }) =>
-	t.media_type === "show" ? "Show" : "Movie"
+const kindWord = (t: { media_type: string }) => (t.media_type === "show" ? "Show" : "Movie")
 
 /** The title asked about, always with its year, so "The Office" (2005) never reads as the 2001 one. */
 export function TitleLine({ t }: { t: ScoringMedia }) {
@@ -59,17 +54,10 @@ export function TitleLine({ t }: { t: ScoringMedia }) {
 		<div className="min-w-0">
 			<h2 className="text-2xl font-extrabold leading-tight text-white md:text-3xl">
 				<span lang={mediaFieldLanguage(t)}>{t.title}</span>
-				{t.release_year && (
-					<span className="font-semibold text-gray-400">
-						{" "}
-						({t.release_year})
-					</span>
-				)}
+				{t.release_year && <span className="font-semibold text-gray-400"> ({t.release_year})</span>}
 			</h2>
 			<div className="mt-1 text-sm text-gray-400">
-				{[kindWord(t), t.genres?.slice(0, 3).join(", ")]
-					.filter(Boolean)
-					.join(" · ")}
+				{[kindWord(t), t.genres?.slice(0, 3).join(", ")].filter(Boolean).join(" · ")}
 			</div>
 		</div>
 	)
@@ -213,10 +201,7 @@ const FULL_MS = 1100
  * in words. When a milestone lands on the latest rating the dots show full for a moment, then rise in again from the
  * reset count. Opacity and transform only.
  */
-export function NextStepDots({
-	step,
-	landed,
-}: { step: NextStep; landed: Milestone | null }) {
+export function NextStepDots({ step, landed }: { step: NextStep; landed: Milestone | null }) {
 	const [full, setFull] = useState<number | null>(null)
 	// Bumped each time the full dots give way to the reset ones, so only that change rises in.
 	const [wave, setWave] = useState(0)
@@ -262,7 +247,11 @@ export function TasteBar({
 	tally,
 	lit,
 	onOpen,
-}: { tally: Tally; lit: Milestone | null; onOpen: () => void }) {
+}: {
+	tally: Tally
+	lit: Milestone | null
+	onOpen: () => void
+}) {
 	const on = lit != null
 	const { head, line } = tasteBarWords(tally, lit)
 	return (
@@ -337,10 +326,7 @@ export function TopRow({
 		<div className="flex min-h-12 items-center justify-between gap-3">
 			<div className="min-w-0">{left}</div>
 			{recent.length > 0 && (
-				<ul
-					aria-label={WORDS.lastAnswered}
-					className="flex shrink-0 items-center gap-2"
-				>
+				<ul aria-label={WORDS.lastAnswered} className="flex shrink-0 items-center gap-2">
 					{recent.map((r, n) => (
 						<li key={r.key} className={n === 2 ? "max-[419px]:hidden" : ""}>
 							<button
@@ -374,11 +360,7 @@ function AnswerBadge({ answer }: { answer: TasteInteraction }) {
 	const base =
 		"absolute -right-1 -bottom-1 flex size-4 items-center justify-center rounded-[5px] text-[10px] font-black leading-none ring-2 ring-gray-950"
 	if (answer.type === "score")
-		return (
-			<span className={`${base} bg-amber-400 tabular-nums text-gray-950`}>
-				{answer.score}
-			</span>
-		)
+		return <span className={`${base} bg-amber-400 tabular-nums text-gray-950`}>{answer.score}</span>
 	const [Icon, tint] =
 		answer.type === "skip"
 			? [EyeSlashIcon, "text-gray-200"]
@@ -411,8 +393,7 @@ export function ReopenedNote({
 			<span className="text-gray-300">
 				{answer ? (
 					<>
-						{WORDS.yourAnswer}{" "}
-						<strong className="text-white">{answerWords(answer)}</strong>
+						{WORDS.yourAnswer} <strong className="text-white">{answerWords(answer)}</strong>
 					</>
 				) : (
 					WORDS.noAnswer
@@ -428,11 +409,7 @@ export function ReopenedNote({
 					{WORDS.clearIt}
 				</button>
 			)}
-			<button
-				type="button"
-				onClick={onClose}
-				className={`${link} text-amber-300`}
-			>
+			<button type="button" onClick={onClose} className={`${link} text-amber-300`}>
 				{WORDS.backToNew}
 			</button>
 		</div>
@@ -473,22 +450,18 @@ export function LockedPanel({
 	const google = useContinueWithGoogle()
 	return (
 		<div className="score-ack-enter rounded-2xl bg-white/[0.03] px-4 py-4 ring-1 ring-white/10 sm:px-5">
-			<p className="text-base font-extrabold text-white">
-				{WORDS.lockedHead(rated)}
-			</p>
-			<p className="mt-1 text-sm leading-snug text-gray-300">
-				{WORDS.lockedLine}
-			</p>
+			<p className="text-base font-extrabold text-white">{WORDS.lockedHead(rated)}</p>
+			<p className="mt-1 text-sm leading-snug text-gray-300">{WORDS.lockedLine}</p>
 			<div className="mt-4 flex flex-wrap items-center gap-2">
-				<Link
+				<PrimaryButton
 					rel="nofollow"
 					to={authHref("sign-up", returnTo)}
 					data-cta="sign-up"
-					className="inline-flex min-h-11 items-center gap-2 rounded-full bg-linear-to-b from-amber-400 to-amber-600 px-5 text-sm font-black text-gray-950 hover:brightness-110"
+					className="inline-flex min-h-11 items-center gap-2 px-5 text-sm"
 				>
 					<UserPlusIcon className="size-4" aria-hidden />
 					{WORDS.signUpFree}
-				</Link>
+				</PrimaryButton>
 				<button
 					type="button"
 					onClick={() => google(returnTo)}
@@ -518,15 +491,8 @@ export function PicksGrid({ picks }: { picks: FlowPick[] }) {
 	return (
 		<div className="grid grid-cols-3 gap-2 sm:gap-3 md:grid-cols-6">
 			{picks.map((p) => (
-				<div
-					key={`${p.media_type}-${p.tmdb_id}`}
-					className="flex min-w-0 flex-col gap-1"
-				>
-					<MovieTvCard
-						details={p}
-						mediaType={p.media_type}
-						posterSizes={PICK_SIZES}
-					/>
+				<div key={`${p.media_type}-${p.tmdb_id}`} className="flex min-w-0 flex-col gap-1">
+					<MovieTvCard details={p} mediaType={p.media_type} posterSizes={PICK_SIZES} />
 					{p.match_percentage > 0 && (
 						<p className="text-center text-xs font-bold text-amber-200">
 							{Math.round(p.match_percentage)}% match
@@ -540,10 +506,7 @@ export function PicksGrid({ picks }: { picks: FlowPick[] }) {
 
 export function PicksLoading() {
 	return (
-		<div
-			className="grid grid-cols-3 gap-2 sm:gap-3 md:grid-cols-6"
-			aria-busy="true"
-		>
+		<div className="grid grid-cols-3 gap-2 sm:gap-3 md:grid-cols-6" aria-busy="true">
 			{[0, 1, 2, 3, 4, 5].map((i) => (
 				<div
 					key={i}
@@ -570,15 +533,10 @@ export function ScoreSquare({ score }: { score: Score }) {
 }
 
 /** A section heading inside the taste view. */
-export function Label({
-	children,
-	line,
-}: { children: ReactNode; line?: ReactNode }) {
+export function Label({ children, line }: { children: ReactNode; line?: ReactNode }) {
 	return (
 		<div>
-			<h2 className="text-xs font-bold uppercase tracking-wider text-gray-400">
-				{children}
-			</h2>
+			<h2 className="text-xs font-bold uppercase tracking-wider text-gray-400">{children}</h2>
 			{line && <p className="mt-0.5 text-sm text-gray-500">{line}</p>}
 		</div>
 	)
@@ -588,11 +546,11 @@ export function Label({
 export function SaveTaste() {
 	const authHref = useAuthHref()
 	return (
-		<Link
+		<PrimaryButton
 			rel="nofollow"
 			to={authHref("sign-up", TASTE_VIEW_PATH)}
 			data-cta="sign-up"
-			className="inline-flex min-h-12 items-center gap-2.5 rounded-full bg-linear-to-b from-amber-400 to-amber-600 py-1.5 pr-6 pl-4 text-gray-950 hover:brightness-110"
+			className="inline-flex min-h-12 items-center gap-2.5 py-1.5 pr-6 pl-4"
 		>
 			<UserPlusIcon className="size-5 shrink-0" aria-hidden />
 			<span className="flex flex-col text-left leading-tight">
@@ -601,6 +559,6 @@ export function SaveTaste() {
 				</span>
 				<span className="text-[15px] font-black">{WORDS.saveTaste}</span>
 			</span>
-		</Link>
+		</PrimaryButton>
 	)
 }

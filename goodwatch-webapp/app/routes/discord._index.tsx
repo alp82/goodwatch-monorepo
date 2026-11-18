@@ -37,6 +37,7 @@ import { DISCORD_URL, DiscordMark } from "~/ui/footer/links"
 import { Kicker, Question, SectionIntro } from "~/ui/info-page"
 import { type PageMeta, buildMeta } from "~/utils/meta"
 import { START_AFTER_PAINT } from "~/utils/start-after-paint"
+import { PrimaryButton } from "~/ui/button/PrimaryButton"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -133,13 +134,14 @@ export default function DiscordBot() {
 function AddButton({ className = "" }: { className?: string }) {
 	// A document request: /discord/add redirects to discord.com.
 	return (
-		<a
+		<PrimaryButton
+			variant="rect"
 			href={DISCORD_ADD_PATH}
-			className={`inline-flex min-h-12 items-center justify-center gap-2.5 rounded-lg bg-amber-700 px-5 py-3 font-semibold text-white transition hover:bg-amber-600 focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 focus-visible:outline-none ${className}`}
+			className={`inline-flex min-h-12 items-center justify-center gap-2.5 px-5 py-3 focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 focus-visible:outline-none ${className}`}
 		>
 			<DiscordMark className="h-5 w-5" />
 			Add to Discord
-		</a>
+		</PrimaryButton>
 	)
 }
 

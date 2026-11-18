@@ -9,32 +9,21 @@ import { Link } from "@remix-run/react"
 import { motion, useReducedMotion } from "framer-motion"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import { countText } from "../moods/mood-counts"
-import {
-	type ResultsScope,
-	START_CARDS,
-	seeAllHref,
-} from "../search/start-search"
-import {
-	type StartQuery,
-	type StartResults,
-	querySignature,
-} from "../stage/start-query"
+import { type ResultsScope, START_CARDS, seeAllHref } from "../search/start-search"
+import { type StartQuery, type StartResults, querySignature } from "../stage/start-query"
+import { primaryButtonClass } from "~/ui/button/PrimaryButton"
 
 /** Which widths show a slot, by its place: two rows at every width. */
 const slotShown = (i: number) =>
-	i >= 12
-		? "hidden lg:block"
-		: i >= 10
-			? "hidden md:block"
-			: i >= 6
-				? "hidden sm:block"
-				: ""
+	i >= 12 ? "hidden lg:block" : i >= 10 ? "hidden md:block" : i >= 6 ? "hidden sm:block" : ""
 
 const LINK =
 	"inline-flex h-9 shrink-0 items-center rounded-lg px-3 text-sm font-semibold outline-none focus-visible:outline-2 focus-visible:outline-amber-300"
 /** The box's main action: a filled amber button. */
-const ACTION =
-	"inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-amber-400 px-4 text-sm font-bold text-gray-950 shadow-md shadow-black/30 outline-none hover:bg-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
+const ACTION = primaryButtonClass(
+	"pill",
+	"inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 px-4 text-sm shadow-md shadow-black/30 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300",
+)
 
 export function MemberResults({
 	query,
@@ -67,10 +56,7 @@ export function MemberResults({
 	return (
 		<div className="start-member-box flex h-full flex-col pt-3">
 			<div className="flex h-10 min-w-0 items-center gap-2">
-				<h2
-					className="min-w-0 flex-1 truncate text-sm text-gray-300"
-					aria-live="polite"
-				>
+				<h2 className="min-w-0 flex-1 truncate text-sm text-gray-300" aria-live="polite">
 					{line}
 				</h2>
 				<button
@@ -85,11 +71,7 @@ export function MemberResults({
 						Try again
 					</button>
 				) : (
-					<Link
-						to={results.discoverHref ?? seeAllHref(query)}
-						prefetch="intent"
-						className={ACTION}
-					>
+					<Link to={results.discoverHref ?? seeAllHref(query)} prefetch="intent" className={ACTION}>
 						See all
 						<ArrowRightIcon className="h-4 w-4" aria-hidden />
 					</Link>

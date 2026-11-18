@@ -1,10 +1,12 @@
-// The sign-in card's main button, in a module of its own: the Feedback drawer uses it too and must not load the
-// card's scene (AuthScene.tsx) on every page (#236).
+// The sign-in card's main button: the info pages' amber-700 rectangle (D1), full width, with a spinner while busy.
 import type { ReactNode } from "react"
+import { primaryButtonClass } from "~/ui/button/PrimaryButton"
 import { Spinner } from "~/ui/wait/Spinner"
 
-export const AUTH_SUBMIT_CLASS =
-	"flex w-full cursor-pointer items-center justify-center rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 px-4 py-3 font-semibold text-white shadow-lg shadow-amber-900/40 transition duration-200 hover:from-amber-500 hover:to-orange-500 disabled:cursor-not-allowed disabled:opacity-60"
+export const AUTH_SUBMIT_CLASS = primaryButtonClass(
+	"rect",
+	"flex w-full cursor-pointer items-center justify-center px-4 py-3 disabled:cursor-not-allowed disabled:opacity-60",
+)
 
 export function PrimaryButton({
 	children,

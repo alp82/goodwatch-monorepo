@@ -1,14 +1,14 @@
 // The owner's way to bring ratings or a watchlist in from another service (Settings > Imports), with the import sources'
 // own logos. The owner can dismiss it for good: the choice is a user setting, so it holds on every device.
 import { ArrowDownTrayIcon, XMarkIcon } from "@heroicons/react/20/solid"
-import { Link } from "@remix-run/react"
 import { useState } from "react"
 import { IMPORT_CTA_KEYS, type ProfileShell } from "~/domain/profile"
 import { useSetUserSettings } from "~/routes/api.user-settings.set"
 import { IMPORT_SOURCE_LIST } from "~/ui/imports/ImportSources"
 import { IMPORTS_PATH } from "~/ui/imports/shared"
 import { assetUrl } from "~/utils/asset-url"
-import { AMBER_BUTTON } from "./parts"
+import { BUTTON_BOX } from "./parts"
+import { PrimaryButton } from "~/ui/button/PrimaryButton"
 
 const SHOWN = ["letterboxd", "imdb", "trakt", "myanimelist", "tvtime"]
 const LOGOS = SHOWN.flatMap((id) => {
@@ -17,21 +17,10 @@ const LOGOS = SHOWN.flatMap((id) => {
 })
 
 /** Shown to the owner only, until they dismiss it. */
-export function ImportCta({
-	shell,
-	what,
-}: {
-	shell: ProfileShell
-	what: "ratings" | "wishlist"
-}) {
+export function ImportCta({ shell, what }: { shell: ProfileShell; what: "ratings" | "wishlist" }) {
 	const save = useSetUserSettings()
 	const [dismissed, setDismissed] = useState(false)
-	if (
-		shell.viewer !== "owner" ||
-		dismissed ||
-		shell.dismissedImports.includes(what)
-	)
-		return null
+	if (shell.viewer !== "owner" || dismissed || shell.dismissedImports.includes(what)) return null
 	const dismiss = () => {
 		setDismissed(true)
 		save.mutate(
@@ -56,32 +45,27 @@ export function ImportCta({
 						key={id}
 						className="flex size-9 items-center justify-center rounded-full bg-gray-900 ring-2 ring-gray-950"
 					>
-						<img
-							src={assetUrl(logo)}
-							alt=""
-							className="size-5 object-contain"
-						/>
+						<img src={assetUrl(logo)} alt="" className="size-5 object-contain" />
 					</span>
 				))}
 			</span>
 			<p className="min-w-[14rem] flex-1 text-sm text-gray-300">
 				{what === "ratings" ? (
 					<>
-						<b className="text-white">Rated titles somewhere else?</b> Bring
-						your scores from Letterboxd, IMDb, Trakt and more. Every import
-						sharpens your taste.
+						<b className="text-white">Rated titles somewhere else?</b> Bring your scores from
+						Letterboxd, IMDb, Trakt and more. Every import sharpens your taste.
 					</>
 				) : (
 					<>
-						<b className="text-white">Keeping a watchlist elsewhere?</b> Bring
-						it in from Letterboxd, IMDb, Trakt, Netflix and more.
+						<b className="text-white">Keeping a watchlist elsewhere?</b> Bring it in from
+						Letterboxd, IMDb, Trakt, Netflix and more.
 					</>
 				)}
 			</p>
-			<Link to={IMPORTS_PATH} className={AMBER_BUTTON}>
+			<PrimaryButton to={IMPORTS_PATH} className={BUTTON_BOX}>
 				<ArrowDownTrayIcon className="size-4" aria-hidden />
 				{what === "ratings" ? "Import ratings" : "Import a watchlist"}
-			</Link>
+			</PrimaryButton>
 		</div>
 	)
 }

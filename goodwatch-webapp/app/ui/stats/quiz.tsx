@@ -15,6 +15,7 @@ import { loadEffects } from "./effects/load"
 import type { HostStage } from "./effects/stage"
 import { PANEL, reducedMotion } from "./parts"
 import { type QuizAnswer, type QuizQuestion, verdict } from "./quiz-questions"
+import { PrimaryButton } from "~/ui/button/PrimaryButton"
 
 /** CSS px per effect pixel: smaller than the hero's 3, so a burst stays near the answer it celebrates. */
 const PX = 2
@@ -51,8 +52,7 @@ const FOCUS =
 type Picks = Record<string, string>
 
 /** An answer's picture (its poster or thumb), or the answer itself without one. */
-const pictureOf = (answer: Element) =>
-	answer.querySelector("img")?.parentElement ?? answer
+const pictureOf = (answer: Element) => answer.querySelector("img")?.parentElement ?? answer
 type State = "open" | "right" | "wrong" | "other"
 
 /** Each question's answer order, shuffled with a seed from the moment of the shuffle. Browser only. */
@@ -62,9 +62,7 @@ function shuffled(quiz: QuizQuestion[]): Record<string, number[]> {
 		quiz.map((q) => {
 			const o = [0, 1, 2]
 			for (let i = o.length - 1; i > 0; i--) {
-				const j = Math.floor(
-					seededRandomMixed(`${seed}|${q.id}|${i}`) * (i + 1),
-				)
+				const j = Math.floor(seededRandomMixed(`${seed}|${q.id}|${i}`) * (i + 1))
 				;[o[i], o[j]] = [o[j], o[i]]
 			}
 			return [q.id, o]
@@ -77,7 +75,11 @@ function Stack({
 	at,
 	items,
 	className = "",
-}: { at: number; items: ReactNode[]; className?: string }) {
+}: {
+	at: number
+	items: ReactNode[]
+	className?: string
+}) {
 	return (
 		<div className={`grid ${className}`}>
 			{items.map((x, k) => (
@@ -142,18 +144,11 @@ function Score({ quiz, picks }: { quiz: QuizQuestion[]; picks: Picks }) {
 	)
 }
 
-function StateMark({
-	state,
-	className = "",
-}: { state: State; className?: string }) {
+function StateMark({ state, className = "" }: { state: State; className?: string }) {
 	if (state === "right")
-		return (
-			<CheckIcon aria-hidden className={`size-5 text-amber-300 ${className}`} />
-		)
+		return <CheckIcon aria-hidden className={`size-5 text-amber-300 ${className}`} />
 	if (state === "wrong")
-		return (
-			<XMarkIcon aria-hidden className={`size-5 text-gray-500 ${className}`} />
-		)
+		return <XMarkIcon aria-hidden className={`size-5 text-gray-500 ${className}`} />
 	return <span aria-hidden className={`size-5 ${className}`} />
 }
 
@@ -240,9 +235,7 @@ function TextAnswer({ q, a, state, onPick }: AnswerProps) {
 			}`}
 		>
 			{a.thumb !== undefined && (
-				<span
-					className={`block w-7 shrink-0 ${state === "wrong" ? "opacity-40 grayscale" : ""}`}
-				>
+				<span className={`block w-7 shrink-0 ${state === "wrong" ? "opacity-40 grayscale" : ""}`}>
 					<PosterImg title={{ poster: a.thumb }} className="rounded-sm" />
 				</span>
 			)}
@@ -269,9 +262,7 @@ function TextAnswer({ q, a, state, onPick }: AnswerProps) {
 					{a.label}
 					{srState(state)}
 				</span>
-				{a.sub && (
-					<span className="truncate text-[11px] text-gray-500">{a.sub}</span>
-				)}
+				{a.sub && <span className="truncate text-[11px] text-gray-500">{a.sub}</span>}
 			</span>
 			<span
 				className={`max-w-[42%] shrink-0 text-right text-xs leading-tight tabular-nums ${state === "right" ? "text-amber-200/90" : "text-gray-400"} ${revealed ? "" : "invisible"}`}
@@ -301,18 +292,10 @@ function QuizCard({
 	const posters = q.answers.every((a) => a.poster !== undefined)
 	const answers = order.map((i) => q.answers[i])
 	const stateOf = (a: QuizAnswer): State =>
-		!pick
-			? "open"
-			: a.key === q.right
-				? "right"
-				: a.key === pick
-					? "wrong"
-					: "other"
+		!pick ? "open" : a.key === q.right ? "right" : a.key === pick ? "wrong" : "other"
 	const line = (ok: boolean) => (
 		<p className="text-sm text-gray-400">
-			<b className={ok ? "text-amber-300" : "text-gray-200"}>
-				{ok ? "Right." : "Not quite."}
-			</b>{" "}
+			<b className={ok ? "text-amber-300" : "text-gray-200"}>{ok ? "Right." : "Not quite."}</b>{" "}
 			{q.explain}
 			{q.link && (
 				<>
@@ -392,10 +375,7 @@ export const numberWord = (n: number) => WORDS[n] ?? String(n)
 
 export function Quiz({ quiz }: { quiz: QuizQuestion[] }) {
 	const total = quiz.length
-	const identity = useMemo(
-		() => Object.fromEntries(quiz.map((q) => [q.id, [0, 1, 2]])),
-		[quiz],
-	)
+	const identity = useMemo(() => Object.fromEntries(quiz.map((q) => [q.id, [0, 1, 2]])), [quiz])
 	const [picks, setPicks] = useState<Picks>({})
 	const [orders, setOrders] = useState<Record<string, number[]>>(identity)
 	const [round, setRound] = useState(0)
@@ -441,9 +421,7 @@ export function Quiz({ quiz }: { quiz: QuizQuestion[] }) {
 	// A new round puts focus on the first answer, with the quiz's top in view.
 	useEffect(() => {
 		if (!round || !host.current) return
-		host.current
-			.querySelector<HTMLElement>("[data-quiz-answer]")
-			?.focus({ preventScroll: true })
+		host.current.querySelector<HTMLElement>("[data-quiz-answer]")?.focus({ preventScroll: true })
 		host.current.scrollIntoView({
 			behavior: reducedMotion() ? "auto" : "smooth",
 			block: "start",
@@ -465,12 +443,7 @@ export function Quiz({ quiz }: { quiz: QuizQuestion[] }) {
 		}
 	}
 
-	const celebrate = async (
-		ok: boolean,
-		el: HTMLElement,
-		q: QuizQuestion,
-		perfect: boolean,
-	) => {
+	const celebrate = async (ok: boolean, el: HTMLElement, q: QuizQuestion, perfect: boolean) => {
 		if (reducedMotion()) return
 		const st = await ensureStage()
 		if (!st) return
@@ -480,13 +453,7 @@ export function Quiz({ quiz }: { quiz: QuizQuestion[] }) {
 		if (!p) return
 		if (ok) {
 			st.play("pickups/collect-burst", p.x, p.y, { palette: GOLD, seed: n })
-			st.play(
-				"cinema/glint",
-				p.left + p.w - 8,
-				p.top + 8,
-				{ palette: GOLD5, seed: n },
-				0.18,
-			)
+			st.play("cinema/glint", p.left + p.w - 8, p.top + 8, { palette: GOLD5, seed: n }, 0.18)
 		} else {
 			st.play("quiz/fizzle", p.x, p.y + 4, { seed: n })
 			// Then a wink on the answer that was right, so the eye goes there.
@@ -510,12 +477,11 @@ export function Quiz({ quiz }: { quiz: QuizQuestion[] }) {
 			const box = verdictBox.current && spot(verdictBox.current)
 			if (!box) return
 			if (box.w >= 640) {
-				st.play(
-					"explosions/firework-burst",
-					box.left + box.w * 0.25,
-					box.top + 40,
-					{ palette: GOLD7, core: GOLD7, seed: n + 3 },
-				)
+				st.play("explosions/firework-burst", box.left + box.w * 0.25, box.top + 40, {
+					palette: GOLD7,
+					core: GOLD7,
+					seed: n + 3,
+				})
 				st.play(
 					"explosions/firework-burst",
 					box.left + box.w * 0.75,
@@ -524,13 +490,7 @@ export function Quiz({ quiz }: { quiz: QuizQuestion[] }) {
 					0.45,
 				)
 			} else {
-				st.play(
-					"pickups/collect-burst",
-					box.x,
-					box.top + 40,
-					{ palette: GOLD, seed: n + 3 },
-					0.1,
-				)
+				st.play("pickups/collect-burst", box.x, box.top + 40, { palette: GOLD, seed: n + 3 }, 0.1)
 			}
 			st.play(
 				"stats/coin-fountain",
@@ -539,13 +499,7 @@ export function Quiz({ quiz }: { quiz: QuizQuestion[] }) {
 				{ palette: GOLD, seed: n + 9 },
 				0.9,
 			)
-			st.play(
-				"cinema/glint",
-				box.left + 24,
-				box.top + 20,
-				{ palette: GOLD5, seed: n },
-				1.3,
-			)
+			st.play("cinema/glint", box.left + 24, box.top + 20, { palette: GOLD5, seed: n }, 1.3)
 			st.play(
 				"cinema/glint",
 				box.left + box.w - 24,
@@ -642,21 +596,19 @@ export function Quiz({ quiz }: { quiz: QuizQuestion[] }) {
 								<Kicker>
 									{right} of {total} right
 								</Kicker>
-								<p
-									className={`${DISPLAY} text-4xl leading-none text-amber-400 sm:text-5xl`}
-								>
+								<p className={`${DISPLAY} text-4xl leading-none text-amber-400 sm:text-5xl`}>
 									{v.label}
 								</p>
 								<p className="text-sm text-gray-300">{v.line}</p>
 								<div className="flex flex-wrap items-center gap-3">
-									<button
+									<PrimaryButton
 										type="button"
 										onClick={again}
 										tabIndex={done ? 0 : -1}
-										className={`inline-flex min-h-10 items-center gap-1.5 rounded-full bg-linear-to-b from-amber-400 to-amber-600 px-4 text-sm font-black text-gray-950 hover:brightness-110 ${FOCUS}`}
+										className={`inline-flex min-h-10 items-center gap-1.5 px-4 text-sm ${FOCUS}`}
 									>
 										Try again
-									</button>
+									</PrimaryButton>
 									<Dots quiz={quiz} picks={picks} />
 								</div>
 							</div>,

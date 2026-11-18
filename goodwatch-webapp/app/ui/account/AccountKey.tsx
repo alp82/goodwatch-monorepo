@@ -14,6 +14,7 @@ import { useUser } from "~/utils/auth"
 import { useAuthHref } from "~/utils/auth-href"
 import { AccountAvatar } from "./AccountAvatar"
 import { useAccountSummary } from "./useAccountSummary"
+import { PrimaryButton } from "~/ui/button/PrimaryButton"
 
 /** The id of the account menu's panel, for aria-controls. */
 export const ACCOUNT_MENU_ID = "account-menu"
@@ -21,10 +22,7 @@ export const ACCOUNT_MENU_ID = "account-menu"
 /** The account key on show (the header's on desktop, the dock's on phones), to hand focus back to. */
 export const visibleAccountKey = () =>
 	[...document.querySelectorAll<HTMLElement>("[data-account-key]")].find(
-		(el) =>
-			el.isConnected &&
-			el.getClientRects().length > 0 &&
-			!el.closest("[inert]"),
+		(el) => el.isConnected && el.getClientRects().length > 0 && !el.closest("[inert]"),
 	) ?? null
 
 function useMenuKey() {
@@ -99,15 +97,8 @@ export function ProfileKeyIcon({
 			/>
 		)
 	return (
-		<span
-			className={`flex rounded-full p-[1.5px] ${on ? "bg-amber-400" : "bg-white/20"}`}
-		>
-			<AccountAvatar
-				url={me.avatarUrl}
-				color={me.color}
-				initial={me.initial}
-				size={size - 3}
-			/>
+		<span className={`flex rounded-full p-[1.5px] ${on ? "bg-amber-400" : "bg-white/20"}`}>
+			<AccountAvatar url={me.avatarUrl} color={me.color} initial={me.initial} size={size - 3} />
 		</span>
 	)
 }
@@ -124,13 +115,13 @@ export function GuestKeys() {
 			>
 				Sign in
 			</Link>
-			<Link
+			<PrimaryButton
 				rel="nofollow"
 				to={authHref("sign-up")}
-				className="flex h-10 items-center whitespace-nowrap rounded-full bg-amber-400 px-4 text-[14px] font-bold text-black hover:bg-amber-300"
+				className="flex h-10 items-center whitespace-nowrap px-4 text-[14px]"
 			>
 				Sign up
-			</Link>
+			</PrimaryButton>
 		</div>
 	)
 }

@@ -50,6 +50,7 @@ import { AI_CHAT_COPY } from "~/ui/og-image/copy"
 import { AppPicker, AppSetup } from "~/ui/use-with-ai/AppSetup"
 import { ChatDemo } from "~/ui/use-with-ai/ChatDemo"
 import { type PageMeta, buildMeta } from "~/utils/meta"
+import { PrimaryButton } from "~/ui/button/PrimaryButton"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -114,12 +115,13 @@ export default function UseWithAi() {
 
 function SetupButton({ className = "" }: { className?: string }) {
 	return (
-		<a
+		<PrimaryButton
+			variant="rect"
 			href="#setup"
-			className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-amber-700 px-5 py-3 font-semibold text-white transition hover:bg-amber-600 focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 focus-visible:outline-none ${className}`}
+			className={`inline-flex min-h-12 items-center justify-center gap-2 px-5 py-3 focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 focus-visible:outline-none ${className}`}
 		>
 			Set it up
-		</a>
+		</PrimaryButton>
 	)
 }
 

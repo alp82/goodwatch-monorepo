@@ -15,15 +15,13 @@ import { useSignUpHref } from "~/ui/navigation/bits"
 import { Whorl } from "~/ui/profile/taste/Whorl"
 import { isReady, nextStep, nextStepWords, tally } from "~/ui/rating-flow/flow"
 import type { TasteInteraction } from "~/ui/taste/types"
-import {
-	snapshotGuestProgress,
-	useGuestInteractions,
-} from "~/utils/guest-progress"
+import { snapshotGuestProgress, useGuestInteractions } from "~/utils/guest-progress"
 import { useHydrated } from "~/utils/hydrated"
 import useLocale from "~/utils/locale"
 import { mediaLanguageUrl } from "~/utils/media-presentation"
 import { Heading } from "./Heading"
 import { posterSrc } from "./context"
+import { primaryButtonClass } from "~/ui/button/PrimaryButton"
 
 /** What the browser sends: the guest progress, as /api/taste/portrait takes it. */
 export interface GuestProgressBody {
@@ -31,10 +29,7 @@ export interface GuestProgressBody {
 	country: string | null
 	services: string | null
 }
-export type GuestLoader = (
-	progress: GuestProgressBody,
-	language: string,
-) => Promise<ForYouGuest>
+export type GuestLoader = (progress: GuestProgressBody, language: string) => Promise<ForYouGuest>
 
 const POSTERS = 12
 const QUIZ_PATH = "/taste/quiz"
@@ -43,14 +38,11 @@ export async function fetchGuest(
 	progress: GuestProgressBody,
 	language: string,
 ): Promise<ForYouGuest> {
-	const response = await fetch(
-		mediaLanguageUrl("/api/for-you/pool", language),
-		{
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ guest: progress }),
-		},
-	)
+	const response = await fetch(mediaLanguageUrl("/api/for-you/pool", language), {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ guest: progress }),
+	})
 	if (!response.ok) throw new Error(`For you preview: ${response.status}`)
 	return (await response.json()) as ForYouGuest
 }
@@ -162,9 +154,7 @@ export function GuestLock({ load = fetchGuest }: { load?: GuestLoader }) {
 						<span className="grid size-14 place-items-center rounded-full bg-gray-950/85 ring-1 ring-amber-400/40">
 							<LockClosedIcon className="size-6 text-amber-400" aria-hidden />
 						</span>
-						<span
-							className={`text-[13px] font-semibold text-gray-200 ${read ? "" : "invisible"}`}
-						>
+						<span className={`text-[13px] font-semibold text-gray-200 ${read ? "" : "invisible"}`}>
 							{done ? "Sign up to unlock" : "Rate titles to unlock"}
 						</span>
 					</span>
@@ -177,15 +167,10 @@ export function GuestLock({ load = fetchGuest }: { load?: GuestLoader }) {
 /** `done` null: the progress isn't read yet; the button's room stays, empty. */
 function CallToAction({ done }: { done: boolean | null }) {
 	const signUp = useSignUpHref()
-	const className =
-		"inline-flex min-h-11 items-center rounded-full bg-amber-400 px-5 text-[14px] font-black text-gray-950 hover:bg-amber-300"
+	const className = primaryButtonClass("pill", "inline-flex min-h-11 items-center px-5 text-[14px]")
 	if (done === null)
 		return (
-			<span
-				aria-hidden="true"
-				className={`${className} invisible`}
-				data-cta="pending"
-			>
+			<span aria-hidden="true" className={`${className} invisible`} data-cta="pending">
 				Rate titles
 			</span>
 		)

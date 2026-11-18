@@ -14,8 +14,9 @@ import {
 import type { Score } from "~/server/scores.server"
 import { RowScores, rowMark, useRowMarks } from "~/ui/list-row/RowScores"
 import { profileTabPath } from "./links"
-import { AMBER_BUTTON, PosterImg, ProfilePoster, TILE, count, posterOwner } from "./parts"
+import { BUTTON_BOX, PosterImg, ProfilePoster, TILE, count, posterOwner } from "./parts"
 import { SectionHeading } from "~/ui/heading"
+import { PrimaryButton } from "~/ui/button/PrimaryButton"
 
 /**
  * The parts of the old Overview that a visitor's Taste profile keeps, under the portrait: the way to a match (a
@@ -162,9 +163,9 @@ function GuestMatch({ handle }: { handle: string }) {
 				<b className="text-white">See how your taste matches @{handle}.</b> Rate a few titles you
 				love and GoodWatch shows what you share.
 			</p>
-			<Link to="/sign-up" rel="nofollow" className={AMBER_BUTTON}>
+			<PrimaryButton to="/sign-up" rel="nofollow" className={BUTTON_BOX}>
 				Sign up free
-			</Link>
+			</PrimaryButton>
 		</div>
 	)
 }

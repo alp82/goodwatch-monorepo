@@ -39,6 +39,7 @@ import {
 import { Spinner } from "~/ui/wait/Spinner"
 import { useUser } from "~/utils/auth"
 import { FeedbackError, submitFeedback } from "~/utils/feedback"
+import { PrimaryButton } from "~/ui/button/PrimaryButton"
 
 export const CONTACT_SECTION_ID = "write"
 
@@ -64,11 +65,10 @@ const LABEL = "mb-1.5 block text-sm font-medium text-gray-300"
 // As the fields of Edit profile.
 const FIELD =
 	"min-h-11 w-full rounded-lg bg-gray-900 px-3 text-gray-100 ring-1 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-400"
-const field = (invalid = false) =>
-	`${FIELD} ${invalid ? "ring-red-500" : "ring-white/15"}`
+const field = (invalid = false) => `${FIELD} ${invalid ? "ring-red-500" : "ring-white/15"}`
 // As the page's former email button.
 const SEND =
-	"inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-amber-700 px-5 py-3 font-semibold text-white transition hover:bg-amber-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 disabled:cursor-not-allowed disabled:opacity-60"
+	"inline-flex min-h-12 items-center justify-center gap-2 px-5 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 disabled:cursor-not-allowed disabled:opacity-60"
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -162,9 +162,7 @@ export function ContactSection() {
 			key.current = null
 			startedAt.current = Date.now()
 		} catch (error) {
-			setFailure(
-				contactFailure(error instanceof FeedbackError ? error.status : 0),
-			)
+			setFailure(contactFailure(error instanceof FeedbackError ? error.status : 0))
 		} finally {
 			setSending(false)
 		}
@@ -183,13 +181,8 @@ export function ContactSection() {
 				<EnvelopeIcon className="h-5 w-5 text-amber-400" aria-hidden="true" />
 				What's it about?
 			</h2>
-			<p className="mb-4 text-sm text-gray-400">
-				Pick one, then write to us. We answer by email.
-			</p>
-			<fieldset
-				disabled={sending}
-				className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3"
-			>
+			<p className="mb-4 text-sm text-gray-400">Pick one, then write to us. We answer by email.</p>
+			<fieldset disabled={sending} className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3">
 				<legend className="sr-only">Topic</legend>
 				{CONTACT_TOPICS.map(({ id, label }) => {
 					const Icon = ICONS[id]
@@ -207,10 +200,7 @@ export function ContactSection() {
 								onChange={() => pick(id)}
 								className="sr-only"
 							/>
-							<Icon
-								className="size-5 shrink-0 text-amber-400"
-								aria-hidden="true"
-							/>
+							<Icon className="size-5 shrink-0 text-amber-400" aria-hidden="true" />
 							{label}
 						</label>
 					)
@@ -224,16 +214,9 @@ export function ContactSection() {
 				{sentTo !== null ? (
 					<div className="mt-5 flex flex-col gap-3 border-t border-white/10 pt-5">
 						<div className="flex items-start gap-3">
-							<CheckCircleIcon
-								className="size-7 shrink-0 text-emerald-400"
-								aria-hidden="true"
-							/>
+							<CheckCircleIcon className="size-7 shrink-0 text-emerald-400" aria-hidden="true" />
 							<div>
-								<p
-									ref={success}
-									tabIndex={-1}
-									className="text-lg font-semibold text-white"
-								>
+								<p ref={success} tabIndex={-1} className="text-lg font-semibold text-white">
 									Sent. We'll write back.
 								</p>
 								<p className="mt-0.5 break-words text-sm text-gray-400">
@@ -250,15 +233,8 @@ export function ContactSection() {
 						</button>
 					</div>
 				) : topic !== null ? (
-					<form
-						noValidate
-						onSubmit={submit}
-						className="mt-5 border-t border-white/10 pt-5"
-					>
-						<fieldset
-							disabled={sending}
-							className="flex min-w-0 flex-col gap-4 md:max-w-xl"
-						>
+					<form noValidate onSubmit={submit} className="mt-5 border-t border-white/10 pt-5">
+						<fieldset disabled={sending} className="flex min-w-0 flex-col gap-4 md:max-w-xl">
 							<legend className="sr-only">Your message</legend>
 							<div hidden>
 								<label htmlFor={`${ids}-website`}>Website</label>
@@ -274,8 +250,8 @@ export function ContactSection() {
 							{topic === "data" && (
 								<>
 									<p className="text-sm leading-relaxed text-gray-300">
-										Tell us which title and what's wrong. A link to its
-										GoodWatch page helps us find it fast.
+										Tell us which title and what's wrong. A link to its GoodWatch page helps us find
+										it fast.
 									</p>
 									<div>
 										<label htmlFor={`${ids}-title`} className={LABEL}>
@@ -307,17 +283,12 @@ export function ContactSection() {
 									placeholder={PLACEHOLDERS[topic]}
 									aria-invalid={problems.includes("message") || undefined}
 									aria-describedby={
-										problems.includes("message")
-											? `${ids}-message-error`
-											: undefined
+										problems.includes("message") ? `${ids}-message-error` : undefined
 									}
 									className={`${field(problems.includes("message"))} py-2.5`}
 								/>
 								{problems.includes("message") && (
-									<p
-										id={`${ids}-message-error`}
-										className="mt-1 text-sm text-red-300"
-									>
+									<p id={`${ids}-message-error`} className="mt-1 text-sm text-red-300">
 										Write a few words first.
 									</p>
 								)}
@@ -365,23 +336,24 @@ export function ContactSection() {
 								>
 									{failure === "busy" ? (
 										<>
-											That's a lot of messages in a short time. Try again in an
-											hour, or write to <MailLink />.
+											That's a lot of messages in a short time. Try again in an hour, or write to{" "}
+											<MailLink />.
 										</>
 									) : failure === "rejected" ? (
 										<>
-											We couldn't take that message. Check your email address,
-											or write to <MailLink />.
+											We couldn't take that message. Check your email address, or write to{" "}
+											<MailLink />.
 										</>
 									) : (
 										<>
-											That didn't go through. Your message is still here. Try
-											again, or write to <MailLink />.
+											That didn't go through. Your message is still here. Try again, or write to{" "}
+											<MailLink />.
 										</>
 									)}
 								</p>
 							)}
-							<button
+							<PrimaryButton
+								variant="rect"
 								type="submit"
 								disabled={sending}
 								aria-busy={sending || undefined}
@@ -397,7 +369,7 @@ export function ContactSection() {
 								) : (
 									"Send"
 								)}
-							</button>
+							</PrimaryButton>
 						</fieldset>
 					</form>
 				) : null}

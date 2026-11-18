@@ -1,6 +1,7 @@
 // The panel closes onto the matches already counted; candidate-set totals are labelled approximate.
 import { motion } from "framer-motion"
 import { ShowTitlesButton } from "~/ui/filter-bar/ShowTitlesButton"
+import { primaryButtonClass } from "~/ui/button/PrimaryButton"
 import { RollingNumber, TAP } from "~/ui/filter-bar/motion"
 import type { FilterBarCounts } from "~/ui/filter-bar/types"
 import { countWords } from "./chips"
@@ -17,27 +18,15 @@ export function ShowButton({
 	className?: string
 }) {
 	if (!searching)
-		return (
-			<ShowTitlesButton
-				counts={counts}
-				onClick={onClick}
-				className={className}
-			/>
-		)
-	const { n, words, about } = countWords(
-		counts?.total,
-		true,
-		counts?.searchEstimate,
-	)
+		return <ShowTitlesButton counts={counts} onClick={onClick} className={className} />
+	const { n, words, about } = countWords(counts?.total, true, counts?.searchEstimate)
 	return (
 		<motion.button
 			type="button"
 			whileTap={TAP}
 			onClick={onClick}
-			className={`flex h-12 items-center justify-center gap-1.5 rounded-xl px-6 font-bold text-white cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white ${
-				n === 0
-					? "bg-gray-800"
-					: "bg-linear-to-b from-amber-500 to-amber-700 shadow-[inset_0_1px_0_rgba(255,255,255,.25),0_10px_30px_-10px_rgba(217,119,6,.7)]"
+			className={`flex h-12 items-center justify-center gap-1.5 px-6 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white ${
+				n === 0 ? "rounded-full bg-gray-800 font-bold text-white" : primaryButtonClass()
 			} ${className}`}
 		>
 			{n === null ? (

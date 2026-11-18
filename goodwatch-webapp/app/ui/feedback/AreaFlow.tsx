@@ -2,7 +2,6 @@
 // Send. These are reports for staff; nothing changes on the page.
 import { FlagIcon } from "@heroicons/react/20/solid"
 import { useState } from "react"
-import { PrimaryButton } from "~/ui/auth/PrimaryButton"
 import { type FeedbackOutcome, outcomeOf } from "~/utils/feedback"
 import { type PageArea, SOMETHING_ELSE, chipsOf } from "./areas"
 import {
@@ -15,15 +14,13 @@ import {
 	SendFooter,
 	useFixFlow,
 	useSender,
+	SendButton,
 } from "./kit"
 import { type Report, subjectOf } from "./problems"
 import { buildReportRequest, emailProblem, fallbackOutcome } from "./request"
 import type { FeedbackSubject } from "./subject"
 
-export function AreaFlow({
-	area,
-	subject,
-}: { area: PageArea; subject: FeedbackSubject | null }) {
+export function AreaFlow({ area, subject }: { area: PageArea; subject: FeedbackSubject | null }) {
 	const flow = useFixFlow()
 	const guest = flow?.guest ?? false
 	const sender = useSender()
@@ -84,9 +81,7 @@ export function AreaFlow({
 							onClick={() => setChip(i)}
 							className={`inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-full px-3 py-1.5 text-sm transition-colors ${chip === i ? "bg-white font-semibold text-black" : "bg-white/8 text-gray-200 hover:bg-white/15"}`}
 						>
-							{c.kind === "flag" && (
-								<FlagIcon className="size-3.5 opacity-60" aria-hidden />
-							)}
+							{c.kind === "flag" && <FlagIcon className="size-3.5 opacity-60" aria-hidden />}
 							{c.label}
 						</button>
 					))}
@@ -96,9 +91,7 @@ export function AreaFlow({
 				<label className="flex flex-col gap-1.5">
 					<span className="text-sm font-medium text-gray-300">
 						{other ? "What's wrong?" : "Anything to add?"}{" "}
-						{!other && (
-							<span className="font-normal text-gray-500">(optional)</span>
-						)}
+						{!other && <span className="font-normal text-gray-500">(optional)</span>}
 					</span>
 					<textarea
 						value={note}
@@ -115,11 +108,7 @@ export function AreaFlow({
 				</label>
 			)}
 			{picked && guest && (
-				<GuestEmail
-					value={email}
-					onChange={setEmail}
-					invalid={emailProblem(email)}
-				/>
+				<GuestEmail value={email} onChange={setEmail} invalid={emailProblem(email)} />
 			)}
 			<SendFooter>
 				<FailureLine failure={sender.failure} />
@@ -128,18 +117,13 @@ export function AreaFlow({
 						<BeforeSendLine kind={picked.kind} />
 					</div>
 				)}
-				<PrimaryButton
-					type="button"
+				<SendButton
+					sending={sender.sending}
 					disabled={
-						!picked ||
-						(other && !note.trim()) ||
-						(guest && emailProblem(email)) ||
-						sender.sending
+						!picked || (other && !note.trim()) || (guest && emailProblem(email)) || sender.sending
 					}
 					onClick={send}
-				>
-					{sender.sending ? "Sending…" : "Send"}
-				</PrimaryButton>
+				/>
 			</SendFooter>
 		</div>
 	)

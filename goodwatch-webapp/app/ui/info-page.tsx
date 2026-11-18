@@ -5,6 +5,7 @@ import { ChevronDownIcon } from "@heroicons/react/24/outline"
 import { Link } from "@remix-run/react"
 import type { ReactNode } from "react"
 import { SectionHeading } from "~/ui/heading"
+import { PrimaryButton } from "~/ui/button/PrimaryButton"
 
 export const Kicker = ({
 	children,
@@ -50,15 +51,21 @@ export function ActionLink({
 	primary?: boolean
 	children: ReactNode
 }) {
-	return (
+	const box = "inline-flex min-h-12 items-center justify-center gap-2 px-5 py-3"
+	return primary ? (
+		<PrimaryButton
+			variant="rect"
+			to={to}
+			prefetch="intent"
+			className={`${box} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400`}
+		>
+			{children}
+		</PrimaryButton>
+	) : (
 		<Link
 			to={to}
 			prefetch="intent"
-			className={
-				primary
-					? "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-amber-700 px-5 py-3 font-semibold text-white transition hover:bg-amber-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
-					: "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-white/[0.06] px-5 py-3 font-semibold text-gray-100 ring-1 ring-white/10 transition hover:bg-white/10"
-			}
+			className={`${box} rounded-lg bg-white/[0.06] font-semibold text-gray-100 ring-1 ring-white/10 transition hover:bg-white/10`}
 		>
 			{children}
 		</Link>

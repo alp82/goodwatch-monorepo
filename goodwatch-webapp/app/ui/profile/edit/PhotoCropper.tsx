@@ -1,7 +1,8 @@
 // A square crop of a photo before upload: drag to place it, zoom with the slider (or the wheel), and the browser draws
 // the square at 512 px, so only the crop leaves the device. The server re-encodes it anyway.
 import { useEffect, useRef, useState } from "react"
-import { AMBER_BUTTON, QUIET_BUTTON } from "../parts"
+import { BUTTON_BOX, QUIET_BUTTON } from "../parts"
+import { PrimaryButton } from "~/ui/button/PrimaryButton"
 
 const OUT = 512
 const MAX_UPLOAD = 5 * 1024 * 1024
@@ -22,9 +23,7 @@ export function PhotoCropper({
 	const [zoom, setZoom] = useState(1)
 	const [offset, setOffset] = useState({ x: 0, y: 0 })
 	const [error, setError] = useState<string | null>(null)
-	const drag = useRef<{ x: number; y: number; ox: number; oy: number } | null>(
-		null,
-	)
+	const drag = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null)
 
 	useEffect(() => {
 		// A run that was cleaned up (a new file, or React running the effect twice) must not report on its image.
@@ -37,8 +36,7 @@ export function PhotoCropper({
 		setOffset({ x: 0, y: 0 })
 		const image = new Image()
 		image.onload = () => live && setImg(image)
-		image.onerror = () =>
-			live && setError("That file isn't a photo this browser can read.")
+		image.onerror = () => live && setError("That file isn't a photo this browser can read.")
 		image.src = url
 		return () => {
 			live = false
@@ -69,15 +67,12 @@ export function PhotoCropper({
 		ctx.drawImage(img, dx * scale, dy * scale, w * scale, h * scale)
 		const done = (blob: Blob | null) => {
 			if (!blob) return setError("Cropping failed. Try another photo.")
-			if (blob.size > MAX_UPLOAD)
-				return setError("That photo is still larger than 5 MB.")
+			if (blob.size > MAX_UPLOAD) return setError("That photo is still larger than 5 MB.")
 			onCropped(blob)
 		}
 		canvas.toBlob(
 			(blob) =>
-				blob && blob.type === "image/webp"
-					? done(blob)
-					: canvas.toBlob(done, "image/jpeg", 0.9),
+				blob && blob.type === "image/webp" ? done(blob) : canvas.toBlob(done, "image/jpeg", 0.9),
 			"image/webp",
 			0.9,
 		)
@@ -98,17 +93,12 @@ export function PhotoCropper({
 				}}
 				onPointerMove={(e) => {
 					const d = drag.current
-					if (d)
-						setOffset(
-							clamp({ x: d.ox + e.clientX - d.x, y: d.oy + e.clientY - d.y }),
-						)
+					if (d) setOffset(clamp({ x: d.ox + e.clientX - d.x, y: d.oy + e.clientY - d.y }))
 				}}
 				onPointerUp={() => {
 					drag.current = null
 				}}
-				onWheel={(e) =>
-					setZoom((z) => Math.min(4, Math.max(1, z - e.deltaY * 0.002)))
-				}
+				onWheel={(e) => setZoom((z) => Math.min(4, Math.max(1, z - e.deltaY * 0.002)))}
 			>
 				{src && img && (
 					<img
@@ -145,14 +135,14 @@ export function PhotoCropper({
 				</label>
 				{error && <p className="text-sm text-rose-300">{error}</p>}
 				<div className="flex flex-wrap gap-2">
-					<button
+					<PrimaryButton
 						type="button"
 						onClick={crop}
 						disabled={!img || busy}
-						className={`${AMBER_BUTTON} disabled:opacity-50`}
+						className={`${BUTTON_BOX} disabled:opacity-50`}
 					>
 						{busy ? "Uploading…" : "Use this photo"}
-					</button>
+					</PrimaryButton>
 					<button type="button" onClick={onCancel} className={QUIET_BUTTON}>
 						Cancel
 					</button>
