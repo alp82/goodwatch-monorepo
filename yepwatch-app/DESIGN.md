@@ -66,7 +66,6 @@ typography:
 rounded:
   stamp: "4px"
   control: "10px"
-  button: "12px"
   card: "14px"
   full: "9999px"
 spacing:
@@ -78,13 +77,13 @@ components:
     backgroundColor: "{colors.amber}"
     textColor: "{colors.amber-ink}"
     typography: "{typography.button}"
-    rounded: "{rounded.button}"
+    rounded: "{rounded.control}"
     height: "54px"
   button-secondary:
     backgroundColor: "{colors.faint}"
     textColor: "{colors.ink}"
     typography: "{typography.button}"
-    rounded: "{rounded.button}"
+    rounded: "{rounded.control}"
     height: "54px"
   vote-yep:
     backgroundColor: "{colors.amber}"
@@ -100,7 +99,7 @@ components:
   input-field:
     backgroundColor: "{colors.faint}"
     textColor: "{colors.ink}"
-    rounded: "{rounded.button}"
+    rounded: "{rounded.control}"
     height: "52px"
   room-tile:
     backgroundColor: "{colors.panel}"
@@ -124,7 +123,7 @@ components:
 
 This file records YepWatch's visual system as it is in the code on November 18, 2026. Where the app uses competing variants for the same thing, this file names them and points to an open decision in `docs/design/yepwatch-design-decisions.md`. Until a decision is made, new work uses the variant the surrounding screen already uses and doesn't add another.
 
-YepWatch is part of the GoodWatch family but has its own look. Shared family decisions (amber value, fonts) are listed in the decisions file.
+YepWatch is part of the GoodWatch family but has its own look. Shared family decisions are in the decisions file. The amber is `#fbbf24` across the whole family (decision F1, November 18, 2026).
 
 ## Overview
 
@@ -216,8 +215,7 @@ Depth comes from warm tonal steps (Night, Panel, Raised) and thin white lines. S
 ## Shapes
 
 - **Stamp** (4px, with a 2px black outline): YEP and NOPE stamps on posters, so they read on any image.
-- **Control** (10px): small controls, Undo, sheet Close, and the floating note.
-- **Button** (12px): primary and secondary buttons and fields. The token `R.control` says 10, but buttons and fields use 12 in about 42 places. Open decision Y1.
+- **Control** (10px, `R.control`): every button, field, and small control, including Undo, sheet Close, and the floating note. Decision Y1 (November 18, 2026); about 42 places still hardcode 12 until the follow-up lands.
 - **Card** (14px): sheets (top corners on phones), room tiles, the New couch tile, and the Ideas card.
 - **Full**: faces, the profile chip, and switches.
 - Posters keep their 2:3 shape. On the voting deck they fill the card.
@@ -225,7 +223,7 @@ Depth comes from warm tonal steps (Night, Panel, Raised) and thin white lines. S
 ## Components
 
 ### Buttons
-- **Primary:** amber, 54px tall (44 small), 12px corners, Bold 17px amber-ink text. Pressed is 78% opacity, disabled 42%. Disabled amber currently fails contrast (2.94:1); cleanup.
+- **Primary:** amber, 54px tall (44 small), 10px corners, Bold 17px amber-ink text. Pressed is 78% opacity, disabled 42%. Disabled amber currently fails contrast (2.94:1); cleanup.
 - **Secondary:** white 3% fill with a strong line border and ink text, same size.
 - **Link:** bold amber text, no underline. The join page has an underlined variant; cleanup.
 - Several screens re-implement the primary button (Tonight's Watch link, the join page's Join, the web "Open in YepWatch" link); cleanup.
@@ -246,10 +244,10 @@ One sheet shell (`shell/Sheet.tsx`): black 70% scrim, Panel surface with a stron
 ### Start and rooms
 - **New couch tile:** a large amber card (14px corners, at least 168px tall) with a title and arrow row, a steps line, and a round dark arrow button.
 - **Room tiles:** Panel cards with 14px corners, a poster fan with 8px corners, and a white 7% border that turns amber when the room is active.
-- **Join panel:** Raised with a strong line border, a 52px field with 12px corners, and an amber Join button.
+- **Join panel:** Raised with a strong line border, a 52px field with 10px corners, and an amber Join button.
 
 ### Inputs
-- **Field:** 52px tall, 12px corners, white 3% fill, strong line border, amber border when focused, Gabarito 17px. Two other field styles exist; cleanup.
+- **Field:** 52px tall, 10px corners, white 3% fill, strong line border, amber border when focused, Gabarito 17px. Two other field styles exist; cleanup.
 - **Switch:** a 48 × 28 track with a 22px knob, white 15% when off and amber when on. A second 40 × 24 switch exists on the Ideas card; cleanup.
 
 ### Notes and status
@@ -257,7 +255,7 @@ One sheet shell (`shell/Sheet.tsx`): black 70% scrim, Panel surface with a stron
 - **Startup cover:** Night with the YepWatch word in Bold 64 and an amber arc, shown only if loading takes longer than 400ms.
 
 ### Icons
-The hand-drawn `Icon` set in `glow/theme.tsx` (24px grid, 2px stroke, round caps) is the main set. Five other small SVG sets and a text arrow are in use. Open decision Y3.
+Every icon comes from the hand-drawn `Icon` set in `glow/theme.tsx` (24px grid, 2px stroke, round caps). Brand marks (`GoodWatchG`, store logos) are drawings, not icons, and stay separate. Decision Y3 (November 18, 2026); five other small SVG sets and a text arrow remain until the follow-up lands.
 
 ### Motion
 - **Sheets** enter over 220ms with an ease-out cubic curve.

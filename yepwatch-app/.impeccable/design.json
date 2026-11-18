@@ -230,7 +230,7 @@
       "refersTo": "button-primary",
       "description": "The next step.",
       "html": "<button class=\"ds-yw-btn\">Start voting</button>",
-      "css": ".ds-yw-btn{height:54px;padding:0 22px;border:0;border-radius:12px;background:#fbbf24;color:#201400;font:700 17px Gabarito,system-ui,sans-serif;cursor:pointer;transition:opacity .1s}.ds-yw-btn:active{opacity:.78}.ds-yw-btn:disabled{opacity:.42}.ds-yw-btn:focus-visible{outline:2px solid #fafafa;outline-offset:2px}"
+      "css": ".ds-yw-btn{height:54px;padding:0 22px;border:0;border-radius:10px;background:#fbbf24;color:#201400;font:700 17px Gabarito,system-ui,sans-serif;cursor:pointer;transition:opacity .1s}.ds-yw-btn:active{opacity:.78}.ds-yw-btn:disabled{opacity:.42}.ds-yw-btn:focus-visible{outline:2px solid #fafafa;outline-offset:2px}"
     },
     {
       "name": "Secondary Button",
@@ -238,7 +238,7 @@
       "refersTo": "button-secondary",
       "description": "Quiet alternative action.",
       "html": "<button class=\"ds-yw-btn2\">Invite friends</button>",
-      "css": ".ds-yw-btn2{height:54px;padding:0 22px;border:1px solid #ffffff24;border-radius:12px;background:#ffffff08;color:#fafafa;font:700 17px Gabarito,system-ui,sans-serif;cursor:pointer}.ds-yw-btn2:hover{background:#ffffff14}.ds-yw-btn2:focus-visible{outline:2px solid #fbbf24;outline-offset:2px}"
+      "css": ".ds-yw-btn2{height:54px;padding:0 22px;border:1px solid #ffffff24;border-radius:10px;background:#ffffff08;color:#fafafa;font:700 17px Gabarito,system-ui,sans-serif;cursor:pointer}.ds-yw-btn2:hover{background:#ffffff14}.ds-yw-btn2:focus-visible{outline:2px solid #fbbf24;outline-offset:2px}"
     },
     {
       "name": "Yep and Nope Keys",
@@ -254,7 +254,7 @@
       "refersTo": "input-field",
       "description": "Join code or name field.",
       "html": "<input class=\"ds-yw-field\" placeholder=\"Code or link\">",
-      "css": ".ds-yw-field{height:52px;width:280px;padding:0 14px;border:1px solid #ffffff24;border-radius:12px;background:#ffffff08;color:#fafafa;font:400 17px Gabarito,system-ui,sans-serif;outline:0}.ds-yw-field::placeholder{color:#6f675b}.ds-yw-field:focus{border-color:#fbbf24}"
+      "css": ".ds-yw-field{height:52px;width:280px;padding:0 14px;border:1px solid #ffffff24;border-radius:10px;background:#ffffff08;color:#fafafa;font:400 17px Gabarito,system-ui,sans-serif;outline:0}.ds-yw-field::placeholder{color:#6f675b}.ds-yw-field:focus{border-color:#fbbf24}"
     },
     {
       "name": "New Couch Tile",
