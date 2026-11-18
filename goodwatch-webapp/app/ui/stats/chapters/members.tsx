@@ -7,23 +7,14 @@
 import { Link } from "@remix-run/react"
 import { Fragment, useState } from "react"
 import { genreColor } from "~/domain/genre-colors"
-import type {
-	MemberStats,
-	ScoredTitle,
-	StatsSnapshot,
-} from "~/domain/stats/snapshot"
+import type { MemberStats, ScoredTitle, StatsSnapshot } from "~/domain/stats/snapshot"
 import imdbLogo from "~/img/imdb-logo-250.webp?no-inline"
 import { PosterImg, SpreadBars, vibe } from "~/ui/profile/parts"
 import { flag, pct } from "~/ui/profile/taste/model"
+import { sectionPillClass } from "~/ui/profile/taste/parts"
 import { assetUrl } from "~/utils/asset-url"
 import { regionName } from "~/utils/display-names"
-import {
-	MINUTES_PER_YEAR,
-	count,
-	oneDecimal,
-	titleHref,
-	titleKey,
-} from "../format"
+import { MINUTES_PER_YEAR, count, oneDecimal, titleHref, titleKey } from "../format"
 import {
 	B,
 	Block,
@@ -41,43 +32,33 @@ import {
 /** Interstellar's runtime, for counting the watch time in Interstellars. */
 const INTERSTELLAR_MINUTES = 169
 
-const PILL = (on: boolean) =>
-	`min-h-8 cursor-pointer rounded-full px-3 text-xs font-bold tracking-wide uppercase ring-1 transition-colors ${
-		on
-			? "bg-amber-400/15 text-amber-300 ring-amber-400/60"
-			: "text-gray-400 ring-white/10 hover:text-white"
-	}`
+const loggedOf = (m: MemberStats) => m.loggedMovieMinutes + m.loggedEpisodeMinutes
 
-const loggedOf = (m: MemberStats) =>
-	m.loggedMovieMinutes + m.loggedEpisodeMinutes
-
-function LoggedRecount({
-	m,
-	generatedAt,
-}: { m: MemberStats; generatedAt: string }) {
+function LoggedRecount({ m, generatedAt }: { m: MemberStats; generatedAt: string }) {
 	const minutes = loggedOf(m)
-	const start = new Date(
-		new Date(generatedAt).getTime() - minutes * 60_000,
-	).toLocaleDateString("en-US", {
-		month: "long",
-		year: "numeric",
-		timeZone: "UTC",
-	})
+	const start = new Date(new Date(generatedAt).getTime() - minutes * 60_000).toLocaleDateString(
+		"en-US",
+		{
+			month: "long",
+			year: "numeric",
+			timeZone: "UTC",
+		},
+	)
 	return (
 		<RecountLine
 			effect="mem-logged"
 			ways={[
 				<Fragment key="hours">
-					That's <B>{count(minutes / 60)}</B> hours of movies and episodes that
-					members marked as watched.
+					That's <B>{count(minutes / 60)}</B> hours of movies and episodes that members marked as
+					watched.
 				</Fragment>,
 				<Fragment key="interstellar">
-					Enough to watch Interstellar{" "}
-					<B>{count(minutes / INTERSTELLAR_MINUTES)}</B> times in a row.
+					Enough to watch Interstellar <B>{count(minutes / INTERSTELLAR_MINUTES)}</B> times in a
+					row.
 				</Fragment>,
 				<Fragment key="screen">
-					Switch on a screen in <b className="text-white">{start}</b>, never
-					switch it off, and it would catch up about now.
+					Switch on a screen in <b className="text-white">{start}</b>, never switch it off, and it
+					would catch up about now.
 				</Fragment>,
 				<Fragment key="nights">
 					Or <B>{count(minutes / 120)}</B> two-hour movie nights.
@@ -103,12 +84,8 @@ function HoursSplit({ m }: { m: MemberStats }) {
 					>
 						<span className="truncate text-sm font-bold">Episodes</span>
 						<span>
-							<span className="block text-3xl font-black tabular-nums">
-								{count(episodes)} h
-							</span>
-							<span className="text-xs font-bold">
-								{pct(episodes / both)} of the time
-							</span>
+							<span className="block text-3xl font-black tabular-nums">{count(episodes)} h</span>
+							<span className="text-xs font-bold">{pct(episodes / both)} of the time</span>
 						</span>
 					</div>
 					<div
@@ -116,15 +93,11 @@ function HoursSplit({ m }: { m: MemberStats }) {
 						style={{ flex: `${movies} 1 0` }}
 					>
 						<span className="text-xs font-bold">Movies</span>
-						<span className="text-sm font-black tabular-nums">
-							{count(movies)} h
-						</span>
+						<span className="text-sm font-black tabular-nums">{count(movies)} h</span>
 					</div>
 				</div>
 				<p className="text-sm text-gray-400">
-					{episodes > movies * 2
-						? "Shows win by a distance: one episode at a time adds up. "
-						: ""}
+					{episodes > movies * 2 ? "Shows win by a distance: one episode at a time adds up. " : ""}
 					The average member who logs anything has logged{" "}
 					<B>{count((episodes + movies) / Math.max(1, m.watchers))}</B> hours.
 				</p>
@@ -176,8 +149,7 @@ function MostSeen({ m }: { m: MemberStats }) {
 						<li key={titleKey(t)}>
 							<Poster t={t}>
 								<span className="text-xs text-gray-400">
-									<b className="text-gray-600 tabular-nums">{i + 2}</b> ·{" "}
-									{t.members} members
+									<b className="text-gray-600 tabular-nums">{i + 2}</b> · {t.members} members
 								</span>
 							</Poster>
 						</li>
@@ -194,9 +166,7 @@ function Binges({ m }: { m: MemberStats }) {
 	const rows = m.mostBinged
 		.map((t) => ({
 			t,
-			n: perMember
-				? Math.round(t.episodeWatches / t.members)
-				: t.episodeWatches,
+			n: perMember ? Math.round(t.episodeWatches / t.members) : t.episodeWatches,
 		}))
 		.sort((a, b) => b.n - a.n)
 	const leader = rows[0]
@@ -218,7 +188,7 @@ function Binges({ m }: { m: MemberStats }) {
 								type="button"
 								aria-pressed={!perMember}
 								onClick={() => setPerMember(false)}
-								className={PILL(!perMember)}
+								className={sectionPillClass(!perMember)}
 							>
 								All episodes
 							</button>
@@ -226,7 +196,7 @@ function Binges({ m }: { m: MemberStats }) {
 								type="button"
 								aria-pressed={perMember}
 								onClick={() => setPerMember(true)}
-								className={PILL(perMember)}
+								className={sectionPillClass(perMember)}
 							>
 								Per member
 							</button>
@@ -234,9 +204,7 @@ function Binges({ m }: { m: MemberStats }) {
 					</div>
 					<div data-fx-spot="mem-binged">
 						<RankRows
-							heading={
-								perMember ? "Episode watches per member" : "Episode watches"
-							}
+							heading={perMember ? "Episode watches per member" : "Episode watches"}
 							rows={rows.map(({ t, n }) => ({
 								key: titleKey(t),
 								href: titleHref(t),
@@ -249,13 +217,13 @@ function Binges({ m }: { m: MemberStats }) {
 					<p className="text-sm text-gray-400" aria-live="polite">
 						{perMember ? (
 							<>
-								Each member who watches {leader.t.title} has logged{" "}
-								<B>{count(leader.n)}</B> episodes of it, on average.
+								Each member who watches {leader.t.title} has logged <B>{count(leader.n)}</B>{" "}
+								episodes of it, on average.
 							</>
 						) : (
 							<>
-								<B>{count(leader.n)}</B> episodes of {leader.t.title}, logged by{" "}
-								{leader.t.members} members.
+								<B>{count(leader.n)}</B> episodes of {leader.t.title}, logged by {leader.t.members}{" "}
+								members.
 							</>
 						)}
 					</p>
@@ -263,9 +231,7 @@ function Binges({ m }: { m: MemberStats }) {
 			)}
 			{m.highestRated.length > 0 && (
 				<div className={`${PANEL} p-4 sm:p-5`}>
-					<p className="mb-3 text-sm font-bold text-gray-200">
-						Members' highest rated
-					</p>
+					<p className="mb-3 text-sm font-bold text-gray-200">Members' highest rated</p>
 					<ul className="grid grid-cols-3 gap-2.5">
 						{m.highestRated.map((t) => (
 							<li key={titleKey(t)}>
@@ -297,10 +263,7 @@ function RangeRow({ t }: { t: Ranged }) {
 	const lo = Math.max(1, t.average - t.spread)
 	const hi = Math.min(10, t.average + t.spread)
 	return (
-		<li
-			data-spread={t.spread.toFixed(3)}
-			className="flex items-center gap-3 py-2"
-		>
+		<li data-spread={t.spread.toFixed(3)} className="flex items-center gap-3 py-2">
 			<PosterLink t={t} className="w-8 shrink-0" />
 			<div className="flex min-w-0 flex-1 flex-col gap-1.5">
 				<div className="flex items-baseline justify-between gap-2">
@@ -312,8 +275,7 @@ function RangeRow({ t }: { t: Ranged }) {
 						{t.title}
 					</Link>
 					<span className="shrink-0 text-xs text-gray-500 tabular-nums">
-						<b className="text-white">{oneDecimal(t.average)}</b> ±{" "}
-						{oneDecimal(t.spread)}
+						<b className="text-white">{oneDecimal(t.average)}</b> ± {oneDecimal(t.spread)}
 					</span>
 				</div>
 				<div className="relative h-3" aria-hidden>
@@ -343,9 +305,8 @@ function Agreement({ m }: { m: MemberStats }) {
 			title="Where members agree, and where they split"
 			line={
 				<>
-					{agreed.title} gets {oneDecimal(agreed.average)} give or take{" "}
-					{oneDecimal(agreed.spread)}. {split.title} gets{" "}
-					{oneDecimal(split.average)} give or take {oneDecimal(split.spread)}:
+					{agreed.title} gets {oneDecimal(agreed.average)} give or take {oneDecimal(agreed.spread)}.{" "}
+					{split.title} gets {oneDecimal(split.average)} give or take {oneDecimal(split.spread)}:
 					some members love it, others score it low.
 				</>
 			}
@@ -357,10 +318,7 @@ function Agreement({ m }: { m: MemberStats }) {
 				].map((g) => (
 					<div key={g.head} className={`${PANEL} p-4`}>
 						<p className={`${LABEL} mb-1`}>{g.head}</p>
-						<ol
-							data-fx-range={g.effect}
-							className="flex flex-col divide-y divide-white/5"
-						>
+						<ol data-fx-range={g.effect} className="flex flex-col divide-y divide-white/5">
 							{g.rows.map((t) => (
 								<RangeRow key={titleKey(t)} t={t} />
 							))}
@@ -377,8 +335,8 @@ function Agreement({ m }: { m: MemberStats }) {
 				))}
 			</div>
 			<p className="text-xs text-gray-500">
-				The dot is the members' average. The bar reaches one standard deviation
-				to each side, where most scores fall.
+				The dot is the members' average. The bar reaches one standard deviation to each side, where
+				most scores fall.
 			</p>
 		</Block>
 	)
@@ -446,13 +404,13 @@ function VersusImdb({ m }: { m: MemberStats }) {
 				lean ? (
 					<>
 						Members are tougher on long-running shows: {worst.title} gets{" "}
-						{oneDecimal(worst.average)} here and {oneDecimal(worst.imdb)} on
-						IMDb. On movies, they lean the other way.
+						{oneDecimal(worst.average)} here and {oneDecimal(worst.imdb)} on IMDb. On movies, they
+						lean the other way.
 					</>
 				) : (
 					<>
-						{worst.title} gets {oneDecimal(worst.average)} here and{" "}
-						{oneDecimal(worst.imdb)} on IMDb, the widest gap below.
+						{worst.title} gets {oneDecimal(worst.average)} here and {oneDecimal(worst.imdb)} on
+						IMDb, the widest gap below.
 					</>
 				)
 			}
@@ -464,11 +422,7 @@ function VersusImdb({ m }: { m: MemberStats }) {
 					</span>
 					<span className="flex items-center gap-1.5">
 						<span className="size-2.5 rounded-full bg-gray-300" />
-						<img
-							src={assetUrl(imdbLogo)}
-							alt="IMDb"
-							className="h-3.5 rounded-[2px]"
-						/>
+						<img src={assetUrl(imdbLogo)} alt="IMDb" className="h-3.5 rounded-[2px]" />
 					</span>
 				</span>
 			}
@@ -508,14 +462,8 @@ function GenreLove({ m }: { m: MemberStats }) {
 	const row = genres.find((x) => x.genre === picked) ?? genres[0]
 	const last = genres[genres.length - 1]
 	// The track runs from 6.5 to 8, wider in half points when an average falls outside.
-	const min = Math.min(
-		6.5,
-		Math.floor(Math.min(...genres.map((g) => g.average)) * 2) / 2,
-	)
-	const max = Math.max(
-		8,
-		Math.ceil(Math.max(...genres.map((g) => g.average)) * 2) / 2,
-	)
+	const min = Math.min(6.5, Math.floor(Math.min(...genres.map((g) => g.average)) * 2) / 2)
+	const max = Math.max(8, Math.ceil(Math.max(...genres.map((g) => g.average)) * 2) / 2)
 	const at = (x: number) => `${((x - min) / (max - min)) * 100}%`
 	return (
 		<Block
@@ -525,10 +473,8 @@ function GenreLove({ m }: { m: MemberStats }) {
 			<div className={`${PANEL} p-4 sm:p-5`}>
 				<p className="mb-3 text-sm text-gray-400" aria-live="polite">
 					<b className="text-white">{row.genre}</b>:{" "}
-					<b className="text-amber-300 tabular-nums">
-						{oneDecimal(row.average)}
-					</b>{" "}
-					on average, from {count(row.scores)} scores by {row.members} members.
+					<b className="text-amber-300 tabular-nums">{oneDecimal(row.average)}</b> on average, from{" "}
+					{count(row.scores)} scores by {row.members} members.
 				</p>
 				<ol className="grid gap-x-8 lg:grid-cols-2">
 					{genres.map((x, i) => {
@@ -541,9 +487,7 @@ function GenreLove({ m }: { m: MemberStats }) {
 									aria-pressed={on}
 									className="group flex w-full cursor-pointer items-center gap-3 rounded-md py-1.5 text-left focus-visible:outline-2 focus-visible:outline-amber-400"
 								>
-									<span className="w-5 text-xs font-black text-gray-600 tabular-nums">
-										{i + 1}
-									</span>
+									<span className="w-5 text-xs font-black text-gray-600 tabular-nums">{i + 1}</span>
 									<span
 										className={`w-28 shrink-0 truncate text-sm font-semibold ${on ? "text-white" : "text-gray-300 group-hover:text-white"}`}
 									>
@@ -568,8 +512,8 @@ function GenreLove({ m }: { m: MemberStats }) {
 					})}
 				</ol>
 				<p className="mt-2 text-[11px] text-gray-500">
-					Average member score per genre, on a track from {min} to {max}. A
-					title counts for each of its genres.
+					Average member score per genre, on a track from {min} to {max}. A title counts for each of
+					its genres.
 				</p>
 			</div>
 		</Block>
@@ -624,10 +568,7 @@ function PickBars({
 	)
 }
 
-function PosterStrip({
-	label,
-	titles,
-}: { label: string; titles: MemberStats["oldestShared"] }) {
+function PosterStrip({ label, titles }: { label: string; titles: MemberStats["oldestShared"] }) {
 	return (
 		<div className={`${PANEL} p-4`}>
 			<p className={`${LABEL} mb-3`}>{label}</p>
@@ -666,9 +607,7 @@ function Decades({ m }: { m: MemberStats }) {
 		d.reduce((a, x) => a + x.scores, 0),
 	)
 	const row = d.find((x) => String(x.decade) === picked) ?? top
-	const before1990 = d
-		.filter((x) => x.decade < 1990)
-		.reduce((a, x) => a + x.scores, 0)
+	const before1990 = d.filter((x) => x.decade < 1990).reduce((a, x) => a + x.scores, 0)
 	const oldest = m.oldestShared[0]
 	return (
 		<Block
@@ -678,9 +617,8 @@ function Decades({ m }: { m: MemberStats }) {
 			<div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
 				<div className={`${PANEL} flex flex-col p-4 sm:p-5`}>
 					<p className="mb-4 text-sm text-gray-400" aria-live="polite">
-						<b className="text-amber-300 tabular-nums">{count(row.scores)}</b>{" "}
-						scores for titles from the {row.decade}s, {pct(row.scores / total)}{" "}
-						of the total.
+						<b className="text-amber-300 tabular-nums">{count(row.scores)}</b> scores for titles
+						from the {row.decade}s, {pct(row.scores / total)} of the total.
 					</p>
 					<PickBars
 						bars={d.map((x) => ({
@@ -695,16 +633,10 @@ function Decades({ m }: { m: MemberStats }) {
 				</div>
 				<div className="flex flex-col gap-4">
 					{m.oldestShared.length > 0 && (
-						<PosterStrip
-							label="Oldest titles members share"
-							titles={m.oldestShared}
-						/>
+						<PosterStrip label="Oldest titles members share" titles={m.oldestShared} />
 					)}
 					{m.newestShared.length > 0 && (
-						<PosterStrip
-							label="Newest titles members share"
-							titles={m.newestShared}
-						/>
+						<PosterStrip label="Newest titles members share" titles={m.newestShared} />
 					)}
 				</div>
 			</div>
@@ -712,15 +644,7 @@ function Decades({ m }: { m: MemberStats }) {
 	)
 }
 
-const DAYS = [
-	"Monday",
-	"Tuesday",
-	"Wednesday",
-	"Thursday",
-	"Friday",
-	"Saturday",
-	"Sunday",
-]
+const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 const hh = (n: number) => `${String(n).padStart(2, "0")}:00`
 
 /** Scores by weekday and by hour (UTC); tap a bar to read it. */
@@ -768,10 +692,7 @@ function WhenTheyScore({ m }: { m: MemberStats }) {
 					<p className={`${LABEL} mb-1`}>By day of the week</p>
 					<p className="mb-4 text-sm text-gray-400" aria-live="polite">
 						{DAYS[dayRow.day - 1]}:{" "}
-						<b className="text-amber-300 tabular-nums">
-							{count(dayRow.scores)}
-						</b>{" "}
-						scores, {dayNote}
+						<b className="text-amber-300 tabular-nums">{count(dayRow.scores)}</b> scores, {dayNote}
 					</p>
 					<PickBars
 						bars={w.map((x) => ({
@@ -788,10 +709,7 @@ function WhenTheyScore({ m }: { m: MemberStats }) {
 					<p className={`${LABEL} mb-1`}>By hour of the day, UTC</p>
 					<p className="mb-4 text-sm text-gray-400" aria-live="polite">
 						{hh(hourRow.hour)} to {hh((hourRow.hour + 1) % 24)} UTC:{" "}
-						<b className="text-amber-300 tabular-nums">
-							{count(hourRow.scores)}
-						</b>{" "}
-						scores
+						<b className="text-amber-300 tabular-nums">{count(hourRow.scores)}</b> scores
 						{hourNote ? `, ${hourNote}` : "."}
 					</p>
 					<PickBars
@@ -825,8 +743,8 @@ function ScoreSpread({ m }: { m: MemberStats }) {
 				<div>
 					<p className={LABEL}>Member scores</p>
 					<p className="mt-2 text-lg text-gray-300">
-						<b className="text-white">{common}</b> is the most common score. The
-						average is <b className="text-white">{oneDecimal(sc.average)}</b>.
+						<b className="text-white">{common}</b> is the most common score. The average is{" "}
+						<b className="text-white">{oneDecimal(sc.average)}</b>.
 					</p>
 				</div>
 				<SpreadBars
@@ -842,13 +760,8 @@ function ScoreSpread({ m }: { m: MemberStats }) {
 				</p>
 			</div>
 			<div className="grid grid-cols-2 gap-3 lg:grid-cols-1">
-				<div
-					className={`${PANEL} flex flex-col justify-center gap-1 p-4 sm:p-5`}
-				>
-					<span
-						data-fx-spot="mem-tens"
-						className="text-5xl font-black text-amber-400 tabular-nums"
-					>
+				<div className={`${PANEL} flex flex-col justify-center gap-1 p-4 sm:p-5`}>
+					<span data-fx-spot="mem-tens" className="text-5xl font-black text-amber-400 tabular-nums">
 						{count(sc.perfectTens)}
 					</span>
 					<span className="text-sm text-gray-300">
@@ -856,15 +769,8 @@ function ScoreSpread({ m }: { m: MemberStats }) {
 					</span>
 				</div>
 				<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-2">
-					{movie && (
-						<FactTile
-							label="Movies average"
-							value={oneDecimal(movie.average)}
-						/>
-					)}
-					{show && (
-						<FactTile label="Shows average" value={oneDecimal(show.average)} />
-					)}
+					{movie && <FactTile label="Movies average" value={oneDecimal(movie.average)} />}
+					{show && <FactTile label="Shows average" value={oneDecimal(show.average)} />}
 				</div>
 			</div>
 		</div>
@@ -891,16 +797,13 @@ function Wishlists({ m }: { m: MemberStats }) {
 							{count(hours)}
 						</span>
 						<p className="mt-1 text-sm text-gray-300">
-							hours of movies wait on Wishlists. That's{" "}
-							<B>{count(hours / 24)}</B> days, before a single show.
+							hours of movies wait on Wishlists. That's <B>{count(hours / 24)}</B> days, before a
+							single show.
 						</p>
 					</div>
 					<div>
 						<div className="flex h-3 overflow-hidden rounded-full">
-							<span
-								className="bg-amber-400"
-								style={{ width: `${(w.movies / both) * 100}%` }}
-							/>
+							<span className="bg-amber-400" style={{ width: `${(w.movies / both) * 100}%` }} />
 							<span className="flex-1 bg-amber-400/25" />
 						</div>
 						<div className="mt-2 flex justify-between text-xs text-gray-400">
@@ -915,16 +818,12 @@ function Wishlists({ m }: { m: MemberStats }) {
 				</div>
 				{w.most.length > 0 && (
 					<div className={`${PANEL} p-4`}>
-						<p className="mb-3 text-sm font-bold text-gray-200">
-							Most on Wishlists
-						</p>
+						<p className="mb-3 text-sm font-bold text-gray-200">Most on Wishlists</p>
 						<ul className="grid grid-cols-4 gap-2.5">
 							{w.most.map((t, i) => (
 								<li key={titleKey(t)} className={i >= 4 ? "max-sm:hidden" : ""}>
 									<Poster t={t}>
-										<span className="text-xs text-gray-400">
-											{t.members} members
-										</span>
+										<span className="text-xs text-gray-400">{t.members} members</span>
 									</Poster>
 								</li>
 							))}
@@ -989,9 +888,7 @@ function Arrivals({ m }: { m: MemberStats }) {
 			{countries.length > 0 && (
 				<div className={`${PANEL} p-4 sm:p-5`}>
 					<p className={`${LABEL} mb-1`}>Where members watch from</p>
-					<p className="mb-4 text-sm text-gray-400">
-						Countries with 10 or more members.
-					</p>
+					<p className="mb-4 text-sm text-gray-400">Countries with 10 or more members.</p>
 					<ol className="flex flex-col gap-2">
 						{countries.map((x) => (
 							<li key={x.code} className="flex items-center gap-3 text-sm">

@@ -24,6 +24,7 @@ import {
 	titlesOf,
 	useServicesFilter,
 } from "./parts"
+import { SELECTED_QUIET_CARD } from "~/ui/selection/selected"
 
 export function SidesOfYou({
 	view,
@@ -160,7 +161,7 @@ function SidePicker({
 						tabIndex={on ? 0 : -1}
 						onClick={() => onOpen(s.id)}
 						onKeyDown={(event) => onKeyDown(event, i)}
-						className={`flex w-60 shrink-0 cursor-pointer items-center gap-3 rounded-xl border-2 p-2 pr-4 text-left transition md:w-auto md:flex-1 ${on ? "border-amber-500 bg-amber-950/40" : "border-gray-800 bg-gray-900/40 hover:border-gray-500 hover:bg-gray-900"}`}
+						className={`flex w-60 shrink-0 cursor-pointer items-center gap-3 rounded-xl border-2 p-2 pr-4 text-left transition md:w-auto md:flex-1 ${on ? `border-transparent ${SELECTED_QUIET_CARD}` : "border-gray-800 bg-gray-900/40 hover:border-gray-500 hover:bg-gray-900"}`}
 					>
 						{cover?.poster && (
 							<img src={posterUrl(cover, "w185")} alt="" className="w-10 shrink-0 rounded-md" />

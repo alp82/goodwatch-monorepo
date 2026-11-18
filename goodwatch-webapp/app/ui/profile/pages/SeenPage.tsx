@@ -8,7 +8,8 @@ import type { ProfileSeenPage, ProfileShell, ProfileTitle } from "~/domain/profi
 import type { RowServices } from "~/server/row-services.server"
 import type { Score } from "~/server/scores.server"
 import { RowLogos, RowScores, rowMark, useRowMarks } from "~/ui/list-row/RowScores"
-import { Segmented, TILE, TitleRow, count } from "../parts"
+import { TILE, TitleRow, count } from "../parts"
+import { Segmented } from "~/ui/selection/Segmented"
 import { SectionHeading } from "~/ui/heading"
 
 type Kind = LibraryKind
@@ -73,13 +74,14 @@ export function SeenPage({
 		<>
 			<div className="flex flex-wrap items-center gap-3">
 				<Segmented
+					size="sm"
 					label="Movies or shows"
 					value={kind}
 					onChange={setKind}
 					options={[
-						["all", `All ${count(page.titles.length)}`],
-						["movie", `Movies ${count(movies)}`],
-						["show", `Shows ${count(page.titles.length - movies)}`],
+						{ key: "all", label: "All", count: page.titles.length },
+						{ key: "movie", label: "Movies", count: movies },
+						{ key: "show", label: "Shows", count: page.titles.length - movies },
 					]}
 				/>
 				<span className="grow" />

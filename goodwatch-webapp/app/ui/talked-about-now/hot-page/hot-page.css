@@ -113,9 +113,10 @@
 	color: #a3a3a3;
 	white-space: nowrap;
 }
+/* Day / Week filters the whole ranking: the solid white pill (D2, `SELECTED_SOLID`). */
 .hx .hx-seg button[aria-pressed="true"] {
 	background: #fff;
-	color: #0a0a0a;
+	color: var(--color-gray-950, #060606);
 }
 .hx-active {
 	display: flex;
@@ -160,8 +161,10 @@
 .hx .hx-titles button:hover {
 	background: var(--hx-card);
 }
+/* The picked title switches the side panel: the quiet row (D2, `SELECTED_QUIET_CARD` in ui/selection/selected.ts). */
 .hx .hx-titles button[aria-pressed="true"] {
-	background: rgba(252, 211, 77, 0.12);
+	background: rgb(255 255 255 / 0.12);
+	box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.15);
 }
 .hx-t-n {
 	font-family: var(--hx-font);

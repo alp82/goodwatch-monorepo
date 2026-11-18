@@ -8,6 +8,7 @@ import { WORDS } from "~/domain/taste-picker"
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
 import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
 import type { BarChip } from "./chips"
+import { SELECTED_SOLID } from "~/ui/selection/selected"
 
 const MOODS = WORDS.filter((word) => word.kind === "mood").slice(0, 8)
 
@@ -69,7 +70,7 @@ function TypePicker({
 					role="radio"
 					aria-checked={type === key}
 					onClick={() => onChange(key)}
-					className={`cursor-pointer rounded-full px-3 py-1 text-[12px] font-semibold ${type === key ? "bg-white/15 text-white" : "text-gray-400 hover:text-white"}`}
+					className={`cursor-pointer rounded-full px-3 py-1 text-[12px] font-semibold ${type === key ? SELECTED_SOLID : "text-gray-400 hover:text-white"}`}
 				>
 					{label}
 				</button>
@@ -151,9 +152,7 @@ export function Filter({
 	)
 }
 
-export const Divider = () => (
-	<span className="h-4 w-px shrink-0 bg-white/10" aria-hidden />
-)
+export const Divider = () => <span className="h-4 w-px shrink-0 bg-white/10" aria-hidden />
 
 export function ReadingLine({
 	state,
@@ -202,11 +201,7 @@ export function ReadingLine({
 							onClick={() => onMood(word.key)}
 							className="flex cursor-pointer items-center gap-1.5 text-[13px] text-gray-300 hover:text-white"
 						>
-							<span
-								className="h-2 w-2 rounded-full"
-								style={{ background: word.hue }}
-								aria-hidden
-							/>
+							<span className="h-2 w-2 rounded-full" style={{ background: word.hue }} aria-hidden />
 							{word.name}
 						</button>
 					))}
@@ -240,13 +235,8 @@ export function ReadingLine({
 						className="flex shrink-0 items-center gap-1 rounded-md px-1 pr-5 hover:bg-white/[0.05]"
 					>
 						<span className="text-[12px] text-[#92a5bf]">History</span>
-						<LockClosedIcon
-							className="h-3 w-3 text-amber-500/70"
-							aria-hidden
-						/>
-						<strong className="text-[12px] font-[650] text-amber-200/80">
-							Not seen yet
-						</strong>
+						<LockClosedIcon className="h-3 w-3 text-amber-500/70" aria-hidden />
+						<strong className="text-[12px] font-[650] text-amber-200/80">Not seen yet</strong>
 					</a>
 				)}
 			</span>

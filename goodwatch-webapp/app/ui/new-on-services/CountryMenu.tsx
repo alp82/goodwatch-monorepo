@@ -2,12 +2,7 @@
 // A navigation menu, not a dialog: it closes on a pick, Escape, a click outside or a page change. On phones it is a
 // bottom sheet, on desktop a two-column menu under its button, with "Use my country" on top. Loaded on first use
 // (./CountryChooser.tsx).
-import {
-	CheckIcon,
-	MagnifyingGlassIcon,
-	MapPinIcon,
-	XMarkIcon,
-} from "@heroicons/react/20/solid"
+import { CheckIcon, MagnifyingGlassIcon, MapPinIcon, XMarkIcon } from "@heroicons/react/20/solid"
 import { Link, useLocation, useNavigate } from "@remix-run/react"
 import {
 	type KeyboardEvent,
@@ -22,6 +17,7 @@ import { createPortal } from "react-dom"
 import { searchCountries } from "~/ui/discover-bar/watch/watch-choices"
 import { useDragToClose } from "~/ui/navigation/useDragToClose"
 import { Flag } from "./parts"
+import { NAV_ROW } from "~/ui/selection/selected"
 
 export interface CountryChoice {
 	code: string
@@ -122,10 +118,7 @@ export default function CountryMenu({
 	}, [anchor, onClose])
 
 	const links = () =>
-		Array.from(
-			panel.current?.querySelectorAll<HTMLAnchorElement>("[data-country]") ??
-				[],
-		)
+		Array.from(panel.current?.querySelectorAll<HTMLAnchorElement>("[data-country]") ?? [])
 	const onInputKey = (event: KeyboardEvent<HTMLInputElement>) => {
 		if (event.key === "ArrowDown") {
 			event.preventDefault()
@@ -148,10 +141,7 @@ export default function CountryMenu({
 
 	const search = (
 		<label className="flex h-11 shrink-0 items-center gap-2 rounded-xl bg-white/[0.06] px-3 ring-1 ring-white/10 focus-within:ring-white/30">
-			<MagnifyingGlassIcon
-				className="size-5 shrink-0 text-gray-400"
-				aria-hidden
-			/>
+			<MagnifyingGlassIcon className="size-5 shrink-0 text-gray-400" aria-hidden />
 			<input
 				ref={input}
 				type="search"
@@ -189,9 +179,7 @@ export default function CountryMenu({
 		>
 			<MapPinIcon className="size-5 shrink-0 text-amber-400" aria-hidden />
 			<span className="min-w-0 flex-1">
-				<span className="block text-sm font-bold text-white">
-					Use my country
-				</span>
+				<span className="block text-sm font-bold text-white">Use my country</span>
 				<span className="block truncate text-xs text-amber-100/70">
 					{mine.name}
 					{mine.code === current ? ", shown now" : ""}
@@ -218,15 +206,12 @@ export default function CountryMenu({
 							prefetch="intent"
 							aria-current={on ? "page" : undefined}
 							onClick={() => onClose(false)}
-							className={`flex h-11 items-center gap-3 rounded-lg px-2.5 text-sm outline-none focus-visible:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-400 ${on ? "bg-amber-400/10 font-bold text-white" : "font-semibold text-gray-200 hover:bg-white/[0.07]"}`}
+							className={`flex h-11 items-center gap-3 rounded-lg px-2.5 text-sm outline-none focus-visible:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-400 ${on ? `${NAV_ROW} font-bold text-white` : "font-semibold text-gray-200 hover:bg-white/[0.07]"}`}
 						>
 							<Flag country={choice.code} />
 							<span className="min-w-0 flex-1 truncate">{choice.name}</span>
 							{on && (
-								<CheckIcon
-									className="size-4 shrink-0 text-amber-400"
-									aria-label="Shown now"
-								/>
+								<CheckIcon className="size-4 shrink-0 text-amber-400" aria-label="Shown now" />
 							)}
 						</Link>
 					</li>
@@ -255,10 +240,7 @@ export default function CountryMenu({
 					aria-label="Choose a country"
 					className={`absolute inset-x-0 bottom-0 flex max-h-[85dvh] flex-col gap-3 rounded-t-3xl bg-gray-900 px-4 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl ring-1 ring-white/10 transition-transform duration-200 ease-out ${shown ? "translate-y-0" : "translate-y-full"}`}
 				>
-					<span
-						aria-hidden
-						className="mx-auto h-1 w-10 shrink-0 rounded-full bg-white/20"
-					/>
+					<span aria-hidden className="mx-auto h-1 w-10 shrink-0 rounded-full bg-white/20" />
 					<p className="text-base font-bold text-white">Choose a country</p>
 					{useMine}
 					{search}

@@ -1,5 +1,8 @@
 // One-of tabs in a tray: the offer types of Where to watch (Stream 5 · Rent 6 · Buy 4) and any other one-of filter
-// with counts. The picked tab is a raised pill with its count in amber; empty tabs stay pressable but quieter.
+// with counts. The picked tab is the quiet tab (D2: a choice that switches one section) with its count in amber;
+// empty tabs stay pressable but quieter.
+import { SELECTED_QUIET } from "~/ui/selection/selected"
+
 export interface SegmentedTab {
 	key: string
 	label: string
@@ -44,7 +47,7 @@ export function SegmentedTabs({
 						onClick={() => onChange(t.key)}
 						className={`flex h-8 shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 text-sm transition-colors duration-150 sm:px-3 ${
 							on
-								? "bg-white/[0.12] font-semibold text-white"
+								? `${SELECTED_QUIET} font-semibold`
 								: empty
 									? "text-gray-500 hover:text-gray-300"
 									: "text-gray-300 hover:text-white"
@@ -52,9 +55,7 @@ export function SegmentedTabs({
 					>
 						{t.label}
 						{t.count != null && (
-							<span
-								className={`text-xs tabular-nums ${on ? "text-amber-300" : "text-gray-500"}`}
-							>
+							<span className={`text-xs tabular-nums ${on ? "text-amber-300" : "text-gray-500"}`}>
 								{t.count}
 							</span>
 						)}

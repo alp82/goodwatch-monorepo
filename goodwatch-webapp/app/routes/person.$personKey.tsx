@@ -58,6 +58,7 @@ import { getPersonRoles } from "~/server/character-portraits.server"
 import { INCOMPLETE_PAGE_HEADERS } from "~/server/incomplete-page"
 import { validPersonId } from "~/server/person-id"
 import { SectionHeading } from "~/ui/heading"
+import { SELECTED_SOLID } from "~/ui/selection/selected"
 
 const PER_GROUP = 12
 
@@ -818,7 +819,7 @@ function GenresAndTags({ data }: { data: Data }) {
 						<li key={g.name}>
 							<PersonFilterButton
 								to={href({ genre: data.filters.genre === g.name ? null : g.name }, "#titles")}
-								className={`inline-block rounded-full px-3 py-1 text-sm font-semibold ${data.filters.genre === g.name ? "bg-amber-500 text-black" : "bg-gray-700 hover:bg-gray-600"}`}
+								className={`inline-block rounded-full px-3 py-1 text-sm font-semibold ${data.filters.genre === g.name ? SELECTED_SOLID : "bg-gray-700 hover:bg-gray-600"}`}
 							>
 								{g.name} <span className="opacity-60">{g.count}</span>
 							</PersonFilterButton>
@@ -995,7 +996,7 @@ function Arrange({ data }: { data: Data }) {
 			? { desc: "Highest first", asc: "Lowest first" }
 			: { desc: "Newest first", asc: "Oldest first" }
 	const segment = (active: boolean) =>
-		`flex items-center gap-1 px-3 py-1.5 ${active ? "bg-gray-100 font-bold text-gray-900" : "text-gray-300 hover:bg-gray-700"}`
+		`flex items-center gap-1 px-3 py-1.5 ${active ? `${SELECTED_SOLID} font-bold` : "text-gray-300 hover:bg-gray-700"}`
 	return (
 		<div className="flex flex-wrap items-center gap-3 border-t border-gray-700 bg-gray-900/60 px-3 py-2.5">
 			<span className="w-16 shrink-0 text-xs uppercase tracking-wide text-gray-500">Group by</span>

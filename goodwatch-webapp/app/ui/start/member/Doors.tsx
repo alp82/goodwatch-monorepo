@@ -29,6 +29,7 @@ import {
 } from "./doors"
 import { type MemberStartData, PERSONAL_AT } from "./member-data"
 import { primaryButtonClass } from "~/ui/button/PrimaryButton"
+import { SELECTED_QUIET } from "~/ui/selection/selected"
 
 const TEXT_LINK =
 	"group inline-flex shrink-0 items-center gap-1 rounded-md text-sm font-semibold text-amber-400 underline-offset-4 outline-none hover:text-amber-300 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
@@ -45,7 +46,7 @@ const CHIP =
 	"inline-flex h-9 shrink-0 cursor-pointer items-center rounded-full px-3.5 text-sm font-semibold outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
 const chipTone = (on: boolean) =>
 	on
-		? "bg-amber-400 text-gray-950"
+		? `${SELECTED_QUIET} ring-1 ring-inset ring-white/20`
 		: "bg-white/[0.06] text-gray-200 ring-1 ring-inset ring-white/10 hover:bg-white/10"
 
 const PANEL_ID = "start-door-section"
@@ -184,9 +185,7 @@ export function DoorSection({
 									className={`${CHIP} ${chipTone(on)}`}
 								>
 									{f.label}
-									<span
-										className={`ml-1.5 tabular-nums ${on ? "text-gray-950/60" : "text-gray-500"}`}
-									>
+									<span className={`ml-1.5 tabular-nums ${on ? "text-white/60" : "text-gray-500"}`}>
 										{door.titles.filter((t) => f.keep(t.card)).length}
 									</span>
 								</button>

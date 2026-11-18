@@ -5,11 +5,7 @@
 import { Link, useLocation } from "@remix-run/react"
 import { useMemo } from "react"
 import type { SignalWords } from "~/domain/new-episodes-signal"
-import {
-	GuestKeys,
-	HeaderMenuKey,
-	ProfileKeyIcon,
-} from "~/ui/account/AccountKey"
+import { GuestKeys, HeaderMenuKey, ProfileKeyIcon } from "~/ui/account/AccountKey"
 import { GoodWatchWordmark } from "~/ui/brand/GoodWatchWordmark"
 import { GlobalLoading } from "~/ui/nav/GlobalLoading"
 import { useUser } from "~/utils/auth"
@@ -20,6 +16,7 @@ import { PhoneBar } from "./PhoneBar"
 import { HEADER_BAR, PHONE_BAR } from "./bar-layers"
 import { NewEpisodesMark } from "./bits"
 import { useOpenerSignal } from "./useWhatsNew"
+import { NAV_PILL } from "~/ui/selection/selected"
 
 export interface AreaKeyView extends AreaDef {
 	on: boolean
@@ -46,12 +43,7 @@ export function useAreaKeys(): AreaKeyView[] {
 
 function Wordmark({ fontSize }: { fontSize: number }) {
 	return (
-		<Link
-			to="/"
-			prefetch="intent"
-			aria-label="GoodWatch home"
-			className="flex shrink-0"
-		>
+		<Link to="/" prefetch="intent" aria-label="GoodWatch home" className="flex shrink-0">
 			<GoodWatchWordmark fontSize={fontSize} />
 		</Link>
 	)
@@ -74,9 +66,7 @@ function AreaKeys({ areas }: { areas: AreaKeyView[] }) {
 						data-area-key={a.key}
 						aria-current={a.on ? "true" : undefined}
 						className={`relative flex h-8 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-[14.5px] font-bold ${
-							a.on
-								? "bg-amber-500/20 text-amber-200"
-								: "text-gray-300 hover:bg-white/[0.07] hover:text-white"
+							a.on ? NAV_PILL : "text-gray-300 hover:bg-white/[0.07] hover:text-white"
 						}`}
 					>
 						{a.key === "taste" ? (
@@ -88,10 +78,7 @@ function AreaKeys({ areas }: { areas: AreaKeyView[] }) {
 							/>
 						)}
 						{a.label}
-						<NewEpisodesMark
-							words={a.fresh ?? null}
-							className="absolute -top-2 -right-2"
-						/>
+						<NewEpisodesMark words={a.fresh ?? null} className="absolute -top-2 -right-2" />
 					</Link>
 				)
 			})}

@@ -16,6 +16,7 @@ import { type PageName, pageNameOf } from "./page-name"
 import { type PhoneBar as Bar, areaSheetOf, phoneBarOf } from "./phone-bar"
 import { useWatchNews } from "./useWhatsNew"
 import { withWatchNews } from "./watch-news"
+import { NAV_ROW } from "~/ui/selection/selected"
 
 /** The bar's height in px (h-16): the page starts under it, and it slides away by this much. */
 const BAR_PX = 64
@@ -63,20 +64,14 @@ function NameBlock({ page }: { page: PageName }) {
 					{page.trail.map((crumb, i) => (
 						<span key={crumb.path} className="flex min-w-0 items-center gap-1">
 							{i > 0 && <span aria-hidden>›</span>}
-							<Link
-								to={crumb.path}
-								prefetch="intent"
-								className="truncate active:text-gray-300"
-							>
+							<Link to={crumb.path} prefetch="intent" className="truncate active:text-gray-300">
 								{crumb.label}
 							</Link>
 						</span>
 					))}
 				</nav>
 			)}
-			<span className="truncate text-xl font-black text-white">
-				{page.name}
-			</span>
+			<span className="truncate text-xl font-black text-white">{page.name}</span>
 		</div>
 	)
 }
@@ -182,12 +177,7 @@ function useFitSnap(chrome: number) {
 		const el = ref.current
 		if (!el) return
 		const measure = () =>
-			setSnap(
-				Math.min(
-					0.9,
-					Math.max(0.15, (el.scrollHeight + chrome) / window.innerHeight),
-				),
-			)
+			setSnap(Math.min(0.9, Math.max(0.15, (el.scrollHeight + chrome) / window.innerHeight)))
 		measure()
 		const observer = new ResizeObserver(measure)
 		observer.observe(el)
@@ -212,12 +202,7 @@ function TitleBlock({ bar, title }: { bar: Bar; title: string }) {
 				)}
 				<span className="flex min-w-0 items-center gap-1 text-xl font-black text-white">
 					<span className="truncate">{title}</span>
-					{menu && (
-						<ChevronDownIcon
-							className="size-5 shrink-0 text-gray-400"
-							aria-hidden
-						/>
-					)}
+					{menu && <ChevronDownIcon className="size-5 shrink-0 text-gray-400" aria-hidden />}
 				</span>
 			</span>
 		</>
@@ -245,7 +230,7 @@ function SheetRow({ tab }: { tab: AreaTab }) {
 			to={tab.href}
 			prefetch="intent"
 			aria-current={tab.here ? "page" : undefined}
-			className={`flex items-center gap-3 rounded-xl px-3 py-3 ${tab.here ? "bg-amber-500/15" : "active:bg-white/[0.05]"}`}
+			className={`flex items-center gap-3 rounded-xl px-3 py-3 ${tab.here ? NAV_ROW : "active:bg-white/[0.05]"}`}
 		>
 			{Icon && (
 				<Icon
@@ -254,14 +239,8 @@ function SheetRow({ tab }: { tab: AreaTab }) {
 				/>
 			)}
 			<span className="min-w-0 flex-1">
-				<span
-					className={`block font-semibold ${tab.here ? "text-amber-100" : "text-white"}`}
-				>
-					{tab.label}
-				</span>
-				{tab.sub && (
-					<span className="block text-sm text-gray-500">{tab.sub}</span>
-				)}
+				<span className={`block font-semibold text-white`}>{tab.label}</span>
+				{tab.sub && <span className="block text-sm text-gray-500">{tab.sub}</span>}
 			</span>
 			{tab.news && (
 				<span className="rounded-full bg-sky-400 px-1.5 text-[11px] font-black text-black">
@@ -296,8 +275,7 @@ function TabsSheet({ bar }: { bar: Bar }) {
 			: null
 	const news = useWatchNews()
 	const rawTabs = other?.tabs ?? navigation.phoneRow?.tabs ?? bar.siblings
-	const tabs =
-		(asked ?? bar.area) === "watch" ? withWatchNews(rawTabs, news) : rawTabs
+	const tabs = (asked ?? bar.area) === "watch" ? withWatchNews(rawTabs, news) : rawTabs
 	const label = other?.label ?? (navigation.phoneRow?.label || bar.eyebrow)
 	const fit = useFitSnap(72)
 	return (
@@ -332,10 +310,7 @@ export function PhoneBar({ surface }: { surface: string }) {
 	useEffect(() => {
 		document.documentElement.toggleAttribute("data-phone-bar-away", away)
 	}, [away])
-	useEffect(
-		() => () => document.documentElement.removeAttribute("data-phone-bar-away"),
-		[],
-	)
+	useEffect(() => () => document.documentElement.removeAttribute("data-phone-bar-away"), [])
 	const named = pageNameOf(useMatches())
 	const page = bar.kind === "detail" ? named : null
 	const heading = useHeadingTitle(bar.kind === "detail" && !page)
@@ -351,12 +326,7 @@ export function PhoneBar({ surface }: { surface: string }) {
 			>
 				{bar.kind === "home" ? (
 					<>
-						<Link
-							to="/"
-							prefetch="intent"
-							aria-label="GoodWatch home"
-							className="flex shrink-0"
-						>
+						<Link to="/" prefetch="intent" aria-label="GoodWatch home" className="flex shrink-0">
 							<GoodWatchWordmark fontSize={20} />
 						</Link>
 						<span className="flex-1" />
@@ -364,14 +334,8 @@ export function PhoneBar({ surface }: { surface: string }) {
 					</>
 				) : (
 					<>
-						{bar.back && (
-							<BackKey href={bar.back.href} label={bar.back.label} />
-						)}
-						{page ? (
-							<NameBlock page={page} />
-						) : (
-							<TitleBlock bar={bar} title={title} />
-						)}
+						{bar.back && <BackKey href={bar.back.href} label={bar.back.label} />}
+						{page ? <NameBlock page={page} /> : <TitleBlock bar={bar} title={title} />}
 						{bar.kind !== "settings" && <EndKey />}
 					</>
 				)}

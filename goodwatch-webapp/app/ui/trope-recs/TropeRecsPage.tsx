@@ -23,20 +23,14 @@ import {
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import { DISPLAY, Empty, GuestPage } from "~/ui/my-pages/bits"
 import { usePathViewer } from "~/ui/navigation/NavigationContext"
-import { Segmented } from "~/ui/profile/parts"
 import { teaser } from "~/ui/profile/tropes/model"
 import { LicenseCredit } from "~/ui/profile/tropes/parts"
 import { useUser } from "~/utils/auth"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import { openingLead } from "~/utils/trope-opening"
+import { Segmented } from "~/ui/selection/Segmented"
 import { RecsSwitch } from "./RecsSwitch"
-import {
-	NotYourTrope,
-	type RecTitle,
-	useMyTropes,
-	useRecs,
-	useTropeDescription,
-} from "./api"
+import { NotYourTrope, type RecTitle, useMyTropes, useRecs, useTropeDescription } from "./api"
 import { cardTitle } from "./card"
 
 const loadSheet = reloadOnStaleChunk(() => import("./PickSheet"))
@@ -123,8 +117,8 @@ function MemberView() {
 			<div className={WRAP}>
 				<Empty title="Score a few more titles first">
 					<p>
-						Picks by your tropes need a trope profile: the tropes in at least
-						ten of the titles you scored, compared with how you scored them.
+						Picks by your tropes need a trope profile: the tropes in at least ten of the titles you
+						scored, compared with how you scored them.
 					</p>
 					<Link
 						to={ratePath(viewer)}
@@ -142,10 +136,11 @@ function MemberView() {
 			<div className="mb-4 flex flex-wrap items-center justify-between gap-3">
 				<RecsSwitch here="tropes" />
 				<Segmented
+					size="sm"
 					label="Movies or shows"
 					value={query.kind}
 					onChange={setKind}
-					options={REC_KINDS}
+					options={REC_KINDS.map(([key, label]) => ({ key, label }))}
 				/>
 			</div>
 			{trope ? (
@@ -203,15 +198,9 @@ function MemberView() {
 function TropeHead({ trope, kind }: { trope: MemberTropeRef; kind: RecKind }) {
 	const viewer = usePathViewer()
 	const handle = viewer.kind === "member" ? viewer.handle : null
-	const description = useTropeDescription(handle, trope.id).data?.entries[
-		trope.id
-	]
+	const description = useTropeDescription(handle, trope.id).data?.entries[trope.id]
 	const line = description
-		? teaser(
-				description.opening
-					? openingLead(description.opening)
-					: description.text,
-			)
+		? teaser(description.opening ? openingLead(description.opening) : description.text)
 		: null
 	return (
 		<header>
@@ -222,12 +211,9 @@ function TropeHead({ trope, kind }: { trope: MemberTropeRef; kind: RecKind }) {
 			>
 				← All picks for you
 			</Link>
-			<h2 className={`${DISPLAY} mt-1 text-3xl text-white sm:text-4xl`}>
-				{trope.name}
-			</h2>
+			<h2 className={`${DISPLAY} mt-1 text-3xl text-white sm:text-4xl`}>{trope.name}</h2>
 			<p className="mt-1 max-w-2xl text-sm text-gray-400">
-				Your #{trope.rank} trope · you scored {trope.loved} of {trope.count}{" "}
-				titles with it 8+.
+				Your #{trope.rank} trope · you scored {trope.loved} of {trope.count} titles with it 8+.
 			</p>
 			{line && (
 				<p className="mt-2 max-w-2xl text-sm text-gray-500">
@@ -270,10 +256,7 @@ function YourTropes({
 				Your tropes {open ? "▴" : "▾"}
 			</button>
 			{open && (
-				<ol
-					id="your-tropes"
-					className="mt-2 columns-2 gap-6 text-sm sm:columns-3 lg:columns-4"
-				>
+				<ol id="your-tropes" className="mt-2 columns-2 gap-6 text-sm sm:columns-3 lg:columns-4">
 					{tropes.map((t) => (
 						<li key={t.id} className="break-inside-avoid">
 							<Link
@@ -323,11 +306,7 @@ function Picks({
 		<>
 			<ol className="grid grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
 				{visible.map((t, i) => (
-					<li
-						key={t.id}
-						className="flex min-w-0 flex-col gap-1"
-						data-pick-id={t.id}
-					>
+					<li key={t.id} className="flex min-w-0 flex-col gap-1" data-pick-id={t.id}>
 						<div onPointerDown={() => void loadView().catch(() => {})}>
 							<MovieTvCard
 								details={cardTitle(t)}
@@ -341,21 +320,13 @@ function Picks({
 								skipOffscreen={i >= 18}
 							/>
 						</div>
-						<RankLine
-							place={i + 1}
-							match={t.match}
-							matched={single ? undefined : t.matchedCount}
-						/>
+						<RankLine place={i + 1} match={t.match} matched={single ? undefined : t.matchedCount} />
 					</li>
 				))}
 			</ol>
 			{titles.length > shown && (
 				<p className="flex justify-center pt-6">
-					<button
-						type="button"
-						onClick={() => setShown((n) => n + STEP)}
-						className={QUIET_BUTTON}
-					>
+					<button type="button" onClick={() => setShown((n) => n + STEP)} className={QUIET_BUTTON}>
 						Show {Math.min(STEP, titles.length - shown)} more
 					</button>
 				</p>
@@ -394,11 +365,7 @@ function Picks({
 }
 
 /** "#1 · 94 · 5 of your tropes" in gray under the poster, the number brighter; never on the title band. */
-function RankLine({
-	place,
-	match,
-	matched,
-}: { place: number; match: number; matched?: number }) {
+function RankLine({ place, match, matched }: { place: number; match: number; matched?: number }) {
 	return (
 		<p
 			className="flex items-baseline gap-1.5 text-[11px] text-gray-500 tabular-nums"

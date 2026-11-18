@@ -6,6 +6,7 @@ import type { PosterProps } from "~/ui/Poster"
 import { ProfilePoster } from "../parts"
 import { useTaste } from "./model"
 import { SectionHeading } from "~/ui/heading"
+import { SELECTED_QUIET } from "~/ui/selection/selected"
 
 export const PANEL = "rounded-2xl bg-white/[0.035] ring-1 ring-white/10"
 
@@ -51,6 +52,12 @@ export function SectionHead({
 	)
 }
 
+/** A section's pill (D2: a choice that switches one section, so the quiet tab when picked). */
+export const sectionPillClass = (on: boolean) =>
+	`min-h-8 cursor-pointer rounded-full px-3 text-xs font-bold tracking-wide uppercase ring-1 transition-colors ${
+		on ? `${SELECTED_QUIET} ring-white/20` : "text-gray-400 ring-white/10 hover:text-white"
+	}`
+
 export function Pills<T extends string>({
 	value,
 	onChange,
@@ -71,11 +78,7 @@ export function Pills<T extends string>({
 					type="button"
 					aria-pressed={o.value === value}
 					onClick={() => onChange(o.value)}
-					className={`min-h-8 rounded-full px-3 text-xs font-bold tracking-wide uppercase ring-1 transition-colors ${
-						o.value === value
-							? "bg-amber-400/15 text-amber-300 ring-amber-400/60"
-							: "text-gray-400 ring-white/10 hover:text-white"
-					}`}
+					className={sectionPillClass(o.value === value)}
 				>
 					{o.label}
 					{o.count != null && <span className="ml-1 tabular-nums opacity-60">{o.count}</span>}

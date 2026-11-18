@@ -707,7 +707,6 @@
     "[\"goodwatch-webapp/app/ui/profile/edit/PhotoCropper.tsx\",\"jsx-a11y(img-redundant-alt)\",\"Redundant `alt` attribute.\"]": 1,
     "[\"goodwatch-webapp/app/ui/profile/pages/ScoresPage.tsx\",\"@tanstack/query(exhaustive-deps)\",\"The following dependencies are missing in your queryKey: choice\"]": 1,
     "[\"goodwatch-webapp/app/ui/profile/pages/ShowsPage.tsx\",\"jsx-a11y(prefer-tag-over-role)\",\"Prefer `progress` over `role` attribute `progressbar`.\"]": 1,
-    "[\"goodwatch-webapp/app/ui/profile/parts.tsx\",\"jsx-a11y(prefer-tag-over-role)\",\"Prefer `input` over `role` attribute `radio`.\"]": 1,
     "[\"goodwatch-webapp/app/ui/profile/parts.tsx\",\"react(no-array-index-key)\",\"Usage of Array index in keys is not allowed\"]": 3,
     "[\"goodwatch-webapp/app/ui/profile/taste/RimTracks.tsx\",\"jsx-a11y(prefer-tag-over-role)\",\"Prefer `img` over `role` attribute `img`.\"]": 1,
     "[\"goodwatch-webapp/app/ui/profile/taste/Stats.tsx\",\"jsx-a11y(prefer-tag-over-role)\",\"Prefer `address, details, fieldset, hgroup, optgroup` over `role` attribute `group`.\"]": 1,

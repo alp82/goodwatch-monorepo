@@ -11,14 +11,10 @@ import { createMediaKey } from "~/types/user-data"
 import { awardKey } from "~/domain/award-marks"
 import { RowAward, RowAwardSymbol } from "~/ui/awards/AwardMarks"
 import { TmdbImage } from "~/ui/TmdbImage"
-import {
-	RowLogos,
-	RowScores,
-	rowMark,
-	useRowMarks,
-} from "~/ui/list-row/RowScores"
+import { RowLogos, RowScores, rowMark, useRowMarks } from "~/ui/list-row/RowScores"
 import MediaText from "~/ui/media-text/MediaText"
 import { presentedText } from "~/ui/media-text/media-text"
+import { NAV_PILL } from "~/ui/selection/selected"
 
 // The rows a phone shows without scrolling: their posters load at once.
 const EAGER_ROWS = 6
@@ -28,13 +24,15 @@ export function ListPageLinks({
 	page,
 	pages,
 	total,
-}: { kind: ListKind; page: number; pages: number; total: number }) {
+}: {
+	kind: ListKind
+	page: number
+	pages: number
+	total: number
+}) {
 	if (pages < 2) return null
 	return (
-		<nav
-			aria-label="Pages of the list"
-			className="flex flex-wrap gap-2 text-sm"
-		>
+		<nav aria-label="Pages of the list" className="flex flex-wrap gap-2 text-sm">
 			{Array.from({ length: pages }, (_, i) => i + 1).map((n) => {
 				const { first, last } = pageRange(n, total)
 				return (
@@ -44,7 +42,7 @@ export function ListPageLinks({
 						prefetch="intent"
 						aria-current={n === page ? "page" : undefined}
 						aria-label={`${first}–${last}. Ranks ${first} to ${last}`}
-						className={`rounded-md px-3 py-1.5 tabular-nums ${n === page ? "bg-amber-400 font-bold text-black" : "bg-white/[0.06] text-gray-300 ring-1 ring-white/10 hover:bg-white/10"}`}
+						className={`rounded-md px-3 py-1.5 tabular-nums ${n === page ? `${NAV_PILL} font-bold ring-1 ring-amber-400/60` : "bg-white/[0.06] text-gray-300 ring-1 ring-white/10 hover:bg-white/10"}`}
 					>
 						{first}–{last}
 					</Link>
@@ -81,10 +79,7 @@ export function RankedTitles({
 				{titles.map((t, i) => {
 					const marks = marksOf(t.media_type, t.tmdb_id)
 					return (
-						<li
-							key={t.tmdb_id}
-							className="border-b border-white/5 hover:bg-white/[0.02]"
-						>
+						<li key={t.tmdb_id} className="border-b border-white/5 hover:bg-white/[0.02]">
 							<Link
 								to={t.path}
 								prefetch="intent"
@@ -109,21 +104,12 @@ export function RankedTitles({
 										<MediaText value={presentedText(t, "title", t.title)} />
 									</span>
 									<span className="flex min-w-0 items-center gap-1.5 text-xs text-gray-500">
-										<RowLogos
-											services={
-												services?.[createMediaKey(t.media_type, t.tmdb_id)]
-											}
-										/>
+										<RowLogos services={services?.[createMediaKey(t.media_type, t.tmdb_id)]} />
 										<span className="truncate">
-											{[t.release_year, t.genres.join(", ")]
-												.filter(Boolean)
-												.join(" · ")}
+											{[t.release_year, t.genres.join(", ")].filter(Boolean).join(" · ")}
 										</span>
 									</span>
-									<RowAward
-										mark={awards[awardKey(t.media_type, t.tmdb_id)]}
-										icon={trophy}
-									/>
+									<RowAward mark={awards[awardKey(t.media_type, t.tmdb_id)]} icon={trophy} />
 								</span>
 								<RowScores
 									goodwatch={t.goodwatch_overall_score_normalized_percent}

@@ -13,13 +13,8 @@ import { TAP } from "~/ui/filter-bar/motion"
 import { TabBadge } from "./DiscoverBar"
 import { PhoneSheet } from "./PhoneSheet"
 import { TabHeader, onTabListKey, tabElementId } from "./TabHeader"
-import {
-	MAIN_TABS,
-	MAIN_TAB_LABELS,
-	type MainTab,
-	type SubTab,
-	type SubTabId,
-} from "./tabs"
+import { MAIN_TABS, MAIN_TAB_LABELS, type MainTab, type SubTab, type SubTabId } from "./tabs"
+import { SELECTED_QUIET } from "~/ui/selection/selected"
 
 /** The desktop content area's height, under the 48 px header row. */
 export const CONTENT_HEIGHT = 400
@@ -144,10 +139,7 @@ export function DiscoverPanel({
 			style={{ transformOrigin: "top center" }}
 			className="absolute inset-x-0 top-[86px] z-40 flex flex-col overflow-hidden rounded-[24px] bg-gray-950 shadow-[0_30px_80px_-20px_rgba(0,0,0,.95),0_0_0_1px_rgba(255,255,255,0.09)]"
 		>
-			<div
-				className="relative shrink-0 overflow-hidden"
-				style={{ height: CONTENT_HEIGHT + 48 }}
-			>
+			<div className="relative shrink-0 overflow-hidden" style={{ height: CONTENT_HEIGHT + 48 }}>
 				<AnimatePresence initial={false} custom={tab.dir}>
 					<motion.div
 						key={tab.tab}
@@ -176,9 +168,7 @@ export function DiscoverPanel({
 								id={tab.finding ? "find" : tab.active}
 								phone={false}
 								panelId={panelId}
-								labelledBy={
-									tab.finding ? null : tabElementId(idBase, tab.active)
-								}
+								labelledBy={tab.finding ? null : tabElementId(idBase, tab.active)}
 							>
 								{tab.content}
 							</SubTabContent>
@@ -229,9 +219,7 @@ function SheetTabs({
 			role="tablist"
 			aria-label="Filters"
 			className="flex gap-0.5 px-2 pt-1 pb-1"
-			onKeyDown={(event) =>
-				onTabListKey(event, MAIN_TABS, open, onPick, idBase)
-			}
+			onKeyDown={(event) => onTabListKey(event, MAIN_TABS, open, onPick, idBase)}
 		>
 			{MAIN_TABS.map((tab) => {
 				const on = open === tab
@@ -247,13 +235,13 @@ function SheetTabs({
 						whileTap={TAP}
 						onClick={() => onPick(tab)}
 						data-tab={tab}
-						className={`relative flex h-10 min-w-0 flex-1 items-center justify-center rounded-full px-1.5 text-[13px] font-semibold whitespace-nowrap cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${on ? "text-gray-950" : "text-gray-300"}`}
+						className={`relative flex h-10 min-w-0 flex-1 items-center justify-center rounded-full px-1.5 text-[13px] font-semibold whitespace-nowrap cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${on ? "text-white" : "text-gray-300"}`}
 					>
 						{on && (
 							<motion.span
 								layoutId="discover-sheet-tab"
 								transition={PILL_SPRING}
-								className="absolute inset-0 rounded-full bg-white"
+								className={`absolute inset-0 rounded-full ring-1 ring-inset ring-white/20 ${SELECTED_QUIET}`}
 							/>
 						)}
 						<span className="relative flex items-center gap-1.5">
@@ -371,9 +359,7 @@ export function DiscoverSheet({
 							id={tab.finding ? "find" : tab.active}
 							phone
 							panelId={subPanelId}
-							labelledBy={
-								tab.finding ? null : tabElementId(subBase, tab.active)
-							}
+							labelledBy={tab.finding ? null : tabElementId(subBase, tab.active)}
 						>
 							{tab.content}
 						</SubTabContent>

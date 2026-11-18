@@ -14,6 +14,7 @@ import { useNavigation, usePathViewer } from "./NavigationContext"
 import { areaSheetOf } from "./phone-bar"
 import { type AreaKeyView, useAreaKeys } from "./SiteHeader"
 import { NewEpisodesMark } from "./bits"
+import { NAV_PILL } from "~/ui/selection/selected"
 
 /** One area key. A tap opens the area's sheet of pages; the link stays for new tabs and for no-script. */
 function DockAreaKey({ area }: { area: AreaKeyView }) {
@@ -35,21 +36,15 @@ function DockAreaKey({ area }: { area: AreaKeyView }) {
 				event.preventDefault()
 				navigation.openSheet(area.key)
 			}}
-			className={`flex h-full min-w-0 flex-col items-center justify-center gap-0.5 rounded-[18px] text-[12px] font-bold ${area.on ? "bg-amber-500/15 text-amber-200" : "text-gray-400 active:bg-white/[0.06]"}`}
+			className={`flex h-full min-w-0 flex-col items-center justify-center gap-0.5 rounded-[18px] text-[12px] font-bold ${area.on ? NAV_PILL : "text-gray-400 active:bg-white/[0.06]"}`}
 		>
 			<span className="relative">
 				{profile ? (
 					<ProfileKeyIcon size={24} on={area.on} fallback={Icon} />
 				) : (
-					<Icon
-						className={`h-[22px] w-[22px] ${area.on ? "text-amber-300" : ""}`}
-						aria-hidden
-					/>
+					<Icon className={`h-[22px] w-[22px] ${area.on ? "text-amber-300" : ""}`} aria-hidden />
 				)}
-				<NewEpisodesMark
-					words={area.fresh ?? null}
-					className="absolute -top-2 -right-3.5"
-				/>
+				<NewEpisodesMark words={area.fresh ?? null} className="absolute -top-2 -right-3.5" />
 			</span>
 			<span className="truncate">{area.label}</span>
 		</Link>
@@ -73,12 +68,9 @@ function DockKeys() {
 					to="/"
 					prefetch="intent"
 					aria-current={home ? "page" : undefined}
-					className={`flex h-full min-w-0 flex-col items-center justify-center gap-0.5 rounded-[18px] text-[12px] font-bold ${home ? "bg-amber-500/15 text-amber-200" : "text-gray-400 active:bg-white/[0.06]"}`}
+					className={`flex h-full min-w-0 flex-col items-center justify-center gap-0.5 rounded-[18px] text-[12px] font-bold ${home ? NAV_PILL : "text-gray-400 active:bg-white/[0.06]"}`}
 				>
-					<Home
-						className={`h-[22px] w-[22px] ${home ? "text-amber-300" : ""}`}
-						aria-hidden
-					/>
+					<Home className={`h-[22px] w-[22px] ${home ? "text-amber-300" : ""}`} aria-hidden />
 					<span>Home</span>
 				</Link>
 				{watch && <DockAreaKey area={watch} />}
@@ -121,11 +113,7 @@ export function MobileDock({ strip }: { strip?: ReactNode } = {}) {
 		<>
 			{/* Keeps the end of the page clear of the fixed dock. */}
 			{!docked && (
-				<div
-					aria-hidden
-					className="lg:hidden"
-					style={{ height: "var(--nav-dock-height, 76px)" }}
-				/>
+				<div aria-hidden className="lg:hidden" style={{ height: "var(--nav-dock-height, 76px)" }} />
 			)}
 			<div
 				ref={dock}
@@ -136,11 +124,7 @@ export function MobileDock({ strip }: { strip?: ReactNode } = {}) {
 					docked ? "rounded-t-3xl" : ""
 				} ${quiet ? "bg-gray-950" : "bg-gray-950/94 backdrop-blur-xl"}`}
 			>
-				{docked && (
-					<div className="flex items-end gap-1.5 px-2.5 pt-2.5 pb-1">
-						{strip}
-					</div>
-				)}
+				{docked && <div className="flex items-end gap-1.5 px-2.5 pt-2.5 pb-1">{strip}</div>}
 				<nav
 					aria-label="Site"
 					className={`relative transition-opacity duration-150 motion-reduce:transition-none ${

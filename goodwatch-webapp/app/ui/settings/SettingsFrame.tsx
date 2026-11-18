@@ -8,6 +8,7 @@ import { useUserData } from "~/routes/api.user-data"
 import { WRAP } from "~/ui/my-pages/bits"
 import { UNDER_TABS } from "~/ui/navigation/AreaTabs"
 import { type Place, SETTINGS_COLUMN, placeHere } from "~/ui/navigation/areas"
+import { NAV_ROW } from "~/ui/selection/selected"
 
 const count = (n: number) => n.toLocaleString("en-US")
 
@@ -19,17 +20,10 @@ export const useInSettingsFrame = () => useContext(InFrame)
 /** Not interested's number of titles, from the member's data. */
 function useNotInterestedCount() {
 	const { data } = useUserData()
-	return useMemo(
-		() => (data ? Object.keys(data.notInterested ?? {}).length : undefined),
-		[data],
-	)
+	return useMemo(() => (data ? Object.keys(data.notInterested ?? {}).length : undefined), [data])
 }
 
-function ColumnRow({
-	place,
-	here,
-	n,
-}: { place: Place; here: boolean; n?: number }) {
+function ColumnRow({ place, here, n }: { place: Place; here: boolean; n?: number }) {
 	if (!place.href) return null
 	return (
 		<Link
@@ -37,30 +31,19 @@ function ColumnRow({
 			prefetch="intent"
 			aria-current={here ? "page" : undefined}
 			className={`relative flex min-h-9 items-center gap-2.5 rounded-lg px-2.5 text-[14px] font-medium ${
-				here
-					? "bg-white/[0.07] text-white"
-					: "text-gray-400 hover:bg-white/[0.04] hover:text-gray-100"
+				here ? `${NAV_ROW} text-white` : "text-gray-400 hover:bg-white/[0.04] hover:text-gray-100"
 			}`}
 		>
 			{here && (
-				<span
-					aria-hidden
-					className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-amber-400"
-				/>
+				<span aria-hidden className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-amber-400" />
 			)}
 			<place.icon
 				className={`h-[18px] w-[18px] shrink-0 ${here ? "text-amber-300" : "text-gray-500"}`}
 				aria-hidden
 			/>
 			<span className="grow truncate">{place.label}</span>
-			{n != null && (
-				<span className="text-xs tabular-nums text-gray-500">{count(n)}</span>
-			)}
-			{place.tag && (
-				<span className="text-[11px] font-semibold text-gray-500">
-					{place.tag}
-				</span>
-			)}
+			{n != null && <span className="text-xs tabular-nums text-gray-500">{count(n)}</span>}
+			{place.tag && <span className="text-[11px] font-semibold text-gray-500">{place.tag}</span>}
 		</Link>
 	)
 }
@@ -68,8 +51,7 @@ function ColumnRow({
 export function SettingsFrame({ children }: { children: ReactNode }) {
 	const { pathname } = useLocation()
 	const notInterested = useNotInterestedCount()
-	const countOf = (place: Place) =>
-		place.count === "not-interested" ? notInterested : undefined
+	const countOf = (place: Place) => (place.count === "not-interested" ? notInterested : undefined)
 	return (
 		<>
 			<div className={`${WRAP} lg:flex lg:gap-8`} data-settings-frame>
@@ -84,12 +66,7 @@ export function SettingsFrame({ children }: { children: ReactNode }) {
 									{g.name}
 								</p>
 								{g.places.map((p) => (
-									<ColumnRow
-										key={p.id}
-										place={p}
-										here={placeHere(p, pathname)}
-										n={countOf(p)}
-									/>
+									<ColumnRow key={p.id} place={p} here={placeHere(p, pathname)} n={countOf(p)} />
 								))}
 							</div>
 						))}

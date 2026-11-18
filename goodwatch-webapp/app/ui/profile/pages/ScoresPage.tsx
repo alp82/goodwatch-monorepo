@@ -13,7 +13,8 @@ import { FOLLOW_PHONE_BAR, STICKY_SUBBAR } from "~/ui/layers"
 import { ScorePill } from "~/ui/poster-card/ScorePill"
 import { scoreLabels } from "~/utils/ratings"
 import { ImportCta } from "../ImportCta"
-import { ProfilePoster, ScoreChip, Segmented, SortSelect, SpreadBars, TILE, count } from "../parts"
+import { ProfilePoster, ScoreChip, SortSelect, SpreadBars, TILE, count } from "../parts"
+import { Segmented } from "~/ui/selection/Segmented"
 import { SectionHeading } from "~/ui/heading"
 
 const TIER_SIZES: [string | null, string][] = [
@@ -105,13 +106,14 @@ export function ScoresPage({
 				className={`sticky top-[calc(4rem_+_var(--visitor-bar-h,0px))] ${STICKY_SUBBAR} ${FOLLOW_PHONE_BAR} -mx-4 flex flex-wrap items-center gap-3 bg-gray-950/90 px-4 py-2 sm:-mx-6 sm:px-6 lg:top-28 lg:-mx-8 lg:px-8`}
 			>
 				<Segmented
+					size="sm"
 					label="Movies or shows"
 					value={kind}
 					onChange={(kind) => setChoice({ kind })}
 					options={[
-						["all", `All ${count(page.counts.all)}`],
-						["movie", `Movies ${count(page.counts.movie)}`],
-						["show", `Shows ${count(page.counts.show)}`],
+						{ key: "all", label: "All", count: page.counts.all },
+						{ key: "movie", label: "Movies", count: page.counts.movie },
+						{ key: "show", label: "Shows", count: page.counts.show },
 					]}
 				/>
 				<span className="grow" />

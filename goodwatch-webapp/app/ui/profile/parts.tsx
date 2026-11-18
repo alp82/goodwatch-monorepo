@@ -254,40 +254,6 @@ export function Body({ children }: { children: ReactNode }) {
 	return <div className={`${WRAP} flex flex-col gap-6 pt-5 pb-32 text-white`}>{children}</div>
 }
 
-export function Segmented<T extends string>({
-	value,
-	onChange,
-	options,
-	label,
-}: {
-	value: T
-	onChange: (v: T) => void
-	options: [T, string][]
-	label: string
-}) {
-	return (
-		<div
-			className="flex max-w-full overflow-x-auto rounded-full bg-white/[0.06] p-1 ring-1 ring-white/10 [scrollbar-width:none]"
-			role="radiogroup"
-			aria-label={label}
-		>
-			{options.map(([key, text]) => (
-				<button
-					key={key}
-					type="button"
-					// biome-ignore lint/a11y/useSemanticElements: the ARIA radio pattern on styled buttons, with aria-checked
-					role="radio"
-					aria-checked={key === value}
-					onClick={() => onChange(key)}
-					className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-bold whitespace-nowrap tabular-nums ${key === value ? "bg-white text-gray-950" : "text-gray-300 hover:text-white"}`}
-				>
-					{text}
-				</button>
-			))}
-		</div>
-	)
-}
-
 /** The page's sort: Discover's sort button, with its menu in a portal because it sits in a sticky row. */
 export function SortSelect<T extends string>({
 	value,

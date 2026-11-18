@@ -1,5 +1,5 @@
 // The title page's small shared look: the section header, a caption sub-heading, the contained list and its rows, a
-// search field, filter chips with live counts, the "Show N more" row, keyboard keys, and an in-place reveal.
+// search field, the "Show N more" row, keyboard keys, and an in-place reveal.
 import { CheckIcon, LinkIcon, MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline"
 import { type ComponentType, type ReactNode, useEffect, useRef, useState } from "react"
 import { SectionHeading } from "~/ui/heading"
@@ -172,64 +172,6 @@ export function SearchField({
 					<XMarkIcon className="h-4 w-4" />
 				</button>
 			) : null}
-		</div>
-	)
-}
-
-export interface Chip {
-	key: string
-	label: string
-	count?: number
-}
-
-/**
- * One-of filter chips with live counts ("Main cast 35"). A chip with no matches stays visible but quiet. Wraps on a
- * phone (no sideways scroll), so every option is seen at once.
- */
-export function FilterChips({
-	chips,
-	value,
-	onChange,
-	label,
-	className = "",
-}: {
-	chips: Chip[]
-	value: string
-	onChange: (key: string) => void
-	label: string
-	className?: string
-}) {
-	return (
-		// biome-ignore lint/a11y/useSemanticElements: a row of toggle buttons, not a form; a <fieldset> would need a legend
-		<div role="group" aria-label={label} className={`flex flex-wrap gap-1.5 ${className}`}>
-			{chips.map((c) => {
-				const on = c.key === value
-				const empty = c.count === 0 && !on
-				return (
-					<button
-						key={c.key}
-						type="button"
-						aria-pressed={on}
-						onClick={() => onChange(c.key)}
-						className={`inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 text-[13px] transition-colors duration-150 ${
-							on
-								? "bg-white font-semibold text-black"
-								: empty
-									? "text-gray-600 ring-1 ring-white/[0.06] hover:text-gray-400"
-									: "text-gray-200 ring-1 ring-white/15 hover:bg-white/[0.06] hover:text-white"
-						}`}
-					>
-						{c.label}
-						{c.count != null && (
-							<span
-								className={`tabular-nums text-xs ${on ? "text-black/55" : empty ? "text-gray-700" : "text-gray-500"}`}
-							>
-								{fmt(c.count)}
-							</span>
-						)}
-					</button>
-				)
-			})}
 		</div>
 	)
 }

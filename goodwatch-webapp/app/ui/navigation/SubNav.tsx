@@ -36,6 +36,7 @@ import {
 	SUBNAV_MARK,
 	subnavItem,
 } from "./bar-layers"
+import { NAV_ROW } from "~/ui/selection/selected"
 
 const WRAP = "mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8"
 const count = (n: number) => n.toLocaleString("en-US")
@@ -67,15 +68,10 @@ const coveredBy = (nav: HTMLElement) =>
 	(Number.parseFloat(getComputedStyle(nav).top) || 0) + nav.offsetHeight
 
 const reducedMotion = () =>
-	typeof window !== "undefined" &&
-	window.matchMedia("(prefers-reduced-motion: reduce)").matches
+	typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
 const plainClick = (event: MouseEvent) =>
-	event.button === 0 &&
-	!event.metaKey &&
-	!event.ctrlKey &&
-	!event.shiftKey &&
-	!event.altKey
+	event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey
 
 /**
  * Scroll-spy for section items: the last section whose top has passed under the sticky rows is current (the first
@@ -96,9 +92,7 @@ function useSpy(items: SubNavItem[], nav: RefObject<HTMLElement>, on: boolean) {
 				const el = document.getElementById(item.href.slice(1))
 				if (el && el.getBoundingClientRect().top <= line) current = item.key
 			}
-			const end =
-				window.innerHeight + window.scrollY >=
-				document.documentElement.scrollHeight - 4
+			const end = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4
 			if (end && items.length) current = items[items.length - 1].key
 			setHere(current)
 		}
@@ -136,8 +130,7 @@ function useSpy(items: SubNavItem[], nav: RefObject<HTMLElement>, on: boolean) {
 function scrollToSection(id: string, nav: HTMLElement) {
 	const el = document.getElementById(id)
 	if (!el) return false
-	const top =
-		el.getBoundingClientRect().top + window.scrollY - coveredBy(nav) - 16
+	const top = el.getBoundingClientRect().top + window.scrollY - coveredBy(nav) - 16
 	window.scrollTo({
 		top: Math.max(0, top),
 		behavior: reducedMotion() ? "auto" : "smooth",
@@ -209,16 +202,12 @@ export function SubNav({
 		return given.filter((it) => keys.has(it.key))
 	}, [given, drawn])
 	const { here: spied, lock } = useSpy(items, nav, sections)
-	const hereKey = sections
-		? spied
-		: (items.find((item) => item.here)?.key ?? null)
+	const hereKey = sections ? spied : (items.find((item) => item.here)?.key ?? null)
 
 	// The current item stays in view in a row that scrolls sideways (the row only: never the page).
 	useLayoutEffect(() => {
 		const row = scroller.current
-		const el = row?.querySelector<HTMLElement>(
-			`[data-subnav-item="${hereKey}"]`,
-		)
+		const el = row?.querySelector<HTMLElement>(`[data-subnav-item="${hereKey}"]`)
 		if (!row || !el || row.scrollWidth <= row.clientWidth) return
 		const left = el.offsetLeft - (row.clientWidth - el.offsetWidth) / 2
 		row.scrollTo({
@@ -304,11 +293,7 @@ export function SubNav({
 				sections={sections}
 				className={className}
 			/>
-			<div
-				ref={sentinel}
-				aria-hidden
-				className={`max-lg:hidden ${className}`}
-			/>
+			<div ref={sentinel} aria-hidden className={`max-lg:hidden ${className}`} />
 			<nav
 				ref={nav}
 				aria-label={label}
@@ -324,10 +309,7 @@ export function SubNav({
 							<ul className={`${SUBNAV_LIST} shrink-0`}>
 								{items.flatMap((it) => [
 									...(it.sep ? [<Sep key={`${it.key}-sep`} />] : []),
-									<li
-										key={it.key}
-										className="flex h-full shrink-0 items-center"
-									>
+									<li key={it.key} className="flex h-full shrink-0 items-center">
 										{item(it)}
 									</li>,
 								])}
@@ -387,11 +369,7 @@ function QuietRow({
 							const el = document.getElementById(it.href.slice(1))
 							if (!plainClick(event) || !el) return
 							event.preventDefault()
-							const top =
-								el.getBoundingClientRect().top +
-								window.scrollY -
-								PHONE_BAR_PX -
-								12
+							const top = el.getBoundingClientRect().top + window.scrollY - PHONE_BAR_PX - 12
 							window.scrollTo({
 								top: Math.max(0, top),
 								behavior: reducedMotion() ? "auto" : "smooth",
@@ -405,10 +383,7 @@ function QuietRow({
 				))}
 			</nav>
 		)
-	const head = items.slice(
-		0,
-		items.length > FREQUENT + 1 ? FREQUENT : items.length,
-	)
+	const head = items.slice(0, items.length > FREQUENT + 1 ? FREQUENT : items.length)
 	const rest = items.slice(head.length)
 	const restHere = rest.find((it) => it.here)
 	const link = (it: SubNavItem, extra = "") => (
@@ -465,9 +440,7 @@ function QuietRow({
 									onClick={() => setMore(false)}
 									aria-current={it.here ? "page" : undefined}
 									className={`flex items-center rounded-xl px-3 py-3 font-semibold ${
-										it.here
-											? "bg-amber-500/15 text-amber-100"
-											: "text-white active:bg-white/[0.05]"
+										it.here ? `${NAV_ROW} text-amber-300` : "text-white active:bg-white/[0.05]"
 									}`}
 								>
 									<span className="flex-1">{it.label}</span>

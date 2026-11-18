@@ -7,7 +7,8 @@ import type { LibraryKind } from "~/domain/my-library"
 import type { ProfileShell, ProfileTitle, ProfileWishlistPage } from "~/domain/profile"
 import { ImportCta } from "../ImportCta"
 import { ProfileCard } from "../ProfileCard"
-import { Segmented, SortSelect, TILE, count, shortDate } from "../parts"
+import { SortSelect, TILE, count, shortDate } from "../parts"
+import { Segmented } from "~/ui/selection/Segmented"
 import { SectionHeading } from "~/ui/heading"
 
 type Kind = LibraryKind
@@ -59,13 +60,14 @@ export function WishlistPage({
 		<>
 			<div className="flex flex-wrap items-center gap-3">
 				<Segmented
+					size="sm"
 					label="Movies or shows"
 					value={kind}
 					onChange={setKind}
 					options={[
-						["all", `All ${count(page.titles.length)}`],
-						["movie", `Movies ${count(movies)}`],
-						["show", `Shows ${count(page.titles.length - movies)}`],
+						{ key: "all", label: "All", count: page.titles.length },
+						{ key: "movie", label: "Movies", count: movies },
+						{ key: "show", label: "Shows", count: page.titles.length - movies },
 					]}
 				/>
 				<span className="grow" />

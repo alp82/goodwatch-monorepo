@@ -11,15 +11,14 @@ import { PosterImg, posterUrl } from "~/ui/profile/parts"
 import { PANEL, SectionHead } from "~/ui/profile/taste/parts"
 import { personPath } from "~/utils/helpers"
 import { rank, titleHref } from "./format"
+import { NAV_PILL } from "~/ui/selection/selected"
 
 export { PANEL }
 
-export const LABEL =
-	"text-xs font-bold tracking-[0.16em] text-gray-500 uppercase"
+export const LABEL = "text-xs font-bold tracking-[0.16em] text-gray-500 uppercase"
 
 /** Whether the reader asked for less motion. Browser only. */
-export const reducedMotion = () =>
-	window.matchMedia("(prefers-reduced-motion: reduce)").matches
+export const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
 /**
  * The page's own styles: the intro's brand cards on a page grid, and the motions. Transform and opacity only; nothing
@@ -155,16 +154,9 @@ export function Block({
 /** The Stats tab's fact tile: small label, bold value. */
 export function FactTile({ label, value }: { label: string; value: string }) {
 	return (
-		<div
-			data-fx-tile={label}
-			className={`${PANEL} flex min-w-0 flex-col gap-2 p-3`}
-		>
-			<span className="text-[11px] font-bold tracking-wider text-gray-500 uppercase">
-				{label}
-			</span>
-			<span className="text-xl font-black text-white tabular-nums">
-				{value}
-			</span>
+		<div data-fx-tile={label} className={`${PANEL} flex min-w-0 flex-col gap-2 p-3`}>
+			<span className="text-[11px] font-bold tracking-wider text-gray-500 uppercase">{label}</span>
+			<span className="text-xl font-black text-white tabular-nums">{value}</span>
 		</div>
 	)
 }
@@ -178,10 +170,7 @@ export type RankRow = {
 }
 
 /** The Stats tab's ranked rows: number, small poster, linked name, count. */
-export function RankRows({
-	heading,
-	rows,
-}: { heading: string; rows: RankRow[] }) {
+export function RankRows({ heading, rows }: { heading: string; rows: RankRow[] }) {
 	return (
 		<div className={`${PANEL} min-w-0 p-4`}>
 			<p className={`mb-2 ${LABEL}`}>{heading}</p>
@@ -203,9 +192,7 @@ export function RankRows({
 						>
 							{r.name}
 						</Link>
-						<span className="text-xs text-gray-500 tabular-nums">
-							{r.value}
-						</span>
+						<span className="text-xs text-gray-500 tabular-nums">{r.value}</span>
 					</li>
 				))}
 			</ol>
@@ -214,10 +201,7 @@ export function RankRows({
 }
 
 /** Ranked rows for titles, with the value each one shows. */
-export const titleRows = <T extends StatsTitle>(
-	titles: T[],
-	value: (t: T) => string,
-): RankRow[] =>
+export const titleRows = <T extends StatsTitle>(titles: T[], value: (t: T) => string): RankRow[] =>
 	titles.map((t) => ({
 		key: `${t.type}-${t.tmdbId}`,
 		href: titleHref(t),
@@ -248,11 +232,7 @@ export function Portraits({
 			<ul className="flex gap-4 overflow-x-auto pb-1 [scrollbar-width:none]">
 				{people.map((p) => (
 					<li key={p.tmdbId} className="w-24 shrink-0 text-center">
-						<Link
-							to={personPath(p.tmdbId, p.name)}
-							prefetch="intent"
-							className="group block"
-						>
+						<Link to={personPath(p.tmdbId, p.name)} prefetch="intent" className="group block">
 							{p.profile ? (
 								<img
 									src={posterUrl(p.profile, "w185") ?? ""}
@@ -410,7 +390,7 @@ export function ChapterNav({ items }: { items: ChapterItem[] }) {
 								aria-current={on ? "true" : undefined}
 								className={`flex min-h-8 items-center rounded-full px-3 text-xs font-bold tracking-wide whitespace-nowrap uppercase ring-1 transition-colors ${
 									on
-										? "bg-amber-400/15 text-amber-300 ring-amber-400/60"
+										? `${NAV_PILL} ring-amber-400/60`
 										: "text-gray-400 ring-white/10 hover:text-white"
 								}`}
 							>

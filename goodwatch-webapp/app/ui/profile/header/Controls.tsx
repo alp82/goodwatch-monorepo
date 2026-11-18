@@ -16,6 +16,7 @@ import { type ReactNode, useEffect, useId, useRef, useState } from "react"
 import { EDIT_PROFILE_PATH } from "~/domain/member-paths"
 import { ogImageUrl } from "~/utils/og-image-url"
 import { type ViewLinks, toggleView } from "./VisitorView"
+import { SELECTED_SOLID } from "~/ui/selection/selected"
 
 /** Something the Share menu offers: the profile, or the tab or list you're on. */
 export interface ShareTarget {
@@ -35,8 +36,7 @@ export interface ControlsProps {
 	share: ShareTarget[]
 }
 
-const FOCUS =
-	"focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
 
 /** A label under an icon key on hover and keyboard focus; the key carries the same name as its aria-label. */
 function Tip({ children }: { children: ReactNode }) {
@@ -70,7 +70,7 @@ export function ClusterControls({ handle, view, edit, share }: ControlsProps) {
 					preventScrollReset
 					aria-pressed={view.on}
 					aria-label="View as visitor"
-					className={`${SEG} w-9 sm:w-auto sm:px-3 ${view.on ? "bg-amber-400 text-gray-950" : IDLE}`}
+					className={`${SEG} w-9 sm:w-auto sm:px-3 ${view.on ? SELECTED_SOLID : IDLE}`}
 				>
 					{view.on ? (
 						<EyeSlashIcon className="size-[18px]" aria-hidden />
@@ -82,10 +82,7 @@ export function ClusterControls({ handle, view, edit, share }: ControlsProps) {
 			)}
 			{edit && (
 				<>
-					<span
-						aria-hidden
-						className="mx-0.5 h-5 w-px bg-white/12 max-sm:hidden"
-					/>
+					<span aria-hidden className="mx-0.5 h-5 w-px bg-white/12 max-sm:hidden" />
 					<Link
 						to={EDIT_PROFILE_PATH}
 						prefetch="intent"
@@ -108,10 +105,7 @@ const cardImage = (path: string) => {
 }
 
 /** Share, as a small menu of what to share. */
-function ShareMenu({
-	handle,
-	targets,
-}: { handle: string; targets: ShareTarget[] }) {
+function ShareMenu({ handle, targets }: { handle: string; targets: ShareTarget[] }) {
 	const [open, setOpen] = useState(false)
 	const [native, setNative] = useState(false)
 	const [copied, setCopied] = useState<string | null>(null)
@@ -123,9 +117,7 @@ function ShareMenu({
 	// The page you're on has its own card (a list's is versioned by its content): its og:image, on this host.
 	useEffect(() => {
 		if (!open) return
-		const meta = document.querySelector<HTMLMetaElement>(
-			'meta[property="og:image"]',
-		)?.content
+		const meta = document.querySelector<HTMLMetaElement>('meta[property="og:image"]')?.content
 		if (!meta) return setPageImage(null)
 		const url = new URL(meta, window.location.origin)
 		setPageImage(`${url.pathname}${url.search}`)
@@ -216,12 +208,8 @@ function ShareMenu({
 										className="aspect-[1200/630] w-24 shrink-0 rounded-md bg-white/5 object-cover ring-1 ring-white/10"
 									/>
 									<div className="min-w-0 flex-1">
-										<p className="truncate text-sm font-bold text-gray-100">
-											{target.name}
-										</p>
-										<p className="truncate text-xs text-gray-400">
-											goodwatch.app{target.path}
-										</p>
+										<p className="truncate text-sm font-bold text-gray-100">{target.name}</p>
+										<p className="truncate text-xs text-gray-400">goodwatch.app{target.path}</p>
 									</div>
 								</div>
 								<div className="mt-2 flex gap-1.5">

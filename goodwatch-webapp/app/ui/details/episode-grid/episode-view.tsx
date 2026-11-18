@@ -1,6 +1,7 @@
 // Which view the episodes section shows, Grid or Spread, set by the switch in the section header. One show at a
 // time: another show starts on the grid again.
 import { useSyncExternalStore } from "react"
+import { SELECTED_QUIET } from "~/ui/selection/selected"
 import { FOCUS } from "./presentation"
 
 let state: { showId: number; chart: boolean } = { showId: 0, chart: false }
@@ -25,12 +26,7 @@ export function useEpisodeChart(showId: number): boolean {
 }
 
 const GridIcon = () => (
-	<svg
-		viewBox="0 0 14 14"
-		aria-hidden="true"
-		className="h-3.5 w-3.5"
-		fill="currentColor"
-	>
+	<svg viewBox="0 0 14 14" aria-hidden="true" className="h-3.5 w-3.5" fill="currentColor">
 		<rect x="1" y="1" width="5" height="5" rx="1.2" />
 		<rect x="8" y="1" width="5" height="5" rx="1.2" />
 		<rect x="1" y="8" width="5" height="5" rx="1.2" />
@@ -38,12 +34,7 @@ const GridIcon = () => (
 	</svg>
 )
 const SpreadIcon = () => (
-	<svg
-		viewBox="0 0 14 14"
-		aria-hidden="true"
-		className="h-3.5 w-3.5"
-		fill="currentColor"
-	>
+	<svg viewBox="0 0 14 14" aria-hidden="true" className="h-3.5 w-3.5" fill="currentColor">
 		<rect x="0.5" y="6.4" width="13" height="1.2" rx="0.6" opacity="0.45" />
 		<circle cx="2.6" cy="7" r="1.6" />
 		<circle cx="6.4" cy="4.4" r="1.6" />
@@ -78,16 +69,12 @@ export function EpisodeViewToggle({
 					role="radio"
 					aria-checked={chart === on}
 					disabled={loading}
-					title={
-						on ? "Each episode on the score scale" : "Each episode as a square"
-					}
+					title={on ? "Each episode on the score scale" : "Each episode as a square"}
 					onClick={() => setEpisodeChart(showId, on)}
-					className={`inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-md px-2 sm:px-2.5 text-xs font-semibold transition-colors ${FOCUS} ${chart === on ? "bg-white/[0.14] text-white shadow-sm shadow-black/40" : "text-gray-400 hover:text-gray-100"}`}
+					className={`inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-md px-2 sm:px-2.5 text-xs font-semibold transition-colors ${FOCUS} ${chart === on ? `${SELECTED_QUIET} shadow-sm shadow-black/40` : "text-gray-400 hover:text-gray-100"}`}
 				>
 					{on ? <SpreadIcon /> : <GridIcon />}
-					<span className="sr-only sm:not-sr-only">
-						{on ? "Spread" : "Grid"}
-					</span>
+					<span className="sr-only sm:not-sr-only">{on ? "Spread" : "Grid"}</span>
 				</button>
 			))}
 		</div>
