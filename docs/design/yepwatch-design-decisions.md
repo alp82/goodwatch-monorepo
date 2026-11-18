@@ -16,6 +16,8 @@ These affect GoodWatch on the web and YepWatch together.
 
 Status: decided November 18, 2026. One amber for every app and surface: `#fbbf24` (Tailwind v3 amber-400), because it reads less orange than the v4 value. GoodWatch on the web sets `--color-amber-400: #fbbf24` in `tailwind.css`, which also makes its Tailwind controls match its own wordmark and share cards. YepWatch doesn't change. Design diff: branch `prototype/yepwatch-design-f1`, page `docs/design/yepwatch-design-diffs/F1/index.html`.
 
+Implemented November 18, 2026 in 8222b6d2f.
+
 YepWatch uses `#fbbf24` (Tailwind v3 amber-400). GoodWatch on the web uses Tailwind v4's `amber-400`, `oklch(82.8% 0.189 84.429)`, which is a more saturated, slightly more orange yellow. The web's Open Graph cards and `start.css` also use `#fbbf24`. The two apps' "same" amber differs visibly side by side, for example on the YepWatch share cards that the web app renders.
 
 Options to prototype: one shared amber value for the family; keep each app's value.
@@ -25,6 +27,8 @@ Design diff should show: the YepWatch start page, the GoodWatch start page, both
 ### F2: Fonts
 
 Status: decided November 18, 2026, on one condition. Option B: GoodWatch on the web sets body text in Gabarito, if Lighthouse scores don't get worse. They don't: on five pages (start, Discover, a title, a person, /movies/best), phone and desktop, Performance, Accessibility, and SEO stayed within run-to-run noise, with no extra font bytes, as long as body text keeps the one preloaded Latin file and gets size-matched fallback faces (report: `docs/design/yepwatch-design-diffs/F2/lighthouse.md` on the prototype branch). Shipped that way in `goodwatch-webapp/app/tailwind.css` (`--font-sans`) and `app/fonts/gabarito.css`. YepWatch keeps Gabarito for everything. Design diff: branch `prototype/yepwatch-design-f2`, page `docs/design/yepwatch-design-diffs/F2/index.html`.
+
+Implemented November 18, 2026 in 9fe764caf.
 
 YepWatch sets everything in Gabarito Regular and Bold. GoodWatch on the web uses Gabarito (up to weight 900) for the brand and some page titles and the system sans for everything else (web open decision D3).
 
@@ -36,6 +40,8 @@ Options to prototype: keep each app's approach; align the web's body text to Gab
 
 Status: decided November 18, 2026. Option B: buttons, fields, and small controls all use 10 (`R.control`). The separate 12 for buttons goes away. Design diff: branch `prototype/yepwatch-design-y1`, page `docs/design/yepwatch-design-diffs/Y1/index.html`.
 
+Implemented November 18, 2026 in ab96df029 and 21572e5fb.
+
 The approved shape scale is `R = { stamp: 4, control: 10, card: 14 }` (`features/shell/tokens.ts:2`). Buttons and fields hardcode 12 instead of `R.control` in about 42 places (for example `features/room/ui.tsx:126`, `features/home/start-parts.tsx:164`, `features/room/panels.tsx:134`). `R` tokens are used only about 26 times in the room flow. Raw literals also include 10 (15), 14 (10), 8 (12), and 9, 6, 5, 3, 2, 16, 21.
 
 Options to prototype: change `R.control` to 12; move buttons and fields to 10; add a separate `button` radius of 12.
@@ -45,6 +51,8 @@ Design diff should show: setup, the join page, the voting deck bar, Matches, Ton
 ### Y2: Reds
 
 Status: decided November 18, 2026. Option B: Nope is a game color with three shades (`#ef4444`, `#f87171`, `#7f1d1d`), and errors, Leave, and Reset share one status color. The error color is `#ffa59e` (round 2 candidate E2): slightly redder than the prototype's `#ffb4ab`, 10.7:1 on `#070707`, and 11.6 ΔE00 from the Nope red, so a failed save doesn't read like a vote. It's close to today's `#fca5a5`. Design diff: branch `prototype/yepwatch-design-y2`, page `docs/design/yepwatch-design-diffs/Y2/index.html`.
+
+Implemented November 18, 2026 in 76d09c9f8 and 21572e5fb.
 
 About 22 reds are in use. The main ones: `#ef4444` (`glow.red`, redeclared in `glow/EdgeGlow.tsx:17`), `#f87171` (Nope and Leave: `room/Voting.tsx:106,111`, `room/Sheets.tsx:183-190`, `room/YourYeps.tsx:104`), `#fca5a5` (error text: `room/SetupConsole.tsx:214`, `rooms/NewRoom.tsx:107`, `room/MoodComposer.tsx:133`, `room/panels.tsx:54`, `legal/DeleteAccount.tsx:99`), `#ffb2ad` (`colors.danger`), `#dc2626` (trailer play disc), and `#7f1d1d` (vote looks).
 
@@ -56,6 +64,8 @@ Design diff should show: the Nope key and stamps, Leave, every error message, an
 
 Status: decided November 18, 2026. Option A: every icon comes from the `glow` `Icon` set (24px grid, 2px stroke, round caps). Five icons are redrawn on that grid (film, TV, sliders, archive, pencil), and the text "↗" becomes a drawn arrow. Brand marks (`GoodWatchG`, store logos) stay as they are. Design diff: branch `prototype/yepwatch-design-y3`, page `docs/design/yepwatch-design-diffs/Y3/index.html`.
 
+Implemented November 18, 2026 in 5a0abe058.
+
 Six hand-rolled SVG sets: the `glow` `Icon` (14 names, stroke 2, about 48 uses), `HeroIcon` with Heroicons paths (stroke 1.5, 4 uses: Movies and Shows), two `Glyph` components (`room/ui.tsx` and `home/start-parts.tsx:28`), taste `Heart` and `AnswerIcon`, `marks.tsx` (`GoodWatchG`, `StoreLogo`), and `Chevron` and `Plus` in `shell/Header.tsx:64-68`, plus a text "↗" (`glow/Poster.tsx:116,133`, `home/install.tsx:57`).
 
 Options to prototype: everything in the `glow` `Icon` set; adopt Heroicons, shared with the web app.
@@ -64,6 +74,8 @@ Options to prototype: everything in the `glow` `Icon` set; adopt Heroicons, shar
 
 Status: decided November 18, 2026, on one condition. Option A: the static web pages use the app's look (Gabarito, app colors and title style, a 640px reading column, amber links with a thin underline), if there's no SEO concern. There isn't: the pages keep their static HTML text, title, canonical URL, and description, and only the CSS and one Gabarito file change. The owner tied this to F2. While porting, fix the generator bug that puts a sentence's final period inside a link. Design diff: branch `prototype/yepwatch-design-y4`, page `docs/design/yepwatch-design-diffs/Y4/index.html`.
 
+Implemented November 18, 2026 in 995470132.
+
 In the app, terms, privacy, and support use `legal/LegalPage.tsx` (Gabarito, Bold 32 titles, soft unlinked text). On the web, `/terms`, `/privacy`, and `/support` are static HTML generated by `scripts/build-store-assets.ts:17` (system-ui 17px, line height 1.65, h1 36px, underlined amber links). Web visitors never see the in-app version.
 
 Options to prototype: generate the static pages in the app's look; keep the plain reading style for both.
@@ -71,6 +83,8 @@ Options to prototype: generate the static pages in the app's look; keep the plai
 ### Y5: Detail and trailer controls on the poster
 
 Status: decided November 18, 2026. Option D: one quiet dark glass chip on both widths (white text, an open-outside icon on Details, a small red play disc on Trailer, no amber), beside the card on desktop. Round 2 variant D3 adds the lift the owner asked for: a chip shadow of `0 2px 8px` at 30% black, and on phones a scrim inside the poster from 32% black at the top edge to clear over the top 20% of the card. The scrim is a fixed layer that moves with the card's drag transform. On desktop only the chip shadow applies. Design diff: branch `prototype/yepwatch-design-y5`, page `docs/design/yepwatch-design-diffs/Y5/index.html`.
+
+Implemented November 18, 2026 in db5ae3e60.
 
 On phones the voting card shows an amber "Details ↗" chip and a white trailer chip with a red play disc (`glow/Poster.tsx:105-135`). On desktop the same controls are outlined, muted chips (`room/Voting.tsx:120`).
 

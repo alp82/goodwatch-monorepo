@@ -31,7 +31,7 @@
 
 	/* Gabarito (fonts/gabarito.css): page titles in `font-display font-bold`, big brand numbers in `font-black`. "Gabarito
 	   Brand" first, so the text never waits for a share card's slices of "Gabarito"; those still fill in characters the
-	   brand files lack. The fallbacks are metric-matched at weight 700. */
+	   brand files lack. The fallback faces match Gabarito regular (400-599) and bold (600-900). */
 	--font-display:
 		"Gabarito Brand", "Gabarito", "Gabarito Fallback", "Gabarito Fallback Roboto", sans-serif;
 
