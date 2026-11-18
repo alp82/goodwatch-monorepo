@@ -302,11 +302,11 @@
 		"typographyMeta": {
 			"display": {
 				"displayName": "Display",
-				"purpose": "Gabarito page titles (open decision D3)."
+				"purpose": "Every page h1: Gabarito 700, normal letter spacing (D3)."
 			},
 			"headline": {
 				"displayName": "Headline",
-				"purpose": "Section headings (open decision D4)."
+				"purpose": "Every section heading: system 600, -0.025em (D4)."
 			},
 			"title": {
 				"displayName": "Title",
@@ -535,7 +535,7 @@
 		"overview": "GoodWatch looks like a home video shelf in a dark room with a warm lamp on. The room is dark navy. The posters and backdrops are the color. Amber is the lamp: it marks actions, the current place, links, and awards. The interface stays out of the way so that people compare titles, not chrome.\n\nDensity is high but calm. Poster grids, score rows, and episode grids carry a lot of data, so surfaces stay flat, layers come from translucent white, and text steps down through a blue-gray ramp. Title pages take on the color of the title itself: the page sits on the title's own backdrop, blurred and darkened. Brand scenes, such as the start page room, the TV easter eggs, the intro film, and the footer cinema, are illustrated or pixel-art worlds with their own rules. They frame the app but don't set its controls.",
 		"keyCharacteristics": [
 			"Dark navy base for most pages; title pages tint toward their own backdrop.",
-			"Amber as the brand light; open decision D7 settles its exact job.",
+			"Amber as the brand light; one filled amber button per view, the main action (D7).",
 			"Translucent white layers (4-20%) and thin white rings instead of shadows.",
 			"Pills for chips, toggles, and most buttons; 8-16px corners for cards, panels, fields, and action buttons.",
 			"Gabarito for the brand and many page titles, the system sans for data and controls.",
@@ -580,7 +580,7 @@
 			"**Do** use the darkened tile color behind white score numbers.",
 			"**Do** let posters and backdrops carry color.",
 			"**Do** use the system sans for data, controls, and body text, with tabular figures for numbers.",
-			"**Do** match the variant the surrounding page already uses wherever an open decision (D1 to D7) applies.",
+			"**Do** follow the decided variant for D1 and D3 to D7, and match the variant the surrounding page already uses for the selected state (D2, open).",
 			"**Do** animate only transform and opacity, and keep interface motion at 120-300ms.",
 			"**Do** make every interactive element at least 40px tall on touch, with a visible focus ring."
 		],

@@ -17,11 +17,11 @@ The options listed under each decision are starting points. A prototype can add 
 
 Two family decisions that affect both GoodWatch on the web and YepWatch, F1 (amber value) and F2 (fonts), are in `docs/design/yepwatch-design-decisions.md`.
 
-## Open decisions
+## Decisions
 
 ### D1: Primary button
 
-Status: open.
+Status: decided on November 18, 2026: **split**. Inside the app, every primary button is the flat `amber-400` pill with near-black bold text (hover `amber-300`), including the member gradient (`AMBER_BUTTON`), Discover's "Show N titles", and the Feedback drawer's Send. Info pages and the sign-in and sign-up cards use the `amber-700` rectangle (`rounded-lg`, white semibold text, hover `amber-600`), including the numbered step discs.
 
 | Variant | Where |
 |---|---|
@@ -37,7 +37,7 @@ Design diff should show: the header, the start page, Discover, a member page wit
 
 ### D2: Selected state
 
-Status: open.
+Status: round 2. The owner likes most of today's looks: Stream/Rent/Buy and the episodes Grid/Spread (quiet white 12% tab), Watch status and profile scores (solid white pill), the settings side column (faint white row, amber bar, amber icon), and the amber 15% tint on Best list pagination instead of solid amber. Two options built from those rules are in the design diff: `scope` (a page-wide filter is a solid white pill, a switch inside one section is the quiet white tab, navigation is the amber mark or amber tint) and `shape` (pills are solid white, rectangular tabs and rows are the quiet tab, navigation as in `scope`).
 
 | Variant | Where |
 |---|---|
@@ -55,7 +55,7 @@ Design diff should show: Discover filters, the title page (Stream/Rent/Buy, epis
 
 ### D3: Page title font
 
-Status: open.
+Status: decided on November 18, 2026: **Gabarito 700 for every page h1**, with no extra letter spacing (the wordmark and Discover weight), including title and person names, member, info, sign-in, and legal pages. Sizes stay as they are.
 
 | Variant | Where |
 |---|---|
@@ -70,7 +70,7 @@ Design diff should show: a title page, a person page, Discover, /new, Watch, /mo
 
 ### D4: Section heading
 
-Status: open.
+Status: decided on November 18, 2026: **system font, semibold, -0.025em everywhere**, 20 px on phones and 24 px from 640 px. Group headings are one step smaller. The icon tile stays where it is today (title pages) and isn't added elsewhere.
 
 | Variant | Where |
 |---|---|
@@ -88,7 +88,7 @@ Design diff should show: the title page, a person page, /awards, profile stats, 
 
 ### D5: Title page base
 
-Status: open.
+Status: decided on November 18, 2026: **keep the backdrop tint and the `stone-950` bars; panels on the tint become translucent white** (`white/4` to `white/7`, with a backdrop blur where the panel floats). This covers the season panel (`#141923`), the quick view card and phone sheet opened from a title page, the Watch menu, the Feels popover and sheet, the score and Not seen sheets, and the tropes letter headers.
 
 The title page and its sub-pages sit on the title's own backdrop (`details/TitlePage.tsx:550`, `blur(64px) brightness(0.15)`), with `stone-950` bars (TitleBar `:147`, PhoneBar `:70`, SubPageHeader `:84`) and stone neutrals, about 29 stone classes. That looks warm brown. Quick views (`QuickView.tsx:579`), the season panel (`#141923`), and the person and list pages are navy `gray-900` and clash over the brown.
 
@@ -98,7 +98,7 @@ Design diff should show: several title pages with very different posters (warm, 
 
 ### D6: Eyebrow labels
 
-Status: open.
+Status: decided on November 18, 2026: **two styles**. Section labels use the gray caption (11 px, 600, uppercase, 0.14em, `gray-500`). The line above a page or card title uses the amber kicker (12 px, 700, uppercase, 0.18em, `amber-400`). Tiny labels inside controls keep their current look.
 
 | Variant | Where |
 |---|---|
@@ -114,7 +114,7 @@ Design diff should show: the title page, the info pages, the footer, the command
 
 ### D7: What amber means
 
-Status: open.
+Status: decided on November 18, 2026: **one filled amber button per view**. The view's main action is the only solid amber fill; other amber buttons become amber outline buttons. Solid amber bars, dots, and badges that aren't buttons turn gray. Amber text, icons, links, award lines, light amber tints, and focus rings stay.
 
 Amber marks actions, active navigation, links, award lines, section icons, reading-progress bars, counts, and focus, often all on one screen. Discover shows amber on the count bar, the Mode toggle, Search, Sign up, award lines, and the "you" lock at once. The title page shows it on Sign up, award lines, rail progress, active tabs, links, and section icons. Amber also comes in several values: amber-300 (about 109 uses on the title page), amber-400, amber-500, amber-700, `#fcd34d` (`--tn-amber`), `rgb(255,204,51)` (`.accent`), and orange-300 `#fdba74` (TV remote).
 

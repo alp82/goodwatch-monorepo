@@ -42,9 +42,9 @@ typography:
   display:
     fontFamily: "Gabarito, 'Gabarito Fallback', 'Gabarito Fallback Roboto', sans-serif"
     fontSize: "2.5rem"
-    fontWeight: 900
+    fontWeight: 700
     lineHeight: 1.1
-    letterSpacing: "-0.03em"
+    letterSpacing: "normal"
   headline:
     fontFamily: "ui-sans-serif, system-ui, sans-serif"
     fontSize: "1.5rem"
@@ -173,7 +173,7 @@ components:
 
 # Design System: GoodWatch
 
-This file records the GoodWatch web app's visual system as it is in the code on November 18, 2026. Where the app uses several competing variants for the same thing, this file names them and points to an open decision (D1 to D7) in `docs/design/webapp-design-decisions.md`. Until a decision is made, new work uses the variant that the surrounding page already uses and doesn't add another one.
+This file records the GoodWatch web app's visual system as it is in the code on November 18, 2026. Where the app uses several competing variants for the same thing, this file names them and points to a decision (D1 to D7) in `docs/design/webapp-design-decisions.md`. D1 and D3 to D7 were decided on November 18, 2026: new work follows the decided variant, and the app is migrated to it in follow-up issues. D2 (selected state) is still open: until it's decided, new work uses the variant that the surrounding page already uses.
 
 ## Overview
 
@@ -186,7 +186,7 @@ Density is high but calm. Poster grids, score rows, and episode grids carry a lo
 **Key Characteristics:**
 
 - Dark navy base for most pages; title pages tint toward their own backdrop.
-- Amber as the brand light; open decision D7 settles its exact job.
+- Amber as the brand light. One filled amber button per view (D7): the view's main action. Amber text, icons, links, award lines, light tints, and focus rings are fine; solid amber that isn't the main action isn't.
 - Translucent white layers (4-20%) and thin white rings instead of shadows.
 - Pills for chips, toggles, and most buttons; 8-16px corners for cards, panels, fields, and action buttons.
 - Gabarito for the brand and many page titles, the system sans for data and controls.
@@ -202,7 +202,7 @@ A cool, dark navy room with a warm amber lamp, translucent white layers, and a s
 - **Bright Amber** (`amber-light`): amber text and icons on dark: active tab labels, section icons (at 90%), award lines, links, counts in selected segments, and the spinner.
 - **Pale Amber** (`amber-pale`): amber text on amber-tinted surfaces, and the "won" award state.
 - **Deep Amber** (`amber-deep`): the switch's on state and reading-progress bars.
-- In use, but part of open decisions: `amber-700` (info page buttons, D1), the `amber-400` to `amber-600` gradient (member buttons, D1), and amber-500 links on info pages and the blog.
+- `amber-700`: the primary button on info pages and the sign-in and sign-up cards (D1). The `amber-400` to `amber-600` gradient is retired (D1); member buttons move to the flat pill. Amber-500 links on info pages and the blog are still in use.
 
 ### Neutral
 
@@ -212,7 +212,7 @@ A cool, dark navy room with a warm amber lamp, translucent white layers, and a s
 - **Night Line** (`night-line`, gray-700): solid outlines, such as the poster card frame (gray-800) and old dividers.
 - **Ink** ramp (`ink-strong` to `ink-faint`): white for titles and key numbers, then ink (gray-300) for body text, ink-muted (gray-400) for secondary lines, and ink-faint (gray-500) for captions and metadata.
 - **White veils**: white at 2.5-6% for panels, list containers, and quiet buttons; 10% for rings, borders, and ghost buttons; 12-20% for hover and pressed states.
-- **Title page tint**: the title's backdrop image at `blur(64px) brightness(0.15)` behind the whole title page, with `stone-950` bars. Open decision D5 covers how panels sit on it.
+- **Title page tint**: the title's backdrop image at `blur(64px) brightness(0.15)` behind the whole title page, with `stone-950` bars. Panels that sit on it (season panel, quick views opened from the title page, menus, sheets, tropes letter headers) are translucent white, `white/4` to `white/7`, with a backdrop blur where they float, not navy or stone (D5).
 
 ### Status
 
@@ -249,14 +249,14 @@ A cool, dark navy room with a warm amber lamp, translucent white layers, and a s
 
 ### Hierarchy
 
-- **Display** (Gabarito 900, 34-52px, line height 1.1, -0.03em): page titles on member, Watch, and /new pages, and big brand numbers. Discover uses Gabarito 700 and Hot uses 800. Many other pages use the system font for their h1. Open decision D3.
-- **Headline** (system 600, 20-24px, -0.025em): title-page section headings, next to an icon tile. Other areas use Gabarito or system bold at other sizes. Open decision D4.
+- **Display** (Gabarito 700, 34-52px, line height 1.1, normal letter spacing): every page h1, including title and person names, member, info, sign-in, and legal pages (D3). Big brand numbers keep Gabarito 900. Pages still on Gabarito 900 or 800 or the system font for their h1 are migrated in follow-up issues.
+- **Headline** (system 600, 20px on phones and 24px from 640px, -0.025em): every section heading (D4). Group headings are one step smaller. Title pages keep their icon tile; other pages don't add one.
 - **Title** (system 600, 18px): card titles, sheet titles, settings row labels, and list headings.
 - **Body** (system 400, 16-18px, line height 1.625): synopses and long-form text. The blog and info pages run 16px on phones and 18px from `sm` up, in a 672px column.
 - **Body small** (system 400-600, 14px): the workhorse size for controls, metadata, lists, and settings hints.
 - **Caption** (system 600, 11px, +0.14em, uppercase, ink-faint): section labels such as ON THIS PAGE, YOUR SCORE, and form labels.
 - **Kicker** (system 700, 12px, +0.18em, uppercase, amber): the line above a page title on info pages and the blog.
-- About 11 letter-spacing values are in use for uppercase labels. Open decision D6.
+- Uppercase labels come in two styles (D6). **Caption** (11px, 600, 0.14em, `gray-500`): section labels. **Kicker** (12px, 700, 0.18em, `amber-400`): the line above a page or card title. Tiny labels inside controls keep their own look. About 11 letter-spacing values are still in use and are migrated in follow-up issues.
 
 ### Named Rules
 
@@ -308,7 +308,7 @@ Surfaces are flat at rest. Depth comes from tonal steps (Deep Night, Night, Rais
 
 Pills (9999px) are the most common shape: chips, toggles, switches, segmented controls, the search pill, and most buttons. Cards and posters use 8px corners. Action buttons, text fields, and list containers use 8-12px. Panels and settings tiles use 16px. Sheets use 24px top corners, and dialogs 16-24px. Small badges, genre chips, and age ratings use 2-6px. Episode tiles use 4px.
 
-Several elements with the same role use different shapes: primary buttons on info and sign-in pages are 8-12px rectangles, and some chips and pagination are 6px. Open decisions D1 and D2.
+Primary buttons are pills inside the app and 8px rectangles on info pages and the sign-in and sign-up cards (D1). Some chips and pagination are 6px; open decision D2.
 
 Posters keep their 2:3 portrait shape everywhere.
 
@@ -318,7 +318,7 @@ Posters keep their 2:3 portrait shape everywhere.
 
 Bold, short labels, weight 700-900.
 
-- **Primary** (amber pill with near-black text, at least 44px tall): the most common primary button. Hover goes to bright amber. Four other treatments are live (amber gradient, amber-700 rectangle with white text, orange gradient on sign-in, white-text gradient on Discover's Show button). Open decision D1.
+- **Primary** (D1): inside the app, the flat `amber-400` pill with near-black bold text, at least 44px tall, hover `amber-300`. On info pages and the sign-in and sign-up cards, the `amber-700` rectangle (`rounded-lg`, white semibold text, hover `amber-600`). The amber gradient, the orange sign-in gradient, and Discover's white-text gradient Show button are retired. Other amber buttons in the same view are outline buttons (D7).
 - **Light:** a white pill with black text for strong secondary actions on dark. Hover goes to light gray. The character quick view's CTA hovers to amber-300.
 - **Ghost:** white at 10% with light text, hovering to 20%. The default for secondary actions.
 - **Action button** (title actions, Want to See, Not interested): 36-44px tall, 8px corners, white 6% fill with a white ring.
@@ -399,7 +399,7 @@ These are separate worlds. They don't set the rules for controls.
 - **Do** use the darkened tile color behind white score numbers.
 - **Do** let posters and backdrops carry color.
 - **Do** use the system sans for data, controls, and body text, with tabular figures for numbers.
-- **Do** match the variant the surrounding page already uses wherever an open decision (D1 to D7) applies.
+- **Do** follow the decided variant for D1 and D3 to D7, and match the variant the surrounding page already uses for the selected state (D2, open).
 - **Do** animate only transform and opacity, and keep interface motion at 120-300ms.
 - **Do** make every interactive element at least 40px tall on touch, with a visible focus ring.
 
