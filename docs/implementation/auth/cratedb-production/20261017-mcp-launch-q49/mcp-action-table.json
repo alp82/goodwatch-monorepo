@@ -1,0 +1,124 @@
+{
+  "checked_at_utc": "2026-10-17T01:45:21.645088+00:00",
+  "checks": [
+    {
+      "query": "SELECT table_name,number_of_shards,number_of_replicas,settings['write']['wait_for_active_shards'],settings['translog']['durability'] FROM information_schema.tables WHERE table_schema='doc' AND table_name='user_mcp_action'",
+      "result": {
+        "cols": [
+          "table_name",
+          "number_of_shards",
+          "number_of_replicas",
+          "settings['write']['wait_for_active_shards']",
+          "settings['translog']['durability']"
+        ],
+        "rows": [
+          [
+            "user_mcp_action",
+            3,
+            "2",
+            "1",
+            "REQUEST"
+          ]
+        ],
+        "rowcount": 1,
+        "duration": 4.496252
+      }
+    },
+    {
+      "query": "SELECT id,primary,state,routing_state,node['name'] FROM sys.shards WHERE schema_name='doc' AND table_name='user_mcp_action' ORDER BY id,primary DESC,node['name']",
+      "result": {
+        "cols": [
+          "id",
+          "primary",
+          "state",
+          "routing_state",
+          "node['name']"
+        ],
+        "rows": [
+          [
+            0,
+            true,
+            "STARTED",
+            "STARTED",
+            "crate-01"
+          ],
+          [
+            0,
+            false,
+            "STARTED",
+            "STARTED",
+            "crate-02"
+          ],
+          [
+            0,
+            false,
+            "STARTED",
+            "STARTED",
+            "crate-03"
+          ],
+          [
+            1,
+            true,
+            "STARTED",
+            "STARTED",
+            "crate-03"
+          ],
+          [
+            1,
+            false,
+            "STARTED",
+            "STARTED",
+            "crate-01"
+          ],
+          [
+            1,
+            false,
+            "STARTED",
+            "STARTED",
+            "crate-02"
+          ],
+          [
+            2,
+            true,
+            "STARTED",
+            "STARTED",
+            "crate-02"
+          ],
+          [
+            2,
+            false,
+            "STARTED",
+            "STARTED",
+            "crate-01"
+          ],
+          [
+            2,
+            false,
+            "STARTED",
+            "STARTED",
+            "crate-03"
+          ]
+        ],
+        "rowcount": 9,
+        "duration": 15.766979
+      }
+    },
+    {
+      "query": "SELECT grantee,class,ident,type,state FROM sys.privileges WHERE ident='doc.user_mcp_action' ORDER BY grantee,type",
+      "result": {
+        "cols": [
+          "grantee",
+          "class",
+          "ident",
+          "type",
+          "state"
+        ],
+        "rows": [],
+        "rowcount": 0,
+        "duration": 1.715054
+      }
+    }
+  ],
+  "settings_match_1_4": true,
+  "all_9_copies_started": true
+}

@@ -1,0 +1,90 @@
+http:
+  routers:
+    gw-webapp-https:
+      entryPoints:
+        - https
+      rule: Host(`goodwatch.app`)
+      priority: 1000
+      middlewares:
+        - gw-webapp-retry
+      service: gw-webapp
+      tls:
+        certResolver: letsencrypt
+    gw-webapp-member-https:
+      entryPoints:
+        - https
+      rule: 'Host(`goodwatch.app`) && HeadersRegexp(`Cookie`, `(^|;)[[:blank:]]*(sb-[^=;[:blank:]]+-auth-token([.][0-9]+)?|(__Secure-)?gw[.]session_token)=`)'
+      priority: 1001
+      middlewares:
+        - gw-webapp-retry
+      service: gw-webapp-member
+      tls:
+        certResolver: letsencrypt
+    gw-webapp-http:
+      entryPoints:
+        - http
+      rule: Host(`goodwatch.app`)
+      priority: 1000
+      middlewares:
+        - gw-webapp-redirect-to-https
+      service: gw-webapp
+    gw-webapp-www-https:
+      entryPoints:
+        - https
+      rule: Host(`www.goodwatch.app`)
+      priority: 1000
+      middlewares:
+        - gw-webapp-www-to-apex
+      service: noop@internal
+      tls:
+        certResolver: letsencrypt
+    gw-webapp-www-http:
+      entryPoints:
+        - http
+      rule: Host(`www.goodwatch.app`)
+      priority: 1000
+      middlewares:
+        - gw-webapp-www-to-apex
+      service: noop@internal
+  middlewares:
+    gw-webapp-redirect-to-https:
+      redirectScheme:
+        scheme: https
+        permanent: true
+    gw-webapp-retry:
+      retry:
+        attempts: 2
+        initialInterval: 100ms
+  services:
+    gw-webapp:
+      loadBalancer:
+        passHostHeader: true
+        healthCheck:
+          path: /health/ready
+          interval: 5s
+          timeout: 4s
+          hostname: goodwatch.app
+        servers:
+          -
+            url: 'http://goodwatch-webapp:3000'
+          -
+            url: 'http://10.0.0.20:80'
+    gw-webapp-member:
+      loadBalancer:
+        passHostHeader: true
+        sticky:
+          cookie:
+            name: gw_instance
+            secure: true
+            httpOnly: true
+            sameSite: lax
+        healthCheck:
+          path: /health/ready
+          interval: 5s
+          timeout: 4s
+          hostname: goodwatch.app
+        servers:
+          -
+            url: 'http://goodwatch-webapp:3000'
+          -
+            url: 'http://10.0.0.20:80'

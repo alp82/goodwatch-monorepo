@@ -1,0 +1,37 @@
+{
+    "application": {
+        "id": 1,
+        "uuid": "gk4owk8",
+        "name": "Goodwatch Webapp"
+    },
+    "flags": [
+        {
+            "key": "BETTER_AUTH_ENABLED",
+            "value": "false",
+            "is_preview": true,
+            "is_runtime": true,
+            "is_buildtime": false
+        },
+        {
+            "key": "REC_CONNECTOR",
+            "value": "on",
+            "is_preview": true,
+            "is_runtime": true,
+            "is_buildtime": false
+        },
+        {
+            "key": "BETTER_AUTH_ENABLED",
+            "value": "true",
+            "is_preview": false,
+            "is_runtime": true,
+            "is_buildtime": false
+        },
+        {
+            "key": "REC_CONNECTOR",
+            "value": "on",
+            "is_preview": false,
+            "is_runtime": true,
+            "is_buildtime": false
+        }
+    ]
+}

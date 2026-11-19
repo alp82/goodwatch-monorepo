@@ -1,0 +1,90 @@
+== 1. Today: goodwatch-balance.yaml and goodwatch-instance.yaml only
+PASS  palette lookups alternate between the page instances: page-abio=10 page-vector1=10
+PASS  searches alternate between the page instances: page-abio=10 page-vector1=10
+== 2. goodwatch-search-instance.yaml installed on vector1 only: nothing changes
+PASS  palette lookups still alternate between the page instances: page-abio=10 page-vector1=10
+PASS  searches still alternate between the page instances: page-abio=10 page-vector1=10
+== 3. goodwatch-search.yaml installed on abio: the three paths reach the search roles
+PASS  palette lookups alternate between the search roles: search-a=10 search-b=10
+PASS  searches alternate between the search roles: search-a=10 search-b=10
+PASS  a palette lookup without a query string: search-a=1 search-b=1
+PASS  a GET on the search path (the app answers the method): search-a=1 search-b=1
+PASS  MCP calls alternate between search roles: search-a=10 search-b=10
+PASS  MCP with a query string reaches search roles: search-a=1 search-b=1
+PASS  MCP bearer authorization is preserved: Bearer local-mcp-fixture
+PASS  / stays with the page instances: 0
+PASS  /api/search-config stays with the page instances: 0
+PASS  /health/ready stays with the page instances: 0
+PASS  /api/combined-search/more stays with the page instances: 0
+PASS  /api/command-palette/ stays with the page instances: 0
+PASS  /api/command-palettes stays with the page instances: 0
+PASS  /api/combined-searches stays with the page instances: 0
+PASS  /mcp/ stays with the page instances: 0
+PASS  /mcp/more stays with the page instances: 0
+PASS  /.well-known/oauth-protected-resource/mcp stays with the page instances: 0
+PASS  /movie/603-the-matrix?x=/api/combined-search stays with the page instances: 0
+PASS  sb-abcdefghijklmnopqrst-auth-token search reaches the search roles: search-a=10 search-b=10
+PASS  sb-abcdefghijklmnopqrst-auth-token search gets no sticky cookie:
+PASS  sb-abcdefghijklmnopqrst-auth-token page gets the sticky cookie: 1
+PASS  gw.session_token search reaches the search roles: search-a=10 search-b=10
+PASS  gw.session_token search gets no sticky cookie:
+PASS  gw.session_token page gets the sticky cookie: 1
+PASS  __Secure-gw.session_token search reaches the search roles: search-a=10 search-b=10
+PASS  __Secure-gw.session_token search gets no sticky cookie:
+PASS  __Secure-gw.session_token page gets the sticky cookie: 1
+PASS  plain HTTP redirects to HTTPS: redirect https://goodwatch.app/api/command-palette?q=mat
+PASS  the role header from a visitor moves no other path: 0
+PASS  another client of vector1 proxy gets the redirect, not a search role: 302
+== 4. What a search role receives, and what comes back
+PASS  a search role answered: 1
+PASS  the method arrives: POST
+PASS  the path arrives: /api/combined-search
+PASS  the body arrives unchanged: {"q":"dark comedies about grief","filters":{"type":"movie"}}
+PASS  the host arrives: goodwatch.app:38422
+PASS  the cookies arrive: gw_browser=1; sb-abcdefghijklmnopqrst-auth-token=x
+PASS  the origin arrives: https://goodwatch.app
+PASS  the content type arrives: application/json
+PASS  the language arrives: de-DE,de;q=0.9
+PASS  a custom header arrives: kept
+PASS  the scheme arrives: https
+PASS  X-Real-Ip is the visitor, not the value the visitor sent: 127.0.0.9
+PASS  X-Real-Ip is what the page instance on abio gets: 127.0.0.9
+PASS  the role header is the proxy value, not the visitor value: search
+      X-Forwarded-For at the search role: 127.0.0.9, 127.0.0.1, at the page instance on abio: 127.0.0.9
+PASS  the busy answer of a role passes through: 503 retry-after=2 type=application/json; charset=utf-8
+PASS  with its body: {"error":"Search is busy right now. Try again in a moment."}
+PASS  a busy answer takes no role out: search-a=10 search-b=10
+      a streamed response: first byte after 0.002579 s, complete after 0.603864 s
+PASS  the first line of a streamed response is not held back: yes
+PASS  the proxies add no compression:
+== 5. One search role killed (no drain), then started again
+      10 s from the kill: search-a=145
+PASS  no failed request in those 10 s: 0
+PASS  only the other role answers afterwards: search-a=10
+PASS  both answer again: search-a=10 search-b=10
+== 6. One search role drains: SIGTERM, 8 s of serving with readiness 503, then exit
+      14 s from the SIGTERM: search-a=9 search-b=230
+PASS  no failed request while it drains and after it is gone: 0
+PASS  both answer again: search-a=10 search-b=10
+== 7. Both search roles down
+      5 s from the kill: 502=1 503=83
+      a search is answered after 0.002851 s
+PASS  a search gets 503 without Retry-After: 503 type=text/plain; charset=utf-8 retry-after=
+PASS  with the text of vector1 proxy as the body: no available server
+PASS  a palette lookup gets the same: no available server|503 type=text/plain; charset=utf-8 retry-after=|
+PASS  pages are unaffected: page-abio=10 page-vector1=10
+PASS  one role back: it answers every search: search-a=10
+== 8. vector1 proxy down
+      6 s from the kill: 502=6 503=97
+      a search is answered after 0.002540 s
+PASS  a search gets 503 without Retry-After: 503 type=text/plain; charset=utf-8 retry-after=
+PASS  with the text of abio proxy as the body: Service Unavailable
+PASS  pages come from abio alone: page-abio=10
+PASS  the search roles answer again: search-a=10 search-b=10
+== 9. Undo
+PASS  vector1 file deleted first: the page instance on vector1 gets every search: page-vector1=10
+PASS  abio file deleted: searches alternate between the page instances again: page-abio=10 page-vector1=10
+PASS  and palette lookups: page-abio=10 page-vector1=10
+PASS  both files deleted: the same: page-abio=10 page-vector1=10
+
+All checks passed

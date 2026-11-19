@@ -1,0 +1,27 @@
+--- live/goodwatch-search-instance.yaml
++++ paste/goodwatch-search-instance.yaml
+@@ -2,11 +2,11 @@
+   routers:
+     gw-search-from-abio:
+       entryPoints:
+-        - http
+-      rule: 'Host(`goodwatch.app`) && ClientIP(`10.0.0.21`) && Header(`X-Gw-Role`, `search`) && (Path(`/api/combined-search`) || Path(`/api/command-palette`))'
++      - http
++      rule: Host(`goodwatch.app`) && ClientIP(`10.0.0.21`) && Header(`X-Gw-Role`, `search`) && (Path(`/api/combined-search`) || Path(`/api/command-palette`) || Path(`/mcp`))
+       priority: 1100
+       middlewares:
+-        - gw-search-retry
++      - gw-search-retry
+       service: gw-search-local
+   middlewares:
+     gw-search-retry:
+@@ -22,7 +22,5 @@
+           interval: 2s
+           timeout: 1s
+         servers:
+-          -
+-            url: 'http://goodwatch-search-a:3000'
+-          -
+-            url: 'http://goodwatch-search-b:3000'
++        - url: http://goodwatch-search-a:3000
++        - url: http://goodwatch-search-b:3000
