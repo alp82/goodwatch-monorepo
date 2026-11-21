@@ -9,24 +9,13 @@
 // Redis; Crate only for a title neither holds), while the page waits for the related map. A viewer's language takes
 // the same title overlay as the rest of the page.
 
-import {
-	copyPresentationFields,
-	overlayTitles,
-} from "~/server/media-overlay.server"
+import { copyPresentationFields, overlayTitles } from "~/server/media-overlay.server"
 import type { RelatedMapLookup } from "~/server/related-map.server"
 import { optionalTitlePart } from "~/server/title-page-budget"
-import {
-	MAX_KEYS,
-	type TitleDisplay,
-	getDisplayFields,
-} from "~/server/title-cards.server"
-import {
-	type TitleSnapshot,
-	getTitleSnapshot,
-} from "~/server/title-snapshot/index.server"
+import { MAX_KEYS, type TitleDisplay, getDisplayFields } from "~/server/title-cards.server"
+import { type TitleSnapshot, getTitleSnapshot } from "~/server/title-snapshot/index.server"
 import type { MediaPresentation } from "~/utils/media-presentation"
 import { type TitleKey, titleKey } from "~/utils/title-key"
-import categorySitemap from "../../../public/sitemaps/sitemap_categories.xml?raw"
 import movieSitemap from "../../../public/sitemaps/sitemap_movie_detail_0.xml?raw"
 import showSitemap from "../../../public/sitemaps/sitemap_show_detail_0.xml?raw"
 import {
@@ -36,7 +25,7 @@ import {
 	rankGenreRow,
 	sitemapSelection,
 } from "./pick"
-import { type Pool, genrePool, rowGenre, sitemapPaths } from "./row-genre"
+import { type Pool, genrePagePaths, genrePool, rowGenre } from "./row-genre"
 
 /** What a card of the row shows. */
 export interface GenreRowTitle {
@@ -67,8 +56,8 @@ const SPARE = 16
 // As long as the title cards' cache keeps a card.
 const STORE_TTL_MS = 6 * 60 * 60 * 1000
 
-// The genre pages the sitemap lists, which a Kids or Family row may link to.
-const listedPages = sitemapPaths(categorySitemap)
+// The genre pages Browse has, which a Kids or Family row may link to.
+const listedPages = genrePagePaths()
 
 const cohort = new Set<TitleKey>([
 	...sitemapSelection(movieSitemap).map((id) => titleKey("movie", id)),
@@ -84,8 +73,7 @@ function poolOf(
 	genre: string,
 	young: boolean,
 ): Pool {
-	if (pools?.version !== snapshot.version)
-		pools = { version: snapshot.version, byGenre: new Map() }
+	if (pools?.version !== snapshot.version) pools = { version: snapshot.version, byGenre: new Map() }
 	const name = `${mediaType}:${genre}:${young ? "young" : "all"}`
 	const known = pools.byGenre.get(name)
 	if (known) return known
@@ -202,20 +190,17 @@ async function readGenreRow(params: {
 	// A pick outside the early read, because the related map took more than the spares, is read now.
 	await earlyRead
 	await readMissing(picks)
-	const titles = (await present(picks, params.language)).map(
-		(display): GenreRowTitle => ({
-			tmdb_id: display.tmdb_id,
-			title: display.title,
-			release_year: display.release_year,
-			poster_path: display.poster_path,
-			goodwatch_overall_score_normalized_percent:
-				display.goodwatch_overall_score_normalized_percent,
-			...(display.canonical_title !== undefined && {
-				canonical_title: display.canonical_title,
-			}),
-			...(display.presentation && { presentation: display.presentation }),
+	const titles = (await present(picks, params.language)).map((display): GenreRowTitle => ({
+		tmdb_id: display.tmdb_id,
+		title: display.title,
+		release_year: display.release_year,
+		poster_path: display.poster_path,
+		goodwatch_overall_score_normalized_percent: display.goodwatch_overall_score_normalized_percent,
+		...(display.canonical_title !== undefined && {
+			canonical_title: display.canonical_title,
 		}),
-	)
+		...(display.presentation && { presentation: display.presentation }),
+	}))
 	return titles.length
 		? {
 				heading: genreRowHeading(page.label, params.mediaType),
@@ -229,18 +214,12 @@ async function readGenreRow(params: {
 export async function genreRow(
 	params: Parameters<typeof readGenreRow>[0],
 ): Promise<GenreRowResult> {
-	const result = await optionalTitlePart(
-		"genre row",
-		() => readGenreRow(params),
-		params.budgetMs,
-	)
+	const result = await optionalTitlePart("genre row", () => readGenreRow(params), params.budgetMs)
 	return result.complete ? result.value : "late"
 }
 
 /** The titles of a related map lookup: the map shows them, and its hidden links name them. */
 export function relatedMapKeys(lookup: RelatedMapLookup): TitleKey[] {
 	if (lookup === "none" || lookup === "late") return []
-	return lookup.n.map(([id]) =>
-		titleKey(id[0] === "m" ? "movie" : "show", Number(id.slice(1))),
-	)
+	return lookup.n.map(([id]) => titleKey(id[0] === "m" ? "movie" : "show", Number(id.slice(1))))
 }

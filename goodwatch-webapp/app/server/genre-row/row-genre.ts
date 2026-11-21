@@ -1,17 +1,10 @@
 // The genre of a title page's genre row. Usually the breadcrumb's, but a title for children or families gets a row of
-// its own kind: Kids or Family wins when the sitemap lists its genre page for the media type, so the row reads
+// its own kind: Kids or Family wins when Browse has its genre page for the media type, so the row reads
 // "More kids shows" or "More family movies" and links there. A Kids or Family title never gets a row of other titles:
 // whichever genre the row shows, it takes only Kids or Family titles.
-import {
-	type TitleGenrePage,
-	genrePage,
-	titleGenrePage,
-} from "~/server/title-breadcrumb.server"
-import {
-	FLAG_ADULT,
-	FLAG_POSTER,
-	type TitleColumns,
-} from "~/server/title-snapshot/index.server"
+import { type TitleGenrePage, genrePage, titleGenrePage } from "~/server/title-breadcrumb.server"
+import { LEGACY_GENRES, finalAddress } from "~/domain/browse/redirects"
+import { FLAG_ADULT, FLAG_POSTER, type TitleColumns } from "~/server/title-snapshot/index.server"
 import { type TitleKey, titleKey } from "~/utils/title-key"
 import type { GenreRowCandidate } from "./pick"
 
@@ -44,13 +37,17 @@ export function rowGenre(
 	return page ? { page, young } : null
 }
 
-/** The paths a sitemap file lists on goodwatch.app, such as `/shows/genres/kids`. */
-export function sitemapPaths(xml: string): Set<string> {
-	return new Set(
-		[...xml.matchAll(/<loc>https:\/\/goodwatch\.app(\/[^<]*)<\/loc>/g)].map(
-			(match) => match[1],
+/**
+ * The genre pages Browse has, as final addresses such as `/shows/genres/kids`. A former genre whose address now leads
+ * to its kind's genre index (too few well-known titles) has no page.
+ */
+export function genrePagePaths(): Set<string> {
+	const paths = (["movie", "show"] as const).flatMap((mediaType) =>
+		LEGACY_GENRES[mediaType].map((genre) =>
+			finalAddress(`/${mediaType === "movie" ? "movies" : "shows"}/genres/${genre}`),
 		),
 	)
+	return new Set(paths.filter((path) => /^\/(movies|shows)\/genres\/[^/?]+$/.test(path)))
 }
 
 /** The titles a genre row picks from: the sitemap's first, the genre's most voted others to fill a short row. */
@@ -64,10 +61,7 @@ export interface Pool {
  * Young keeps only titles with a Kids or Family genre, in both parts.
  */
 export function genrePool(
-	columns: Pick<
-		TitleColumns,
-		"pointIds" | "genres" | "genreNames" | "votes" | "flags"
-	>,
+	columns: Pick<TitleColumns, "pointIds" | "genres" | "genreNames" | "votes" | "flags">,
 	options: {
 		mediaType: "movie" | "show"
 		genre: string
@@ -86,10 +80,7 @@ export function genrePool(
 		return at >= 0 ? bits | (1 << at) : bits
 	}, 0)
 	const low = titleKey(options.mediaType, 0)
-	const high =
-		options.mediaType === "movie"
-			? titleKey("show", 0)
-			: Number.POSITIVE_INFINITY
+	const high = options.mediaType === "movie" ? titleKey("show", 0) : Number.POSITIVE_INFINITY
 	const others: GenreRowCandidate[] = []
 	for (let row = 0; row < pointIds.length; row++) {
 		const key = pointIds[row]

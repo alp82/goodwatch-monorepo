@@ -1,25 +1,13 @@
 import assert from "node:assert/strict"
-import { readFileSync } from "node:fs"
 import { test } from "node:test"
 import "../title-filter/test-alias.ts"
 
-const { genrePool, rowGenre, sitemapPaths } = await import("./row-genre.ts")
-const { FLAG_ADULT, FLAG_POSTER } = await import(
-	"../title-snapshot/format.server.ts"
-)
+const { genrePagePaths, genrePool, rowGenre } = await import("./row-genre.ts")
+const { FLAG_ADULT, FLAG_POSTER } = await import("../title-snapshot/format.server.ts")
 const { genreRowHeading } = await import("./pick.ts")
 
-const listed = sitemapPaths(
-	readFileSync(
-		new URL("../../../public/sitemaps/sitemap_categories.xml", import.meta.url),
-		"utf8",
-	),
-)
-const heading = (
-	mediaType: "movie" | "show",
-	genres: string[],
-	pages = listed,
-) => {
+const listed = genrePagePaths()
+const heading = (mediaType: "movie" | "show", genres: string[], pages = listed) => {
 	const genre = rowGenre(mediaType, genres, pages)
 	return (
 		genre && {
@@ -34,10 +22,7 @@ test("the sitemap lists the Kids and Family genre pages a row may link to", () =
 	assert.ok(listed.has("/shows/genres/kids"))
 	assert.ok(listed.has("/shows/genres/family"))
 	assert.ok(listed.has("/movies/genres/family"))
-	assert.ok(
-		!listed.has("/movies/genres/kids"),
-		"TMDB has no Kids genre for movies",
-	)
+	assert.ok(!listed.has("/movies/genres/kids"), "TMDB has no Kids genre for movies")
 })
 
 test("a Kids or Family genre wins over the breadcrumb's, with its own heading and link", () => {
@@ -58,10 +43,7 @@ test("a Kids or Family genre wins over the breadcrumb's, with its own heading an
 		heading("show", ["Animation", "Comedy", "Family", "Kids"])?.path,
 		"/shows/genres/kids",
 	)
-	assert.equal(
-		heading("show", ["Comedy", "Family"])?.path,
-		"/shows/genres/family",
-	)
+	assert.equal(heading("show", ["Comedy", "Family"])?.path, "/shows/genres/family")
 })
 
 test("without a listed Kids or Family page, the row keeps the breadcrumb's genre but only Kids or Family titles", () => {
@@ -72,9 +54,7 @@ test("without a listed Kids or Family page, the row keeps the breadcrumb's genre
 		young: true,
 	})
 	// A page the sitemap doesn't list.
-	const withoutKids = new Set(
-		[...listed].filter((path) => path !== "/shows/genres/kids"),
-	)
+	const withoutKids = new Set([...listed].filter((path) => path !== "/shows/genres/kids"))
 	assert.deepEqual(heading("show", ["Animation", "Kids"], withoutKids), {
 		heading: "More animated shows",
 		path: "/shows/genres/animation",
@@ -117,20 +97,12 @@ test("a young pool takes only Kids or Family titles, in the sitemap part and the
 		{ key: 1e12 + 8, genres: bits("Animation", "Kids"), votes: 9999 }, // a movie
 	]
 	const columns = {
-		pointIds: Float64Array.from(
-			rows.map((row) => row.key).sort((a, b) => a - b),
-		),
+		pointIds: Float64Array.from(rows.map((row) => row.key).sort((a, b) => a - b)),
 		genreNames,
-		genres: Uint32Array.from(
-			[...rows].sort((a, b) => a.key - b.key).map((row) => row.genres),
-		),
-		votes: Uint32Array.from(
-			[...rows].sort((a, b) => a.key - b.key).map((row) => row.votes),
-		),
+		genres: Uint32Array.from([...rows].sort((a, b) => a.key - b.key).map((row) => row.genres)),
+		votes: Uint32Array.from([...rows].sort((a, b) => a.key - b.key).map((row) => row.votes)),
 		flags: Uint8Array.from(
-			[...rows]
-				.sort((a, b) => a.key - b.key)
-				.map((row) => row.flags ?? FLAG_POSTER),
+			[...rows].sort((a, b) => a.key - b.key).map((row) => row.flags ?? FLAG_POSTER),
 		),
 	}
 	const options = {
