@@ -30,6 +30,8 @@ import { BrowseRow } from "~/ui/browse/BrowseRow"
 import { IndexPage } from "~/ui/browse/IndexPage"
 import { BrowsePageProvider } from "~/ui/browse/page-context"
 import { PlacePage } from "~/ui/browse/place/PlacePage"
+import { tropesRoute } from "~/server/browse/tropes-route.server"
+import { TropesRoute } from "~/ui/browse/tropes/TropesRoute"
 import { crumbsOf } from "~/ui/browse/place/PlaceHead"
 import { StreamingPage, streamingMeta } from "~/ui/browse/streaming/StreamingRoute"
 import { buildMeta } from "~/utils/meta"
@@ -82,13 +84,17 @@ const canonicalLoader = async ({ params, request }: LoaderFunctionArgs) => {
 		throw notFound()
 	}
 
-	// The streaming pages: a country's index of services, and one service's page.
+	// The streaming index of a country (one service alone is a room page, below).
 	const stream = await streamingRoute(atlas, address, notFound)
 	if (stream) return { page: "stream" as const, route: stream }
 
 	// The pantry's preview: a few posters of the blend with one more ingredient (the Add button asks with `?peek=1`).
 	if (url.searchParams.get("peek") === "1" && address.view === "place")
 		return { page: "peek" as const, data: await peekOf(atlas, address.parts) }
+
+	// The tropes index and a single trope's page (a trope blended with anything else is a place page).
+	const tropes = await tropesRoute(atlas, address)
+	if (tropes) return tropes
 
 	if (isPlacePage(address)) {
 		const args = { request, url, address, atlas }
@@ -146,7 +152,6 @@ const canonicalLoader = async ({ params, request }: LoaderFunctionArgs) => {
 			indexable: kind !== "all" && (!lead || atlas.count(address.parts) >= MIN_PAGE),
 		}
 	}
-	// The trope pages arrive with spec ticket T6.
 	throw notFound()
 }
 
@@ -154,6 +159,7 @@ export const loader = presentCatalogLoader(canonicalLoader, { live: true })
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data || data.page === "peek") return [{ title: "Page Not Found | GoodWatch" }]
+	if (data.page === "tropes" || data.page === "trope") return buildMeta(data.meta)
 	if (data.page === "stream") return streamingMeta(data.route)
 	if (data.page === "index")
 		return buildMeta({
@@ -188,6 +194,7 @@ const to = (a: Address, extra?: Record<string, string | undefined>) => browsePat
 export default function BrowsePage() {
 	const data = useLoaderData<typeof loader>()
 	if (data.page === "peek") return null
+	if (data.page === "tropes" || data.page === "trope") return <TropesRoute data={data} to={to} />
 	if (data.page === "stream") return <StreamingPage data={data.route} />
 	if (data.page === "index")
 		return (

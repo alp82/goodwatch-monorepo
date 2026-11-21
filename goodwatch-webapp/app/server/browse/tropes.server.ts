@@ -6,15 +6,13 @@
 // fleet, served stale while it refreshes); the write-ups are read here per trope page with a short cache.
 import { query } from "~/utils/crate"
 import { type TitleKey, titleKey } from "~/utils/title-key"
-import { htmlToText } from "~/server/profile/trope-text"
+import { firstPoint } from "./trope-write-up"
 import { TROPES, type Play, playOf, tropeUrlOf } from "~/domain/tropes/catalog"
 import {
 	ensureTropeMembers,
 	tropeMembers as sharedMembers,
 	tropeMembersVersion,
 } from "./trope-members.server"
-
-const REFRESH_MS = 12 * 60 * 60 * 1000
 
 /** Starts (or joins) the membership load (T1's shared cache); resolves once every trope has been tried once. */
 export const ensureTropes = (): Promise<void> => ensureTropeMembers(TROPES.map((t) => t.id))
@@ -50,35 +48,6 @@ async function remember<T>(id: string, ttlMs: number, read: () => Promise<T>): P
 	if (cache.size > 400) cache.clear()
 	cache.set(id, { at: Date.now(), value })
 	return value
-}
-
-/** The first list item (or the whole text), with spoiler spans kept as ranges. */
-function firstPoint(html: string): { text: string; spoilers: [number, number][] } {
-	const li = /<li>([\s\S]*?)(?:<\/li>|<ul>|$)/i.exec(html)
-	let body = li ? li[1] : html
-	body = body.replace(/<div class="indent">[\s\S]*$/i, "")
-	// Mark spoilers with private-use characters, flatten the rest to text, then turn the marks into ranges.
-	body = body.replace(/<span class="spoiler"[^>]*>/gi, "").replace(/<\/span>/gi, "")
-	// Some write-ups keep the wiki form ([[spoiler:...]]), sometimes cut before its end.
-	body = body.replace(/\[\[spoiler:([\s\S]*?)(?:\]\]|$)/gi, "$1")
-	let text = htmlToText(body).replace(/\s+/g, " ").trim()
-	if (text.length > 320) {
-		const cut = text.slice(0, 320)
-		const end = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf("! "), cut.lastIndexOf("? "))
-		text = `${end > 140 ? cut.slice(0, end + 1) : `${cut.slice(0, cut.lastIndexOf(" "))}…`}`
-	}
-	const spoilers: [number, number][] = []
-	let out = ""
-	let open = -1
-	for (const ch of text) {
-		if (ch === "") open = out.length
-		else if (ch === "") {
-			if (open >= 0 && out.length > open) spoilers.push([open, out.length])
-			open = -1
-		} else out += ch
-	}
-	if (open >= 0 && out.length > open) spoilers.push([open, out.length])
-	return { text: out, spoilers }
 }
 
 /** The write-ups of one trope for the given titles (at most 80), in the given order. */
@@ -145,28 +114,4 @@ export async function tropeOpening(id: string): Promise<string | null> {
 		}
 		return out.trim()
 	})
-}
-
-/**
- * The titles whose write-up opens by bending the trope (subverted, averted, lampshaded...), with how. They are a few
- * percent of a trope's titles, so a page that only read its most popular titles would rarely meet one. One read of
- * every write-up's first words; a failed read is not remembered.
- */
-export async function tropeBent(id: string): Promise<Map<TitleKey, Play>> {
-	const hit = cache.get(`bent|${id}`)
-	if (hit && Date.now() - hit.at < REFRESH_MS) return hit.value as Map<TitleKey, Play>
-	const rows = await query<{ media_type: string; media_tmdb_id: number; head: string | null }>(
-		"SELECT media_type, media_tmdb_id, substr(content, 1, 64) AS head FROM trope WHERE url = ? LIMIT 30000",
-		[tropeUrlOf(id)],
-		{ timeoutMs: 10000 },
-	).catch(() => null)
-	const out = new Map<TitleKey, Play>()
-	if (!rows) return out
-	for (const r of rows) {
-		if (!r.head || (r.media_type !== "movie" && r.media_type !== "show")) continue
-		const play = playOf(htmlToText(r.head.replace(/<[^>]*$/, "")))
-		if (play !== "straight") out.set(titleKey(r.media_type, Number(r.media_tmdb_id)), play)
-	}
-	cache.set(`bent|${id}`, { at: Date.now(), value: out })
-	return out
 }
