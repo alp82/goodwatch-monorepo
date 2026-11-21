@@ -2,21 +2,45 @@
 // names answers 404 here: a redirect to a hub would read as a soft 404 to a crawler.
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
-import { hub, kindOfSeg, kindSeg } from "~/domain/browse/address"
+import type { CSSProperties } from "react"
+import { type Address, browsePath, hub, kindOfSeg, kindSeg } from "~/domain/browse/address"
 import { copyFor } from "~/domain/browse/copy"
 import { notFound } from "~/domain/browse/not-found"
 import { cachedClientLoader } from "~/navigation/instant-navigation"
 import { presentCatalogLoader } from "~/server/media-payload.server"
-import { WRAP } from "~/ui/browse/base"
+import { loadMarks } from "~/server/browse/card-marks.server"
+import { loadHubPage } from "~/server/browse/hub/hub.server"
+import { PlacesNotReady, openPlaces } from "~/server/browse/places.server"
 import { BrowseRow } from "~/ui/browse/BrowseRow"
-import { PageTitle } from "~/ui/heading"
+import { HubPage } from "~/ui/browse/hub/HubPage"
+import { BrowsePageProvider } from "~/ui/browse/page-context"
 import { buildMeta } from "~/utils/meta"
 
-const canonicalLoader = async ({ params }: LoaderFunctionArgs) => {
+const canonicalLoader = async ({ params, request }: LoaderFunctionArgs) => {
 	const kind = kindOfSeg(params.type)
 	if (!kind) throw notFound()
-	return { address: hub(kind) }
+	const address = hub(kind)
+	let atlas: Awaited<ReturnType<typeof openPlaces>>
+	try {
+		atlas = await openPlaces(request, kind, "us")
+	} catch (error) {
+		if (error instanceof PlacesNotReady)
+			throw new Response("Loading", {
+				status: 503,
+				headers: { "Retry-After": "5", "Cache-Control": "no-store" },
+			})
+		throw error
+	}
+	const url = new URL(request.url)
+	return {
+		address,
+		viewer: atlas.viewer,
+		data: await loadHubPage({ request, url, address, atlas }),
+		marks: await loadMarks(atlas),
+	}
 }
+
+const to = (a: Address, extra?: Record<string, string | undefined>) => browsePath(a, extra)
 
 export const loader = presentCatalogLoader(canonicalLoader, { live: true })
 
@@ -42,18 +66,14 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 }
 
 export default function BrowseHub() {
-	const { address } = useLoaderData<typeof loader>()
-	const copy = copyFor(kindSeg(address.kind), "hub", "home")
+	const { address, viewer, data, marks } = useLoaderData<typeof loader>()
 	return (
-		<div className="pb-16">
-			<BrowseRow address={address} />
-			<div className={`${WRAP} pt-8`}>
-				<PageTitle className="text-4xl font-extrabold text-white md:text-5xl">
-					{HEADINGS[address.kind]}
-				</PageTitle>
-				{copy && <p className="mt-3 max-w-2xl text-lg text-gray-300">{copy.lede}</p>}
+		<BrowsePageProvider value={{ marks, entry: null }}>
+			<div className="pb-16" style={{ "--browse-head-top": "calc(4rem + 93px)" } as CSSProperties}>
+				<BrowseRow address={address} streamingCountry={viewer.country.toLowerCase()} />
+				<HubPage address={address} viewer={viewer} to={to} data={data} />
 			</div>
-		</div>
+		</BrowsePageProvider>
 	)
 }
 

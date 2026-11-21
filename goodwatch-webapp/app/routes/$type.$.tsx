@@ -7,7 +7,9 @@ import { useLoaderData } from "@remix-run/react"
 import type { CSSProperties } from "react"
 import {
 	type Address,
+	FAMILY,
 	browsePath,
+	kindLabel,
 	canonicalPath,
 	kindOfSeg,
 	parse,
@@ -19,10 +21,12 @@ import { browseRedirect, finalAddress, legacyGenreFallback } from "~/domain/brow
 import { loadAddEntry } from "~/server/browse/add-entry.server"
 import { peekOf } from "~/server/browse/blend.server"
 import { loadMarks } from "~/server/browse/card-marks.server"
+import { indexPageOf, loadIndexPage } from "~/server/browse/index-pages.server"
 import { loadPlacePage } from "~/server/browse/place-page.server"
 import { MIN_PAGE, PlacesNotReady, openPlaces } from "~/server/browse/places.server"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { BrowseRow } from "~/ui/browse/BrowseRow"
+import { IndexPage } from "~/ui/browse/IndexPage"
 import { BrowsePageProvider } from "~/ui/browse/page-context"
 import { PlacePage } from "~/ui/browse/place/PlacePage"
 import { crumbsOf } from "~/ui/browse/place/PlaceHead"
@@ -101,14 +105,57 @@ const canonicalLoader = async ({ params, request }: LoaderFunctionArgs) => {
 			indexable: indexable(address, count),
 		}
 	}
-	// The index, era, country, streaming, trope, and Top pages arrive with spec tickets T4 to T7.
+	const index = indexPageOf(address)
+	if (index && index !== "hub") {
+		const page = await loadIndexPage(index, { request, url, address, atlas })
+		const lead = address.parts[0]
+		const family = address.view === "family" ? address.family : undefined
+		const single = address.view === "place" ? atlas.name(address.parts) : null
+		const fam = family ? FAMILY[family] : null
+		const deck = {
+			mood: "moods",
+			genre: "genres",
+			decade: "decades",
+			country: "countries",
+		} as const
+		return {
+			page: "index" as const,
+			address,
+			index: page,
+			viewer: atlas.viewer,
+			marks: await loadMarks(atlas),
+			entry: loadAddEntry(atlas, address),
+			title: single ?? `${kindLabel(kind)} by ${fam?.one.toLowerCase() ?? ""}`,
+			description:
+				(lead ? copyFor(kind, lead.family, lead.slug)?.lede : null) ??
+				(family && family in deck
+					? copyFor(kind, "hub", deck[family as keyof typeof deck])?.lede
+					: null) ??
+				"",
+			canonical: canonicalPath(address),
+			// The room pages of a decade or a country are single places; the family indexes are listed.
+			indexable: kind !== "all" && (!lead || atlas.count(address.parts) >= MIN_PAGE),
+		}
+	}
+	// The streaming and trope pages arrive with spec tickets T5 and T6.
 	throw notFound()
 }
 
 export const loader = presentCatalogLoader(canonicalLoader, { live: true })
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
-	if (!data || data.page !== "place") return [{ title: "Page Not Found | GoodWatch" }]
+	if (!data || data.page === "peek") return [{ title: "Page Not Found | GoodWatch" }]
+	if (data.page === "index")
+		return buildMeta({
+			pageMeta: {
+				title: `${data.title} | GoodWatch`,
+				description: data.description,
+				url: site(data.canonical),
+				image: `https://goodwatch.app/images/heroes/hero-${data.address.kind === "show" ? "shows" : "movies"}.png`,
+				alt: data.title,
+			},
+			robots: data.indexable ? undefined : "noindex, follow",
+		})
 	const crumbs = crumbsOf(data.data, data.address, (a) => browsePath(a)).map((c) => ({
 		label: c.label,
 		path: "to" in c && c.to ? c.to : data.canonical,
@@ -130,7 +177,19 @@ const to = (a: Address, extra?: Record<string, string | undefined>) => browsePat
 
 export default function BrowsePage() {
 	const data = useLoaderData<typeof loader>()
-	if (data.page !== "place") return null
+	if (data.page === "peek") return null
+	if (data.page === "index")
+		return (
+			<BrowsePageProvider value={{ marks: data.marks, entry: data.entry }}>
+				<div
+					className="pb-16"
+					style={{ "--browse-head-top": "calc(4rem + 93px)" } as CSSProperties}
+				>
+					<BrowseRow address={data.address} streamingCountry={data.viewer.country.toLowerCase()} />
+					<IndexPage page={data.index} address={data.address} viewer={data.viewer} to={to} />
+				</div>
+			</BrowsePageProvider>
+		)
 	return (
 		<BrowsePageProvider value={{ marks: data.marks, entry: data.entry }}>
 			{/* The Browse row adds 44px under the tab row from `lg`: a sticky bar inside the page sits under it. */}
