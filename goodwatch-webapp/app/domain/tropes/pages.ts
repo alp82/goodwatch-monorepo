@@ -122,17 +122,50 @@ export const many = (n: number) => {
 	return b.lossy ? `${b.text}+` : b.text
 }
 
-// A write-up that opens by naming its own twist ("Subverted.", "Averted;") repeats the twist tag beside it.
-const LEAD =
-	/^(?:(?:partially|mostly|somewhat|largely|briefly|ultimately) )?(?:double[- ])?(?:subverted|inverted|averted|lampshaded|exaggerated|downplayed|played with|zig-?zagged|deconstructed|discussed)(?:,? (?:then|and|but) (?:\w+ ?){1,2})?(?:[.!;:,]|\s+-)\s+/i
+// A write-up that opens by naming its own twist ("Subverted.", "Averted when ...", "Subverted with Jess.") repeats the
+// twist tag shown beside it. The twist words go and what follows stays a clean start:
+// - after punctuation the rest begins the text ("Subverted. In the end ..." -> "In the end ...");
+// - before "when", "after", "despite" and the like, the connective begins it ("When Sherry tries ...");
+// - after "with", "by" or "but" the rest begins it ("River; she declares ..."), and a short "with an actual gun."
+//   goes along with the twist words.
+// Anything else ("Played with as nicely as possible ...", "Subverted in the remake.") keeps its opening, since cutting
+// it would leave a fragment.
+const TWIST_WORD =
+	"(?:(?:partially|mostly|somewhat|largely|briefly|ultimately|eventually|heavily|initially) )?(?:double[- ])?(?:subverted|inverted|averted|lampshaded|exaggerated|downplayed|played with|zig-?zagged|deconstructed|discussed|defied|justified)"
+const HEAD = new RegExp(
+	`^${TWIST_WORD}(?:,? (?:then|and|but)(?: then)?(?: later| ultimately| eventually| partially)? (?:${TWIST_WORD}|played straight))?(?: (?:\\w+ly|twice|again|too|as well|big time|hard))?`,
+	"i",
+)
+const AFTER_MARK = /^\s*(?:[.!;:,]|\s[-–])\s+/
+const BEFORE_CLAUSE =
+	/^\s+(?=(?:when|whenever|after|during|before|until|once|since|because|although|though|despite|while|throughout)\b)/i
+const VIA = /^\s*(with|by|but)\s+/i
+const SHORT_THING = /^(?:a|an|the) [^.!?]{1,40}[.!?]\s+/i
 
 /** The write-up without a leading twist word when the tag already says it; spoiler marks move with the text. */
 export function clean<E extends Pick<Example, "play" | "text" | "spoilers">>(e: E): E {
 	if (e.play === "straight") return e
-	const m = LEAD.exec(e.text)
-	if (!m || m[0].length >= e.text.length - 12) return e
-	const cut = m[0].length
+	const head = HEAD.exec(e.text)
+	if (!head) return e
+	let cut = head[0].length
+	const after = e.text.slice(cut)
+	const mark = AFTER_MARK.exec(after) ?? BEFORE_CLAUSE.exec(after)
+	if (mark) cut += mark[0].length
+	else if (!VIA.test(after)) return e
+	const via = VIA.exec(e.text.slice(cut))
+	if (via) {
+		cut += via[0].length
+		const thing = via[1].toLowerCase() === "but" ? null : SHORT_THING.exec(e.text.slice(cut))
+		if (thing && e.text.length - cut - thing[0].length >= 24) cut += thing[0].length
+	}
 	const text = e.text.slice(cut)
+	// Too little left, a chain that goes on ("then ...", "and ..."), or no real start: keep the write-up as it is.
+	if (
+		text.length < 24 ||
+		/^(?:then|and|but|or|as)\b/i.test(text) ||
+		!/^["'“(]?[\p{L}\p{N}]/u.test(text)
+	)
+		return e
 	return {
 		...e,
 		text: text[0].toUpperCase() + text.slice(1),

@@ -13,7 +13,12 @@ export function firstPoint(html: string): { text: string; spoilers: [number, num
 	body = body.replace(/<span class="spoiler"[^>]*>/gi, "\uE000").replace(/<\/span>/gi, "\uE001")
 	// Some write-ups keep the wiki form ([[spoiler:...]]), sometimes cut before its end.
 	body = body.replace(/\[\[spoiler:([\s\S]*?)(?:\]\]|$)/gi, "\uE000$1\uE001")
-	let text = htmlToText(body).replace(/\s+/g, " ").trim()
+	// Source text often keeps a space before punctuation where a link ended ("Action Prologue , Dr."): close it up.
+	let text = htmlToText(body)
+		.replace(/\s+/g, " ")
+		.replace(/ ([\uE000\uE001]?)(?=[,.;:!?)])/g, "$1")
+		.replace(/\( /g, "(")
+		.trim()
 	if (text.length > 320) {
 		const cut = text.slice(0, 320)
 		const end = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf("! "), cut.lastIndexOf("? "))
