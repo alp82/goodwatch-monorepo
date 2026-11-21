@@ -288,15 +288,16 @@ class SitemapRegenerationTests(unittest.TestCase):
                       patch("builtins.print")):
                     if status == 200:
                         count, files = worker.generate_and_check(root)
-                        # Titles, people, categories, static pages (with the best-of lists), blog pages, profiles and
-                        # the new-on-services pages. Categories and static pages come from the generator's own lists,
-                        # so a new landing page doesn't make this count stale.
+                        # Titles, people, static pages (with the Top lists), blog pages, profiles and the
+                        # new-on-services pages. Static pages come from the generator's own list, so a new landing page
+                        # doesn't make this count stale. The Browse pages are listed by the site itself
+                        # (sitemap_browse.xml), so no file here holds them.
                         generator = generators[-1]
-                        categories = sum(
-                            1 + len(generator.extract_subcategories_from_typescript(kind, category))
-                            for kind in ("movies", "shows") for category in generator.MAIN_CATEGORIES)
                         static_pages = len(generator.STATIC_ROUTES) + 3
-                        self.assertEqual(count, 700 + 300 + 30 + categories + static_pages + profiles + new_pages)
+                        self.assertEqual(count, 700 + 300 + 30 + static_pages + profiles + new_pages)
+                        index = files[worker.OUTPUT + "sitemap.xml"].decode()
+                        self.assertIn("/sitemaps/sitemap_browse.xml</loc>", index)
+                        self.assertNotIn("sitemap_categories", index)
                         static = files[worker.OUTPUT + "sitemap_static.xml"].decode()
                         self.assertIn("<loc>https://goodwatch.app/blog</loc>\n    <lastmod>2026-10-12</lastmod>", static)
                         self.assertIn("<loc>https://goodwatch.app/blog/a-post</loc>\n    <lastmod>2026-10-02</lastmod>", static)
@@ -304,7 +305,7 @@ class SitemapRegenerationTests(unittest.TestCase):
                         self.assertEqual(static.count("<lastmod>"), 3)
                         self.assertLess(static.index("/use-with-ai<"), static.index("/blog<"))
                         self.assertLess(static.index("/blog/a-post<"), static.index("/blog/b-post<"))
-                        self.assertEqual(len(files), 8 + profiles + (1 if new_pages else 0))
+                        self.assertEqual(len(files), 7 + profiles + (1 if new_pages else 0))
                         # Replay from the exact generated artifacts: history and cohort
                         # state must preserve every byte on an unchanged rerun.
                         previous = root / "previous-sitemaps"
@@ -324,7 +325,7 @@ class SitemapRegenerationTests(unittest.TestCase):
                         self.assertEqual(again_count, count)
                         self.assertEqual(again, files)
                         for path, content in files.items():
-                            if "detail_0" in path or "people" in path or "categories" in path:
+                            if "detail_0" in path or "people" in path:
                                 self.assertNotIn(b"<lastmod>", content)
                     else:
                         with self.assertRaisesRegex(RuntimeError, "Sitemap check failed"):

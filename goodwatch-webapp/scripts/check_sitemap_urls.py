@@ -54,6 +54,11 @@ class Response(NamedTuple):
     size: Optional[int] = None
 
 
+# Sitemap files the site builds itself, from the data it has loaded, instead of a file in the directory: the Browse
+# sitemap (app/server/browse/sitemap.server.ts) lists only pages its own robots rule indexes.
+SERVED_BY_THE_SITE = frozenset({"sitemap_browse.xml"})
+
+
 def read_sitemap_urls(directory: str) -> Tuple[List[str], List[str]]:
     """Reads every sitemap*.xml in the directory. Returns the listed page URLs, each once and in file order, and
     the problems of the files themselves: an index that names a file the directory lacks, or a file that is neither
@@ -75,7 +80,7 @@ def read_sitemap_urls(directory: str) -> Tuple[List[str], List[str]]:
         if root.tag == f"{NAMESPACE}sitemapindex":
             for loc in locs:
                 listed = loc.rsplit("/", 1)[-1]
-                if listed not in names:
+                if listed not in names and listed not in SERVED_BY_THE_SITE:
                     problems.append(f"{name}: lists {loc}, and the directory has no {listed}")
         elif root.tag == f"{NAMESPACE}urlset":
             if not locs:

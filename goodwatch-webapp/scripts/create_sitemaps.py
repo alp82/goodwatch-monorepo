@@ -6,7 +6,6 @@ from xml.sax.saxutils import escape
 import argparse
 import glob
 import os
-import re
 from crate import client
 from dotenv import load_dotenv
 
@@ -33,23 +32,20 @@ def prepare_sitemaps(previous_dir):
     PREVIOUS_SITEMAPS = SitemapHistory(previous_dir)
 
 
-CATEGORY_DIR = os.path.join(SCRIPT_DIR, "../app/ui/explore/category/")
 # The published blog posts, with the dates that sitemap_static.xml gives their URLs.
 BLOG_POSTS = os.path.join(SCRIPT_DIR, "../app/content/blog/posts.json")
 BASE_URL = "https://goodwatch.app"
 
-# Must match mainHierarchy in app/ui/explore/main-nav.ts
-MAIN_CATEGORIES = [
-    "moods",
-    "streaming",
-    "genres"
-]
+# The Browse pages (moods, genres, decades, countries, tropes, streaming, and the two-part blends with a full page) are
+# listed by the webapp itself, from the title snapshot it has loaded: /sitemaps/sitemap_browse.xml
+# (app/server/browse/sitemap.server.ts). It's never a file here, so a file can't shadow it.
+BROWSE_SITEMAP = "sitemap_browse.xml"
 
 # Only canonical public pages. Search is noindex; Taste may redirect guests to
-# the quiz. The best-of lists list only their first page; later pages are linked from it. The awards hub stands for
+# the quiz. The Top lists list only their first page; later pages are linked from it. The awards hub stands for
 # the awards pages: a body's ceremonies are published by a density check, so they are linked from it, not listed. Auth, quiz, /living-room (301), and TV-state URLs are left out.
 STATIC_ROUTES = [
-    "/", "/movies", "/movies/best", "/shows", "/shows/best", "/people", "/awards", "/discover",
+    "/", "/movies", "/movies/top", "/shows", "/shows/top", "/people", "/awards", "/discover",
     "/map", "/hot", "/how-it-works",
     "/about", "/stats", "/disclaimer", "/privacy", "/support", "/use-with-ai",
     "/discord"
@@ -87,69 +83,6 @@ def write_sitemap_index(filename: str, sitemaps: List[tuple]):
                 index_file.write(f"    <lastmod>{lastmod.isoformat()}</lastmod>\n")
             index_file.write("  </sitemap>\n")
         index_file.write('</sitemapindex>\n')
-
-
-def strip_comments(source: str) -> str:
-    source = re.sub(r"/\*.*?\*/", "", source, flags=re.DOTALL)
-    return "\n".join(line for line in source.splitlines() if not line.lstrip().startswith("//"))
-
-
-def extract_subcategories_from_typescript(media_type: str, category: str) -> List[str]:
-    """
-    Extract subcategory paths from the TypeScript category file.
-
-    Args:
-       media_type: Either "movies" or "shows"
-       category: The category name (e.g., "moods", "streaming")
-
-    Returns:
-       List of subcategory paths that match the media type
-    """
-    parts = category.split('-')
-    camel_case = parts[0] + ''.join(p.capitalize() for p in parts[1:])
-    with open(os.path.join(CATEGORY_DIR, f"{camel_case}.ts"), encoding="utf-8") as ts_file:
-        lines = [line for line in strip_comments(ts_file.read()).splitlines()
-                 if re.search(r'type:|(?<!_)path:', line)]
-
-    paths = []
-    for i, line in enumerate(lines):
-        type_match = re.search(r'type:\s*"([^"]+)"', line)
-        if not type_match:
-            continue
-        type_value = type_match.group(1)
-
-        # The path belongs to this type if it follows before the next type
-        for next_line in lines[i + 1:i + 10]:
-            if re.search(r'type:\s*"', next_line):
-                break
-            path_match = re.search(r'(?<!_)path:\s*"([^"]+)"', next_line)
-            if path_match:
-                if type_value in ("all", media_type):
-                    paths.append(path_match.group(1))
-                break
-
-    if not paths:
-        raise ValueError(f"No subcategories found for {category} ({media_type}), check the parser")
-    return paths
-
-
-def create_category_sitemaps():
-    """Create sitemaps for category pages."""
-    sitemap_filename = "sitemap_categories.xml"
-    entries = []
-
-    for media_type in ["movies", "shows"]:
-        for category in MAIN_CATEGORIES:
-            entries.append(url_entry(f"{BASE_URL}/{media_type}/{category}"))
-            for subcategory in extract_subcategories_from_typescript(media_type, category):
-                entries.append(url_entry(f"{BASE_URL}/{media_type}/{category}/{subcategory}"))
-
-    lastmod = write_urlset(sitemap_filename, entries)
-    return {
-        "lastmod": lastmod,
-        "category_url_count": len(entries),
-        "sitemap_filename": sitemap_filename
-    }
 
 
 def create_detail_sitemaps(crate_cursor, table_name: Literal["movie", "show"]):
@@ -245,7 +178,7 @@ def create_master_sitemap_index(file_lastmods: dict):
     # Keep the legacy detail indexes for their existing Search Console submissions.
     sitemap_files = [
         ("sitemap_static.xml", file_lastmods["static"]),
-        ("sitemap_categories.xml", file_lastmods["categories"]),
+        (BROWSE_SITEMAP, None),
         ("sitemap_movie_detail_0.xml", file_lastmods["movie"]),
         ("sitemap_show_detail_0.xml", file_lastmods["show"]),
         ("sitemap_people.xml", file_lastmods["people"]),
@@ -302,10 +235,6 @@ if __name__ == "__main__":
     show_result = create_detail_sitemaps(crate_cursor, table_name="show")
     print(f"Show Detail Sitemap Result: {show_result}")
 
-    # Generate sitemap for categories and subcategories
-    category_result = create_category_sitemaps()
-    print(f"Category Sitemap Result: {category_result}")
-
     # Generate sitemap for static navigation
     static_result = create_landing_sitemaps()
     print(f"Static Sitemap Result: {static_result}")
@@ -326,7 +255,6 @@ if __name__ == "__main__":
         "movie": movies_result["lastmod"],
         "show": show_result["lastmod"],
         "static": static_result["lastmod"],
-        "categories": category_result["lastmod"],
         "people": people_result["lastmod"],
         "profiles": profiles_result["lastmod"],
         "new": new_result["lastmod"],

@@ -1,7 +1,28 @@
-// The sitemap files are static files, answered before Remix (see ~/server/static-files.server). A request that
-// arrives here names a sitemap file that was removed. It answers 410 so that a crawler drops the address, and so
-// that it doesn't fall into the category routes.
-export async function loader() {
+// The sitemap files are static files, answered before Remix (see ~/server/static-files.server). Two kinds of request
+// arrive here: the Browse sitemap, which is built from the loaded title snapshot (~/server/browse/sitemap.server),
+// and a sitemap file that was removed, which answers 410 so that a crawler drops the address.
+import type { LoaderFunctionArgs } from "@remix-run/node"
+import { browseSitemap } from "~/server/browse/sitemap.server"
+import { PlacesNotReady } from "~/server/browse/places.server"
+
+export async function loader({ params, request }: LoaderFunctionArgs) {
+	if (params.file === "sitemap_browse.xml") {
+		try {
+			return new Response(await browseSitemap(request), {
+				headers: {
+					"Content-Type": "application/xml; charset=utf-8",
+					"Cache-Control": "public, max-age=3600",
+				},
+			})
+		} catch (error) {
+			if (error instanceof PlacesNotReady)
+				return new Response("Loading", {
+					status: 503,
+					headers: { "Retry-After": "30", "Cache-Control": "no-store" },
+				})
+			throw error
+		}
+	}
 	return new Response("Gone", {
 		status: 410,
 		headers: {

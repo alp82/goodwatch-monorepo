@@ -7,13 +7,13 @@
     <loc>https://goodwatch.app/movies</loc>
   </url>
   <url>
-    <loc>https://goodwatch.app/movies/best</loc>
+    <loc>https://goodwatch.app/movies/top</loc>
   </url>
   <url>
     <loc>https://goodwatch.app/shows</loc>
   </url>
   <url>
-    <loc>https://goodwatch.app/shows/best</loc>
+    <loc>https://goodwatch.app/shows/top</loc>
   </url>
   <url>
     <loc>https://goodwatch.app/people</loc>

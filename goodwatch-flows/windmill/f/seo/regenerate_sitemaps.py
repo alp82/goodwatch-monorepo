@@ -25,7 +25,6 @@ REPOSITORY = "alp82/goodwatch-monorepo"
 API = f"https://api.github.com/repos/{REPOSITORY}"
 OUTPUT = "goodwatch-webapp/public/sitemaps/"
 SCRIPTS = "goodwatch-webapp/scripts/"
-CATEGORIES = "goodwatch-webapp/app/ui/explore/category/"
 BLOG_POSTS = "goodwatch-webapp/app/content/blog/posts.json"
 TOKEN_VARIABLE = "u/Alp/GITHUB_SITEMAP_TOKEN"
 SOURCE_FILES = [SCRIPTS + name for name in (
@@ -33,7 +32,7 @@ SOURCE_FILES = [SCRIPTS + name for name in (
     "sitemap_lastmod.py", "sitemap_selection.py", "sitemap_people.py", "sitemap_profiles.py", "sitemap_crate.py",
     "sitemap_blog.py", "sitemap_new.py", "sitemap_http.py",
     "utils.py",
-)] + [CATEGORIES + name + ".ts" for name in ("moods", "streaming", "genres")] + [BLOG_POSTS]
+)] + [BLOG_POSTS]
 
 
 def request(url, method="GET", data=None, token=None, raw=False):
@@ -148,7 +147,6 @@ def generate_and_check(root):
             try:
                 movies = generator.create_detail_sitemaps(cursor, "movie")
                 shows = generator.create_detail_sitemaps(cursor, "show")
-                categories = generator.create_category_sitemaps()
                 static = generator.create_landing_sitemaps()
                 people = generator.create_person_sitemap(cursor, {
                     "movie": movies["title_ids"], "show": shows["title_ids"],
@@ -157,7 +155,7 @@ def generate_and_check(root):
                 new_pages = new_on_services_sitemap(generator, root)
                 lastmods = {
                     "movie": movies["lastmod"], "show": shows["lastmod"],
-                    "static": static["lastmod"], "categories": categories["lastmod"], "people": people["lastmod"],
+                    "static": static["lastmod"], "people": people["lastmod"],
                     "profiles": profiles["lastmod"],
                     "new": new_pages["lastmod"],
                 }

@@ -57,7 +57,7 @@ class NewPagesTest(unittest.TestCase):
 
     def test_only_new_on_services_addresses_are_taken(self):
         pages = select_new_pages(lambda url: index([
-            {"path": "/movies/best", "titles": 10, "latest": DAY},
+            {"path": "/movies/top", "titles": 10, "latest": DAY},
             {"path": "https://example.com/new/us", "titles": 10, "latest": DAY},
             {"path": "/new/us/../../admin", "titles": 10, "latest": DAY},
         ]))

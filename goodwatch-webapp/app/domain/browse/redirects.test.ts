@@ -154,7 +154,7 @@ test("?when= and ?from= become real parts of the blend", () => {
 
 test("every address in the old category sitemap answers: a redirect to a page, or its own page", () => {
 	const xml = readFileSync(
-		new URL("../../../public/sitemaps/sitemap_categories.xml", import.meta.url),
+		new URL("./fixtures/old-sitemap-categories.xml", import.meta.url),
 		"utf8",
 	)
 	const urls = [...xml.matchAll(/<loc>https:\/\/goodwatch\.app([^<]*)<\/loc>/g)].map((m) => m[1])

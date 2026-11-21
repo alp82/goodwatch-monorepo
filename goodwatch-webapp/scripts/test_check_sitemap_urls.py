@@ -76,6 +76,11 @@ class ReadSitemapUrlsTest(unittest.TestCase):
         self.assertEqual(len(problems), 1)
         self.assertIn("sitemap_gone.xml", problems[0])
 
+    def test_accepts_the_browse_sitemap_the_site_serves_itself(self):
+        _, problems = self.read({"sitemap.xml": index("sitemap_a.xml", "sitemap_browse.xml"),
+                                 "sitemap_a.xml": urlset(MOVIE)})
+        self.assertEqual(problems, [])
+
     def test_reports_broken_and_empty_files(self):
         urls, problems = self.read({"sitemap_a.xml": "<urlset", "sitemap_b.xml": urlset(),
                                     "sitemap_c.xml": "<html></html>"})
