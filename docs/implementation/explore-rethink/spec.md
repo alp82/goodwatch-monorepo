@@ -193,22 +193,37 @@ Point straight at the final target. Never chain through an intermediate redirect
 | `/explore/<type>/<category>/<text>`, `/tv-shows/...`, `/tv/...` | The final new address via the same tables; 404 when nothing replaces it (current rule) |
 | Any old category page with pagination or filter parameters the new page doesn't read | Drop those parameters |
 
-**Old mood slugs.** The proposed map is below. Rows marked **verify** must be confirmed by title overlap: compare the
-old page's Discover query results with each new mood's titles (Jaccard) and take the best match. The builder reports
-the numbers.
+**Old mood slugs.** Every row is the new mood whose titles overlap most with the old page's rule (Jaccard), measured
+on 2026-11-22 over the 77,810 well-known movies and shows (1,000+ ratings) with the tightened mood rules of
+`24e2fb5a4`. "In" is the share of the old page's titles that the new mood holds. The table lives in
+`app/domain/browse/redirects.ts` (`OLD_MOODS`).
 
-| Old | New | | Old | New |
-|---|---|---|---|---|
-| scary | scary | | whimsical | quirky |
-| feel-good | cozy | | peaceful | cozy (verify) |
-| suspense | tense | | adrenaline | thrilling |
-| motivational | coming-of-age (verify) | | epic | other-worlds (verify) |
-| funny | funny | | romantic | romantic |
-| psychological | trippy (verify) | | gritty | dark |
-| nostalgic | cozy (verify) | | mind-bending | trippy |
-| melancholic | sad | | morally-complex | deep |
-| bittersweet | sad | | atmospheric | tense (verify) |
-| visually-stunning | other-worlds (verify) | | educational | history (verify) |
+| Old | Titles | New | Jaccard | In | Runner-up |
+|---|---|---|---|---|---|
+| scary | 3,796 | scary | 0.44 | 0.99 | dark 0.14 |
+| feel-good | 8,763 | cozy | 0.58 | 0.81 | romantic 0.18 |
+| suspense | 23,679 | crime-mystery | 0.42 | 0.44 | tense 0.28 (was proposed) |
+| motivational | 704 | history | 0.04 | 0.98 | sad 0.02 (coming-of-age was proposed; not in the top 3) |
+| funny | 14,688 | funny | 0.77 | 0.88 | cozy 0.26 |
+| psychological | 7,990 | dark | 0.24 | 0.44 | crime-mystery 0.23 (trippy was proposed; not in the top 3) |
+| nostalgic | 4,890 | cozy | 0.12 | 0.34 | funny 0.11 (confirmed) |
+| melancholic | 8,675 | sad | 0.60 | 0.98 | dark 0.25 |
+| bittersweet | 11,352 | sad | 0.32 | 0.55 | romantic 0.18 |
+| whimsical | 697 | magical | 0.20 | 0.48 | other-worlds 0.05 (quirky was proposed: 0.04) |
+| peaceful | 8,436 | cozy | 0.16 | 0.32 | romantic 0.17 (a tie; cozy says what the page promised) |
+| adrenaline | 1,112 | thrilling | 0.20 | 0.89 | other-worlds 0.02 |
+| epic | 284 | thrilling | 0.03 | 0.56 | magical 0.03 (other-worlds was proposed; not in the top 3) |
+| romantic | 6,393 | romantic | 0.52 | 0.99 | cozy 0.14 |
+| gritty | 2,368 | crime-mystery | 0.10 | 0.53 | tense 0.05 (dark was proposed: 0.04) |
+| mind-bending | 311 | deep | 0.09 | 0.58 | trippy 0.04 (was proposed) |
+| morally-complex | 155 | deep | 0.05 | 0.59 | trippy 0.04 |
+| atmospheric | 9,121 | sad | 0.27 | 0.54 | history 0.19 (tense was proposed; not in the top 3) |
+| visually-stunning | 588 | thrilling | 0.05 | 0.48 | trippy 0.05 (other-worlds was proposed; not in the top 3) |
+| educational | 3,277 | history | 0.13 | 0.70 | sad 0.07 (confirmed) |
+
+The measure changed six proposed rows beyond the seven marked verify: suspense, gritty, mind-bending, and whimsical
+now follow the data too. Small old pages (epic, morally-complex, motivational) overlap little with any mood; the row is
+still the closest page, never a hub.
 
 The lab answers 200 for `/movies/streaming/netflix`, because it reads `netflix` as a country. Production must check the
 service slugs before it treats the segment as a country.
