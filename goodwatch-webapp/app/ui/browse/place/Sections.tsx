@@ -91,13 +91,7 @@ export function CloseToSection({ data, address, to }: P) {
 	if (!room.neighbors.length) return null
 	return (
 		<Reveal as="section" className="space-y-5">
-			<ModuleHead
-				title={headings.closeTo(asWord(lead))}
-				line="Next door, and how it differs."
-				aside={
-					room.mapHref ? <MoreLink to={room.mapHref}>{headings.onTheMap}</MoreLink> : undefined
-				}
-			/>
+			<ModuleHead title={headings.closeTo(asWord(lead))} line="Next door, and how it differs." />
 			<NearRow
 				items={room.neighbors.map((n) => ({
 					place: n.place,

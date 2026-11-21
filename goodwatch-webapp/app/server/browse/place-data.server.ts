@@ -184,7 +184,6 @@ export interface PlaceData {
 	decades?: PlaceRef[]
 	/** A country page: every country with a page, for the map in the head. */
 	map: { code: string; name: string; slug: string; weight: number }[] | null
-	mapHref: string | null
 }
 
 /** A title for decoration inside a card that is one link: the poster and its name only. */
@@ -344,14 +343,6 @@ export async function bestPresets(atlas: Places): Promise<BestPreset[]> {
 	return out
 }
 
-const MAP_GROUPING: Partial<Record<Family, string>> = {
-	mood: "mood",
-	theme: "theme",
-	style: "style",
-	decade: "decade",
-	country: "country",
-}
-
 async function loadPlace(atlas: Places, address: Address): Promise<PlaceData> {
 	const parts = address.parts
 	const refs = parts.map((p) => atlas.ref(p))
@@ -459,7 +450,6 @@ async function loadPlace(atlas: Places, address: Address): Promise<PlaceData> {
 					}))
 				})()
 			: null
-	const grouping = single ? MAP_GROUPING[lead.family] : undefined
 	return {
 		view: "place",
 		title: atlas.name(parts),
@@ -511,7 +501,6 @@ async function loadPlace(atlas: Places, address: Address): Promise<PlaceData> {
 			: null,
 		decades: single && lead.family === "decade" ? atlas.members("decade") : undefined,
 		map: countries,
-		mapHref: grouping ? `/map?grouping=${grouping}` : null,
 	}
 }
 

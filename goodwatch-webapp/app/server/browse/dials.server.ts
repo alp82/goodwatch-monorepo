@@ -144,7 +144,7 @@ export type DialsData =
 			suggestions?: { place: PlaceRef; name: string; to: string; titles: ShowTitle[] }[]
 			people: Person[]
 			awards: AwardWin[]
-			hand: { discover: string | null; topTo: string; mapTo: string | null }
+			hand: { discover: string | null; topTo: string }
 	  })
 	| (Head & {
 			view: "top"
@@ -842,8 +842,6 @@ async function loadPlace(atlas: Places, address: Address, url: URL): Promise<Dia
 					parts.filter((p) => ["mood", "genre", "decade"].includes(p.family)),
 				),
 			),
-			mapTo:
-				single && ["mood", "theme", "style", "decade", "country"].includes(family) ? "/map" : null,
 		},
 	}
 
