@@ -28,8 +28,8 @@ import {
 } from "~/domain/top-lists"
 import type { Places } from "~/server/browse/places.server"
 import { getRankedList } from "~/server/top-lists.server"
-import { type DialSpec, type Stop, percentile } from "~/ui/browse/dials/tune"
-import { AGE_TEXT, AXIS_TEXT, LOVE_TEXT } from "~/ui/browse/dials/words"
+import { type DialSpec, type Stop, percentile } from "~/domain/browse/tune"
+import { AGE_TEXT, AXIS_TEXT, LOVE_TEXT } from "~/domain/browse/dial-words"
 
 export interface TopFilter {
 	label: string
