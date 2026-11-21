@@ -1070,7 +1070,7 @@ async function loadTop(atlas: Places, address: Address, url: URL): Promise<Dials
 	const noDecade = address.parts.filter((p) => p.family !== "decade")
 	return {
 		view: "top",
-		title: atlas.name(address.parts, { best: true, year: address.year }),
+		title: atlas.name(address.parts, { top: true, year: address.year }),
 		kicker: "Top",
 		lede:
 			address.parts.length || address.year

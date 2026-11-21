@@ -534,7 +534,7 @@ export async function loadPage({
 		const filtered = address.parts.length > 0 || address.year !== undefined
 		return {
 			view: "top",
-			title: atlas.name(address.parts, { best: true, year: address.year }),
+			title: atlas.name(address.parts, { top: true, year: address.year }),
 			copy: filtered ? null : deckCopy(deckKind(kind), "best", "all"),
 			parts: address.parts.map((p) => atlas.ref(p)),
 			year: address.year,
