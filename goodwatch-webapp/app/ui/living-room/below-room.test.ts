@@ -14,10 +14,10 @@ const HUBS = [
 	"/how-it-works",
 	"/movies/moods",
 	"/movies/genres",
-	"/movies/streaming",
+	"/movies/streaming/us",
 	"/shows/moods",
 	"/shows/genres",
-	"/shows/streaming",
+	"/shows/streaming/us",
 ]
 
 const rendered = JSON.parse(
@@ -43,21 +43,17 @@ const rendered = JSON.parse(
 
 /** Every `<a>` of the HTML: its attributes and its text. */
 const links = (html: string) =>
-	[...html.matchAll(/<a\b([^>]*)>(.*?)<\/a>/gs)].map(
-		([, attributes, inner]) => ({
-			attributes,
-			href: /\bhref="([^"]*)"/.exec(attributes)?.[1] ?? "",
-			text: inner
-				.replace(/<[^>]+>/g, " ")
-				.replace(/\s+/g, " ")
-				.trim(),
-		}),
-	)
+	[...html.matchAll(/<a\b([^>]*)>(.*?)<\/a>/gs)].map(([, attributes, inner]) => ({
+		attributes,
+		href: /\bhref="([^"]*)"/.exec(attributes)?.[1] ?? "",
+		text: inner
+			.replace(/<[^>]+>/g, " ")
+			.replace(/\s+/g, " ")
+			.trim(),
+	}))
 
 test("all 16 titles are poster card links with the title and year as text", () => {
-	const titles = links(rendered.full).filter((link) =>
-		/^\/(movie|show)\//.test(link.href),
-	)
+	const titles = links(rendered.full).filter((link) => /^\/(movie|show)\//.test(link.href))
 	assert.equal(titles.length, 16)
 	assert.equal(new Set(titles.map((link) => link.href)).size, 16)
 	assert.equal(titles[0].href, "/movie/100-title-1")
@@ -75,9 +71,9 @@ test("all 16 titles are poster card links with the title and year as text", () =
 })
 
 test("each card shows the GoodWatch score it has, and no services", () => {
-	const pills = [
-		...rendered.full.matchAll(/GoodWatch score <\/span>(\d+)</g),
-	].map(([, score]) => Number(score))
+	const pills = [...rendered.full.matchAll(/GoodWatch score <\/span>(\d+)</g)].map(([, score]) =>
+		Number(score),
+	)
 	// One of the 16 test titles has no score.
 	assert.equal(pills.length, 15)
 	assert.deepEqual(pills.slice(0, 4), [60, 61, 62, 64])
@@ -104,10 +100,7 @@ test("nothing in the section's HTML hides a link", () => {
 		const withoutDecoration = html
 			.replace(/<div aria-hidden="true" data-title-band=""/g, "<div")
 			.replace(/<(span|i) aria-hidden="true">[^<]*<\/\1>/g, "")
-			.replace(
-				/<span class="sr-only">(<span lang="[^"]+">[^<]*<\/span>)?[^<]*<\/span>/g,
-				"",
-			)
+			.replace(/<span class="sr-only">(<span lang="[^"]+">[^<]*<\/span>)?[^<]*<\/span>/g, "")
 			.replace(/ class="hidden h-3 [^"]*"/g, "")
 			.replace(/ overflow-hidden /g, " ")
 		assert.doesNotMatch(
@@ -118,10 +111,10 @@ test("nothing in the section's HTML hides a link", () => {
 })
 
 test("the stylesheet hides nothing of the section but the lip's extras", () => {
-	const css = readFileSync(
-		"app/ui/living-room/living-room.css",
-		"utf8",
-	).replace(/\/\*[\s\S]*?\*\//g, "")
+	const css = readFileSync("app/ui/living-room/living-room.css", "utf8").replace(
+		/\/\*[\s\S]*?\*\//g,
+		"",
+	)
 	const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
 		.map(([, selector, body]) => ({ selector: selector.trim(), body }))
 		.filter(({ selector }) => /\.lrb(?![\w-]*-lip)/.test(selector))
@@ -142,10 +135,7 @@ test("each poster is an image in the HTML that loads lazily and holds its place"
 		.filter((tag) => tag.includes("image.tmdb.org"))
 	// One of the 16 test titles has no poster: its card shows the placeholder.
 	assert.equal(posters.length, 15)
-	assert.match(
-		posters[0],
-		/ src="https:\/\/image\.tmdb\.org\/t\/p\/w154\/poster0\.jpg"/,
-	)
+	assert.match(posters[0], / src="https:\/\/image\.tmdb\.org\/t\/p\/w154\/poster0\.jpg"/)
 	// The small files only: the cards are at most 140 px wide, so w154 at 1x and w342 at 2x.
 	assert.match(
 		posters[0],
@@ -162,8 +152,7 @@ test("each poster is an image in the HTML that loads lazily and holds its place"
 		assert.doesNotMatch(tag, /fetchpriority/)
 	}
 	// Every image of the section waits: the placeholder and the score pill's logo too.
-	for (const [tag] of rendered.full.matchAll(/<img\b[^>]*>/g))
-		assert.match(tag, / loading="lazy"/)
+	for (const [tag] of rendered.full.matchAll(/<img\b[^>]*>/g)) assert.match(tag, / loading="lazy"/)
 	assert.doesNotMatch(rendered.empty, /<img/)
 })
 
@@ -181,17 +170,14 @@ test("the same titles give the same HTML", () => {
 test("the lip and the way back are links that work without a script", () => {
 	assert.match(rendered.full, /<section id="browse"/)
 	assert.match(rendered.full, /<a href="#browse" class="lrb-lip">/)
-	assert.equal(
-		rendered.full.match(/<a href="#room" class="lrb-back">/g)?.length,
-		2,
-	)
+	assert.equal(rendered.full.match(/<a href="#room" class="lrb-back">/g)?.length, 2)
 })
 
 test("the page is held still until it is open, and a script is not needed to open it", () => {
-	const css = readFileSync(
-		"app/ui/living-room/living-room.css",
-		"utf8",
-	).replace(/\/\*[\s\S]*?\*\//g, "")
+	const css = readFileSync("app/ui/living-room/living-room.css", "utf8").replace(
+		/\/\*[\s\S]*?\*\//g,
+		"",
+	)
 	const rule = (selector: string) =>
 		[...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].find(([, selectors]) =>
 			selectors
@@ -211,17 +197,13 @@ test("the social ranking, post preview and links are present before JavaScript o
 	assert.ok(rendered.social.includes(">Hot<"))
 	assert.ok(
 		links(rendered.social).some(
-			(link) =>
-				link.href === "/movie/603-the-matrix" &&
-				link.text.includes("The Matrix"),
+			(link) => link.href === "/movie/603-the-matrix" && link.text.includes("The Matrix"),
 		),
 	)
 	assert.ok(rendered.social.includes("The Matrix returns to cinemas"))
 	assert.ok(
 		links(rendered.social).some(
-			(link) =>
-				link.href === "/hot#movie-603" &&
-				link.text.includes("The Matrix"),
+			(link) => link.href === "/hot#movie-603" && link.text.includes("The Matrix"),
 		),
 	)
 	assert.doesNotMatch(rendered.social, /tn-wait|<iframe/)

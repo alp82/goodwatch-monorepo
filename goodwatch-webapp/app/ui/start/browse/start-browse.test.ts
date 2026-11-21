@@ -14,10 +14,10 @@ const HUBS = [
 	"/how-it-works",
 	"/movies/moods",
 	"/movies/genres",
-	"/movies/streaming",
+	"/movies/streaming/us",
 	"/shows/moods",
 	"/shows/genres",
-	"/shows/streaming",
+	"/shows/streaming/us",
 	"/movies/top",
 	"/shows/top",
 	"/new",
@@ -100,7 +100,7 @@ test("every mood, service, and genre is a link to its page, named by it", () => 
 	const all = links(rendered.full)
 	const moods = all.filter((link) => link.href.startsWith("/movies/moods/"))
 	assert.equal(moods.length, 10)
-	assert.equal(moods[0].href, "/movies/moods/feel-good")
+	assert.equal(moods[0].href, "/movies/moods/cozy")
 	assert.match(moods[0].text, /^Cozy Warm and hopeful/)
 	for (const mood of ["tense", "dark", "deep", "magical", "quirky"]) {
 		const link = all.find((link) => link.href === `/discover?moods=${mood}`)
@@ -114,7 +114,7 @@ test("every mood, service, and genre is a link to its page, named by it", () => 
 	)
 	const genres = all.filter((link) => /^\/(movies|shows)\/genres\/./.test(link.href))
 	assert.equal(genres.length, 15)
-	assert.ok(genres.some((link) => link.href === "/shows/genres/scifi-and-fantasy"))
+	assert.ok(genres.some((link) => link.href === "/shows/genres/sci-fi-fantasy"))
 })
 
 test("headings: one H2 for the section, an H3 per rail, no H1", () => {

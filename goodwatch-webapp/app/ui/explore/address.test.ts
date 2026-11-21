@@ -2,8 +2,7 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import "../../server/title-filter/test-alias.ts"
 
-const { exploreAddressExists, formerExplorePath, formerTvShowsPath } =
-	await import("./address.ts")
+const { exploreAddressExists, formerExplorePath, formerTvShowsPath } = await import("./address.ts")
 
 test("the two type hubs exist, and no other one-segment path does", () => {
 	assert.equal(exploreAddressExists({ type: "movies" }), true)
@@ -16,29 +15,14 @@ test("the two type hubs exist, and no other one-segment path does", () => {
 
 test("a category hub exists only under a known type and for a known category", () => {
 	assert.equal(exploreAddressExists({ type: "movies", category: "moods" }), true)
-	assert.equal(
-		exploreAddressExists({ type: "shows", category: "streaming" }),
-		true,
-	)
-	assert.equal(
-		exploreAddressExists({ type: "movies", category: "qwertyzzz" }),
-		false,
-	)
-	assert.equal(
-		exploreAddressExists({ type: "qwertyzzz", category: "moods" }),
-		false,
-	)
-	assert.equal(
-		exploreAddressExists({ type: "sitemaps", category: "sitemap_old.xml" }),
-		false,
-	)
+	assert.equal(exploreAddressExists({ type: "shows", category: "streaming" }), true)
+	assert.equal(exploreAddressExists({ type: "movies", category: "qwertyzzz" }), false)
+	assert.equal(exploreAddressExists({ type: "qwertyzzz", category: "moods" }), false)
+	assert.equal(exploreAddressExists({ type: "sitemaps", category: "sitemap_old.xml" }), false)
 })
 
 test("a category page exists only when the category lists it", () => {
-	assert.equal(
-		exploreAddressExists({ type: "movies", category: "moods", page: "scary" }),
-		true,
-	)
+	assert.equal(exploreAddressExists({ type: "movies", category: "moods", page: "scary" }), true)
 	assert.equal(
 		exploreAddressExists({
 			type: "movies",
@@ -66,10 +50,7 @@ test("a category page exists only when the category lists it", () => {
 })
 
 test("a name that every object has is not a category or a page", () => {
-	assert.equal(
-		exploreAddressExists({ type: "movies", category: "constructor" }),
-		false,
-	)
+	assert.equal(exploreAddressExists({ type: "movies", category: "constructor" }), false)
 	assert.equal(
 		exploreAddressExists({
 			type: "movies",
@@ -81,14 +62,8 @@ test("a name that every object has is not a category or a page", () => {
 })
 
 test("an old explore address moves to the category page of the same name", () => {
-	assert.equal(
-		formerExplorePath("movies", "moods", "scary"),
-		"/movies/moods/scary",
-	)
-	assert.equal(
-		formerExplorePath("tv-shows", "moods", "scary"),
-		"/shows/moods/scary",
-	)
+	assert.equal(formerExplorePath("movies", "moods", "scary"), "/movies/moods/scary")
+	assert.equal(formerExplorePath("tv-shows", "moods", "scary"), "/shows/moods/scary")
 	assert.equal(formerExplorePath("tv", "moods", "scary"), "/shows/moods/scary")
 })
 
@@ -104,38 +79,17 @@ test("a tv-shows address moves to the same path under shows and keeps its query"
 	assert.equal(formerTvShowsPath("/tv-shows/moods", ""), "/shows/moods")
 	assert.equal(formerTvShowsPath("/TV-SHOWS/moods", ""), "/shows/moods")
 	assert.equal(formerTvShowsPath("/%74v-shows/moods", ""), "/shows/moods")
-	assert.equal(
-		formerTvShowsPath("/tv-shows/moods/scary", "?page=2"),
-		"/shows/moods/scary?page=2",
-	)
-	assert.equal(
-		formerTvShowsPath("/tv-shows/tv-shows/x/y", ""),
-		"/shows/tv-shows/x/y",
-	)
+	assert.equal(formerTvShowsPath("/tv-shows/moods/scary", "?page=2"), "/shows/moods/scary?page=2")
+	assert.equal(formerTvShowsPath("/tv-shows/tv-shows/x/y", ""), "/shows/tv-shows/x/y")
 })
 
 test("a list exists only under the type it lists", () => {
-	assert.equal(
-		exploreAddressExists({ type: "movies", category: "genres", page: "talk" }),
-		false,
-	)
-	assert.equal(
-		exploreAddressExists({ type: "shows", category: "genres", page: "action" }),
-		false,
-	)
-	assert.equal(
-		exploreAddressExists({ type: "shows", category: "genres", page: "talk" }),
-		true,
-	)
-	assert.equal(
-		exploreAddressExists({ type: "movies", category: "genres", page: "action" }),
-		true,
-	)
+	assert.equal(exploreAddressExists({ type: "movies", category: "genres", page: "talk" }), false)
+	assert.equal(exploreAddressExists({ type: "shows", category: "genres", page: "action" }), false)
+	assert.equal(exploreAddressExists({ type: "shows", category: "genres", page: "talk" }), true)
+	assert.equal(exploreAddressExists({ type: "movies", category: "genres", page: "action" }), true)
 	// Lists of both types.
-	assert.equal(
-		exploreAddressExists({ type: "shows", category: "genres", page: "drama" }),
-		true,
-	)
+	assert.equal(exploreAddressExists({ type: "shows", category: "genres", page: "drama" }), true)
 	assert.equal(
 		exploreAddressExists({
 			type: "shows",
@@ -147,11 +101,11 @@ test("a list exists only under the type it lists", () => {
 	assert.equal(formerExplorePath("movies", "genres", "talk"), null)
 })
 
-test("the category sitemap lists exactly the category pages that exist", async () => {
+test("the former category sitemap (kept as a fixture) lists exactly the category pages that exist", async () => {
 	const { readFile } = await import("node:fs/promises")
 	const { mainHierarchy } = await import("./main-nav.ts")
 	const xml = await readFile(
-		new URL("../../../public/sitemaps/sitemap_categories.xml", import.meta.url),
+		new URL("../../domain/browse/fixtures/old-sitemap-categories.xml", import.meta.url),
 		"utf8",
 	)
 	const listed = [...xml.matchAll(/<loc>https:\/\/goodwatch\.app\/([^<]*)<\/loc>/g)].map(
@@ -160,11 +114,7 @@ test("the category sitemap lists exactly the category pages that exist", async (
 	assert.ok(listed.length > 0)
 	for (const path of listed) {
 		const [type, category, page] = path.split("/")
-		assert.equal(
-			exploreAddressExists({ type, category, page }),
-			true,
-			`/${path} is in the sitemap`,
-		)
+		assert.equal(exploreAddressExists({ type, category, page }), true, `/${path} is in the sitemap`)
 	}
 	const existing: string[] = []
 	for (const type of ["movies", "shows"])
