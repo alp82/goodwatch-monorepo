@@ -13,17 +13,17 @@ import {
 	canonicalPath,
 	kindOfSeg,
 	parse,
-	splitParts,
 } from "~/domain/browse/address"
 import { copyFor } from "~/domain/browse/copy-lookup"
 import { notFound } from "~/domain/browse/not-found"
+import { browseCrumbs, isIndexable } from "~/domain/browse/indexing"
 import { browseRedirect, finalAddress, legacyGenreFallback } from "~/domain/browse/redirects"
 import { loadAddEntry } from "~/server/browse/add-entry.server"
 import { peekOf } from "~/server/browse/blend.server"
 import { loadMarks } from "~/server/browse/card-marks.server"
 import { indexPageOf, loadIndexPage } from "~/server/browse/index-pages.server"
 import { loadPlacePage } from "~/server/browse/place-page.server"
-import { MIN_PAGE, PlacesNotReady, openPlaces } from "~/server/browse/places.server"
+import { PlacesNotReady, openPlaces } from "~/server/browse/places.server"
 import { streamingRoute } from "~/server/browse/streaming-page.server"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { BrowseRow } from "~/ui/browse/BrowseRow"
@@ -42,16 +42,6 @@ const trimmed = (pathname: string) => pathname.replace(/\/+$/, "") || "/"
 const isPlacePage = (a: Address) =>
 	a.view === "place" &&
 	(a.parts.length > 1 || ["mood", "genre", "theme", "style"].includes(a.parts[0]?.family ?? ""))
-
-/**
- * Whether a place page may be indexed: single places and two-part path blends with a full page, for movies or shows.
- * `/all`, `?with=` blends, three or more parts, themes and styles, and thin places stay out (noindex, follow).
- */
-function indexable(a: Address, count: number) {
-	if (a.kind === "all" || count < MIN_PAGE) return false
-	if (a.parts.some((p) => p.family === "theme" || p.family === "style")) return false
-	return splitParts(a.parts).rest.length === 0
-}
 
 const site = (path: string) => `https://goodwatch.app${path}`
 
@@ -114,7 +104,7 @@ const canonicalLoader = async ({ params, request }: LoaderFunctionArgs) => {
 				data.dz.lede ??
 				"",
 			canonical: canonicalPath(address),
-			indexable: indexable(address, count),
+			indexable: isIndexable(address, count),
 		}
 	}
 	const index = indexPageOf(address)
@@ -148,8 +138,8 @@ const canonicalLoader = async ({ params, request }: LoaderFunctionArgs) => {
 					: null) ??
 				"",
 			canonical: canonicalPath(address),
-			// The room pages of a decade or a country are single places; the family indexes are listed.
-			indexable: kind !== "all" && (!lead || atlas.count(address.parts) >= MIN_PAGE),
+			// The room pages of a decade, a country or a service are single places; the family indexes are listed.
+			indexable: isIndexable(address, lead ? atlas.count(address.parts) : 0),
 		}
 	}
 	throw notFound()
@@ -170,6 +160,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 				image: `https://goodwatch.app/images/heroes/hero-${data.address.kind === "show" ? "shows" : "movies"}.png`,
 				alt: data.title,
 			},
+			breadcrumbs: browseCrumbs(data.address, data.title),
 			robots: data.indexable ? undefined : "noindex, follow",
 		})
 	const crumbs = crumbsOf(data.data, data.address, (a) => browsePath(a)).map((c) => ({
