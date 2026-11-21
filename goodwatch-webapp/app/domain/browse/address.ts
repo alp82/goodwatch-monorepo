@@ -85,6 +85,10 @@ export interface Address {
 	unseen?: boolean
 	/** Top of one release year. */
 	year?: number
+	/** The first "how much" dial of a place page, at its named stop (`?level=`). */
+	level?: Level
+	/** A kind inside the place (its cluster id, `?k=`): the steering's "Which kind?". */
+	kind_?: string
 }
 
 export const kindSeg = (k: Kind) => (k === "all" ? "all" : k === "show" ? "shows" : "movies")
@@ -151,6 +155,8 @@ function query(a: Address, rest: Ingredient[], extra?: Record<string, string | u
 	if (a.mine) q.set("mine", "1")
 	if (a.unseen) q.set("unseen", "1")
 	if (a.year) q.set("year", String(a.year))
+	if (a.level) q.set("level", a.level)
+	if (a.kind_) q.set("k", a.kind_)
 	for (const [k, v] of Object.entries(extra ?? {})) {
 		if (v === undefined || v === "") q.delete(k)
 		else q.set(k, v)
@@ -184,6 +190,8 @@ export const canonicalPath = (a: Address) =>
 		at: undefined,
 		mine: undefined,
 		unseen: undefined,
+		level: undefined,
+		kind_: undefined,
 	})
 
 // ---------------------------------------------------------------------------------------------------------
@@ -219,13 +227,15 @@ export const add = (a: Address, p: Ingredient): Address => ({
 	parts: sortParts([...a.parts, p]),
 	page: undefined,
 	at: undefined,
+	level: undefined,
+	kind_: undefined,
 })
 /** The same page without a part; a place without parts is the hub. */
 export function remove(a: Address, p: Ingredient): Address {
 	const parts = a.parts.filter((x) => !same(x, p))
 	if (a.view === "top") return { ...a, parts, page: undefined }
 	if (!parts.length) return hub(a.kind)
-	return { ...a, parts, page: undefined, at: undefined }
+	return { ...a, parts, page: undefined, at: undefined, level: undefined, kind_: undefined }
 }
 export const swap = (a: Address, from: Ingredient, to: Ingredient): Address =>
 	add(remove(a, from), to)
@@ -279,6 +289,10 @@ export function parse(path: string, search: URLSearchParams, index: SlugIndex): 
 		mine: search.get("mine") === "1" || undefined,
 		unseen: search.get("unseen") === "1" || undefined,
 		year: positive(search.get("year")),
+		level: LEVELS.includes(search.get("level") as Level)
+			? (search.get("level") as Level)
+			: undefined,
+		kind_: /^[\w-]{1,64}$/.test(search.get("k") ?? "") ? (search.get("k") as string) : undefined,
 	}
 	if (segs.length === 1) return hub(kind)
 	if (segs[1] === "top")

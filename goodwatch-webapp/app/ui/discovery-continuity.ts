@@ -15,7 +15,7 @@ export const emptyContext = (): Context => ({ routes: {}, positions: {} })
 // No auth/account screens: a failed login must not replace the discovery return target.
 export const isDiscovery = (path: string) =>
 	path === "/" ||
-	/^\/(watch|u|taste|discover|wishlist|search|movie|show|movies|shows|explore|lists|categories)(\/|$)/.test(
+	/^\/(watch|u|taste|discover|wishlist|search|movie|show|movies|shows|all|explore|lists|categories)(\/|$)/.test(
 		path,
 	)
 
@@ -23,12 +23,10 @@ export const isDiscovery = (path: string) =>
  * The URL with the last filters of a listing, when someone opens its entry point without a query. Null when the
  * page opens as asked. Discover never restores: a plain /discover link opens fresh, not with the last search.
  * By your tropes never restores either: ?trope= is a pick, and its "All picks for you" link must open the full list.
+ * Browse pages (`/movies/...`, `/shows/...`, `/all/...`) never restore: their query is the grid's offset, dials and
+ * switches, and a plain link (the grid's Prev to the first page, a place without its dials) must open as asked.
  */
-export function restoredEntry(
-	pathname: string,
-	search: string,
-	context: Context,
-): string | null {
+export function restoredEntry(pathname: string, search: string, context: Context): string | null {
 	if (search && search !== "?") return null
 	if (!isDiscovery(pathname) || pathname === "/") return null
 	if (
@@ -36,6 +34,7 @@ export function restoredEntry(
 		pathname.startsWith("/u/") ||
 		/^\/(movie|show)\//.test(pathname) ||
 		/^\/discover(\/|$)/.test(pathname) ||
+		/^\/(movies|shows|all)(\/|$)/.test(pathname) ||
 		/^\/watch\/for-you\/tropes\/?$/.test(pathname)
 	)
 		return null
@@ -51,12 +50,7 @@ function newest<T>(map: Record<string, T>, key: string, value: T) {
 }
 
 /** The context after a visit to `url` (on `pathname`) at scroll offset `y`. */
-export function remember(
-	context: Context,
-	pathname: string,
-	url: string,
-	y: number,
-): Context {
+export function remember(context: Context, pathname: string, url: string, y: number): Context {
 	const visit = { url, y }
 	return {
 		last: visit,
