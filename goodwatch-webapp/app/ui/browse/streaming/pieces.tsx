@@ -87,9 +87,22 @@ export function Month({ s, compact = false }: { s: StreamService; compact?: bool
 			<p className={`mt-0.5 text-sm text-gray-400 ${compact ? "" : "whitespace-nowrap"}`}>
 				{s.arrived || s.left ? (
 					<>
-						<span className="font-bold text-emerald-300 tabular-nums">+{fmt(s.arrived)}</span> new
+						{s.arrived ? (
+							<>
+								<span className="font-bold text-emerald-300 tabular-nums">+{fmt(s.arrived)}</span>{" "}
+								new
+							</>
+						) : (
+							"None new"
+						)}
 						<span className="text-gray-600"> · </span>
-						<span className="font-bold text-rose-300 tabular-nums">−{fmt(s.left)}</span> gone
+						{s.left ? (
+							<>
+								<span className="font-bold text-rose-300 tabular-nums">−{fmt(s.left)}</span> gone
+							</>
+						) : (
+							"none gone"
+						)}
 					</>
 				) : (
 					"Nothing came or went"
