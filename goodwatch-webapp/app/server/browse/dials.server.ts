@@ -864,7 +864,11 @@ async function loadPlace(atlas: Places, address: Address, url: URL): Promise<Dia
 	if (single && family === "genre") {
 		out.print = atlas.print(parts).map((b) => {
 			const slug = b.key.replace(/_/g, "-")
-			return { ...b, to: atlas.has("trait", slug) ? placeTo(atlas, ing("trait", slug)) : undefined }
+			// A trait has no page of its own: its bar opens the genre's titles that lean that way (a blend).
+			const to = atlas.has("trait", slug)
+				? browsePath(place(atlas.kind, [...parts, ing("trait", slug)], atlas.country))
+				: undefined
+			return { ...b, to }
 		})
 		out.standouts = atlas.traits(parts, { n: 6 }).more
 		out.kinds = (await atlas.kinds(parts, 4)).map((k) => ({
