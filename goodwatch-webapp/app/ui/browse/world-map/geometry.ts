@@ -7,7 +7,7 @@ import {
 	type WorldRegion,
 	type WorldShape,
 	type WorldView,
-} from "~/ui/browse/world-map/shapes"
+} from "./shapes.ts"
 
 export type Box = readonly [number, number, number, number]
 
