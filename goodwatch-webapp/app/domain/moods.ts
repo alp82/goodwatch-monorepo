@@ -4,10 +4,7 @@
 //
 // The keys are stable identifiers: they appear in URLs and in the title snapshot's mood mask (bit i is MOOD_KEYS[i]),
 // so they never change or move. The names, descriptions, hues, and rules in words may change.
-import {
-	type CoreScores,
-	VALID_FINGERPRINT_KEYS,
-} from "../server/utils/fingerprint.ts"
+import { type CoreScores, VALID_FINGERPRINT_KEYS } from "../server/utils/fingerprint.ts"
 
 export const MOOD_KEYS = [
 	"funny",
@@ -67,9 +64,13 @@ const MISSING = 255
 // A title without a title analysis has fewer scores than this and belongs to no mood.
 const MIN_SCORES = 10
 
-const KEY_INDEX = Object.fromEntries(
-	VALID_FINGERPRINT_KEYS.map((key, i) => [key, i]),
-) as Record<FingerprintKey, number>
+const KEY_INDEX = Object.fromEntries(VALID_FINGERPRINT_KEYS.map((key, i) => [key, i])) as Record<
+	FingerprintKey,
+	number
+>
+
+const has = (genres: readonly string[], ...names: string[]) =>
+	names.some((name) => genres.includes(name))
 
 const humor = (score: Score) =>
 	Math.max(
@@ -89,8 +90,18 @@ const MOOD_RULES: readonly MoodRule[] = [
 		feel: true,
 		description: "Comedy leads: wit, slapstick or the absurd.",
 		hue: "#facc15",
-		rule: "Any humor score (situational comedy, wit and wordplay, physical comedy, absurdist humor, satire and parody) 8 or more, and bleakness 5 or less",
-		test: (score) => humor(score) >= 8 && score("bleakness") <= 5,
+		rule: "Bleakness 5 or less, and either the Comedy genre with any humor score (situational comedy, wit and wordplay, physical comedy, absurdist humor, satire and parody) 7 or more, or situational comedy, physical comedy, absurdist humor or satire and parody 9 or more with violence 5 or less",
+		// Wit alone isn't comedy: sharp dialogue lifted Pulp Fiction, The Social Network and Good Will Hunting in.
+		test: (score, genres) =>
+			score("bleakness") <= 5 &&
+			((has(genres, "Comedy") && humor(score) >= 7) ||
+				(Math.max(
+					score("situational_comedy"),
+					score("physical_comedy"),
+					score("absurdist_humor"),
+					score("satire_parody"),
+				) >= 9 &&
+					score("violence") <= 5)),
 	},
 	{
 		key: "feelgood",
@@ -99,11 +110,15 @@ const MOOD_RULES: readonly MoodRule[] = [
 		feel: true,
 		description: "Warm and hopeful, with nothing grim.",
 		hue: "#fb923c",
-		rule: "Wholesome 7 or more, hopefulness 7 or more, and bleakness 3 or less",
+		rule: "Wholesome 7 or more, hopefulness 7 or more, bleakness 3 or less, adrenaline 6 or less, violence 3 or less, and tension 6 or less",
+		// Low stakes too: without the last three, Star Wars and Top Gun: Maverick were Cozy.
 		test: (score) =>
 			score("wholesome") >= 7 &&
 			score("hopefulness") >= 7 &&
-			score("bleakness") <= 3,
+			score("bleakness") <= 3 &&
+			score("adrenaline") <= 6 &&
+			score("violence") <= 3 &&
+			score("tension") <= 6,
 	},
 	{
 		key: "romance",
@@ -112,8 +127,12 @@ const MOOD_RULES: readonly MoodRule[] = [
 		feel: true,
 		description: "A love story at the center.",
 		hue: "#f472b6",
-		rule: "Romance 7 or more",
-		test: (score) => score("romance") >= 7,
+		rule: "Not Horror, and either the Romance genre with romance 6 or more, or romance 8 or more with adrenaline 6 or less",
+		// A subplot isn't a love story: Bride of Chucky, The Empire Strikes Back and Casino Royale were Romantic.
+		test: (score, genres) =>
+			!has(genres, "Horror") &&
+			((has(genres, "Romance") && score("romance") >= 6) ||
+				(score("romance") >= 8 && score("adrenaline") <= 6)),
 	},
 	{
 		key: "action",
@@ -132,9 +151,11 @@ const MOOD_RULES: readonly MoodRule[] = [
 		feel: true,
 		description: "Dread, frights and horror.",
 		hue: "#a3e635",
-		rule: "Scare 7 or more, or the Horror genre with scare 5 or more",
+		rule: "The Horror genre with scare 5 or more, or scare 8 or more with uncanny or grotesque 6 or more",
+		// Peril isn't horror: war films and adventures (Saving Private Ryan, The Return of the King) scored scare 7.
 		test: (score, genres) =>
-			score("scare") >= 7 || (genres.includes("Horror") && score("scare") >= 5),
+			(has(genres, "Horror") && score("scare") >= 5) ||
+			(score("scare") >= 8 && (score("uncanny") >= 6 || score("grotesque") >= 6)),
 	},
 	{
 		key: "crime",
@@ -143,12 +164,11 @@ const MOOD_RULES: readonly MoodRule[] = [
 		feel: false,
 		description: "Puzzles, investigations and heists.",
 		hue: "#60a5fa",
-		rule: "Mystery 8 or more, or crime 8 or more with intrigue 8 or more and spectacle 7 or less",
-		test: (score) =>
-			score("mystery") >= 8 ||
-			(score("crime") >= 8 &&
-				score("intrigue") >= 8 &&
-				score("spectacle") <= 7),
+		rule: "Mystery 8 or more with crime 5 or more or the Crime or Mystery genre, or crime 8 or more with intrigue 8 or more and spectacle 7 or less",
+		// Mystery alone also scores science fiction puzzles (The Matrix, Arrival).
+		test: (score, genres) =>
+			(score("mystery") >= 8 && (score("crime") >= 5 || has(genres, "Crime", "Mystery"))) ||
+			(score("crime") >= 8 && score("intrigue") >= 8 && score("spectacle") <= 7),
 	},
 	{
 		key: "mind",
@@ -157,11 +177,14 @@ const MOOD_RULES: readonly MoodRule[] = [
 		feel: true,
 		description: "Surreal or layered; keeps you thinking.",
 		hue: "#c084fc",
-		rule: "Surrealism 6 or more, or complexity 8 or more with philosophical 7 or more or non-linear narrative 8 or more",
+		rule: "Surrealism 7 or more, psychedelic 8 or more, or non-linear narrative 8 or more with complexity 8 or more and meta-narrative 6 or more or ambiguity 7 or more",
+		// Complex and philosophical isn't trippy (Schindler's List, The Godfather Part II); Deep covers those.
 		test: (score) =>
-			score("surrealism") >= 6 ||
-			(score("complexity") >= 8 &&
-				(score("philosophical") >= 7 || score("non_linear_narrative") >= 8)),
+			score("surrealism") >= 7 ||
+			score("psychedelic") >= 8 ||
+			(score("non_linear_narrative") >= 8 &&
+				score("complexity") >= 8 &&
+				(score("meta_narrative") >= 6 || score("ambiguity") >= 7)),
 	},
 	{
 		key: "heavy",
@@ -170,8 +193,12 @@ const MOOD_RULES: readonly MoodRule[] = [
 		feel: true,
 		description: "Grief, melancholy and big emotions.",
 		hue: "#94a3b8",
-		rule: "Pathos 8 or more, or melancholy 8 or more",
-		test: (score) => score("pathos") >= 8 || score("melancholy") >= 8,
+		rule: "Adrenaline 7 or less, and melancholy 8 or more with pathos 7 or more, or pathos 8 or more with melancholy 6 or more",
+		// Big emotions, not big battles: Avengers: Endgame and The Dark Knight Rises were Sad.
+		test: (score) =>
+			score("adrenaline") <= 7 &&
+			((score("melancholy") >= 8 && score("pathos") >= 7) ||
+				(score("pathos") >= 8 && score("melancholy") >= 6)),
 	},
 	{
 		key: "worlds",
@@ -180,8 +207,9 @@ const MOOD_RULES: readonly MoodRule[] = [
 		feel: false,
 		description: "Fantasy realms and imagined futures.",
 		hue: "#2dd4bf",
-		rule: "Fantasy 7 or more, or futuristic 7 or more",
-		test: (score) => score("fantasy") >= 7 || score("futuristic") >= 7,
+		rule: "Fantasy 7 or more or futuristic 7 or more, with world immersion 6 or more",
+		test: (score) =>
+			(score("fantasy") >= 7 || score("futuristic") >= 7) && score("world_immersion") >= 6,
 	},
 	{
 		key: "history",
@@ -212,8 +240,7 @@ const MOOD_RULES: readonly MoodRule[] = [
 		description: "Suspense without action or horror.",
 		hue: "#5b7fa8",
 		rule: "Tension 8 or more, adrenaline 6 or less, and scare 6 or less",
-		test: (score) =>
-			score("tension") >= 8 && score("adrenaline") <= 6 && score("scare") <= 6,
+		test: (score) => score("tension") >= 8 && score("adrenaline") <= 6 && score("scare") <= 6,
 	},
 	{
 		key: "dark",
@@ -242,8 +269,14 @@ const MOOD_RULES: readonly MoodRule[] = [
 		feel: true,
 		description: "A sense of wonder and possibility.",
 		hue: "#e9a23b",
-		rule: "Wonder 8 or more",
-		test: (score) => score("wonder") >= 8,
+		rule: "Wonder 8 or more, fantasy 6 or more, futuristic 5 or less, adrenaline 7 or less, and bleakness 5 or less",
+		// Awe isn't magic: Interstellar, Titanic and the Avengers films scored wonder 8.
+		test: (score) =>
+			score("wonder") >= 8 &&
+			score("fantasy") >= 6 &&
+			score("futuristic") <= 5 &&
+			score("adrenaline") <= 7 &&
+			score("bleakness") <= 5,
 	},
 	{
 		key: "quirky",
@@ -252,14 +285,14 @@ const MOOD_RULES: readonly MoodRule[] = [
 		feel: true,
 		description: "Eccentric people and offbeat stories.",
 		hue: "#b98a5a",
-		rule: "Eccentricity 8 or more",
-		test: (score) => score("eccentricity") >= 8,
+		rule: "Eccentricity 8 or more, violence 5 or less, and bleakness 6 or less",
+		// Offbeat, not unhinged: Fight Club, Joker and American Psycho were Quirky.
+		test: (score) =>
+			score("eccentricity") >= 8 && score("violence") <= 5 && score("bleakness") <= 6,
 	},
 ]
 
-function isOrdered(
-	fingerprint: MoodFingerprint,
-): fingerprint is ArrayLike<number> {
+function isOrdered(fingerprint: MoodFingerprint): fingerprint is ArrayLike<number> {
 	return typeof (fingerprint as ArrayLike<number>).length === "number"
 }
 
@@ -272,15 +305,13 @@ export function moodMaskOf(
 	let present = 0
 	let score: Score
 	if (isOrdered(fingerprint)) {
-		for (let i = 0; i < fingerprint.length; i++)
-			if (fingerprint[i] !== MISSING) present++
+		for (let i = 0; i < fingerprint.length; i++) if (fingerprint[i] !== MISSING) present++
 		score = (key) => {
 			const value = fingerprint[KEY_INDEX[key]]
 			return value === MISSING || value === undefined ? 0 : value
 		}
 	} else {
-		for (const value of Object.values(fingerprint))
-			if (typeof value === "number") present++
+		for (const value of Object.values(fingerprint)) if (typeof value === "number") present++
 		score = (key) => fingerprint[key] ?? 0
 	}
 	if (present < MIN_SCORES) return 0
@@ -316,9 +347,10 @@ export const MOODS: readonly Mood[] = MOOD_RULES.map(
 	}),
 )
 
-export const MOOD_BY_KEY = Object.fromEntries(
-	MOODS.map((mood) => [mood.key, mood]),
-) as Record<MoodKey, Mood>
+export const MOOD_BY_KEY = Object.fromEntries(MOODS.map((mood) => [mood.key, mood])) as Record<
+	MoodKey,
+	Mood
+>
 
 export const isMoodKey = (value: string): value is MoodKey =>
 	(MOOD_KEYS as readonly string[]).includes(value)
@@ -342,8 +374,7 @@ export function toggleMood(
 	moods: readonly MoodKey[],
 	key: MoodKey,
 ): { moods: MoodKey[]; refused: boolean } {
-	if (moods.includes(key))
-		return { moods: moods.filter((m) => m !== key), refused: false }
+	if (moods.includes(key)) return { moods: moods.filter((m) => m !== key), refused: false }
 	if (moods.length >= MAX_MOODS) return { moods: [...moods], refused: true }
 	return { moods: [...moods, key], refused: false }
 }
@@ -367,8 +398,6 @@ const moodWords = (text: string) =>
 export function moodsInText(text: string): readonly Mood[] {
 	const wanted = ` ${moodWords(text)} `
 	return MOODS.filter((mood) =>
-		[mood.name, ...mood.aliases].some((name) =>
-			wanted.includes(` ${moodWords(name)} `),
-		),
+		[mood.name, ...mood.aliases].some((name) => wanted.includes(` ${moodWords(name)} `)),
 	)
 }

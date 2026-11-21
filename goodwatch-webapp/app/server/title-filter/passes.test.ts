@@ -4,9 +4,7 @@ import { test } from "node:test"
 import "./test-alias.ts"
 import type { PassInput, RatingsFilter } from "./passes.server.ts"
 
-const { ladderFor, ratingsFilter, runPasses, popularityCounts } = await import(
-	"./passes.server.ts"
-)
+const { ladderFor, ratingsFilter, runPasses, popularityCounts } = await import("./passes.server.ts")
 const { loadRatings } = await import("../title-snapshot/ratings.server.ts")
 const { byMatch, compareRows, sortToUse } = await import("./order.server.ts")
 const { hiddenContentBits } = await import("~/domain/age-content")
@@ -15,12 +13,8 @@ const { MOOD_KEYS, maskOfMoods, moodMaskOf } = await import("~/domain/moods")
 const { STYLE_KEYS, THEME_KEYS, maskOfKeys, styleMaskOf, themeMaskOf } =
 	await import("~/domain/themes-styles")
 const { VALID_FINGERPRINT_KEYS } = await import("../utils/fingerprint.ts")
-const {
-	SnapshotRefused,
-	checkRatingsManifest,
-	encodeRatings,
-	joinRatingsChunks,
-} = await import("../title-snapshot/format.server.ts")
+const { SnapshotRefused, checkRatingsManifest, encodeRatings, joinRatingsChunks } =
+	await import("../title-snapshot/format.server.ts")
 
 const UNKNOWN_SCORE = 255
 const MOVIE = 1e12
@@ -90,10 +84,7 @@ function passes(
 		genresChosen: false,
 		minScore: filters.minScore ?? 0,
 		minMatch: filters.minMatch ?? 0,
-		matches:
-			filters.taste === false
-				? null
-				: Uint8Array.from(order, (row) => MATCHES[row]),
+		matches: filters.taste === false ? null : Uint8Array.from(order, (row) => MATCHES[row]),
 		released: null,
 		releasedOptions: { any: null },
 		similarTo: [],
@@ -158,9 +149,7 @@ test("a recovery counts the titles only the taste match filter hides", () => {
 		{ filter: "minScore", titles: 2 },
 		{ filter: "minMatch", titles: 1 },
 	])
-	assert.deepEqual(passes(plain, { minMatch: 90 }).recoveries, [
-		{ filter: "minMatch", titles: 4 },
-	])
+	assert.deepEqual(passes(plain, { minMatch: 90 }).recoveries, [{ filter: "minMatch", titles: 4 }])
 })
 
 test("without taste the taste match filter doesn't narrow", () => {
@@ -201,8 +190,7 @@ test("Best match orders titles that show the same match by their percentile", as
 	const { shownMatch } = await import("~/domain/taste-match")
 	// Positions 0 to 5 in the Top rated order. All but the last show 90; the last has no match.
 	const percentiles = Float32Array.from([99.0, 99.05, 98.95, 99.05, 99.1, -1])
-	for (const percentile of percentiles.slice(0, 5))
-		assert.equal(shownMatch(percentile, 100), 90)
+	for (const percentile of percentiles.slice(0, 5)) assert.equal(shownMatch(percentile, 100), 90)
 	// Best fit first; the two at 99.05 keep the order they came in.
 	assert.deepEqual(
 		Array.from(byMatch(Int32Array.from([0, 1, 2, 3, 4, 5]), percentiles)),
@@ -265,22 +253,14 @@ test("the age limit passes a title by its rating in the country, else by its est
 	assert.deepEqual(passes(plain, { ratings: rated(0) }).rows, [])
 	// The highest step still hides the title rated nowhere, and only the limit hides it.
 	const input = { ratings: rated(18) }
-	assert.deepEqual(passes(plain, input).recoveries, [
-		{ filter: "ageLimit", titles: 1 },
-	])
+	assert.deepEqual(passes(plain, input).recoveries, [{ filter: "ageLimit", titles: 1 }])
 })
 
 test("a country without a column goes by the estimate alone", () => {
 	const ok = { violence: "show", sex: "show" } as const
-	assert.deepEqual(
-		passes(plain, { ratings: rated(12, ok, false) }).rows,
-		[0, 1, 2],
-	)
+	assert.deepEqual(passes(plain, { ratings: rated(12, ok, false) }).rows, [0, 1, 2])
 	// Row 3 is estimated at 14, below its German 16.
-	assert.deepEqual(
-		passes(plain, { ratings: rated(14, undefined, false) }).rows,
-		[0, 1, 2, 3],
-	)
+	assert.deepEqual(passes(plain, { ratings: rated(14, undefined, false) }).rows, [0, 1, 2, 3])
 })
 
 test("content hides the kinds the limit sets and the person's overrides, with or without a limit", () => {
@@ -291,10 +271,7 @@ test("content hides the kinds the limit sets and the person's overrides, with or
 	// The overrides apply on top: disturbing hidden, violence OK.
 	const mine = { violence: "show", disturbing: "hide" } as const
 	assert.deepEqual(passes(plain, { ratings: rated(12, mine) }).rows, [0, 1])
-	assert.deepEqual(
-		passes(plain, { ratings: rated(16, mine) }).rows,
-		[0, 1, 3, 5],
-	)
+	assert.deepEqual(passes(plain, { ratings: rated(16, mine) }).rows, [0, 1, 3, 5])
 	// Without a limit content still hides, and a title rated nowhere shows.
 	assert.deepEqual(
 		passes(plain, { ratings: rated(undefined, { violence: "hide" }) }).rows,
@@ -303,8 +280,7 @@ test("content hides the kinds the limit sets and the person's overrides, with or
 	// Violence and disturbing hidden up to 12: rows 1 and 2 are hidden by content alone, rows 4 and 5 by the limit alone,
 	// and row 3 by both, so it counts in neither.
 	assert.deepEqual(
-		passes(plain, { ratings: rated(12, { sex: "show", disturbing: "hide" }) })
-			.recoveries,
+		passes(plain, { ratings: rated(12, { sex: "show", disturbing: "hide" }) }).recoveries,
 		[
 			{ filter: "ageLimit", titles: 2 },
 			{ filter: "content", titles: 2 },
@@ -325,22 +301,23 @@ test("the age limit's options count what each step would leave with the content 
 	})
 	// With overrides each step counts its defaults plus the overrides: disturbing hidden everywhere, violence OK.
 	const mine = { violence: "show", disturbing: "hide" } as const
-	assert.deepEqual(
-		passes(plain, { ratings: rated(12, mine) }).optionCounts.ageLimit,
-		{
-			off: 5,
-			"0": 0,
-			"6": 1,
-			"12": 2,
-			"16": 4,
-			"18": 4,
-		},
-	)
+	assert.deepEqual(passes(plain, { ratings: rated(12, mine) }).optionCounts.ageLimit, {
+		off: 5,
+		"0": 0,
+		"6": 1,
+		"12": 2,
+		"16": 4,
+		"18": 4,
+	})
 	// The other filters count: GoodWatch score of at least 70 leaves rows 0, 2, and 4.
-	assert.deepEqual(
-		passes(plain, { ratings: rated(12), minScore: 70 }).optionCounts.ageLimit,
-		{ off: 3, "0": 0, "6": 1, "12": 2, "16": 2, "18": 2 },
-	)
+	assert.deepEqual(passes(plain, { ratings: rated(12), minScore: 70 }).optionCounts.ageLimit, {
+		off: 3,
+		"0": 0,
+		"6": 1,
+		"12": 2,
+		"16": 2,
+		"18": 2,
+	})
 })
 
 test("the content options count the titles of each kind within the age limit and the other filters", () => {
@@ -390,10 +367,7 @@ test("the ratings sidecar decodes its layout and is refused for a wrong size or 
 	})
 	assert.deepEqual(manifest.countries, ["DE", "US"])
 	// content, estimate, then the ages of DE and of US, three titles each.
-	assert.deepEqual(
-		[...chunks[0]],
-		[0, 1, 20, 6, 12, 255, 6, 12, 255, 0, 255, 255],
-	)
+	assert.deepEqual([...chunks[0]], [0, 1, 20, 6, 12, 255, 6, 12, 255, 0, 255, 255])
 	const checked = checkRatingsManifest(JSON.parse(JSON.stringify(manifest)))
 	const columns = joinRatingsChunks(checked, 3, chunks)
 	assert.deepEqual([...columns.content], [0, VIOLENCE, DISTURBING | DRUGS])
@@ -403,12 +377,7 @@ test("the ratings sidecar decodes its layout and is refused for a wrong size or 
 	// Split into several chunks it joins the same.
 	const bytes = chunks[0]
 	assert.deepEqual(
-		[
-			...joinRatingsChunks(checked, 3, [
-				bytes.subarray(0, 5),
-				bytes.subarray(5),
-			]).ages,
-		],
+		[...joinRatingsChunks(checked, 3, [bytes.subarray(0, 5), bytes.subarray(5)]).ages],
 		[...columns.ages],
 	)
 
@@ -420,39 +389,28 @@ test("the ratings sidecar decodes its layout and is refused for a wrong size or 
 		})
 	// Another title count than the snapshot's, or a missing byte.
 	refused(() => joinRatingsChunks(checked, 4, chunks), /need 16/)
-	refused(
-		() => joinRatingsChunks(checked, 3, [bytes.subarray(0, 11)]),
-		/checksum/,
-	)
+	refused(() => joinRatingsChunks(checked, 3, [bytes.subarray(0, 11)]), /checksum/)
 	// A changed byte.
 	const changed = Uint8Array.from(bytes)
 	changed[4] = 16
 	refused(() => joinRatingsChunks(checked, 3, [changed]), /checksum/)
 	// Values outside the format, under a matching checksum.
-	const sha256 = (data: Uint8Array) =>
-		createHash("sha256").update(data).digest("hex")
+	const sha256 = (data: Uint8Array) => createHash("sha256").update(data).digest("hex")
 	const badAge = Uint8Array.from(bytes)
 	badAge[7] = 21
 	refused(
-		() =>
-			joinRatingsChunks({ ...checked, sha256: sha256(badAge) }, 3, [badAge]),
+		() => joinRatingsChunks({ ...checked, sha256: sha256(badAge) }, 3, [badAge]),
 		/age 21 at row 1/,
 	)
 	const badContent = Uint8Array.from(bytes)
 	badContent[0] = 32
 	refused(
-		() =>
-			joinRatingsChunks({ ...checked, sha256: sha256(badContent) }, 3, [
-				badContent,
-			]),
+		() => joinRatingsChunks({ ...checked, sha256: sha256(badContent) }, 3, [badContent]),
 		/content bits/,
 	)
 	// The manifest's shape.
 	refused(() => checkRatingsManifest({ ...manifest, format: 2 }), /format 2/)
-	refused(
-		() => checkRatingsManifest({ ...manifest, countries: ["US", "DE"] }),
-		/country table/,
-	)
+	refused(() => checkRatingsManifest({ ...manifest, countries: ["US", "DE"] }), /country table/)
 	refused(
 		() => checkRatingsManifest({ ...manifest, countries: ["DE", "FR", "US"] }),
 		/ladder of two steps for FR/,
@@ -476,8 +434,7 @@ const snapshotRatings = {
 	estimates: Uint8Array.from(ESTIMATES),
 	countries: ["DE"],
 	ladderOf: (country: string) => (country === "DE" ? DE_LADDER : undefined),
-	agesOf: (country: string) =>
-		country === "DE" ? Uint8Array.from(DE_AGES) : null,
+	agesOf: (country: string) => (country === "DE" ? Uint8Array.from(DE_AGES) : null),
 }
 
 test("the viewer's ladder is their country's, plain ages without a column, and none without ratings", () => {
@@ -603,10 +560,7 @@ test("the snapshot loads without ratings whatever goes wrong with the sidecar", 
 			null,
 		)
 		assert.match(String(logged[1][1]), /checksum/)
-		assert.equal(
-			await loadRatings(stored, { ...manifest, ratings: { format: 2 } }),
-			null,
-		)
+		assert.equal(await loadRatings(stored, { ...manifest, ratings: { format: 2 } }), null)
 		assert.match(String(logged[2][1]), /format 2/)
 		assert.equal(await loadRatings(stored, { ...manifest, count: 3 }), null)
 		assert.match(String(logged[3][1]), /need 9/)
@@ -634,12 +588,8 @@ function ruleColumns(titles: { scores: Scores; genres?: string[] }[]) {
 	const fingerprints = titles.map((title) =>
 		Uint8Array.from(VALID_FINGERPRINT_KEYS, (key) => title.scores[key] ?? 0),
 	)
-	const mask = (
-		of: (fp: Uint8Array, genres: readonly string[]) => number,
-	): Uint16Array =>
-		Uint16Array.from(titles, (title, row) =>
-			of(fingerprints[row], title.genres ?? []),
-		)
+	const mask = (of: (fp: Uint8Array, genres: readonly string[]) => number): Uint16Array =>
+		Uint16Array.from(titles, (title, row) => of(fingerprints[row], title.genres ?? []))
 	return {
 		...columns,
 		pointIds: Float64Array.from(titles, (_, row) => MOVIE + row + 1),
@@ -662,9 +612,7 @@ function passInput(c: PassInput["columns"], rows: number[]): PassInput {
 	return {
 		columns: c,
 		rows: Int32Array.from(rows),
-		keys: Float64Array.from(rows, (row, i) =>
-			row < 0 ? MOVIE + 900 + i : c.pointIds[row],
-		),
+		keys: Float64Array.from(rows, (row, i) => (row < 0 ? MOVIE + 900 + i : c.pointIds[row])),
 		services: { kind: "column", kept: null, onMyServices: false },
 		notSeen: null,
 		seenOrSkipped: { keys: new Set(), rows: new Uint8Array(c.pointIds.length) },
@@ -701,15 +649,15 @@ function pick(c: ReturnType<typeof ruleColumns>, rows: number[], picks: Picks) {
 // Rows 0 to 5; what each has by the rules:
 // 0 crime 9, mystery 8, slow burn 8     themes crime, mystery   style slow       mood Crime & mystery
 // 1 crime 8, fast pace 9                theme crime             style fast
-// 2 warfare 8, slow burn 9, pathos 9    theme war               style slow       mood Heavy
-// 3 warfare 7, mystery 8, Animation     themes mystery, war     style animated   mood Crime & mystery
+// 2 warfare 8, slow burn 9, pathos 9, melancholy 6  theme war  style slow       mood Heavy
+// 3 warfare 7, mystery 8, crime 5, Animation  themes mystery, war  style animated  mood Crime & mystery
 // 4 futuristic 8, fast pace 8           theme future            style fast       mood Other worlds
 // 5 nothing above its threshold
 const told = ruleColumns([
 	{ scores: { crime: 9, mystery: 8, slow_burn: 8 } },
 	{ scores: { crime: 8, fast_pace: 9 } },
-	{ scores: { warfare: 8, slow_burn: 9, pathos: 9 } },
-	{ scores: { warfare: 7, mystery: 8 }, genres: ["Animation"] },
+	{ scores: { warfare: 8, slow_burn: 9, pathos: 9, melancholy: 6 } },
+	{ scores: { warfare: 7, mystery: 8, crime: 5 }, genres: ["Animation"] },
 	{ scores: { futuristic: 8, fast_pace: 8 } },
 	{ scores: { crime: 7, slow_burn: 7 } },
 ])
@@ -719,15 +667,9 @@ test("a theme or style filter keeps the titles with one of the chosen, and the g
 	assert.deepEqual(pick(told, everyRow, {}).rows, everyRow)
 	assert.deepEqual(pick(told, everyRow, { themes: ["crime"] }).rows, [0, 1])
 	// Any of the chosen fits.
-	assert.deepEqual(
-		pick(told, everyRow, { themes: ["crime", "war"] }).rows,
-		[0, 1, 2, 3],
-	)
+	assert.deepEqual(pick(told, everyRow, { themes: ["crime", "war"] }).rows, [0, 1, 2, 3])
 	assert.deepEqual(pick(told, everyRow, { styles: ["slow"] }).rows, [0, 2])
-	assert.deepEqual(
-		pick(told, everyRow, { styles: ["animated", "fast"] }).rows,
-		[1, 3, 4],
-	)
+	assert.deepEqual(pick(told, everyRow, { styles: ["animated", "fast"] }).rows, [1, 3, 4])
 	// A theme with a style: a title needs both.
 	assert.deepEqual(
 		pick(told, everyRow, { themes: ["crime", "war"], styles: ["slow"] }).rows,
@@ -959,9 +901,7 @@ test("a fail mask has room for every filter group, the last one included", () =>
 		},
 	})
 	assert.equal(last.passing.length, 0)
-	assert.deepEqual(last.recoveries, [
-		{ filter: "tasteGroups", titles: everyRow.length },
-	])
+	assert.deepEqual(last.recoveries, [{ filter: "tasteGroups", titles: everyRow.length }])
 })
 
 test("the awards filter keeps the titles in its set, recovers what it alone hides, and counts on and off", () => {
@@ -999,11 +939,7 @@ test("production countries combine with OR, count co-productions once, and recov
 	assert.deepEqual(worldwide.rows, [0, 1, 3])
 	assert.equal(worldwide.optionCounts.productionCountries, undefined)
 
-	assert.equal(
-		worldwide.recoveries.find((r) => r.filter === "productionCountries")
-			?.titles,
-		3,
-	)
+	assert.equal(worldwide.recoveries.find((r) => r.filter === "productionCountries")?.titles, 3)
 	assert.deepEqual(
 		passes(plain, {
 			productionCountries: [us],
@@ -1017,25 +953,14 @@ test("production countries combine with OR, count co-productions once, and recov
 	const result = passes(plain, { productionCountries: [us, gb] })
 	assert.deepEqual(result.rows, [0, 1, 2])
 	assert.equal(result.optionCounts.productionCountries, undefined)
-	assert.equal(
-		result.recoveries.find((r) => r.filter === "productionCountries")?.titles,
-		3,
-	)
-	assert.deepEqual(
-		passes(plain, { productionCountries: [us, gb], minScore: 80 }).rows,
-		[0],
-	)
-	assert.deepEqual(
-		passes(plain, { productionCountries: [country("ZZ", [])] }).rows,
-		[],
-	)
+	assert.equal(result.recoveries.find((r) => r.filter === "productionCountries")?.titles, 3)
+	assert.deepEqual(passes(plain, { productionCountries: [us, gb], minScore: 80 }).rows, [0])
+	assert.deepEqual(passes(plain, { productionCountries: [country("ZZ", [])] }).rows, [])
 })
 
 test("years, runtime, source scores and gap have independent fail bits and recoveries", () => {
 	const keeping = (except: number[]) => ({
-		keys: new Set(
-			plain.filter((i) => !except.includes(i)).map((i) => columns.pointIds[i]),
-		),
+		keys: new Set(plain.filter((i) => !except.includes(i)).map((i) => columns.pointIds[i])),
 		rows: Uint8Array.from(plain, (i) => (except.includes(i) ? 0 : 1)),
 	})
 	const out = passes(plain, {
@@ -1052,16 +977,8 @@ test("years, runtime, source scores and gap have independent fail bits and recov
 			titles: 1,
 		})),
 	)
-	for (const name of [
-		"years",
-		"runtime",
-		"sourceScores",
-		"scoreGap",
-	] as const) {
-		assert.deepEqual(
-			passes(plain, { [name]: keeping([1, 2]) }).rows,
-			[0, 3, 4, 5],
-		)
+	for (const name of ["years", "runtime", "sourceScores", "scoreGap"] as const) {
+		assert.deepEqual(passes(plain, { [name]: keeping([1, 2]) }).rows, [0, 3, 4, 5])
 		assert.deepEqual(out.optionCounts[name], undefined) // No extra SQL for option counts.
 	}
 })
@@ -1089,10 +1006,7 @@ test("any service uses the country's offers and shares the services recovery", (
 	assert.equal(out.optionCounts.services.any, 3)
 	assert.equal(out.optionCounts.services.all, 6)
 	assert.equal(out.optionCounts.services.mine, 2)
-	assert.deepEqual(
-		passes(plain, { services: { ...services, anyService: false } }).rows,
-		plain,
-	)
+	assert.deepEqual(passes(plain, { services: { ...services, anyService: false } }).rows, plain)
 })
 
 test("all-of masks, counts and recoveries agree with brute force for every tag group", () => {
@@ -1120,9 +1034,7 @@ test("all-of masks, counts and recoveries agree with brute force for every tag g
 			(_, row) => ((row >> 9) & 3) | (row & 2048 ? 0x80000000 : 0),
 		),
 		genreNames,
-		scores: Uint8Array.from({ length: size }, (_, row) =>
-			row % 5 === 0 ? 60 : 80,
-		),
+		scores: Uint8Array.from({ length: size }, (_, row) => (row % 5 === 0 ? 60 : 80)),
 		flags: new Uint8Array(size),
 	}
 	const selected = {
@@ -1153,21 +1065,13 @@ test("all-of masks, counts and recoveries agree with brute force for every tag g
 		legacy: null,
 		ratings: null,
 	}
-	for (const allOf of [[], [...groups], ["moods", "genres"]] as NonNullable<
-		PassInput["allOf"]
-	>[]) {
-		const accepts = (
-			row: number,
-			group: (typeof groups)[number],
-			mask = selected[group],
-		) => {
+	for (const allOf of [[], [...groups], ["moods", "genres"]] as NonNullable<PassInput["allOf"]>[]) {
+		const accepts = (row: number, group: (typeof groups)[number], mask = selected[group]) => {
 			if (!mask) return true
 			if (row < 0) return false
 			const bits = generated[group][row] >>> 0
 			const wanted = mask >>> 0
-			return allOf.includes(group)
-				? (bits & wanted) >>> 0 === wanted
-				: (bits & wanted) !== 0
+			return allOf.includes(group) ? (bits & wanted) >>> 0 === wanted : (bits & wanted) !== 0
 		}
 		const scorePasses = (row: number) => row >= 0 && generated.scores[row] >= 70
 		const out = runPasses({ ...base, allOf })
@@ -1179,15 +1083,10 @@ test("all-of masks, counts and recoveries agree with brute force for every tag g
 		)
 		for (const group of groups) {
 			const others = rows.filter(
-				(row) =>
-					scorePasses(row) &&
-					groups.every((g) => g === group || accepts(row, g)),
+				(row) => scorePasses(row) && groups.every((g) => g === group || accepts(row, g)),
 			)
 			const recovery = others.filter((row) => !accepts(row, group)).length
-			assert.equal(
-				out.recoveries.find((r) => r.filter === group)?.titles ?? 0,
-				recovery,
-			)
+			assert.equal(out.recoveries.find((r) => r.filter === group)?.titles ?? 0, recovery)
 			names[group].forEach((name, bit) => {
 				const option = 1 << bit
 				const chosen = selected[group]
@@ -1211,9 +1110,7 @@ test("all-of masks, counts and recoveries agree with brute force for every tag g
 		genresMissing: true,
 	})
 	assert.equal(missing.passing.length, 0)
-	assert.ok(
-		Object.values(missing.optionCounts.genres).every((count) => count === 0),
-	)
+	assert.ok(Object.values(missing.optionCounts.genres).every((count) => count === 0))
 	// Folded pairs are OR units inside an AND group, in either counting path.
 	const pairs = [
 		["Action", "Action & Adventure"],
@@ -1257,23 +1154,12 @@ test("all-of masks, counts and recoveries agree with brute force for every tag g
 					genreRows.filter((bits) => hasPair(bits) && hasDrama(bits)),
 					`${movie}: ${picked}, ${width}`,
 				)
-				assert.equal(
-					out.optionCounts.genres[movie],
-					genreRows.filter(hasDrama).length,
-				)
-				assert.equal(
-					out.optionCounts.genres[tv],
-					genreRows.filter(hasDrama).length,
-				)
-				assert.equal(
-					out.optionCounts.genres.Drama,
-					genreRows.filter(hasPair).length,
-				)
+				assert.equal(out.optionCounts.genres[movie], genreRows.filter(hasDrama).length)
+				assert.equal(out.optionCounts.genres[tv], genreRows.filter(hasDrama).length)
+				assert.equal(out.optionCounts.genres.Drama, genreRows.filter(hasPair).length)
 				assert.equal(
 					out.optionCounts.genres.Romance,
-					genreRows.filter(
-						(bits) => hasPair(bits) && hasDrama(bits) && !!(bits & 8),
-					).length,
+					genreRows.filter((bits) => hasPair(bits) && hasDrama(bits) && !!(bits & 8)).length,
 				)
 				assert.equal(
 					out.recoveries.find((r) => r.filter === "genres")?.titles,
@@ -1320,19 +1206,15 @@ test("all-of masks, counts and recoveries agree with brute force for every tag g
 			})
 			assert.deepEqual(
 				Array.from(out.passing),
-				genreRows.filter((bits) =>
-					requirements.every((unit) => !!(bits & unit)),
-				),
+				genreRows.filter((bits) => requirements.every((unit) => !!(bits & unit))),
 			)
 			assert.equal(
 				out.optionCounts.genres.Drama,
-				genreRows.filter((bits) =>
-					requirements.slice(0, -1).every((unit) => !!(bits & unit)),
-				).length,
+				genreRows.filter((bits) => requirements.slice(0, -1).every((unit) => !!(bits & unit)))
+					.length,
 			)
 			if (chosen === (4 | 8)) {
-				for (const name of family)
-					assert.equal(out.optionCounts.genres[name], 8)
+				for (const name of family) assert.equal(out.optionCounts.genres[name], 8)
 			}
 		}
 	}
@@ -1380,10 +1262,7 @@ test("list and taste steps, option counts and recoveries agree with brute force"
 								option === "seen"
 									? !member || seenKeys.has(base.keys[i])
 									: option !== "on" ||
-										!(
-											seenKeys.has(base.keys[i]) ||
-											skippedKeys.has(base.keys[i])
-										)
+										!(seenKeys.has(base.keys[i]) || skippedKeys.has(base.keys[i]))
 							const wishPasses = (i: number, on: boolean) =>
 								!on || !member || wishes.has(base.keys[i])
 							const matchPasses = (i: number, option: number | "outside") =>
@@ -1393,18 +1272,13 @@ test("list and taste steps, option counts and recoveries agree with brute force"
 									: matches[i] >= option)
 							const scorePasses = (i: number) =>
 								!minScore ||
-								(rows[i] >= 0 &&
-									SCORES[rows[i]] !== UNKNOWN_SCORE &&
-									SCORES[rows[i]] >= minScore)
+								(rows[i] >= 0 && SCORES[rows[i]] !== UNKNOWN_SCORE && SCORES[rows[i]] >= minScore)
 							const all = Array.from(rows.keys())
 							const out = runPasses({
 								...base,
 								seen: member ? set(seenKeys) : undefined,
 								seenOrSkipped: set(new Set([...seenKeys, ...skippedKeys])),
-								notSeen:
-									mode === "on"
-										? set(new Set([...seenKeys, ...skippedKeys]))
-										: null,
+								notSeen: mode === "on" ? set(new Set([...seenKeys, ...skippedKeys])) : null,
 								seenBefore: mode === "seen" && member,
 								wishlist: member ? set(wishes) : null,
 								onWishlist,
@@ -1424,16 +1298,9 @@ test("list and taste steps, option counts and recoveries agree with brute force"
 								Array.from(out.passing),
 								all.filter((i) => Object.values(predicates).every((p) => p(i))),
 							)
-							for (const group of [
-								"notSeenYet",
-								"wishlist",
-								"minMatch",
-								"minScore",
-							] as const) {
+							for (const group of ["notSeenYet", "wishlist", "minMatch", "minScore"] as const) {
 								const others = all.filter((i) =>
-									Object.entries(predicates).every(
-										([g, p]) => g === group || p(i),
-									),
+									Object.entries(predicates).every(([g, p]) => g === group || p(i)),
 								)
 								assert.equal(
 									out.recoveries.find((r) => r.filter === group)?.titles ?? 0,
@@ -1452,14 +1319,7 @@ test("list and taste steps, option counts and recoveries agree with brute force"
 											others.filter((i) => wishPasses(i, on)).length,
 										)
 								if (group === "minMatch")
-									for (const option of [
-										0,
-										60,
-										70,
-										80,
-										90,
-										"outside",
-									] as const) {
+									for (const option of [0, 60, 70, 80, 90, "outside"] as const) {
 										assert.equal(
 											out.optionCounts[group][String(option)],
 											others.filter((i) => matchPasses(i, option)).length,
@@ -1561,9 +1421,7 @@ test("rating country chooses the ladder and age column independently of streamin
 						{ age: 18, label: "R" },
 					],
 		agesOf: (country: string) =>
-			country === "DE"
-				? Uint8Array.from(DE_AGES)
-				: Uint8Array.from(DE_AGES.map(() => 18)),
+			country === "DE" ? Uint8Array.from(DE_AGES) : Uint8Array.from(DE_AGES.map(() => 18)),
 	}
 	const state = {
 		streamingCountry: "US",
@@ -1583,10 +1441,7 @@ test("rating country chooses the ladder and age column independently of streamin
 	const fallback = ladderFor(ratings, "GB", { ...state, ratingCountry: "ZZ" })
 	assert.ok(fallback)
 	assert.equal(fallback.country, "US")
-	assert.deepEqual(
-		passes(plain, { ratings: ratingsFilter(ratings, fallback, state) }).rows,
-		[],
-	)
+	assert.deepEqual(passes(plain, { ratings: ratingsFilter(ratings, fallback, state) }).rows, [])
 	assert.equal(ladderFor(ratings, "US", { ratingCountry: "ZZ" })?.country, "US")
 	assert.equal(ladderFor(ratings, "US", {})?.country, "US")
 })
@@ -1677,10 +1532,7 @@ test("popularity ranges, every preset and stop count, and shared recovery match 
 		{ min: 10001 },
 		{ min: 1, max: 1 },
 	]
-	const keeps = (
-		value: number | undefined,
-		range?: { min?: number; max?: number },
-	) =>
+	const keeps = (value: number | undefined, range?: { min?: number; max?: number }) =>
 		!range ||
 		(range.min === undefined && range.max === undefined) ||
 		(value !== undefined &&
@@ -1690,8 +1542,7 @@ test("popularity ranges, every preset and stop count, and shared recovery match 
 		for (const rank of rankRanges)
 			for (const minScore of [0, 70]) {
 				const other = (row: number) =>
-					!minScore ||
-					(row >= 0 && SCORES[row] !== UNKNOWN_SCORE && SCORES[row] >= minScore)
+					!minScore || (row >= 0 && SCORES[row] !== UNKNOWN_SCORE && SCORES[row] >= minScore)
 				const vAt = (row: number) => (row < 0 ? undefined : votes[row])
 				const rAt = (row: number) => (row < 0 ? undefined : ranks[row])
 				const out = runPasses({
@@ -1710,10 +1561,7 @@ test("popularity ranges, every preset and stop count, and shared recovery match 
 					minScore,
 				})
 				assert.equal(
-					Object.prototype.hasOwnProperty.call(
-						uncounted.optionCounts,
-						"popularity",
-					),
+					Object.prototype.hasOwnProperty.call(uncounted.optionCounts, "popularity"),
 					false,
 				)
 				assert.deepEqual(uncounted.passing, out.passing)
@@ -1737,11 +1585,7 @@ test("popularity ranges, every preset and stop count, and shared recovery match 
 								? keeps(vAt(row), o.range) && keeps(rAt(row), rank)
 								: keeps(rAt(row), o.range) && keeps(vAt(row), v)),
 					).length
-					assert.equal(
-						out.optionCounts.popularity![o.key],
-						expectedCount,
-						o.key,
-					)
+					assert.equal(out.optionCounts.popularity![o.key], expectedCount, o.key)
 				}
 			}
 	// A title outside the eligible catalog has no rank, including for an upper-bound-only range.
@@ -1757,9 +1601,7 @@ test("popularity ranges, every preset and stop count, and shared recovery match 
 
 test("catalog Popular ranks are shared, stable across sorts, and renewed per snapshot version", async () => {
 	const { popularityRanks, catalogRows } = await import("./order.server.ts")
-	const { FLAG_POSTER, FLAG_ADULT } = await import(
-		"../title-snapshot/format.server.ts"
-	)
+	const { FLAG_POSTER, FLAG_ADULT } = await import("../title-snapshot/format.server.ts")
 	const c = {
 		...columns,
 		votes: Uint32Array.from([1000, 1000, 999, 1000, 1000, 1000]),
@@ -1805,18 +1647,13 @@ test("catalog Popular ranks are shared, stable across sorts, and renewed per sna
 })
 
 test("popularity preset seams partition titles except the intentional million-vote subset", async () => {
-	const { VOTES_PRESETS, POPULARITY_RANK_PRESETS } = await import(
-		"~/domain/title-scales"
-	)
+	const { VOTES_PRESETS, POPULARITY_RANK_PRESETS } = await import("~/domain/title-scales")
 	const contains = (value: number, range: { min?: number; max?: number }) =>
-		value >= (range.min ?? 0) &&
-		value <= (range.max ?? Number.POSITIVE_INFINITY)
-	for (const votes of [
-		0, 9999, 10000, 99999, 100000, 999999, 1000000, 2000000,
-	]) {
-		const matches = VOTES_PRESETS.filter((preset) =>
-			contains(votes, preset.range),
-		).map((preset) => preset.key)
+		value >= (range.min ?? 0) && value <= (range.max ?? Number.POSITIVE_INFINITY)
+	for (const votes of [0, 9999, 10000, 99999, 100000, 999999, 1000000, 2000000]) {
+		const matches = VOTES_PRESETS.filter((preset) => contains(votes, preset.range)).map(
+			(preset) => preset.key,
+		)
 		assert.deepEqual(
 			matches,
 			votes < 10000
@@ -1830,14 +1667,10 @@ test("popularity preset seams partition titles except the intentional million-vo
 	}
 	for (const rank of [1, 999, 1000, 1001, 9999, 10000, 10001, 200000]) {
 		assert.deepEqual(
-			POPULARITY_RANK_PRESETS.filter((preset) =>
-				contains(rank, preset.range),
-			).map((preset) => preset.key),
-			rank <= 1000
-				? ["popularNow"]
-				: rank <= 10000
-					? ["underTheRadar"]
-					: ["deepCuts"],
+			POPULARITY_RANK_PRESETS.filter((preset) => contains(rank, preset.range)).map(
+				(preset) => preset.key,
+			),
+			rank <= 1000 ? ["popularNow"] : rank <= 10000 ? ["underTheRadar"] : ["deepCuts"],
 		)
 	}
 })
@@ -1888,16 +1721,11 @@ function factsFixture(n: number): NonNullable<PassInput["columns"]["facts"]> {
 	const countries = ["US", "CA", "GB", "FR", "NG", "NZ", "JP"]
 	const countryIndexes = new Uint8Array(n * 4).fill(255)
 	for (let r = 0; r < n; r++)
-		for (let s = 0; s < r % 5; s++)
-			countryIndexes[s * n + r] = (r + s) % countries.length
+		for (let s = 0; s < r % 5; s++) countryIndexes[s * n + r] = (r + s) % countries.length
 	return {
 		sources: null,
-		releaseYears: Uint16Array.from({ length: n }, (_, i) =>
-			i % 11 ? 1920 + (i % 108) : 0,
-		),
-		lengths: Uint16Array.from({ length: n }, (_, i) =>
-			i % 13 ? 1 + ((i * 7) % 350) : 0,
-		),
+		releaseYears: Uint16Array.from({ length: n }, (_, i) => (i % 11 ? 1920 + (i % 108) : 0)),
+		lengths: Uint16Array.from({ length: n }, (_, i) => (i % 13 ? 1 + ((i * 7) % 350) : 0)),
 		budgets: new Uint32Array(n),
 		boxOffice: new Uint32Array(n),
 		seasons: new Uint8Array(n),
@@ -1909,18 +1737,13 @@ function factsFixture(n: number): NonNullable<PassInput["columns"]["facts"]> {
 }
 
 test("facts counts match brute force with other filters, distinct sets, overflow and unknown lengths", async () => {
-	const { INDUSTRIES, REGIONS, BIG_EIGHT } = await import(
-		"~/domain/film-industries"
-	)
+	const { INDUSTRIES, REGIONS, BIG_EIGHT } = await import("~/domain/film-industries")
 	const n = 100,
 		facts = factsFixture(n)
 	const c = {
 		...columns,
 		facts,
-		pointIds: Float64Array.from(
-			{ length: n },
-			(_, i) => (i % 2 ? 2e12 : MOVIE) + i + 1,
-		),
+		pointIds: Float64Array.from({ length: n }, (_, i) => (i % 2 ? 2e12 : MOVIE) + i + 1),
 		scores: Uint8Array.from({ length: n }, (_, i) => (i % 3 ? 80 : 40)),
 	}
 	const base = passInput(
@@ -1964,11 +1787,9 @@ test("facts counts match brute force with other filters, distinct sets, overflow
 			const scoreOK = !limited || c.scores[i] >= 70,
 				yearOK = !limited || (year >= 1970 && year <= 2025)
 			const lengthOK =
-				!limited ||
-				(length > 0 && (show ? length >= 35 && length <= 55 : length <= 90))
+				!limited || (length > 0 && (show ? length >= 35 && length <= 55 : length <= 90))
 			const countryOK = !limited || show
-			if (scoreOK && lengthOK && countryOK && year)
-				years[year] = (years[year] ?? 0) + 1
+			if (scoreOK && lengthOK && countryOK && year) years[year] = (years[year] ?? 0) + 1
 			if (scoreOK && yearOK && countryOK)
 				runtime[
 					`${show ? "episode" : "movie"}:${
@@ -1981,8 +1802,7 @@ test("facts counts match brute force with other filters, distinct sets, overflow
 				)
 				for (const code of codes) origin[code] = (origin[code] ?? 0) + 1
 				for (const set of [...INDUSTRIES, ...REGIONS])
-					if (codes.some((code) => set.codes.includes(code)))
-						origin[`set:${set.id}`]++
+					if (codes.some((code) => set.codes.includes(code))) origin[`set:${set.id}`]++
 				if (codes.some((code) => !BIG_EIGHT.includes(code))) origin.world++
 			}
 		}
@@ -1998,8 +1818,7 @@ test("facts counts match brute force with other filters, distinct sets, overflow
 		["originCounts", "productionCountries"],
 	] as const) {
 		assert.equal(
-			runPasses({ ...base, columns: { ...c, facts: null }, [flag]: true })
-				.optionCounts[field],
+			runPasses({ ...base, columns: { ...c, facts: null }, [flag]: true }).optionCounts[field],
 			null,
 		)
 		const present = runPasses({ ...base, [flag]: true }).optionCounts
@@ -2017,19 +1836,12 @@ test("facts count cost on a generated 260k-title universe", async (t) => {
 		{
 			...columns,
 			facts,
-			pointIds: Float64Array.from(
-				{ length: n },
-				(_, i) => (i % 2 ? 2e12 : MOVIE) + i + 1,
-			),
+			pointIds: Float64Array.from({ length: n }, (_, i) => (i % 2 ? 2e12 : MOVIE) + i + 1),
 		},
 		Array.from({ length: n }, (_, i) => i),
 	)
 	const masks = new Uint32Array(n)
-	for (const flag of [
-		"releasedCounts",
-		"lengthCounts",
-		"originCounts",
-	] as const) {
+	for (const flag of ["releasedCounts", "lengthCounts", "originCounts"] as const) {
 		const requested = { ...input, [flag]: true }
 		for (let warm = 0; warm < 5; warm++) factCounts(requested, masks)
 		const times = Array.from({ length: 15 }, () => {
@@ -2037,11 +1849,7 @@ test("facts count cost on a generated 260k-title universe", async (t) => {
 			factCounts(requested, masks)
 			return performance.now() - start
 		}).sort((a, b) => a - b)
-		t.diagnostic(
-			`${flag}: median ${times[7].toFixed(2)} ms; p95 ${times[14].toFixed(
-				2,
-			)} ms`,
-		)
+		t.diagnostic(`${flag}: median ${times[7].toFixed(2)} ms; p95 ${times[14].toFixed(2)} ms`)
 	}
 })
 
@@ -2071,8 +1879,7 @@ test("year counts ignore both Released choices and out-of-snapshot rows count as
 	})
 	assert.deepEqual(result.optionCounts.years, { 1921: 1 })
 	assert.equal(result.optionCounts.runtime?.["movie:unknown"], 0) // Released is still another filter for Length.
-	const unknown = runPasses({ ...base, lengthCounts: true }).optionCounts
-		.runtime
+	const unknown = runPasses({ ...base, lengthCounts: true }).optionCounts.runtime
 	assert.equal(unknown?.["movie:unknown"], 2)
 })
 
@@ -2081,17 +1888,12 @@ function moneyShowsInput(n = 100): PassInput {
 	const c = {
 		...columns,
 		facts,
-		pointIds: Float64Array.from(
-			{ length: n },
-			(_, i) => (i % 2 ? 2e12 : MOVIE) + i + 1,
-		),
+		pointIds: Float64Array.from({ length: n }, (_, i) => (i % 2 ? 2e12 : MOVIE) + i + 1),
 		scores: Uint8Array.from({ length: n }, (_, i) => (i % 3 ? 80 : 40)),
 	}
 	for (let i = 0; i < n; i++) {
 		facts.budgets[i] = [0, 10, 4999, 5000, 49999, 50000, 99999, 100000][i % 8]
-		facts.boxOffice[i] = [0, 100000, 500000, 1000000, 2000, 150000, 99999][
-			i % 7
-		]
+		facts.boxOffice[i] = [0, 100000, 500000, 1000000, 2000, 150000, 99999][i % 7]
 		facts.seasons[i] = i % 12
 		facts.episodes[i] = i % 9 ? i * 10 : 0
 		facts.lengths[i] = i % 7 ? 30 : 0
@@ -2134,10 +1936,7 @@ test("budget and shows unknown facts and wrong media types fail, including zero 
 		![...runPasses({ ...base, returns: "flop" }).passing].includes(2),
 		"missing box office cannot be a flop",
 	)
-	assert.ok(
-		[...runPasses({ ...base, returns: "hit" }).passing].includes(4),
-		"exactly 3x is a hit",
-	)
+	assert.ok([...runPasses({ ...base, returns: "hit" }).passing].includes(4), "exactly 3x is a hit")
 	const flops = [...runPasses({ ...base, returns: "flop" }).passing]
 	assert.ok(flops.includes(6), "known box office below budget is a flop")
 	assert.ok(!flops.includes(8), "breaking even is not a flop")
@@ -2153,9 +1952,7 @@ test("budget and shows unknown facts and wrong media types fail, including zero 
 			...base,
 			rows: Int32Array.of(-1),
 			keys: Float64Array.of(
-				"budget" in choice || "boxOffice" in choice || "returns" in choice
-					? MOVIE
-					: 2e12,
+				"budget" in choice || "boxOffice" in choice || "returns" in choice ? MOVIE : 2e12,
 			),
 		}
 		assert.equal(
@@ -2177,10 +1974,7 @@ test("budget and shows unknown facts and wrong media types fail, including zero 
 		}
 	}
 	for (const group of ["budget", "shows"] as const) {
-		assert.equal(
-			Object.prototype.hasOwnProperty.call(runPasses(base).optionCounts, group),
-			false,
-		)
+		assert.equal(Object.prototype.hasOwnProperty.call(runPasses(base).optionCounts, group), false)
 		const noFacts = runPasses({
 			...base,
 			columns: { ...base.columns, facts: null },
@@ -2244,16 +2038,13 @@ test("budget and shows histograms retain sibling choices and match brute force",
 						h = (f.episodes[i] * f.lengths[i]) / 60,
 						status = f.showStatuses[i]
 					const within = (v: number, range?: { min?: number; max?: number }) =>
-						!range ||
-						(v > 0 && v >= (range.min ?? 0) && v <= (range.max ?? Infinity))
+						!range || (v > 0 && v >= (range.min ?? 0) && v <= (range.max ?? Infinity))
 					const [field, option] = key.split(":")
 					if (group === "budget") {
 						if (!movie) return false
 						const replacement = field === "known" ? option : field
-						if (replacement !== "budget" && !within(b, active.budget))
-							return false
-						if (replacement !== "boxOffice" && !within(o, active.boxOffice))
-							return false
+						if (replacement !== "budget" && !within(b, active.budget)) return false
+						if (replacement !== "boxOffice" && !within(o, active.boxOffice)) return false
 						if (
 							replacement !== "returns" &&
 							active.returns &&
@@ -2265,18 +2056,14 @@ test("budget and shows histograms retain sibling choices and match brute force",
 							return (
 								rawBudget > 0 &&
 								rawOffice > 0 &&
-								(option === "hit"
-									? rawOffice >= 3 * rawBudget
-									: rawOffice < rawBudget)
+								(option === "hit" ? rawOffice >= 3 * rawBudget : rawOffice < rawBudget)
 							)
 					} else {
 						if (movie) return false
 						if (field !== "seasons" && !within(s, active.seasons)) return false
 						if (field !== "hours" && !within(h, active.hours)) return false
-						if (field !== "status" && active.showStatus && status !== 2)
-							return false
-						if (field === "status")
-							return status === { running: 1, ended: 2, canceled: 3 }[option]
+						if (field !== "status" && active.showStatus && status !== 2) return false
+						if (field === "status") return status === { running: 1, ended: 2, canceled: 3 }[option]
 					}
 					const stops =
 						field === "budget"
@@ -2287,13 +2074,7 @@ test("budget and shows histograms retain sibling choices and match brute force",
 									? SEASONS_STEPS
 									: HOURS_STEPS
 					const value =
-						field === "budget"
-							? b
-							: field === "boxOffice"
-								? o
-								: field === "seasons"
-									? s
-									: h
+						field === "budget" ? b : field === "boxOffice" ? o : field === "seasons" ? s : h
 					return (
 						value > 0 &&
 						value >= stops[Number(option)] &&
@@ -2307,16 +2088,11 @@ test("budget and shows histograms retain sibling choices and match brute force",
 })
 
 test("budget and show presets have disjoint inclusive seams", async () => {
-	const { BUDGET_PRESETS, SEASONS_PRESETS, HOURS_PRESETS } = await import(
-		"~/domain/title-scales"
-	)
+	const { BUDGET_PRESETS, SEASONS_PRESETS, HOURS_PRESETS } = await import("~/domain/title-scales")
 	for (const [presets, values] of [
 		[BUDGET_PRESETS, [0.01, 4.999, 5, 49.999, 50, 99.999, 100, 1000]],
 		[SEASONS_PRESETS, [1, 2, 3, 4, 7, 8, 254]],
-		[
-			HOURS_PRESETS,
-			[1 / 60, 599 / 60, 10, 1799 / 60, 30, 5999 / 60, 100, 1000],
-		],
+		[HOURS_PRESETS, [1 / 60, 599 / 60, 10, 1799 / 60, 30, 5999 / 60, 100, 1000]],
 	] as const) {
 		for (const value of values)
 			assert.equal(
@@ -2347,9 +2123,7 @@ test("budget and shows counts share one facts pass over 200k titles", async (t) 
 		factCounts(input, masks)
 		return performance.now() - start
 	}).sort((a, b) => a - b)
-	t.diagnostic(
-		`Budget and Shows median: ${times[4].toFixed(2)} ms over 200k titles`,
-	)
+	t.diagnostic(`Budget and Shows median: ${times[4].toFixed(2)} ms over 200k titles`)
 	assert.ok(times[4] < 15, `Median ${times[4]} ms exceeded 15 ms`)
 })
 
@@ -2382,24 +2156,15 @@ test("taste groups are any of, count membership including none, and assign only 
 		"show-2": 2,
 		none: 2,
 	})
-	assert.equal(
-		one.recoveries.find((r) => r.filter === "tasteGroups")?.titles,
-		4,
-	)
-	assert.deepEqual(
-		passes(plain, { tasteGroups: filter(groups) }).rows,
-		[0, 1, 2, 4],
-	)
+	assert.equal(one.recoveries.find((r) => r.filter === "tasteGroups")?.titles, 4)
+	assert.deepEqual(passes(plain, { tasteGroups: filter(groups) }).rows, [0, 1, 2, 4])
 	// Correct counts for another filter's removal: only the chosen groups can recover.
 	const narrowed = passes(plain, {
 		minScore: 80,
 		tasteGroups: filter([groups[1]]),
 	})
 	assert.deepEqual(narrowed.rows, [])
-	assert.equal(
-		narrowed.recoveries.find((r) => r.filter === "minScore")?.titles,
-		2,
-	)
+	assert.equal(narrowed.recoveries.find((r) => r.filter === "minScore")?.titles, 2)
 	assert.equal(narrowed.optionCounts.minScore["0"], 2)
 	assert.equal(narrowed.optionCounts.minScore["70"], 1)
 	assert.deepEqual(passes(plain, {}).optionCounts.tasteGroups, {})
@@ -2432,16 +2197,10 @@ test("year counts replacing Years and Released still respect taste picks", () =>
 test("format 3 source and gap filters match SQL, and counts match replacing each choice", async () => {
 	const { createRequire } = await import("node:module")
 	const { DatabaseSync } = createRequire(import.meta.url)("node:sqlite")
-	const { rangeScoreConditions } = await import(
-		"./range-score-conditions.server.ts"
-	)
-	const { defaultFilterState, SOURCE_KEYS } = await import(
-		"~/domain/filter-state"
-	)
+	const { rangeScoreConditions } = await import("./range-score-conditions.server.ts")
+	const { defaultFilterState, SOURCE_KEYS } = await import("~/domain/filter-state")
 	const { SCORE_STEPS } = await import("~/domain/title-scales")
-	const { encodeFacts, joinFactsChunks } = await import(
-		"../title-snapshot/format.server.ts"
-	)
+	const { encodeFacts, joinFactsChunks } = await import("../title-snapshot/format.server.ts")
 	const n = 120
 	const values = [null, 0, 60, 65, 69, 70, 75, 80, 85, 90, 100]
 	const records = Array.from({ length: n }, (_, row) =>
@@ -2480,9 +2239,7 @@ test("format 3 source and gap filters match SQL, and counts match replacing each
 		`CREATE TABLE titles (id INTEGER, imdb_user_score_normalized_percent INTEGER, rotten_tomatoes_tomato_score_normalized_percent INTEGER, rotten_tomatoes_audience_score_normalized_percent INTEGER, metacritic_meta_score_normalized_percent INTEGER, metacritic_user_score_normalized_percent INTEGER, letterboxd_user_score_normalized_percent INTEGER)`,
 	)
 	const insert = db.prepare("INSERT INTO titles VALUES (?, ?, ?, ?, ?, ?, ?)")
-	records.forEach((scores, row) =>
-		insert.run(row, ...SOURCE_KEYS.map((key) => scores[key])),
-	)
+	records.forEach((scores, row) => insert.run(row, ...SOURCE_KEYS.map((key) => scores[key])))
 	const defaults = defaultFilterState({
 		onMyServices: false,
 		notSeenYet: false,
@@ -2500,9 +2257,7 @@ test("format 3 source and gap filters match SQL, and counts match replacing each
 		return new Set<number>(
 			db
 				.prepare(
-					`SELECT id FROM titles${
-						conditions.length ? ` WHERE ${conditions.join(" AND ")}` : ""
-					}`,
+					`SELECT id FROM titles${conditions.length ? ` WHERE ${conditions.join(" AND ")}` : ""}`,
 				)
 				.all(...params)
 				.map((r: { id: number }) => r.id),
@@ -2517,12 +2272,7 @@ test("format 3 source and gap filters match SQL, and counts match replacing each
 		{ letterboxd: 70 },
 		{ imdb: 60, letterboxd: 85 },
 	]) {
-		for (const gapChoice of [
-			undefined,
-			"agree",
-			"critics",
-			"audience",
-		] as const) {
+		for (const gapChoice of [undefined, "agree", "critics", "audience"] as const) {
 			const request = { ...input, sourceMinimums, gapChoice }
 			const actual = runPasses(request)
 			const sqlSource = selected(sourceMinimums, gapChoice, "sourceScores"),
@@ -2546,23 +2296,16 @@ test("format 3 source and gap filters match SQL, and counts match replacing each
 						scoresCounts: false,
 						sourceMinimums: { ...sourceMinimums, [key]: step },
 					}).passing.length
-					assert.equal(
-						actual.optionCounts.sourceScores![`${key}:${step}`],
-						brute,
-					)
+					assert.equal(actual.optionCounts.sourceScores![`${key}:${step}`], brute)
 				}
 			for (const gapChoice of ["agree", "critics", "audience"] as const)
 				assert.equal(
 					actual.optionCounts.scoreGap![gapChoice],
-					runPasses({ ...request, scoresCounts: false, gapChoice }).passing
-						.length,
+					runPasses({ ...request, scoresCounts: false, gapChoice }).passing.length,
 				)
 		}
 	}
-	assert.equal(
-		runPasses({ ...input, scoresCounts: false }).optionCounts.sourceScores,
-		undefined,
-	)
+	assert.equal(runPasses({ ...input, scoresCounts: false }).optionCounts.sourceScores, undefined)
 	assert.equal(
 		runPasses({
 			...input,
@@ -2572,7 +2315,10 @@ test("format 3 source and gap filters match SQL, and counts match replacing each
 	)
 	const outside = { ...input, rows: Int32Array.of(-1), keys: Float64Array.of(MOVIE + n + 1) }
 	assert.equal(runPasses({ ...outside, minScore: 0 }).passing.length, 1)
-	assert.equal(runPasses({ ...outside, minScore: 0, sourceMinimums: { imdb: 0 } }).passing.length, 0)
+	assert.equal(
+		runPasses({ ...outside, minScore: 0, sourceMinimums: { imdb: 0 } }).passing.length,
+		0,
+	)
 	assert.equal(runPasses({ ...outside, minScore: 0, gapChoice: "agree" }).passing.length, 0)
 	assert.equal(runPasses({ ...input, columns: { ...c, facts: null } }).optionCounts.scoreGap, null)
 	db.close()
@@ -2588,9 +2334,7 @@ test("score counts share the facts traversal and stay within budget over 200k ro
 		sources: Object.fromEntries(
 			SOURCE_KEYS.map((key, source) => [
 				key,
-				Uint8Array.from({ length: n }, (_, row) =>
-					row % 17 ? (row * (source + 1)) % 101 : 255,
-				),
+				Uint8Array.from({ length: n }, (_, row) => (row % 17 ? (row * (source + 1)) % 101 : 255)),
 			]),
 		) as Record<(typeof SOURCE_KEYS)[number], Uint8Array>,
 	}
@@ -2617,18 +2361,19 @@ test("score counts share the facts traversal and stay within budget over 200k ro
 		factCounts(input, masks)
 		return performance.now() - start
 	}).sort((a, b) => a - b)
-	t.diagnostic(
-		`Scores, Budget and Shows median: ${times[4].toFixed(2)} ms over 200k rows`,
-	)
+	t.diagnostic(`Scores, Budget and Shows median: ${times[4].toFixed(2)} ms over 200k rows`)
 	assert.ok(times[4] < 40, `Median ${times[4]} ms exceeded 40 ms`)
 })
 
- test("trope membership is strict, including an empty set, and has its own recovery count", () => {
-  const trope = { keys: new Set([columns.pointIds[0], columns.pointIds[2]]), rows: Uint8Array.from(plain, i => i === 0 || i === 2 ? 1 : 0) }
-  const result = passes(plain, { trope, taste: false })
-  assert.deepEqual(result.rows, [0, 2])
-  assert.deepEqual(result.optionCounts.trope, { on: 2, off: plain.length })
-  assert.deepEqual(result.recoveries, [{ filter: "trope", titles: plain.length - 2 }])
-  const empty = { keys: new Set<number>(), rows: new Uint8Array(plain.length) }
-  assert.deepEqual(passes(plain, { trope: empty, taste: false }).rows, [])
- })
+test("trope membership is strict, including an empty set, and has its own recovery count", () => {
+	const trope = {
+		keys: new Set([columns.pointIds[0], columns.pointIds[2]]),
+		rows: Uint8Array.from(plain, (i) => (i === 0 || i === 2 ? 1 : 0)),
+	}
+	const result = passes(plain, { trope, taste: false })
+	assert.deepEqual(result.rows, [0, 2])
+	assert.deepEqual(result.optionCounts.trope, { on: 2, off: plain.length })
+	assert.deepEqual(result.recoveries, [{ filter: "trope", titles: plain.length - 2 }])
+	const empty = { keys: new Set<number>(), rows: new Uint8Array(plain.length) }
+	assert.deepEqual(passes(plain, { trope: empty, taste: false }).rows, [])
+})
