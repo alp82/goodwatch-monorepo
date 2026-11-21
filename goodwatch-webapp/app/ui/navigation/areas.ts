@@ -115,6 +115,7 @@ const EXPLORE_PREFIXES = [
 	"/hot",
 	"/movies",
 	"/shows",
+	"/all",
 	"/people",
 	"/map",
 	"/explore",
@@ -137,8 +138,7 @@ export function areaOf(pathname: string): AreaKey | null {
 /** The area key to light for this viewer: as areaOf, except a guest on a profile lights none. */
 export function litArea(pathname: string, viewer: PathViewer): AreaKey | null {
 	const area = areaOf(pathname)
-	if (area === "taste" && viewer.kind === "guest" && under(pathname, "/u"))
-		return null
+	if (area === "taste" && viewer.kind === "guest" && under(pathname, "/u")) return null
 	return area
 }
 
@@ -211,17 +211,14 @@ const READY_CHIPS: [WatchChipKey, string, string][] = [
 ]
 
 const trim = (pathname: string) =>
-	pathname.length > 1 && pathname.endsWith("/")
-		? pathname.slice(0, -1)
-		: pathname
+	pathname.length > 1 && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname
 
 /** The Watch page a path names, or null outside Watch (and for an unknown /watch/* slug). */
 export function watchPlaceOf(pathname: string): WatchPlace | null {
 	const path = trim(pathname)
 	if (path === WATCH_PATHS.forYou || path === WATCH_PATHS.forYouTropes)
 		return { tab: "for-you", side: null, chip: null }
-	if (path === WATCH_PATHS.showsSeen)
-		return { tab: "up-next", side: "seen", chip: null }
+	if (path === WATCH_PATHS.showsSeen) return { tab: "up-next", side: "seen", chip: null }
 	const show = UP_NEXT_CHIPS.find(([, , href]) => href === path)
 	if (show) return { tab: "up-next", side: "to-watch", chip: show[0] }
 	const movie = READY_CHIPS.find(([, , href]) => href === path)
@@ -271,33 +268,33 @@ export function watchChips(
 	const shows = place.tab === "up-next"
 	return {
 		label: shows ? "Shows to watch" : "Movies to watch",
-		choices: (shows ? UP_NEXT_CHIPS : READY_CHIPS).map(
-			([key, label, href]) => ({
-				key,
-				label,
-				href,
-				here: place.chip === key,
-				count: counts[key],
-			}),
-		),
+		choices: (shows ? UP_NEXT_CHIPS : READY_CHIPS).map(([key, label, href]) => ({
+			key,
+			label,
+			href,
+			here: place.chip === key,
+			count: counts[key],
+		})),
 	}
 }
 
 // Explore --------------------------------------------------------------------------------------------------
 
 export type ExploreTabKey =
-	| "discover"
+	| "browse"
 	| "new"
 	| "hot"
-	| "best"
+	| "top"
 	| "awards"
-	| "movies"
-	| "shows"
 	| "people"
 	| "map"
+	| "discover"
 
-const isBest = (path: string) =>
-	path === "/movies/best" || path === "/shows/best"
+/** The Browse pages: every page under a kind (`/movies`, `/shows`, `/all`) but Top. */
+const BROWSE_KINDS = ["/movies", "/shows", "/all"]
+const TOP_PATH = /^\/(?:movies|shows|all)\/top$/
+const isTop = (path: string) => TOP_PATH.test(path)
+const isBrowse = (path: string) => BROWSE_KINDS.some((k) => under(path, k)) && !isTop(path)
 
 const EXPLORE_TABS: {
 	key: ExploreTabKey
@@ -307,11 +304,11 @@ const EXPLORE_TABS: {
 	here: (path: string) => boolean
 }[] = [
 	{
-		key: "discover",
-		label: "Discover",
-		href: "/discover",
-		icon: MagnifyingGlassIcon,
-		here: (p) => under(p, "/discover"),
+		key: "browse",
+		label: "Browse",
+		href: "/movies",
+		icon: GlobeAltIcon,
+		here: isBrowse,
 	},
 	{
 		key: "new",
@@ -328,11 +325,11 @@ const EXPLORE_TABS: {
 		here: (p) => under(p, "/hot"),
 	},
 	{
-		key: "best",
-		label: "Best",
-		href: "/movies/best",
+		key: "top",
+		label: "Top",
+		href: "/movies/top",
 		icon: CheckBadgeIcon,
-		here: isBest,
+		here: isTop,
 	},
 	{
 		key: "awards",
@@ -340,20 +337,6 @@ const EXPLORE_TABS: {
 		href: "/awards",
 		icon: TrophyIcon,
 		here: (p) => under(p, "/awards"),
-	},
-	{
-		key: "movies",
-		label: "Movies",
-		href: "/movies",
-		icon: FilmIcon,
-		here: (p) => under(p, "/movies") && !isBest(p),
-	},
-	{
-		key: "shows",
-		label: "Shows",
-		href: "/shows",
-		icon: TvIcon,
-		here: (p) => under(p, "/shows") && !isBest(p),
 	},
 	{
 		key: "people",
@@ -368,6 +351,13 @@ const EXPLORE_TABS: {
 		href: "/map",
 		icon: MapIcon,
 		here: (p) => under(p, "/map"),
+	},
+	{
+		key: "discover",
+		label: "Discover",
+		href: "/discover",
+		icon: MagnifyingGlassIcon,
+		here: (p) => under(p, "/discover"),
 	},
 ]
 
@@ -386,24 +376,24 @@ export function exploreTabs(
 	}))
 }
 
-/** Best's Movies | Shows switch; null off the Best pages. */
-export function bestSwitch(pathname: string): NavChoices | null {
+/** Top's Movies | Shows switch; null off the Top pages. */
+export function topSwitch(pathname: string): NavChoices | null {
 	const path = trim(pathname)
-	if (!isBest(path)) return null
+	if (!isTop(path)) return null
 	return {
-		label: "Best of",
+		label: "Top",
 		choices: [
 			{
 				key: "movies",
 				label: "Movies",
-				href: "/movies/best",
-				here: path === "/movies/best",
+				href: "/movies/top",
+				here: path === "/movies/top",
 			},
 			{
 				key: "shows",
 				label: "Shows",
-				href: "/shows/best",
-				here: path === "/shows/best",
+				href: "/shows/top",
+				here: path === "/shows/top",
 			},
 		],
 	}
@@ -471,25 +461,14 @@ export interface TasteRow {
 const PROFILE_PATH = /^\/u\/([^/]+)(?:\/([^/]+))?(?:\/([^/]+))?/
 
 /** The Profile tab a profile path lights: /scores/rate is Rate more, every other page under Scores is Scores. */
-function profileTabOf(
-	rest: string | undefined,
-	sub: string | undefined,
-): TasteTabKey | null {
+function profileTabOf(rest: string | undefined, sub: string | undefined): TasteTabKey | null {
 	if (!rest) return "profile"
 	if (rest === "scores" && sub === "rate") return "rate"
 	if (rest === "taste") return "stats"
 	return (
-		(
-			[
-				"tropes",
-				"scores",
-				"stats",
-				"lists",
-				"seen",
-				"wishlist",
-				"shows",
-			] as const
-		).find((t) => t === rest) ?? null
+		(["tropes", "scores", "stats", "lists", "seen", "wishlist", "shows"] as const).find(
+			(t) => t === rest,
+		) ?? null
 	)
 }
 
@@ -577,8 +556,7 @@ export function tasteRow({
 	}
 
 	const isOwner = own != null && own.toLowerCase() === handle.toLowerCase()
-	const asVisitor =
-		isOwner && new URLSearchParams(search).get("as") === "visitor"
+	const asVisitor = isOwner && new URLSearchParams(search).get("as") === "visitor"
 	const visitorView = !isOwner || asVisitor
 	const query = asVisitor ? { as: "visitor" } : undefined
 	const tab = (t: TasteTabDef): AreaTab => ({
@@ -597,9 +575,7 @@ export function tasteRow({
 			areaIcon: true,
 			handle,
 			asVisitor: false,
-			tabs: tabs.flatMap((t) =>
-				t.key === "scores" ? [t, tab(RATE_TAB)] : [t],
-			),
+			tabs: tabs.flatMap((t) => (t.key === "scores" ? [t, tab(RATE_TAB)] : [t])),
 			trailing: [],
 			gear: gearOf(true),
 		}
@@ -625,8 +601,7 @@ export function scoresSwitch(
 	const scored = tastePath(handle, "scores")
 	const notRated = tastePath(handle, "not-rated")
 	const lower = path.toLowerCase()
-	if (lower !== scored.toLowerCase() && lower !== notRated.toLowerCase())
-		return null
+	if (lower !== scored.toLowerCase() && lower !== notRated.toLowerCase()) return null
 	const onNotRated = lower === notRated.toLowerCase()
 	return {
 		label: "Your scores",
@@ -855,7 +830,5 @@ export const SETTINGS_COLUMN: PlaceGroup[] = [
 export function placeHere(place: Place, pathname: string): boolean {
 	if (!place.href) return false
 	const path = trim(pathname)
-	return place.href === SETTINGS_PATHS.home
-		? path === place.href
-		: under(path, place.href)
+	return place.href === SETTINGS_PATHS.home ? path === place.href : under(path, place.href)
 }

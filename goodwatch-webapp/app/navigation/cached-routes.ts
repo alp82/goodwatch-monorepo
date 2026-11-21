@@ -16,9 +16,7 @@ export const CACHED_ROUTE_IDS = [
 	"routes/show.$showKey_.at-a-glance",
 	"routes/person.$personKey",
 	"routes/$type._index",
-	"routes/$type.best",
-	"routes/$type.$category._index",
-	"routes/$type.$category.$page",
+	"routes/$type.top",
 	"routes/discover.($type)",
 	"routes/people",
 	// The awards pages: the hub, a body, a ceremony, a category.
@@ -41,11 +39,7 @@ export function isCachedRoute(routeId: string): routeId is CachedRouteId {
 }
 
 /** Title pages: a press or hover prefetch of one also starts its hero picture. */
-export const TITLE_ROUTE_IDS: readonly string[] = [
-	"routes/movie.$movieKey",
-	"routes/show.$showKey",
-]
+export const TITLE_ROUTE_IDS: readonly string[] = ["routes/movie.$movieKey", "routes/show.$showKey"]
 
 /** Links the phone prefetch looks at when a list stops scrolling: titles and people. */
-export const VIEWPORT_LINK_SELECTOR =
-	'a[href^="/movie/"], a[href^="/show/"], a[href^="/person/"]'
+export const VIEWPORT_LINK_SELECTOR = 'a[href^="/movie/"], a[href^="/show/"], a[href^="/person/"]'

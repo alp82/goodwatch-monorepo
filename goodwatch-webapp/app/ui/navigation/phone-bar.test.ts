@@ -6,8 +6,7 @@ import { GUEST, member } from "../../domain/member-paths.ts"
 import { phoneBarOf } from "./phone-bar.ts"
 
 const me = member("alp")
-const bar = (pathname: string, viewer = me, search = "") =>
-	phoneBarOf({ pathname, search, viewer })
+const bar = (pathname: string, viewer = me, search = "") => phoneBarOf({ pathname, search, viewer })
 
 test("area pages: area label over the current tab, siblings in the sheet", () => {
 	const shows = bar("/watch/shows")
@@ -22,7 +21,8 @@ test("area pages: area label over the current tab, siblings in the sheet", () =>
 	assert.equal(bar("/watch/movies/want").title, "My movies")
 	assert.equal(bar("/watch/seen").title, "Seen")
 	assert.equal(bar("/hot").title, "Hot")
-	assert.equal(bar("/movies/best").title, "Best")
+	assert.equal(bar("/movies/top").title, "Top")
+	assert.equal(bar("/movies/moods/cozy").title, "Browse")
 	assert.equal(bar("/discover").title, "Discover")
 	assert.equal(bar("/movies").eyebrow, "Explore")
 	const scores = bar("/u/alp/scores")
@@ -33,14 +33,14 @@ test("area pages: area label over the current tab, siblings in the sheet", () =>
 	assert.equal(bar("/taste").title, "Taste")
 })
 
-test("the awards pages: Explore over Awards with the trophy; Best keeps the check badge", () => {
+test("the awards pages: Explore over Awards with the trophy; Top keeps the check badge", () => {
 	const awards = bar("/awards/oscars/2024", GUEST)
 	assert.equal(awards.eyebrow, "Explore")
 	assert.equal(awards.title, "Awards")
 	assert.equal(awards.icon, TrophyIcon)
 	const keys = awards.siblings.map((t) => t.key)
-	assert.equal(keys.indexOf("awards"), keys.indexOf("best") + 1)
-	assert.equal(bar("/movies/best").icon, CheckBadgeIcon)
+	assert.equal(keys.indexOf("awards"), keys.indexOf("top") + 1)
+	assert.equal(bar("/movies/top").icon, CheckBadgeIcon)
 })
 
 test("someone else's profile: @handle over the tab, visitors' tabs; settings home is Settings", () => {

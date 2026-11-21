@@ -1,138 +1,61 @@
-import { presentCatalogLoader } from "~/server/media-payload.server"
-import { type LoaderFunction, type LoaderFunctionArgs, type MetaFunction } from "@remix-run/node"
-import { Link, useLoaderData } from "@remix-run/react"
-import React from "react"
-import { exploreAddressExists, notFound } from "~/ui/explore/address"
-import { type NavType, navLabel } from "~/ui/explore/config"
-import { mainNavigation } from "~/ui/explore/main-nav"
-import { TileBackdrop, tilePriority } from "~/ui/explore/TileBackdrop"
-import { exploreHubCopy } from "~/ui/explore/page-copy"
-import { listNoun, scoreSourceList } from "~/domain/best-lists"
-import { type PageItem, type PageMeta, buildMeta, plainPageMeta } from "~/utils/meta"
+// The Browse hub: `/movies`, `/shows`, and `/all` (movies and shows together). Any other first segment that no route
+// names answers 404 here: a redirect to a hub would read as a soft 404 to a crawler.
+import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
+import { useLoaderData } from "@remix-run/react"
+import { hub, kindOfSeg, kindSeg } from "~/domain/browse/address"
+import { copyFor } from "~/domain/browse/copy"
+import { notFound } from "~/domain/browse/not-found"
 import { cachedClientLoader } from "~/navigation/instant-navigation"
+import { presentCatalogLoader } from "~/server/media-payload.server"
+import { WRAP } from "~/ui/browse/base"
+import { BrowseRow } from "~/ui/browse/BrowseRow"
 import { PageTitle } from "~/ui/heading"
+import { buildMeta } from "~/utils/meta"
 
-export const meta: MetaFunction = ({ params }) => {
-	const type = params.type || ""
-	const typeLabel = navLabel[type]
-	if (!typeLabel) return [{ title: "Page Not Found | GoodWatch" }]
-
-	const pageMeta: PageMeta = {
-		title: `Best ${typeLabel} and Where to Stream Them | GoodWatch`,
-		description: `Discover the best ${typeLabel} to watch right now. From award-winning Netflix exclusives to classic films on Prime Video, Disney+ and HBO. Find ${typeLabel} by genre, mood, or streaming service. Get personalized recommendations based on ratings from IMDb, ${type === "movies" ? "Letterboxd, " : ""}Rotten Tomatoes, and Metacritic. Updated daily with new releases and trending titles.`,
-		url: `https://goodwatch.app/${type}`,
-		image: "https://goodwatch.app/images/heroes/hero-movies.png",
-		alt: "Find your next binge by genre, mood, or streaming service on GoodWatch",
-	}
-
-	// TODO
-	const items: PageItem[] = []
-
-	return buildMeta({ pageMeta: plainPageMeta(pageMeta), items })
+const canonicalLoader = async ({ params }: LoaderFunctionArgs) => {
+	const kind = kindOfSeg(params.type)
+	if (!kind) throw notFound()
+	return { address: hub(kind) }
 }
 
-interface LoaderData {
-	type: NavType
+export const loader = presentCatalogLoader(canonicalLoader, { live: true })
+
+const HEADINGS = { movie: "Movies", show: "Shows", all: "Movies and shows" } as const
+
+export const meta: MetaFunction<typeof loader> = ({ data }) => {
+	if (!data) return [{ title: "Page Not Found | GoodWatch" }]
+	const { kind } = data.address
+	const seg = kindSeg(kind)
+	const copy = copyFor(seg, "hub", "home")
+	return buildMeta({
+		pageMeta: {
+			title: `${HEADINGS[kind]} by mood, genre, era, and place | GoodWatch`,
+			description: copy?.lede ?? "",
+			url: `https://goodwatch.app/${seg}`,
+			image: `https://goodwatch.app/images/heroes/hero-${kind === "show" ? "shows" : "movies"}.png`,
+			alt: copy?.short ?? HEADINGS[kind],
+		},
+		breadcrumbs: [{ label: HEADINGS[kind], path: `/${seg}` }],
+		// Movies and shows together repeat two indexable hubs.
+		robots: kind === "all" ? "noindex, follow" : undefined,
+	})
 }
 
-const canonicalLoader: LoaderFunction = async ({ params }: LoaderFunctionArgs) => {
-	const type = params.type || ""
-
-	if (!exploreAddressExists({ type })) throw notFound()
-
-	return {
-		type,
-	}
-}
-
-const bestIntro = (type: NavType) =>
-	`The best-known ${listNoun(type)} on GoodWatch, ranked by one score from ${scoreSourceList(type)}.`
-
-export default function Movies() {
-	const { type } = useLoaderData<LoaderData>()
-	const copy = exploreHubCopy(type)
-
+export default function BrowseHub() {
+	const { address } = useLoaderData<typeof loader>()
+	const copy = copyFor(kindSeg(address.kind), "hub", "home")
 	return (
-		<div className="max-w-7xl mx-auto p-4">
-			<PageTitle className="mb-2 text-3xl text-gray-100 md:text-4xl">{copy.heading}</PageTitle>
-			<p className="mb-8 text-xl text-gray-400">{copy.intro}</p>
-			<div className="mt-4 flex flex-col gap-10">
-				{/* The ranked list of the sitemap's titles, in the same look as the category sections below. */}
-				<div>
-					<Link to={`/${type}/best`} prefetch="viewport">
-						<div className="text-6xl font-extrabold opacity-40 text-gray-400 hover:opacity-60 hover:text-amber-400 transition-all">
-							Best of all time
-						</div>
-					</Link>
-					<div className="my-2 text-2xl text-gray-400">
-						<span className="font-semibold">Ranked</span>:{" "}
-						<span className="text-xl">{bestIntro(type)}</span>
-					</div>
-					<Link to={`/${type}/best`} prefetch="viewport">
-						<div className="text-lg font-semibold text-indigo-500 hover:text-indigo-400 transition-all">
-							{`See the best ${listNoun(type)} of all time`}
-						</div>
-					</Link>
-				</div>
-				{Object.values(mainNavigation).map((navItem, section) => {
-					const items = Object.values(navItem.items).filter((pageData) => {
-						return ["all", type].includes(pageData?.type)
-					})
-
-					return (
-						<div key={navItem.path}>
-							<Link to={`/${type}/${navItem.path}`} prefetch="viewport">
-								<div className="text-6xl font-extrabold opacity-40 text-gray-400 hover:opacity-60 hover:text-amber-400 transition-all">
-									{navItem.label}
-								</div>
-							</Link>
-							<div className="my-2 text-2xl text-gray-400">
-								<span className="font-semibold">{navItem.subtitle}</span>:{" "}
-								<span className="text-xl">{navItem.description}</span>
-							</div>
-							<div className="my-6 grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-								{items.map((item, index) => {
-									return (
-										<Link
-											key={item.path}
-											to={`/${type}/${navItem.path}/${item.path}`}
-											prefetch="viewport"
-											className="group relative block w-full aspect-7/4 overflow-hidden transition-transform duration-200 hover:scale-105"
-										>
-											<div className="absolute inset-0">
-												<TileBackdrop
-													path={item.backdrop_path}
-													priority={tilePriority(section, index)}
-												/>
-												<div className="absolute inset-0 bg-black/50 group-hover:bg-black/30 transition-colors duration-300" />
-											</div>
-
-											<div className="relative h-full w-full border-2 border-gray-800 group-hover:border-gray-700 transition-colors duration-300">
-												<div className="flex h-full items-center justify-center">
-													<h2 className="w-full py-2 text-center text-2xl font-bold text-white bg-black/30">
-														{item.label}
-													</h2>
-												</div>
-											</div>
-										</Link>
-									)
-								})}
-							</div>
-
-							<Link to={`/${type}/${navItem.path}`} prefetch="viewport">
-								<div className="text-lg font-semibold text-indigo-500 hover:text-indigo-400 transition-all">
-									Show all {navItem.label}
-								</div>
-							</Link>
-						</div>
-					)
-				})}
+		<div className="pb-16">
+			<BrowseRow address={address} />
+			<div className={`${WRAP} pt-8`}>
+				<PageTitle className="text-4xl font-extrabold text-white md:text-5xl">
+					{HEADINGS[address.kind]}
+				</PageTitle>
+				{copy && <p className="mt-3 max-w-2xl text-lg text-gray-300">{copy.lede}</p>}
 			</div>
 		</div>
 	)
 }
-
-export const loader = presentCatalogLoader(canonicalLoader, { live: true })
 
 // Page changes read this route's data from the browser's cache when they can (docs/navigation-cache.md).
 export const clientLoader = cachedClientLoader("routes/$type._index")

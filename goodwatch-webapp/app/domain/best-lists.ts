@@ -1,4 +1,4 @@
-// The best-of lists (`/movies/best`, `/shows/best`) and the people list (`/people`): what they hold, in what order,
+// The best-of lists (`/movies/top`, `/shows/top`) and the people list (`/people`): what they hold, in what order,
 // on which page, and what their copy says.
 //
 // They hold exactly the sitemap cohort, read from the committed sitemap files: the movie and show sitemaps carry the
@@ -11,8 +11,7 @@ export type ListKind = "movies" | "shows"
 export type TitleKind = "movie" | "show"
 
 export const LIST_KINDS: readonly ListKind[] = ["movies", "shows"]
-export const titleKindOf = (kind: ListKind): TitleKind =>
-	kind === "movies" ? "movie" : "show"
+export const titleKindOf = (kind: ListKind): TitleKind => (kind === "movies" ? "movie" : "show")
 
 /** Titles per page of a best-of list. */
 export const PER_PAGE = 250
@@ -61,20 +60,15 @@ export function rankTitles<T extends RankableTitle>(titles: readonly T[]): T[] {
 	const score = (t: T) => t.goodwatch_overall_score_normalized_percent ?? -1
 	const votes = (t: T) => t.goodwatch_overall_score_voting_count ?? 0
 	return [...titles].sort(
-		(a, b) =>
-			score(b) - score(a) || votes(b) - votes(a) || a.tmdb_id - b.tmdb_id,
+		(a, b) => score(b) - score(a) || votes(b) - votes(a) || a.tmdb_id - b.tmdb_id,
 	)
 }
 
-export const pageCount = (total: number) =>
-	Math.max(1, Math.ceil(total / PER_PAGE))
+export const pageCount = (total: number) => Math.max(1, Math.ceil(total / PER_PAGE))
 
 /** The page a URL asks for, read the way `pagedUrl` reads it: a missing or unusable number is the first page. */
 export function requestedPage(search: string): number {
-	const page = Number.parseInt(
-		new URLSearchParams(search).get("page") || "",
-		10,
-	)
+	const page = Number.parseInt(new URLSearchParams(search).get("page") || "", 10)
 	return page > 1 ? page : 1
 }
 
@@ -86,7 +80,7 @@ export const pageRange = (page: number, total: number) => ({
 
 /** A page's own address: the list's path, and `?page=N` after the first page. */
 export const pagePath = (kind: ListKind, page: number) =>
-	page > 1 ? `/${kind}/best?page=${page}` : `/${kind}/best`
+	page > 1 ? `/${kind}/top?page=${page}` : `/${kind}/top`
 
 // In a sentence, at its start, and in a title-case page title.
 const nouns: Record<ListKind, { noun: string; Lead: string; Noun: string }> = {
@@ -136,34 +130,19 @@ export function listCopy(
 
 /** How a person's department reads on their card. */
 export const roleLabel = (department: string | null | undefined) =>
-	department === "Acting"
-		? "Actor"
-		: department === "Directing"
-			? "Director"
-			: (department ?? "")
+	department === "Acting" ? "Actor" : department === "Directing" ? "Director" : (department ?? "")
 
 /**
  * The people list's copy, from who is on it. The sitemap takes leads and directors; the copy names only what the
  * list holds, so it says "actors" while no director is on it.
  */
-export function peopleCopy(
-	departments: readonly (string | null | undefined)[],
-): ListCopy {
+export function peopleCopy(departments: readonly (string | null | undefined)[]): ListCopy {
 	const directors = departments.filter((d) => d === "Directing").length
 	const others = departments.length - directors
-	const who =
-		directors && others
-			? "actors and directors"
-			: directors
-				? "directors"
-				: "actors"
+	const who = directors && others ? "actors and directors" : directors ? "directors" : "actors"
 	const Who = who.charAt(0).toUpperCase() + who.slice(1)
 	const did =
-		directors && others
-			? "led or directed"
-			: directors
-				? "directed"
-				: "has a leading role in"
+		directors && others ? "led or directed" : directors ? "directed" : "has a leading role in"
 	return {
 		title: `Popular ${Who}: Their Best Movies and TV Shows | GoodWatch`,
 		heading: `Popular ${who}`,

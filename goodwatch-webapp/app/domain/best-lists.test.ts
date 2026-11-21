@@ -16,10 +16,7 @@ import {
 } from "./best-lists.ts"
 
 const sitemap = (file: string) =>
-	readFileSync(
-		new URL(`../../public/sitemaps/${file}`, import.meta.url),
-		"utf8",
-	)
+	readFileSync(new URL(`../../public/sitemaps/${file}`, import.meta.url), "utf8")
 
 const xml = (selection: string, locs: string[]) =>
 	`<?xml version="1.0" encoding="UTF-8"?>\n<urlset>\n${selection}${locs.map((loc) => `  <url>\n    <loc>https://goodwatch.app${loc}</loc>\n  </url>\n`).join("")}</urlset>`
@@ -44,10 +41,7 @@ test("a title sitemap gives every address in its order and the attention IDs", (
 })
 
 test("a title sitemap without selection state fails instead of listing nothing", () => {
-	assert.throws(
-		() => parseTitleSitemap(xml("", ["/movie/155"]), "movie"),
-		/selection state/,
-	)
+	assert.throws(() => parseTitleSitemap(xml("", ["/movie/155"]), "movie"), /selection state/)
 })
 
 test("a show sitemap ignores addresses of another kind", () => {
@@ -62,10 +56,7 @@ test("a show sitemap ignores addresses of another kind", () => {
 })
 
 test("the committed sitemaps hold the cohort the lists show", () => {
-	const movies = parseTitleSitemap(
-		sitemap("sitemap_movie_detail_0.xml"),
-		"movie",
-	)
+	const movies = parseTitleSitemap(sitemap("sitemap_movie_detail_0.xml"), "movie")
 	const shows = parseTitleSitemap(sitemap("sitemap_show_detail_0.xml"), "show")
 	const people = parsePeopleSitemap(sitemap("sitemap_people.xml"))
 	assert.equal(movies.paths.size, 700)
@@ -107,8 +98,8 @@ test("pages hold 250 titles and read the page number like the canonical address"
 	assert.equal(requestedPage("?page=0"), 1)
 	assert.equal(requestedPage("?page=abc"), 1)
 	assert.equal(requestedPage("?utm_source=x&page=3"), 3)
-	assert.equal(pagePath("movies", 1), "/movies/best")
-	assert.equal(pagePath("shows", 2), "/shows/best?page=2")
+	assert.equal(pagePath("movies", 1), "/movies/top")
+	assert.equal(pagePath("shows", 2), "/shows/top?page=2")
 })
 
 test("a list's copy names its count, its popular titles, and a later page's ranks", () => {
@@ -120,27 +111,15 @@ test("a list's copy names its count, its popular titles, and a later page's rank
 		"700 well-known movies, ranked by GoodWatch score: the most-rated movies on GoodWatch, plus 70 that are popular right now. Updated monthly.",
 	)
 	const later = listCopy("shows", { total: 300, popular: 30, page: 2 })
-	assert.equal(
-		later.title,
-		"The Best TV Shows of All Time, Ranked 251 to 300 | GoodWatch",
-	)
+	assert.equal(later.title, "The Best TV Shows of All Time, Ranked 251 to 300 | GoodWatch")
 	assert.equal(later.heading, "The best TV shows of all time, 251 to 300")
-	assert.match(
-		later.description,
-		/^TV shows 251 to 300 of the 300 best-known TV shows/,
-	)
-	assert.doesNotMatch(
-		listCopy("movies", { total: 700, popular: 0, page: 1 }).intro,
-		/plus/,
-	)
+	assert.match(later.description, /^TV shows 251 to 300 of the 300 best-known TV shows/)
+	assert.doesNotMatch(listCopy("movies", { total: 700, popular: 0, page: 1 }).intro, /plus/)
 })
 
 test("the people copy says actors until a director is on the list", () => {
 	assert.equal(peopleCopy(["Acting", "Acting"]).heading, "Popular actors")
-	assert.equal(
-		peopleCopy(["Acting", "Directing"]).heading,
-		"Popular actors and directors",
-	)
+	assert.equal(peopleCopy(["Acting", "Directing"]).heading, "Popular actors and directors")
 	assert.equal(peopleCopy(["Directing"]).heading, "Popular directors")
 	assert.match(peopleCopy(["Acting"]).intro, /has a leading role in several/)
 	assert.equal(

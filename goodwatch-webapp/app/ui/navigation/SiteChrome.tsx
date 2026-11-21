@@ -14,7 +14,7 @@ import { MobileDock } from "./MobileDock"
 import { NavigationProvider, usePathViewer } from "./NavigationContext"
 import { SiteHeader } from "./SiteHeader"
 import { SubNav } from "./SubNav"
-import { areaOf, bestSwitch, exploreTabs, tasteRow } from "./areas"
+import { areaOf, exploreTabs, tasteRow, topSwitch } from "./areas"
 import { LAYER_VARS } from "./bar-layers"
 
 const under = (pathname: string, prefix: string) =>
@@ -26,11 +26,7 @@ const under = (pathname: string, prefix: string) =>
  */
 export function exploreRowMode(pathname: string): "off" | "static" | "sticky" {
 	if (areaOf(pathname) !== "explore") return "off"
-	if (
-		under(pathname, "/discover") ||
-		under(pathname, "/hot") ||
-		under(pathname, "/map")
-	)
+	if (under(pathname, "/discover") || under(pathname, "/hot") || under(pathname, "/map"))
 		return "static"
 	return "sticky"
 }
@@ -42,8 +38,8 @@ function ExploreRow() {
 	const { locale } = useLocale()
 	const mode = exploreRowMode(pathname)
 	if (mode === "off") return null
-	// Explore's third level: Best's Movies | Shows.
-	const best = bestSwitch(pathname)
+	// Explore's third level: Top's Movies | Shows.
+	const top = topSwitch(pathname)
 	return (
 		// `contents`: no box of its own, so the row sticks within <main> rather than within this wrapper.
 		<div data-explore-tabs={mode} className="contents">
@@ -55,7 +51,7 @@ function ExploreRow() {
 				})}
 				sticky={mode === "sticky"}
 			/>
-			{best && <SubNav label={best.label} items={best.choices} />}
+			{top && <SubNav label={top.label} items={top.choices} />}
 		</div>
 	)
 }
@@ -66,10 +62,7 @@ function ExploreRow() {
  * rest: guests on /taste, /taste/quiz and /lists/new, and members without a handle on /taste/quiz.
  */
 export function profileRowHere(pathname: string, member: boolean): boolean {
-	const path =
-		pathname.length > 1 && pathname.endsWith("/")
-			? pathname.slice(0, -1)
-			: pathname
+	const path = pathname.length > 1 && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname
 	if (path === "/taste/quiz") return true
 	return !member && (path === "/taste" || path === "/lists/new")
 }
@@ -83,8 +76,7 @@ function ProfileRow() {
 	const row = tasteRow({
 		pathname,
 		search,
-		viewer:
-			viewer.kind === "member" ? { kind: "member", handle: null } : viewer,
+		viewer: viewer.kind === "member" ? { kind: "member", handle: null } : viewer,
 	})
 	return row && <TasteTabs row={row} />
 }

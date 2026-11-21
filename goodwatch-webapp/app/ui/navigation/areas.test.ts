@@ -18,8 +18,8 @@ import {
 	SETTINGS_PLACES,
 	areaKeys,
 	areaOf,
-	bestSwitch,
 	exploreTabs,
+	topSwitch,
 	litArea,
 	placeHere,
 	scoresSwitch,
@@ -44,7 +44,8 @@ test("areaOf: Watch, Explore, Taste, or none", () => {
 		["/new", "explore"],
 		["/new/de/netflix", "explore"],
 		["/hot", "explore"],
-		["/movies/best", "explore"],
+		["/movies/top", "explore"],
+		["/all/moods/cozy", "explore"],
 		["/shows/drama", "explore"],
 		["/people", "explore"],
 		["/map", "explore"],
@@ -104,13 +105,17 @@ test("the third key says Profile, and every tab of every area has an icon", () =
 	}
 })
 
-test("Awards sits after Best in Explore with the trophy; Best has the check badge", () => {
+test("Explore: Browse first, Top between Hot and Awards with the check badge, Awards with the trophy", () => {
 	const tabs = exploreTabs("/awards")
 	const keys = tabs.map((t) => t.key)
-	assert.equal(keys.indexOf("awards"), keys.indexOf("best") + 1)
+	assert.deepEqual(keys, ["browse", "new", "hot", "top", "awards", "people", "map", "discover"])
+	assert.deepEqual(
+		tabs.map((t) => t.label),
+		["Browse", "New", "Hot", "Top", "Awards", "People", "Map", "Discover"],
+	)
 	const icon = (key: string) => tabs.find((t) => t.key === key)?.icon
 	assert.equal(icon("awards"), TrophyIcon)
-	assert.equal(icon("best"), CheckBadgeIcon)
+	assert.equal(icon("top"), CheckBadgeIcon)
 	assert.equal(areaOf("/awards/emmys/2025"), "explore")
 })
 
@@ -131,11 +136,7 @@ test("Watch: tabs, the To watch | Seen switch and the chips for every page", () 
 		assert.deepEqual(watchPlaceOf(path), { tab, side, chip }, path)
 		assert.deepEqual(hereOf(watchTabs(path)), [tab], path)
 		const chips = watchChips(path)
-		assert.deepEqual(
-			chips ? hereOf(chips.choices) : null,
-			chip ? [chip] : null,
-			path,
-		)
+		assert.deepEqual(chips ? hereOf(chips.choices) : null, chip ? [chip] : null, path)
 	}
 	assert.equal(watchPlaceOf("/watch/nope"), null)
 	assert.equal(watchPlaceOf("/discover"), null)
@@ -154,10 +155,7 @@ test("Watch tabs read My shows, My movies, Recommendations, each with its second
 
 test("the chips point at their own tab's pages and carry counts", () => {
 	assert.deepEqual(
-		watchChips("/watch/movies", { wishlist: 40 })?.choices.map((c) => [
-			c.label,
-			c.count,
-		]),
+		watchChips("/watch/movies", { wishlist: 40 })?.choices.map((c) => [c.label, c.count]),
 		[
 			["Next Movie", undefined],
 			["Want to Watch", 40],
@@ -166,16 +164,20 @@ test("the chips point at their own tab's pages and carry counts", () => {
 	assert.equal(watchChips("/watch/shows")?.choices.length, 5)
 })
 
-test("Explore tabs: one current tab per page; Best covers both kinds; guests' New goes to their country", () => {
+test("Explore tabs: one current tab per page; Browse covers every kind; Top covers both kinds; guests' New goes to their country", () => {
 	const cases: [string, string[]][] = [
 		["/discover", ["discover"]],
 		["/new/de", ["new"]],
 		["/hot", ["hot"]],
-		["/movies/best", ["best"]],
-		["/shows/best", ["best"]],
-		["/movies", ["movies"]],
-		["/movies/drama/2", ["movies"]],
-		["/shows", ["shows"]],
+		["/movies/top", ["top"]],
+		["/shows/top", ["top"]],
+		["/all/top", ["top"]],
+		["/movies", ["browse"]],
+		["/movies/moods/cozy", ["browse"]],
+		["/movies/streaming/us/netflix", ["browse"]],
+		["/shows", ["browse"]],
+		["/all", ["browse"]],
+		["/all/moods/cozy/comedy", ["browse"]],
 		["/people", ["people"]],
 		["/map", ["map"]],
 		["/awards", ["awards"]],
@@ -183,16 +185,13 @@ test("Explore tabs: one current tab per page; Best covers both kinds; guests' Ne
 		["/awards/oscars/2024", ["awards"]],
 		["/awards/oscars/category/directing", ["awards"]],
 	]
-	for (const [path, here] of cases)
-		assert.deepEqual(hereOf(exploreTabs(path)), here, path)
+	for (const [path, here] of cases) assert.deepEqual(hereOf(exploreTabs(path)), here, path)
 	assert.equal(
-		exploreTabs("/discover", { newHref: "/new/de" }).find(
-			(t) => t.key === "new",
-		)?.href,
+		exploreTabs("/discover", { newHref: "/new/de" }).find((t) => t.key === "new")?.href,
 		"/new/de",
 	)
-	assert.deepEqual(hereOf(bestSwitch("/shows/best")?.choices ?? []), ["shows"])
-	assert.equal(bestSwitch("/movies"), null)
+	assert.deepEqual(hereOf(topSwitch("/shows/top")?.choices ?? []), ["shows"])
+	assert.equal(topSwitch("/movies"), null)
 })
 
 test("Taste row, owner: five tabs with Rate more after Scores, the gear, the current tab per page", () => {
@@ -223,17 +222,10 @@ test("Taste row, owner: five tabs with Rate more after Scores, the gear, the cur
 			["Taste", "Tropes", "Scores", "Rate more", "Lists", "Stats"],
 		)
 		assert.deepEqual(row.trailing, [])
-		assert.deepEqual(
-			row.gear,
-			{ href: "/settings", here: path.startsWith("/settings") },
-			path,
-		)
+		assert.deepEqual(row.gear, { href: "/settings", here: path.startsWith("/settings") }, path)
 		assert.equal(row.tabs[2].count, 300)
 	}
-	assert.equal(
-		tasteRow({ pathname: "/u/ana", viewer: ANA })?.tabs[0].href,
-		"/u/ana",
-	)
+	assert.equal(tasteRow({ pathname: "/u/ana", viewer: ANA })?.tabs[0].href, "/u/ana")
 	assert.equal(tasteRow({ pathname: "/watch/shows", viewer: ANA }), null)
 	// Same label and icon as the guests' Rate more.
 	const guestRate = tasteRow({ pathname: "/taste", viewer: GUEST })?.tabs[1]
@@ -272,11 +264,7 @@ test("Taste row, owner as visitor: visitor tabs keep ?as=visitor, no gear", () =
 	assert.equal(row.tabs[0].href, "/u/ana?as=visitor")
 	assert.deepEqual(
 		row.trailing.map((t) => t.href),
-		[
-			"/u/ana/seen?as=visitor",
-			"/u/ana/want?as=visitor",
-			"/u/ana/shows?as=visitor",
-		],
+		["/u/ana/seen?as=visitor", "/u/ana/want?as=visitor", "/u/ana/shows?as=visitor"],
 	)
 })
 
@@ -381,12 +369,8 @@ test("Menu: Set up has one Settings row; the Settings column keeps every setting
 			["Discord bot", "/discord"],
 		],
 	)
-	const menu = new Set(
-		[...MENU_WATCH, ...MENU_SETUP, ...MENU_FOOTER].map((p) => p.id),
-	)
-	const column = new Set(
-		SETTINGS_COLUMN.flatMap((g) => g.places.map((p) => p.id)),
-	)
+	const menu = new Set([...MENU_WATCH, ...MENU_SETUP, ...MENU_FOOTER].map((p) => p.id))
+	const column = new Set(SETTINGS_COLUMN.flatMap((g) => g.places.map((p) => p.id)))
 	for (const p of SETTINGS_PLACES) {
 		assert.ok(column.has(p.id), p.id)
 		assert.ok(!menu.has(p.id), p.id)
@@ -406,8 +390,7 @@ test("Menu: the footer has real addresses, Feedback acts instead of navigating",
 
 test("placeHere: All settings only on /settings, other rows on their page and below", () => {
 	const all = SETTINGS_COLUMN.flatMap((g) => g.places)
-	const here = (path: string) =>
-		all.filter((p) => placeHere(p, path)).map((p) => p.id)
+	const here = (path: string) => all.filter((p) => placeHere(p, path)).map((p) => p.id)
 	assert.deepEqual(here("/settings"), ["settings"])
 	assert.deepEqual(here("/settings/imports"), ["imports"])
 	assert.deepEqual(here("/settings/services/"), ["services"])

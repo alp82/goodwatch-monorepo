@@ -1,5 +1,6 @@
-// /movies/best and /shows/best: the sitemap's movies or shows, best first, 250 a page (see domain/best-lists.ts). A
-// later page is `?page=N`, its own address with its own canonical; a page past the last answers 404.
+// /movies/top and /shows/top: the sitemap's movies or shows, best first, 250 a page (see domain/best-lists.ts). A
+// later page is `?page=N`, its own address with its own canonical; a page past the last answers 404. The old
+// `/movies/best` addresses answer 301 here (domain/browse/redirects.ts).
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
 import {
@@ -26,7 +27,7 @@ import { buildMeta } from "~/utils/meta"
 
 const crumbsOf = (kind: ListKind): Crumb[] => [
 	{ label: kind === "movies" ? "Movies" : "Shows", path: `/${kind}` },
-	{ label: listName(kind), path: `/${kind}/best` },
+	{ label: listName(kind), path: `/${kind}/top` },
 ]
 
 const canonicalLoader = async ({ params, request }: LoaderFunctionArgs) => {
@@ -43,10 +44,7 @@ const canonicalLoader = async ({ params, request }: LoaderFunctionArgs) => {
 		mediaType: t.media_type,
 		tmdbId: t.tmdb_id,
 	}))
-	const [services, awards] = await Promise.all([
-		rowServices(request, keys),
-		awardMarksOf(keys),
-	])
+	const [services, awards] = await Promise.all([rowServices(request, keys), awardMarksOf(keys)])
 	return {
 		kind,
 		page,
@@ -89,24 +87,17 @@ export default function BestList() {
 	const { kind, page, pages, total, popular, first, titles, services, awards } =
 		useLoaderData<typeof loader>()
 	const copy = listCopy(kind, { total, popular, page })
-	const links = (
-		<ListPageLinks kind={kind} page={page} pages={pages} total={total} />
-	)
+	const links = <ListPageLinks kind={kind} page={page} pages={pages} total={total} />
 	return (
 		<div className="pb-16">
 			<ListHead heading={copy.heading} intro={copy.intro}>
 				<div className="mt-3">{links}</div>
 			</ListHead>
-			<RankedTitles
-				titles={titles}
-				first={first}
-				services={services}
-				awards={awards}
-			/>
+			<RankedTitles titles={titles} first={first} services={services} awards={awards} />
 			<div className="mx-auto mt-6 max-w-7xl px-4">{links}</div>
 		</div>
 	)
 }
 
 // Page changes read this route's data from the browser's cache when they can (docs/navigation-cache.md).
-export const clientLoader = cachedClientLoader("routes/$type.best")
+export const clientLoader = cachedClientLoader("routes/$type.top")
