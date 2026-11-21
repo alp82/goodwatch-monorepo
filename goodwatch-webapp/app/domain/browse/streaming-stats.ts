@@ -88,26 +88,75 @@ export interface ServiceNumbers {
 	great: number
 }
 
+// A service's tiers and resold channels carry its name with a suffix ("Paramount Plus Essential", "Starz Roku Premium
+// Channel", "MGM+ Amazon Channel", "Netflix Standard with Ads"), and the same brand is spelled more than one way
+// ("Paramount+" and "Paramount Plus", "AcornTV" and "Acorn TV").
+const CHANNEL = /\s+(?:(?:amazon|amzon)\s+channel|apple\s+tv\s+channel|roku\s+premium\s+channel)$/i
+const TIER =
+	/\s+(?:(?:standard|basic|free)\s+with\s+ads|with\s+ads|with\s+showtime|premium\s+plus|premium|essential|basic|select|kids|free)$/i
+/** Brands whose own spellings differ more than a suffix: one key stands for the other. */
+const SAME_BRAND: Record<string, string> = {
+	plexchannel: "plex",
+	"joyn+": "joyn",
+	nowtvcinema: "nowtv",
+	"channel4+": "channel4",
+	"magentatv+": "magentatv",
+	"rtl+max": "rtl+",
+	arrowvideo: "arrow",
+	shoutfactorytv: "shoutfactory",
+	amazonarthaus: "arthaus+",
+}
+
+/** A service name without its channel and tier suffixes, in its own spelling ("Paramount Plus Essential" -> "Paramount Plus"). */
+export function brandName(name: string): string {
+	let out = name.replace(/\s+/g, " ").trim()
+	for (let before = ""; before !== out;) {
+		before = out
+		out = out.replace(CHANNEL, "").replace(TIER, "").trim()
+	}
+	return out || name.trim()
+}
+
+/** The brand a service name belongs to, as a key that ignores case, spaces, punctuation and "+" vs "Plus". */
+export function brandKey(name: string): string {
+	const key = brandName(name)
+		.toLowerCase()
+		.replace(/\s+plus\b/g, "+")
+		.replace(/[^a-z0-9+]/g, "")
+	return SAME_BRAND[key] ?? key
+}
+
 /**
- * A tier or channel that carries a bigger service's name ("Amazon Prime Video with Ads", "HBO Max Amazon Channel")
- * folds into it: the same catalog under another label is not another place to browse. Shorter names go first, so the
- * plain brand is always the host. Returns the hosts, each with the larger of its own and its folded numbers.
+ * A brand's tiers and resold channels fold into one service: the same catalog under another label is not another place
+ * to browse. The host is the member named plainly after the brand (else the shortest name, shown without its suffix);
+ * it keeps the larger of its own and its folded numbers, and gathers their service ids.
  */
-export function foldTiers<T extends { name: string } & ServiceNumbers>(
+export function foldTiers<T extends { name: string; serviceIds?: number[] } & ServiceNumbers>(
 	services: readonly T[],
 ): T[] {
+	const groups = new Map<string, T[]>()
+	for (const s of services) {
+		const k = brandKey(s.name)
+		groups.set(k, [...(groups.get(k) ?? []), s])
+	}
 	const hosts: T[] = []
-	for (const s of [...services].sort((x, y) => x.name.length - y.name.length)) {
-		const host = hosts.find((h) => s.name.toLowerCase().startsWith(`${h.name.toLowerCase()} `))
-		if (!host) {
-			hosts.push({ ...s })
-			continue
+	for (const members of groups.values()) {
+		const plain = (s: T) => brandName(s.name) === s.name.replace(/\s+/g, " ").trim()
+		const first = [...members].sort(
+			(x, y) => Number(plain(y)) - Number(plain(x)) || x.name.length - y.name.length,
+		)[0]
+		const host: T = { ...first, name: brandName(first.name) }
+		for (const s of members) {
+			if (s === first) continue
+			host.arrived = Math.max(host.arrived, s.arrived)
+			host.left = Math.max(host.left, s.left)
+			host.popular = Math.max(host.popular, s.popular)
+			host.great = Math.max(host.great, s.great)
+			host.titles = Math.max(host.titles, s.titles)
+			if (host.serviceIds && s.serviceIds)
+				host.serviceIds = [...new Set([...host.serviceIds, ...s.serviceIds])].sort((a, b) => a - b)
 		}
-		host.arrived = Math.max(host.arrived, s.arrived)
-		host.left = Math.max(host.left, s.left)
-		host.popular = Math.max(host.popular, s.popular)
-		host.great = Math.max(host.great, s.great)
-		host.titles = Math.max(host.titles, s.titles)
+		hosts.push(host)
 	}
 	return hosts
 }
