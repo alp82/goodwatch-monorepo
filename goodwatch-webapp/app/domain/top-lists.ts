@@ -1,4 +1,4 @@
-// The best-of lists (`/movies/top`, `/shows/top`) and the people list (`/people`): what they hold, in what order,
+// The Top lists (`/movies/top`, `/shows/top`, `/all/top`) and the people list (`/people`): what they hold, in what order,
 // on which page, and what their copy says.
 //
 // They hold exactly the sitemap cohort, read from the committed sitemap files: the movie and show sitemaps carry the
@@ -8,12 +8,15 @@
 // docs/research/discovery-search/best-of-lists/proposal.md.
 
 export type ListKind = "movies" | "shows"
+/** A Top list: one kind, or movies and shows together (`/all/top`, both rankings merged). */
+export type TopKind = ListKind | "all"
 export type TitleKind = "movie" | "show"
 
 export const LIST_KINDS: readonly ListKind[] = ["movies", "shows"]
+export const TOP_KINDS: readonly TopKind[] = ["movies", "shows", "all"]
 export const titleKindOf = (kind: ListKind): TitleKind => (kind === "movies" ? "movie" : "show")
 
-/** Titles per page of a best-of list. */
+/** Titles per page of a Top list. */
 export const PER_PAGE = 250
 
 const SITE = "https://goodwatch.app"
@@ -55,7 +58,18 @@ export interface RankableTitle {
 	goodwatch_overall_score_voting_count: number | null
 }
 
-/** Best first: by GoodWatch score, then by number of ratings, then by TMDB ID, so the order is stable. */
+/**
+ * An all-time ranking leaves out titles from this year and last: a new title with a huge early following and a very
+ * high first average (2026's "You Can See Everything", 800k+ Letterboxd ratings at 4.6) would otherwise sit in the
+ * top five before its score has settled. They still rank on their year's and decade's lists.
+ */
+export const settledYear = (now: Date = new Date()) => now.getUTCFullYear() - 2
+
+/** Whether a title has been out long enough for an all-time ranking (see settledYear). Unknown years stay. */
+export const isSettled = (releaseYear: number | null | undefined, now: Date = new Date()) =>
+	releaseYear == null || releaseYear <= settledYear(now)
+
+/** Top first: by GoodWatch score, then by number of ratings, then by TMDB ID, so the order is stable. */
 export function rankTitles<T extends RankableTitle>(titles: readonly T[]): T[] {
 	const score = (t: T) => t.goodwatch_overall_score_normalized_percent ?? -1
 	const votes = (t: T) => t.goodwatch_overall_score_voting_count ?? 0
@@ -79,24 +93,25 @@ export const pageRange = (page: number, total: number) => ({
 })
 
 /** A page's own address: the list's path, and `?page=N` after the first page. */
-export const pagePath = (kind: ListKind, page: number) =>
+export const pagePath = (kind: TopKind, page: number) =>
 	page > 1 ? `/${kind}/top?page=${page}` : `/${kind}/top`
 
 // In a sentence, at its start, and in a title-case page title.
-const nouns: Record<ListKind, { noun: string; Lead: string; Noun: string }> = {
+const nouns: Record<TopKind, { noun: string; Lead: string; Noun: string }> = {
 	movies: { noun: "movies", Lead: "Movies", Noun: "Movies" },
 	shows: { noun: "TV shows", Lead: "TV shows", Noun: "TV Shows" },
+	all: { noun: "movies and TV shows", Lead: "Movies and TV shows", Noun: "Movies and TV Shows" },
 }
 
 /** What a list holds, inside a sentence: "movies" or "TV shows". */
-export const listNoun = (kind: ListKind) => nouns[kind].noun
+export const listNoun = (kind: TopKind) => nouns[kind].noun
 
 /** The name of a list in a breadcrumb and a link. */
-export const listName = (kind: ListKind) => `Best ${nouns[kind].noun}`
+export const listName = (kind: TopKind) => `Top ${nouns[kind].noun}`
 
 /** The sources of a kind's GoodWatch score, as a list in a sentence. Letterboxd scores movies only. */
-export const scoreSourceList = (kind: ListKind) =>
-	kind === "movies"
+export const scoreSourceList = (kind: TopKind) =>
+	kind !== "shows"
 		? "IMDb, Letterboxd, Rotten Tomatoes, Metacritic and TMDB"
 		: "IMDb, Rotten Tomatoes, Metacritic and TMDB"
 
@@ -108,7 +123,7 @@ export interface ListCopy {
 }
 
 export function listCopy(
-	kind: ListKind,
+	kind: TopKind,
 	{ total, popular, page }: { total: number; popular: number; page: number },
 ): ListCopy {
 	const { noun, Lead, Noun } = nouns[kind]
@@ -116,15 +131,13 @@ export function listCopy(
 	const later = page > 1
 	return {
 		title: later
-			? `The Best ${Noun} of All Time, Ranked ${first} to ${last} | GoodWatch`
-			: `The Best ${Noun} of All Time, Ranked | GoodWatch`,
-		heading: later
-			? `The best ${noun} of all time, ${first} to ${last}`
-			: `The best ${noun} of all time`,
-		intro: `${total} well-known ${noun}, ranked by GoodWatch score: the most-rated ${noun} on GoodWatch${popular ? `, plus ${popular} that are popular right now` : ""}. Updated monthly.`,
+			? `Top ${Noun} of All Time, Ranked ${first} to ${last} | GoodWatch`
+			: `Top ${Noun} of All Time | GoodWatch`,
+		heading: later ? `Top ${noun} of all time, ${first} to ${last}` : `Top ${noun} of all time`,
+		intro: `${total} well-known ${noun}, ranked by GoodWatch score: the most-rated ${noun} on GoodWatch${popular ? `, plus ${popular} that are popular right now` : ""}. New releases join once they're two years old. Updated monthly.`,
 		description: later
-			? `${Lead} ${first} to ${last} of the ${total} best-known ${noun}, ranked by one score from ${scoreSourceList(kind)}. See every score and where to stream it.`
-			: `The ${total} best-known ${noun}, ranked by one score from ${scoreSourceList(kind)}. See every score and where to stream it.`,
+			? `${Lead} ${first} to ${last} of the top ${total} well-known ${noun}, ranked by one score from ${scoreSourceList(kind)}. See every score and where to stream it.`
+			: `The top ${total} well-known ${noun}, ranked by one score from ${scoreSourceList(kind)}. See every score and where to stream it.`,
 	}
 }
 

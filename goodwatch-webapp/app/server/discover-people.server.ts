@@ -2,7 +2,7 @@ import { PERSON_PHOTO_COLUMN } from "~/server/person-photo-sql"
 // Discover people: sitemap actors and adult-safe credit aggregates for featured crew and filtered results.
 // Public credit results share a best-effort Redis cache; viewer state stays in the panel.
 import { createHash } from "node:crypto"
-import { parsePeopleSitemap } from "~/domain/best-lists"
+import { parsePeopleSitemap } from "~/domain/top-lists"
 import { catalogRows } from "~/server/title-filter/order.server"
 import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
 import { getRedisCluster, withRedisDeadline } from "~/utils/cache"
@@ -41,16 +41,14 @@ const JOBS = [
 	"Original Music Composer",
 	"Director of Photography",
 ]
-const roleOf = (job: string) =>
-	["Screenplay", "Novel", "Writer"].includes(job) ? "Writer" : job
+const roleOf = (job: string) => (["Screenplay", "Novel", "Writer"].includes(job) ? "Writer" : job)
 
 /** Reject malformed keys before any ID can become a SQL literal. */
 function validKeys(keys: readonly TitleKey[]) {
 	return [
 		...new Set(
 			keys.filter((key) => {
-				if (!Number.isSafeInteger(key) || key <= 1e12 || key >= 3e12)
-					return false
+				if (!Number.isSafeInteger(key) || key <= 1e12 || key >= 3e12) return false
 				const { tmdbId } = parseTitleKey(key)
 				return Number.isSafeInteger(tmdbId) && tmdbId > 0
 			}),
@@ -60,7 +58,9 @@ function validKeys(keys: readonly TitleKey[]) {
 
 /** Public title sets alone identify public credit aggregates, including for a member's filtered list. */
 export function peopleCacheKey(keys: readonly TitleKey[]) {
-	const sorted = validKeys(keys).slice(0, PEOPLE_TITLES).sort((a, b) => a - b)
+	const sorted = validKeys(keys)
+		.slice(0, PEOPLE_TITLES)
+		.sort((a, b) => a - b)
 	return `discover-people:v1:${createHash("sha256").update(JSON.stringify(sorted)).digest("base64url")}`
 }
 
@@ -78,10 +78,7 @@ async function readCreditPeople(
 	run: typeof query,
 	featuredCrew: boolean,
 ): Promise<DiscoverPeople> {
-	const safe = validKeys(keys).slice(
-		0,
-		featuredCrew ? FEATURED_TITLES : PEOPLE_TITLES,
-	)
+	const safe = validKeys(keys).slice(0, featuredCrew ? FEATURED_TITLES : PEOPLE_TITLES)
 	const groups = await Promise.all(
 		(["movie", "show"] as const).map(async (kind) => {
 			const ids = safe.flatMap((key) => {
@@ -107,10 +104,7 @@ async function readCreditPeople(
 		}),
 	)
 	const aggregate = (credits: Credit[], acting: boolean) => {
-		const totals = new Map<
-			string,
-			{ id: number; role: string; count: number }
-		>()
+		const totals = new Map<string, { id: number; role: string; count: number }>()
 		for (const credit of credits) {
 			const role = acting ? "Actor" : roleOf(credit.job ?? "")
 			const id = Number(credit.person_tmdb_id)
@@ -121,8 +115,7 @@ async function readCreditPeople(
 			totals.set(key, row)
 		}
 		return [...totals.values()].sort(
-			(a, b) =>
-				b.count - a.count || a.id - b.id || a.role.localeCompare(b.role),
+			(a, b) => b.count - a.count || a.id - b.id || a.role.localeCompare(b.role),
 		)
 	}
 	const actors = aggregate(
@@ -152,9 +145,7 @@ async function readCreditPeople(
 						...person,
 						role,
 						count,
-						note: acting
-							? `${count} ${count === 1 ? "title" : "titles"}`
-							: `${role} · ${count}`,
+						note: acting ? `${count} ${count === 1 ? "title" : "titles"}` : `${role} · ${count}`,
 					},
 				]
 			})
@@ -168,11 +159,8 @@ async function readCreditPeople(
 }
 
 const loading = new Map<string, Promise<DiscoverPeople>>()
-export function peopleInResults(
-	keys: readonly TitleKey[],
-): Promise<DiscoverPeople> {
-	if (!keys.length)
-		return Promise.resolve({ mode: "results", actors: [], crew: [] })
+export function peopleInResults(keys: readonly TitleKey[]): Promise<DiscoverPeople> {
+	if (!keys.length) return Promise.resolve({ mode: "results", actors: [], crew: [] })
 	const key = peopleCacheKey(keys)
 	const pending = loading.get(key)
 	if (pending) return pending
@@ -186,9 +174,7 @@ export function peopleInResults(
 		}
 		const result = await readPeopleInResults(keys)
 		if (redis) {
-			void withRedisDeadline(
-				redis.set(key, JSON.stringify(result), "EX", 30 * 60),
-			).catch(() => {})
+			void withRedisDeadline(redis.set(key, JSON.stringify(result), "EX", 30 * 60)).catch(() => {})
 		}
 		return result
 	})().finally(() => loading.delete(key))
@@ -209,10 +195,7 @@ export function selectFeaturedPeople(people: readonly Person[]): DiscoverPeople 
 }
 
 /** Quotas take precedence in this order; a multi-role person can fill only one slot. */
-function selectFeaturedCrew(
-	candidates: readonly PanelPerson[],
-	actors: readonly PanelPerson[],
-) {
+function selectFeaturedCrew(candidates: readonly PanelPerson[], actors: readonly PanelPerson[]) {
 	const seen = new Set(actors.map((person) => Number(person.tmdb_id)))
 	const crew: PanelPerson[] = []
 	for (const [job, limit, role] of [
@@ -224,11 +207,7 @@ function selectFeaturedCrew(
 		let picked = 0
 		for (const person of candidates) {
 			const id = Number(person.tmdb_id)
-			if (
-				person.role !== job ||
-				person.known_for_department === "Acting" ||
-				seen.has(id)
-			) continue
+			if (person.role !== job || person.known_for_department === "Acting" || seen.has(id)) continue
 			seen.add(id)
 			crew.push({ ...person, role, count: null, note: role })
 			if (++picked === limit) break
@@ -245,9 +224,7 @@ function readFeaturedActors(): Promise<DiscoverPeople> {
 		const people = await query<Person>(
 			`SELECT tmdb_id, name, ${PERSON_PHOTO_COLUMN}, known_for_department FROM person WHERE adult = false AND tmdb_id IN (${ids.join(",")}) LIMIT ${ids.length}`,
 		)
-		const byId = new Map(
-			people.map((person) => [Number(person.tmdb_id), person]),
-		)
+		const byId = new Map(people.map((person) => [Number(person.tmdb_id), person]))
 		return selectFeaturedPeople(ids.flatMap((id) => byId.get(id) ?? []))
 	})().catch((error) => {
 		featuredActors = undefined
@@ -267,9 +244,7 @@ export async function featuredPeople(): Promise<DiscoverPeople> {
 		version: snapshot.version,
 		result: (async () => {
 			// Filter kind before the cutoff so shows cannot displace Popular movies.
-			const keys = Array.from(
-				catalogRows(snapshot, "popular").keys,
-			)
+			const keys = Array.from(catalogRows(snapshot, "popular").keys)
 				.filter((key) => parseTitleKey(key).mediaType === "movie")
 				.slice(0, FEATURED_TITLES)
 			const credits = await readCreditPeople(keys, query, true)

@@ -40,23 +40,19 @@ export const moods: Entry[] = [
 ]
 export const lists: Entry[] = [
 	...(["movies", "shows"] as const).map((type) => ({
-		names: [`best ${type}`, `top ${type}`, `best of ${type}`],
+		names: [`top ${type}`, `best ${type}`, `best of ${type}`],
 		popularity: 1,
 		item: {
-			key: `list-best-${type}`,
-			label: `Best ${type}`,
-			href: `/${type}/best`,
+			key: `list-top-${type}`,
+			label: `Top ${type}`,
+			href: `/${type}/top`,
 			sub: "Ranked by GoodWatch score",
 		},
 	})),
 	...Object.entries(mainHierarchy).flatMap(([category, pages]) =>
 		Object.values(pages).flatMap((page) =>
 			(page.type === "all" ? ["movies", "shows"] : [page.type]).map((type) => ({
-				names: [
-					page.label,
-					`${page.label} ${type}`,
-					`best ${page.label} ${type}`,
-				],
+				names: [page.label, `${page.label} ${type}`, `best ${page.label} ${type}`],
 				popularity: 0.8,
 				item: {
 					key: `list-${type}-${category}-${page.path}`,
@@ -79,9 +75,7 @@ export const blog: Entry[] = (
 )
 	.filter(
 		(post) =>
-			!post.draft &&
-			!!post.published &&
-			post.published <= new Date().toISOString().slice(0, 10),
+			!post.draft && !!post.published && post.published <= new Date().toISOString().slice(0, 10),
 	)
 	.map((post) => ({
 		names: [post.title, "blog"],

@@ -9,22 +9,16 @@ import type { DiscoverParams, DiscoverResult } from "~/server/discover.server"
 // The real readers need Crate, Redis, and the bundled sitemaps; the tests pass their own.
 const { registerHooks } = nodeModule as unknown as {
 	registerHooks(hooks: {
-		resolve(
-			specifier: string,
-			context: unknown,
-			next: (s: string, c: unknown) => unknown,
-		): unknown
+		resolve(specifier: string, context: unknown, next: (s: string, c: unknown) => unknown): unknown
 	}): void
 }
 const STUBS: Record<string, string> = {
-	"~/server/best-lists.server":
-		"export const getRankedList = () => { throw new Error('stub') }",
+	"~/server/top-lists.server": "export const getRankedList = () => { throw new Error('stub') }",
 	"~/server/new-on-services.server":
 		"export const getCountryArrivals = () => { throw new Error('stub') }",
 	"~/server/streaming-providers.server":
 		"export const getStreamingProviders = () => { throw new Error('stub') }",
-	"~/server/discover.server":
-		"export const getDiscoverResults = () => { throw new Error('stub') }",
+	"~/server/discover.server": "export const getDiscoverResults = () => { throw new Error('stub') }",
 }
 registerHooks({
 	resolve: (specifier, context, next) =>
@@ -36,18 +30,10 @@ registerHooks({
 			: next(specifier, context),
 })
 
-const {
-	keptParts,
-	joinBrowse,
-	pickPosters,
-	readCountryBrowse,
-	readSharedBrowse,
-	serviceHref,
-} = await import("./browse.server.ts")
+const { keptParts, joinBrowse, pickPosters, readCountryBrowse, readSharedBrowse, serviceHref } =
+	await import("./browse.server.ts")
 const { BRANDS } = await import("~/domain/new-on-services")
-const { BROWSE_GENRES, BROWSE_MOODS, moodHref } = await import(
-	"~/ui/start/browse/browse-data"
-)
+const { BROWSE_GENRES, BROWSE_MOODS, moodHref } = await import("~/ui/start/browse/browse-data")
 const { exploreAddressExists } = await import("~/ui/explore/address")
 type Readers = Parameters<typeof readSharedBrowse>[0]
 
@@ -117,10 +103,7 @@ describe("the shared rails", () => {
 		assert.equal(complete, true)
 		assert.equal(value.top.movie.length, 10)
 		assert.equal(value.top.show[0].media_type, "show")
-		assert.equal(
-			value.top.movie[0].goodwatch_overall_score_normalized_percent,
-			90,
-		)
+		assert.equal(value.top.movie[0].goodwatch_overall_score_normalized_percent, 90)
 		assert.deepEqual(
 			value.moods.map((mood) => mood.path),
 			BROWSE_MOODS.map((mood) => mood.path),
@@ -131,14 +114,11 @@ describe("the shared rails", () => {
 			BROWSE_GENRES.movie,
 		)
 		assert.equal(
-			value.genres.show.find((genre) => genre.path === "scifi-and-fantasy")
-				?.name,
+			value.genres.show.find((genre) => genre.path === "scifi-and-fantasy")?.name,
 			"Sci-Fi & Fantasy",
 		)
 		// The pages' own filters, movies for the moods, each genre's own type, never a service.
-		const comedy = reads.find(
-			(read) => read.withGenres === "35" && read.type === "show",
-		)
+		const comedy = reads.find((read) => read.withGenres === "35" && read.type === "show")
 		assert.ok(comedy)
 		for (const [key, field] of Object.entries({
 			tense: "tension",
@@ -147,9 +127,7 @@ describe("the shared rails", () => {
 			magical: "wonder",
 			quirky: "eccentricity",
 		})) {
-			const conditions = reads.map((read) =>
-				JSON.parse(read.fingerprintConditions || "[]"),
-			)
+			const conditions = reads.map((read) => JSON.parse(read.fingerprintConditions || "[]"))
 			const expected = [
 				{
 					logic: "AND",
@@ -165,9 +143,7 @@ describe("the shared rails", () => {
 				},
 			]
 			assert.ok(
-				conditions.some(
-					(value) => JSON.stringify(value) === JSON.stringify(expected),
-				),
+				conditions.some((value) => JSON.stringify(value) === JSON.stringify(expected)),
 				key,
 			)
 		}
@@ -226,16 +202,9 @@ describe("the country's rails", () => {
 		assert.equal(complete, true)
 		assert.equal(value.arrivals.length, 12)
 		assert.equal(value.arrivals[0].title, "New 1")
-		assert.equal(
-			value.arrivals[0].goodwatch_overall_score_normalized_percent,
-			81,
-		)
+		assert.equal(value.arrivals[0].goodwatch_overall_score_normalized_percent, 81)
 		assert.deepEqual(
-			value.services.map((service) => [
-				service.name,
-				service.href,
-				service.logo,
-			]),
+			value.services.map((service) => [service.name, service.href, service.logo]),
 			[
 				["Netflix", "/shows/streaming/netflix", "/netflix.jpg"],
 				["Disney+", "/shows/streaming/disney-plus", "/disney.jpg"],

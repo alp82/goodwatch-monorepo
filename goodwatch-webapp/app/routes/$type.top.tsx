@@ -1,4 +1,4 @@
-// /movies/top and /shows/top: the sitemap's movies or shows, best first, 250 a page (see domain/best-lists.ts). A
+// /movies/top and /shows/top: the sitemap's movies or shows, best first, 250 a page (see domain/top-lists.ts). A
 // later page is `?page=N`, its own address with its own canonical; a page past the last answers 404. The old
 // `/movies/best` addresses answer 301 here (domain/browse/redirects.ts).
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
@@ -13,14 +13,14 @@ import {
 	pageRange,
 	requestedPage,
 	titleKindOf,
-} from "~/domain/best-lists"
+} from "~/domain/top-lists"
 import { cachedClientLoader } from "~/navigation/instant-navigation"
 import { awardMarksOf } from "~/server/award-marks.server"
-import { getRankedList } from "~/server/best-lists.server"
+import { getRankedList } from "~/server/top-lists.server"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { rowServices } from "~/server/row-services.server"
-import { ListHead } from "~/ui/best-lists/ListHead"
-import { ListPageLinks, RankedTitles } from "~/ui/best-lists/RankedTitles"
+import { ListHead } from "~/ui/top-lists/ListHead"
+import { ListPageLinks, RankedTitles } from "~/ui/top-lists/RankedTitles"
 import { notFound } from "~/ui/explore/address"
 import type { Crumb } from "~/ui/nav/breadcrumb-trail"
 import { buildMeta } from "~/utils/meta"

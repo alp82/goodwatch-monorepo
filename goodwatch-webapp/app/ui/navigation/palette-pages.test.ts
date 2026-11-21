@@ -43,14 +43,11 @@ test("no two pages share a key or a name with the same section", () => {
 
 test("every page links inside the site", () => {
 	for (const viewer of [member, visitor])
-		for (const p of palettePages(viewer))
-			assert.match(p.href, /^\/[^/]?/, p.key)
+		for (const p of palettePages(viewer)) assert.match(p.href, /^\/[^/]?/, p.key)
 })
 
 test("the pages named in the brief are all reachable by a member", () => {
-	const hrefs = new Set(
-		palettePages(member).map((p) => p.href.split(/[?#]/)[0]),
-	)
+	const hrefs = new Set(palettePages(member).map((p) => p.href.split(/[?#]/)[0]))
 	for (const path of [
 		"/watch/shows",
 		"/watch/shows/not-started",
@@ -85,8 +82,8 @@ test("the pages named in the brief are all reachable by a member", () => {
 		"/about",
 		"/how-it-works",
 		"/hot",
-		"/movies/best",
-		"/shows/best",
+		"/movies/top",
+		"/shows/top",
 		"/people",
 		"/blog",
 		"/lists/mine",
@@ -98,16 +95,12 @@ test("the pages named in the brief are all reachable by a member", () => {
 })
 
 test("a member without a handle gets /taste for Taste and /taste/quiz for rating", () => {
-	const hrefs = new Map(
-		palettePages(memberWithoutHandle).map((p) => [p.key, p.href]),
-	)
+	const hrefs = new Map(palettePages(memberWithoutHandle).map((p) => [p.key, p.href]))
 	assert.equal(hrefs.get("taste"), "/taste")
 	assert.equal(hrefs.get("tasteQuiz"), "/taste/quiz")
 	assert.equal(hrefs.get("myScores"), "/taste")
 	assert.equal(hrefs.get("tasteFingerprint"), "/taste#fingerprint")
-	const visitorHrefs = new Map(
-		palettePages(visitor).map((p) => [p.key, p.href]),
-	)
+	const visitorHrefs = new Map(palettePages(visitor).map((p) => [p.key, p.href]))
 	assert.equal(visitorHrefs.get("taste"), "/taste")
 	assert.equal(visitorHrefs.get("tasteQuiz"), "/taste/quiz")
 })
@@ -133,14 +126,7 @@ test("every settings page in the routes has a palette page", () => {
 test("members and visitors see their own pages", () => {
 	const memberKeys = new Set(keysOf(palettePages(member)))
 	const visitorKeys = new Set(keysOf(palettePages(visitor)))
-	for (const key of [
-		"wishlist",
-		"myScores",
-		"settings",
-		"imports",
-		"profile",
-		"profile-stats",
-	])
+	for (const key of ["wishlist", "myScores", "settings", "imports", "profile", "profile-stats"])
 		assert.ok(memberKeys.has(key) && !visitorKeys.has(key), key)
 	for (const key of ["signUp", "signIn"])
 		assert.ok(visitorKeys.has(key) && !memberKeys.has(key), key)
@@ -229,12 +215,9 @@ test("new finds the page named New first, then the newest releases", () => {
 test("prefixes and several words find pages", () => {
 	assert.deepEqual(top(member, "sett"), ["settings"])
 	assert.deepEqual(top(member, "hot on"), ["hot"])
-	assert.deepEqual(top(member, "best shows"), ["bestShows"])
+	assert.deepEqual(top(member, "best shows"), ["topShows"])
 	assert.deepEqual(top(member, "horror", 2), ["movies-genres-horror"])
-	assert.deepEqual(top(member, "comedy", 2), [
-		"movies-genres-comedy",
-		"shows-genres-comedy",
-	])
+	assert.deepEqual(top(member, "comedy", 2), ["movies-genres-comedy", "shows-genres-comedy"])
 	assert.deepEqual(top(member, "scary mov"), ["movies-moods-scary"])
 	assert.deepEqual(top(member, "netflix shows"), ["shows-streaming-netflix"])
 })

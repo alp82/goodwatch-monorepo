@@ -64,16 +64,10 @@ test("Movie and TVSeries award structured data contains only ordered reported wi
 			jsonLd.award,
 			Array.from(
 				{ length: 20 },
-				(_, i) =>
-					`Academy Awards – Category ${String(i).padStart(2, "0")} (2024)`,
+				(_, i) => `Academy Awards – Category ${String(i).padStart(2, "0")} (2024)`,
 			),
 		)
-		assert.ok(
-			!(
-				"award" in
-				buildJsonLdDetail(page, { ...media, awards: undefined } as never)
-			),
-		)
+		assert.ok(!("award" in buildJsonLdDetail(page, { ...media, awards: undefined } as never)))
 		assert.ok(
 			!(
 				"award" in
@@ -127,14 +121,16 @@ test("show JSON-LD uses the visible Producer selection", () => {
 	const jsonLd = buildJsonLdDetail(page, media as never) as {
 		producer: { name: string }[]
 	}
-	assert.deepEqual(jsonLd.producer.map((person) => person.name), [
-		"Credited producer",
-	])
+	assert.deepEqual(
+		jsonLd.producer.map((person) => person.name),
+		["Credited producer"],
+	)
 })
 
 test("movie JSON-LD keeps five director and composer credits", () => {
 	const people = Array.from({ length: 5 }, (_, id) => ({
-		id, name: `Person ${id}`,
+		id,
+		name: `Person ${id}`,
 	}))
 	const jsonLd = buildJsonLdDetail(page, {
 		mediaType: "movie",
@@ -194,18 +190,12 @@ test("a title's structured data has no null value and no empty list", () => {
 })
 
 test("a page's Open Graph image is the JPEG under /og/, with index for the home page", () => {
-	assert.equal(
-		ogImageUrl("https://goodwatch.app/"),
-		"https://goodwatch.app/og/index.jpg?brand=D2",
-	)
+	assert.equal(ogImageUrl("https://goodwatch.app/"), "https://goodwatch.app/og/index.jpg?brand=D2")
 	assert.equal(
 		ogImageUrl("https://goodwatch.app/movie/603-the-matrix"),
 		"https://goodwatch.app/og/movie/603-the-matrix.jpg?brand=D2",
 	)
-	assert.equal(
-		ogImageUrl("/movies/moods/"),
-		"https://goodwatch.app/og/movies/moods.jpg?brand=D2",
-	)
+	assert.equal(ogImageUrl("/movies/moods/"), "https://goodwatch.app/og/movies/moods.jpg?brand=D2")
 })
 
 test("a card with its own version names it in its image address, so previews fetch the new design", () => {
@@ -228,23 +218,15 @@ test("a page without structured data has no JSON-LD tag, not an empty one", () =
 })
 
 test("a page with a title or a list has one JSON-LD tag with content", () => {
-	const [detail, ...moreDetail] = jsonLdTags(
-		buildMeta({ pageMeta: page, item: show([]) }),
-	)
+	const [detail, ...moreDetail] = jsonLdTags(buildMeta({ pageMeta: page, item: show([]) }))
 	assert.equal(moreDetail.length, 0)
-	assert.equal(
-		(detail["script:ld+json"] as { "@type": string })["@type"],
-		"TVSeries",
-	)
+	assert.equal((detail["script:ld+json"] as { "@type": string })["@type"], "TVSeries")
 
 	const [list, ...moreList] = jsonLdTags(
 		buildMeta({ pageMeta: page, items: [{ title: "Dark" }] as never }),
 	)
 	assert.equal(moreList.length, 0)
-	assert.equal(
-		(list["script:ld+json"] as { "@type": string })["@type"],
-		"CollectionPage",
-	)
+	assert.equal((list["script:ld+json"] as { "@type": string })["@type"], "CollectionPage")
 })
 
 test("the first page of a list has the list's address, with or without a page parameter", () => {
@@ -259,10 +241,7 @@ test("the first page of a list has the list's address, with or without a page pa
 test("a later page of a list has its page number in the address and no other parameter", () => {
 	const url = "https://goodwatch.app/movies/moods/scary"
 	assert.equal(pagedUrl(url, "?page=2"), `${url}?page=2`)
-	assert.equal(
-		pagedUrl(url, "?utm_source=x&page=12&country=DE"),
-		`${url}?page=12`,
-	)
+	assert.equal(pagedUrl(url, "?utm_source=x&page=12&country=DE"), `${url}?page=12`)
 	assert.equal(pagedUrl(url, "?page=02"), `${url}?page=2`)
 })
 
@@ -285,9 +264,7 @@ test("the canonical address and og:url of a later page name that page", () => {
 test("a category page's title, description, and image description carry no emoji", async () => {
 	const { plainPageMeta, withoutEmoji } = await import("./meta.ts")
 	assert.equal(
-		withoutEmoji(
-			"Discover the best Mind-Bending 🌀 Movies to watch right now.",
-		),
+		withoutEmoji("Discover the best Mind-Bending 🌀 Movies to watch right now."),
 		"Discover the best Mind-Bending Movies to watch right now.",
 	)
 	assert.equal(withoutEmoji("Feel Good ❤️ Shows"), "Feel Good Shows")
@@ -320,29 +297,25 @@ test("a page has one robots tag: index by default, or the directive it asks for"
 	const robots = (tags: Record<string, unknown>[]) =>
 		tags.filter((tag) => tag.name === "robots").map((tag) => tag.content)
 	assert.deepEqual(robots(buildMeta({ pageMeta: page })), ["index, follow"])
-	assert.deepEqual(
-		robots(buildMeta({ pageMeta: page, robots: "noindex, follow" })),
-		["noindex, follow"],
-	)
-	assert.deepEqual(
-		robots(buildMeta({ pageMeta: page, robots: "noindex, nofollow" })),
-		["noindex, nofollow"],
-	)
+	assert.deepEqual(robots(buildMeta({ pageMeta: page, robots: "noindex, follow" })), [
+		"noindex, follow",
+	])
+	assert.deepEqual(robots(buildMeta({ pageMeta: page, robots: "noindex, nofollow" })), [
+		"noindex, nofollow",
+	])
 })
 
 test("a ranked list page carries its entries as an ItemList and links its neighbor pages", () => {
 	const tags = buildMeta({
-		pageMeta: { ...page, url: "https://goodwatch.app/movies/best?page=2" },
+		pageMeta: { ...page, url: "https://goodwatch.app/movies/top?page=2" },
 		itemList: {
 			paths: ["/movie/238-the-godfather", "/movie/389-12-angry-men"],
 			first: 251,
 		},
-		pages: { prev: "/movies/best", next: "/movies/best?page=3" },
+		pages: { prev: "/movies/top", next: "/movies/top?page=3" },
 	}) as Record<string, unknown>[]
 	const list = tags.find(
-		(tag) =>
-			(tag["script:ld+json"] as { "@type"?: string } | undefined)?.["@type"] ===
-			"ItemList",
+		(tag) => (tag["script:ld+json"] as { "@type"?: string } | undefined)?.["@type"] === "ItemList",
 	)?.["script:ld+json"]
 	assert.deepEqual(list, {
 		"@context": "https://schema.org",
@@ -360,15 +333,11 @@ test("a ranked list page carries its entries as an ItemList and links its neighb
 			},
 		],
 	})
-	const link = (rel: string) =>
-		tags.find((tag) => tag.tagName === "link" && tag.rel === rel)?.href
-	assert.equal(link("canonical"), "https://goodwatch.app/movies/best?page=2")
-	assert.equal(link("prev"), "https://goodwatch.app/movies/best")
-	assert.equal(link("next"), "https://goodwatch.app/movies/best?page=3")
-	assert.equal(
-		tags.find((tag) => tag.name === "robots")?.content,
-		"index, follow",
-	)
+	const link = (rel: string) => tags.find((tag) => tag.tagName === "link" && tag.rel === rel)?.href
+	assert.equal(link("canonical"), "https://goodwatch.app/movies/top?page=2")
+	assert.equal(link("prev"), "https://goodwatch.app/movies/top")
+	assert.equal(link("next"), "https://goodwatch.app/movies/top?page=3")
+	assert.equal(tags.find((tag) => tag.name === "robots")?.content, "index, follow")
 })
 
 test("a page without list entries or neighbors has no ItemList and no prev or next link", () => {

@@ -82,7 +82,7 @@ const QUICK_MOODS: MoodKey[] = ["funny", "feelgood", "tense", "mind", "romance",
 /** The pages to go to before typing: the ones members keep going back to; visitors get the main pages. */
 const GO_TO = {
 	member: ["profile", "wishlist", "myScores", "myLists", "forYou", "settings"],
-	visitor: ["discover", "forYou", "hot", "bestMovies", "signUp", "howItWorks"],
+	visitor: ["discover", "forYou", "hot", "topMovies", "signUp", "howItWorks"],
 }
 
 function useDebounced<T>(value: T, ms: number): T {

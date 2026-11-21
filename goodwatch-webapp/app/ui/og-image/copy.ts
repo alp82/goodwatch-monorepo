@@ -12,7 +12,7 @@ import { MOOD_BY_KEY } from "../../domain/moods.ts"
 // - A blog post's kind, headline and preview line: app/content/blog/posts.json.
 
 // Relative with the extension, because copy.test.ts runs this file in plain Node.
-import { type ListKind, listName, listNoun } from "../../domain/best-lists.ts"
+import { type TopKind, listName, listNoun } from "../../domain/top-lists.ts"
 import { TONIGHT_ASK } from "../connector/example-prompts.ts"
 
 export const BRAND_NAME = "GoodWatch"
@@ -30,13 +30,10 @@ export const runtimeLabel = (minutes: number | null | undefined) => {
 	const whole = Math.round(minutes)
 	const hours = Math.floor(whole / 60)
 	const rest = whole % 60
-	return [hours ? `${hours}h` : "", rest ? `${rest}m` : ""]
-		.filter(Boolean)
-		.join(" ")
+	return [hours ? `${hours}h` : "", rest ? `${rest}m` : ""].filter(Boolean).join(" ")
 }
 
-export const seasonsLabel = (count: number) =>
-	`${count} season${count > 1 ? "s" : ""}`
+export const seasonsLabel = (count: number) => `${count} season${count > 1 ? "s" : ""}`
 
 // People: the tag above the name, such as "Actor · 198 titles".
 export const DEPARTMENT_LABELS: Record<string, string> = {
@@ -59,28 +56,21 @@ export const typeIndexCopy = (typeLabel: string): PageCopy => ({
 			: "By genre, mood, or streaming service. Scored from IMDb, Rotten Tomatoes, and Metacritic.",
 })
 
-// /movies/best and /shows/best.
-export const bestListCopy = (kind: ListKind): PageCopy => ({
+// /movies/top, /shows/top and /all/top.
+export const topListCopy = (kind: TopKind): PageCopy => ({
 	tag: listName(kind),
-	title: `The best ${listNoun(kind)} of all time`,
+	title: `Top ${listNoun(kind)} of all time`,
 	subtitle: "Ranked by GoodWatch score",
 })
 
 // /movies/moods, /shows/genres, and so on. categoryLabel is "Moods", "Streaming", "Genres".
-export const categoryIndexCopy = (
-	typeLabel: string,
-	categoryLabel: string,
-) => ({
+export const categoryIndexCopy = (typeLabel: string, categoryLabel: string) => ({
 	tag: `Browse ${typeLabel}`,
 	title: `${typeLabel} by ${categoryLabel.toLowerCase()}`,
 })
 
 // /movies/moods/scary and so on. pageLabel is "Scary", "Netflix", "Comedy".
-export const collectionCopy = (
-	typeLabel: string,
-	categoryLabel: string,
-	pageLabel: string,
-) => ({
+export const collectionCopy = (typeLabel: string, categoryLabel: string, pageLabel: string) => ({
 	tag: `${categoryLabel} · ${typeLabel}`,
 	title: `${pageLabel} ${typeLabel}`,
 })
@@ -142,8 +132,7 @@ export const STATIC_PAGE_COPY: Record<string, PageCopy> = {
 	"/lists/new": {
 		tag: "Top 5",
 		title: "Rank your top 5. Share it.",
-		subtitle:
-			"Pick five movies or shows, choose a card design, and share the link.",
+		subtitle: "Pick five movies or shows, choose a card design, and share the link.",
 	},
 	[WATCH_PATHS.nextEpisodes]: {
 		tag: "Watch",
@@ -275,9 +264,7 @@ export const NEW_SERVICES_CARD_COPY = {
 	member: "New on your services",
 	shareTag: "In your country",
 	tally: (count: number) =>
-		count === 1
-			? "1 new movie or show"
-			: `${count.toLocaleString("en-US")} new movies and shows`,
+		count === 1 ? "1 new movie or show" : `${count.toLocaleString("en-US")} new movies and shows`,
 	// The member card's wall marks a few services as the viewer's own, the rest step back.
 	memberPicks: ["netflix", "hulu", "paramount-plus"],
 	// The share card's disc: a few countries' flags stand for "yours, wherever you are".
@@ -387,8 +374,7 @@ export const TITLE_SUB_PAGE_CARD_COPY = {
 	fingerprintTag: "Fingerprint",
 	/** Tropes: the tag in the corner and the count under the poster. */
 	tropesTag: "Tropes",
-	tropesCount: (n: number) =>
-		`${n.toLocaleString("en-US")} trope${n === 1 ? "" : "s"}`,
+	tropesCount: (n: number) => `${n.toLocaleString("en-US")} trope${n === 1 ? "" : "s"}`,
 	/** At a glance: the tile labels. */
 	tiles: {
 		released: "Released",

@@ -159,15 +159,7 @@ export const BROWSE_GENRES: Record<BrowseKind, readonly string[]> = {
 		"romance",
 		"documentary",
 	],
-	show: [
-		"comedy",
-		"drama",
-		"crime",
-		"scifi-and-fantasy",
-		"animation",
-		"mystery",
-		"documentary",
-	],
+	show: ["comedy", "drama", "crime", "scifi-and-fantasy", "animation", "mystery", "documentary"],
 }
 
 const PLURAL = { movie: "movies", show: "shows" } as const
@@ -176,13 +168,12 @@ export const moodHref = (path: string) =>
 	DISCOVER_BROWSE_MOODS.some((key) => key === path)
 		? `/discover?moods=${path}`
 		: `/movies/moods/${path}`
-export const genreHref = (kind: BrowseKind, path: string) =>
-	`/${PLURAL[kind]}/genres/${path}`
+export const genreHref = (kind: BrowseKind, path: string) => `/${PLURAL[kind]}/genres/${path}`
 
 /** The section's hub links: the rails' See all, and the ways to browse that no rail leads to. */
 export const BROWSE_HUBS = {
-	bestMovies: "/movies/best",
-	bestShows: "/shows/best",
+	topMovies: "/movies/top",
+	topShows: "/shows/top",
 	arrivals: "/new",
 	moods: "/movies/moods",
 	services: "/shows/streaming",
@@ -195,8 +186,8 @@ export const MORE_HUBS = [
 	{ href: "/discover", label: "Discover" },
 	{ href: "/movies", label: "Movies" },
 	{ href: "/shows", label: "TV shows" },
-	{ href: "/movies/best", label: "Best movies" },
-	{ href: "/shows/best", label: "Best shows" },
+	{ href: "/movies/top", label: "Top movies" },
+	{ href: "/shows/top", label: "Top shows" },
 	{ href: "/new", label: "New on streaming" },
 	{ href: "/movies/moods", label: "Movies by mood" },
 	{ href: "/shows/moods", label: "Shows by mood" },

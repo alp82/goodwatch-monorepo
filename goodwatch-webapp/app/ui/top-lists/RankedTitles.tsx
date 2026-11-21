@@ -4,8 +4,8 @@
 // GoodWatch score in the pill, and a member's own score, state and services join it from their data.
 import { Link } from "@remix-run/react"
 import { useId } from "react"
-import { type ListKind, pagePath, pageRange } from "~/domain/best-lists"
-import type { ListTitle } from "~/server/best-lists.server"
+import { type ListKind, pagePath, pageRange } from "~/domain/top-lists"
+import type { ListTitle } from "~/server/top-lists.server"
 import type { RowServices } from "~/server/row-services.server"
 import { createMediaKey } from "~/types/user-data"
 import { awardKey } from "~/domain/award-marks"

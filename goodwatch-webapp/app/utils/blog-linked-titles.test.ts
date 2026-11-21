@@ -5,13 +5,10 @@ import { linkedTitle, linkedTitles } from "./blog-linked-titles.js"
 test("a title page's address names its title", () => {
 	assert.equal(linkedTitle("/movie/129-spirited-away"), "movie/129")
 	assert.equal(linkedTitle("/movie/129"), "movie/129")
-	assert.equal(
-		linkedTitle("https://goodwatch.app/show/1399-got/tropes"),
-		"show/1399",
-	)
+	assert.equal(linkedTitle("https://goodwatch.app/show/1399-got/tropes"), "show/1399")
 	assert.equal(linkedTitle("/tv/1399"), "show/1399")
 	for (const url of [
-		"/movies/best",
+		"/movies/top",
 		"/movie/0",
 		"/movie/12x",
 		"https://example.com/movie/1",

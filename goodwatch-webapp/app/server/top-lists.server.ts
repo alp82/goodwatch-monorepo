@@ -1,13 +1,14 @@
 import { PERSON_PHOTO_COLUMN } from "~/server/person-photo-sql"
 import {
 	type TitleKind,
+	isSettled,
 	parsePeopleSitemap,
 	parseTitleSitemap,
 	rankTitles,
-} from "~/domain/best-lists"
+} from "~/domain/top-lists"
 import { query } from "~/utils/crate"
 import type { PresentedMedia } from "~/utils/media-presentation"
-// The data of the best-of lists and the people list (domain/best-lists.ts): the sitemap cohort joined with the catalog.
+// The data of the Top lists and the people list (domain/top-lists.ts): the sitemap cohort joined with the catalog.
 // The sitemap files are bundled into the server build, so a deploy lists exactly the files it ships under /sitemaps/.
 import movieSitemap from "../../public/sitemaps/sitemap_movie_detail_0.xml?raw"
 import peopleSitemap from "../../public/sitemaps/sitemap_people.xml?raw"
@@ -82,10 +83,7 @@ async function readTitles(kind: TitleKind) {
 }
 
 async function readLists() {
-	const [movieRows, showRows] = await Promise.all([
-		readTitles("movie"),
-		readTitles("show"),
-	])
+	const [movieRows, showRows] = await Promise.all([readTitles("movie"), readTitles("show")])
 	const lists = {} as Record<TitleKind, RankedList>
 	const votes = new Map<string, number>()
 	const titles = new Map<string, ListTitle>()
@@ -95,28 +93,25 @@ async function readLists() {
 	] as const) {
 		const { paths, attention } = cohorts[kind]
 		// A title the catalog no longer has is left out; the sitemap's next run drops it too.
-		const ranked = rankTitles(rows).map(
-			(row): ListTitle => ({
-				tmdb_id: row.tmdb_id,
-				media_type: kind,
-				title: row.title,
-				release_year: row.release_year,
-				poster_path: row.poster_path,
-				genres: (row.genres ?? []).slice(0, 2),
-				goodwatch_overall_score_normalized_percent:
-					row.goodwatch_overall_score_normalized_percent,
-				path: paths.get(row.tmdb_id) as string,
-			}),
-		)
+		const ranked = rankTitles(rows).map((row): ListTitle => ({
+			tmdb_id: row.tmdb_id,
+			media_type: kind,
+			title: row.title,
+			release_year: row.release_year,
+			poster_path: row.poster_path,
+			genres: (row.genres ?? []).slice(0, 2),
+			goodwatch_overall_score_normalized_percent: row.goodwatch_overall_score_normalized_percent,
+			path: paths.get(row.tmdb_id) as string,
+		}))
 		for (const row of rows)
-			votes.set(
-				`${kind}:${row.tmdb_id}`,
-				row.goodwatch_overall_score_voting_count ?? 0,
-			)
+			votes.set(`${kind}:${row.tmdb_id}`, row.goodwatch_overall_score_voting_count ?? 0)
 		for (const title of ranked) titles.set(`${kind}:${title.tmdb_id}`, title)
+		// All time: this year's and last year's titles wait until their scores settle (domain/top-lists.ts). The people
+		// list above still counts them.
+		const settled = ranked.filter((t) => isSettled(t.release_year))
 		lists[kind] = {
-			titles: ranked,
-			popular: ranked.filter((t) => attention.has(t.tmdb_id)).length,
+			titles: settled,
+			popular: settled.filter((t) => attention.has(t.tmdb_id)).length,
 		}
 	}
 	return { lists, people: await readPeople(titles, votes) }
@@ -201,8 +196,7 @@ function lists() {
 }
 
 /** The cohort's movies or shows, best first. */
-export const getRankedList = async (kind: TitleKind) =>
-	(await lists()).lists[kind]
+export const getRankedList = async (kind: TitleKind) => (await lists()).lists[kind]
 
 /** The cohort's people, in the sitemap's order. */
 export const getListPeople = async () => (await lists()).people

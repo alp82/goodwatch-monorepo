@@ -17,10 +17,10 @@ const state = {
 }
 Object.assign(globalThis, { __categoryPagination: state })
 stubModules({
-	"~/server/best-lists.server": "export const getRankedList=async()=>({titles:[],popular:[]})",
+	"~/server/top-lists.server": "export const getRankedList=async()=>({titles:[],popular:[]})",
 	"~/server/row-services.server": "export const rowServices=async()=>null",
-	"~/ui/best-lists/ListHead": "export const ListHead=()=>null",
-	"~/ui/best-lists/RankedTitles":
+	"~/ui/top-lists/ListHead": "export const ListHead=()=>null",
+	"~/ui/top-lists/RankedTitles":
 		"export const ListPageLinks=()=>null;export const RankedTitles=()=>null",
 	"~/server/discover.server":
 		"export const getDiscoverResults=async()=>globalThis.__categoryPagination.results",
