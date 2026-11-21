@@ -13,8 +13,7 @@ import { AccountMenuHost, SearchDialog } from "./LazyDialogs"
 import { MobileDock } from "./MobileDock"
 import { NavigationProvider, usePathViewer } from "./NavigationContext"
 import { SiteHeader } from "./SiteHeader"
-import { SubNav } from "./SubNav"
-import { areaOf, exploreTabs, tasteRow, topSwitch } from "./areas"
+import { areaOf, exploreTabs, tasteRow } from "./areas"
 import { LAYER_VARS } from "./bar-layers"
 
 const under = (pathname: string, prefix: string) =>
@@ -38,8 +37,6 @@ function ExploreRow() {
 	const { locale } = useLocale()
 	const mode = exploreRowMode(pathname)
 	if (mode === "off") return null
-	// Explore's third level: Top's Movies | Shows.
-	const top = topSwitch(pathname)
 	return (
 		// `contents`: no box of its own, so the row sticks within <main> rather than within this wrapper.
 		<div data-explore-tabs={mode} className="contents">
@@ -51,7 +48,6 @@ function ExploreRow() {
 				})}
 				sticky={mode === "sticky"}
 			/>
-			{top && <SubNav label={top.label} items={top.choices} />}
 		</div>
 	)
 }

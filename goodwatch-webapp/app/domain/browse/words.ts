@@ -114,12 +114,12 @@ const list = (xs: string[]) =>
 
 /**
  * A blend the way a person would say it: "Cozy comedies", "Dark Korean thrillers", "90s action movies on Netflix".
- * `best` puts "Best" in front and "of all time" behind when nothing else dates it.
+ * `top` puts "Top" in front and "of all time" behind when nothing else dates it.
  */
 export function blendName(
 	kind: Kind,
 	parts: PlaceRef[],
-	opts: { best?: boolean; year?: number } = {},
+	opts: { top?: boolean; year?: number } = {},
 ) {
 	let noun = kindNoun(kind)
 	const by = (f: PlaceRef["family"]) => parts.filter((p) => p.family === f)
@@ -166,7 +166,7 @@ export function blendName(
 	const core = [...before, head].join(" ")
 	const tail = after.join(" ")
 	let text = [core, tail].filter(Boolean).join(" ")
-	if (opts.best) text = `best ${text}${!decades.length && !opts.year ? " of all time" : ""}`
+	if (opts.top) text = `top ${text}${!decades.length && !opts.year ? " of all time" : ""}`
 	// Demonyms and services keep their capitals.
 	return cap(text)
 }
