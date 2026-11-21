@@ -286,6 +286,41 @@ Explorer (`app/server/explorer`, `app/ui/explorer`).
 | Kinds (clusters per place, `clustersOf`) | Per-request clustering for places with 60+ titles | Memoize per place per snapshot version (LRU) | `app/server/browse/kinds.server.ts` |
 | People, awards, essence text, original language (`person_worked_on`, `person_appeared_in`, `person`, `award_title_display`, essence, original language) | Crate reads per page | Cache per place per version (page cache) | Existing page-cache pattern (`app/server/page-cache.server.ts`) |
 
+### T1 APIs (built, for T2 to T6)
+
+T1 kept the precompute in the webapp's shared Redis cache (`cached()` in `~/utils/cache`, deduplicated across the
+fleet, served stale while it refreshes) instead of new Windmill scripts. The directory of tropes stays in one place
+(`~/domain/tropes`, TypeScript), every Crate statement involved runs well under a second except the first trope load,
+and nothing needs a deploy or schedule beyond the webapp. Measured in the harness: a fresh process loads all 113
+tropes' members from Redis in about 20 ms (369k title-trope pairs, about 1.5 MB); the US streaming directory takes
+300 ms on first call and 2 ms after.
+
+- `~/domain/tropes/play` — `Play`, `PLAY_IDS`, `playOf(text)`, `isPlay`. T6 ports the directory (`TROPES`, groups,
+  one-liners, twist tag words) next to it and imports `Play` from here instead of porting its own.
+- `~/server/browse/trope-members.server` — `ensureTropeMembers(pageNames)` (call with the directory's TV Tropes page
+  names, `TROPES.map((t) => t.id)`; the first call waits, later refreshes run in the background every six hours),
+  `tropeMembersReady(pageNames, ms)`, `tropeMembers(pageName): TropeMembers | null` (null before the first load),
+  `tropeMembersVersion()` (put it in the key of anything derived), `tropePlay(pageName, key)`, `tropeUrlOf(pageName)`.
+  Cache name `browse-trope-members-v1`: a day fresh, a week stale.
+- `~/server/browse/trope-members` — `TropeMembers`: `size`, `bentCount`, `twistShare`, `has(key)`, `play(key)`,
+  `bent()`, `keys()`. Every title with a write-up counts; filter to well-known titles with the snapshot where a page
+  needs that. Co-occurrence ("often/rarely seen with"), How it grew, spotlight eligibility and defining tropes per place
+  are computed from these in memory; wrap them in a version memo keyed by `snapshot.version` + `tropeMembersVersion()`.
+- `~/server/browse/version-memo` — `createVersionMemo<V>(limit)` → `get(version, key, compute)`: a new version empties
+  it, LRU beyond `limit`. T2 wraps place counts and pair counts (`counts.server`) with it keyed by
+  `getTitleSnapshot().version`, and T3 wraps kinds (`clustersOf` per place) the same way.
+- `~/domain/browse/streaming-stats` — pure: `PLAN_TYPES`, `MIN_SERVICE_TITLES`, `serviceGroupOf`, `countPerGroup`,
+  `groupsOf`, `foldTiers`, `sortServices(services, "popular" | "titles" | "great" | "new" | "name")`.
+- `~/server/browse/streaming-stats.server` — `streamingDirectory({ country, kind, wellKnownRows, rowsKey?, sort? })`
+  → `{ country, kind, services: StreamingService[], ready }` with each service's `key`, `name`, `logoPath`,
+  `brandSlug`, `serviceIds`, `model`, `titles`, `arrived`, `left`, `popular`, `great`, `picks: TitleKey[]`. Pass the
+  Browse lists' well-known rows of the kind, most popular first (T2's rows port), so "well-known" means the same as on
+  every list. Also `streamingCountries()` (codes with plan offers, most first) and `streamingCounts(country)`. Cache
+  names `browse-streaming-counts-v1` (six hours) and `browse-streaming-countries-v1` (twelve hours).
+
+Left for the page tickets: trope excerpts and catalog openings (request-time with a short cache, T6), people, awards
+and essence reads per place (page cache, T3/T4).
+
 ### Data fixes before launch (tracked separately, must land first)
 
 - **Mood rules:** 16 rules in `domain/moods.ts` and the fingerprint rules behind them. Known misses: *Bride of Chucky*
