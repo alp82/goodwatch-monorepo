@@ -4,12 +4,8 @@ import { readFileSync } from "node:fs"
 import { test } from "node:test"
 import "../../server/title-filter/test-alias.ts"
 
-const { breadcrumbJsonLd, categoryCrumbs, titleTrail } = await import(
-	"./breadcrumb-trail.ts"
-)
-const { titleBreadcrumb } = await import(
-	"../../server/title-breadcrumb.server.ts"
-)
+const { breadcrumbJsonLd, categoryCrumbs, titleTrail } = await import("./breadcrumb-trail.ts")
+const { titleBreadcrumb } = await import("../../server/title-breadcrumb.server.ts")
 const { buildMeta } = await import("../../utils/meta.ts")
 const { finalAddress } = await import("../../domain/browse/redirects.ts")
 
@@ -51,12 +47,8 @@ test("a genre without a page for the title's type is passed over", () => {
 		label: "Drama",
 		path: "/shows/genres/drama",
 	})
-	assert.deepEqual(titleBreadcrumb("movie", ["Talk"]), [
-		{ label: "Movies", path: "/movies" },
-	])
-	assert.deepEqual(titleBreadcrumb("movie", null), [
-		{ label: "Movies", path: "/movies" },
-	])
+	assert.deepEqual(titleBreadcrumb("movie", ["Talk"]), [{ label: "Movies", path: "/movies" }])
+	assert.deepEqual(titleBreadcrumb("movie", null), [{ label: "Movies", path: "/movies" }])
 })
 
 test("every genre page a trail links to is in the sitemap", () => {
@@ -106,25 +98,18 @@ test("every genre page a trail links to is in the sitemap", () => {
 		for (const name of names) {
 			const genrePage = titleBreadcrumb(type, [name])[1]
 			assert.ok(genrePage, `${type} ${name} has a genre page`)
-			assert.ok(
-				sitemapGenrePages.has(genrePage.path),
-				`${genrePage.path} is in the sitemap`,
-			)
+			assert.ok(sitemapGenrePages.has(genrePage.path), `${genrePage.path} is in the sitemap`)
 		}
 })
 
 test("a category page's trail is its path, the page's own label last", () => {
-	assert.deepEqual(
-		categoryCrumbs("/movies/moods/mind-bending", "Mind-Bending 🌀"),
-		[
-			{ label: "Movies", path: "/movies" },
-			{ label: "Moods", path: "/movies/moods" },
-			{ label: "Mind-Bending", path: "/movies/moods/mind-bending" },
-		],
-	)
+	assert.deepEqual(categoryCrumbs("/movies/moods/mind-bending", "Mind-Bending 🌀"), [
+		{ label: "Movies", path: "/movies" },
+		{ label: "Moods", path: "/movies/moods" },
+		{ label: "Mind-Bending", path: "/movies/moods/mind-bending" },
+	])
 	assert.equal(
-		categoryCrumbs("/shows/genres/scifi-and-fantasy", "Sci-Fi & Fantasy")[2]
-			.label,
+		categoryCrumbs("/shows/genres/scifi-and-fantasy", "Sci-Fi & Fantasy")[2].label,
 		"Sci-Fi & Fantasy",
 	)
 	assert.equal(categoryCrumbs("/movies/moods/epic", "Epic ⚔️")[2].label, "Epic")
@@ -182,10 +167,7 @@ test("a page with a trail gets the BreadcrumbList as its own structured data blo
 	}
 	const blocks = buildMeta({
 		pageMeta,
-		breadcrumbs: categoryCrumbs(
-			"/movies/moods/mind-bending",
-			"Mind-Bending 🌀",
-		),
+		breadcrumbs: categoryCrumbs("/movies/moods/mind-bending", "Mind-Bending 🌀"),
 	})
 		.filter((tag) => "script:ld+json" in tag)
 		.map((tag) => tag["script:ld+json"] as { "@type": string })

@@ -349,6 +349,7 @@ export function ErasPage({ data, address, to }: BrowseViewProps<ScrubData>) {
 			<div className="relative mt-5 max-lg:order-2 lg:mt-10">
 				<div
 					ref={ribbon}
+					// oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a draggable ribbon of decades with keyboard steps, not a range input
 					role="slider"
 					tabIndex={0}
 					data-keys=""

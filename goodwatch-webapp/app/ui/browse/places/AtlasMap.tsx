@@ -703,6 +703,7 @@ export function AtlasMap({
 		// oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/prefer-tag-over-role -- the map's own drag, pinch and double-click zoom; every country inside is a link, and the zoom buttons are buttons
 		<div
 			ref={host}
+			// oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- an interactive map region, not a form group
 			role="group"
 			aria-label={label}
 			onPointerDown={down}
