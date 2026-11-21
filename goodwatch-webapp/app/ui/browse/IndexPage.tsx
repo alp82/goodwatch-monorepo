@@ -9,6 +9,7 @@ import { MoodsPage } from "~/ui/browse/moods/MoodsPage"
 import { PlacesPage } from "~/ui/browse/places/PlacesPage"
 import { CountryPage } from "~/ui/browse/room/CountryPage"
 import { EraPage } from "~/ui/browse/room/EraPage"
+import { RoomPage } from "~/ui/browse/room/RoomPage"
 
 export function IndexPage({
 	page,
@@ -37,5 +38,7 @@ export function IndexPage({
 			return <EraPage {...base} data={page.data} />
 		case "country":
 			return <CountryPage {...base} data={page.data} />
+		case "service":
+			return <RoomPage {...base} data={page.data} />
 	}
 }

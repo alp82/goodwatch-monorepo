@@ -24,12 +24,14 @@ import { loadMarks } from "~/server/browse/card-marks.server"
 import { indexPageOf, loadIndexPage } from "~/server/browse/index-pages.server"
 import { loadPlacePage } from "~/server/browse/place-page.server"
 import { MIN_PAGE, PlacesNotReady, openPlaces } from "~/server/browse/places.server"
+import { streamingRoute } from "~/server/browse/streaming-page.server"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { BrowseRow } from "~/ui/browse/BrowseRow"
 import { IndexPage } from "~/ui/browse/IndexPage"
 import { BrowsePageProvider } from "~/ui/browse/page-context"
 import { PlacePage } from "~/ui/browse/place/PlacePage"
 import { crumbsOf } from "~/ui/browse/place/PlaceHead"
+import { StreamingPage, streamingMeta } from "~/ui/browse/streaming/StreamingRoute"
 import { buildMeta } from "~/utils/meta"
 
 const trimmed = (pathname: string) => pathname.replace(/\/+$/, "") || "/"
@@ -80,6 +82,10 @@ const canonicalLoader = async ({ params, request }: LoaderFunctionArgs) => {
 		throw notFound()
 	}
 
+	// The streaming pages: a country's index of services, and one service's page.
+	const stream = await streamingRoute(atlas, address, notFound)
+	if (stream) return { page: "stream" as const, route: stream }
+
 	// The pantry's preview: a few posters of the blend with one more ingredient (the Add button asks with `?peek=1`).
 	if (url.searchParams.get("peek") === "1" && address.view === "place")
 		return { page: "peek" as const, data: await peekOf(atlas, address.parts) }
@@ -107,6 +113,9 @@ const canonicalLoader = async ({ params, request }: LoaderFunctionArgs) => {
 	}
 	const index = indexPageOf(address)
 	if (index && index !== "hub") {
+		// A service without titles in this country has no page here.
+		if (index === "service" && atlas.streamingReady && atlas.count(address.parts) === 0)
+			throw notFound()
 		const page = await loadIndexPage(index, { request, url, address, atlas })
 		const lead = address.parts[0]
 		const family = address.view === "family" ? address.family : undefined
@@ -137,7 +146,7 @@ const canonicalLoader = async ({ params, request }: LoaderFunctionArgs) => {
 			indexable: kind !== "all" && (!lead || atlas.count(address.parts) >= MIN_PAGE),
 		}
 	}
-	// The streaming and trope pages arrive with spec tickets T5 and T6.
+	// The trope pages arrive with spec ticket T6.
 	throw notFound()
 }
 
@@ -145,6 +154,7 @@ export const loader = presentCatalogLoader(canonicalLoader, { live: true })
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data || data.page === "peek") return [{ title: "Page Not Found | GoodWatch" }]
+	if (data.page === "stream") return streamingMeta(data.route)
 	if (data.page === "index")
 		return buildMeta({
 			pageMeta: {
@@ -178,6 +188,7 @@ const to = (a: Address, extra?: Record<string, string | undefined>) => browsePat
 export default function BrowsePage() {
 	const data = useLoaderData<typeof loader>()
 	if (data.page === "peek") return null
+	if (data.page === "stream") return <StreamingPage data={data.route} />
 	if (data.page === "index")
 		return (
 			<BrowsePageProvider value={{ marks: data.marks, entry: data.entry }}>

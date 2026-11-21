@@ -1,5 +1,5 @@
 // The Browse pages that aren't a place page: the family indexes (moods, genres, eras, places) and the room pages of a
-// single decade or country. Each answers its own data; the route renders the matching page.
+// single decade, country or streaming service. Each answers its own data; the route renders the matching page.
 import type { Address } from "~/domain/browse/address"
 import { loadCountryPage } from "~/server/browse/country-page.server"
 import { loadEraPage } from "~/server/browse/era-page.server"
@@ -8,6 +8,7 @@ import { loadGenresPage } from "~/server/browse/genres.server"
 import { loadHubPage } from "~/server/browse/hub/hub.server"
 import type { BrowseLoadArgs } from "~/server/browse/load-args"
 import { loadMoodsPage } from "~/server/browse/moods.server"
+import { type PlaceData, loadPage } from "~/server/browse/place-data.server"
 import { loadPlacesPage } from "~/server/browse/places-page.server"
 
 /** Which index or room page an address opens, or null when it opens none of them. */
@@ -23,6 +24,7 @@ export function indexPageOf(a: Address) {
 	if (a.view === "place" && a.parts.length === 1) {
 		if (a.parts[0].family === "decade") return "era" as const
 		if (a.parts[0].family === "country") return "country" as const
+		if (a.parts[0].family === "service") return "service" as const
 	}
 	return null
 }
@@ -45,6 +47,8 @@ export async function loadIndexPage(page: IndexPage, args: BrowseLoadArgs) {
 			return { page, data: await loadEraPage(args) }
 		case "country":
 			return { page, data: await loadCountryPage(args) }
+		case "service":
+			return { page, data: (await loadPage(args)) as PlaceData }
 	}
 }
 
