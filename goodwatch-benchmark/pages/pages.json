@@ -102,19 +102,19 @@
     },
     {
       "id": "type-best-tsx",
-      "route": "$type.best.tsx",
-      "examples": ["/movies/best", "/shows/best"],
+      "route": "$type.top.tsx",
+      "examples": ["/movies/top", "/shows/top"],
       "tier": "P1",
       "audience": ["guest", "member"],
       "verification": [
         {
-          "path": "/movies/best",
+          "path": "/movies/top",
           "status": 200,
           "checkedAt": "2026-10-29T08:18:39.469Z",
           "audience": "guest"
         },
         {
-          "path": "/shows/best",
+          "path": "/shows/top",
           "status": 200,
           "checkedAt": "2026-10-29T08:18:39.469Z",
           "audience": "guest"
@@ -159,7 +159,7 @@
     },
     {
       "id": "type-category-page-tsx",
-      "route": "$type.$category.$page.tsx",
+      "route": "$type.$.tsx",
       "examples": ["/movies/genres/drama", "/shows/moods/funny"],
       "tier": "P2",
       "audience": ["guest", "member"],
@@ -180,7 +180,7 @@
     },
     {
       "id": "type-category-index-tsx",
-      "route": "$type.$category._index.tsx",
+      "route": "$type.$.tsx",
       "examples": ["/movies/genres", "/shows/moods"],
       "tier": "P2",
       "audience": ["guest", "member"],

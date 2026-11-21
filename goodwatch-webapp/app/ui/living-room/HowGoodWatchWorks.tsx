@@ -35,7 +35,13 @@ const Img = ({
 	w,
 	h,
 	className,
-}: { src: string; alt: string; w: number; h: number; className?: string }) => (
+}: {
+	src: string
+	alt: string
+	w: number
+	h: number
+	className?: string
+}) => (
 	<img
 		src={assetUrl(src)}
 		alt={alt}
@@ -86,7 +92,7 @@ const FEATURES: Feature[] = [
 		section: "streaming",
 		title: "Where it streams",
 		text: "325 streaming services in 139 countries. See which of yours has it tonight, and hear the day a title you want arrives.",
-		link: { to: "/movies/streaming", label: "By streaming service" },
+		link: { to: "/movies/streaming/us", label: "By streaming service" },
 		visual: () => (
 			<div className="hgw-v-services">
 				<span className="hgw-v-tile hgw-v-lit">
@@ -137,13 +143,7 @@ const FEATURES: Feature[] = [
 		link: { to: WATCH_PATHS.forYou, label: "See your picks" },
 		visual: () => (
 			<div className="hgw-v-feel">
-				<Img
-					src={fingerprintIcon}
-					alt=""
-					w={52}
-					h={52}
-					className="hgw-v-print"
-				/>
+				<Img src={fingerprintIcon} alt="" w={52} h={52} className="hgw-v-print" />
 				<ul aria-hidden="true">
 					{[
 						["Novelty", 92, "#a78bfa"],
@@ -168,20 +168,8 @@ const FEATURES: Feature[] = [
 			<div className="hgw-v-search" aria-hidden="true">
 				<div className="hgw-v-field">
 					<svg viewBox="0 0 24 24" aria-hidden="true">
-						<circle
-							cx="11"
-							cy="11"
-							r="6.5"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="2"
-						/>
-						<path
-							d="M16 16l4.5 4.5"
-							stroke="currentColor"
-							strokeWidth="2"
-							strokeLinecap="round"
-						/>
+						<circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" strokeWidth="2" />
+						<path d="M16 16l4.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
 					</svg>
 					<span>a mind-blowing space adventure</span>
 					<i />
@@ -301,12 +289,8 @@ const IMPORT_RATINGS_SOURCES = ["letterboxd", "trakt", "plex", "tmdb"].flatMap(
 
 export function HowGoodWatchWorks() {
 	const watch = (section: ChapterId) => {
-		document
-			.getElementById(ROOM_ID)
-			?.scrollIntoView({ behavior: "smooth", block: "start" })
-		window.dispatchEvent(
-			new CustomEvent(FILM_CHAPTER_EVENT, { detail: section }),
-		)
+		document.getElementById(ROOM_ID)?.scrollIntoView({ behavior: "smooth", block: "start" })
+		window.dispatchEvent(new CustomEvent(FILM_CHAPTER_EVENT, { detail: section }))
 	}
 	return (
 		<section className="hgw" aria-labelledby="hgw-h">
@@ -314,8 +298,8 @@ export function HowGoodWatchWorks() {
 				<p className="lrb-eye">How GoodWatch works</p>
 				<h1 id="hgw-h">GoodWatch finds your next movie or show</h1>
 				<p className="hgw-lede">
-					One trusted score, every streaming service in your country, and picks
-					made for your taste. Free, no account needed to start.
+					One trusted score, every streaming service in your country, and picks made for your taste.
+					Free, no account needed to start.
 				</p>
 			</header>
 			<ol className="hgw-list">
@@ -330,11 +314,7 @@ export function HowGoodWatchWorks() {
 								<Link to={f.link.to} className="hgw-link">
 									{f.link.label} →
 								</Link>
-								<button
-									type="button"
-									className="hgw-watch"
-									onClick={() => watch(f.section)}
-								>
+								<button type="button" className="hgw-watch" onClick={() => watch(f.section)}>
 									▶ Watch in the intro
 								</button>
 							</div>

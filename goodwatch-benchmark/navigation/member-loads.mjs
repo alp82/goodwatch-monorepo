@@ -31,7 +31,7 @@ for (const origin of [beforeOrigin, afterOrigin]) {
 const routes = [
 	["/movie/603-the-matrix", "routes/movie.$movieKey"],
 	["/show/1399-game-of-thrones", "routes/show.$showKey"],
-	["/movies/best", "routes/$type.best"],
+	["/movies/top", "routes/$type.top"],
 	["/discover", "routes/discover.($type)"],
 	["/watch/movies/want", "routes/watch.movies.$list"],
 	["/u/alp82", "routes/u.$handle._index"],

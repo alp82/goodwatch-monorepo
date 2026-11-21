@@ -8,7 +8,7 @@ const [origin, profile, mode, runsArg, out, cookieFile] = process.argv.slice(2)
 const exe = process.env.CHROME_PATH || undefined
 const TITLE = 'main a[href^="/movie/"], main a[href^="/show/"]'
 const FLOW = [
-	{ name: 'list→title', start: '/movies/best', sel: TITLE },
+	{ name: 'list→title', start: '/movies/top', sel: TITLE },
 	{ name: 'title→person', sel: 'main a[href^="/person/"]' },
 	{ name: 'person→title', sel: TITLE },
 	{ name: 'title→title', sel: TITLE, skip: 2 },
@@ -17,7 +17,7 @@ const FLOW = [
 	{ name: 'hub→discover', open: HUB, sel: '[role=dialog] a[href^="/discover"]' },
 	{ name: 'discover→title', sel: TITLE },
 	{ name: 'hub→shows', open: HUB, sel: '[role=dialog] a[href="/shows"]' },
-	{ name: 'shows→category', sel: 'main a[href="/shows/best"]' },
+	{ name: 'shows→category', sel: 'main a[href="/shows/top"]' },
 	{ name: 'category→title', sel: TITLE },
 	{ name: 'back', back: true },
 	{ name: 'forward', forward: true },

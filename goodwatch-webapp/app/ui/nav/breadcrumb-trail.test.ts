@@ -11,14 +11,16 @@ const { titleBreadcrumb } = await import(
 	"../../server/title-breadcrumb.server.ts"
 )
 const { buildMeta } = await import("../../utils/meta.ts")
+const { finalAddress } = await import("../../domain/browse/redirects.ts")
 
-// The genre pages the sitemap lists, the ones a title's trail may link to.
+// The genre pages the old category sitemap listed, at the addresses they moved to: the ones a title's trail may link
+// to. A trail never links to an address that redirects.
 const sitemapGenrePages = new Set(
 	[
-		...readFileSync("public/sitemaps/sitemap_categories.xml", "utf8").matchAll(
+		...readFileSync("app/domain/browse/fixtures/old-sitemap-categories.xml", "utf8").matchAll(
 			/<loc>https:\/\/goodwatch\.app(\/[a-z]+\/genres\/[^<]+)<\/loc>/g,
 		),
-	].map((match) => match[1]),
+	].map((match) => finalAddress(match[1])),
 )
 
 test("a title's trail is its hub and the genre page of its first genre that has one", () => {
@@ -34,9 +36,9 @@ test("a title's trail is its hub and the genre page of its first genre that has 
 
 test("a show's TMDB genre names find their show genre pages", () => {
 	for (const [genre, path] of [
-		["Sci-Fi & Fantasy", "/shows/genres/scifi-and-fantasy"],
-		["Action & Adventure", "/shows/genres/action-and-adventure"],
-		["War & Politics", "/shows/genres/war-and-politics"],
+		["Sci-Fi & Fantasy", "/shows/genres/sci-fi-fantasy"],
+		["Action & Adventure", "/shows/genres/action-adventure"],
+		["War & Politics", "/shows/genres/war-politics"],
 		["Talk", "/shows/genres/talk"],
 		["Kids", "/shows/genres/kids"],
 	])

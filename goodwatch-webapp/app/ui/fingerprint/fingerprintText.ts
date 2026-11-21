@@ -2,7 +2,12 @@
 // detail page and its meta description. Templates only: the same scores
 // always produce the same words, on the server and in the browser.
 
-import { type CoreScores, type FingerprintResult, PILLAR_ATTRIBUTES } from "~/server/utils/fingerprint"
+import {
+	type CoreScores,
+	type FingerprintResult,
+	PILLAR_ATTRIBUTES,
+} from "~/server/utils/fingerprint"
+import { finalAddress } from "~/domain/browse/redirects"
 import { moods } from "~/ui/explore/category/moods"
 
 type Key = keyof CoreScores
@@ -131,7 +136,10 @@ const article = (w: string) => (/^[aeiou]/i.test(w) ? "an" : "a")
 
 function genreLabel(t: TitleInput) {
 	const g = t.genres.filter((x) => !["Action & Adventure", "Sci-Fi & Fantasy"].includes(x))
-	const main = (g[0] ?? "").toLowerCase().replace("science fiction", "sci-fi").replace("animation", "animated")
+	const main = (g[0] ?? "")
+		.toLowerCase()
+		.replace("science fiction", "sci-fi")
+		.replace("animation", "animated")
 	return main ? `${main} ${noun(t)}` : noun(t)
 }
 
@@ -139,14 +147,18 @@ function genreLabel(t: TitleInput) {
 export function pillarLine(t: TitleInput) {
 	const p = t.fingerprint.pillars
 	const entries = Object.entries(p) as [string, number][]
-	const strong = entries.filter(([, v]) => v >= 3).sort((a, b) => b[1] - a[1]).slice(0, 2)
-	const weakest = entries.filter(([k]) => ["Energy", "Heart", "Humor"].includes(k)).sort((a, b) => a[1] - b[1])[0]
+	const strong = entries
+		.filter(([, v]) => v >= 3)
+		.sort((a, b) => b[1] - a[1])
+		.slice(0, 2)
+	const weakest = entries
+		.filter(([k]) => ["Energy", "Heart", "Humor"].includes(k))
+		.sort((a, b) => a[1] - b[1])[0]
 	const parts = strong.map(([k, v]) => PILLAR_WORDS[k][v])
 	if (weakest && weakest[1] <= 1 && !strong.some(([k]) => k === weakest[0]))
 		parts.push(PILLAR_WORDS[weakest[0]][weakest[1]])
 	return cap(parts.join(", "))
 }
-
 
 function feelAdjectives(s: CoreScores, n: number) {
 	return top(s, FEEL, 7, n).map((k) => feelWord(s, k))
@@ -169,18 +181,13 @@ export function summary(t: TitleInput) {
 	const themes = top(s, THEME, 7, 2).map((k) => word(THEME, k))
 	const craft = top(s, CRAFT, 9, 2).map((k) => word(CRAFT, k))
 	const g = genreLabel(t)
-	let out = adj.length ? `${cap(article(adj[0]))} ${adj.join(", ")} ${g}` : `${cap(article(g))} ${g}`
+	let out = adj.length
+		? `${cap(article(adj[0]))} ${adj.join(", ")} ${g}`
+		: `${cap(article(g))} ${g}`
 	if (themes.length) out += ` about ${list(themes)}`
 	if (craft.length) out += `, with standout ${list(craft)}`
 	return `${out}.`
 }
-
-
-
-
-
-
-
 
 export function skipIf(t: TitleInput) {
 	const s = t.fingerprint.scores
@@ -188,7 +195,8 @@ export function skipIf(t: TitleInput) {
 	if (humorPhrase(s).level === "none") out.push("you want something to laugh at")
 	if (s.bleakness >= 8 && s.hopefulness <= 4) out.push("you need an uplifting mood")
 	if (s.slow_burn >= 8) out.push("you want fast pacing")
-	if (s.complexity >= 8 || s.non_linear_narrative >= 8) out.push("you want to half-watch while scrolling")
+	if (s.complexity >= 8 || s.non_linear_narrative >= 8)
+		out.push("you want to half-watch while scrolling")
 	if (s.violence >= 8 || s.grotesque >= 7) out.push("graphic violence bothers you")
 	if (s.scare >= 8) out.push("you scare easily")
 	if (s.eroticism >= 7) out.push("you're watching with family")
@@ -197,12 +205,15 @@ export function skipIf(t: TitleInput) {
 	return out.slice(0, 4)
 }
 
-
-
-
 // Evaluates the mood pages' own fingerprint rules against this title, so the
 // links point to pages this title actually appears on.
-type Cond = { field?: string; operator?: string; value?: number; logic?: "AND" | "OR"; conditions?: Cond[] }
+type Cond = {
+	field?: string
+	operator?: string
+	value?: number
+	logic?: "AND" | "OR"
+	conditions?: Cond[]
+}
 
 function evalCond(c: Cond, s: CoreScores): boolean {
 	if (c.conditions) {
@@ -223,9 +234,9 @@ export function matchingMoods(t: TitleInput) {
 			const conds = JSON.parse(raw as string) as Cond[]
 			return conds.every((c) => evalCond(c, s))
 		})
-		.map((m) => ({ label: m.label, url: `/${type}/moods/${m.path}` }))
+		.map((m) => ({ label: m.label, url: finalAddress(`/${type}/moods/${m.path}`) }))
+		.filter((m, i, all) => all.findIndex((o) => o.url === m.url) === i)
 }
-
 
 // --- Per-pillar text for the pillar rows and the pillar detail ---
 
@@ -233,26 +244,40 @@ export const PILLAR_KEYS: Record<string, readonly Key[]> = PILLAR_ATTRIBUTES
 
 export function pillarDrivers(t: TitleInput, pillar: string) {
 	const s = t.fingerprint.scores
-	return [...PILLAR_KEYS[pillar]].sort((a, b) => s[b] - s[a]).slice(0, 3).map((k) => ({ key: k, score: s[k] }))
+	return [...PILLAR_KEYS[pillar]]
+		.sort((a, b) => s[b] - s[a])
+		.slice(0, 3)
+		.map((k) => ({ key: k, score: s[k] }))
 }
 
 export function pillarSentence(t: TitleInput, pillar: string) {
 	const s = t.fingerprint.scores
 	const pick = (keys: readonly Key[], lex: Partial<Record<Key, string>>, min = 7) =>
-		keys.filter((k) => s[k] >= min && lex[k]).sort((a, b) => s[b] - s[a]).map((k) => word(lex, k))
+		keys
+			.filter((k) => s[k] >= min && lex[k])
+			.sort((a, b) => s[b] - s[a])
+			.map((k) => word(lex, k))
 	const feel = (keys: readonly Key[]) =>
-		keys.filter((k) => s[k] >= 7 && FEEL[k]).sort((a, b) => s[b] - s[a]).map((k) => feelWord(s, k))
+		keys
+			.filter((k) => s[k] >= 7 && FEEL[k])
+			.sort((a, b) => s[b] - s[a])
+			.map((k) => feelWord(s, k))
 	switch (pillar) {
 		case "Energy": {
 			const a = feel(PILLAR_KEYS.Energy)
-			const pace = s.slow_burn >= 7 ? " The story builds slowly, so the intensity comes in waves." : ""
-			return a.length ? `${t.title} is ${list(a.slice(0, 3))}.${pace}` : `${t.title} is calm and low-intensity.${pace}`
+			const pace =
+				s.slow_burn >= 7 ? " The story builds slowly, so the intensity comes in waves." : ""
+			return a.length
+				? `${t.title} is ${list(a.slice(0, 3))}.${pace}`
+				: `${t.title} is calm and low-intensity.${pace}`
 		}
 		case "Heart": {
 			const a = feel(PILLAR_KEYS.Heart)
 			const th = pick(["coming_of_age", "family_dynamics"], THEME)
 			const about = th.length ? ` Much of it is about ${list(th)}.` : ""
-			return a.length ? `Emotionally, it's ${list(a.slice(0, 3))}.${about}` : `It keeps its emotions at a distance.${about}`
+			return a.length
+				? `Emotionally, it's ${list(a.slice(0, 3))}.${about}`
+				: `It keeps its emotions at a distance.${about}`
 		}
 		case "Humor":
 			return `Expect ${humorPhrase(s).text}.`
@@ -265,13 +290,31 @@ export function pillarSentence(t: TitleInput, pillar: string) {
 			return parts.filter(Boolean).join(" ") || "The world stays in the background."
 		}
 		case "Craft": {
-			const c = pick(["direction", "acting", "narrative_structure", "dialogue_quality", "character_depth"], CRAFT, 8)
+			const c = pick(
+				["direction", "acting", "narrative_structure", "dialogue_quality", "character_depth"],
+				CRAFT,
+				8,
+			)
 			const extra = s.complexity >= 8 ? " The plot is layered and rewards full attention." : ""
-			return c.length ? `The ${list(c.slice(0, 3))} stand out.${extra}` : `The craft is serviceable rather than remarkable.${extra}`
+			return c.length
+				? `The ${list(c.slice(0, 3))} stand out.${extra}`
+				: `The craft is serviceable rather than remarkable.${extra}`
 		}
 		case "Style": {
-			const c = pick(["cinematography", "editing", "music_composition", "visual_stylization", "sound_centrality"], CRAFT, 8)
-			return c.length ? `Look and sound: the ${list(c.slice(0, 3))} stand out.` : "The look and sound stay functional."
+			const c = pick(
+				[
+					"cinematography",
+					"editing",
+					"music_composition",
+					"visual_stylization",
+					"sound_centrality",
+				],
+				CRAFT,
+				8,
+			)
+			return c.length
+				? `Look and sound: the ${list(c.slice(0, 3))} stand out.`
+				: "The look and sound stay functional."
 		}
 	}
 	return ""
@@ -296,30 +339,59 @@ export function pillarBrief(t: TitleInput, pillar: string): PillarBrief {
 			.slice(0, n)
 			.map((k) => feelWord(s, k))
 	const pick = (keys: readonly Key[], lex: Partial<Record<Key, string>>, min: number, n: number) =>
-		keys.filter((k) => s[k] >= min && lex[k]).sort((a, b) => s[b] - s[a]).slice(0, n).map((k) => word(lex, k))
+		keys
+			.filter((k) => s[k] >= min && lex[k])
+			.sort((a, b) => s[b] - s[a])
+			.slice(0, n)
+			.map((k) => word(lex, k))
 	switch (pillar) {
 		case "Energy": {
 			const a = feel(PILLAR_KEYS.Energy, 2)
-			const note = s.slow_burn >= 7 ? "Builds slowly, so the intensity comes in waves." : s.fast_pace >= 7 ? "Fast from start to finish." : ""
+			const note =
+				s.slow_burn >= 7
+					? "Builds slowly, so the intensity comes in waves."
+					: s.fast_pace >= 7
+						? "Fast from start to finish."
+						: ""
 			return { verdict: a.length ? cap(list(a)) : "Calm and low-key", note, drivers }
 		}
 		case "Heart": {
 			const a = feel(PILLAR_KEYS.Heart, 2)
 			const th = pick(["coming_of_age", "family_dynamics"], THEME, 7, 2)
-			return { verdict: a.length ? cap(list(a)) : "Emotionally reserved", note: th.length ? `Much of it is about ${list(th)}.` : "", drivers }
+			return {
+				verdict: a.length ? cap(list(a)) : "Emotionally reserved",
+				note: th.length ? `Much of it is about ${list(th)}.` : "",
+				drivers,
+			}
 		}
 		case "Humor": {
 			const h = humorPhrase(s)
 			const verdict = h.level === "none" ? "Serious throughout" : cap(h.text)
-			return { verdict, note: h.level === "some" || h.level === "light" ? "Not a comedy at heart." : "", drivers }
+			return {
+				verdict,
+				note: h.level === "some" || h.level === "light" ? "Not a comedy at heart." : "",
+				drivers,
+			}
 		}
 		case "World": {
 			const th = top(s, THEME, 7, 3).map((k) => word(THEME, k))
-			const notes = [s.world_immersion >= 8 ? "Lived-in and easy to get lost in." : "", s.rewatchability >= 8 ? "Holds up on a rewatch." : ""]
-			return { verdict: th.length ? cap(list(th)) : "Kept in the background", note: notes.filter(Boolean).join(" "), drivers }
+			const notes = [
+				s.world_immersion >= 8 ? "Lived-in and easy to get lost in." : "",
+				s.rewatchability >= 8 ? "Holds up on a rewatch." : "",
+			]
+			return {
+				verdict: th.length ? cap(list(th)) : "Kept in the background",
+				note: notes.filter(Boolean).join(" "),
+				drivers,
+			}
 		}
 		case "Craft": {
-			const c = pick(["direction", "acting", "narrative_structure", "dialogue_quality", "character_depth"], CRAFT, 8, 3)
+			const c = pick(
+				["direction", "acting", "narrative_structure", "dialogue_quality", "character_depth"],
+				CRAFT,
+				8,
+				3,
+			)
 			return {
 				verdict: c.length ? `Standout ${list(c)}` : "Solid, not remarkable",
 				note: s.complexity >= 8 ? "Layered plot that rewards full attention." : "",
@@ -327,7 +399,18 @@ export function pillarBrief(t: TitleInput, pillar: string): PillarBrief {
 			}
 		}
 		case "Style": {
-			const c = pick(["cinematography", "editing", "music_composition", "visual_stylization", "sound_centrality"], CRAFT, 8, 3)
+			const c = pick(
+				[
+					"cinematography",
+					"editing",
+					"music_composition",
+					"visual_stylization",
+					"sound_centrality",
+				],
+				CRAFT,
+				8,
+				3,
+			)
 			return {
 				verdict: c.length ? `Standout ${list(c)}` : "Functional look and sound",
 				note: s.visual_stylization >= 8 ? "A distinctive visual signature." : "",
@@ -338,25 +421,55 @@ export function pillarBrief(t: TitleInput, pillar: string): PillarBrief {
 	return { verdict: "", note: "", drivers }
 }
 
-
-
 // Attributes outside a pillar's formula that still help explain it.
 export const RELATED_KEYS: Record<string, Key[]> = {
 	Energy: ["slow_burn", "uncanny", "grotesque", "bleakness", "warfare"],
 	Heart: ["bleakness", "spiritual", "philosophical", "character_depth"],
 	Humor: ["camp_and_irony", "eccentricity", "pastiche", "wholesome"],
 	World: [
-		"fantasy", "futuristic", "historical", "contemporary_realism", "crime", "mystery", "warfare", "political",
-		"sports", "biographical", "psychological", "showbiz", "gaming", "pop_culture", "social_commentary",
-		"class_and_capitalism", "technology_and_humanity", "spiritual", "surrealism",
+		"fantasy",
+		"futuristic",
+		"historical",
+		"contemporary_realism",
+		"crime",
+		"mystery",
+		"warfare",
+		"political",
+		"sports",
+		"biographical",
+		"psychological",
+		"showbiz",
+		"gaming",
+		"pop_culture",
+		"social_commentary",
+		"class_and_capitalism",
+		"technology_and_humanity",
+		"spiritual",
+		"surrealism",
 	],
-	Craft: ["novelty", "homage_and_reference", "philosophical", "educational", "slow_burn", "fast_pace"],
-	Style: ["spectacle", "psychedelic", "grotesque", "camp_and_irony", "pastiche", "dialogue_centrality"],
+	Craft: [
+		"novelty",
+		"homage_and_reference",
+		"philosophical",
+		"educational",
+		"slow_burn",
+		"fast_pace",
+	],
+	Style: [
+		"spectacle",
+		"psychedelic",
+		"grotesque",
+		"camp_and_irony",
+		"pastiche",
+		"dialogue_centrality",
+	],
 }
 
 export function pillarAttributes(t: TitleInput, pillar: string) {
 	const s = t.fingerprint.scores
-	const own = [...PILLAR_KEYS[pillar]].sort((a, b) => s[b] - s[a]).map((k) => ({ key: k, score: s[k] }))
+	const own = [...PILLAR_KEYS[pillar]]
+		.sort((a, b) => s[b] - s[a])
+		.map((k) => ({ key: k, score: s[k] }))
 	const related = RELATED_KEYS[pillar]
 		.filter((k) => !PILLAR_KEYS[pillar].includes(k) && s[k] >= 5)
 		.sort((a, b) => s[b] - s[a])
@@ -378,8 +491,11 @@ export function moodsForKeys(t: TitleInput, keys: string[]) {
 			const raw = m.discoverParams?.fingerprintConditions
 			if (!raw) return false
 			const conds = JSON.parse(raw as string) as Cond[]
-			return conds.every((c) => evalCond(c, s)) && conds.flatMap(condFields).some((f) => keys.includes(f))
+			return (
+				conds.every((c) => evalCond(c, s)) &&
+				conds.flatMap(condFields).some((f) => keys.includes(f))
+			)
 		})
-		.map((m) => ({ label: m.label, url: `/${type}/moods/${m.path}` }))
+		.map((m) => ({ label: m.label, url: finalAddress(`/${type}/moods/${m.path}`) }))
+		.filter((m, i, all) => all.findIndex((o) => o.url === m.url) === i)
 }
-

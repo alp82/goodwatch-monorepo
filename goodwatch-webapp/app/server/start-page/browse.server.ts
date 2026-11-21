@@ -12,6 +12,7 @@
 // kept part still serves while it is read again, so no request waits for a read once a part was read. A part read with
 // a failed source is kept for a minute only and marks the page incomplete. The first request of a part waits at most
 // BROWSE_BUDGET_MS; the page renders without the rails meanwhile, and as incomplete.
+import { finalAddress } from "~/domain/browse/redirects"
 import { type Brand, BRANDS, servicePath } from "~/domain/new-on-services"
 import { getRankedList, type ListTitle } from "~/server/top-lists.server"
 import {
@@ -294,7 +295,7 @@ export function serviceHref(
 			page: brand.slug,
 		})
 	)
-		return `/shows/streaming/${brand.slug}`
+		return finalAddress(`/shows/streaming/${brand.slug}`)
 	return arrivals.brands[brand.slug]?.length ? servicePath(country, brand) : null
 }
 

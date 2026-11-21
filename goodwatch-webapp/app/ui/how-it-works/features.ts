@@ -50,7 +50,7 @@ export const HOW_IT_WORKS_FEATURES: Feature[] = [
 		kicker: "Streaming",
 		title: "Where it streams",
 		line: "325 services in 139 countries. See which of yours has it tonight.",
-		link: { to: "/movies/streaming", label: "By service" },
+		link: { to: "/movies/streaming/us", label: "By service" },
 	},
 	{
 		id: "for-you",

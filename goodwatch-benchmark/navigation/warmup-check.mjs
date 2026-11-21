@@ -55,7 +55,7 @@ async function phone() {
 
 {
 	const { ctx, page, scripts } = await phone()
-	await page.goto(`${origin}/movies/best`, { waitUntil: "load", timeout: 120000 })
+	await page.goto(`${origin}/movies/top`, { waitUntil: "load", timeout: 120000 })
 	for (let i = 0; i < 600 && !scripts.some((s) => s.priority === "Low"); i++)
 		await page.waitForTimeout(25)
 	const before = scripts.length

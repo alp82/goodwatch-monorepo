@@ -1,14 +1,14 @@
 [
   {
-    "module": "$type.$category.$page.tsx",
+    "module": "$type.$.tsx",
     "kind": "document",
     "samples": [
       {
-        "path": "/movies/moods/feel-good",
+        "path": "/movies/moods/cozy",
         "status": 200
       },
       {
-        "path": "/movies/moods/feel-good?page=2",
+        "path": "/movies/moods/cozy?at=18",
         "status": 200
       },
       {
@@ -19,7 +19,7 @@
     "coverage": "captured route loader"
   },
   {
-    "module": "$type.$category._index.tsx",
+    "module": "$type.$.tsx",
     "kind": "document",
     "samples": [
       {
@@ -35,7 +35,7 @@
         "status": 200
       },
       {
-        "path": "/shows/streaming",
+        "path": "/shows/streaming/us",
         "status": 200
       }
     ],
@@ -57,15 +57,15 @@
     "coverage": "captured route loader"
   },
   {
-    "module": "$type.best.tsx",
+    "module": "$type.top.tsx",
     "kind": "document",
     "samples": [
       {
-        "path": "/movies/best",
+        "path": "/movies/top",
         "status": 200
       },
       {
-        "path": "/shows/best",
+        "path": "/shows/top",
         "status": 200
       }
     ],

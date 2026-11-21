@@ -206,8 +206,8 @@ describe("the country's rails", () => {
 		assert.deepEqual(
 			value.services.map((service) => [service.name, service.href, service.logo]),
 			[
-				["Netflix", "/shows/streaming/netflix", "/netflix.jpg"],
-				["Disney+", "/shows/streaming/disney-plus", "/disney.jpg"],
+				["Netflix", "/shows/streaming/us/netflix", "/netflix.jpg"],
+				["Disney+", "/shows/streaming/us/disney-plus", "/disney.jpg"],
 			],
 		)
 		assert.equal(value.services[0].posters.length, 4)

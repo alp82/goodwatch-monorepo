@@ -1,6 +1,7 @@
 // Where a title page sits in the site: its hub and the genre page of its first genre that has one, as
 // Movies › Science Fiction or Shows › Animation. The title page adds itself as the last item. On the server, so
 // the genre pages' copy stays out of the title page's script.
+import { finalAddress } from "~/domain/browse/redirects"
 import { genres as genrePages } from "~/ui/explore/category/genres"
 import { type Crumb, crumbLabel } from "~/ui/nav/breadcrumb-trail"
 
@@ -17,22 +18,18 @@ export interface TitleGenrePage {
 }
 
 /** The genre page of one TMDB genre for the media type; null when the genre has none. */
-export function genrePage(
-	mediaType: "movie" | "show",
-	genre: string,
-): TitleGenrePage | null {
+export function genrePage(mediaType: "movie" | "show", genre: string): TitleGenrePage | null {
 	const type = mediaType === "movie" ? "movies" : "shows"
 	const label = PAGE_LABEL[genre] ?? genre
 	const page = Object.values(genrePages).find(
 		(candidate) =>
-			candidate.label === label &&
-			(candidate.type === "all" || candidate.type === type),
+			candidate.label === label && (candidate.type === "all" || candidate.type === type),
 	)
 	return page
 		? {
 				genre,
 				label: crumbLabel(page.label),
-				path: `/${type}/genres/${page.path}`,
+				path: finalAddress(`/${type}/genres/${page.path}`),
 			}
 		: null
 }

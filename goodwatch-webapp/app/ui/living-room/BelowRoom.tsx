@@ -14,19 +14,14 @@ import { type MouseEvent, type ReactNode, useMemo } from "react"
 import type { NewWeekRow } from "~/server/new-on-services-page.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import { StartRowSlot } from "~/ui/talked-about-now/start-row/StartRowSlot"
-import {
-	HiddenTileContext,
-	useKeptCards,
-} from "~/ui/title-actions/hide-feedback"
+import { HiddenTileContext, useKeptCards } from "~/ui/title-actions/hide-feedback"
 import { titleToDashed } from "~/utils/helpers"
 import type { SizeRule } from "~/utils/tmdb-image"
 import { titleKey } from "~/utils/title-key"
 import type { StartTitle } from "./living-room-data"
 import { BELOW_ID, ROOM_ID } from "./use-below-room"
 
-export const startTitleHref = (
-	title: Pick<StartTitle, "media_type" | "tmdb_id" | "title">,
-) =>
+export const startTitleHref = (title: Pick<StartTitle, "media_type" | "tmdb_id" | "title">) =>
 	`/${title.media_type}/${title.tmdb_id}-${titleToDashed(canonicalMediaTitle(title))}`
 
 /** The widest a start poster is drawn: the cards of the grid are 105 to 140 px wide, so w154 at 1x and w342 at 2x. */
@@ -77,7 +72,7 @@ export const CATEGORY_HUBS = [
 		links: [
 			{ href: "/movies/moods", label: "Movies by mood" },
 			{ href: "/movies/genres", label: "Movies by genre" },
-			{ href: "/movies/streaming", label: "Movies by streaming service" },
+			{ href: "/movies/streaming/us", label: "Movies by streaming service" },
 		],
 	},
 	{
@@ -85,7 +80,7 @@ export const CATEGORY_HUBS = [
 		links: [
 			{ href: "/shows/moods", label: "Shows by mood" },
 			{ href: "/shows/genres", label: "Shows by genre" },
-			{ href: "/shows/streaming", label: "Shows by streaming service" },
+			{ href: "/shows/streaming/us", label: "Shows by streaming service" },
 		],
 	},
 ]
@@ -152,8 +147,7 @@ function NewOnYourServices({ row }: { row: NewWeekRow }) {
 					<h2 id="new-on-yours">New on your services</h2>
 				</div>
 				<Link to="/new" prefetch="intent" className="lrb-back">
-					See all{row.total > row.titles.length ? ` ${row.total}` : ""}{" "}
-					<span aria-hidden>→</span>
+					See all{row.total > row.titles.length ? ` ${row.total}` : ""} <span aria-hidden>→</span>
 				</Link>
 			</header>
 			<ol className="lrb-titles">
@@ -207,9 +201,7 @@ export function BelowRoom({
 					{/* An invitation, not the list's name: the heading under it has that. */}
 					<b>More below</b>
 					<small>
-						{titles.length
-							? `${titles.length} popular titles`
-							: "Movies and shows"}
+						{titles.length ? `${titles.length} popular titles` : "Movies and shows"}
 						<u> and every way to browse</u>
 					</small>
 				</span>
@@ -222,9 +214,7 @@ export function BelowRoom({
 				<header className="lrb-head">
 					<div>
 						<p className="lrb-eye">On GoodWatch now</p>
-						<h2 id="browse-title">
-							{titles.length ? "Popular right now" : "Browse GoodWatch"}
-						</h2>
+						<h2 id="browse-title">{titles.length ? "Popular right now" : "Browse GoodWatch"}</h2>
 					</div>
 					{back}
 				</header>
@@ -247,10 +237,7 @@ export function BelowRoom({
 								<h3>{group.label}</h3>
 								<ul>
 									{group.links.map((link) => (
-										<li
-											key={link.href}
-											className={`lrb-by-${link.href.split("/").at(-1)}`}
-										>
+										<li key={link.href} className={`lrb-by-${link.href.split("/").at(-1)}`}>
 											<Link to={link.href} discover="none">
 												{link.label}
 											</Link>

@@ -1,3 +1,4 @@
+import { finalAddress } from "~/domain/browse/redirects"
 import { TASTE_FALLBACK_PATH } from "~/domain/member-paths"
 import { MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
 // What the start page's Where to start section shows (StartBrowse.tsx), shared by its loader (server/start-page/
@@ -167,8 +168,9 @@ const PLURAL = { movie: "movies", show: "shows" } as const
 export const moodHref = (path: string) =>
 	DISCOVER_BROWSE_MOODS.some((key) => key === path)
 		? `/discover?moods=${path}`
-		: `/movies/moods/${path}`
-export const genreHref = (kind: BrowseKind, path: string) => `/${PLURAL[kind]}/genres/${path}`
+		: finalAddress(`/movies/moods/${path}`)
+export const genreHref = (kind: BrowseKind, path: string) =>
+	finalAddress(`/${PLURAL[kind]}/genres/${path}`)
 
 /** The section's hub links: the rails' See all, and the ways to browse that no rail leads to. */
 export const BROWSE_HUBS = {
@@ -176,7 +178,7 @@ export const BROWSE_HUBS = {
 	topShows: "/shows/top",
 	arrivals: "/new",
 	moods: "/movies/moods",
-	services: "/shows/streaming",
+	services: "/shows/streaming/us",
 	movieGenres: "/movies/genres",
 	showGenres: "/shows/genres",
 } as const
@@ -193,8 +195,8 @@ export const MORE_HUBS = [
 	{ href: "/shows/moods", label: "Shows by mood" },
 	{ href: "/movies/genres", label: "Movies by genre" },
 	{ href: "/shows/genres", label: "Shows by genre" },
-	{ href: "/movies/streaming", label: "Movies by service" },
-	{ href: "/shows/streaming", label: "Shows by service" },
+	{ href: "/movies/streaming/us", label: "Movies by service" },
+	{ href: "/shows/streaming/us", label: "Shows by service" },
 	{ href: "/map", label: "Explorer" },
 	{ href: TASTE_FALLBACK_PATH, label: "Your taste" },
 	{ href: "/how-it-works", label: "How it works" },
