@@ -2,74 +2,31 @@
 // write-ups that say how. SELECT only, read from the per-title `trope` rows (media_type, media_tmdb_id, url, name,
 // content) and the `trope_catalog_page` descriptions, the same tables production's title Tropes section reads.
 //
-// Membership is read once per process (one statement per trope, a few at a time, about four seconds in all) and
-// refreshed every twelve hours; a trope whose read failed has no members until the next try, never a cached empty set.
+// Membership comes from the shared trope members cache (trope-members.server.ts: read from Crate once a day across the
+// fleet, served stale while it refreshes); the write-ups are read here per trope page with a short cache.
 import { query } from "~/utils/crate"
 import { type TitleKey, titleKey } from "~/utils/title-key"
 import { htmlToText } from "~/server/profile/trope-text"
 import { TROPES, type Play, playOf, tropeUrlOf } from "~/domain/tropes/catalog"
+import {
+	ensureTropeMembers,
+	tropeMembers as sharedMembers,
+	tropeMembersVersion,
+} from "./trope-members.server"
 
 const REFRESH_MS = 12 * 60 * 60 * 1000
 
-interface Members {
-	/** Trope id → the title keys that carry it (movies and shows). */
-	byId: Map<string, Set<TitleKey>>
-	/** Raised on every completed read; part of row caches' identity. */
-	version: number
-	at: number
+/** Starts (or joins) the membership load (T1's shared cache); resolves once every trope has been tried once. */
+export const ensureTropes = (): Promise<void> => ensureTropeMembers(TROPES.map((t) => t.id))
+
+/** The titles that carry a trope, or null before the first load finished. */
+export function tropeMembers(id: string): { has(key: TitleKey): boolean } | null {
+	const members = sharedMembers(id)
+	return members ? { has: (key) => members.has(key) } : null
 }
 
-let members: Members = { byId: new Map(), version: 0, at: 0 }
-let loading: Promise<void> | null = null
-
-async function readOne(id: string): Promise<Set<TitleKey> | null> {
-	try {
-		const rows = await query<{ media_type: string; media_tmdb_id: number }>(
-			"SELECT media_type, media_tmdb_id FROM trope WHERE url = ? LIMIT 30000",
-			[tropeUrlOf(id)],
-			{ timeoutMs: 8000 },
-		)
-		const out = new Set<TitleKey>()
-		for (const r of rows)
-			if (r.media_type === "movie" || r.media_type === "show")
-				out.add(titleKey(r.media_type, Number(r.media_tmdb_id)))
-		return out
-	} catch (error) {
-		console.error(`Explore tropes: reading ${id} failed:`, error)
-		return null
-	}
-}
-
-async function readAll(): Promise<void> {
-	const byId = new Map(members.byId)
-	const queue = [...TROPES]
-	const worker = async () => {
-		for (let t = queue.shift(); t; t = queue.shift()) {
-			const set = await readOne(t.id)
-			if (set) byId.set(t.id, set)
-		}
-	}
-	await Promise.all(Array.from({ length: 6 }, worker))
-	members = { byId, version: members.version + 1, at: Date.now() }
-}
-
-/** Starts (or joins) the membership read; resolves when every trope has been tried once. */
-export function ensureTropes(): Promise<void> {
-	const stale = Date.now() - members.at > REFRESH_MS
-	if (!loading && (members.version === 0 || stale)) {
-		loading = readAll().finally(() => {
-			loading = null
-		})
-	}
-	// A refresh runs in the background; only the first read is waited for.
-	return members.version === 0 && loading ? loading : Promise.resolve()
-}
-
-/** The titles that carry a trope, or null before the first read finished. */
-export const tropeMembers = (id: string): Set<TitleKey> | null =>
-	members.version === 0 ? null : (members.byId.get(id) ?? new Set())
-
-export const tropesVersion = () => members.version
+/** Raised on every completed load; part of row caches' identity. */
+export const tropesVersion = () => tropeMembersVersion()
 
 // ---------------------------------------------------------------------------------------------------------
 // Write-ups
