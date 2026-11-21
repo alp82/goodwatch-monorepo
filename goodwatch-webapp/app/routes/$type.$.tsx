@@ -25,6 +25,8 @@ import { presentCatalogLoader } from "~/server/media-payload.server"
 import { BrowseRow } from "~/ui/browse/BrowseRow"
 import { BrowsePageProvider } from "~/ui/browse/page-context"
 import { PlacePage } from "~/ui/browse/place/PlacePage"
+import { tropesRoute } from "~/server/browse/tropes-route.server"
+import { TropesRoute } from "~/ui/browse/tropes/TropesRoute"
 import { crumbsOf } from "~/ui/browse/place/PlaceHead"
 import { buildMeta } from "~/utils/meta"
 
@@ -80,6 +82,10 @@ const canonicalLoader = async ({ params, request }: LoaderFunctionArgs) => {
 	if (url.searchParams.get("peek") === "1" && address.view === "place")
 		return { page: "peek" as const, data: await peekOf(atlas, address.parts) }
 
+	// The tropes index and a single trope's page (a trope blended with anything else is a place page).
+	const tropes = await tropesRoute(atlas, address)
+	if (tropes) return tropes
+
 	if (isPlacePage(address)) {
 		const args = { request, url, address, atlas }
 		const data = await loadPlacePage(args)
@@ -108,6 +114,7 @@ const canonicalLoader = async ({ params, request }: LoaderFunctionArgs) => {
 export const loader = presentCatalogLoader(canonicalLoader, { live: true })
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
+	if (data && (data.page === "tropes" || data.page === "trope")) return buildMeta(data.meta)
 	if (!data || data.page !== "place") return [{ title: "Page Not Found | GoodWatch" }]
 	const crumbs = crumbsOf(data.data, data.address, (a) => browsePath(a)).map((c) => ({
 		label: c.label,
@@ -130,6 +137,7 @@ const to = (a: Address, extra?: Record<string, string | undefined>) => browsePat
 
 export default function BrowsePage() {
 	const data = useLoaderData<typeof loader>()
+	if (data.page === "tropes" || data.page === "trope") return <TropesRoute data={data} to={to} />
 	if (data.page !== "place") return null
 	return (
 		<BrowsePageProvider value={{ marks: data.marks, entry: data.entry }}>
