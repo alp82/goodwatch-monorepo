@@ -473,6 +473,27 @@ export class Places {
 	 * production (or is alone). 1: in its language, as a partner. 2: the rest. Null when no country is in the place.
 	 * Only representative picks use this; a country's full list stays every title it helped make.
 	 */
+	/** A place's most-rated released rows, the ones `homeTiers` reads the original language of. */
+	private homeTop(rows: number[]): number[] {
+		const b = this.b
+		return rows
+			.filter((r) => released(b, r))
+			.sort((x, y) => votesOf(b, y) - votesOf(b, x))
+			.slice(0, 700)
+	}
+
+	/**
+	 * Reads the original languages that the given countries' showcases need, in one go: a page with many country cards
+	 * (the hub's map, the places index) would otherwise read them country by country.
+	 */
+	async prefetchHomeLanguages(countries: PlaceRef[]): Promise<void> {
+		const keys = new Set<TitleKey>()
+		for (const p of countries)
+			for (const r of this.homeTop(this.rows([{ family: p.family, slug: p.slug }])))
+				keys.add(this.keyOf(r))
+		await languagesOf([...keys])
+	}
+
 	private async homeTiers(
 		parts: Ingredient[],
 		rows: number[],
@@ -483,10 +504,7 @@ export class Places {
 		const b = this.b
 		const c = b.snap.columns
 		const n = facts.releaseYears.length
-		const top = rows
-			.filter((r) => released(b, r))
-			.sort((x, y) => votesOf(b, y) - votesOf(b, x))
-			.slice(0, 700)
+		const top = this.homeTop(rows)
 		const langs = await languagesOf(top.map(this.keyOf))
 		const out = new Map<number, number>()
 		const codes = countries.map((p) => valueOf(this.catalog, p)?.id ?? "")
@@ -1662,16 +1680,23 @@ const HOME_LANGUAGES: Record<string, string[]> = {
 const languageCache = new Map<TitleKey, string>()
 async function languagesOf(keys: TitleKey[]): Promise<Map<TitleKey, string>> {
 	const missing = keys.filter((k) => !languageCache.has(k))
+	// Chunks of 400 ids, a few at a time: a page of many countries asks for thousands of titles at once.
 	const read = async (table: "movie" | "show", ids: number[]) => {
-		for (let i = 0; i < ids.length; i += 400) {
-			const chunk = ids.slice(i, i + 400)
-			const rows = await query<{ tmdb_id: number; original_language_code: string | null }>(
-				`SELECT tmdb_id, original_language_code FROM ${table} WHERE tmdb_id IN (${chunk.map(() => "?").join(",")}) LIMIT 400`,
-				chunk,
-			).catch(() => [])
-			for (const row of rows)
-				languageCache.set(titleKey(table, row.tmdb_id), row.original_language_code ?? "")
+		const chunks: number[][] = []
+		for (let i = 0; i < ids.length; i += 400) chunks.push(ids.slice(i, i + 400))
+		let next = 0
+		const worker = async () => {
+			for (let i = next++; i < chunks.length; i = next++) {
+				const chunk = chunks[i]
+				const rows = await query<{ tmdb_id: number; original_language_code: string | null }>(
+					`SELECT tmdb_id, original_language_code FROM ${table} WHERE tmdb_id IN (${chunk.map(() => "?").join(",")}) LIMIT 400`,
+					chunk,
+				).catch(() => [])
+				for (const row of rows)
+					languageCache.set(titleKey(table, row.tmdb_id), row.original_language_code ?? "")
+			}
 		}
+		await Promise.all(Array.from({ length: Math.min(4, chunks.length) }, worker))
 	}
 	if (missing.length)
 		await Promise.all([
