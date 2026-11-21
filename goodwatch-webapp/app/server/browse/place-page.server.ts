@@ -15,6 +15,8 @@ import type { PlaceData } from "~/server/browse/place-data.server"
 import { loadDials } from "~/server/browse/dials.server"
 import type { BrowseLoadArgs } from "~/server/browse/load-args"
 import { loadPage } from "~/server/browse/place-data.server"
+import { cachedPage } from "./page-cache.server"
+import { tropeMembersVersion } from "./trope-members.server"
 import { WINDOW } from "~/domain/browse/window"
 
 export type DialsPlace = Extract<DialsData, { view: "place" }>
@@ -157,8 +159,28 @@ async function windowOf(
 	return { ...a, titles: [...a.titles, ...b.titles].slice(skip, skip + WINDOW) }
 }
 
-/** Everything a place page (a mood, a genre, a theme, a style, or any blend) loads. Read-only. */
+/**
+ * Everything a place page (a mood, a genre, a theme, a style, or any blend) loads. Read-only. At its plain address
+ * (no list state in the query) the page depends only on the catalog and the viewer's settings, so it is built once
+ * per data version (page-cache.server); a single place is also shared across the fleet, a blend stays in-process.
+ */
 export async function loadPlacePage(args: BrowseLoadArgs): Promise<PlacePageData> {
+	if (args.url.search) return buildPlacePage(args)
+	let complete = true
+	return cachedPage(args.atlas, {
+		name: "place",
+		key: args.url.pathname,
+		build: async () => {
+			// Until the trope members load, the steering has no trope row: such a build is served, then rebuilt.
+			complete = tropeMembersVersion() > 0
+			return buildPlacePage(args)
+		},
+		complete: () => complete,
+		shared: args.address.parts.length === 1,
+	})
+}
+
+async function buildPlacePage(args: BrowseLoadArgs): Promise<PlacePageData> {
 	const { atlas, address, url } = args
 	const parts = address.parts
 	const lead = parts[0]

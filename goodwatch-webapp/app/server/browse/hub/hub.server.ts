@@ -7,6 +7,8 @@ import { MIN_PAGE } from "~/server/browse/places.server"
 import type { BestRow, CardData, KindOf, PlaceRef, ShowTitle } from "~/domain/browse/types"
 import { WORLD_SHAPES } from "~/ui/browse/world-map/shapes"
 import { cardData, slim } from "~/server/browse/cards.server"
+import { cachedPage } from "~/server/browse/page-cache.server"
+import type { Places } from "~/server/browse/places.server"
 import type { BrowseLoader } from "~/ui/browse/view"
 import { OCCASIONS, QUESTIONS, setOf } from "~/server/browse/hub/occasions.server"
 import { homeLede, topBest } from "~/server/browse/hub/shared.server"
@@ -67,14 +69,27 @@ export interface MiniData {
 	genres: MiniGenre[]
 	services: MiniService[]
 	streamingReady: boolean
+	/** Whether the previews could show their defining tropes (members loaded). */
+	tropesReady: boolean
 	lists: BestOf[]
 	occasions: MiniOccasion[]
 }
 
 const PREVIEW = 4
 
+/** The hub: built once per data version and viewer setting, and shared across the fleet (page-cache.server). */
 export const loadHubPage: BrowseLoader<MiniData> = async ({ atlas }) => {
-	const tropes = await tropesReady()
+	return cachedPage(atlas, {
+		name: "hub",
+		key: atlas.kind,
+		build: async () => buildHub(atlas, await tropesReady()),
+		// Without trope members the previews have no tropes; without availability the streaming tile is empty.
+		complete: (data) => data.streamingReady && data.tropesReady,
+		shared: true,
+	})
+}
+
+async function buildHub(atlas: Places, tropes: boolean): Promise<MiniData> {
 	const withTropes = <T extends CardData>(cards: T[]): (T & { tropes: TropeTag[] })[] =>
 		cards.map((c) => ({
 			...c,
@@ -168,6 +183,7 @@ export const loadHubPage: BrowseLoader<MiniData> = async ({ atlas }) => {
 		genres,
 		services,
 		streamingReady: atlas.streamingReady,
+		tropesReady: tropes,
 		lists,
 		occasions,
 	}
