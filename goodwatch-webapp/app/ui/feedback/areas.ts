@@ -117,10 +117,7 @@ export const PAGE_TYPES: PageType[] = [
 				id: "how",
 				name: "How it works",
 				selector: 'section[aria-labelledby="hgw-h"]',
-				chips: [
-					flag("A number is out of date"),
-					flag("It doesn't work like this"),
-				],
+				chips: [flag("A number is out of date"), flag("It doesn't work like this")],
 			},
 		],
 	},
@@ -134,10 +131,7 @@ export const PAGE_TYPES: PageType[] = [
 			{
 				id: "search",
 				name: "Search",
-				selector: [
-					'button[aria-label="Discover movies and TV shows. Search"]',
-					"main h1",
-				],
+				selector: ['button[aria-label="Discover movies and TV shows. Search"]', "main h1"],
 				chips: [
 					flag("The best match is wrong"),
 					flag("A title I expected is missing"),
@@ -188,11 +182,9 @@ export const PAGE_TYPES: PageType[] = [
 			"tv-shows.$.tsx (redirect)",
 		],
 		example: "/movies/moods",
-		match: re(/^\/(movies|shows)(\/(?!best)[^/]+)*\/?$/),
+		match: re(/^\/(movies|shows|all)(\/(?!top)[^/]+)*\/?$/),
 		areas: [
-			TITLE_CARDS(
-				"main ol, main ul:has(a[href^='/movie/']), main ul:has(a[href^='/show/'])",
-			),
+			TITLE_CARDS("main ol, main ul:has(a[href^='/movie/']), main ul:has(a[href^='/show/'])"),
 			{
 				id: "ranking",
 				name: "Order",
@@ -206,11 +198,11 @@ export const PAGE_TYPES: PageType[] = [
 		],
 	},
 	{
-		id: "best",
-		name: "Best-of list",
-		routes: ["$type.best.tsx"],
-		example: "/movies/best",
-		match: re(/^\/(movies|shows)\/best\/?$/),
+		id: "top",
+		name: "Top list",
+		routes: ["$type.top.tsx"],
+		example: "/movies/top",
+		match: re(/^\/(movies|shows|all)\/top\/?$/),
 		areas: [
 			{
 				id: "ranking",
@@ -226,11 +218,7 @@ export const PAGE_TYPES: PageType[] = [
 				id: "titles",
 				name: "Title details",
 				selector: "main ol[start] > li",
-				chips: [
-					fix("Wrong year"),
-					flag("Wrong genre"),
-					flag("A score looks wrong"),
-				],
+				chips: [fix("Wrong year"), flag("Wrong genre"), flag("A score looks wrong")],
 			},
 			{
 				id: "intro",
@@ -263,11 +251,7 @@ export const PAGE_TYPES: PageType[] = [
 	{
 		id: "title",
 		name: "Title page (movie or show)",
-		routes: [
-			"movie.$movieKey.tsx",
-			"show.$showKey.tsx",
-			"tv.$showKey.tsx (redirect)",
-		],
+		routes: ["movie.$movieKey.tsx", "show.$showKey.tsx", "tv.$showKey.tsx (redirect)"],
 		example: "/show/136315-the-bear",
 		match: re(/^\/(movie|show)\/[^/]+\/?$/),
 		areas: [
@@ -275,10 +259,7 @@ export const PAGE_TYPES: PageType[] = [
 				id: "scores",
 				name: "Scores",
 				selector: '[data-feedback-area="scores"]',
-				chips: [
-					flag("A score looks wrong or old"),
-					flag("A score belongs to another title"),
-				],
+				chips: [flag("A score looks wrong or old"), flag("A score belongs to another title")],
 			},
 			WATCH,
 			{
@@ -316,20 +297,13 @@ export const PAGE_TYPES: PageType[] = [
 				id: "cast",
 				name: "Cast and crew",
 				selector: '[data-feedback-area="cast"]',
-				chips: [
-					fix("Wrong character name"),
-					fix("Someone isn't in it"),
-					fix("Someone is missing"),
-				],
+				chips: [fix("Wrong character name"), fix("Someone isn't in it"), fix("Someone is missing")],
 			},
 			{
 				id: "related",
 				name: "Similar titles",
 				selector: '[data-feedback-area="related"]',
-				chips: [
-					flag("A title isn't similar"),
-					flag("A title is for a different audience"),
-				],
+				chips: [flag("A title isn't similar"), flag("A title is for a different audience")],
 			},
 			{
 				id: "media",
@@ -382,11 +356,7 @@ export const PAGE_TYPES: PageType[] = [
 				id: "cast",
 				name: "Cast and crew",
 				selector: '[data-feedback-area="cast"]',
-				chips: [
-					fix("Wrong character name"),
-					fix("Someone isn't in it"),
-					fix("Someone is missing"),
-				],
+				chips: [fix("Wrong character name"), fix("Someone isn't in it"), fix("Someone is missing")],
 			},
 		],
 	},
@@ -401,11 +371,7 @@ export const PAGE_TYPES: PageType[] = [
 				id: "person",
 				name: "Details",
 				selector: '[data-feedback-area="person"]',
-				chips: [
-					fix("Wrong main job"),
-					fix("Wrong career years"),
-					flag("Wrong photo"),
-				],
+				chips: [fix("Wrong main job"), fix("Wrong career years"), flag("Wrong photo")],
 			},
 			{
 				id: "standout",
@@ -442,10 +408,7 @@ export const PAGE_TYPES: PageType[] = [
 				id: "taste",
 				name: "Taste",
 				selector: "main section:has(> h2 a[href$='/taste'])",
-				chips: [
-					flag("The viewer type doesn't fit"),
-					flag("A taste word doesn't fit"),
-				],
+				chips: [flag("The viewer type doesn't fit"), flag("A taste word doesn't fit")],
 			},
 			{
 				id: "match",
@@ -491,19 +454,13 @@ export const PAGE_TYPES: PageType[] = [
 				id: "titles",
 				name: "Titles",
 				selector: "main section:has(a[href^='/movie/'], a[href^='/show/'])",
-				chips: [
-					fix("Wrong year or poster on a title"),
-					flag("A title shows that wasn't added"),
-				],
+				chips: [fix("Wrong year or poster on a title"), flag("A title shows that wasn't added")],
 			},
 			{
 				id: "taste",
 				name: "Taste",
 				selector: "main section:has(h2):not(:has(a[href^='/movie/']))",
-				chips: [
-					flag("The viewer type doesn't fit"),
-					flag("A taste number looks wrong"),
-				],
+				chips: [flag("The viewer type doesn't fit"), flag("A taste number looks wrong")],
 			},
 		],
 	},
@@ -621,10 +578,7 @@ export const PAGE_TYPES: PageType[] = [
 				id: "map",
 				name: "Map",
 				selector: "main canvas, main svg[role='img']",
-				chips: [
-					flag("A title is on the wrong island"),
-					flag("An island's name doesn't fit"),
-				],
+				chips: [flag("A title is on the wrong island"), flag("An island's name doesn't fit")],
 			},
 		],
 	},
@@ -688,9 +642,7 @@ export const PAGE_TYPES: PageType[] = [
 			"auth.mcp.consent.tsx",
 		],
 		example: "/sign-in",
-		match: re(
-			/^\/(sign-in|sign-up|forgot-password|reset-password|verify-email|auth\/)/,
-		),
+		match: re(/^\/(sign-in|sign-up|forgot-password|reset-password|verify-email|auth\/)/),
 		areas: [],
 	},
 	{

@@ -1,16 +1,12 @@
 // Shared pieces of the awards pages: the head, the won mark, the poster card, the year links.
-import {
-	ChevronLeftIcon,
-	ChevronRightIcon,
-	TrophyIcon,
-} from "@heroicons/react/24/solid"
+import { ChevronLeftIcon, ChevronRightIcon, TrophyIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
 import { type ReactNode, createContext, useContext } from "react"
 import type { AwardTitle } from "~/server/award-pages.server"
 import type { RowServices } from "~/server/row-services.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import { TmdbImage } from "~/ui/TmdbImage"
-import { ListHead } from "~/ui/best-lists/ListHead"
+import { ListHead } from "~/ui/top-lists/ListHead"
 import Breadcrumbs from "~/ui/nav/Breadcrumbs"
 import type { Crumb } from "~/ui/nav/breadcrumb-trail"
 import type { SizeRule } from "~/utils/tmdb-image"
@@ -20,7 +16,12 @@ export function AwardsHead({
 	heading,
 	intro,
 	children,
-}: { crumbs: Crumb[]; heading: string; intro: string; children?: ReactNode }) {
+}: {
+	crumbs: Crumb[]
+	heading: string
+	intro: string
+	children?: ReactNode
+}) {
 	return (
 		<>
 			{crumbs.length > 1 && <Breadcrumbs items={crumbs} />}
@@ -106,10 +107,7 @@ export function AwardCard({
 	)
 }
 
-export function SmallPoster({
-	title,
-	className,
-}: { title: AwardTitle; className: string }) {
+export function SmallPoster({ title, className }: { title: AwardTitle; className: string }) {
 	return title.poster_path ? (
 		<TmdbImage
 			kind="poster"
@@ -123,15 +121,17 @@ export function SmallPoster({
 }
 
 export const yearText = (t: AwardTitle) =>
-	[t.media_type === "show" ? "TV show" : null, t.release_year]
-		.filter(Boolean)
-		.join(" · ")
+	[t.media_type === "show" ? "TV show" : null, t.release_year].filter(Boolean).join(" · ")
 
 export function YearNav({
 	base,
 	prev,
 	next,
-}: { base: string; prev: number | null; next: number | null }) {
+}: {
+	base: string
+	prev: number | null
+	next: number | null
+}) {
 	const cls =
 		"inline-flex items-center gap-1 rounded-md bg-white/[0.06] px-3 py-1.5 text-sm text-gray-300 ring-1 ring-white/10 hover:bg-white/10"
 	return (
@@ -161,11 +161,7 @@ export function TitleLinks({ titles }: { titles: AwardTitle[] }) {
 		<>
 			{titles.map((t, i) => (
 				<span key={`${t.media_type}${t.tmdb_id}`}>
-					<Link
-						to={t.path}
-						prefetch="intent"
-						className="text-gray-300 hover:text-amber-300"
-					>
+					<Link to={t.path} prefetch="intent" className="text-gray-300 hover:text-amber-300">
 						{t.title}
 					</Link>
 					{i < titles.length - 1 && <span className="text-gray-600">, </span>}

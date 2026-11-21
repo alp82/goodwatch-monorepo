@@ -26,9 +26,7 @@ const KINDS: { kind: BrowseKind; label: string }[] = [
 ]
 
 export function TopTen({ top }: { top: Record<BrowseKind, StartTitle[]> }) {
-	const [kind, setKind] = useState<BrowseKind>(
-		top.movie.length ? "movie" : "show",
-	)
+	const [kind, setKind] = useState<BrowseKind>(top.movie.length ? "movie" : "show")
 	const navs: Record<BrowseKind, RailNav> = {
 		movie: useRailNav(),
 		show: useRailNav(),
@@ -47,7 +45,7 @@ export function TopTen({ top }: { top: Record<BrowseKind, StartTitle[]> }) {
 				id="sb-top"
 				title="Top 10 on GoodWatch"
 				line="The highest scores of all time"
-				href={kind === "movie" ? BROWSE_HUBS.bestMovies : BROWSE_HUBS.bestShows}
+				href={kind === "movie" ? BROWSE_HUBS.topMovies : BROWSE_HUBS.topShows}
 				nav={navs[kind]}
 			/>
 			<div role="tablist" aria-label="Top 10" className="sb-tabs">
@@ -67,16 +65,10 @@ export function TopTen({ top }: { top: Record<BrowseKind, StartTitle[]> }) {
 				{kinds.map((option) => {
 					const away = option.kind !== kind
 					return (
-						<div
-							key={option.kind}
-							aria-hidden={away || undefined}
-							{...(away && { inert: "" })}
-						>
+						<div key={option.kind} aria-hidden={away || undefined} {...(away && { inert: "" })}>
 							<Rail
 								nav={navs[option.kind]}
-								name={
-									option.kind === "movie" ? "Top 10 movies" : "Top 10 shows"
-								}
+								name={option.kind === "movie" ? "Top 10 movies" : "Top 10 shows"}
 								className="sb-ranks"
 							>
 								{top[option.kind].map((title, i) => (
@@ -96,11 +88,11 @@ export function TopTen({ top }: { top: Record<BrowseKind, StartTitle[]> }) {
 			</div>
 			<p className="sb-also">
 				All the best{" "}
-				<Link to={BROWSE_HUBS.bestMovies} discover="none">
+				<Link to={BROWSE_HUBS.topMovies} discover="none">
 					movies
 				</Link>{" "}
 				and{" "}
-				<Link to={BROWSE_HUBS.bestShows} discover="none">
+				<Link to={BROWSE_HUBS.topShows} discover="none">
 					shows
 				</Link>
 			</p>

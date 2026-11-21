@@ -1,5 +1,5 @@
-// The head of a best-of list and of the people list: the heading and the intro. Explore's tab row names the page, so
-// there is no visible breadcrumb; the best-of lists keep their BreadcrumbList in the page's meta.
+// The head of a Top list and of the people list: the heading and the intro. Explore's tab row names the page, so
+// there is no visible breadcrumb; the Top lists keep their BreadcrumbList in the page's meta.
 import type { ReactNode } from "react"
 import { PageTitle } from "~/ui/heading"
 

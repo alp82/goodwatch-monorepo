@@ -2,13 +2,8 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import "../../server/title-filter/test-alias.ts"
 
-const {
-	runtimeLabel,
-	bestListCopy,
-	DISCOVERY_COPY,
-	STATIC_PAGE_COPY,
-	SUBTEXT_MAX_LENGTH,
-} = await import("./copy.ts")
+const { runtimeLabel, topListCopy, DISCOVERY_COPY, STATIC_PAGE_COPY, SUBTEXT_MAX_LENGTH } =
+	await import("./copy.ts")
 
 test("a movie's length reads as hours and minutes", () => {
 	assert.equal(runtimeLabel(136), "2h 16m")
@@ -23,13 +18,13 @@ test("a missing or impossible length gives no label", () => {
 		assert.equal(runtimeLabel(minutes), "")
 })
 
-test("the best-of lists and the people list have cards whose subtitle fits", () => {
-	assert.deepEqual(bestListCopy("shows"), {
-		tag: "Best TV shows",
-		title: "The best TV shows of all time",
+test("the Top lists and the people list have cards whose subtitle fits", () => {
+	assert.deepEqual(topListCopy("shows"), {
+		tag: "Top TV shows",
+		title: "Top TV shows of all time",
 		subtitle: "Ranked by GoodWatch score",
 	})
-	for (const copy of [bestListCopy("movies"), STATIC_PAGE_COPY["/people"]])
+	for (const copy of [topListCopy("movies"), STATIC_PAGE_COPY["/people"]])
 		assert.ok(copy.subtitle.length <= SUBTEXT_MAX_LENGTH, copy.subtitle)
 })
 

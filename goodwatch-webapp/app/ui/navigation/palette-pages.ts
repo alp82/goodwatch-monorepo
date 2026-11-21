@@ -154,29 +154,27 @@ const profileTab =
 				})
 			: null
 
-const CATEGORY_HUB: Record<
-	string,
-	{ movies: string; shows: string; icon: Icon; words: string[] }
-> = {
-	moods: {
-		movies: "Movies by mood",
-		shows: "Shows by mood",
-		icon: FaceSmileIcon,
-		words: ["moods", "feeling", "vibe"],
-	},
-	genres: {
-		movies: "Movies by genre",
-		shows: "Shows by genre",
-		icon: Squares2X2Icon,
-		words: ["genres", "categories"],
-	},
-	streaming: {
-		movies: "Movies by service",
-		shows: "Shows by service",
-		icon: SignalIcon,
-		words: ["streaming", "services", "providers"],
-	},
-}
+const CATEGORY_HUB: Record<string, { movies: string; shows: string; icon: Icon; words: string[] }> =
+	{
+		moods: {
+			movies: "Movies by mood",
+			shows: "Shows by mood",
+			icon: FaceSmileIcon,
+			words: ["moods", "feeling", "vibe"],
+		},
+		genres: {
+			movies: "Movies by genre",
+			shows: "Shows by genre",
+			icon: Squares2X2Icon,
+			words: ["genres", "categories"],
+		},
+		streaming: {
+			movies: "Movies by service",
+			shows: "Shows by service",
+			icon: SignalIcon,
+			words: ["streaming", "services", "providers"],
+		},
+	}
 
 /** A list's name without its emoji ("Scary 👻" → "Scary"). */
 const plainLabel = (label: string) =>
@@ -200,16 +198,10 @@ function browsePages(): PalettePage[] {
 			const hub = CATEGORY_HUB[category]
 			if (!hub) continue
 			pages.push(
-				page(
-					`${type}-${category}`,
-					hub[type],
-					`/${type}/${category}`,
-					hub.icon,
-					{
-						sub: type === "movies" ? "Movies" : "Shows",
-						words: hub.words,
-					},
-				),
+				page(`${type}-${category}`, hub[type], `/${type}/${category}`, hub.icon, {
+					sub: type === "movies" ? "Movies" : "Shows",
+					words: hub.words,
+				}),
 			)
 			for (const list of Object.values(lists)) {
 				if (list.type !== "all" && list.type !== type) continue
@@ -266,13 +258,7 @@ const PAGES: Entry[] = [
 	}),
 	page("forYou", "For you", WATCH_PATHS.forYou, SparklesIcon, {
 		destination: "forYou",
-		words: [
-			"recommendations",
-			"recommended",
-			"suggestions",
-			"picks",
-			"personal",
-		],
+		words: ["recommendations", "recommended", "suggestions", "picks", "personal"],
 	}),
 	page("forYouTropes", "By your tropes", WATCH_PATHS.forYouTropes, TagIcon, {
 		sub: "For you",
@@ -307,15 +293,7 @@ const PAGES: Entry[] = [
 		destination: "hot",
 		// Its name until 2026-10-29: people still search for it.
 		names: ["hot on socials"],
-		words: [
-			"trending",
-			"buzz",
-			"viral",
-			"popular",
-			"social media",
-			"tiktok",
-			"reddit",
-		],
+		words: ["trending", "buzz", "viral", "popular", "social media", "tiktok", "reddit"],
 	}),
 	// What arrived on streaming in the last 14 days (#489): a member's own services; a visitor's country.
 	(viewer) =>
@@ -330,12 +308,13 @@ const PAGES: Entry[] = [
 				words: ["just added", "new arrivals", "recently added", "arrived"],
 			},
 		),
-	page("bestMovies", "Best movies", "/movies/best", CheckBadgeIcon, {
-		words: ["top movies", "best films", "top rated", "ranking", "greatest"],
+	page("topMovies", "Top movies", "/movies/top", CheckBadgeIcon, {
+		names: ["best movies"],
+		words: ["best films", "top films", "top rated", "ranking", "greatest"],
 	}),
-	page("bestShows", "Best TV shows", "/shows/best", CheckBadgeIcon, {
-		names: ["best shows"],
-		words: ["top shows", "best series", "top rated", "ranking", "greatest"],
+	page("topShows", "Top TV shows", "/shows/top", CheckBadgeIcon, {
+		names: ["top shows", "best shows", "best TV shows"],
+		words: ["best series", "top series", "top rated", "ranking", "greatest"],
 	}),
 	page("awards", "Awards", "/awards", TrophyIcon, {
 		names: ["award winners", "oscars", "emmys", "golden globes"],
@@ -347,17 +326,11 @@ const PAGES: Entry[] = [
 
 	// Profile.
 	(viewer) =>
-		page(
-			"tasteQuiz",
-			"Rate titles",
-			ratePath(pathViewer(viewer)),
-			FingerPrintIcon,
-			{
-				sub: TASTE,
-				names: ["rate more"],
-				words: ["quiz", "taste quiz", "start", "onboarding"],
-			},
-		),
+		page("tasteQuiz", "Rate titles", ratePath(pathViewer(viewer)), FingerPrintIcon, {
+			sub: TASTE,
+			names: ["rate more"],
+			words: ["quiz", "taste quiz", "start", "onboarding"],
+		}),
 	(viewer) =>
 		page(
 			"tasteFingerprint",
@@ -384,18 +357,12 @@ const PAGES: Entry[] = [
 			},
 		),
 	(viewer) =>
-		page(
-			"myScores",
-			"My scores",
-			tasteTabFor(pathViewer(viewer), "scores"),
-			StarIcon,
-			{
-				sub: TASTE,
-				for: "member",
-				names: ["scores", "scored"],
-				words: ["ratings", "rated", "rescore"],
-			},
-		),
+		page("myScores", "My scores", tasteTabFor(pathViewer(viewer), "scores"), StarIcon, {
+			sub: TASTE,
+			for: "member",
+			names: ["scores", "scored"],
+			words: ["ratings", "rated", "rescore"],
+		}),
 	(viewer) =>
 		page(
 			"notRated",
@@ -417,29 +384,17 @@ const PAGES: Entry[] = [
 		names: ["want to see", "wishlist", "whole wishlist"],
 		words: ["watchlist", "watch later", "saved", "bookmarks", "my library"],
 	}),
-	page(
-		"recent",
-		"Recently added",
-		`${WATCH_PATHS.wishlist}?sort=added`,
-		BookmarkIcon,
-		{
-			sub: WATCH,
-			for: "member",
-			words: ["new on my wishlist", "latest", "added"],
-		},
-	),
-	page(
-		"seenMovies",
-		"Seen movies",
-		`${WATCH_PATHS.showsSeen}?type=movie`,
-		EyeIcon,
-		{
-			sub: WATCH,
-			for: "member",
-			names: ["seen"],
-			words: ["watched", "history", "already seen", "films"],
-		},
-	),
+	page("recent", "Recently added", `${WATCH_PATHS.wishlist}?sort=added`, BookmarkIcon, {
+		sub: WATCH,
+		for: "member",
+		words: ["new on my wishlist", "latest", "added"],
+	}),
+	page("seenMovies", "Seen movies", `${WATCH_PATHS.showsSeen}?type=movie`, EyeIcon, {
+		sub: WATCH,
+		for: "member",
+		names: ["seen"],
+		words: ["watched", "history", "already seen", "films"],
+	}),
 	page("seenShows", "Seen shows", WATCH_PATHS.showsSeen, EyeIcon, {
 		sub: WATCH,
 		for: "member",
@@ -500,12 +455,7 @@ const PAGES: Entry[] = [
 						words: ["handle", "pick a handle", "public profile", "me"],
 					})
 			: null,
-	profileTab("stats", "Stats", ChartBarIcon, [
-		"statistics",
-		"numbers",
-		"taste stats",
-		"charts",
-	]),
+	profileTab("stats", "Stats", ChartBarIcon, ["statistics", "numbers", "taste stats", "charts"]),
 	profileTab("tropes", "Tropes", TagIcon, ["tv tropes", "patterns", "themes"]),
 
 	// Settings: members only (the layout sends visitors to sign in).
@@ -524,15 +474,7 @@ const PAGES: Entry[] = [
 		sub: SETTINGS,
 		for: "member",
 		names: ["services", "streaming services", "my services"],
-		words: [
-			"providers",
-			"subscriptions",
-			"netflix",
-			"prime",
-			"disney",
-			"hbo",
-			"streaming",
-		],
+		words: ["providers", "subscriptions", "netflix", "prime", "disney", "hbo", "streaming"],
 	}),
 	page("language", "Show titles in", TITLE_LANGUAGE_PATH, LanguageIcon, {
 		sub: SETTINGS,
@@ -540,17 +482,11 @@ const PAGES: Entry[] = [
 		names: ["language"],
 		words: ["translation", "locale", "title language"],
 	}),
-	page(
-		"privacy-settings",
-		"Discover and privacy",
-		DISCOVER_PRIVACY_PATH,
-		LockClosedIcon,
-		{
-			sub: SETTINGS,
-			for: "member",
-			words: ["privacy", "public", "private", "visibility"],
-		},
-	),
+	page("privacy-settings", "Discover and privacy", DISCOVER_PRIVACY_PATH, LockClosedIcon, {
+		sub: SETTINGS,
+		for: "member",
+		words: ["privacy", "public", "private", "visibility"],
+	}),
 	page("editProfile", "Edit profile", PROFILE_PATH, UserCircleIcon, {
 		sub: SETTINGS,
 		for: "member",
@@ -560,14 +496,7 @@ const PAGES: Entry[] = [
 		sub: SETTINGS,
 		for: "member",
 		names: ["account"],
-		words: [
-			"email",
-			"password",
-			"sign in",
-			"login",
-			"security",
-			"delete account",
-		],
+		words: ["email", "password", "sign in", "login", "security", "delete account"],
 	}),
 	page("imports", "Imports", IMPORTS_PATH, ArrowDownTrayIcon, {
 		sub: SETTINGS,
@@ -653,15 +582,7 @@ const PAGES: Entry[] = [
 	page("stats", "GoodWatch in numbers", "/stats", ChartBarIcon, {
 		sub: GOODWATCH,
 		names: ["stats", "statistics", "in numbers"],
-		words: [
-			"numbers",
-			"records",
-			"facts",
-			"trivia",
-			"quiz",
-			"how many",
-			"catalog",
-		],
+		words: ["numbers", "records", "facts", "trivia", "quiz", "how many", "catalog"],
 	}),
 	page("howItWorks", "How it works", "/how-it-works", LightBulbIcon, {
 		sub: GOODWATCH,
@@ -687,92 +608,43 @@ const PAGES: Entry[] = [
 	}),
 
 	// Discover with a filter or an order set.
-	page(
-		"discoverMovies",
-		"Discover movies",
-		"/discover?type=movie",
-		AdjustmentsHorizontalIcon,
-		{
-			sub: DISCOVER,
-			words: ["films", "movies only"],
-		},
-	),
-	page(
-		"discoverShows",
-		"Discover shows",
-		"/discover?type=show",
-		AdjustmentsHorizontalIcon,
-		{
-			sub: DISCOVER,
-			words: ["tv", "series", "shows only"],
-		},
-	),
-	page(
-		"discoverAnime",
-		"Discover anime",
-		"/discover?anime=only",
-		AdjustmentsHorizontalIcon,
-		{
-			sub: DISCOVER,
-			names: ["anime"],
-			words: ["japanese animation"],
-		},
-	),
-	page(
-		"discoverTop",
-		"Top rated",
-		"/discover?sort=top",
-		AdjustmentsHorizontalIcon,
-		{
-			sub: DISCOVER,
-			words: ["best", "highest score", "top"],
-		},
-	),
-	page(
-		"discoverNewest",
-		"Newest releases",
-		"/discover?sort=newest",
-		AdjustmentsHorizontalIcon,
-		{
-			sub: DISCOVER,
-			words: ["new", "latest", "recent", "fresh"],
-		},
-	),
-	page(
-		"discoverMatch",
-		"Best match",
-		"/discover?sort=match",
-		AdjustmentsHorizontalIcon,
-		{
-			sub: DISCOVER,
-			words: ["match", "for me", "my taste"],
-		},
-	),
-	page(
-		"discoverMine",
-		"On my services",
-		"/discover?services=mine",
-		AdjustmentsHorizontalIcon,
-		{
-			sub: DISCOVER,
-			for: "member",
-			words: ["streaming", "available", "my services", "can watch"],
-		},
-	),
+	page("discoverMovies", "Discover movies", "/discover?type=movie", AdjustmentsHorizontalIcon, {
+		sub: DISCOVER,
+		words: ["films", "movies only"],
+	}),
+	page("discoverShows", "Discover shows", "/discover?type=show", AdjustmentsHorizontalIcon, {
+		sub: DISCOVER,
+		words: ["tv", "series", "shows only"],
+	}),
+	page("discoverAnime", "Discover anime", "/discover?anime=only", AdjustmentsHorizontalIcon, {
+		sub: DISCOVER,
+		names: ["anime"],
+		words: ["japanese animation"],
+	}),
+	page("discoverTop", "Top rated", "/discover?sort=top", AdjustmentsHorizontalIcon, {
+		sub: DISCOVER,
+		words: ["best", "highest score", "top"],
+	}),
+	page("discoverNewest", "Newest releases", "/discover?sort=newest", AdjustmentsHorizontalIcon, {
+		sub: DISCOVER,
+		words: ["new", "latest", "recent", "fresh"],
+	}),
+	page("discoverMatch", "Best match", "/discover?sort=match", AdjustmentsHorizontalIcon, {
+		sub: DISCOVER,
+		words: ["match", "for me", "my taste"],
+	}),
+	page("discoverMine", "On my services", "/discover?services=mine", AdjustmentsHorizontalIcon, {
+		sub: DISCOVER,
+		for: "member",
+		words: ["streaming", "available", "my services", "can watch"],
+	}),
 
 	// The lists by mood, genre and service, for movies and for shows.
 	...browsePages(),
 ]
 
 /** The main pages in a guest's phone menu, in this order (Sign in and Sign up follow as buttons). */
-export const GUEST_MENU = [
-	"myMovies",
-	"forYou",
-	"discover",
-	"hot",
-	"movies",
-	"shows",
-]
+export const GUEST_MENU = ["myMovies", "forYou", "discover", "hot", "movies", "shows"]
 
 /** Every page the viewer can go to, in tie-break order. */
 export function palettePages(viewer: PaletteViewer): PalettePage[] {
@@ -839,8 +711,7 @@ interface Prepared {
 	allTokens: string[]
 }
 
-const tokens = (texts: string[]) =>
-	texts.flatMap((t) => t.split(" ")).filter(Boolean)
+const tokens = (texts: string[]) => texts.flatMap((t) => t.split(" ")).filter(Boolean)
 
 function prepare(p: PalettePage): Prepared {
 	const names = [p.label, ...(p.names ?? [])].map(normalize)
@@ -865,11 +736,7 @@ export function oneEditApart(a: string, b: string): boolean {
 	while (i < a.length && i < b.length && a[i] === b[i]) i++
 	if (a.length === b.length) {
 		if (a.slice(i + 1) === b.slice(i + 1)) return true
-		return (
-			a[i] === b[i + 1] &&
-			a[i + 1] === b[i] &&
-			a.slice(i + 2) === b.slice(i + 2)
-		)
+		return a[i] === b[i + 1] && a[i + 1] === b[i] && a.slice(i + 2) === b.slice(i + 2)
 	}
 	const [short, long] = a.length < b.length ? [a, b] : [b, a]
 	return short.slice(i) === long.slice(i + 1)
@@ -882,17 +749,14 @@ function scoreOf(prepared: Prepared, q: string, typed: string[]): number {
 	if (names.some((n) => n.startsWith(q))) return SCORE.namePrefix
 	if (section && section === q) return SCORE.section
 	if (words.some((w) => w.startsWith(q))) return SCORE.wordPrefix
-	const starts = (list: string[]) =>
-		typed.every((t) => list.some((w) => w.startsWith(t)))
+	const starts = (list: string[]) => typed.every((t) => list.some((w) => w.startsWith(t)))
 	if (starts(nameTokens)) return SCORE.nameWords
 	if (starts(allTokens)) return SCORE.anyWords
 	if (q.length >= 3 && names.some((n) => n.includes(q))) return SCORE.inside
 	// Typos only in longer words: short ones are a letter away from too much.
 	const near = typed.every((t) =>
 		t.length >= 4
-			? allTokens.some(
-					(w) => w.length >= 4 && (w.startsWith(t) || oneEditApart(t, w)),
-				)
+			? allTokens.some((w) => w.length >= 4 && (w.startsWith(t) || oneEditApart(t, w)))
 			: allTokens.some((w) => w.startsWith(t)),
 	)
 	if (near && typed.some((t) => t.length >= 4)) return SCORE.typo
@@ -936,16 +800,12 @@ export interface PlacedPages {
 
 /** Where each matching page goes in the typed palette. */
 export function placePages(matches: PageMatch[]): PlacedPages {
-	const first = matches
-		.filter((m) => m.score >= SCORE.name)
-		.slice(0, PAGE_ROWS.first)
+	const first = matches.filter((m) => m.score >= SCORE.name).slice(0, PAGE_ROWS.first)
 	const rest = matches.filter((m) => !first.includes(m))
 	const beforeTitles = rest
 		.filter((m) => m.score >= SCORE.anyWords)
 		.slice(0, PAGE_ROWS.beforeTitles)
-	const afterTitles = rest
-		.filter((m) => !beforeTitles.includes(m))
-		.slice(0, PAGE_ROWS.afterTitles)
+	const afterTitles = rest.filter((m) => !beforeTitles.includes(m)).slice(0, PAGE_ROWS.afterTitles)
 	return {
 		first: first.map((m) => m.page),
 		beforeTitles: beforeTitles.map((m) => m.page),

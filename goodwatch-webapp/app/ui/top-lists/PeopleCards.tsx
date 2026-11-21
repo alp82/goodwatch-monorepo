@@ -1,8 +1,8 @@
 // The people list: the person page's collaborator cards (portrait, name, role), each with up to four of the person's
 // best-known titles as links.
 import { Link } from "@remix-run/react"
-import { roleLabel } from "~/domain/best-lists"
-import type { ListPerson } from "~/server/best-lists.server"
+import { roleLabel } from "~/domain/top-lists"
+import type { ListPerson } from "~/server/top-lists.server"
 import MediaText from "~/ui/media-text/MediaText"
 import { presentedText } from "~/ui/media-text/media-text"
 import { Portrait } from "~/ui/person/Portrait"
@@ -18,13 +18,7 @@ export function PeopleCards({ people }: { people: ListPerson[] }) {
 					key={p.tmdb_id}
 					className="flex h-full gap-3 rounded-xl border border-gray-800 bg-gray-900 p-3 transition-[scale,opacity] duration-100 hover:border-amber-400/60 motion-safe:has-[a:active]:scale-[0.98] has-[a:active]:opacity-90"
 				>
-					<Link
-						to={p.path}
-						prefetch="intent"
-						tabIndex={-1}
-						aria-hidden
-						className="shrink-0"
-					>
+					<Link to={p.path} prefetch="intent" tabIndex={-1} aria-hidden className="shrink-0">
 						<Portrait
 							path={p.profile_path}
 							name={p.name}
@@ -41,9 +35,7 @@ export function PeopleCards({ people }: { people: ListPerson[] }) {
 						>
 							{p.name}
 						</Link>
-						<div className="text-xs text-amber-400">
-							{roleLabel(p.department)}
-						</div>
+						<div className="text-xs text-amber-400">{roleLabel(p.department)}</div>
 						{p.knownFor.length > 0 && (
 							<p className="mt-1 text-xs text-gray-400">
 								{p.knownFor.map((t, j) => (

@@ -1,6 +1,6 @@
 // The start page's Where to start section (ui/start/browse/): its rails, from the site's own cached reads.
 //
-// - Top 10: the best-of lists (best-lists.server.ts), the same for every country.
+// - Top 10: the best-of lists (top-lists.server.ts), the same for every country.
 // - New on streaming: the country's arrivals on the big services (new-on-services.server.ts, the read /new uses).
 // - Moods and genres: the mood and genre pages' own filters through Discover's cached read (discover.server.ts),
 //   the most popular first. They don't depend on the country.
@@ -13,7 +13,7 @@
 // a failed source is kept for a minute only and marks the page incomplete. The first request of a part waits at most
 // BROWSE_BUDGET_MS; the page renders without the rails meanwhile, and as incomplete.
 import { type Brand, BRANDS, servicePath } from "~/domain/new-on-services"
-import { getRankedList, type ListTitle } from "~/server/best-lists.server"
+import { getRankedList, type ListTitle } from "~/server/top-lists.server"
 import {
 	type DiscoverParams,
 	type DiscoverResult,
@@ -21,10 +21,7 @@ import {
 	type StreamingPreset,
 	type WatchedType,
 } from "~/server/discover.server"
-import type {
-	ArrivalTitle,
-	CountryArrivals,
-} from "~/server/new-on-services-page.server"
+import type { ArrivalTitle, CountryArrivals } from "~/server/new-on-services-page.server"
 import { getCountryArrivals } from "~/server/new-on-services.server"
 import { getStreamingProviders } from "~/server/streaming-providers.server"
 import { exploreAddressExists } from "~/ui/explore/address"
@@ -82,8 +79,7 @@ type Part<T> = { value: T; complete: boolean }
 // Titles
 
 /** Whole points: what the card shows, in fewer bytes of the HTML's loader data. */
-const wholeScore = (score: number | null | undefined) =>
-	score == null ? null : Math.floor(score)
+const wholeScore = (score: number | null | undefined) => (score == null ? null : Math.floor(score))
 
 const fromRanked = (title: ListTitle): StartTitle => ({
 	media_type: title.media_type,
@@ -115,19 +111,13 @@ export function pickPosters(
 	used: Set<string>,
 ): BrowsePoster[] {
 	const fresh = results.filter(
-		(result) =>
-			result.poster_path && !used.has(`${result.media_type}-${result.tmdb_id}`),
+		(result) => result.poster_path && !used.has(`${result.media_type}-${result.tmdb_id}`),
 	)
 	const known = fresh.filter(
-		(result) =>
-			(result.goodwatch_overall_score_voting_count ?? 0) >= KNOWN_VOTES,
+		(result) => (result.goodwatch_overall_score_voting_count ?? 0) >= KNOWN_VOTES,
 	)
-	const picked = [
-		...known,
-		...fresh.filter((result) => !known.includes(result)),
-	].slice(0, count)
-	for (const result of picked)
-		used.add(`${result.media_type}-${result.tmdb_id}`)
+	const picked = [...known, ...fresh.filter((result) => !known.includes(result))].slice(0, count)
+	for (const result of picked) used.add(`${result.media_type}-${result.tmdb_id}`)
 	return picked.map((result) => ({
 		title: result.title,
 		poster_path: result.poster_path,
@@ -187,9 +177,7 @@ async function settle<T>(reads: Promise<T>[]): Promise<Part<(T | null)[]>> {
 		if (result.status === "rejected")
 			console.error("Start page: a browse read failed", result.reason)
 	return {
-		value: results.map((result) =>
-			result.status === "fulfilled" ? result.value : null,
-		),
+		value: results.map((result) => (result.status === "fulfilled" ? result.value : null)),
 		complete: results.every((result) => result.status === "fulfilled"),
 	}
 }
@@ -210,9 +198,7 @@ const BROWSE_MOOD_FIELDS: Record<string, string> = {
 }
 
 /** The rails that are the same in every country: Top 10, moods, and genres. */
-export async function readSharedBrowse(
-	readers: BrowseReaders,
-): Promise<Part<SharedPart>> {
+export async function readSharedBrowse(readers: BrowseReaders): Promise<Part<SharedPart>> {
 	const moods = BROWSE_MOODS.map(({ path }) => ({
 		path,
 		discoverParams: DISCOVER_BROWSE_MOODS.some((key) => key === path)
@@ -248,11 +234,7 @@ export async function readSharedBrowse(
 	const [top, moodResults, genreResults] = await Promise.all([
 		settle([readers.ranked("movie"), readers.ranked("show")]),
 		// The country only filters by service; these reads have none, so one country's read serves all.
-		settle(
-			moods.map((page) =>
-				readers.discover(browseParams("movie", "US", page.discoverParams)),
-			),
-		),
+		settle(moods.map((page) => readers.discover(browseParams("movie", "US", page.discoverParams)))),
 		settle(
 			genres.map(({ kind, page }) =>
 				readers.discover(browseParams(kind, "US", page.discoverParams)),
@@ -262,11 +244,7 @@ export async function readSharedBrowse(
 
 	const usedByMoods = new Set<string>()
 	const moodRail: BrowseMood[] = moods.flatMap((page, i) => {
-		const posters = pickPosters(
-			moodResults.value[i] ?? [],
-			BROWSE_LIMITS.moodPosters,
-			usedByMoods,
-		)
+		const posters = pickPosters(moodResults.value[i] ?? [], BROWSE_LIMITS.moodPosters, usedByMoods)
 		return posters.length === BROWSE_LIMITS.moodPosters
 			? [
 					{
@@ -317,9 +295,7 @@ export function serviceHref(
 		})
 	)
 		return `/shows/streaming/${brand.slug}`
-	return arrivals.brands[brand.slug]?.length
-		? servicePath(country, brand)
-		: null
+	return arrivals.brands[brand.slug]?.length ? servicePath(country, brand) : null
 }
 
 /** The rails of one country: what arrived on the big services, and the services themselves. */
@@ -336,9 +312,7 @@ export async function readCountryBrowse(
 
 	// The big services, in the order the country's viewers see services; one the country hasn't is left out.
 	const rank = new Map(providers.map((provider, i) => [provider.id, i]))
-	const logo = new Map(
-		providers.map((provider) => [provider.id, provider.logo_path]),
-	)
+	const logo = new Map(providers.map((provider) => [provider.id, provider.logo_path]))
 	const brands = BRANDS.filter((brand) => rank.has(brand.logo))
 		.sort((a, b) => (rank.get(a.logo) ?? 0) - (rank.get(b.logo) ?? 0))
 		.flatMap((brand) => {
@@ -358,11 +332,7 @@ export async function readCountryBrowse(
 	)
 	const used = new Set<string>()
 	const services: BrowseService[] = brands.flatMap(({ brand, href }, i) => {
-		const posters = pickPosters(
-			titles.value[i] ?? [],
-			BROWSE_LIMITS.servicePosters,
-			used,
-		)
+		const posters = pickPosters(titles.value[i] ?? [], BROWSE_LIMITS.servicePosters, used)
 		return posters.length >= 3
 			? [
 					{
@@ -383,8 +353,7 @@ export async function readCountryBrowse(
 				.map(fromArrival),
 			services,
 		},
-		complete:
-			arrivalsRead.complete && providersRead.complete && titles.complete,
+		complete: arrivalsRead.complete && providersRead.complete && titles.complete,
 	}
 }
 
@@ -415,9 +384,7 @@ export function keptParts<T>(
 				entry.value = value
 				entry.at = now()
 			})
-			.catch((error) =>
-				console.error("Start page: reading the browse section failed", error),
-			)
+			.catch((error) => console.error("Start page: reading the browse section failed", error))
 			.finally(() => {
 				entry.reading = null
 			})
@@ -432,8 +399,7 @@ export function keptParts<T>(
 		}
 		const age = now() - entry.at
 		if (entry.value) {
-			if (age > (entry.value.complete ? ttl : retry))
-				void refresh(key, entry).catch(() => {})
+			if (age > (entry.value.complete ? ttl : retry)) void refresh(key, entry).catch(() => {})
 			return entry.value
 		}
 		return refresh(key, entry).catch(() => null)
@@ -441,9 +407,7 @@ export function keptParts<T>(
 }
 
 const sharedPart = keptParts(() => readSharedBrowse(browseReaders))
-const countryPart = keptParts((country) =>
-	readCountryBrowse(country, browseReaders),
-)
+const countryPart = keptParts((country) => readCountryBrowse(country, browseReaders))
 
 /** Resolves to null after `ms`, so a slow read doesn't hold the page. */
 function within<T>(work: Promise<T>, ms: number): Promise<T | null> {

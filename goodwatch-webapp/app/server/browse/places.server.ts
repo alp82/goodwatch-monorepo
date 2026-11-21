@@ -12,10 +12,10 @@ import { BRANDS, brandBySlug } from "~/domain/new-on-services"
 import { STYLES, THEMES } from "~/domain/themes-styles"
 import { FAMILY_COLOR } from "~/domain/fingerprint-effects/palette"
 import { familyOf } from "~/domain/fingerprint-families"
-import { titleKindOf } from "~/domain/best-lists"
+import { isSettled, titleKindOf } from "~/domain/top-lists"
 import { AWARD_BODIES } from "~/domain/award-pages"
 import { countryServices } from "~/server/availability-index.server"
-import { getRankedList } from "~/server/best-lists.server"
+import { getRankedList } from "~/server/top-lists.server"
 import { NO_TASTE } from "~/server/taste/taste.server"
 import { adjective, label as keyLabel, meaning } from "~/server/taste-portrait/words.server"
 import { type TitleCard, getServiceCards, getTitleCards } from "~/server/title-cards.server"
@@ -317,7 +317,7 @@ export class Places {
 	}
 
 	/** How a person would say the place: "Cozy comedies from the 1990s". */
-	name(parts: Ingredient[], opts: { best?: boolean; year?: number } = {}): string {
+	name(parts: Ingredient[], opts: { top?: boolean; year?: number } = {}): string {
 		return blendName(
 			this.kind,
 			this.norm(parts).map((p) => this.ref(p)),
@@ -1190,7 +1190,14 @@ export class Places {
 	 * source's own score.
 	 */
 	async best(
-		opts: { parts?: Ingredient[]; year?: number; limit?: number; offset?: number } = {},
+		opts: {
+			parts?: Ingredient[]
+			year?: number
+			limit?: number
+			offset?: number
+			/** All time: leave out titles too new for their score to have settled (domain/top-lists.ts). */
+			settled?: boolean
+		} = {},
 	): Promise<BestList> {
 		const b = this.b
 		const c = b.snap.columns
@@ -1215,7 +1222,10 @@ export class Places {
 		} else {
 			const facts = c.facts
 			rows = this.rows(parts).filter(
-				(r) => released(b, r) && (!opts.year || facts?.releaseYears[r] === opts.year),
+				(r) =>
+					released(b, r) &&
+					(!opts.year || facts?.releaseYears[r] === opts.year) &&
+					(!opts.settled || isSettled(facts?.releaseYears[r] || null)),
 			)
 			// The bar for "enough ratings" comes from the set itself: a year of the 1930s, a shelf of shows and last
 			// year's movies are rated on very different scales.

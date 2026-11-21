@@ -1,10 +1,6 @@
 // Maps a page path to what its Open Graph card shows. Image fields hold remote URLs here;
 // the renderer inlines them.
-import {
-	getAwardBody,
-	getAwardCategory,
-	getAwardCeremony,
-} from "~/server/award-pages.server"
+import { getAwardBody, getAwardCategory, getAwardCeremony } from "~/server/award-pages.server"
 import { postLinkedTitles } from "~/server/blog/linked-titles.server"
 import { blogPosts, findBlogPost } from "~/server/blog/posts.server"
 import { getDetailsForMovie, getDetailsForShow } from "~/server/details.server"
@@ -16,20 +12,11 @@ import {
 	getDiscoverResults,
 } from "~/server/discover.server"
 import { newDeps } from "~/server/new-on-services.server"
-import {
-	awardsContent,
-	canonicalAwardsPath,
-} from "~/server/og-image/awards-content.server"
-import {
-	blogCardContent,
-	canonicalBlogPath,
-} from "~/server/og-image/blog-content.server"
+import { awardsContent, canonicalAwardsPath } from "~/server/og-image/awards-content.server"
+import { blogCardContent, canonicalBlogPath } from "~/server/og-image/blog-content.server"
 import { hotCardContent } from "~/server/og-image/hot-content.server"
 import { statsCardContent } from "~/server/og-image/stats-content.server"
-import {
-	canonicalNewPath,
-	newServicesContent,
-} from "~/server/og-image/new-services-content.server"
+import { canonicalNewPath, newServicesContent } from "~/server/og-image/new-services-content.server"
 import { profileCardContent } from "~/server/og-image/profile-content.server"
 import {
 	type TitleSubPage,
@@ -39,12 +26,7 @@ import { getPersonProfile } from "~/server/person.server"
 import { talkedAboutNowMode } from "~/server/talked-about-now/flags.server"
 import { titleTropes } from "~/ui/details/tropes/title-tropes.server"
 import { moods } from "~/ui/explore/category/moods"
-import {
-	type NavType,
-	type PageData,
-	defaultDiscoverParams,
-	navLabel,
-} from "~/ui/explore/config"
+import { type NavType, type PageData, defaultDiscoverParams, navLabel } from "~/ui/explore/config"
 import { mainHierarchy, mainNavigation } from "~/ui/explore/main-nav"
 import type { OgContent } from "~/ui/og-image/OgCard"
 import {
@@ -54,7 +36,7 @@ import {
 	HOME_COPY,
 	MEDIA_LABELS,
 	STATIC_PAGE_COPY,
-	bestListCopy,
+	topListCopy,
 	categoryIndexCopy,
 	collectionCopy,
 	personTag,
@@ -62,10 +44,7 @@ import {
 	seasonsLabel,
 	typeIndexCopy,
 } from "~/ui/og-image/copy"
-import {
-	PROFILE_CARD_TABS,
-	PROFILE_CARD_VIEWS,
-} from "~/ui/og-image/profile-card-model"
+import { PROFILE_CARD_TABS, PROFILE_CARD_VIEWS } from "~/ui/og-image/profile-card-model"
 import { hasGoodwatchScore } from "~/utils/ratings"
 import { canonicalTitleId } from "~/utils/title-identity"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
@@ -73,20 +52,15 @@ import { WATCH_PATHS } from "../../domain/member-paths.ts"
 
 type Category = keyof typeof mainHierarchy
 
-const tmdbImage = (size: string, path?: string | null) =>
-	path ? tmdbImageUrl(path, size) : null
+const tmdbImage = (size: string, path?: string | null) => (path ? tmdbImageUrl(path, size) : null)
 // Some pages use local .webp backdrops, which satori can't decode.
 const tmdbBackdrop = (path?: string | null) =>
 	path?.startsWith("/images/") ? null : tmdbImage("w1280", path)
-const hasKey = (object: object, key: string) =>
-	Object.prototype.hasOwnProperty.call(object, key)
-const stripEmoji = (text: string) =>
-	text.replace(/\p{Extended_Pictographic}/gu, "").trim()
+const hasKey = (object: object, key: string) => Object.prototype.hasOwnProperty.call(object, key)
+const stripEmoji = (text: string) => text.replace(/\p{Extended_Pictographic}/gu, "").trim()
 const TITLE_MAX_LENGTH = 80
 const clip = (text: string) =>
-	text.length <= TITLE_MAX_LENGTH
-		? text
-		: `${text.slice(0, TITLE_MAX_LENGTH - 1).trim()}…`
+	text.length <= TITLE_MAX_LENGTH ? text : `${text.slice(0, TITLE_MAX_LENGTH - 1).trim()}…`
 
 const PROFILE_TABS = new Set<string>(PROFILE_CARD_TABS)
 const PROFILE_VIEWS = new Set<string>(PROFILE_CARD_VIEWS)
@@ -111,13 +85,9 @@ export function canonicalOgPath(path: string): string | null {
 	if (first === "movie" || first === "show" || first === "tv") {
 		const id = positiveId(second)
 		// A title's sub-page (its fingerprint, tropes, at a glance) has its own card.
-		const subPage =
-			segments.length === 3 && TITLE_SUB_PAGES.includes(third ?? "")
+		const subPage = segments.length === 3 && TITLE_SUB_PAGES.includes(third ?? "")
 		if (!id || (segments.length > 2 && !subPage)) return null
-		const title =
-			first === "movie"
-				? `/movie/${canonicalTitleId("movie", id)}`
-				: `/show/${id}`
+		const title = first === "movie" ? `/movie/${canonicalTitleId("movie", id)}` : `/show/${id}`
 		return subPage ? `${title}/${third}` : title
 	}
 	if (first === "person") {
@@ -127,7 +97,7 @@ export function canonicalOgPath(path: string): string | null {
 	}
 	if (first === "movies" || first === "shows") {
 		if (segments.length === 1) return `/${first}`
-		if (second === "best" && segments.length === 2) return `/${first}/best`
+		if (second === "top" && segments.length === 2) return `/${first}/top`
 		if (!hasKey(mainHierarchy, second) || segments.length > 3) return null
 		if (third && !hasKey(mainHierarchy[second as Category], third)) return null
 		return `/${segments.join("/")}`
@@ -138,20 +108,13 @@ export function canonicalOgPath(path: string): string | null {
 		// card addresses already shared under /taste get the Stats cards.
 		const handle = second?.toLowerCase() ?? ""
 		if (!/^[a-z][a-z0-9_]{2,29}$/.test(handle)) return null
-		const tab =
-			third === "taste" ? "stats" : third === "want" ? "wishlist" : third
+		const tab = third === "taste" ? "stats" : third === "want" ? "wishlist" : third
 		// The Tropes tab has no card of its own yet: its link preview is the profile's card.
 		if (tab === "tropes" && !fourth) return `/u/${handle}`
-		if (
-			tab === "scores" &&
-			(fourth === "not-rated" || fourth === "rate") &&
-			segments.length === 4
-		)
+		if (tab === "scores" && (fourth === "not-rated" || fourth === "rate") && segments.length === 4)
 			return `/u/${handle}/scores`
 		if (fourth)
-			return segments.length === 4 &&
-				tab === "stats" &&
-				PROFILE_VIEWS.has(fourth)
+			return segments.length === 4 && tab === "stats" && PROFILE_VIEWS.has(fourth)
 				? `/u/${handle}/stats/${fourth}`
 				: null
 		if (tab && !PROFILE_TABS.has(tab)) return null
@@ -161,17 +124,13 @@ export function canonicalOgPath(path: string): string | null {
 	if (first?.toLowerCase() === "awards") return canonicalAwardsPath(segments)
 	if (first === "blog") return canonicalBlogPath(segments, blogPosts)
 	// /hot-on-socials moves to /hot.
-	if ((first === "hot" || first === "hot-on-socials") && segments.length === 1)
-		return "/hot"
+	if ((first === "hot" || first === "hot-on-socials") && segments.length === 1) return "/hot"
 	if (first === "discover") return "/discover"
 	if (first === "for-you" && segments.length === 1) return WATCH_PATHS.forYou
 	// By your tropes, and its old address /for-you/tropes.
 	if (
 		(first === "for-you" && second === "tropes" && segments.length === 2) ||
-		(first === "watch" &&
-			second === "for-you" &&
-			third === "tropes" &&
-			segments.length === 3)
+		(first === "watch" && second === "for-you" && third === "tropes" && segments.length === 3)
 	)
 		return WATCH_PATHS.forYouTropes
 	if (first === "watch") {
@@ -179,8 +138,7 @@ export function canonicalOgPath(path: string): string | null {
 		if (second === "movies") return WATCH_PATHS.tonight
 		return WATCH_PATHS.nextEpisodes
 	}
-	if ((first === "explorer" || first === "map") && segments.length === 1)
-		return "/map"
+	if ((first === "explorer" || first === "map") && segments.length === 1) return "/map"
 
 	const clean = `/${segments.join("/")}`
 	return hasKey(STATIC_PAGE_COPY, clean) ? clean : "/"
@@ -223,10 +181,7 @@ const DISCOVER_DEFAULTS: DiscoverParams = {
 	page: 1,
 }
 
-async function discoverBackdrops(
-	params: Partial<DiscoverParams>,
-	size = "w780",
-) {
+async function discoverBackdrops(params: Partial<DiscoverParams>, size = "w780") {
 	const results = await getDiscoverResults({
 		...DISCOVER_DEFAULTS,
 		...defaultDiscoverParams,
@@ -270,10 +225,7 @@ async function loadDetails(type: "movie" | "show", id: number) {
 	}
 }
 
-async function titleContent(
-	type: "movie" | "show",
-	id: number,
-): Promise<OgContent | null> {
+async function titleContent(type: "movie" | "show", id: number): Promise<OgContent | null> {
 	const media = await loadDetails(type, id)
 	if (!media) return null
 	const d = media.details
@@ -287,9 +239,7 @@ async function titleContent(
 	const score = d.goodwatch_overall_score_normalized_percent
 	return {
 		kind: "title",
-		tag: [MEDIA_LABELS[type], d.release_year, length]
-			.filter(Boolean)
-			.join(" · "),
+		tag: [MEDIA_LABELS[type], d.release_year, length].filter(Boolean).join(" · "),
 		title: clip(d.title),
 		score: hasGoodwatchScore(score) && score <= 100 ? score : null,
 		poster: tmdbImage("w500", d.poster_path),
@@ -300,8 +250,7 @@ async function personContent(id: number): Promise<OgContent | null> {
 	const person = await getPersonProfile(id)
 	if (!person) return null
 	const department = person.known_for_department
-		? (DEPARTMENT_LABELS[person.known_for_department] ??
-			person.known_for_department)
+		? (DEPARTMENT_LABELS[person.known_for_department] ?? person.known_for_department)
 		: null
 	return {
 		kind: "person",
@@ -312,22 +261,18 @@ async function personContent(id: number): Promise<OgContent | null> {
 }
 
 async function browseContent(path: string): Promise<OgContent | null> {
-	const [type, category, pageKey] = path.split("/").filter(Boolean) as [
-		NavType,
-		Category?,
-		string?,
-	]
+	const [type, category, pageKey] = path.split("/").filter(Boolean) as [NavType, Category?, string?]
 	const typeLabel = navLabel[type]
 	const discoverType = type === "shows" ? "show" : "movie"
 
-	if ((category as string) === "best") {
+	if ((category as string) === "top") {
 		const backdrops = await discoverBackdrops({
 			type: discoverType,
 			minScore: "85",
 		})
 		return {
 			kind: "page",
-			...bestListCopy(type),
+			...topListCopy(type),
 			backdrop: rotateByPath(backdrops, path)[0] ?? null,
 		}
 	}
@@ -352,10 +297,7 @@ async function browseContent(path: string): Promise<OgContent | null> {
 		const backdrop =
 			tmdbBackdrop(page.backdrop_path) ??
 			rotateByPath(
-				await discoverBackdrops(
-					{ type: discoverType, ...page.discoverParams },
-					"w1280",
-				),
+				await discoverBackdrops({ type: discoverType, ...page.discoverParams }, "w1280"),
 				path,
 			)[0] ??
 			null
@@ -365,23 +307,14 @@ async function browseContent(path: string): Promise<OgContent | null> {
 			subtitle: page.subtitle,
 			backdrop,
 			providerId:
-				category === "streaming"
-					? page.discoverParams.withStreamingProviders || null
-					: null,
+				category === "streaming" ? page.discoverParams.withStreamingProviders || null : null,
 		}
 	}
 
-	const first = Object.values(pages).find(
-		(p) => p.type === "all" || p.type === type,
-	)
+	const first = Object.values(pages).find((p) => p.type === "all" || p.type === type)
 	const backdrop =
 		tmdbBackdrop(first?.backdrop_path) ??
-		(
-			await discoverBackdrops(
-				{ type: discoverType, ...first?.discoverParams },
-				"w1280",
-			)
-		)[0] ??
+		(await discoverBackdrops({ type: discoverType, ...first?.discoverParams }, "w1280"))[0] ??
 		null
 	return {
 		kind: "collection",
@@ -406,10 +339,7 @@ async function scoredPosters(params: Partial<DiscoverParams> = {}) {
 	const franchises = new Set<string>()
 	return results
 		.filter((r) => {
-			const franchise = r.title
-				.toLowerCase()
-				.replace(/^the /, "")
-				.split(/[\s:]/)[0]
+			const franchise = r.title.toLowerCase().replace(/^the /, "").split(/[\s:]/)[0]
 			if (!r.poster_path || franchises.has(franchise)) return false
 			franchises.add(franchise)
 			return true
@@ -421,10 +351,7 @@ async function scoredPosters(params: Partial<DiscoverParams> = {}) {
 		}))
 }
 
-const toPoster = ({
-	src,
-	score,
-}: { src: string | null; score: number | null }) => ({
+const toPoster = ({ src, score }: { src: string | null; score: number | null }) => ({
 	src,
 	score,
 })
@@ -515,9 +442,7 @@ async function chatCardContent(): Promise<OgContent> {
 // The example taste that visitors see on the page, over a wall of top-scored posters. A shared link has no viewer, so
 // the card never shows a member's own taste.
 async function forYouCardContent(): Promise<OgContent> {
-	const { getTastePortrait, portraitViewer } = await import(
-		"~/server/taste-portrait/index.server"
-	)
+	const { getTastePortrait, portraitViewer } = await import("~/server/taste-portrait/index.server")
 	const who = await portraitViewer(
 		new Request(`https://goodwatch.app${WATCH_PATHS.forYou}`),
 		undefined,
@@ -539,10 +464,7 @@ async function forYouCardContent(): Promise<OgContent> {
 			edge,
 		})),
 		// Discover can list a title twice; each shows once (the card also drops repeated pictures).
-		posters: [...new Map(posters.map((p) => [p.id, p.src])).values()].slice(
-			0,
-			20,
-		),
+		posters: [...new Map(posters.map((p) => [p.id, p.src])).values()].slice(0, 20),
 	}
 }
 
@@ -555,12 +477,9 @@ async function staticPageContent(path: string): Promise<OgContent> {
 	const page = STATIC_PAGE_COPY[path] ?? HOME_COPY
 	const backdrops = await discoverBackdrops({ type: "movie", minScore: "80" })
 	// Taste pages skip the rotation, so they lead with a different title than the other main pages.
-	const backdrop = path.startsWith("/taste")
-		? backdrops[2]
-		: rotateByPath(backdrops, path)[0]
+	const backdrop = path.startsWith("/taste") ? backdrops[2] : rotateByPath(backdrops, path)[0]
 	// Rate titles: the taste bar card over the same backdrop (TasteQuizCard.tsx).
-	if (path === "/taste/quiz")
-		return { kind: "taste-quiz", backdrop: backdrop ?? null }
+	if (path === "/taste/quiz") return { kind: "taste-quiz", backdrop: backdrop ?? null }
 	return { kind: "page", ...page, backdrop: backdrop ?? null }
 }
 
@@ -572,18 +491,14 @@ function blogContent(path: string) {
 		backdrop: async (type, id) =>
 			tmdbBackdrop((await loadDetails(type, id))?.details.backdrop_path),
 		fallbackBackdrop: async () =>
-			rotateByPath(
-				await discoverBackdrops({ type: "movie", minScore: "80" }, "w1280"),
-				path,
-			)[0] ?? null,
+			rotateByPath(await discoverBackdrops({ type: "movie", minScore: "80" }, "w1280"), path)[0] ??
+			null,
 	})
 }
 
 // The Hot on socials card: the page's own ranking, while the page is on for guests.
 async function hotContent() {
-	const { getHotOnSocials } = await import(
-		"~/server/talked-about-now/start-row.server"
-	)
+	const { getHotOnSocials } = await import("~/server/talked-about-now/start-row.server")
 	return hotCardContent({
 		enabled: () => talkedAboutNowMode("row") === "on",
 		ranking: () => getHotOnSocials(),
@@ -594,17 +509,14 @@ async function hotContent() {
  * What the card for a canonical path (see canonicalOgPath) shows, or null when the page has
  * no data. Throws when the data can't be loaded.
  */
-export async function resolveOgContent(
-	path: string,
-): Promise<OgContent | null> {
+export async function resolveOgContent(path: string): Promise<OgContent | null> {
 	const [first, second, third, fourth] = path.split("/").filter(Boolean)
 	if ((first === "movie" || first === "show") && third)
 		return titleSubPageContent(first, Number(second), third as TitleSubPage, {
 			details: loadDetails,
 			tropes: titleTropes,
 		})
-	if (first === "movie" || first === "show")
-		return titleContent(first, Number(second))
+	if (first === "movie" || first === "show") return titleContent(first, Number(second))
 	if (first === "person") return personContent(Number(second))
 	if (first === "u") return profileCardContent(second, third, fourth)
 	if (first === "movies" || first === "shows") return browseContent(path)
@@ -613,8 +525,7 @@ export async function resolveOgContent(
 	if (first === "hot") return hotContent()
 	if (path === "/stats")
 		return statsCardContent({
-			snapshot: async () =>
-				(await import("~/server/stats/stats.server")).readStatsSnapshot(),
+			snapshot: async () => (await import("~/server/stats/stats.server")).readStatsSnapshot(),
 		})
 	if (first === "awards")
 		return awardsContent(path, {

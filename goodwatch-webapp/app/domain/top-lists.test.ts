@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs"
 import { test } from "node:test"
 import {
 	PER_PAGE,
+	isSettled,
 	listCopy,
 	pageCount,
 	pagePath,
@@ -13,7 +14,7 @@ import {
 	rankTitles,
 	requestedPage,
 	roleLabel,
-} from "./best-lists.ts"
+} from "./top-lists.ts"
 
 const sitemap = (file: string) =>
 	readFileSync(new URL(`../../public/sitemaps/${file}`, import.meta.url), "utf8")
@@ -104,16 +105,21 @@ test("pages hold 250 titles and read the page number like the canonical address"
 
 test("a list's copy names its count, its popular titles, and a later page's ranks", () => {
 	const first = listCopy("movies", { total: 700, popular: 70, page: 1 })
-	assert.equal(first.title, "The Best Movies of All Time, Ranked | GoodWatch")
-	assert.equal(first.heading, "The best movies of all time")
+	assert.equal(first.title, "Top Movies of All Time | GoodWatch")
+	assert.equal(first.heading, "Top movies of all time")
 	assert.equal(
 		first.intro,
-		"700 well-known movies, ranked by GoodWatch score: the most-rated movies on GoodWatch, plus 70 that are popular right now. Updated monthly.",
+		"700 well-known movies, ranked by GoodWatch score: the most-rated movies on GoodWatch, plus 70 that are popular right now. New releases join once they're two years old. Updated monthly.",
 	)
 	const later = listCopy("shows", { total: 300, popular: 30, page: 2 })
-	assert.equal(later.title, "The Best TV Shows of All Time, Ranked 251 to 300 | GoodWatch")
-	assert.equal(later.heading, "The best TV shows of all time, 251 to 300")
-	assert.match(later.description, /^TV shows 251 to 300 of the 300 best-known TV shows/)
+	assert.equal(later.title, "Top TV Shows of All Time, Ranked 251 to 300 | GoodWatch")
+	assert.equal(later.heading, "Top TV shows of all time, 251 to 300")
+	assert.match(later.description, /^TV shows 251 to 300 of the top 300 well-known TV shows/)
+	assert.equal(
+		listCopy("all", { total: 900, popular: 0, page: 1 }).heading,
+		"Top movies and TV shows of all time",
+	)
+	assert.equal(pagePath("all", 3), "/all/top?page=3")
 	assert.doesNotMatch(listCopy("movies", { total: 700, popular: 0, page: 1 }).intro, /plus/)
 })
 
@@ -130,4 +136,15 @@ test("the people copy says actors until a director is on the list", () => {
 	assert.equal(roleLabel("Directing"), "Director")
 	assert.equal(roleLabel("Writing"), "Writing")
 	assert.equal(roleLabel(null), "")
+})
+
+test("an all-time Top list waits two calendar years for a new title's score to settle", () => {
+	const now = new Date("2026-11-22T12:00:00Z")
+	assert.equal(isSettled(2026, now), false)
+	assert.equal(isSettled(2025, now), false)
+	assert.equal(isSettled(2024, now), true)
+	assert.equal(isSettled(1972, now), true)
+	// A title without a known year is not held back.
+	assert.equal(isSettled(null, now), true)
+	assert.equal(isSettled(2025, new Date("2027-01-01T00:00:00Z")), true)
 })

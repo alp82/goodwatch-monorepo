@@ -19,7 +19,6 @@ import {
 	areaKeys,
 	areaOf,
 	exploreTabs,
-	topSwitch,
 	litArea,
 	placeHere,
 	scoresSwitch,
@@ -190,8 +189,6 @@ test("Explore tabs: one current tab per page; Browse covers every kind; Top cove
 		exploreTabs("/discover", { newHref: "/new/de" }).find((t) => t.key === "new")?.href,
 		"/new/de",
 	)
-	assert.deepEqual(hereOf(topSwitch("/shows/top")?.choices ?? []), ["shows"])
-	assert.equal(topSwitch("/movies"), null)
 })
 
 test("Taste row, owner: five tabs with Rate more after Scores, the gear, the current tab per page", () => {

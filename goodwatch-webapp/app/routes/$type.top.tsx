@@ -1,102 +1,79 @@
-// /movies/top and /shows/top: the sitemap's movies or shows, best first, 250 a page (see domain/best-lists.ts). A
-// later page is `?page=N`, its own address with its own canonical; a page past the last answers 404. The old
-// `/movies/best` addresses answer 301 here (domain/browse/redirects.ts).
+// /movies/top, /shows/top and /all/top: the Top lists (server/top-page.server.ts). Without filters each is the
+// published ranking, 250 a page; a later page is `?page=N`, its own address with its own canonical, and a page past the
+// last answers 404. A mood, genre, decade or year (`?with=`, `?year=`) narrows the ranking on a page of its own that
+// isn't indexed, and so is everything under /all. The old `/movies/best` addresses answer 301 here
+// (domain/browse/redirects.ts).
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
-import {
-	LIST_KINDS,
-	type ListKind,
-	listCopy,
-	listName,
-	pageCount,
-	pagePath,
-	pageRange,
-	requestedPage,
-	titleKindOf,
-} from "~/domain/best-lists"
+import { browsePath, kindLabel, kindOfSeg, parse, withKind, KINDS } from "~/domain/browse/address"
+import { notFound } from "~/domain/browse/not-found"
+import { listName } from "~/domain/top-lists"
 import { cachedClientLoader } from "~/navigation/instant-navigation"
-import { awardMarksOf } from "~/server/award-marks.server"
-import { getRankedList } from "~/server/best-lists.server"
-import { presentCatalogLoader } from "~/server/media-payload.server"
-import { rowServices } from "~/server/row-services.server"
-import { ListHead } from "~/ui/best-lists/ListHead"
-import { ListPageLinks, RankedTitles } from "~/ui/best-lists/RankedTitles"
-import { notFound } from "~/ui/explore/address"
+import { PlacesNotReady, openPlaces } from "~/server/browse/places.server"
+import { loadTopPage } from "~/server/top-page.server"
+import { TopRanking } from "~/ui/top-lists/TopRanking"
 import type { Crumb } from "~/ui/nav/breadcrumb-trail"
 import { buildMeta } from "~/utils/meta"
 
-const crumbsOf = (kind: ListKind): Crumb[] => [
-	{ label: kind === "movies" ? "Movies" : "Shows", path: `/${kind}` },
-	{ label: listName(kind), path: `/${kind}/top` },
-]
-
-const canonicalLoader = async ({ params, request }: LoaderFunctionArgs) => {
-	const kind = params.type as ListKind
-	if (!LIST_KINDS.includes(kind)) throw notFound()
-	const { titles, popular } = await getRankedList(titleKindOf(kind))
-	const total = titles.length
-	const pages = pageCount(total)
-	const page = requestedPage(new URL(request.url).search)
-	if (page > pages) throw notFound()
-	const { first, last } = pageRange(page, total)
-	const shown = titles.slice(first - 1, last)
-	const keys = shown.map((t) => ({
-		mediaType: t.media_type,
-		tmdbId: t.tmdb_id,
-	}))
-	const [services, awards] = await Promise.all([rowServices(request, keys), awardMarksOf(keys)])
+export const loader = async ({ params, request }: LoaderFunctionArgs) => {
+	const kind = kindOfSeg(params.type)
+	if (!kind) throw notFound()
+	const url = new URL(request.url)
+	let places: Awaited<ReturnType<typeof openPlaces>>
+	try {
+		places = await openPlaces(request, kind)
+	} catch (error) {
+		if (error instanceof PlacesNotReady)
+			throw new Response("Loading", {
+				status: 503,
+				headers: { "Retry-After": "5", "Cache-Control": "no-store" },
+			})
+		throw error
+	}
+	const pathname = url.pathname.replace(/\/+$/, "")
+	const address = parse(pathname, url.searchParams, places)
+	if (!address || address.view !== "top") throw notFound()
+	const page = await loadTopPage(places, address, url.searchParams)
+	if (!page) throw notFound()
 	return {
-		kind,
-		page,
-		pages,
-		total,
-		popular,
-		first,
-		titles: shown,
-		// A member's own services per title, for the logos in the rows; null for a guest, whose page is shared.
-		services,
-		// The top body each listed title won ("Oscar"), from memory: a line under the row's meta.
-		awards,
+		...page,
+		kinds: KINDS.map((k) => ({
+			kind: k,
+			label: kindLabel(k),
+			href: browsePath(withKind({ ...address, page: undefined }, k)),
+			on: address.kind === k,
+		})),
 	}
 }
 
-export const loader = presentCatalogLoader(canonicalLoader, { live: true })
-
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) return [{ title: "Page Not Found | GoodWatch" }]
-	const { kind, page, pages, total, popular, first, titles } = data
-	const copy = listCopy(kind, { total, popular, page })
+	const crumbs: Crumb[] = [
+		{
+			label: kindLabel(data.kind),
+			path: browsePath({ view: "hub", kind: data.kind, parts: [], country: "us" }),
+		},
+		{ label: listName(data.listKind), path: data.canonical.split("?")[0] },
+	]
+	const indexable = data.published && data.kind !== "all"
 	return buildMeta({
 		pageMeta: {
-			title: copy.title,
-			description: copy.description,
-			url: `https://goodwatch.app${pagePath(kind, page)}`,
-			image: `https://goodwatch.app/images/heroes/hero-${kind}.png`,
-			alt: copy.heading,
+			title: data.title,
+			description: data.description,
+			url: `https://goodwatch.app${data.canonical}`,
+			image: `https://goodwatch.app/images/heroes/hero-${data.kind === "show" ? "shows" : "movies"}.png`,
+			alt: data.heading,
 		},
-		breadcrumbs: crumbsOf(kind),
-		itemList: { paths: titles.map((t) => t.path), first },
-		pages: {
-			prev: page > 1 ? pagePath(kind, page - 1) : undefined,
-			next: page < pages ? pagePath(kind, page + 1) : undefined,
-		},
+		robots: indexable ? "index, follow" : "noindex, follow",
+		breadcrumbs: crumbs,
+		itemList: { paths: data.rows.map((r) => r.title.to), first: data.first },
+		pages: { prev: data.prev, next: data.next },
 	})
 }
 
-export default function BestList() {
-	const { kind, page, pages, total, popular, first, titles, services, awards } =
-		useLoaderData<typeof loader>()
-	const copy = listCopy(kind, { total, popular, page })
-	const links = <ListPageLinks kind={kind} page={page} pages={pages} total={total} />
-	return (
-		<div className="pb-16">
-			<ListHead heading={copy.heading} intro={copy.intro}>
-				<div className="mt-3">{links}</div>
-			</ListHead>
-			<RankedTitles titles={titles} first={first} services={services} awards={awards} />
-			<div className="mx-auto mt-6 max-w-7xl px-4">{links}</div>
-		</div>
-	)
+export default function TopList() {
+	const data = useLoaderData<typeof loader>()
+	return <TopRanking data={data} kinds={data.kinds} />
 }
 
 // Page changes read this route's data from the browser's cache when they can (docs/navigation-cache.md).

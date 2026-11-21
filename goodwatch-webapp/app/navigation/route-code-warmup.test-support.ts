@@ -55,9 +55,8 @@ Object.defineProperty(g, "navigator", {
 })
 const setPath = (pathname: string) => {
 	g.location = new URL(`https://goodwatch.app${pathname}`)
-	;(
-		g.__remixRouter as { state: { location: { pathname: string } } }
-	).state.location.pathname = pathname
+	;(g.__remixRouter as { state: { location: { pathname: string } } }).state.location.pathname =
+		pathname
 }
 g.document = {
 	visibilityState: "visible",
@@ -78,8 +77,7 @@ g.document = {
 			},
 			addEventListener(type: string, listener: () => void) {
 				listeners[type] = [...(listeners[type] ?? []), listener]
-				;(this as unknown as Record<string, unknown>)[`_${type}`] =
-					listeners[type]
+				;(this as unknown as Record<string, unknown>)[`_${type}`] = listeners[type]
 			},
 		}
 	},
@@ -92,7 +90,7 @@ g.__remixRouteModules = { root: {} }
 g.__remixRouter = {
 	routes: routerRoutes,
 	state: {
-		location: { pathname: "/movies/best", search: "", key: "k" },
+		location: { pathname: "/movies/top", search: "", key: "k" },
 		matches: [{ pathname: "/", params: {}, route: { id: "root" } }],
 		loaderData: {
 			root: { user: null, locale: { country: "US", language: "en" } },
@@ -105,18 +103,15 @@ g.__remixRouter = {
 	subscribe: () => () => {},
 	revalidate() {},
 }
-setPath("/movies/best")
+setPath("/movies/top")
 
-const snapshot = () =>
-	links.map((l) => `${l.href} ${l.fetchPriority || "auto"}`)
+const snapshot = () => links.map((l) => `${l.href} ${l.fetchPriority || "auto"}`)
 /** Finishes the load of the oldest link still loading. */
 const finishOne = () => {
 	const link = links.find((l) => !(l as unknown as { done?: boolean }).done)
 	if (!link) return
 	;(link as unknown as { done: boolean }).done = true
-	for (const listener of (link as unknown as { _load?: (() => void)[] })
-		._load ?? [])
-		listener()
+	for (const listener of (link as unknown as { _load?: (() => void)[] })._load ?? []) listener()
 }
 
 // A best list on a phone: two title links on screen.
@@ -136,13 +131,11 @@ prefetchPage(new URL("https://goodwatch.app/person/3-c"), "viewport")
 const startPage = snapshot().slice(warmLinks)
 
 // A 3G connection elsewhere: no code warm-up either.
-setPath("/movies/best")
+setPath("/movies/top")
 connection.effectiveType = "3g"
 prefetchPage(new URL("https://goodwatch.app/person/3-c"), "viewport")
 const slow = snapshot().slice(warmLinks)
 
-console.log(
-	`__WARMUP__${JSON.stringify({ first, afterOneLoad, afterPress, startPage, slow })}`,
-)
+console.log(`__WARMUP__${JSON.stringify({ first, afterOneLoad, afterPress, startPage, slow })}`)
 
 export {}

@@ -376,29 +376,6 @@ export function exploreTabs(
 	}))
 }
 
-/** Top's Movies | Shows switch; null off the Top pages. */
-export function topSwitch(pathname: string): NavChoices | null {
-	const path = trim(pathname)
-	if (!isTop(path)) return null
-	return {
-		label: "Top",
-		choices: [
-			{
-				key: "movies",
-				label: "Movies",
-				href: "/movies/top",
-				here: path === "/movies/top",
-			},
-			{
-				key: "shows",
-				label: "Shows",
-				href: "/shows/top",
-				here: path === "/shows/top",
-			},
-		],
-	}
-}
-
 // Profile (key "taste") ------------------------------------------------------------------------------------
 
 /**
