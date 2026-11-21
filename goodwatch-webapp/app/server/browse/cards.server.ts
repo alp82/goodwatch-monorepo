@@ -79,6 +79,8 @@ export async function cardData(
 		? opts.only.flatMap((slug) => all.filter((m) => m.slug === slug))
 		: all.slice(0, opts.n ?? all.length)
 	const max = family === "country" ? Math.max(1, ...all.map((m) => atlas.count([m]))) : 1
+	// A country card's titles prefer the country's own (by original language): read those languages in one go.
+	if (family === "country" && (opts.titles ?? 3) > 0) await atlas.prefetchHomeLanguages(wanted)
 	const out: CardData[] = []
 	for (const place of wanted) {
 		const card = await cardOf(atlas, place, opts)

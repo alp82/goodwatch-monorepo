@@ -27,6 +27,7 @@ import type { TitleKey } from "~/utils/title-key"
 import type { Places } from "./places.server"
 import { tropeMembers, tropeMembersVersion } from "./trope-members.server"
 import { ensureTropes, tropeExamples, tropeOpening } from "./tropes.server"
+import { cachedPage } from "./page-cache.server"
 import { createVersionMemo } from "./version-memo"
 
 const part = (t: Trope): Ingredient => ing("trope", t.slug)
@@ -102,22 +103,19 @@ async function indexOf(atlas: Places): Promise<TropesIndexData> {
 	return { kind: atlas.kind, groups, feature }
 }
 
-// The index reads a teaser per trope (about a hundred small reads on a cold process): built once per snapshot and
-// members version and kind, then shared by every request. A failed build is dropped, so the next request tries again.
-const indexBuilds = new Map<string, Promise<TropesIndexData>>()
-
-/** The index: every trope with a page for the kind, in its named index, with a poster fan and a teaser. */
+/**
+ * The index: every trope with a page for the kind, in its named index, with a poster fan and a teaser. It reads a
+ * teaser per trope (about a hundred small reads), so it is built once per data version and shared (page-cache.server).
+ */
 export async function loadTropesIndex(atlas: Places): Promise<TropesIndexData> {
 	await ensureTropes()
-	const key = `${versionOf()}|${atlas.kind}`
-	let build = indexBuilds.get(key)
-	if (!build) {
-		for (const k of indexBuilds.keys()) if (!k.startsWith(`${versionOf()}|`)) indexBuilds.delete(k)
-		build = indexOf(atlas)
-		indexBuilds.set(key, build)
-		build.catch(() => indexBuilds.delete(key))
-	}
-	return build
+	return cachedPage(atlas, {
+		name: "tropes-index",
+		key: atlas.kind,
+		build: () => indexOf(atlas),
+		complete: () => tropeMembersVersion() > 0,
+		shared: true,
+	})
 }
 
 /**
@@ -181,6 +179,16 @@ export async function loadTropePage(atlas: Places, slug: string): Promise<TropeP
 	await ensureTropes()
 	const t = tropeBySlug(atlas.canon("trope", slug))
 	if (!t) return null
+	return cachedPage(atlas, {
+		name: "trope",
+		key: `${atlas.kind}|${t.slug}`,
+		build: () => buildTropePage(atlas, t),
+		complete: () => tropeMembersVersion() > 0,
+		shared: true,
+	})
+}
+
+async function buildTropePage(atlas: Places, t: Trope): Promise<TropePageData> {
 	const me = part(t)
 	const n = atlas.count([me])
 	// Chance is measured among titles that have trope write-ups at all: most well-known titles have none, and against

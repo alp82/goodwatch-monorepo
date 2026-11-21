@@ -3,8 +3,16 @@ import { test } from "node:test"
 import "../../server/title-filter/test-alias.ts"
 
 const { BRANDS } = await import("~/domain/new-on-services")
-const { countPerGroup, foldTiers, groupsOf, kindHas, serviceGroupOf, sortServices } =
-	await import("./streaming-stats.ts")
+const {
+	brandKey,
+	brandName,
+	countPerGroup,
+	foldTiers,
+	groupsOf,
+	kindHas,
+	serviceGroupOf,
+	sortServices,
+} = await import("./streaming-stats.ts")
 
 const netflix = BRANDS.find((b) => b.slug === "netflix")
 assert.ok(netflix, "the brand list has Netflix")
@@ -75,14 +83,70 @@ test("a tier named after a bigger service folds into it", () => {
 		service("HBO Max", { popular: 200, arrived: 4, titles: 2000 }),
 		service("Hulu", { popular: 100 }),
 	])
-	assert.deepEqual(
-		hosts.map((h) => h.name),
-		["Hulu", "HBO Max"],
-	)
+	assert.deepEqual(hosts.map((h) => h.name).sort(), ["HBO Max", "Hulu"])
 	const hbo = hosts.find((h) => h.name === "HBO Max")
 	assert.equal(hbo?.popular, 300)
 	assert.equal(hbo?.arrived, 9)
 	assert.equal(hbo?.titles, 2000)
+})
+
+test("tiers and resold channels fold into their brand, also without a prefix match", () => {
+	const hosts = foldTiers([
+		{ ...service("Paramount+ Amazon Channel", { popular: 50 }), serviceIds: [582] },
+		{ ...service("Paramount Plus Essential", { popular: 400, titles: 900 }), serviceIds: [2303] },
+		{ ...service("Paramount Plus Premium", { popular: 380, titles: 950 }), serviceIds: [2616] },
+		{ ...service("Paramount+ Roku Premium Channel", { arrived: 30 }), serviceIds: [633] },
+		{ ...service("Paramount+ with Showtime", { great: 12 }), serviceIds: [1770] },
+	])
+	assert.equal(hosts.length, 1)
+	assert.equal(hosts[0].name, "Paramount Plus")
+	assert.equal(hosts[0].popular, 400)
+	assert.equal(hosts[0].titles, 950)
+	assert.equal(hosts[0].arrived, 30)
+	assert.equal(hosts[0].great, 12)
+	assert.deepEqual(hosts[0].serviceIds, [582, 633, 1770, 2303, 2616])
+})
+
+test("brand names drop channel and tier suffixes in their own spelling", () => {
+	assert.equal(brandName("Starz Roku Premium Channel"), "Starz")
+	assert.equal(brandName("Netflix Standard with Ads"), "Netflix")
+	assert.equal(brandName("Amazon Prime Video Free with Ads"), "Amazon Prime Video")
+	assert.equal(brandName("Peacock Premium Plus"), "Peacock")
+	assert.equal(brandName("ViX Premium Amazon Channel"), "ViX")
+	assert.equal(brandName("HBO Max  Amazon Channel"), "HBO Max")
+	assert.equal(brandKey("AcornTV Amazon Channel"), brandKey("Acorn TV"))
+	assert.equal(brandKey("MGM Plus Roku Premium Channel"), brandKey("MGM+ Amazon Channel"))
+	assert.equal(brandKey("Discovery +"), brandKey("Discovery+"))
+})
+
+test("over the real US, DE and GB service lists, brands fold and different services stay apart", async () => {
+	const { readFile } = await import("node:fs/promises")
+	const names = JSON.parse(
+		await readFile(new URL("./streaming-service-names.fixture.json", import.meta.url), "utf8"),
+	) as Record<string, string[]>
+	const brands = (list: string[]) => new Set(list.map(brandKey))
+	assert.equal(brands(names.US).size, 227)
+	assert.equal(brands(names.DE).size, 148)
+	assert.equal(brands(names.GB).size, 99)
+	const together = (a: string, b: string) => assert.equal(brandKey(a), brandKey(b), `${a} / ${b}`)
+	const apart = (a: string, b: string) => assert.notEqual(brandKey(a), brandKey(b), `${a} / ${b}`)
+	together("Paramount Plus Essential", "Paramount+ Amazon Channel")
+	together("Paramount Plus Basic with Ads", "Paramount Plus")
+	together("Starz Apple TV channel", "Starz")
+	together("Joyn Plus", "Joyn")
+	together("Magenta TV+", "MagentaTV")
+	together("ITVX Premium", "ITVX")
+	together("Now TV Cinema", "Now TV")
+	together("Arrow Video Amazon Channel", "ARROW")
+	apart("YouTube TV", "YouTube Free")
+	apart("AMC", "AMC+")
+	apart("History", "History Vault")
+	apart("Channel 4", "The Roku Channel")
+	apart("Hallmark TV Amazon Channel", "Hallmark+ Amazon Channel")
+	apart("Amazon MX Player", "Amazon Prime Video")
+	apart("ARD Mediathek", "ARD Plus")
+	for (const list of Object.values(names))
+		for (const n of list) assert.ok(brandKey(n).length > 0, n)
 })
 
 test("sorts order by their number, then popularity, size and name", () => {

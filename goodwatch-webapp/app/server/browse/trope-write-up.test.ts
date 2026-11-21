@@ -121,3 +121,76 @@ test("Ending and Death tropes hide their whole write-ups; ordinary tropes rely o
 	assert.equal(tropeById("ChekhovsGun")?.spoilersOff, false)
 	assert.equal(tropeById("FinalGirl")?.spoilersOff, false)
 })
+
+const lead = (text: string) => {
+	const { playOf } = playMod
+	return clean({ play: playOf(text), text, spoilers: [] as [number, number][] }).text
+}
+const playMod = await import("~/domain/tropes/play")
+
+test("real twist lead-ins leave a clean start", () => {
+	assert.equal(
+		lead(
+			"Subverted. In the end, it seems like Paris is the only one who made it, but then Timmy shows up.",
+		),
+		"In the end, it seems like Paris is the only one who made it, but then Timmy shows up.",
+	)
+	assert.equal(
+		lead("Averted when Sherry tries to sacrifice herself to the mangler to stop it."),
+		"When Sherry tries to sacrifice herself to the mangler to stop it.",
+	)
+	assert.equal(
+		lead(
+			"Subverted with the final astronaut in the Action Prologue, who seems to be the Hero of Another Story.",
+		),
+		"The final astronaut in the Action Prologue, who seems to be the Hero of Another Story.",
+	)
+	assert.equal(
+		lead(
+			"Averted with an actual gun. Getting fired from his job causes Sergei to take a long look at the gun.",
+		),
+		"Getting fired from his job causes Sergei to take a long look at the gun.",
+	)
+	assert.equal(
+		lead(
+			"Played with and ultimately averted, although it does serve a purpose, as Alexander threatens suicide.",
+		),
+		"Although it does serve a purpose, as Alexander threatens suicide.",
+	)
+	assert.equal(
+		lead("Averted brutally: Allison manages to escape and fatally wound Sutter."),
+		"Allison manages to escape and fatally wound Sutter.",
+	)
+	assert.equal(
+		lead("Downplayed but we see up close the serious physical toll even an average match takes."),
+		"We see up close the serious physical toll even an average match takes.",
+	)
+	assert.equal(
+		lead(
+			"Discussed when, at Jason and Sarah's wedding, Ben complains that he hasn't had a meet-cute.",
+		),
+		"When, at Jason and Sarah's wedding, Ben complains that he hasn't had a meet-cute.",
+	)
+})
+
+test("an opening that would leave a fragment stays as it is", () => {
+	for (const text of [
+		"Played with as nicely as possible because this is a kid's film. When Joy and Sadness's dog costume splits.",
+		"Subverted in the remake. Rita tries to rescue Jeff and brings along the case.",
+		"Subverted in the first film, but played completely straight in the second and third.",
+		"Lampshaded, then the ditz turns out to be the smartest one in the room.",
+		"Played with, as Josh mentions the flare gun on his boat when quizzing Gabe.",
+		"Subverted with the digital recorder.",
+	])
+		assert.equal(lead(text), text)
+})
+
+test("a space before punctuation left by a link closes up", () => {
+	const p = firstPoint(
+		'<li>Subverted with the final astronaut in the <a href="#">Action Prologue</a> , Dr. Kerry Adkins ( a pilot ) .</li>',
+	)
+	assert.equal(
+		p.text,
+		"Subverted with the final astronaut in the Action Prologue, Dr. Kerry Adkins (a pilot).",
+	)
+})
