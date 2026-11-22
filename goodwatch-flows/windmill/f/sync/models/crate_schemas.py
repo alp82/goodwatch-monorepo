@@ -1389,6 +1389,23 @@ SCHEMAS = {
         "timestamps": False,
         "replicas": "0-1",
     },
+    # An explicitly selected Google profile picture. The consent revision isolates earlier
+    # choices and concurrent fetches. Uploaded photos remain in user_avatar.
+    "user_provider_avatar": {
+        "columns": {
+            "user_id": "TEXT",
+            "consent": "TEXT",
+            "source": "TEXT INDEX OFF",
+            "signed_in_at": "LONG NOT NULL",
+            "retry_at": "LONG NOT NULL",
+            "version": "TEXT",
+            "data": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
+        },
+        "primary_key": ["user_id"],
+        "shards": 1,
+        "timestamps": False,
+        "replicas": "0-1",
+    },
     "user_discord_link": {
         "columns": {
             "discord_user_id": "TEXT",

@@ -2,21 +2,15 @@
 // is chosen once and can't be changed, so every card is honestly signed). With one: the picture, cover, bio, links to
 // their other profiles, and who sees each part of the profile.
 // Spec: docs/implementation/member-profile/README.md
-import {
-	type LoaderFunctionArgs,
-	type MetaFunction,
-	json,
-} from "@remix-run/node"
+import { type LoaderFunctionArgs, type MetaFunction, json } from "@remix-run/node"
 import { useLoaderData, useRevalidator } from "@remix-run/react"
 import type { ProfileTitle } from "~/domain/profile"
 import { avatarPath, avatarVersion } from "~/server/profile/avatar.server"
+import { providerPhotoForSettings } from "~/server/profile/provider-photo-choice.server"
 import { getProfileLibrary } from "~/server/profile/library.server"
 import { getProfileSettings } from "~/server/profile/settings.server"
 import { getCachedProfileByUserId } from "~/server/share-lists/view.server"
-import {
-	EditProfile,
-	type EditProfileData,
-} from "~/ui/profile/edit/EditProfile"
+import { EditProfile, type EditProfileData } from "~/ui/profile/edit/EditProfile"
 import { SettingsPage } from "~/ui/settings/SettingsPage"
 import { HandlePicker } from "~/ui/share-lists/HandlePicker"
 import { getUserFromRequest } from "~/utils/auth"
@@ -25,23 +19,14 @@ export { pageHeaders as headers } from "~/utils/headers"
 
 const FAVORITES = 10
 const COVERS = 11
-const latest = (a: ProfileTitle, b: ProfileTitle) =>
-	(b.date ?? "").localeCompare(a.date ?? "")
+const latest = (a: ProfileTitle, b: ProfileTitle) => (b.date ?? "").localeCompare(a.date ?? "")
 
 export async function loader({ request }: LoaderFunctionArgs) {
-	const user = await getUserFromRequest({ request })
+	const user = await getUserFromRequest({ request, fresh: true })
 	const headers = { "Cache-Control": "private, no-store" }
-	if (!user?.id)
-		return json(
-			{ signedIn: false as const, handle: null, edit: null },
-			{ headers },
-		)
+	if (!user?.id) return json({ signedIn: false as const, handle: null, edit: null }, { headers })
 	const profile = await getCachedProfileByUserId(user.id)
-	if (!profile)
-		return json(
-			{ signedIn: true as const, handle: null, edit: null },
-			{ headers },
-		)
+	if (!profile) return json({ signedIn: true as const, handle: null, edit: null }, { headers })
 
 	const [settings, library, version] = await Promise.all([
 		getProfileSettings(user.id),
@@ -51,11 +36,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const scored = [...library.scored.values()]
 	const tens = scored.filter((t) => t.score === 10 && t.poster).sort(latest)
 	const nines = scored.filter((t) => t.score === 9 && t.poster).sort(latest)
-	const plain = ({
-		genres: _genres,
-		...t
-	}: ProfileTitle & { genres?: string[] }): ProfileTitle => t
-	const provider = user.user_metadata?.avatar_url
+	const plain = ({ genres: _genres, ...t }: ProfileTitle & { genres?: string[] }): ProfileTitle => t
+	const provider = await providerPhotoForSettings(user, settings.providerPhoto)
 	const edit: EditProfileData = {
 		handle: profile.handle,
 		settings: {
@@ -66,20 +48,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			visibility: settings.visibility,
 		},
 		photo: version ? avatarPath(profile.handle, version) : null,
-		providerPhoto:
-			typeof provider === "string" && provider.startsWith("https://")
-				? provider
-				: null,
+		providerPhoto: provider,
 		favorites: [...tens, ...nines].slice(0, FAVORITES).map(plain),
 		covers: [...tens, ...nines]
 			.filter((t) => t.backdrop)
 			.slice(0, COVERS)
 			.map(plain),
 	}
-	return json(
-		{ signedIn: true as const, handle: profile.handle, edit },
-		{ headers },
-	)
+	return json({ signedIn: true as const, handle: profile.handle, edit }, { headers })
 }
 
 export const meta: MetaFunction = () => [

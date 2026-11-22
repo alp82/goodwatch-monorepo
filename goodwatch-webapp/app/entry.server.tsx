@@ -38,11 +38,7 @@ import { routeLabelFor } from "~/server/metrics/http.server"
 import { startMetrics } from "~/server/metrics/index.server"
 import { startNewPagesRefresh } from "~/server/new-on-services.server"
 import { startHotCards } from "~/server/og-image/hot-cards.server"
-import {
-	configurePageCache,
-	pageCacheWants,
-	startPageCache,
-} from "~/server/page-cache.server"
+import { configurePageCache, pageCacheWants, startPageCache } from "~/server/page-cache.server"
 import { startProcessStats } from "~/server/process-stats.server"
 import { withoutRelatedMapMarkup } from "~/server/related-map-handoff"
 import { logProcessRole, processRole } from "~/server/role.server"
@@ -55,12 +51,16 @@ import { startCrateDiagnostics } from "~/utils/crate-diagnostics"
 import {
 	preloadAuthRuntime,
 	registerAuthCluster,
+	registerAvatarRefresh,
 	registerLazyAuthResolver,
 } from "./server/auth/boot.server.ts"
 import { getRedisCluster } from "./utils/cache"
 
 // Better Auth itself loads on its first use with BETTER_AUTH_ENABLED on (boot.server.ts).
 registerAuthCluster(getRedisCluster)
+registerAvatarRefresh(async (userId, signIn) =>
+	(await import("./server/profile/settings.server")).refreshProviderAvatar(userId, signIn),
+)
 registerLazyAuthResolver()
 registerSessionUserObserver(identifyProductUser)
 
@@ -149,8 +149,7 @@ function renderDocument(
 ) {
 	const renderStarted = performance.now()
 	// Crawlers get the complete document in one piece. Browsers get the shell first and suspended parts as they finish.
-	const waitForAll =
-		isbot(request.headers.get("user-agent") ?? "") || remixContext.isSpaMode
+	const waitForAll = isbot(request.headers.get("user-agent") ?? "") || remixContext.isSpaMode
 
 	return new Promise((resolve, reject) => {
 		let shellRendered = false
@@ -164,17 +163,14 @@ function renderDocument(
 		const send = () => {
 			shellRendered = true
 			responseHeaders.set("Content-Type", "text/html")
-			responseHeaders.append("Server-Timing", `render;dur=${(performance.now() - renderStarted).toFixed(1)}`)
+			responseHeaders.append(
+				"Server-Timing",
+				`render;dur=${(performance.now() - renderStarted).toFixed(1)}`,
+			)
 			protectMediaResponse(responseHeaders)
 			const routePolicy = responseHeaders.get("Cache-Control")
 			const decision = applyCachePolicy(request, status, responseHeaders)
-			const offer = pageCacheWants(
-				request,
-				status,
-				responseHeaders,
-				decision,
-				routePolicy,
-			)
+			const offer = pageCacheWants(request, status, responseHeaders, decision, routePolicy)
 			const body = new HtmlStream(
 				offer
 					? (html) => {
@@ -192,11 +188,7 @@ function renderDocument(
 			pipe(body)
 		}
 		const { pipe, abort } = renderToPipeableStream(
-			<RemixServer
-				context={remixContext}
-				url={request.url}
-				abortDelay={ABORT_DELAY}
-			/>,
+			<RemixServer context={remixContext} url={request.url} abortDelay={ABORT_DELAY} />,
 			{
 				onShellReady() {
 					if (!waitForAll) send()
@@ -219,10 +211,7 @@ function renderDocument(
 	})
 }
 
-export function handleDataRequest(
-	response: Response,
-	{ request }: { request: Request },
-) {
+export function handleDataRequest(response: Response, { request }: { request: Request }) {
 	protectMediaResponse(response.headers)
 	// An incomplete page says no-store before the cache policy below makes every private answer say it. The
 	// browser's loader cache shows such data once but doesn't keep it (navigation/loader-cache.ts).

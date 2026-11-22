@@ -1,4 +1,10 @@
-import { assertYepWatchOAuthRequest, validateYepWatchOAuthConfig, YEPWATCH_READ_SCOPE, type YepWatchOAuthConfig } from "./yepwatch-oauth-policy.ts"
+import { AsyncLocalStorage } from "node:async_hooks"
+import {
+	assertYepWatchOAuthRequest,
+	validateYepWatchOAuthConfig,
+	YEPWATCH_READ_SCOPE,
+	type YepWatchOAuthConfig,
+} from "./yepwatch-oauth-policy.ts"
 import { createHash, randomUUID } from "node:crypto"
 import { type BetterAuthOptions, betterAuth } from "@goodwatch/auth-stack"
 import {
@@ -31,10 +37,7 @@ import {
 } from "./emails.server.ts"
 import type { AuthMailQueue } from "./mail.server.ts"
 import { bearerMcpMetadata } from "./mcp-metadata.server.ts"
-import {
-	type AuthEncryptionKeys,
-	authCredentialVersion,
-} from "./payload-codec.server.ts"
+import { type AuthEncryptionKeys, authCredentialVersion } from "./payload-codec.server.ts"
 import { maxMemberSessions } from "./population.server.ts"
 import type { ValkeyAuthStorage } from "./secondary-storage.server.ts"
 
@@ -48,13 +51,15 @@ export function jsonResponse(body: unknown, init: ResponseInit = {}) {
 // remix-serve's polyfilled Headers (no v3_singleFetch) has no getSetCookie(); its raw() keeps the cookies apart.
 export function setCookiesOf(headers: Headers): string[] {
 	if (typeof headers.getSetCookie === "function") return headers.getSetCookie()
-	const raw = (
-		headers as Headers & { raw?: () => Record<string, string[]> }
-	).raw?.()
+	const raw = (headers as Headers & { raw?: () => Record<string, string[]> }).raw?.()
 	return raw?.["set-cookie"] ?? []
 }
 
 export function createGoodwatchAuth(options: {
+	refreshAvatar?: (
+		userId: string,
+		signIn: { at: number; photo?: string | null },
+	) => Promise<unknown>
 	analytics?: (
 		userId: string,
 		event: "account created" | "email verified" | "sign in succeeded",
@@ -75,17 +80,18 @@ export function createGoodwatchAuth(options: {
 	yepwatch?: YepWatchOAuthConfig
 	google: { clientId: string; clientSecret: string }
 }) {
+	const googleProfile = new AsyncLocalStorage<{ picture?: string | null }>()
 	const { mail } = options
-	if (options.yepwatch) { validateYepWatchOAuthConfig(options.yepwatch); if (!options.mcp) throw new Error("YepWatch requires the existing central OAuth issuer") }
+	if (options.yepwatch) {
+		validateYepWatchOAuthConfig(options.yepwatch)
+		if (!options.mcp) throw new Error("YepWatch requires the existing central OAuth issuer")
+	}
 	const origin = new URL(options.baseURL).origin
 	const send = (to: string, message: AuthEmail) =>
 		mail.enqueue(to, message.subject, message.text, message.html)
 	const refreshGrants = new WeakMap<Request, { id: string; version: string }>()
 	const credentialVersion = (password: string | null) =>
-		authCredentialVersion(
-			options.encryptionSecret ?? localAuthEncryptionSecret,
-			password,
-		)
+		authCredentialVersion(options.encryptionSecret ?? localAuthEncryptionSecret, password)
 	const verifyCurrentPassword = async (hash: string, password: string) => {
 		try {
 			return hash.startsWith("$2")
@@ -95,8 +101,7 @@ export function createGoodwatchAuth(options: {
 			return false
 		}
 	}
-	const tokenHash = (token: string) =>
-		createHash("sha256").update(token).digest("base64url")
+	const tokenHash = (token: string) => createHash("sha256").update(token).digest("base64url")
 	const core = betterAuth({
 		baseURL: options.baseURL,
 		secret: options.secret,
@@ -118,7 +123,16 @@ export function createGoodwatchAuth(options: {
 						loginPage: "/sign-in",
 						consentPage: "/auth/mcp/consent",
 						resource: options.mcp.resource,
-						...(options.yepwatch ? { resources: [{ identifier: options.yepwatch.resource, allowedScopes: [YEPWATCH_READ_SCOPE, "offline_access"] }] } : {}),
+						...(options.yepwatch
+							? {
+									resources: [
+										{
+											identifier: options.yepwatch.resource,
+											allowedScopes: [YEPWATCH_READ_SCOPE, "offline_access"],
+										},
+									],
+								}
+							: {}),
 						scopes: [
 							"openid",
 							"profile",
@@ -136,13 +150,7 @@ export function createGoodwatchAuth(options: {
 						extensions: [
 							{
 								claims: {
-									accessToken: async ({
-										ctx,
-										user,
-										client,
-										referenceId,
-										grantType,
-									}) => {
+									accessToken: async ({ ctx, user, client, referenceId, grantType }) => {
 										if (!user)
 											throw new APIError("BAD_REQUEST", {
 												error: "invalid_grant",
@@ -155,14 +163,10 @@ export function createGoodwatchAuth(options: {
 											where: [
 												{ field: "clientId", value: client.clientId },
 												{ field: "userId", value: user.id },
-												...(referenceId
-													? [{ field: "referenceId", value: referenceId }]
-													: []),
+												...(referenceId ? [{ field: "referenceId", value: referenceId }] : []),
 											],
 										})
-										const expected = ctx.request
-											? refreshGrants.get(ctx.request)
-											: undefined
+										const expected = ctx.request ? refreshGrants.get(ctx.request) : undefined
 										if (
 											grantType === "refresh_token" &&
 											(!expected ||
@@ -239,8 +243,7 @@ export function createGoodwatchAuth(options: {
 					userId: string
 					expiresAt: Date
 				}>({ model: "session", where: [{ field: "token", value: key }] })
-				if (!session || new Date(session.expiresAt).getTime() <= Date.now())
-					return null
+				if (!session || new Date(session.expiresAt).getTime() <= Date.now()) return null
 				const user = await context.adapter.findOne({
 					model: "user",
 					where: [{ field: "id", value: session.userId }],
@@ -251,8 +254,7 @@ export function createGoodwatchAuth(options: {
 				let storedValue = value
 				if (key.startsWith("active-sessions-")) {
 					const references = JSON.parse(value)
-					if (!Array.isArray(references))
-						throw new Error("Invalid auth session index")
+					if (!Array.isArray(references)) throw new Error("Invalid auth session index")
 					storedValue = JSON.stringify(references.slice(-maxMemberSessions))
 				}
 				return options.storage.set(key, storedValue, ttl)
@@ -313,10 +315,7 @@ export function createGoodwatchAuth(options: {
 				verify: async (data) => {
 					try {
 						return data.hash.startsWith("$2")
-							? await compare(
-									data.password,
-									data.hash.replace(/^\$2y\$/, "$2b$"),
-								)
+							? await compare(data.password, data.hash.replace(/^\$2y\$/, "$2b$"))
 							: await verifyPassword(data)
 					} catch {
 						return false
@@ -362,17 +361,34 @@ export function createGoodwatchAuth(options: {
 		},
 		hooks: {
 			before: createAuthMiddleware(async (ctx) => {
-				if (options.yepwatch && ["/oauth2/authorize", "/oauth2/consent", "/oauth2/token"].includes(ctx.path)) {
+				if (
+					options.yepwatch &&
+					["/oauth2/authorize", "/oauth2/consent", "/oauth2/token"].includes(ctx.path)
+				) {
 					try {
 						const input = { ...ctx.query, ...ctx.body }
 						assertYepWatchOAuthRequest(options.yepwatch, ctx.path, input)
-						const intent = typeof input.oauth_query === "string" ? Object.fromEntries(new URLSearchParams(input.oauth_query)) : input
+						const intent =
+							typeof input.oauth_query === "string"
+								? Object.fromEntries(new URLSearchParams(input.oauth_query))
+								: input
 						if (intent.client_id === options.yepwatch.clientId) {
-							const client = await ctx.context.adapter.findOne<{ tokenEndpointAuthMethod: string; disabled?: boolean }>({ model: "oauthClient", where: [{ field: "clientId", value: options.yepwatch.clientId }] })
-							if (!client || client.disabled || client.tokenEndpointAuthMethod !== "none") throw new Error("YepWatch requires its registered public client")
+							const client = await ctx.context.adapter.findOne<{
+								tokenEndpointAuthMethod: string
+								disabled?: boolean
+							}>({
+								model: "oauthClient",
+								where: [{ field: "clientId", value: options.yepwatch.clientId }],
+							})
+							if (!client || client.disabled || client.tokenEndpointAuthMethod !== "none")
+								throw new Error("YepWatch requires its registered public client")
 						}
+					} catch {
+						throw new APIError("BAD_REQUEST", {
+							error: "invalid_request",
+							message: "Invalid YepWatch authorization request",
+						})
 					}
-					catch { throw new APIError("BAD_REQUEST", { error: "invalid_request", message: "Invalid YepWatch authorization request" }) }
 				}
 				if (options.mcp && ctx.path === "/oauth2/register") {
 					if (ctx.body?.dpop_bound_access_tokens === true)
@@ -382,10 +398,7 @@ export function createGoodwatchAuth(options: {
 						})
 					const ip = createHash("sha256")
 						.update(
-							getIP(
-								ctx.request ?? ctx.headers ?? new Headers(),
-								ctx.context.options,
-							) ?? "unknown",
+							getIP(ctx.request ?? ctx.headers ?? new Headers(), ctx.context.options) ?? "unknown",
 						)
 						.digest("hex")
 					if ((await options.storage.increment(`dcr-ip:${ip}`, 3600)) > 30)
@@ -393,32 +406,19 @@ export function createGoodwatchAuth(options: {
 							message: "Please wait before registering another client.",
 						})
 				}
-				if (
-					options.mcp &&
-					ctx.path === "/oauth2/revoke" &&
-					typeof ctx.body?.token === "string"
-				) {
-					const token = await ctx.context.adapter.findOne<{ clientId: string }>(
-						{
-							model: "oauthRefreshToken",
-							where: [{ field: "token", value: tokenHash(ctx.body.token) }],
-						},
-					)
+				if (options.mcp && ctx.path === "/oauth2/revoke" && typeof ctx.body?.token === "string") {
+					const token = await ctx.context.adapter.findOne<{ clientId: string }>({
+						model: "oauthRefreshToken",
+						where: [{ field: "token", value: tokenHash(ctx.body.token) }],
+					})
 					if (token) {
-						let clientId =
-							typeof ctx.body.client_id === "string"
-								? ctx.body.client_id
-								: undefined
-						const authorization = (ctx.request?.headers ?? ctx.headers)?.get(
-							"authorization",
-						)
+						let clientId = typeof ctx.body.client_id === "string" ? ctx.body.client_id : undefined
+						const authorization = (ctx.request?.headers ?? ctx.headers)?.get("authorization")
 						if (authorization?.startsWith("Basic ")) {
 							let basicId: string | undefined
 							try {
 								basicId = decodeURIComponent(
-									Buffer.from(authorization.slice(6), "base64")
-										.toString("utf8")
-										.split(":")[0],
+									Buffer.from(authorization.slice(6), "base64").toString("utf8").split(":")[0],
 								)
 							} catch {}
 							if (clientId && basicId !== clientId)
@@ -451,9 +451,7 @@ export function createGoodwatchAuth(options: {
 						grantVersion?: string
 					}>({
 						model: "oauthRefreshToken",
-						where: [
-							{ field: "token", value: tokenHash(ctx.body.refresh_token) },
-						],
+						where: [{ field: "token", value: tokenHash(ctx.body.refresh_token) }],
 					})
 					if (!token) throw invalid()
 					const [consent, user] = await Promise.all([
@@ -468,9 +466,7 @@ export function createGoodwatchAuth(options: {
 							where: [
 								{ field: "clientId", value: token.clientId },
 								{ field: "userId", value: token.userId },
-								...(token.referenceId
-									? [{ field: "referenceId", value: token.referenceId }]
-									: []),
+								...(token.referenceId ? [{ field: "referenceId", value: token.referenceId }] : []),
 							],
 						}),
 						ctx.context.adapter.findOne<{ emailVerified: boolean }>({
@@ -484,9 +480,7 @@ export function createGoodwatchAuth(options: {
 						!token.grantVersion ||
 						token.grantVersion !== consent.grantVersion ||
 						!token.scopes.every((scope) => consent.scopes.includes(scope)) ||
-						!token.resources?.every((resource) =>
-							consent.resources?.includes(resource),
-						)
+						!token.resources?.every((resource) => consent.resources?.includes(resource))
 					)
 						throw invalid()
 					if (!ctx.request) throw invalid()
@@ -497,11 +491,7 @@ export function createGoodwatchAuth(options: {
 					let lastUsedAt = consent.lastUsedAt
 					for (let attempt = 0; ; attempt++) {
 						const now = new Date()
-						if (
-							lastUsedAt &&
-							now.getTime() - new Date(lastUsedAt).getTime() < 60_000
-						)
-							break
+						if (lastUsedAt && now.getTime() - new Date(lastUsedAt).getTime() < 60_000) break
 						if (attempt === 8) throw new Error("Grant use could not be recorded")
 						if (
 							await ctx.context.adapter.incrementOne({
@@ -532,9 +522,7 @@ export function createGoodwatchAuth(options: {
 				}
 
 				if (
-					["/request-password-reset", "/send-verification-email"].includes(
-						ctx.path,
-					) &&
+					["/request-password-reset", "/send-verification-email"].includes(ctx.path) &&
 					typeof ctx.body?.email === "string"
 				) {
 					const address = createHash("sha256")
@@ -542,10 +530,7 @@ export function createGoodwatchAuth(options: {
 						.digest("hex")
 					const ip = createHash("sha256")
 						.update(
-							getIP(
-								ctx.request ?? ctx.headers ?? new Headers(),
-								ctx.context.options,
-							) ?? "unknown",
+							getIP(ctx.request ?? ctx.headers ?? new Headers(), ctx.context.options) ?? "unknown",
 						)
 						.digest("hex")
 					const [perAddress, perIp] = await Promise.all([
@@ -557,24 +542,13 @@ export function createGoodwatchAuth(options: {
 							message: "Please wait before requesting another email.",
 						})
 				}
-				if (
-					ctx.path === "/request-password-reset" &&
-					typeof ctx.body?.email === "string"
-				) {
-					const found = await ctx.context.internalAdapter.findUserByEmail(
-						ctx.body.email,
-					)
-					if (
-						found &&
-						!(await ctx.context.internalAdapter.findCredentialAccount(
-							found.user.id,
-						))
-					) {
+				if (ctx.path === "/request-password-reset" && typeof ctx.body?.email === "string") {
+					const found = await ctx.context.internalAdapter.findUserByEmail(ctx.body.email)
+					if (found && !(await ctx.context.internalAdapter.findCredentialAccount(found.user.id))) {
 						send(found.user.email, googleOnlyEmail(origin))
 						return ctx.json({
 							status: true,
-							message:
-								"If this email exists in our system, check your email for the reset link",
+							message: "If this email exists in our system, check your email for the reset link",
 						})
 					}
 				}
@@ -582,12 +556,10 @@ export function createGoodwatchAuth(options: {
 				if (ctx.path === "/reset-password") {
 					const token = ctx.body?.token ?? ctx.query?.token
 					if (typeof token === "string") {
-						const verification =
-							await ctx.context.internalAdapter.findVerificationValue(
-								`reset-password:${token}`,
-							)
-						if (verification)
-							Object.assign(ctx.context, { resetUserId: verification.value })
+						const verification = await ctx.context.internalAdapter.findVerificationValue(
+							`reset-password:${token}`,
+						)
+						if (verification) Object.assign(ctx.context, { resetUserId: verification.value })
 					}
 				}
 				if (ctx.path !== "/verify-email") return
@@ -599,8 +571,7 @@ export function createGoodwatchAuth(options: {
 				if (typeof token !== "string") throw invalid()
 				if (
 					ctx.query?.callbackURL &&
-					new URL(ctx.query.callbackURL, options.baseURL).origin !==
-						new URL(options.baseURL).origin
+					new URL(ctx.query.callbackURL, options.baseURL).origin !== new URL(options.baseURL).origin
 				)
 					throw invalid()
 				let email: unknown
@@ -645,21 +616,16 @@ export function createGoodwatchAuth(options: {
 					ctx.path === "/reset-password" &&
 					(ctx.context.returned as { status?: boolean })?.status === true
 				) {
-					const userId = (
-						ctx.context as typeof ctx.context & { resetUserId?: string }
-					).resetUserId
+					const userId = (ctx.context as typeof ctx.context & { resetUserId?: string }).resetUserId
 					if (!userId) throw new Error("Reset identity missing")
 					const user = await ctx.context.internalAdapter.findUserById(userId)
-					const session =
-						await ctx.context.internalAdapter.createSession(userId)
-					if (!user || !session)
-						throw new Error("Reset session issuance failed")
+					const session = await ctx.context.internalAdapter.createSession(userId)
+					if (!user || !session) throw new Error("Reset session issuance failed")
 					await setSessionCookie(ctx, { user, session })
 				}
 				if (ctx.path !== "/sign-in/email" || !ctx.context.newSession) return
 				const userId = ctx.context.newSession.user.id
-				const account =
-					await ctx.context.internalAdapter.findCredentialAccount(userId)
+				const account = await ctx.context.internalAdapter.findCredentialAccount(userId)
 				if (account?.password?.startsWith("$2")) {
 					const upgraded = await ctx.context.adapter.incrementOne({
 						model: "account",
@@ -671,8 +637,7 @@ export function createGoodwatchAuth(options: {
 						set: { password: await hashPassword(ctx.body.password) },
 					})
 					if (!upgraded) {
-						const current =
-							await ctx.context.internalAdapter.findCredentialAccount(userId)
+						const current = await ctx.context.internalAdapter.findCredentialAccount(userId)
 						if (
 							!current?.password ||
 							!(await ctx.context.password.verify({
@@ -680,16 +645,13 @@ export function createGoodwatchAuth(options: {
 								password: ctx.body.password,
 							}))
 						) {
-							await ctx.context.internalAdapter.deleteSession(
-								ctx.context.newSession.session.token,
-							)
+							await ctx.context.internalAdapter.deleteSession(ctx.context.newSession.session.token)
 							throw new APIError("UNAUTHORIZED", {
 								message: "Unable to sign in.",
 							})
 						}
 					}
-					const current =
-						await ctx.context.internalAdapter.findCredentialAccount(userId)
+					const current = await ctx.context.internalAdapter.findCredentialAccount(userId)
 					if (
 						!current?.password ||
 						!(await verifyCurrentPassword(current.password, ctx.body.password))
@@ -699,9 +661,7 @@ export function createGoodwatchAuth(options: {
 						})
 					const stamped = await ctx.context.adapter.update({
 						model: "session",
-						where: [
-							{ field: "token", value: ctx.context.newSession.session.token },
-						],
+						where: [{ field: "token", value: ctx.context.newSession.session.token }],
 						update: { credentialVersion: credentialVersion(current.password) },
 					})
 					if (!stamped)
@@ -711,7 +671,17 @@ export function createGoodwatchAuth(options: {
 				}
 			}),
 		},
-		socialProviders: { google: options.google },
+		socialProviders: {
+			google: {
+				...options.google,
+				mapProfileToUser(profile) {
+					// Keep only the verified callback picture until Better Auth has bound it to the resulting session.
+					const callback = googleProfile.getStore()
+					if (callback) callback.picture = profile.picture ?? null
+					return {}
+				},
+			},
+		},
 		account: {
 			encryptOAuthTokens: true,
 			accountLinking: {
@@ -729,33 +699,23 @@ export function createGoodwatchAuth(options: {
 				},
 				update: {
 					after: async (user) => {
-						if (user.emailVerified)
-							options.analytics?.(user.id, "email verified", {}, user)
+						if (user.emailVerified) options.analytics?.(user.id, "email verified", {}, user)
 					},
 				},
 			},
 			session: {
 				create: {
 					before: async (session, context) => {
-						if (!context)
-							throw new Error(
-								"Auth request context required for session creation",
-							)
-						const user = await context.context.internalAdapter.findUserById(
-							session.userId,
-						)
+						if (!context) throw new Error("Auth request context required for session creation")
+						const user = await context.context.internalAdapter.findUserById(session.userId)
 						if (!user?.emailVerified)
 							throw new APIError("FORBIDDEN", {
 								message: "Confirm your email before signing in.",
 							})
-						const credential =
-							await context.context.internalAdapter.findCredentialAccount(
-								session.userId,
-							)
-						const password =
-							typeof credential?.password === "string"
-								? credential.password
-								: null
+						const credential = await context.context.internalAdapter.findCredentialAccount(
+							session.userId,
+						)
+						const password = typeof credential?.password === "string" ? credential.password : null
 						// Core verified the password before reaching this hook. Verify the
 						// current credential too, then bind the session to that exact version.
 						if (
@@ -799,15 +759,14 @@ export function createGoodwatchAuth(options: {
 			// OIDC discovery with an issuer path uses the provider's issuer-relative alias.
 			const coreRequest =
 				path === "/.well-known/openid-configuration/api/auth"
-					? new Request(
-							new URL("/api/auth/.well-known/openid-configuration", url),
-							request,
-						)
+					? new Request(new URL("/api/auth/.well-known/openid-configuration", url), request)
 					: request
-			const upstream = await core.handler(coreRequest)
-			const response = options.mcp
-				? await bearerMcpMetadata(request, upstream)
-				: upstream
+			const google: { picture?: string | null } = {}
+			const upstream =
+				path === "/api/auth/callback/google" || path === "/api/auth/sign-in/social"
+					? await googleProfile.run(google, () => core.handler(coreRequest))
+					: await core.handler(coreRequest)
+			const response = options.mcp ? await bearerMcpMetadata(request, upstream) : upstream
 			// A confirmation link opened in a browser that no longer works lands on the page that says so and offers a
 			// new one. API callers keep the 401.
 			if (
@@ -846,12 +805,10 @@ export function createGoodwatchAuth(options: {
 							})
 						: null
 				if (!current) {
-					if (typeof token === "string")
-						await context.internalAdapter.deleteSession(token)
+					if (typeof token === "string") await context.internalAdapter.deleteSession(token)
 					return jsonResponse(
 						{
-							message:
-								"Unable to sign in. Check your details and confirmation email.",
+							message: "Unable to sign in. Check your details and confirmation email.",
 						},
 						{ status: 401 },
 					)
@@ -899,16 +856,14 @@ export function createGoodwatchAuth(options: {
 							throw new Error("Refresh binding changed")
 					}
 				} catch {
-					return jsonResponse(
-						{ error: "temporarily_unavailable" },
-						{ status: 503 },
-					)
+					return jsonResponse({ error: "temporarily_unavailable" }, { status: 503 })
 				}
 			}
 			if (
 				response.status < 400 &&
 				(path === "/api/auth/sign-in/email" ||
-					path.startsWith("/api/auth/callback/"))
+					path.startsWith("/api/auth/callback/") ||
+					(path === "/api/auth/sign-in/social" && google.picture !== undefined))
 			) {
 				try {
 					const session = await core.api.getSession({
@@ -918,6 +873,16 @@ export function createGoodwatchAuth(options: {
 								.join("; "),
 						}),
 					})
+					if (session && options.refreshAvatar) {
+						void options
+							.refreshAvatar(session.user.id, {
+								at: new Date(session.session.createdAt).getTime(),
+								photo: google.picture,
+							})
+							.catch(() =>
+								console.warn("[profile] could not refresh the provider photo on sign-in"),
+							)
+					}
 					if (session)
 						options.analytics?.(
 							session.user.id,
@@ -932,18 +897,11 @@ export function createGoodwatchAuth(options: {
 				}
 			}
 			if (response.status >= 500)
-				return jsonResponse(
-					{ message: "Sign-in is temporarily unavailable." },
-					{ status: 503 },
-				)
-			if (
-				path === "/api/auth/sign-in/email" &&
-				[401, 403].includes(response.status)
-			)
+				return jsonResponse({ message: "Sign-in is temporarily unavailable." }, { status: 503 })
+			if (path === "/api/auth/sign-in/email" && [401, 403].includes(response.status))
 				return jsonResponse(
 					{
-						message:
-							"Unable to sign in. Check your details and confirmation email.",
+						message: "Unable to sign in. Check your details and confirmation email.",
 					},
 					{ status: 401 },
 				)

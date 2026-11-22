@@ -17,7 +17,11 @@ export function loadSupabaseClient(
 ): Promise<SupabaseClient> {
 	client ??= importClient()
 		.then(({ createBrowserClient }) =>
-			createBrowserClient(url, anonKey, maintenance ? { auth: { detectSessionInUrl: false } } : undefined),
+			createBrowserClient(
+				url,
+				anonKey,
+				maintenance ? { auth: { detectSessionInUrl: false } } : undefined,
+			),
 		)
 		.catch((error: unknown) => {
 			client = undefined
@@ -38,4 +42,22 @@ export function isAuthCallbackUrl(url: URL): boolean {
 		hash.has("error_description") ||
 		url.searchParams.has("error_description")
 	)
+}
+
+let reportedLogin: string | undefined
+/** Supabase can announce the same sign-in again on focus or reload. Only report that login once per tab. */
+export async function refreshLegacyAvatar(userId: string, signedInAt: string) {
+	const login = `${userId}:${signedInAt}`
+	if (reportedLogin === login) return
+	try {
+		if (sessionStorage.getItem("gw-avatar-login") === login) return
+	} catch {}
+	reportedLogin = login
+	try {
+		const response = await fetch("/api/profile/avatar-refresh", { method: "POST", keepalive: true })
+		if (!response.ok) throw new Error("Avatar refresh failed")
+		if (reportedLogin === login) sessionStorage.setItem("gw-avatar-login", login)
+	} catch {
+		if (reportedLogin === login) reportedLogin = undefined
+	}
 }

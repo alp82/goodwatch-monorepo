@@ -7,6 +7,21 @@ import { registerBetterAuthResolver } from "../../utils/auth-session.ts"
 import { addReadinessCheck } from "../lifecycle.server.ts"
 import { authMaintenanceGuard } from "./cutover-notice.server.ts"
 
+type AvatarRefresh = (
+	userId: string,
+	signIn: { at: number; photo?: string | null },
+) => Promise<unknown>
+let refreshAvatar: AvatarRefresh | undefined
+export function registerAvatarRefresh(refresh: AvatarRefresh) {
+	refreshAvatar = refresh
+}
+export async function refreshSignedInAvatar(
+	userId: string,
+	signIn: { at: number; photo?: string | null },
+) {
+	await refreshAvatar?.(userId, signIn)
+}
+
 let clusterProvider: () => Cluster | null = () => null
 
 /** The server entry hands over the site's Valkey cluster; the auth storage asks for it when it runs. */
@@ -17,8 +32,7 @@ export function authCluster(): Cluster | null {
 	return clusterProvider()
 }
 
-export const betterAuthEnabled = () =>
-	process.env.BETTER_AUTH_ENABLED === "true"
+export const betterAuthEnabled = () => process.env.BETTER_AUTH_ENABLED === "true"
 export const loadAuthRuntime = () => import("./runtime.server.ts")
 
 /**
@@ -40,9 +54,7 @@ export function preloadAuthRuntime({
 	let settled = false
 	addCheck("auth runtime", () => settled)
 	load()
-		.catch((error) =>
-			console.error("Auth runtime: loading at start failed", error),
-		)
+		.catch((error) => console.error("Auth runtime: loading at start failed", error))
 		.finally(() => {
 			settled = true
 		})

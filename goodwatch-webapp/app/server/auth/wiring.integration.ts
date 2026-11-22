@@ -1,12 +1,14 @@
-import { authTestCrateOrigins, authTestValkeyPort, authTestSmtpPort, authTestMailpitURL } from "./store-fixtures.integration.ts"
+import {
+	authTestCrateOrigins,
+	authTestValkeyPort,
+	authTestSmtpPort,
+	authTestMailpitURL,
+} from "./store-fixtures.integration.ts"
 import assert from "node:assert/strict"
 import { before, after, test } from "node:test"
 import { randomUUID } from "node:crypto"
 import Redis from "ioredis"
-import {
-	localCrateTransport,
-	migrateAuthTables,
-} from "./crate-adapter.server.ts"
+import { localCrateTransport, migrateAuthTables } from "./crate-adapter.server.ts"
 import { createGoodwatchAuth } from "./auth.server.ts"
 import { AuthMailQueue, smtpTransport } from "./mail.server.ts"
 import { ValkeyAuthStorage } from "./secondary-storage.server.ts"
@@ -22,7 +24,11 @@ const mail = new AuthMailQueue(
 	smtpTransport({ host: "127.0.0.1", port: authTestSmtpPort, localCatcher: true }),
 	{ retryDelayMs: 10 },
 )
+const avatarRefreshes: { userId: string; at: number; photo?: string | null }[] = []
 const auth = createGoodwatchAuth({
+	refreshAvatar: async (userId, signIn) => {
+		avatarRefreshes.push({ userId, ...signIn })
+	},
 	sql,
 	storage,
 	mail,
@@ -40,12 +46,7 @@ const cookie = (response: Response) =>
 		.getSetCookie()
 		.map((c) => c.split(";")[0])
 		.join("; ")
-async function call(
-	path: string,
-	body?: unknown,
-	cookies = "",
-	ip = "127.0.0.1",
-) {
+async function call(path: string, body?: unknown, cookies = "", ip = "127.0.0.1") {
 	return auth.handler(
 		new Request(`${baseURL}/api/auth${path}`, {
 			method: body === undefined ? "GET" : "POST",
@@ -61,31 +62,21 @@ async function call(
 }
 async function messages(address: string) {
 	await mail.drain()
-	const data = await (
-		await fetch(`${authTestMailpitURL}/api/v1/messages`)
-	).json()
-	const found = data.messages.filter((m: any) =>
-		m.To.some((t: any) => t.Address === address),
-	)
+	const data = await (await fetch(`${authTestMailpitURL}/api/v1/messages`)).json()
+	const found = data.messages.filter((m: any) => m.To.some((t: any) => t.Address === address))
 	return Promise.all(
 		found
 			.reverse()
-			.map(async (m: any) =>
-				(await fetch(`${authTestMailpitURL}/api/v1/message/${m.ID}`)).json(),
-			),
+			.map(async (m: any) => (await fetch(`${authTestMailpitURL}/api/v1/message/${m.ID}`)).json()),
 	)
 }
-const link = (message: any) =>
-	message.Text.match(/http:\/\/localhost:3000\/api\/auth\/\S+/)[0]
+const link = (message: any) => message.Text.match(/http:\/\/localhost:3000\/api\/auth\/\S+/)[0]
 async function confirmed(address = email()) {
 	assert.equal(
-		(await call("/sign-up/email", { email: address, name: "Member", password }))
-			.status,
+		(await call("/sign-up/email", { email: address, name: "Member", password })).status,
 		200,
 	)
-	const response = await auth.handler(
-		new Request(link((await messages(address))[0])),
-	)
+	const response = await auth.handler(new Request(link((await messages(address))[0])))
 	assert.ok([200, 302].includes(response.status), await response.clone().text())
 	return { address, cookies: cookie(response) }
 }
@@ -107,24 +98,15 @@ test("a member confirms their email before signing in and receives a 90-day gw s
 	})
 	assert.equal(signup.status, 200, await signup.clone().text())
 	assert.equal(cookie(signup), "")
-	assert.equal(
-		(await call("/sign-in/email", { email: address, password })).status,
-		401,
-	)
+	assert.equal((await call("/sign-in/email", { email: address, password })).status, 401)
 	const message = (await messages(address))[0]
 	assert.equal(message.From.Address, "hello@goodwatch.app")
 	const verify = await auth.handler(new Request(link(message)))
 	assert.match(cookie(verify), /gw.session_token=/)
-	const session = await (
-		await call("/get-session", undefined, cookie(verify))
-	).json()
+	const session = await (await call("/get-session", undefined, cookie(verify))).json()
 	assert.equal(session.user.email, address)
 	assert.ok(
-		Math.abs(
-			new Date(session.session.expiresAt).getTime() -
-				Date.now() -
-				90 * 86400000,
-		) < 10000,
+		Math.abs(new Date(session.session.expiresAt).getTime() - Date.now() - 90 * 86400000) < 10000,
 	)
 })
 
@@ -140,10 +122,7 @@ test("only the newest confirmation works, it expires after 24 hours, and it is s
 	assert.match(cookie(confirmed), /gw.session_token=/)
 	assert.equal((await auth.handler(new Request(second))).status, 401)
 	const payload = JSON.parse(
-		Buffer.from(
-			new URL(second).searchParams.get("token")!.split(".")[1],
-			"base64url",
-		).toString(),
+		Buffer.from(new URL(second).searchParams.get("token")!.split(".")[1], "base64url").toString(),
 	)
 	assert.equal(payload.exp - payload.iat, 86400)
 })
@@ -172,21 +151,13 @@ test("an imported bcrypt password is upgraded to scrypt after successful sign-in
 		).status,
 		401,
 	)
-	assert.match(
-		(await context.internalAdapter.findCredentialAccount(user.id))!.password!,
-		/^\$2/,
-	)
+	assert.match((await context.internalAdapter.findCredentialAccount(user.id))!.password!, /^\$2/)
 	const response = await call("/sign-in/email", { email: address, password })
 	assert.equal(response.status, 200, await response.clone().text())
-	const upgraded = (await context.internalAdapter.findCredentialAccount(
-		user.id,
-	))!.password!
+	const upgraded = (await context.internalAdapter.findCredentialAccount(user.id))!.password!
 	assert.doesNotMatch(upgraded, /^\$2/)
 	assert.equal(await verifyPassword({ hash: upgraded, password }), true)
-	assert.equal(
-		(await call("/sign-in/email", { email: address, password })).status,
-		200,
-	)
+	assert.equal((await call("/sign-in/email", { email: address, password })).status, 200)
 })
 
 test("a password reset signs the member in, rejects replay, sends a notice and revokes other devices even without a cache index", async () => {
@@ -196,9 +167,7 @@ test("a password reset signs the member in, rejects replay, sends a notice and r
 		password,
 	})
 	const context = await auth.$context
-	const oldSession = await (
-		await call("/get-session", undefined, member.cookies)
-	).json()
+	const oldSession = await (await call("/get-session", undefined, member.cookies)).json()
 	await storage.delete(`active-sessions-${oldSession.user.id}`)
 	const resetRequest = await call("/request-password-reset", {
 		email: member.address,
@@ -207,10 +176,7 @@ test("a password reset signs the member in, rejects replay, sends a notice and r
 	assert.equal(resetRequest.status, 200, await resetRequest.clone().text())
 	const resetMail = (await messages(member.address)).at(-1)
 	const token = new URL(link(resetMail)).pathname.split("/").at(-1)
-	assert.equal(
-		(await call("/reset-password", { token, newPassword: "123456789" })).status,
-		400,
-	)
+	assert.equal((await call("/reset-password", { token, newPassword: "123456789" })).status, 400)
 	const changed = await call("/reset-password", {
 		token,
 		newPassword: "a replacement secure password",
@@ -218,18 +184,11 @@ test("a password reset signs the member in, rejects replay, sends a notice and r
 	assert.equal(changed.status, 200, await changed.clone().text())
 	assert.match(cookie(changed), /gw.session_token=/)
 	assert.equal(
-		(await (await call("/get-session", undefined, cookie(changed))).json()).user
-			.email,
+		(await (await call("/get-session", undefined, cookie(changed))).json()).user.email,
 		member.address,
 	)
-	assert.equal(
-		await (await call("/get-session", undefined, member.cookies)).json(),
-		null,
-	)
-	assert.equal(
-		await (await call("/get-session", undefined, cookie(other))).json(),
-		null,
-	)
+	assert.equal(await (await call("/get-session", undefined, member.cookies)).json(), null)
+	assert.equal(await (await call("/get-session", undefined, cookie(other))).json(), null)
 	assert.equal(
 		(
 			await call("/reset-password", {
@@ -239,14 +198,8 @@ test("a password reset signs the member in, rejects replay, sends a notice and r
 		).status,
 		400,
 	)
-	assert.match(
-		(await messages(member.address)).at(-1).Subject,
-		/password changed/i,
-	)
-	assert.equal(
-		(await call("/sign-in/email", { email: member.address, password })).status,
-		401,
-	)
+	assert.match((await messages(member.address)).at(-1).Subject, /password changed/i)
+	assert.equal((await call("/sign-in/email", { email: member.address, password })).status, 401)
 })
 
 test("sign-up and reset responses conceal membership, duplicate signup emails the owner, and passwords require ten characters", async () => {
@@ -263,10 +216,7 @@ test("sign-up and reset responses conceal membership, duplicate signup emails th
 		password,
 	})
 	assert.deepEqual(await duplicate.json(), await fresh.json())
-	assert.match(
-		(await messages(member.address)).at(-1).Subject,
-		/already.*account/i,
-	)
+	assert.match((await messages(member.address)).at(-1).Subject, /already.*account/i)
 	const known = await call("/request-password-reset", { email: member.address })
 	const unknown = await call("/request-password-reset", { email: email() })
 	assert.deepEqual(await known.json(), await unknown.json())
@@ -307,19 +257,12 @@ test("changing a password keeps the current device signed in and signs other dev
 		member.cookies,
 	)
 	assert.equal(changed.status, 200, await changed.clone().text())
+	assert.equal(await (await call("/get-session", undefined, cookie(other))).json(), null)
 	assert.equal(
-		await (await call("/get-session", undefined, cookie(other))).json(),
-		null,
-	)
-	assert.equal(
-		(await (await call("/get-session", undefined, cookie(changed))).json()).user
-			.email,
+		(await (await call("/get-session", undefined, cookie(changed))).json()).user.email,
 		member.address,
 	)
-	assert.match(
-		(await messages(member.address)).at(-1).Subject,
-		/password changed/i,
-	)
+	assert.match((await messages(member.address)).at(-1).Subject, /password changed/i)
 })
 
 test("Google OAuth validates state and PKCE, signs in a verified member, and sends Google-only reset guidance", async () => {
@@ -340,6 +283,7 @@ test("Google OAuth validates state and PKCE, signs in a verified member, and sen
 		email: address,
 		email_verified: true,
 		name: "Google member",
+		picture: "https://lh3.googleusercontent.com/a/approved-OAuth-picture",
 	})
 		.setProtectedHeader({ alg: "RS256", kid: jwk.kid })
 		.setIssuedAt()
@@ -417,24 +361,22 @@ test("Google OAuth validates state and PKCE, signs in a verified member, and sen
 			result.headers.get("location") ?? (await result.clone().text()),
 		)
 		assert.equal(
-			(await (await call("/get-session", undefined, cookie(result))).json())
-				.user.email,
+			(await (await call("/get-session", undefined, cookie(result))).json()).user.email,
 			address,
 		)
+		const member = (await (await call("/get-session", undefined, cookie(result))).json()).user
+		const refreshes = avatarRefreshes.filter((refresh) => refresh.userId === member.id)
+		assert.equal(refreshes.length, 1)
+		assert.equal(refreshes[0].photo, "https://lh3.googleusercontent.com/a/approved-OAuth-picture")
+		assert.ok(Number.isFinite(refreshes[0].at))
 		const again = await call(
 			`/callback/google?code=local-authorization-code&state=${state}`,
 			undefined,
 			cookie(start),
 		)
 		assert.equal(cookie(again).includes("gw.session_token="), false)
-		assert.equal(
-			(await call("/request-password-reset", { email: address })).status,
-			200,
-		)
-		assert.match(
-			(await messages(address)).at(-1).Subject,
-			/sign in with Google/i,
-		)
+		assert.equal((await call("/request-password-reset", { email: address })).status, 200)
+		assert.match((await messages(address)).at(-1).Subject, /sign in with Google/i)
 	} finally {
 		globalThis.fetch = originalFetch
 		await new Promise<void>((resolve) => fixture.close(() => resolve()))
@@ -444,24 +386,13 @@ test("Google OAuth validates state and PKCE, signs in a verified member, and sen
 test("resends and resets are rate-limited per address, including unknown addresses", async () => {
 	const address = email()
 	for (let i = 0; i < 5; i++)
-		assert.equal(
-			(await call("/request-password-reset", { email: address })).status,
-			200,
-		)
-	assert.equal(
-		(await call("/request-password-reset", { email: address })).status,
-		429,
-	)
-	assert.equal(
-		(await call("/send-verification-email", { email: address })).status,
-		429,
-	)
+		assert.equal((await call("/request-password-reset", { email: address })).status, 200)
+	assert.equal((await call("/request-password-reset", { email: address })).status, 429)
+	assert.equal((await call("/send-verification-email", { email: address })).status, 429)
 })
 
 test("the auth flag gates HTTP endpoints and session resolution, and sign-out applies without memoization", async () => {
-	const { handleAuthRequest, setAuthForTest } = await import(
-		"./runtime.server.ts"
-	)
+	const { handleAuthRequest, setAuthForTest } = await import("./runtime.server.ts")
 	const { resolveSession } = await import("../../utils/auth-session.ts")
 	const { hasAuthCookie } = await import("../../utils/auth-cookie.ts")
 	const member = await confirmed()
@@ -470,20 +401,13 @@ test("the auth flag gates HTTP endpoints and session resolution, and sign-out ap
 	try {
 		process.env.BETTER_AUTH_ENABLED = "false"
 		assert.equal(
-			(await handleAuthRequest(new Request(`${baseURL}/api/auth/get-session`)))
-				.status,
+			(await handleAuthRequest(new Request(`${baseURL}/api/auth/get-session`))).status,
 			404,
 		)
 		process.env.BETTER_AUTH_ENABLED = "true"
 		assert.equal(hasAuthCookie(member.cookies), true)
-		assert.equal(
-			(await resolveSession(member.cookies)).user?.email,
-			member.address,
-		)
-		assert.equal(
-			(await resolveSession(member.cookies)).user?.email,
-			member.address,
-		)
+		assert.equal((await resolveSession(member.cookies)).user?.email, member.address)
+		assert.equal((await resolveSession(member.cookies)).user?.email, member.address)
 		const signedOut = await handleAuthRequest(
 			new Request(`${baseURL}/api/auth/sign-out`, {
 				method: "POST",
@@ -547,28 +471,16 @@ test("SMTP work runs in the background, retries temporary failures, and alerts w
 			},
 		},
 	)
-	failing.enqueue(
-		email(),
-		"Undelivered notice",
-		"Must exhaust retries and alert.",
-	)
+	failing.enqueue(email(), "Undelivered notice", "Must exhaust retries and alert.")
 	await failing.drain()
 	assert.equal(alerts, 1)
-	assert.match(
-		renderMetrics(),
-		/goodwatch_auth_mail_total\{outcome="retry"\} [1-9]/,
-	)
-	assert.match(
-		renderMetrics(),
-		/goodwatch_auth_mail_total\{outcome="failed"\} [1-9]/,
-	)
+	assert.match(renderMetrics(), /goodwatch_auth_mail_total\{outcome="retry"\} [1-9]/)
+	assert.match(renderMetrics(), /goodwatch_auth_mail_total\{outcome="failed"\} [1-9]/)
 })
 
 test("sessions renew after one day at most, survive a missing Valkey key, and remain revoked after sign-out", async () => {
 	const member = await confirmed()
-	const first = await (
-		await call("/get-session", undefined, member.cookies)
-	).json()
+	const first = await (await call("/get-session", undefined, member.cookies)).json()
 	const context = await auth.$context
 	await context.adapter.update({
 		model: "session",
@@ -581,34 +493,24 @@ test("sessions renew after one day at most, survive a missing Valkey key, and re
 	const renewed = await call("/get-session", undefined, member.cookies)
 	const data = await renewed.json()
 	assert.ok(
-		Math.abs(
-			new Date(data.session.expiresAt).getTime() - Date.now() - 90 * 86400000,
-		) < 10000,
+		Math.abs(new Date(data.session.expiresAt).getTime() - Date.now() - 90 * 86400000) < 10000,
 	)
 	assert.match(cookie(renewed), /gw.session_token=/)
-	const again = await (
-		await call("/get-session", undefined, member.cookies)
-	).json()
+	const again = await (await call("/get-session", undefined, member.cookies)).json()
 	assert.equal(again.session.expiresAt, data.session.expiresAt)
 	await storage.delete(data.session.token)
 	assert.equal(
-		(await (await call("/get-session", undefined, member.cookies)).json()).user
-			.email,
+		(await (await call("/get-session", undefined, member.cookies)).json()).user.email,
 		member.address,
 	)
 	await call("/sign-out", {}, member.cookies)
-	assert.equal(
-		await (await call("/get-session", undefined, member.cookies)).json(),
-		null,
-	)
+	assert.equal(await (await call("/get-session", undefined, member.cookies)).json(), null)
 })
 
 test("secondary storage atomically consumes a key once and uses a fixed-window counter across cluster slots", async () => {
 	const key = `test-consume:${randomUUID()}`
 	await storage.set(key, "one use", 10)
-	const results = await Promise.all(
-		Array.from({ length: 24 }, () => storage.getAndDelete(key)),
-	)
+	const results = await Promise.all(Array.from({ length: 24 }, () => storage.getAndDelete(key)))
 	assert.equal(results.filter((value) => value === "one use").length, 1)
 	assert.equal(await storage.get(key), null)
 	const counterKey = `test-counter:${randomUUID()}`
@@ -641,34 +543,17 @@ test("a Google-only member requesting a reset receives guidance without gaining 
 	const unknown = await call("/request-password-reset", { email: email() })
 	assert.deepEqual(await request.json(), await unknown.json())
 	assert.match((await messages(address)).at(-1).Subject, /sign in with Google/i)
-	assert.equal(
-		(await call("/sign-in/email", { email: address, password })).status,
-		401,
-	)
+	assert.equal((await call("/sign-in/email", { email: address, password })).status, 401)
 })
 
 test("request limits also apply per IP across different addresses", async () => {
 	for (let i = 0; i < 30; i++)
 		assert.equal(
-			(
-				await call(
-					"/request-password-reset",
-					{ email: email() },
-					"",
-					"203.0.113.11",
-				)
-			).status,
+			(await call("/request-password-reset", { email: email() }, "", "203.0.113.11")).status,
 			200,
 		)
 	assert.equal(
-		(
-			await call(
-				"/request-password-reset",
-				{ email: email() },
-				"",
-				"203.0.113.11",
-			)
-		).status,
+		(await call("/request-password-reset", { email: email() }, "", "203.0.113.11")).status,
 		429,
 	)
 })
@@ -761,22 +646,16 @@ test("a legacy password upgrade cannot overwrite a password changed concurrently
 	assert.equal(response.status, 401, await response.clone().text())
 	assert.equal(cookie(response), "")
 	const current = await context.internalAdapter.findCredentialAccount(user.id)
+	assert.equal(await verifyPassword({ hash: current!.password!, password: replacement }), true)
 	assert.equal(
-		await verifyPassword({ hash: current!.password!, password: replacement }),
-		true,
-	)
-	assert.equal(
-		(await call("/sign-in/email", { email: address, password: replacement }))
-			.status,
+		(await call("/sign-in/email", { email: address, password: replacement })).status,
 		200,
 	)
 })
 
 test("Google linking requires a verified provider address before joining an existing confirmed account", async () => {
 	const member = await confirmed()
-	const session = await (
-		await call("/get-session", undefined, member.cookies)
-	).json()
+	const session = await (await call("/get-session", undefined, member.cookies)).json()
 	const { generateKeyPair, exportJWK, SignJWT } = await import("jose")
 	const { privateKey, publicKey } = await generateKeyPair("RS256")
 	const jwk = {
@@ -813,18 +692,14 @@ test("Google linking requires a verified provider address before joining an exis
 			idToken: { token: await token(false) },
 		})
 		assert.equal(cookie(unconfirmed).includes("gw.session_token="), false)
-		assert.ok(
-			[401, 403].includes(unconfirmed.status),
-			await unconfirmed.clone().text(),
-		)
+		assert.ok([401, 403].includes(unconfirmed.status), await unconfirmed.clone().text())
 		const confirmed = await call("/sign-in/social", {
 			provider: "google",
 			idToken: { token: await token(true) },
 		})
 		assert.equal(confirmed.status, 200, await confirmed.clone().text())
 		assert.equal(
-			(await (await call("/get-session", undefined, cookie(confirmed))).json())
-				.user.id,
+			(await (await call("/get-session", undefined, cookie(confirmed))).json()).user.id,
 			session.user.id,
 		)
 	} finally {
@@ -857,14 +732,8 @@ test("server session checks bypass HTTP throttling while the public session endp
 	setAuthForTest(limited)
 	process.env.BETTER_AUTH_ENABLED = "true"
 	try {
-		assert.equal(
-			(await resolveSession(member.cookies)).user?.email,
-			member.address,
-		)
-		assert.equal(
-			(await resolveSession(member.cookies)).user?.email,
-			member.address,
-		)
+		assert.equal((await resolveSession(member.cookies)).user?.email, member.address)
+		assert.equal((await resolveSession(member.cookies)).user?.email, member.address)
 		const request = new Request(`${baseURL}/api/auth/get-session`, {
 			headers: { cookie: member.cookies, "x-forwarded-for": "203.0.113.52" },
 		})
@@ -903,8 +772,7 @@ test("a full background mail queue does not reveal membership through password-r
 	)
 	queue.enqueue(email(), "Local queue test", "Synthetic message")
 	await sending
-	for (let n = 0; n < 1000; n++)
-		queue.enqueue(email(), "Local queue test", "Synthetic message")
+	for (let n = 0; n < 1000; n++) queue.enqueue(email(), "Local queue test", "Synthetic message")
 	const overloaded = createGoodwatchAuth({
 		sql,
 		storage,
@@ -946,9 +814,7 @@ test("sign-up, sign-in and the server's session read work under remix-serve's fe
 	// to CrateDB failed, Response.json and Headers#getSetCookie were missing.
 	const member = await confirmed()
 	const { installGlobals } = await import("@remix-run/node")
-	const { handleAuthRequest, setAuthForTest } = await import(
-		"./runtime.server.ts"
-	)
+	const { handleAuthRequest, setAuthForTest } = await import("./runtime.server.ts")
 	const { resolveSession } = await import("../../utils/auth-session.ts")
 	const names = ["fetch", "Request", "Response", "Headers", "FormData"] as const
 	const original = Object.fromEntries(names.map((name) => [name, globalThis[name]]))
@@ -982,10 +848,7 @@ test("sign-up, sign-in and the server's session read work under remix-serve's fe
 			status: true,
 			message: "Check your inbox to continue.",
 		})
-		assert.equal(
-			(await resolveSession(member.cookies)).user?.email,
-			member.address,
-		)
+		assert.equal((await resolveSession(member.cookies)).user?.email, member.address)
 	} finally {
 		Object.assign(globalThis, original)
 		if (previous === undefined) delete process.env.BETTER_AUTH_ENABLED
@@ -999,9 +862,7 @@ test("a scrypt sign-in paused before session insertion cannot survive a concurre
 	const context = await auth.$context
 	const user = await context.internalAdapter.findUserByEmail(member.address)
 	assert.ok(user)
-	const account = await context.internalAdapter.findCredentialAccount(
-		user.user.id,
-	)
+	const account = await context.internalAdapter.findCredentialAccount(user.user.id)
 	assert.ok(account)
 	const { hashPassword } = await import("@goodwatch/auth-stack/crypto")
 	const newPasswordHash = await hashPassword("a different secure password")
@@ -1042,9 +903,7 @@ test("a scrypt sign-in paused before session insertion cannot survive a concurre
 
 test("signing in on a twenty-first device revokes the oldest session and removes its Valkey entry", async () => {
 	const member = await confirmed()
-	const first = await (
-		await call("/get-session", undefined, member.cookies)
-	).json()
+	const first = await (await call("/get-session", undefined, member.cookies)).json()
 	assert.ok(await storage.get(first.session.token))
 	let newestCookie = member.cookies
 	for (let i = 0; i < 20; i++) {
@@ -1057,17 +916,12 @@ test("signing in on a twenty-first device revokes the oldest session and removes
 	}
 	assert.equal(await storage.get(first.session.token), null)
 	assert.equal(
-		JSON.parse((await storage.get(`active-sessions-${first.user.id}`)) ?? "[]")
-			.length,
+		JSON.parse((await storage.get(`active-sessions-${first.user.id}`)) ?? "[]").length,
 		20,
 	)
+	assert.equal(await (await call("/get-session", undefined, member.cookies)).json(), null)
 	assert.equal(
-		await (await call("/get-session", undefined, member.cookies)).json(),
-		null,
-	)
-	assert.equal(
-		(await (await call("/get-session", undefined, newestCookie)).json()).user
-			.email,
+		(await (await call("/get-session", undefined, newestCookie)).json()).user.email,
 		member.address,
 	)
 })

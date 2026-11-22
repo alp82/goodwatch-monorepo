@@ -1,10 +1,7 @@
 // The signed-in member's handle and resolved profile picture, for the account menu, and whether they still get the
 // "GoodWatch has profiles now" strip.
 import { type AvatarChoice, owesProfilesStrip } from "~/domain/profile"
-import {
-	type ResolvedAvatar,
-	resolveAvatar,
-} from "~/server/profile/avatar-choice.server"
+import { type ResolvedAvatar, resolveAvatar } from "~/server/profile/avatar-choice.server"
 import { getProfileSettings } from "~/server/profile/settings.server"
 import { getCachedProfileByUserId } from "~/server/share-lists/view.server"
 import { getUserSettings } from "~/server/user-settings.server"
@@ -31,12 +28,8 @@ export async function getAccountSummary(
 	// Until a member picks a picture, the menu (theirs alone) keeps their provider's photo, as the old menu did; the
 	// public profile shows the initial until they choose.
 	const chosen = Boolean(stored.profile_avatar)
-	const choice: AvatarChoice =
-		chosen || !providerPhoto ? settings.avatar : { kind: "provider" }
-	const avatar = await resolveAvatar(userId, handle, choice, providerPhoto)
-	const profilesStrip = owesProfilesStrip(
-		profile?.claimedAt ?? null,
-		settings.noticeSeen,
-	)
+	const choice: AvatarChoice = chosen || !providerPhoto ? settings.avatar : { kind: "provider" }
+	const avatar = await resolveAvatar(userId, chosen ? handle : null, choice, providerPhoto)
+	const profilesStrip = owesProfilesStrip(profile?.claimedAt ?? null, settings.noticeSeen)
 	return { handle, avatar, profilesStrip }
 }

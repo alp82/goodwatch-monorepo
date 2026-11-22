@@ -5,6 +5,7 @@ import { asMediaKey } from "~/domain/profile-settings"
 import { titleDisplays } from "~/server/taste-portrait/display.server"
 import { parseMediaKey } from "~/types/user-data"
 import { titleKey } from "~/utils/title-key"
+import { googleAvatarPath, googlePhotoUrl } from "./google-photo"
 import { avatarPath, avatarVersion } from "./avatar.server"
 
 export interface ResolvedAvatar {
@@ -30,22 +31,21 @@ export async function resolveAvatar(
 	})
 	if (choice.kind === "initial") return initial(choice.color)
 	if (choice.kind === "provider")
-		return providerPhoto ? { url: providerPhoto, color: "amber" } : initial()
+		return providerPhoto
+			? {
+					url: handle && googlePhotoUrl(providerPhoto) ? googleAvatarPath(handle) : providerPhoto,
+					color: "amber",
+				}
+			: initial()
 	if (choice.kind === "photo") {
 		if (!handle) return initial()
 		const version = loaded ? loaded.photoVersion : await avatarVersion(userId)
-		return version
-			? { url: avatarPath(handle, version), color: "amber" }
-			: initial()
+		return version ? { url: avatarPath(handle, version), color: "amber" } : initial()
 	}
 	const key = asMediaKey(choice.title)
 	if (!key) return initial()
 	const { mediaType, tmdbId } = parseMediaKey(key)
 	const tk = titleKey(mediaType, tmdbId)
-	const poster = loaded
-		? loaded.poster
-		: (await titleDisplays([tk])).get(tk)?.poster
-	return poster
-		? { url: `${TMDB_POSTER_W185}${poster}`, color: "amber" }
-		: initial()
+	const poster = loaded ? loaded.poster : (await titleDisplays([tk])).get(tk)?.poster
+	return poster ? { url: `${TMDB_POSTER_W185}${poster}`, color: "amber" } : initial()
 }

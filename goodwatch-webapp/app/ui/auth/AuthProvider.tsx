@@ -24,11 +24,12 @@ import { createAuthCookieMatcher } from "~/utils/auth-cookie"
 import { keptLoaderData } from "~/utils/loader-request-retry"
 import { clearMediaSession, establishMediaSession } from "~/utils/media-session"
 import { whenInteractive } from "~/utils/page-interactive"
+import { requestRootRevalidation, rootRevalidated } from "~/utils/root-revalidation"
 import {
-	requestRootRevalidation,
-	rootRevalidated,
-} from "~/utils/root-revalidation"
-import { isAuthCallbackUrl, loadSupabaseClient } from "~/utils/supabase-browser"
+	isAuthCallbackUrl,
+	loadSupabaseClient,
+	refreshLegacyAvatar,
+} from "~/utils/supabase-browser"
 
 export function AuthProvider({
 	supabaseUrl,
@@ -67,9 +68,7 @@ export function AuthProvider({
 		// With Better Auth no client hears a signed-out page load, so the loader's "no one" ends a marker that an
 		// earlier member left in this tab. Otherwise a later sign-in as that member would skip adopting the guest's choices.
 		if (betterAuth && !initialUser) clearMediaSession()
-		setUser((current) =>
-			current && current.id === initialUser?.id ? current : initialUser,
-		)
+		setUser((current) => (current && current.id === initialUser?.id ? current : initialUser))
 	}, [initialUser, betterAuth])
 
 	// The client's code loads on first use. Whoever asks for the client gets it after the provider has subscribed to
@@ -81,13 +80,12 @@ export function AuthProvider({
 	const mounted = useRef(true)
 	const getSupabase = useCallback(async () => {
 		if (betterAuth) throw new Error("Supabase sign-in is off")
-		const client = await loadSupabaseClient(
-			supabaseUrl,
-			supabaseAnonKey,
-			maintenance,
-		)
+		const client = await loadSupabaseClient(supabaseUrl, supabaseAnonKey, maintenance)
 		if (mounted.current && !subscription.current) {
 			subscription.current = client.auth.onAuthStateChange((event, session) => {
+				if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session?.user.last_sign_in_at)
+					void refreshLegacyAvatar(session.user.id, session.user.last_sign_in_at)
+
 				// The session cookie names the new person now: pages kept for the previous one must not show until the
 				// effect below holds the cache. The transition renders later.
 				if ((session?.user.id ?? undefined) !== currentUserId.current) {
@@ -97,11 +95,7 @@ export function AuthProvider({
 				}
 				startTransition(() => {
 					setUser(session?.user ?? null)
-					if (
-						event === "INITIAL_SESSION" ||
-						event === "SIGNED_IN" ||
-						event === "SIGNED_OUT"
-					) {
+					if (event === "INITIAL_SESSION" || event === "SIGNED_IN" || event === "SIGNED_OUT") {
 						setSessionUserId(session?.user.id ?? null)
 						if (!session) clearMediaSession()
 					}
@@ -139,8 +133,8 @@ export function AuthProvider({
 		const userChanged = previousUserId.current !== targetUserId
 		const establishSession = Boolean(
 			targetUserId &&
-				(betterAuth || sessionUserId === targetUserId) &&
-				establishedUserId.current !== targetUserId,
+			(betterAuth || sessionUserId === targetUserId) &&
+			establishedUserId.current !== targetUserId,
 		)
 		if (!userChanged && !establishSession) return
 		const oldUserId = previousUserId.current
@@ -167,8 +161,7 @@ export function AuthProvider({
 				if (targetUserId) {
 					try {
 						changed = await establishMediaSession(targetUserId, userChanged, {
-							isCurrent: () =>
-								mounted.current && currentUserId.current === targetUserId,
+							isCurrent: () => mounted.current && currentUserId.current === targetUserId,
 						})
 					} catch {
 						/* A failed check cannot prevent sign-in or a later explicit Keep. */

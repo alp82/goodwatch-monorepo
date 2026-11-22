@@ -1,7 +1,5 @@
-import {
-	captureProductEvent,
-	eventUuid,
-} from "../../telemetry/product-analytics.server.ts"
+import { decodeJwt } from "jose"
+import { captureProductEvent, eventUuid } from "../../telemetry/product-analytics.server.ts"
 import { yepwatchOAuthEnvironment } from "./yepwatch-oauth-policy.ts"
 import { captureMessage } from "@sentry/remix"
 import type { User } from "@supabase/auth-js"
@@ -9,20 +7,13 @@ import Redis, { type Cluster } from "ioredis"
 import { registerBetterAuthResolver } from "../../utils/auth-session.ts"
 import { onShutdown } from "../lifecycle.server.ts"
 import { fillWebFetchGaps } from "../web-fetch-gaps.server.ts"
-import {
-	createGoodwatchAuth,
-	jsonResponse,
-	setCookiesOf,
-} from "./auth.server.ts"
-import {
-	crateAuthTransport,
-	localCrateTransport,
-} from "./crate-adapter.server.ts"
+import { createGoodwatchAuth, jsonResponse, setCookiesOf } from "./auth.server.ts"
+import { crateAuthTransport, localCrateTransport } from "./crate-adapter.server.ts"
 import { AuthMailQueue, smtpTransport } from "./mail.server.ts"
 import { startAuthMaintenance } from "./maintenance-worker.server.ts"
 import { parseAuthEncryptionKeys } from "./payload-codec.server.ts"
 import { ValkeyAuthStorage } from "./secondary-storage.server.ts"
-import { authCluster, registerAuthCluster } from "./boot.server.ts"
+import { authCluster, registerAuthCluster, refreshSignedInAvatar } from "./boot.server.ts"
 
 type AuthService = ReturnType<typeof createGoodwatchAuth>
 let instance: Promise<AuthService> | null = null
@@ -30,8 +21,7 @@ let testAuth: AuthService | null = null
 // The cluster registry lives in boot.server.ts, which the server entry loads without this module.
 const clusterProvider = authCluster
 export { registerAuthCluster }
-export const betterAuthEnabled = () =>
-	process.env.BETTER_AUTH_ENABLED === "true"
+export const betterAuthEnabled = () => process.env.BETTER_AUTH_ENABLED === "true"
 export function setAuthForTest(auth: AuthService | null) {
 	testAuth = auth
 }
@@ -66,17 +56,14 @@ export async function getBetterAuth(): Promise<AuthService> {
 			},
 		)
 		const encryptionSecret = required("AUTH_CRATEDB_ENCRYPTION_SECRET")
-		const encryptionKeys = parseAuthEncryptionKeys(
-			required("AUTH_CRATEDB_ENCRYPTION_KEYS"),
-		)
+		const encryptionKeys = parseAuthEncryptionKeys(required("AUTH_CRATEDB_ENCRYPTION_KEYS"))
 		const storage = new ValkeyAuthStorage(() => clusterProvider())
 		const auth = createGoodwatchAuth({
+			refreshAvatar: refreshSignedInAvatar,
 			analytics: (userId, event, properties, user) =>
 				captureProductEvent(userId, event, properties, {
 					user,
-					...(event === "sign in succeeded"
-						? {}
-						: { uuid: eventUuid(`auth:${userId}:${event}`) }),
+					...(event === "sign in succeeded" ? {} : { uuid: eventUuid(`auth:${userId}:${event}`) }),
 				}),
 			sql,
 			encryptionSecret,
@@ -119,9 +106,7 @@ function localAuth(): AuthService {
 	return createGoodwatchAuth({
 		sql: localCrateTransport(["http://127.0.0.1:15848"]),
 		storage: new ValkeyAuthStorage(() => valkey),
-		mail: new AuthMailQueue(
-			smtpTransport({ host: "127.0.0.1", port: 15925, localCatcher: true }),
-		),
+		mail: new AuthMailQueue(smtpTransport({ host: "127.0.0.1", port: 15925, localCatcher: true })),
 		baseURL: required("BETTER_AUTH_URL"),
 		secret: required("BETTER_AUTH_SECRET"),
 		encryptionSecret: required("AUTH_CRATEDB_ENCRYPTION_SECRET"),
@@ -142,13 +127,30 @@ export async function handleAuthRequest(request: Request): Promise<Response> {
 			response = await (await getBetterAuth()).handler(request)
 		} catch {
 			captureMessage("Auth request failed closed", "error")
-			response = jsonResponse(
-				{ message: "Sign-in is temporarily unavailable." },
-				{ status: 503 },
-			)
+			response = jsonResponse({ message: "Sign-in is temporarily unavailable." }, { status: 503 })
 		}
 	response.headers.set("Cache-Control", "private, no-store")
 	return response
+}
+/** Better Auth received this ID token from Google for the linked account. Editable user.image is not a provider claim. */
+export async function linkedGooglePhoto(userId: string): Promise<string | null> {
+	const context = await (await getBetterAuth()).$context
+	const accounts = await context.internalAdapter.findAccounts(userId)
+	for (const account of accounts) {
+		if (account.providerId !== "google" || !account.idToken) continue
+		try {
+			const profile = decodeJwt(account.idToken)
+			if (
+				profile.sub === account.accountId &&
+				["accounts.google.com", "https://accounts.google.com"].includes(profile.iss ?? "") &&
+				typeof profile.picture === "string"
+			)
+				return profile.picture
+		} catch {
+			/* Imported accounts may have no Google profile claims until the next login. */
+		}
+	}
+	return null
 }
 export async function resolveBetterAuthSession(cookieHeader: string | null) {
 	const auth = await getBetterAuth()

@@ -15,11 +15,9 @@ import type { UserSettingsMap } from "~/routes/api.user-settings.get"
 // Spec: docs/implementation/member-profile/README.md
 import { forgetOgCard } from "~/server/og-image/og-image.server"
 import { resetPageCache } from "~/server/page-cache.server"
-import {
-	getCachedProfileByUserId,
-	resetProfileViews,
-} from "~/server/share-lists/view.server"
+import { getCachedProfileByUserId, resetProfileViews } from "~/server/share-lists/view.server"
 import { getUserSettings, setUserSettings } from "~/server/user-settings.server"
+import { pruneProviderAvatars, readProviderAvatar } from "./provider-avatar.server"
 import { profileCardPaths } from "~/ui/og-image/profile-card-model"
 
 export const PROFILE_KEYS = {
@@ -64,17 +62,13 @@ export interface StoredProfileSettings extends ProfileSettings {
 }
 
 /** The member's profile settings, with the defaults for anything not saved. */
-export async function getProfileSettings(
-	userId: string,
-): Promise<StoredProfileSettings> {
+export async function getProfileSettings(userId: string): Promise<StoredProfileSettings> {
 	const stored = await getUserSettings({ userId })
 	const cover = stored.profile_cover ?? ""
 	return {
 		bio: stored.profile_bio ?? DEFAULT_PROFILE_SETTINGS.bio,
 		links: parseLinks(parseJson(stored.profile_links)),
-		avatar:
-			parseAvatarChoice(parseJson(stored.profile_avatar)) ??
-			DEFAULT_PROFILE_SETTINGS.avatar,
+		avatar: parseAvatarChoice(parseJson(stored.profile_avatar)) ?? DEFAULT_PROFILE_SETTINGS.avatar,
 		cover: /^(movie|show)-\d+$/.test(cover) ? cover : null,
 		visibility: parseVisibility(parseJson(stored.profile_visibility)),
 		noticeSeen: stored.profile_public_notice_seen === "yes",
@@ -118,7 +112,16 @@ export async function saveProfileSettings(
 	if (settings.avatar.kind === "provider" && providerPhoto)
 		values[PROFILE_KEYS.providerPhoto] = providerPhoto
 	const result = await setUserSettings({ user_id: userId, settings: values })
+	if (result) await pruneProviderAvatars(userId)
 	return result !== null
+}
+
+/** A profile link card embeds the image bytes and the HTML carries the current avatar choice. */
+export async function refreshProviderAvatar(
+	userId: string,
+	signIn: { at: number; photo?: string | null },
+) {
+	await readProviderAvatar(userId, signIn, () => resetProfilePages(userId))
 }
 
 /** Clears the bio (the admin script's removal). */
@@ -145,10 +148,7 @@ export async function dropPhotoChoice(userId: string): Promise<void> {
  * Drops this process's cached pages of the member's profile and its tabs, and its link-preview card everywhere, after a
  * settings or photo change. `knownHandle` for a profile that may already be deleted (account deletion).
  */
-export async function resetProfilePages(
-	userId: string,
-	knownHandle?: string,
-): Promise<void> {
+export async function resetProfilePages(userId: string, knownHandle?: string): Promise<void> {
 	await resetProfileViews(userId)
 	const handle = knownHandle ?? (await getCachedProfileByUserId(userId))?.handle
 	if (!handle) return

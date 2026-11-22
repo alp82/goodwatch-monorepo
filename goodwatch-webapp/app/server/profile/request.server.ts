@@ -8,9 +8,7 @@ export function sameOrigin(request: Request): boolean {
 	// Coolify terminates TLS, so compare with the public origin rather than the internal HTTP URL.
 	const expected =
 		process.env.APP_ORIGIN ||
-		(process.env.NODE_ENV === "production"
-			? "https://goodwatch.app"
-			: new URL(request.url).origin)
+		(process.env.NODE_ENV === "production" ? "https://goodwatch.app" : new URL(request.url).origin)
 	return origin === expected
 }
 
@@ -20,16 +18,18 @@ export function crossSite(request: Request): boolean {
 }
 
 /** The profile's write endpoints take requests from the site itself only: same Origin, not marked cross-site. */
-export const fromThisSite = (request: Request) =>
-	sameOrigin(request) && !crossSite(request)
+export const fromThisSite = (request: Request) => sameOrigin(request) && !crossSite(request)
 
 /** Reads at most `max` bytes of a request body; null when it is larger. */
 export async function readLimited(
-	request: Request,
+	request: Request | Response,
 	max: number,
 ): Promise<Uint8Array | null> {
 	const length = Number(request.headers.get("Content-Length"))
-	if (Number.isFinite(length) && length > max) return null
+	if (Number.isFinite(length) && length > max) {
+		await request.body?.cancel()
+		return null
+	}
 	const reader = request.body?.getReader()
 	if (!reader) return new Uint8Array()
 	const chunks: Uint8Array[] = []
@@ -57,9 +57,7 @@ export async function readLimited(
 export async function readJsonLimited(
 	request: Request,
 	max: number,
-): Promise<
-	{ ok: true; value: unknown } | { ok: false; problem: "too-large" | "invalid" }
-> {
+): Promise<{ ok: true; value: unknown } | { ok: false; problem: "too-large" | "invalid" }> {
 	const bytes = await readLimited(request, max)
 	if (!bytes) return { ok: false, problem: "too-large" }
 	try {

@@ -4,6 +4,8 @@
 // 2026-10-23).
 import sharp from "sharp"
 import { type ProfileShell, seesPart } from "~/domain/profile"
+import { googleAvatarPath } from "~/server/profile/google-photo"
+import { readProviderAvatar } from "~/server/profile/provider-avatar.server"
 import { readAvatar } from "~/server/profile/avatar.server"
 import {
 	loadProfileLists,
@@ -41,15 +43,11 @@ import {
 } from "~/ui/og-image/profile-card-model"
 
 const poster = (path: string | null | undefined) =>
-	path
-		? path.startsWith("http")
-			? path
-			: `https://image.tmdb.org/t/p/w342${path}`
-		: null
+	path ? (path.startsWith("http") ? path : `https://image.tmdb.org/t/p/w342${path}`) : null
 
 /** The photo as a JPEG data URI: satori can't decode the WebP it's stored as. */
-async function photoDataUri(userId: string): Promise<string | null> {
-	const photo = await readAvatar(userId)
+async function photoDataUri(userId: string, provider: boolean): Promise<string | null> {
+	const photo = provider ? await readProviderAvatar(userId) : await readAvatar(userId)
 	if (!photo) return null
 	const jpeg = await sharp(photo.data).jpeg({ quality: 85 }).toBuffer()
 	return `data:image/jpeg;base64,${jpeg.toString("base64")}`
@@ -73,11 +71,11 @@ async function loadGuestView(handle: string): Promise<Loaded | null> {
 	if (!loaded || loaded instanceof Response) return null
 	const { ownerId, shell } = loaded
 	const settings = await getProfileSettings(ownerId)
-	const gradient =
-		AVATAR_GRADIENTS[shell.avatar.color] ?? AVATAR_GRADIENTS.amber
+	const gradient = AVATAR_GRADIENTS[shell.avatar.color] ?? AVATAR_GRADIENTS.amber
 	const avatar =
-		settings.avatar.kind === "photo" && shell.avatar.url
-			? await photoDataUri(ownerId).catch(() => null)
+		shell.avatar.url &&
+		(settings.avatar.kind === "photo" || shell.avatar.url === googleAvatarPath(shell.handle))
+			? await photoDataUri(ownerId, settings.avatar.kind === "provider").catch(() => null)
 			: shell.avatar.url
 	return {
 		ownerId,
@@ -91,10 +89,7 @@ async function loadGuestView(handle: string): Promise<Loaded | null> {
 }
 
 /** The fingerprint as the print draws it, or null when the taste is hidden or not formed. */
-async function printOf({
-	ownerId,
-	shell,
-}: Loaded): Promise<CardAttribute[] | null> {
+async function printOf({ ownerId, shell }: Loaded): Promise<CardAttribute[] | null> {
 	if (!seesPart(shell, "taste")) return null
 	const view = await getProfilePortrait(ownerId, "fingerprint", {
 		scores: seesPart(shell, "scores"),
@@ -127,10 +122,7 @@ async function mainCard(view: Loaded): Promise<OgProfileContent> {
 	}
 }
 
-async function tabCard(
-	view: Loaded,
-	tab: ProfileCardTab,
-): Promise<OgProfileTabContent | null> {
+async function tabCard(view: Loaded, tab: ProfileCardTab): Promise<OgProfileTabContent | null> {
 	const { ownerId, shell } = view
 	const base = {
 		kind: "profile-tab" as const,
@@ -163,10 +155,7 @@ async function tabCard(
 				: null
 			return {
 				...base,
-				line: PROFILE_CARD_COPY.seenLine(
-					mediumWord(movies),
-					peakDecade(stats?.eras.decades ?? []),
-				),
+				line: PROFILE_CARD_COPY.seenLine(mediumWord(movies), peakDecade(stats?.eras.decades ?? [])),
 				visual: {
 					type: "posters",
 					kicker: null,
@@ -210,9 +199,7 @@ async function tabCard(
 					type: "shows",
 					shows: group.shows.slice(0, 6).map((s) => ({
 						poster: poster(s.poster),
-						progress: s.airedEpisodes
-							? Math.min(1, s.watchedEpisodes / s.airedEpisodes)
-							: 0,
+						progress: s.airedEpisodes ? Math.min(1, s.watchedEpisodes / s.airedEpisodes) : 0,
 					})),
 				},
 			}
@@ -265,8 +252,7 @@ async function viewCard(
 	const { ownerId, shell } = view
 	if (!seesPart(shell, "taste")) return null
 	const scores = seesPart(shell, "scores")
-	const titleOf = (titles: Record<string, PortraitTitle>, key: number) =>
-		titles[String(key)]
+	const titleOf = (titles: Record<string, PortraitTitle>, key: number) => titles[String(key)]
 	if (section === "everyone") {
 		// Without public scores the portrait has no rows, so there is no card; checked first to skip the load.
 		if (!scores) return null
@@ -294,9 +280,7 @@ async function viewCard(
 		)
 		return takes && { kind: "profile-everyone", ...view.person, takes }
 	}
-	const sides = await getProfilePortrait(ownerId, "sides", { scores }).catch(
-		() => null,
-	)
+	const sides = await getProfilePortrait(ownerId, "sides", { scores }).catch(() => null)
 	if (!sides) return null
 	const pair = sidesPair({
 		status: sides.status,
@@ -328,20 +312,13 @@ export async function profileCardContent(
 	tab?: string,
 	section?: string,
 ): Promise<
-	| OgProfileContent
-	| OgProfileTabContent
-	| OgProfileEveryoneContent
-	| OgProfileSidesContent
-	| null
+	OgProfileContent | OgProfileTabContent | OgProfileEveryoneContent | OgProfileSidesContent | null
 > {
 	const view = await loadGuestView(handle)
 	if (!view) return null
 	if (section) {
 		const known = PROFILE_CARD_VIEWS.find((v) => v === section)
-		return (
-			(tab === "stats" && known && (await viewCard(view, known))) ||
-			mainCard(view)
-		)
+		return (tab === "stats" && known && (await viewCard(view, known))) || mainCard(view)
 	}
 	const known = PROFILE_CARD_TABS.find((t) => t === tab)
 	return (known && (await tabCard(view, known))) || mainCard(view)
