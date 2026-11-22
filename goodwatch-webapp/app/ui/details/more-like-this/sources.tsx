@@ -11,27 +11,18 @@ import { useQueries } from "@tanstack/react-query"
 import type { ReactNode } from "react"
 import { useMemo } from "react"
 import type { EffectReading } from "~/domain/fingerprint-effects/effects"
-import { POPULATION_MEDIANS } from "~/domain/fingerprint-effects/population-medians"
 import { useMovieCollection } from "~/routes/api.movie.collection"
 import type { GenreRow } from "~/server/genre-row/genre-row.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { useSectionNear } from "~/ui/details/below-fold"
-import { printGeometry } from "~/ui/details/fingerprint-section/Shape"
+import { usePrintRidges } from "~/ui/details/fingerprint-section/use-print-ridges"
 import {
 	type MixAnswer,
 	useRarePairs,
 	useSharedTitles,
 } from "~/ui/details/fingerprint-section/population"
-import {
-	type Reading,
-	printAttributes,
-	readTitle,
-} from "~/ui/details/fingerprint-section/reading"
-import {
-	byId,
-	nextSelection,
-	startSelection,
-} from "~/ui/details/fingerprint-section/selection"
+import { type Reading, readTitle } from "~/ui/details/fingerprint-section/reading"
+import { byId, nextSelection, startSelection } from "~/ui/details/fingerprint-section/selection"
 import { usePeople } from "~/ui/details/people/usePeople"
 import { useMixPick } from "./mix-pick"
 import {
@@ -78,9 +69,7 @@ const sameIds = (a: readonly string[], b: readonly string[]) =>
 	a.length === b.length && a.every((x) => b.includes(x))
 
 async function mixJson(type: "movie" | "show", key: string, exclude: number) {
-	const res = await fetch(
-		`/api/fingerprint/mix?type=${type}&effects=${key}&exclude=${exclude}`,
-	)
+	const res = await fetch(`/api/fingerprint/mix?type=${type}&effects=${key}&exclude=${exclude}`)
 	if (!res.ok) throw new Error(`mix: ${res.status}`)
 	return { key, ...((await res.json()) as MixAnswer) }
 }
@@ -170,8 +159,7 @@ export function useShelfSources(
 	)
 	const pairs = useRarePairs(type, id, near && !!reading)
 	const start = useMemo(
-		() =>
-			pairs.data && reading ? startSelection(pairs.data.pairs, reading) : [],
+		() => (pairs.data && reading ? startSelection(pairs.data.pairs, reading) : []),
 		[pairs.data, reading],
 	)
 	const [picked, setPicked] = useMixPick(id)
@@ -179,21 +167,16 @@ export function useShelfSources(
 	const selectedKey = selected.join(",")
 	const shared = useSharedTitles(type, selected, id)
 	const selectedEffects = reading
-		? selected
-				.map((x) => byId(reading, x))
-				.filter((r): r is EffectReading => !!r)
+		? selected.map((x) => byId(reading, x)).filter((r): r is EffectReading => !!r)
 		: []
 	const options = reading
 		? [
 				...reading.rows.map((p) => p.r),
-				...selectedEffects.filter(
-					(r) => !reading.rows.some((p) => p.r.effect.id === r.effect.id),
-				),
+				...selectedEffects.filter((r) => !reading.rows.some((p) => p.r.effect.id === r.effect.id)),
 			]
 		: []
 	const toggle = (effect: string) =>
-		reading &&
-		setPicked(nextSelection(selected, { kind: "effect", id: effect }, reading))
+		reading && setPicked(nextSelection(selected, { kind: "effect", id: effect }, reading))
 	const answer = selected.length ? shared.data : undefined
 	const mixTitles: ShelfTitle[] = clean(
 		(answer?.titles ?? []).map((t) => ({
@@ -221,14 +204,9 @@ export function useShelfSources(
 	// key), so picking it shows its titles at once.
 	const pairRecipes: Recipe[] = useMemo(() => {
 		if (!reading || !pairs.data) return []
-		const known = pairs.data.pairs.filter(
-			(p) => byId(reading, p.a) && byId(reading, p.b),
-		)
+		const known = pairs.data.pairs.filter((p) => byId(reading, p.a) && byId(reading, p.b))
 		const first = known.find((p) => sameIds([p.a, p.b], start))
-		const ordered = [
-			...(first ? [first] : []),
-			...known.filter((p) => p !== first),
-		].slice(0, 5)
+		const ordered = [...(first ? [first] : []), ...known.filter((p) => p !== first)].slice(0, 5)
 		return ordered.map((p) => ({
 			ids: [p.a, p.b],
 			effects: [byId(reading, p.a), byId(reading, p.b)] as EffectReading[],
@@ -263,21 +241,13 @@ export function useShelfSources(
 			.slice(0, 2)
 			.map((t) => ({
 				ids: t.ids,
-				effects: t.ids.map((x) =>
-					byId(reading as Reading, x),
-				) as EffectReading[],
+				effects: t.ids.map((x) => byId(reading as Reading, x)) as EffectReading[],
 				both: t.total,
 				oneIn: Math.max(1, Math.round((of ?? 0) / t.total)),
 			})),
 	]
 	const scores = media.fingerprint?.scores
-	const geo = useMemo(
-		() =>
-			near && scores
-				? printGeometry(printAttributes(scores, POPULATION_MEDIANS[type]))
-				: null,
-		[near, scores, type],
-	)
+	const ridges = usePrintRidges(near, scores, type)
 	const mixNote = !selected.length
 		? "Pick one to three of its effects"
 		: isStart && pairCount && of
@@ -303,7 +273,7 @@ export function useShelfSources(
 		total: answer && answer.key === selectedKey ? answer.total : null,
 		reading,
 		/** The print's geometry for the control's mini print (one RidgeSprite per page: FEELS_RIDGES). */
-		geo,
+		...ridges,
 		titles: mixTitles,
 		key: selectedKey,
 		busy: selected.length > 0 && answer?.key !== selectedKey,
@@ -343,8 +313,7 @@ export function useShelfSources(
 				name: p.name,
 			})
 	}
-	if (type === "movie")
-		add(media.crew.directors[0], "Director", "Directed by", "Directing")
+	if (type === "movie") add(media.crew.directors[0], "Director", "Directed by", "Directing")
 	else
 		add(
 			creators.rows.find((r) => r.roles.includes("Creator")),
@@ -353,8 +322,7 @@ export function useShelfSources(
 			"Creator",
 		)
 	// A show's leading director (most episodes) too: shows often have no creator with other titles.
-	if (type === "show")
-		add(media.crew.directors[0], "Director", "Directed by", "Directing")
+	if (type === "show") add(media.crew.directors[0], "Director", "Directed by", "Directing")
 	// The first writer and composer who isn't already offered (Villeneuve directs and co-writes Dune).
 	add(
 		media.crew.writers.find((p) => !people.some((x) => x.id === p.id)),
@@ -380,9 +348,7 @@ export function useShelfSources(
 			staleTime: 5 * 60_000,
 		})),
 	})
-	const working = people.filter(
-		(_, i) => (work[i]?.data?.titles.length ?? 0) > 0,
-	)
+	const working = people.filter((_, i) => (work[i]?.data?.titles.length ?? 0) > 0)
 
 	// The genres: the loader's row is the first; the title's other genres fetch theirs.
 	const genres = (media.details.genres ?? []).slice(0, 4)
@@ -408,13 +374,7 @@ export function useShelfSources(
 export type Sources = ReturnType<typeof useShelfSources>
 
 export function usePersonShelf(src: Sources, option: PersonOption | null) {
-	const q = usePersonWork(
-		src.type,
-		src.id,
-		option?.id ?? null,
-		option?.as ?? "Directing",
-		src.near,
-	)
+	const q = usePersonWork(src.type, src.id, option?.id ?? null, option?.as ?? "Directing", src.near)
 	return {
 		titles: src.clean(q.data?.titles ?? []),
 		busy: q.isPlaceholderData,

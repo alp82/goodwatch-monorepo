@@ -19,17 +19,15 @@ import {
 import type { Geo } from "~/ui/details/fingerprint-section/Shape"
 import { AXES, type Reading } from "~/ui/details/fingerprint-section/reading"
 import type { Light, LitKey } from "~/ui/details/fingerprint-section/selection"
-import { FAMILY_COLOR } from "~/ui/profile/taste/model"
+import { FAMILY_COLOR } from "~/domain/fingerprint-effects/palette"
 import type { SectionView } from "./print-model"
 
 const R = 150
 const TAU = Math.PI * 2
 const angleOf = (i: number) => -Math.PI / 2 + (i * TAU) / AXES.length
-const radiusOf = (s: number) =>
-	R * (0.06 + (0.94 * Math.min(10, Math.max(0, s))) / 10)
+const radiusOf = (s: number) => R * (0.06 + (0.94 * Math.min(10, Math.max(0, s))) / 10)
 const r1 = (n: number) => Math.round(n * 10) / 10
-const pt = (r: number, a: number) =>
-	[r1(r * Math.cos(a)), r1(r * Math.sin(a))] as const
+const pt = (r: number, a: number) => [r1(r * Math.cos(a)), r1(r * Math.sin(a))] as const
 const PRINT = { dy: 6, k: 0.82 }
 const RIDGE = 2.6
 /** The pointer's reach: the ring and its labels' band. */
@@ -60,10 +58,7 @@ function wedge(i: number, r: number) {
 
 function LitRidges({ geo, keys }: { geo: Geo; keys: LitKey[] }) {
 	const byKey = useMemo(() => {
-		const m = new Map<
-			string,
-			{ d: string; family: keyof typeof FAMILY_COLOR }
-		>()
+		const m = new Map<string, { d: string; family: keyof typeof FAMILY_COLOR }>()
 		for (const turn of geo.turns)
 			for (const p of turn.paths) {
 				const cur = m.get(p.key)
@@ -84,9 +79,7 @@ function LitRidges({ geo, keys }: { geo: Geo; keys: LitKey[] }) {
 						stroke={FAMILY_COLOR[p.family]}
 						strokeOpacity={role === "adds" ? 0.7 : 1}
 						strokeWidth={RIDGE + 0.9}
-						strokeDasharray={
-							role === "brake" ? `${RIDGE} ${RIDGE * 2.4}` : undefined
-						}
+						strokeDasharray={role === "brake" ? `${RIDGE} ${RIDGE * 2.4}` : undefined}
 						strokeLinecap="round"
 					/>
 				)
@@ -115,16 +108,13 @@ function placeNames(
 			const [x0, y] = pt(R + 10, a)
 			const w = (`${k.label} ${k.score}`.length * 6.15 + 6) / px
 			const x =
-				side === "r"
-					? Math.min(Math.max(x0, 18), W - w)
-					: Math.max(Math.min(x0, -18), -W + w)
+				side === "r" ? Math.min(Math.max(x0, 18), W - w) : Math.max(Math.min(x0, -18), -W + w)
 			return { k, mx, my, x, y, side, w }
 		})
 	for (const side of ["l", "r"] as const) {
 		const col = placed.filter((p) => p.side === side).sort((a, b) => a.y - b.y)
 		for (let i = 1; i < col.length; i++)
-			if (col[i].y - col[i - 1].y < h + 2 / px)
-				col[i].y = col[i - 1].y + h + 2 / px
+			if (col[i].y - col[i - 1].y < h + 2 / px) col[i].y = col[i - 1].y + h + 2 / px
 		const over = col.length ? col[col.length - 1].y - (H - h / 2) : 0
 		if (over > 0) for (const p of col) p.y -= over
 	}
@@ -249,27 +239,13 @@ export function Print({
 					))}
 				</defs>
 
-				<g
-					className="fp-fade"
-					opacity={keysLit ? 0.06 : 0.17}
-					pointerEvents="none"
-				>
+				<g className="fp-fade" opacity={keysLit ? 0.06 : 0.17} pointerEvents="none">
 					<use href={`#${ridges}`} />
 				</g>
 				<circle r={R} fill="none" stroke="white" strokeOpacity=".06" />
 				{AXES.map((a, i) => {
 					const [x, y] = pt(R, angleOf(i))
-					return (
-						<line
-							key={a.id}
-							x1={0}
-							y1={0}
-							x2={x}
-							y2={y}
-							stroke="white"
-							strokeOpacity=".06"
-						/>
-					)
+					return <line key={a.id} x1={0} y1={0} x2={x} y2={y} stroke="white" strokeOpacity=".06" />
 				})}
 
 				{/* An effect row's slice: a soft fan behind the shape. */}
@@ -470,10 +446,7 @@ export function Print({
 							style={{
 								left: `${((p.x + W) / (W * 2)) * 100}%`,
 								top: `${((p.y + H) / (H * 2)) * 100}%`,
-								transform:
-									p.side === "r"
-										? "translate(0,-50%)"
-										: "translate(-100%,-50%)",
+								transform: p.side === "r" ? "translate(0,-50%)" : "translate(-100%,-50%)",
 							}}
 						>
 							<span
@@ -506,15 +479,11 @@ export function Print({
 						e.currentTarget.style.cursor = axis ? "pointer" : "default"
 						onPoint?.(axis)
 					}}
-					onPointerLeave={(e: PointerEvent) =>
-						e.pointerType === "mouse" && onPoint?.(null)
-					}
+					onPointerLeave={(e: PointerEvent) => e.pointerType === "mouse" && onPoint?.(null)}
 					onPointerDown={(e: PointerEvent) => {
 						pointerType.current = e.pointerType
 					}}
-					onClick={(e: MouseEvent) =>
-						onPick?.(axisAt(e) ?? null, pointerType.current !== "mouse")
-					}
+					onClick={(e: MouseEvent) => onPick?.(axisAt(e) ?? null, pointerType.current !== "mouse")}
 				/>
 			)}
 		</div>

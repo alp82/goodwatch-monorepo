@@ -2,7 +2,7 @@
 // that draws them once per page so every drawing can show them by reference.
 import { memo } from "react"
 import { type WhorlAttribute, build } from "~/ui/profile/taste/Whorl"
-import { FAMILY_COLOR } from "~/ui/profile/taste/model"
+import { FAMILY_COLOR } from "~/domain/fingerprint-effects/palette"
 
 // The print sits a little smaller than the shape's ring, nudged down to center its off-center core.
 const PRINT = { dy: 6, k: 0.82 }
@@ -10,8 +10,7 @@ const PRINT = { dy: 6, k: 0.82 }
 export type Geo = ReturnType<typeof build>
 
 /** The print's geometry for a section's drawings: twelve turns, rim markers included. */
-export const printGeometry = (attributes: WhorlAttribute[]): Geo =>
-	build(attributes, 12, true)
+export const printGeometry = (attributes: WhorlAttribute[]): Geo => build(attributes, 12, true)
 
 const RIDGE = 2.6
 
@@ -23,10 +22,7 @@ const RIDGE = 2.6
  * the reader comes near: the print has no words for search engines, and its coordinates were a third of the page's
  * compressed HTML.
  */
-export const RidgeSprite = memo(function RidgeSprite({
-	id,
-	geo,
-}: { id: string; geo: Geo }) {
+export const RidgeSprite = memo(function RidgeSprite({ id, geo }: { id: string; geo: Geo }) {
 	const runs: {
 		family: keyof typeof FAMILY_COLOR
 		paths: Geo["turns"][number]["paths"]

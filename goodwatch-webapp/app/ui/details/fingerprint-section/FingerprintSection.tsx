@@ -4,16 +4,9 @@
 import { ChevronRightIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import { useId, useMemo } from "react"
-import { POPULATION_MEDIANS } from "~/domain/fingerprint-effects/population-medians"
 import { useSectionNear } from "~/ui/details/below-fold"
-import {
-	RidgeSprite,
-	printGeometry,
-} from "~/ui/details/fingerprint-section/Shape"
-import {
-	printAttributes,
-	readTitle,
-} from "~/ui/details/fingerprint-section/reading"
+import { usePrintRidges } from "./use-print-ridges"
+import { readTitle } from "~/ui/details/fingerprint-section/reading"
 import { SECTION_STYLE } from "~/ui/details/fingerprint-section/styles"
 import { fingerprintInput } from "~/ui/details/title-words"
 import { Lines, NotFor } from "./EffectLines"
@@ -35,22 +28,12 @@ export function FingerprintSection({
 	// The print's ridges are drawn once the section comes near: they have no words for search engines, and their
 	// coordinates would be a large share of the page's HTML.
 	const near = useSectionNear()
-	const geo = useMemo(
-		() =>
-			near && scores
-				? printGeometry(printAttributes(scores, POPULATION_MEDIANS[type]))
-				: null,
-		[near, scores, type],
-	)
+	const { geo, RidgeSprite } = usePrintRidges(near, scores, type)
 	const ridges = `fp-ridges-${useId().replace(/:/g, "")}`
 	if (!reading) return null
 	const label = `What it does to you, on eight feelings: ${reading.axes.map((a) => `${a.axis.label} ${a.strength.toFixed(1)}`).join(", ")}.`
 	return (
-		<div
-			data-feedback-area="analysis"
-			data-fingerprint-section=""
-			className="@container/fp"
-		>
+		<div data-feedback-area="analysis" data-fingerprint-section="" className="@container/fp">
 			<style>{SECTION_STYLE}</style>
 			<Link
 				to={href}
@@ -58,7 +41,7 @@ export function FingerprintSection({
 				aria-label="The whole fingerprint"
 				className="group -mx-3 block rounded-2xl px-3 py-3 outline-none ring-1 ring-transparent transition-[background-color,box-shadow] duration-200 hover:bg-white/[0.035] hover:ring-white/10 focus-visible:outline-2 focus-visible:outline-amber-300"
 			>
-				{geo && <RidgeSprite id={ridges} geo={geo} />}
+				{geo && RidgeSprite && <RidgeSprite id={ridges} geo={geo} />}
 				<div className="grid items-center gap-x-6 gap-y-3 @min-[560px]/fp:grid-cols-[minmax(0,1fr)_19rem] @min-[760px]/fp:grid-cols-[minmax(0,1fr)_23rem]">
 					<div className="mx-auto w-full max-w-[20rem] @min-[560px]/fp:order-2 @min-[560px]/fp:max-w-none">
 						<div className="transition-transform duration-300 group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100">

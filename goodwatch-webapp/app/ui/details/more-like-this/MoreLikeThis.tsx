@@ -7,25 +7,13 @@ import { useState } from "react"
 import type { GenreRow } from "~/server/genre-row/genre-row.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { SegmentedTabs } from "~/ui/details/SegmentedTabs"
-import { RidgeSprite } from "~/ui/details/fingerprint-section/Shape"
 import ScoreRing from "~/ui/details/hero/ScoreRing"
 import { FEELS_RIDGES } from "./FeelsControl"
 import { SHELF_STYLE } from "./Shelf"
 import { ExpandProvider } from "./expanded-view"
 import type { ShelfTitle } from "./shelf-data"
-import {
-	FeelsShelf,
-	GenreShelf,
-	PersonShelf,
-	SeriesShelf,
-	SimilarShelf,
-} from "./shelves"
-import {
-	type Sources,
-	useGenreShelf,
-	usePersonShelf,
-	useShelfSources,
-} from "./sources"
+import { FeelsShelf, GenreShelf, PersonShelf, SeriesShelf, SimilarShelf } from "./shelves"
+import { type Sources, useGenreShelf, usePersonShelf, useShelfSources } from "./sources"
 
 type Media = MovieResult | ShowResult
 
@@ -45,7 +33,9 @@ export function MoreLikeThis({
 		<div data-feedback-area="related">
 			<style>{SHELF_STYLE}</style>
 			{/* The one print the Feels the same control's mini prints draw from. */}
-			{src.mix.geo && <RidgeSprite id={FEELS_RIDGES} geo={src.mix.geo} />}
+			{src.mix.geo && src.mix.RidgeSprite && (
+				<src.mix.RidgeSprite id={FEELS_RIDGES} geo={src.mix.geo} />
+			)}
 			<ExpandProvider
 				pageTitle={src.title}
 				poster={media.details.poster_path ?? null}
@@ -60,8 +50,7 @@ export function MoreLikeThis({
 function Shelves({ src }: { src: Sources }) {
 	const [personKey, setPersonKey] = useState<string | null>(null)
 	const [genre, setGenre] = useState<string | null>(null)
-	const person =
-		src.people.find((p) => p.key === personKey) ?? src.people[0] ?? null
+	const person = src.people.find((p) => p.key === personKey) ?? src.people[0] ?? null
 	// The genre shelf and the person shelf stay once they have shown titles, so a switch to an empty one says so.
 	const firstGenre = useGenreShelf(src, null)
 	const firstPerson = usePersonShelf(src, src.people[0] ?? null)
