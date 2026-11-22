@@ -18,7 +18,12 @@ import { countryServices } from "~/server/availability-index.server"
 import { getRankedList } from "~/server/top-lists.server"
 import { NO_TASTE } from "~/server/taste/taste.server"
 import { adjective, label as keyLabel, meaning } from "~/server/taste-portrait/words.server"
-import { type TitleCard, getServiceCards, getTitleCards } from "~/server/title-cards.server"
+import {
+	MAX_KEYS,
+	type TitleCard,
+	getServiceCards,
+	getTitleCards,
+} from "~/server/title-cards.server"
 import { SHOW_BASE, UNKNOWN_SCORE } from "~/server/title-snapshot/format.server"
 import { VALID_FINGERPRINT_KEYS } from "~/server/utils/fingerprint"
 import { type ViewerContext, getViewerContext } from "~/server/viewer.server"
@@ -101,6 +106,9 @@ export class PlacesNotReady extends Error {
 		super("The title snapshot is still loading")
 	}
 }
+
+type ShowcaseOrder = "fit" | "popular" | "best"
+const candidateHead = (ranked: number[], n: number) => ranked.slice(0, n * 2 + 8)
 
 const PAGE = 40
 /** A blend needs this many well-known titles to be offered as a suggestion or a swap. */
@@ -216,6 +224,7 @@ export class Places {
 	/** Every title a showcase has handed out on this page. Pass your own set to a call to scope it differently. */
 	readonly used = new Set<TitleKey>()
 	private cardCache = new Map<TitleKey, TitleCard>()
+	private pendingCards?: { keys: Set<TitleKey>; done: Promise<void> }
 	private lineCache = new Map<TitleKey, string>()
 
 	constructor(
@@ -225,6 +234,7 @@ export class Places {
 		/** The streaming country of the address, lowercase. */
 		readonly country: string,
 		private logoMap: Map<number, string>,
+		private loadCards: typeof getTitleCards = getTitleCards,
 	) {}
 
 	get kind(): Kind {
@@ -333,13 +343,34 @@ export class Places {
 	private keyOf = (r: number) => this.b.snap.columns.pointIds[r] as TitleKey
 
 	private async cards(keys: TitleKey[]): Promise<void> {
-		const missing = [...new Set(keys)].filter((k) => !this.cardCache.has(k))
+		const missing = keys.filter((key) => !this.cardCache.has(key))
+		if (!missing.length) return
+		// Independent sections often ask for titles in the same turn (for example, ten years of a decade).
+		// Gather their keys before issuing the existing bounded reads, including shared titles only once.
+		if (!this.pendingCards) {
+			const keysToRead = new Set<TitleKey>()
+			const done = Promise.resolve().then(() => {
+				this.pendingCards = undefined
+				return this.readCards([...keysToRead])
+			})
+			this.pendingCards = { keys: keysToRead, done }
+		}
+		for (const key of missing) this.pendingCards.keys.add(key)
+		await this.pendingCards.done
+	}
+
+	private async readCards(missing: TitleKey[]): Promise<void> {
 		const batches: TitleKey[][] = []
-		for (let i = 0; i < missing.length; i += 60) batches.push(missing.slice(i, i + 60))
-		for (const cards of await Promise.all(
-			batches.map((keys2) => getTitleCards(keys2, this.ctx, NO_TASTE)),
-		))
-			for (const c of cards) this.cardCache.set(c.key, c)
+		for (let i = 0; i < missing.length; i += MAX_KEYS) batches.push(missing.slice(i, i + MAX_KEYS))
+		// At most four batch reads at a time when a large index requests many lists together.
+		let next = 0
+		const read = async () => {
+			for (let i = next++; i < batches.length; i = next++) {
+				const cards = await this.loadCards(batches[i], this.ctx, NO_TASTE)
+				for (const card of cards) this.cardCache.set(card.key, card)
+			}
+		}
+		await Promise.all(Array.from({ length: Math.min(4, batches.length) }, read))
 	}
 
 	/** The title analysis texts (read-only SELECT), a sentence each. */
@@ -411,17 +442,17 @@ export class Places {
 		parts: Ingredient[],
 		n: number,
 		opts: {
-			by?: "fit" | "popular" | "best"
+			by?: ShowcaseOrder
 			lines?: boolean
 			used?: Set<TitleKey>
 			/** Draw from these rows instead of the place's (kinds, bands). */
 			rows?: number[]
 		} = {},
 	): Promise<ShowTitle[]> {
+		if (n <= 0) return []
 		const used = opts.used ?? this.used
 		const rows = opts.rows ?? this.rows(parts)
-		const home = await this.homeTiers(parts, rows)
-		const order = this.rank(rows, parts, opts.by ?? "fit", used, home)
+		const order = await this.showcaseOrder(parts, rows, opts.by ?? "fit", used)
 		const picked = await this.distinct(order, n, used)
 		const terms = opts.lines
 			? this.fitTraits(parts).ks.flatMap((k) => [
@@ -432,11 +463,34 @@ export class Places {
 		return this.titles(picked, opts.lines, terms)
 	}
 
+	/** Read the candidate cards for an ordered row of showcases in bounded database batches.
+	 * No titles are reserved here. Each showcase still ranks against its own current used set
+	 * and reads any newly promoted candidates normally. */
+	async readShowcaseCandidates(groups: Ingredient[][], n: number, by: ShowcaseOrder = "fit") {
+		if (n <= 0 || groups.length < 2) return
+		const keys = new Set<TitleKey>()
+		for (const parts of groups) {
+			await breathe()
+			const order = await this.showcaseOrder(parts, this.rows(parts), by, this.used)
+			for (const row of candidateHead(order, n)) keys.add(this.keyOf(row))
+		}
+		await this.cards([...keys])
+	}
+
+	private async showcaseOrder(
+		parts: Ingredient[],
+		rows: number[],
+		by: ShowcaseOrder,
+		used: Set<TitleKey>,
+	) {
+		return this.rank(rows, parts, by, used, await this.homeTiers(parts, rows))
+	}
+
 	/** A place's released, well-known, not yet shown rows, best candidates first. */
 	private rank(
 		rows: number[],
 		parts: Ingredient[],
-		by: "fit" | "popular" | "best",
+		by: ShowcaseOrder,
 		used: Set<TitleKey>,
 		/** A country's place: how much each row is the country's own (see `homeTiers`). */
 		home: Map<number, number> | null = null,
@@ -538,7 +592,8 @@ export class Places {
 
 	/** The first `n` of ranked rows with no two of one series (Paddington and Paddington 2), marked as used. */
 	private async distinct(ranked: number[], n: number, used: Set<TitleKey>): Promise<number[]> {
-		const head = ranked.slice(0, n * 2 + 8)
+		if (n <= 0) return []
+		const head = candidateHead(ranked, n)
 		await this.cards(head.map(this.keyOf))
 		const out: number[] = []
 		const names: string[] = []
@@ -812,6 +867,39 @@ export class Places {
 	 * inside the place ("Darkly funny"). A kind's list is the place with `kind_` set to its id.
 	 */
 	async kinds(parts: Ingredient[], titles = 6): Promise<KindOf[]> {
+		return (await this.kindsByPlace([parts], titles))[0]
+	}
+
+	/** Load one page's kinds together, then give each place first pick in display order. */
+	async kindsByPlace(groups: Ingredient[][], titles: number): Promise<KindOf[][]> {
+		const plans = []
+		for (const parts of groups) plans.push(await this.kindPlans(parts, titles))
+
+		if (plans.length > 1 && titles > 0) {
+			const keys = plans.flatMap((group) =>
+				group.flatMap(({ order }) => candidateHead(order(), titles).map(this.keyOf)),
+			)
+			await this.cards(keys)
+		}
+
+		const out = []
+		for (const group of plans) {
+			// Earlier places have claimed their titles. Rank against the current used set so overlapping
+			// genres get exactly the same candidates as individual calls, including any extra card reads.
+			out.push(
+				await Promise.all(
+					group.map(async ({ kind, order }) => ({
+						...kind,
+						titles:
+							titles > 0 ? await this.titles(await this.distinct(order(), titles, this.used)) : [],
+					})),
+				),
+			)
+		}
+		return out
+	}
+
+	private async kindPlans(parts: Ingredient[], titles: number) {
 		await breathe()
 		const all = this.rows(parts)
 		const mine = this.mean(parts)
@@ -823,7 +911,7 @@ export class Places {
 		const placeKey = this.norm(parts)
 			.map((p) => `${p.family}:${p.slug}`)
 			.join("+")
-		const home = await this.homeTiers(parts, all)
+		const home = titles > 0 ? await this.homeTiers(parts, all) : null
 		// A kind is shown under a name a person would say (domain/browse/kind-names.ts), or not at all.
 		const isShow = (r: number) => c.pointIds[r] >= SHOW_BASE
 		// A place that is one kind all but entirely (seven shows carry Romance beside eleven thousand movies) clusters
@@ -855,24 +943,31 @@ export class Places {
 						: undefined
 				// Typical titles: fit on the kind's own traits, drawn from the kind's rows.
 				const ws = g.ks.map((k) => Math.max(0.2, m[k] - mine[k]))
-				const order = g.rows
-					.filter((r) => released(this.b, r) && !this.used.has(this.keyOf(r)))
-					.sort((x, y) => votesOf(this.b, y) - votesOf(this.b, x))
-					.slice(0, 160)
-					.map((r) => ({ r, s: fitOf(this.b, r, g.ks, ws), t: home?.get(r) ?? (home ? 2 : 0) }))
-					.sort((x, y) => x.t - y.t || y.s - x.s)
-					.map((x) => x.r)
-				const pool = await this.distinct(order, titles, this.used)
+				const popular =
+					titles > 0
+						? g.rows
+								.filter((r) => released(this.b, r))
+								.sort((x, y) => votesOf(this.b, y) - votesOf(this.b, x))
+						: []
+				const order = () =>
+					popular
+						.filter((r) => !this.used.has(this.keyOf(r)))
+						.slice(0, 160)
+						.map((r) => ({ r, s: fitOf(this.b, r, g.ks, ws), t: home?.get(r) ?? (home ? 2 : 0) }))
+						.sort((x, y) => x.t - y.t || y.s - x.s)
+						.map((x) => x.r)
 				return {
-					id: g.id,
-					name,
-					share: g.rows.length / total,
-					traits: words,
-					mood: moodVal ? this.ref(moodVal) : null,
-					titles: await this.titles(pool),
+					order,
+					kind: {
+						id: g.id,
+						name,
+						share: g.rows.length / total,
+						traits: words,
+						mood: moodVal ? this.ref(moodVal) : null,
+					},
 				}
 			}),
-		).then((list) => (all.length ? list : []))
+		)
 	}
 
 	/** Candidates a place can be compared with: its family's other places, or every family's. */
@@ -1457,7 +1552,7 @@ export class Places {
 		const families = opts.families ?? FAMILIES.filter((f) => f !== "trait")
 		const taken = (p: Ingredient) => parts.some((x) => same(x, p))
 		// Lift: how much more often the candidate turns up in the blend than in the whole kind.
-		const candidates = families
+		const candidates = (opts.suggestions === 0 ? [] : families)
 			.flatMap((family) => this.catalog[family].map((v) => ({ family, slug: v.slug })))
 			.filter((p) => !taken(p))
 		const scored = (

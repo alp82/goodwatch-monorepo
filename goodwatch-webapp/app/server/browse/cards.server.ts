@@ -39,6 +39,9 @@ export interface CardDataOptions {
 	only?: string[]
 }
 
+const defaultOrder = (family: Family) =>
+	family === "decade" || family === "service" ? "best" : "fit"
+
 /** One place's card data. */
 export async function cardOf(
 	atlas: Places,
@@ -47,7 +50,7 @@ export async function cardOf(
 ): Promise<CardData> {
 	const part = [{ family: place.family, slug: place.slug }]
 	const n = opts.titles ?? 3
-	const by = opts.by ?? (place.family === "decade" || place.family === "service" ? "best" : "fit")
+	const by = opts.by ?? defaultOrder(place.family)
 	const out: CardData = {
 		place,
 		copy: cardCopy(atlas, place),
@@ -81,6 +84,11 @@ export async function cardData(
 	const max = family === "country" ? Math.max(1, ...all.map((m) => atlas.count([m]))) : 1
 	// A country card's titles prefer the country's own (by original language): read those languages in one go.
 	if (family === "country" && (opts.titles ?? 3) > 0) await atlas.prefetchHomeLanguages(wanted)
+	await atlas.readShowcaseCandidates(
+		wanted.map((place) => [place]),
+		opts.titles ?? 3,
+		opts.by ?? defaultOrder(family),
+	)
 	const out: CardData[] = []
 	for (const place of wanted) {
 		const card = await cardOf(atlas, place, opts)

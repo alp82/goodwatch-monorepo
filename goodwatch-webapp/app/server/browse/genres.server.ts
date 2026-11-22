@@ -49,44 +49,49 @@ export interface AtlasData {
 
 export async function loadAtlas(atlas: Places, perKind = 4, tops = 6): Promise<AtlasData> {
 	const members = atlas.members("genre")
-	const genres: AtlasGenre[] = []
 	// Showcases first, so each genre's famous titles are its own and not spent on another genre's kind.
 	const showcases = new Map<string, Lite[]>()
+	const groups = members.map((g) => [g])
+	await atlas.readShowcaseCandidates(groups, tops)
 	for (const g of members) showcases.set(g.slug, (await atlas.showcase([g], tops)).map(lite))
-	for (const g of members) {
-		const words = atlas.traits([g], { n: 3 }).more.map(word)
-		const kinds = await atlas.kinds([g], perKind)
-		const titles = showcases.get(g.slug) ?? []
-		const shown = new Set(
-			[...titles, ...kinds.flatMap((k) => k.titles.map(lite))].map((t) => t.key),
-		)
-		const picks = await picksFor(
-			atlas,
-			[g],
-			shown,
-			kinds.filter((k) => k.titles.length >= 2),
-		)
-		genres.push({
-			place: g,
-			short: copyFor(atlas.kind, "genre", g.slug)?.short ?? null,
-			plural: atlas.name([g]),
-			n: atlas.count([g]),
-			color: words[0]?.color ?? "#fbbf24",
-			words,
-			titles,
-			picks,
-			kinds: kinds
-				.filter((k) => k.titles.length >= 2)
-				.sort((a, b) => b.share - a.share)
-				.map((k) => ({
-					id: k.id,
-					name: k.name,
-					share: k.share,
-					words: k.traits.slice(0, 2).map(word),
-					titles: k.titles.map(lite),
-				})),
-		})
-	}
+	const kindsByGenre = await atlas.kindsByPlace(groups, perKind)
+	// Picks only read ranked lists. Resolve them together so a title in several genres is read once.
+	const genres = await Promise.all(
+		members.map(async (g, index) => {
+			const words = atlas.traits([g], { n: 3 }).more.map(word)
+			const kinds = kindsByGenre[index]
+			const titles = showcases.get(g.slug) ?? []
+			const shown = new Set(
+				[...titles, ...kinds.flatMap((k) => k.titles.map(lite))].map((t) => t.key),
+			)
+			const picks = await picksFor(
+				atlas,
+				[g],
+				shown,
+				kinds.filter((k) => k.titles.length >= 2),
+			)
+			return {
+				place: g,
+				short: copyFor(atlas.kind, "genre", g.slug)?.short ?? null,
+				plural: atlas.name([g]),
+				n: atlas.count([g]),
+				color: words[0]?.color ?? "#fbbf24",
+				words,
+				titles,
+				picks,
+				kinds: kinds
+					.filter((k) => k.titles.length >= 2)
+					.sort((a, b) => b.share - a.share)
+					.map((k) => ({
+						id: k.id,
+						name: k.name,
+						share: k.share,
+						words: k.traits.slice(0, 2).map(word),
+						titles: k.titles.map(lite),
+					})),
+			}
+		}),
+	)
 	return {
 		copy: pageCopy(atlas.kind, "hub", "genres"),
 		genres,

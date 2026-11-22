@@ -121,8 +121,12 @@ async function buildHub(atlas: Places, tropes: boolean): Promise<MiniData> {
 	const counts = genreCards.map((g) => atlas.count([g.place]))
 	const most = Math.max(1, ...counts)
 	const genres: MiniGenre[] = []
+	const genreKinds = await atlas.kindsByPlace(
+		genreCards.map((g) => [g.place]),
+		3,
+	)
 	for (const [i, g] of genreCards.entries()) {
-		const kinds = await atlas.kinds([g.place], 3)
+		const kinds = genreKinds[i]
 		genres.push({
 			...g,
 			size: counts[i] / most,
