@@ -6,6 +6,7 @@
 //
 // Three dials re-sort a page in the browser without leaving it: critics or the crowd, old or new, lighter or darker.
 // Their stops are links too, so a tuned page is an address. docs/implementation/explore-rethink/spec.md
+import { ensureTropes } from "~/server/browse/tropes.server"
 import {
 	type Address,
 	type Family,
@@ -112,6 +113,7 @@ export async function loadTopPage(
 	const kind = address.kind
 	const listKind = topKindOf(kind)
 	const parts = address.parts
+	if (parts.some((part) => part.family === "trope")) await ensureTropes()
 	const year = address.year
 	const filtered = parts.length > 0 || year !== undefined
 	const page = address.page && address.page > 1 ? address.page : 1

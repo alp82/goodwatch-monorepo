@@ -98,7 +98,6 @@ import type {
 import { BAND_WORDS, blendName, comparative } from "~/domain/browse/words"
 import { kindNameOf } from "~/domain/browse/kind-names"
 import { groupOf, tropeById } from "~/domain/tropes/catalog"
-import { ensureTropes } from "./tropes.server"
 import { breathe, mapBreathing } from "./breathe"
 
 export class PlacesNotReady extends Error {
@@ -195,17 +194,7 @@ export async function openPlaces(request: Request, kind: Kind, country = "us"): 
 	const short = catalogOf((key) => keyLabel(key), kind)
 	if (!b || !short) throw new PlacesNotReady()
 	const catalog = withEveryCountry(short, b)
-	// Trope members load once per process: waited for where the page is about tropes (any page may link to one).
-	const url = new URL(request.url)
-	const tropes = ensureTropes()
-	const aboutTropes =
-		/\/(?:tropes|traits)(?:\/|$)/.test(url.pathname) ||
-		(url.searchParams.get("with") ?? "").includes("trope:")
-	const [ctx, logoMap] = await Promise.all([
-		getViewerContext(request),
-		serviceLogos(),
-		aboutTropes ? tropes : null,
-	])
+	const [ctx, logoMap] = await Promise.all([getViewerContext(request), serviceLogos()])
 	return new Places(b, catalog, ctx, country.toLowerCase(), logoMap)
 }
 

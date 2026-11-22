@@ -30,6 +30,7 @@ import { BrowseRow } from "~/ui/browse/BrowseRow"
 import { IndexPage } from "~/ui/browse/IndexPage"
 import { BrowsePageProvider } from "~/ui/browse/page-context"
 import { PlacePage } from "~/ui/browse/place/PlacePage"
+import { ensureTropes } from "~/server/browse/tropes.server"
 import { tropesRoute } from "~/server/browse/tropes-route.server"
 import { TropesRoute } from "~/ui/browse/tropes/TropesRoute"
 import { crumbsOf } from "~/ui/browse/place/PlaceHead"
@@ -75,6 +76,13 @@ const canonicalLoader = async ({ params, request }: LoaderFunctionArgs) => {
 			segs[1] === "genres" && segs[2] && !segs[3] ? legacyGenreFallback(kind, segs[2]) : null
 		if (fallback) throw redirect(fallback, 301)
 		throw notFound()
+	}
+
+	// A place can offer tropes in its Add menu. Only a selected trope needs its full membership before
+	// ranking starts. Family directories load their own data, including the dedicated trope directory.
+	if (address.view === "place") {
+		const memberships = ensureTropes()
+		if (address.parts.some((part) => part.family === "trope")) await memberships
 	}
 
 	// The streaming index of a country (one service alone is a room page, below).
