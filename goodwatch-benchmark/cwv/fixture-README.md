@@ -44,12 +44,16 @@ The 2026-11-10 run captured six public pages once, before either build, in `load
 again between builds. Ignored HTML files retain the original anonymous responses; `capture.json` records page
 paths and route IDs. The original run also records the frozen payload's SHA-256 and baseline commit there.
 
-The API capture has an explicit six-request allowlist: US streaming providers, award marks, and the two measured
+The JSON API capture has an explicit six-request allowlist: US streaming providers, award marks, and the two measured
 titles' character portraits and trope teasers. It sends no credentials or auth/member requests and refuses to
 recapture an existing snapshot before sending requests. `api-responses.json` is shared by both builds;
 `api-capture.json` records its SHA-256. API response schemas are checked at server startup. An unexpected API
 request receives 404, while the local anonymous `/api/auth/get-session` contract returns `null` without contacting
 production. Every write receives 405.
+
+When the frozen list owner's profile selected the locally stored Google photo, capture also reads that one
+public avatar endpoint. The fixture serves the captured WebP and its cache headers from `avatar-response.json`;
+older payloads retain their original external picture URL.
 
 Prepare and compile the baseline:
 

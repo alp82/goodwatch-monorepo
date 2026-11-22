@@ -1,5 +1,5 @@
 // Run once; both builds reuse this immutable API snapshot alongside loader-data.json.
-import { access, writeFile } from "node:fs/promises";
+import { access, readFile, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import {
@@ -8,15 +8,28 @@ import {
 	validateApiFixtures,
 } from "./fixture-api.mjs";
 
+import { freezeAvatar, selectedAvatarPath } from "./fixture-avatar.mjs";
+
 const [directory, origin = "https://goodwatch.app"] = process.argv.slice(2);
 if (!directory) throw new Error("Expected OUTPUT_DIR [PUBLIC_ORIGIN]");
-for (const file of ["api-responses.json", "api-capture.json"]) {
+for (const file of ["api-responses.json", "api-capture.json", "avatar-response.json"]) {
 	try {
 		await access(path.join(directory, file));
 		throw new Error(`Refusing to recapture frozen API data: ${file}`);
 	} catch (error) {
 		if (error.code !== "ENOENT") throw error;
 	}
+}
+const pages = JSON.parse(
+	await readFile(path.join(directory, "loader-data.json"), "utf8")
+);
+const avatarPath = selectedAvatarPath(pages);
+let avatar;
+if (avatarPath) {
+	const response = await fetch(new URL(avatarPath, origin), {
+		redirect: "error",
+	});
+	avatar = freezeAvatar(response, Buffer.from(await response.arrayBuffer()));
 }
 const responses = {};
 for (const pathname of PUBLIC_API_PATHS) {
@@ -37,6 +50,15 @@ for (const pathname of PUBLIC_API_PATHS) {
 }
 validateApiFixtures(responses);
 const snapshot = JSON.stringify(responses);
+if (avatar)
+	await writeFile(
+		path.join(directory, "avatar-response.json"),
+		JSON.stringify(avatar),
+		{
+			flag: "wx",
+		}
+	);
+
 await writeFile(path.join(directory, "api-responses.json"), snapshot, {
 	flag: "wx",
 });

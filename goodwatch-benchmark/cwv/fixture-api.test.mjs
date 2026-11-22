@@ -1,3 +1,9 @@
+import { createHash } from "node:crypto";
+import {
+	freezeAvatar,
+	selectedAvatarPath,
+	publicAvatarPath,
+} from "./fixture-avatar.mjs";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
@@ -96,5 +102,42 @@ test("a 200 ErrorBoundary or later client TypeError cannot pass the hydration sm
 			...result,
 			failedApiResponses: [{ status: 404, path: "/api/unknown" }],
 		}).length,
+	);
+});
+
+test("the avatar fixture preserves the selected public photo's bytes and version", () => {
+	const pages = (url) => ({
+		"/u/alperortac/lists/o1H79d4fVu": {
+			"routes/u.$handle": { shell: { avatar: { url } } },
+		},
+	});
+	assert.equal(
+		selectedAvatarPath(pages("https://lh3.googleusercontent.com/a/original")),
+		null
+	);
+	assert.equal(
+		selectedAvatarPath(pages("/api/avatar/another?source=google")),
+		null
+	);
+	assert.equal(selectedAvatarPath(pages(publicAvatarPath)), publicAvatarPath);
+	const bytes = Buffer.from("RIFF0000WEBPfixture");
+	const etag = '"' + createHash("sha256").update(bytes).digest("hex") + '"';
+	const response = new Response(bytes, {
+		headers: {
+			"content-type": "image/webp",
+			etag,
+			"cache-control": "public, no-cache",
+		},
+	});
+	const capture = freezeAvatar(response, bytes);
+	assert.deepEqual(Buffer.from(capture.body, "base64"), bytes);
+	assert.equal(capture.headers.etag, etag);
+	assert.throws(
+		() => freezeAvatar(response, Buffer.from("RIFF0000WEBPother")),
+		/stored version/
+	);
+	assert.throws(
+		() => freezeAvatar(new Response("missing", { status: 404 }), bytes),
+		/successful WebP/
 	);
 });

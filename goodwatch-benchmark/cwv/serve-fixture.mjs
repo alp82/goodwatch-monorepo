@@ -10,6 +10,8 @@ import { pathToFileURL } from "node:url";
 import { denyOutboundConnections } from "./fixture-safety.mjs";
 import { fixtureApiResponse, validateApiFixtures } from "./fixture-api.mjs";
 
+import { freezeAvatar, selectedAvatarPath } from "./fixture-avatar.mjs";
+
 const [buildArg, appArg, payloadArg, portArg, keyFile, certFile] =
 	process.argv.slice(2);
 const build = path.resolve(buildArg);
@@ -35,6 +37,22 @@ const apiFixtures = validateApiFixtures(
 		),
 	),
 );
+const avatarPath = selectedAvatarPath(globalThis.__CWV_FIXTURES__);
+let avatar;
+if (avatarPath) {
+	const saved = JSON.parse(
+		await readFile(
+			path.join(path.dirname(payload), "avatar-response.json"),
+			"utf8"
+		)
+	);
+	const bytes = Buffer.from(saved.body, "base64");
+	const snapshot = freezeAvatar(
+		new Response(bytes, { headers: saved.headers }),
+		bytes
+	);
+	avatar = { bytes, headers: snapshot.headers };
+}
 globalThis.__CWV_ASSET_BASE__ = process.env.CWV_ASSET_BASE || "";
 for (const data of Object.values(globalThis.__CWV_FIXTURES__)) {
 	if (!data.root || data.root.user !== null)
@@ -96,6 +114,22 @@ server.on("request", async (request, response) => {
 				request,
 			);
 		const pathname = new URL(request.url, `https://127.0.0.1:${port}`).pathname;
+		if (avatar && request.url === avatarPath) {
+			const etag = avatar.headers.etag;
+			if (
+				etag &&
+				request.headers["if-none-match"]
+					?.split(",")
+					.some((tag) => tag.trim().replace(/^W\//, "") === etag)
+			) {
+				response.writeHead(304, {
+					etag,
+					"cache-control": avatar.headers["cache-control"],
+				});
+				return response.end();
+			}
+			return reply(response, 200, { ...avatar.headers }, avatar.bytes, request);
+		}
 		if (pathname.startsWith("/api/")) {
 			const api = fixtureApiResponse(request.url, apiFixtures);
 			if (api.status === 404)
