@@ -10,7 +10,7 @@ import {
 	getDiscoverResults,
 } from "~/server/discover.server"
 import type { MediaType } from "~/server/utils/query-db"
-import { sortedDNACategories } from "~/ui/dna/dna_utils"
+import { type DNACategoryName, sortedDNACategories } from "~/ui/dna/dna_utils"
 import { buildDiscoverParams } from "~/utils/discover"
 import { SEPARATOR_SECONDARY, SEPARATOR_TERTIARY } from "~/utils/navigation"
 import { DISCOVER_PAGE_SIZE } from "~/utils/constants"
@@ -21,9 +21,7 @@ export type GetDiscoverResult = DiscoverResults
 
 // API endpoint
 
-const canonicalLoader: LoaderFunction = async ({
-	request,
-}: LoaderFunctionArgs) => {
+const canonicalLoader: LoaderFunction = async ({ request }: LoaderFunctionArgs) => {
 	const params = await buildDiscoverParams(request)
 	return await getDiscoverResults(params)
 }
@@ -38,11 +36,7 @@ export interface UseDiscoverParams {
 	enabled?: boolean
 }
 
-export const useDiscover = ({
-	params,
-	initialData,
-	enabled = true,
-}: UseDiscoverParams) => {
+export const useDiscover = ({ params, initialData, enabled = true }: UseDiscoverParams) => {
 	const { locale } = useLocale()
 	const initialPageParam = initialData?.pageParams[0] ?? (params?.page || 1)
 	if (params?.page) {
@@ -86,15 +80,15 @@ export const convertSimilarTitles = (similarTitles: string): WithSimilar[] => {
 	return similarTitles
 		.split(",")
 		.filter(Boolean)
-		.map((similarTitle) =>
-			(similarTitle || "").split(SEPARATOR_SECONDARY).filter(Boolean),
-		)
+		.map((similarTitle) => (similarTitle || "").split(SEPARATOR_SECONDARY).filter(Boolean))
 		.map(([tmdbId, mediaType, categories]) => ({
 			tmdbId,
 			mediaType: mediaType as MediaType,
 			categories: (categories || "")
 				.split(SEPARATOR_TERTIARY)
-				.filter((category) => sortedDNACategories.includes(category)),
+				.filter((category): category is DNACategoryName =>
+					sortedDNACategories.some((name) => name === category),
+				),
 		}))
 }
 
