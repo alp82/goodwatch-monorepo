@@ -6,7 +6,6 @@
 // screen (Open and Actions on a phone's three across, under 7.5rem), a click opens the title page.
 import { ArrowRightIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
-import { motion, useReducedMotion } from "framer-motion"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import { countText } from "../moods/mood-counts"
 import { type ResultsScope, START_CARDS, seeAllHref } from "../search/start-search"
@@ -39,7 +38,6 @@ export function MemberResults({
 	onBack: () => void
 	onRetry: () => void
 }) {
-	const reduce = useReducedMotion()
 	const own = results.signature === querySignature(query)
 	const ready = own && results.status === "ready"
 	const failed = own && results.status === "error"
@@ -87,17 +85,12 @@ export function MemberResults({
 							className={`min-w-0 ${slotShown(i)}`}
 						>
 							{card ? (
-								<motion.div
-									initial={reduce ? false : { opacity: 0, y: 10 }}
-									animate={{ opacity: 1, y: 0 }}
-									transition={{
-										duration: 0.3,
-										delay: Math.min(i, 11) * 0.03,
-										ease: "easeOut",
-									}}
+								<div
+									className="start-result-enter"
+									style={{ animationDelay: `${Math.min(i, 11) * 30}ms` }}
 								>
 									<TitlePosterCard card={card} />
-								</motion.div>
+								</div>
 							) : (
 								<div
 									className={`aspect-[2/3] rounded-lg border-2 border-gray-800 bg-gray-900 ${ready || failed ? "" : "animate-pulse"}`}

@@ -1,9 +1,10 @@
 import { mediaFieldLanguage } from "~/utils/media-presentation"
-import { canonicalMediaTitle } from "~/utils/media-presentation"
+import { WatchButton, titleHref } from "./WatchButton"
+export { WatchButton, titleHref } from "./WatchButton"
 // The start hero: the first title of Watch next, large, over its backdrop, with its services and actions, and the
 // Then column with the next three. The docked strip sits on its top edge. With an empty Wishlist it offers the best
 // worthwhile suggestion instead ("Start with this?").
-import { BookmarkIcon, CheckIcon, PlayIcon } from "@heroicons/react/24/solid"
+import { BookmarkIcon, CheckIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
 import { AnimatePresence, motion } from "framer-motion"
 import type React from "react"
@@ -11,7 +12,6 @@ import { createContext, useContext } from "react"
 import { MOOD_BY_KEY } from "~/domain/moods"
 import type { CardService, TitleCard } from "~/server/title-cards.server"
 import type { WatchNext, WatchNextTitle } from "~/server/watch-next.server"
-import { titleToDashed } from "~/utils/helpers"
 import {
 	CLOSE_TO_TASTE,
 	heroLabel,
@@ -41,10 +41,6 @@ export interface NewOnMark {
 }
 export const NewOnContext = createContext<NewOnMark | null>(null)
 
-export const titleHref = (
-	title: Pick<TitleCard, "media_type" | "tmdb_id" | "title">,
-) => `/${title.media_type}/${title.tmdb_id}-${titleToDashed(canonicalMediaTitle(title))}`
-
 const SWAP = {
 	initial: { opacity: 0, x: 40 },
 	animate: { opacity: 1, x: 0 },
@@ -63,32 +59,19 @@ export function ServiceTiles({
 	max?: number
 }) {
 	if (!offers) return null
-	if (!offers.length)
-		return (
-			<p className="text-xs text-gray-400">Not streaming in your country</p>
-		)
+	if (!offers.length) return <p className="text-xs text-gray-400">Not streaming in your country</p>
 	const owned = offers.some((offer) => offer.owned)
 	return (
 		<div className="flex flex-wrap items-center gap-2">
 			{offers.slice(0, max).map((offer) => (
 				<span
 					key={offer.id}
-					title={
-						offer.owned
-							? `${offer.name}: one of your services`
-							: `Stream on ${offer.name}`
-					}
+					title={offer.owned ? `${offer.name}: one of your services` : `Stream on ${offer.name}`}
 					className={`relative flex shrink-0 items-center gap-2 rounded-lg border-2 bg-white/10 pr-2.5 ${offer.owned ? "border-green-500" : "border-white/15 opacity-70"}`}
 					style={{ height: size }}
 				>
-					<img
-						src={logoUrl(offer.logo_path)}
-						alt=""
-						className="aspect-square h-full rounded-md"
-					/>
-					<span className="truncate text-sm font-medium text-white">
-						{offer.name}
-					</span>
+					<img src={logoUrl(offer.logo_path)} alt="" className="aspect-square h-full rounded-md" />
+					<span className="truncate text-sm font-medium text-white">{offer.name}</span>
 					{offer.owned && (
 						<span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-green-500 text-black ring-2 ring-stone-950">
 							<CheckIcon className="h-3 w-3" aria-hidden />
@@ -97,21 +80,13 @@ export function ServiceTiles({
 					)}
 				</span>
 			))}
-			{!owned && (
-				<span className="text-xs text-gray-400">Not on your services</span>
-			)}
+			{!owned && <span className="text-xs text-gray-400">Not on your services</span>}
 		</div>
 	)
 }
 
 // The line above the title: what the pick is under this sort and these moods, the value the sort read, its moods.
-function Eyebrow({
-	data,
-	hero,
-}: {
-	data: WatchNext
-	hero: WatchNextTitle
-}) {
+function Eyebrow({ data, hero }: { data: WatchNext; hero: WatchNextTitle }) {
 	const movies = useMoviesPage()
 	const fact = data.sort === "match" ? null : sortFact(data.sort, hero)
 	return (
@@ -132,12 +107,7 @@ function Eyebrow({
 							data.time ?? null,
 							picksWords(data.picker),
 						)
-					: heroLabel(
-							data.sort,
-							data.moods,
-							data.heroNote,
-							picksWords(data.picker),
-						)}
+					: heroLabel(data.sort, data.moods, data.heroNote, picksWords(data.picker))}
 			</span>
 			{fact && <span className="text-gray-300">{fact}</span>}
 			{hero.closeToTaste && (
@@ -162,11 +132,7 @@ function Eyebrow({
 								style={on ? { background: hue } : undefined}
 							>
 								{!on && (
-									<span
-										className="h-2 w-2 rounded-full"
-										style={{ background: hue }}
-										aria-hidden
-									/>
+									<span className="h-2 w-2 rounded-full" style={{ background: hue }} aria-hidden />
 								)}
 								{name}
 							</span>
@@ -178,35 +144,8 @@ function Eyebrow({
 	)
 }
 
-/** The hero's main button: the first service's logo and "Watch on …", to the title page. The start page uses it too. */
-export function WatchButton({
-	title,
-	offers,
-}: { title: TitleCard; offers: ServiceOffer[] | null }) {
-	const offer = offers?.[0]
-	return (
-		<Link
-			to={titleHref(title)}
-			className="inline-flex h-12 items-center gap-2.5 rounded-lg bg-white pl-2 pr-5 text-base font-bold text-black shadow-lg shadow-black/40 hover:bg-gray-200"
-		>
-			{offer ? (
-				<img
-					src={logoUrl(offer.logo_path)}
-					alt=""
-					className="h-8 w-8 rounded-md"
-				/>
-			) : null}
-			<PlayIcon className={`h-5 w-5 ${offer ? "" : "ml-2"}`} aria-hidden />
-			{offer ? `Watch on ${offer.name}` : "Where to watch"}
-		</Link>
-	)
-}
-
 // The next three, as the start hero kept them from round 1: poster, number, title, and where it streams.
-function ThenColumn({
-	titles,
-	mine,
-}: { titles: WatchNextTitle[]; mine: CardService[] }) {
+function ThenColumn({ titles, mine }: { titles: WatchNextTitle[]; mine: CardService[] }) {
 	const movieWord = useMoviesPage() ? "Movie" : undefined
 	const newOn = useContext(NewOnContext)
 	if (!titles.length) return null
@@ -251,10 +190,7 @@ function ThenColumn({
 										{watchLine(offersOf(title, mine))}
 									</span>
 									{title.closeToTaste ? (
-										<span
-											className="block truncate text-xs text-gray-400"
-											data-close-to-taste
-										>
+										<span className="block truncate text-xs text-gray-400" data-close-to-taste>
 											{CLOSE_TO_TASTE}
 										</span>
 									) : (
@@ -292,10 +228,7 @@ export function WatchNextHero({
 	const mine = data?.myServices ?? []
 	const heroOffers = hero ? offersOf(hero, mine) : null
 	return (
-		<section
-			className="relative isolate overflow-hidden"
-			aria-label="Your next watch"
-		>
+		<section className="relative isolate overflow-hidden" aria-label="Your next watch">
 			<AnimatePresence mode="popLayout" initial={false}>
 				{stage?.backdrop_path && (
 					<motion.img
@@ -314,17 +247,13 @@ export function WatchNextHero({
 			<div className="absolute inset-x-0 bottom-0 -z-10 h-32 bg-linear-to-t from-gray-900 to-transparent" />
 			<div className="absolute inset-x-0 top-0 -z-10 h-40 bg-linear-to-b from-gray-900/90 to-transparent" />
 			{/* Phones get the controls in the page under the pick instead (PhoneControls). */}
-			<div className={`${WRAP} relative z-20 hidden pt-6 lg:block`}>
-				{strip}
-			</div>
+			<div className={`${WRAP} relative z-20 hidden pt-6 lg:block`}>{strip}</div>
 
 			<div
 				className={`${WRAP} grid min-h-[30rem] items-end gap-6 pb-8 pt-24 md:min-h-[36rem] md:grid-cols-[1fr_auto] md:items-center md:gap-10 md:pt-6`}
 			>
 				<div className="min-w-0">
-					{data && hero && (
-						<Eyebrow data={data} hero={hero} />
-					)}
+					{data && hero && <Eyebrow data={data} hero={hero} />}
 					<AnimatePresence mode="wait" initial={false}>
 						{hero ? (
 							<motion.div
@@ -382,11 +311,7 @@ export function WatchNextHero({
 								</div>
 							</motion.div>
 						) : data ? (
-							<motion.div
-								key={`start-${start?.key ?? ""}`}
-								{...SWAP}
-								className="min-w-0 max-w-2xl"
-							>
+							<motion.div key={`start-${start?.key ?? ""}`} {...SWAP} className="min-w-0 max-w-2xl">
 								<p className="text-sm font-semibold text-amber-300">
 									{movieWord ? "No movies yet" : "Your Wishlist is empty"}
 								</p>
@@ -400,8 +325,7 @@ export function WatchNextHero({
 											</h2>
 										</Link>
 										<p className="mt-3 text-base text-gray-200 md:text-lg">
-											Start with this?{" "}
-											{start.match ? `${start.match}% taste match. ` : ""}
+											Start with this? {start.match ? `${start.match}% taste match. ` : ""}
 											{runtimeLabel(start, movieWord)}.
 										</p>
 										<div className="mt-5">
@@ -413,28 +337,19 @@ export function WatchNextHero({
 												onClick={() => onWant(start)}
 												className="inline-flex h-12 cursor-pointer items-center gap-1.5 rounded-full bg-white/95 px-5 text-base font-bold text-black shadow-lg shadow-black/50 hover:bg-white"
 											>
-												<BookmarkIcon
-													className="h-4 w-4 text-amber-600"
-													aria-hidden
-												/>
+												<BookmarkIcon className="h-4 w-4 text-amber-600" aria-hidden />
 												Want to See
 											</button>
 										</div>
 									</>
 								) : (
-									<h2
-										className={`${DISPLAY} mt-1 text-5xl leading-[0.9] text-white md:text-6xl`}
-									>
+									<h2 className={`${DISPLAY} mt-1 text-5xl leading-[0.9] text-white md:text-6xl`}>
 										Nothing here yet
 									</h2>
 								)}
 							</motion.div>
 						) : (
-							<div
-								key="loading"
-								className="min-w-0 max-w-2xl animate-pulse"
-								aria-hidden
-							>
+							<div key="loading" className="min-w-0 max-w-2xl animate-pulse" aria-hidden>
 								<div className="h-4 w-48 rounded bg-white/10" />
 								<div className="mt-3 h-20 w-96 max-w-full rounded bg-white/10" />
 								<div className="mt-4 h-4 w-64 rounded bg-white/10" />

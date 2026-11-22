@@ -6,7 +6,7 @@ import { ArrowRightIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import type { CSSProperties } from "react"
 import { MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
-import { IMPORT_SOURCE_LIST } from "~/ui/imports/ImportSources"
+import { featuredImportLogos } from "~/ui/imports/featured-import-logos"
 import { assetUrl } from "~/utils/asset-url"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 import type { ShelfTitle } from "../room/ShelfCovers"
@@ -17,7 +17,7 @@ import { PERSONAL_AT } from "./member-data"
 const MOOD_DOTS: readonly MoodKey[] = ["funny", "feelgood", "romance", "action"]
 
 /** The import sources whose marks the row shows. */
-const MARKS = IMPORT_SOURCE_LIST.filter((source) => source.logo).slice(0, 5)
+const MARKS = Object.entries(featuredImportLogos)
 
 export function FirstSteps({
 	ratings,
@@ -34,9 +34,7 @@ export function FirstSteps({
 				<span className="first-main-words">
 					<span className="first-kicker">Start here</span>
 					<span className="first-title">Rate a few titles you've seen</span>
-					<span className="first-line">
-						Picks get personal at {PERSONAL_AT} ratings.
-					</span>
+					<span className="first-line">Picks get personal at {PERSONAL_AT} ratings.</span>
 					<Progress have={ratings} />
 					<span className="first-go">
 						Start rating
@@ -48,21 +46,15 @@ export function FirstSteps({
 			<div className="first-ways">
 				<Link to={MEMBER_HREF.imports} prefetch="intent" className="first-way">
 					<span aria-hidden className="first-marks">
-						{MARKS.map((source) => (
-							<span key={source.id} className="first-mark" data-id={source.id}>
-								<img
-									src={assetUrl(source.logo as string)}
-									alt=""
-									{...{ fetchpriority: "low" }}
-								/>
+						{MARKS.map(([id, logo]) => (
+							<span key={id} className="first-mark" data-id={id}>
+								<img src={assetUrl(logo)} alt="" {...{ fetchpriority: "low" }} />
 							</span>
 						))}
 					</span>
 					<span className="first-way-words">
 						<span className="first-way-title">Bring your ratings</span>
-						<span className="first-way-line">
-							From IMDb, Letterboxd, Trakt, Plex and more.
-						</span>
+						<span className="first-way-line">From IMDb, Letterboxd, Trakt, Plex and more.</span>
 					</span>
 					<ArrowRightIcon className="first-chev" aria-hidden />
 				</Link>
@@ -78,9 +70,7 @@ export function FirstSteps({
 					</span>
 					<span className="first-way-words">
 						<span className="first-way-title">Find something now</span>
-						<span className="first-way-line">
-							Search by mood above, or browse Discover.
-						</span>
+						<span className="first-way-line">Search by mood above, or browse Discover.</span>
 					</span>
 					<ArrowRightIcon className="first-chev" aria-hidden />
 				</Link>

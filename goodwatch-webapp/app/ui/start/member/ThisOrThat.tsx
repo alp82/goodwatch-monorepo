@@ -6,13 +6,12 @@
 // Phones show posters; from 640 px the sides show the titles' backdrops.
 import { ArrowPathIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
-import { AnimatePresence, motion } from "framer-motion"
 import { useMemo, useState } from "react"
 import type { TitleCard } from "~/server/title-cards.server"
 import { ListTag } from "~/ui/list-tag/ListTag"
-import { WatchButton, titleHref } from "~/ui/watch-next/WatchNextHero"
+import { WatchButton, titleHref } from "~/ui/watch-next/WatchButton"
 import { offersOf } from "~/ui/watch-next/services"
-import { DISPLAY, EASE, backdropUrl, posterUrl } from "~/ui/watch-next/style"
+import { DISPLAY, backdropUrl, posterUrl } from "~/ui/watch-next/style"
 import { mediaFieldLanguage } from "~/utils/media-presentation"
 import {
 	type DeckSource,
@@ -46,38 +45,29 @@ export function ThisOrThat({ deck }: { deck: DeckTitle[] }) {
 	const view = only ? "only" : done ? `done:${done.card.key}` : `pair:${duel.epoch}`
 	return (
 		<div className="relative h-full">
-			<AnimatePresence initial={false}>
-				<motion.div
-					key={view}
-					className="absolute inset-0"
-					initial={{ opacity: 0, scale: 0.98 }}
-					animate={{ opacity: 1, scale: 1 }}
-					exit={{ opacity: 0 }}
-					transition={{ duration: 0.3, ease: EASE }}
-				>
-					{only ? (
-						<TonightsPick pick={only} runnerUp={null} onAgain={null} />
-					) : done ? (
-						<TonightsPick
-							pick={done}
-							runnerUp={of(duel.runnerUp)}
-							onAgain={() => setDuel(restart(deck, duel))}
-						/>
-					) : (
-						<Pair
-							left={of(duel.left)}
-							right={of(duel.right)}
-							taps={duel.taps}
-							rounds={rounds}
-							canSkip={deck.length > 2}
-							chose={duel.chose}
-							onChoose={(side) => setDuel(choose(deck, duel, side))}
-							onNeither={() => setDuel(neither(deck, duel))}
-							onRestart={() => setDuel(restart(deck, duel))}
-						/>
-					)}
-				</motion.div>
-			</AnimatePresence>
+			<div key={view} className="start-duel-view absolute inset-0">
+				{only ? (
+					<TonightsPick pick={only} runnerUp={null} onAgain={null} />
+				) : done ? (
+					<TonightsPick
+						pick={done}
+						runnerUp={of(duel.runnerUp)}
+						onAgain={() => setDuel(restart(deck, duel))}
+					/>
+				) : (
+					<Pair
+						left={of(duel.left)}
+						right={of(duel.right)}
+						taps={duel.taps}
+						rounds={rounds}
+						canSkip={deck.length > 2}
+						chose={duel.chose}
+						onChoose={(side) => setDuel(choose(deck, duel, side))}
+						onNeither={() => setDuel(neither(deck, duel))}
+						onRestart={() => setDuel(restart(deck, duel))}
+					/>
+				)}
+			</div>
 		</div>
 	)
 }
@@ -176,43 +166,37 @@ function Side({
 }) {
 	return (
 		<div className="grid min-w-0 [&>*]:[grid-area:1/1]">
-			<AnimatePresence initial={false}>
-				{title ? (
-					<motion.button
-						key={title.card.key}
-						type="button"
-						onClick={() => onChoose(side)}
-						className="group mx-auto block w-full min-w-0 max-w-[11.25rem] cursor-pointer text-left outline-none sm:max-w-none"
-						initial={{ opacity: 0, x: side === "left" ? -16 : 16 }}
-						animate={
-							nod ? { opacity: 1, x: 0, scale: [1, 1.03, 1] } : { opacity: 1, x: 0, scale: 1 }
-						}
-						exit={{ opacity: 0, scale: 0.94 }}
-						transition={{ duration: 0.3, ease: EASE }}
-					>
-						<Art card={title.card} source={title.source} />
-						<span className="mt-2 block h-16 min-w-0 lg:h-[4.5rem]">
-							<span
-								className="block truncate text-base font-bold text-white lg:text-xl"
-								lang={mediaFieldLanguage(title.card)}
-							>
-								{title.card.title}
-							</span>
-							<span className="block truncate text-xs font-semibold text-amber-300 lg:text-sm">
-								{title.episode ?? title.why}
-							</span>
-							<span className="block truncate text-xs text-gray-400 lg:text-sm">
-								{factsLine(title.card)}
-							</span>
+			{title ? (
+				<button
+					key={title.card.key}
+					type="button"
+					onClick={() => onChoose(side)}
+					className="group mx-auto block w-full min-w-0 max-w-[11.25rem] cursor-pointer text-left outline-none sm:max-w-none"
+					data-duel-side={side}
+					data-nod={nod || undefined}
+				>
+					<Art card={title.card} source={title.source} />
+					<span className="mt-2 block h-16 min-w-0 lg:h-[4.5rem]">
+						<span
+							className="block truncate text-base font-bold text-white lg:text-xl"
+							lang={mediaFieldLanguage(title.card)}
+						>
+							{title.card.title}
 						</span>
-					</motion.button>
-				) : (
-					<div
-						key="empty"
-						className="mx-auto aspect-[2/3] w-full max-w-[11.25rem] rounded-lg border-2 border-dashed border-gray-800 sm:aspect-video sm:max-w-none"
-					/>
-				)}
-			</AnimatePresence>
+						<span className="block truncate text-xs font-semibold text-amber-300 lg:text-sm">
+							{title.episode ?? title.why}
+						</span>
+						<span className="block truncate text-xs text-gray-400 lg:text-sm">
+							{factsLine(title.card)}
+						</span>
+					</span>
+				</button>
+			) : (
+				<div
+					key="empty"
+					className="mx-auto aspect-[2/3] w-full max-w-[11.25rem] rounded-lg border-2 border-dashed border-gray-800 sm:aspect-video sm:max-w-none"
+				/>
+			)}
 		</div>
 	)
 }

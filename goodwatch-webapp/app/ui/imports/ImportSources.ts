@@ -3,25 +3,17 @@
 // would get a neutral letter tile. Names come from the import contract, so the page, the history, and the receipt
 // call a source the same.
 import type { ImdbImportSummary } from "~/domain/imdb-import"
-import {
-	IMPORT_SOURCE_NAMES,
-	type ImportSource,
-	type ImportSummary,
-} from "~/domain/imports"
+import { IMPORT_SOURCE_NAMES, type ImportSource, type ImportSummary } from "~/domain/imports"
 // Every source shows its own mark: the owner chose real marks over letter tiles on 2026-10-19, knowing the brand
 // terms noted on each source below.
 import csvLogo from "~/img/import-sources/csv.svg?no-inline"
-import imdbLogo from "~/img/import-sources/imdb.svg?no-inline"
 import kodiLogo from "~/img/import-sources/kodi.png?no-inline"
-import letterboxdLogo from "~/img/import-sources/letterboxd.svg?no-inline"
 import mdblistLogo from "~/img/import-sources/mdblist.svg?no-inline"
 import movielensLogo from "~/img/import-sources/movielens.png?no-inline"
 import myanimelistLogo from "~/img/import-sources/myanimelist.svg?no-inline"
-import plexLogo from "~/img/import-sources/plex.png?no-inline"
-import tmdbLogo from "~/img/import-sources/tmdb.svg?no-inline"
-import traktLogo from "~/img/import-sources/trakt.svg?no-inline"
 import tvtimeLogo from "~/img/import-sources/tvtime.svg?no-inline"
 import wishlistLogo from "~/img/import-sources/wishlist.png?no-inline"
+import { featuredImportLogos } from "./featured-import-logos"
 import type { RecognizedImportFile } from "./ImportFileRecognition"
 
 export type ImportSourceId = "imdb" | ImportSource
@@ -50,7 +42,7 @@ const NAMES: Record<ImportSourceId, string> = {
 const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 	{
 		id: "imdb",
-		logo: imdbLogo,
+		logo: featuredImportLogos.imdb,
 		tile: "IMDb",
 		gets: ["Ratings", "Want to See", "Lists"],
 		wait: "A few minutes",
@@ -58,7 +50,7 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 	{
 		id: "letterboxd",
 		// Letterboxd's decal (letterboxd.com/about/brand). Its brand page asks for consent before commercial use.
-		logo: letterboxdLogo,
+		logo: featuredImportLogos.letterboxd,
 		tile: "Lb",
 		gets: [
 			"Ratings",
@@ -73,7 +65,7 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 	},
 	{
 		id: "trakt",
-		logo: traktLogo,
+		logo: featuredImportLogos.trakt,
 		tile: "Tr",
 		gets: [
 			"Ratings",
@@ -88,7 +80,7 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 	},
 	{
 		id: "tmdb",
-		logo: tmdbLogo,
+		logo: featuredImportLogos.tmdb,
 		tile: "TMDB",
 		gets: ["Ratings", "Want to See", "Favorites", "Lists"],
 		wait: "Seconds",
@@ -98,7 +90,7 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 		id: "plex",
 		// Plex's own app icon (its favicon, via Wikimedia Commons), not one derived from it. Plex's kit has only a wide
 		// wordmark, and its guidelines forbid icons derived from its marks.
-		logo: plexLogo,
+		logo: featuredImportLogos.plex,
 		tile: "Px",
 		// Each play from the member's own server, and Want to See from the personal watchlist feed.
 		gets: ["Watches with dates", "Rewatches", "Episodes", "Want to See"],
@@ -189,9 +181,10 @@ const SOURCES: Omit<ImportSourceEntry, "name">[] = [
 	},
 ]
 
-export const IMPORT_SOURCE_LIST: readonly ImportSourceEntry[] = SOURCES.map(
-	(source) => ({ ...source, name: NAMES[source.id] }),
-)
+export const IMPORT_SOURCE_LIST: readonly ImportSourceEntry[] = SOURCES.map((source) => ({
+	...source,
+	name: NAMES[source.id],
+}))
 
 const entry = (id: ImportSourceId) =>
 	IMPORT_SOURCE_LIST.find((source) => source.id === id) as ImportSourceEntry
@@ -200,8 +193,7 @@ export const importSourceName = (id: ImportSourceId) => entry(id).name
 
 /** How a sentence names a source's file: "a Trakt file", "a CSV file in Letterboxd's import format". */
 export const importFileNoun = (id: ImportSourceId) =>
-	entry(id).fileNoun ??
-	`${/^[AEIOU]/i.test(entry(id).name) ? "an" : "a"} ${entry(id).name} file`
+	entry(id).fileNoun ?? `${/^[AEIOU]/i.test(entry(id).name) ? "an" : "a"} ${entry(id).name} file`
 
 /** The source a recognized file is offered as: "Trakt", "Kitsu". */
 export const importAsName = (recognition: RecognizedImportFile) =>
@@ -212,16 +204,12 @@ export const importAsName = (recognition: RecognizedImportFile) =>
 		: importSourceName(recognition.source)
 
 /** When each source last finished an import. An undone or unfinished import doesn't count. */
-export function lastImported(
-	imdb: readonly ImdbImportSummary[],
-	native: readonly ImportSummary[],
-) {
+export function lastImported(imdb: readonly ImdbImportSummary[], native: readonly ImportSummary[]) {
 	const latest = new Map<ImportSourceId, string>()
 	const note = (id: ImportSourceId, at: string | null) => {
 		if (at && at > (latest.get(id) ?? "")) latest.set(id, at)
 	}
-	for (const item of imdb)
-		if (item.status === "done") note("imdb", item.finishedAt)
+	for (const item of imdb) if (item.status === "done") note("imdb", item.finishedAt)
 	for (const item of native)
 		if (item.status === "done")
 			note(item.source === "imdb_list" ? "imdb" : item.source, item.finishedAt)

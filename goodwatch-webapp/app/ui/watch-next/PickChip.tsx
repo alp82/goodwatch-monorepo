@@ -2,7 +2,6 @@
 // shelf that show with the picker closed, apart from TasteShelf.tsx so a page can show its picks before the shelf's
 // code loads (the start page loads its panel on first use).
 import { XMarkIcon } from "@heroicons/react/24/solid"
-import { motion } from "framer-motion"
 import { WORD_BY_ID, groupNumber } from "~/domain/taste-picker"
 import type { WatchNext } from "~/server/watch-next.server"
 import type { MoodControl } from "./MoodPicker"
@@ -14,10 +13,8 @@ type Picker = WatchNext["picker"]
 /** A taste group with no words that set it apart has no colors of its own. */
 const NO_HUE = "#6b7280"
 
-export const choiceOf = (picker: Picker, id: string) =>
-	picker.choices.find((c) => c.id === id)
-export const groupOf = (picker: Picker, id: string) =>
-	picker.groups.find((g) => g.id === id)
+export const choiceOf = (picker: Picker, id: string) => picker.choices.find((c) => c.id === id)
+export const groupOf = (picker: Picker, id: string) => picker.groups.find((g) => g.id === id)
 
 /** A choice's colors: a word's own, or a taste group's one or two. */
 export function choiceHues(picker: Picker, id: string): string[] {
@@ -43,10 +40,7 @@ export function ChoiceArt({
 }) {
 	const [a, b = a] = hues
 	return (
-		<span
-			className={`absolute inset-0 -z-10 overflow-hidden ${className}`}
-			aria-hidden
-		>
+		<span className={`absolute inset-0 -z-10 overflow-hidden ${className}`} aria-hidden>
 			<span className="absolute inset-0" style={{ background: a }} />
 			{path && (
 				<img
@@ -94,11 +88,8 @@ export function PickChip({
 	const name = pickName(picker, id)
 	const hues = choiceHues(picker, id)
 	return (
-		<motion.span
-			layout
-			initial={{ opacity: 0, scale: 0.9 }}
-			animate={{ opacity: 1, scale: 1 }}
-			className={`relative isolate inline-flex max-w-[22rem] shrink-0 items-center overflow-hidden rounded-xl text-sm font-bold text-white ring-1 ring-white/25 ${scrim ? "[text-shadow:0_1px_2px_rgb(0_0_0/.9),0_0_10px_rgb(0_0_0/.55)]" : "[text-shadow:0_1px_4px_rgba(0,0,0,.6)]"} ${pinned ? "h-8" : "h-9"}`}
+		<span
+			className={`relative isolate inline-flex motion-safe:transition-[opacity,scale] motion-safe:duration-200 motion-safe:starting:scale-90 motion-safe:starting:opacity-0 max-w-[22rem] shrink-0 items-center overflow-hidden rounded-xl text-sm font-bold text-white ring-1 ring-white/25 ${scrim ? "[text-shadow:0_1px_2px_rgb(0_0_0/.9),0_0_10px_rgb(0_0_0/.55)]" : "[text-shadow:0_1px_4px_rgba(0,0,0,.6)]"} ${pinned ? "h-8" : "h-9"}`}
 			style={{ boxShadow: `0 4px 18px -6px ${hues[0]}` }}
 		>
 			<ChoiceArt
@@ -137,6 +128,6 @@ export function PickChip({
 			>
 				<XMarkIcon className="h-3.5 w-3.5" />
 			</button>
-		</motion.span>
+		</span>
 	)
 }

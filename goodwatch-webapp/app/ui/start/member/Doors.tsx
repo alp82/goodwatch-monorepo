@@ -7,10 +7,9 @@ import { usePathViewer } from "~/ui/navigation/NavigationContext"
 // title page), the Wishlist door's bookmark included.
 import { ArrowRightIcon, PlusIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
-import { motion } from "framer-motion"
 import { useRef, useState } from "react"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
-import { DISPLAY, EASE, WRAP, posterUrl } from "~/ui/watch-next/style"
+import { DISPLAY, WRAP, posterUrl } from "~/ui/watch-next/style"
 import {
 	type Cta,
 	type Door,
@@ -129,14 +128,9 @@ export function Doors({ data }: { data: MemberStartData }) {
 				className="-mx-4 mt-10 border-t-2 border-amber-400 bg-gray-900 px-4 pt-5 pb-6 ring-1 ring-white/5 sm:mx-0 sm:rounded-2xl sm:px-6 lg:mt-[100px]"
 			>
 				{/* A new section swaps in at once and fades up, so the panel never collapses between sections. */}
-				<motion.div
-					key={current.key}
-					initial={opened ? { opacity: 0, y: 8 } : false}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.2, ease: EASE }}
-				>
+				<div key={current.key} className={opened ? "start-door-enter" : undefined}>
 					<DoorSection door={current} reserve={reserve} filter={filter} onFilter={setFilter} />
-				</motion.div>
+				</div>
 			</div>
 		</section>
 	)
