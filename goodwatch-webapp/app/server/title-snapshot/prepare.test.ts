@@ -75,11 +75,7 @@ test("prepared derivations give the same facts, moods, cosines, statistics and r
 	const inline = buildSnapshot(
 		input.manifest,
 		joinChunks(input.manifest, input.chunks),
-		joinRatingsChunks(
-			input.ratings.manifest,
-			input.manifest.count,
-			input.ratings.chunks,
-		),
+		joinRatingsChunks(input.ratings.manifest, input.manifest.count, input.ratings.chunks),
 		undefined,
 		result.facts,
 	)
@@ -105,23 +101,16 @@ test("prepared derivations give the same facts, moods, cosines, statistics and r
 		prepared.columns.ratings?.agesOf("DE"),
 		inline.columns.ratings?.agesOf("DE"),
 	)
-	assert.deepStrictEqual(
-		prepared.columns.ratings?.content,
-		inline.columns.ratings?.content,
-	)
-	assert.deepStrictEqual(
-		prepared.columns.ratings?.estimates,
-		inline.columns.ratings?.estimates,
-	)
+	assert.deepStrictEqual(prepared.columns.ratings?.content, inline.columns.ratings?.content)
+	assert.deepStrictEqual(prepared.columns.ratings?.estimates, inline.columns.ratings?.estimates)
 	assert.equal(result.ratingsRefusal, null)
 	assert.equal(result.factsRefusal, null)
 	assert.equal(prepared.columns.facts, result.facts)
 })
 
 test("the snapshot derives each title's themes and styles beside its moods, by the rules' own thresholds", async () => {
-	const { themeMaskOf, themesInMask, styleMaskOf, stylesInMask } = await import(
-		"../../domain/themes-styles.ts"
-	)
+	const { themeMaskOf, themesInMask, styleMaskOf, stylesInMask } =
+		await import("../../domain/themes-styles.ts")
 	const scored = (scores: Record<string, number>) =>
 		VALID_FINGERPRINT_KEYS.map((key) => scores[key] ?? 0)
 	const titles = [
@@ -156,12 +145,7 @@ test("the snapshot derives each title's themes and styles beside its moods, by t
 		})),
 	})
 	const prepared = prepareSnapshot({ manifest, chunks, ratings: null })
-	const { columns } = buildSnapshot(
-		manifest,
-		prepared.columns,
-		null,
-		prepared.derived,
-	)
+	const { columns } = buildSnapshot(manifest, prepared.columns, null, prepared.derived)
 	assert.deepEqual(
 		Array.from(columns.themes, (mask) => themesInMask(mask)),
 		[["war"], [], ["crime", "mystery"], []],
@@ -172,14 +156,8 @@ test("the snapshot derives each title's themes and styles beside its moods, by t
 	)
 	// The same masks the rules give a title's fingerprint and genres directly.
 	titles.forEach((title, row) => {
-		assert.equal(
-			columns.themes[row],
-			themeMaskOf(title.fingerprint, title.genres),
-		)
-		assert.equal(
-			columns.styles[row],
-			styleMaskOf(title.fingerprint, title.genres),
-		)
+		assert.equal(columns.themes[row], themeMaskOf(title.fingerprint, title.genres))
+		assert.equal(columns.styles[row], styleMaskOf(title.fingerprint, title.genres))
 	})
 })
 
@@ -199,12 +177,7 @@ test("snapshot checksum refusal is fatal but ratings refusal still produces a sn
 	assert.ok(result.ratingsRefusal)
 	assert.match(result.ratingsRefusal, /checksum/i)
 	assert.equal(
-		buildSnapshot(
-			input.manifest,
-			result.columns,
-			result.ratings,
-			result.derived,
-		).count,
+		buildSnapshot(input.manifest, result.columns, result.ratings, result.derived).count,
 		3,
 	)
 })
@@ -213,16 +186,10 @@ test("source snapshot worker transfers the prepared result and reports refusals"
 	const { Worker } = await import("node:worker_threads")
 	const { snapshotTransferables } = await import("./prepare.server.ts")
 	async function roundTrip(input: ReturnType<typeof fixture>) {
-		const worker = new Worker(
-			new URL("./title-snapshot.worker.ts", import.meta.url),
-			{
-				workerData: input,
-				execArgv: [
-					"--import",
-					new URL("../title-filter/test-alias.ts", import.meta.url).href,
-				],
-			},
-		)
+		const worker = new Worker(new URL("./title-snapshot.worker.ts", import.meta.url), {
+			workerData: input,
+			execArgv: ["--import", new URL("../title-filter/test-alias.ts", import.meta.url).href],
+		})
 		try {
 			return await new Promise<{
 				ok: boolean
@@ -232,9 +199,7 @@ test("source snapshot worker transfers the prepared result and reports refusals"
 			}>((resolve, reject) => {
 				worker.once("error", reject)
 				worker.once("message", resolve)
-				worker.once("exit", (code) =>
-					reject(new Error(`Worker exited before result: ${code}`)),
-				)
+				worker.once("exit", (code) => reject(new Error(`Worker exited before result: ${code}`)))
 			})
 		} finally {
 			await worker.terminate()
@@ -247,10 +212,7 @@ test("source snapshot worker transfers the prepared result and reports refusals"
 	assert.deepStrictEqual(result.result, prepareSnapshot(input))
 	const buffers = snapshotTransferables(result.result)
 	assert.equal(new Set(buffers).size, buffers.length)
-	assert.equal(
-		result.result.columns.pointIds.buffer,
-		result.result.columns.fingerprints.buffer,
-	)
+	assert.equal(result.result.columns.pointIds.buffer, result.result.columns.fingerprints.buffer)
 	input.manifest.sha256 = "0".repeat(64)
 	const refused = await roundTrip(input)
 	assert.equal(refused.ok, false)
@@ -282,10 +244,7 @@ test("snapshots without facts or with refused facts load with null facts and unc
 		)
 		assert.equal(snapshot.columns.facts, null)
 		assert.equal(snapshot.count, 3)
-		assert.deepEqual(
-			snapshot.factsAt(0),
-			buildSnapshot(input.manifest, result.columns).factsAt(0),
-		)
+		assert.deepEqual(snapshot.factsAt(0), buildSnapshot(input.manifest, result.columns).factsAt(0))
 	}
 })
 
@@ -318,5 +277,35 @@ test("production worker input preserves multiple facts chunks and leaves source 
 		assert.equal(result.facts.releaseYears.buffer, result.facts.episodes.buffer)
 	} finally {
 		await rm(dir, { recursive: true, force: true })
+	}
+})
+
+test("optional original languages preserve exact codes and row alignment across chunks", async () => {
+	const { createHash } = await import("node:crypto")
+	const { readLanguageChunks } = await import("./languages.server.ts")
+	const input = fixture()
+	const chunks = [Uint8Array.of(1), Uint8Array.of(0, 255, 255, 0, 0)]
+	const languages = {
+		format: 1,
+		codes: ["JA", "en"],
+		chunks: chunks.length,
+		sha256: createHash("sha256").update(Buffer.concat(chunks)).digest("hex"),
+	}
+	const reader = { getBuffer: async (key: string) => chunks[Number(key.split(":").pop())] }
+	assert.equal(await readLanguageChunks(reader, input.manifest), null)
+	const raw = await readLanguageChunks(reader, { ...input.manifest, languages })
+	assert.ok(raw)
+	const prepared = prepareSnapshot({ ...input, languages: raw })
+	assert.deepEqual(prepared.languages?.indexes, Uint16Array.of(1, 65535, 0))
+	assert.deepEqual(prepared.languages?.codes, ["JA", "en"])
+	assert.equal(prepared.languagesRefusal, null)
+	for (const changed of [
+		{ ...raw.manifest, codes: ["JA"] },
+		{ ...raw.manifest, sha256: "0".repeat(64) },
+	]) {
+		const bad = prepareSnapshot({ ...input, languages: { ...raw, manifest: changed } })
+		assert.equal(bad.languages, null)
+		assert.ok(bad.languagesRefusal)
+		assert.deepEqual(bad.columns.pointIds, prepared.columns.pointIds)
 	}
 })

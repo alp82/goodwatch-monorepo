@@ -1,13 +1,10 @@
 // The loaded title snapshot: every title with a title analysis, its fingerprint and the facts filters and sorts need,
 // in webapp memory. Row data is derived in a worker, then wrapped once per version; never changed afterwards.
+import type { OriginalLanguages } from "./languages.server"
 import type { LadderStep } from "~/domain/age-content"
 import { type MoodKey, moodMaskOf, moodsInMask } from "~/domain/moods"
 import { styleMaskOf, themeMaskOf } from "~/domain/themes-styles"
-import {
-	type CatalogStats,
-	catalogStats,
-	referencePool,
-} from "./catalog-stats.server"
+import { type CatalogStats, catalogStats, referencePool } from "./catalog-stats.server"
 import {
 	type Columns,
 	FINGERPRINT_LENGTH,
@@ -81,6 +78,7 @@ export interface TitleColumns {
 	readonly ratings: TitleRatings | null
 	/** Optional facts sidecar in row order; null when absent or refused. */
 	readonly facts: TitleFactColumns | null
+	readonly originalLanguages?: OriginalLanguages | null
 }
 
 /**
@@ -105,14 +103,9 @@ export interface TitleRatings {
 
 function titleRatings(r: RatingColumns): TitleRatings {
 	const ages = new Map(
-		r.countries.map((country, at) => [
-			country,
-			r.ages.subarray(at * r.count, (at + 1) * r.count),
-		]),
+		r.countries.map((country, at) => [country, r.ages.subarray(at * r.count, (at + 1) * r.count)]),
 	)
-	const ladders = new Map(
-		r.countries.map((country) => [country, r.ladders[country]]),
-	)
+	const ladders = new Map(r.countries.map((country) => [country, r.ladders[country]]))
 	return {
 		content: r.content,
 		estimates: r.estimates,
@@ -207,6 +200,7 @@ class LoadedSnapshot implements TitleSnapshot {
 		ratings: RatingColumns | null,
 		derived: ReturnType<typeof deriveSnapshot>,
 		facts: FactColumns | null,
+		originalLanguages: OriginalLanguages | null,
 	) {
 		this.c = c
 		this.version = manifest.version
@@ -232,6 +226,7 @@ class LoadedSnapshot implements TitleSnapshot {
 			styles: derived.styleMasks,
 			ratings: ratings && titleRatings(ratings),
 			facts,
+			originalLanguages,
 		}
 	}
 
@@ -334,6 +329,7 @@ export function buildSnapshot(
 	ratings: RatingColumns | null = null,
 	derived = deriveSnapshot(manifest, columns),
 	facts: FactColumns | null = null,
+	originalLanguages: OriginalLanguages | null = null,
 ): TitleSnapshot {
-	return new LoadedSnapshot(manifest, columns, ratings, derived, facts)
+	return new LoadedSnapshot(manifest, columns, ratings, derived, facts, originalLanguages)
 }

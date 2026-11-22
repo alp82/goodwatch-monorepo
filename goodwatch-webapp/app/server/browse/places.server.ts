@@ -540,6 +540,7 @@ export class Places {
 	 * (the hub's map, the places index) would otherwise read them country by country.
 	 */
 	async prefetchHomeLanguages(countries: PlaceRef[]): Promise<void> {
+		if (this.b.snap.columns.originalLanguages) return
 		const keys = new Set<TitleKey>()
 		for (const p of countries)
 			for (const r of this.homeTop(this.rows([{ family: p.family, slug: p.slug }])))
@@ -558,7 +559,8 @@ export class Places {
 		const c = b.snap.columns
 		const n = facts.releaseYears.length
 		const top = this.homeTop(rows)
-		const langs = await languagesOf(top.map(this.keyOf))
+		const column = c.originalLanguages
+		const langs = column ? null : await languagesOf(top.map(this.keyOf))
 		const out = new Map<number, number>()
 		const codes = countries.map((p) => valueOf(this.catalog, p)?.id ?? "")
 		const us = facts.countries.indexOf("US")
@@ -570,7 +572,9 @@ export class Places {
 				const idx = facts.countries.indexOf(code)
 				const first = facts.countryIndexes[r] === idx
 				const alone = first && facts.countryIndexes[n + r] >= facts.countries.length
-				const lang = langs.get(c.pointIds[r] as TitleKey)
+				const lang = column
+					? column.codes[column.indexes[r]]
+					: langs?.get(c.pointIds[r] as TitleKey)
 				const homeLangs = HOME_LANGUAGES[code]
 				let tier: number
 				if (!homeLangs || !lang) tier = first ? 0 : 2

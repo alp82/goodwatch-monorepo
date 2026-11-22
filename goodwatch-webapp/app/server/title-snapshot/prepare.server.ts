@@ -9,11 +9,13 @@ import {
 	joinFactsChunks,
 	joinRatingsChunks,
 } from "./format.server"
+import { decodeLanguages, type LanguageInput, type OriginalLanguages } from "./languages.server"
 import { deriveSnapshot } from "./snapshot.server"
 
 export interface PrepareInput {
 	manifest: Manifest
 	chunks: Uint8Array[]
+	languages?: LanguageInput | null
 	facts?: { manifest: FactsManifest; chunks: Uint8Array[] } | null
 	ratings: { manifest: RatingsManifest; chunks: Uint8Array[] } | null
 }
@@ -38,16 +40,30 @@ export function prepareSnapshot(input: PrepareInput) {
 	let factsRefusal: string | null = null
 	if (input.facts) {
 		try {
-			facts = joinFactsChunks(
-				input.facts.manifest,
-				input.manifest.count,
-				input.facts.chunks,
-			)
+			facts = joinFactsChunks(input.facts.manifest, input.manifest.count, input.facts.chunks)
 		} catch (error) {
 			factsRefusal = error instanceof Error ? error.message : String(error)
 		}
 	}
-	return { columns, derived, ratings, ratingsRefusal, facts, factsRefusal }
+	let languages: OriginalLanguages | null = null
+	let languagesRefusal: string | null = null
+	if (input.languages) {
+		try {
+			languages = decodeLanguages(input.languages, input.manifest.count)
+		} catch (error) {
+			languagesRefusal = error instanceof Error ? error.message : String(error)
+		}
+	}
+	return {
+		columns,
+		derived,
+		ratings,
+		ratingsRefusal,
+		facts,
+		factsRefusal,
+		languages,
+		languagesRefusal,
+	}
 }
 
 /** Column views share buffers; transfer each backing buffer once. */

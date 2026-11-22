@@ -42,8 +42,7 @@ import type { LadderStep } from "~/domain/age-content"
 
 export const FORMAT = 1
 export const CURRENT_KEY = "title-snapshot:current"
-export const chunkKey = (version: string, n: number) =>
-	`title-snapshot:${version}:${n}`
+export const chunkKey = (version: string, n: number) => `title-snapshot:${version}:${n}`
 export const MAX_CHUNK_BYTES = 4 * 1024 * 1024
 
 export const RATINGS_FORMAT = 1
@@ -73,8 +72,7 @@ export const FLAG_ANIME = 8
 export const MOVIE_BASE = 1e12
 export const SHOW_BASE = 2e12
 
-export const BYTES_PER_TITLE =
-	8 + 4 + 4 + 4 + 4 + FINGERPRINT_LENGTH + 1 + 1 + 1
+export const BYTES_PER_TITLE = 8 + 4 + 4 + 4 + 4 + FINGERPRINT_LENGTH + 1 + 1 + 1
 
 export interface Manifest {
 	version: string
@@ -90,6 +88,8 @@ export interface Manifest {
 	ratings?: unknown
 	/** Optional facts sidecar; validated separately so refusal never rejects the snapshot. */
 	facts?: unknown
+	/** Optional original language per row, independently versioned and checked. */
+	languages?: unknown
 }
 
 export interface RatingsManifest {
@@ -128,14 +128,8 @@ export interface Columns {
  * Whether the row is a presentable title (CONTEXT.md): it has a poster and a GoodWatch score. The lists GoodWatch puts
  * together hold only these.
  */
-export function presentableAt(
-	columns: Pick<Columns, "flags" | "scores">,
-	row: number,
-): boolean {
-	return (
-		(columns.flags[row] & FLAG_POSTER) !== 0 &&
-		columns.scores[row] !== UNKNOWN_SCORE
-	)
+export function presentableAt(columns: Pick<Columns, "flags" | "scores">, row: number): boolean {
+	return (columns.flags[row] & FLAG_POSTER) !== 0 && columns.scores[row] !== UNKNOWN_SCORE
 }
 
 export class SnapshotRefused extends Error {
@@ -149,8 +143,7 @@ const isLittleEndian = new Uint8Array(new Uint16Array([1]).buffer)[0] === 1
 
 /** Views of the columns over one buffer of count * BYTES_PER_TITLE bytes; no copy. */
 export function columnsOf(buffer: ArrayBuffer, count: number): Columns {
-	if (!isLittleEndian)
-		throw new Error("The title snapshot needs a little-endian machine")
+	if (!isLittleEndian) throw new Error("The title snapshot needs a little-endian machine")
 	if (buffer.byteLength !== count * BYTES_PER_TITLE)
 		throw new SnapshotRefused(
 			`Snapshot holds ${buffer.byteLength} bytes; ${count} titles need ${count * BYTES_PER_TITLE}`,
@@ -179,25 +172,17 @@ export function columnsOf(buffer: ArrayBuffer, count: number): Columns {
 }
 
 /** Checks the manifest's shape and that its key order is the webapp's own. Throws SnapshotRefused. */
-export function checkManifest(
-	value: unknown,
-	keyOrder: readonly string[],
-): Manifest {
+export function checkManifest(value: unknown, keyOrder: readonly string[]): Manifest {
 	const m = value as Partial<Manifest> | null
 	const fail = (why: string): never => {
 		throw new SnapshotRefused(`Title snapshot manifest refused: ${why}`)
 	}
 	if (!m || typeof m !== "object") return fail("not an object")
-	if (m.format !== FORMAT)
-		return fail(`format ${m.format}, this webapp reads ${FORMAT}`)
-	if (typeof m.version !== "string" || !/^[\w.-]{1,64}$/.test(m.version))
-		return fail("bad version")
-	if (!Number.isSafeInteger(m.count) || (m.count as number) < 0)
-		return fail("bad count")
-	if (!Number.isSafeInteger(m.chunks) || (m.chunks as number) < 1)
-		return fail("bad chunk count")
-	if (typeof m.sha256 !== "string" || !/^[0-9a-f]{64}$/.test(m.sha256))
-		return fail("bad sha256")
+	if (m.format !== FORMAT) return fail(`format ${m.format}, this webapp reads ${FORMAT}`)
+	if (typeof m.version !== "string" || !/^[\w.-]{1,64}$/.test(m.version)) return fail("bad version")
+	if (!Number.isSafeInteger(m.count) || (m.count as number) < 0) return fail("bad count")
+	if (!Number.isSafeInteger(m.chunks) || (m.chunks as number) < 1) return fail("bad chunk count")
+	if (typeof m.sha256 !== "string" || !/^[0-9a-f]{64}$/.test(m.sha256)) return fail("bad sha256")
 	if (
 		!Array.isArray(m.keyOrder) ||
 		m.keyOrder.length !== keyOrder.length ||
@@ -244,9 +229,7 @@ export function joinChunks(manifest: Manifest, chunks: Uint8Array[]): Columns {
 // table indexes inside their tables.
 function checkRows(manifest: Manifest, c: Columns) {
 	const fail = (why: string): never => {
-		throw new SnapshotRefused(
-			`Title snapshot ${manifest.version} refused: ${why}`,
-		)
+		throw new SnapshotRefused(`Title snapshot ${manifest.version} refused: ${why}`)
 	}
 	let previous = Number.NEGATIVE_INFINITY
 	for (let row = 0; row < c.count; row++) {
@@ -257,11 +240,9 @@ function checkRows(manifest: Manifest, c: Columns) {
 			return fail(`bad point id ${id}`)
 		previous = id
 	}
-	const genreBits =
-		manifest.genres.length >= 32 ? 0 : ~((1 << manifest.genres.length) - 1)
+	const genreBits = manifest.genres.length >= 32 ? 0 : ~((1 << manifest.genres.length) - 1)
 	for (let row = 0; row < c.count; row++) {
-		if (c.genres[row] & genreBits)
-			return fail(`genre bits outside the table at row ${row}`)
+		if (c.genres[row] & genreBits) return fail(`genre bits outside the table at row ${row}`)
 		const origin = c.origins[row]
 		if (origin !== UNKNOWN_ORIGIN && origin >= manifest.origins.length)
 			return fail(`origin outside the table at row ${row}`)
@@ -292,8 +273,7 @@ export function checkRatingsManifest(value: unknown): RatingsManifest {
 		(m.chunks as number) > MAX_RATINGS_CHUNKS
 	)
 		return fail("bad chunk count")
-	if (typeof m.sha256 !== "string" || !/^[0-9a-f]{64}$/.test(m.sha256))
-		return fail("bad sha256")
+	if (typeof m.sha256 !== "string" || !/^[0-9a-f]{64}$/.test(m.sha256)) return fail("bad sha256")
 	const countries = m.countries
 	if (
 		!Array.isArray(countries) ||
@@ -314,22 +294,14 @@ export function checkRatingsManifest(value: unknown): RatingsManifest {
 			return fail(`no ladder of two steps for ${country}`)
 		let previous = -1
 		for (const step of steps as Partial<LadderStep>[]) {
-			if (!step || typeof step !== "object")
-				return fail(`bad ladder for ${country}`)
+			if (!step || typeof step !== "object") return fail(`bad ladder for ${country}`)
 			const age = step.age
-			if (
-				!Number.isSafeInteger(age) ||
-				(age as number) <= previous ||
-				(age as number) > MAX_AGE
-			)
+			if (!Number.isSafeInteger(age) || (age as number) <= previous || (age as number) > MAX_AGE)
 				return fail(`ladder ages for ${country} not ascending from 0 to 18`)
 			previous = age as number
 			if (typeof step.label !== "string" || !step.label)
 				return fail(`a ladder step without a label for ${country}`)
-			if (
-				step.show !== undefined &&
-				(typeof step.show !== "string" || !step.show)
-			)
+			if (step.show !== undefined && (typeof step.show !== "string" || !step.show))
 				return fail(`bad show label for ${country}`)
 		}
 	}
@@ -380,9 +352,7 @@ export function joinRatingsChunks(
 	}
 	const digest = hash.digest("hex")
 	if (digest !== manifest.sha256)
-		return fail(
-			`checksum ${digest} differs from the manifest's ${manifest.sha256}`,
-		)
+		return fail(`checksum ${digest} differs from the manifest's ${manifest.sha256}`)
 	const bytes = new Uint8Array(total)
 	let at = 0
 	for (const chunk of chunks) {
@@ -431,8 +401,7 @@ export function encodeSnapshot(input: {
 	// The most common origins get the table's places; rarer ones beyond it are stored as unknown.
 	const originCounts = new Map<string, number>()
 	for (const r of rows)
-		if (r.origin)
-			originCounts.set(r.origin, (originCounts.get(r.origin) ?? 0) + 1)
+		if (r.origin) originCounts.set(r.origin, (originCounts.get(r.origin) ?? 0) + 1)
 	const origins = [...originCounts.entries()]
 		.sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
 		.slice(0, MAX_ORIGINS)
@@ -454,13 +423,9 @@ export function encodeSnapshot(input: {
 		for (let k = 0; k < FINGERPRINT_LENGTH; k++)
 			c.fingerprints[row * FINGERPRINT_LENGTH + k] = r.fingerprint[k]
 		c.scores[row] =
-			r.score == null
-				? UNKNOWN_SCORE
-				: Math.max(0, Math.min(100, Math.floor(r.score)))
+			r.score == null ? UNKNOWN_SCORE : Math.max(0, Math.min(100, Math.floor(r.score)))
 		c.origins[row] =
-			r.origin == null
-				? UNKNOWN_ORIGIN
-				: (originIndex.get(r.origin) ?? UNKNOWN_ORIGIN)
+			r.origin == null ? UNKNOWN_ORIGIN : (originIndex.get(r.origin) ?? UNKNOWN_ORIGIN)
 		c.flags[row] =
 			(r.hasPoster ? FLAG_POSTER : 0) |
 			(r.hasBackdrop ? FLAG_BACKDROP : 0) |
@@ -469,7 +434,7 @@ export function encodeSnapshot(input: {
 	})
 
 	const chunks: Uint8Array[] = []
-	for (let at = 0; at < bytes.length || chunks.length === 0; ) {
+	for (let at = 0; at < bytes.length || chunks.length === 0;) {
 		chunks.push(bytes.subarray(at, at + MAX_CHUNK_BYTES))
 		at += MAX_CHUNK_BYTES
 	}
@@ -526,7 +491,7 @@ export function encodeRatings(input: {
 		})
 	})
 	const chunks: Uint8Array[] = []
-	for (let at = 0; at < bytes.length || chunks.length === 0; ) {
+	for (let at = 0; at < bytes.length || chunks.length === 0;) {
 		chunks.push(bytes.subarray(at, at + MAX_CHUNK_BYTES))
 		at += MAX_CHUNK_BYTES
 	}
@@ -561,8 +526,7 @@ const FACTS_WIRE_BYTES: Readonly<Record<number, number>> = {
 	[FACTS_FORMAT]: FACTS_BYTES_PER_TITLE,
 }
 export const NO_COUNTRY = 255
-export const factsChunkKey = (version: string, n: number) =>
-	`title-snapshot:${version}:facts:${n}`
+export const factsChunkKey = (version: string, n: number) => `title-snapshot:${version}:facts:${n}`
 
 export interface FactsManifest {
 	format: number
@@ -597,23 +561,15 @@ export function checkFactsManifest(value: unknown): FactsManifest {
 	if (!m || typeof m !== "object") return fail("not an object")
 	if (typeof m.format !== "number" || !FACTS_WIRE_BYTES[m.format])
 		return fail(`format ${m.format}, this webapp reads 1 to ${FACTS_FORMAT}`)
-	if (
-		!Number.isSafeInteger(m.chunks) ||
-		(m.chunks as number) < 1 ||
-		(m.chunks as number) > 4096
-	)
+	if (!Number.isSafeInteger(m.chunks) || (m.chunks as number) < 1 || (m.chunks as number) > 4096)
 		return fail("bad chunk count")
-	if (typeof m.sha256 !== "string" || !/^[0-9a-f]{64}$/.test(m.sha256))
-		return fail("bad sha256")
+	if (typeof m.sha256 !== "string" || !/^[0-9a-f]{64}$/.test(m.sha256)) return fail("bad sha256")
 	const countries = m.countries
 	if (
 		!Array.isArray(countries) ||
 		countries.length > 255 ||
 		countries.some(
-			(c, i) =>
-				typeof c !== "string" ||
-				!/^[A-Z]{2}$/.test(c) ||
-				(i > 0 && c <= countries[i - 1]),
+			(c, i) => typeof c !== "string" || !/^[A-Z]{2}$/.test(c) || (i > 0 && c <= countries[i - 1]),
 		)
 	)
 		return fail("bad country table")
@@ -630,15 +586,13 @@ export function joinFactsChunks(
 		throw new SnapshotRefused(`Title snapshot facts refused: ${why}`)
 	}
 	if (!Number.isSafeInteger(count) || count < 0) return fail("bad title count")
-	if (chunks.length !== manifest.chunks)
-		return fail("chunk count differs from manifest")
+	if (chunks.length !== manifest.chunks) return fail("chunk count differs from manifest")
 	const total = chunks.reduce((n, c) => n + c.byteLength, 0)
 	if (total !== count * FACTS_WIRE_BYTES[manifest.format])
 		return fail(`bad size: ${total} bytes for ${count} titles`)
 	const hash = createHash("sha256")
 	for (const chunk of chunks) hash.update(chunk)
-	if (hash.digest("hex") !== manifest.sha256)
-		return fail("checksum differs from manifest")
+	if (hash.digest("hex") !== manifest.sha256) return fail("checksum differs from manifest")
 	if (!isLittleEndian) return fail("needs a little-endian machine")
 	// Insert one byte before episodes when N is odd. Copy straight from chunks into the
 	// aligned buffer; retaining a second copy of the wire bytes would double memory.
@@ -653,8 +607,7 @@ export function joinFactsChunks(
 	for (const chunk of chunks) {
 		const before = Math.max(0, Math.min(chunk.length, split - offset))
 		bytes.set(chunk.subarray(0, before), offset + (offset >= split ? pad : 0))
-		if (before < chunk.length)
-			bytes.set(chunk.subarray(before), offset + before + pad)
+		if (before < chunk.length) bytes.set(chunk.subarray(before), offset + before + pad)
 		offset += chunk.length
 	}
 	const buffer = bytes.buffer
@@ -680,12 +633,9 @@ export function joinFactsChunks(
 	}
 	for (const values of Object.values(columns.sources ?? {}))
 		for (const value of values)
-			if (value > 100 && value !== UNKNOWN_SCORE)
-				return fail("bad source score")
-	for (const status of columns.showStatuses)
-		if (status > 3) return fail("bad show status")
-	for (const seasons of columns.seasons)
-		if (seasons === 255) return fail("bad seasons")
+			if (value > 100 && value !== UNKNOWN_SCORE) return fail("bad source score")
+	for (const status of columns.showStatuses) if (status > 3) return fail("bad show status")
+	for (const seasons of columns.seasons) if (seasons === 255) return fail("bad seasons")
 	for (const country of columns.countryIndexes)
 		if (country !== NO_COUNTRY && country >= manifest.countries.length)
 			return fail("bad country index")
@@ -729,9 +679,7 @@ export function encodeFacts(input: { rows: FactRow[] }): {
 	const view = new DataView(bytes.buffer)
 	const n = rows.length
 	const uint = (v: number | null | undefined, max: number) =>
-		typeof v === "number" && Number.isFinite(v) && v > 0
-			? Math.min(max, Math.floor(v))
-			: 0
+		typeof v === "number" && Number.isFinite(v) && v > 0 ? Math.min(max, Math.floor(v)) : 0
 	const money = (v: number | null | undefined) =>
 		v != null && v >= 10_000 ? uint(v / 1000, 0xffffffff) : 0
 	bytes.fill(NO_COUNTRY, 16 * n)

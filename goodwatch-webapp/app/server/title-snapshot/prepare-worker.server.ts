@@ -13,9 +13,7 @@ export function stopSnapshotWorkers() {
 }
 
 function copyChunks(chunks: Uint8Array[]): Uint8Array {
-	const bytes = new Uint8Array(
-		chunks.reduce((size, chunk) => size + chunk.byteLength, 0),
-	)
+	const bytes = new Uint8Array(chunks.reduce((size, chunk) => size + chunk.byteLength, 0))
 	let offset = 0
 	for (const chunk of chunks) {
 		bytes.set(chunk, offset)
@@ -31,9 +29,7 @@ export async function prepareInWorker(
 	if (!existsSync(url)) {
 		if (process.env.NODE_ENV === "production" && !warned) {
 			warned = true
-			console.error(
-				`Missing ${url.pathname}; title snapshot load runs on the main thread`,
-			)
+			console.error(`Missing ${url.pathname}; title snapshot load runs on the main thread`)
 		}
 		return prepareSnapshot(input)
 	}
@@ -52,13 +48,15 @@ export async function prepareInWorker(
 				chunks: input.facts.chunks.map((chunk) => copyChunks([chunk])),
 			}
 		: null
+	const languages = input.languages
+		? { manifest: input.languages.manifest, chunks: [copyChunks(input.languages.chunks)] }
+		: null
 	const transferList = [chunks[0].buffer as ArrayBuffer]
+	if (languages) transferList.push(languages.chunks[0].buffer as ArrayBuffer)
 	if (ratings) transferList.push(ratings.chunks[0].buffer as ArrayBuffer)
-	if (facts)
-		for (const chunk of facts.chunks)
-			transferList.push(chunk.buffer as ArrayBuffer)
+	if (facts) for (const chunk of facts.chunks) transferList.push(chunk.buffer as ArrayBuffer)
 	const worker = new Worker(url, {
-		workerData: { ...input, chunks, ratings, facts },
+		workerData: { ...input, chunks, ratings, facts, languages },
 		transferList,
 	})
 	active.add(worker)
@@ -66,23 +64,17 @@ export async function prepareInWorker(
 	try {
 		return await new Promise((resolve, reject) => {
 			let done = false
-			timeout = setTimeout(
-				() => reject(new Error("Title snapshot worker timed out")),
-				60_000,
-			)
+			timeout = setTimeout(() => reject(new Error("Title snapshot worker timed out")), 60_000)
 			worker.on("error", reject)
 			worker.on("exit", (code) => {
-				if (!done || code !== 0)
-					reject(new Error(`Title snapshot worker exited early (${code})`))
+				if (!done || code !== 0) reject(new Error(`Title snapshot worker exited early (${code})`))
 			})
 			worker.once("message", (message) => {
 				done = true
 				if (message.ok) resolve(message.result)
 				else
 					reject(
-						message.refused
-							? new SnapshotRefused(message.message)
-							: new Error(message.message),
+						message.refused ? new SnapshotRefused(message.message) : new Error(message.message),
 					)
 			})
 		})

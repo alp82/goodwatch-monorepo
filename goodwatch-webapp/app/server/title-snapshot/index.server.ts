@@ -16,6 +16,7 @@ import Redis from "ioredis"
 import { addReadinessCheck, isShuttingDown, onShutdown } from "~/server/lifecycle.server"
 import { VALID_FINGERPRINT_KEYS } from "~/server/utils/fingerprint"
 import { CURRENT_KEY, SnapshotRefused, checkManifest, chunkKey } from "./format.server"
+import { readLanguageChunks } from "./languages.server"
 import { readFactsChunks } from "./facts.server"
 import { readRatingsChunks } from "./ratings.server"
 import { reloadDelayMs, retryDelayMs } from "./retry.server"
@@ -146,28 +147,43 @@ async function check(): Promise<boolean> {
 			throw new Error(
 				`Title snapshot ${manifest.version} lacks chunk ${missing}; retrying at the next check`,
 			)
-		const [ratingsInput, factsInput] = await Promise.all([
+		const [ratingsInput, factsInput, languageInput] = await Promise.all([
 			readRatingsChunks(redis, manifest),
 			readFactsChunks(redis, manifest),
+			readLanguageChunks(redis, manifest),
 		])
 		const readMs = performance.now() - startedAt
 		if (!started) return true
-		const { columns, derived, ratings, ratingsRefusal, facts, factsRefusal } =
-			await prepareInWorker({
-				manifest,
-				chunks: chunks as Buffer[],
-				ratings: ratingsInput,
-				facts: factsInput,
-			})
+		const {
+			columns,
+			derived,
+			ratings,
+			ratingsRefusal,
+			facts,
+			factsRefusal,
+			languages,
+			languagesRefusal,
+		} = await prepareInWorker({
+			manifest,
+			chunks: chunks as Buffer[],
+			ratings: ratingsInput,
+			facts: factsInput,
+			languages: languageInput,
+		})
 		if (!started) return true
 		if (ratingsRefusal)
 			console.error(`Title snapshot ${manifest.version} loads without ratings:`, ratingsRefusal)
 		if (factsRefusal)
 			console.error(`Title snapshot ${manifest.version} loads without facts:`, factsRefusal)
-		const snapshot = buildSnapshot(manifest, columns, ratings, derived, facts)
+		if (languagesRefusal)
+			console.error(
+				`Title snapshot ${manifest.version} loads without original languages:`,
+				languagesRefusal,
+			)
+		const snapshot = buildSnapshot(manifest, columns, ratings, derived, facts, languages)
 		current = snapshot
 		console.info(
-			`Title snapshot ${snapshot.version} loaded: ${snapshot.count} titles, ${snapshot.stats.pool} in the reference pool, ${ratings ? `ratings for ${ratings.countries.length} countries` : "no ratings"}, ${facts ? `facts for ${facts.countries.length} countries` : "no facts"}, in ${Math.round(performance.now() - startedAt)} ms (${Math.round(readMs)} ms reading Redis)`,
+			`Title snapshot ${snapshot.version} loaded: ${snapshot.count} titles, ${snapshot.stats.pool} in the reference pool, ${ratings ? `ratings for ${ratings.countries.length} countries` : "no ratings"}, ${facts ? `facts for ${facts.countries.length} countries` : "no facts"}, ${languages ? "original languages" : "no original languages"}, in ${Math.round(performance.now() - startedAt)} ms (${Math.round(readMs)} ms reading Redis)`,
 		)
 	} catch (error) {
 		if (error instanceof SnapshotRefused) refusedManifest = raw
