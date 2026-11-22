@@ -322,7 +322,7 @@ export class Places {
 
 	/** How many well-known titles a place or blend has. */
 	count(parts: Ingredient[]): number {
-		return countOf(this.b, this.catalog, this.norm(parts), this.country)
+		return countOf(this.b, this.catalog, this.norm(parts), this.country, parts.at(-1))
 	}
 
 	/** How a person would say the place: "Cozy comedies from the 1990s". */

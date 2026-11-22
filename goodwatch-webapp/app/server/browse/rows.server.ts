@@ -495,8 +495,26 @@ function maskOf(b: Base, catalog: Catalog, part: Ingredient, country: string): U
 	return mask
 }
 
-/** The smallest single set of a blend and the masks of the others; null when an ingredient can't be read. */
-function blendPlan(b: Base, catalog: Catalog, parts: Ingredient[], country: string) {
+/** The smallest available starting set and the masks it still needs to pass. */
+function blendPlan(
+	b: Base,
+	catalog: Catalog,
+	parts: Ingredient[],
+	country: string,
+	added?: Ingredient,
+) {
+	// Steering and blend suggestions extend the same selection by one ingredient at a time.
+	// Reuse its existing rows when they are narrower than the new ingredient. The input
+	// was canonicalized and sorted, so the appended ingredient may be anywhere in it.
+	if (added && parts.length > 2) {
+		const rest = parts.filter((p) => p.family !== added.family || p.slug !== added.slug)
+		if (rest.length < parts.length) {
+			const selected = rowCache.get(rowsId(b, rest, country))
+			if (selected && !selected.length) return { start: selected, masks: [] }
+			if (selected && selected.length <= rowsOf(b, catalog, [added], country).length)
+				return { start: selected, masks: [maskOf(b, catalog, added, country)] }
+		}
+	}
 	const singles = parts.map((p) => rowsOf(b, catalog, [p], country))
 	if (singles.some((s, i) => !s.length && !testOf(b.snap, catalog, parts[i], country))) return null
 	const order = singles.map((_, i) => i).sort((x, y) => singles[x].length - singles[y].length)
@@ -641,14 +659,20 @@ export function rowsOf(b: Base, catalog: Catalog, parts: Ingredient[], country: 
 }
 
 /** How many well-known rows have every ingredient, without keeping the rows: the counts behind steering and pantry. */
-export function countOf(b: Base, catalog: Catalog, parts: Ingredient[], country: string): number {
+export function countOf(
+	b: Base,
+	catalog: Catalog,
+	parts: Ingredient[],
+	country: string,
+	added?: Ingredient,
+): number {
 	if (parts.length < 2) return rowsOf(b, catalog, parts, country).length
 	const id = rowsId(b, parts, country)
 	const rows = rowCache.get(id)
 	if (rows) return rows.length
 	const hit = countCache.get(id)
 	if (hit !== undefined) return hit
-	const plan = blendPlan(b, catalog, parts, country)
+	const plan = blendPlan(b, catalog, parts, country, added)
 	let n = 0
 	if (plan)
 		for (const r of plan.start) {
