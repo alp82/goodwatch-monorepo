@@ -150,8 +150,8 @@ function Grid({
 						<TitlePosterCard
 							card={t.card}
 							posterSizes={fit ? [[null, `${Math.round(fit.w)}px`]] : STAGE_SIZES}
-							posterPriority={i === 0 ? "high" : i < 3 ? "eager" : "lazy"}
-							posterPaintBeforeScripts={i === 0}
+							posterPriority={i < 3 ? "high" : "lazy"}
+							posterPaintBeforeScripts={i < 3}
 							skipOffscreen={i > 17}
 						/>
 					</motion.div>
