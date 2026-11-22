@@ -14,9 +14,9 @@ import { PlacesNotReady, openPlaces } from "~/server/browse/places.server"
 import { BrowseRow } from "~/ui/browse/BrowseRow"
 import { HubPage } from "~/ui/browse/hub/HubPage"
 import { buildMeta } from "~/utils/meta"
-import { START_AFTER_PAINT } from "~/utils/start-after-paint"
+import { EXPLORE_AFTER_PAINT } from "~/utils/start-after-paint"
 
-export const handle = START_AFTER_PAINT
+export const handle = EXPLORE_AFTER_PAINT
 
 const canonicalLoader = async ({ params, request }: LoaderFunctionArgs) => {
 	const kind = kindOfSeg(params.type)

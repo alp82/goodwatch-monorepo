@@ -17,6 +17,9 @@
 /** A route's handle: the route's scripts start after the first paint. */
 export const START_AFTER_PAINT = { scripts: "after-paint" } as const
 
+/** Explore also remembers the first press of a JavaScript-only button while its modules arrive. */
+export const EXPLORE_AFTER_PAINT = { ...START_AFTER_PAINT, replayExploreButtons: true } as const
+
 /** The `elementtiming` attribute of a picture that the scripts wait for. Spread it on the `img`. */
 export const HERO_TIMING = { elementtiming: "hero" } as const
 
@@ -24,8 +27,7 @@ export const HERO_TIMING = { elementtiming: "hero" } as const
 export const FALLBACK_MS = 5000
 
 /** A value as a script literal that can't end the script element. */
-const literal = (value: unknown) =>
-	JSON.stringify(value).replace(/</g, "\\u003c")
+const literal = (value: unknown) => JSON.stringify(value).replace(/</g, "\\u003c")
 
 // The browser half, as plain ES5. Wait only for an image whose box intersects this viewport, that is not an empty
 // responsive-source placeholder, and that has not failed to load. An error releases the wait immediately. A picture whose request hasn't
@@ -47,9 +49,6 @@ setTimeout(start,fallback)})`.replace(/\n/g, "")
  * The classic script that starts a page's modules: the module preloads in the head, then Remix's module script (`code`)
  * at the end of the body. Both are after the server's nodes, where React's hydration of the document leaves them alone.
  */
-export function startAfterPaintScript(
-	code: string,
-	preloads: string[],
-): string {
+export function startAfterPaintScript(code: string, preloads: string[]): string {
 	return `${BROWSER}(${literal(code)},${literal(preloads)},${FALLBACK_MS})`
 }

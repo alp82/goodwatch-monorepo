@@ -57,6 +57,8 @@ import { SiteChrome } from "~/ui/navigation"
 import { LocaleContext } from "~/utils/locale"
 import { clearLoaderCache } from "~/navigation/instant-navigation"
 import { assetBase, assetUrl } from "~/utils/asset-url"
+import { EXPLORE_BUTTON_GROUP, EXPLORE_BUTTON_SCRIPT } from "~/utils/replay-tap"
+import { useReplayedTap } from "~/utils/useReplayedTap"
 import { START_AFTER_PAINT, startAfterPaintScript } from "~/utils/start-after-paint"
 
 // Shared first-view styles. Carousel and notification styles follow the features that need them.
@@ -326,6 +328,13 @@ const NO_CLIENT = {
 	refreshUser: () => {},
 }
 
+/** Handles a press made on an Explore button while the route's modules were loading. */
+function ExploreButtonReplay() {
+	useReplayedTap(EXPLORE_BUTTON_GROUP)
+	// oxlint-disable-next-line react/no-danger -- Static application code, emitted before the buttons it observes.
+	return <script dangerouslySetInnerHTML={{ __html: EXPLORE_BUTTON_SCRIPT }} />
+}
+
 function Root() {
 	const { locale, env, user } = useLoaderData<LoaderData>()
 	const location = useLocation()
@@ -368,6 +377,10 @@ function Root() {
 	)
 	const dehydratedState = useDehydratedState()
 	const matches = useMatches()
+	const replayExploreButtons = matches.some(
+		(match) =>
+			(match.handle as { replayExploreButtons?: boolean } | undefined)?.replayExploreButtons,
+	)
 	const afterPaint = matches.some(
 		(match) =>
 			(match.handle as { scripts?: string } | undefined)?.scripts === START_AFTER_PAINT.scripts,
@@ -387,6 +400,7 @@ function Root() {
 				<Links />
 			</head>
 			<body className="flex flex-col h-screen bg-gray-900">
+				{replayExploreButtons && <ExploreButtonReplay />}
 				<QueryClientProvider client={queryClient}>
 					<LocaleContext.Provider value={{ locale }}>
 						<AuthProvider

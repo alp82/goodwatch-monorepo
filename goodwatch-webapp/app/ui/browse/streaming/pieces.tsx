@@ -1,7 +1,5 @@
 // The streaming index's parts: the head with its country picker, the control row (what it costs, find, sort), the
 // state behind them, and the small parts every service shows (logo, poster fan, how much changed this month).
-import { REPLAY_TAP_SCRIPT } from "~/utils/replay-tap"
-import { useReplayedTap } from "~/utils/useReplayedTap"
 import { TmdbImage } from "~/ui/TmdbImage"
 import { getVibeColorValue } from "~/utils/ratings"
 import { count } from "~/domain/browse/count"
@@ -190,7 +188,6 @@ const fold = (s: string) =>
 		.toLowerCase()
 
 export function CountryPicker({ data, kind }: { data: StreamingIndexData; kind: Kind }) {
-	useReplayedTap("stream-country")
 	const [open, setOpen] = useState(false)
 	const [find, setFind] = useState("")
 	const box = useRef<HTMLDivElement>(null)
@@ -241,7 +238,6 @@ export function CountryPicker({ data, kind }: { data: StreamingIndexData; kind: 
 		<div ref={box} className="relative inline-block">
 			<button
 				type="button"
-				data-replay-tap={`stream-country:${data.country.code}`}
 				aria-expanded={open}
 				aria-haspopup="dialog"
 				onClick={() => setOpen((o) => !o)}
@@ -331,8 +327,6 @@ export function StreamHead({ data, kind }: { data: StreamingIndexData; kind: Kin
 	const subs = data.services.filter((s) => s.model === "plan").length
 	return (
 		<header className={`${WRAP} pt-8 pb-6 sm:pt-10`}>
-			{/* oxlint-disable-next-line react/no-danger -- The tap recorder is static application code. */}
-			<script dangerouslySetInnerHTML={{ __html: REPLAY_TAP_SCRIPT }} />
 			<p className="text-xs font-bold tracking-[0.18em] text-amber-300 uppercase">Streaming</p>
 			<h1 className="font-display mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-4xl leading-tight font-bold tracking-tight text-white sm:text-5xl">
 				<span>Streaming in</span>

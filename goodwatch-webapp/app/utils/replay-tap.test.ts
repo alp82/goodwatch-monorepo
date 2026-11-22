@@ -1,7 +1,10 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
+import { Window } from "happy-dom"
 
 const {
+	EXPLORE_BUTTON_SCRIPT,
+	EXPLORE_BUTTON_GROUP,
 	REPLAY_PENDING_ATTRIBUTE,
 	REPLAY_TAP_ATTRIBUTE,
 	REPLAY_TAP_EXPIRY_MS,
@@ -14,9 +17,7 @@ const {
 
 // A stand-in for a marked control: its attributes, whether it is in the document, and how often it was clicked.
 function control(mark: string, attributes: Record<string, string> = {}) {
-	const held = new Map(
-		Object.entries({ [REPLAY_TAP_ATTRIBUTE]: mark, ...attributes }),
-	)
+	const held = new Map(Object.entries({ [REPLAY_TAP_ATTRIBUTE]: mark, ...attributes }))
 	const el = {
 		isConnected: true,
 		clicks: 0,
@@ -28,28 +29,23 @@ function control(mark: string, attributes: Record<string, string> = {}) {
 			el.clicks += 1
 		},
 		// The control itself is what `closest` finds from anywhere inside it.
-		closest: (selector: string) =>
-			selector === `[${REPLAY_TAP_ATTRIBUTE}]` ? el : null,
+		closest: (selector: string) => (selector === `[${REPLAY_TAP_ATTRIBUTE}]` ? el : null),
 	}
 	return el
 }
 type Control = ReturnType<typeof control>
 
 // Runs the inline script against a stand-in window, the way the browser runs it while it parses the document.
-function runInlineScript(path = "/movie/603-the-matrix") {
+function runInlineScript(path = "/movie/603-the-matrix", script = REPLAY_TAP_SCRIPT) {
 	const listeners = new Set<(event: unknown) => void>()
 	const timers = new Map<number, () => void>()
 	let nextTimer = 1
 	let clock = 1_000_000
 	const win = {
-		location: { pathname: path },
-		addEventListener(
-			type: string,
-			listener: (event: unknown) => void,
-			capture?: boolean,
-		) {
+		location: { pathname: path, search: "" },
+		addEventListener(type: string, listener: (event: unknown) => void, capture?: boolean) {
 			assert.equal(type, "click")
-			assert.equal(capture, true)
+			assert.equal(capture, script === REPLAY_TAP_SCRIPT)
 			listeners.add(listener)
 		},
 		removeEventListener(_type: string, listener: (event: unknown) => void) {
@@ -57,13 +53,7 @@ function runInlineScript(path = "/movie/603-the-matrix") {
 		},
 	}
 	const run = () =>
-		new Function(
-			"window",
-			"setTimeout",
-			"clearTimeout",
-			"Date",
-			REPLAY_TAP_SCRIPT,
-		)(
+		new Function("window", "setTimeout", "clearTimeout", "Date", script)(
 			win,
 			(callback: () => void, ms: number) => {
 				assert.equal(ms, REPLAY_TAP_EXPIRY_MS)
@@ -77,10 +67,15 @@ function runInlineScript(path = "/movie/603-the-matrix") {
 	return {
 		win,
 		run,
-		tap(el: Control | null, trusted = true) {
+		tap(
+			el: { closest: (selector: string) => unknown } | null,
+			trusted = true,
+			defaultPrevented = false,
+		) {
 			let stopped = false
 			const event = {
 				isTrusted: trusted,
+				defaultPrevented,
 				target: el ?? { closest: () => null },
 				stopPropagation: () => {
 					stopped = true
@@ -259,11 +254,7 @@ test("a tap whose control changed its meaning, left the document, or is far away
 	far.tap(pillar)
 	stopRecordingTaps(far.win)
 	assert.equal(far.claim("pillar", { near: () => false }), null)
-	assert.equal(
-		far.claim("pillar", { near: () => true }),
-		null,
-		"it was taken out",
-	)
+	assert.equal(far.claim("pillar", { near: () => true }), null, "it was taken out")
 })
 
 test("a tap from another page, or from before React listens, is not done", () => {
@@ -271,10 +262,7 @@ test("a tap from another page, or from before React listens, is not done", () =>
 	const rent = control("offer:rent")
 	page.tap(rent)
 	stopRecordingTaps(page.win)
-	assert.equal(
-		page.claim("offer", { path: "/movie/604-the-matrix-reloaded" }),
-		null,
-	)
+	assert.equal(page.claim("offer", { path: "/movie/604-the-matrix-reloaded" }), null)
 	assert.equal(pending(rent), false)
 
 	const early = runInlineScript()
@@ -290,10 +278,7 @@ test("a control that isn't the tapped one leaves the tap for its owner", () => {
 	stopRecordingTaps(page.win)
 	assert.equal(page.claim("row", { accept: () => false }), null)
 	assert.equal(pending(castNext), true)
-	assert.equal(
-		page.claim("row", { accept: (el: unknown) => el === castNext }),
-		castNext,
-	)
+	assert.equal(page.claim("row", { accept: (el: unknown) => el === castNext }), castNext)
 })
 
 test("the script runs once per document, and a page without it has nothing to do", () => {
@@ -310,9 +295,59 @@ test("the script runs once per document, and a page without it has nothing to do
 
 test("the script is small, names its global, and can't end a script tag", () => {
 	assert.ok(REPLAY_TAP_SCRIPT.includes(REPLAY_TAP_KEY))
-	assert.ok(
-		REPLAY_TAP_SCRIPT.length < 900,
-		`${REPLAY_TAP_SCRIPT.length} characters`,
-	)
+	assert.ok(REPLAY_TAP_SCRIPT.length < 900, `${REPLAY_TAP_SCRIPT.length} characters`)
 	assert.equal(REPLAY_TAP_SCRIPT.includes("<"), false)
+})
+
+test("an early Explore press reaches the same enabled button, once", () => {
+	const window = new Window()
+	window.document.body.innerHTML =
+		'<main><button type="button" aria-expanded="false"><span>From where?</span></button></main>'
+	const button = window.document.querySelector("button")!
+	const page = runInlineScript("/movies/moods/cozy", EXPLORE_BUTTON_SCRIPT)
+	page.tap(button.firstElementChild)
+	assert.equal(stopRecordingTaps(page.win), true)
+	assert.equal(page.claim(EXPLORE_BUTTON_GROUP), button)
+	assert.equal(page.claim(EXPLORE_BUTTON_GROUP), null)
+})
+
+test("Explore leaves native actions, disabled buttons and already handled events to the browser", () => {
+	const window = new Window()
+	window.document.body.innerHTML = `<button type="button">Outside</button><main>
+		<a href="/movies">Movies</a><details><summary>Choose</summary></details>
+		<form><button>Submit</button></form><button type="button" disabled>Prev</button>
+		<button type="button" popovertarget="open">Open</button><div inert><button type="button">Inert</button></div>
+		<button type="button" aria-disabled="true">Unavailable</button></main>`
+	const page = runInlineScript("/movies", EXPLORE_BUTTON_SCRIPT)
+	for (const el of window.document.querySelectorAll("a,summary,button")) page.tap(el)
+	const button = window.document.createElement("button")
+	button.type = "button"
+	button.textContent = "Zoom in"
+	window.document.querySelector("main")!.append(button)
+	page.tap(button, true, true)
+	page.tap(button, false)
+	assert.equal(stopRecordingTaps(page.win), false)
+})
+
+test("Explore discards taps when the page, control or requested action has changed", () => {
+	const window = new Window()
+	window.document.body.innerHTML =
+		'<main><button type="button" aria-label="Zoom in">+</button></main>'
+	const root = window.document.querySelector("main")!
+	for (const change of ["location", "disabled", "label", "replaced", "toggle-again"]) {
+		const button = window.document.createElement("button")
+		button.type = "button"
+		button.setAttribute("aria-label", "Sort popular")
+		button.setAttribute("aria-expanded", "false")
+		root.replaceChildren(button)
+		const page = runInlineScript("/movies", EXPLORE_BUTTON_SCRIPT)
+		page.tap(button)
+		if (change === "location") page.win.location.search = "?at=12"
+		if (change === "disabled") button.disabled = true
+		if (change === "label") button.setAttribute("aria-label", "Sort newest")
+		if (change === "replaced") root.replaceChildren(button.cloneNode(true))
+		if (change === "toggle-again") page.tap(button)
+		stopRecordingTaps(page.win)
+		assert.equal(page.claim(EXPLORE_BUTTON_GROUP), null, change)
+	}
 })

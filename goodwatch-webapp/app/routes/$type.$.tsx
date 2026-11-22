@@ -36,9 +36,9 @@ import { TropesRoute } from "~/ui/browse/tropes/TropesRoute"
 import { crumbsOf } from "~/ui/browse/place/PlaceHead"
 import { StreamingPage, streamingMeta } from "~/ui/browse/streaming/StreamingRoute"
 import { buildMeta } from "~/utils/meta"
-import { START_AFTER_PAINT } from "~/utils/start-after-paint"
+import { EXPLORE_AFTER_PAINT } from "~/utils/start-after-paint"
 
-export const handle = START_AFTER_PAINT
+export const handle = EXPLORE_AFTER_PAINT
 
 const trimmed = (pathname: string) => pathname.replace(/\/+$/, "") || "/"
 

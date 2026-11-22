@@ -52,6 +52,8 @@ export interface PendingTap {
 }
 
 export interface TapStore {
+	/** A route may identify a button by its visible action and state. */
+	keyFor?: (el: TapElement) => string | null
 	/** The path of the document that the taps belong to. */
 	path: string
 	/** The waiting taps by group. */
@@ -63,33 +65,50 @@ export interface TapStore {
 	 * the script's listener off the window.
 	 */
 	drop: (group: string) => void
-	/** The script's click listener, on the window in the capture phase. */
+	/** The script's window click listener. Explore uses the bubble phase to honor an already handled press. */
 	on: (event: unknown) => void
 }
 
+/** Browse's ordinary buttons need JavaScript; links, forms and native disclosures already work before hydration. */
+export const EXPLORE_BUTTON_GROUP = "explore-button"
+const BUTTON_SELECTOR =
+	'main button[type="button"]:not(:disabled,[aria-disabled="true"],[popovertarget],[commandfor],[data-replay-tap])'
+
 /**
- * The inline script. A plain string, so the server HTML and the hydrated document hold the same text, in syntax that
- * every browser the site supports can parse. It never stops an event and never prevents a default.
+ * The title-page recorder uses explicit marks. Explore uses the same one-tap handoff for a plain button in its
+ * main content. At replay its element, label, toggle state and current query must still describe the same action.
  */
-export const REPLAY_TAP_SCRIPT = [
-	`(function(w){if(w.${REPLAY_TAP_KEY})return;`,
-	`var M="${REPLAY_TAP_ATTRIBUTE}",P="${REPLAY_PENDING_ATTRIBUTE}",`,
-	`T=w.${REPLAY_TAP_KEY}={path:w.location.pathname,taps:{},live:false,`,
-	"drop:function(g){var t=T.taps[g];if(t){delete T.taps[g];clearTimeout(t.timer);t.el.removeAttribute(P)}",
-	'T.live&&!Object.keys(T.taps).length&&w.removeEventListener("click",T.on,true)},',
-	'on:function(e){var el=e.isTrusted&&e.target&&e.target.closest&&e.target.closest("["+M+"]");if(!el)return;',
-	'var k=el.getAttribute(M),g=k.split(":")[0],t=T.taps[g],again=t&&t.el===el&&el.hasAttribute("aria-pressed");',
-	"T.drop(g);if(T.live||again)return;",
-	'el.setAttribute(P,"");',
-	"T.taps[g]={key:k,el:el,time:Date.now(),timer:setTimeout(function(){T.drop(g)},1e4)}}};",
-	'w.addEventListener("click",T.on,true)})(window)',
-].join("")
+function recorder(explore: boolean) {
+	const selector = explore ? BUTTON_SELECTOR : `[${REPLAY_TAP_ATTRIBUTE}]`
+	const capture = explore ? "false" : "true"
+	const keyFor = [
+		`keyFor:function(el){if(!el.matches(${JSON.stringify(selector)})||el.closest("a,summary,[inert],[aria-disabled=true]"))return null;`,
+		'var label=el.getAttribute("aria-label")||el.textContent||el.getAttribute("title");if(!label)return null;',
+		`return "${EXPLORE_BUTTON_GROUP}:"+JSON.stringify([w.location.search,label,el.getAttribute("aria-pressed"),el.getAttribute("aria-expanded")])},`,
+	].join("")
+	return [
+		`(function(w){if(w.${REPLAY_TAP_KEY})return;`,
+		`var M="${REPLAY_TAP_ATTRIBUTE}",P="${REPLAY_PENDING_ATTRIBUTE}",`,
+		`T=w.${REPLAY_TAP_KEY}={path:w.location.pathname,taps:{},live:false,`,
+		explore ? keyFor : "",
+		"drop:function(g){var t=T.taps[g];if(t){delete T.taps[g];clearTimeout(t.timer);t.el.removeAttribute(P)}",
+		`T.live&&!Object.keys(T.taps).length&&w.removeEventListener("click",T.on,${capture})},`,
+		`on:function(e){var el=e.isTrusted&&${explore ? "!e.defaultPrevented&&" : ""}e.target&&e.target.closest&&e.target.closest(${JSON.stringify(selector)});if(!el)return;`,
+		explore ? "var k=T.keyFor(el);if(!k)return;" : "var k=el.getAttribute(M);",
+		`var g=k.split(":")[0],t=T.taps[g],again=t&&t.el===el&&${explore ? '(el.hasAttribute("aria-pressed")||el.hasAttribute("aria-expanded"))' : 'el.hasAttribute("aria-pressed")'};`,
+		"T.drop(g);if(T.live||again)return;",
+		'el.setAttribute(P,"");',
+		"T.taps[g]={key:k,el:el,time:Date.now(),timer:setTimeout(function(){T.drop(g)},1e4)}}};",
+		`w.addEventListener("click",T.on,${capture})})(window)`,
+	].join("")
+}
+
+export const REPLAY_TAP_SCRIPT = recorder(false)
+export const EXPLORE_BUTTON_SCRIPT = recorder(true)
 
 /** The script's record, or null on a page without the script. */
 export function readTapStore(win: unknown): TapStore | null {
-	const store = (win as Record<string, unknown> | null)?.[REPLAY_TAP_KEY] as
-		| TapStore
-		| undefined
+	const store = (win as Record<string, unknown> | null)?.[REPLAY_TAP_KEY] as TapStore | undefined
 	return store && typeof store.drop === "function" && store.taps ? store : null
 }
 
@@ -124,11 +143,7 @@ export interface ClaimContext {
  * The control that a waiting tap of the group is for, or null. The tap is taken out either way, except when the
  * asking control isn't the tapped one: a tap is done once at most.
  */
-export function claimTap(
-	win: unknown,
-	group: string,
-	context: ClaimContext,
-): TapElement | null {
+export function claimTap(win: unknown, group: string, context: ClaimContext): TapElement | null {
 	const store = readTapStore(win)
 	const tap = store?.taps[group]
 	if (!store || !tap) return null
@@ -139,7 +154,7 @@ export function claimTap(
 		store.path === context.path &&
 		context.now - tap.time <= REPLAY_TAP_EXPIRY_MS &&
 		tap.el.isConnected &&
-		tap.el.getAttribute(REPLAY_TAP_ATTRIBUTE) === tap.key &&
+		(store.keyFor ? store.keyFor(tap.el) : tap.el.getAttribute(REPLAY_TAP_ATTRIBUTE)) === tap.key &&
 		(context.near ? context.near(tap.el) : true)
 	return valid ? tap.el : null
 }
