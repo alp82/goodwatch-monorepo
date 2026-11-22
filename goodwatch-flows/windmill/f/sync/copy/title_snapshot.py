@@ -40,17 +40,25 @@ the total to 26 bytes per title. Numeric facts are 0 when unknown; amounts below
 are unknown. See the Discover plan's Facts sidecar section for offsets and normalization. It is read and written independently of ratings and
 the snapshot, and a failure leaves only facts out of the manifest.
 
+Original languages are optional too. `manifest.languages` holds format 1, chunk count, SHA-256
+and the sorted dictionary `codes`. The `title-snapshot:<version>:languages:<n>` chunks are one
+little-endian uint16 per main row: its exact original_language_code index, or 65535 when absent.
+The code comes from the same Crate row as the fingerprint. Production country and the main
+origin column, which can fall back to language, remain separate.
+
 One run:
 
 1. Reads a mark of the analyses in Crate: per table, the count and the sum of
    `dna_updated_at` and `tmdb_details_updated_at` for titles with analysis. A new, changed or
    removed analysis or details refresh of an analysed title moves it. When it equals the mark in
-   the current manifest, the run exits without a new version, unless `force` is set.
+   the current manifest and the language sidecar is present, the run exits without a new
+   version, unless `force` is set.
 2. Reads the titles from Crate in pages of `PAGE_SIZE` by tmdb_id, filtered on
    `dna_updated_at` (a timestamp with doc values). The 74 scores come from the typed
    `fingerprint_scores[...]` subcolumns; reading the whole object column is about five
    times slower and has pages near the 10 s timeout.
-3. Builds the ratings and facts sidecars from separate, narrow reads of the same titles and the
+3. Encodes original languages from those rows. Builds the ratings and facts sidecars from separate,
+   narrow reads of the same titles and the
    `age_certification` lookup table. Whatever fails there is logged and the snapshot is
    published without that sidecar's manifest field: a sidecar never stops a publish.
 4. Writes the chunks of the new version, swaps `title-snapshot:current`, and deletes the
@@ -117,6 +125,9 @@ FACTS_FORMAT = 3
 FACTS_BYTES_PER_TITLE = 26
 FACTS_COUNTRY_SLOTS = 4
 SHOW_STATUSES = {"Returning Series": 1, "In Production": 1, "Ended": 2, "Canceled": 3}
+
+LANGUAGES_FORMAT = 1
+UNKNOWN_LANGUAGE = 65535
 
 RATINGS_FORMAT = 1
 NO_AGE = 255
@@ -226,6 +237,7 @@ def to_row(base: int, record: list) -> Optional[dict]:
         "fingerprint": fingerprint,
         "score": score,
         "origin": (countries[0] if countries and countries[0] else None) or language or None,
+        "original_language_code": language or None,
         "poster": bool(poster),
         "backdrop": bool(backdrop),
         "adult": bool(adult),
@@ -279,6 +291,7 @@ def source_mark(select: Callable[[str, list], list]) -> dict:
         mark[media_type] = [int(value or 0) for value in values]
     mark["ratings"] = RATINGS_FORMAT
     mark["facts"] = FACTS_FORMAT
+    mark["languages"] = LANGUAGES_FORMAT
     return mark
 
 
@@ -554,6 +567,23 @@ def build_facts(select: Callable[[str, list], list], point_ids: list[int]) -> tu
     return field, chunks, over
 
 
+def encode_languages(rows: Iterable[dict]) -> tuple[dict, list[bytes]]:
+    """One original-language dictionary index per row, in the main snapshot's point-id order."""
+    ordered = [r["original_language_code"] for r in sorted(rows, key=lambda r: r["point_id"])]
+    codes = sorted({code for code in ordered if code})
+    if len(codes) > UNKNOWN_LANGUAGE:
+        raise ValueError(f"{len(codes)} original languages; format {LANGUAGES_FORMAT} holds {UNKNOWN_LANGUAGE}")
+    indexes = {code: i for i, code in enumerate(codes)}
+    column = array("H", (indexes.get(code, UNKNOWN_LANGUAGE) for code in ordered))
+    if sys.byteorder != "little":
+        column.byteswap()
+    data = column.tobytes()
+    assert len(data) == 2 * len(ordered)
+    chunks = [data[at:at + CHUNK_BYTES] for at in range(0, len(data), CHUNK_BYTES)] or [b""]
+    return {"format": LANGUAGES_FORMAT, "chunks": len(chunks), "sha256": sha256(data).hexdigest(),
+            "codes": codes}, chunks
+
+
 # ---- Encoding --------------------------------------------------------------
 
 
@@ -632,6 +662,10 @@ def chunk_key(version: str, n: int) -> str:
 
 def ratings_chunk_key(version: str, n: int) -> str:
     return f"title-snapshot:{version}:ratings:{n}"
+
+
+def languages_chunk_key(version: str, n: int) -> str:
+    return f"title-snapshot:{version}:languages:{n}"
 
 
 def facts_chunk_key(version: str, n: int) -> str:
@@ -725,8 +759,8 @@ def _without_ratings(step: str, error: Exception) -> str:
     return f"{step}: {error!r}"
 
 
-def _without_facts(step: str, error: Exception) -> str:
-    print(f"FACTS SIDECAR FAILED while {step}: {error!r}. Publishing the snapshot without facts."
+def _without_sidecar(name: str, step: str, error: Exception) -> str:
+    print(f"{name.upper()} SIDECAR FAILED while {step}: {error!r}. Publishing the snapshot without {name}."
           f"\n{traceback.format_exc()}", flush=True)
     return f"{step}: {error!r}"
 
@@ -737,7 +771,9 @@ def run(redis, select: Callable[[str, list], list], *, force: bool = False, dry_
     started = time.monotonic()
     previous = current_manifest(redis)
     mark = source_mark(select)
-    if not force and previous and previous.get("sourceMark") == mark:
+    language_field = previous.get("languages") if previous else None
+    if (not force and previous and previous.get("sourceMark") == mark
+            and isinstance(language_field, dict) and language_field.get("format") == LANGUAGES_FORMAT):
         # Keep the existing reason for callers; the mark now covers details as well.
         return {"published": False, "reason": "no title analysis changed since the current version",
                 "version": previous.get("version"), "source_mark": mark}
@@ -785,8 +821,17 @@ def run(redis, select: Callable[[str, list], list], *, force: bool = False, dry_
             summary["facts"] = {"countries": len(facts[0]["countries"]), "chunks": facts[0]["chunks"],
                                 "bytes": manifest["count"] * FACTS_BYTES_PER_TITLE, "over_slots": over}
         except Exception as error:
-            summary["facts_error"] = _without_facts("building it", error)
+            summary["facts_error"] = _without_sidecar("facts", "building it", error)
         timings["facts_seconds"] = round(time.monotonic() - at, 1)
+        languages = None
+        at = time.monotonic()
+        try:
+            languages = encode_languages(rows)
+            summary["languages"] = {"codes": len(languages[0]["codes"]), "chunks": languages[0]["chunks"],
+                                    "bytes": manifest["count"] * 2}
+        except Exception as error:
+            summary["languages_error"] = _without_sidecar("languages", "building it", error)
+        timings["languages_seconds"] = round(time.monotonic() - at, 1)
         if not dry_run:
             at = time.monotonic()
             if ratings:
@@ -802,7 +847,14 @@ def run(redis, select: Callable[[str, list], list], *, force: bool = False, dry_
                     manifest["facts"] = facts[0]
                 except Exception as error:
                     summary.pop("facts", None)
-                    summary["facts_error"] = _without_facts("writing it", error)
+                    summary["facts_error"] = _without_sidecar("facts", "writing it", error)
+            if languages:
+                try:
+                    write_sidecar(redis, version, languages[1], languages_chunk_key)
+                    manifest["languages"] = languages[0]
+                except Exception as error:
+                    summary.pop("languages", None)
+                    summary["languages_error"] = _without_sidecar("languages", "writing it", error)
             summary["pruned_chunks"] = publish(redis, manifest, chunks, previous)
             timings["write_seconds"] = round(time.monotonic() - at, 1)
             summary["published"] = True

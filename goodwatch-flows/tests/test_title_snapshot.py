@@ -1,7 +1,7 @@
 """The title snapshot publisher: its encoding round-trips through the webapp decoder's checks
 (ported here, and the webapp's own code under Node when it is installed), it pages Crate, and it
 publishes only when an analysis changed, keeping at most two versions in Redis. Beside it, the
-ratings and facts sidecars: their byte layouts, no-data rules, change marks, and failures that
+ratings, facts and language sidecars: their byte layouts, no-data rules, change marks, and failures that
 leave the snapshot published."""
 import json
 import shutil
@@ -612,7 +612,7 @@ class PublishingTest(unittest.TestCase):
         manifest, chunks = self.stored()
         self.assertTrue(result["published"])
         self.assertEqual((manifest["count"], result["count"], result["source"]), (3, 3, "crate"))
-        self.assertEqual(manifest["sourceMark"], {"movie": [1, 10, 1, 100], "show": [1, 20, 1, 200], "ratings": 1, "facts": 3})
+        self.assertEqual(manifest["sourceMark"], {"movie": [1, 10, 1, 100], "show": [1, 20, 1, 200], "ratings": 1, "facts": 3, "languages": 1})
         self.assertEqual(len(decode(manifest, chunks, ts.KEY_ORDER)), 3)
         self.assertIsNone(self.redis.get(ts.LOCK_KEY))
 
@@ -630,7 +630,40 @@ class PublishingTest(unittest.TestCase):
                                         "ages": {"AU": 15, "US": 17}})
         self.assertEqual(result["ratings"], {"countries": 5, "chunks": 1, "bytes": 3 * 7})
         self.assertEqual(self.keys(), ["title-snapshot:20260927T180000Z:0", "title-snapshot:20260927T180000Z:facts:0",
-                                      "title-snapshot:20260927T180000Z:ratings:0"])
+                                      "title-snapshot:20260927T180000Z:languages:0", "title-snapshot:20260927T180000Z:ratings:0"])
+
+    def test_language_indexes_follow_main_rows_preserve_exact_codes_and_use_missing_sentinel(self):
+        rows = [ts.to_row(ts.SHOW_BASE, record(4, language="en")), ts.to_row(ts.MOVIE_BASE, record(3, language=None)),
+                ts.to_row(ts.MOVIE_BASE, record(1, language="EN", countries=["JP"])),
+                ts.to_row(ts.MOVIE_BASE, record(2, language=""))]
+        with patch.object(ts, "CHUNK_BYTES", 3):
+            field, chunks = ts.encode_languages(rows)
+        data = b"".join(chunks)
+        self.assertEqual(field, {"format": 1, "chunks": 3, "codes": ["EN", "en"], "sha256": sha256(data).hexdigest()})
+        self.assertEqual(struct.unpack("<4H", data), (0, 65535, 65535, 1))
+        self.assertEqual(rows[2]["origin"], "JP")
+        empty, empty_chunks = ts.encode_languages([])
+        self.assertEqual((empty["codes"], empty["chunks"], empty_chunks), ([], 1, [b""]))
+
+    def test_partial_language_write_is_cleaned_up_and_next_run_repairs_missing_sidecar(self):
+        put = self.redis.set
+        def fail_second(key, value, *args, **kwargs):
+            if str(key).endswith(":languages:1"):
+                raise ConnectionError("interrupted")
+            return put(key, value, *args, **kwargs)
+        with patch.object(ts, "CHUNK_BYTES", 4), patch.object(self.redis, "set", side_effect=fail_second), patch("builtins.print"):
+            result = self.run_once()
+        manifest, _ = self.stored()
+        self.assertTrue(result["published"])
+        self.assertNotIn("languages", manifest)
+        self.assertIn("writing it", result["languages_error"])
+        self.assertFalse(list(self.redis.scan_iter("title-snapshot:*:languages:*")))
+        self.assertTrue(self.run_once()["published"])
+        manifest, _ = self.stored()
+        data = self.redis.get(ts.languages_chunk_key(manifest["version"], 0))
+        self.assertEqual(manifest["languages"]["sha256"], sha256(data).hexdigest())
+        self.assertEqual(struct.unpack("<3H", data), (0, 0, 0))
+        self.assertFalse(self.run_once()["published"])
 
     def test_the_snapshot_is_the_same_bytes_with_the_sidecar(self):
         self.run_once()
@@ -641,8 +674,8 @@ class PublishingTest(unittest.TestCase):
                 ts.to_row(ts.SHOW_BASE, record(1396))]
         plain, plain_chunks = ts.encode_snapshot(rows, "20260927T180000Z", built_at, {"sourceMark": manifest["sourceMark"]})
         self.assertEqual(chunks, plain_chunks)
-        self.assertEqual({k: v for k, v in manifest.items() if k not in ("ratings", "facts")}, plain)
-        self.assertEqual((manifest["format"], list(manifest)[-1]), (1, "facts"))
+        self.assertEqual({k: v for k, v in manifest.items() if k not in ("ratings", "facts", "languages")}, plain)
+        self.assertEqual((manifest["format"], list(manifest)[-1]), (1, "languages"))
 
     def test_the_first_run_over_an_older_publishers_snapshot_publishes(self):
         self.run_once()
@@ -662,7 +695,7 @@ class PublishingTest(unittest.TestCase):
         self.assertTrue(result["ratings_error"].startswith(step), result["ratings_error"])
         self.assertEqual(len(decode(manifest, chunks, ts.KEY_ORDER)), 3)
         self.assertEqual(self.keys(), ["title-snapshot:20260927T180000Z:0",
-                                      "title-snapshot:20260927T180000Z:facts:0"])
+                                      "title-snapshot:20260927T180000Z:facts:0", "title-snapshot:20260927T180000Z:languages:0"])
         self.assertIsNone(self.redis.get(ts.LOCK_KEY))
 
     def test_a_sidecar_that_fails_to_build_leaves_the_snapshot_published(self):
@@ -824,9 +857,9 @@ class PublishingTest(unittest.TestCase):
 
         self.assertEqual(self.keys(), [
             "title-snapshot:20260927T180100Z:0", "title-snapshot:20260927T180100Z:facts:0",
-            "title-snapshot:20260927T180100Z:ratings:0",
+            "title-snapshot:20260927T180100Z:languages:0", "title-snapshot:20260927T180100Z:ratings:0",
             "title-snapshot:20260927T180200Z:0", "title-snapshot:20260927T180200Z:facts:0",
-            "title-snapshot:20260927T180200Z:ratings:0",
+            "title-snapshot:20260927T180200Z:languages:0", "title-snapshot:20260927T180200Z:ratings:0",
         ])
 
     def test_a_dry_run_writes_nothing(self):
