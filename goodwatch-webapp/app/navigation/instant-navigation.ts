@@ -6,16 +6,9 @@
 import { type ClientLoaderFunctionArgs, matchRoutes } from "@remix-run/react"
 import { preloadHeroBackdrop } from "~/ui/details/hero/hero-backdrop"
 import { keptLoaderData } from "~/utils/loader-request-retry"
-import {
-	requestRootRevalidation,
-	rootRevalidated,
-} from "~/utils/root-revalidation"
+import { requestRootRevalidation, rootRevalidated } from "~/utils/root-revalidation"
 import { AUTH_SYNC_KEY, type AuthNote, AuthSync } from "./auth-sync"
-import {
-	type CachedRouteId,
-	TITLE_ROUTE_IDS,
-	isCachedRoute,
-} from "./cached-routes"
+import { type CachedRouteId, TITLE_ROUTE_IDS, isCachedRoute } from "./cached-routes"
 import {
 	type LoadSource,
 	type Loaded,
@@ -73,10 +66,7 @@ type ShouldRevalidate = (args: {
 interface RemixWindow {
 	__remixRouter?: RemixRouter
 	__remixManifest?: { routes: Record<string, ManifestRoute | undefined> }
-	__remixRouteModules?: Record<
-		string,
-		{ shouldRevalidate?: ShouldRevalidate } | undefined
-	>
+	__remixRouteModules?: Record<string, { shouldRevalidate?: ShouldRevalidate } | undefined>
 	__gwNavCache?: typeof stats
 }
 
@@ -126,10 +116,7 @@ const AUTH_ANSWER_GRACE_MS = 3000
  * Releases a hold once the root has new data from the server (`releaseOnFreshRoot`), and makes sure the root
  * reruns: on the next revalidation or navigation, or now with `revalidateAfterMs` when none started by then.
  */
-function releaseAfterRootReload(
-	release: () => void,
-	revalidateAfterMs?: number,
-) {
+function releaseAfterRootReload(release: () => void, revalidateAfterMs?: number) {
 	const router = remix().__remixRouter
 	if (!router) return release()
 	requestRootRevalidation()
@@ -202,16 +189,13 @@ function startAuthSync(router: RemixRouter) {
 			read: () => window.localStorage.getItem(AUTH_SYNC_KEY),
 			write: (value) => window.localStorage.setItem(AUTH_SYNC_KEY, value),
 			post: channel ? (note) => channel.postMessage(note) : null,
-			newId: () =>
-				`${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`,
+			newId: () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`,
 		},
 		() => memberOf(router.state.loaderData.root),
 		resyncIdentity,
 	)
 	authSync = sync
-	if (channel)
-		channel.onmessage = (event: MessageEvent<AuthNote>) =>
-			sync.receive(event.data)
+	if (channel) channel.onmessage = (event: MessageEvent<AuthNote>) => sync.receive(event.data)
 	window.addEventListener("storage", (event) => {
 		if (event.key === AUTH_SYNC_KEY) sync.receive(event.newValue)
 	})
@@ -291,9 +275,7 @@ function refresh(url: URL, routeId: string, key: string) {
 		priority: "viewport",
 		run: () => {
 			if (!stillWanted(identity)) return Promise.resolve()
-			return cache.load(key, "refresh", () =>
-				fetchRouteData(url, routeId, { priority: "low" }),
-			)
+			return cache.load(key, "refresh", () => fetchRouteData(url, routeId, { priority: "low" }))
 		},
 	})
 }
@@ -314,9 +296,7 @@ function saveData(): boolean {
 			connection?: { saveData?: boolean; effectiveType?: string }
 		}
 	).connection
-	return Boolean(
-		connection?.saveData || /(^|-)2g$/.test(connection?.effectiveType ?? ""),
-	)
+	return Boolean(connection?.saveData || /(^|-)2g$/.test(connection?.effectiveType ?? ""))
 }
 
 /** The addresses of the links this module added, and of those the page already had. */
@@ -326,11 +306,7 @@ const preloaded = new Set<string>()
 function addLink(rel: string, href: string, as?: string, low = false): boolean {
 	if (preloaded.has(href)) return false
 	preloaded.add(href)
-	if (
-		document.querySelector(
-			`link[href="${CSS.escape(href)}"], script[src="${CSS.escape(href)}"]`,
-		)
-	)
+	if (document.querySelector(`link[href="${CSS.escape(href)}"], script[src="${CSS.escape(href)}"]`))
 		return false
 	const link = document.createElement("link")
 	link.rel = rel
@@ -375,8 +351,8 @@ function warmLink(rel: string, href: string, as?: string) {
 /** Whether a phone may warm code it wasn't asked for: not on the start page (its LCP and TBT budget, #236), not on 3G. */
 function mayWarmCode(): boolean {
 	if (window.location.pathname === "/") return false
-	const type = (navigator as Navigator & { connection?: { effectiveType?: string } })
-		.connection?.effectiveType
+	const type = (navigator as Navigator & { connection?: { effectiveType?: string } }).connection
+		?.effectiveType
 	return !/(^|-)3g$/.test(type ?? "")
 }
 
@@ -404,8 +380,7 @@ export function preloadRouteCode(routeId: string, warm = false): void {
  * position always loads, a route that stays loads when the query string changes and its `shouldRevalidate` agrees.
  */
 function routesToLoad(router: RemixRouter, url: URL): RouteMatch[] {
-	const matches = (matchRoutes(router.routes, url.pathname) ??
-		[]) as unknown as RouteMatch[]
+	const matches = (matchRoutes(router.routes, url.pathname) ?? []) as unknown as RouteMatch[]
 	const current = router.state
 	const currentUrl = new URL(
 		current.location.pathname + current.location.search,
@@ -413,8 +388,7 @@ function routesToLoad(router: RemixRouter, url: URL): RouteMatch[] {
 	)
 	return matches.filter((match) => {
 		const id = match.route.id
-		if (!isCachedRoute(id) || !remix().__remixManifest?.routes[id]?.hasLoader)
-			return false
+		if (!isCachedRoute(id) || !remix().__remixManifest?.routes[id]?.hasLoader) return false
 		const staying = current.matches.find(
 			(old) => old.route.id === id && old.pathname === match.pathname,
 		)
@@ -451,16 +425,17 @@ export function prefetchableUrl(href: string): URL | null {
 		return null
 	}
 	if (url.origin !== window.location.origin) return null
-	if (
-		url.pathname === window.location.pathname &&
-		url.search === window.location.search
-	)
+	if (url.pathname === window.location.pathname && url.search === window.location.search)
 		return null
 	return url
 }
 
 /** Prefetches the data and code of the page at `url`, within the limits of the queue. */
-export function prefetchPage(url: URL, trigger: PrefetchTrigger): void {
+export function prefetchPage(
+	url: URL,
+	trigger: PrefetchTrigger,
+	{ warmCode = true }: { warmCode?: boolean } = {},
+): void {
 	const router = remix().__remixRouter
 	if (!router || document.visibilityState === "hidden" || cache.held) return
 	if (saveData()) return
@@ -470,9 +445,8 @@ export function prefetchPage(url: URL, trigger: PrefetchTrigger): void {
 	// Code on intent at once. For what a phone shows (viewport), warmed at low priority: a page type's files come
 	// once (title pages share them), and the phone's first change to a title or person page then doesn't wait about a
 	// second for them after the tap (#753).
-	if (trigger !== "viewport")
-		for (const match of routes) preloadRouteCode(match.route.id)
-	else if (mayWarmCode())
+	if (trigger !== "viewport") for (const match of routes) preloadRouteCode(match.route.id)
+	else if (warmCode && mayWarmCode())
 		for (const match of routes) preloadRouteCode(match.route.id, true)
 	for (const match of routes) {
 		const routeId = match.route.id
@@ -486,8 +460,7 @@ export function prefetchPage(url: URL, trigger: PrefetchTrigger): void {
 			key,
 			priority: PRIORITY[trigger],
 			run: () => {
-				if (!stillWanted(identity) || cache.covered(key))
-					return Promise.resolve()
+				if (!stillWanted(identity) || cache.covered(key)) return Promise.resolve()
 				stats.prefetches++
 				return cache
 					.load(key, trigger, () =>
@@ -514,8 +487,8 @@ export function cancelPrefetch(url: URL): void {
 }
 
 function startHero(data: unknown) {
-	const path = (data as { media?: { details?: { backdrop_path?: unknown } } })
-		?.media?.details?.backdrop_path
+	const path = (data as { media?: { details?: { backdrop_path?: unknown } } })?.media?.details
+		?.backdrop_path
 	if (typeof path === "string" && path) preloadHeroBackdrop(path)
 }
 
@@ -557,10 +530,7 @@ export function startLoaderCache(): void {
 function seed(state: RemixRouter["state"]) {
 	const identity = identityOf(state.loaderData.root)
 	if (!identity || state.errors) return
-	const url = new URL(
-		state.location.pathname + state.location.search,
-		window.location.origin,
-	)
+	const url = new URL(state.location.pathname + state.location.search, window.location.origin)
 	for (const match of state.matches) {
 		const id = match.route.id
 		const data = state.loaderData[id]
@@ -578,19 +548,14 @@ export function installWriteWatch(): void {
 	const browserFetch = window.fetch.bind(window)
 	const origin = window.location.origin
 	window.fetch = (input, init) => {
-		const method =
-			init?.method ?? (input instanceof Request ? input.method : "GET")
+		const method = init?.method ?? (input instanceof Request ? input.method : "GET")
 		let url: URL | null = null
 		try {
-			url = new URL(
-				input instanceof Request ? input.url : String(input),
-				origin,
-			)
+			url = new URL(input instanceof Request ? input.url : String(input), origin)
 		} catch {}
 		// A sign-in or sign-out changes the session cookie with its answer, before the root's data names the new
 		// person: the cache stays off from the request until the root has reloaded.
-		const release =
-			url && isAuthRequest(method, url, origin) ? holdLoaderCache() : null
+		const release = url && isAuthRequest(method, url, origin) ? holdLoaderCache() : null
 		const pending = browserFetch(input, init)
 		if (release) {
 			// The cookie may name someone else now, also for the other tabs.

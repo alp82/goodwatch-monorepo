@@ -4,7 +4,8 @@
 // - A press (pointer or touch down) starts at once: on a phone it's the first sign of a tap.
 // - Phones (no hover): when scrolling stops for SCROLL_IDLE_MS, the title and person links fully on screen nearest
 //   its center, up to VIEWPORT_LINKS.
-// - Phones also prefetch visible title/person data after load, and their page types' code once, at low priority.
+// - On first paint the destination is still speculative. Fetch only visible title/person data after load.
+//   Once the reader scrolls, also warm the visible page types' code at low priority.
 import { VIEWPORT_LINK_SELECTOR } from "./cached-routes"
 import {
 	type PrefetchTrigger,
@@ -21,29 +22,17 @@ export const WARM_DELAY_MS = 2000
 
 type IntentElement = HTMLAnchorElement | HTMLButtonElement
 const intentHref = (element: IntentElement) =>
-	element instanceof HTMLAnchorElement
-		? element.href
-		: (element.dataset.prefetchHref ?? "")
+	element instanceof HTMLAnchorElement ? element.href : (element.dataset.prefetchHref ?? "")
 
 function linkOf(target: EventTarget | null): IntentElement | null {
-	const anchor = (target as Element | null)?.closest?.(
-		"a[href], button[data-prefetch-href]",
-	)
+	const anchor = (target as Element | null)?.closest?.("a[href], button[data-prefetch-href]")
 	// TV navigation keeps its button: the remote and View Transition still own the click.
-	if (anchor instanceof HTMLButtonElement)
-		return anchor.disabled ? null : anchor
+	if (anchor instanceof HTMLButtonElement) return anchor.disabled ? null : anchor
 	if (!(anchor instanceof HTMLAnchorElement)) return null
-	if (
-		anchor.hasAttribute("download") ||
-		anchor.getAttribute("rel")?.includes("external")
-	)
+	if (anchor.hasAttribute("download") || anchor.getAttribute("rel")?.includes("external"))
 		return null
 	if (anchor.target && anchor.target !== "_self") return null
-	if (
-		anchor.hasAttribute("reloaddocument") ||
-		anchor.dataset.noPrefetch !== undefined
-	)
-		return null
+	if (anchor.hasAttribute("reloaddocument") || anchor.dataset.noPrefetch !== undefined) return null
 	return anchor
 }
 
@@ -61,10 +50,8 @@ const inSkippedContent = (element: Element) =>
 	typeof element.checkVisibility === "function" &&
 	!element.checkVisibility({ contentVisibilityAuto: true })
 
-function prefetchVisible() {
-	const links = [
-		...document.querySelectorAll<HTMLAnchorElement>(VIEWPORT_LINK_SELECTOR),
-	]
+function prefetchVisible(warmCode: boolean) {
+	const links = [...document.querySelectorAll<HTMLAnchorElement>(VIEWPORT_LINK_SELECTOR)]
 		.filter((anchor) => linkOf(anchor) === anchor && !inSkippedContent(anchor))
 		.map((anchor) => ({
 			href: anchor.href,
@@ -73,7 +60,7 @@ function prefetchVisible() {
 	const viewport = { width: window.innerWidth, height: window.innerHeight }
 	for (const href of nearestLinks(links, viewport)) {
 		const url = prefetchableUrl(href)
-		if (url) prefetchPage(url, "viewport")
+		if (url) prefetchPage(url, "viewport", { warmCode })
 	}
 }
 
@@ -117,10 +104,7 @@ export function installLinkIntent(): void {
 			if (!anchor || anchor === hovered) return
 			stopHover()
 			hovered = anchor
-			hoverTimer = window.setTimeout(
-				() => prefetchLink(anchor, "hover"),
-				HOVER_DELAY_MS,
-			)
+			hoverTimer = window.setTimeout(() => prefetchLink(anchor, "hover"), HOVER_DELAY_MS)
 		},
 		{ passive: true },
 	)
@@ -153,7 +137,7 @@ export function installLinkIntent(): void {
 		let scrollTimer: number | undefined
 		const schedule = () => {
 			window.clearTimeout(scrollTimer)
-			scrollTimer = window.setTimeout(prefetchVisible, SCROLL_IDLE_MS)
+			scrollTimer = window.setTimeout(() => prefetchVisible(true), SCROLL_IDLE_MS)
 		}
 		document.addEventListener("scroll", schedule, {
 			capture: true,
@@ -164,7 +148,6 @@ export function installLinkIntent(): void {
 	// Only what a phone shows is speculative: its data, and the code of those page types (instant-navigation.ts).
 	// Warming every catalog route's code here competed with an active navigation and downloaded unrelated page
 	// types on every landing page.
-	if (phone) afterLoad(() =>
-		window.setTimeout(() => idle(prefetchVisible), WARM_DELAY_MS),
-	)
+	if (phone)
+		afterLoad(() => window.setTimeout(() => idle(() => prefetchVisible(false)), WARM_DELAY_MS))
 }
