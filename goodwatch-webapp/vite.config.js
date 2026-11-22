@@ -215,15 +215,18 @@ function leanStylesheet() {
 // takes modules whose imports are on every page already or match rule 3 themselves, so it can't pull a large module or
 // a library such as framer-motion onto every page.
 const VENDOR_CHUNKS = [
-	["react", /\/node_modules\/(react|react-dom|scheduler)\//],
-	["remix", /\/node_modules\/(@remix-run\/[^/]+|react-router|react-router-dom|turbo-stream)\//],
+	// React, the router, and the query provider bootstrap together on every document.
+	// Keep the framework independent of the application modules that change with deployments.
+	[
+		"framework",
+		/\/node_modules\/(react|react-dom|scheduler|@remix-run\/[^/]+|react-router|react-router-dom|turbo-stream|@tanstack\/(react-query|query-core))\//,
+	],
 	["supabase", /\/node_modules\/(@supabase\/[^/]+|cookie)\//],
 	["motion", /\/node_modules\/framer-motion\//],
 	[
 		"headless",
 		/\/node_modules\/(@headlessui\/react|@react-aria\/[^/]+|@react-stately\/[^/]+|@floating-ui\/[^/]+|@tanstack\/(react-virtual|virtual-core)|tabbable)\//,
 	],
-	["query", /\/node_modules\/@tanstack\/(react-query|query-core)\//],
 ]
 const BUNDLER_HELPERS = /^\0(commonjsHelpers\.js|vite\/)/
 const SHELL_ROOTS = /\/app\/(root|entry\.client)\.tsx$/
@@ -325,7 +328,7 @@ function clientChunks() {
 	return (id, graph) => {
 		// The bundler's own helpers (CommonJS interop, the dynamic import preloader) have no imports and every chunk may
 		// use them. They live in the lowest chunk, or the library chunks would import the shell and the shell them.
-		if (BUNDLER_HELPERS.test(id)) return "react"
+		if (BUNDLER_HELPERS.test(id)) return "framework"
 		const vendor = vendorChunk(id)
 		if (vendor) return vendor
 		// Route modules stay entry points of their own: Remix loads them by name.
