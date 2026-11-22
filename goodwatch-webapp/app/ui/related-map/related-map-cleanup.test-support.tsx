@@ -20,9 +20,7 @@ for (const key of [
 		writable: true,
 		value: (window as unknown as Record<string, unknown>)[key],
 	})
-;(
-	globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
-).IS_REACT_ACT_ENVIRONMENT = true
+;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 const fetched: string[] = []
 const fetchStub = (url: unknown) => {
 	fetched.push(String(url))
@@ -31,23 +29,19 @@ const fetchStub = (url: unknown) => {
 ;(globalThis as Record<string, unknown>).fetch = fetchStub
 ;(window as unknown as Record<string, unknown>).fetch = fetchStub
 class NearAtOnce {
-	constructor(
-		private readonly callback: (entries: { isIntersecting: boolean }[]) => void,
-	) {}
+	constructor(private readonly callback: (entries: { isIntersecting: boolean }[]) => void) {}
 	observe() {
 		setTimeout(() => this.callback([{ isIntersecting: true }]), 0)
 	}
 	disconnect() {}
 }
 ;(globalThis as Record<string, unknown>).IntersectionObserver = NearAtOnce
-;(window as unknown as Record<string, unknown>).IntersectionObserver =
-	NearAtOnce
+;(window as unknown as Record<string, unknown>).IntersectionObserver = NearAtOnce
 
 const { act } = await import("react")
 const { createRoot } = await import("react-dom/client")
-const { createMemoryRouter, RouterProvider, useParams } = await import(
-	"react-router-dom"
-)
+const { createMemoryRouter, RouterProvider, useParams, useLoaderData } =
+	await import("react-router-dom")
 const { default: RelatedMap } = await import("./RelatedMap")
 
 const media = (id: number) =>
@@ -62,11 +56,13 @@ const media = (id: number) =>
 	}) as unknown as Parameters<typeof RelatedMap>[0]["media"]
 function Page() {
 	const { id } = useParams()
-	return <RelatedMap media={media(Number(id))} />
+	const { relatedMap } = useLoaderData() as {
+		relatedMap: Parameters<typeof RelatedMap>[0]["map"]
+	}
+	return <RelatedMap media={media(Number(id))} map={relatedMap} />
 }
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
-const asked = (id: number) =>
-	fetched.filter((url) => url.includes(`key=m${id}&`)).length
+const asked = (id: number) => fetched.filter((url) => url.includes(`key=m${id}&`)).length
 
 async function mount(id: number) {
 	const router = createMemoryRouter(
@@ -120,11 +116,11 @@ scroll()
 const c = await mount(5)
 scroll()
 let engineRan = 0
-;(
-	window as unknown as { __gwRelatedMapDefer: (run: () => void) => void }
-).__gwRelatedMapDefer(() => {
-	engineRan++
-})
+;(window as unknown as { __gwRelatedMapDefer: (run: () => void) => void }).__gwRelatedMapDefer(
+	() => {
+		engineRan++
+	},
+)
 await sleep(100)
 await act(async () => {
 	await c.router.navigate("/movie/6")
