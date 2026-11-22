@@ -2,11 +2,11 @@
 // (/scores/not-rated), right under the tab row, then the head. Rate more (/scores/rate) is the owner's own tab after
 // Scores (ui/navigation/areas.ts) and has its own head.
 // Visitors, and the owner with ?as=visitor, get the public Scores page under a plain head.
-import { Outlet, useLocation } from "@remix-run/react"
+import { Outlet, useLocation, useRouteLoaderData } from "@remix-run/react"
 import { useMemo } from "react"
 import { libraryCounts } from "~/domain/my-library"
 import { useUserData } from "~/routes/api.user-data"
-import { useProfileLayout } from "~/routes/u.$handle"
+import type { ProfileHeaderData } from "~/server/profile/header.server"
 import { SubNav } from "~/ui/navigation/SubNav"
 import { scoresSwitch } from "~/ui/navigation/areas"
 import { ProfileTabPage, TabHead } from "~/ui/profile/ProfileFrame"
@@ -16,21 +16,15 @@ import { count } from "~/ui/profile/parts"
 export { pageHeaders as headers } from "~/utils/headers"
 
 export default function ProfileScoresLayout() {
-	const layout = useProfileLayout()
+	const layout = useRouteLoaderData<ProfileHeaderData>("routes/u.$handle")
 	const { pathname, search } = useLocation()
 	const { data } = useUserData()
-	const unrated = useMemo(
-		() => (data ? libraryCounts(data).unrated : undefined),
-		[data],
-	)
+	const unrated = useMemo(() => (data ? libraryCounts(data).unrated : undefined), [data])
 	if (!layout) return <Outlet />
 	const real = layout.shell
-	const asVisitor =
-		real.viewer === "owner" &&
-		new URLSearchParams(search).get("as") === "visitor"
+	const asVisitor = real.viewer === "owner" && new URLSearchParams(search).get("as") === "visitor"
 	const shell = asVisitor ? asGuestSees(real) : real
-	const average =
-		shell.counts.average != null ? `, average ${shell.counts.average}` : ""
+	const average = shell.counts.average != null ? `, average ${shell.counts.average}` : ""
 
 	if (shell.viewer !== "owner")
 		return (
@@ -47,10 +41,7 @@ export default function ProfileScoresLayout() {
 	if (pathname.replace(/\/$/, "").endsWith("/scores/rate"))
 		return (
 			<>
-				<TabHead
-					title="Rate more"
-					line="Titles you've likely seen, best guesses first."
-				/>
+				<TabHead title="Rate more" line="Titles you've likely seen, best guesses first." />
 				<Outlet />
 			</>
 		)

@@ -2,36 +2,19 @@
 // the tabs change under them (the Outlet). Handles are permanent: a differently cased handle redirects to the lowercase
 // one, unknown and deleted handles answer 404. List pages (/u/:handle/lists/new, /:id, /:id/edit) render inside it.
 // Spec: docs/implementation/member-profile/README.md
-import {
-	type LoaderFunctionArgs,
-	type SerializeFrom,
-	json,
-} from "@remix-run/node"
-import {
-	Outlet,
-	type ShouldRevalidateFunction,
-	useLoaderData,
-	useLocation,
-	useRouteLoaderData,
-} from "@remix-run/react"
-import {
-	type ProfileHeaderData,
-	loadProfileHeader,
-} from "~/server/profile/header.server"
+import { type LoaderFunctionArgs, json } from "@remix-run/node"
+import { Outlet, type ShouldRevalidateFunction, useLoaderData, useLocation } from "@remix-run/react"
+import { type ProfileHeaderData, loadProfileHeader } from "~/server/profile/header.server"
 import { profileCacheControl } from "~/server/profile/page.server"
 import { ProfileChrome, isVisitorView } from "~/ui/profile/ProfileHeader"
 import { visitorBarStyle } from "~/ui/profile/header/VisitorView"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
-export const PROFILE_LAYOUT_ID = "routes/u.$handle"
-
-export type ProfileLayoutData = ProfileHeaderData
-
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const loaded = await loadProfileHeader(request, params.handle ?? "")
 	if (loaded instanceof Response) return loaded
-	return json<ProfileLayoutData>(loaded.header, {
+	return json<ProfileHeaderData>(loaded.header, {
 		headers: { "Cache-Control": profileCacheControl(loaded.viewerId) },
 	})
 }
@@ -46,23 +29,12 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 	formMethod,
 	defaultShouldRevalidate,
 }) =>
-	formMethod ||
-	currentUrl.href === nextUrl.href ||
-	currentParams.handle !== nextParams.handle
+	formMethod || currentUrl.href === nextUrl.href || currentParams.handle !== nextParams.handle
 		? defaultShouldRevalidate
 		: false
 
-/** The layout's data, for the tabs under it. */
-export function useProfileLayout() {
-	return useRouteLoaderData<typeof loader>(PROFILE_LAYOUT_ID) as
-		| SerializeFrom<ProfileLayoutData>
-		| undefined
-}
-
 export default function ProfileLayout() {
-	const { shell, identity, print, match } = useLoaderData<
-		typeof loader
-	>() as ProfileLayoutData
+	const { shell, identity, print, match } = useLoaderData<typeof loader>() as ProfileHeaderData
 	const { pathname, search } = useLocation()
 	// --visitor-bar-h: the sticky visitor bar's height while it shows, for the sticky rows under it.
 	return (
