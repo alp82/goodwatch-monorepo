@@ -7,6 +7,7 @@ import { type ReactNode, useState } from "react"
 import type { ProfileShell, ProfileTitle } from "~/domain/profile"
 import type { Score } from "~/server/scores.server"
 import { type CardTitle, MovieTvCard } from "~/ui/MovieTvCard"
+import { OwnerScore } from "~/ui/poster-card/OwnerScore"
 import { PrimaryButton, primaryButtonClass } from "~/ui/button/PrimaryButton"
 import type { PosterProps } from "~/ui/Poster"
 import { SortControl } from "~/ui/filter-bar/controls"
@@ -112,8 +113,18 @@ export function ProfilePoster({
 			details={profileCardTitle(title)}
 			mediaType={title.mediaType}
 			posterSizes={sizes}
-			ownerScore={owner ? (title.score as Score | null) : null}
-			ownerName={owner ? `@${owner}` : null}
+			ownerScore={
+				owner && title.score != null
+					? (className) => (
+							<OwnerScore
+								score={title.score as Score}
+								name={`@${owner}`}
+								size="auto"
+								className={className}
+							/>
+						)
+					: undefined
+			}
 			skipScore={skipScore}
 		/>
 	)

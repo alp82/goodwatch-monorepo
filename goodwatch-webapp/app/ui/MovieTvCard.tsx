@@ -32,7 +32,6 @@ import type { RatingBadge } from "~/domain/age-content"
 import type { MovieDetails, TVDetails } from "~/server/details.server"
 import type { DiscoverResult } from "~/server/discover.server"
 import type { OnboardingResult } from "~/server/onboarding-media.server"
-import type { Score } from "~/server/scores.server"
 import type { TitleCard } from "~/server/title-cards.server"
 import { Poster, type PosterProps } from "~/ui/Poster"
 import { BandAward } from "~/ui/awards/AwardMarks"
@@ -42,15 +41,18 @@ import MediaText from "~/ui/media-text/MediaText"
 import { presentedText } from "~/ui/media-text/media-text"
 import type { ActionsPlacement, OpenActions } from "~/ui/poster-card/CardActions"
 import { HiddenCover } from "~/ui/poster-card/HiddenCover"
-import { OwnerScore } from "~/ui/poster-card/OwnerScore"
 import { TitleScorePill } from "~/ui/poster-card/ScorePill"
 import { TitleBand } from "~/ui/poster-card/TitleBand"
 import { FOCUS } from "~/ui/poster-card/look"
-import { type ServiceOffer, YourServiceLogos } from "~/ui/poster-card/services"
+import {
+	type ServiceOffer,
+	YourServiceLogos as ServerServiceLogos,
+} from "~/ui/poster-card/services"
 import { preloadTitleQuickView, useTitleQuickView } from "~/ui/quick-view/title-quick-view"
 import { HiddenTileContext } from "~/ui/title-actions/hide-feedback"
 import { touchPointerNow } from "~/ui/title-actions/pointer"
 import { RatingMark } from "~/ui/title-card/RatingMark"
+import { useUser } from "~/utils/auth"
 import { onFirstInteraction } from "~/utils/first-interaction"
 import { titleToDashed } from "~/utils/helpers"
 import { type PresentedMedia, canonicalMediaTitle } from "~/utils/media-presentation"
@@ -59,6 +61,16 @@ import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import { titleKey } from "~/utils/title-key"
 
 export type { ActionsPlacement }
+
+// Member service marks can render in the server HTML. A browser only needs their settings and logos
+// when a signed-in viewer encounters a card with streaming offers.
+const CardServiceLogos = import.meta.env.SSR
+	? ServerServiceLogos
+	: lazy(
+			reloadOnStaleChunk(async () => ({
+				default: (await import("~/ui/poster-card/services")).YourServiceLogos,
+			})),
+		)
 
 const loadCardActions = reloadOnStaleChunk(() => import("~/ui/poster-card/CardActions"))
 const CardActions = lazy(loadCardActions)
@@ -139,9 +151,7 @@ interface MovieTvCardProps {
 	 * On another member's pages: their score for the title, as a filled square. Never on the viewer's own pages, where
 	 * the pill's "you" says it.
 	 */
-	ownerScore?: Score | null
-	/** Whose `ownerScore` it is, for the tooltip and screen readers. */
-	ownerName?: string | null
+	ownerScore?: (className: string) => React.ReactNode
 }
 
 /** A plain left click, which a page's own view may take; a modified one opens the link as the browser does. */
@@ -171,8 +181,7 @@ export function MovieTvCard({
 	newOn,
 	skipScore = false,
 	hidden,
-	ownerScore = null,
-	ownerName,
+	ownerScore,
 }: MovieTvCardProps) {
 	const actions = hidden ? false : actionsOn
 	const ratings = extractRatings(details)
@@ -236,6 +245,7 @@ export function MovieTvCard({
 		href,
 	])
 	const offers = (details as CardDetails).streaming_links
+	const { user } = useUser()
 	return (
 		<div
 			ref={frame}
@@ -314,11 +324,15 @@ export function MovieTvCard({
 								{rating && (
 									<RatingMark rating={rating} className="mb-1 @min-[4.5rem]/card:hidden!" />
 								)}
-								<YourServiceLogos
-									offers={offers}
-									newOn={newOn}
-									className={`mb-1 transition-opacity @min-[11rem]/card:mb-1.5 ${actions ? "can-hover:group-hover/card:opacity-0 can-hover:group-focus-within/card:opacity-0" : ""}`}
-								/>
+								{user && offers?.length ? (
+									<Suspense fallback={null}>
+										<CardServiceLogos
+											offers={offers}
+											newOn={newOn}
+											className={`mb-1 transition-opacity @min-[11rem]/card:mb-1.5 ${actions ? "can-hover:group-hover/card:opacity-0 can-hover:group-focus-within/card:opacity-0" : ""}`}
+										/>
+									</Suspense>
+								) : null}
 							</>
 						}
 					/>
@@ -331,14 +345,7 @@ export function MovieTvCard({
 							// The owner's square takes the pill's place under 7.5rem.
 							className={ownerScore != null ? "hidden! @min-[7.5rem]/card:inline-flex!" : ""}
 						/>
-						{ownerScore != null && (
-							<OwnerScore
-								score={ownerScore}
-								name={ownerName}
-								size="auto"
-								className="@min-[7.5rem]/card:hidden"
-							/>
-						)}
+						{ownerScore?.("@min-[7.5rem]/card:hidden")}
 					</div>
 					{(rating || ownerScore != null) && (
 						// Under 4.5rem the badge and the score don't fit side by side: the badge moves into the band.
@@ -346,14 +353,7 @@ export function MovieTvCard({
 							{rating && (
 								<RatingMark rating={rating} className="hidden! @min-[4.5rem]/card:inline-flex!" />
 							)}
-							{ownerScore != null && (
-								<OwnerScore
-									score={ownerScore}
-									name={ownerName}
-									size="auto"
-									className="hidden! @min-[7.5rem]/card:inline-flex!"
-								/>
-							)}
+							{ownerScore?.("hidden! @min-[7.5rem]/card:inline-flex!")}
 						</div>
 					)}
 				</div>
