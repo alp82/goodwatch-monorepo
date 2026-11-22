@@ -27,15 +27,7 @@
 // list is next loaded. A title already hidden (the Hidden titles page) starts under that cover, and its Undo is the
 // page's.
 import { Link } from "@remix-run/react"
-import {
-	Suspense,
-	lazy,
-	useCallback,
-	useContext,
-	useEffect,
-	useRef,
-	useState,
-} from "react"
+import { Suspense, lazy, useCallback, useContext, useEffect, useRef, useState } from "react"
 import type { RatingBadge } from "~/domain/age-content"
 import type { MovieDetails, TVDetails } from "~/server/details.server"
 import type { DiscoverResult } from "~/server/discover.server"
@@ -48,38 +40,27 @@ import { useAwardMark } from "~/ui/awards/marks-store"
 import { CARD, CARD_RAISED } from "~/ui/layers"
 import MediaText from "~/ui/media-text/MediaText"
 import { presentedText } from "~/ui/media-text/media-text"
-import type {
-	ActionsPlacement,
-	OpenActions,
-} from "~/ui/poster-card/CardActions"
+import type { ActionsPlacement, OpenActions } from "~/ui/poster-card/CardActions"
 import { HiddenCover } from "~/ui/poster-card/HiddenCover"
 import { OwnerScore } from "~/ui/poster-card/OwnerScore"
 import { TitleScorePill } from "~/ui/poster-card/ScorePill"
 import { TitleBand } from "~/ui/poster-card/TitleBand"
 import { FOCUS } from "~/ui/poster-card/look"
 import { type ServiceOffer, YourServiceLogos } from "~/ui/poster-card/services"
-import {
-	preloadTitleQuickView,
-	useTitleQuickView,
-} from "~/ui/quick-view/title-quick-view"
+import { preloadTitleQuickView, useTitleQuickView } from "~/ui/quick-view/title-quick-view"
 import { HiddenTileContext } from "~/ui/title-actions/hide-feedback"
-import { touchPointerNow, useTouchPointer } from "~/ui/title-actions/pointer"
+import { touchPointerNow } from "~/ui/title-actions/pointer"
 import { RatingMark } from "~/ui/title-card/RatingMark"
 import { onFirstInteraction } from "~/utils/first-interaction"
 import { titleToDashed } from "~/utils/helpers"
-import {
-	type PresentedMedia,
-	canonicalMediaTitle,
-} from "~/utils/media-presentation"
+import { type PresentedMedia, canonicalMediaTitle } from "~/utils/media-presentation"
 import { extractRatings } from "~/utils/ratings"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import { titleKey } from "~/utils/title-key"
 
 export type { ActionsPlacement }
 
-const loadCardActions = reloadOnStaleChunk(
-	() => import("~/ui/poster-card/CardActions"),
-)
+const loadCardActions = reloadOnStaleChunk(() => import("~/ui/poster-card/CardActions"))
 const CardActions = lazy(loadCardActions)
 
 // Fetched at the first sign that a person uses the page, so the first hover or tap finds the actions loaded and a
@@ -111,13 +92,7 @@ export interface HiddenState {
 }
 
 interface MovieTvCardProps {
-	details:
-		| MovieDetails
-		| TVDetails
-		| DiscoverResult
-		| OnboardingResult
-		| TitleCard
-		| CardTitle
+	details: MovieDetails | TVDetails | DiscoverResult | OnboardingResult | TitleCard | CardTitle
 	mediaType: "movie" | "show"
 	prefetch?: boolean
 	/**
@@ -170,11 +145,7 @@ interface MovieTvCardProps {
 
 /** A plain left click, which a page's own view may take; a modified one opens the link as the browser does. */
 const plainClick = (event: React.MouseEvent) =>
-	event.button === 0 &&
-	!event.metaKey &&
-	!event.ctrlKey &&
-	!event.shiftKey &&
-	!event.altKey
+	event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey
 
 type CardDetails = MovieTvCardProps["details"] & {
 	streaming_links?: readonly ServiceOffer[] | null
@@ -203,10 +174,6 @@ export function MovieTvCard({
 }: MovieTvCardProps) {
 	const actions = hidden ? false : actionsOn
 	const ratings = extractRatings(details)
-	const touchLater = useTouchPointer()
-	// Set by a tap that came before the idle-time answer: the tap itself tells the card it is on a touch screen.
-	const [touchNow, setTouchNow] = useState(false)
-	const touch = touchLater || touchNow
 	const frame = useRef<HTMLDivElement>(null)
 	const [armed, setArmed] = useState(false)
 	const [open, setOpen] = useState<OpenActions>(null)
@@ -298,10 +265,7 @@ export function MovieTvCard({
 					// A modified click opens the link as the browser does (a new tab, a new window).
 					if (!plainClick(event)) return
 					if (!actions || tile) return opens()
-					if (!touch) {
-						if (!touchPointerNow()) return opens()
-						setTouchNow(true)
-					}
+					if (!touchPointerNow()) return opens()
 					// Touch: the page's own view, else the title quick view on this card's list.
 					if (onOpen) return opens()
 					if (!quickView || !frame.current) return
@@ -311,11 +275,7 @@ export function MovieTvCard({
 				className={`block select-none overflow-hidden rounded-lg border-2 border-gray-800 bg-gray-900 [-webkit-touch-callout:none] can-hover:hover:border-amber-700/50 @min-[8rem]/card:border-4 ${tile ? "[&_img]:grayscale" : ""} ${FOCUS}`}
 			>
 				<div
-					className={
-						skipOffscreen
-							? "relative aspect-[2/3] [content-visibility:auto]"
-							: "relative"
-					}
+					className={skipOffscreen ? "relative aspect-[2/3] [content-visibility:auto]" : "relative"}
 				>
 					<Poster
 						path={details.poster_path}
@@ -343,20 +303,13 @@ export function MovieTvCard({
 					className={`pointer-events-none absolute inset-0 ${skipOffscreen ? "[content-visibility:auto]" : ""}`}
 				>
 					<TitleBand
-						title={
-							<MediaText
-								value={presentedText(details, "title", details.title)}
-							/>
-						}
+						title={<MediaText value={presentedText(details, "title", details.title)} />}
 						year={details.release_year}
 						yearEnd={award ? <BandAward mark={award} /> : undefined}
 						top={
 							<>
 								{rating && (
-									<RatingMark
-										rating={rating}
-										className="mb-1 @min-[4.5rem]/card:hidden!"
-									/>
+									<RatingMark rating={rating} className="mb-1 @min-[4.5rem]/card:hidden!" />
 								)}
 								<YourServiceLogos
 									offers={offers}
@@ -373,11 +326,7 @@ export function MovieTvCard({
 							goodwatch={ratings?.goodwatch_overall_score_normalized_percent}
 							skipScore={skipScore}
 							// The owner's square takes the pill's place under 7.5rem.
-							className={
-								ownerScore != null
-									? "hidden! @min-[7.5rem]/card:inline-flex!"
-									: ""
-							}
+							className={ownerScore != null ? "hidden! @min-[7.5rem]/card:inline-flex!" : ""}
 						/>
 						{ownerScore != null && (
 							<OwnerScore
@@ -392,10 +341,7 @@ export function MovieTvCard({
 						// Under 4.5rem the badge and the score don't fit side by side: the badge moves into the band.
 						<div className="absolute top-1 left-1 flex flex-col items-start gap-1 @min-[11rem]/card:top-2 @min-[11rem]/card:left-2">
 							{rating && (
-								<RatingMark
-									rating={rating}
-									className="hidden! @min-[4.5rem]/card:inline-flex!"
-								/>
+								<RatingMark rating={rating} className="hidden! @min-[4.5rem]/card:inline-flex!" />
 							)}
 							{ownerScore != null && (
 								<OwnerScore
@@ -410,18 +356,13 @@ export function MovieTvCard({
 				</div>
 			)}
 			{hidden && (
-				<HiddenCover
-					title={details.title}
-					onUndo={hidden.onUndo}
-					pending={hidden.pending}
-				/>
+				<HiddenCover title={details.title} onUndo={hidden.onUndo} pending={hidden.pending} />
 			)}
 			{actions && armed && (
 				<Suspense fallback={null}>
 					<CardActions
 						media={{ mediaType, details }}
 						placement={actions}
-						touch={touch}
 						open={open}
 						setOpen={setOpen}
 						tile={tileShown}

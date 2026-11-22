@@ -11,6 +11,7 @@ import { BookmarkIcon, NoSymbolIcon, StarIcon } from "@heroicons/react/20/solid"
 import { Suspense, lazy, useContext, useEffect, useRef, useState } from "react"
 import UserAction from "~/ui/auth/UserAction"
 import TitleScoreDialog from "~/ui/scoring/TitleScoreDialog"
+import { useTouchPointer } from "~/ui/title-actions/pointer"
 import { HideFeedbackContext } from "~/ui/title-actions/hide-feedback"
 import {
 	SEEN_INSTRUCTIONS,
@@ -44,15 +45,13 @@ export type ActionsPlacement = "bottom" | "raised"
 export type OpenActions = "score" | "seen-score" | null
 
 const PANEL_AT: Record<ActionsPlacement, string> = {
-	bottom:
-		"inset-x-1 bottom-1 @min-[11rem]/card:inset-x-2 @min-[11rem]/card:bottom-2",
+	bottom: "inset-x-1 bottom-1 @min-[11rem]/card:inset-x-2 @min-[11rem]/card:bottom-2",
 	raised: "inset-x-1 bottom-14 @min-[11rem]/card:inset-x-2",
 }
 
 export default function CardActions({
 	media,
 	placement,
-	touch,
 	open,
 	setOpen,
 	tile,
@@ -60,13 +59,12 @@ export default function CardActions({
 }: {
 	media: ScoredMedia
 	placement: ActionsPlacement
-	/** A touch screen: no panel (a tap opens the quick view). */
-	touch: boolean
 	open: OpenActions
 	setOpen: (open: OpenActions) => void
 	tile: boolean
 	setTile: (tile: boolean) => void
 }) {
+	const touch = useTouchPointer()
 	const a = useTitleActions(media)
 	const { status } = useTitleMarks(media.mediaType, media.details.tmdb_id)
 	const { user } = useUser()
@@ -154,9 +152,7 @@ export default function CardActions({
 				? "Seen"
 				: "Mark as Seen"
 	const wantName = a.seen ? "Want to rewatch" : "Want to See"
-	const scoreName = a.score
-		? `Your score: ${getScoreLabelText(a.score)}. Change it`
-		: "Score it"
+	const scoreName = a.score ? `Your score: ${getScoreLabelText(a.score)}. Change it` : "Score it"
 	const hideName = a.hidden
 		? "Not interested. Press to bring it back."
 		: a.canHide
@@ -198,10 +194,7 @@ export default function CardActions({
 							onClick={a.toggleWant}
 							className={`${PANEL_BTN} ${a.want ? "bg-amber-500 text-black" : OFF}`}
 						>
-							<BookmarkIcon
-								className={a.want ? "" : "text-amber-300"}
-								aria-hidden
-							/>
+							<BookmarkIcon className={a.want ? "" : "text-amber-300"} aria-hidden />
 						</button>
 						<UserAction instructions={SEEN_INSTRUCTIONS}>
 							<button
@@ -210,14 +203,9 @@ export default function CardActions({
 								title={seenName}
 								className={`${PANEL_BTN} ${seenFace.on ? seenFace.cls : OFF}`}
 							>
-								<seenFace.Icon
-									className={seenFace.on ? "" : seenFace.tint}
-									aria-hidden
-								/>
+								<seenFace.Icon className={seenFace.on ? "" : seenFace.tint} aria-hidden />
 								{a.seenLog?.count && (
-									<span className="text-[10px] font-bold tabular-nums">
-										{a.seenLog.count}
-									</span>
+									<span className="text-[10px] font-bold tabular-nums">{a.seenLog.count}</span>
 								)}
 							</button>
 						</UserAction>
@@ -230,10 +218,7 @@ export default function CardActions({
 							onClick={pressHide}
 							className={`${PANEL_BTN} ${a.hidden ? "bg-pink-500 text-black" : OFF}`}
 						>
-							<NoSymbolIcon
-								className={a.hidden ? "" : "text-pink-300"}
-								aria-hidden
-							/>
+							<NoSymbolIcon className={a.hidden ? "" : "text-pink-300"} aria-hidden />
 						</button>
 						<button
 							type="button"
@@ -247,9 +232,7 @@ export default function CardActions({
 						>
 							{a.score ? (
 								<>
-									<span className="truncate px-1 @min-[7.5rem]/card:hidden">
-										{a.score}
-									</span>
+									<span className="truncate px-1 @min-[7.5rem]/card:hidden">{a.score}</span>
 									<span className="hidden truncate px-1 @min-[7.5rem]/card:inline">
 										{getScoreLabelText(a.score)}
 									</span>
@@ -257,9 +240,7 @@ export default function CardActions({
 							) : (
 								<>
 									<StarIcon className="text-yellow-300" aria-hidden />
-									<span className="hidden @min-[7.5rem]/card:inline">
-										Score
-									</span>
+									<span className="hidden @min-[7.5rem]/card:inline">Score</span>
 								</>
 							)}
 						</button>
