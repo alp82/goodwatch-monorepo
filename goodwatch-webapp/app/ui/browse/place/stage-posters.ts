@@ -14,7 +14,11 @@ export const STAGE_SIZES: SizeRule[] = [
 	[null, "calc((100vw - 48px) / 3)"],
 ]
 
-export function rankedStageTitles(pool: PoolItem[], dials: DialSpec[], settings: Settings) {
+export function rankedStageTitles<T>(
+	pool: (Pick<PoolItem, "s" | "m"> & { t: T })[],
+	dials: DialSpec[],
+	settings: Settings,
+) {
 	return rank(pool, dials, settings, 72).map((item) => item.t)
 }
 

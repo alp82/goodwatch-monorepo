@@ -18,8 +18,10 @@ const RAIL_ITEM =
 const RAIL_ITEM_WIDE =
 	"w-[calc((100%-2*0.5rem)/3.3)] shrink-0 snap-start sm:w-[calc((100%-3*0.75rem)/4.4)] lg:w-[calc((100%-4*0.75rem)/5)]"
 
+type MediaKindTitle = { card: Pick<ShowTitle["card"], "media_type"> }
+
 /** Whether a list holds movies and shows together (`/all/...`): only then a show says that it is one. */
-export const isMixed = (titles: ShowTitle[]) =>
+export const isMixed = (titles: MediaKindTitle[]) =>
 	titles.some((t) => t.card.media_type === "show") &&
 	titles.some((t) => t.card.media_type !== "show")
 
@@ -27,7 +29,7 @@ export const isMixed = (titles: ShowTitle[]) =>
  * The mark of a show in a mixed list: a small word in the poster's top left corner (movies carry none, so half the
  * posters stay clean). It sits over the card, not in it, and never takes the click.
  */
-export function ShowMark({ title, mixed }: { title: ShowTitle; mixed: boolean }) {
+export function ShowMark({ title, mixed }: { title: MediaKindTitle; mixed: boolean }) {
 	if (!mixed || title.card.media_type !== "show") return null
 	return (
 		<span className="pointer-events-none absolute top-2 left-2 z-10 rounded-[5px] bg-gray-950/80 px-1.5 py-0.5 text-[10px] leading-4 font-bold tracking-wide text-gray-100 uppercase ring-1 ring-white/15 backdrop-blur-sm">

@@ -10,7 +10,7 @@ import { DISCOVER_SORTS, compactCount } from "~/ui/filter-bar/labels"
 import { type ReactNode, useEffect, useRef, useState } from "react"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import { STAGE_SIZES, STAGE_LEAD_POSTERS, rankedStageTitles } from "~/ui/browse/place/stage-posters"
-import type { ShowTitle, Sort } from "~/domain/browse/types"
+import type { Sort } from "~/domain/browse/types"
 import { FOCUS, PANEL, ShowMark, isMixed } from "~/ui/browse/index"
 import { EASE, GLIDE_T, QUICK_T } from "~/ui/browse/motion"
 import { useSteps } from "~/ui/browse/dials/Tuner"
@@ -93,7 +93,7 @@ function Grid({
 	fit,
 	dir,
 }: {
-	titles: ShowTitle[]
+	titles: Props["data"]["list"]["titles"]
 	fit: Fit | null
 	/** Which way the last step went, so a new page slides in from that side. */
 	dir: 1 | -1

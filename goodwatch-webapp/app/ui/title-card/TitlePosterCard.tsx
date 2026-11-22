@@ -16,7 +16,19 @@ export function TitlePosterCard({
 	newOn,
 	onOpen,
 }: {
-	card: TitleCard
+	card: Pick<
+		TitleCard,
+		| "media_type"
+		| "tmdb_id"
+		| "title"
+		| "poster_path"
+		| "release_year"
+		| "goodwatch_overall_score_normalized_percent"
+		| "canonical_title"
+		| "presentation"
+		| "services"
+		| "rating"
+	>
 	prefetch?: boolean
 	/** Set by a page for the cards it shows without scrolling. Every other poster loads lazily. */
 	posterPriority?: ImagePriority

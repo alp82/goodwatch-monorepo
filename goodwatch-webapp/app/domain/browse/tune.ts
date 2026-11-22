@@ -174,16 +174,16 @@ const norm = (d: DialSpec, x: number) => (d.hi > d.lo ? clamp01((x - d.lo) / (d.
  * the pool's own order (not nearest-first) means a title that stays keeps its place among the others, so a moving
  * knob shifts the grid by a few cells and never shuffles it. With no dial set it is the place's own list.
  */
-export function rank(
-	pool: PoolItem[],
+export function rank<T extends Pick<PoolItem, "s" | "m">>(
+	pool: T[],
 	dials: DialSpec[],
 	settings: Settings,
 	n: number,
-): PoolItem[] {
+): T[] {
 	const active = dials.filter((d) => settings[d.id] != null)
 	if (!active.length) return pool.filter((i) => i.m).slice(0, n)
 	const wide = active.some((d) => d.widens)
-	const scored: { i: PoolItem; index: number; cost: number }[] = []
+	const scored: { i: T; index: number; cost: number }[] = []
 	pool.forEach((i, index) => {
 		if (!wide && !i.m) return
 		let cost = (index / pool.length) * 0.06

@@ -2,8 +2,27 @@ import type { ShowTitle } from "~/domain/browse/types"
 import { copyMediaPresentation } from "~/utils/media-presentation"
 import type { PlacePageData } from "./place-page.server"
 
+/** Every title in the tuning pool can enter the grid. Keep the fields read by its poster,
+ * service and rating marks, quick view, title actions, and localized canonical link. */
+function stageTitle({ card }: ShowTitle) {
+	return {
+		card: {
+			key: card.key,
+			media_type: card.media_type,
+			tmdb_id: card.tmdb_id,
+			title: card.title,
+			poster_path: card.poster_path,
+			release_year: card.release_year,
+			goodwatch_overall_score_normalized_percent: card.goodwatch_overall_score_normalized_percent,
+			services: card.services,
+			rating: card.rating,
+			...copyMediaPresentation(card),
+		},
+	}
+}
+
 /** The lattice and steering previews need artwork and names. Keep their identity and provenance
- * for the route's localization overlay, while the stage and quick views keep their full cards. */
+ * for the route's localization overlay, including localized poster artwork. */
 function posterPreview({ card }: ShowTitle) {
 	return {
 		card: {
@@ -21,6 +40,8 @@ function posterPreview({ card }: ShowTitle) {
 export function placeDisplayData(data: PlacePageData) {
 	return {
 		...data,
+		pool: data.pool.map(({ t, s, m }) => ({ t: stageTitle(t), s, m })),
+		list: { ...data.list, titles: data.list.titles.map(stageTitle) },
 		dz: {
 			...data.dz,
 			field: (data.dz.field ?? []).map((point) => ({
