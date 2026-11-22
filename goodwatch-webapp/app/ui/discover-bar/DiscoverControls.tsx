@@ -14,14 +14,7 @@ import type { SearchTrigger } from "~/domain/search-attribution"
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid"
 import { useSearchParams } from "@remix-run/react"
 import { AnimatePresence, MotionConfig, motion } from "framer-motion"
-import {
-	type ReactNode,
-	useCallback,
-	useEffect,
-	useId,
-	useRef,
-	useState,
-} from "react"
+import { type ReactNode, useCallback, useEffect, useId, useRef, useState } from "react"
 import type { SearchScope } from "~/domain/discover-search"
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
 import type { TitleCard } from "~/server/title-cards.server"
@@ -29,18 +22,8 @@ import type { MoodKey } from "~/domain/moods"
 import type { FilterBarCounts, ForYouControl } from "~/ui/filter-bar/types"
 import type { FilterStateBinding } from "~/ui/filter-bar/useFilterState"
 import type { TitleKey } from "~/utils/title-key"
-import {
-	DiscoverBar,
-	PhoneDiscoverBar,
-	SearchButton,
-	SearchInput,
-} from "./DiscoverBar"
-import {
-	DiscoverPanel,
-	DiscoverSheet,
-	type PanelTab,
-	SubTabSlot,
-} from "./DiscoverPanel"
+import { DiscoverBar, PhoneDiscoverBar, SearchButton, SearchInput } from "./DiscoverBar"
+import { DiscoverPanel, DiscoverSheet, type PanelTab, SubTabSlot } from "./DiscoverPanel"
 import { FilterMix, type OwnRow, type ReadRow } from "./FilterMix"
 import { PanelFooter } from "./PanelFooter"
 import { ReadingLine } from "./ReadingLine"
@@ -150,11 +133,7 @@ export interface DiscoverControlsProps {
 	/** A sub-tab's content; an empty area of its final height until its step fills it. */
 	renderSubTab?: (id: SubTabId, view: SubTabView) => ReactNode
 	/** Find's results in place of the content, while Find has text. */
-	renderFind?: (
-		text: string,
-		view: SubTabView,
-		controls: FindControls,
-	) => ReactNode
+	renderFind?: (text: string, view: SubTabView, controls: FindControls) => ReactNode
 	/** The page's title; the count sits at its right. */
 	heading?: ReactNode
 	className?: string
@@ -177,7 +156,6 @@ export interface DiscoverControlsProps {
 	searchPending?: boolean
 	onUnsentWords?: (words: string | null) => void
 }
-
 
 export function DiscoverControls(props: DiscoverControlsProps) {
 	return (
@@ -262,8 +240,7 @@ function DiscoverControlsContent({
 		clearSearch: onClearSearch,
 		clearFilters: () => filters.update(clearAll),
 	})
-	const openChip = (chip: BarChip) =>
-		chip.opens && openTab(tabOfSubTab(chip.opens), chip.opens)
+	const openChip = (chip: BarChip) => chip.opens && openTab(tabOfSubTab(chip.opens), chip.opens)
 	const { mode, setMode } = useDiscoverMode()
 	const advanced = mode === "advanced"
 	const changeMode = (next: DiscoverMode) => {
@@ -332,9 +309,7 @@ function DiscoverControlsContent({
 		finding,
 		content: finding
 			? (renderFind?.(panel.find, view(phone), findControls) ?? null)
-			: (renderSubTab?.(active, view(phone)) ?? (
-					<SubTabSlot id={active} phone={phone} />
-				)),
+			: (renderSubTab?.(active, view(phone)) ?? <SubTabSlot id={active} phone={phone} />),
 	})
 	const footer = (phone: boolean) => (
 		<PanelFooter
@@ -350,8 +325,7 @@ function DiscoverControlsContent({
 	)
 	const readyOn = isReady(state, member)
 	const setReady = (on: boolean) => filters.update(readyTo(on, member))
-	const removeChip = (chip: BarChip) =>
-		chip.remove ? filters.update(chip.remove) : clearAllNow()
+	const removeChip = (chip: BarChip) => (chip.remove ? filters.update(chip.remove) : clearAllNow())
 	const values = {
 		...data.values,
 		search: titlesAndPeople(data.values.search, data.chips, desktop),
@@ -406,6 +380,7 @@ function DiscoverControlsContent({
 			<div className={className}>
 				<DescribeField
 					typed={asked}
+					searchParams={params}
 					onSearch={onSearch}
 					onClear={clearAllNow}
 					flatBottom={advanced}
@@ -427,122 +402,113 @@ function DiscoverControlsContent({
 							exit={{ height: 0, opacity: 0, overflow: "hidden" }}
 							transition={{ duration: 0.32, ease: [0.2, 0.7, 0.2, 1] }}
 						>
-				<div className="hidden lg:block">
-					<div className="relative">
-						<DiscoverBar
-							values={values}
-							active={desktop ? open : null}
-							onPick={(next) => (next === open ? close() : openTab(next))}
-							providers={providers}
-							barRef={barRef}
-							panelId={panelId}
-							search={
-								desktop && open ? (
-									<div className="flex items-center gap-2">
-										<SearchInput
-											value={text}
-											onChange={(value) => {
-												setText(value)
-												toSearch()
-											}}
-											onFocus={toSearch}
-											onEnter={() => runSearch(text, "enter")}
-											onEscape={close}
-											inputRef={field}
-										/>
-										<SearchButton
-											onClick={() => runSearch(text, "search_button")}
-											empty={!typed}
-										/>
-									</div>
-								) : undefined
-							}
-						/>
-						<AnimatePresence>
-							{desktop && open !== null && (
-								<DiscoverPanel
-									key="panel"
-									id={panelId}
-									tab={panelTab(false)}
-									panelRef={panelRef}
-									find={
-										<FindField
-											value={panel.find}
-											onChange={bar.setFind}
-											onEmptyEscape={close}
-											keys={findKeys}
-										/>
-									}
-									footer={footer(false)}
-								/>
-							)}
-						</AnimatePresence>
-					</div>
-				</div>
-				<div className="lg:hidden">
-					<PhoneDiscoverBar
-						values={values}
-						onPick={openTab}
-						providers={providers}
-					/>
-					{!desktop && (
-						<DiscoverSheet
-							open={open !== null}
-							tab={panelTab(true)}
-							badges={
-								Object.fromEntries(
-									MAIN_TABS.map((t) => [t, data.values[t].badge]),
-								) as Record<MainTab, number>
-							}
-							onPickTab={openTab}
-							onClose={close}
-							find={
-								<FindOpenButton
-									onClick={() => setPhoneFind(true)}
-									buttonRef={findButton}
-								/>
-							}
-							findOverlay={
-								<FindOverlay
-									shown={phoneFind || panel.find !== ""}
-									onCancel={endPhoneFind}
-								>
-									<FindField
-										value={panel.find}
-										onChange={bar.setFind}
-										onEmptyEscape={endPhoneFind}
-										inputRef={phoneFindField}
-										keys={findKeys}
+							<div className="hidden lg:block">
+								<div className="relative">
+									<DiscoverBar
+										values={values}
+										active={desktop ? open : null}
+										onPick={(next) => (next === open ? close() : openTab(next))}
+										providers={providers}
+										barRef={barRef}
+										panelId={panelId}
+										search={
+											desktop && open ? (
+												<div className="flex items-center gap-2">
+													<SearchInput
+														value={text}
+														onChange={(value) => {
+															setText(value)
+															toSearch()
+														}}
+														onFocus={toSearch}
+														onEnter={() => runSearch(text, "enter")}
+														onEscape={close}
+														inputRef={field}
+													/>
+													<SearchButton
+														onClick={() => runSearch(text, "search_button")}
+														empty={!typed}
+													/>
+												</div>
+											) : undefined
+										}
 									/>
-								</FindOverlay>
-							}
-							top={
-								tab === "search" &&
-								!finding && (
-									<div className="mb-5 flex h-14 items-center gap-2.5 rounded-[14px] bg-white/[0.07] pr-2 pl-4 shadow-[inset_0_0_0_1.5px_rgba(251,191,36,0.6)]">
-										<MagnifyingGlassIcon
-											className="h-5 w-5 shrink-0 text-gray-300"
-											aria-hidden
-										/>
-										<SearchInput
-											value={text}
-											onChange={setText}
-											onEnter={() => runSearch(text, "enter")}
-											inputRef={sheetField}
-											size="md"
-										/>
-										<SearchButton
-											onClick={() => runSearch(text, "search_button")}
-											empty={!typed}
-											small
-										/>
-									</div>
-								)
-							}
-							footer={footer(true)}
-						/>
-					)}
-				</div>
+									<AnimatePresence>
+										{desktop && open !== null && (
+											<DiscoverPanel
+												key="panel"
+												id={panelId}
+												tab={panelTab(false)}
+												panelRef={panelRef}
+												find={
+													<FindField
+														value={panel.find}
+														onChange={bar.setFind}
+														onEmptyEscape={close}
+														keys={findKeys}
+													/>
+												}
+												footer={footer(false)}
+											/>
+										)}
+									</AnimatePresence>
+								</div>
+							</div>
+							<div className="lg:hidden">
+								<PhoneDiscoverBar values={values} onPick={openTab} providers={providers} />
+								{!desktop && (
+									<DiscoverSheet
+										open={open !== null}
+										tab={panelTab(true)}
+										badges={
+											Object.fromEntries(MAIN_TABS.map((t) => [t, data.values[t].badge])) as Record<
+												MainTab,
+												number
+											>
+										}
+										onPickTab={openTab}
+										onClose={close}
+										find={
+											<FindOpenButton onClick={() => setPhoneFind(true)} buttonRef={findButton} />
+										}
+										findOverlay={
+											<FindOverlay shown={phoneFind || panel.find !== ""} onCancel={endPhoneFind}>
+												<FindField
+													value={panel.find}
+													onChange={bar.setFind}
+													onEmptyEscape={endPhoneFind}
+													inputRef={phoneFindField}
+													keys={findKeys}
+												/>
+											</FindOverlay>
+										}
+										top={
+											tab === "search" &&
+											!finding && (
+												<div className="mb-5 flex h-14 items-center gap-2.5 rounded-[14px] bg-white/[0.07] pr-2 pl-4 shadow-[inset_0_0_0_1.5px_rgba(251,191,36,0.6)]">
+													<MagnifyingGlassIcon
+														className="h-5 w-5 shrink-0 text-gray-300"
+														aria-hidden
+													/>
+													<SearchInput
+														value={text}
+														onChange={setText}
+														onEnter={() => runSearch(text, "enter")}
+														inputRef={sheetField}
+														size="md"
+													/>
+													<SearchButton
+														onClick={() => runSearch(text, "search_button")}
+														empty={!typed}
+														small
+													/>
+												</div>
+											)
+										}
+										footer={footer(true)}
+									/>
+								)}
+							</div>
 						</motion.div>
 					)}
 				</AnimatePresence>
@@ -551,16 +517,24 @@ function DiscoverControlsContent({
 						<ReadySwitch on={readyOn} onChange={setReady} member={member} />
 					</div>
 					<div className="order-last flex min-w-0 basis-full lg:order-none lg:flex-1 lg:basis-auto">
-						{readStrip ? readStrip({ chips: data.chips, onRemove: removeChip, onOpen: advanced ? openChip : undefined }) : <ReadingLine
-							state={state}
-							chips={data.chips}
-							reading={reading}
-							member={member}
-							onOpen={advanced ? openChip : undefined}
-							onRemove={removeChip}
-							onType={(type) => filters.set({ type })}
-							onMood={(mood) => filters.set({ moods: [mood as MoodKey] })}
-						/>}
+						{readStrip ? (
+							readStrip({
+								chips: data.chips,
+								onRemove: removeChip,
+								onOpen: advanced ? openChip : undefined,
+							})
+						) : (
+							<ReadingLine
+								state={state}
+								chips={data.chips}
+								reading={reading}
+								member={member}
+								onOpen={advanced ? openChip : undefined}
+								onRemove={removeChip}
+								onType={(type) => filters.set({ type })}
+								onMood={(mood) => filters.set({ moods: [mood as MoodKey] })}
+							/>
+						)}
 					</div>
 					<div className="flex h-10 shrink-0 items-center rounded-full ring-1 ring-white/10">
 						{forYou && (

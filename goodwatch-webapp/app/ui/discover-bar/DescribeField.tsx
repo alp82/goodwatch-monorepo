@@ -49,6 +49,7 @@ function OneExample({ run, paused }: { run: (text: string) => void; paused: bool
 
 export function DescribeField({
 	typed,
+	searchParams,
 	onSearch,
 	onClear,
 	flatBottom,
@@ -59,6 +60,8 @@ export function DescribeField({
 }: {
 	/** What the running search shows in the field. */
 	typed: string
+	/** Filter parameters for a search submitted through the native form before hydration. */
+	searchParams?: URLSearchParams
 	/** The trigger says what sent the words: a typing pause, Enter, the Search button, or an example. */
 	onSearch: (text: string, trigger: SearchTrigger) => void
 	onClear: () => void
@@ -72,6 +75,7 @@ export function DescribeField({
 	/** The words the typing pause will send, from the keystroke that arms it; null when it will send nothing new. */
 	onUnsent?: (words: string | null) => void
 }) {
+	const form = useRef<HTMLFormElement>(null)
 	const [text, setText] = useState(typed)
 	// What this field last sent: its answer coming back must not overwrite what is being typed.
 	const sent = useRef(typed)
@@ -130,6 +134,13 @@ export function DescribeField({
 		if (words.length >= MIN_CHARS)
 			timer.current = setTimeout(() => send(words, "typing_pause"), TYPING_PAUSE_MS)
 	}
+	// React preserves an edited input during hydration. Adopt those words before the next render.
+	const initialSearch = useRef({ typed, type })
+	useEffect(() => {
+		const field = form.current?.elements.namedItem("q") as HTMLInputElement | null
+		if (field && field.value !== initialSearch.current.typed)
+			initialSearch.current.type(field.value)
+	}, [])
 	const run = (value: string) => {
 		setText(value)
 		send(value, "selection")
@@ -137,6 +148,9 @@ export function DescribeField({
 	return (
 		<form
 			role="search"
+			ref={form}
+			method="get"
+			action="/discover"
 			onSubmit={(event) => {
 				event.preventDefault()
 				const trigger = pressed.current ?? "navigation"
@@ -147,6 +161,15 @@ export function DescribeField({
 				flatBottom ? "rounded-t-[22px] lg:rounded-t-[32px]" : "rounded-[22px] lg:rounded-[32px]"
 			}`}
 		>
+			{Array.from(new Set(searchParams?.keys()))
+				.filter(
+					(key) =>
+						!["q", "asked", "page", "off"].includes(key) &&
+						(key !== "sort" || searchParams?.has("q")),
+				)
+				.map((key) => (
+					<input key={key} type="hidden" name={key} value={searchParams?.get(key) ?? ""} />
+				))}
 			<div className="relative flex min-h-[92px] min-w-0 flex-1 flex-col justify-center pr-2 lg:min-h-[108px] lg:pr-3">
 				<span
 					className={`absolute top-[25px] flex h-[15px] items-center gap-1 text-[10px] font-bold tracking-[0.1em] text-amber-300/80 uppercase transition-opacity duration-150 lg:top-[30px] ${label ? "opacity-100" : "opacity-0"}`}
@@ -157,6 +180,7 @@ export function DescribeField({
 				</span>
 				<input
 					ref={inputRef}
+					name="q"
 					type="search"
 					value={text}
 					maxLength={SEARCH_MAX_CHARS}

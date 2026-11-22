@@ -40,6 +40,8 @@ import { readAwardWords } from "~/domain/award-filter"
 import { personPath } from "~/utils/helpers"
 import { type PageItem, type PageMeta, buildMeta } from "~/utils/meta"
 
+export { EXPLORE_AFTER_PAINT as handle } from "~/utils/start-after-paint"
+
 export { pageHeaders as headers } from "~/utils/headers"
 
 export const meta: MetaFunction<typeof loader> = ({ data, location }) => {
