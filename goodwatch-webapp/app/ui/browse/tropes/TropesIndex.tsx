@@ -15,6 +15,8 @@ import {
 import { WRAP } from "~/ui/browse/base"
 import { FOCUS, QUICK_T } from "~/ui/browse/motion"
 import { NamePlate, PosterFan, TropeCard, TvTropesCredit } from "~/ui/browse/tropes/parts"
+import { REPLAY_TAP_SCRIPT } from "~/utils/replay-tap"
+import { useReplayedTap } from "~/utils/useReplayedTap"
 import { Kicker } from "~/ui/eyebrow"
 import { PageTitle } from "~/ui/heading"
 import { RowArrows, useStepRow } from "~/ui/row-arrows"
@@ -35,10 +37,12 @@ function useSpotlight(data: TropesIndexData) {
 }
 
 function Surprise({ onPick }: { onPick: () => void }) {
+	useReplayedTap("trope-surprise")
 	return (
 		<button
 			type="button"
 			onClick={onPick}
+			data-replay-tap="trope-surprise"
 			className={`inline-flex items-center gap-2 rounded-full bg-white/[0.07] px-4 py-2 text-sm font-bold text-white ring-1 ring-white/15 ${QUICK_T} hover:bg-white/[0.12] active:scale-[0.98] ${FOCUS}`}
 		>
 			<svg aria-hidden viewBox="0 0 20 20" className="h-4 w-4 text-amber-300" fill="currentColor">
@@ -188,6 +192,8 @@ export function TropesIndex({ data, to }: { data: TropesIndexData; to: To }) {
 	const spot = useSpotlight(data)
 	return (
 		<div className={`${WRAP} pt-6 pb-24 sm:pt-10`}>
+			{/* oxlint-disable-next-line react/no-danger -- The tap recorder is static application code. */}
+			{spot.can && <script dangerouslySetInnerHTML={{ __html: REPLAY_TAP_SCRIPT }} />}
 			<IndexHead
 				data={data}
 				noun={noun}
