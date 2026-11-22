@@ -253,7 +253,11 @@ export function Essentials({ titles, eager = true }: { titles: ShowTitle[]; eage
 			{titles.map((t, i) => (
 				<li key={t.card.key} className="relative w-[46%] shrink-0 snap-start sm:w-[30%] lg:w-auto">
 					<ShowMark title={t} mixed={mixed} />
-					<TitlePosterCard card={t.card} posterPriority={eager && i === 0 ? "high" : "lazy"} />
+					<TitlePosterCard
+						card={t.card}
+						posterPriority={eager && i === 0 ? "high" : "lazy"}
+						skipOffscreen={!eager || i >= 5}
+					/>
 					{t.line && (
 						<p
 							title={t.line}

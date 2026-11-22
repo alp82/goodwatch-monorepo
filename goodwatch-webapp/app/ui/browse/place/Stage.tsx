@@ -152,7 +152,7 @@ function Grid({
 							posterSizes={fit ? [[null, `${Math.round(fit.w)}px`]] : STAGE_SIZES}
 							posterPriority={i < 3 ? "high" : "lazy"}
 							posterPaintBeforeScripts={i < 3}
-							skipOffscreen={i > 17}
+							skipOffscreen={i >= 3}
 						/>
 					</motion.div>
 				))}
