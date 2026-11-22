@@ -257,8 +257,12 @@ const FEATURE_CHUNKS = [
 		"score-badges",
 		/\/app\/(utils\/ratings|ui\/(poster-card\/(OwnerScore|ScorePill|pill-parts|services)|list-row\/RowScores|profile\/format))\.tsx?$/,
 	],
-	// The shared view and editor both display the selected card at the available size. Designs remain independent.
-	["share-card", /\/app\/ui\/share-card\/(ScaledCard|SelectedCard\.browser)\.tsx$/],
+	// The viewer and editor use the same card model, scaling, design helpers and list navigation.
+	// Each design still loads separately, and only the editor opens the full picker.
+	[
+		"share-card",
+		/\/app\/ui\/(share-card\/(ScaledCard|SelectedCard\.browser|model|kit)|share-lists\/ListToolbar)\.tsx?$/,
+	],
 	["user-data", /\/app\/hooks\/useUserDataMutations\.ts$/],
 	// The status words of a tracked show (tracking/status-look.ts) ride here: the poster cards' actions and the title
 	// page's Seen and score both use them and both load this group. Rule 3 would put them into every page's shell; in
