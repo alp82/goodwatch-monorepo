@@ -265,7 +265,7 @@ async function buildPlacePage(args: BrowseLoadArgs): Promise<BuiltPlacePage> {
 			size: 84,
 		})
 		// A widening dial ("a touch of heartwarming") reaches past the place's own titles; a kind keeps to its own.
-		const widen = !address.kind_ && SOFT.includes(lead.family) && !!intensity
+		const widen = !address.kind_ && SOFT.includes(lead.family) && !!intensityTrait
 		const bands = widen
 			? await Promise.all(
 					LEVELS.map((level) =>
