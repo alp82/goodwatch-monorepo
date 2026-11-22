@@ -14,13 +14,13 @@ import {
 	writeSettings,
 } from "~/domain/browse/tune"
 import type { Viewer } from "~/domain/browse/types"
-import type { PlacePageData } from "~/server/browse/place-page.server"
+import type { PlaceDisplayData } from "~/server/browse/place-display.server"
 
 /** The link of an address on this site; `extra` sets or (with undefined) drops query parameters. */
 export type To = (a: Address, extra?: Record<string, string | undefined>) => string
 
 export interface Props {
-	data: PlacePageData
+	data: PlaceDisplayData
 	address: Address
 	viewer: Viewer
 	to: To

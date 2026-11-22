@@ -5,6 +5,7 @@ import placeholder from "~/img/poster-placeholder.png"
 import { TmdbImage, type TmdbImageProps } from "~/ui/TmdbImage"
 import { assetUrl } from "~/utils/asset-url"
 import { imageLoadingProps } from "~/utils/tmdb-image"
+import { POSTER_CARD_MIN_WIDTH, POSTER_CARD_MAX_WIDTH } from "~/utils/poster-thumbnail"
 import type { SizeRule } from "~/utils/tmdb-image"
 
 export interface PosterProps {
@@ -26,10 +27,6 @@ export interface PosterProps {
 	minWidth?: number
 	phoneThumbnail?: boolean
 }
-
-// A card in the grid (2 to 6 columns) or in a row (3 to 8 slides) is at most this wide.
-export const POSTER_CARD_MIN_WIDTH = 100
-export const POSTER_CARD_MAX_WIDTH = 230
 
 /** The width of a card in MovieTvGrid and MovieSeries: 2 columns on a phone, 6 on a wide screen. */
 export const POSTER_GRID_SIZES: SizeRule[] = [

@@ -9,22 +9,15 @@ import { SortControl } from "~/ui/filter-bar/controls"
 import { DISCOVER_SORTS, compactCount } from "~/ui/filter-bar/labels"
 import { type ReactNode, useEffect, useRef, useState } from "react"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
-import type { SizeRule } from "~/utils/tmdb-image"
+import { STAGE_SIZES, STAGE_LEAD_POSTERS, rankedStageTitles } from "~/ui/browse/place/stage-posters"
 import type { ShowTitle, Sort } from "~/domain/browse/types"
 import { FOCUS, PANEL, ShowMark, isMixed } from "~/ui/browse/index"
 import { EASE, GLIDE_T, QUICK_T } from "~/ui/browse/motion"
 import { useSteps } from "~/ui/browse/dials/Tuner"
-import { rank } from "~/domain/browse/tune"
 import { SteerRows } from "~/ui/browse/place/SteerRows"
 import { WINDOW } from "~/domain/browse/window"
 import { type Props, useMoodTuner } from "~/ui/browse/place/shared"
 import { type SteerModel, type SteerRow, Token, useSteer } from "~/ui/browse/place/Steer"
-
-const STAGE_SIZES: SizeRule[] = [
-	["(min-width: 1024px)", "155px"],
-	["(min-width: 640px)", "calc((100vw - 84px) / 4)"],
-	[null, "calc((100vw - 48px) / 3)"],
-]
 
 const GAP = 14
 /** The block's height from `lg`: one screen under the sticky bars, never tiny, never a wall. */
@@ -150,10 +143,10 @@ function Grid({
 						<TitlePosterCard
 							card={t.card}
 							posterSizes={fit ? [[null, `${Math.round(fit.w)}px`]] : STAGE_SIZES}
-							posterPriority={i < 3 ? "high" : "lazy"}
+							posterPriority={i < STAGE_LEAD_POSTERS ? "high" : "lazy"}
 							phoneThumbnail
-							posterPaintBeforeScripts={i < 3}
-							skipOffscreen={i >= 3}
+							posterPaintBeforeScripts={i < STAGE_LEAD_POSTERS}
+							skipOffscreen={i >= STAGE_LEAD_POSTERS}
 						/>
 					</motion.div>
 				))}
@@ -289,7 +282,7 @@ export function Stage({
 	const [dir, setDir] = useState<1 | -1>(1)
 
 	// Tuned: the dials rank the pool in the browser and Prev and Next step through it here.
-	const ranked = tuner.tuned ? rank(pool, dz.dials, steps, 72).map((i) => i.t) : null
+	const ranked = tuner.tuned ? rankedStageTitles(pool, dz.dials, steps) : null
 	const stepsKey = JSON.stringify(steps)
 	const [local, setLocal] = useState(0)
 	// oxlint-disable-next-line react-hooks/exhaustive-deps -- a new tuning starts at the top

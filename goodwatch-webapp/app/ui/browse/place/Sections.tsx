@@ -13,12 +13,12 @@ import {
 } from "~/ui/browse/place-parts"
 import { PrintBars } from "~/ui/browse/dials/PrintBars"
 import { Lattice, onwardItems } from "~/ui/browse/place/PlaceHead"
-import type { PlacePageData } from "~/server/browse/place-page.server"
+import type { PlaceDisplayData } from "~/server/browse/place-display.server"
 import { type Props, asWord, cap, said } from "~/ui/browse/place/shared"
 
 type P = Pick<Props, "data" | "address" | "to">
 
-export function EssentialsSection({ data, listTo }: { data: PlacePageData; listTo?: string }) {
+export function EssentialsSection({ data, listTo }: { data: PlaceDisplayData; listTo?: string }) {
 	const what = said(data.room.title, data.room.parts)
 	if (!data.room.essentials.length) return null
 	return (
@@ -103,7 +103,7 @@ export function CloseToSection({ data, address, to }: P) {
 	)
 }
 
-export function PeopleSection({ data }: { data: PlacePageData }) {
+export function PeopleSection({ data }: { data: PlaceDisplayData }) {
 	return (
 		<>
 			{data.people.length > 0 && (

@@ -176,7 +176,7 @@ export function PosterTrio({
 	titles,
 	className = "",
 }: {
-	titles: ShowTitle[]
+	titles: { card: Pick<ShowTitle["card"], "key" | "poster_path" | "title"> }[]
 	className?: string
 }) {
 	return (

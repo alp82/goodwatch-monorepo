@@ -6,9 +6,10 @@ import {
 	imageLoadingProps,
 	tmdbFixedImage,
 	tmdbFluidImage,
-	tmdbImageUrl,
 	isTvdbPhoto,
 } from "~/utils/tmdb-image"
+
+import { phonePosterSrcSet, PHONE_THUMBNAIL_MEDIA } from "~/utils/poster-thumbnail"
 
 type ImgProps = Omit<
 	React.ImgHTMLAttributes<HTMLImageElement>,
@@ -92,9 +93,9 @@ export function TmdbImage({
 	return (
 		<picture className="contents">
 			<source
-				media="(max-width: 479px)"
+				media={PHONE_THUMBNAIL_MEDIA}
 				sizes={source.sizes ?? `${base}px`}
-				srcSet={[92, 154, 185].map((w) => `${tmdbImageUrl(path, `w${w}`)} ${w}w`).join(", ")}
+				srcSet={phonePosterSrcSet(path)}
 			/>
 			{image}
 		</picture>

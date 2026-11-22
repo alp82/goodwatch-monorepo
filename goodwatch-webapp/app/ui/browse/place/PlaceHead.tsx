@@ -23,10 +23,11 @@ import { BlendBar } from "~/ui/browse/blend/BlendBar"
 import { DragProvider } from "~/ui/browse/blend/parts"
 import { inSentence, phrase, phraseText } from "~/domain/browse/phrase"
 import { lattice } from "~/ui/browse/dials/Field"
-import type { FieldPlace } from "~/server/browse/dials.server"
 import { Onward } from "~/ui/browse/place-parts"
-import type { PlacePageData } from "~/server/browse/place-page.server"
+import type { PlaceDisplayData } from "~/server/browse/place-display.server"
 import { type HeadState, type Props, asWord, cap } from "~/ui/browse/place/shared"
+
+type FieldPlace = NonNullable<PlaceDisplayData["dz"]["field"]>[number]
 
 const GLIDE = { duration: 0.46, ease: EASE } as const
 
@@ -389,7 +390,7 @@ export function FeelWords({
 // ---------------------------------------------------------------------------------------------------------
 // The ways onward of the head: what it pairs with, what is closest, the one to start with.
 
-export function onwardItems(data: PlacePageData, address: Props["address"], to: Props["to"]) {
+export function onwardItems(data: PlaceDisplayData, address: Props["address"], to: Props["to"]) {
 	const { room } = data
 	const kind = address.kind
 	const items: { label: string; value: string; sub?: string; to: string; hue?: string }[] = []
@@ -421,7 +422,7 @@ export function onwardItems(data: PlacePageData, address: Props["address"], to: 
 	return items
 }
 
-export function crumbsOf(data: PlacePageData, address: Props["address"], to: Props["to"]) {
+export function crumbsOf(data: PlaceDisplayData, address: Props["address"], to: Props["to"]) {
 	const lead = data.room.parts[0]
 	const family = lead.family === "theme" || lead.family === "style" ? "genre" : lead.family
 	const top = { label: kindLabel(address.kind), to: to(hub(address.kind)) }

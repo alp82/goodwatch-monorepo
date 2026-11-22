@@ -22,6 +22,7 @@ import { loadAddEntry } from "~/server/browse/add-entry.server"
 import { peekOf } from "~/server/browse/blend.server"
 import { loadMarks } from "~/server/browse/card-marks.server"
 import { indexPageOf, loadIndexPage, pageCards } from "~/server/browse/index-pages.server"
+import { placeDisplayData } from "~/server/browse/place-display.server"
 import { loadPlacePage } from "~/server/browse/place-page.server"
 import { PlacesNotReady, openPlaces } from "~/server/browse/places.server"
 import { streamingRoute } from "~/server/browse/streaming-page.server"
@@ -29,6 +30,8 @@ import { presentCatalogLoader } from "~/server/media-payload.server"
 import { BrowseRow } from "~/ui/browse/BrowseRow"
 import { IndexPage } from "~/ui/browse/IndexPage"
 import { BrowsePageProvider } from "~/ui/browse/page-context"
+import { isTuned, settingsWithFine } from "~/domain/browse/tune"
+import { rankedStageTitles, stagePosterPreloads } from "~/ui/browse/place/stage-posters"
 import { PlacePage } from "~/ui/browse/place/PlacePage"
 import { ensureTropes } from "~/server/browse/tropes.server"
 import { tropesRoute } from "~/server/browse/tropes-route.server"
@@ -99,7 +102,7 @@ const canonicalLoader = async ({ params, request }: LoaderFunctionArgs) => {
 
 	if (isPlacePage(address)) {
 		const args = { request, url, address, atlas }
-		const data = await loadPlacePage(args)
+		const data = placeDisplayData(await loadPlacePage(args))
 		const count = atlas.count(address.parts)
 		const lead = address.parts[0]
 		return {
@@ -157,7 +160,7 @@ const canonicalLoader = async ({ params, request }: LoaderFunctionArgs) => {
 
 export const loader = presentCatalogLoader(canonicalLoader, { live: true })
 
-export const meta: MetaFunction<typeof loader> = ({ data }) => {
+export const meta: MetaFunction<typeof loader> = ({ data, location }) => {
 	if (!data || data.page === "peek") return [{ title: "Page Not Found | GoodWatch" }]
 	if (data.page === "tropes" || data.page === "trope") return buildMeta(data.meta)
 	if (data.page === "stream") return streamingMeta(data.route)
@@ -177,7 +180,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 		label: c.label,
 		path: "to" in c && c.to ? c.to : data.canonical,
 	}))
-	return buildMeta({
+	const placeMeta = buildMeta({
 		pageMeta: {
 			title: `${data.title} | GoodWatch`,
 			description: data.description,
@@ -188,6 +191,10 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 		breadcrumbs: crumbs,
 		robots: data.indexable ? undefined : "noindex, follow",
 	})
+	const { dz, list, pool } = data.data
+	const settings = settingsWithFine(dz.dials, location.search)
+	const shown = isTuned(settings) ? rankedStageTitles(pool, dz.dials, settings) : list.titles
+	return [...placeMeta, ...stagePosterPreloads(shown)]
 }
 
 const to = (a: Address, extra?: Record<string, string | undefined>) => browsePath(a, extra)

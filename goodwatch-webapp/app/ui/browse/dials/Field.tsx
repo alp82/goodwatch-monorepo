@@ -13,11 +13,11 @@ import type { FieldPlace } from "~/server/browse/dials.server"
  * One cell per place, and no empty cells: the family is cut into columns from the lightest to the darkest, and each
  * column runs from its calmest place at the top to its most intense at the bottom.
  */
-export function lattice(places: FieldPlace[], cols: number) {
+export function lattice<T extends Pick<FieldPlace, "tone" | "pace">>(places: T[], cols: number) {
 	const n = places.length
 	const rows = Math.max(1, Math.ceil(n / cols))
 	const byTone = [...places].sort((a, b) => a.tone - b.tone || a.pace - b.pace)
-	const cells: { place: FieldPlace; row: number; col: number }[] = []
+	const cells: { place: T; row: number; col: number }[] = []
 	for (let c = 0; c < cols; c++) {
 		const from = Math.round((c * n) / cols)
 		const to = Math.round(((c + 1) * n) / cols)
