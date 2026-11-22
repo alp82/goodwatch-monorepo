@@ -13,7 +13,7 @@ import {
 	Cog6ToothIcon as CogSolid,
 	UserCircleIcon as UserCircleSolid,
 } from "@heroicons/react/24/solid"
-import { Link } from "@remix-run/react"
+import { Link, useLocation } from "@remix-run/react"
 import { type ReactNode, useEffect, useRef } from "react"
 import { STICKY_BAR } from "~/ui/layers"
 import { useNavigation } from "./NavigationContext"
@@ -55,10 +55,11 @@ const ROW_H = {
 /** Keeps the current tab in view in a row that scrolls sideways. */
 function useCenterCurrent(current: string | undefined) {
 	const box = useRef<HTMLDivElement>(null)
+	const { pathname } = useLocation()
 	useEffect(() => {
 		const row = box.current
 		const here = row?.querySelector<HTMLElement>("[aria-current='page']")
-		if (!row || !here || !current) return
+		if (!row || !here) return
 		const observer = new ResizeObserver(([entry]) => {
 			if (entry.contentRect.width > 0 && row.scrollWidth > row.clientWidth)
 				row.scrollLeft = Math.max(0, here.offsetLeft - (row.clientWidth - here.offsetWidth) / 2)
@@ -66,7 +67,7 @@ function useCenterCurrent(current: string | undefined) {
 		observer.observe(row)
 		observer.observe(here)
 		return () => observer.disconnect()
-	}, [current])
+	}, [current, pathname])
 	return box
 }
 
