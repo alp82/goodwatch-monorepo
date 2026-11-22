@@ -4,7 +4,6 @@ import { HERO_TIMING } from "~/utils/start-after-paint"
 import { TmdbImage } from "~/ui/TmdbImage"
 import { Link } from "@remix-run/react"
 import type { CSSProperties } from "react"
-import type { ShowTitle } from "~/domain/browse/types"
 import { type Example, type TropeRow, many, twistOf } from "~/domain/tropes/pages"
 import { FOCUS, GLIDE_T, QUICK_T } from "~/ui/browse/motion"
 
@@ -66,7 +65,7 @@ export function PosterFan({
 	spotlight = false,
 	className = "",
 }: {
-	titles: ShowTitle[]
+	titles: TropeRow["posters"]
 	width?: number
 	spotlight?: boolean
 	className?: string
@@ -74,7 +73,7 @@ export function PosterFan({
 	const [front, left, right] = titles
 	if (!front) return null
 	const h = width * 1.5
-	const card = (t: ShowTitle | undefined, pos: "left" | "front" | "right") => {
+	const card = (t: TropeRow["posters"][number] | undefined, pos: "left" | "front" | "right") => {
 		if (!t?.card.poster_path) return null
 		const at =
 			pos === "front"

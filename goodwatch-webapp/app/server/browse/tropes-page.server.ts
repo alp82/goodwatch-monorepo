@@ -123,19 +123,40 @@ async function indexOf(atlas: Places): Promise<TropesIndexData> {
 	return { kind: atlas.kind, groups, feature }
 }
 
+/** Rails and the spotlight share the same three posters and short excerpt. The title model
+ * also carries personal marks and discovery metadata that neither view displays. */
+function indexRow(row: TropeRow): TropeRow {
+	const { posters, teaser } = row
+	return {
+		...row,
+		posters: posters.map(({ card }) => ({ card: { poster_path: card.poster_path } })),
+		teaser: teaser && {
+			text: teaser.text,
+			title: {
+				card: { title: teaser.title.card.title, release_year: teaser.title.card.release_year },
+			},
+		},
+	}
+}
+
 /**
  * The index: every trope with a page for the kind, in its named index, with a poster fan and a teaser. It reads a
  * teaser per trope (about a hundred small reads), so it is built once per data version and shared (page-cache.server).
  */
 export async function loadTropesIndex(atlas: Places): Promise<TropesIndexData> {
 	await ensureTropes()
-	return cachedPage(atlas, {
+	const data = await cachedPage(atlas, {
 		name: "tropes-index",
 		key: atlas.kind,
 		build: () => indexOf(atlas),
 		complete: () => tropeMembersVersion() > 0,
 		shared: true,
 	})
+	return {
+		kind: data.kind,
+		groups: data.groups.map((group) => ({ ...group, tropes: group.tropes.map(indexRow) })),
+		feature: data.feature && indexRow(data.feature),
+	}
 }
 
 /**

@@ -26,9 +26,12 @@ export interface TropeRow {
 	/** Well-known titles of the kind that carry it. */
 	n: number
 	/** Its best-known titles, for the poster fan. */
-	posters: ShowTitle[]
+	posters: { card: Pick<ShowTitle["card"], "poster_path"> }[]
 	/** One short write-up without spoilers, as a teaser: "In Jaws: ...". */
-	teaser: Example | null
+	teaser: {
+		text: string
+		title: { card: Pick<ShowTitle["card"], "title" | "release_year"> }
+	} | null
 }
 
 /**
