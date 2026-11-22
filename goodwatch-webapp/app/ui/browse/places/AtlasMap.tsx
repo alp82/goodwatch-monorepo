@@ -21,6 +21,7 @@ import {
 	memo,
 	useCallback,
 	useEffect,
+	useId,
 	useLayoutEffect,
 	useMemo,
 	useRef,
@@ -147,16 +148,24 @@ const FLAG_LOOK: Record<FlagLook, CSSProperties> = {
 }
 
 /** A country's flag inside its outline, covering its largest part. It re-renders only when its look changes. */
-const Flag = memo(function Flag({ shape, look }: { shape: WorldShape; look: FlagLook }) {
+const Flag = memo(function Flag({
+	shape,
+	look,
+	outline,
+}: {
+	shape: WorldShape
+	look: FlagLook
+	outline: string
+}) {
 	const b = flagBox(shape)
 	const cover = flagCover(b[0], b[1], b[2] - b[0], b[3] - b[1])
 	return (
 		<>
-			<clipPath id={`atlas-c-${shape.code}`}>
-				<path d={shape.d} />
+			<clipPath id={`${outline}-clip`}>
+				<use href={`#${outline}`} />
 			</clipPath>
-			<g clipPath={`url(#atlas-c-${shape.code})`}>
-				<path d={shape.d} fill="#2d3748" />
+			<g clipPath={`url(#${outline}-clip)`}>
+				<use href={`#${outline}`} fill="#2d3748" />
 				<image
 					href={countryFlagUrl(shape.code)}
 					{...cover}
@@ -232,6 +241,7 @@ export function AtlasMap({
 	className?: string
 	label?: string
 }) {
+	const mapId = useId().replace(/:/g, "")
 	const navigate = useNavigate()
 	const host = useRef<HTMLDivElement>(null)
 	const group = useRef<SVGGElement>(null)
@@ -733,9 +743,23 @@ export function AtlasMap({
 			>
 				<g ref={group} style={{ transformOrigin: "0 0", willChange: "transform" } as CSSProperties}>
 					<Land skip={codes} />
+					<defs>
+						{placed.map(
+							({ code, shape }) =>
+								!isTiny(shape) && (
+									<path
+										key={code}
+										id={`${mapId}-${code}`}
+										d={shape.d}
+										vectorEffect="non-scaling-stroke"
+									/>
+								),
+						)}
+					</defs>
 					{placed.map((p) => {
 						const on = p.code === dockedCode
 						const lit = p.code === hot
+						const outline = `${mapId}-${p.code}`
 						const tiny = isTiny(p.shape)
 						const t = fit?.[p.code] ?? 0
 						const fits = Boolean(fit) && t > 0
@@ -785,8 +809,8 @@ export function AtlasMap({
 							>
 								{/* A wider area to hit, for the countries a pointer would miss. */}
 								{isSmall(p.shape) && !tiny && (
-									<path
-										d={p.shape.d}
+									<use
+										href={`#${outline}`}
 										fill="none"
 										stroke="transparent"
 										strokeWidth={12}
@@ -795,11 +819,15 @@ export function AtlasMap({
 									/>
 								)}
 								{flags && p.shape.d && !tiny && (
-									<Flag shape={p.shape} look={on ? "on" : lit ? "hover" : "rest"} />
+									<Flag
+										outline={outline}
+										shape={p.shape}
+										look={on ? "on" : lit ? "hover" : "rest"}
+									/>
 								)}
 								{p.shape.d && !tiny && (
-									<path
-										d={p.shape.d}
+									<use
+										href={`#${outline}`}
 										stroke={BORDER}
 										style={{
 											fill: veil,
@@ -839,9 +867,9 @@ export function AtlasMap({
 					{/* The country under the pointer and the dock's country: a clean outline over every neighbor's border. */}
 					{[hotShape, dockShape].map((shape, i) =>
 						shape?.d && !isTiny(shape) ? (
-							<path
+							<use
 								key={i === 0 ? "hot" : "dock"}
-								d={shape.d}
+								href={`#${mapId}-${shape.code}`}
 								fill="none"
 								stroke={i === 0 ? "rgba(255,255,255,0.9)" : "#fcd34d"}
 								strokeWidth={i === 0 ? 1.4 : 1.8}
@@ -854,8 +882,8 @@ export function AtlasMap({
 					{/* The keyboard's place: an outline over every neighbor's border. */}
 					{focusShape &&
 						(focusShape.d && !isTiny(focusShape) ? (
-							<path
-								d={focusShape.d}
+							<use
+								href={`#${mapId}-${focusShape.code}`}
 								fill="none"
 								className="stroke-amber-400"
 								strokeWidth={2}
