@@ -10,11 +10,8 @@ import { BelowFoldProvider } from "~/ui/details/below-fold"
 import { hasEpisodeGrid } from "~/ui/details/episode-grid/scale"
 import type { ShelfTitle } from "~/ui/details/more-like-this/shelf-data"
 import { useTitleQuestions } from "~/ui/details/useTitleQuestions"
-import { usePublishTitleSubject } from "~/ui/feedback/subject"
-import {
-	MediaPreferenceProvider,
-	useMediaPreference,
-} from "~/ui/media-preference/MediaPreference"
+import { usePublishTitleSubject } from "~/ui/feedback/title-subject"
+import { MediaPreferenceProvider, useMediaPreference } from "~/ui/media-preference/MediaPreference"
 import { useTitlePreview } from "~/ui/media-preference/useTitlePreview"
 import { type Crumb, titleTrail } from "~/ui/nav/breadcrumb-trail"
 import { titlePath } from "~/utils/helpers"

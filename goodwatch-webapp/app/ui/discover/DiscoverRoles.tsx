@@ -5,17 +5,12 @@
 // character quick view instead. Without a cast filter, or without portraits among the results, nothing shows. The first view gets the roles from Discover's loader; while another person's roles load
 // in the page, a placeholder holds the strip's place, so the grid moves only when the strip turns out empty.
 import { useSearchParams } from "@remix-run/react"
-import {
-	type ReactNode,
-	createContext,
-	useContext,
-	useMemo,
-	useState,
-} from "react"
+import { type ReactNode, createContext, useContext, useMemo, useState } from "react"
 import type { CharacterRole } from "~/domain/character-portraits"
 import { useCharacterQuickView } from "~/ui/character-quick-view/context"
 import { PortraitImg, TvdbCredit } from "~/ui/character-quick-view/parts"
-import { roleEntry, usePersonRoles } from "~/ui/character-quick-view/portraits"
+import { roleEntry } from "~/ui/character-quick-view/role-entry"
+import { usePersonRoles } from "~/ui/character-quick-view/portraits"
 import { RowArrows, useStepRow } from "~/ui/row-arrows"
 
 type Card = { media_type: string; tmdb_id: number }
@@ -39,13 +34,7 @@ const RING_MS = 1800
  * Wraps Discover's results (the grid or the taste rows): the strip above them, and the ring around a card the strip
  * pointed at. `cards` are the results in screen order.
  */
-export function DiscoverRoles({
-	cards,
-	children,
-}: {
-	cards: Card[]
-	children: ReactNode
-}) {
+export function DiscoverRoles({ cards, children }: { cards: Card[]; children: ReactNode }) {
 	const [params] = useSearchParams()
 	const personId = Number((params.get("people") ?? "").split(",")[0]) || null
 	const roles = usePersonRoles(personId)
@@ -59,20 +48,13 @@ export function DiscoverRoles({
 			ringed,
 			ring: (key) => {
 				setRinged(key)
-				window.setTimeout(
-					() => setRinged((k) => (k === key ? null : k)),
-					RING_MS,
-				)
+				window.setTimeout(() => setRinged((k) => (k === key ? null : k)), RING_MS)
 			},
 		}
 	}, [personId, roles, ringed])
 	return (
 		<RolesContext.Provider value={value}>
-			{value ? (
-				<RolesStrip cards={cards} />
-			) : (
-				roles.loading && <RolesStripPlaceholder />
-			)}
+			{value ? <RolesStrip cards={cards} /> : roles.loading && <RolesStripPlaceholder />}
 			{children}
 		</RolesContext.Provider>
 	)
@@ -125,8 +107,7 @@ export function DiscoverCardRole({
 }
 
 /** The strip's classes, shared with its placeholder so both take the same room. */
-const STRIP =
-	"mb-5 w-full min-w-0 max-w-full overflow-hidden [contain:inline-size]"
+const STRIP = "mb-5 w-full min-w-0 max-w-full overflow-hidden [contain:inline-size]"
 const STRIP_ROW = "flex gap-2.5 overflow-hidden pb-2"
 const TILE = "w-20 shrink-0 sm:w-24"
 const TILE_PICTURE =
@@ -194,15 +175,11 @@ function RolesStrip({ cards }: { cards: Card[] }) {
 	// contain: inline-size keeps the strip from widening the results column; it scrolls inside it instead. The head
 	// keeps the arrows' height from the first paint, as the placeholder does, so they never push the grid down.
 	return (
-		<section
-			className={STRIP}
-			aria-label={`${ctx.name}'s characters in these results`}
-		>
+		<section className={STRIP} aria-label={`${ctx.name}'s characters in these results`}>
 			<div className="mb-2 flex min-h-5 items-center gap-3 lg:min-h-8">
 				<p className="min-w-0 flex-1 text-sm text-gray-400">
 					<span className="font-semibold text-gray-200">{ctx.name}</span> plays{" "}
-					{shown.length === 1 ? "one character" : `${shown.length} characters`}{" "}
-					here
+					{shown.length === 1 ? "one character" : `${shown.length} characters`} here
 				</p>
 				<RowArrows row={row} label="characters" />
 			</div>
@@ -218,9 +195,7 @@ function RolesStrip({ cards }: { cards: Card[] }) {
 						onClick={(e) => go(card, role, e.currentTarget)}
 						className={`group ${TILE} cursor-pointer snap-start text-left`}
 					>
-						<span
-							className={`${TILE_PICTURE} can-hover:group-hover:border-amber-700/50`}
-						>
+						<span className={`${TILE_PICTURE} can-hover:group-hover:border-amber-700/50`}>
 							<PortraitImg
 								src={role.image}
 								alt={`${ctx.name} as ${role.character}`}
@@ -230,9 +205,7 @@ function RolesStrip({ cards }: { cards: Card[] }) {
 						<span className="mt-1 block truncate text-xs font-semibold text-gray-200">
 							{role.character}
 						</span>
-						<span className="block truncate text-[0.6875rem] text-gray-500">
-							{role.title}
-						</span>
+						<span className="block truncate text-[0.6875rem] text-gray-500">{role.title}</span>
 					</button>
 				))}
 			</div>

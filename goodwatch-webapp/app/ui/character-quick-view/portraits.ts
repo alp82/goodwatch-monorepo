@@ -14,8 +14,6 @@ import {
 	pickRole,
 	portraitLookup,
 } from "~/domain/character-portraits"
-import { titlePath } from "~/utils/helpers"
-import type { CharacterEntry } from "./context"
 
 export type { CharacterPortrait, CharacterRole }
 
@@ -55,11 +53,7 @@ export function useTitlePortraits(
 }
 
 /** A person's characters, one per title, best known first (`limit` of them). */
-export function fetchPersonRoles(
-	personId: number | null | undefined,
-	name: string,
-	limit: number,
-) {
+export function fetchPersonRoles(personId: number | null | undefined, name: string, limit: number) {
 	const params: Record<string, string> = {
 		person: String(personId ?? 0),
 		limit: String(limit),
@@ -75,11 +69,7 @@ export interface PersonRoles {
 	name: string
 	list: CharacterRole[]
 	/** That title's character, preferring the one named in `characters`. */
-	of: (
-		mediaType: string,
-		tmdbId: number,
-		characters?: string[],
-	) => CharacterRole | undefined
+	of: (mediaType: string, tmdbId: number, characters?: string[]) => CharacterRole | undefined
 }
 
 /** Every role of a person (Discover's cast filter knows only the id; the name is looked up then). */
@@ -113,32 +103,5 @@ export function usePersonRoles(
 
 /** Characters whose name, or a word of it, starts with the text, most popular titles first. */
 export function fetchCharacterMatches(text: string) {
-	return read<{ characters: CharacterRole[] }>({ q: text }).then(
-		(d) => d.characters,
-	)
-}
-
-/** The quick view's entry for a person's role; its link goes to the title. */
-export function roleEntry(
-	role: CharacterRole,
-	person: { id?: number | null; name: string; profilePath?: string | null },
-): CharacterEntry {
-	return {
-		anchor: `role-${role.mediaType}-${role.tmdbId}-${role.character}`,
-		character: role.character,
-		image: role.image,
-		personName: person.name || role.personName,
-		personId: person.id ?? role.personTmdbId,
-		actorProfilePath: person.profilePath ?? null,
-		actorImage: role.actorImage,
-		title: {
-			mediaType: role.mediaType,
-			tmdbId: role.tmdbId,
-			name: role.title,
-			year: role.year,
-			posterPath: role.posterPath,
-		},
-		href: titlePath(role.mediaType, role.tmdbId, role.title),
-		moreFrom: "title",
-	}
+	return read<{ characters: CharacterRole[] }>({ q: text }).then((d) => d.characters)
 }
