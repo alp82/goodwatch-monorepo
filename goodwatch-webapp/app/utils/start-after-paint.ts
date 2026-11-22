@@ -17,8 +17,12 @@
 /** A route's handle: the route's scripts start after the first paint. */
 export const START_AFTER_PAINT = { scripts: "after-paint" } as const
 
-/** Explore also remembers the first press of a JavaScript-only button while its modules arrive. */
-export const EXPLORE_AFTER_PAINT = { ...START_AFTER_PAINT, replayExploreButtons: true } as const
+/** Keep an early press on a JavaScript-only page button until its handler is ready. */
+export const START_AFTER_PAINT_WITH_BUTTON_REPLAY = {
+	...START_AFTER_PAINT,
+	replayExploreButtons: true,
+} as const
+export const EXPLORE_AFTER_PAINT = START_AFTER_PAINT_WITH_BUTTON_REPLAY
 
 /** The `elementtiming` attribute of a picture that the scripts wait for. Spread it on the `img`. */
 export const HERO_TIMING = { elementtiming: "hero" } as const

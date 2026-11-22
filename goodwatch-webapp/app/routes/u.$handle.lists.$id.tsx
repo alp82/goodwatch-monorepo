@@ -40,6 +40,9 @@ import { canonicalMediaTitle } from "~/utils/media-presentation"
 import { Kicker } from "~/ui/eyebrow"
 import { PageTitle, SectionHeading } from "~/ui/heading"
 
+import { START_AFTER_PAINT_WITH_BUTTON_REPLAY } from "~/utils/start-after-paint"
+
+export const handle = START_AFTER_PAINT_WITH_BUTTON_REPLAY
 export { pageHeaders as headers } from "~/utils/headers"
 
 // Logos shown per title before the rest collapse into "+N".
