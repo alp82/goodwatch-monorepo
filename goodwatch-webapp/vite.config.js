@@ -234,7 +234,7 @@ const APP_MODULE = /\/app\/(?!routes\/)/
 // A shared module above this size stays with the routes that use it.
 const SHARED_SMALL_MODULE_MAX_BYTES = 3_000
 // Strikes a balance between the bytes paid on every first visit and separate requests when a route needs a helper.
-const SHARED_SMALL_MODULE_MIN_ROUTES = 4
+const SHARED_SMALL_MODULE_MIN_ROUTES = 6
 // Rule 3 never takes a style sheet. Its module is a stub of a few bytes, but its rules go wherever its chunk goes, and
 // the shell's style sheets block the first paint of every page. The intro film's style sheet (76 KB, 13 KB compressed)
 // went there once a second module imported it.
@@ -246,11 +246,16 @@ const STYLE_SHEET = /\.css($|\?)/
 // rule names is pulled into the group, for every page that uses it. That is why the mutation hooks, which the home page
 // also loads, are a group of their own.
 const FEATURE_CHUNKS = [
+	// The Discover form uses the request, filter and exact-match helpers together. Other search entry points share them.
+	[
+		"discover-query",
+		/\/app\/(domain\/(discover-search|exact-search)|ui\/discover\/discover-search-request)\.ts$/,
+	],
 	// A list row's score, owner mark and service logos draw together; poster cards use the same pieces.
 	// Group the small presentations independently from the controls that write a score.
 	[
 		"score-badges",
-		/\/app\/(utils\/ratings|ui\/(poster-card\/(OwnerScore|ScorePill|pill-parts|services)|list-row\/RowScores))\.tsx?$/,
+		/\/app\/(utils\/ratings|ui\/(poster-card\/(OwnerScore|ScorePill|pill-parts|services)|list-row\/RowScores|profile\/format))\.tsx?$/,
 	],
 	// The shared view and editor both display the selected card at the available size. Designs remain independent.
 	["share-card", /\/app\/ui\/share-card\/(ScaledCard|SelectedCard\.browser)\.tsx$/],
@@ -449,6 +454,10 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
 	},
 
 	build: {
+		// A second compression pass reduces the scripts every visitor downloads. Limit worker memory
+		// during the production build; SSR keeps the existing unminified output.
+		minify: isSsrBuild ? false : "terser",
+		terserOptions: { maxWorkers: 3, compress: { passes: 2 } },
 		sourcemap: true,
 		rollupOptions: isSsrBuild
 			? undefined
