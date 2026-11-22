@@ -190,11 +190,19 @@ async function cachedSql<T>(id: string, run: () => Promise<T>, ttlMs = 30 * 60 *
 
 /** Opens the place data for one request. Throws PlacesNotReady while the title snapshot loads. */
 export async function openPlaces(request: Request, kind: Kind, country = "us"): Promise<Places> {
+	return placesForContext(kind, country, () => getViewerContext(request))
+}
+
+export async function placesForContext(
+	kind: Kind,
+	country: string,
+	context: () => Promise<ViewerContext> | ViewerContext,
+): Promise<Places> {
 	const b = base(kind)
 	const short = catalogOf((key) => keyLabel(key), kind)
 	if (!b || !short) throw new PlacesNotReady()
 	const catalog = withEveryCountry(short, b)
-	const [ctx, logoMap] = await Promise.all([getViewerContext(request), serviceLogos()])
+	const [ctx, logoMap] = await Promise.all([context(), serviceLogos()])
 	return new Places(b, catalog, ctx, country.toLowerCase(), logoMap)
 }
 

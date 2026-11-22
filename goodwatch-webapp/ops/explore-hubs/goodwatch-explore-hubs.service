@@ -1,0 +1,10 @@
+[Unit]
+Description=Prepare the three anonymous GoodWatch Explore hubs from the published catalog
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/goodwatch/explore-hubs/run.sh
+TimeoutStartSec=12min
+ExecStopPost=-/usr/bin/docker stop --time=10 goodwatch-explore-hubs

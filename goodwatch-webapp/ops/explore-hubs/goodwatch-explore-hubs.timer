@@ -1,0 +1,10 @@
+[Unit]
+Description=Check for a new GoodWatch catalog or UTC day
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=2min
+AccuracySec=10s
+
+[Install]
+WantedBy=timers.target

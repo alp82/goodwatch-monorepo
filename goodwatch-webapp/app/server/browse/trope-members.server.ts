@@ -109,6 +109,10 @@ export function tropeMembers(pageName: string): TropeMembers | null {
 	return loaded.byName.get(pageName) ?? EMPTY
 }
 
+/** Every directory member has a successful read, including legitimately empty records. */
+export const allTropeMembersLoaded = (names: readonly string[]) =>
+	names.every((name) => loaded.byName.has(name))
+
 /** Raised on every completed load: include it in the key of anything computed from members. */
 export const tropeMembersVersion = () => loaded.version
 

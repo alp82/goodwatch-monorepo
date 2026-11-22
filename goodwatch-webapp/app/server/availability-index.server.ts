@@ -1,15 +1,7 @@
 import { correctedAvailability } from "./feedback/availability-corrections.server"
 import type { Sql } from "./feedback/correction-store.server"
-import {
-	type FirstSeen,
-	type Landing,
-	baseService,
-	landingOn,
-} from "~/domain/newly-available"
-import {
-	keptSince,
-	readFirstSeen,
-} from "~/server/availability-first-seen.server"
+import { type FirstSeen, type Landing, baseService, landingOn } from "~/domain/newly-available"
+import { keptSince, readFirstSeen } from "~/server/availability-first-seen.server"
 import { execute, query } from "~/utils/crate"
 import { type TitleKey, titleKey } from "~/utils/title-key"
 
@@ -62,10 +54,7 @@ let queue: Promise<void> = Promise.resolve()
 const isCountryCode = (country: string) => /^[A-Z]{2}$/.test(country)
 
 /** The services that carry each title in the country, or `null` for every title while the country loads. */
-export function servicesFor(
-	country: string,
-	keys: TitleKey[],
-): (number[] | null)[] {
+export function servicesFor(country: string, keys: TitleKey[]): (number[] | null)[] {
 	const index = loadedIndex(country)
 	if (!index) return keys.map(() => null)
 	return keys.map((key) => {
@@ -80,11 +69,7 @@ export function servicesFor(
 }
 
 /** Whether any of the services carries the title in the country, or `null` while the country loads. */
-export function isOnServices(
-	country: string,
-	services: number[],
-	key: TitleKey,
-): boolean | null {
+export function isOnServices(country: string, services: number[], key: TitleKey): boolean | null {
 	const index = loadedIndex(country)
 	if (!index) return null
 	const row = findRow(index, key)
@@ -130,10 +115,7 @@ export function landingsOnServices(
  * Waits up to `timeoutMs` for the country's first load, starting it if needed. True once the country is loaded. Only
  * for the rare request that can't do without availability (a country's first request after the server starts).
  */
-export async function availabilityLoaded(
-	countryCode: string,
-	timeoutMs: number,
-): Promise<boolean> {
+export async function availabilityLoaded(countryCode: string, timeoutMs: number): Promise<boolean> {
 	const country = countryCode.toUpperCase()
 	if (loadedIndex(country)) return true
 	if (!queued.has(country)) return false
@@ -211,7 +193,9 @@ export function preloadAvailability(): void {
 				.split(",")
 				.map((c) => c.trim().toUpperCase())
 				.slice(0, PRELOAD_COUNTRIES)
-			console.info(`Availability index: preloading ${fallback.join(",")} (member countries unavailable)`)
+			console.info(
+				`Availability index: preloading ${fallback.join(",")} (member countries unavailable)`,
+			)
 			for (const country of fallback) if (isCountryCode(country)) scheduleLoad(country)
 		},
 	)
@@ -295,17 +279,11 @@ async function loadFirstSeen(country: string) {
 	try {
 		firstSeen.set(
 			country,
-			await readFirstSeen(
-				{ country, types: SUBSCRIPTION_TYPES, since: keptSince() },
-				execute,
-			),
+			await readFirstSeen({ country, types: SUBSCRIPTION_TYPES, since: keptSince() }, execute),
 		)
 	} catch (error) {
 		// The index is whole without the times: nothing new is announced until a load reads them.
-		console.error(
-			`Availability index: reading ${country}'s landing history failed`,
-			error,
-		)
+		console.error(`Availability index: reading ${country}'s landing history failed`, error)
 	}
 }
 
@@ -317,9 +295,7 @@ export function forgetAvailabilityForTest(): void {
 	failedAt.clear()
 }
 
-async function buildIndex(
-	rows: [string, number, number[]][],
-): Promise<CountryIndex> {
+async function buildIndex(rows: [string, number, number[]][]): Promise<CountryIndex> {
 	const services: number[] = []
 	const serviceIndex = new Map<number, number>()
 	const rowKeys = new Float64Array(rows.length)
@@ -364,8 +340,7 @@ async function buildIndex(
 		offsets[t] = start
 		for (let i = from; i < to; i++) {
 			let repeated = false
-			for (let j = start; j < size && !repeated; j++)
-				repeated = loose[j] === loose[i]
+			for (let j = start; j < size && !repeated; j++) repeated = loose[j] === loose[i]
 			if (!repeated) loose[size++] = loose[i]
 		}
 	}
@@ -381,8 +356,7 @@ async function buildIndex(
 }
 
 // Building an index takes up to about 100 ms; in slices, requests arriving meanwhile wait a few ms at most.
-const yieldToRequests = () =>
-	new Promise<void>((resolve) => setImmediate(resolve))
+const yieldToRequests = () => new Promise<void>((resolve) => setImmediate(resolve))
 
 function findRow(index: CountryIndex, key: TitleKey): number {
 	return binarySearch(index.keys, key)
@@ -401,7 +375,8 @@ function binarySearch(keys: Float64Array, key: number): number {
 	return -1
 }
 
-preloadAvailability()
+// A one-shot catalog worker requests only its own country explicitly.
+if (process.env.AVAILABILITY_PRELOAD !== "off") preloadAvailability()
 
 /** Discard a corrected country's index and schedule its replacement. Only a loaded country reloads. */
 export function reloadAvailability(country?: string) {

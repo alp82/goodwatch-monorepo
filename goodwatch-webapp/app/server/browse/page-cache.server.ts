@@ -19,7 +19,8 @@ import { type CachedParams, cached } from "~/utils/cache"
 import { markedFor, unmarked } from "./page-marks"
 import type { Places } from "./places.server"
 
-const DAY_MS = 86_400_000
+export const browsePageDay = () => Math.floor(Date.now() / 86_400_000)
+export const pageCacheMinutes = { ttlMinutes: 26 * 60, staleMinutes: 60 }
 /** In-process builds kept at once (the least recently used go first). */
 const LIMIT = 240
 
@@ -40,8 +41,22 @@ export interface PageCacheOptions<T> {
 }
 
 /** What a page depends on besides the address and the catalog: language, country and services. */
-const viewerKey = ({ language, country, services }: ViewerContext) =>
+type PageLocale = Pick<ViewerContext, "language" | "country" | "services">
+const viewerKey = ({ language, country, services }: PageLocale) =>
 	`${language ?? ""}|${country}|${[...services].sort((a, b) => a - b).join(".")}`
+
+export function browseCacheEntry(
+	name: string,
+	key: string,
+	ctx: PageLocale,
+	snapshot: string,
+	day: number,
+) {
+	return {
+		name: `browse-page-${name}-v1`,
+		params: { snapshot, day, key: `${key}|${viewerKey(ctx)}` },
+	}
+}
 
 /**
  * The page's data, built at most once per data version in this process and, when `shared`, once across the fleet,
@@ -54,9 +69,9 @@ export async function cachedPage<T>(
 	const snapshot = getTitleSnapshot()?.version
 	if (!snapshot) return build()
 	const ctx = atlas.ctx
-	const day = Math.floor(Date.now() / DAY_MS)
-	const k = `${key}|${viewerKey(ctx)}`
-	const id = `${name}|${snapshot}|${day}|${k}`
+	const day = browsePageDay()
+	const entry = browseCacheEntry(name, key, ctx, snapshot, day)
+	const id = `${name}|${snapshot}|${day}|${entry.params.key}`
 	let run = builds.get(id) as Promise<T> | undefined
 	if (run) {
 		builds.delete(id)
@@ -65,10 +80,8 @@ export async function cachedPage<T>(
 		const neutral = async () => unmarked(await build())
 		run = shared
 			? typedCached<T>({
-					name: `browse-page-${name}-v1`,
-					params: { snapshot, day, key: k },
-					ttlMinutes: 26 * 60,
-					staleMinutes: 60,
+					...entry,
+					...pageCacheMinutes,
 					freshMinutes: (value) => (complete(value) ? undefined : 0),
 					target: neutral,
 				})

@@ -89,7 +89,7 @@ export const loadHubPage: BrowseLoader<MiniData> = async ({ atlas }) => {
 	})
 }
 
-async function buildHub(atlas: Places, tropes: boolean): Promise<MiniData> {
+export async function buildHub(atlas: Places, tropes: boolean): Promise<MiniData> {
 	const withTropes = async <T extends CardData>(
 		cards: T[],
 	): Promise<(T & { tropes: TropeTag[] })[]> => {

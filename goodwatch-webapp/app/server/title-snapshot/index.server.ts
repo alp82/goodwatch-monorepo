@@ -13,18 +13,9 @@
 // TITLE_SNAPSHOT_REDIS_URL points the loader at a single Redis (for example a local one that
 // scripts/write-title-snapshot.ts filled with a sample); without it, it reads the webapp's Redis cluster.
 import Redis from "ioredis"
-import {
-	addReadinessCheck,
-	isShuttingDown,
-	onShutdown,
-} from "~/server/lifecycle.server"
+import { addReadinessCheck, isShuttingDown, onShutdown } from "~/server/lifecycle.server"
 import { VALID_FINGERPRINT_KEYS } from "~/server/utils/fingerprint"
-import {
-	CURRENT_KEY,
-	SnapshotRefused,
-	checkManifest,
-	chunkKey,
-} from "./format.server"
+import { CURRENT_KEY, SnapshotRefused, checkManifest, chunkKey } from "./format.server"
 import { readFactsChunks } from "./facts.server"
 import { readRatingsChunks } from "./ratings.server"
 import { reloadDelayMs, retryDelayMs } from "./retry.server"
@@ -63,8 +54,7 @@ let loadingHasStarted = false
 
 /** Optional read-only source, configured before the first load. Caller owns its connection lifecycle. */
 export function configureTitleSnapshotReader(reader: SnapshotRedis): void {
-	if (loadingHasStarted)
-		throw new Error("Configure the snapshot reader before loading starts")
+	if (loadingHasStarted) throw new Error("Configure the snapshot reader before loading starts")
 	injectedReader = reader
 }
 
@@ -110,14 +100,20 @@ async function snapshotRedis(): Promise<SnapshotRedis | null> {
 	return getRedisCluster()
 }
 
+/** Read the manifest alone so a scheduled consumer can skip an already processed version. */
+export async function publishedSnapshotVersion(): Promise<string> {
+	const raw = await (await snapshotRedis())?.get(CURRENT_KEY)
+	if (!raw) throw new Error("Title snapshot manifest unavailable")
+	return checkManifest(JSON.parse(raw), VALID_FINGERPRINT_KEYS).version
+}
+
 /** One check: loads the snapshot the manifest names when it's new. Returns false when a connection or transient load failure needs a retry. */
 async function check(): Promise<boolean> {
 	const redis = await snapshotRedis()
 	if (!redis) return false
 	const raw = await redis.get(CURRENT_KEY)
 	if (!raw) {
-		if (!reportedMissing)
-			console.info(`Title snapshot: nothing published at ${CURRENT_KEY} yet`)
+		if (!reportedMissing) console.info(`Title snapshot: nothing published at ${CURRENT_KEY} yet`)
 		reportedMissing = true
 		return true
 	}
@@ -165,15 +161,9 @@ async function check(): Promise<boolean> {
 			})
 		if (!started) return true
 		if (ratingsRefusal)
-			console.error(
-				`Title snapshot ${manifest.version} loads without ratings:`,
-				ratingsRefusal,
-			)
+			console.error(`Title snapshot ${manifest.version} loads without ratings:`, ratingsRefusal)
 		if (factsRefusal)
-			console.error(
-				`Title snapshot ${manifest.version} loads without facts:`,
-				factsRefusal,
-			)
+			console.error(`Title snapshot ${manifest.version} loads without facts:`, factsRefusal)
 		const snapshot = buildSnapshot(manifest, columns, ratings, derived, facts)
 		current = snapshot
 		console.info(
@@ -202,8 +192,7 @@ function schedule(delayMs: number) {
 		}
 		if (connected) settled = true
 		failures = connected || current ? 0 : failures + 1
-		if (started && !isShuttingDown())
-			schedule(failures ? retryDelayMs(failures) : CHECK_EVERY_MS)
+		if (started && !isShuttingDown()) schedule(failures ? retryDelayMs(failures) : CHECK_EVERY_MS)
 	}, delayMs)
 	timer.unref()
 }

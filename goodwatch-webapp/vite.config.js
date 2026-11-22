@@ -39,7 +39,11 @@ const BUNDLED_WORKERS = [
 // name like Vite's own files, so that it is served, compressed, cached for a year, and kept for other builds the same
 // way. A title page loads it before hydration. The server reads its address from a small file next to the server
 // bundle (app/server/related-map.server.ts).
-const RELATED_MAP_SCRIPT = { entry: "app/ui/related-map/inline.ts", name: "related-map", list: "related-map.assets.json" }
+const RELATED_MAP_SCRIPT = {
+	entry: "app/ui/related-map/inline.ts",
+	name: "related-map",
+	list: "related-map.assets.json",
+}
 function separateEntryFiles() {
 	let root
 	let outDir
@@ -66,6 +70,19 @@ function separateEntryFiles() {
 				format: "esm",
 				target: "node24",
 				external: ["node:*"],
+				tsconfig: join(root, "tsconfig.json"),
+			})
+			// The scheduled hub builder uses the same server modules as a page. Keep runtime
+			// packages external and load the ranking's bundled sitemap XML as Vite's ?raw does.
+			await bundleWorker({
+				entryPoints: [join(root, "app/server/browse/hub/prepare-hubs.ts")],
+				outdir: resolve(root, outDir),
+				bundle: true,
+				platform: "node",
+				format: "esm",
+				target: "node24",
+				packages: "external",
+				loader: { ".xml": "text" },
 				tsconfig: join(root, "tsconfig.json"),
 			})
 			const built = await bundleWorker({
@@ -98,9 +115,32 @@ function separateEntryFiles() {
 // class names that only they use (about a quarter of its rules).
 const PROTOTYPES = {
 	// Files in app/routes.
-	routes: ["prototype.media-language-ui*", "prototype.rec-*", "prototype.share-list*", "prototype.title-actions*", "prototype.watch-log*", "prototype.episode-list*", "prototype.episode-tracking*", "prototype.tracking*", "prototype.my-library*", "prototype.import-preview*"],
+	routes: [
+		"prototype.media-language-ui*",
+		"prototype.rec-*",
+		"prototype.share-list*",
+		"prototype.title-actions*",
+		"prototype.watch-log*",
+		"prototype.episode-list*",
+		"prototype.episode-tracking*",
+		"prototype.tracking*",
+		"prototype.my-library*",
+		"prototype.import-preview*",
+	],
 	// Directories in app/ui that only those routes import.
-	ui: ["prototype-rec-*", "prototype-share-list", "prototype-title-actions", "prototype-watch-log", "prototype-episode-list", "prototype-episode-list-2", "prototype-episode-list-3", "prototype-episode-list-4", "prototype-episode-tracking", "prototype-tracking-hub", "prototype-my-library"],
+	ui: [
+		"prototype-rec-*",
+		"prototype-share-list",
+		"prototype-title-actions",
+		"prototype-watch-log",
+		"prototype-episode-list",
+		"prototype-episode-list-2",
+		"prototype-episode-list-3",
+		"prototype-episode-list-4",
+		"prototype-episode-tracking",
+		"prototype-tracking-hub",
+		"prototype-my-library",
+	],
 }
 const PROTOTYPE_SOURCES = [
 	...PROTOTYPES.routes.map((name) => `./routes/${name}`),
@@ -108,10 +148,7 @@ const PROTOTYPE_SOURCES = [
 ]
 const PROTOTYPE_MODULE = new RegExp(
 	`/app/(${PROTOTYPE_SOURCES.map((source) =>
-		source
-			.slice(2)
-			.replace(/[.]/g, "\\.")
-			.replace(/\*/g, "[^/]*"),
+		source.slice(2).replace(/[.]/g, "\\.").replace(/\*/g, "[^/]*"),
 	).join("|")})(/|\\.[^/]*$|$)`,
 )
 const TAILWIND_ENTRY = /\/app\/tailwind\.css$/
@@ -179,10 +216,7 @@ function leanStylesheet() {
 // a library such as framer-motion onto every page.
 const VENDOR_CHUNKS = [
 	["react", /\/node_modules\/(react|react-dom|scheduler)\//],
-	[
-		"remix",
-		/\/node_modules\/(@remix-run\/[^/]+|react-router|react-router-dom|turbo-stream)\//,
-	],
+	["remix", /\/node_modules\/(@remix-run\/[^/]+|react-router|react-router-dom|turbo-stream)\//],
 	["supabase", /\/node_modules\/(@supabase\/[^/]+|cookie)\//],
 	["motion", /\/node_modules\/framer-motion\//],
 	[
@@ -247,10 +281,7 @@ const TITLE_PAGE_MODULE =
 // into the shell, being small and shared. The words of "newly available" (#456) are needed by the hub, home's doors,
 // My shows and My movies, none of which is on a landing surface's first view.
 const LATE_CHUNKS = [
-	[
-		"newly-available",
-		/\/app\/(domain\/newly-available-words|ui\/my-pages\/LandedRow)\.tsx?$/,
-	],
+	["newly-available", /\/app\/(domain\/newly-available-words|ui\/my-pages\/LandedRow)\.tsx?$/],
 	// The click-to-load facades of "Talked about now" (#558), shared by the title page's section and the start page's
 	// row, and the YouTube frame the trailer dialog loads on its click. None is on a first view.
 	["social-embed", /\/app\/ui\/social-embed\/[^/]+\.tsx?$/],
@@ -259,8 +290,7 @@ const LATE_CHUNKS = [
 function clientChunks() {
 	const vendorChunk = (id) => {
 		if (!id.includes("/node_modules/")) return undefined
-		for (const [name, pattern] of VENDOR_CHUNKS)
-			if (pattern.test(id)) return name
+		for (const [name, pattern] of VENDOR_CHUNKS) if (pattern.test(id)) return name
 	}
 	// The modules that are loaded on every page: what the root route and the browser entry import, directly or through
 	// other static imports. Collected once, when Rollup asks about the first module.
@@ -268,9 +298,7 @@ function clientChunks() {
 	const isOnEveryPage = (id, { getModuleInfo, getModuleIds }) => {
 		if (!everyPage) {
 			everyPage = new Set()
-			const queue = [...getModuleIds()].filter((moduleId) =>
-				SHELL_ROOTS.test(moduleId),
-			)
+			const queue = [...getModuleIds()].filter((moduleId) => SHELL_ROOTS.test(moduleId))
 			for (const moduleId of queue) {
 				if (everyPage.has(moduleId)) continue
 				everyPage.add(moduleId)
@@ -281,12 +309,7 @@ function clientChunks() {
 	}
 	const isSharedSmallModule = (id, graph, depth = 0) => {
 		const info = graph.getModuleInfo(id)
-		if (
-			!info ||
-			id.includes("/node_modules/") ||
-			!APP_MODULE.test(id) ||
-			STYLE_SHEET.test(id)
-		)
+		if (!info || id.includes("/node_modules/") || !APP_MODULE.test(id) || STYLE_SHEET.test(id))
 			return false
 		if (info.importers.length < 2 && depth === 0) return false
 		if ((info.code?.length ?? 0) > SHARED_SMALL_MODULE_MAX_BYTES) return false
@@ -303,10 +326,8 @@ function clientChunks() {
 		const vendor = vendorChunk(id)
 		if (vendor) return vendor
 		// Route modules stay entry points of their own: Remix loads them by name.
-		if (SHELL_ROOTS.test(id) || graph.getModuleInfo(id)?.isEntry)
-			return undefined
-		if (isOnEveryPage(id, graph))
-			return id.includes("/node_modules/") ? "vendor" : "shell"
+		if (SHELL_ROOTS.test(id) || graph.getModuleInfo(id)?.isEntry) return undefined
+		if (isOnEveryPage(id, graph)) return id.includes("/node_modules/") ? "vendor" : "shell"
 		for (const [name, pattern] of LATE_CHUNKS) if (pattern.test(id)) return name
 		if (TITLE_PAGE_MODULE.test(id)) return undefined
 		// A group's modules stay in their group even when small and shared (rule 3 would put them into the shell).
@@ -388,9 +409,7 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
 		// A lazy chunk's preloads follow the chunk: their addresses are relative to the script that asks for them, not
 		// to the page. A page can get its scripts from the static hostname (see app/utils/asset-url.ts).
 		renderBuiltUrl: (filename, { hostType, ssr }) =>
-			!ssr && hostType === "js" && filename.endsWith(".js")
-				? { relative: true }
-				: undefined,
+			!ssr && hostType === "js" && filename.endsWith(".js") ? { relative: true } : undefined,
 	},
 
 	build: {
