@@ -4,7 +4,7 @@
 // Visitors, and the owner with ?as=visitor, get the public Scores page under a plain head.
 import { Outlet, useLocation, useRouteLoaderData } from "@remix-run/react"
 import { useMemo } from "react"
-import { libraryCounts } from "~/domain/my-library"
+import { unratedTitles } from "~/domain/unrated-titles"
 import { useUserData } from "~/routes/api.user-data"
 import type { ProfileHeaderData } from "~/server/profile/header.server"
 import { SubNav } from "~/ui/navigation/SubNav"
@@ -19,7 +19,7 @@ export default function ProfileScoresLayout() {
 	const layout = useRouteLoaderData<ProfileHeaderData>("routes/u.$handle")
 	const { pathname, search } = useLocation()
 	const { data } = useUserData()
-	const unrated = useMemo(() => (data ? libraryCounts(data).unrated : undefined), [data])
+	const unrated = useMemo(() => (data ? unratedTitles(data).length : undefined), [data])
 	if (!layout) return <Outlet />
 	const real = layout.shell
 	const asVisitor = real.viewer === "owner" && new URLSearchParams(search).get("as") === "visitor"

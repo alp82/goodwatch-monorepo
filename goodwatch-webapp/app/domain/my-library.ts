@@ -1,3 +1,4 @@
+import { unratedTitles } from "./unrated-titles.ts"
 import { GUEST, type PathViewer, ratePath, statusHome } from "./member-paths.ts"
 // My library (#385): every title a member has marked, one status at a time. Want to see and Seen are the two main
 // choices; Watching, On hold, Dropped and Not rated are one step away in a drop-down. Pure and shared by the server
@@ -5,19 +6,10 @@ import { GUEST, type PathViewer, ratePath, statusHome } from "./member-paths.ts"
 // one step are read from the catalog (docs/implementation/tracking/data-model.md, "Reads": Library).
 import type { MediaKey, UserData } from "~/types/user-data"
 
-export type LibraryStatus =
-	| "want"
-	| "seen"
-	| "watching"
-	| "on_hold"
-	| "dropped"
-	| "unrated"
+export type LibraryStatus = "want" | "seen" | "watching" | "on_hold" | "dropped" | "unrated"
 
 /** The two choices that are always shown. */
-export const MAIN_STATUSES = [
-	"want",
-	"seen",
-] as const satisfies readonly LibraryStatus[]
+export const MAIN_STATUSES = ["want", "seen"] as const satisfies readonly LibraryStatus[]
 /** The choices in the drop-down. Not rated is a view of Seen: the Seen titles without a score. */
 export const MORE_STATUSES = [
 	"watching",
@@ -73,30 +65,20 @@ export interface LibraryChoice {
 
 export type LibraryData = Pick<UserData, "wishlist" | "watchState" | "scores">
 
-const keysOf = <T>(entries: Record<string, T>) =>
-	Object.keys(entries) as MediaKey[]
+const keysOf = <T>(entries: Record<string, T>) => Object.keys(entries) as MediaKey[]
 const isShow = (key: MediaKey) => key.startsWith("show-")
 
 /** The titles of a status. A title is under one of Watching, On hold, Dropped and Seen, never under two. */
-export function libraryKeys(
-	data: LibraryData,
-	status: LibraryStatus,
-): MediaKey[] {
+export function libraryKeys(data: LibraryData, status: LibraryStatus): MediaKey[] {
 	if (status === "want") return keysOf(data.wishlist)
-	if (status === "seen" || status === "unrated") {
-		const seen = keysOf(data.watchState).filter(
-			(key) => data.watchState[key].state === "seen",
-		)
-		if (status === "unrated") return seen.filter((key) => !(key in data.scores))
+	if (status === "unrated") return unratedTitles(data)
+	if (status === "seen") {
+		const seen = keysOf(data.watchState).filter((key) => data.watchState[key].state === "seen")
 		// A rated show counts as Seen through its score alone, unless a state says where the member stands with it.
-		const rated = keysOf(data.scores).filter(
-			(key) => isShow(key) && !(key in data.watchState),
-		)
+		const rated = keysOf(data.scores).filter((key) => isShow(key) && !(key in data.watchState))
 		return [...seen, ...rated]
 	}
-	return keysOf(data.watchState).filter(
-		(key) => data.watchState[key].state === status,
-	)
+	return keysOf(data.watchState).filter((key) => data.watchState[key].state === status)
 }
 
 export const libraryCounts = (data: LibraryData) =>
@@ -105,12 +87,10 @@ export const libraryCounts = (data: LibraryData) =>
 	) as Record<LibraryStatus, number>
 
 // Lower case and without accents, so "elite" finds "Élite".
-const fold = (text: string) =>
-	text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().trim()
+const fold = (text: string) => text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().trim()
 
 /** A title as the Title sort reads it: lower case, without accents, without a leading article. */
-export const sortKey = (title: string) =>
-	fold(title).replace(/^(the|an|a) (?=\S)/, "")
+export const sortKey = (title: string) => fold(title).replace(/^(the|an|a) (?=\S)/, "")
 
 /** The Title sort and the search need the titles of the status's keys; the other sorts need no catalog read. */
 export const needsTitles = (choice: { sort: LibrarySort | null; q: string }) =>
@@ -139,8 +119,7 @@ export function libraryOrder(
 	titleOf: (key: MediaKey) => string | undefined = () => undefined,
 ): LibraryOrder {
 	const sorts = sortsFor(choice.status)
-	const sort =
-		choice.sort && sorts.includes(choice.sort) ? choice.sort : sorts[0]
+	const sort = choice.sort && sorts.includes(choice.sort) ? choice.sort : sorts[0]
 	const needle = fold(choice.q)
 	const found = libraryKeys(data, choice.status).filter(
 		(key) => !needle || fold(titleOf(key) ?? "").includes(needle),
@@ -165,11 +144,9 @@ export function libraryOrder(
 	// activity first, so the watch record still reads newest first.
 	const byWatch = byDate((key) => time(data.watchState[key]?.watchedAt))
 	const byActivity = byDate((key) => time(data.watchState[key]?.lastActivityAt))
-	const lastWatched = (a: MediaKey, b: MediaKey) =>
-		byWatch(a, b) || byActivity(a, b)
+	const lastWatched = (a: MediaKey, b: MediaKey) => byWatch(a, b) || byActivity(a, b)
 	let compare: (a: MediaKey, b: MediaKey) => number
-	if (sort === "added")
-		compare = byDate((key) => time(data.wishlist[key]?.createdAt))
+	if (sort === "added") compare = byDate((key) => time(data.wishlist[key]?.createdAt))
 	else if (sort === "last") compare = lastWatched
 	else if (sort === "score") {
 		// Not rated goes last under My score; the Not rated choice is how those are found.
@@ -177,8 +154,7 @@ export function libraryOrder(
 		compare = (a, b) => scoreOf(b) - scoreOf(a) || lastWatched(a, b)
 	} else {
 		const names = new Map(keys.map((key) => [key, sortKey(titleOf(key) ?? "")]))
-		compare = (a, b) =>
-			(names.get(a) as string).localeCompare(names.get(b) as string, "en")
+		compare = (a, b) => (names.get(a) as string).localeCompare(names.get(b) as string, "en")
 	}
 	keys.sort((a, b) => compare(a, b) || byKey(a, b))
 	return { sort, keys, total: keys.length, kinds }
@@ -216,8 +192,7 @@ export function libraryChoiceOf(params: URLSearchParams): LibraryChoice {
 export function libraryParams(choice: LibraryChoice): URLSearchParams {
 	const params = new URLSearchParams()
 	if (choice.status !== "want") params.set("status", choice.status)
-	if (choice.sort && choice.sort !== sortsFor(choice.status)[0])
-		params.set("sort", choice.sort)
+	if (choice.sort && choice.sort !== sortsFor(choice.status)[0]) params.set("sort", choice.sort)
 	if (choice.kind !== "all") params.set("type", choice.kind)
 	if (choice.q.trim()) params.set("q", choice.q.trim())
 	return params
@@ -258,14 +233,10 @@ export function watchedWords(
 }
 
 /** When a title was added to the Wishlist: "Added today", "Added 3 days ago", "Added 5 months ago". */
-export function addedWords(
-	addedAt: Date | string | number,
-	now: number,
-): string {
+export function addedWords(addedAt: Date | string | number, now: number): string {
 	const days = Math.max(
 		0,
-		Math.floor(now / 86_400_000) -
-			Math.floor(new Date(addedAt).getTime() / 86_400_000),
+		Math.floor(now / 86_400_000) - Math.floor(new Date(addedAt).getTime() / 86_400_000),
 	)
 	if (days < 1) return "Added today"
 	if (days < 2) return "Added yesterday"
@@ -296,9 +267,8 @@ export const STATUS_SLUG: Record<LibraryStatus, string> = {
 
 /** The status a page's slug names; null for a slug that is no list. */
 export const statusOfSlug = (slug: string | undefined): LibraryStatus | null =>
-	(Object.entries(STATUS_SLUG).find(([, s]) => s === slug)?.[0] as
-		| LibraryStatus
-		| undefined) ?? null
+	(Object.entries(STATUS_SLUG).find(([, s]) => s === slug)?.[0] as LibraryStatus | undefined) ??
+	null
 
 /** The page of a status, with the list's sort, filter and search in the query. */
 export function statusPage(

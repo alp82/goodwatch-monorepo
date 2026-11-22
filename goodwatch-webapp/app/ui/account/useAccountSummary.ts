@@ -3,7 +3,7 @@
 // /api/account-summary, which the root loader prefetches for members.
 import { useQuery } from "@tanstack/react-query"
 import { useMemo } from "react"
-import { libraryCounts } from "~/domain/my-library"
+import { unratedTitles } from "~/domain/unrated-titles"
 import type { AvatarColor } from "~/domain/profile"
 import { useUserData } from "~/routes/api.user-data"
 import { useUser } from "~/utils/auth"
@@ -48,7 +48,7 @@ export function useAccountCounts(): AccountCounts | null {
 	return useMemo(() => {
 		if (!data) return null
 		return {
-			unrated: libraryCounts(data).unrated,
+			unrated: unratedTitles(data).length,
 			notInterested: Object.keys(data.notInterested ?? {}).length,
 		}
 	}, [data])
