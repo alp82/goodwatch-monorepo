@@ -6,6 +6,7 @@
 import { Link } from "@remix-run/react"
 import type { CSSProperties } from "react"
 import type { StartTitle } from "~/ui/living-room/living-room-data"
+import { NearSection, useSectionNear } from "~/ui/details/below-fold"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import { tmdbImageUrl, type SizeRule } from "~/utils/tmdb-image"
 import {
@@ -62,9 +63,8 @@ export function Poster({
 	className?: string
 	style?: CSSProperties
 }) {
-	if (!path)
-		return <span className={className ? `sb-poster ${className}` : "sb-poster"} style={style} />
-	return (
+	const near = useSectionNear()
+	const image = path && (
 		<img
 			src={tmdbImageUrl(path, size)}
 			alt=""
@@ -72,9 +72,13 @@ export function Poster({
 			decoding="async"
 			width={size === "w92" ? 92 : 185}
 			height={size === "w92" ? 138 : 278}
-			className={className ? `sb-poster ${className}` : "sb-poster"}
-			style={style}
 		/>
+	)
+	// The frame reserves its layout in a fan, a service stack or a round genre chip.
+	return (
+		<span className={className ? `sb-poster ${className}` : "sb-poster"} style={style}>
+			{near ? image : <noscript>{image}</noscript>}
+		</span>
 	)
 }
 
@@ -120,7 +124,7 @@ export function MoodRail({ moods }: { moods: BrowseMood[] }) {
 	const nav = useRailNav()
 	if (!moods.length) return null
 	return (
-		<section aria-labelledby="sb-moods">
+		<NearSection aria-labelledby="sb-moods">
 			<RailHead
 				id="sb-moods"
 				title="By mood"
@@ -143,7 +147,7 @@ export function MoodRail({ moods }: { moods: BrowseMood[] }) {
 					)
 				})}
 			</Rail>
-		</section>
+		</NearSection>
 	)
 }
 
@@ -151,7 +155,7 @@ export function ServiceRail({ services }: { services: BrowseService[] }) {
 	const nav = useRailNav()
 	if (!services.length) return null
 	return (
-		<section aria-labelledby="sb-services">
+		<NearSection aria-labelledby="sb-services">
 			<RailHead
 				id="sb-services"
 				title="Streaming services"
@@ -187,6 +191,6 @@ export function ServiceRail({ services }: { services: BrowseService[] }) {
 					</li>
 				))}
 			</Rail>
-		</section>
+		</NearSection>
 	)
 }

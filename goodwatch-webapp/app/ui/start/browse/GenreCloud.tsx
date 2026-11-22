@@ -3,21 +3,11 @@
 // transform. On a touch screen the first tap opens the peek and the second (on the chip or the peek) opens the genre;
 // a tap elsewhere or Escape closes it. The peek overlays the cloud, so nothing reflows.
 import { Link } from "@remix-run/react"
-import {
-	type CSSProperties,
-	type MouseEvent,
-	useEffect,
-	useRef,
-	useState,
-} from "react"
+import { type CSSProperties, type MouseEvent, useEffect, useRef, useState } from "react"
+import { NearSection } from "~/ui/details/below-fold"
 import { RailHead } from "./Rail"
 import { Fan, Poster } from "./Rails"
-import {
-	BROWSE_HUBS,
-	type BrowseGenre,
-	type BrowseKind,
-	genreHref,
-} from "./browse-data"
+import { BROWSE_HUBS, type BrowseGenre, type BrowseKind, genreHref } from "./browse-data"
 
 /** The peek's box (start.css `.sb-peek`). */
 const PEEK_W = 168
@@ -34,25 +24,22 @@ type Peek = {
 
 const canHover = () => window.matchMedia("(hover: hover)").matches
 
-const GROUPS: { kind: BrowseKind; label: string; all: string; href: string }[] =
-	[
-		{
-			kind: "movie",
-			label: "Movies",
-			all: "All movie genres",
-			href: BROWSE_HUBS.movieGenres,
-		},
-		{
-			kind: "show",
-			label: "Shows",
-			all: "All show genres",
-			href: BROWSE_HUBS.showGenres,
-		},
-	]
+const GROUPS: { kind: BrowseKind; label: string; all: string; href: string }[] = [
+	{
+		kind: "movie",
+		label: "Movies",
+		all: "All movie genres",
+		href: BROWSE_HUBS.movieGenres,
+	},
+	{
+		kind: "show",
+		label: "Shows",
+		all: "All show genres",
+		href: BROWSE_HUBS.showGenres,
+	},
+]
 
-export function GenreCloud({
-	genres,
-}: { genres: Record<BrowseKind, BrowseGenre[]> }) {
+export function GenreCloud({ genres }: { genres: Record<BrowseKind, BrowseGenre[]> }) {
 	const box = useRef<HTMLDivElement>(null)
 	const [peek, setPeek] = useState<Peek | null>(null)
 
@@ -61,8 +48,7 @@ export function GenreCloud({
 	// Escape closes any peek, whether a hover, a focus, or a tap opened it.
 	useEffect(() => {
 		if (!open) return
-		const onKey = (event: KeyboardEvent) =>
-			event.key === "Escape" && setPeek(null)
+		const onKey = (event: KeyboardEvent) => event.key === "Escape" && setPeek(null)
 		document.addEventListener("keydown", onKey)
 		return () => document.removeEventListener("keydown", onKey)
 	}, [open])
@@ -70,11 +56,7 @@ export function GenreCloud({
 	useEffect(() => {
 		if (!byTap) return
 		const close = (event: PointerEvent) => {
-			if (
-				!(event.target instanceof Element) ||
-				!event.target.closest("[data-genre]")
-			)
-				setPeek(null)
+			if (!(event.target instanceof Element) || !event.target.closest("[data-genre]")) setPeek(null)
 		}
 		document.addEventListener("pointerdown", close)
 		return () => document.removeEventListener("pointerdown", close)
@@ -83,12 +65,7 @@ export function GenreCloud({
 	const groups = GROUPS.filter((group) => genres[group.kind].length)
 	if (!groups.length) return null
 
-	const show = (
-		el: HTMLElement,
-		kind: BrowseKind,
-		genre: BrowseGenre,
-		byTap: boolean,
-	) => {
+	const show = (el: HTMLElement, kind: BrowseKind, genre: BrowseGenre, byTap: boolean) => {
 		const host = box.current
 		if (!host) return
 		const outer = host.getBoundingClientRect()
@@ -101,11 +78,7 @@ export function GenreCloud({
 		setPeek({ id: `${kind}-${genre.path}`, kind, genre, x, y, byTap })
 	}
 
-	const tap = (
-		event: MouseEvent<HTMLAnchorElement>,
-		kind: BrowseKind,
-		genre: BrowseGenre,
-	) => {
+	const tap = (event: MouseEvent<HTMLAnchorElement>, kind: BrowseKind, genre: BrowseGenre) => {
 		if (canHover()) return
 		// The second tap on the chip follows its link.
 		if (peek?.byTap && peek.id === `${kind}-${genre.path}`) return
@@ -114,18 +87,12 @@ export function GenreCloud({
 	}
 
 	return (
-		<section aria-labelledby="sb-genres">
-			<RailHead
-				id="sb-genres"
-				title="Genres"
-				line="Hover or tap one for a look inside"
-			/>
+		<NearSection aria-labelledby="sb-genres">
+			<RailHead id="sb-genres" title="Genres" line="Hover or tap one for a look inside" />
 			<div
 				ref={box}
 				className="sb-cloud"
-				onPointerLeave={(event) =>
-					event.pointerType === "mouse" && !peek?.byTap && setPeek(null)
-				}
+				onPointerLeave={(event) => event.pointerType === "mouse" && !peek?.byTap && setPeek(null)}
 			>
 				{groups.map((group) => (
 					<div key={group.kind}>
@@ -151,19 +118,14 @@ export function GenreCloud({
 												show(event.currentTarget, group.kind, genre, false)
 											}
 											onFocus={(event) =>
-												canHover() &&
-												show(event.currentTarget, group.kind, genre, false)
+												canHover() && show(event.currentTarget, group.kind, genre, false)
 											}
 											onBlur={() => !peek?.byTap && setPeek(null)}
 											onClick={(event) => tap(event, group.kind, genre)}
 										>
 											<span aria-hidden>
 												{genre.titles.slice(0, 2).map((title) => (
-													<Poster
-														key={title.poster_path}
-														path={title.poster_path}
-														size="w92"
-													/>
+													<Poster key={title.poster_path} path={title.poster_path} size="w92" />
 												))}
 											</span>
 											{genre.name}
@@ -176,7 +138,7 @@ export function GenreCloud({
 				))}
 				<GenrePeek peek={peek} />
 			</div>
-		</section>
+		</NearSection>
 	)
 }
 
@@ -228,13 +190,7 @@ function GenrePeek({ peek }: { peek: Peek | null }) {
 			{inner}
 		</Link>
 	) : (
-		<div
-			id="sb-peek"
-			role="tooltip"
-			aria-hidden={!peek}
-			className={className}
-			style={style}
-		>
+		<div id="sb-peek" role="tooltip" aria-hidden={!peek} className={className} style={style}>
 			{inner}
 		</div>
 	)

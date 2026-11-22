@@ -140,8 +140,12 @@ test("every image waits until it is near (the section is below the first screen)
 		assert.match(tag, / loading="lazy"/)
 		assert.doesNotMatch(tag, /fetchpriority="high"/)
 	}
-	// Decorative posters hold their place with their size and say nothing.
-	for (const tag of images.filter((tag) => tag.includes("sb-poster"))) {
+	// Lower Browse rails keep their decorative images in no-script fallbacks until the rail nears the viewport.
+	const decorations = [
+		...rendered.full.matchAll(/<span class="sb-poster[^"]*"[^>]*><noscript>(<img[^>]*>)/g),
+	]
+	assert.ok(decorations.length > 30)
+	for (const [, tag] of decorations) {
 		assert.match(tag, / alt=""/)
 		assert.match(tag, / width="\d+" height="\d+"/)
 	}
