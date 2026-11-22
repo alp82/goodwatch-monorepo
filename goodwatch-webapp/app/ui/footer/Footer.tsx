@@ -13,7 +13,14 @@ import { assetUrl } from "~/utils/asset-url"
 import useLocale from "~/utils/locale"
 import { InviteCard } from "./InviteCard"
 import { CinemaSlot } from "./cinema/CinemaSlot"
-import { CREATOR_URL, FOOTER_COLUMNS, type FooterLink, NEW_ON_STREAMING, XMark } from "./links"
+import {
+	CREATOR_URL,
+	FOOTER_COLUMNS,
+	type FooterLink,
+	FooterIcon,
+	NEW_ON_STREAMING,
+	XMark,
+} from "./links"
 import { Reveal, ScrambleText, useFooterView } from "./motion"
 import { Caption } from "~/ui/eyebrow"
 
@@ -150,7 +157,7 @@ export default function Footer() {
 					>
 						{pointed ? (
 							<>
-								<pointed.icon className="h-4 w-4 text-amber-300" aria-hidden />
+								<FooterIcon name={pointed.icon} className="h-4 w-4 text-amber-300" aria-hidden />
 								<span className="text-gray-200">{pointed.name}</span>
 								<span className="text-gray-600" aria-hidden>
 									·
@@ -188,7 +195,8 @@ export default function Footer() {
 													onPoint={(target) => pointAt(target ? link : null, target)}
 													className="group relative -mx-3 flex h-9 items-center gap-2.5 rounded-lg px-3 text-sm text-gray-400 transition-colors hover:text-white focus-visible:text-white"
 												>
-													<link.icon
+													<FooterIcon
+														name={link.icon}
 														className="h-4 w-4 text-gray-600 transition-colors group-hover:text-amber-300 group-focus-visible:text-amber-300"
 														aria-hidden
 													/>
