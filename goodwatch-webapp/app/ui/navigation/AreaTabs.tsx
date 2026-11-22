@@ -14,7 +14,7 @@ import {
 	UserCircleIcon as UserCircleSolid,
 } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
-import { type ReactNode, useEffect, useLayoutEffect, useRef } from "react"
+import { type ReactNode, useEffect, useRef } from "react"
 import { STICKY_BAR } from "~/ui/layers"
 import { useNavigation } from "./NavigationContext"
 import type { AreaTab, NavIcon, TasteRow } from "./areas"
@@ -53,14 +53,20 @@ const ROW_H = {
 } as const
 
 /** Keeps the current tab in view in a row that scrolls sideways. */
-export function useCenterCurrent() {
+function useCenterCurrent(current: string | undefined) {
 	const box = useRef<HTMLDivElement>(null)
-	useLayoutEffect(() => {
+	useEffect(() => {
 		const row = box.current
 		const here = row?.querySelector<HTMLElement>("[aria-current='page']")
-		if (!row || !here) return
-		row.scrollLeft = Math.max(0, here.offsetLeft - (row.clientWidth - here.offsetWidth) / 2)
-	})
+		if (!row || !here || !current) return
+		const observer = new ResizeObserver(([entry]) => {
+			if (entry.contentRect.width > 0 && row.scrollWidth > row.clientWidth)
+				row.scrollLeft = Math.max(0, here.offsetLeft - (row.clientWidth - here.offsetWidth) / 2)
+		})
+		observer.observe(row)
+		observer.observe(here)
+		return () => observer.disconnect()
+	}, [current])
 	return box
 }
 
@@ -198,7 +204,8 @@ export function AreaTabs({
 	end?: ReactNode
 	sticky?: boolean
 }) {
-	const scroller = useCenterCurrent()
+	const current = tabs.find((t) => t.here) ?? trailing?.find((t) => t.here)
+	const scroller = useCenterCurrent(current?.key)
 	usePhoneRow(typeof label === "string" ? label : "", tabs, trailing)
 	const hasTrailing = trailing != null && trailing.length > 0
 	const kind = [...tabs, ...(trailing ?? [])].some((t) => t.sub) ? "two" : "one"
