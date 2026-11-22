@@ -74,6 +74,16 @@ env -i PATH="$PATH" NODE_ENV=production SENTRY_DISABLE_AUTO_UPLOAD=true CHOKIDAR
   node node_modules/@remix-run/dev/dist/cli.js vite:build --config build/cwv-fixture-config/vite.config.mjs
 ```
 
+Run the production build's static compression step for both client bundles before starting the fixture servers.
+The servers use the generated Brotli files for CSS and JavaScript, so a new browser's first request has the same
+asset representation as a visit through the production static hostname. Without the build step a fixture
+compresses each asset during its first request, which can delay other requests in the same process.
+
+```bash
+node "$cwv_baseline/scripts/precompress.mjs" "$cwv_data/baseline-build/client"
+node "$cwv_candidate/scripts/precompress.mjs" "$cwv_data/candidate-build/client"
+```
+
 The generated configuration lives under ignored `goodwatch-webapp/build/`. It uses an empty environment
 directory, disables build telemetry and keeps the actual Vite client configuration. Every configuration
 substitution requires exactly one match. Neither build executes the application's production server bootstrap.

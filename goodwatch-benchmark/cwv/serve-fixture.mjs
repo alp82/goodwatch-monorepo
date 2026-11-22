@@ -65,6 +65,7 @@ const mime = {
 const compressed = new Map();
 async function reply(response, status, headers, bytes, request) {
 	if (
+		!headers["content-encoding"] &&
 		/br/.test(request.headers["accept-encoding"] || "") &&
 		/text|javascript|json|svg/.test(headers["content-type"] || "")
 	) {
@@ -114,7 +115,16 @@ server.on("request", async (request, response) => {
 			const file = path.resolve(root, "." + pathname);
 			if (!file.startsWith(root + path.sep))
 				throw new Error("Invalid asset path");
-			const bytes = await readFile(file);
+			// npm run build writes the immutable asset variants that the production CDN serves.
+			let compressedAsset;
+			if (pathname.startsWith("/assets/") && /\bbr\b/.test(request.headers["accept-encoding"] || "")) {
+				try {
+					compressedAsset = await readFile(file + ".br");
+				} catch (error) {
+					if (error.code !== "ENOENT") throw error;
+				}
+			}
+			const bytes = compressedAsset ?? await readFile(file);
 			return reply(
 				response,
 				200,
@@ -122,6 +132,7 @@ server.on("request", async (request, response) => {
 					"content-type":
 						mime[path.extname(file)] || "application/octet-stream",
 					"cache-control": "public,max-age=31536000,immutable",
+					...(compressedAsset && { "content-encoding": "br", vary: "Accept-Encoding" }),
 				},
 				bytes,
 				request,
