@@ -95,7 +95,7 @@ export function DiscoverGrid({
 											card={card}
 											posterPriority={priority}
 											posterSizes={POSTER_SIZES}
-											phoneThumbnail={priority === "lazy"}
+											phoneThumbnail={index >= 3}
 											skipOffscreen={priority === "lazy"}
 										/>
 									</DiscoverCardRole>
