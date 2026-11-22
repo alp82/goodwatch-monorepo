@@ -1,0 +1,26 @@
+{
+  "name": "explore-mobile",
+  "description": "Median mobile first visits across the Browse layouts. Run ./bench.sh budget --budget urls/explore-budget.json --runs 3.",
+  "cpu_slowdown": 2.7,
+  "surfaces": {
+    "movies": {"path": "/movies", "budget": {"lcp_ms": {"max": 2500}, "tbt_ms": {"max": 200}, "cls": {"max": 0.1}, "score": {"min": 90}}},
+    "movies-moods": {"path": "/movies/moods", "budget": {"lcp_ms": {"max": 2500}, "tbt_ms": {"max": 200}, "cls": {"max": 0.1}, "score": {"min": 90}}},
+    "movies-moods-cozy": {"path": "/movies/moods/cozy", "budget": {"lcp_ms": {"max": 2500}, "tbt_ms": {"max": 200}, "cls": {"max": 0.1}, "score": {"min": 90}}},
+    "movies-moods-cozy-comedy": {"path": "/movies/moods/cozy/comedy", "budget": {"lcp_ms": {"max": 2500}, "tbt_ms": {"max": 200}, "cls": {"max": 0.1}, "score": {"min": 90}}},
+    "movies-top": {"path": "/movies/top", "budget": {"lcp_ms": {"max": 2500}, "tbt_ms": {"max": 200}, "cls": {"max": 0.1}, "score": {"min": 90}}},
+    "movies-genres": {"path": "/movies/genres", "budget": {"lcp_ms": {"max": 2500}, "tbt_ms": {"max": 200}, "cls": {"max": 0.1}, "score": {"min": 90}}},
+    "movies-genres-drama": {"path": "/movies/genres/drama", "budget": {"lcp_ms": {"max": 2500}, "tbt_ms": {"max": 200}, "cls": {"max": 0.1}, "score": {"min": 90}}},
+    "movies-decades": {"path": "/movies/decades", "budget": {"lcp_ms": {"max": 2500}, "tbt_ms": {"max": 200}, "cls": {"max": 0.1}, "score": {"min": 90}}},
+    "movies-decades-1990s": {"path": "/movies/decades/1990s", "budget": {"lcp_ms": {"max": 2500}, "tbt_ms": {"max": 200}, "cls": {"max": 0.1}, "score": {"min": 90}}},
+    "movies-countries": {"path": "/movies/countries", "budget": {"lcp_ms": {"max": 2500}, "tbt_ms": {"max": 200}, "cls": {"max": 0.1}, "score": {"min": 90}}},
+    "movies-countries-japan": {"path": "/movies/countries/japan", "budget": {"lcp_ms": {"max": 2500}, "tbt_ms": {"max": 200}, "cls": {"max": 0.1}, "score": {"min": 90}}},
+    "movies-streaming-us": {"path": "/movies/streaming/us", "budget": {"lcp_ms": {"max": 2500}, "tbt_ms": {"max": 200}, "cls": {"max": 0.1}, "score": {"min": 90}}},
+    "movies-streaming-us-netflix": {"path": "/movies/streaming/us/netflix", "budget": {"lcp_ms": {"max": 2500}, "tbt_ms": {"max": 200}, "cls": {"max": 0.1}, "score": {"min": 90}}},
+    "movies-tropes": {"path": "/movies/tropes", "budget": {"lcp_ms": {"max": 2500}, "tbt_ms": {"max": 200}, "cls": {"max": 0.1}, "score": {"min": 90}}},
+    "movies-tropes-final-girl": {"path": "/movies/tropes/final-girl", "budget": {"lcp_ms": {"max": 2500}, "tbt_ms": {"max": 200}, "cls": {"max": 0.1}, "score": {"min": 90}}},
+    "movies-themes-crime": {"path": "/movies/themes/crime", "budget": {"lcp_ms": {"max": 2500}, "tbt_ms": {"max": 200}, "cls": {"max": 0.1}, "score": {"min": 90}}},
+    "movies-styles-animated": {"path": "/movies/styles/animated", "budget": {"lcp_ms": {"max": 2500}, "tbt_ms": {"max": 200}, "cls": {"max": 0.1}, "score": {"min": 90}}},
+    "shows": {"path": "/shows", "budget": {"lcp_ms": {"max": 2500}, "tbt_ms": {"max": 200}, "cls": {"max": 0.1}, "score": {"min": 90}}},
+    "all": {"path": "/all", "budget": {"lcp_ms": {"max": 2500}, "tbt_ms": {"max": 200}, "cls": {"max": 0.1}, "score": {"min": 90}}}
+  }
+}
