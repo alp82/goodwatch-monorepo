@@ -84,7 +84,7 @@ function recorder(explore: boolean) {
 	const keyFor = [
 		`keyFor:function(el){if(!el.matches(${JSON.stringify(selector)})||el.closest("a,summary,[inert],[aria-disabled=true]"))return null;`,
 		'var label=el.getAttribute("aria-label")||el.textContent||el.getAttribute("title");if(!label)return null;',
-		`return "${EXPLORE_BUTTON_GROUP}:"+JSON.stringify([w.location.search,label,el.getAttribute("aria-pressed"),el.getAttribute("aria-expanded")])},`,
+		`return "${EXPLORE_BUTTON_GROUP}:"+JSON.stringify([w.location.search,label,el.getAttribute("aria-pressed"),el.getAttribute("aria-expanded"),el.getAttribute("aria-checked")])},`,
 	].join("")
 	return [
 		`(function(w){if(w.${REPLAY_TAP_KEY})return;`,
@@ -95,7 +95,7 @@ function recorder(explore: boolean) {
 		`T.live&&!Object.keys(T.taps).length&&w.removeEventListener("click",T.on,${capture})},`,
 		`on:function(e){var el=e.isTrusted&&${explore ? "!e.defaultPrevented&&" : ""}e.target&&e.target.closest&&e.target.closest(${JSON.stringify(selector)});if(!el)return;`,
 		explore ? "var k=T.keyFor(el);if(!k)return;" : "var k=el.getAttribute(M);",
-		`var g=k.split(":")[0],t=T.taps[g],again=t&&t.el===el&&${explore ? '(el.hasAttribute("aria-pressed")||el.hasAttribute("aria-expanded"))' : 'el.hasAttribute("aria-pressed")'};`,
+		`var g=k.split(":")[0],t=T.taps[g],again=t&&t.el===el&&${explore ? '(el.hasAttribute("aria-pressed")||el.hasAttribute("aria-expanded")||el.hasAttribute("aria-checked"))' : 'el.hasAttribute("aria-pressed")'};`,
 		"T.drop(g);if(T.live||again)return;",
 		'el.setAttribute(P,"");',
 		"T.taps[g]={key:k,el:el,time:Date.now(),timer:setTimeout(function(){T.drop(g)},1e4)}}};",

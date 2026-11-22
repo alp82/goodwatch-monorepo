@@ -351,3 +351,19 @@ test("Explore discards taps when the page, control or requested action has chang
 		assert.equal(page.claim(EXPLORE_BUTTON_GROUP), null, change)
 	}
 })
+
+test("a Discover switch keeps its original checked state and a second early tap cancels the first", () => {
+	const window = new Window()
+	window.document.body.innerHTML =
+		'<main><button type="button" role="switch" aria-label="Advanced mode"></button></main>'
+	const button = window.document.querySelector("button")!
+	for (const action of ["double tap", "state changed"]) {
+		button.setAttribute("aria-checked", "false")
+		const page = runInlineScript("/discover", EXPLORE_BUTTON_SCRIPT)
+		page.tap(button)
+		if (action === "double tap") page.tap(button)
+		else button.setAttribute("aria-checked", "true")
+		stopRecordingTaps(page.win)
+		assert.equal(page.claim(EXPLORE_BUTTON_GROUP), null, action)
+	}
+})
