@@ -471,28 +471,198 @@ const tropeStamp = (parts: Ingredient[]) =>
 	parts.some((p) => p.family === "trope") ? `|t${tropesVersion()}` : ""
 
 const rowCache = new Map<string, number[]>()
+const maskCache = new Map<string, Uint8Array>()
+const countCache = new Map<string, number>()
+
+const rowsId = (b: Base, parts: Ingredient[], country: string) => {
+	const loaded = usesCountry(parts) ? (countryServices(country.toUpperCase())?.loadedAt ?? 0) : 0
+	return `${b.snap.version}|${b.kind}|${usesCountry(parts) ? `${country}@${loaded}` : ""}|${partsId(parts)}${tropeStamp(parts)}`
+}
+
+/**
+ * One ingredient's well-known rows as a byte per snapshot row (1 = has it). A blend's test then costs one array read
+ * per row instead of a closure over fingerprints, country slots or a trope's key set: the steering, the pantry and the
+ * blend suggestions ask for hundreds of pair counts per page.
+ */
+function maskOf(b: Base, catalog: Catalog, part: Ingredient, country: string): Uint8Array {
+	const id = rowsId(b, [part], country)
+	const hit = maskCache.get(id)
+	if (hit) return hit
+	const mask = new Uint8Array(b.snap.columns.moods.length)
+	for (const r of rowsOf(b, catalog, [part], country)) mask[r] = 1
+	if (maskCache.size > 1500) maskCache.clear()
+	maskCache.set(id, mask)
+	return mask
+}
+
+/** The smallest single set of a blend and the masks of the others; null when an ingredient can't be read. */
+function blendPlan(b: Base, catalog: Catalog, parts: Ingredient[], country: string) {
+	const singles = parts.map((p) => rowsOf(b, catalog, [p], country))
+	if (singles.some((s, i) => !s.length && !testOf(b.snap, catalog, parts[i], country))) return null
+	const order = singles.map((_, i) => i).sort((x, y) => singles[x].length - singles[y].length)
+	return {
+		start: singles[order[0]],
+		masks: order.slice(1).map((i) => maskOf(b, catalog, parts[i], country)),
+	}
+}
+
+/**
+ * Every place of a family with its well-known rows, built in one pass over the kind's rows (most popular first, like
+ * `rows`). Asking a family's members used to scan all rows once per place: a hundred countries meant a hundred passes
+ * over about 78,000 rows in one go, long enough to stall the event loop and make the overload guard shed requests.
+ * Families whose membership is a column of the snapshot (moods, genres, themes, styles, decades, countries) are read
+ * here; services (the viewer's country), tropes and traits keep their own tests. Kept per base, so per snapshot
+ * version and kind.
+ */
+type FamilyIndex = Map<string, number[]>
+const INDEXED: ReadonlySet<Family> = new Set([
+	"mood",
+	"genre",
+	"theme",
+	"style",
+	"decade",
+	"country",
+])
+const familyIndexes = new WeakMap<Base, Map<Family, FamilyIndex | null>>()
+export function familyIndex(b: Base, catalog: Catalog, family: Family): FamilyIndex | null {
+	if (!INDEXED.has(family)) return null
+	let byFamily = familyIndexes.get(b)
+	if (!byFamily) {
+		byFamily = new Map()
+		familyIndexes.set(b, byFamily)
+	}
+	if (byFamily.has(family)) return byFamily.get(family) ?? null
+	const built = buildFamilyIndex(b, catalog, family)
+	byFamily.set(family, built)
+	return built
+}
+
+function buildFamilyIndex(b: Base, catalog: Catalog, family: Family): FamilyIndex | null {
+	const c = b.snap.columns
+	const values = catalog[family] ?? []
+	const out: FamilyIndex = new Map(values.map((v) => [v.id, [] as number[]]))
+	const bucket = (id: string) => out.get(id)
+	if (family === "decade" || family === "country") {
+		const facts = c.facts
+		if (!facts) return null
+		if (family === "decade") {
+			for (const r of b.rows) bucket(String(Math.floor(facts.releaseYears[r] / 10) * 10))?.push(r)
+			return out
+		}
+		const n = facts.releaseYears.length
+		const lists = facts.countries.map((code) => bucket(code))
+		for (const r of b.rows)
+			for (let s = 0; s < 4; s++) {
+				const idx = facts.countryIndexes[s * n + r]
+				// An unused slot is NO_COUNTRY, past the list; a country repeated in a later slot counts once.
+				if (idx >= lists.length) continue
+				let again = false
+				for (let t = 0; t < s; t++) if (facts.countryIndexes[t * n + r] === idx) again = true
+				if (!again) lists[idx]?.push(r)
+			}
+		return out
+	}
+	// Bit columns: each value is one bit (a merged genre is several).
+	const column =
+		family === "mood"
+			? c.moods
+			: family === "genre"
+				? c.genres
+				: family === "theme"
+					? c.themes
+					: c.styles
+	const masks = values.map((v) => {
+		if (family === "genre") {
+			let bits = 0
+			for (const name of v.ids ?? [v.id]) {
+				const g = c.genreNames.indexOf(name)
+				if (g >= 0) bits |= 1 << g
+			}
+			return bits
+		}
+		const keys: readonly string[] =
+			family === "mood" ? MOOD_KEYS : family === "theme" ? THEME_KEYS : STYLE_KEYS
+		const at = keys.indexOf(v.id)
+		return at >= 0 ? 1 << at : 0
+	})
+	const lists = values.map((v) => bucket(v.id) as number[])
+	for (const r of b.rows) {
+		const bits = column[r]
+		if (!bits) continue
+		for (let i = 0; i < masks.length; i++) if (bits & masks[i]) lists[i].push(r)
+	}
+	return out
+}
+
+/** A well-known row by its point id, once per base. */
+const pointRows = new WeakMap<Base, Map<number, number>>()
+/** The well-known rows of a set of title keys, most popular first. */
+function rowsOfKeys(b: Base, keys: Iterable<TitleKey>): number[] {
+	let byPoint = pointRows.get(b)
+	if (!byPoint) {
+		const ids = b.snap.columns.pointIds
+		byPoint = new Map(b.rows.map((r) => [ids[r] as number, r]))
+		pointRows.set(b, byPoint)
+	}
+	const rows: number[] = []
+	for (const key of keys) {
+		const r = byPoint.get(key as number)
+		if (r !== undefined) rows.push(r)
+	}
+	return rows.sort((x, y) => b.rank[x] - b.rank[y])
+}
 
 /** The well-known rows that have every ingredient, most popular first. Empty when an ingredient can't be read. */
 export function rowsOf(b: Base, catalog: Catalog, parts: Ingredient[], country: string): number[] {
 	if (!parts.length) return b.rows
-	const loaded = usesCountry(parts) ? (countryServices(country.toUpperCase())?.loadedAt ?? 0) : 0
-	const id = `${b.snap.version}|${b.kind}|${usesCountry(parts) ? `${country}@${loaded}` : ""}|${partsId(parts)}${tropeStamp(parts)}`
+	const id = rowsId(b, parts, country)
 	const hit = rowCache.get(id)
 	if (hit) return hit
 	let rows: number[]
 	if (parts.length > 1) {
-		// Start from the smallest single set.
-		const singles = parts.map((p) => rowsOf(b, catalog, [p], country))
-		const order = singles.map((_, i) => i).sort((x, y) => singles[x].length - singles[y].length)
-		const tests = order.slice(1).map((i) => testOf(b.snap, catalog, parts[i], country))
-		rows = tests.some((t) => !t) ? [] : singles[order[0]].filter((r) => tests.every((t) => t?.(r)))
+		const plan = blendPlan(b, catalog, parts, country)
+		rows = plan ? plan.start.filter((r) => plan.masks.every((m) => m[r] === 1)) : []
 	} else {
-		const test = testOf(b.snap, catalog, parts[0], country)
-		rows = test ? b.rows.filter(test) : []
+		// A service's rows come from the country's brand index (one pass per country), a trope's from its member
+		// list (a few thousand keys, not a pass over every row), the other columns from the family index above.
+		const family = parts[0].family
+		const indexed = family === "service" ? brandRows(b, country) : familyIndex(b, catalog, family)
+		const keys = family === "trope" ? tropeMembers(valueOf(catalog, parts[0])?.id ?? "") : null
+		if (indexed) rows = indexed.get(valueOf(catalog, parts[0])?.id ?? "") ?? []
+		else if (keys) rows = rowsOfKeys(b, keys.keys())
+		else {
+			const test = testOf(b.snap, catalog, parts[0], country)
+			rows = test ? b.rows.filter(test) : []
+		}
 	}
 	if (rowCache.size > 4000) rowCache.clear()
 	rowCache.set(id, rows)
 	return rows
+}
+
+/** How many well-known rows have every ingredient, without keeping the rows: the counts behind steering and pantry. */
+export function countOf(b: Base, catalog: Catalog, parts: Ingredient[], country: string): number {
+	if (parts.length < 2) return rowsOf(b, catalog, parts, country).length
+	const id = rowsId(b, parts, country)
+	const rows = rowCache.get(id)
+	if (rows) return rows.length
+	const hit = countCache.get(id)
+	if (hit !== undefined) return hit
+	const plan = blendPlan(b, catalog, parts, country)
+	let n = 0
+	if (plan)
+		for (const r of plan.start) {
+			let all = true
+			for (const m of plan.masks)
+				if (m[r] !== 1) {
+					all = false
+					break
+				}
+			if (all) n++
+		}
+	if (countCache.size > 50_000) countCache.clear()
+	countCache.set(id, n)
+	return n
 }
 
 /** The brands a country carries, with their well-known rows. Null while the country's availability loads. */
@@ -664,8 +834,17 @@ export function clustersOf(snap: Snap, rows: number[], k: number) {
 			centers[c] = m
 		}
 	}
+	// Every row to its nearest center, through one reused buffer (a place can hold tens of thousands of rows).
 	const full: number[][] = Array.from({ length: k }, () => [])
-	for (const r of rows) full[nearest(vecOf(r))].push(r)
+	const buf = new Float64Array(D)
+	for (const r of rows) {
+		const v = snap.fingerprintAt(r)
+		for (let i = 0; i < D; i++) {
+			const x = v[TRAIT_KEYS[i]]
+			buf[i] = x === MISSING ? 0 : x
+		}
+		full[nearest(buf)].push(r)
+	}
 	return Array.from({ length: k }, (_, c) => ({ rows: full[c], center: centers[c] })).filter(
 		(c) => c.rows.length >= 8,
 	)

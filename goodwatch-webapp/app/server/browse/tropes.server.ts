@@ -18,9 +18,11 @@ import {
 export const ensureTropes = (): Promise<void> => ensureTropeMembers(TROPES.map((t) => t.id))
 
 /** The titles that carry a trope, or null before the first load finished. */
-export function tropeMembers(id: string): { has(key: TitleKey): boolean } | null {
+export function tropeMembers(
+	id: string,
+): { has(key: TitleKey): boolean; keys(): Iterable<TitleKey> } | null {
 	const members = sharedMembers(id)
-	return members ? { has: (key) => members.has(key) } : null
+	return members ? { has: (key) => members.has(key), keys: () => members.keys() } : null
 }
 
 /** Raised on every completed load; part of row caches' identity. */
