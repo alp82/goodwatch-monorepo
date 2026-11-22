@@ -33,11 +33,19 @@ async function prepare() {
 		const entry = browseCacheEntry("hub", kind, locale, version, day)
 		const key = cacheEntryKey(entry.name, entry.params)
 		const marker = `{${key}}:prepared`
-		if ((await redis.exists(key, marker)) !== 2) pending.push({ kind, key, marker })
+		// A simultaneous on-demand render can replace this entry. Match its contents so an
+		// incomplete result cannot inherit the earlier preparation marker.
+		const prepared = await redis.eval(
+			"local page = redis.call('GET', KEYS[1]); return page and redis.sha1hex(page) == redis.call('GET', KEYS[2]) and 1 or 0",
+			2,
+			key,
+			marker,
+		)
+		if (!prepared) pending.push({ kind, key, marker })
 	}
 	if (!pending.length) return
 	// Importing the availability index starts a read. Keep it and all catalog consumers off
-	// the frequent path that only checks whether the three Redis entries still exist.
+	// the frequent path that only checks whether the three prepared Redis entries are current.
 	const [
 		{ TROPES },
 		{ availabilityLoaded },
@@ -86,7 +94,7 @@ async function prepare() {
 		// The marker and page occupy one cluster slot. A failed command or interrupted worker
 		// leaves the previous complete entry intact, and a retry skips each finished hub.
 		await redis.eval(
-			"redis.call('SET', KEYS[1], ARGV[1], 'EX', ARGV[2]); return redis.call('SET', KEYS[2], '1', 'EX', ARGV[2])",
+			"redis.call('SET', KEYS[1], ARGV[1], 'EX', ARGV[2]); return redis.call('SET', KEYS[2], redis.sha1hex(ARGV[1]), 'EX', ARGV[2])",
 			2,
 			key,
 			marker,
