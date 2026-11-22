@@ -22,8 +22,9 @@ function DockAreaKey({ area }: { area: AreaKeyView }) {
 	const Icon = area.on ? area.iconOn : area.icon
 	const profile = area.key === "taste"
 	const viewer = usePathViewer()
-	// An area without pages for this viewer (a guest's Profile) is a plain link.
-	const sheet = area.on || areaSheetOf(area.key, area.href, viewer) !== null
+	// Explore opens Browse directly. Its other tabs are available from the phone header.
+	const sheet =
+		area.key !== "explore" && (area.on || areaSheetOf(area.key, area.href, viewer) !== null)
 	return (
 		<Link
 			to={area.href}

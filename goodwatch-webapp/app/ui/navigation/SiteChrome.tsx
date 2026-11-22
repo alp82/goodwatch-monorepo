@@ -1,7 +1,6 @@
 // The site's chrome around a page: the header, the Explore tab row on the Explore pages, the Profile row on the Profile
 // pages that have no profile layout of their own, the footer, the phone dock, the account menu and the search dialog.
 // The app (app.tsx) and the error page (root.tsx) both draw it, so the two can't drift apart.
-import { GlobeAltIcon } from "@heroicons/react/24/solid"
 import { useLocation } from "@remix-run/react"
 import type { ReactNode } from "react"
 import { countryPath } from "~/domain/new-on-services"
@@ -42,7 +41,6 @@ function ExploreRow() {
 		<div data-explore-tabs={mode} className="contents">
 			<AreaTabs
 				label="Explore"
-				icon={GlobeAltIcon}
 				tabs={exploreTabs(pathname, {
 					newHref: user ? "/new" : countryPath(locale.country),
 				})}

@@ -78,7 +78,7 @@ test("areaKeys: Taste leads to the profile, or /taste without a handle", () => {
 		areaKeys(ANA).map((a) => [a.key, a.href]),
 		[
 			["watch", "/watch/shows"],
-			["explore", "/discover"],
+			["explore", "/all"],
 			["taste", "/u/ana"],
 		],
 	)
@@ -106,6 +106,7 @@ test("the third key says Profile, and every tab of every area has an icon", () =
 
 test("Explore: Browse first, Top between Hot and Awards with the check badge, Awards with the trophy", () => {
 	const tabs = exploreTabs("/awards")
+	assert.equal(tabs.find((tab) => tab.key === "browse")?.href, "/all")
 	const keys = tabs.map((t) => t.key)
 	assert.deepEqual(keys, ["browse", "new", "hot", "top", "awards", "people", "map", "discover"])
 	assert.deepEqual(

@@ -92,7 +92,7 @@ export function areaKeys(viewer: PathViewer): AreaDef[] {
 		{
 			key: "explore",
 			label: "Explore",
-			href: "/discover",
+			href: "/all",
 			icon: GlobeAltIcon,
 			iconOn: GlobeAltSolid,
 		},
@@ -306,7 +306,7 @@ const EXPLORE_TABS: {
 	{
 		key: "browse",
 		label: "Browse",
-		href: "/movies",
+		href: "/all",
 		icon: GlobeAltIcon,
 		here: isBrowse,
 	},
