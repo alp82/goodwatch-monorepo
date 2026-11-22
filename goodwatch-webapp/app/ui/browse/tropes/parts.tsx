@@ -1,10 +1,10 @@
 // Pieces the tropes index and the trope page share: the name plate, a poster fan, a twist tag in plain words, a trope
 // card, and the TV Tropes credit.
+import { TmdbImage } from "~/ui/TmdbImage"
 import { Link } from "@remix-run/react"
 import type { CSSProperties } from "react"
 import type { ShowTitle } from "~/domain/browse/types"
 import { type Example, type TropeRow, many, twistOf } from "~/domain/tropes/pages"
-import { poster } from "~/ui/browse/base"
 import { FOCUS, GLIDE_T, QUICK_T } from "~/ui/browse/motion"
 
 /** A trope's name as a plate: the group's color as a left rule, the name set in the display face. */
@@ -80,11 +80,11 @@ export function PosterFan({
 					? "z-10 -translate-x-[46%] rotate-[-9deg] translate-y-[6%] group-hover:-translate-x-[58%] group-hover:rotate-[-13deg]"
 					: "z-10 translate-x-[46%] rotate-[9deg] translate-y-[6%] group-hover:translate-x-[58%] group-hover:rotate-[13deg]"
 		return (
-			<img
-				src={poster(t.card.poster_path, "w185")}
+			<TmdbImage
+				kind="poster"
+				path={t.card.poster_path}
+				width={width}
 				alt=""
-				loading="lazy"
-				decoding="async"
 				className={`absolute top-0 left-1/2 -ml-[50%] block w-full origin-bottom rounded-lg object-cover shadow-[0_10px_24px_-8px_rgba(0,0,0,0.75)] ring-1 ring-white/15 ${FAN_T} ${at}`}
 				style={{ height: h }}
 			/>

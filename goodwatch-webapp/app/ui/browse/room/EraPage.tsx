@@ -157,7 +157,14 @@ export function EraPage(props: BrowseViewProps<EraYearsData>) {
 								>
 									<div className="relative">
 										<ShowMark title={lead} mixed={mixed} />
-										<TitlePosterCard card={lead.card} posterPriority="high" />
+										<TitlePosterCard
+											card={lead.card}
+											posterPriority="high"
+											posterSizes={[
+												["(min-width: 640px)", "200px"],
+												[null, "136px"],
+											]}
+										/>
 									</div>
 									{lead.line && (
 										<p className="text-sm leading-snug text-pretty text-gray-300 sm:mt-3 sm:line-clamp-5">
@@ -169,7 +176,14 @@ export function EraPage(props: BrowseViewProps<EraYearsData>) {
 							{rest.slice(0, 4).map((t) => (
 								<motion.div key={t.card.key} variants={RISE} className="relative min-w-0">
 									<ShowMark title={t} mixed={mixed} />
-									<TitlePosterCard card={t.card} posterPriority="high" />
+									<TitlePosterCard
+										card={t.card}
+										posterSizes={[
+											["(min-width: 1024px)", "132px"],
+											["(min-width: 640px)", "16vw"],
+											[null, "calc((100vw - 94px) / 4)"],
+										]}
+									/>
 								</motion.div>
 							))}
 						</motion.div>

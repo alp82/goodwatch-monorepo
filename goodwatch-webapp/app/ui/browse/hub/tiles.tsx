@@ -5,6 +5,8 @@
 //   - MoodLattice, EraRibbon, BestSwitcher, FlagMap (+ FlagRail), GenreShelf, ServiceRow, Occasions.
 // Previews say what a place is with fingerprint words and defining tropes instead of repeating its
 // name; poster groups are links to their category; the map zooms and pans; every country with a page is on it.
+import type { SizeRule } from "~/utils/tmdb-image"
+import { TmdbImage } from "~/ui/TmdbImage"
 import { Link, useNavigate } from "@remix-run/react"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import {
@@ -203,12 +205,15 @@ export function PosterFan({
 	href,
 	label,
 	size = "md",
+	sizes,
 	className = "",
 }: {
 	titles: ShowTitle[]
 	href: string
 	label: string
 	size?: keyof typeof FAN
+	/** Each poster occupies 46% of this fan. */
+	sizes: SizeRule[]
 	className?: string
 }) {
 	const shown = titles.filter((t) => t.card.poster_path).slice(0, 3)
@@ -233,10 +238,12 @@ export function PosterFan({
 						className="absolute top-[4%] left-1/2 block w-[46%] origin-bottom overflow-hidden rounded-lg bg-gray-800 shadow-xl ring-1 shadow-black/50 ring-black/40 transition-transform duration-[320ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
 						style={style}
 					>
-						<img
-							src={poster(t.card.poster_path as string, size === "sm" ? "w185" : "w342")}
+						<TmdbImage
+							kind="poster"
+							path={t.card.poster_path}
+							sizes={sizes}
+							maxWidth={126}
 							alt=""
-							loading="lazy"
 							className="block aspect-[2/3] w-full object-cover"
 						/>
 					</span>
@@ -382,6 +389,10 @@ export function MoodLattice({
 					href={href(m.place)}
 					label={`Open ${m.place.label}`}
 					size="lg"
+					sizes={[
+						["(min-width: 640px)", "107px"],
+						[null, "70px"],
+					]}
 					className="max-sm:w-[9.5rem]"
 				/>
 			</Swap>
@@ -510,6 +521,11 @@ export function EraRibbon({
 					href={href(d.place)}
 					label={`Open the ${d.place.label}`}
 					size="xl"
+					sizes={[
+						["(min-width: 1024px)", "125px"],
+						["(min-width: 640px)", "81px"],
+						[null, "63px"],
+					]}
 					className="max-sm:w-[8.5rem] sm:max-lg:w-[11rem]"
 				/>
 			</Swap>
@@ -661,10 +677,11 @@ function BestLine({ row, place, lead }: { row: BestRow; place: number; lead: boo
 					className={`block shrink-0 overflow-hidden rounded-md bg-gray-800 ring-1 ring-white/10 ${QUICK_T} group-hover:-translate-y-0.5 ${lead ? "w-14" : "w-9"}`}
 				>
 					{c.poster_path && (
-						<img
-							src={poster(c.poster_path, lead ? "w185" : "w92")}
+						<TmdbImage
+							kind="poster"
+							path={c.poster_path}
+							width={lead ? 56 : 36}
 							alt=""
-							loading="lazy"
 							className="block aspect-[2/3] w-full object-cover"
 						/>
 					)}
@@ -1166,6 +1183,10 @@ export function FlagMap({
 							href={href(c.place)}
 							label={`Open ${nice(c.place)}`}
 							size="lg"
+							sizes={[
+								["(min-width: 640px)", "107px"],
+								[null, "81px"],
+							]}
 							className="mt-4 max-sm:w-[11rem]"
 						/>
 					</Swap>
@@ -1409,10 +1430,11 @@ function KindStack({ titles }: { titles: ShowTitle[] }) {
 						transform: `rotate(${(i - 1) * 4}deg)`,
 					}}
 				>
-					<img
-						src={poster(t.card.poster_path as string, "w185")}
+					<TmdbImage
+						kind="poster"
+						path={t.card.poster_path}
+						width={48}
 						alt=""
-						loading="lazy"
 						className="block aspect-[2/3] w-full object-cover"
 					/>
 				</span>

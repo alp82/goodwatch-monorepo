@@ -1,5 +1,6 @@
 // The streaming index's parts: the head with its country picker, the control row (what it costs, find, sort), the
 // state behind them, and the small parts every service shows (logo, poster fan, how much changed this month).
+import { TmdbImage } from "~/ui/TmdbImage"
 import { getVibeColorValue } from "~/utils/ratings"
 import { count } from "~/domain/browse/count"
 import { Link } from "@remix-run/react"
@@ -13,7 +14,7 @@ import type {
 	StreamService,
 	StreamingIndexData,
 } from "~/server/browse/streaming-page.server"
-import { WRAP, poster } from "../base"
+import { WRAP } from "../base"
 import { EASE, FOCUS, QUICK_T } from "../motion"
 import { FlagShape } from "../world-map/FlagShape"
 
@@ -38,13 +39,12 @@ export function Logo({
 	className?: string
 }) {
 	return s.logo ? (
-		<img
-			src={poster(s.logo, "w154")}
+		<TmdbImage
+			kind="logo"
+			path={s.logo}
+			ratio={1}
 			alt=""
-			loading="lazy"
-			decoding="async"
 			width={size}
-			height={size}
 			className={`shrink-0 rounded-[22%] ring-1 ring-white/10 ${className}`}
 			style={{ width: size, height: size }}
 		/>
@@ -146,12 +146,12 @@ export function Fan({ s, href, size = 54 }: { s: StreamService; href: string; si
 			{picks.map((p, i) => {
 				const at = picks.length === 1 ? 1 : picks.length === 2 ? [0, 2][i] : i
 				return (
-					<img
+					<TmdbImage
 						key={p.card.key}
-						src={poster(p.card.poster_path, "w154")}
+						kind="poster"
+						path={p.card.poster_path}
+						width={size}
 						alt=""
-						loading="lazy"
-						decoding="async"
 						className={`absolute top-0 left-1/2 rounded-md shadow-lg ring-1 ring-black/40 [transform:translateX(calc(-50%_+_var(--x)))_rotate(var(--r))] ${QUICK_T} motion-safe:group-hover/fan:[transform:translateX(calc(-50%_+_var(--x)_*_1.4))_rotate(calc(var(--r)_*_1.35))_translateY(-3px)]`}
 						style={
 							{

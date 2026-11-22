@@ -9,7 +9,7 @@ import { SortControl } from "~/ui/filter-bar/controls"
 import { DISCOVER_SORTS, compactCount } from "~/ui/filter-bar/labels"
 import { type ReactNode, useEffect, useRef, useState } from "react"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
-import { gridPosterPriority } from "~/utils/tmdb-image"
+import type { SizeRule } from "~/utils/tmdb-image"
 import type { ShowTitle, Sort } from "~/domain/browse/types"
 import { FOCUS, PANEL, ShowMark, isMixed } from "~/ui/browse/index"
 import { EASE, GLIDE_T, QUICK_T } from "~/ui/browse/motion"
@@ -19,6 +19,12 @@ import { SteerRows } from "~/ui/browse/place/SteerRows"
 import { WINDOW } from "~/domain/browse/window"
 import { type Props, useMoodTuner } from "~/ui/browse/place/shared"
 import { type SteerModel, type SteerRow, Token, useSteer } from "~/ui/browse/place/Steer"
+
+const STAGE_SIZES: SizeRule[] = [
+	["(min-width: 1024px)", "155px"],
+	["(min-width: 640px)", "calc((100vw - 84px) / 4)"],
+	[null, "calc((100vw - 48px) / 3)"],
+]
 
 const GAP = 14
 /** The block's height from `lg`: one screen under the sticky bars, never tiny, never a wall. */
@@ -143,7 +149,9 @@ function Grid({
 						<ShowMark title={t} mixed={mixed} />
 						<TitlePosterCard
 							card={t.card}
-							posterPriority={i < 12 ? gridPosterPriority(i) : "lazy"}
+							posterSizes={fit ? [[null, `${Math.round(fit.w)}px`]] : STAGE_SIZES}
+							posterPriority={i === 0 ? "high" : i < 3 ? "eager" : "lazy"}
+							posterPaintBeforeScripts={i === 0}
 							skipOffscreen={i > 17}
 						/>
 					</motion.div>

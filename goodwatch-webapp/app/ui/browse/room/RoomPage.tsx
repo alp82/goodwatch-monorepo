@@ -112,7 +112,15 @@ function YearRail({
 							<span aria-hidden className="h-px flex-1 bg-white/15" />
 						</p>
 						<div className="relative">
-							<TitlePosterCard card={y.title.card} posterPriority={i < 6 ? "high" : "lazy"} />
+							<TitlePosterCard
+								card={y.title.card}
+								posterSizes={[
+									["(min-width: 1024px)", "110px"],
+									["(min-width: 640px)", "17vw"],
+									[null, "28vw"],
+								]}
+								posterPriority={i === 0 ? "high" : "lazy"}
+							/>
 							<ShowMark title={y.title} mixed={mixed} />
 						</div>
 					</li>
@@ -557,7 +565,7 @@ export function RoomPage({
 							}
 							aside={<MoreLink to="#all">{headings.all(said)}</MoreLink>}
 						/>
-						<Essentials titles={data.essentials} />
+						<Essentials titles={data.essentials} eager={!data.era && !data.service} />
 					</section>
 				)}
 

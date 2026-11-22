@@ -1,6 +1,6 @@
 import type { TitleCard } from "~/server/title-cards.server"
 import { type ActionsPlacement, MovieTvCard } from "~/ui/MovieTvCard"
-import type { ImagePriority } from "~/utils/tmdb-image"
+import type { ImagePriority, SizeRule } from "~/utils/tmdb-image"
 
 // The poster card for a title card from getTitleCards: its services (the card shows the viewer's own), and its rating
 // badge while an age limit is on.
@@ -8,6 +8,8 @@ export function TitlePosterCard({
 	card,
 	prefetch,
 	posterPriority,
+	posterSizes,
+	posterPaintBeforeScripts,
 	skipOffscreen,
 	actions,
 	newOn,
@@ -17,6 +19,8 @@ export function TitlePosterCard({
 	prefetch?: boolean
 	/** Set by a page for the cards it shows without scrolling. Every other poster loads lazily. */
 	posterPriority?: ImagePriority
+	posterSizes?: SizeRule[]
+	posterPaintBeforeScripts?: boolean
 	/** For a card far down a long grid, see MovieTvCard. */
 	skipOffscreen?: boolean
 	/** Where the title actions sit on the poster, see MovieTvCard. */
@@ -40,6 +44,8 @@ export function TitlePosterCard({
 			mediaType={card.media_type}
 			prefetch={prefetch}
 			posterPriority={posterPriority}
+			posterSizes={posterSizes}
+			posterPaintBeforeScripts={posterPaintBeforeScripts}
 			skipOffscreen={skipOffscreen}
 			actions={actions}
 			newOn={newOn}

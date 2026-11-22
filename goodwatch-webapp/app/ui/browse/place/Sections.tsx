@@ -28,7 +28,7 @@ export function EssentialsSection({ data, listTo }: { data: PlacePageData; listT
 				line="The ones that define it, and why."
 				aside={listTo ? <MoreLink to={listTo}>{headings.all(what)}</MoreLink> : undefined}
 			/>
-			<Essentials titles={data.room.essentials} />
+			<Essentials titles={data.room.essentials} eager={false} />
 		</Reveal>
 	)
 }

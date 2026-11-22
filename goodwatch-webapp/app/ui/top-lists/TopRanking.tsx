@@ -25,7 +25,13 @@ import { SHELL } from "~/ui/filter-bar/motion"
 import { PageTitle } from "~/ui/heading"
 import { NAV_PILL } from "~/ui/selection/selected"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
+import type { SizeRule } from "~/utils/tmdb-image"
 import { assetUrl } from "~/utils/asset-url"
+
+const LEAD_SIZES: SizeRule[] = [
+	["(min-width: 640px)", "144px"],
+	[null, "112px"],
+]
 
 const MOVE = { duration: 0.38, ease: [0.65, 0, 0.35, 1] as const }
 /** With a dial set, how many of the page's titles come forward. */
@@ -159,7 +165,7 @@ function Lead({
 			className={`${PANEL} flex h-full gap-4 p-3 sm:p-4 ${first ? "bg-amber-400/[0.05] ring-amber-400/25" : ""}`}
 		>
 			<div className="w-28 shrink-0 sm:w-36">
-				<TitlePosterCard card={t.card} posterPriority="eager" />
+				<TitlePosterCard card={t.card} posterSizes={LEAD_SIZES} posterPriority="eager" />
 			</div>
 			<div className="flex min-w-0 flex-1 flex-col">
 				<span className="flex items-baseline gap-2">
@@ -432,7 +438,7 @@ export function TopRanking({ data, kinds }: { data: TopPage; kinds: KindChoice[]
 												place={placeOf(leads + i)}
 												tuned={tuned}
 												mixed={mixed}
-												eager={i < 5}
+												eager={!leads && i < 2}
 											/>
 										</motion.li>
 									))}

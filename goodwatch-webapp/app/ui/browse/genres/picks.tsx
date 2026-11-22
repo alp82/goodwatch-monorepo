@@ -1,8 +1,9 @@
 // Under the opened genre: a few picks that are not its front row, each
 // with the reason it is there. A phone scrolls the row sideways.
+import { TmdbImage } from "~/ui/TmdbImage"
 import { Link } from "@remix-run/react"
 import { ScorePill } from "~/ui/poster-card/ScorePill"
-import { FOCUS, poster } from "~/ui/browse/index"
+import { FOCUS } from "~/ui/browse/index"
 import { QUICK_T } from "~/ui/browse/motion"
 import type { AtlasGenre, Pick, PickWhy } from "~/server/browse/genres.server"
 import { low } from "~/ui/browse/genres/shared"
@@ -28,11 +29,11 @@ function PickCard({ p }: { p: Pick }) {
 					className={`relative block w-[4.25rem] shrink-0 overflow-hidden rounded-md bg-gray-800 shadow-md ring-1 shadow-black/40 ring-white/10 ${QUICK_T} group-hover/p:-translate-y-0.5`}
 				>
 					{p.poster && (
-						<img
-							src={poster(p.poster, "w185")}
+						<TmdbImage
+							kind="poster"
+							path={p.poster}
+							width={68}
 							alt=""
-							loading="lazy"
-							decoding="async"
 							className="block aspect-[2/3] w-full object-cover"
 						/>
 					)}

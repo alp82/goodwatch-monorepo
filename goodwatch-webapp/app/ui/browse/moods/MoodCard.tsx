@@ -5,7 +5,7 @@
 //   a mood that fits keeps its color, one that doesn't drains to slate. Pointing at moods never changes it.
 // - Pointing (`pointed`) only answers "this one": the rule runs out to full width, an arrow slides in, the still
 //   pushes in a little.
-import { poster } from "~/ui/browse/index"
+import { TmdbImage } from "~/ui/TmdbImage"
 import { GLIDE_T, MOVE_T } from "~/ui/browse/motion"
 import { CardLink, type MoodCardProps } from "~/ui/browse/moods/lattice"
 
@@ -30,11 +30,7 @@ export function MixCard({
 		backdrop === "none"
 			? undefined
 			: (mood.titles.find((t) => t.card.backdrop_path) ?? mood.titles[0])
-	const src = frame
-		? frame.card.backdrop_path
-			? poster(frame.card.backdrop_path, "w780")
-			: poster(frame.card.poster_path, "w342")
-		: ""
+	const path = frame?.card.backdrop_path || frame?.card.poster_path
 	const still = backdrop === "full" ? 0.62 : 0.2
 	const m = size === "m"
 	return (
@@ -42,11 +38,17 @@ export function MixCard({
 			mood={mood}
 			className={`group relative h-full overflow-hidden rounded-xl bg-[#0f1420] ring-1 ring-white/[0.06] ${m ? "min-h-[10.5rem]" : "min-h-[8rem]"}`}
 		>
-			{src && (
-				<img
-					src={src}
+			{path && (
+				<TmdbImage
+					kind={frame?.card.backdrop_path ? "backdrop" : "poster"}
+					path={path}
+					sizes={[
+						["(min-width: 1280px)", "288px"],
+						["(min-width: 1024px)", "calc((100vw - 132px) / 4)"],
+						[null, "calc((100vw - 68px) / 2)"],
+					]}
+					maxWidth={476}
 					alt=""
-					loading="lazy"
 					className="absolute inset-0 h-full w-full object-cover transition-[transform,opacity,filter] duration-[380ms] ease-[cubic-bezier(0.65,0,0.35,1)] motion-reduce:transition-none"
 					style={{
 						opacity: fits ? still : still * 0.3,
@@ -56,7 +58,7 @@ export function MixCard({
 				/>
 			)}
 			{/* Over a still: the mood's hue tints the frame (color blend), so every still reads as its mood. */}
-			{src && (
+			{path && (
 				<span
 					aria-hidden
 					className={`absolute inset-0 ${GLIDE_T}`}

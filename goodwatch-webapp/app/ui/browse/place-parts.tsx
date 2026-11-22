@@ -245,7 +245,7 @@ export function TraitMeters({
  * The titles that define a place, each with one sentence from GoodWatch's title analysis as a caption under its real
  * poster card. A contact sheet with captions, not a list of quotes.
  */
-export function Essentials({ titles }: { titles: ShowTitle[] }) {
+export function Essentials({ titles, eager = true }: { titles: ShowTitle[]; eager?: boolean }) {
 	if (!titles.length) return null
 	const mixed = isMixed(titles)
 	return (
@@ -253,7 +253,7 @@ export function Essentials({ titles }: { titles: ShowTitle[] }) {
 			{titles.map((t, i) => (
 				<li key={t.card.key} className="relative w-[46%] shrink-0 snap-start sm:w-[30%] lg:w-auto">
 					<ShowMark title={t} mixed={mixed} />
-					<TitlePosterCard card={t.card} posterPriority={i < 5 ? "high" : "lazy"} />
+					<TitlePosterCard card={t.card} posterPriority={eager && i === 0 ? "high" : "lazy"} />
 					{t.line && (
 						<p
 							title={t.line}

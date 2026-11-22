@@ -326,7 +326,7 @@ export function ErasPage({ data, address, to }: BrowseViewProps<ScrubData>) {
 								variants={{ in: { transition: { staggerChildren: 0.04 } } }}
 								className="grid grid-cols-4 gap-2 sm:gap-3"
 							>
-								{stage.titles.map((t) => (
+								{stage.titles.map((t, i) => (
 									<motion.li
 										key={t.card.key}
 										className="min-w-0"
@@ -336,7 +336,15 @@ export function ErasPage({ data, address, to }: BrowseViewProps<ScrubData>) {
 											gone: { opacity: 0, transition: { duration: 0.16, ease: EASE } },
 										}}
 									>
-										<TitlePosterCard card={t.card} posterPriority="high" />
+										<TitlePosterCard
+											card={t.card}
+											posterSizes={[
+												["(min-width: 1280px)", "161px"],
+												["(min-width: 1024px)", "13vw"],
+												[null, "calc((100vw - 56px) / 4)"],
+											]}
+											posterPriority={i === 0 ? "high" : "lazy"}
+										/>
 									</motion.li>
 								))}
 							</motion.ul>
