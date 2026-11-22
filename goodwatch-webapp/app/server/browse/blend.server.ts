@@ -30,11 +30,13 @@ const id = (p: Ingredient) => `${p.family}:${p.slug}`
 
 export async function pantry(atlas: Places, parts: Ingredient[]): Promise<PantryGroup[]> {
 	const groups: PantryGroup[] = []
+	const empty = parts.length > 0 && atlas.count(parts) === 0
 	for (const family of PANTRY_FAMILIES) {
 		const options = await mapBreathing(
 			atlas.members(family).filter((m) => !parts.some((p) => same(p, m))),
 			(place): PantryOption => {
 				if (!parts.length) return { place, state: "full" }
+				if (empty) return { place, state: "none" }
 				const n = atlas.count([...parts, place])
 				return { place, state: n >= MIN_PAGE ? "full" : n > 0 ? "thin" : "none" }
 			},

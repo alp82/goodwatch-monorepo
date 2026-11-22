@@ -367,7 +367,10 @@ export async function loadPlaceContent(atlas: Places, address: Address) {
 	const blend = await atlas.blend(parts, { suggestions: 6, titles: 3, families })
 	// "Goes well with" fills its row. On a small or very recent catalog (a service) the decades take every
 	// place and the rest count as their twins, so a second ask without the families already shown tops it up.
-	if (blend.suggestions.filter((s) => s.place.slug !== "tv-movie").length < 4) {
+	if (
+		blend.suggestions.length &&
+		blend.suggestions.filter((s) => s.place.slug !== "tv-movie").length < 4
+	) {
 		const shown = new Set(blend.suggestions.map((s) => s.place.family))
 		const wider = await atlas.blend(parts, {
 			suggestions: 6,

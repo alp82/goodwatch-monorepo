@@ -1068,15 +1068,20 @@ export class Places {
 		})
 	}
 
+	/** The trait used by the intensity dial, without constructing its three lists of titles. */
+	intensityTrait(parts: Ingredient[]): TraitWord | null {
+		if (!parts.length) return null
+		const k = this.leadTrait(parts)
+		return k === undefined ? null : this.word(k, this.mean(parts), this.b.mean)
+	}
+
 	/**
 	 * Intensity: the place's lead trait in three bands (a touch, plenty, all the way), each with titles. "Not always
 	 * about the 10's": a touch of scary is its own list. A band's full list is the place with `level` set.
 	 */
 	async intensity(parts: Ingredient[], titles = 6): Promise<Intensity | null> {
-		if (!parts.length) return null
-		const k = this.leadTrait(parts)
-		if (k === undefined) return null
-		const trait = this.word(k, this.mean(parts), this.b.mean)
+		const trait = this.intensityTrait(parts)
+		if (!trait) return null
 		const perBand = LEVELS.map((level) => ({ level, rows: this.bandRows(parts, level) }))
 		const total = perBand.reduce((s, x) => s + x.rows.length, 0) || 1
 		const bands: Band[] = await Promise.all(
@@ -1566,7 +1571,8 @@ export class Places {
 		const families = opts.families ?? FAMILIES.filter((f) => f !== "trait")
 		const taken = (p: Ingredient) => parts.some((x) => same(x, p))
 		// Lift: how much more often the candidate turns up in the blend than in the whole kind.
-		const candidates = (opts.suggestions === 0 ? [] : families)
+		// Every suggested addition must have MIN_PAGE titles and fewer than 90% of the blend.
+		const candidates = (opts.suggestions === 0 || rows.length * 0.9 <= MIN_PAGE ? [] : families)
 			.flatMap((family) => this.catalog[family].map((v) => ({ family, slug: v.slug })))
 			.filter((p) => !taken(p))
 		const scored = (

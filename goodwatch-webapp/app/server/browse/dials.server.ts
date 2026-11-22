@@ -676,13 +676,13 @@ export async function loadPlaceDials(
 		: parts
 				.filter((p) => ["mood", "theme", "style", "trait", "genre"].includes(p.family))
 				.slice(0, 3)
-	const intensity = muchParts.length
-		? await atlas.intensity(single ? parts : [muchParts[0]], 0)
+	const intensityTrait = muchParts.length
+		? atlas.intensityTrait(single ? parts : [muchParts[0]])
 		: null
 	const muchTraits: TraitWord[] = muchParts
 		.map((p, i) =>
-			i === 0 && intensity
-				? intensity.trait
+			i === 0 && intensityTrait
+				? intensityTrait
 				: (atlas.traits([p], { n: 1 }).more[0] as TraitWord | undefined),
 		)
 		.filter((t): t is TraitWord => !!t)
@@ -850,11 +850,11 @@ export async function loadPlaceDials(
 		},
 	}
 
-	if (single && family === "trait" && intensity) {
-		const ev = eveningsFor(lead.slug, intensity.trait.word)
+	if (single && family === "trait" && intensityTrait) {
+		const ev = eveningsFor(lead.slug, intensityTrait.word)
 		const full = await atlas.intensity(parts, 8)
 		out.evenings = {
-			trait: intensity.trait,
+			trait: intensityTrait,
 			bands: (full?.bands ?? []).map((b) => ({
 				level: b.level,
 				name: b.name,
@@ -863,7 +863,7 @@ export async function loadPlaceDials(
 				to: link("level", b.level),
 			})),
 		}
-		out.lede = `How ${intensity.trait.word} do you want it? A touch, plenty, or all the way make three very different evenings. Pick one, or turn the dial yourself.`
+		out.lede = `How ${intensityTrait.word} do you want it? A touch, plenty, or all the way make three very different evenings. Pick one, or turn the dial yourself.`
 		out.kicker = "How much"
 	}
 	if (single && family === "genre") {

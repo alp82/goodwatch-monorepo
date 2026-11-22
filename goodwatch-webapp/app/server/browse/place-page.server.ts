@@ -255,8 +255,8 @@ async function buildPlacePage(args: BrowseLoadArgs): Promise<BuiltPlacePage> {
 	)
 	if (narrowed) {
 		const much = dz.dials.filter((d) => d.kind === "much")
-		const intensity = much.length ? await atlas.intensity(parts, 0) : null
-		const keys = [...(intensity ? [intensity.trait.key] : []), ...AXIS_KEYS]
+		const intensityTrait = much.length ? atlas.intensityTrait(parts) : null
+		const keys = [...(intensityTrait ? [intensityTrait.key] : []), ...AXIS_KEYS]
 		const opts = { mine: address.mine, unseen: address.unseen }
 		const own = await listOf(atlas, parts, extra, {
 			...opts,
@@ -343,14 +343,16 @@ async function buildPlacePage(args: BrowseLoadArgs): Promise<BuiltPlacePage> {
 	// a trope too, the ones this page plays far more than elsewhere (members load once per process; until then
 	// the row stays out).
 	const adds: SteerAdd[] = []
-	for (const f of lead.family === "mood"
-		? ["genre", "mood", "trope"]
-		: ["mood", "genre", "trope"]) {
-		const add = await addsOf(f as Family)
-		if (add.items.length >= 2) adds.push(add)
+	const count = atlas.count(parts)
+	if (count >= MIN_PAGE) {
+		for (const f of lead.family === "mood"
+			? ["genre", "mood", "trope"]
+			: ["mood", "genre", "trope"]) {
+			const add = await addsOf(f as Family)
+			if (add.items.length >= 2) adds.push(add)
+		}
 	}
 
-	const count = atlas.count(parts)
 	const title: TitleData = {
 		shorts: shortsOf(atlas, parts),
 		swaps: blend.swaps,
@@ -394,7 +396,8 @@ async function buildPlacePage(args: BrowseLoadArgs): Promise<BuiltPlacePage> {
 	const leans = atlas.members("mood", 0).map((m) => {
 		const inSel = atlas.count([...parts, m]) / Math.max(1, count)
 		const overall = atlas.count([m]) / all
-		const at = (key: string) => atlas.dials(m).find((d) => d.key === key)?.at ?? 0.5
+		const dials = atlas.dials(m)
+		const at = (key: string) => dials.find((d) => d.key === key)?.at ?? 0.5
 		return { m, lift: overall > 0 ? inSel / overall : 0, tone: at("tone"), pace: at("pace") }
 	})
 	const topLift = Math.max(1.0001, ...leans.map((l) => l.lift))
