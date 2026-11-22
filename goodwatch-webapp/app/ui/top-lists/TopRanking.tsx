@@ -165,7 +165,12 @@ function Lead({
 			className={`${PANEL} flex h-full gap-4 p-3 sm:p-4 ${first ? "bg-amber-400/[0.05] ring-amber-400/25" : ""}`}
 		>
 			<div className="w-28 shrink-0 sm:w-36">
-				<TitlePosterCard card={t.card} posterSizes={LEAD_SIZES} posterPriority="eager" />
+				<TitlePosterCard
+					card={t.card}
+					posterSizes={LEAD_SIZES}
+					posterPriority="eager"
+					phoneThumbnail
+				/>
 			</div>
 			<div className="flex min-w-0 flex-1 flex-col">
 				<span className="flex items-baseline gap-2">
