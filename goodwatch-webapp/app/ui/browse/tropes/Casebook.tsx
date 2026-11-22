@@ -5,7 +5,8 @@ import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from "react"
 import type { Example } from "~/domain/tropes/pages"
-import { poster } from "~/ui/browse/base"
+import { TmdbImage } from "~/ui/TmdbImage"
+import { HERO_TIMING } from "~/utils/start-after-paint"
 import { FOCUS, GLIDE_T, QUICK_T } from "~/ui/browse/motion"
 import { TwistTag } from "~/ui/browse/tropes/parts"
 import { WriteUp } from "~/ui/browse/tropes/Spoiler"
@@ -13,11 +14,6 @@ import { StepButton } from "~/ui/row-arrows"
 
 const LEAD = 3
 const PER = 8
-
-const still = (e: Example) => {
-	const c = e.title.card
-	return c.backdrop_path ? poster(c.backdrop_path, "w780") : poster(c.poster_path, "w342")
-}
 
 function TitleLine({ e, big = false }: { e: Example; big?: boolean }) {
 	const c = e.title.card
@@ -39,7 +35,7 @@ function TitleLine({ e, big = false }: { e: Example; big?: boolean }) {
 
 /** A big case: number, wide still, title, twist, the write-up as a quote. */
 function Case({ e, n, tint }: { e: Example; n: number; tint: string }) {
-	const src = still(e)
+	const { backdrop_path, poster_path } = e.title.card
 	return (
 		<article
 			className="group grid gap-4 py-6 sm:grid-cols-[3rem_minmax(0,14rem)_minmax(0,1fr)] sm:gap-6"
@@ -58,15 +54,21 @@ function Case({ e, n, tint }: { e: Example; n: number; tint: string }) {
 				aria-hidden
 				className={`relative block aspect-video overflow-hidden rounded-xl bg-gray-800 ring-1 ring-white/10 ${FOCUS}`}
 			>
-				{src && (
-					<img
-						src={src}
-						alt=""
-						loading="lazy"
-						decoding="async"
-						className={`h-full w-full object-cover ${GLIDE_T} group-hover:scale-[1.03]`}
-					/>
-				)}
+				<TmdbImage
+					kind={backdrop_path ? "backdrop" : "poster"}
+					path={backdrop_path || poster_path}
+					sizes={[
+						["(min-width: 640px)", "224px"],
+						[null, "calc(100vw - 32px)"],
+					]}
+					minWidth={224}
+					maxWidth={608}
+					ratio={9 / 16}
+					priority={n === 1 ? "high" : "lazy"}
+					{...(n === 1 ? HERO_TIMING : {})}
+					alt=""
+					className={`h-full w-full object-cover ${GLIDE_T} group-hover:scale-[1.03]`}
+				/>
 			</Link>
 			<div className="min-w-0">
 				<TitleLine e={e} big />
@@ -81,7 +83,6 @@ function Case({ e, n, tint }: { e: Example; n: number; tint: string }) {
 
 /** A compact row: small poster, title and year, twist, the whole write-up. */
 function Row({ e, n, tint }: { e: Example; n: number; tint: string }) {
-	const src = poster(e.title.card.poster_path, "w154")
 	return (
 		<article className="group grid grid-cols-[3.25rem_minmax(0,1fr)] gap-3.5 py-4">
 			<Link
@@ -91,15 +92,13 @@ function Row({ e, n, tint }: { e: Example; n: number; tint: string }) {
 				aria-hidden
 				className="relative block aspect-[2/3] overflow-hidden rounded-md bg-gray-800 ring-1 ring-white/10"
 			>
-				{src && (
-					<img
-						src={src}
-						alt=""
-						loading="lazy"
-						decoding="async"
-						className="h-full w-full object-cover"
-					/>
-				)}
+				<TmdbImage
+					kind="poster"
+					path={e.title.card.poster_path}
+					width={52}
+					alt=""
+					className="h-full w-full object-cover"
+				/>
 				<span className="absolute top-0 left-0 rounded-br-md bg-black/70 px-1 text-[10px] font-bold text-white tabular-nums">
 					{n}
 				</span>
