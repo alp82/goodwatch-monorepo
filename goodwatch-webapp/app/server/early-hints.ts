@@ -76,9 +76,9 @@ export function earlyHintLinks(
 	links.push(`<${base}${files.font}>; rel=preload; as=font; type="font/woff2"; crossorigin`)
 	if (path === "/map" && files.explorer)
 		links.push(`<${base}${files.explorer}>; rel=preload; as=style; crossorigin`)
-	// Every Explore layout draws catalog artwork from this origin. Start the image connection
+	// Discover and Explore draw catalog artwork from this origin. Start the image connection
 	// while the loader selects the posters, in the same credentials mode as an ordinary img.
-	if (/^\/(movies|shows|all)(?:\/|$)/.test(path))
+	if (path === "/discover" || /^\/(movies|shows|all)(?:\/|$)/.test(path))
 		links.push("<https://image.tmdb.org>; rel=preconnect")
 	if (path !== "/") return links
 	for (const sheet of files.home) links.push(`<${base}${sheet}>; rel=preload; as=style${cors}`)

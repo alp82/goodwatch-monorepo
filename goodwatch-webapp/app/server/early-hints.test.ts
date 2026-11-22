@@ -79,8 +79,8 @@ describe("earlyHintLinks", () => {
 		])
 	})
 
-	it("opens the poster connection while an Explore document is being built", () => {
-		for (const path of ["/movies", "/shows/moods/cozy", "/all/top?page=2"])
+	it("opens the poster connection while a catalog document is being built", () => {
+		for (const path of ["/movies", "/shows/moods/cozy", "/all/top?page=2", "/discover?type=show"])
 			assert.deepEqual(earlyHintLinks(page(path, phone), base, files), [
 				...shared,
 				"<https://image.tmdb.org>; rel=preconnect",
