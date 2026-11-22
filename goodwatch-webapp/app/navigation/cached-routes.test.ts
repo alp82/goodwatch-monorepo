@@ -14,7 +14,8 @@ test("each cached route exports the cache's clientLoader with its own id", () =>
 		const code = source(id)
 		assert.ok(code, `${id} has a route file`)
 		assert.ok(
-			code.includes(`export const clientLoader = cachedClientLoader("${id}")`),
+			code.includes(`cachedClientLoader("${id}")`) &&
+				/export (?:const|async function) clientLoader\b/.test(code),
 			`${id} exports clientLoader`,
 		)
 	}

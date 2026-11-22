@@ -35,7 +35,7 @@ import { MovieTvCard } from "~/ui/MovieTvCard"
 import { TmdbImage } from "~/ui/TmdbImage"
 import { whiteMark } from "~/ui/brand/white-mark"
 import { type PersonSubject, usePublishFeedbackSubject } from "~/ui/feedback/subject"
-import { FINGERPRINT_META } from "~/ui/fingerprint/fingerprintMeta"
+import { personTraitLabels } from "~/ui/person/trait-labels"
 import MediaText from "~/ui/media-text/MediaText"
 import { presentedText } from "~/ui/media-text/media-text"
 import { AwardsShelf } from "~/ui/person/AwardsShelf"
@@ -121,6 +121,7 @@ async function canonicalLoader({ params, request }: LoaderFunctionArgs) {
 	const { credits, ...rest } = profile
 	const data = {
 		profile: rest,
+		traitLabels: personTraitLabels(rest.signature, filters.trait),
 		filters,
 		facets,
 		total: items.length,
@@ -293,8 +294,6 @@ export default function PersonPage() {
 
 // --- Shared helpers ---
 
-const traitLabel = (key: string) => FINGERPRINT_META[key]?.label ?? key.replace(/_/g, " ")
-const traitEmoji = (key: string) => FINGERPRINT_META[key]?.emoji ?? ""
 const titleHref = (c: { media_type: string; tmdb_id: number; title: string }) =>
 	`/${c.media_type}/${c.tmdb_id}-${titleToDashed(canonicalMediaTitle(c))}`
 const HERO_BACKDROP_SIZES: SizeRule[] = [[null, "100vw"]]
@@ -773,9 +772,11 @@ function TraitCards({ data }: { data: Data }) {
 						>
 							<div className="flex items-center gap-2">
 								<span className="text-xl" aria-hidden>
-									{traitEmoji(t.key)}
+									{data.traitLabels[t.key].emoji}
 								</span>
-								<span className="text-sm font-semibold leading-tight">{traitLabel(t.key)}</span>
+								<span className="text-sm font-semibold leading-tight">
+									{data.traitLabels[t.key].label}
+								</span>
 							</div>
 							<div className="mt-2 flex items-baseline gap-1.5">
 								<span className="text-xl font-black tabular-nums">{t.value.toFixed(1)}</span>
@@ -807,10 +808,12 @@ function TraitCards({ data }: { data: Data }) {
 								className="flex items-center gap-3 rounded-lg border border-dashed border-gray-700 px-3 py-2"
 							>
 								<span className="text-xl opacity-60 grayscale" aria-hidden>
-									{traitEmoji(t.key)}
+									{data.traitLabels[t.key].emoji}
 								</span>
 								<div className="min-w-0 flex-1">
-									<div className="truncate text-sm text-gray-300">{traitLabel(t.key)}</div>
+									<div className="truncate text-sm text-gray-300">
+										{data.traitLabels[t.key].label}
+									</div>
 									<div className="relative mt-1 h-1 rounded-full bg-gray-700">
 										<div
 											className="absolute h-full rounded-full"
@@ -1004,7 +1007,7 @@ function FilterBox({ data }: { data: Data }) {
 							preventScrollReset
 							className="font-bold text-amber-400"
 						>
-							{traitEmoji(f.trait)} Strong {traitLabel(f.trait)}{" "}
+							{data.traitLabels[f.trait].emoji} Strong {data.traitLabels[f.trait].label}{" "}
 							<span className="font-normal text-gray-400">(remove)</span>
 						</PersonFilterButton>
 					</div>
@@ -1186,4 +1189,11 @@ function Titles({ data }: { data: Data }) {
 export const loader = presentCatalogLoader(canonicalLoader, { live: true })
 
 // Page changes read this route's data from the browser's cache when they can (docs/navigation-cache.md).
-export const clientLoader = cachedClientLoader("routes/person.$personKey")
+const loadPerson = cachedClientLoader("routes/person.$personKey")
+export async function clientLoader(args: Parameters<typeof loadPerson>[0]) {
+	const data = (await loadPerson(args)) as Data
+	if (data.traitLabels) return data
+	// Another replica may still serve the previous loader shape during a rolling release.
+	const { personTraitLabels } = await import("~/ui/person/trait-labels")
+	return { ...data, traitLabels: personTraitLabels(data.profile.signature, data.filters.trait) }
+}
