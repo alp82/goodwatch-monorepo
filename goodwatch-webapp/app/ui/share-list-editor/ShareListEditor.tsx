@@ -3,15 +3,12 @@
 // Edit, the design and color pickers, the save status, and Share: one row at 1024 px and wider, two rows below (Lists,
 // Edit and Share, then the pickers). The toolbar has the page width of the profile header and tab row; the page keeps
 // the site's background.
-import { ChevronLeftIcon, PencilSquareIcon } from "@heroicons/react/24/outline"
-import { Link } from "@remix-run/react"
+import { PencilSquareIcon } from "@heroicons/react/24/outline"
+import { BackToLists } from "~/ui/share-lists/ListToolbar"
 import { type CSSProperties, useState } from "react"
 import { CardFonts } from "~/ui/share-card/ScaledCard"
 import type { CardTitle } from "~/ui/share-card/model"
-import {
-	CardPreview,
-	CardPreviewStyles,
-} from "~/ui/share-list-editor/CardPreview"
+import { CardPreview, CardPreviewStyles } from "~/ui/share-list-editor/CardPreview"
 import { EditorDialogs } from "~/ui/share-list-editor/Dialogs"
 import { DesignPicker, ThemePicker } from "~/ui/share-list-editor/Pickers"
 import { Ranking } from "~/ui/share-list-editor/Ranking"
@@ -23,12 +20,7 @@ import {
 	useAutosave,
 } from "~/ui/share-list-editor/autosave"
 import type { ListDraft } from "~/ui/share-list-editor/list-state"
-import {
-	DragGhost,
-	PromptLinks,
-	TitleInput,
-	sectionLabel,
-} from "~/ui/share-list-editor/parts"
+import { DragGhost, PromptLinks, TitleInput, sectionLabel } from "~/ui/share-list-editor/parts"
 import { type Editor, useEditor } from "~/ui/share-list-editor/useEditor"
 
 /**
@@ -39,27 +31,6 @@ export type ShareAction = (draft: ListDraft) => Promise<string | null>
 
 /** The page width, as the profile header and the tab row (ui/my-pages/bits.tsx). */
 const WRAP = "mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8"
-
-/**
- * The Profile tab row's height, as a CSS variable for the offsets under the sticky rows (the h-16 header, the visitor
- * bar's --visitor-bar-h, then this row). The values are TAB_ROW_PX.one in ui/navigation/AreaTabs.tsx, written out
- * because Tailwind only sees literal class names.
- */
-export const TAB_ROW_H = "[--tab-row-h:45px] lg:[--tab-row-h:49px]"
-
-/** The toolbar's Lists key: back to the lists. */
-export function BackToLists({ href }: { href: string }) {
-	return (
-		<Link
-			to={href}
-			prefetch="intent"
-			className="flex shrink-0 items-center gap-1 rounded-full bg-white/10 py-2.5 pr-4 pl-3 font-bold text-white transition hover:bg-white/15"
-		>
-			<ChevronLeftIcon className="size-5" aria-hidden />
-			Lists
-		</Link>
-	)
-}
 
 // The card never gets narrower than this ratio, so the back panel has room on square and wide cards.
 const MIN_BOX_RATIO = 0.62
@@ -202,10 +173,7 @@ export function ShareListEditor({
 					>
 						<div className="flex shrink-0 flex-col gap-2">
 							<div className={sectionLabel}>Title</div>
-							<TitleInput
-								ed={ed}
-								className="rounded-2xl bg-white/10 px-4 py-2.5 text-lg"
-							/>
+							<TitleInput ed={ed} className="rounded-2xl bg-white/10 px-4 py-2.5 text-lg" />
 							<PromptLinks ed={ed} />
 						</div>
 						<div className="flex shrink-0 flex-col gap-2">

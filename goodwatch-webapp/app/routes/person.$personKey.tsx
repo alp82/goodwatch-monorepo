@@ -49,8 +49,12 @@ import { canonicalMediaTitle } from "~/utils/media-presentation"
 import { buildMeta } from "~/utils/meta"
 import { goodwatchScoreDisplay, goodwatchVibeIndex } from "~/utils/ratings"
 import { scoreBandWordsFor } from "~/utils/score-bands"
-import { tmdbImageUrl } from "~/utils/tmdb-image"
+import { tmdbFluidImage, tmdbImageUrl } from "~/utils/tmdb-image"
+import { heroBackdropPath } from "~/ui/details/hero/hero-backdrop"
+import { HERO_TIMING, START_AFTER_PAINT } from "~/utils/start-after-paint"
 import type { SizeRule } from "~/utils/tmdb-image"
+
+export const handle = START_AFTER_PAINT
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -171,8 +175,29 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 			alt: text.alt,
 		},
 	}).filter((tag) => !("script:ld+json" in tag))
+	const hero = personBackdrop(data.knownFor)
+	const preload = hero
+		? tmdbFluidImage("backdrop", heroBackdropPath(hero), HERO_BACKDROP_SIZES, {
+				fallbackWidth: 1280,
+				maxWidth: 1280,
+			})
+		: null
 	return [
 		...tags,
+		...(preload
+			? [
+					{
+						tagName: "link" as const,
+						rel: "preload",
+						as: "image",
+						href: preload.src,
+						imageSrcSet: preload.srcSet,
+						imageSizes: preload.sizes,
+						crossOrigin: "anonymous",
+						fetchpriority: "high",
+					},
+				]
+			: []),
 		{
 			"script:ld+json": {
 				"@context": "https://schema.org",
@@ -273,6 +298,8 @@ const traitEmoji = (key: string) => FINGERPRINT_META[key]?.emoji ?? ""
 const titleHref = (c: { media_type: string; tmdb_id: number; title: string }) =>
 	`/${c.media_type}/${c.tmdb_id}-${titleToDashed(canonicalMediaTitle(c))}`
 const HERO_BACKDROP_SIZES: SizeRule[] = [[null, "100vw"]]
+const personBackdrop = (credits: Pick<PersonCredit, "backdrop_path">[]) =>
+	credits.find((credit) => credit.backdrop_path)?.backdrop_path
 const AMBER = "#fbbf24" // more than the catalog average
 const SKY = "#38bdf8" // less than the catalog average
 const MUTED = "#6b7280"
@@ -384,7 +411,7 @@ function Section({
 
 function Hero({ data, children }: { data: Data; children?: React.ReactNode }) {
 	const p = data.profile
-	const hero = data.knownFor.find((c) => c.backdrop_path)
+	const hero = personBackdrop(data.knownFor)
 	return (
 		<header className="relative isolate overflow-hidden">
 			{hero && (
@@ -392,7 +419,9 @@ function Hero({ data, children }: { data: Data; children?: React.ReactNode }) {
 				// the viewport, not at the width it is cropped from.
 				<TmdbImage
 					kind="backdrop"
-					path={hero.backdrop_path as string}
+					path={heroBackdropPath(hero)}
+					{...HERO_TIMING}
+					crossOrigin="anonymous"
 					sizes={HERO_BACKDROP_SIZES}
 					maxWidth={1280}
 					priority="high"

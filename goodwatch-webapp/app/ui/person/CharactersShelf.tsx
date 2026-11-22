@@ -9,6 +9,7 @@ import { PortraitImg, TvdbCredit } from "~/ui/character-quick-view/parts"
 import { roleEntry } from "~/ui/character-quick-view/portraits"
 import { RowArrows, useStepRow } from "~/ui/row-arrows"
 import { SectionHeading } from "~/ui/heading"
+import { NearSection, useSectionNear } from "~/ui/details/below-fold"
 
 export function CharactersShelf({
 	person,
@@ -24,7 +25,7 @@ export function CharactersShelf({
 	const shelf = roles.map((role) => ({ role, entry: roleEntry(role, person) }))
 	const entries = shelf.map((s) => s.entry)
 	return (
-		<section data-feedback-area="characters" className="min-w-0">
+		<NearSection data-feedback-area="characters" className="min-w-0">
 			<div className="flex items-center gap-3">
 				<SectionHeading>Characters</SectionHeading>
 				<span className="text-gray-400">{roles.length}</span>
@@ -63,7 +64,7 @@ export function CharactersShelf({
 				))}
 			</div>
 			<TvdbCredit className="mt-1" />
-		</section>
+		</NearSection>
 	)
 }
 
@@ -77,6 +78,15 @@ function RoleCard({
 	entry: CharacterEntry
 	siblings: CharacterEntry[]
 }) {
+	// The page can have several screens of awards before these third-party portraits.
+	const near = useSectionNear()
+	const portrait = (
+		<PortraitImg
+			src={role.image}
+			alt={`${entry.personName} as ${role.character}`}
+			className="absolute inset-0 h-full w-full"
+		/>
+	)
 	const line = `${role.title}${role.year ? ` · ${role.year}` : ""}`
 	return (
 		<span className="group/card @container/card relative block w-full min-w-0">
@@ -87,11 +97,7 @@ function RoleCard({
 				className="block w-full select-none overflow-hidden rounded-lg border-2 border-gray-800 bg-gray-900 text-left can-hover:hover:border-amber-700/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white @min-[8rem]/card:border-4"
 			>
 				<span className="relative block aspect-[2/3]">
-					<PortraitImg
-						src={role.image}
-						alt={`${entry.personName} as ${role.character}`}
-						className="absolute inset-0 h-full w-full"
-					/>
+					{near ? portrait : <noscript>{portrait}</noscript>}
 					<span
 						aria-hidden
 						className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-gray-950 via-gray-950/85 to-transparent px-1.5 pt-6 pb-1.5 @min-[7.5rem]/card:px-2 @min-[7.5rem]/card:pt-8 @min-[7.5rem]/card:pb-2"

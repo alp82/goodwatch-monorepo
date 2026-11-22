@@ -30,7 +30,7 @@ import {
 	shareListEditPath,
 } from "~/ui/share-card/links"
 import { type CardTitle, THEMES } from "~/ui/share-card/model"
-import { BackToLists, TAB_ROW_H } from "~/ui/share-list-editor/ShareListEditor"
+import { BackToLists, TAB_ROW_H } from "~/ui/share-lists/ListToolbar"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { countryFlagUrl } from "~/utils/country-flag"
 import { titleToDashed } from "~/utils/helpers"

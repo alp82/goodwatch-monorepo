@@ -5,25 +5,12 @@
 // come from their ratings, guests send their ranked ratings as ?titles=movie:603,show:1399.
 // A new list saves as a draft in this browser until it's shared; a visit that starts fresh doesn't restore it.
 // ?share=1 is where sign-up and sign-in return to: it shares the restored draft (see ShareFlow).
-import {
-	type LoaderFunctionArgs,
-	type MetaFunction,
-	json,
-} from "@remix-run/node"
+import { type LoaderFunctionArgs, type MetaFunction, json } from "@remix-run/node"
 import { useLoaderData, useLocation, useSearchParams } from "@remix-run/react"
 import { useEffect, useState } from "react"
-import {
-	GUEST,
-	member,
-	moveResponse,
-	oldToNew,
-	tastePath,
-} from "~/domain/member-paths"
+import { GUEST, member, moveResponse, oldToNew, tastePath } from "~/domain/member-paths"
 import { presentCatalogLoader } from "~/server/media-payload.server"
-import {
-	prefillTitles,
-	topRatedEntries,
-} from "~/server/share-lists/prefill.server"
+import { prefillTitles, topRatedEntries } from "~/server/share-lists/prefill.server"
 import { getRemixSource } from "~/server/share-lists/remix.server"
 import {
 	type ListEntry,
@@ -44,10 +31,8 @@ import {
 } from "~/ui/share-card/model"
 import { PREFILL_CANDIDATES, prefillPrompt } from "~/ui/share-card/prefill"
 import { useShareFlow } from "~/ui/share-list-editor/ShareFlow"
-import {
-	ShareListEditor,
-	TAB_ROW_H,
-} from "~/ui/share-list-editor/ShareListEditor"
+import { ShareListEditor } from "~/ui/share-list-editor/ShareListEditor"
+import { TAB_ROW_H } from "~/ui/share-lists/ListToolbar"
 import { isComplete, readBrowserDraft } from "~/ui/share-list-editor/autosave"
 import type { ListDraft } from "~/ui/share-list-editor/list-state"
 import { getUserIdFromRequest, useUser } from "~/utils/auth"
@@ -92,11 +77,7 @@ async function canonicalLoader({ request }: LoaderFunctionArgs) {
 	const profile = userId ? await getCachedProfileByUserId(userId) : null
 	// /lists/new with a handle, or someone else's /u/:handle/lists/new: on to the viewer's own editor.
 	const url = new URL(request.url)
-	const move = oldToNew(
-		url.pathname,
-		url.search,
-		userId ? member(profile?.handle ?? null) : GUEST,
-	)
+	const move = oldToNew(url.pathname, url.search, userId ? member(profile?.handle ?? null) : GUEST)
 	if (move) return moveResponse(move)
 	const [quickPicks, source, rated] = await Promise.all([
 		getQuickPicks(),
@@ -133,11 +114,7 @@ async function canonicalLoader({ request }: LoaderFunctionArgs) {
 			// the row for guests; the profile layout draws the chrome at /u/:handle/lists/new).
 			noHandle: userId != null && !profile?.handle,
 			// The toolbar's Lists key: the profile's Lists tab, My lists without a handle, none for guests.
-			back: profile?.handle
-				? tastePath(profile.handle, "lists")
-				: userId
-					? "/lists/mine"
-					: null,
+			back: profile?.handle ? tastePath(profile.handle, "lists") : userId ? "/lists/mine" : null,
 		},
 		{ headers: { "Cache-Control": "private, no-store" } },
 	)
@@ -147,8 +124,7 @@ async function canonicalLoader({ request }: LoaderFunctionArgs) {
 export const meta: MetaFunction = () => {
 	const pageMeta: PageMeta = {
 		title: "Make your top 5 · GoodWatch",
-		description:
-			"Rank your five favorite movies or shows and share them as a card.",
+		description: "Rank your five favorite movies or shows and share them as a card.",
 		url: "https://goodwatch.app/lists/new",
 		image: "https://goodwatch.app/og/lists/new.jpg",
 		alt: "Rank your top 5 movies or shows on GoodWatch and share them",
