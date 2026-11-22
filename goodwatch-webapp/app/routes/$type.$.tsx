@@ -21,7 +21,7 @@ import { browseRedirect, finalAddress, legacyGenreFallback } from "~/domain/brow
 import { loadAddEntry } from "~/server/browse/add-entry.server"
 import { peekOf } from "~/server/browse/blend.server"
 import { loadMarks } from "~/server/browse/card-marks.server"
-import { indexPageOf, loadIndexPage } from "~/server/browse/index-pages.server"
+import { indexPageOf, loadIndexPage, pageCards } from "~/server/browse/index-pages.server"
 import { loadPlacePage } from "~/server/browse/place-page.server"
 import { PlacesNotReady, openPlaces } from "~/server/browse/places.server"
 import { streamingRoute } from "~/server/browse/streaming-page.server"
@@ -35,6 +35,9 @@ import { TropesRoute } from "~/ui/browse/tropes/TropesRoute"
 import { crumbsOf } from "~/ui/browse/place/PlaceHead"
 import { StreamingPage, streamingMeta } from "~/ui/browse/streaming/StreamingRoute"
 import { buildMeta } from "~/utils/meta"
+import { START_AFTER_PAINT } from "~/utils/start-after-paint"
+
+export const handle = START_AFTER_PAINT
 
 const trimmed = (pathname: string) => pathname.replace(/\/+$/, "") || "/"
 
@@ -96,8 +99,7 @@ const canonicalLoader = async ({ params, request }: LoaderFunctionArgs) => {
 			address,
 			data,
 			viewer: atlas.viewer,
-			marks: await loadMarks(atlas),
-			entry: await loadAddEntry(atlas, address),
+			marks: await loadMarks(atlas, data.room.goesWith),
 			title: data.room.title,
 			description:
 				(address.parts.length === 1 ? copyFor(kind, lead.family, lead.slug)?.lede : null) ??
@@ -128,7 +130,7 @@ const canonicalLoader = async ({ params, request }: LoaderFunctionArgs) => {
 			address,
 			index: page,
 			viewer: atlas.viewer,
-			marks: await loadMarks(atlas),
+			marks: await loadMarks(atlas, pageCards(page)),
 			entry: await loadAddEntry(atlas, address),
 			title: single ?? `${kindLabel(kind)} by ${fam?.one.toLowerCase() ?? ""}`,
 			description:
@@ -200,7 +202,7 @@ export default function BrowsePage() {
 			</BrowsePageProvider>
 		)
 	return (
-		<BrowsePageProvider value={{ marks: data.marks, entry: data.entry }}>
+		<BrowsePageProvider value={{ marks: data.marks, entry: null }}>
 			{/* The Browse row adds 44px under the tab row from `lg`: a sticky bar inside the page sits under it. */}
 			<div className="pb-16" style={{ "--browse-head-top": "calc(4rem + 93px)" } as CSSProperties}>
 				<BrowseRow address={data.address} streamingCountry={data.viewer.country.toLowerCase()} />

@@ -8,13 +8,15 @@ import { copyFor } from "~/domain/browse/copy"
 import { notFound } from "~/domain/browse/not-found"
 import { cachedClientLoader } from "~/navigation/instant-navigation"
 import { presentCatalogLoader } from "~/server/media-payload.server"
-import { loadMarks } from "~/server/browse/card-marks.server"
+import { hubViewData } from "~/server/browse/hub/view-data"
 import { loadHubPage } from "~/server/browse/hub/hub.server"
 import { PlacesNotReady, openPlaces } from "~/server/browse/places.server"
 import { BrowseRow } from "~/ui/browse/BrowseRow"
 import { HubPage } from "~/ui/browse/hub/HubPage"
-import { BrowsePageProvider } from "~/ui/browse/page-context"
 import { buildMeta } from "~/utils/meta"
+import { START_AFTER_PAINT } from "~/utils/start-after-paint"
+
+export const handle = START_AFTER_PAINT
 
 const canonicalLoader = async ({ params, request }: LoaderFunctionArgs) => {
 	const kind = kindOfSeg(params.type)
@@ -35,8 +37,7 @@ const canonicalLoader = async ({ params, request }: LoaderFunctionArgs) => {
 	return {
 		address,
 		viewer: atlas.viewer,
-		data: await loadHubPage({ request, url, address, atlas }),
-		marks: await loadMarks(atlas),
+		data: hubViewData(await loadHubPage({ request, url, address, atlas })),
 	}
 }
 
@@ -66,14 +67,12 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 }
 
 export default function BrowseHub() {
-	const { address, viewer, data, marks } = useLoaderData<typeof loader>()
+	const { address, viewer, data } = useLoaderData<typeof loader>()
 	return (
-		<BrowsePageProvider value={{ marks, entry: null }}>
-			<div className="pb-16" style={{ "--browse-head-top": "calc(4rem + 93px)" } as CSSProperties}>
-				<BrowseRow address={address} streamingCountry={viewer.country.toLowerCase()} />
-				<HubPage address={address} viewer={viewer} to={to} data={data} />
-			</div>
-		</BrowsePageProvider>
+		<div className="pb-16" style={{ "--browse-head-top": "calc(4rem + 93px)" } as CSSProperties}>
+			<BrowseRow address={address} streamingCountry={viewer.country.toLowerCase()} />
+			<HubPage address={address} viewer={viewer} to={to} data={data} />
+		</div>
 	)
 }
 

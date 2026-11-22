@@ -53,3 +53,17 @@ export async function loadIndexPage(page: IndexPage, args: BrowseLoadArgs) {
 }
 
 export type IndexPageData = Awaited<ReturnType<typeof loadIndexPage>>
+
+/** The place cards that draw on the shared identity catalog. The country room renders its own onward links. */
+export function pageCards(page: IndexPageData) {
+	switch (page.page) {
+		case "places":
+			return page.data.countries
+		case "era":
+			return page.data.rooms.goesWith
+		case "service":
+			return page.data.goesWith
+		default:
+			return []
+	}
+}

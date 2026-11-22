@@ -20,7 +20,7 @@ import {
 } from "react"
 import { countryFlagUrl } from "~/utils/country-flag"
 import type { Kind } from "~/domain/browse/address"
-import type { BestRow, PlaceRef, ShowTitle, TraitWord } from "~/domain/browse/types"
+import type { PlaceRef, TraitWord } from "~/domain/browse/types"
 import { EASE, FOCUS, poster } from "~/ui/browse/index"
 import { GLIDE_T, QUICK_T } from "~/ui/browse/motion"
 import { FlagShape } from "~/ui/browse/world-map/FlagShape"
@@ -28,15 +28,8 @@ import { flagBox, flagCover } from "~/ui/browse/world-map/flagBox"
 import { VIEW_BOX, WORLD_SHAPES } from "~/ui/browse/world-map/shapes"
 import { PhraseText } from "~/ui/browse/blend/parts"
 import { phrase } from "~/domain/browse/phrase"
-import type {
-	BestOf,
-	MiniGenre,
-	MiniMood,
-	MiniOccasion,
-	MiniPlace,
-	MiniService,
-	TropeTag,
-} from "~/server/browse/hub/hub.server"
+import type { TropeTag } from "~/server/browse/hub/hub.server"
+import type { HubViewData } from "~/server/browse/hub/view-data"
 import { count } from "~/domain/browse/count"
 import { nice } from "~/ui/browse/hub/pieces"
 
@@ -140,7 +133,13 @@ function Swap({
 // What a place is: words, tropes, posters
 
 /** The fingerprint words that set a place apart, each in its family's color. */
-export function Words({ traits, className = "" }: { traits: TraitWord[]; className?: string }) {
+export function Words({
+	traits,
+	className = "",
+}: {
+	traits: Pick<TraitWord, "key" | "word" | "color">[]
+	className?: string
+}) {
 	if (!traits.length) return null
 	return (
 		<p className={`text-[15px] leading-snug font-semibold ${className}`}>
@@ -208,7 +207,7 @@ export function PosterFan({
 	sizes,
 	className = "",
 }: {
-	titles: ShowTitle[]
+	titles: HubViewData["moods"][number]["titles"]
 	href: string
 	label: string
 	size?: keyof typeof FAN
@@ -276,10 +275,10 @@ const hot = (set: () => void, on = false) => ({
 // Moods: the lattice
 
 /** Columns from lightest to darkest, each from its calmest mood down to its most intense (no empty cells). */
-function cellsOf(moods: MiniMood[], cols: number) {
+function cellsOf(moods: HubViewData["moods"], cols: number) {
 	const n = moods.length
 	const byTone = [...moods].sort((a, b) => a.tone - b.tone || a.pace - b.pace)
-	const out: { mood: MiniMood; row: number; col: number }[] = []
+	const out: { mood: HubViewData["moods"][number]; row: number; col: number }[] = []
 	for (let c = 0; c < cols; c++)
 		byTone
 			.slice(Math.round((c * n) / cols), Math.round(((c + 1) * n) / cols))
@@ -294,7 +293,7 @@ export function MoodLattice({
 	href,
 	tropeHref,
 }: {
-	moods: MiniMood[]
+	moods: HubViewData["moods"]
 	start: string
 	href: (p: PlaceRef) => string
 	tropeHref: (slug: string) => string
@@ -408,7 +407,7 @@ export function EraRibbon({
 	href,
 	tropeHref,
 }: {
-	decades: MiniPlace[]
+	decades: HubViewData["decades"]
 	href: (p: PlaceRef) => string
 	tropeHref: (slug: string) => string
 }) {
@@ -547,7 +546,13 @@ const DWELL_MS = 7000
  * at the tile (or focusing into it) pauses it; nothing else does, and there's no pause button. The fill runs in one
  * frame loop that writes the line's scale, so nothing re-renders while it fills.
  */
-export function BestSwitcher({ lists, href }: { lists: BestOf[]; href: (l: BestOf) => string }) {
+export function BestSwitcher({
+	lists,
+	href,
+}: {
+	lists: HubViewData["lists"]
+	href: (l: HubViewData["lists"][number]) => string
+}) {
 	const reduce = useReducedMotion()
 	const [i, setI] = useState(0)
 	const [hovered, setHovered] = useState(false)
@@ -659,7 +664,15 @@ export function BestSwitcher({ lists, href }: { lists: BestOf[]; href: (l: BestO
 	)
 }
 
-function BestLine({ row, place, lead }: { row: BestRow; place: number; lead: boolean }) {
+function BestLine({
+	row,
+	place,
+	lead,
+}: {
+	row: HubViewData["lists"][number]["rows"][number]
+	place: number
+	lead: boolean
+}) {
 	const c = row.title.card
 	return (
 		<li>
@@ -857,7 +870,7 @@ export function FlagMap({
 	href,
 	tropeHref,
 }: {
-	countries: MiniPlace[]
+	countries: HubViewData["countries"]
 	mapped: string[]
 	href: (p: PlaceRef) => string
 	tropeHref: (slug: string) => string
@@ -1212,7 +1225,7 @@ function FlagRail({
 	href,
 	onPick,
 }: {
-	countries: MiniPlace[]
+	countries: HubViewData["countries"]
 	code: string
 	href: (p: PlaceRef) => string
 	onPick: (code: string) => void
@@ -1297,7 +1310,7 @@ export function GenreShelf({
 	kindHref,
 	tropeHref,
 }: {
-	genres: MiniGenre[]
+	genres: HubViewData["genres"]
 	kind: Kind
 	href: (p: PlaceRef) => string
 	kindHref: (p: PlaceRef, id: string) => string
@@ -1416,7 +1429,7 @@ export function GenreShelf({
 }
 
 /** A kind's posters stacked, offset, inside its link (decoration of the kind, not links of their own). */
-function KindStack({ titles }: { titles: ShowTitle[] }) {
+function KindStack({ titles }: { titles: HubViewData["moods"][number]["titles"] }) {
 	const shown = titles.filter((t) => t.card.poster_path).slice(0, 3)
 	return (
 		<span aria-hidden className="relative block h-[4.5rem] w-[5.25rem] shrink-0">
@@ -1451,7 +1464,7 @@ export function ServiceRow({
 	kind,
 	href,
 }: {
-	services: MiniService[]
+	services: HubViewData["services"]
 	kind: Kind
 	href: (p: PlaceRef) => string
 }) {
@@ -1496,7 +1509,7 @@ export function Occasions({
 	kind,
 	href,
 }: {
-	occasions: MiniOccasion[]
+	occasions: HubViewData["occasions"]
 	kind: Kind
 	href: (parts: PlaceRef[]) => string
 }) {

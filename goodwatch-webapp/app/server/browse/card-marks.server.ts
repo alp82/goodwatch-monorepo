@@ -95,8 +95,28 @@ export async function marksOf(atlas: Places): Promise<Marks> {
 
 const memo = createVersionMemo<Promise<Marks>>(6)
 
-/** Every place's identity, once per snapshot version, kind and streaming country. */
-export function loadMarks(atlas: Places): Promise<Marks> {
+/** The identities used by this page's place cards, selected from the existing per-version catalog. */
+export async function loadMarks(
+	atlas: Places,
+	cards: readonly { place: PlaceRef }[],
+): Promise<Marks | null> {
+	if (!cards.length) return null
 	const version = String(getTitleSnapshot()?.version ?? "none")
-	return memo.get(version, `${atlas.kind}|${atlas.country}`, () => marksOf(atlas))
+	const all = await memo.get(version, `${atlas.kind}|${atlas.country}`, () => marksOf(atlas))
+	const keys = new Set(cards.map(({ place }) => `${place.family}:${place.slug}`))
+	const select = <T>(record: Record<string, T>, family?: Family): Record<string, T> =>
+		Object.fromEntries(
+			Object.entries(record).filter(([key]) => keys.has(family ? `${family}:${key}` : key)),
+		)
+	return {
+		bars: cards.some(({ place }) => place.family === "genre") ? all.bars : [],
+		decades: cards.some(({ place }) => place.family === "decade") ? all.decades : [],
+		words: select(all.words),
+		lines: select(all.lines),
+		genres: select(all.genres, "genre"),
+		moods: select(all.moods, "mood"),
+		kinds: select(all.kinds, "genre"),
+		rose: select(all.rose, "decade"),
+		goodAt: select(all.goodAt, "service"),
+	}
 }

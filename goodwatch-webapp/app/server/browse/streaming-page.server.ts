@@ -5,12 +5,13 @@
 // - A service's page (`/movies/streaming/us/netflix`) is a room page like a decade or a country: place-data.server.ts
 //   and ui/browse/room/RoomPage.tsx.
 import type { Address, Kind } from "~/domain/browse/address"
-import type { ShowTitle, TitleCard } from "~/domain/browse/types"
+import type { ShowTitle } from "~/domain/browse/types"
 import type { ServiceSort } from "~/domain/browse/streaming-stats"
 import { type FilterState, defaultFilterState, filterQuery } from "~/domain/filter-state"
 import { SHAPE_BY_CODE } from "~/ui/browse/world-map/geometry"
 import type { Places } from "./places.server"
 import { base } from "./rows.server"
+import { slim } from "./cards.server"
 import { streamingCountries, streamingDirectory } from "./streaming-stats.server"
 
 // ---------------------------------------------------------------------------------------------------------
@@ -78,19 +79,6 @@ function discoverHref(kind: Kind, country: string, ids: number[]): string {
 	return `/discover?${filterQuery(state, "popular", plain)}`
 }
 
-/** A title for decoration inside a card that is one link: the poster and its name only. */
-const slim = (t: ShowTitle): ShowTitle => ({
-	to: t.to,
-	card: {
-		key: t.card.key,
-		media_type: t.card.media_type,
-		tmdb_id: t.card.tmdb_id,
-		title: t.card.title,
-		poster_path: t.card.poster_path,
-		release_year: t.card.release_year,
-	} as TitleCard,
-})
-
 export async function loadStreamingIndex(
 	places: Places,
 	address: Address,
@@ -102,6 +90,9 @@ export async function loadStreamingIndex(
 		streamingCountries().catch(() => []),
 		streamingDirectory({ country: code, kind: places.kind, wellKnownRows: rows, sort }),
 	])
+	// A title may appear on several services. Fetch the picks together through the atlas's batched card reader.
+	const picks = [...new Set(dir.services.flatMap((s) => s.picks))]
+	const titles = new Map((await places.titlesOf(picks)).map((t) => [t.card.key, slim(t)]))
 	const services: StreamService[] = []
 	for (const s of dir.services)
 		services.push({
@@ -116,7 +107,7 @@ export async function loadStreamingIndex(
 			left: s.left,
 			great: dir.ready ? s.great : null,
 			popular: dir.ready ? s.popular : null,
-			picks: s.picks.length ? (await places.titlesOf(s.picks)).map(slim) : [],
+			picks: s.picks.flatMap((key) => titles.get(key) ?? []),
 		})
 	const all = countries.map((c) => countryOf(c.code))
 	return {

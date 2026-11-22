@@ -27,15 +27,15 @@ import {
 	ServiceRow,
 	Tile,
 } from "~/ui/browse/hub/tiles"
-import type { MiniData } from "~/server/browse/hub/hub.server"
+import type { HubViewData } from "~/server/browse/hub/view-data"
 
 /** a tile's line says what is in it, plainly ("1930s to 2020s"), no prose. */
-const eraLine = (decades: MiniData["decades"]) => {
+const eraLine = (decades: HubViewData["decades"]) => {
 	const names = decades.map((d) => d.place.label).sort()
 	return names.length > 1 ? `${names[0]} to ${names[names.length - 1]}` : `${names.length} decades`
 }
 
-export function HubPage({ data, address, to }: BrowseViewProps<MiniData>) {
+export function HubPage({ data, address, to }: BrowseViewProps<HubViewData>) {
 	const kind: Kind = address.kind
 	const noun = kindNoun(kind)
 	const room = (f: Family) => to(familyPage(kind, f))

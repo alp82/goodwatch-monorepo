@@ -79,7 +79,7 @@ export interface About {
 	count: number
 }
 
-export interface PlacePageData {
+interface BuiltPlacePage {
 	/** "About this selection". */
 	about: About
 	room: PlaceData
@@ -165,7 +165,48 @@ async function windowOf(
  * (no list state in the query) the page depends only on the catalog and the viewer's settings, so it is built once
  * per data version (page-cache.server); a single place is also shared across the fleet, a blend stays in-process.
  */
+export type PlacePageData = Omit<BuiltPlacePage, "room" | "dz"> & {
+	room: Pick<
+		PlaceData,
+		| "title"
+		| "parts"
+		| "copy"
+		| "more"
+		| "less"
+		| "essentials"
+		| "goesWith"
+		| "neighbors"
+		| "bestOne"
+	>
+	dz: Pick<DialsPlace, "lede" | "dials" | "field" | "print" | "standouts">
+}
+
 export async function loadPlacePage(args: BrowseLoadArgs): Promise<PlacePageData> {
+	const { room, dz, ...page } = await placeData(args)
+	return {
+		...page,
+		room: {
+			title: room.title,
+			parts: room.parts,
+			copy: room.copy,
+			more: room.more,
+			less: room.less,
+			essentials: room.essentials,
+			goesWith: room.goesWith,
+			neighbors: room.neighbors,
+			bestOne: room.bestOne,
+		},
+		dz: {
+			lede: dz.lede,
+			dials: dz.dials,
+			field: dz.field,
+			print: dz.print,
+			standouts: dz.standouts,
+		},
+	}
+}
+
+async function placeData(args: BrowseLoadArgs): Promise<BuiltPlacePage> {
 	if (args.url.search) return buildPlacePage(args)
 	let complete = true
 	return cachedPage(args.atlas, {
@@ -181,7 +222,7 @@ export async function loadPlacePage(args: BrowseLoadArgs): Promise<PlacePageData
 	})
 }
 
-async function buildPlacePage(args: BrowseLoadArgs): Promise<PlacePageData> {
+async function buildPlacePage(args: BrowseLoadArgs): Promise<BuiltPlacePage> {
 	const { atlas, address, url } = args
 	const parts = address.parts
 	const lead = parts[0]
