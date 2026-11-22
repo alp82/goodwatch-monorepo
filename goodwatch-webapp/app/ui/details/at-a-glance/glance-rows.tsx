@@ -6,30 +6,19 @@ import type { ReactNode } from "react"
 import { awardsRowValue } from "~/domain/title-award-list"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { TmdbImage } from "~/ui/TmdbImage"
-import {
-	type CharacterEntry,
-	CharacterLink,
-} from "~/ui/character-quick-view/context"
+import { type CharacterEntry, CharacterLink } from "~/ui/character-quick-view/context"
 import { PortraitImg } from "~/ui/character-quick-view/parts"
 import { useTitlePortraits } from "~/ui/character-quick-view/portraits"
 import { useSectionNear } from "~/ui/details/below-fold"
 import { CAPTION, initials } from "~/ui/details/page-ui"
-import {
-	castCharacter,
-	pageCastRows,
-} from "~/ui/details/people/cast-characters"
+import { castCharacter, pageCastRows } from "~/ui/details/people/cast-characters"
 import { usePeople } from "~/ui/details/people/usePeople"
 import { ageWord, countryName } from "~/ui/details/title-words"
 import type { TitleQuestion } from "~/ui/details/titleQuestions"
 import { personPath } from "~/utils/helpers"
 import { contentSummary } from "./content"
 import { factsLine, numbersTeaser } from "./facts"
-import {
-	CREW_PAGE_SIZE,
-	GLANCE_LABEL,
-	type GlanceRowId,
-	glanceRowIds,
-} from "./rows"
+import { CREW_PAGE_SIZE, GLANCE_LABEL, type GlanceRowId, glanceRowIds } from "./rows"
 
 export type { GlanceRowId } from "./rows"
 
@@ -81,11 +70,7 @@ export function useGlanceRows({
 			return {
 				id,
 				label,
-				value: (
-					<span className="text-white">
-						{awardsRowValue(media.award_results ?? [])}
-					</span>
-				),
+				value: <span className="text-white">{awardsRowValue(media.award_results ?? [])}</span>,
 				teaser: <span className={TEASE}>Wins and nominations by award</span>,
 			}
 		if (id === "glance-content") {
@@ -94,9 +79,7 @@ export function useGlanceRows({
 				id,
 				label,
 				value: <span className="text-white">{content?.value}</span>,
-				teaser: content?.verdict ? (
-					<span className={TEASE}>{content.verdict}</span>
-				) : undefined,
+				teaser: content?.verdict ? <span className={TEASE}>{content.verdict}</span> : undefined,
 			}
 		}
 		if (id === "glance-cast")
@@ -131,13 +114,10 @@ export function useGlanceRows({
  * (else the actor's photo), a link to the person page whose plain click opens the character quick view. Five on a phone.
  */
 function StarringFaces({ media }: { media: Media }) {
-	const portraits = useTitlePortraits(media.mediaType, media.details.tmdb_id)
-	const all = pageCastRows(media).map((row) =>
-		castCharacter(media, row, portraits, "faces"),
-	)
-	const siblings = all
-		.map((p) => p.entry)
-		.filter((e): e is CharacterEntry => e !== null)
+	const near = useSectionNear()
+	const portraits = useTitlePortraits(media.mediaType, media.details.tmdb_id, near)
+	const all = pageCastRows(media).map((row) => castCharacter(media, row, portraits, "faces"))
+	const siblings = all.map((p) => p.entry).filter((e): e is CharacterEntry => e !== null)
 	const faces = all.slice(0, 8)
 	const total = media.cast_total || media.cast?.length || 0
 	return (
@@ -175,9 +155,7 @@ function StarringFaces({ media }: { media: Media }) {
 				))}
 			</span>
 			{total > 3 && (
-				<span className="whitespace-nowrap text-[13px] text-gray-500">
-					and {total - 3} more
-				</span>
+				<span className="whitespace-nowrap text-[13px] text-gray-500">and {total - 3} more</span>
 			)}
 		</span>
 	)
@@ -215,19 +193,13 @@ function MakersValue({ media }: { media: Media }) {
 		<span className="text-white">
 			{lead.length > 0 && (
 				<>
-					<span className="text-gray-400">
-						{show ? "Created by " : "Directed by "}
-					</span>
-					<span className="font-semibold">
-						{lead.map((p) => p.name).join(", ")}
-					</span>
+					<span className="text-gray-400">{show ? "Created by " : "Directed by "}</span>
+					<span className="font-semibold">{lead.map((p) => p.name).join(", ")}</span>
 				</>
 			)}
 			{writers && (
 				<>
-					<span className="text-gray-400">
-						{lead.length ? ", written with " : "Written by "}
-					</span>
+					<span className="text-gray-400">{lead.length ? ", written with " : "Written by "}</span>
 					<span className="font-semibold">{writers}</span>
 				</>
 			)}
@@ -254,8 +226,7 @@ function MakersTeaser({ media }: { media: Media }) {
 		pageSize: CREW_PAGE_SIZE,
 		enabled: near,
 	})
-	if (!crew.ready)
-		return <span className={TEASE}>The whole crew by department</span>
+	if (!crew.ready) return <span className={TEASE}>The whole crew by department</span>
 	const named = TEASE_JOBS.map(([job, word]) => {
 		const p = crew.rows.find((r) => r.roles.includes(job))
 		return p ? `${p.name} (${word})` : null

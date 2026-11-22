@@ -197,7 +197,7 @@ export function MovieTvCard({
 		return () => keeper.release(kept)
 	}, [tileShown, keeper, mediaType, tmdbId, title])
 
-	const award = useAwardMark(mediaType, details.tmdb_id)
+	const award = useAwardMark(mediaType, details.tmdb_id, frame)
 
 	const href =
 		hrefOverride ??

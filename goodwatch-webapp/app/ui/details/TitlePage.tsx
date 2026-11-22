@@ -75,7 +75,7 @@ import Breadcrumbs from "~/ui/nav/Breadcrumbs"
 import type { Crumb } from "~/ui/nav/breadcrumb-trail"
 import { TalkedAboutNowSlot } from "~/ui/talked-about-now/TalkedAboutNowSlot"
 import { HEADER_GENRE_COUNT } from "~/utils/title-extras"
-import { tmdbImageUrl } from "~/utils/tmdb-image"
+import { heroBackdropSource } from "~/ui/details/hero/hero-backdrop"
 
 export interface TitlePageProps {
 	media: MovieResult | ShowResult
@@ -466,8 +466,8 @@ export function TitlePage(props: TitlePageProps) {
 	const hasAwards = awardWins > 0
 	const title = presentedText(details, "title", details.title)
 	const withCard = hasVideo(media)
-	// Blurred by 64 px across the whole page, so the smallest backdrop is enough.
-	const pageBackdrop = details.backdrop_path ? tmdbImageUrl(details.backdrop_path, "w300") : ""
+	// Reuse the hero image for the page tint, including its CORS mode and responsive source.
+	const pageBackdrop = details.backdrop_path ? heroBackdropSource(details.backdrop_path) : null
 	// The score ring on its own row above the sites' chips, beside the poster from lg up and full width under the
 	// header on a phone.
 	const ratings = (className: string, ringSize: number) => (
@@ -485,15 +485,13 @@ export function TitlePage(props: TitlePageProps) {
 			{/* "overview" is the opener's id from before, so old links land on the top of the page. */}
 			<div id="overview" className="relative isolate scroll-mt-16 pb-28">
 				{pageBackdrop && (
-					<div
+					<img
+						{...pageBackdrop}
+						alt=""
 						aria-hidden="true"
-						className="pointer-events-none absolute inset-0 -z-10"
-						style={{
-							backgroundImage: `url(${pageBackdrop})`,
-							backgroundSize: "cover",
-							backgroundPosition: "center",
-							filter: "blur(64px) brightness(0.15)",
-						}}
+						decoding="async"
+						crossOrigin="anonymous"
+						className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover blur-[64px] brightness-[.15]"
 					/>
 				)}
 				{props.trail.length > 0 && (

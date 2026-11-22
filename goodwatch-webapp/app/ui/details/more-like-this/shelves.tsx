@@ -1,19 +1,14 @@
 // One shelf per reason a title is like this one, all the same Shelf: what each says, where its titles come from
 // (sources.tsx), its control, and where its Show all goes in the expanded view (discover-links.ts).
 import { ChevronRightIcon } from "@heroicons/react/20/solid"
-import { Link } from "@remix-run/react"
-import { type ReactNode, useState } from "react"
-import RelatedMap, { useRelatedMap } from "~/ui/related-map/RelatedMap"
+import { Link, useMatches } from "@remix-run/react"
+import { type ReactNode, Suspense, lazy, useState } from "react"
+import type { RelatedMapData } from "~/server/related-map.server"
+import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import { personPath } from "~/utils/helpers"
 import { feelsControls, feelsNote, feelsTitle } from "./FeelsControl"
 import { ACTION, Shelf } from "./Shelf"
-import {
-	feelsLink,
-	genreLink,
-	personLink,
-	seriesLink,
-	similarLink,
-} from "./discover-links"
+import { feelsLink, genreLink, personLink, seriesLink, similarLink } from "./discover-links"
 import {
 	type PersonOption,
 	type Sources,
@@ -21,6 +16,19 @@ import {
 	useGenreShelf,
 	usePersonShelf,
 } from "./sources"
+
+const loadMap = reloadOnStaleChunk(() => import("~/ui/related-map/RelatedMap"))
+const RelatedMap = lazy(loadMap)
+const preloadMap = () => void loadMap().catch(() => {})
+
+/** The section's data from the title route's loader, or undefined when the page shows the related titles carousel. */
+function useRelatedMap(): RelatedMapData | undefined {
+	for (const match of useMatches()) {
+		const data = match.data as { relatedMap?: RelatedMapData } | undefined
+		if (data?.relatedMap) return data.relatedMap
+	}
+	return undefined
+}
 
 export function SeriesShelf({ src }: { src: Sources }) {
 	const s = src.series
@@ -100,6 +108,8 @@ export function SimilarShelf({ src }: { src: Sources }) {
 				mapData ? (
 					<button
 						type="button"
+						onPointerEnter={preloadMap}
+						onFocus={preloadMap}
 						onClick={() => setMapOpen(!mapOpen)}
 						aria-expanded={mapOpen}
 						className={ACTION}
@@ -116,9 +126,11 @@ export function SimilarShelf({ src }: { src: Sources }) {
 			discover={similarLink(src)}
 			reason={`Close to ${src.title} in everything it does`}
 		>
-			{mapOpen && (
+			{mapOpen && mapData && (
 				<div className="mt-6 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-gray-100">
-					<RelatedMap media={src.media} />
+					<Suspense fallback={<output>Loading map…</output>}>
+						<RelatedMap media={src.media} map={mapData} />
+					</Suspense>
 				</div>
 			)}
 		</Shelf>
@@ -145,11 +157,7 @@ export function PersonShelf({
 			id="shelf-person"
 			kind={`Same ${option.role.toLowerCase()}`}
 			title={
-				<Link
-					to={to}
-					prefetch="intent"
-					className="transition-colors hover:text-amber-300"
-				>
+				<Link to={to} prefetch="intent" className="transition-colors hover:text-amber-300">
 					More from {option.name}
 				</Link>
 			}
@@ -165,11 +173,7 @@ export function PersonShelf({
 			discover={personLink(option)}
 			listKey={option.key}
 			busy={work.busy}
-			empty={
-				work.loaded
-					? `Nothing else of ${option.name}'s here yet`
-					: "Finding them…"
-			}
+			empty={work.loaded ? `Nothing else of ${option.name}'s here yet` : "Finding them…"}
 			reason={`${option.verb} ${option.name}`}
 		/>
 	)
@@ -205,9 +209,7 @@ export function GenreShelf({
 			discover={genreLink(src, genre)}
 			listKey={genre ?? ""}
 			busy={g.busy}
-			empty={
-				g.loaded ? "No titles of this genre to show here" : "Finding them…"
-			}
+			empty={g.loaded ? "No titles of this genre to show here" : "Finding them…"}
 			reason={g.heading}
 		/>
 	)

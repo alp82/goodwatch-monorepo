@@ -15,7 +15,7 @@
 // it nearest first; its code loads on that tap.
 //
 // A walk is forgotten when the page is left.
-import { useMatches, useNavigate, useNavigation } from "@remix-run/react"
+import { useNavigate, useNavigation } from "@remix-run/react"
 import { Suspense, lazy, useEffect, useRef, useState } from "react"
 import { afterNavigationWork } from "~/navigation/instant-navigation"
 import type { RelatedMapData } from "~/server/related-map.server"
@@ -77,8 +77,7 @@ const earlyScript = (css: string, crossOrigin: boolean) =>
 		"\\u003c",
 	)
 
-const escapeHtml = (text: string) =>
-	text.replace(/[&<>"]/g, (ch) => `&#${ch.charCodeAt(0)};`)
+const escapeHtml = (text: string) => text.replace(/[&<>"]/g, (ch) => `&#${ch.charCodeAt(0)};`)
 
 /** The style in the document's head, where it stays for every page that is opened from here. Asked for once. */
 function keepStyle(href: string, path: string) {
@@ -162,15 +161,6 @@ function NavigationWatch() {
 	return null
 }
 
-/** The section's data from the title route's loader, or undefined when the page shows the related titles carousel. */
-export function useRelatedMap(): RelatedMapData | undefined {
-	for (const match of useMatches()) {
-		const data = match.data as { relatedMap?: RelatedMapData } | undefined
-		if (data?.relatedMap) return data.relatedMap
-	}
-	return undefined
-}
-
 /**
  * The markup of a document's section, in the browser. A document's page data doesn't carry it (see
  * server/related-map-handoff.ts): the server renders it from the loader's data, and the browser reads what the
@@ -178,10 +168,7 @@ export function useRelatedMap(): RelatedMapData | undefined {
  */
 function documentMarkup(rootKey: string): string {
 	if (typeof document === "undefined") return ""
-	return (
-		document.querySelector(`[data-related-map][data-pl-root="${rootKey}"]`)
-			?.innerHTML ?? ""
-	)
+	return document.querySelector(`[data-related-map][data-pl-root="${rootKey}"]`)?.innerHTML ?? ""
 }
 
 // The engine's wait before it asks for the page title's pack (engine.ts, wake), handed over once the app runs. The waits
@@ -203,10 +190,11 @@ function dropEngineWaits() {
 
 export default function RelatedMap({
 	media,
+	map,
 }: {
 	media: MovieResult | ShowResult
+	map: RelatedMapData
 }) {
-	const map = useRelatedMap()
 	const navigate = useNavigate()
 	const rootKey = `${media.mediaType === "movie" ? "m" : "s"}${media.details.tmdb_id}`
 	// True for the section of a document: the server's HTML holds the inline script and the script tag, and they ran.
@@ -263,9 +251,7 @@ export default function RelatedMap({
 		let timer: ReturnType<typeof setTimeout> | undefined
 		let stop = () => {}
 		const attempt = () => {
-			fetch(
-				`/api/related-map?key=${rootKey}&displayLanguage=${encodeURIComponent(language)}`,
-			)
+			fetch(`/api/related-map?key=${rootKey}&displayLanguage=${encodeURIComponent(language)}`)
 				.then((response) => {
 					if (response.status === 404) return null
 					if (!response.ok) throw new Error(String(response.status))
@@ -295,11 +281,7 @@ export default function RelatedMap({
 				})
 		}
 		// Near and after the navigation work, or at once when the reader taps the placeholder (late-wait.ts).
-		const stopWaiting = whenSectionWanted(
-			section.current,
-			attempt,
-			afterNavigationWork,
-		)
+		const stopWaiting = whenSectionWanted(section.current, attempt, afterNavigationWork)
 		return () => {
 			gone = true
 			stopWaiting()
@@ -345,12 +327,7 @@ export default function RelatedMap({
 		}
 		let stopWaiting = () => {}
 		if (w.__gwRelatedMap) boot()
-		else
-			stopWaiting = whenSectionWanted(
-				section.current,
-				boot,
-				afterNavigationWork,
-			)
+		else stopWaiting = whenSectionWanted(section.current, boot, afterNavigationWork)
 		return () => {
 			stopWaiting()
 			stop()
