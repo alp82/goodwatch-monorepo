@@ -22,7 +22,7 @@ const base = {
 	},
 } as Base
 
-const setup = (failOnce = false) => {
+const setup = (failOnce = false, missing = true) => {
 	const reads: number[][] = []
 	const load = async (ids: number[]) => {
 		reads.push(ids)
@@ -33,7 +33,7 @@ const setup = (failOnce = false) => {
 		return ids.flatMap((key) => {
 			const i = keys.indexOf(key)
 			// A missing catalog entry and two films from one series occur in the overlapping candidate lists.
-			if (i === 0) return []
+			if (missing && i === 0) return []
 			return [
 				{
 					key,
@@ -72,6 +72,16 @@ const before = batch.reads.length
 await batch.atlas.readShowcaseCandidates(groups, 0)
 assert.deepEqual(await batch.atlas.showcase([], 0), [])
 assert.equal(batch.reads.length, before)
+const loaded = setup(false, false)
+await loaded.atlas.readShowcaseCandidates(groups, 3, "popular")
+for (const group of groups)
+	assert.equal((await loaded.atlas.showcase(group, 3, { by: "popular" })).length, 3)
+assert.equal(
+	loaded.reads.length,
+	1,
+	"an unread tail cannot matter once the loaded prefix fills the row",
+)
+
 const retry = setup(true)
 await assert.rejects(
 	retry.atlas.readShowcaseCandidates(groups, 3, "popular"),

@@ -594,20 +594,33 @@ export class Places {
 	private async distinct(ranked: number[], n: number, used: Set<TitleKey>): Promise<number[]> {
 		if (n <= 0) return []
 		const head = candidateHead(ranked, n)
-		await this.cards(head.map(this.keyOf))
-		const out: number[] = []
-		const names: string[] = []
-		for (const r of head) {
-			if (out.length >= n) break
-			const key = this.keyOf(r)
-			const card = this.cardCache.get(key)
-			if (!card || used.has(key)) continue
-			const name = seriesName(card.title)
-			if (names.some((x) => sameSeries(x, name))) continue
-			names.push(name)
-			used.add(key)
-			out.push(r)
+		// Earlier sections can promote new candidates into the tail. The already loaded prefix often
+		// supplies every poster. A gap before the last pick still requires reading the candidates.
+		const choose = (requireLoaded: boolean) => {
+			const picked: number[] = []
+			const names: string[] = []
+			for (const r of head) {
+				const key = this.keyOf(r)
+				if (used.has(key)) continue
+				const card = this.cardCache.get(key)
+				if (!card) {
+					if (requireLoaded) return null
+					continue
+				}
+				const name = seriesName(card.title)
+				if (names.some((x) => sameSeries(x, name))) continue
+				names.push(name)
+				picked.push(r)
+				if (picked.length === n) break
+			}
+			return picked
 		}
+		let out = choose(true)
+		if (!out) {
+			await this.cards(head.map(this.keyOf))
+			out = choose(false) ?? []
+		}
+		for (const row of out) used.add(this.keyOf(row))
 		return out
 	}
 

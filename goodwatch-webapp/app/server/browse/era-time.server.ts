@@ -135,12 +135,20 @@ export async function decadeYears(
 		label: x.label,
 		place: x.place,
 	})
-	for (const d of atlas.members("decade")) {
-		const era = await atlas.era(d.slug, perYear, opts)
-		value[d.slug] = {
-			years: (era?.years ?? []).filter((y) => y.titles.length > 0),
-			rose: (era?.rose ?? []).map(shift),
-			fell: (era?.fell ?? []).map(shift),
+	const decades = atlas.members("decade")
+	// Each decade selects from disjoint years. Group their card reads without running a century of
+	// analysis-text queries together when a caller requests lines.
+	const groupSize = opts.lines ? 1 : 3
+	for (let start = 0; start < decades.length; start += groupSize) {
+		const group = decades.slice(start, start + groupSize)
+		const eras = await Promise.all(group.map((d) => atlas.era(d.slug, perYear, opts)))
+		for (const [i, d] of group.entries()) {
+			const era = eras[i]
+			value[d.slug] = {
+				years: (era?.years ?? []).filter((y) => y.titles.length > 0),
+				rose: (era?.rose ?? []).map(shift),
+				fell: (era?.fell ?? []).map(shift),
+			}
 		}
 	}
 	if (guest) frameMemo.set(id, { at: Date.now(), value })
