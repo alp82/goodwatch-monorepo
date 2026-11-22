@@ -14,6 +14,9 @@ import { loadTopPage } from "~/server/top-page.server"
 import { TopRanking } from "~/ui/top-lists/TopRanking"
 import type { Crumb } from "~/ui/nav/breadcrumb-trail"
 import { buildMeta } from "~/utils/meta"
+import { START_AFTER_PAINT } from "~/utils/start-after-paint"
+
+export const handle = START_AFTER_PAINT
 
 export const loader = async ({ params, request }: LoaderFunctionArgs) => {
 	const kind = kindOfSeg(params.type)
