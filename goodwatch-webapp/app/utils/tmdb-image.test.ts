@@ -79,17 +79,12 @@ describe("tmdbFixedImage", () => {
 
 // What a browser does with srcSet and sizes: slot width times pixel ratio, then the smallest
 // file that covers it. The slot is the first entry of sizes whose condition matches.
-function browserPick(
-	image: { srcSet?: string; sizes?: string },
-	viewport: number,
-	ratio: number,
-) {
+function browserPick(image: { srcSet?: string; sizes?: string }, viewport: number, ratio: number) {
 	const entry = (image.sizes ?? "").split(", ").find((candidate) => {
 		const minWidth = /\(min-width: (\d+)px\)/.exec(candidate)
 		const minRatio = /\(min-resolution: ([\d.]+)dppx\)/.exec(candidate)
 		return (
-			(!minWidth || viewport >= Number(minWidth[1])) &&
-			(!minRatio || ratio >= Number(minRatio[1]))
+			(!minWidth || viewport >= Number(minWidth[1])) && (!minRatio || ratio >= Number(minRatio[1]))
 		)
 	}) as string
 	const length = entry.replace(/\([^)]*: [^)]*\) /g, "").replace(/ and /g, "")
@@ -103,8 +98,7 @@ function browserPick(
 		const [url, width] = candidate.split(" ")
 		return { url, width: Number.parseInt(width) }
 	})
-	const file =
-		files.find((f) => f.width >= slot * ratio) ?? files[files.length - 1]
+	const file = files.find((f) => f.width >= slot * ratio) ?? files[files.length - 1]
 	return file.url.split("/")[5]
 }
 
@@ -212,6 +206,11 @@ describe("which images are eager", () => {
 	})
 
 	it("never makes the page's largest image lazy, and fetches it first", () => {
+		assert.deepEqual(imageLoadingProps("low"), {
+			loading: "lazy",
+			decoding: "async",
+			fetchpriority: "low",
+		})
 		assert.deepEqual(imageLoadingProps("high"), { fetchpriority: "high" })
 		assert.deepEqual(imageLoadingProps("eager"), {})
 	})
@@ -243,9 +242,6 @@ describe("preferred TVDB actor photos", () => {
 		)
 	})
 	it("retains TMDB size selection for the fallback photo", () => {
-		assert.equal(
-			tmdbFixedImage("profile", "/fallback.jpg", 40).src,
-			`${BASE}/w45/fallback.jpg`,
-		)
+		assert.equal(tmdbFixedImage("profile", "/fallback.jpg", 40).src, `${BASE}/w45/fallback.jpg`)
 	})
 })

@@ -63,16 +63,10 @@ export function tmdbImageUrl(path: string, size: string): string {
 }
 
 /** The smallest step that covers a displayed width at a pixel ratio, or the largest step. */
-export function tmdbSizeFor(
-	kind: TmdbImageKind,
-	displayWidth: number,
-	pixelRatio = 1,
-): string {
-	const needed =
-		displayWidth * Math.min(Math.max(pixelRatio, 1), MAX_PIXEL_RATIO)
+export function tmdbSizeFor(kind: TmdbImageKind, displayWidth: number, pixelRatio = 1): string {
+	const needed = displayWidth * Math.min(Math.max(pixelRatio, 1), MAX_PIXEL_RATIO)
 	const steps = STEPS[kind]
-	return (steps.find((step) => step.width >= needed) ?? steps[steps.length - 1])
-		.name
+	return (steps.find((step) => step.width >= needed) ?? steps[steps.length - 1]).name
 }
 
 export interface TmdbImageSource {
@@ -119,9 +113,7 @@ const HIGH_RATIOS: [minRatio: number, factor: number][] = [
 
 const scaled = (length: string, factor: number) => {
 	const px = /^(\d+(?:\.\d+)?)px$/.exec(length)
-	return px
-		? `${Math.round(Number(px[1]) * factor)}px`
-		: `calc(${length} * ${factor})`
+	return px ? `${Math.round(Number(px[1]) * factor)}px` : `calc(${length} * ${factor})`
 }
 
 /**
@@ -135,8 +127,7 @@ export function tmdbSizes(rules: SizeRule[]): string {
 				? [`${condition} ${length}`]
 				: [
 						...HIGH_RATIOS.map(
-							([ratio, factor]) =>
-								`(min-resolution: ${ratio}dppx) ${scaled(length, factor)}`,
+							([ratio, factor]) => `(min-resolution: ${ratio}dppx) ${scaled(length, factor)}`,
 						),
 						length,
 					],
@@ -166,15 +157,11 @@ export function tmdbFluidImage(
 		0,
 		steps.findIndex((step) => step.width >= minWidth),
 	)
-	const last = steps.findIndex(
-		(step) => step.width >= maxWidth * MAX_PIXEL_RATIO,
-	)
+	const last = steps.findIndex((step) => step.width >= maxWidth * MAX_PIXEL_RATIO)
 	const used = steps.slice(first, last === -1 ? steps.length : last + 1)
 	return {
 		src: tmdbImageUrl(path, tmdbSizeFor(kind, fallbackWidth, 1)),
-		srcSet: used
-			.map((step) => `${tmdbImageUrl(path, step.name)} ${step.width}w`)
-			.join(", "),
+		srcSet: used.map((step) => `${tmdbImageUrl(path, step.name)} ${step.width}w`).join(", "),
 		sizes: tmdbSizes(rules),
 	}
 }
@@ -183,12 +170,13 @@ export function tmdbFluidImage(
  * "lazy" waits until the image is near the viewport. "eager" is for an image that is visible
  * without scrolling. "high" is for the page's largest image: eager, and fetched first.
  */
-export type ImagePriority = "lazy" | "eager" | "high"
+export type ImagePriority = "lazy" | "low" | "eager" | "high"
 
 /** The loading attributes of an image. Lazy is the default everywhere. */
 export function imageLoadingProps(priority: ImagePriority = "lazy") {
-	if (priority === "lazy")
-		return { loading: "lazy", decoding: "async" } as const
+	if (priority === "low")
+		return { loading: "lazy", decoding: "async", fetchpriority: "low" } as const
+	if (priority === "lazy") return { loading: "lazy", decoding: "async" } as const
 	if (priority === "high") return { fetchpriority: "high" } as const
 	return {}
 }

@@ -85,7 +85,7 @@ export function DiscoverGrid({
 									<DiscoverCardRole card={card}>
 										<TitlePosterCard
 											card={card}
-											posterPriority={priority}
+											posterPriority={priority === "lazy" ? "low" : priority}
 											posterPaintBeforeScripts={priority === "high"}
 											posterSizes={DISCOVER_POSTER_SIZES}
 											phoneThumbnail={index >= 3}
