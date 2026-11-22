@@ -16,7 +16,7 @@ import type React from "react"
 import imdbLogo from "~/img/imdb-logo-250.webp?no-inline"
 import letterboxdLogo from "~/img/letterboxd-dots.svg?no-inline"
 import metacriticLogoIcon from "~/img/metacritic-logo-icon-64.webp?no-inline"
-import rottenLogoIcon from "~/img/rotten-logo-icon-64.webp"
+import rottenLogoIcon from "~/img/rotten-logo-icon-64.webp?no-inline"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { CAPTION } from "~/ui/details/page-ui"
 import { assetUrl } from "~/utils/asset-url"
@@ -186,24 +186,19 @@ function Figure({
 				</span>
 				{unit && <span className="text-[15px] text-gray-300">{unit}</span>}
 			</p>
-			{children && (
-				<p className="mt-1 text-[15px] leading-snug text-gray-300">
-					{children}
-				</p>
-			)}
+			{children && <p className="mt-1 text-[15px] leading-snug text-gray-300">{children}</p>}
 		</div>
 	)
 }
 
 // ------------------------------------------------------------------------------------------- critics vs audience
 
-const SITE: Record<ScoreSite, { logo: string; bg: string; wordmark: boolean }> =
-	{
-		imdb: { logo: imdbLogo, bg: "bg-imdb", wordmark: true },
-		letterboxd: { logo: letterboxdLogo, bg: "bg-letterboxd", wordmark: true },
-		mc: { logo: metacriticLogoIcon, bg: "bg-metacritic", wordmark: false },
-		rt: { logo: rottenLogoIcon, bg: "bg-rotten", wordmark: false },
-	}
+const SITE: Record<ScoreSite, { logo: string; bg: string; wordmark: boolean }> = {
+	imdb: { logo: imdbLogo, bg: "bg-imdb", wordmark: true },
+	letterboxd: { logo: letterboxdLogo, bg: "bg-letterboxd", wordmark: true },
+	mc: { logo: metacriticLogoIcon, bg: "bg-metacritic", wordmark: false },
+	rt: { logo: rottenLogoIcon, bg: "bg-rotten", wordmark: false },
+}
 
 function SpreadTile({ s }: { s: Spread }) {
 	// One axis for every mark: from a round number under the lowest score to 100, so near scores still part.
@@ -214,24 +209,14 @@ function SpreadTile({ s }: { s: Spread }) {
 	return (
 		<Card icon={ScaleIcon} title="Critics vs audiences">
 			<div>
-				<p className="text-lg font-semibold leading-snug text-white">
-					{s.verdict}
-				</p>
+				<p className="text-lg font-semibold leading-snug text-white">{s.verdict}</p>
 				<p className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-300 tabular-nums">
-					{s.critics != null && (
-						<Legend color={CRITICS} label="Critics" value={s.critics} />
-					)}
-					{s.audience != null && (
-						<Legend color={AUDIENCE} label="Audiences" value={s.audience} />
-					)}
+					{s.critics != null && <Legend color={CRITICS} label="Critics" value={s.critics} />}
+					{s.audience != null && <Legend color={AUDIENCE} label="Audiences" value={s.audience} />}
 					{s.goodwatch != null && (
 						<span className="flex items-center gap-1.5">
-							<span
-								aria-hidden="true"
-								className="h-3 w-0.5 rounded-full bg-white/80"
-							/>
-							GoodWatch{" "}
-							<span className="font-semibold text-white">{s.goodwatch}</span>
+							<span aria-hidden="true" className="h-3 w-0.5 rounded-full bg-white/80" />
+							GoodWatch <span className="font-semibold text-white">{s.goodwatch}</span>
 						</span>
 					)}
 				</p>
@@ -276,11 +261,7 @@ function SpreadTile({ s }: { s: Spread }) {
 				{/* The axis's numbers under the bars, at their places. */}
 				<span className="relative h-3 w-full">
 					{ticks.map((t) => (
-						<span
-							key={t}
-							className="absolute -translate-x-1/2"
-							style={{ left: at(t) }}
-						>
+						<span key={t} className="absolute -translate-x-1/2" style={{ left: at(t) }}>
 							{t}
 						</span>
 					))}
@@ -290,18 +271,10 @@ function SpreadTile({ s }: { s: Spread }) {
 	)
 }
 
-function Legend({
-	color,
-	label,
-	value,
-}: { color: string; label: string; value: number }) {
+function Legend({ color, label, value }: { color: string; label: string; value: number }) {
 	return (
 		<span className="flex items-center gap-1.5">
-			<span
-				aria-hidden="true"
-				className="h-2.5 w-2.5 rounded-full"
-				style={{ background: color }}
-			/>
+			<span aria-hidden="true" className="h-2.5 w-2.5 rounded-full" style={{ background: color }} />
 			{label} <span className="font-semibold text-white">{value}</span>
 		</span>
 	)
@@ -309,10 +282,7 @@ function Legend({
 
 function Dot({ color, left, i }: { color: string; left: string; i: number }) {
 	return (
-		<span
-			className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2"
-			style={{ left }}
-		>
+		<span className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ left }}>
 			<span
 				className="facts-pop block h-3.5 w-3.5 rounded-full ring-2 ring-gray-950"
 				style={{ background: color, ...delay(i + 4) }}
@@ -321,11 +291,7 @@ function Dot({ color, left, i }: { color: string; left: string; i: number }) {
 	)
 }
 
-function ScoreLine({
-	row,
-	at,
-	i,
-}: { row: ScoreRow; at: (v: number) => string; i: number }) {
+function ScoreLine({ row, at, i }: { row: ScoreRow; at: (v: number) => string; i: number }) {
 	const site = SITE[row.site]
 	const color = row.side === "critics" ? CRITICS : AUDIENCE
 	return (
@@ -349,9 +315,7 @@ function ScoreLine({
 					{row.kind === "Users" || row.kind === "Members" ? row.name : row.kind}
 					{row.votes && <span className="text-gray-500"> · {row.votes}</span>}
 				</span>
-				<span className="ml-auto font-semibold text-white tabular-nums">
-					{row.shown}
-				</span>
+				<span className="ml-auto font-semibold text-white tabular-nums">{row.shown}</span>
 			</p>
 			<span className="relative h-1.5 rounded-full bg-white/[0.07]">
 				<span
@@ -380,10 +344,7 @@ function BoxOfficeTile({ b }: { b: BoxOffice }) {
 			: null
 	return (
 		<Card icon={BanknotesIcon} title="Box office">
-			<Figure
-				value={b.headline}
-				unit={hit ? "its budget" : "of its budget back"}
-			/>
+			<Figure value={b.headline} unit={hit ? "its budget" : "of its budget back"} />
 			<div
 				role="img"
 				aria-label={`Budget ${dollars(b.budget)}, worldwide gross ${dollars(b.gross)}`}
@@ -421,27 +382,17 @@ function BoxOfficeTile({ b }: { b: BoxOffice }) {
 			<dl className="grid grid-cols-2 gap-2 text-sm">
 				<div>
 					<dt className="flex items-center gap-1.5 text-gray-400">
-						<span
-							aria-hidden="true"
-							className="h-2 w-2 rounded-sm bg-slate-400/70"
-						/>
+						<span aria-hidden="true" className="h-2 w-2 rounded-sm bg-slate-400/70" />
 						Budget
 					</dt>
-					<dd className="mt-0.5 font-semibold text-white tabular-nums">
-						{dollars(b.budget)}
-					</dd>
+					<dd className="mt-0.5 font-semibold text-white tabular-nums">{dollars(b.budget)}</dd>
 				</div>
 				<div className="text-right">
 					<dt className="flex items-center justify-end gap-1.5 text-gray-400">
-						<span
-							aria-hidden="true"
-							className="h-2 w-2 rounded-sm bg-emerald-400/70"
-						/>
+						<span aria-hidden="true" className="h-2 w-2 rounded-sm bg-emerald-400/70" />
 						Worldwide
 					</dt>
-					<dd className="mt-0.5 font-semibold text-white tabular-nums">
-						{dollars(b.gross)}
-					</dd>
+					<dd className="mt-0.5 font-semibold text-white tabular-nums">{dollars(b.gross)}</dd>
 				</div>
 			</dl>
 			<p className="text-sm text-gray-400">{b.line}</p>
@@ -479,10 +430,7 @@ function RuntimeTile({ r }: { r: RuntimeVsGenre }) {
 					className="absolute top-2 h-3 rounded-full bg-white/[0.14]"
 					style={{ left: at(p25), width: `calc(${at(p75)} - ${at(p25)})` }}
 				/>
-				<span
-					className="absolute top-1 h-5 w-px bg-white/50"
-					style={{ left: at(p50) }}
-				/>
+				<span className="absolute top-1 h-5 w-px bg-white/50" style={{ left: at(p50) }} />
 				<span
 					className="absolute top-7 -translate-x-1/2 whitespace-nowrap text-[11px] text-gray-400 tabular-nums"
 					style={{ left: at(p50) }}
@@ -518,9 +466,7 @@ function BingeTile({ t }: { t: BingeTime }) {
 	const hours = t.minutes / 60
 	return (
 		<Card icon={ClockIcon} title="Time to watch it all">
-			<Figure
-				value={hours >= 10 ? `${Math.round(hours)} h` : minutesWords(t.minutes)}
-			>
+			<Figure value={hours >= 10 ? `${Math.round(hours)} h` : minutesWords(t.minutes)}>
 				{t.episodes} episodes, about {t.perEpisode} min each
 			</Figure>
 			<p className="text-sm text-gray-400">{t.pace}</p>
@@ -551,9 +497,7 @@ function ReachTile({ r }: { r: Reach }) {
 				<div>
 					<p className="text-[15px] text-gray-200">
 						Streams in{" "}
-						<span className="font-semibold text-white tabular-nums">
-							{r.streaming.length}
-						</span>{" "}
+						<span className="font-semibold text-white tabular-nums">{r.streaming.length}</span>{" "}
 						{r.streaming.length === 1 ? "country" : "countries"}
 						{r.anywhere > r.streaming.length && (
 							<span className="text-gray-400">
@@ -567,18 +511,12 @@ function ReachTile({ r }: { r: Reach }) {
 								<Flag code={c} />
 							</span>
 						))}
-						{more > 0 && (
-							<span className="text-xs text-gray-400 tabular-nums">
-								+{more}
-							</span>
-						)}
+						{more > 0 && <span className="text-xs text-gray-400 tabular-nums">+{more}</span>}
 					</div>
 				</div>
 			) : (
 				r.anywhere > 0 && (
-					<p className="text-[15px] text-gray-200">
-						To rent or buy in {r.anywhere} countries
-					</p>
+					<p className="text-[15px] text-gray-200">To rent or buy in {r.anywhere} countries</p>
 				)
 			)}
 		</Card>
@@ -624,9 +562,7 @@ function GenresTile({ genres }: { genres: string[] }) {
 function LanguageTile({ l }: { l: Languages }) {
 	return (
 		<Card icon={LanguageIcon} title="Language">
-			<Figure
-				value={<span className="text-2xl">{languageName(l.original)}</span>}
-			>
+			<Figure value={<span className="text-2xl">{languageName(l.original)}</span>}>
 				Original language
 			</Figure>
 			{l.others.length > 0 && (
@@ -644,10 +580,7 @@ function MadeInTile({ countries }: { countries: string[] }) {
 		<Card icon={MapPinIcon} title="Made in">
 			<ul className="flex flex-col gap-1.5">
 				{countries.map((c) => (
-					<li
-						key={c}
-						className="flex items-center gap-2.5 text-[15px] text-gray-100"
-					>
+					<li key={c} className="flex items-center gap-2.5 text-[15px] text-gray-100">
 						<Flag code={c} />
 						{regionName(c)}
 					</li>

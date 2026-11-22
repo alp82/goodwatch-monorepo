@@ -2,15 +2,13 @@
 // the title pages the text names, the table of every country, the CSV files and the credits TMDB's terms ask for.
 import { Link } from "@remix-run/react"
 import justwatchLogo from "~/img/justwatch-logo.svg"
-import tmdbLogo from "~/img/tmdb-logo.svg"
+import tmdbLogo from "~/img/tmdb-logo.svg?no-inline"
 import { assetUrl } from "~/utils/asset-url"
 import { titlePath } from "~/utils/helpers"
 import { COUNTRY_TABLE_ID } from "./StudyChart"
 import { type StudyData, type TitleRef, fmt } from "./study-charts"
 
-export function KeyNumbers({
-	items,
-}: { items: { n: string; label: string }[] }) {
+export function KeyNumbers({ items }: { items: { n: string; label: string }[] }) {
 	return (
 		<dl className="my-10 grid grid-cols-2 gap-x-6 gap-y-6 border-y border-white/10 py-8 sm:grid-cols-4">
 			{items.map(({ n, label }) => (
@@ -53,9 +51,7 @@ export function TitleRun({ items }: { items: TitleRef[] }) {
 }
 
 export function CountryTable({ data }: { data: StudyData }) {
-	const rows = [...data.countries].sort((a, b) =>
-		a.name.localeCompare(b.name, "en"),
-	)
+	const rows = [...data.countries].sort((a, b) => a.name.localeCompare(b.name, "en"))
 	return (
 		<section
 			id={COUNTRY_TABLE_ID}
@@ -75,9 +71,8 @@ export function CountryTable({ data }: { data: StudyData }) {
 				<div className="overflow-x-auto px-2 pb-4">
 					<table className="w-full text-left text-sm tabular-nums">
 						<caption className="px-2 pb-3 text-left text-xs text-gray-400">
-							Of {fmt(data.movies.titles)} movies and {fmt(data.shows.titles)}{" "}
-							shows, how many are on a subscription in each country, on{" "}
-							{data.snapshot.date}.
+							Of {fmt(data.movies.titles)} movies and {fmt(data.shows.titles)} shows, how many are
+							on a subscription in each country, on {data.snapshot.date}.
 						</caption>
 						<thead className="text-xs text-gray-400">
 							<tr>
@@ -101,26 +96,17 @@ export function CountryTable({ data }: { data: StudyData }) {
 						<tbody className="text-gray-300">
 							{rows.map((c) => (
 								<tr key={c.code} className="border-t border-white/5">
-									<th
-										scope="row"
-										className="px-2 py-1.5 font-normal text-gray-100"
-									>
+									<th scope="row" className="px-2 py-1.5 font-normal text-gray-100">
 										{c.name}
 									</th>
-									<td className="px-2 py-1.5 text-right">
-										{fmt(c.movies?.subscription ?? 0)}
-									</td>
+									<td className="px-2 py-1.5 text-right">{fmt(c.movies?.subscription ?? 0)}</td>
 									<td className="px-2 py-1.5">
 										{c.movies?.biggest_service
 											? `${c.movies.biggest_service} (${fmt(c.movies.biggest_service_titles)})`
 											: "None"}
 									</td>
-									<td className="px-2 py-1.5 text-right">
-										{fmt(c.movies?.netflix ?? 0)}
-									</td>
-									<td className="px-2 py-1.5 text-right">
-										{fmt(c.shows?.subscription ?? 0)}
-									</td>
+									<td className="px-2 py-1.5 text-right">{fmt(c.movies?.netflix ?? 0)}</td>
+									<td className="px-2 py-1.5 text-right">{fmt(c.shows?.subscription ?? 0)}</td>
 								</tr>
 							))}
 						</tbody>
@@ -171,11 +157,7 @@ export function StudyCredits() {
 		<div className="mt-12 flex flex-col gap-4 border-t border-white/10 pt-6 text-sm text-gray-400">
 			<div className="flex flex-wrap items-center gap-x-5 gap-y-3">
 				<span>Data from</span>
-				<img
-					src={assetUrl(tmdbLogo)}
-					alt="TMDB"
-					className="h-3 w-auto opacity-80"
-				/>
+				<img src={assetUrl(tmdbLogo)} alt="TMDB" className="h-3 w-auto opacity-80" />
 				{/* The JustWatch file's viewBox doesn't parse, so it has no ratio of its own: give it its drawing's size. */}
 				<img
 					src={assetUrl(justwatchLogo)}
@@ -183,24 +165,14 @@ export function StudyCredits() {
 					className="h-[10px] w-[66px] opacity-80"
 				/>
 			</div>
-			<p>
-				This product uses the TMDB API but is not endorsed or certified by TMDB.
-			</p>
+			<p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
 			<p>
 				Streaming data from{" "}
-				<a
-					href="https://www.justwatch.com/"
-					className={linkClass}
-					rel="noreferrer"
-				>
+				<a href="https://www.justwatch.com/" className={linkClass} rel="noreferrer">
 					JustWatch
 				</a>
 				, through{" "}
-				<a
-					href="https://www.themoviedb.org/"
-					className={linkClass}
-					rel="noreferrer"
-				>
+				<a href="https://www.themoviedb.org/" className={linkClass} rel="noreferrer">
 					TMDB
 				</a>
 				. Information courtesy of IMDb (

@@ -7,7 +7,7 @@ import type { CSSProperties } from "react"
 import imdbLogo from "~/img/imdb-logo-250.webp?no-inline"
 import letterboxdLogo from "~/img/letterboxd-dots.svg?no-inline"
 import metacriticLogo from "~/img/metacritic-logo-icon-64.webp?no-inline"
-import rottenLogo from "~/img/rotten-logo-icon-64.webp"
+import rottenLogo from "~/img/rotten-logo-icon-64.webp?no-inline"
 import { assetUrl } from "~/utils/asset-url"
 
 export type VsSource = "imdb" | "lb" | "rt" | "rta" | "mc" | "mcu"
@@ -21,8 +21,7 @@ export type VsSide = {
 }
 
 /** Metacritic's own score colors, as the brand cards use them. */
-const metaColor = (pct: number) =>
-	pct >= 61 ? "#00ce7a" : pct >= 40 ? "#ffbd3f" : "#ff6874"
+const metaColor = (pct: number) => (pct >= 61 ? "#00ce7a" : pct >= 40 ? "#ffbd3f" : "#ff6874")
 
 type Brand = {
 	/** The half's background and text. */
@@ -116,11 +115,7 @@ const NAME: Record<VsSource, string> = {
 const SEAM_TOP = "56%"
 const SEAM_BOTTOM = "44%"
 
-function Half({
-	s,
-	side,
-	wins,
-}: { s: VsSide; side: "left" | "right"; wins: boolean }) {
+function Half({ s, side, wins }: { s: VsSide; side: "left" | "right"; wins: boolean }) {
 	const b = brandOf(s)
 	const left = side === "left"
 	return (
@@ -138,9 +133,7 @@ function Half({
 						src={assetUrl(b.logo)}
 						alt={b.alt}
 						className={
-							s.source === "imdb"
-								? "h-3 rounded-[2px] shadow-[0_0_0_1.5px_rgba(0,0,0,.85)]"
-								: "h-3"
+							s.source === "imdb" ? "h-3 rounded-[2px] shadow-[0_0_0_1.5px_rgba(0,0,0,.85)]" : "h-3"
 						}
 					/>
 				)}
@@ -150,11 +143,7 @@ function Half({
 				className={`font-['Gabarito'] leading-none font-extrabold tracking-[-0.02em] tabular-nums ${wins ? "text-[22px]" : "text-[15px]"}`}
 			>
 				{s.n}
-				{b.unit && (
-					<small className="ml-px text-[0.5em] font-bold opacity-70">
-						{b.unit}
-					</small>
-				)}
+				{b.unit && <small className="ml-px text-[0.5em] font-bold opacity-70">{b.unit}</small>}
 			</span>
 			{b.who && (
 				<span className="text-[9px] leading-none font-extrabold tracking-[0.12em] uppercase opacity-80">
@@ -183,12 +172,7 @@ export function VsStandoff({ a, b }: { a: VsSide; b: VsSide }) {
 				: x.bg
 	const label = `${NAME[a.source]} ${a.n}${A.unit ?? ""} against ${NAME[b.source]} ${b.n}${B.unit ?? ""}, ${gap} points apart`
 	return (
-		<div
-			data-fx-spot="dis-row"
-			role="img"
-			aria-label={label}
-			className="flex flex-col gap-1.5"
-		>
+		<div data-fx-spot="dis-row" role="img" aria-label={label} className="flex flex-col gap-1.5">
 			<div className="relative isolate overflow-hidden rounded-lg shadow-[0_6px_16px_rgba(0,0,0,.45),inset_0_0_0_1px_rgba(255,255,255,.12)]">
 				<span
 					aria-hidden

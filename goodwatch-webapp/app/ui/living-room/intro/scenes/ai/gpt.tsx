@@ -4,8 +4,8 @@
 // (server/mcp/poster-grid/widget.css): banner, score tab, logo plate.
 import type { CSSProperties, ReactNode } from "react"
 import imdbLogo from "~/img/imdb-logo-250.webp?no-inline"
-import metacriticLogo from "~/img/metacritic-logo-icon-64.webp"
-import rottenLogo from "~/img/rotten-logo-icon-64.webp"
+import metacriticLogo from "~/img/metacritic-logo-icon-64.webp?no-inline"
+import rottenLogo from "~/img/rotten-logo-icon-64.webp?no-inline"
 import { GoodWatchG } from "~/ui/brand/GoodWatchWordmark"
 import type { IntroCard } from "~/ui/living-room/intro/data"
 import { goodwatchScoreDisplay, goodwatchVibeIndex } from "~/utils/ratings"
@@ -31,7 +31,11 @@ function ScoreTab({
 	score,
 	className = "",
 	style,
-}: { score: number; className?: string; style?: CSSProperties }) {
+}: {
+	score: number
+	className?: string
+	style?: CSSProperties
+}) {
 	return (
 		<span
 			className={`intro-ai-tab ${className}`}
@@ -46,10 +50,7 @@ function ScoreTab({
 	)
 }
 
-function Poster({
-	card,
-	className = "",
-}: { card: ChatCard; className?: string }) {
+function Poster({ card, className = "" }: { card: ChatCard; className?: string }) {
 	return (
 		<span className={`intro-ai-poster ${className}`}>
 			<img src={img(card.poster)} alt="" draggable={false} />
@@ -100,11 +101,7 @@ function Chevron() {
 }
 
 /** ChatGPT's app-call line: the app's icon, "Calling GoodWatch…" pulsing, then "Called GoodWatch" and the tool. */
-export function AppCall({
-	from,
-	done,
-	tool,
-}: { from: number; done: number; tool: string }) {
+export function AppCall({ from, done, tool }: { from: number; done: number; tool: string }) {
 	return (
 		<p className="intro-ai-chat-call intro-ai-fade" style={at(from, 220)}>
 			<span className="intro-ai-chat-app" aria-hidden="true">
@@ -140,11 +137,7 @@ export function Banner({
 			className="intro-ai-chat-card intro-ai-feat intro-ai-chat-ban intro-ai-deal"
 			style={at(from, 650)}
 		>
-			<img
-				className="intro-ai-feat-bd"
-				src={img(card.backdrop, "w780")}
-				alt=""
-			/>
+			<img className="intro-ai-feat-bd" src={img(card.backdrop, "w780")} alt="" />
 			<Mark className="intro-ai-chat-banmark" />
 			<div className="intro-ai-chat-banin">
 				<Poster card={card} className="intro-ai-chat-pf" />
@@ -159,11 +152,7 @@ export function Banner({
 }
 
 /** IMDb, Rotten Tomatoes and Metacritic, then the one GoodWatch number they make. */
-export function SourceRow({
-	s,
-	score,
-	from,
-}: { s: Sources; score: number; from: number }) {
+export function SourceRow({ s, score, from }: { s: Sources; score: number; from: number }) {
 	const items = [
 		{ logo: imdbLogo, n: `${s.imdb}`, wide: true },
 		{ logo: rottenLogo, n: `${s.rt}%` },
@@ -185,10 +174,7 @@ export function SourceRow({
 					{x.n}
 				</span>
 			))}
-			<span
-				className="intro-ai-chat-eq intro-ai-fade"
-				style={at(from + 430, 250)}
-			>
+			<span className="intro-ai-chat-eq intro-ai-fade" style={at(from + 430, 250)}>
 				→
 			</span>
 			<ScoreTab
@@ -201,18 +187,11 @@ export function SourceRow({
 }
 
 /** Pills under a banner's name (amber lead optional). */
-export function Chips({
-	items,
-	from,
-}: { items: { lead?: string; text: string }[]; from: number }) {
+export function Chips({ items, from }: { items: { lead?: string; text: string }[]; from: number }) {
 	return (
 		<div className="intro-ai-pills intro-ai-chat-chips">
 			{items.map((c, i) => (
-				<span
-					key={c.text}
-					className="intro-ai-pill intro-ai-pop"
-					style={at(from + i * 150, 450)}
-				>
+				<span key={c.text} className="intro-ai-pill intro-ai-pop" style={at(from + i * 150, 450)}>
 					{c.lead && <b>{c.lead}</b>}
 					{c.text}
 				</span>
@@ -226,12 +205,13 @@ export function WatchButton({
 	logo,
 	service,
 	from,
-}: { logo: string; service: string; from: number }) {
+}: {
+	logo: string
+	service: string
+	from: number
+}) {
 	return (
-		<span
-			className="intro-ai-btn intro-ai-chat-btn intro-ai-pop"
-			style={at(from, 450)}
-		>
+		<span className="intro-ai-btn intro-ai-chat-btn intro-ai-pop" style={at(from, 450)}>
 			<img src={img(logo, "w92")} alt="" />
 			Watch on {service}
 		</span>

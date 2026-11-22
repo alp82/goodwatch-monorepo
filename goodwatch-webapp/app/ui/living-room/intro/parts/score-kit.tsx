@@ -2,15 +2,11 @@
 import type { CSSProperties, ReactNode } from "react"
 import imdbLogo from "~/img/imdb-logo-250.webp?no-inline"
 import letterboxdLogo from "~/img/letterboxd-dots.svg?no-inline"
-import metacriticLogo from "~/img/metacritic-logo-icon-64.webp"
-import rottenLogo from "~/img/rotten-logo-icon-64.webp"
+import metacriticLogo from "~/img/metacritic-logo-icon-64.webp?no-inline"
+import rottenLogo from "~/img/rotten-logo-icon-64.webp?no-inline"
 import type { ScoreData } from "~/ui/living-room/intro/data"
 import type { IntroCard } from "~/ui/living-room/intro/data"
-import {
-	score,
-	verdictOf,
-	vibeColor,
-} from "~/ui/living-room/intro/parts/source-kit"
+import { score, verdictOf, vibeColor } from "~/ui/living-room/intro/parts/source-kit"
 import type { IntroData } from "~/ui/living-room/intro/scene"
 import { goodwatchScoreDisplay } from "~/utils/ratings"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
@@ -25,7 +21,11 @@ export function Ring({
 	percent,
 	fillAt,
 	numberAt,
-}: { percent: number; fillAt?: number; numberAt?: number }) {
+}: {
+	percent: number
+	fillAt?: number
+	numberAt?: number
+}) {
 	const value = goodwatchScoreDisplay(percent)
 	const r = 45.5
 	const c = 2 * Math.PI * r
@@ -33,14 +33,7 @@ export function Ring({
 	return (
 		<div className="intro-source-ring">
 			<svg viewBox="0 0 100 100" className="-rotate-90" aria-hidden="true">
-				<circle
-					cx="50"
-					cy="50"
-					r={r}
-					fill="none"
-					stroke="rgba(255,255,255,.12)"
-					strokeWidth="9"
-				/>
+				<circle cx="50" cy="50" r={r} fill="none" stroke="rgba(255,255,255,.12)" strokeWidth="9" />
 				<circle
 					cx="50"
 					cy="50"
@@ -52,9 +45,7 @@ export function Ring({
 					strokeDasharray={`${len} ${c}`}
 					className={fillAt !== undefined ? "intro-source-fill" : undefined}
 					style={
-						fillAt !== undefined
-							? ({ ...at(fillAt), "--len": len } as CSSProperties)
-							: undefined
+						fillAt !== undefined ? ({ ...at(fillAt), "--len": len } as CSSProperties) : undefined
 					}
 				/>
 			</svg>
@@ -69,21 +60,15 @@ export function Ring({
 }
 
 /** Delay and duration for an `intro-score-*` move, in ms at k = 1. */
-export const at = (
-	d: number,
-	dur?: number,
-	extra?: CSSProperties,
-): CSSProperties =>
+export const at = (d: number, dur?: number, extra?: CSSProperties): CSSProperties =>
 	({
 		"--d": `${d}ms`,
 		...(dur ? { "--dur": `${dur}ms` } : {}),
 		...extra,
 	}) as CSSProperties
 
-export const poster = (path: string | null, size = "w342") =>
-	path ? tmdbImageUrl(path, size) : ""
-export const extraOf = (data: IntroData) =>
-	(data.extra.score ?? null) as ScoreData | null
+export const poster = (path: string | null, size = "w342") => (path ? tmdbImageUrl(path, size) : "")
+export const extraOf = (data: IntroData) => (data.extra.score ?? null) as ScoreData | null
 
 export type Source = {
 	id: string
@@ -101,24 +86,20 @@ export function scoreTitle(data: IntroData) {
 		const s = extra?.sources.find((x) => x.key === c.key)
 		return Boolean(
 			s &&
-				s.imdb != null &&
-				s.tomatometer != null &&
-				s.rtAudience != null &&
-				s.metacritic != null &&
-				s.metacriticUser != null &&
-				s.letterboxd != null,
+			s.imdb != null &&
+			s.tomatometer != null &&
+			s.rtAudience != null &&
+			s.metacritic != null &&
+			s.metacriticUser != null &&
+			s.letterboxd != null,
 		)
 	}
 	const card =
-		data.pool.slice(1).find((c) => full(c) && score(c) >= 80) ??
-		data.pool[1] ??
-		data.pool[0]
+		data.pool.slice(1).find((c) => full(c) && score(c) >= 80) ?? data.pool[1] ?? data.pool[0]
 	const s = extra?.sources.find((x) => x.key === card?.key) ?? null
-	const fmt = (v: number | null | undefined, unit = "") =>
-		v == null ? "–" : `${v}${unit}`
+	const fmt = (v: number | null | undefined, unit = "") => (v == null ? "–" : `${v}${unit}`)
 	// Letterboxd shows one decimal: 4.5, not 4.50.
-	const stars = (x: number | null | undefined) =>
-		x == null ? "–" : x.toFixed(1)
+	const stars = (x: number | null | undefined) => (x == null ? "–" : x.toFixed(1))
 	const sources: Source[] = [
 		{
 			id: "imdb",
@@ -177,21 +158,13 @@ export function RingEnd({
 	fillAt,
 }: {
 	card: IntroCard
-	wrap?: (
-		key: "kick" | "head" | "ring" | "verdict",
-		node: ReactNode,
-	) => ReactNode
+	wrap?: (key: "kick" | "head" | "ring" | "verdict", node: ReactNode) => ReactNode
 	fillAt?: number
 }) {
 	const numberAt = fillAt !== undefined ? fillAt + 1100 : undefined
 	return (
 		<>
-			{wrap(
-				"kick",
-				<div className="intro-score-kick intro-score-at-kick">
-					{card.title}
-				</div>,
-			)}
+			{wrap("kick", <div className="intro-score-kick intro-score-at-kick">{card.title}</div>)}
 			{wrap(
 				"head",
 				<div className="intro-score-head intro-score-at-head">
@@ -222,7 +195,11 @@ export const Layer = ({
 	className = "",
 	style,
 	children,
-}: { className?: string; style?: CSSProperties; children: ReactNode }) => (
+}: {
+	className?: string
+	style?: CSSProperties
+	children: ReactNode
+}) => (
 	<div className={`intro-score-layer ${className}`} style={style}>
 		{children}
 	</div>

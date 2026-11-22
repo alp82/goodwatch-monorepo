@@ -20,7 +20,7 @@ import {
 import imdbLogo from "~/img/imdb-logo-250.webp?no-inline"
 import letterboxdLogo from "~/img/letterboxd-dots.svg?no-inline"
 import metacriticLogoIcon from "~/img/metacritic-logo-icon-64.webp?no-inline"
-import rottenLogoIcon from "~/img/rotten-logo-icon-64.webp"
+import rottenLogoIcon from "~/img/rotten-logo-icon-64.webp?no-inline"
 import { whiteMark } from "~/ui/brand/white-mark"
 import { radioKeys } from "~/ui/filter-bar/controls"
 import { compactCount } from "~/ui/filter-bar/labels"

@@ -5,7 +5,7 @@ import imdbLogo from "~/img/imdb-logo-250.webp?no-inline"
 import metacriticLogo from "~/img/metacritic-logo-96.webp"
 import metacriticLogoIcon from "~/img/metacritic-logo-icon-64.webp?no-inline"
 import rottenLogo from "~/img/rotten-logo-96.webp"
-import rottenLogoIcon from "~/img/rotten-logo-icon-64.webp"
+import rottenLogoIcon from "~/img/rotten-logo-icon-64.webp?no-inline"
 import {
 	type AllRatings,
 	goodwatchScoreDisplay,
@@ -22,11 +22,7 @@ export interface RatingBadgesProps {
 	onToggleRate: () => void
 }
 
-export default function RatingBadges({
-	media,
-	ratings,
-	onToggleRate,
-}: RatingBadgesProps) {
+export default function RatingBadges({ media, ratings, onToggleRate }: RatingBadgesProps) {
 	const { details, mediaType } = media
 	const { tmdb_id } = details
 
@@ -56,9 +52,7 @@ export default function RatingBadges({
 								<span
 									className={`text-xl font-semibold ${vibeColorIndex == null ? "text-gray-300" : `text-vibe-${vibeColorIndex}`}`}
 								>
-									{goodwatchScoreDisplay(
-										ratings.goodwatch_overall_score_normalized_percent,
-									)}
+									{goodwatchScoreDisplay(ratings.goodwatch_overall_score_normalized_percent)}
 								</span>
 								<span className="text-gray-300 font-normal text-sm">/100</span>
 							</>
@@ -91,9 +85,7 @@ export default function RatingBadges({
 						</div>
 					)}
 					<div className="flex flex-col text-sm">
-						<span className="text-gray-300 font-light text-xs">
-							My Score
-						</span>
+						<span className="text-gray-300 font-light text-xs">My Score</span>
 						<span
 							className={`
 								${userColorIndex == null ? "text-gray-200" : `text-vibe-${userColorIndex}`} 
@@ -107,12 +99,7 @@ export default function RatingBadges({
 			</div>
 
 			<div className="w-full sm:w-auto flex items-center justify-between gap-2 sm:gap-3">
-				<a
-					className="flex-1 min-w-0"
-					href={ratings?.imdb_url}
-					target="_blank"
-					rel="noreferrer"
-				>
+				<a className="flex-1 min-w-0" href={ratings?.imdb_url} target="_blank" rel="noreferrer">
 					<dl
 						className={`
 							${ratings?.imdb_url ? "hover:border-white/[.45] active:border-white/[.45]" : "opacity-60"}
@@ -122,11 +109,7 @@ export default function RatingBadges({
 							text-center brightness-[.8] hover:brightness-100
 						`}
 					>
-						<img
-							className="block h-5 object-contain"
-							src={assetUrl(imdbLogo)}
-							alt="IMDb Logo"
-						/>
+						<img className="block h-5 object-contain" src={assetUrl(imdbLogo)} alt="IMDb Logo" />
 						<dd className="text-base font-semibold tracking-tight text-gray-900">
 							{ratings?.imdb_user_score_original
 								? ratings?.imdb_user_score_original.toFixed(1)

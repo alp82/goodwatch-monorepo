@@ -4,7 +4,7 @@ import type { StatsSnapshot } from "~/domain/stats/snapshot"
 import imdbLogo from "~/img/imdb-logo-250.webp?no-inline"
 import letterboxdLogo from "~/img/letterboxd-dots.svg?no-inline"
 import metacriticLogo from "~/img/metacritic-logo-icon-64.webp?no-inline"
-import rottenLogo from "~/img/rotten-logo-icon-64.webp"
+import rottenLogo from "~/img/rotten-logo-icon-64.webp?no-inline"
 import { BrandCard } from "~/ui/living-room/intro/parts/brand-cards"
 import type { Source } from "~/ui/living-room/intro/parts/score-kit"
 import { SpreadBars } from "~/ui/profile/parts"
@@ -29,9 +29,7 @@ export function Crowd({ s }: { s: StatsSnapshot }) {
 	// Metascores in tens, with the perfect 100s in the top bar: ten bars, as SpreadBars draws them.
 	const metascores = s.charts.metascoreSpread
 	const perfect = metascores[10] ?? 0
-	const metaBars = metascores
-		.slice(0, 10)
-		.map((n, i) => n + (i === 9 ? perfect : 0))
+	const metaBars = metascores.slice(0, 10).map((n, i) => n + (i === 9 ? perfect : 0))
 	const metaPeak = metascores.indexOf(Math.max(...metascores.slice(0, 10)))
 	const metacritic = splitCompact(src.metacriticCriticReviews)
 	const cards: { source: Source; line: string }[] = [
@@ -96,9 +94,7 @@ export function Crowd({ s }: { s: StatsSnapshot }) {
 						<div className="stats-brand">
 							<BrandCard s={source} />
 						</div>
-						<figcaption className="text-center text-xs text-gray-400 sm:text-sm">
-							{line}
-						</figcaption>
+						<figcaption className="text-center text-xs text-gray-400 sm:text-sm">{line}</figcaption>
 					</figure>
 				))}
 			</div>
@@ -132,9 +128,7 @@ export function Crowd({ s }: { s: StatsSnapshot }) {
 				/>
 			</div>
 			<div className="grid gap-4 lg:grid-cols-2">
-				<div
-					className={`${PANEL} flex flex-col justify-between gap-6 p-4 sm:p-5`}
-				>
+				<div className={`${PANEL} flex flex-col justify-between gap-6 p-4 sm:p-5`}>
 					<div>
 						<p className={LABEL}>IMDb scores, movies with 1,000+ votes</p>
 						<p className="mt-2 text-lg text-gray-300">
@@ -143,17 +137,14 @@ export function Crowd({ s }: { s: StatsSnapshot }) {
 								{imdbPeak + 1} and {imdbPeak + 1}.9
 							</b>
 							: {count(imdb[imdbPeak])} movies. Only{" "}
-							<b className="text-white">{count(imdb[8] + imdb[9])}</b> score 9
-							or higher.
+							<b className="text-white">{count(imdb[8] + imdb[9])}</b> score 9 or higher.
 						</p>
 					</div>
 					<div data-fx-spot="crowd-spread">
 						<SpreadBars spread={imdb} height="h-28" />
 					</div>
 				</div>
-				<div
-					className={`${PANEL} flex flex-col justify-between gap-6 p-4 sm:p-5`}
-				>
+				<div className={`${PANEL} flex flex-col justify-between gap-6 p-4 sm:p-5`}>
 					<div>
 						<p className={LABEL}>Metascores, movies</p>
 						<p className="mt-2 text-lg text-gray-300">

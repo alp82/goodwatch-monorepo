@@ -2,14 +2,10 @@ import type React from "react"
 import imdbLogo from "~/img/imdb-logo-250.webp?no-inline"
 import letterboxdLogo from "~/img/letterboxd-dots.svg?no-inline"
 import metacriticLogoIcon from "~/img/metacritic-logo-icon-64.webp?no-inline"
-import rottenLogoIcon from "~/img/rotten-logo-icon-64.webp"
+import rottenLogoIcon from "~/img/rotten-logo-icon-64.webp?no-inline"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { assetUrl } from "~/utils/asset-url"
-import {
-	letterboxdScore,
-	letterboxdStars,
-	letterboxdTitle,
-} from "~/utils/letterboxd"
+import { letterboxdScore, letterboxdStars, letterboxdTitle } from "~/utils/letterboxd"
 
 // IMDb, Letterboxd (movies only), Metacritic (critics | audience), and Rotten Tomatoes (critics | audience) as compact
 // brand-colored chips in a wrapping row. A site with no score at all is left out.
@@ -17,7 +13,10 @@ import {
 export default function RatingChips({
 	media,
 	fill = false,
-}: { media: MovieResult | ShowResult; fill?: boolean }) {
+}: {
+	media: MovieResult | ShowResult
+	fill?: boolean
+}) {
 	const d = media.details
 	const lb = letterboxdScore(media)
 	return (
@@ -25,21 +24,13 @@ export default function RatingChips({
 			fill={fill}
 			lb={lb && letterboxdStars(lb.stars)}
 			lbCount={lb?.count ?? null}
-			imdb={
-				d.imdb_user_score_original
-					? d.imdb_user_score_original.toFixed(1)
-					: null
-			}
+			imdb={d.imdb_user_score_original ? d.imdb_user_score_original.toFixed(1) : null}
 			mc={
 				d.metacritic_meta_score_original
 					? String(Math.floor(d.metacritic_meta_score_original))
 					: null
 			}
-			mcUser={
-				d.metacritic_user_score_original
-					? d.metacritic_user_score_original.toFixed(1)
-					: null
-			}
+			mcUser={d.metacritic_user_score_original ? d.metacritic_user_score_original.toFixed(1) : null}
 			rt={
 				d.rotten_tomatoes_tomato_score_original
 					? `${Math.floor(d.rotten_tomatoes_tomato_score_original)}%`
@@ -125,30 +116,13 @@ export function RatingChipRow({
 			<img
 				src={assetUrl(logo)}
 				alt={alt}
-				className={
-					wordmark.has(alt)
-						? small
-							? "h-2.5"
-							: "h-3"
-						: small
-							? "h-3"
-							: "h-3.5"
-				}
+				className={wordmark.has(alt) ? (small ? "h-2.5" : "h-3") : small ? "h-3" : "h-3.5"}
 			/>
 			{value}
 		</a>
 	)
 	const chips = [
-		imdb &&
-			chip(
-				"imdb",
-				d.imdb_url,
-				imdbLogo,
-				"IMDb",
-				imdb,
-				"bg-imdb text-black",
-				`IMDb: ${imdb}`,
-			),
+		imdb && chip("imdb", d.imdb_url, imdbLogo, "IMDb", imdb, "bg-imdb text-black", `IMDb: ${imdb}`),
 		lb &&
 			chip(
 				"lb",
@@ -185,9 +159,7 @@ export function RatingChipRow({
 	].filter(Boolean)
 	if (chips.length === 0) return null
 	return (
-		<div
-			className={`flex items-center gap-1.5 ${fill ? "min-w-0 flex-1" : "flex-wrap"}`}
-		>
+		<div className={`flex items-center gap-1.5 ${fill ? "min-w-0 flex-1" : "flex-wrap"}`}>
 			{chips}
 		</div>
 	)

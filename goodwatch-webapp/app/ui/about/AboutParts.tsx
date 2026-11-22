@@ -1,10 +1,6 @@
 // Pieces of /about: who makes GoodWatch (the footer's "Created by" chip, a little bigger), where to find us (the
 // footer's Elsewhere links plus Support) and where the data comes from (the footer's credits plus the score sources).
-import {
-	EnvelopeIcon,
-	NewspaperIcon,
-	SignalIcon,
-} from "@heroicons/react/24/outline"
+import { EnvelopeIcon, NewspaperIcon, SignalIcon } from "@heroicons/react/24/outline"
 import { Link } from "@remix-run/react"
 import type { ComponentType, ReactNode } from "react"
 import imdbLogo from "~/img/imdb-logo-250.webp?no-inline"
@@ -12,7 +8,7 @@ import justwatchLogo from "~/img/justwatch-logo.svg"
 import letterboxdLogo from "~/img/letterboxd-dots.svg?no-inline"
 import metacriticLogo from "~/img/metacritic-logo-96.webp"
 import rottenLogo from "~/img/rotten-logo-96.webp"
-import tmdbLogo from "~/img/tmdb-logo.svg"
+import tmdbLogo from "~/img/tmdb-logo.svg?no-inline"
 import {
 	CREATOR_URL,
 	DISCORD_URL,
@@ -36,9 +32,7 @@ export function CreatorChip() {
 			</span>
 			<span>
 				By{" "}
-				<span className="font-semibold text-gray-100 group-hover:text-amber-300">
-					Alper Ortac
-				</span>{" "}
+				<span className="font-semibold text-gray-100 group-hover:text-amber-300">Alper Ortac</span>{" "}
 				<span className="text-gray-500">@alperortac</span>
 			</span>
 		</a>
@@ -93,7 +87,11 @@ function Out({
 	href,
 	className,
 	children,
-}: { href: string; className: string; children: ReactNode }) {
+}: {
+	href: string
+	className: string
+	children: ReactNode
+}) {
 	return href.startsWith("/") ? (
 		<Link to={href} prefetch="intent" className={className}>
 			{children}
@@ -114,27 +112,11 @@ export function Credits({ className = "" }: { className?: string }) {
 			<span>Data from</span>
 			<img src={assetUrl(tmdbLogo)} alt="TMDB" className={`h-3 ${logo}`} />
 			{/* The JustWatch file's viewBox doesn't parse, so it has no ratio of its own: give it its drawing's size. */}
-			<img
-				src={assetUrl(justwatchLogo)}
-				alt="JustWatch"
-				className="h-[10px] w-[66px] opacity-80"
-			/>
+			<img src={assetUrl(justwatchLogo)} alt="JustWatch" className="h-[10px] w-[66px] opacity-80" />
 			<img src={assetUrl(imdbLogo)} alt="IMDb" className={`h-5 ${logo}`} />
-			<img
-				src={assetUrl(letterboxdLogo)}
-				alt="Letterboxd"
-				className={`h-3.5 ${logo}`}
-			/>
-			<img
-				src={assetUrl(rottenLogo)}
-				alt="Rotten Tomatoes"
-				className={`h-5 ${logo}`}
-			/>
-			<img
-				src={assetUrl(metacriticLogo)}
-				alt="Metacritic"
-				className={`h-5 ${logo}`}
-			/>
+			<img src={assetUrl(letterboxdLogo)} alt="Letterboxd" className={`h-3.5 ${logo}`} />
+			<img src={assetUrl(rottenLogo)} alt="Rotten Tomatoes" className={`h-5 ${logo}`} />
+			<img src={assetUrl(metacriticLogo)} alt="Metacritic" className={`h-5 ${logo}`} />
 			{/* Character images; TheTVDB asks for a credit with a link. */}
 			<a
 				href="https://thetvdb.com"

@@ -7,7 +7,7 @@ import { Link } from "@remix-run/react"
 import { useRef, useState } from "react"
 import { countryPath } from "~/domain/new-on-services"
 import justwatchLogo from "~/img/justwatch-logo.svg"
-import tmdbLogo from "~/img/tmdb-logo.svg"
+import tmdbLogo from "~/img/tmdb-logo.svg?no-inline"
 import { GoodWatchWordmark } from "~/ui/brand/GoodWatchWordmark"
 import { assetUrl } from "~/utils/asset-url"
 import useLocale from "~/utils/locale"
@@ -84,7 +84,14 @@ function PoweredBy() {
 				rel="noreferrer"
 				className="relative z-[8] opacity-70 transition-opacity hover:opacity-100"
 			>
-				<img alt="TMDB" className="h-2.5 w-auto" src={assetUrl(tmdbLogo)} />
+				<img
+					alt="TMDB"
+					className="h-2.5 w-auto"
+					loading="lazy"
+					width={273}
+					height={36}
+					src={assetUrl(tmdbLogo)}
+				/>
 			</a>
 			and
 			<a

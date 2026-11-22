@@ -1,22 +1,11 @@
 // Episode details, provider scores, and the floating panel shared with member season controls.
-import {
-	type ReactNode,
-	useCallback,
-	useEffect,
-	useLayoutEffect,
-	useRef,
-	useState,
-} from "react"
+import { type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import imdbLogo from "~/img/imdb-logo-250.webp?no-inline"
 import metacriticLogoIcon from "~/img/metacritic-logo-icon-64.webp?no-inline"
-import rottenLogoIcon from "~/img/rotten-logo-icon-64.webp"
-import tmdbLogo from "~/img/tmdb-logo.svg"
-import type {
-	GridEpisode,
-	GridSeason,
-	GridSpecial,
-} from "~/server/episode-grid.server"
+import rottenLogoIcon from "~/img/rotten-logo-icon-64.webp?no-inline"
+import tmdbLogo from "~/img/tmdb-logo.svg?no-inline"
+import type { GridEpisode, GridSeason, GridSpecial } from "~/server/episode-grid.server"
 import {
 	LOW_VOTE_THRESHOLD,
 	PROVIDERS,
@@ -35,8 +24,7 @@ export { episodeLabel, episodeWhere } from "./labels"
 import { episodeWhere } from "./labels"
 
 // useLayoutEffect warns during server rendering; the float never renders there anyway.
-const useIsoLayoutEffect =
-	typeof window === "undefined" ? useEffect : useLayoutEffect
+const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect
 
 // ---------------------------------------------------------------------------------------
 // Floating tip and popover
@@ -73,8 +61,7 @@ export function useFloat() {
 			close()
 		}
 		// Follow the anchor when the page or the grid box scrolls, e.g. while tabbing through.
-		const follow = () =>
-			setState((s) => (s ? { ...s, anchor: s.el.getBoundingClientRect() } : s))
+		const follow = () => setState((s) => (s ? { ...s, anchor: s.el.getBoundingClientRect() } : s))
 		window.addEventListener("keydown", onKey)
 		window.addEventListener("pointerdown", onDown, true)
 		window.addEventListener("scroll", follow, true)
@@ -107,12 +94,7 @@ export function useFloat() {
 				},
 				onPointerLeave: (event: React.PointerEvent<HTMLElement>) => {
 					const current = stateRef.current
-					if (
-						event.pointerType === "mouse" &&
-						current?.id === id &&
-						!current.pinned
-					)
-						close()
+					if (event.pointerType === "mouse" && current?.id === id && !current.pinned) close()
 				},
 				onFocus: (event: React.FocusEvent<HTMLElement>) => {
 					if (!stateRef.current?.pinned) open(event.currentTarget, false)
@@ -144,7 +126,10 @@ export function useFloat() {
 export function FloatLayer({
 	state,
 	topInset: headersBottom,
-}: { state: FloatState | null; topInset: () => number }) {
+}: {
+	state: FloatState | null
+	topInset: () => number
+}) {
 	const ref = useRef<HTMLDivElement>(null)
 	const [position, setPosition] = useState<{
 		left: number
@@ -202,7 +187,11 @@ export function EpisodeTip({
 	season,
 	episode,
 	tmdbNumbers = false,
-}: { season: number | null; episode: GridEpisode | GridSpecial; tmdbNumbers?: boolean }) {
+}: {
+	season: number | null
+	episode: GridEpisode | GridSpecial
+	tmdbNumbers?: boolean
+}) {
 	const vibe = imdbVibe(episode.score)
 	const low = isLowVotes(episode.votes)
 	return (
@@ -225,14 +214,11 @@ export function EpisodeTip({
 				</span>
 				<span className="block text-xs text-gray-400">
 					{episodeWhere(season, episode, tmdbNumbers)} ·{" "}
-					{episode.unrated
-						? "No IMDb rating"
-						: `${formatCount(episode.votes)} votes`}
+					{episode.unrated ? "No IMDb rating" : `${formatCount(episode.votes)} votes`}
 				</span>
 				{low && !episode.unrated && (
 					<span className="mt-1 block text-xs text-amber-200/90">
-						Few votes (under {LOW_VOTE_THRESHOLD}), so this score can still
-						move.
+						Few votes (under {LOW_VOTE_THRESHOLD}), so this score can still move.
 					</span>
 				)}
 			</span>
@@ -255,9 +241,7 @@ const SITE_LOGO = {
 export function ProviderLogo({ provider }: { provider: ProviderKey }) {
 	const logo = SITE_LOGO[PROVIDERS[provider].site]
 	return (
-		<span
-			className={`inline-flex h-4 w-9 shrink-0 items-center justify-center rounded ${logo.bg}`}
-		>
+		<span className={`inline-flex h-4 w-9 shrink-0 items-center justify-center rounded ${logo.bg}`}>
 			<img src={assetUrl(logo.src)} alt="" className={logo.className} />
 		</span>
 	)
@@ -267,35 +251,28 @@ export function ProviderLogo({ provider }: { provider: ProviderKey }) {
 export function SeasonScoreList({
 	season,
 	providers,
-}: { season: GridSeason; providers: ProviderKey[] }) {
+}: {
+	season: GridSeason
+	providers: ProviderKey[]
+}) {
 	const rows = providers.flatMap((p) => {
 		const value = season.scores[p]
 		return value ? [{ p, value }] : []
 	})
 	if (!rows.length)
-		return (
-			<p className="text-xs text-gray-400">
-				No site has a score for this season.
-			</p>
-		)
+		return <p className="text-xs text-gray-400">No site has a score for this season.</p>
 	return (
 		<ul className="grid grid-cols-[auto_1fr_auto] items-center gap-x-2 gap-y-1">
 			{rows.map(({ p, value }) => {
 				const meta = PROVIDERS[p]
-				const suffix =
-					meta.site === "rotten" || meta.site === "metacritic"
-						? meta.short
-						: null
+				const suffix = meta.site === "rotten" || meta.site === "metacritic" ? meta.short : null
 				return (
 					<li key={p} className="contents">
 						<ProviderLogo provider={p} />
 						<span className="text-xs text-gray-400">
 							{suffix ?? (p === "imdb" ? "Episode avg" : "Season avg")}
 							{value.count && meta.countNoun ? (
-								<span className="text-gray-500">
-									{" "}
-									· {formatCount(value.count)}
-								</span>
+								<span className="text-gray-500"> · {formatCount(value.count)}</span>
 							) : null}
 						</span>
 						<span className="text-right text-sm font-semibold tabular-nums text-white">
