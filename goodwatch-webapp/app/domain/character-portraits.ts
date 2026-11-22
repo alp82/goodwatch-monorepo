@@ -38,10 +38,6 @@ export const ALL_PERSON_ROLES = 200
 export const personRolesKey = (personId: number, name: string) =>
 	["character-person-roles", personId, name] as const
 
-/** TheTVDB portraits are 2:3. */
-export const PORTRAIT_WIDTH = 300
-export const PORTRAIT_HEIGHT = 450
-
 /** Lowercase, without accents or punctuation, single spaces: "Zoë  D'Amato" → "zoe d amato". */
 export function foldName(text: string): string {
 	return text
@@ -80,9 +76,7 @@ export function characterNamePatterns(query: string): [string, string] {
 
 /** Roles that name no character: the actor as themselves, a narrator. */
 export function isSelfRole(character: string): boolean {
-	return /^(self|himself|herself|themselves|themself|narrator)\b/.test(
-		foldName(character),
-	)
+	return /^(self|himself|herself|themselves|themself|narrator)\b/.test(foldName(character))
 }
 
 /**
@@ -165,18 +159,13 @@ export function pickRole<T extends { character: string }>(
 	return (
 		portraits.find((p) => {
 			const name = foldName(p.character)
-			return (
-				Boolean(name) &&
-				wanted.some((w) => name.includes(w) || w.includes(name))
-			)
+			return Boolean(name) && wanted.some((w) => name.includes(w) || w.includes(name))
 		}) ?? portraits[0]
 	)
 }
 
 /** A person's roles, one per title (the first of each, so keep them best known first). */
-export function onePerTitle<T extends { mediaType: string; tmdbId: number }>(
-	roles: T[],
-): T[] {
+export function onePerTitle<T extends { mediaType: string; tmdbId: number }>(roles: T[]): T[] {
 	const seen = new Set<string>()
 	return roles.filter((r) => {
 		const key = `${r.mediaType}-${r.tmdbId}`
@@ -196,8 +185,7 @@ export function portraitLookup(portraits: CharacterPortrait[]) {
 	const byId = new Map<number, CharacterPortrait[]>()
 	const byName = new Map<string, CharacterPortrait[]>()
 	for (const p of portraits) {
-		if (p.personTmdbId)
-			byId.set(p.personTmdbId, [...(byId.get(p.personTmdbId) ?? []), p])
+		if (p.personTmdbId) byId.set(p.personTmdbId, [...(byId.get(p.personTmdbId) ?? []), p])
 		const name = foldName(p.personName)
 		if (name) byName.set(name, [...(byName.get(name) ?? []), p])
 	}
@@ -208,8 +196,7 @@ export function portraitLookup(portraits: CharacterPortrait[]) {
 		roles?: string[]
 	}): CharacterPortrait | undefined => {
 		const list =
-			byId.get(member.id) ??
-			(member.name ? byName.get(foldName(member.name)) : undefined)
+			byId.get(member.id) ?? (member.name ? byName.get(foldName(member.name)) : undefined)
 		return list?.length ? pickRole(list, member.roles) : undefined
 	}
 }
@@ -237,9 +224,7 @@ export function characterHref(path: string, ask: CharacterAsk): string {
 }
 
 /** The character a title page's search asks for, and the search without it; null when it asks for none. */
-export function readCharacterAsk(
-	search: string,
-): { ask: CharacterAsk; rest: string } | null {
+export function readCharacterAsk(search: string): { ask: CharacterAsk; rest: string } | null {
 	const params = new URLSearchParams(search)
 	const character = (params.get(CHARACTER_PARAM) ?? "").trim()
 	if (!character) return null
@@ -262,17 +247,13 @@ export function pickCastRow(
 ): number {
 	const character = foldName(ask.character)
 	const actor = foldName(ask.actor)
-	const exact = (r: { characters: string[] }) =>
-		r.characters.some((c) => foldName(c) === character)
+	const exact = (r: { characters: string[] }) => r.characters.some((c) => foldName(c) === character)
 	const loose = (r: { characters: string[] }) =>
 		r.characters.some((c) => {
 			const name = foldName(c)
-			return (
-				Boolean(name) && (name.includes(character) || character.includes(name))
-			)
+			return Boolean(name) && (name.includes(character) || character.includes(name))
 		})
-	const by = (r: { name: string }) =>
-		Boolean(actor) && foldName(r.name) === actor
+	const by = (r: { name: string }) => Boolean(actor) && foldName(r.name) === actor
 	const tests: ((r: { name: string; characters: string[] }) => boolean)[] = [
 		(r) => by(r) && exact(r),
 		(r) => by(r) && loose(r),

@@ -1,5 +1,4 @@
 // Small shared pieces for character portraits: the picture itself and TheTVDB's credit.
-import { PORTRAIT_HEIGHT, PORTRAIT_WIDTH } from "~/domain/character-portraits"
 
 /**
  * A TheTVDB portrait (an external 300×450 picture), cropped from the top so small crops keep the face. Its width and
@@ -21,8 +20,8 @@ export function PortraitImg({
 		<img
 			src={src}
 			alt={alt}
-			width={PORTRAIT_WIDTH}
-			height={PORTRAIT_HEIGHT}
+			width={300}
+			height={450}
 			loading={eager ? "eager" : "lazy"}
 			decoding="async"
 			draggable={false}
