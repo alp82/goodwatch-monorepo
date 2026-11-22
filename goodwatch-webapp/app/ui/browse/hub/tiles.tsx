@@ -1005,9 +1005,12 @@ export function FlagMap({
 								const sh = SHAPES.get(k)
 								if (!sh) return null
 								return (
-									<clipPath key={k} id={`mini-land-${k}`}>
-										<path d={sh.d} />
-									</clipPath>
+									<g key={k}>
+										<path id={`mini-outline-${k}`} d={sh.d} vectorEffect="non-scaling-stroke" />
+										<clipPath id={`mini-land-${k}`}>
+											<use href={`#mini-outline-${k}`} />
+										</clipPath>
+									</g>
 								)
 							})}
 						</defs>
@@ -1038,7 +1041,7 @@ export function FlagMap({
 								>
 									<g clipPath={`url(#mini-land-${k})`}>
 										{/* Far-off parts outside the flag's box (Alaska) stay land-colored, not a repeat of the flag. */}
-										<path d={sh.d} fill="#3a4354" />
+										<use href={`#mini-outline-${k}`} fill="#3a4354" />
 										{/* hinted at rest, almost full under the pointer, full when picked. */}
 										<image
 											href={countryFlagUrl(k)}
@@ -1047,8 +1050,8 @@ export function FlagMap({
 											className={`${GLIDE_T} ${on ? "opacity-100" : "opacity-40 saturate-[0.25] group-hover:opacity-90 group-hover:saturate-[0.9]"}`}
 										/>
 									</g>
-									<path
-										d={sh.d}
+									<use
+										href={`#mini-outline-${k}`}
 										fill="none"
 										stroke={on ? "#fff" : "#0f1420"}
 										strokeWidth={on ? 1.6 : 0.6}

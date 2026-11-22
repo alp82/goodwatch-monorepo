@@ -92,8 +92,9 @@ export function FlagShape({
 			className={`shrink-0 overflow-visible ${className}`}
 		>
 			<defs>
+				<path id={`${uid}p`} d={d} vectorEffect="non-scaling-stroke" />
 				<clipPath id={`${uid}c`}>
-					<path d={d} />
+					<use href={`#${uid}p`} />
 				</clipPath>
 				{/* A soft light from the top left, so the flag reads as a surface and not as a sticker. */}
 				<linearGradient id={`${uid}g`} x1="0" y1="0" x2="1" y2="1">
@@ -112,8 +113,8 @@ export function FlagShape({
 				/>
 				<rect x={0} y={0} width={w} height={h} fill={`url(#${uid}g)`} />
 			</g>
-			<path
-				d={d}
+			<use
+				href={`#${uid}p`}
 				fill="none"
 				stroke="white"
 				strokeOpacity={quiet ? 0.5 : 0.4}
