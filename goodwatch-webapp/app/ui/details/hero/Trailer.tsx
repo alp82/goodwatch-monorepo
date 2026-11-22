@@ -4,7 +4,11 @@ import { TmdbImage } from "~/ui/TmdbImage"
 import { useOpenedOnce } from "~/utils/first-use"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import { HERO_TIMING } from "~/utils/start-after-paint"
-import { HERO_BACKDROP_MAX_WIDTH, HERO_BACKDROP_SIZES, heroBackdropPath } from "~/ui/details/hero/hero-backdrop"
+import {
+	HERO_BACKDROP_MAX_WIDTH,
+	HERO_BACKDROP_SIZES,
+	heroBackdropPath,
+} from "~/ui/details/hero/hero-backdrop"
 import { type SizeRule, tmdbImageUrl } from "~/utils/tmdb-image"
 
 type Media = MovieResult | ShowResult
@@ -15,7 +19,10 @@ type Media = MovieResult | ShowResult
  * as 412 at 1.75 or 2.625 and 390 at 3) pick w780; the desktop's banner is 1216 px wide and picks w1280.
  */
 export function heroBackdropFiles(path: string) {
-	return { phone: tmdbImageUrl(heroBackdropPath(path), "w780"), desktop: tmdbImageUrl(heroBackdropPath(path), "w1280") }
+	return {
+		phone: tmdbImageUrl(heroBackdropPath(path), "w780"),
+		desktop: tmdbImageUrl(heroBackdropPath(path), "w1280"),
+	}
 }
 
 export function HeroBackdropImage({ media, className }: { media: Media; className: string }) {
@@ -23,7 +30,18 @@ export function HeroBackdropImage({ media, className }: { media: Media; classNam
 	// The sizes and width rule live in hero-backdrop.ts, which a prefetch also uses to load the same file early.
 	// The page's scripts wait for it to paint (HERO_TIMING): it is the first screen's largest content. It asks without
 	// credentials, as the 103 Early Hints response preloads it (TMDB answers with the CORS header).
-	return <TmdbImage kind="backdrop" path={heroBackdropPath(media.details.backdrop_path)} sizes={HERO_BACKDROP_SIZES} maxWidth={HERO_BACKDROP_MAX_WIDTH} priority="high" className={className} crossOrigin="anonymous" {...HERO_TIMING} />
+	return (
+		<TmdbImage
+			kind="backdrop"
+			path={heroBackdropPath(media.details.backdrop_path)}
+			sizes={HERO_BACKDROP_SIZES}
+			maxWidth={HERO_BACKDROP_MAX_WIDTH}
+			priority="high"
+			className={className}
+			crossOrigin="anonymous"
+			{...HERO_TIMING}
+		/>
+	)
 }
 
 // The opener's poster: 96 to 112 px wide on a phone, 128 px from sm, 176 px from lg (ui/details/TitlePage.tsx).
@@ -65,6 +83,7 @@ export function HeroPoster({ media, className = "" }: { media: Media; className?
 					kind="poster"
 					lang={media.details.presentation?.title.language ?? "en"}
 					path={media.details.poster_path}
+					phoneThumbnail
 					sizes={HERO_POSTER_SIZES}
 					maxWidth={176}
 					alt={`Poster for ${media.details.title}`}
@@ -74,7 +93,12 @@ export function HeroPoster({ media, className = "" }: { media: Media; className?
 			</button>
 			{opened && (
 				<Suspense fallback={null}>
-					<PosterFullScreen media={media} open={open} thumb={thumb} onClose={() => setOpen(false)} />
+					<PosterFullScreen
+						media={media}
+						open={open}
+						thumb={thumb}
+						onClose={() => setOpen(false)}
+					/>
 				</Suspense>
 			)}
 		</>

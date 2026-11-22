@@ -34,12 +34,16 @@ export const RAIL_POSTER_SIZES: SizeRule[] = [
 export function RailCard({
 	title,
 	sizes = RAIL_POSTER_SIZES,
-}: { title: StartTitle; sizes?: SizeRule[] }) {
+}: {
+	title: StartTitle
+	sizes?: SizeRule[]
+}) {
 	return (
 		<MovieTvCard
 			details={title}
 			mediaType={title.media_type}
 			discover="none"
+			phoneThumbnail
 			posterSizes={sizes}
 			posterMaxWidth={164}
 		/>
@@ -59,12 +63,7 @@ export function Poster({
 	style?: CSSProperties
 }) {
 	if (!path)
-		return (
-			<span
-				className={className ? `sb-poster ${className}` : "sb-poster"}
-				style={style}
-			/>
-		)
+		return <span className={className ? `sb-poster ${className}` : "sb-poster"} style={style} />
 	return (
 		<img
 			src={tmdbImageUrl(path, size)}
@@ -80,10 +79,7 @@ export function Poster({
 }
 
 /** Three posters fanned out from the bottom center, the first in front. They spread a little on hover or focus. */
-export function Fan({
-	posters,
-	className,
-}: { posters: readonly string[]; className?: string }) {
+export function Fan({ posters, className }: { posters: readonly string[]; className?: string }) {
 	return (
 		<div aria-hidden className={className ? `sb-fan ${className}` : "sb-fan"}>
 			<Poster path={posters[1]} className="sb-fan-l" />
@@ -137,16 +133,8 @@ export function MoodRail({ moods }: { moods: BrowseMood[] }) {
 					const info = MOOD_INFO.get(mood.path)
 					if (!info) return null
 					return (
-						<li
-							key={mood.path}
-							className="sb-mood"
-							style={{ "--hue": info.hue } as CSSProperties}
-						>
-							<Link
-								to={moodHref(mood.path)}
-								discover="none"
-								className="sb-tile"
-							>
+						<li key={mood.path} className="sb-mood" style={{ "--hue": info.hue } as CSSProperties}>
+							<Link to={moodHref(mood.path)} discover="none" className="sb-tile">
 								<Fan posters={mood.posters} />
 								<b>{info.name}</b>
 								<span>{info.line}</span>

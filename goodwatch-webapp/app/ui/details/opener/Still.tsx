@@ -1,5 +1,6 @@
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { TmdbImage } from "~/ui/TmdbImage"
+import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { HeroBackdropImage } from "~/ui/details/hero/Trailer"
 
 type Media = MovieResult | ShowResult
@@ -24,21 +25,29 @@ const CARD_SIZES: [string | null, string][] = [
 export function Still({
 	media,
 	small = false,
-}: { media: MovieResult | ShowResult; small?: boolean }) {
+}: {
+	media: MovieResult | ShowResult
+	small?: boolean
+}) {
 	const path = cardStillPath(media)
 	return (
 		<div aria-hidden="true" className="absolute inset-0">
 			{path ? (
 				<>
-					<TmdbImage
-						kind="backdrop"
-						path={path}
-						sizes={CARD_SIZES}
-						maxWidth={780}
-						alt=""
-						className="absolute inset-0 h-full w-full scale-[1.06] object-cover object-[50%_40%]"
-						draggable={false}
-					/>
+					<picture>
+						{/* The resting card is scaled to half the phone's width. The expanded player
+						    overlays its own full-size still when opened. */}
+						<source media="(max-width: 639px)" srcSet={tmdbImageUrl(path, "w300")} />
+						<TmdbImage
+							kind="backdrop"
+							path={path}
+							sizes={CARD_SIZES}
+							maxWidth={780}
+							alt=""
+							className="absolute inset-0 h-full w-full scale-[1.06] object-cover object-[50%_40%]"
+							draggable={false}
+						/>
+					</picture>
 					{!small && (
 						<TmdbImage
 							kind="backdrop"
