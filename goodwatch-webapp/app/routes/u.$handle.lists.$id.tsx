@@ -253,7 +253,8 @@ export default function ShareListPage() {
 													decoding="async"
 													width={56}
 													height={84}
-													srcSet={`${item.poster.replace("/w500/", "/w92/")} 1x, ${item.poster.replace("/w500/", "/w154/")} 2x`}
+													sizes="(min-width: 640px) 56px, 48px"
+													srcSet={`${item.poster.replace("/w500/", "/w92/")} 92w, ${item.poster.replace("/w500/", "/w154/")} 154w`}
 													src={item.poster.replace("/w500/", "/w92/")}
 													alt=""
 													className="aspect-[2/3] h-auto w-12 rounded-md object-cover shadow-lg shadow-black/50 sm:w-14"
