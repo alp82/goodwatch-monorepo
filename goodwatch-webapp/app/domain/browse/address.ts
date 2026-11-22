@@ -154,7 +154,8 @@ function query(a: Address, rest: Ingredient[], extra?: Record<string, string | u
 	if (a.at && a.at > 0) q.set("at", String(a.at))
 	if (a.mine) q.set("mine", "1")
 	if (a.unseen) q.set("unseen", "1")
-	if (a.year) q.set("year", String(a.year))
+	if (a.year && (a.view === "top" || (a.parts.length === 1 && a.parts[0].family === "decade")))
+		q.set("year", String(a.year))
 	if (a.level) q.set("level", a.level)
 	if (a.kind_) q.set("k", a.kind_)
 	for (const [k, v] of Object.entries(extra ?? {})) {

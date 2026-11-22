@@ -238,3 +238,15 @@ test("the older /explore and /tv-shows addresses land on the final address in on
 	assert.equal(finalAddress(best, bq), "/shows/top?page=2")
 	assert.equal(finalAddress("/shows/streaming/netflix"), "/shows/streaming/us/netflix")
 })
+
+test("a year follows Top and the decade ribbon, and drops from unrelated blends", () => {
+	const path = "/movies/moods/cozy/comedy"
+	const query = "year=1994&at=12&with=country%3Ajapan"
+	assert.equal(finalAddress(path, query), path + "?at=12&with=country%3Ajapan")
+	const parsed = parse(path, new URLSearchParams(query), index)
+	assert.ok(parsed)
+	assert.equal(browsePath(parsed), path + "?with=country%3Ajapan&at=12")
+	for (const supported of ["/movies/top", "/movies/decades", "/movies/decades/1990s"]) {
+		assert.equal(browseRedirect(supported, "?year=1994"), null)
+	}
+})

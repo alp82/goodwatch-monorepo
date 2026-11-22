@@ -163,6 +163,13 @@ export function browseRedirect(pathname: string, search = ""): string | null {
 		const q = merged.toString()
 		return `${path}${q ? `?${q}` : ""}`
 	}
+	// A release year changes Top and the era ribbon. On a mood, genre, theme or style page it
+	// never filters a title, but carrying it into each link creates a duplicate of every blend.
+	if (slug && ["moods", "genres", "themes", "styles"].includes(family) && query.has("year")) {
+		query.delete("year")
+		const rest = query.toString()
+		return pathname + (rest ? `?${rest}` : "")
+	}
 	return null
 }
 
