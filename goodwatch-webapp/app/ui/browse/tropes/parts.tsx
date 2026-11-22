@@ -1,5 +1,6 @@
 // Pieces the tropes index and the trope page share: the name plate, a poster fan, a twist tag in plain words, a trope
 // card, and the TV Tropes credit.
+import { HERO_TIMING } from "~/utils/start-after-paint"
 import { TmdbImage } from "~/ui/TmdbImage"
 import { Link } from "@remix-run/react"
 import type { CSSProperties } from "react"
@@ -62,10 +63,12 @@ const FAN_T =
 export function PosterFan({
 	titles,
 	width = 84,
+	spotlight = false,
 	className = "",
 }: {
 	titles: ShowTitle[]
 	width?: number
+	spotlight?: boolean
 	className?: string
 }) {
 	const [front, left, right] = titles
@@ -84,6 +87,8 @@ export function PosterFan({
 				kind="poster"
 				path={t.card.poster_path}
 				width={width}
+				priority={spotlight ? "high" : "lazy"}
+				{...(spotlight ? HERO_TIMING : {})}
 				alt=""
 				className={`absolute top-0 left-1/2 -ml-[50%] block w-full origin-bottom rounded-lg object-cover shadow-[0_10px_24px_-8px_rgba(0,0,0,0.75)] ring-1 ring-white/15 ${FAN_T} ${at}`}
 				style={{ height: h }}
@@ -124,7 +129,7 @@ export function TropeCard({
 		>
 			<span
 				aria-hidden
-				className="relative flex h-44 items-end justify-center overflow-hidden"
+				className="relative flex h-44 [content-visibility:auto] items-end justify-center overflow-hidden"
 				style={{
 					background: `radial-gradient(120% 90% at 50% 100%, color-mix(in oklab, ${t.color} 34%, transparent), transparent 70%), linear-gradient(180deg, color-mix(in oklab, ${t.color} 10%, transparent), transparent)`,
 				}}

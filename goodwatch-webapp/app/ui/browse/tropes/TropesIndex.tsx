@@ -88,7 +88,12 @@ function FeatureCard({ t, to, kind }: { t: TropeRow; to: To; kind: Kind }) {
 			}}
 		>
 			<span className="flex items-center justify-center overflow-hidden py-8 max-sm:h-64 max-sm:items-end max-sm:pb-0">
-				<PosterFan titles={t.posters} width={150} className="max-sm:mb-[-10%] max-sm:scale-90" />
+				<PosterFan
+					titles={t.posters}
+					width={150}
+					spotlight
+					className="max-sm:mb-[-10%] max-sm:scale-90"
+				/>
 			</span>
 			<span className="flex min-h-0 min-w-0 flex-col p-5 sm:p-8 sm:pl-2">
 				<span

@@ -5,7 +5,7 @@
 import { Link } from "@remix-run/react"
 import type { ReactNode } from "react"
 import type { CardProps, PlaceRef, ShowTitle } from "~/domain/browse/types"
-import { poster } from "~/ui/browse/index"
+import { TmdbImage } from "~/ui/TmdbImage"
 import type { MarkWord, Marks } from "~/server/browse/card-marks.server"
 import {
 	GenreForm,
@@ -167,11 +167,11 @@ export function PosterFan({
 							} as React.CSSProperties
 						}
 					>
-						<img
-							src={poster(t.card.poster_path, "w154")}
+						<TmdbImage
+							kind="poster"
+							path={t.card.poster_path}
+							width={width}
 							alt=""
-							loading="lazy"
-							decoding="async"
 							className="block aspect-[2/3] w-full rounded-md bg-gray-800 object-cover shadow-lg shadow-black/50 ring-1 ring-white/15"
 						/>
 					</span>
@@ -209,12 +209,12 @@ export function PosterRow({ titles, className = "" }: { titles: ShowTitle[]; cla
 	return (
 		<span aria-hidden className={`pointer-events-none flex items-end gap-2.5 ${className}`}>
 			{shown.map((t, i) => (
-				<img
+				<TmdbImage
 					key={t.card.key}
-					src={poster(t.card.poster_path, "w154")}
+					kind="poster"
+					path={t.card.poster_path}
+					width={96}
 					alt=""
-					loading="lazy"
-					decoding="async"
 					style={{ transitionDelay: `${i * 25}ms` }}
 					className="block aspect-[2/3] w-[6rem] rounded-lg bg-gray-800 object-cover shadow-lg shadow-black/50 ring-1 ring-white/15 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/card:-translate-y-1 group-has-[a:focus-visible]/card:-translate-y-1 motion-reduce:transition-none"
 				/>
