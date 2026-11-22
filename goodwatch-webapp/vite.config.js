@@ -241,6 +241,9 @@ const STYLE_SHEET = /\.css($|\?)/
 // rule names is pulled into the group, for every page that uses it. That is why the mutation hooks, which the home page
 // also loads, are a group of their own.
 const FEATURE_CHUNKS = [
+	// Reading a score on a poster or a person page needs these pure formatters. Keeping them out
+	// of the interactive title controls also keeps the mutation hooks off those initial views.
+	["ratings", /\/app\/utils\/ratings\.ts$/],
 	["user-data", /\/app\/hooks\/useUserDataMutations\.ts$/],
 	// The status words of a tracked show (tracking/status-look.ts) ride here: the poster cards' actions and the title
 	// page's Seen and score both use them and both load this group. Rule 3 would put them into every page's shell; in
