@@ -8,25 +8,17 @@ import { ArrowDownIcon, ArrowUpIcon } from "@heroicons/react/20/solid"
 import { AnimatePresence, type Transition, motion, useReducedMotion } from "framer-motion"
 import type { ReactNode } from "react"
 import type { TitleCard } from "~/server/title-cards.server"
+import { DISCOVER_POSTER_SIZES } from "~/ui/discover/posters"
 import { DiscoverCardRole } from "~/ui/discover/DiscoverRoles"
 import { compactCount } from "~/ui/filter-bar/labels"
 import { SPRING } from "~/ui/filter-bar/motion"
 import { HiddenTileContext, useKeptCards } from "~/ui/title-actions/hide-feedback"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
-import { type SizeRule, gridPosterPriority } from "~/utils/tmdb-image"
+import { gridPosterPriority } from "~/utils/tmdb-image"
 import type { TitleKey } from "~/utils/title-key"
 
 export const DISCOVER_GRID =
 	"grid grid-cols-3 gap-2 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 lg:gap-5 xl:grid-cols-6"
-
-// The results occupy a padded max-w-7xl container, with three to six columns.
-const POSTER_SIZES: SizeRule[] = [
-	["(min-width: 1280px)", "191px"],
-	["(min-width: 1024px)", "calc((100vw - 112px) / 5)"],
-	["(min-width: 768px)", "calc((100vw - 80px) / 4)"],
-	["(min-width: 640px)", "calc((100vw - 64px) / 3)"],
-	[null, "calc((100vw - 48px) / 3)"],
-]
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const
 // A new order (filters, sort): a quick glide on a slightly overshooting ease.
@@ -94,7 +86,7 @@ export function DiscoverGrid({
 										<TitlePosterCard
 											card={card}
 											posterPriority={priority}
-											posterSizes={POSTER_SIZES}
+											posterSizes={DISCOVER_POSTER_SIZES}
 											phoneThumbnail={index >= 3}
 											skipOffscreen={priority === "lazy"}
 										/>

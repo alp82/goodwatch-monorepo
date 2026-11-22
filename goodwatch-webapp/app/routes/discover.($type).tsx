@@ -5,11 +5,7 @@ import {
 	json,
 	redirect,
 } from "@remix-run/node"
-import {
-	type ShouldRevalidateFunction,
-	useLoaderData,
-	useRouteError,
-} from "@remix-run/react"
+import { type ShouldRevalidateFunction, useLoaderData, useRouteError } from "@remix-run/react"
 import type { DehydratedState } from "@tanstack/react-query"
 import { searchText } from "~/domain/discover-search"
 import {
@@ -35,11 +31,9 @@ import { getPersonName } from "~/server/person.server"
 import { getViewerContext } from "~/server/viewer.server"
 import { reportBoundaryError } from "~/telemetry/telemetry"
 import { ErrorPage, errorPageProps } from "~/ui/ErrorPage"
+import { discoverPosterPreloads } from "~/ui/discover/posters"
 import { DiscoverPage } from "~/ui/discover/DiscoverPage"
-import {
-	type InitialBrowse,
-	browseKey,
-} from "~/ui/discover/useDiscoverBrowse"
+import { type InitialBrowse, browseKey } from "~/ui/discover/useDiscoverBrowse"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { DISCOVER_MAX_PAGE } from "~/utils/constants"
 import { readAwardWords } from "~/domain/award-filter"
@@ -67,7 +61,11 @@ export const meta: MetaFunction<typeof loader> = ({ data, location }) => {
 
 	const items: PageItem[] = []
 
-	return buildMeta({ pageMeta, items })
+	const cards = data?.browse.initial?.pages[0]?.cards ?? []
+	return [
+		...buildMeta({ pageMeta, items }),
+		...(data?.dehydratedState ? [] : discoverPosterPreloads(cards)),
+	]
 }
 
 // Title pages used to link cast as /discover/all?withCast=3084, and search engines still
@@ -89,8 +87,7 @@ const IGNORED_FOR_PERSON = new Set([
 function singlePersonLookup(params: URLSearchParams): number | null {
 	let personId: number | null = null
 	for (const [key, value] of params) {
-		if (!value || IGNORED_FOR_PERSON.has(key) || key.startsWith("utm_"))
-			continue
+		if (!value || IGNORED_FOR_PERSON.has(key) || key.startsWith("utm_")) continue
 		const isPerson = key === "withCast" || key === "withCrew"
 		if (isPerson && personId === null && /^\d{1,10}$/.test(value)) {
 			personId = Number(value)
@@ -101,10 +98,7 @@ function singlePersonLookup(params: URLSearchParams): number | null {
 	return personId
 }
 
-const canonicalLoader = async ({
-	request,
-	params: routeParams,
-}: LoaderFunctionArgs) => {
+const canonicalLoader = async ({ request, params: routeParams }: LoaderFunctionArgs) => {
 	// Extract page from URL parameters
 	const url = new URL(request.url)
 	const urlParams = new URLSearchParams(url.search)
@@ -174,9 +168,7 @@ async function browseLoader(
 	let pages: BrowseResults[] | null = null
 	// The cast filter's first person: their characters lead the grid, read alongside the results.
 	const rolesPerson = state.people?.[0]
-	const rolesWork = rolesPerson
-		? discoverRolesState(rolesPerson, getPersonName)
-		: undefined
+	const rolesWork = rolesPerson ? discoverRolesState(rolesPerson, getPersonName) : undefined
 	try {
 		if (!searching) {
 			pages = await Promise.all(
