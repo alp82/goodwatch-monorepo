@@ -63,18 +63,33 @@ async function teaserOf(atlas: Places, t: Trope): Promise<Example | null> {
 	return title ? { title, as: pick.as, play: pick.play, text: pick.text, spoilers: [] } : null
 }
 
+/** The most common tropes claim posters first. With over a hundred overlapping tropes, each
+ * group ranks after the previous one has claimed its titles. This keeps promoted candidates
+ * in the same bounded card read as their neighbors. */
+async function tropePosters(atlas: Places, order: Trope[]): Promise<Map<string, ShowTitle[]>> {
+	const pics = new Map<string, ShowTitle[]>()
+	// Each 3-poster row considers up to 14 entries. Sixteen rows fit in four 60-card queries.
+	const groupSize = 16
+	for (let i = 0; i < order.length; i += groupSize) {
+		const group = order.slice(i, i + groupSize)
+		await atlas.readShowcaseCandidates(
+			group.map((t) => [part(t)]),
+			3,
+			"popular",
+		)
+		for (const t of group) pics.set(t.id, await atlas.showcase([part(t)], 3, { by: "popular" }))
+	}
+	return pics
+}
+
 async function indexOf(atlas: Places): Promise<TropesIndexData> {
 	const counted = TROPES.map((t) => ({ t, n: atlas.count([part(t)]) })).filter((x) => x.n >= MIN)
-	// The most common tropes pick their posters first, so the familiar titles land where people look; never one twice.
-	const order = [...counted].sort((a, b) => b.n - a.n)
-	const pics = new Map<string, ShowTitle[]>()
-	await atlas.readShowcaseCandidates(
-		order.map(({ t }) => [part(t)]),
-		3,
-		"popular",
-	)
-	for (const { t } of order) pics.set(t.id, await atlas.showcase([part(t)], 3, { by: "popular" }))
-	const teasers = await pool(counted, 8, ({ t }) => teaserOf(atlas, t).catch(() => null))
+	const order = [...counted].sort((a, b) => b.n - a.n).map(({ t }) => t)
+	// Teasers look up the write-ups of the best-known titles. They never reserve a showcase poster.
+	const [pics, teasers] = await Promise.all([
+		tropePosters(atlas, order),
+		pool(counted, 8, ({ t }) => teaserOf(atlas, t).catch(() => null)),
+	])
 	const rows = new Map<string, TropeRow>(
 		counted.map(({ t, n }, i) => [
 			t.id,
