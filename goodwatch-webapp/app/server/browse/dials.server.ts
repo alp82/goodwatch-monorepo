@@ -650,7 +650,12 @@ async function loadFamily(atlas: Places, address: Address, url: URL): Promise<Di
 	}
 }
 
-async function loadPlace(atlas: Places, address: Address, url: URL): Promise<DialsData> {
+export async function loadPlaceDials(
+	atlas: Places,
+	address: Address,
+	url: URL,
+	stage?: { reserveSuggestions: boolean },
+): Promise<Extract<DialsData, { view: "place" }>> {
 	const parts = address.parts
 	const refs = parts.map((p) => atlas.ref(p))
 	const single = parts.length === 1
@@ -902,6 +907,12 @@ async function loadPlace(atlas: Places, address: Address, url: URL): Promise<Dia
 			})),
 		]
 	}
+	if (stage) {
+		// The room already supplied suggestions, people and awards. On pages with kind cards,
+		// keep the poster reservations that determine their independent selection.
+		if (stage.reserveSuggestions) await atlas.blend(parts, { suggestions: 6, titles: 3 })
+		return out
+	}
 	if (single && family === "trait") {
 		const near = await atlas.neighbors(parts[0], { n: 4, within: "all", titles: 3 })
 		out.near = near.map((n) => ({ ...n, to: placeTo(atlas, n.place) }))
@@ -1105,6 +1116,6 @@ async function loadTop(atlas: Places, address: Address, url: URL): Promise<Dials
 export async function loadDials({ atlas, address, url }: BrowseLoadArgs): Promise<DialsData> {
 	if (address.view === "top") return loadTop(atlas, address, url)
 	if (address.view === "family" && address.family) return loadFamily(atlas, address, url)
-	if (address.view === "place" && address.parts.length) return loadPlace(atlas, address, url)
+	if (address.view === "place" && address.parts.length) return loadPlaceDials(atlas, address, url)
 	return loadHub(atlas, address, url)
 }

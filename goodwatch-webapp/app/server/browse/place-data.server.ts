@@ -343,7 +343,7 @@ export async function bestPresets(atlas: Places): Promise<BestPreset[]> {
 	return out
 }
 
-async function loadPlace(atlas: Places, address: Address): Promise<PlaceData> {
+export async function loadPlaceContent(atlas: Places, address: Address) {
 	const parts = address.parts
 	const refs = parts.map((p) => atlas.ref(p))
 	const single = parts.length === 1
@@ -450,7 +450,7 @@ async function loadPlace(atlas: Places, address: Address): Promise<PlaceData> {
 					}))
 				})()
 			: null
-	return {
+	const room: PlaceData = {
 		view: "place",
 		title: atlas.name(parts),
 		parts: refs,
@@ -502,6 +502,7 @@ async function loadPlace(atlas: Places, address: Address): Promise<PlaceData> {
 		decades: single && lead.family === "decade" ? atlas.members("decade") : undefined,
 		map: countries,
 	}
+	return { room, blend }
 }
 
 const BEST_PAGE = 50
@@ -583,7 +584,7 @@ export async function loadPage({
 			cards,
 		}
 	}
-	if (address.view === "place") return loadPlace(atlas, address)
+	if (address.view === "place") return (await loadPlaceContent(atlas, address)).room
 
 	// The hub. Moods lead; the one Popular rail follows them.
 	const moods = await moodCards(atlas)

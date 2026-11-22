@@ -12,9 +12,9 @@ import { copyFor } from "~/domain/browse/copy-lookup"
 import { tropeBySlug } from "~/domain/tropes/catalog"
 import type { PoolItem } from "~/domain/browse/tune"
 import type { PlaceData } from "~/server/browse/place-data.server"
-import { loadDials } from "~/server/browse/dials.server"
+import { loadPlaceDials } from "~/server/browse/dials.server"
 import type { BrowseLoadArgs } from "~/server/browse/load-args"
-import { loadPage } from "~/server/browse/place-data.server"
+import { loadPlaceContent } from "~/server/browse/place-data.server"
 import { cachedPage } from "./page-cache.server"
 import { tropeMembersVersion } from "./trope-members.server"
 import { WINDOW } from "~/domain/browse/window"
@@ -239,8 +239,10 @@ async function buildPlacePage(args: BrowseLoadArgs): Promise<BuiltPlacePage> {
 
 	// The place's content first: its essentials take the best-known titles. The first dial is the intensity, so the
 	// content's own list (which would narrow to a band) is not used.
-	const room = (await loadPage({ atlas, address: { ...address, level: undefined } })) as PlaceData
-	const dz = (await loadDials(args)) as DialsPlace
+	const { room, blend } = await loadPlaceContent(atlas, { ...address, level: undefined })
+	const dz = await loadPlaceDials(atlas, address, url, {
+		reserveSuggestions: room.kinds.length > 0,
+	})
 
 	// The pool, rebuilt when the list's controls or the steering narrow or re-order it.
 	let pool = dz.pool
@@ -348,7 +350,6 @@ async function buildPlacePage(args: BrowseLoadArgs): Promise<BuiltPlacePage> {
 		if (add.items.length >= 2) adds.push(add)
 	}
 
-	const blend = await atlas.blend(parts, { suggestions: 0, titles: 0 })
 	const count = atlas.count(parts)
 	const title: TitleData = {
 		shorts: shortsOf(atlas, parts),
@@ -359,9 +360,11 @@ async function buildPlacePage(args: BrowseLoadArgs): Promise<BuiltPlacePage> {
 		hasBest: count >= MIN_PAGE,
 	}
 
-	const kinds = (await atlas.kinds(parts, 3).catch(() => [])).filter((k) =>
-		room.kinds.some((r) => r.id === k.id),
-	)
+	const kinds = room.kinds.length
+		? (await atlas.kinds(parts, 3).catch(() => [])).filter((k) =>
+				room.kinds.some((r) => r.id === k.id),
+			)
+		: []
 	const list = await windowOf(
 		atlas,
 		parts,
