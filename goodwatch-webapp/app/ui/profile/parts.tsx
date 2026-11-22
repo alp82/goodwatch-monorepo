@@ -13,16 +13,14 @@ import { SortControl } from "~/ui/filter-bar/controls"
 import type { SortOption } from "~/ui/filter-bar/labels"
 import { WRAP, tmdbImage } from "~/ui/my-pages/bits"
 import { BUTTON_BOX } from "~/ui/my-pages/style"
-import { getVibeColorValue } from "~/utils/ratings"
+import { vibe } from "./format"
 
 export const TILE = "rounded-2xl bg-white/[0.04] ring-1 ring-white/10"
 export { BUTTON_BOX } from "~/ui/my-pages/style"
 
 export const QUIET_BUTTON = `${BUTTON_BOX} rounded-full bg-white/[0.06] font-bold text-gray-100 ring-1 ring-white/15 hover:bg-white/[0.1]`
 
-export const count = (n: number) => n.toLocaleString("en-US")
-export const vibe = (score: number) =>
-	getVibeColorValue(Math.max(1, Math.min(10, Math.round(score))) as Score)
+export { count, vibe } from "./format"
 
 /** A TMDB poster or backdrop path at a size; a full URL (share-list cards carry those) stays as it is; null stays null. */
 export const posterUrl = (path: string | null, size = "w342") =>

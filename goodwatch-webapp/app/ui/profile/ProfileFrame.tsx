@@ -45,15 +45,7 @@ export function TabHead({
 	)
 }
 
-/** "2019-03" → "March 2019". */
-export const monthYear = (ym: string) => {
-	const [y, m] = ym.split("-").map(Number)
-	return new Date(Date.UTC(y, (m || 1) - 1, 1)).toLocaleDateString("en-US", {
-		month: "long",
-		year: "numeric",
-		timeZone: "UTC",
-	})
-}
+export { monthYear } from "./format"
 
 function LinkLogos({ shell }: { shell: ProfileShell }) {
 	const links = shell.links.filter((l) => l.value.trim())

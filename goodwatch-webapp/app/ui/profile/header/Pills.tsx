@@ -1,21 +1,18 @@
 // The orbit's open pill: the viewer type in display type, families and attributes as chips,
 // and for a member visitor the match as a ring that mirrors the orbit at the pill's other end and links to the
 // comparison. The owner and guests see the same pill without the ring. It closes on the orbit again or Escape.
-import { DISPLAY } from "~/ui/my-pages/bits"
+import { DISPLAY } from "~/ui/my-pages/style"
 import { FAMILY_COLOR } from "../taste/model"
 import { MatchLink, type MatchView } from "./Compare"
 import { Layer, PillFrame, type RevealProps } from "./Reveal"
 import type { KeyFacts } from "./facts"
 
-const SLIDE = (open: boolean) =>
-	`delay-100 ${open ? "translate-x-0" : "-translate-x-4"}`
+const SLIDE = (open: boolean) => `delay-100 ${open ? "translate-x-0" : "-translate-x-4"}`
 
-const FOCUS =
-	"focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
 
 /** A soft tint of the match color for surfaces. */
-const tint = (color: string, pct: number) =>
-	`color-mix(in srgb, ${color} ${pct}%, transparent)`
+const tint = (color: string, pct: number) => `color-mix(in srgb, ${color} ${pct}%, transparent)`
 
 export function PillBackground({ open }: { open: boolean }) {
 	return (

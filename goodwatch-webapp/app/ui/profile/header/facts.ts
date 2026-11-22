@@ -5,8 +5,7 @@
 import { tastePath } from "~/domain/member-paths"
 import { type ProfilePart, type ProfileShell, seesPart } from "~/domain/profile"
 import { FAMILY_NAMES } from "~/domain/taste-attributes"
-import { monthYear } from "../ProfileFrame"
-import { count } from "../parts"
+import { monthYear, count } from "../format"
 import type { WhorlAttribute } from "../taste/Whorl"
 import { FAMILY_ORDER, type FamilyId } from "../taste/model"
 
@@ -35,18 +34,12 @@ export function watchTime(hours: number) {
 	return `${count(hours)} ${hours === 1 ? "hour" : "hours"}`
 }
 
-const plural = (n: number, one: string, many: string) =>
-	`${count(n)} ${n === 1 ? one : many}`
+const plural = (n: number, one: string, many: string) => `${count(n)} ${n === 1 ? one : many}`
 
-function shellFacts(
-	shell: ProfileShell,
-	query: { as: string } | undefined,
-): HeaderFact[] {
+function shellFacts(shell: ProfileShell, query: { as: string } | undefined): HeaderFact[] {
 	const c = shell.counts
 	const seenTo =
-		shell.viewer === "owner" && !query
-			? undefined
-			: tastePath(shell.handle, "seen", query)
+		shell.viewer === "owner" && !query ? undefined : tastePath(shell.handle, "seen", query)
 	const out: HeaderFact[] = []
 	if (c.seen > 0) {
 		out.push({
@@ -90,22 +83,15 @@ function shellFacts(
 }
 
 /** Movies seen, shows seen and the watch time the viewer may see, missing ones filled from the pool. */
-export function headerFacts(
-	shell: ProfileShell,
-	query: { as: string } | undefined,
-): HeaderFact[] {
+export function headerFacts(shell: ProfileShell, query: { as: string } | undefined): HeaderFact[] {
 	const all = shellFacts(shell, query).filter((fact) =>
 		fact.parts.every((part) => seesPart(shell, part)),
 	)
-	return ORDER.flatMap((key) => all.find((f) => f.key === key) ?? []).slice(
-		0,
-		3,
-	)
+	return ORDER.flatMap((key) => all.find((f) => f.key === key) ?? []).slice(0, 3)
 }
 
 /** The join date's month, "October 2026", for "On GoodWatch since October 2026"; null when the viewer may not see it. */
-export const joinedMonth = (shell: ProfileShell) =>
-	shell.since ? monthYear(shell.since) : null
+export const joinedMonth = (shell: ProfileShell) => (shell.since ? monthYear(shell.since) : null)
 
 // ---------- The fingerprint's key facts ----------
 
