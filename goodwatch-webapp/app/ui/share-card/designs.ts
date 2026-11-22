@@ -37,6 +37,17 @@ export const DESIGNS: CardDesign[] = [
 
 export const DEFAULT_DESIGN = podium.key
 
-export const isDesignKey = (key: unknown): key is string => typeof key === "string" && DESIGNS.some((d) => d.key === key)
+export const isDesignKey = (key: unknown): key is string =>
+	typeof key === "string" && DESIGNS.some((d) => d.key === key)
 
-export const designByKey = (key: string | null | undefined): CardDesign => DESIGNS.find((d) => d.key === key) ?? DESIGNS[0]
+export const designByKey = (key: string | null | undefined): CardDesign =>
+	DESIGNS.find((d) => d.key === key) ?? DESIGNS[0]
+
+/** Static picker choices sent by the editor loaders so that choosing one needs only that template. */
+export const designOptions = DESIGNS.map(({ key, name, format, w, h }) => ({
+	key,
+	name,
+	format,
+	w,
+	h,
+}))

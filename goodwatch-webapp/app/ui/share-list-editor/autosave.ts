@@ -1,13 +1,8 @@
 // Autosave for the share list editor, half a second after each change. A new list saves as a draft in this browser
 // (a visit to /lists/new restores it); a saved list saves to the server through /api/share-lists.
 import { useEffect, useState } from "react"
-import { isDesignKey } from "~/ui/share-card/designs"
-import {
-	type CardTitle,
-	isPromptId,
-	isThemeKey,
-	LIST_SIZE,
-} from "~/ui/share-card/model"
+import type { CardDesignOption } from "~/ui/share-card/model"
+import { type CardTitle, isPromptId, isThemeKey, LIST_SIZE } from "~/ui/share-card/model"
 import type { ListDraft, ListState } from "~/ui/share-list-editor/list-state"
 
 const DEBOUNCE_MS = 500
@@ -17,28 +12,23 @@ export type SaveStatus = "idle" | "saving" | "saved" | "incomplete" | "failed"
 export type SaveTarget = { kind: "draft" } | { kind: "list"; id: string }
 
 /** The draft saved in this browser, if there is a valid one. */
-export function readBrowserDraft(): ListDraft | null {
+export function readBrowserDraft(designs: Pick<CardDesignOption, "key">[]): ListDraft | null {
 	try {
-		const draft = JSON.parse(
-			localStorage.getItem(DRAFT_KEY) ?? "null",
-		) as Partial<ListDraft> | null
-		if (
-			!draft ||
-			typeof draft.title !== "string" ||
-			!Array.isArray(draft.items)
-		)
-			return null
+		const draft = JSON.parse(localStorage.getItem(DRAFT_KEY) ?? "null") as Partial<ListDraft> | null
+		if (!draft || typeof draft.title !== "string" || !Array.isArray(draft.items)) return null
 		const items = (draft.items as CardTitle[])
 			.filter((i) => typeof i?.key === "string" && typeof i.title === "string")
 			.slice(0, LIST_SIZE)
 		return {
 			title: draft.title,
 			promptId: isPromptId(draft.promptId) ? draft.promptId : null,
-			design: isDesignKey(draft.design) ? draft.design : "",
+			design:
+				typeof draft.design === "string" && designs.some((d) => d.key === draft.design)
+					? draft.design
+					: "",
 			theme: isThemeKey(draft.theme) ? draft.theme : "ember",
 			items,
-			remixedFrom:
-				typeof draft.remixedFrom === "string" ? draft.remixedFrom : null,
+			remixedFrom: typeof draft.remixedFrom === "string" ? draft.remixedFrom : null,
 		}
 	} catch {
 		return null
@@ -74,20 +64,21 @@ export const isComplete = (draft: ListDraft) =>
 export function useAutosave(list: ListState, target: SaveTarget) {
 	const [status, setStatus] = useState<SaveStatus>("idle")
 	const snapshot = JSON.stringify(list.draft)
-	const targetKey = target.kind === "list" ? target.id : "draft"
+	const targetId = target.kind === "list" ? target.id : null
+	const version = list.version
 
 	useEffect(() => {
 		// Nothing to save until the person changes something.
-		if (list.version.current === 0) return
+		if (version.current === 0) return
 		const draft = JSON.parse(snapshot) as ListDraft
-		if (target.kind === "list" && !isComplete(draft)) {
+		if (targetId !== null && !isComplete(draft)) {
 			setStatus("incomplete")
 			return
 		}
 		setStatus("saving")
 		const controller = new AbortController()
 		const timer = setTimeout(async () => {
-			if (target.kind === "draft") {
+			if (targetId === null) {
 				try {
 					localStorage.setItem(DRAFT_KEY, snapshot)
 					setStatus("saved")
@@ -102,7 +93,7 @@ export function useAutosave(list: ListState, target: SaveTarget) {
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({
 						intent: "update",
-						id: target.id,
+						id: targetId,
 						list: listInput(draft),
 					}),
 					signal: controller.signal,
@@ -116,8 +107,7 @@ export function useAutosave(list: ListState, target: SaveTarget) {
 			clearTimeout(timer)
 			controller.abort()
 		}
-		// targetKey stands in for target, which is a new object on every render.
-	}, [snapshot, targetKey])
+	}, [snapshot, targetId, version])
 
 	return status
 }

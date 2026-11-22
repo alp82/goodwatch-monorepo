@@ -1,13 +1,9 @@
 // The toolbar's design and color pickers. Both have fixed widths per breakpoint, so a longer name never shifts the
 // layout, and both preview on hover: the card changes, the list doesn't, and a click commits.
-import {
-	ChevronDownIcon,
-	ChevronLeftIcon,
-	ChevronRightIcon,
-} from "@heroicons/react/24/outline"
+import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline"
 import { useState } from "react"
-import { ScaledCard } from "~/ui/share-card/ScaledCard"
-import { DESIGNS } from "~/ui/share-card/designs"
+import { SelectedCard } from "#selected-share-card"
+
 import { THEMES, type ThemeKey } from "~/ui/share-card/model"
 import { Popover, sectionLabel } from "~/ui/share-list-editor/parts"
 import type { Editor } from "~/ui/share-list-editor/useEditor"
@@ -66,11 +62,8 @@ export function DesignPicker({ ed }: { ed: Editor }) {
 				className="top-full left-4 mt-3 max-h-[calc(100dvh-16.75rem-var(--visitor-bar-h,0px)-var(--tab-row-h,0px))] w-[min(340px,calc(100vw-2rem))] overflow-y-auto sm:left-6 lg:left-8 lg:max-h-[calc(100dvh-9.5rem-var(--visitor-bar-h,0px)-var(--tab-row-h,0px))]"
 			>
 				<div className={sectionLabel}>Designs</div>
-				<div
-					className="grid grid-cols-2 gap-2"
-					onMouseLeave={() => ed.setPreviewDesign(null)}
-				>
-					{DESIGNS.map((d) => {
+				<div className="grid grid-cols-2 gap-2" onMouseLeave={() => ed.setPreviewDesign(null)}>
+					{ed.designOptions.map((d) => {
 						const active = d.key === ed.design.key
 						return (
 							<button
@@ -87,8 +80,8 @@ export function DesignPicker({ ed }: { ed: Editor }) {
 								style={{ ["--tw-ring-color" as string]: ed.colors.accent }}
 							>
 								<div className="pointer-events-none flex h-40 w-full items-center">
-									<ScaledCard
-										design={d}
+									<SelectedCard
+										designKey={d.key}
 										card={{ ...ed.card, theme: ed.list.theme }}
 										maxHeight={152}
 										className="rounded-md shadow-lg shadow-black/50"
@@ -99,9 +92,7 @@ export function DesignPicker({ ed }: { ed: Editor }) {
 								>
 									{d.name}
 								</span>
-								<span className="-mt-1 text-[10px] text-neutral-500">
-									{d.format}
-								</span>
+								<span className="-mt-1 text-[10px] text-neutral-500">{d.format}</span>
 							</button>
 						)
 					})}
@@ -126,10 +117,7 @@ export function ThemePicker({ ed }: { ed: Editor }) {
 				aria-haspopup="listbox"
 				className={`flex w-32 items-center gap-2 rounded-full py-1.5 pr-3 pl-1.5 text-sm font-bold transition sm:w-36 ${open ? "bg-white text-black" : "bg-white/10 hover:bg-white/15"}`}
 			>
-				<span
-					className="size-6 shrink-0 rounded-full"
-					style={swatch(ed.list.theme)}
-				/>
+				<span className="size-6 shrink-0 rounded-full" style={swatch(ed.list.theme)} />
 				<span className="flex-1 truncate text-left">{ed.colors.label}</span>
 				<ChevronDownIcon
 					className={`size-4 shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
@@ -162,9 +150,7 @@ export function ThemePicker({ ed }: { ed: Editor }) {
 						>
 							<span className="size-6 rounded-full" style={swatch(key)} />
 							<span className="flex-1">{THEMES[key].label}</span>
-							{ed.list.theme === key && (
-								<span className="text-xs text-neutral-400">✓</span>
-							)}
+							{ed.list.theme === key && <span className="text-xs text-neutral-400">✓</span>}
 						</button>
 					))}
 				</div>

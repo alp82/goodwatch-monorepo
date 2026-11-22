@@ -7,7 +7,7 @@ import { PencilSquareIcon } from "@heroicons/react/24/outline"
 import { BackToLists } from "~/ui/share-lists/ListToolbar"
 import { type CSSProperties, useState } from "react"
 import { CardFonts } from "~/ui/share-card/ScaledCard"
-import type { CardTitle } from "~/ui/share-card/model"
+import type { CardTitle, CardDesignOption } from "~/ui/share-card/model"
 import { CardPreview, CardPreviewStyles } from "~/ui/share-list-editor/CardPreview"
 import { EditorDialogs } from "~/ui/share-list-editor/Dialogs"
 import { DesignPicker, ThemePicker } from "~/ui/share-list-editor/Pickers"
@@ -80,6 +80,7 @@ function ShareButton({ ed, share }: { ed: Editor; share?: ShareAction }) {
 }
 
 export function ShareListEditor({
+	designOptions,
 	initial,
 	quickPicks,
 	date,
@@ -88,6 +89,7 @@ export function ShareListEditor({
 	share,
 	back,
 }: {
+	designOptions: CardDesignOption[]
 	initial: ListDraft
 	quickPicks: Record<string, CardTitle[]>
 	date: string
@@ -97,7 +99,7 @@ export function ShareListEditor({
 	/** Where the Lists key goes. Without it (guests), the toolbar starts with Edit. */
 	back?: string | null
 }) {
-	const ed = useEditor({ initial, quickPicks, date, byline })
+	const ed = useEditor({ designOptions, initial, quickPicks, date, byline })
 	const status = useAutosave(ed.list, saveTarget)
 	const [flipped, setFlipped] = useState(false)
 	const [opened, setOpened] = useState(false)

@@ -2,26 +2,15 @@
 // row with Lists lit stay above it). Only the owner can open it; everyone else goes to the list page. A wrong or
 // differently cased handle redirects to the canonical URL, and deleted lists answer 404. The underscore after $id
 // keeps it out of the list page.
-import {
-	type LoaderFunctionArgs,
-	type MetaFunction,
-	json,
-	redirect,
-} from "@remix-run/node"
+import { type LoaderFunctionArgs, type MetaFunction, json, redirect } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
 import { tastePath } from "~/domain/member-paths"
 import { presentCatalogLoader } from "~/server/media-payload.server"
 import { getList } from "~/server/share-lists/store.server"
-import {
-	getQuickPicks,
-	resolveCardTitles,
-} from "~/server/share-lists/titles.server"
+import { getQuickPicks, resolveCardTitles } from "~/server/share-lists/titles.server"
 import { getCachedProfileByUserId } from "~/server/share-lists/view.server"
-import {
-	publicOrigin,
-	shareListEditPath,
-	shareListPath,
-} from "~/ui/share-card/links"
+import { publicOrigin, shareListEditPath, shareListPath } from "~/ui/share-card/links"
+import { designOptions } from "~/ui/share-card/designs"
 import { cardDate, listByline } from "~/ui/share-card/model"
 import { SharedNotice } from "~/ui/share-list-editor/ShareFlow"
 import { ShareListEditor } from "~/ui/share-list-editor/ShareListEditor"
@@ -53,13 +42,9 @@ async function canonicalLoader({ params, request }: LoaderFunctionArgs) {
 		return redirect(`/lists/${list.id}`, {
 			headers: { "Cache-Control": "private, no-store" },
 		})
-	if (params.handle !== owner.handle)
-		return redirect(shareListEditPath(owner.handle, list.id), 301)
+	if (params.handle !== owner.handle) return redirect(shareListEditPath(owner.handle, list.id), 301)
 
-	const [items, quickPicks] = await Promise.all([
-		resolveCardTitles(list.items),
-		getQuickPicks(),
-	])
+	const [items, quickPicks] = await Promise.all([resolveCardTitles(list.items), getQuickPicks()])
 	const initial: ListDraft = {
 		title: list.title,
 		promptId: list.promptId,
@@ -70,6 +55,7 @@ async function canonicalLoader({ params, request }: LoaderFunctionArgs) {
 	}
 	return json(
 		{
+			designOptions,
 			id: list.id,
 			handle: owner.handle,
 			initial,
@@ -86,8 +72,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => [
 ]
 
 export default function EditShareList() {
-	const { id, handle, initial, quickPicks, date } =
-		useLoaderData<typeof loader>()
+	const { designOptions, id, handle, initial, quickPicks, date } = useLoaderData<typeof loader>()
 	const byline = listByline(handle)
 	const path = shareListPath(handle, id)
 	return (
@@ -95,6 +80,7 @@ export default function EditShareList() {
 			<div className={EDITOR_UNDER_ROW}>
 				<ShareListEditor
 					initial={initial}
+					designOptions={designOptions}
 					quickPicks={quickPicks}
 					date={date}
 					byline={byline}
@@ -102,10 +88,7 @@ export default function EditShareList() {
 					back={tastePath(handle, "lists")}
 					share={async () => {
 						// Make sure the card image is current before the link gets pasted somewhere.
-						navigator.sendBeacon?.(
-							"/api/og-image-warm",
-							new Blob([path], { type: "text/plain" }),
-						)
+						navigator.sendBeacon?.("/api/og-image-warm", new Blob([path], { type: "text/plain" }))
 						return `${publicOrigin()}${path}`
 					}}
 				/>

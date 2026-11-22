@@ -20,7 +20,7 @@ import {
 } from "~/server/share-lists/titles.server"
 import { getCachedProfileByUserId } from "~/server/share-lists/view.server"
 import { NoHandleChrome } from "~/ui/profile/ProfileHeader"
-import { DEFAULT_DESIGN } from "~/ui/share-card/designs"
+import { DEFAULT_DESIGN, designOptions } from "~/ui/share-card/designs"
 import {
 	DEFAULT_PROMPT_ID,
 	DEFAULT_THEME,
@@ -103,6 +103,7 @@ async function canonicalLoader({ request }: LoaderFunctionArgs) {
 			: EMPTY_DRAFT
 	return json(
 		{
+			designOptions,
 			initial,
 			// A remix or a ratings prefill starts fresh instead of restoring the browser draft.
 			startsFresh: !!source || rated.length > 0,
@@ -133,7 +134,7 @@ export const meta: MetaFunction = () => {
 }
 
 export default function NewShareList() {
-	const { initial, startsFresh, quickPicks, date, byline, noHandle, back } =
+	const { designOptions, initial, startsFresh, quickPicks, date, byline, noHandle, back } =
 		useLoaderData<typeof loader>()
 	const { pathname, search } = useLocation()
 	// The browser draft is only readable after hydration; restoring it remounts the editor with the draft.
@@ -143,13 +144,13 @@ export default function NewShareList() {
 	})
 	useEffect(() => {
 		if (startsFresh) return
-		const draft = readBrowserDraft()
+		const draft = readBrowserDraft(designOptions)
 		if (draft)
 			setStart({
-				draft: { ...draft, design: draft.design || DEFAULT_DESIGN },
+				draft: { ...draft, design: draft.design || designOptions[0].key },
 				restored: true,
 			})
-	}, [startsFresh])
+	}, [designOptions, startsFresh])
 
 	const flow = useShareFlow()
 	// Back from sign-up or sign-in: share the saved draft once the session is known.
@@ -165,9 +166,9 @@ export default function NewShareList() {
 			},
 			{ replace: true, preventScrollReset: true },
 		)
-		const draft = readBrowserDraft()
+		const draft = readBrowserDraft(designOptions)
 		if (user && draft && isComplete(draft)) flow.share(draft)
-	}, [resuming, loading, user, setParams, flow.share])
+	}, [designOptions, resuming, loading, user, setParams, flow.share])
 
 	return (
 		<>
@@ -176,6 +177,7 @@ export default function NewShareList() {
 				<ShareListEditor
 					key={start.restored ? "restored" : "initial"}
 					initial={start.draft}
+					designOptions={designOptions}
 					quickPicks={quickPicks}
 					date={date}
 					byline={byline}

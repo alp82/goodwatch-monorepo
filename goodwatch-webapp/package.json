@@ -4,6 +4,12 @@
 	"private": true,
 	"sideEffects": false,
 	"type": "module",
+	"imports": {
+		"#selected-share-card": {
+			"browser": "./app/ui/share-card/SelectedCard.browser.tsx",
+			"default": "./app/ui/share-card/SelectedCard.server.tsx"
+		}
+	},
 	"scripts": {
 		"dev": "remix vite:dev",
 		"start": "remix-serve ./build/server/index.js",

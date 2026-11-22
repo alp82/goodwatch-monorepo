@@ -1,7 +1,7 @@
 // Everything the editor's parts share: the list, drag and drop, the open dialog, and hover previews.
 // Hover previews change what the card shows without touching the list, so nothing saves until a click.
 import { useState } from "react"
-import { DESIGNS, designByKey } from "~/ui/share-card/designs"
+import type { CardDesignOption } from "~/ui/share-card/model"
 import {
 	type CardTitle,
 	DEFAULT_PROMPT_ID,
@@ -9,24 +9,19 @@ import {
 	THEMES,
 	type ThemeKey,
 } from "~/ui/share-card/model"
-import {
-	type DragPayload,
-	type DropTarget,
-	useDragAndDrop,
-} from "~/ui/share-list-editor/drag"
+import { type DragPayload, type DropTarget, useDragAndDrop } from "~/ui/share-list-editor/drag"
 import { type ListDraft, useListState } from "~/ui/share-list-editor/list-state"
 
-export type Dialog =
-	| { kind: "rank"; index: number }
-	| { kind: "title" }
-	| null
+export type Dialog = { kind: "rank"; index: number } | { kind: "title" } | null
 
 export function useEditor({
+	designOptions,
 	initial,
 	quickPicks,
 	date,
 	byline,
 }: {
+	designOptions: CardDesignOption[]
 	initial: ListDraft
 	quickPicks: Record<string, CardTitle[]>
 	date: string
@@ -43,8 +38,9 @@ export function useEditor({
 		else list.place(payload.item, target.index)
 	})
 
+	const designByKey = (key: string) => designOptions.find((d) => d.key === key) ?? designOptions[0]
 	const design = designByKey(list.design)
-	const index = DESIGNS.findIndex((d) => d.key === design.key)
+	const index = designOptions.findIndex((d) => d.key === design.key)
 	const shownTheme = previewTheme ?? list.theme
 
 	return {
@@ -53,6 +49,7 @@ export function useEditor({
 		dnd,
 		dialog,
 		setDialog,
+		designOptions,
 		design,
 		/** The design and theme the card shows right now, including hover previews. */
 		shown: {
@@ -65,12 +62,10 @@ export function useEditor({
 		setPreviewTheme,
 		stepDesign: (step: number) =>
 			list.set({
-				design: DESIGNS[(index + step + DESIGNS.length) % DESIGNS.length].key,
+				design: designOptions[(index + step + designOptions.length) % designOptions.length].key,
 			}),
 		quickPicks:
-			quickPicks[list.promptId ?? DEFAULT_PROMPT_ID] ??
-			quickPicks[DEFAULT_PROMPT_ID] ??
-			[],
+			quickPicks[list.promptId ?? DEFAULT_PROMPT_ID] ?? quickPicks[DEFAULT_PROMPT_ID] ?? [],
 		/** The card's props for the shown design and theme. */
 		card: {
 			title: list.title,

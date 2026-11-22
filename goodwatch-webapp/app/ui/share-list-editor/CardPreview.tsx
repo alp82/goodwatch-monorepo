@@ -1,13 +1,12 @@
 // The live card on the front of the editor. Clicking a poster opens its rank dialog, clicking the title opens the
 // title dialog, dragging a poster onto another swaps them, and titles can be dropped onto posters.
 import type { MouseEvent, PointerEvent } from "react"
-import { ScaledCard } from "~/ui/share-card/ScaledCard"
+import { SelectedCard } from "#selected-share-card"
 import type { Editor } from "~/ui/share-list-editor/useEditor"
 
 /** Hover and drop-target highlights for the card's ranks and title. */
 export function CardPreviewStyles({ ed }: { ed: Editor }) {
-	const over =
-		ed.dnd.drag?.over?.kind === "slot" ? ed.dnd.drag.over.index : null
+	const over = ed.dnd.drag?.over?.kind === "slot" ? ed.dnd.drag.over.index : null
 	const accent = ed.shown.colors.accent
 	const css = `
 		[data-card-preview] [data-slot], [data-card-preview] [data-edit] { cursor: pointer; transition: filter .15s; }
@@ -31,8 +30,7 @@ export function CardPreview({ ed }: { ed: Editor }) {
 	}
 	const onPointerDown = (e: PointerEvent) => {
 		const index = Number(
-			(e.target as HTMLElement).closest<HTMLElement>("[data-slot]")?.dataset
-				.slot,
+			(e.target as HTMLElement).closest<HTMLElement>("[data-slot]")?.dataset.slot,
 		)
 		const item = ed.list.items[index]
 		if (item) ed.dnd.start(e, { item, from: index })
@@ -45,8 +43,8 @@ export function CardPreview({ ed }: { ed: Editor }) {
 			onDragStart={(e) => e.preventDefault()}
 			className="h-full w-full min-w-0 touch-pan-y select-none"
 		>
-			<ScaledCard
-				design={ed.shown.design}
+			<SelectedCard
+				designKey={ed.shown.design.key}
 				card={ed.card}
 				fill
 				editing

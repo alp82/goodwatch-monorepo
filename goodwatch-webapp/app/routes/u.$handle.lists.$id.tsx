@@ -1,3 +1,4 @@
+import type { SizeRule } from "~/utils/tmdb-image"
 // Public share list page: /u/:handle/lists/:id, inside the profile layout: the owner's profile header and the Profile
 // row with Lists lit stay above it. The card, large, and the five titles as rows: the score pill, the
 // owner's score on someone else's list, and the viewer's own services that stream it in their country (none for a
@@ -20,8 +21,8 @@ import { createShareListPageLoader } from "~/server/share-lists/page-loaders.ser
 import { getListView } from "~/server/share-lists/store.server"
 import { getUserSettings } from "~/server/user-settings.server"
 import { RowLogos, RowScores, rowMark, useRowMarks } from "~/ui/list-row/RowScores"
-import { CardFonts, ScaledCard } from "~/ui/share-card/ScaledCard"
-import { designByKey } from "~/ui/share-card/designs"
+import { CardFonts } from "~/ui/share-card/ScaledCard"
+import { SelectedCard } from "#selected-share-card"
 import { titleFontPreload } from "~/ui/share-card/font-faces"
 import {
 	SHARE_CARD_PREVIEW,
@@ -36,7 +37,6 @@ import { countryFlagUrl } from "~/utils/country-flag"
 import { titleToDashed } from "~/utils/helpers"
 import { mediaFieldLanguage } from "~/utils/media-presentation"
 import { canonicalMediaTitle } from "~/utils/media-presentation"
-import type { SizeRule } from "~/utils/tmdb-image"
 import { Kicker } from "~/ui/eyebrow"
 import { PageTitle, SectionHeading } from "~/ui/heading"
 
@@ -66,7 +66,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	const alt = `${list.title}: ${items.map((item) => item.title).join(", ")}`
 	// The card's title is the page's largest text. The preload starts its font's download next to the
 	// stylesheet's, so the title rarely shows in its fallback font first.
-	const titleFont = titleFontPreload(designByKey(list.design).key)
+	const titleFont = titleFontPreload(list.design)
 	return [
 		{ title },
 		...(titleFont
@@ -108,15 +108,15 @@ const titlePath = (item: CardTitle) =>
 	`/${item.type}/${item.key.split(":")[1]}-${titleToDashed(canonicalMediaTitle(item))}`
 
 export default function ShareListPage() {
-	const { list, items, services, ownerScores, country, owner, isOwner } =
+	const { list, items, services, ownerScores, country, owner, isOwner, share } =
 		useLoaderData<typeof loader>()
-	const design = designByKey(list.design)
 	const t = THEMES[list.theme]
 	const marksOf = useRowMarks()
 	const gradient = `linear-gradient(90deg, ${t.accent}, ${t.accent2})`
+
 	// The card's box is the page width on a phone and at most 640 px high, and a column of at most 624 px by 860 px
 	// from lg up. These widths are upper limits for the image sizes.
-	const shape = design.w / design.h
+	const shape = share.width / share.height
 	const phoneWidth = Math.round(640 * shape)
 	const cardDisplay = {
 		rules: [
@@ -125,9 +125,10 @@ export default function ShareListPage() {
 		] satisfies SizeRule[],
 		maxWidth: Math.round(Math.min(624, 860 * shape)),
 	}
+
 	return (
 		<div className={`relative isolate min-h-screen pb-24 text-white ${TAB_ROW_H}`}>
-			<CardFonts design={design.key} />
+			<CardFonts design={list.design} />
 			<div
 				data-list-toolbar
 				className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 pt-4 sm:px-6 lg:px-8"
@@ -147,8 +148,11 @@ export default function ShareListPage() {
 			<div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)] gap-8 px-4 pt-6 sm:px-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-14 lg:px-8 lg:pt-8">
 				<div className="lg:sticky lg:top-[calc(4rem+var(--visitor-bar-h,0px)+var(--tab-row-h)+1.5rem)] lg:self-start">
 					<div className="h-[min(70vh,640px)] lg:h-[calc(100vh-10rem)] lg:max-h-[860px]">
-						<ScaledCard
-							design={design}
+						<SelectedCard
+							designKey={list.design}
+							display={cardDisplay}
+							fill
+							className="rounded-[18px] shadow-2xl shadow-black/60"
 							card={{
 								title: list.title,
 								items,
@@ -156,9 +160,6 @@ export default function ShareListPage() {
 								theme: list.theme,
 								date: list.date,
 							}}
-							fill
-							display={cardDisplay}
-							className="rounded-[18px] shadow-2xl shadow-black/60"
 						/>
 					</div>
 				</div>
