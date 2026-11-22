@@ -206,8 +206,8 @@ function leanStylesheet() {
 //    file names stay the same across deploys and a returning visitor keeps them in the browser cache.
 // 2. Everything else that the root route or the browser entry imports is on every page anyway. App code goes to
 //    `shell`, which changes with most deploys, and the remaining library code to `vendor`.
-// 3. App modules under 3 KB that more than one module imports (helpers, hooks, small components) also go to `shell`.
-//    Together they are about 30 KB minified, and each was a request of its own. A style sheet never goes there.
+// 3. Small helpers shared by several initial routes also go to `shell` to avoid separate requests. A helper
+//    shared only by dialogs or by components of a single page stays with those features. A style sheet never goes there.
 // 3a. Except the title page's small shared modules, which stay with its code, see TITLE_PAGE_MODULE.
 // 4. Feature modules that load together get one chunk per group, see FEATURE_CHUNKS.
 // 5. Rollup splits the rest by route, as before.
@@ -233,6 +233,8 @@ const SHELL_ROOTS = /\/app\/(root|entry\.client)\.tsx$/
 const APP_MODULE = /\/app\/(?!routes\/)/
 // A shared module above this size stays with the routes that use it.
 const SHARED_SMALL_MODULE_MAX_BYTES = 3_000
+// Strikes a balance between the bytes paid on every first visit and separate requests when a route needs a helper.
+const SHARED_SMALL_MODULE_MIN_ROUTES = 4
 // Rule 3 never takes a style sheet. Its module is a stub of a few bytes, but its rules go wherever its chunk goes, and
 // the shell's style sheets block the first paint of every page. The intro film's style sheet (76 KB, 13 KB compressed)
 // went there once a second module imported it.
@@ -244,9 +246,14 @@ const STYLE_SHEET = /\.css($|\?)/
 // rule names is pulled into the group, for every page that uses it. That is why the mutation hooks, which the home page
 // also loads, are a group of their own.
 const FEATURE_CHUNKS = [
-	// Reading a score on a poster or a person page needs these pure formatters. Keeping them out
-	// of the interactive title controls also keeps the mutation hooks off those initial views.
-	["ratings", /\/app\/utils\/ratings\.ts$/],
+	// A list row's score, owner mark and service logos draw together; poster cards use the same pieces.
+	// Group the small presentations independently from the controls that write a score.
+	[
+		"score-badges",
+		/\/app\/(utils\/ratings|ui\/(poster-card\/(OwnerScore|ScorePill|pill-parts|services)|list-row\/RowScores))\.tsx?$/,
+	],
+	// The shared view and editor both display the selected card at the available size. Designs remain independent.
+	["share-card", /\/app\/ui\/share-card\/(ScaledCard|SelectedCard\.browser)\.tsx$/],
 	["user-data", /\/app\/hooks\/useUserDataMutations\.ts$/],
 	// The status words of a tracked show (tracking/status-look.ts) ride here: the poster cards' actions and the title
 	// page's Seen and score both use them and both load this group. Rule 3 would put them into every page's shell; in
@@ -313,6 +320,29 @@ function clientChunks() {
 		}
 		return everyPage.has(id)
 	}
+	// Count route entries that statically import a helper. A module can have many importers and still only be
+	// used by an editor after it opens. Stop walking at the shell and once a subtree reaches the threshold.
+	let routeCounts
+	const isSharedByInitialRoutes = (id, graph) => {
+		if (!routeCounts) {
+			routeCounts = new Map()
+			for (const entry of graph.getModuleIds()) {
+				if (!entry.includes("/app/routes/") || !graph.getModuleInfo(entry)?.isEntry) continue
+				const seen = new Set()
+				const queue = [entry]
+				for (const moduleId of queue) {
+					if (seen.has(moduleId) || !moduleId.includes("/app/") || isOnEveryPage(moduleId, graph))
+						continue
+					seen.add(moduleId)
+					const count = routeCounts.get(moduleId) ?? 0
+					if (count >= SHARED_SMALL_MODULE_MIN_ROUTES) continue
+					routeCounts.set(moduleId, count + 1)
+					queue.push(...graph.getModuleInfo(moduleId).importedIds)
+				}
+			}
+		}
+		return (routeCounts.get(id) ?? 0) >= SHARED_SMALL_MODULE_MIN_ROUTES
+	}
 	const isSharedSmallModule = (id, graph, depth = 0) => {
 		const info = graph.getModuleInfo(id)
 		if (!info || id.includes("/node_modules/") || !APP_MODULE.test(id) || STYLE_SHEET.test(id))
@@ -338,7 +368,7 @@ function clientChunks() {
 		if (TITLE_PAGE_MODULE.test(id)) return undefined
 		// A group's modules stay in their group even when small and shared (rule 3 would put them into the shell).
 		for (const [name, pattern] of FEATURE_CHUNKS) if (pattern.test(id)) return name
-		if (isSharedSmallModule(id, graph)) return "shell"
+		if (isSharedSmallModule(id, graph) && isSharedByInitialRoutes(id, graph)) return "shell"
 		return undefined
 	}
 }

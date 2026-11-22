@@ -2,7 +2,7 @@
 // and for a member visitor the match as a ring that mirrors the orbit at the pill's other end and links to the
 // comparison. The owner and guests see the same pill without the ring. It closes on the orbit again or Escape.
 import { DISPLAY } from "~/ui/my-pages/style"
-import { FAMILY_COLOR } from "../taste/model"
+import { FAMILY_COLOR } from "~/domain/fingerprint-effects/palette"
 import { MatchLink, type MatchView } from "./Compare"
 import { Layer, PillFrame, type RevealProps } from "./Reveal"
 import type { KeyFacts } from "./facts"

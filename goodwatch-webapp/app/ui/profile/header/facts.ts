@@ -1,3 +1,4 @@
+import type { FamilyId } from "~/server/taste-portrait/view"
 // The profile header's facts, all from the shell and the taste print, so the owner's visitor view cuts them by the
 // same visibility rule: the fact line (movies and shows seen, then the watch time), the join date ("On GoodWatch
 // since"), and the fingerprint's key facts the orbit opens (the strongest families, the top attributes). When a fact is
@@ -7,7 +8,7 @@ import { type ProfilePart, type ProfileShell, seesPart } from "~/domain/profile"
 import { FAMILY_NAMES } from "~/domain/taste-attributes"
 import { monthYear, count } from "../format"
 import type { WhorlAttribute } from "../taste/Whorl"
-import { FAMILY_ORDER, type FamilyId } from "../taste/model"
+import { FAMILY_ORDER } from "~/domain/fingerprint-effects/palette"
 
 export type HeaderFactKey = "movies" | "shows" | "time" | "episodes" | "scores"
 

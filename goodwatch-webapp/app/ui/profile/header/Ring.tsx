@@ -1,3 +1,4 @@
+import type { FamilyId } from "~/server/taste-portrait/view"
 // The orbit round the profile picture: the sought attributes as family-colored dots on a dotted track. At rest it is
 // still. Hover, touch or focus (`motion="wake"`) turns it a few degrees with an eased stop, then lets it drift very
 // slowly; while the key facts are open (`motion="open"`) it turns once every 36 seconds. Each layer pauses where it is
@@ -6,7 +7,7 @@ import type { ReactNode } from "react"
 import type { ProfileShell } from "~/domain/profile"
 import { ProfileAvatar } from "../ProfileAvatar"
 import type { WhorlAttribute } from "../taste/Whorl"
-import { FAMILY_COLOR, FAMILY_ORDER, type FamilyId } from "../taste/model"
+import { FAMILY_COLOR, FAMILY_ORDER } from "~/domain/fingerprint-effects/palette"
 import { familyPulls } from "./facts"
 
 export type OrbitMotion = "rest" | "wake" | "open"
