@@ -215,7 +215,11 @@ function Tile({
 						<span className="text-[9px] font-bold tracking-wide text-gray-400 uppercase">Show</span>
 					)}
 				</span>
-				<TitlePosterCard card={row.title.card} posterPriority={eager ? "eager" : "lazy"} />
+				<TitlePosterCard
+					card={row.title.card}
+					posterPriority={eager ? "eager" : "lazy"}
+					skipOffscreen={!eager}
+				/>
 			</div>
 			<div className="mt-2 flex min-h-5 items-center justify-between gap-2">
 				<Scores sources={row.sources} max={3} />
