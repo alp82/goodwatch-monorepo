@@ -1,0 +1,284 @@
+{
+  "checked_at_utc": "2026-10-17T01:33:32.464320+00:00",
+  "host": "vector1 (10.0.0.20)",
+  "page_container": "gk4owk8-20261017T012118",
+  "page_image": "ghcr.io/alp82/goodwatch-webapp:f097c9b747786d3b11ccdfcdee1ad0e1c01e3da0",
+  "roles": [
+    {
+      "container": "goodwatch-search-a",
+      "declared_image": "ghcr.io/alp82/goodwatch-webapp:72c6a9c06cd0ef81eada3287a63b9d8befc44087",
+      "image_id": "sha256:8ec83331c2729b15e34fd2e9ddb870be36cc8a823d2ec1bb3eb1a94ffdf99663",
+      "image_repo_tags": [
+        "ghcr.io/alp82/goodwatch-webapp:e4268159428969682974e50ff0737da607462253"
+      ],
+      "image_repo_digests": [
+        "ghcr.io/alp82/goodwatch-webapp@sha256:be0876f109596c2af732a7cf29a72975d05d4b9d4168495d56783c5e41662fc3"
+      ],
+      "oci_revision": null,
+      "created": "2026-10-16T11:58:01.772739433Z",
+      "health": "healthy",
+      "compose_project": "goodwatch-search",
+      "compose_service": "search-a",
+      "compose_config_files": "/root/goodwatch/goodwatch-monorepo/goodwatch-search/docker-compose.yml",
+      "role_is_search": true,
+      "source_matches_search_commit": true,
+      "search_commit_matches_declared_image_tag": true,
+      "environment_names": [
+        "CRATE_HOSTS",
+        "CRATE_PASS",
+        "CRATE_PORT",
+        "CRATE_USER",
+        "HOST",
+        "MALLOC_ARENA_MAX",
+        "MALLOC_MMAP_THRESHOLD_",
+        "METRICS_PORT",
+        "NODE_ENV",
+        "NODE_VERSION",
+        "PATH",
+        "PORT",
+        "QDRANT_API_KEY",
+        "QDRANT_URL",
+        "REC_AGE_FILTER",
+        "REC_EXPLORER",
+        "REC_FILTER_BAR",
+        "REC_NAVIGATION",
+        "REC_PREVIEW_USERS",
+        "REC_TASTE_MATCH",
+        "REC_TASTE_PAGE",
+        "REC_TRACKING",
+        "REC_WATCH_NEXT",
+        "REDIS_HOST",
+        "REDIS_HOST2",
+        "REDIS_HOST3",
+        "REDIS_PASS",
+        "REDIS_PORT",
+        "SEARCH_COMMIT",
+        "SEARCH_IMAGE",
+        "SEARCH_MAX_IN_FLIGHT",
+        "SEARCH_MODEL_DIR",
+        "SEARCH_STORAGE_KEY",
+        "SEARCH_TRUSTED_IP_HEADER",
+        "SOURCE_COMMIT",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_URL",
+        "TMDB_API_KEY",
+        "TYPESAFE_API_KEY",
+        "WEBAPP_ROLE",
+        "YARN_VERSION"
+      ],
+      "required_environment_present": {
+        "BETTER_AUTH_ENABLED": false,
+        "BETTER_AUTH_SECRET": false,
+        "BETTER_AUTH_URL": false,
+        "AUTH_CRATEDB_ORIGINS": false,
+        "AUTH_CRATEDB_USERNAME": false,
+        "AUTH_CRATEDB_PASSWORD": false,
+        "AUTH_CRATEDB_ENCRYPTION_SECRET": false,
+        "AUTH_CRATEDB_ENCRYPTION_KEYS": false,
+        "AUTH_TRUSTED_IP_HEADER": false,
+        "AUTH_GOOGLE_CLIENT_ID": false,
+        "AUTH_GOOGLE_CLIENT_SECRET": false,
+        "AUTH_SMTP_USER": false,
+        "AUTH_SMTP_PASSWORD": false,
+        "MCP_RESOURCE_URL": false
+      },
+      "required_environment_present_on_page": {
+        "BETTER_AUTH_ENABLED": true,
+        "BETTER_AUTH_SECRET": true,
+        "BETTER_AUTH_URL": true,
+        "AUTH_CRATEDB_ORIGINS": true,
+        "AUTH_CRATEDB_USERNAME": true,
+        "AUTH_CRATEDB_PASSWORD": true,
+        "AUTH_CRATEDB_ENCRYPTION_SECRET": true,
+        "AUTH_CRATEDB_ENCRYPTION_KEYS": true,
+        "AUTH_TRUSTED_IP_HEADER": true,
+        "AUTH_GOOGLE_CLIENT_ID": true,
+        "AUTH_GOOGLE_CLIENT_SECRET": true,
+        "AUTH_SMTP_USER": true,
+        "AUTH_SMTP_PASSWORD": true,
+        "MCP_RESOURCE_URL": true
+      },
+      "shared_environment_hash_matches_page": {
+        "REDIS_HOST": true,
+        "REDIS_HOST2": true,
+        "REDIS_HOST3": true,
+        "REDIS_PORT": true,
+        "REDIS_PASS": true,
+        "SEARCH_STORAGE_KEY": true,
+        "CRATE_HOSTS": true,
+        "CRATE_PORT": true,
+        "CRATE_USER": false,
+        "CRATE_PASS": false
+      },
+      "built_code_matches": {
+        "routes/mcp": [
+          "/app/build/server/assets/server-build-D34JZgMm.js"
+        ],
+        "MCP_RESOURCE_URL": [
+          "/app/build/server/assets/endpoint.server-CIq52q1x.js",
+          "/app/build/server/assets/runtime.server-z9NETHBq.js"
+        ],
+        "BETTER_AUTH_ENABLED": [
+          "/app/build/server/assets/runtime.server-z9NETHBq.js",
+          "/app/build/server/assets/server-build-D34JZgMm.js"
+        ],
+        "verifyAccessToken": [
+          "/app/build/server/assets/endpoint.server-CIq52q1x.js"
+        ],
+        "AUTH_CRATEDB_ORIGINS": [
+          "/app/build/server/assets/runtime.server-z9NETHBq.js"
+        ]
+      },
+      "anonymous_loopback_probes": [
+        {
+          "path": "/mcp",
+          "status": 401,
+          "www_authenticate": "Bearer error=\"invalid_token\", error_description=\"Missing Authorization header\", scope=\"mcp:read\""
+        },
+        {
+          "path": "/health/ready",
+          "status": 200,
+          "www_authenticate": null
+        }
+      ]
+    },
+    {
+      "container": "goodwatch-search-b",
+      "declared_image": "ghcr.io/alp82/goodwatch-webapp:72c6a9c06cd0ef81eada3287a63b9d8befc44087",
+      "image_id": "sha256:8ec83331c2729b15e34fd2e9ddb870be36cc8a823d2ec1bb3eb1a94ffdf99663",
+      "image_repo_tags": [
+        "ghcr.io/alp82/goodwatch-webapp:e4268159428969682974e50ff0737da607462253"
+      ],
+      "image_repo_digests": [
+        "ghcr.io/alp82/goodwatch-webapp@sha256:be0876f109596c2af732a7cf29a72975d05d4b9d4168495d56783c5e41662fc3"
+      ],
+      "oci_revision": null,
+      "created": "2026-10-16T11:58:32.724180986Z",
+      "health": "healthy",
+      "compose_project": "goodwatch-search",
+      "compose_service": "search-b",
+      "compose_config_files": "/root/goodwatch/goodwatch-monorepo/goodwatch-search/docker-compose.yml",
+      "role_is_search": true,
+      "source_matches_search_commit": true,
+      "search_commit_matches_declared_image_tag": true,
+      "environment_names": [
+        "CRATE_HOSTS",
+        "CRATE_PASS",
+        "CRATE_PORT",
+        "CRATE_USER",
+        "HOST",
+        "MALLOC_ARENA_MAX",
+        "MALLOC_MMAP_THRESHOLD_",
+        "METRICS_PORT",
+        "NODE_ENV",
+        "NODE_VERSION",
+        "PATH",
+        "PORT",
+        "QDRANT_API_KEY",
+        "QDRANT_URL",
+        "REC_AGE_FILTER",
+        "REC_EXPLORER",
+        "REC_FILTER_BAR",
+        "REC_NAVIGATION",
+        "REC_PREVIEW_USERS",
+        "REC_TASTE_MATCH",
+        "REC_TASTE_PAGE",
+        "REC_TRACKING",
+        "REC_WATCH_NEXT",
+        "REDIS_HOST",
+        "REDIS_HOST2",
+        "REDIS_HOST3",
+        "REDIS_PASS",
+        "REDIS_PORT",
+        "SEARCH_COMMIT",
+        "SEARCH_IMAGE",
+        "SEARCH_MAX_IN_FLIGHT",
+        "SEARCH_MODEL_DIR",
+        "SEARCH_STORAGE_KEY",
+        "SEARCH_TRUSTED_IP_HEADER",
+        "SOURCE_COMMIT",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_URL",
+        "TMDB_API_KEY",
+        "TYPESAFE_API_KEY",
+        "WEBAPP_ROLE",
+        "YARN_VERSION"
+      ],
+      "required_environment_present": {
+        "BETTER_AUTH_ENABLED": false,
+        "BETTER_AUTH_SECRET": false,
+        "BETTER_AUTH_URL": false,
+        "AUTH_CRATEDB_ORIGINS": false,
+        "AUTH_CRATEDB_USERNAME": false,
+        "AUTH_CRATEDB_PASSWORD": false,
+        "AUTH_CRATEDB_ENCRYPTION_SECRET": false,
+        "AUTH_CRATEDB_ENCRYPTION_KEYS": false,
+        "AUTH_TRUSTED_IP_HEADER": false,
+        "AUTH_GOOGLE_CLIENT_ID": false,
+        "AUTH_GOOGLE_CLIENT_SECRET": false,
+        "AUTH_SMTP_USER": false,
+        "AUTH_SMTP_PASSWORD": false,
+        "MCP_RESOURCE_URL": false
+      },
+      "required_environment_present_on_page": {
+        "BETTER_AUTH_ENABLED": true,
+        "BETTER_AUTH_SECRET": true,
+        "BETTER_AUTH_URL": true,
+        "AUTH_CRATEDB_ORIGINS": true,
+        "AUTH_CRATEDB_USERNAME": true,
+        "AUTH_CRATEDB_PASSWORD": true,
+        "AUTH_CRATEDB_ENCRYPTION_SECRET": true,
+        "AUTH_CRATEDB_ENCRYPTION_KEYS": true,
+        "AUTH_TRUSTED_IP_HEADER": true,
+        "AUTH_GOOGLE_CLIENT_ID": true,
+        "AUTH_GOOGLE_CLIENT_SECRET": true,
+        "AUTH_SMTP_USER": true,
+        "AUTH_SMTP_PASSWORD": true,
+        "MCP_RESOURCE_URL": true
+      },
+      "shared_environment_hash_matches_page": {
+        "REDIS_HOST": true,
+        "REDIS_HOST2": true,
+        "REDIS_HOST3": true,
+        "REDIS_PORT": true,
+        "REDIS_PASS": true,
+        "SEARCH_STORAGE_KEY": true,
+        "CRATE_HOSTS": true,
+        "CRATE_PORT": true,
+        "CRATE_USER": false,
+        "CRATE_PASS": false
+      },
+      "built_code_matches": {
+        "routes/mcp": [
+          "/app/build/server/assets/server-build-D34JZgMm.js"
+        ],
+        "MCP_RESOURCE_URL": [
+          "/app/build/server/assets/endpoint.server-CIq52q1x.js",
+          "/app/build/server/assets/runtime.server-z9NETHBq.js"
+        ],
+        "BETTER_AUTH_ENABLED": [
+          "/app/build/server/assets/runtime.server-z9NETHBq.js",
+          "/app/build/server/assets/server-build-D34JZgMm.js"
+        ],
+        "verifyAccessToken": [
+          "/app/build/server/assets/endpoint.server-CIq52q1x.js"
+        ],
+        "AUTH_CRATEDB_ORIGINS": [
+          "/app/build/server/assets/runtime.server-z9NETHBq.js"
+        ]
+      },
+      "anonymous_loopback_probes": [
+        {
+          "path": "/mcp",
+          "status": 401,
+          "www_authenticate": "Bearer error=\"invalid_token\", error_description=\"Missing Authorization header\", scope=\"mcp:read\""
+        },
+        {
+          "path": "/health/ready",
+          "status": 200,
+          "www_authenticate": null
+        }
+      ]
+    }
+  ]
+}

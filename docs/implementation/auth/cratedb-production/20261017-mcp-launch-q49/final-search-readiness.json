@@ -1,0 +1,109 @@
+{
+  "checked_at_utc": "2026-10-17T01:45:56.967101+00:00",
+  "page_container": "gk4owk8-20261017T013319",
+  "page_image": "ghcr.io/alp82/goodwatch-webapp:c7edf2b320e58c08f538b37d8d8665b36ccd86b2",
+  "roles": [
+    {
+      "container": "goodwatch-search-a",
+      "id": "8d45a42aa60e8b94937049a5270c3b4339057885d2ea9e4b6a5bba9b3bafba4f",
+      "image_id": "sha256:8ec83331c2729b15e34fd2e9ddb870be36cc8a823d2ec1bb3eb1a94ffdf99663",
+      "declared_image": "ghcr.io/alp82/goodwatch-webapp:72c6a9c06cd0ef81eada3287a63b9d8befc44087",
+      "health": "healthy",
+      "environment_hash_matches_page": {
+        "BETTER_AUTH_ENABLED": true,
+        "BETTER_AUTH_SECRET": true,
+        "BETTER_AUTH_URL": true,
+        "AUTH_CRATEDB_ORIGINS": true,
+        "AUTH_CRATEDB_USERNAME": true,
+        "AUTH_CRATEDB_PASSWORD": true,
+        "AUTH_CRATEDB_ENCRYPTION_SECRET": true,
+        "AUTH_CRATEDB_ENCRYPTION_KEYS": true,
+        "AUTH_TRUSTED_IP_HEADER": true,
+        "AUTH_GOOGLE_CLIENT_ID": true,
+        "AUTH_GOOGLE_CLIENT_SECRET": true,
+        "AUTH_SMTP_USER": true,
+        "AUTH_SMTP_PASSWORD": true,
+        "MCP_RESOURCE_URL": true,
+        "REC_CONNECTOR": true
+      },
+      "REC_MCP_names": [],
+      "code_matches": {
+        "routes/mcp": [
+          "/app/build/server/assets/server-build-D34JZgMm.js"
+        ],
+        "mcp-ranked:": [
+          "/app/build/server/assets/ranked.server-t91d7sMi.js"
+        ],
+        "ranked_search": [
+          "/app/build/server/assets/ranked.server-t91d7sMi.js"
+        ],
+        "Search ranking: query models ready": [
+          "/app/build/server/assets/server-build-D34JZgMm.js"
+        ]
+      },
+      "probes": [
+        {
+          "path": "/health/ready",
+          "status": 200,
+          "www_authenticate": null
+        },
+        {
+          "path": "/mcp",
+          "status": 403,
+          "www_authenticate": null
+        }
+      ]
+    },
+    {
+      "container": "goodwatch-search-b",
+      "id": "d72f6279337735e48bae580a568bad5e7a1a5c379caabad5b3b0d1dd15cb2927",
+      "image_id": "sha256:8ec83331c2729b15e34fd2e9ddb870be36cc8a823d2ec1bb3eb1a94ffdf99663",
+      "declared_image": "ghcr.io/alp82/goodwatch-webapp:72c6a9c06cd0ef81eada3287a63b9d8befc44087",
+      "health": "healthy",
+      "environment_hash_matches_page": {
+        "BETTER_AUTH_ENABLED": true,
+        "BETTER_AUTH_SECRET": true,
+        "BETTER_AUTH_URL": true,
+        "AUTH_CRATEDB_ORIGINS": true,
+        "AUTH_CRATEDB_USERNAME": true,
+        "AUTH_CRATEDB_PASSWORD": true,
+        "AUTH_CRATEDB_ENCRYPTION_SECRET": true,
+        "AUTH_CRATEDB_ENCRYPTION_KEYS": true,
+        "AUTH_TRUSTED_IP_HEADER": true,
+        "AUTH_GOOGLE_CLIENT_ID": true,
+        "AUTH_GOOGLE_CLIENT_SECRET": true,
+        "AUTH_SMTP_USER": true,
+        "AUTH_SMTP_PASSWORD": true,
+        "MCP_RESOURCE_URL": true,
+        "REC_CONNECTOR": true
+      },
+      "REC_MCP_names": [],
+      "code_matches": {
+        "routes/mcp": [
+          "/app/build/server/assets/server-build-D34JZgMm.js"
+        ],
+        "mcp-ranked:": [
+          "/app/build/server/assets/ranked.server-t91d7sMi.js"
+        ],
+        "ranked_search": [
+          "/app/build/server/assets/ranked.server-t91d7sMi.js"
+        ],
+        "Search ranking: query models ready": [
+          "/app/build/server/assets/server-build-D34JZgMm.js"
+        ]
+      },
+      "probes": [
+        {
+          "path": "/health/ready",
+          "status": 200,
+          "www_authenticate": null
+        },
+        {
+          "path": "/mcp",
+          "status": 403,
+          "www_authenticate": null
+        }
+      ]
+    }
+  ]
+}
