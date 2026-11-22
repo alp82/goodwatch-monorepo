@@ -24,23 +24,24 @@ export interface PeekData {
 	titles: ShowTitle[]
 }
 
+import { mapBreathing } from "./breathe"
+
 const id = (p: Ingredient) => `${p.family}:${p.slug}`
 
-export function pantry(atlas: Places, parts: Ingredient[]): PantryGroup[] {
-	return PANTRY_FAMILIES.map((family) => ({
-		family,
-		options: atlas
-			.members(family)
-			.filter((m) => !parts.some((p) => same(p, m)))
-			.map((place): PantryOption => {
+export async function pantry(atlas: Places, parts: Ingredient[]): Promise<PantryGroup[]> {
+	const groups: PantryGroup[] = []
+	for (const family of PANTRY_FAMILIES) {
+		const options = await mapBreathing(
+			atlas.members(family).filter((m) => !parts.some((p) => same(p, m))),
+			(place): PantryOption => {
 				if (!parts.length) return { place, state: "full" }
 				const n = atlas.count([...parts, place])
-				return {
-					place,
-					state: n >= MIN_PAGE ? "full" : n > 0 ? "thin" : "none",
-				}
-			}),
-	})).filter((g) => g.options.length > 0)
+				return { place, state: n >= MIN_PAGE ? "full" : n > 0 ? "thin" : "none" }
+			},
+		)
+		if (options.length) groups.push({ family, options })
+	}
+	return groups
 }
 
 /** Each part's short line from the copy deck, by `family:slug`. */

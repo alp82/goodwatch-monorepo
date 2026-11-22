@@ -73,7 +73,7 @@ export async function tropesRoute(atlas: Places, address: Address) {
 			address,
 			data,
 			meta,
-			entry: loadAddEntry(atlas, address),
+			entry: await loadAddEntry(atlas, address),
 			country: atlas.viewer.country.toLowerCase(),
 		}
 	}

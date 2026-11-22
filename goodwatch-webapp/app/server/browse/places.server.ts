@@ -57,6 +57,7 @@ import {
 	meanOf,
 	ranked,
 	released,
+	countOf,
 	rowsOf,
 	similarity,
 	testOf,
@@ -93,6 +94,7 @@ import { BAND_WORDS, blendName, comparative } from "~/domain/browse/words"
 import { kindNameOf } from "~/domain/browse/kind-names"
 import { groupOf, tropeById } from "~/domain/tropes/catalog"
 import { ensureTropes } from "./tropes.server"
+import { breathe, mapBreathing } from "./breathe"
 
 export class PlacesNotReady extends Error {
 	constructor() {
@@ -313,7 +315,7 @@ export class Places {
 
 	/** How many well-known titles a place or blend has. */
 	count(parts: Ingredient[]): number {
-		return this.rows(parts).length
+		return countOf(this.b, this.catalog, this.norm(parts), this.country)
 	}
 
 	/** How a person would say the place: "Cozy comedies from the 1990s". */
@@ -810,10 +812,13 @@ export class Places {
 	 * inside the place ("Darkly funny"). A kind's list is the place with `kind_` set to its id.
 	 */
 	async kinds(parts: Ingredient[], titles = 6): Promise<KindOf[]> {
+		await breathe()
 		const all = this.rows(parts)
 		const mine = this.mean(parts)
 		const c = this.b.snap.columns
+		await breathe()
 		const groups = this.kindRows(parts)
+		await breathe()
 		const total = groups.reduce((s, g) => s + g.rows.length, 0) || 1
 		const placeKey = this.norm(parts)
 			.map((p) => `${p.family}:${p.slug}`)
@@ -837,6 +842,7 @@ export class Places {
 			.filter((x): x is { g: (typeof groups)[number]; name: string } => x.name !== null)
 		return Promise.all(
 			named.map(async ({ g, name }) => {
+				await breathe()
 				const m = meanOf(this.b.snap, g.rows)
 				const words = g.ks.map((k) => this.word(k, m, mine))
 				const moodHit = MOODS.map((md, i) => ({
@@ -1448,25 +1454,19 @@ export class Places {
 	): Promise<Blend> {
 		const parts = this.norm(partsIn)
 		const rows = this.rows(parts)
-		const set = new Set(rows)
 		const families = opts.families ?? FAMILIES.filter((f) => f !== "trait")
 		const taken = (p: Ingredient) => parts.some((x) => same(x, p))
 		// Lift: how much more often the candidate turns up in the blend than in the whole kind.
-		const scored = families
+		const candidates = families
 			.flatMap((family) => this.catalog[family].map((v) => ({ family, slug: v.slug })))
 			.filter((p) => !taken(p))
-			.map((p) => {
-				const theirs = this.rows([p])
-				let both = 0
-				if (theirs.length < rows.length) {
-					for (const r of theirs) if (set.has(r)) both++
-				} else {
-					const t = new Set(theirs)
-					for (const r of rows) if (t.has(r)) both++
-				}
-				const expected = (rows.length * theirs.length) / Math.max(1, this.b.rows.length)
+		const scored = (
+			await mapBreathing(candidates, (p) => {
+				const both = this.count([...parts, p])
+				const expected = (rows.length * this.count([p])) / Math.max(1, this.b.rows.length)
 				return { p, both, lift: expected ? both / expected : 0 }
 			})
+		)
 			// Not the whole blend again (Animation inside Animated), not a thin page.
 			.filter((x) => x.both >= MIN_PAGE && x.both < rows.length * 0.9)
 			.sort((a, b) => b.lift * Math.log10(b.both) - a.lift * Math.log10(a.both))
@@ -1497,14 +1497,19 @@ export class Places {
 				titles: await this.showcase([...parts, x.p], opts.titles ?? 3),
 			})),
 		)
-		const swaps = parts.map((part) => {
+		const swaps = []
+		for (const part of parts) {
 			const rest = parts.filter((x) => !same(x, part))
-			const options = this.catalog[part.family]
-				.map((v) => ({ family: part.family, slug: v.slug }))
-				.filter((p) => !taken(p) && this.count([...rest, p]) >= MIN_PAGE)
+			const options = (
+				await mapBreathing(this.catalog[part.family], (v) => {
+					const p = { family: part.family, slug: v.slug }
+					return !taken(p) && this.count([...rest, p]) >= MIN_PAGE ? p : null
+				})
+			)
+				.filter((p): p is Ingredient => p !== null)
 				.map((p) => this.ref(p))
-			return { part: this.ref(part), options }
-		})
+			swaps.push({ part: this.ref(part), options })
+		}
 		let venn: Blend["venn"] = null
 		if (parts.length === 2) {
 			const a = this.count([parts[0]])

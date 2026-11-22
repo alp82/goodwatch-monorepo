@@ -7,6 +7,7 @@ import { ing } from "~/domain/browse/address"
 import type { Places } from "~/server/browse/places.server"
 import { TROPES, groupOf } from "~/domain/tropes/catalog"
 import { ensureTropes, tropesVersion } from "~/server/browse/tropes.server"
+import { breathe } from "~/server/browse/breathe"
 
 export interface TropeTag {
 	slug: string
@@ -26,32 +27,30 @@ export async function tropesReady(ms = 6000): Promise<boolean> {
 	return done && tropesVersion() > 0
 }
 
-// The atlas keeps a place's rows private; the blend Venn reads them the same way.
-type RowsKit = { rows(parts: Ingredient[]): number[] }
-const rowsOf = (atlas: Places, parts: Ingredient[]) => (atlas as unknown as RowsKit).rows(parts)
-
 const cache = new Map<string, TropeTag[]>()
 
 /** Up to `n` tropes that define a place, the most distinctive first. Empty before the memberships are read. */
-export function definingTropes(atlas: Places, part: Ingredient, n = 2): TropeTag[] {
+export async function definingTropes(atlas: Places, part: Ingredient, n = 2): Promise<TropeTag[]> {
 	const version = tropesVersion()
 	if (!version) return []
-	const all = rowsOf(atlas, [])
-	const id = `${atlas.kind}|${all.length}|${version}|${part.family}:${part.slug}|${n}`
+	const all = atlas.count([])
+	const id = `${atlas.kind}|${all}|${version}|${part.family}:${part.slug}|${n}`
 	const hit = cache.get(id)
 	if (hit) return hit
-	const mine = rowsOf(atlas, [part])
-	if (mine.length < 24) return []
-	const inside = new Set(mine)
+	const mine = atlas.count([part])
+	if (mine < 24) return []
 	const scored: { t: (typeof TROPES)[number]; score: number }[] = []
 	for (const t of TROPES) {
-		const rows = rowsOf(atlas, [ing("trope", t.slug)])
-		if (rows.length < 12) continue
-		let both = 0
-		for (const r of rows) if (inside.has(r)) both++
+		// Counts, not row sets: a pair count reads the smaller set against the other's mask, and each step lets
+		// other requests run (a hub asks this for every place it shows).
+		await breathe()
+		const trope = ing("trope", t.slug)
+		const size = atlas.count([trope])
+		if (size < 12) continue
+		const both = atlas.count([part, trope])
 		// At least a handful of titles, and at least 3% of the place: a defining trope is one you meet there.
-		if (both < Math.max(6, mine.length * 0.03)) continue
-		const lift = both / mine.length / (rows.length / all.length)
+		if (both < Math.max(6, mine * 0.03)) continue
+		const lift = both / mine / (size / all)
 		if (lift < 1.7) continue
 		scored.push({ t, score: lift * Math.log(both) })
 	}

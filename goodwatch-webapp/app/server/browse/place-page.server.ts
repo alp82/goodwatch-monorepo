@@ -18,6 +18,7 @@ import { loadPage } from "~/server/browse/place-data.server"
 import { cachedPage } from "./page-cache.server"
 import { tropeMembersVersion } from "./trope-members.server"
 import { WINDOW } from "~/domain/browse/window"
+import { mapBreathing } from "./breathe"
 
 export type DialsPlace = Extract<DialsData, { view: "place" }>
 
@@ -256,33 +257,41 @@ async function buildPlacePage(args: BrowseLoadArgs): Promise<PlacePageData> {
 	const decades =
 		lead.family === "decade"
 			? []
-			: atlas
-					.members("decade", 0)
-					.map((place) => ({ place, n: atlas.count([...without(whenIn), place]) }))
+			: (
+					await mapBreathing(atlas.members("decade", 0), (place) => ({
+						place,
+						n: atlas.count([...without(whenIn), place]),
+					}))
+				)
 					.filter((d) => d.n > 0)
 					.sort((a, b) => a.place.slug.localeCompare(b.place.slug))
 	const countries =
 		lead.family === "country"
 			? []
-			: atlas
-					.members("country", 0)
-					.map((place) => ({ place, n: atlas.count([...without(fromIn), place]) }))
+			: (
+					await mapBreathing(atlas.members("country", 0), (place) => ({
+						place,
+						n: atlas.count([...without(fromIn), place]),
+					}))
+				)
 					.filter((c) => c.n >= 6 || c.place.slug === from)
 					.sort((a, b) => b.n - a.n)
 
 	// One more genre or mood: those that sit best with the page (their share inside it, against their size), with a
 	// full page left. A family already in the address is offered too, as long as the part isn't there yet.
 	const taken = (f: Family, slug: string) => parts.some((p) => p.family === f && p.slug === slug)
-	const addsOf = (family: Family): SteerAdd => ({
+	const addsOf = async (family: Family): Promise<SteerAdd> => ({
 		family,
-		items: atlas
-			.members(family, 0)
-			.filter((m) => !taken(family, m.slug))
-			.map((place) => {
-				const n = atlas.count([...parts, place])
-				const size = Math.max(1, atlas.count([place]))
-				return { place, n, fit: (n / size) * Math.log10(Math.max(2, n)) }
-			})
+		items: (
+			await mapBreathing(
+				atlas.members(family, 0).filter((m) => !taken(family, m.slug)),
+				(place) => {
+					const n = atlas.count([...parts, place])
+					const size = Math.max(1, atlas.count([place]))
+					return { place, n, fit: (n / size) * Math.log10(Math.max(2, n)) }
+				},
+			)
+		)
 			.filter((x) => x.n >= MIN_PAGE)
 			.sort((a, b) => b.fit - a.fit)
 			.slice(0, 8)
@@ -290,16 +299,20 @@ async function buildPlacePage(args: BrowseLoadArgs): Promise<PlacePageData> {
 	})
 	// a trope too, the ones this page plays far more than elsewhere (members load once per process; until then
 	// the row stays out).
-	const adds = (lead.family === "mood" ? ["genre", "mood", "trope"] : ["mood", "genre", "trope"])
-		.map((f) => addsOf(f as Family))
-		.filter((a) => a.items.length >= 2)
+	const adds: SteerAdd[] = []
+	for (const f of lead.family === "mood"
+		? ["genre", "mood", "trope"]
+		: ["mood", "genre", "trope"]) {
+		const add = await addsOf(f as Family)
+		if (add.items.length >= 2) adds.push(add)
+	}
 
 	const blend = await atlas.blend(parts, { suggestions: 0, titles: 0 })
 	const count = atlas.count(parts)
 	const title: TitleData = {
 		shorts: shortsOf(atlas, parts),
 		swaps: blend.swaps,
-		pantry: pantry(atlas, parts),
+		pantry: await pantry(atlas, parts),
 		together: parts.length > 1 ? blend.traits : [],
 		pitch: pitchFor(address.kind, parts) ?? null,
 		hasBest: count >= MIN_PAGE,

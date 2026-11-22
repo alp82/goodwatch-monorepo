@@ -90,24 +90,32 @@ export const loadHubPage: BrowseLoader<MiniData> = async ({ atlas }) => {
 }
 
 async function buildHub(atlas: Places, tropes: boolean): Promise<MiniData> {
-	const withTropes = <T extends CardData>(cards: T[]): (T & { tropes: TropeTag[] })[] =>
-		cards.map((c) => ({
-			...c,
-			tropes: tropes ? definingTropes(atlas, ing(c.place.family, c.place.slug), 2) : [],
-		}))
+	const withTropes = async <T extends CardData>(
+		cards: T[],
+	): Promise<(T & { tropes: TropeTag[] })[]> => {
+		const out: (T & { tropes: TropeTag[] })[] = []
+		for (const c of cards)
+			out.push({
+				...c,
+				tropes: tropes ? await definingTropes(atlas, ing(c.place.family, c.place.slug), 2) : [],
+			})
+		return out
+	}
 
 	// Moods first: the first screen's titles are theirs.
-	const moodCards = withTropes(await cardData(atlas, "mood", { titles: PREVIEW, traits: 3 }))
+	const moodCards = await withTropes(await cardData(atlas, "mood", { titles: PREVIEW, traits: 3 }))
 	const axis = (m: Ingredient, key: string) => atlas.dials(m).find((d) => d.key === key)?.at ?? 0.5
 	const moods = moodCards.map((c) => ({
 		...c,
 		tone: axis(c.place, "tone"),
 		pace: axis(c.place, "pace"),
 	}))
-	const decades = withTropes(await cardData(atlas, "decade", { titles: PREVIEW, traits: 3 }))
+	const decades = await withTropes(await cardData(atlas, "decade", { titles: PREVIEW, traits: 3 }))
 	// Every country with a full page, not a top handful: Africa and South America belong on the map.
-	const countries = withTropes(await cardData(atlas, "country", { titles: PREVIEW, traits: 3 }))
-	const genreCards = withTropes(
+	const countries = await withTropes(
+		await cardData(atlas, "country", { titles: PREVIEW, traits: 3 }),
+	)
+	const genreCards = await withTropes(
 		await cardData(atlas, "genre", { titles: PREVIEW, traits: 3, kinds: false }),
 	)
 	const counts = genreCards.map((g) => atlas.count([g.place]))

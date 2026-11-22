@@ -4,20 +4,23 @@ import { type Address, FAMILIES, type Family, type Ingredient, same } from "~/do
 import { type Places, MIN_PAGE } from "~/server/browse/places.server"
 import type { PlaceRef } from "~/domain/browse/types"
 import type { PantryGroup, PantryOption } from "~/server/browse/blend.server"
+import { mapBreathing } from "./breathe"
 
 const PANTRY_FAMILIES: Family[] = FAMILIES.filter((f) => f !== "trait")
 
-export function pantryOf(atlas: Places, parts: Ingredient[]): PantryGroup[] {
-	return PANTRY_FAMILIES.map((family) => ({
-		family,
-		options: atlas
-			.members(family)
-			.filter((m) => !parts.some((p) => same(p, m)))
-			.map((place): PantryOption => {
+export async function pantryOf(atlas: Places, parts: Ingredient[]): Promise<PantryGroup[]> {
+	const groups: PantryGroup[] = []
+	for (const family of PANTRY_FAMILIES) {
+		const options = await mapBreathing(
+			atlas.members(family).filter((m) => !parts.some((p) => same(p, m))),
+			(place): PantryOption => {
 				const n = atlas.count([...parts, place])
 				return { place, state: n >= MIN_PAGE ? "full" : n > 0 ? "thin" : "none" }
-			}),
-	})).filter((g) => g.options.length > 0)
+			},
+		)
+		if (options.length) groups.push({ family, options })
+	}
+	return groups
 }
 
 /** What "+ Add" next to a single place's title needs: the place, and the pantry of what blends with it. */
@@ -31,11 +34,11 @@ export interface EntryData {
 export const startsBlend = (address: Address) =>
 	address.view === "place" && address.parts.length === 1 && address.parts[0].family !== "trait"
 
-export function loadAddEntry(atlas: Places, address: Address): EntryData | null {
+export async function loadAddEntry(atlas: Places, address: Address): Promise<EntryData | null> {
 	return startsBlend(address)
 		? {
 				parts: address.parts.map((p) => atlas.ref(p)),
-				pantry: pantryOf(atlas, address.parts),
+				pantry: await pantryOf(atlas, address.parts),
 				partners: [],
 			}
 		: null

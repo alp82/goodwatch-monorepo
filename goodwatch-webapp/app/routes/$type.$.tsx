@@ -97,7 +97,7 @@ const canonicalLoader = async ({ params, request }: LoaderFunctionArgs) => {
 			data,
 			viewer: atlas.viewer,
 			marks: await loadMarks(atlas),
-			entry: loadAddEntry(atlas, address),
+			entry: await loadAddEntry(atlas, address),
 			title: data.room.title,
 			description:
 				(address.parts.length === 1 ? copyFor(kind, lead.family, lead.slug)?.lede : null) ??
@@ -129,7 +129,7 @@ const canonicalLoader = async ({ params, request }: LoaderFunctionArgs) => {
 			index: page,
 			viewer: atlas.viewer,
 			marks: await loadMarks(atlas),
-			entry: loadAddEntry(atlas, address),
+			entry: await loadAddEntry(atlas, address),
 			title: single ?? `${kindLabel(kind)} by ${fam?.one.toLowerCase() ?? ""}`,
 			description:
 				(lead ? copyFor(kind, lead.family, lead.slug)?.lede : null) ??

@@ -7,6 +7,7 @@ import type { Places } from "~/server/browse/places.server"
 import type { PlaceRef, PrintFamily } from "~/domain/browse/types"
 import { cardCopy } from "~/server/browse/cards.server"
 import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
+import { breathe } from "./breathe"
 import { createVersionMemo } from "./version-memo"
 
 export interface MarkWord {
@@ -54,6 +55,7 @@ export async function marksOf(atlas: Places): Promise<Marks> {
 	}
 	for (const family of FAMILIES)
 		for (const place of atlas.members(family)) {
+			await breathe()
 			const part = [{ family, slug: place.slug }]
 			const id = `${family}:${place.slug}`
 			out.words[id] = atlas
