@@ -34,7 +34,7 @@ import { DISPLAY } from "~/ui/my-pages/bits"
 // each part. A live preview beside the form; Save checks with the same rules as the server (domain/profile-settings).
 // No display name: profiles and cards are signed with the permanent @handle (#170).
 import { assetUrl } from "~/utils/asset-url"
-import { ProfileAvatar } from "../ProfileFrame"
+import { ProfileAvatar } from "../ProfileAvatar"
 import { LINK_SERVICE_INFO, profileTabPath } from "../links"
 import { BUTTON_BOX, QUIET_BUTTON, TILE, posterUrl } from "../parts"
 import { PhotoCropper } from "./PhotoCropper"

@@ -8,7 +8,7 @@ import type { ProfileShell } from "~/domain/profile"
 import { matchTier } from "~/domain/profile-taste"
 import { useAccountSummary } from "~/ui/account/useAccountSummary"
 import { DISPLAY } from "~/ui/my-pages/bits"
-import { ProfileAvatar } from "../../ProfileFrame"
+import { ProfileAvatar } from "../../ProfileAvatar"
 import { matchColor, matchStrength } from "../../match"
 import { CountUp, type Ready, splitsOf } from "./parts"
 
@@ -63,11 +63,7 @@ export function Ring({
 			style={{ width: size, height: size }}
 		>
 			{/* biome-ignore lint/a11y/noSvgWithoutTitle: decorative; the numbers carry the meaning */}
-			<svg
-				viewBox="0 0 100 100"
-				className="absolute inset-0 size-full -rotate-90"
-				aria-hidden
-			>
+			<svg viewBox="0 0 100 100" className="absolute inset-0 size-full -rotate-90" aria-hidden>
 				<circle
 					cx="50"
 					cy="50"
@@ -90,9 +86,7 @@ export function Ring({
 					transition={{ duration: 0.6 }}
 				/>
 			</svg>
-			<span className="relative flex flex-col items-center justify-center">
-				{children}
-			</span>
+			<span className="relative flex flex-col items-center justify-center">{children}</span>
 		</span>
 	)
 }
@@ -113,11 +107,7 @@ function Sized({ px, children }: { px: number; children: ReactNode }) {
 }
 
 /** The owner's avatar or the visitor's at a pixel size. */
-export function Face({
-	who,
-	shell,
-	px,
-}: { who: "them" | "you"; shell: ProfileShell; px: number }) {
+export function Face({ who, shell, px }: { who: "them" | "you"; shell: ProfileShell; px: number }) {
 	const me = useAccountSummary()
 	return (
 		<Sized px={px}>
@@ -161,10 +151,7 @@ export function Trio({
 			<span className="relative rounded-full ring-2 ring-amber-400/70 ring-offset-2 ring-offset-gray-950">
 				<Face who="them" shell={shell} px={px} />
 			</span>
-			<span
-				className="relative z-10 rounded-full bg-gray-950"
-				style={{ marginInline: gap }}
-			>
+			<span className="relative z-10 rounded-full bg-gray-950" style={{ marginInline: gap }}>
 				<Ring p={f.p} color={f.color} size={ring} stroke={8} still={still}>
 					<span
 						className="leading-none font-black tabular-nums"
@@ -195,20 +182,11 @@ export const ZONES = [
  * into each other, over a quiet track that shows the five tier zones as faint tints split by ticks. A thin white
  * line, centered on the bar, marks the match; fill and line travel together (transform only). `rounded` rounds the
  * bar's ends with the strip's bottom corners. */
-export function EdgeBar({
-	p,
-	still,
-	rounded,
-}: { p: number; still: boolean; rounded: boolean }) {
-	const blend = ZONES.map(
-		([a, b]) => `${matchColor((a + b) / 2)} ${(a + b) / 2}%`,
-	).join(", ")
+export function EdgeBar({ p, still, rounded }: { p: number; still: boolean; rounded: boolean }) {
+	const blend = ZONES.map(([a, b]) => `${matchColor((a + b) / 2)} ${(a + b) / 2}%`).join(", ")
 	const t = { duration: still ? 0 : 0.9, ease: EASE, delay: still ? 0 : 0.1 }
 	return (
-		<span
-			className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[5px]"
-			aria-hidden
-		>
+		<span className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[5px]" aria-hidden>
 			<span
 				className={`absolute inset-x-0 -top-4 bottom-0 overflow-hidden transition-[border-radius] duration-300 ${rounded ? "rounded-b-2xl" : ""}`}
 			>
@@ -264,10 +242,7 @@ export function EdgeBar({
 }
 
 /** The bold tier word ("Taste twins") in the tier color. */
-export function TierWord({
-	f,
-	className = "",
-}: { f: Facts; className?: string }) {
+export function TierWord({ f, className = "" }: { f: Facts; className?: string }) {
 	return (
 		<span
 			className={`${DISPLAY} block truncate leading-none ${className}`}
@@ -284,7 +259,11 @@ export function Cue({
 	open,
 	short = true,
 	className = "",
-}: { open: boolean; short?: boolean; className?: string }) {
+}: {
+	open: boolean
+	short?: boolean
+	className?: string
+}) {
 	return (
 		<span
 			className={`relative flex shrink-0 items-center gap-1.5 rounded-full bg-white/[0.06] py-2 pr-2.5 pl-3 text-sm font-bold text-amber-300 ring-1 ring-white/10 transition-colors group-hover:bg-amber-400 group-hover:text-gray-950 group-hover:ring-amber-400 ${short ? "max-sm:pl-2.5" : ""} ${className}`}

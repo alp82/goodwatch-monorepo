@@ -4,7 +4,7 @@
 // when it rests, so it never jumps back. Motion is transform and opacity only, and stops under reduced motion.
 import type { ReactNode } from "react"
 import type { ProfileShell } from "~/domain/profile"
-import { ProfileAvatar } from "../ProfileFrame"
+import { ProfileAvatar } from "../ProfileAvatar"
 import type { WhorlAttribute } from "../taste/Whorl"
 import { FAMILY_COLOR, FAMILY_ORDER, type FamilyId } from "../taste/model"
 import { familyPulls } from "./facts"
@@ -53,8 +53,7 @@ function placed(print: WhorlAttribute[]) {
 	})
 }
 
-const at = (r: number, angle: number) =>
-	[r1(r * Math.cos(angle)), r1(r * Math.sin(angle))] as const
+const at = (r: number, angle: number) => [r1(r * Math.cos(angle)), r1(r * Math.sin(angle))] as const
 
 // The nudge is a transition, so leaving eases it back; the drift and the turn are paused animations.
 const STYLE = `
@@ -111,9 +110,7 @@ export function OrbitRing({
 	motion: OrbitMotion
 	className: string
 }) {
-	const top = print
-		? [...familyPulls(print)].sort((a, b) => b.strength - a.strength)[0]
-		: null
+	const top = print ? [...familyPulls(print)].sort((a, b) => b.strength - a.strength)[0] : null
 	return (
 		<div
 			className={`gw-orbit relative shrink-0 ${className}`}
@@ -175,13 +172,7 @@ function Dots({ print }: { print: WhorlAttribute[] }) {
 				.map(({ a, angle, strength }) => {
 					const [x, y] = at(R, angle)
 					return (
-						<circle
-							key={a.key}
-							cx={x}
-							cy={y}
-							r={dotSize(strength)}
-							fill={FAMILY_COLOR[a.family]}
-						/>
+						<circle key={a.key} cx={x} cy={y} r={dotSize(strength)} fill={FAMILY_COLOR[a.family]} />
 					)
 				})}
 		</svg>

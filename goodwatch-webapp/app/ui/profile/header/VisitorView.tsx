@@ -7,7 +7,7 @@ import { Link } from "@remix-run/react"
 import type { CSSProperties } from "react"
 import { tastePath } from "~/domain/member-paths"
 import { FOLLOW_PHONE_BAR, STICKY_BAR } from "~/ui/layers"
-import { WRAP } from "~/ui/my-pages/bits"
+import { WRAP } from "~/ui/my-pages/style"
 
 /**
  * Where the view switch leads from this page. The owner-only pages (Not rated, Rate more) have no visitor view, so

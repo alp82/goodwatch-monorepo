@@ -12,11 +12,12 @@ import type { PosterProps } from "~/ui/Poster"
 import { SortControl } from "~/ui/filter-bar/controls"
 import type { SortOption } from "~/ui/filter-bar/labels"
 import { WRAP, tmdbImage } from "~/ui/my-pages/bits"
+import { BUTTON_BOX } from "~/ui/my-pages/style"
 import { getVibeColorValue } from "~/utils/ratings"
 
 export const TILE = "rounded-2xl bg-white/[0.04] ring-1 ring-white/10"
-/** The profile's button box (height, padding, gap, text size). The main action is a `<PrimaryButton>` with it. */
-export const BUTTON_BOX = "inline-flex min-h-10 items-center gap-1.5 px-4 text-sm"
+export { BUTTON_BOX } from "~/ui/my-pages/style"
+
 export const QUIET_BUTTON = `${BUTTON_BOX} rounded-full bg-white/[0.06] font-bold text-gray-100 ring-1 ring-white/15 hover:bg-white/[0.1]`
 
 export const count = (n: number) => n.toLocaleString("en-US")
