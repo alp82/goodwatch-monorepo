@@ -168,13 +168,16 @@ async function waysOf(atlas: Places, me: Ingredient, n: number): Promise<Suggest
 		top.push(x)
 		if (top.length >= 8) break
 	}
-	return Promise.all(
-		top.map(async (x) => ({
-			place: atlas.ref(x.p),
-			count: x.both,
-			titles: await atlas.showcase([x.p, me], 3, { by: "popular" }),
-		})),
-	)
+	const groups = top.map((x) => [x.p, me])
+	await atlas.readShowcaseCandidates(groups, 3, "popular")
+	const ways: Suggestion[] = []
+	for (const { p, both } of top)
+		ways.push({
+			place: atlas.ref(p),
+			count: both,
+			titles: await atlas.showcase([p, me], 3, { by: "popular" }),
+		})
+	return ways
 }
 
 const documentedMemo = createVersionMemo<number>(6)
@@ -257,17 +260,20 @@ async function buildTropePage(atlas: Places, t: Trope): Promise<TropePageData> {
 	const rate = (d: { slug: string; n: number }) =>
 		d.n / Math.max(1, atlas.count([ing("decade", d.slug)]))
 	const peak = Math.max(1e-9, ...decades.map(rate))
-	const [timelineTitles, blend, people] = await Promise.all([
-		Promise.all(
-			decades.map((d) =>
-				d.n >= 2
-					? atlas.showcase([me, ing("decade", d.slug)], 3, { by: "popular" }).catch(() => [])
-					: Promise.resolve([] as ShowTitle[]),
-			),
-		),
+	// Ways overlap one another and the timeline. Reserve in rank order before the decades
+	// choose from the remaining titles, independent of when the database returns cards.
+	const [blend, people] = await Promise.all([
 		waysOf(atlas, me, n).catch(() => []),
 		atlas.people([me], 12).catch(() => []),
 	])
+	// Each title belongs to exactly one decade, so these groups can reserve concurrently.
+	const timelineTitles = await Promise.all(
+		decades.map((d) =>
+			d.n >= 2
+				? atlas.showcase([me, ing("decade", d.slug)], 3, { by: "popular" }).catch(() => [])
+				: Promise.resolve([] as ShowTitle[]),
+		),
+	)
 	const group = groupOf(t.group)
 	return {
 		trope: {
