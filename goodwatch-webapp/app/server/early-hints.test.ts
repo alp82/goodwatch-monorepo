@@ -44,10 +44,11 @@ const marks = [
 
 describe("earlyHintLinks", () => {
 	it("gives a phone's start page shared hints, styles and marks; the HTML selects its room", () => {
-		assert.deepEqual(
-			earlyHintLinks(page("/?tv=discover", phone), base, files),
-			[...shared, ...homeSheets, ...marks],
-		)
+		assert.deepEqual(earlyHintLinks(page("/?tv=discover", phone), base, files), [
+			...shared,
+			...homeSheets,
+			...marks,
+		])
 	})
 
 	it("leaves responsive room selection to HTML on desktop too", () => {
@@ -59,29 +60,18 @@ describe("earlyHintLinks", () => {
 	})
 
 	it("does not guess a room from device or format request headers", () => {
-		assert.deepEqual(earlyHintLinks(page("/"), base, files), [
-			...shared,
-			...homeSheets,
-			...marks,
-		])
+		assert.deepEqual(earlyHintLinks(page("/"), base, files), [...shared, ...homeSheets, ...marks])
 		assert.deepEqual(
-			earlyHintLinks(
-				page("/", { ...phone, accept: "text/html,image/webp,*/*" }),
-				base,
-				files,
-			),
+			earlyHintLinks(page("/", { ...phone, accept: "text/html,image/webp,*/*" }), base, files),
 			[...shared, ...homeSheets, ...marks],
 		)
 	})
 
 	it("hints Explorer's stylesheet only on Explorer, in the stylesheet's CORS mode", () => {
-		assert.deepEqual(
-			earlyHintLinks(page("/map?type=movie", phone), base, files),
-			[
-				...shared,
-				`<${base}/assets/explorer-J0.css>; rel=preload; as=style; crossorigin`,
-			],
-		)
+		assert.deepEqual(earlyHintLinks(page("/map?type=movie", phone), base, files), [
+			...shared,
+			`<${base}/assets/explorer-J0.css>; rel=preload; as=style; crossorigin`,
+		])
 		assert.deepEqual(earlyHintLinks(page("/map", phone), "", files), [
 			"</assets/tailwind-A1.css>; rel=preload; as=style",
 			'</assets/gabarito-latin-D4.woff2>; rel=preload; as=font; type="font/woff2"; crossorigin',
@@ -89,11 +79,17 @@ describe("earlyHintLinks", () => {
 		])
 	})
 
+	it("opens the poster connection while an Explore document is being built", () => {
+		for (const path of ["/movies", "/shows/moods/cozy", "/all/top?page=2"])
+			assert.deepEqual(earlyHintLinks(page(path, phone), base, files), [
+				...shared,
+				"<https://image.tmdb.org>; rel=preconnect",
+			])
+		assert.deepEqual(earlyHintLinks(page("/movies-list", phone), base, files), shared)
+	})
+
 	it("gives every other page the site's style sheet and the brand font", () => {
-		assert.deepEqual(
-			earlyHintLinks(page("/movie/603-the-matrix", phone), base, files),
-			shared,
-		)
+		assert.deepEqual(earlyHintLinks(page("/movie/603-the-matrix", phone), base, files), shared)
 	})
 
 	it("names the site's own host, without preconnects, while the page does; a font is always fetched without credentials", () => {
