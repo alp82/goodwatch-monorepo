@@ -6,6 +6,8 @@ import {
 	imageLoadingProps,
 	tmdbFixedImage,
 	tmdbFluidImage,
+	tmdbImageUrl,
+	isTvdbPhoto,
 } from "~/utils/tmdb-image"
 
 type ImgProps = Omit<
@@ -31,6 +33,8 @@ export interface TmdbImageProps extends ImgProps {
 	ratio?: number
 	/** "lazy" by default. A page sets "eager" or "high" on the images it shows without scrolling. */
 	priority?: ImagePriority
+	/** Small poster thumbnails drawn at around 90–145 CSS pixels on narrow phones. */
+	phoneThumbnail?: boolean
 	imgRef?: React.Ref<HTMLImageElement>
 }
 
@@ -55,6 +59,7 @@ export function TmdbImage({
 	ratio = DEFAULT_RATIO[kind],
 	priority = "lazy",
 	imgRef,
+	phoneThumbnail,
 	alt = "",
 	...rest
 }: TmdbImageProps) {
@@ -67,7 +72,7 @@ export function TmdbImage({
 				maxWidth,
 			})
 		: tmdbFixedImage(kind, path, base)
-	return (
+	const image = (
 		<img
 			// loading comes before src: a browser starts the request when it sees src.
 			{...imageLoadingProps(priority)}
@@ -80,5 +85,18 @@ export function TmdbImage({
 			{...rest}
 			alt={alt}
 		/>
+	)
+	if (!phoneThumbnail || kind !== "poster" || isTvdbPhoto(path)) return image
+	// These compact thumbnails look sharp at w185. The next TMDB step, w342, more than doubles
+	// the download. Wider layouts keep their full source set, including on tablets and desktops.
+	return (
+		<picture className="contents">
+			<source
+				media="(max-width: 479px)"
+				sizes={source.sizes ?? `${base}px`}
+				srcSet={[92, 154, 185].map((w) => `${tmdbImageUrl(path, `w${w}`)} ${w}w`).join(", ")}
+			/>
+			{image}
+		</picture>
 	)
 }

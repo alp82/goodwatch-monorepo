@@ -8,6 +8,7 @@ export function TitlePosterCard({
 	card,
 	prefetch,
 	posterPriority,
+	phoneThumbnail,
 	posterSizes,
 	posterPaintBeforeScripts,
 	skipOffscreen,
@@ -19,6 +20,7 @@ export function TitlePosterCard({
 	prefetch?: boolean
 	/** Set by a page for the cards it shows without scrolling. Every other poster loads lazily. */
 	posterPriority?: ImagePriority
+	phoneThumbnail?: boolean
 	posterSizes?: SizeRule[]
 	posterPaintBeforeScripts?: boolean
 	/** For a card far down a long grid, see MovieTvCard. */
@@ -44,6 +46,7 @@ export function TitlePosterCard({
 			mediaType={card.media_type}
 			prefetch={prefetch}
 			posterPriority={posterPriority}
+			phoneThumbnail={phoneThumbnail}
 			posterSizes={posterSizes}
 			posterPaintBeforeScripts={posterPaintBeforeScripts}
 			skipOffscreen={skipOffscreen}

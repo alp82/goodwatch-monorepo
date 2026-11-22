@@ -110,6 +110,7 @@ interface MovieTvCardProps {
 	posterMinWidth?: PosterProps["minWidth"]
 	/** Set by a page for the cards it shows without scrolling. Every other poster loads lazily. */
 	posterPriority?: PosterProps["priority"]
+	phoneThumbnail?: boolean
 	/** Wait for a visible poster before starting a landing page's scripts. */
 	posterPaintBeforeScripts?: boolean
 	/**
@@ -161,6 +162,7 @@ export function MovieTvCard({
 	posterMinWidth,
 	posterMaxWidth,
 	posterPriority,
+	phoneThumbnail,
 	posterPaintBeforeScripts,
 	skipOffscreen = false,
 	actions: actionsOn = "bottom",
@@ -285,6 +287,7 @@ export function MovieTvCard({
 						tmdbId={details.tmdb_id}
 						sizes={posterSizes}
 						maxWidth={posterMaxWidth}
+						phoneThumbnail={phoneThumbnail}
 						minWidth={posterMinWidth}
 						priority={posterPriority}
 						paintBeforeScripts={posterPaintBeforeScripts}

@@ -87,6 +87,7 @@ export function PosterFan({
 				kind="poster"
 				path={t.card.poster_path}
 				width={width}
+				phoneThumbnail={spotlight}
 				priority={spotlight ? "high" : "lazy"}
 				{...(spotlight ? HERO_TIMING : {})}
 				alt=""

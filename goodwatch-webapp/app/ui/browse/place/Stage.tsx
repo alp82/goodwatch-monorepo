@@ -151,6 +151,7 @@ function Grid({
 							card={t.card}
 							posterSizes={fit ? [[null, `${Math.round(fit.w)}px`]] : STAGE_SIZES}
 							posterPriority={i < 3 ? "high" : "lazy"}
+							phoneThumbnail
 							posterPaintBeforeScripts={i < 3}
 							skipOffscreen={i >= 3}
 						/>

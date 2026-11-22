@@ -24,6 +24,7 @@ export interface PosterProps {
 	maxWidth?: number
 	/** The narrowest file width in srcset (PHONE_185_SLOT in utils/tmdb-image.ts uses 185). */
 	minWidth?: number
+	phoneThumbnail?: boolean
 }
 
 // A card in the grid (2 to 6 columns) or in a row (3 to 8 slides) is at most this wide.
@@ -46,8 +47,7 @@ export const POSTER_ROW_SIZES: SizeRule[] = [
 	[null, "31vw"],
 ]
 
-const CLASS_NAME =
-	"block w-full h-auto aspect-[2/3] rounded-md pointer-events-none"
+const CLASS_NAME = "block w-full h-auto aspect-[2/3] rounded-md pointer-events-none"
 
 export function Poster({
 	path,
@@ -61,11 +61,9 @@ export function Poster({
 	paintBeforeScripts = false,
 	maxWidth = POSTER_CARD_MAX_WIDTH,
 	minWidth = POSTER_CARD_MIN_WIDTH,
+	phoneThumbnail,
 }: PosterProps) {
-	const impressionRef = usePosterImpression(
-		loading ? undefined : mediaType,
-		tmdbId,
-	)
+	const impressionRef = usePosterImpression(loading ? undefined : mediaType, tmdbId)
 	const alt = title
 	// Every poster is 2:3. The ratio reserves the height before the image arrives.
 	const className = `${CLASS_NAME} ${loading ? "animate-pulse brightness-50" : ""}`
@@ -92,6 +90,7 @@ export function Poster({
 			{...(paintBeforeScripts ? HERO_TIMING : {})}
 			sizes={sizes}
 			minWidth={minWidth}
+			phoneThumbnail={phoneThumbnail}
 			maxWidth={maxWidth}
 			priority={priority}
 			className={className}
