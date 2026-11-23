@@ -2,7 +2,7 @@
 // title's write-up at a reading measure with spoilers covered, what the trope is, and where to go next. The rarity
 // meter and the tiny poster stack are the cards' (TropeCard.tsx).
 import { ArrowUpRightIcon } from "@heroicons/react/20/solid"
-import { tropeDiscoverPath } from "~/domain/trope-filter"
+import { tropePath } from "~/domain/tropes/destination"
 import { Link } from "@remix-run/react"
 import { useEffect, useRef, useState } from "react"
 import { MovieTvCard } from "~/ui/MovieTvCard"
@@ -70,7 +70,7 @@ export function AlsoIn({
 						</span>
 					</h3>
 					<Link
-						to={tropeDiscoverPath(t.url)}
+						to={tropePath(t.url, skip.type)}
 						prefetch="intent"
 						className="shrink-0 text-xs font-semibold text-gray-400 hover:text-white"
 					>
@@ -207,7 +207,15 @@ export function WhatItIs({ t, className = "" }: { t: Row; className?: string }) 
 }
 
 /** Where next: the member's picks with it, or Discover; and TV Tropes. */
-export function NextLinks({ t, className = "" }: { t: Row; className?: string }) {
+export function NextLinks({
+	t,
+	type,
+	className = "",
+}: {
+	t: Row
+	type: Skip["type"]
+	className?: string
+}) {
 	return (
 		<div className={`flex flex-wrap items-center gap-x-5 gap-y-1 ${className}`}>
 			{t.picks ? (
@@ -221,11 +229,11 @@ export function NextLinks({ t, className = "" }: { t: Row; className?: string })
 				</Link>
 			) : (
 				<Link
-					to={tropeDiscoverPath(t.url)}
+					to={tropePath(t.url, type)}
 					prefetch="intent"
 					className="inline-flex min-h-10 items-center text-sm font-semibold text-gray-200 hover:text-white"
 				>
-					Find more with it on Discover →
+					Find more with this trope →
 				</Link>
 			)}
 			{t.url && (

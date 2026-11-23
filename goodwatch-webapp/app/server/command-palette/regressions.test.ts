@@ -4,11 +4,7 @@ import path from "node:path"
 import { test } from "node:test"
 import { build } from "esbuild"
 
-async function fixture(
-	entry: string,
-	stubs: Record<string, string>,
-	extra = "",
-) {
+async function fixture(entry: string, stubs: Record<string, string>, extra = "") {
 	const result = await build({
 		stdin: {
 			contents: `export * from ${JSON.stringify(path.resolve("app/server", entry))}; ${extra}`,
@@ -65,10 +61,7 @@ test("trope names prefer verified headings, then exact slug folds and closest na
 	assert.equal(entries[0].item.label, "Chekhov’s Gun")
 	assert.equal(entries[0].item.sub, "A setup pays off. · 17,870 titles")
 	assert.equal(entries[1].item.label, "Bittersweet Endings")
-	assert.equal(
-		entries[0].item.href,
-		`/discover?${new URLSearchParams({ q: "Chekhov’s Gun" })}`,
-	)
+	assert.equal(entries[0].item.href, "/all/tropes/chekhovs-gun")
 	assert.deepEqual(entries[0].names, ["Chekhov's Axe", "Chekhov’s Gun"])
 	assert.equal(
 		matchGroup("tropes", "Tropes", entries, "mixed").items[0].label,
@@ -80,17 +73,10 @@ test("trope names prefer verified headings, then exact slug folds and closest na
 		[...entries].reverse(),
 	)
 
-	const verified = await tropeEntries(
-		catalog,
-		counts,
-		new Map([[gun, "The Loaded Gun"]]),
-	)
+	const verified = await tropeEntries(catalog, counts, new Map([[gun, "The Loaded Gun"]]))
 	assert.equal(verified[0].item.label, "The Loaded Gun")
 	assert.equal(matchGroup("tropes", "Tropes", verified, "the loaded").total, 1)
-	assert.equal(
-		matchGroup("tropes", "Tropes", verified, "chekhov").items[0].label,
-		"The Loaded Gun",
-	)
+	assert.equal(matchGroup("tropes", "Tropes", verified, "chekhov").items[0].label, "The Loaded Gun")
 })
 
 test("a large trope catalog lets other work run while its entries are built", async () => {
@@ -133,34 +119,22 @@ test("trope URLs with only markers, fragments, sentences or oversized names are 
 	assert.deepEqual(await tropeEntries(catalog, counts, new Map()), [])
 	const url = "https://tvtropes.org/pmwiki/pmwiki.php/Main/LoveIsADrug"
 	assert.equal(
-		(
-			await tropeEntries(
-				[["Love Is a Drug", url, null]],
-				new Map([[url, 1]]),
-				new Map(),
-			)
-		)[0].item.label,
+		(await tropeEntries([["Love Is a Drug", url, null]], new Map([[url, 1]]), new Map()))[0].item
+			.label,
 		"Love Is a Drug",
 	)
-	assert.deepEqual(
-		await tropeEntries([["Love Is a Drug", url, null]], new Map(), new Map()),
-		[],
-	)
+	assert.deepEqual(await tropeEntries([["Love Is a Drug", url, null]], new Map(), new Map()), [])
 })
 
 test("descriptions match only their opening; plain punctuation survives excerpt cleanup", async () => {
-	const { excerpt, matchGroup } = await fixture(
-		"command-palette/matching.server.ts",
-		{ "text-rules.server": fold },
-	)
+	const { excerpt, matchGroup } = await fixture("command-palette/matching.server.ts", {
+		"text-rules.server": fold,
+	})
 	assert.equal(
 		excerpt("#1 is Dr. X* and A_B, with <3 fans."),
 		"#1 is Dr. X* and A_B, with <3 fans.",
 	)
-	assert.equal(
-		excerpt("<b>Bold</b> and **strong**, [[url|label]]."),
-		"Bold and strong, label.",
-	)
+	assert.equal(excerpt("<b>Bold</b> and **strong**, [[url|label]]."), "Bold and strong, label.")
 	const entries = [
 		{
 			names: ["A post"],
@@ -171,12 +145,7 @@ test("descriptions match only their opening; plain punctuation survives excerpt 
 	]
 	assert.equal(matchGroup("blog", "Blog", entries, "ze"), undefined)
 	assert.equal(
-		matchGroup(
-			"blog",
-			"Blog",
-			[{ ...entries[0], names: ["A postscript"] }],
-			"osts",
-		),
+		matchGroup("blog", "Blog", [{ ...entries[0], names: ["A postscript"] }], "osts"),
 		undefined,
 	)
 	assert.equal(matchGroup("blog", "Blog", entries, "op").total, 1)
@@ -184,15 +153,11 @@ test("descriptions match only their opening; plain punctuation survives excerpt 
 })
 
 test("background queue delays startup, runs serially, and backs off failed refreshes", async (t) => {
-	const { scheduleCatalog } = await fixture(
-		"command-palette/background.server.ts",
-		{
-			undici:
-				"export const fetch = () => { throw Error('unexpected network') }",
-			crate:
-				"export class CrateAuthenticationError extends Error {}; export const isCrateRecoveryError = () => false; export const toCrateError = e => e",
-		},
-	)
+	const { scheduleCatalog } = await fixture("command-palette/background.server.ts", {
+		undici: "export const fetch = () => { throw Error('unexpected network') }",
+		crate:
+			"export class CrateAuthenticationError extends Error {}; export const isCrateRecoveryError = () => false; export const toCrateError = e => e",
+	})
 	t.mock.timers.enable({ apis: ["Date", "setTimeout"], now: 100_000 })
 	t.mock.method(console, "warn", () => {})
 	const calls: string[] = []
@@ -228,14 +193,11 @@ test("background queue delays startup, runs serially, and backs off failed refre
 })
 
 test("background reads give each host sixty seconds and never retry a host", async (t) => {
-	const { backgroundStatement, probe } = await fixture(
-		"command-palette/background.server.ts",
-		{
-			undici: `export const probe = []; export const fetch = async (url, options) => { probe.push({url, signal: options.signal}); throw Object.assign(Error('offline'), {code:'ECONNREFUSED'}) }`,
-			crate:
-				"export class CrateAuthenticationError extends Error {}; export const isCrateRecoveryError = () => true; export const toCrateError = e => e",
-		},
-	)
+	const { backgroundStatement, probe } = await fixture("command-palette/background.server.ts", {
+		undici: `export const probe = []; export const fetch = async (url, options) => { probe.push({url, signal: options.signal}); throw Object.assign(Error('offline'), {code:'ECONNREFUSED'}) }`,
+		crate:
+			"export class CrateAuthenticationError extends Error {}; export const isCrateRecoveryError = () => true; export const toCrateError = e => e",
+	})
 	const timeouts: number[] = []
 	t.mock.method(AbortSignal, "timeout", (ms: number) => {
 		timeouts.push(ms)
@@ -244,10 +206,7 @@ test("background reads give each host sixty seconds and never retry a host", asy
 	const old = process.env.CRATE_HOSTS
 	process.env.CRATE_HOSTS = "one,two"
 	try {
-		await assert.rejects(
-			backgroundStatement("SELECT name FROM genre"),
-			/offline/,
-		)
+		await assert.rejects(backgroundStatement("SELECT name FROM genre"), /offline/)
 	} finally {
 		if (old === undefined) Reflect.deleteProperty(process.env, "CRATE_HOSTS")
 		else process.env.CRATE_HOSTS = old
@@ -258,8 +217,7 @@ test("slow legacy titles survive group timeout; failed targets stay uncached and
 	const { getPaletteAnswer, probe } = await fixture(
 		"command-palette.server.ts",
 		{
-			probe:
-				"export const probe = { displayMs: 300, timeout: true, vocabulary: 0, stored: [] }",
+			probe: "export const probe = { displayMs: 300, timeout: true, vocabulary: 0, stored: [] }",
 			"catalog.server": `export const catalogVersion = () => 'same'; export const startPaletteCatalog = () => {}`,
 			"groups.server": `import {probe} from 'probe';
 		 export const indexGroups = async () => probe.timeout ? new Promise(() => {}) : [];
@@ -305,13 +263,11 @@ test("slow legacy titles survive group timeout; failed targets stay uncached and
 })
 
 test("member snapshots batch avatar reads, retain content revisions, and expire stale privacy decisions", async (t) => {
-	const { catalogEntries, catalogVersion, popularTropes, probe } =
-		await fixture(
-			"command-palette/catalog.server.ts",
-			{
-				probe:
-					"export const probe = { jobs: new Map(), queries: [], fail: false }",
-				"background.server": `import {probe} from 'probe';
+	const { catalogEntries, catalogVersion, popularTropes, probe } = await fixture(
+		"command-palette/catalog.server.ts",
+		{
+			probe: "export const probe = { jobs: new Map(), queries: [], fail: false }",
+			"background.server": `import {probe} from 'probe';
 		 export const scheduleCatalog = (key, interval, load) => { if(!probe.jobs.has(key)) probe.jobs.set(key,{interval,load}) };
 		 export const backgroundStatement = async sql => {
 		 probe.queries.push(sql); if(probe.fail) throw Error('offline');
@@ -323,26 +279,23 @@ test("member snapshots batch avatar reads, retain content revisions, and expire 
 		 : sql.includes('FROM trope WHERE') ? [['https://tvtropes.org/pmwiki/pmwiki.php/Main/Gun',17870]] : [];
 		 return {rows};
 		 }`,
-				"new-on-services": "export const BRANDS = []",
-				profile: "export const parseVisibility = v => v",
-				"profile-settings":
-					"export const parseAvatarChoice = v => v; export const asMediaKey = v => v",
-				"user-data":
-					"export const parseMediaKey = () => ({mediaType:'movie',tmdbId:1})",
-				"catalog.server":
-					"export const searchStatement = async () => ({rows:[]})",
-				"avatar-choice.server":
-					"export const resolveAvatar = async (_id,_handle,choice,_photo,loaded) => { if(!loaded) throw Error('unbatched'); return {url:null,color:choice.color} }",
-				"search-eligibility.server":
-					"export const publicProfileSearchable = () => true",
-				"role.server": "export const runsSearch = () => true",
-				"people.server":
-					"export const palettePeopleSnapshot = () => []; export const startPeopleIndex = () => {}",
-				"matching.server":
-					"export const discover = () => '/discover'; export const excerpt = text => text",
-			},
-			'export { probe } from "probe"',
-		)
+			"new-on-services": "export const BRANDS = []",
+			profile: "export const parseVisibility = v => v",
+			"profile-settings":
+				"export const parseAvatarChoice = v => v; export const asMediaKey = v => v",
+			"user-data": "export const parseMediaKey = () => ({mediaType:'movie',tmdbId:1})",
+			"catalog.server": "export const searchStatement = async () => ({rows:[]})",
+			"avatar-choice.server":
+				"export const resolveAvatar = async (_id,_handle,choice,_photo,loaded) => { if(!loaded) throw Error('unbatched'); return {url:null,color:choice.color} }",
+			"search-eligibility.server": "export const publicProfileSearchable = () => true",
+			"role.server": "export const runsSearch = () => true",
+			"people.server":
+				"export const palettePeopleSnapshot = () => []; export const startPeopleIndex = () => {}",
+			"matching.server":
+				"export const discover = () => '/discover'; export const excerpt = text => text",
+		},
+		'export { probe } from "probe"',
+	)
 	let now = 100_000
 	t.mock.method(Date, "now", () => now)
 	const members = probe.jobs.get("members")
@@ -360,15 +313,12 @@ test("member snapshots batch avatar reads, retain content revisions, and expire 
 		initial: "M",
 	})
 	assert.equal(
-		probe.queries.filter((sql: string) => sql.includes("FROM doc.user_avatar"))
-			.length,
+		probe.queries.filter((sql: string) => sql.includes("FROM doc.user_avatar")).length,
 		1,
 	)
 	assert.ok(
 		probe.queries.some((sql: string) =>
-			sql.includes(
-				"WHERE user_id IN (SELECT user_id FROM user_profile WHERE handle IS NOT NULL)",
-			),
+			sql.includes("WHERE user_id IN (SELECT user_id FROM user_profile WHERE handle IS NOT NULL)"),
 		),
 	)
 	const revision = catalogVersion()
@@ -394,8 +344,7 @@ test("start response includes scored trending and popular tropes; failed picks a
 			"export const LIBRARY = []; export const MIN_FIT = 1; export const ownRecipes = () => []",
 		shape:
 			"export const FLAT = {}; export const familyPushes = () => ({}); export const steerOf = () => ({})",
-		"page.server":
-			"export const loadForYouPage = async () => { throw Error('unavailable') }",
+		"page.server": "export const loadForYouPage = async () => { throw Error('unavailable') }",
 		"title-cards.server":
 			"export const getDisplayFields = async () => new Map([[1,{media_type:'movie',tmdb_id:1,title:'Trending',poster_path:'/poster',goodwatch_overall_score_normalized_percent:91}]])",
 		auth: "export const getUserIdFromRequest = async () => 'member'",

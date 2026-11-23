@@ -1,9 +1,10 @@
+import { categoryPath } from "~/domain/browse/address"
 // Published blog posts, discovery vocabularies and navigation lists available without catalog reads.
 import posts from "~/content/blog/posts.json"
 import { MOODS } from "~/domain/moods"
 import { STYLES, THEMES } from "~/domain/themes-styles"
 import { mainHierarchy } from "~/ui/explore/main-nav"
-import { type Entry, discover } from "./matching.server"
+import { type Entry } from "./matching.server"
 
 export const moods: Entry[] = [
 	...MOODS.map((m) => ({
@@ -13,7 +14,7 @@ export const moods: Entry[] = [
 			key: `mood-${m.key}`,
 			label: m.name,
 			sub: m.description,
-			href: discover({ moods: m.key }),
+			href: categoryPath("all", "mood", m.name),
 			image: { kind: "hue" as const, hue: m.hue },
 		},
 	})),
@@ -23,7 +24,7 @@ export const moods: Entry[] = [
 		item: {
 			key: `theme-${m.id}`,
 			label: m.name,
-			href: discover({ themes: m.id }),
+			href: categoryPath("all", "theme", m.name),
 			image: { kind: "hue" as const, hue: m.color },
 		},
 	})),
@@ -33,7 +34,7 @@ export const moods: Entry[] = [
 		item: {
 			key: `style-${m.id}`,
 			label: m.name,
-			href: discover({ styles: m.id }),
+			href: categoryPath("all", "style", m.name),
 			image: { kind: "hue" as const, hue: m.color },
 		},
 	})),

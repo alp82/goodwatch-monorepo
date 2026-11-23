@@ -6,10 +6,10 @@
 //   const [titles, words] = await Promise.all([places.showcase(cozy, 6), places.traits(cozy)])
 //
 // `places.used` remembers every title a showcase handed out, so nothing repeats on one page.
-import { MOODS, MOOD_KEYS } from "~/domain/moods"
+import { MAX_MOODS, MOODS, MOOD_KEYS } from "~/domain/moods"
 import { type SortKey, defaultFilterState, filterQuery } from "~/domain/filter-state"
 import { BRANDS, brandBySlug } from "~/domain/new-on-services"
-import { STYLES, THEMES } from "~/domain/themes-styles"
+import { MAX_STYLES, MAX_THEMES, STYLES, THEMES } from "~/domain/themes-styles"
 import { FAMILY_COLOR } from "~/domain/fingerprint-effects/palette"
 import { familyOf } from "~/domain/fingerprint-families"
 import { isSettled, titleKindOf } from "~/domain/top-lists"
@@ -691,7 +691,10 @@ export class Places {
 			page,
 			pages,
 			sort,
-			discoverHref: this.discoverHref(sorted, sort),
+			discoverHref:
+				opts.level || opts.kindId || (opts.venn && opts.venn !== "both")
+					? null
+					: this.discoverHref(sorted, sort, opts),
 		}
 	}
 
@@ -725,15 +728,35 @@ export class Places {
 	}
 
 	/** Discover with the same filters, when Discover can express them. */
-	discoverHref(parts: Ingredient[], sort: Sort = "popular"): string | null {
+	discoverHref(
+		parts: Ingredient[],
+		sort: Sort = "popular",
+		opts: { mine?: boolean; unseen?: boolean; year?: number } = {},
+	): string | null {
 		if (parts.some((p) => p.family === "trait" || p.family === "trope")) return null
 		const plain = { onMyServices: false, notSeenYet: false }
 		const state = defaultFilterState(plain)
 		state.type = this.kind
+		state.onMyServices = !!opts.mine
+		state.notSeenYet = !!opts.unseen
+		const count = (family: Family) => parts.filter((p) => p.family === family).length
+		if (
+			count("mood") > MAX_MOODS ||
+			count("theme") > MAX_THEMES ||
+			count("style") > MAX_STYLES ||
+			count("country") > 1 ||
+			count("service") > 1 ||
+			count("decade") > 1 ||
+			(opts.mine && count("service"))
+		)
+			return null
+		state.allOf = ["moods", "themes", "styles"]
+		if (count("genre") > 1) state.allOf.push("genres")
 		for (const p of parts) {
 			const v = valueOf(this.catalog, p)
-			if (!v) continue
-			if (p.family === "mood") state.moods = [...state.moods, v.id as never].slice(0, 3)
+			if (!v || (p.family === "genre" && count("genre") > 1 && (v.ids?.length ?? 0) > 1))
+				return null
+			if (p.family === "mood") state.moods = [...state.moods, v.id as never]
 			if (p.family === "genre") state.genres = [...state.genres, ...(v.ids ?? [v.id])]
 			if (p.family === "theme") state.themes = [...state.themes, v.id as never]
 			if (p.family === "style") state.styles = [...state.styles, v.id as never]
@@ -745,6 +768,7 @@ export class Places {
 				state.streamingCountry = this.country.toUpperCase()
 			}
 		}
+		if (opts.year) state.years = { min: opts.year, max: opts.year }
 		return `/discover?${filterQuery(state, sort as SortKey, plain)}`
 	}
 

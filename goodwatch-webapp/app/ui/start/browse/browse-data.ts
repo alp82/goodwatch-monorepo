@@ -1,3 +1,4 @@
+import { categoryPath } from "~/domain/browse/address"
 import { finalAddress } from "~/domain/browse/redirects"
 import { TASTE_FALLBACK_PATH } from "~/domain/member-paths"
 import { MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
@@ -66,7 +67,7 @@ export const BROWSE_LIMITS = {
 	genreTitles: 3,
 } as const
 
-// Legacy mood pages keep their addresses; new fixed-rule moods open Discover directly.
+// These rail previews use the fixed mood rules in the legacy browse reader.
 export const DISCOVER_BROWSE_MOODS = [
 	"tense",
 	"dark",
@@ -119,7 +120,7 @@ export const BROWSE_MOODS = [
 	{
 		path: "mind-bending",
 		name: MOOD_BY_KEY.mind.name,
-		line: "Layered stories that keep you thinking.",
+		line: MOOD_BY_KEY.mind.description,
 		hue: "#c084fc",
 	},
 	{
@@ -166,8 +167,8 @@ export const BROWSE_GENRES: Record<BrowseKind, readonly string[]> = {
 const PLURAL = { movie: "movies", show: "shows" } as const
 
 export const moodHref = (path: string) =>
-	DISCOVER_BROWSE_MOODS.some((key) => key === path)
-		? `/discover?moods=${path}`
+	path === "mind-bending"
+		? categoryPath("movie", "mood", MOOD_BY_KEY.mind.name)
 		: finalAddress(`/movies/moods/${path}`)
 export const genreHref = (kind: BrowseKind, path: string) =>
 	finalAddress(`/${PLURAL[kind]}/genres/${path}`)

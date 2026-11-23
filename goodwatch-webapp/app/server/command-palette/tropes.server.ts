@@ -1,4 +1,4 @@
-import { tropeDiscoverPath } from "~/domain/trope-filter"
+import { tropePath } from "~/domain/tropes/destination"
 import { mapInSlices, timeSlice } from "../time-slice"
 import { type Entry, excerpt } from "./matching.server"
 
@@ -11,21 +11,14 @@ const fold = (name: string) =>
 
 /** Catalog names include contextual link text, not just page names. */
 function properName(name: string): boolean {
-	if (
-		!fold(name) ||
-		name.length > 70 ||
-		/[\[\]\r\n]/.test(name) ||
-		/(?:\.{3}|…)\s*$/.test(name)
-	)
+	if (!fold(name) || name.length > 70 || /[\[\]\r\n]/.test(name) || /(?:\.{3}|…)\s*$/.test(name))
 		return false
 	const words = name.split(/\s+/)
 	// Sentence-case link prose, while retaining title-case names such as "Love Is a Drug".
 	return !(
 		words.length >= 6 &&
 		words.filter((word) => /^[a-z]/.test(word)).length > words.length / 2 &&
-		/\b(?:is|are|was|were|will|would|has|have|had|can|could|should)\b/.test(
-			name,
-		)
+		/\b(?:is|are|was|were|will|would|has|have|had|can|could|should)\b/.test(name)
 	)
 }
 
@@ -38,11 +31,7 @@ function distance(name: string, slug: string): number {
 		const next = [i + 1]
 		for (let j = 0; j < slug.length; j++)
 			next.push(
-				Math.min(
-					next[j] + 1,
-					previous[j + 1] + 1,
-					previous[j] + Number(folded[i] !== slug[j]),
-				),
+				Math.min(next[j] + 1, previous[j + 1] + 1, previous[j] + Number(folded[i] !== slug[j])),
 			)
 		previous = next
 	}
@@ -85,9 +74,7 @@ export async function tropeEntries(
 			const label = heading && properName(heading) ? heading : fallback
 			const count = counts.get(url) ?? 0
 			return {
-				names: [
-					...new Set([label, ...candidates.map(([name]) => name)]),
-				].sort(),
+				names: [...new Set([label, ...candidates.map(([name]) => name)])].sort(),
 				popularity: count,
 				item: {
 					key: `trope-${url}`,
@@ -95,7 +82,7 @@ export async function tropeEntries(
 					sub: [excerpt(description), `${count.toLocaleString("en-US")} titles`]
 						.filter(Boolean)
 						.join(" · "),
-					href: tropeDiscoverPath(url),
+					href: tropePath(url),
 				},
 			}
 		},

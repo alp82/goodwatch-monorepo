@@ -1,3 +1,4 @@
+import { categoryPath } from "~/domain/browse/address"
 import { Link } from "@remix-run/react"
 import React from "react"
 import { useGenreLinks } from "~/routes/api.genres.all"
@@ -26,8 +27,7 @@ export default function Genres({
 
 	return (
 		<>
-			{((genres && genres.length > 0) ||
-				(subgenres && subgenres.length > 0)) && (
+			{((genres && genres.length > 0) || (subgenres && subgenres.length > 0)) && (
 				<div className="flex flex-wrap items-center gap-2 font-medium text-xs sm:text-sm md:text-md">
 					{genresToShow.map((genre) => {
 						if (withLinks) {
@@ -35,7 +35,7 @@ export default function Genres({
 								<Link
 									key={genre.id}
 									className={`${sizeClasses} inline-flex items-center rounded-md border-2 border-gray-600 bg-stone-900 hover:brightness-125 text-white`}
-									to={`/discover/all?withGenres=${genre.id}`}
+									to={categoryPath(type ?? "all", "genre", genre.name)}
 									prefetch="intent"
 								>
 									{genre.name}

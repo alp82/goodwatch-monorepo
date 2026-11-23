@@ -1,3 +1,4 @@
+import { slugify } from "~/domain/browse/address"
 // The Browse catalog from the loaded title snapshot: which facet values exist (the genres titles carry, the countries
 // with the most titles). Place and blend counts are read from the rows themselves (rows.server.ts); this module used to
 // count every single value and pair here too, in one pass that held the event loop for over half a second on a
@@ -48,15 +49,7 @@ export interface Facet {
 	slug: string
 }
 
-/** A label as an address segment: "Action & Adventure" is "action-adventure". */
-export const slugify = (s: string) =>
-	s
-		.toLowerCase()
-		.replace(/&/g, " ")
-		.replace(/\+/g, " plus ")
-		.replace(/[^a-z0-9]+/g, "-")
-		.replace(/^-|-$/g, "")
-
+export { slugify } from "~/domain/browse/address"
 export const MIN_VOTES = 1000
 const DECADES = [1930, 1940, 1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020]
 const regionName = new Intl.DisplayNames(["en"], { type: "region" })

@@ -174,7 +174,7 @@ describe("the shared rails", () => {
 	it("every mood and genre names a page of the site", () => {
 		for (const mood of BROWSE_MOODS) {
 			if (["tense", "dark", "deep", "magical", "quirky"].includes(mood.path)) {
-				assert.equal(moodHref(mood.path), `/discover?moods=${mood.path}`)
+				assert.equal(moodHref(mood.path), `/movies/moods/${mood.path}`)
 				continue
 			}
 			assert.ok(

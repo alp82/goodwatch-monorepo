@@ -1,3 +1,4 @@
+import { categoryPath } from "~/domain/browse/address"
 import { createHash } from "node:crypto"
 // Whole palette catalog snapshots, refreshed serially in the background; requests only read memory.
 // Spec: docs/implementation/grouped-search-panel.md
@@ -8,10 +9,7 @@ import { searchStatement } from "~/server/combined-search/catalog.server"
 import { resolveAvatar } from "~/server/profile/avatar-choice.server"
 import { publicProfileSearchable } from "~/server/profile/search-eligibility.server"
 import { runsSearch } from "~/server/role.server"
-import {
-	palettePeopleSnapshot,
-	startPeopleIndex,
-} from "~/server/search-people/people.server"
+import { palettePeopleSnapshot, startPeopleIndex } from "~/server/search-people/people.server"
 import { parseMediaKey } from "~/types/user-data"
 import { jsonDigest, sortInSlices, timeSlice } from "../time-slice"
 import { backgroundStatement, scheduleCatalog } from "./background.server"
@@ -20,8 +18,7 @@ import { tropeEntries } from "./tropes.server"
 
 /** SELECT only; the catalog transport avoids logging row contents or queries per request. */
 export async function rows<T extends unknown[]>(sql: string): Promise<T[]> {
-	if (!/^SELECT\b/i.test(sql))
-		throw new Error("Palette catalog must be read-only")
+	if (!/^SELECT\b/i.test(sql)) throw new Error("Palette catalog must be read-only")
 	return (await searchStatement(sql)).rows as T[]
 }
 function json(raw: string | undefined): unknown {
@@ -54,34 +51,27 @@ const loaders = {
 			"SELECT name, media_type FROM genre LIMIT 1000",
 		)
 		const types = new Map<string, Set<string>>()
-		for (const [name, type] of found)
-			types.set(name, (types.get(name) ?? new Set()).add(type))
+		for (const [name, type] of found) types.set(name, (types.get(name) ?? new Set()).add(type))
 		return [...types].map(([name, set]) => ({
 			names: [name],
 			popularity: 1,
 			item: {
 				key: `genre-${name}`,
 				label: name,
-				sub:
-					set.size > 1
-						? "Movies and shows"
-						: set.has("movie")
-							? "Movies only"
-							: "Shows only",
-				href: discover({ genres: name, services: "all" }),
+				sub: set.size > 1 ? "Movies and shows" : set.has("movie") ? "Movies only" : "Shows only",
+				href: categoryPath(
+					set.size > 1 ? "all" : set.has("movie") ? "movie" : "show",
+					"genre",
+					name,
+				),
 			},
 		}))
 	},
 	async services(): Promise<Entry[]> {
-		const found = await backgroundRows<
-			[number, string, string | null, number | null]
-		>(
+		const found = await backgroundRows<[number, string, string | null, number | null]>(
 			"SELECT tmdb_id, name, logo_path, order_default FROM streaming_service LIMIT 10000",
 		)
-		const byId = new Map<
-			number,
-			{ name: string; logo: string | null; order: number }
-		>()
+		const byId = new Map<number, { name: string; logo: string | null; order: number }>()
 		for (const [id, name, logo, order] of found)
 			if (!byId.has(id) || (order ?? 999) < (byId.get(id)?.order ?? 999))
 				byId.set(id, { name, logo, order: order ?? 999 })
@@ -198,18 +188,13 @@ const loaders = {
 		const posters = new Map<string, string>()
 		for (const type of ["movie", "show"] as const) {
 			const ids = [
-				...new Set(
-					posterChoices
-						.filter((k) => k.mediaType === type)
-						.map((k) => k.tmdbId),
-				),
+				...new Set(posterChoices.filter((k) => k.mediaType === type).map((k) => k.tmdbId)),
 			]
 			if (!ids.length) continue
 			const found = await backgroundRows<[number, string | null]>(
 				`SELECT tmdb_id, poster_path FROM ${type} WHERE tmdb_id IN (${ids.join(",")}) LIMIT ${ids.length}`,
 			)
-			for (const [id, poster] of found)
-				if (poster) posters.set(`${type}-${id}`, poster)
+			for (const [id, poster] of found) if (poster) posters.set(`${type}-${id}`, poster)
 		}
 		return Promise.all(
 			eligible.map(async ({ id, handle, stored }): Promise<Entry> => {
@@ -224,10 +209,7 @@ const loaders = {
 					stored.profile_provider_photo ?? null,
 					{
 						photoVersion: avatarVersions.get(id) ?? null,
-						poster:
-							choice.kind === "poster"
-								? (posters.get(choice.title) ?? null)
-								: null,
+						poster: choice.kind === "poster" ? (posters.get(choice.title) ?? null) : null,
 					},
 				)
 				return {
@@ -250,12 +232,8 @@ const loaders = {
 	},
 }
 export type CatalogKey = keyof typeof loaders
-const state = new Map<
-	CatalogKey,
-	{ entries: Entry[]; at: number; digest: string }
->()
-const digest = (value: unknown) =>
-	createHash("sha256").update(JSON.stringify(value)).digest("hex")
+const state = new Map<CatalogKey, { entries: Entry[]; at: number; digest: string }>()
+const digest = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex")
 let peopleSnapshot: ReturnType<typeof palettePeopleSnapshot> | undefined
 let peopleDigest = ""
 export function catalogVersion() {
@@ -275,28 +253,18 @@ export function catalogVersion() {
 /** Requests never launch or wait for a catalog read. Old member privacy decisions expire after ten minutes. */
 export function catalogEntries(key: CatalogKey): Entry[] {
 	const snapshot = state.get(key)
-	return !snapshot ||
-		(key === "members" && Date.now() - snapshot.at > 10 * 60_000)
+	return !snapshot || (key === "members" && Date.now() - snapshot.at > 10 * 60_000)
 		? []
 		: snapshot.entries
 }
 export function popularTropes() {
 	return [...catalogEntries("tropes")]
-		.sort(
-			(a, b) =>
-				b.popularity - a.popularity || a.item.key.localeCompare(b.item.key),
-		)
+		.sort((a, b) => b.popularity - a.popularity || a.item.key.localeCompare(b.item.key))
 		.slice(0, 12)
 		.map((entry) => ({ ...entry.item, match: 1 }))
 }
 export function startPaletteCatalog() {
-	for (const key of [
-		"genres",
-		"services",
-		"members",
-		"tropes",
-		"sequels",
-	] as const) {
+	for (const key of ["genres", "services", "members", "tropes", "sequels"] as const) {
 		// Page roles need only the before-typing Tropes tab.
 		if (!runsSearch() && key !== "tropes") continue
 		const interval =

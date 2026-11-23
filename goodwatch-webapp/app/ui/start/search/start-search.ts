@@ -29,7 +29,8 @@ import {
 	filterStateToParams,
 	filterStateFromParams,
 } from "~/domain/filter-state"
-import { picksOf } from "~/domain/taste-picker"
+import { browsePath, ing, place, slugify } from "~/domain/browse/address"
+import { WORD_BY_ID, picksOf } from "~/domain/taste-picker"
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
 import type { DiscoverResults } from "~/server/discover-results.server"
 import { discoverFetch } from "~/ui/discover/discover-fetch"
@@ -49,8 +50,7 @@ import {
 export const START_CARDS = 16
 
 /** What the card says when the results couldn't load (Discover's words). */
-export const RESULTS_ERROR =
-	"Discover couldn't load right now. Try again in a moment."
+export const RESULTS_ERROR = "Discover couldn't load right now. Try again in a moment."
 
 /** How often a 503 (the title snapshot still loading) is asked again before the card says so. */
 const SNAPSHOT_RETRIES = 3
@@ -65,9 +65,8 @@ export type ResultsScope = "all" | "any" | "mine"
  * The one scope rule for the start page's results and the mood picker's counts: `mine` once the viewer (a guest who
  * saved services, or a member with services) has any, else `any`.
  */
-export const resultsScope = (
-	scope: Pick<SearchScope, "services">,
-): ResultsScope => (scope.services.length ? "mine" : "any")
+export const resultsScope = (scope: Pick<SearchScope, "services">): ResultsScope =>
+	scope.services.length ? "mine" : "any"
 
 /** The counts of a search that found nothing: there was nothing to count. */
 const NO_COUNTS = { moods: {}, themes: {}, styles: {} }
@@ -88,8 +87,7 @@ function pickedState(
 	const discover = searching || scope === "all"
 	return {
 		...defaultFilterState(discover ? DISCOVER_DEFAULTS : WIDEST),
-		...(!discover &&
-			(scope === "mine" ? { onMyServices: true } : { anyService: true })),
+		...(!discover && (scope === "mine" ? { onMyServices: true } : { anyService: true })),
 		moods,
 		themes,
 		styles,
@@ -122,25 +120,35 @@ export function resultsPath({
 	return language ? mediaLanguageUrl(path, language) : path
 }
 
-/** See all: Discover with the search's text and the picks. */
-export function seeAllHref(query: Pick<StartQuery, "text" | "picks">): string {
-	const { moods, themes, styles } = picksOf(query.picks)
-	const params = filterStateToParams(
-		{ ...defaultFilterState(WIDEST), moods, themes, styles },
-		WIDEST,
-	)
+/** Link to a place when its intersection and service scope match the picks. */
+export function seeAllHref(
+	query: Pick<StartQuery, "text" | "picks">,
+	scope: ResultsScope = "any",
+): string {
 	const text = searchText(query.text)
-	const out = new URLSearchParams(text ? { q: text } : {})
-	for (const [name, value] of params) out.set(name, value)
-	const search = out.toString()
-	return search ? `/discover?${search}` : "/discover"
+	if (!text) {
+		const words = query.picks.map((id) => WORD_BY_ID[id])
+		if (
+			scope !== "any" &&
+			words.length &&
+			words.every(Boolean) &&
+			new Set(words.map((w) => w.kind)).size === words.length
+		) {
+			const parts = words.map((w) => ing(w.kind, slugify(w.name)))
+			return browsePath({ ...place("all", parts), mine: scope === "mine" })
+		}
+		return `/discover?${filterQuery(pickedState(query.picks, scope), "popular", WIDEST)}`
+	}
+	const out = new URLSearchParams({ q: text })
+	for (const [name, value] of filterStateToParams(pickedState(query.picks, "all", true), WIDEST))
+		out.set(name, value)
+	return `/discover?${out}`
 }
 
 /** Seconds from a Retry-After header, kept to a sane range. */
 function retryAfterMs(response: Response): number {
 	const seconds = Number(response.headers.get("Retry-After"))
-	const s =
-		Number.isFinite(seconds) && seconds > 0 ? seconds : RETRY_AFTER.fallback
+	const s = Number.isFinite(seconds) && seconds > 0 ? seconds : RETRY_AFTER.fallback
 	return Math.min(RETRY_AFTER.max, Math.max(RETRY_AFTER.min, s)) * 1000
 }
 
@@ -205,8 +213,7 @@ export function createStartSearch({
 	/** Stops the search in flight and forgets it now, not when its rejection settles, so its text can be asked anew. */
 	function stopSearching() {
 		if (!searching) return
-		if (searches.get(searching.key) === searching.promise)
-			searches.delete(searching.key)
+		if (searches.get(searching.key) === searching.promise) searches.delete(searching.key)
 		searching.abort.abort()
 		searching = null
 	}
@@ -249,9 +256,7 @@ export function createStartSearch({
 				return {
 					resolution: answer.resolution,
 					ranked: answer.ranked,
-					reading: answer.reading.length
-						? answer.reading
-						: (readings.get(original) ?? []),
+					reading: answer.reading.length ? answer.reading : (readings.get(original) ?? []),
 				}
 			},
 			(error: unknown) => {
@@ -263,20 +268,12 @@ export function createStartSearch({
 		)
 		searching = { text: original, key, abort, promise }
 		searches.set(key, promise)
-		while (searches.size > KEPT_SEARCHES)
-			searches.delete(searches.keys().next().value as string)
+		while (searches.size > KEPT_SEARCHES) searches.delete(searches.keys().next().value as string)
 		return promise
 	}
 
-	async function resolve(
-		text: string,
-		picks: readonly string[],
-		signal: AbortSignal,
-	) {
-		const existing = filterStateToParams(
-			pickedState(picks, "all", true),
-			WIDEST,
-		).toString()
+	async function resolve(text: string, picks: readonly string[], signal: AbortSignal) {
+		const existing = filterStateToParams(pickedState(picks, "all", true), WIDEST).toString()
 		const key = JSON.stringify([text, existing])
 		const kept = interpretations.get(key)
 		if (kept) return kept
@@ -302,9 +299,11 @@ export function createStartSearch({
 		signal: AbortSignal,
 		attempt: number,
 	) {
-		const attribution = asked?.attribution ?? { surface: "start" as const, trigger: "unknown" as const }
-		const live = () =>
-			!disposed && !signal.aborted && asked?.signature === signature
+		const attribution = asked?.attribution ?? {
+			surface: "start" as const,
+			trigger: "unknown" as const,
+		}
+		const live = () => !disposed && !signal.aborted && asked?.signature === signature
 		const fail = (error: string) =>
 			emit({
 				...shown,
@@ -344,10 +343,7 @@ export function createStartSearch({
 				answer = await search(
 					remaining,
 					searchEligibility(
-						filterStateFromParams(
-							new URLSearchParams(interpreted?.params),
-							DISCOVER_DEFAULTS,
-						),
+						filterStateFromParams(new URLSearchParams(interpreted?.params), DISCOVER_DEFAULTS),
 						scope,
 					),
 					text!,
@@ -374,14 +370,10 @@ export function createStartSearch({
 					href: `/discover?${params}`,
 					semanticQuery: "",
 					residual: "",
-					labels: [
-						label,
-						...(answer.resolution.wholeQuery ? [] : interpreted.labels),
-					],
+					labels: [label, ...(answer.resolution.wholeQuery ? [] : interpreted.labels)],
 					display: Object.assign({}, interpreted.display, {
 						similar: {
-							...(interpreted.display as Record<string, Record<string, string>>)
-								?.similar,
+							...(interpreted.display as Record<string, Record<string, string>>)?.similar,
 							[answer.resolution.id]:
 								`${answer.resolution.label}${answer.resolution.year ? ` (${answer.resolution.year})` : ""}`,
 						},
@@ -456,7 +448,8 @@ export function createStartSearch({
 		}
 		if (!live()) return
 		emit({
-			discoverHref: interpreted?.href,
+			discoverHref:
+				interpreted?.href ?? seeAllHref({ text: text ?? "", picks }, resultsScope(scope)),
 			interpretation: interpreted ?? undefined,
 			status: "ready",
 			signature,
@@ -503,8 +496,7 @@ export function createStartSearch({
 		set(query, attribution = { surface: "start", trigger: "navigation" }) {
 			if (disposed || asked?.signature === querySignature(query)) return
 			// A search no longer asked for stops; a kept one (the same text) carries on.
-			if (searching && searching.text !== searchText(query.text))
-				stopSearching()
+			if (searching && searching.text !== searchText(query.text)) stopSearching()
 			run(query, attribution)
 		},
 		retry() {

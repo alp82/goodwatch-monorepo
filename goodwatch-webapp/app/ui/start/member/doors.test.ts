@@ -15,9 +15,7 @@ const {
 	reserveOf,
 	tileText,
 } = await import("./doors.ts")
-const { FEW, FULL, NEW, NO_SHOWS, NO_WISHLIST } = await import(
-	"./member-fixtures.test-support.ts"
-)
+const { FEW, FULL, NEW, NO_SHOWS, NO_WISHLIST } = await import("./member-fixtures.test-support.ts")
 
 const order = (data: typeof FULL) => orderDoors(doorsOf(data)).map((d) => d.key)
 const door = (data: typeof FULL, key: string) =>
@@ -57,22 +55,14 @@ test("no shows: Continue watching moves last, the Wishlist opens, and Continue s
 	assert.equal(shows.strip?.title, "No shows yet")
 	assert.deepEqual(
 		shows.strip?.ctas.map((c) => c.href),
-		["/discover?type=show", "/settings/imports"],
+		["/shows", "/settings/imports"],
 	)
 })
 
 test("no wishlist: the Wishlist moves after the doors with titles and says how to fill it", () => {
-	assert.deepEqual(order(NO_WISHLIST), [
-		"continue",
-		"forYou",
-		"hot",
-		"wishlist",
-	])
+	assert.deepEqual(order(NO_WISHLIST), ["continue", "forYou", "hot", "wishlist"])
 	assert.equal(door(NO_WISHLIST, "wishlist").line, "Nothing saved yet")
-	assert.equal(
-		door(NO_WISHLIST, "wishlist").strip?.title,
-		"Your Wishlist is empty",
-	)
+	assert.equal(door(NO_WISHLIST, "wishlist").strip?.title, "Your Wishlist is empty")
 })
 
 test("new: only Hot on socials has titles and opens first; For you needs ratings", () => {
@@ -81,11 +71,7 @@ test("new: only Hot on socials has titles and opens first; For you needs ratings
 	assert.equal(forYou.line, "Needs ratings")
 	assert.equal(forYou.strip?.progress, 0)
 	// Without Hot on socials the first door, Continue watching, opens on its empty state.
-	assert.deepEqual(order({ ...NEW, hotOn: false, hot: null }), [
-		"continue",
-		"wishlist",
-		"forYou",
-	])
+	assert.deepEqual(order({ ...NEW, hotOn: false, hot: null }), ["continue", "wishlist", "forYou"])
 })
 
 test("lists on their way keep their place: the order and the open door don't change when they arrive", () => {
@@ -99,10 +85,7 @@ test("lists on their way keep their place: the order and the open door don't cha
 	}
 	// On its way, a door has no error strip; For you still says it is forming, Hot on socials waits quietly.
 	const { forYou: _f, hot: _h, ...few } = FEW
-	assert.equal(
-		door(few, "forYou").strip?.title,
-		"Picks get personal at 10 ratings",
-	)
+	assert.equal(door(few, "forYou").strip?.title, "Picks get personal at 10 ratings")
 	assert.equal(door(few, "hot").strip, null)
 	assert.equal(door(few, "hot").line, "Right now")
 	// With nothing on the own lists, a list on its way would open first: the server waits for that one.
@@ -136,8 +119,7 @@ test("the grid fills whole rows at every width, for every count", () => {
 				const cells = cellsOf(plan)
 				// An empty section has no grid (its strip says it all); every other grid ends on a full row.
 				if (n === 0) assert.equal(cells, 0)
-				else
-					assert.equal(cells % columns, 0, `${n} at ${columns}, ghost ${ghost}`)
+				else assert.equal(cells % columns, 0, `${n} at ${columns}, ghost ${ghost}`)
 				assert.ok(plan.posters <= n)
 				assert.ok(plan.posters <= 11)
 				if (n > 0) assert.ok(plan.tile)
@@ -197,10 +179,7 @@ test("a list that comes later reserves its waiting strip, the chips' row it can 
 		filters: false,
 		lines: true,
 	})
-	assert.equal(
-		reserveOf(FEW, "forYou")?.strip?.title,
-		"Picks get personal at 10 ratings",
-	)
+	assert.equal(reserveOf(FEW, "forYou")?.strip?.title, "Picks get personal at 10 ratings")
 	// The member's own lists are always in the page.
 	assert.equal(reserveOf(FULL, "continue"), null)
 	assert.equal(reserveOf(FULL, "wishlist"), null)

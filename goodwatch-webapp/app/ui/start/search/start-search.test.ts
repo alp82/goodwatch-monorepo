@@ -8,16 +8,9 @@ import { streamAnswer } from "../../search/search-test-answers.ts"
 // Loaded ahead, so the search's lazily loaded request code is ready when a test's first search starts.
 await import("../../search/search-request.ts")
 const { createFieldCommit, SEARCH_PAUSE_MS } = await import("./field-commit.ts")
-const {
-	RESULTS_ERROR,
-	START_CARDS,
-	createStartSearch,
-	resultsPath,
-	seeAllHref,
-} = await import("./start-search.ts")
-const { EMPTY_QUERY, querySignature, reduceQuery } = await import(
-	"../stage/start-query.ts"
-)
+const { RESULTS_ERROR, START_CARDS, createStartSearch, resultsPath, seeAllHref } =
+	await import("./start-search.ts")
+const { EMPTY_QUERY, querySignature, reduceQuery } = await import("../stage/start-query.ts")
 type StartQuery = import("../stage/start-query.ts").StartQuery
 type StartQueryAction = import("../stage/start-query.ts").StartQueryAction
 type StartResults = import("../stage/start-query.ts").StartResults
@@ -84,10 +77,8 @@ function stubFetch(
 	})
 	return {
 		calls,
-		searches: () =>
-			calls.filter((c) => c.url.startsWith("/api/combined-search")),
-		results: () =>
-			calls.filter((c) => c.url.startsWith("/api/discover/results")),
+		searches: () => calls.filter((c) => c.url.startsWith("/api/combined-search")),
+		results: () => calls.filter((c) => c.url.startsWith("/api/discover/results")),
 	}
 }
 
@@ -104,8 +95,7 @@ const server = ({ url }: Call) => {
 
 /** Lets the stream, the dynamic import and the JSON reads run (timers aren't needed for them). */
 async function until(ready: () => boolean, what = "the condition") {
-	for (let i = 0; i < 2000 && !ready(); i++)
-		await new Promise((resolve) => setImmediate(resolve))
+	for (let i = 0; i < 2000 && !ready(); i++) await new Promise((resolve) => setImmediate(resolve))
 	assert.ok(ready(), `waited for ${what}`)
 }
 
@@ -155,38 +145,24 @@ for (const member of [false, true]) {
 			const ids = Array.from({ length: count }, (_, i) => i + 1)
 			const ranked = ids.map((id) => 1e12 + id)
 			const net = stubFetch(t, (call) => {
-				if (call.url.startsWith("/api/combined-search"))
-					return searchStream(ids)
+				if (call.url.startsWith("/api/combined-search")) return searchStream(ids)
 				// The production HTTP parser rejects the homepage's long request target with 431.
-				if (call.url.length > 16 * 1024)
-					return new Response(null, { status: 431 })
+				if (call.url.length > 16 * 1024) return new Response(null, { status: 431 })
 				return resultsAnswer(ids.slice(0, START_CARDS), count)
 			})
 			const p = page({ member })
 			t.after(() => p.search.dispose())
 			assert.equal(p.field.submit("funny science fiction"), true)
-			await until(
-				() => p.last()?.status !== "loading",
-				"the homepage search to finish",
-			)
-			assert.equal(
-				p.last()?.status,
-				"ready",
-				p.last()?.error ?? "results should load",
-			)
+			await until(() => p.last()?.status !== "loading", "the homepage search to finish")
+			assert.equal(p.last()?.status, "ready", p.last()?.error ?? "results should load")
 			assert.equal(p.last()?.cards.length, START_CARDS)
 			assert.equal(p.last()?.total, count)
-			assert.deepEqual(
-				p.last()?.ranked,
-				ranked,
-				"keep the complete ranking and its order",
-			)
+			assert.deepEqual(p.last()?.ranked, ranked, "keep the complete ranking and its order")
 			assert.equal(net.results().length, 1)
 			const request = net.results()[0]
 			assert.equal(request.init?.method, "POST")
 			assert.equal(request.init?.signal?.aborted, false)
-			const params = new URL(request.url, "https://goodwatch.invalid")
-				.searchParams
+			const params = new URL(request.url, "https://goodwatch.invalid").searchParams
 			assert.equal(params.has("ranked"), false)
 			assert.equal(params.get("services"), "all")
 			assert.equal(params.get("unseen"), "0")
@@ -212,7 +188,10 @@ test("typing searches once, after the pause", async (t) => {
 	t.mock.timers.tick(100)
 	await until(() => p.last()?.status === "ready", "the results")
 	assert.equal(net.searches().length, 1)
-	assert.deepEqual(JSON.parse(String(net.searches()[0].init?.body)).attribution, { surface: "start", trigger: "typing_pause" })
+	assert.deepEqual(JSON.parse(String(net.searches()[0].init?.body)).attribution, {
+		surface: "start",
+		trigger: "typing_pause",
+	})
 	assert.equal(p.field.submit("twist"), true)
 	assert.equal(net.searches().length, 1, "Enter after a preview does not add an invocation")
 	assert.equal(JSON.parse(String(net.searches()[0].init?.body)).q, "twist")
@@ -231,11 +210,7 @@ test("text shorter than two characters is never searched; emptying the field cle
 	p.dispatch({ type: "picks", picks: ["m:funny"] })
 	p.type("a")
 	t.mock.timers.tick(SEARCH_PAUSE_MS)
-	assert.equal(
-		p.field.submit("a"),
-		false,
-		"Enter on one letter has nothing to show",
-	)
+	assert.equal(p.field.submit("a"), false, "Enter on one letter has nothing to show")
 	await until(() => p.last()?.status === "ready")
 	assert.equal(net.searches().length, 0)
 	p.type("heist")
@@ -260,11 +235,7 @@ test("an example searches its exact phrase at once and drops a pending pause", a
 		net.searches().map((c) => JSON.parse(String(c.init?.body)).q),
 		["rainy day whodunit"],
 	)
-	assert.equal(
-		p.query.draft,
-		"rainy day whodunit",
-		"the field shows the phrase",
-	)
+	assert.equal(p.query.draft, "rainy day whodunit", "the field shows the phrase")
 })
 
 test("the reading shows while the titles are on their way, then the titles (two views at most)", async (t) => {
@@ -320,23 +291,11 @@ test("the results carry the search's ranked list and the picker's counts: one re
 		styles: {},
 	})
 	p.dispatch({ type: "picks", picks: ["m:funny"] })
-	await until(
-		() =>
-			p.last()?.status === "ready" &&
-			p.last()?.signature === querySignature(p.query),
-	)
-	assert.equal(
-		net.results().length,
-		2,
-		"the counts need no request of their own",
-	)
+	await until(() => p.last()?.status === "ready" && p.last()?.signature === querySignature(p.query))
+	assert.equal(net.results().length, 2, "the counts need no request of their own")
 	// Picks alone: no ranked list.
 	p.dispatch({ type: "clearSearch" })
-	await until(
-		() =>
-			p.last()?.status === "ready" &&
-			p.last()?.signature === querySignature(p.query),
-	)
+	await until(() => p.last()?.status === "ready" && p.last()?.signature === querySignature(p.query))
 	assert.equal(p.last()?.ranked, null)
 	assert.ok(p.last()?.optionCounts)
 })
@@ -363,9 +322,7 @@ test("changing the picks re-filters the same ranked list without a new search", 
 	assert.equal(p.last()?.signature, querySignature(p.query))
 	// The reading stays on screen while the picks re-filter.
 	const refiltering = p.shown.find(
-		(r) =>
-			r.signature ===
-			querySignature({ text: "twist ending", picks: ["m:funny", "s:slow"] }),
+		(r) => r.signature === querySignature({ text: "twist ending", picks: ["m:funny", "s:slow"] }),
 	)
 	assert.equal(refiltering?.status, "loading")
 	assert.deepEqual(refiltering?.reading, READING)
@@ -402,10 +359,7 @@ test("a guest POSTs their progress; a member GETs; search stays as wide as Disco
 	const get = net.results().at(-1)
 	assert.ok(get)
 	assert.equal(get.init?.method, undefined)
-	assert.equal(
-		new URL(get.url, "https://x.invalid").searchParams.get("services"),
-		"all",
-	)
+	assert.equal(new URL(get.url, "https://x.invalid").searchParams.get("services"), "all")
 	const body = JSON.parse(String(net.searches().at(-1)?.init?.body))
 	assert.deepEqual(body.filters, {})
 })
@@ -414,11 +368,9 @@ test("a slow answer for an older query never replaces the newer one's", async (t
 	const holds = new Map<string, () => void>()
 	const net = stubFetch(t, async (call) => {
 		if (call.url.startsWith("/api/discover/results")) {
-			const moods =
-				new URL(call.url, "https://x.invalid").searchParams.get("moods") ?? ""
+			const moods = new URL(call.url, "https://x.invalid").searchParams.get("moods") ?? ""
 			// The first query's answer waits until the second one is on screen.
-			if (moods === "funny")
-				await new Promise<void>((resolve) => holds.set(moods, resolve))
+			if (moods === "funny") await new Promise<void>((resolve) => holds.set(moods, resolve))
 		}
 		return server(call)
 	})
@@ -429,11 +381,7 @@ test("a slow answer for an older query never replaces the newer one's", async (t
 	const newer = querySignature(p.query)
 	assert.equal(p.last()?.signature, newer)
 	await until(() => holds.has("funny"))
-	assert.equal(
-		net.results()[0].init?.signal?.aborted,
-		true,
-		"the older request was aborted",
-	)
+	assert.equal(net.results()[0].init?.signal?.aborted, true, "the older request was aborted")
 	holds.get("funny")?.()
 	await until(() => true)
 	await new Promise((resolve) => setTimeout(resolve, 5))
@@ -471,9 +419,7 @@ test("going back to a text whose search was aborted searches it anew (A, B, A)",
 			first = false
 			// The abort settles late: after the next two searches have started.
 			await new Promise<void>((resolve) =>
-				call.init?.signal?.addEventListener("abort", () =>
-					setTimeout(resolve, 30),
-				),
+				call.init?.signal?.addEventListener("abort", () => setTimeout(resolve, 30)),
 			)
 			throw new DOMException("aborted", "AbortError")
 		}
@@ -485,11 +431,7 @@ test("going back to a text whose search was aborted searches it anew (A, B, A)",
 	p.dispatch({ type: "search", text: "space adventure" })
 	await until(() => net.searches().length === 2)
 	p.dispatch({ type: "search", text: "cheer me up" })
-	await until(
-		() =>
-			p.last()?.status === "ready" &&
-			p.last()?.signature === querySignature(p.query),
-	)
+	await until(() => p.last()?.status === "ready" && p.last()?.signature === querySignature(p.query))
 	assert.equal(net.searches().length, 3)
 	assert.ok(p.shown.every((r) => r.status !== "error"))
 })
@@ -499,13 +441,10 @@ test("a 503 while the snapshot loads is asked again after its Retry-After", asyn
 	let refusals = 1
 	const net = stubFetch(t, (call) => {
 		if (call.url.startsWith("/api/discover/results") && refusals-- > 0)
-			return new Response(
-				JSON.stringify({ error: "Starting up, try again shortly" }),
-				{
-					status: 503,
-					headers: { "Retry-After": "5" },
-				},
-			)
+			return new Response(JSON.stringify({ error: "Starting up, try again shortly" }), {
+				status: 503,
+				headers: { "Retry-After": "5" },
+			})
 		return server(call)
 	})
 	const p = page()
@@ -534,10 +473,7 @@ test("failures show Discover's words in the card; Retry asks again", async (t) =
 	const p = page()
 	p.dispatch({ type: "search", text: "twist ending" })
 	await until(() => p.last()?.status === "error")
-	assert.equal(
-		p.last()?.error,
-		"Too many searches right now. Try again in a moment.",
-	)
+	assert.equal(p.last()?.error, "Too many searches right now. Try again in a moment.")
 	answer = (call) =>
 		call.url.startsWith("/api/combined-search")
 			? server(call)
@@ -548,18 +484,12 @@ test("failures show Discover's words in the card; Retry asks again", async (t) =
 	answer = server
 	p.search.retry()
 	await until(() => p.last()?.status === "ready")
-	assert.equal(
-		net.searches().length,
-		2,
-		"the failed search was asked again, the found one wasn't",
-	)
+	assert.equal(net.searches().length, 2, "the failed search was asked again, the found one wasn't")
 })
 
 test("a search that finds nothing answers at once with no titles", async (t) => {
 	const net = stubFetch(t, (call) =>
-		call.url.startsWith("/api/combined-search")
-			? searchStream([])
-			: server(call),
+		call.url.startsWith("/api/combined-search") ? searchStream([]) : server(call),
 	)
 	const p = page()
 	p.dispatch({ type: "search", text: "zzzz" })
@@ -579,12 +509,24 @@ test("See all carries the text and the picks to Discover", () => {
 	)
 	assert.equal(
 		seeAllHref({ text: "", picks: ["m:scary"] }),
-		"/discover?moods=scary",
+		"/discover?services=any&moods=scary&unseen=0&sort=popular",
 	)
+	assert.equal(seeAllHref({ text: "twist ending", picks: [] }), "/discover?q=twist+ending")
+})
+
+test("simple scoped picks open a place and alternatives keep their Discover filters", () => {
+	assert.equal(seeAllHref({ text: "", picks: ["m:feelgood"] }, "mine"), "/all/moods/cozy?mine=1")
 	assert.equal(
-		seeAllHref({ text: "twist ending", picks: [] }),
-		"/discover?q=twist+ending",
+		seeAllHref({ text: "", picks: ["m:funny", "t:crime"] }, "mine"),
+		"/all/moods/funny?with=theme%3Acrime&mine=1",
 	)
+	const alternatives = new URL(
+		seeAllHref({ text: "", picks: ["m:funny", "m:scary"] }, "mine"),
+		"https://example.org",
+	)
+	assert.equal(alternatives.pathname, "/discover")
+	assert.equal(alternatives.searchParams.get("services"), "mine")
+	assert.equal(alternatives.searchParams.get("all"), null)
 })
 
 test("the results path names the scope, the sort, and the display language", () => {
@@ -604,31 +546,19 @@ test("the results path names the scope, the sort, and the display language", () 
 })
 
 test("start search and See all use Discover's identical filters, even with saved services", async () => {
-	const { DISCOVER_DEFAULTS, searchEligibility } = await import(
-		"../../../domain/discover-search.ts"
-	)
-	const { filterStateFromParams, sortFromParams } = await import(
-		"../../../domain/filter-state.ts"
-	)
+	const { DISCOVER_DEFAULTS, searchEligibility } =
+		await import("../../../domain/discover-search.ts")
+	const { filterStateFromParams, sortFromParams } = await import("../../../domain/filter-state.ts")
 	for (const scope of ["any", "mine"] as const) {
 		for (const picks of [[], ["m:funny", "t:crime", "s:slow"]]) {
 			const query = { text: "funny science fiction", picks }
-			const start = new URL(
-				resultsPath({ picks, scope, ranked: [1e12 + 1] }),
-				"https://x.invalid",
-			).searchParams
-			const discover = new URL(seeAllHref(query), "https://x.invalid")
+			const start = new URL(resultsPath({ picks, scope, ranked: [1e12 + 1] }), "https://x.invalid")
 				.searchParams
+			const discover = new URL(seeAllHref(query), "https://x.invalid").searchParams
 			const expected = filterStateFromParams(discover, DISCOVER_DEFAULTS)
-			assert.deepEqual(
-				filterStateFromParams(start, DISCOVER_DEFAULTS),
-				expected,
-			)
+			assert.deepEqual(filterStateFromParams(start, DISCOVER_DEFAULTS), expected)
 			assert.equal(sortFromParams(start, true), sortFromParams(discover, true))
-			assert.deepEqual(
-				searchEligibility(expected, { country: "DE", services: [8, 337] }),
-				{},
-			)
+			assert.deepEqual(searchEligibility(expected, { country: "DE", services: [8, 337] }), {})
 		}
 	}
 })
@@ -673,12 +603,7 @@ test("remaining text ranks within inferred People and streaming eligibility befo
 	assert.equal(body.q, "heist")
 	assert.deepEqual(body.filters.people, [287])
 	assert.deepEqual(body.filters.streaming, { country: "DE", providerIds: [9] })
-	assert.equal(
-		new URL(net.results()[0].url, "https://x.invalid").searchParams.get(
-			"score",
-		),
-		"80",
-	)
+	assert.equal(new URL(net.results()[0].url, "https://x.invalid").searchParams.get("score"), "80")
 })
 
 for (const text of ["scary", "scary dark", "scary horror"]) {
@@ -696,18 +621,10 @@ for (const text of ["scary", "scary dark", "scary horror"]) {
 		p.dispatch({ type: "search", text })
 		await until(() => p.last()?.status === "ready")
 		assert.equal(JSON.parse(String(net.searches()[0].init?.body)).q, text)
+		assert.equal(p.last()?.reading?.[0].kind, "want", "fingerprint chips precede filter chips")
+		assert(!p.last()?.reading?.some((c) => c.text === "A hidden parser warning"))
 		assert.equal(
-			p.last()?.reading?.[0].kind,
-			"want",
-			"fingerprint chips precede filter chips",
-		)
-		assert(
-			!p.last()?.reading?.some((c) => c.text === "A hidden parser warning"),
-		)
-		assert.equal(
-			new URL(net.results()[0].url, "https://x.invalid").searchParams.get(
-				"moods",
-			),
+			new URL(net.results()[0].url, "https://x.invalid").searchParams.get("moods"),
 			"scary",
 		)
 	})
@@ -724,10 +641,10 @@ for (const trigger of ["enter", "search_button"] as const) {
 		await until(() => p.last()?.status === "ready")
 		t.mock.timers.tick(SEARCH_PAUSE_MS)
 		assert.equal(net.searches().length, 1)
-		assert.deepEqual(
-			JSON.parse(String(net.searches()[0].init?.body)).attribution,
-			{ surface: "start", trigger },
-		)
+		assert.deepEqual(JSON.parse(String(net.searches()[0].init?.body)).attribution, {
+			surface: "start",
+			trigger,
+		})
 	})
 }
 
@@ -759,9 +676,7 @@ for (const wholeQuery of [true, false]) {
 			() => ({
 				residual: "like Arrival",
 				semanticQuery: "like Arrival",
-				params: wholeQuery
-					? "q=like+Arrival&moods=funny&styles=dark"
-					: "q=like+Arrival&services=8",
+				params: wholeQuery ? "q=like+Arrival&moods=funny&styles=dark" : "q=like+Arrival&services=8",
 				labels: wholeQuery ? ["Dark"] : ["Netflix"],
 				warnings: [],
 			}),
@@ -771,16 +686,14 @@ for (const wholeQuery of [true, false]) {
 		if (wholeQuery) p.dispatch({ type: "picks", picks: ["m:funny"] })
 		p.field.submit(query)
 		await until(() => p.last()?.status === "ready")
-		const params = new URL(p.last()!.discoverHref!, "https://goodwatch.app")
-			.searchParams
+		const params = new URL(p.last()!.discoverHref!, "https://goodwatch.app").searchParams
 		assert.equal(params.get("similar"), id)
 		assert.equal(params.has("q"), false)
 		if (wholeQuery) {
 			assert.equal(params.get("moods"), "funny")
 			assert.equal(params.has("styles"), false)
 		} else assert.equal(params.get("services"), "8")
-		const result = new URL(net.results().at(-1)!.url, "https://goodwatch.app")
-			.searchParams
+		const result = new URL(net.results().at(-1)!.url, "https://goodwatch.app").searchParams
 		assert.equal(result.get("similar"), id)
 		assert.equal(
 			result.has("ranked"),

@@ -282,12 +282,13 @@ const PAGES: Entry[] = [
 	}),
 	page("movies", "Movies", "/movies", FilmIcon, {
 		destination: "movies",
-		words: ["films", "cinema"],
+		names: ["discover movies"],
+		words: ["films", "cinema", "movies only"],
 	}),
 	page("shows", "Shows", "/shows", TvIcon, {
 		destination: "shows",
-		names: ["tv shows"],
-		words: ["tv", "series"],
+		names: ["tv shows", "discover shows"],
+		words: ["tv", "series", "shows only"],
 	}),
 	page("hot", "Hot", "/hot", FireIcon, {
 		destination: "hot",
@@ -608,14 +609,6 @@ const PAGES: Entry[] = [
 	}),
 
 	// Discover with a filter or an order set.
-	page("discoverMovies", "Discover movies", "/discover?type=movie", AdjustmentsHorizontalIcon, {
-		sub: DISCOVER,
-		words: ["films", "movies only"],
-	}),
-	page("discoverShows", "Discover shows", "/discover?type=show", AdjustmentsHorizontalIcon, {
-		sub: DISCOVER,
-		words: ["tv", "series", "shows only"],
-	}),
 	page("discoverAnime", "Discover anime", "/discover?anime=only", AdjustmentsHorizontalIcon, {
 		sub: DISCOVER,
 		names: ["anime"],

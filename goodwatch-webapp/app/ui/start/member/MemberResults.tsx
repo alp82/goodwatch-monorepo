@@ -42,6 +42,7 @@ export function MemberResults({
 	const ready = own && results.status === "ready"
 	const failed = own && results.status === "error"
 	const cards = ready ? results.cards.slice(0, START_CARDS) : []
+	const href = (own && results.discoverHref) || seeAllHref(query, scope)
 	const line = failed
 		? (results.error ?? "Couldn't load the results.")
 		: ready
@@ -69,8 +70,8 @@ export function MemberResults({
 						Try again
 					</button>
 				) : (
-					<Link to={results.discoverHref ?? seeAllHref(query)} prefetch="intent" className={ACTION}>
-						See all
+					<Link to={href} prefetch="intent" className={ACTION}>
+						{href.startsWith("/all/") ? "Explore these picks" : "See all"}
 						<ArrowRightIcon className="h-4 w-4" aria-hidden />
 					</Link>
 				)}

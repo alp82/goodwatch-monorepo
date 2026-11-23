@@ -1,3 +1,4 @@
+import { categoryPath } from "~/domain/browse/address"
 // How the command palette lays out what it found, as plain data: tabs for the rail, and in each tab the sections it
 // shows with their options in keyboard order. CommandPalette.tsx draws it (palette-parts.tsx); only the active tab is
 // ever drawn, so a tab that isn't shown costs nothing but this description.
@@ -13,11 +14,7 @@
 // Moods, Tropes, and Go to. When the picks are unavailable, For you is left out and Trending comes first.
 import type { ComponentType, SVGProps } from "react"
 import type { Mood } from "~/domain/moods"
-import type {
-	PaletteItem,
-	PaletteStart,
-	PaletteTitle,
-} from "~/utils/command-palette"
+import type { PaletteItem, PaletteStart, PaletteTitle } from "~/utils/command-palette"
 import { type PaletteGroupKey, paletteTitlePath } from "~/utils/command-palette"
 import type { PalettePage } from "./palette-pages"
 
@@ -112,9 +109,7 @@ export function layoutOptions(layout: Layout): Option[] {
 			case "cards":
 			case "rows":
 			case "chips":
-				return section.head.option
-					? [section.head.option, ...section.items]
-					: section.items
+				return section.head.option ? [section.head.option, ...section.items] : section.items
 			case "cta":
 				return [section.option]
 			default:
@@ -125,8 +120,7 @@ export function layoutOptions(layout: Layout): Option[] {
 
 // ---------------------------------------------------------------- groups
 
-const isTitleGroup = (group: PanelGroup) =>
-	group.key === "movies" || group.key === "shows"
+const isTitleGroup = (group: PanelGroup) => group.key === "movies" || group.key === "shows"
 
 /** "57", "~1,200": a group's count, never fewer than the items it has. */
 export const countOf = (group: PanelGroup) =>
@@ -164,16 +158,10 @@ const pageHead = (group: PanelGroup): Head => ({
 })
 
 const isPeople = (group: PanelGroup) =>
-	group.key === "people" ||
-	group.key === "members" ||
-	group.key === "characters"
+	group.key === "people" || group.key === "members" || group.key === "characters"
 
 /** A group by itself: everything it has. */
-function groupSection(
-	group: PanelGroup,
-	cols: number,
-	peopleSplit: boolean,
-): Section {
+function groupSection(group: PanelGroup, cols: number, peopleSplit: boolean): Section {
 	const head = pageHead(group)
 	if (isTitleGroup(group))
 		return {
@@ -257,18 +245,13 @@ export function resultsPlan(groups: PanelGroup[], wide = true): Plan {
 			],
 		}
 	const estimated = groups.some((group) => group.estimated)
-	const total = groups.reduce(
-		(sum, group) => sum + Math.max(group.total, group.items.length),
-		0,
-	)
+	const total = groups.reduce((sum, group) => sum + Math.max(group.total, group.items.length), 0)
 	const all: Layout =
 		groups.length < COLUMNS_FROM || !wide
 			? { top: groups.map(allSection) }
 			: {
 					top: groups.filter(isTitleGroup).map(allSection),
-					columns: balance(
-						groups.filter((group) => !isTitleGroup(group)).map(allSection),
-					),
+					columns: balance(groups.filter((group) => !isTitleGroup(group)).map(allSection)),
 				}
 	return {
 		rail: true,
@@ -302,19 +285,14 @@ export const moodOption = (mood: Mood, withLine = true): Option => ({
 	key: `mood-${mood.key}`,
 	label: mood.name,
 	sub: withLine ? mood.description : undefined,
-	href: `/discover?moods=${mood.key}`,
+	href: categoryPath("all", "mood", mood.name),
 	image: { kind: "hue", hue: mood.hue },
 })
 
 // ---------------------------------------------------------------- nothing matched
 
 /** Typed text that found nothing (or is too short to look up): Search still works; moods and trending to start from. */
-export function nothingPlan(
-	q: string,
-	short: boolean,
-	moods: Option[],
-	trending: Option[],
-): Plan {
+export function nothingPlan(q: string, short: boolean, moods: Option[], trending: Option[]): Plan {
 	const top: Section[] = [
 		{ kind: "nothing", key: "nothing", q, short },
 		{
@@ -349,10 +327,7 @@ export const searchingPlan: Plan = {
 // ---------------------------------------------------------------- before typing
 
 /** The For you tab: the member's taste tiles, or the page's call to action and the trending titles. */
-function forYouLayout(
-	start: PaletteStart | undefined,
-	trending: Option[],
-): Layout {
+function forYouLayout(start: PaletteStart | undefined, trending: Option[]): Layout {
 	if (!start)
 		return {
 			top: [{ kind: "note", key: "loading", text: "Loading your picks…" }],
@@ -424,12 +399,7 @@ export function startPlan(args: {
 	pages: Option[]
 }): Plan {
 	const { start, failed, trending, moods, tropes, pages } = args
-	const list = (
-		key: string,
-		label: string,
-		items: Option[],
-		compact = false,
-	): Tab => ({
+	const list = (key: string, label: string, items: Option[], compact = false): Tab => ({
 		key,
 		label,
 		count: String(items.length),

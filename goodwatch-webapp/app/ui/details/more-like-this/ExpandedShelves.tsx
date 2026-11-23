@@ -5,14 +5,7 @@
 // opens the quick view, stepping through the block.
 import { ChevronRightIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
-import {
-	type ReactNode,
-	Suspense,
-	lazy,
-	useEffect,
-	useMemo,
-	useState,
-} from "react"
+import { type ReactNode, Suspense, lazy, useEffect, useMemo, useState } from "react"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import { SegmentedTabs } from "~/ui/details/SegmentedTabs"
 import { CAPTION } from "~/ui/details/page-ui"
@@ -49,9 +42,7 @@ const COLS: [number, number][] = [
 function useCols() {
 	const [cols, setCols] = useState(COLS[0][1])
 	useEffect(() => {
-		const mqs = COLS.map(
-			([w, n]) => [window.matchMedia(`(min-width: ${w}px)`), n] as const,
-		)
+		const mqs = COLS.map(([w, n]) => [window.matchMedia(`(min-width: ${w}px)`), n] as const)
 		const on = () => setCols(mqs.find(([m]) => m.matches)?.[1] ?? 3)
 		on()
 		for (const [m] of mqs) m.addEventListener("change", on)
@@ -133,11 +124,12 @@ export function ExpandedShelf({
 				action={
 					discover && titles.length > 0 ? (
 						<Link to={discover} prefetch="intent" className={SEE_ALL}>
-							Show all
-							<ChevronRightIcon
-								className="-mr-1 h-4 w-4 text-gray-400"
-								aria-hidden="true"
-							/>
+							{kind === "Feels the same"
+								? "Explore these moods"
+								: kind === "Same genre"
+									? "Explore this genre"
+									: "Show all"}
+							<ChevronRightIcon className="-mr-1 h-4 w-4 text-gray-400" aria-hidden="true" />
 						</Link>
 					) : undefined
 				}
@@ -197,11 +189,8 @@ function CardGrid({
 	const mixed = movies > 0 && movies < titles.length
 	const list = useMemo(() => {
 		const indexed = titles.map((t, i) => ({ t, i }))
-		const kept = indexed.filter(
-			({ t }) => type === "all" || !mixed || t.type === type,
-		)
-		if (sort === "best")
-			kept.sort((a, b) => (b.t.goodwatch ?? -1) - (a.t.goodwatch ?? -1))
+		const kept = indexed.filter(({ t }) => type === "all" || !mixed || t.type === type)
+		if (sort === "best") kept.sort((a, b) => (b.t.goodwatch ?? -1) - (a.t.goodwatch ?? -1))
 		if (sort === "new") kept.sort((a, b) => (b.t.year ?? 0) - (a.t.year ?? 0))
 		return rows ? kept.slice(0, rows * cols) : kept
 	}, [titles, sort, type, mixed, rows, cols])
@@ -279,9 +268,7 @@ function CardGrid({
 								aria-current={here ? "page" : undefined}
 								className="relative min-w-0"
 							>
-								<div
-									className={`relative ${here ? "pointer-events-none" : ""}`}
-								>
+								<div className={`relative ${here ? "pointer-events-none" : ""}`}>
 									<MovieTvCard
 										mediaType={t.type}
 										posterSizes={WIDE}
@@ -299,8 +286,7 @@ function CardGrid({
 										aria-hidden="true"
 										className="pointer-events-none absolute -inset-1 rounded-xl ring-2 ring-amber-400 transition-opacity duration-200"
 										style={{
-											opacity:
-												here || (open !== null && openable[open] === t) ? 1 : 0,
+											opacity: here || (open !== null && openable[open] === t) ? 1 : 0,
 										}}
 									/>
 								</div>

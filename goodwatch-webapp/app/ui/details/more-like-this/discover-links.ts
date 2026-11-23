@@ -1,13 +1,4 @@
-// Where each block's Show all in More like this's expanded view goes: Discover (/discover) with the filters that come
-// nearest to that shelf, in Discover's own URL parameters (domain/filter-state.ts filterStateFromParams). Every link
-// says services=all, as the shelves show titles whatever they stream on (Discover's default for a member is their own
-// services).
-//   Watch order    q=<series name>   Discover has no collection filter: the nearest is a search for the series' name ("Dune")
-//   Feels the same moods=<its moods>&all=moods  Discover can't filter by fingerprint effects; the title's moods (each
-//                  a rule over the fingerprint, domain/moods.ts), Feel moods first, up to three, all of them at once
-//   Similar        similar=<title key>  Discover's "similar to" filter, the same nearest-titles search
-//   Same person    people=<TMDB person id>  Discover's people filter is cast or crew (not this one role)
-//   Same genre     genres=<genre>     the one genre
+import { browsePath, categoryPath, ing, place, slugify } from "~/domain/browse/address"
 import { MOOD_BY_KEY, type MoodKey, moodsOf } from "~/domain/moods"
 import { titleKey } from "~/utils/title-key"
 import type { PersonOption, Sources } from "./sources"
@@ -23,9 +14,7 @@ function discover(params: Record<string, string>, type?: "movie" | "show") {
 export function seriesLink(src: Sources) {
 	const s = src.series
 	if (!s) return null
-	const name = s.named
-		? s.name.replace(/ series$/, "").replace(/^The /, "")
-		: s.titles[0].title
+	const name = s.named ? s.name.replace(/ series$/, "").replace(/^The /, "") : s.titles[0].title
 	return discover({ q: name })
 }
 
@@ -43,19 +32,20 @@ export function feelMoods(src: Sources): MoodKey[] {
 export function feelsLink(src: Sources) {
 	const moods = feelMoods(src)
 	if (!moods.length) return null
-	return discover(
-		{ moods: moods.join(","), ...(moods.length > 1 ? { all: "moods" } : {}) },
-		src.type,
+	return browsePath(
+		place(
+			src.type,
+			moods.map((key) => ing("mood", slugify(MOOD_BY_KEY[key].name))),
+		),
 	)
 }
 
 export const similarLink = (src: Sources) =>
 	discover({ similar: String(titleKey(src.type, src.id)) }, src.type)
 
-export const personLink = (option: PersonOption) =>
-	discover({ people: String(option.id) })
+export const personLink = (option: PersonOption) => discover({ people: String(option.id) })
 
 export const genreLink = (src: Sources, genre: string | null) => {
 	const name = genre ?? src.genres[0]
-	return name ? discover({ genres: name }, src.type) : null
+	return name ? categoryPath(src.type, "genre", name) : null
 }

@@ -99,13 +99,21 @@ test("the Top 10 shows movies first; the shows wait in the same cell, invisible 
 test("every mood, service, and genre is a link to its page, named by it", () => {
 	const all = links(rendered.full)
 	const moods = all.filter((link) => link.href.startsWith("/movies/moods/"))
-	assert.equal(moods.length, 10)
+	assert.equal(moods.length, 15)
 	assert.equal(moods[0].href, "/movies/moods/cozy")
 	assert.match(moods[0].text, /^Cozy Warm and hopeful/)
+	assert.ok(
+		moods.some((link) => link.href === "/movies/moods/trippy" && link.text.startsWith("Trippy")),
+	)
 	for (const mood of ["tense", "dark", "deep", "magical", "quirky"]) {
-		const link = all.find((link) => link.href === `/discover?moods=${mood}`)
-		assert.ok(link, mood)
-		assert.ok(link.text.startsWith(mood[0].toUpperCase() + mood.slice(1)))
+		assert.ok(
+			moods.some(
+				(link) =>
+					link.href === `/movies/moods/${mood}` &&
+					link.text.startsWith(mood[0].toUpperCase() + mood.slice(1)),
+			),
+			mood,
+		)
 	}
 	const services = all.filter((link) => /^\/(shows\/streaming|new\/us)\/s\d/.test(link.href))
 	assert.deepEqual(

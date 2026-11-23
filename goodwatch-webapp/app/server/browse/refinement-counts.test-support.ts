@@ -49,5 +49,14 @@ for (const [i, slugs] of cases.entries()) {
 		assert.equal(atlas.count([...parts].reverse()), expected)
 	}
 }
+const atlas = new Places({ kind: "movie" } as Base, catalog, {} as ViewerContext, "us", new Map())
+const handoff = new URL(
+	atlas.discoverHref([ingredient("a"), ingredient("b")], "top", { mine: true, unseen: true })!,
+	"https://goodwatch.test",
+)
+assert.equal(handoff.searchParams.get("genres"), "A,B")
+assert.equal(handoff.searchParams.get("all"), "genres")
+assert.equal(handoff.searchParams.get("services"), "mine")
+assert.equal(handoff.searchParams.get("unseen"), "1")
 console.log("refinement counts preserved")
 process.exit(0)

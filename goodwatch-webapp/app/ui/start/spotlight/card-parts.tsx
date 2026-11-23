@@ -13,12 +13,7 @@ export const FOR_YOU = "For you"
 /** A die showing five, for Surprise me. */
 export function DieIcon({ className = "" }: { className?: string }) {
 	return (
-		<svg
-			viewBox="0 0 20 20"
-			className={className}
-			aria-hidden="true"
-			fill="none"
-		>
+		<svg viewBox="0 0 20 20" className={className} aria-hidden="true" fill="none">
 			<rect
 				x="2.5"
 				y="2.5"
@@ -35,30 +30,22 @@ export function DieIcon({ className = "" }: { className?: string }) {
 				[6.6, 13.4],
 				[13.4, 13.4],
 			].map(([cx, cy]) => (
-				<circle
-					key={`${cx}-${cy}`}
-					cx={cx}
-					cy={cy}
-					r="1.35"
-					fill="currentColor"
-				/>
+				<circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="1.35" fill="currentColor" />
 			))}
 		</svg>
 	)
 }
 
-/** See all: Discover with the search's text and the picks. */
-export function SeeAll({
-	href,
-	className = "",
-}: { href: string; className?: string }) {
+/** The full results or the Explore page matching the picks. */
+export function SeeAll({ href, className = "" }: { href: string; className?: string }) {
 	return (
 		<Link
 			to={href}
 			prefetch="intent"
 			className={`inline-flex h-9 shrink-0 items-center rounded-lg px-2.5 text-sm font-semibold text-amber-400 hover:bg-amber-400/10 hover:text-amber-300 sm:px-3 ${className}`}
 		>
-			See all<span aria-hidden>&nbsp;→</span>
+			{href.startsWith("/all/") ? "Explore these picks" : "See all"}
+			<span aria-hidden>&nbsp;→</span>
 		</Link>
 	)
 }

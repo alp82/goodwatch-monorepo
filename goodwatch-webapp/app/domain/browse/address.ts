@@ -318,3 +318,15 @@ export function parse(path: string, search: URLSearchParams, index: SlugIndex): 
 	}
 	return { ...place(kind, [...parts, ...extra], country), ...state }
 }
+
+/** A label as an address segment: "Action & Adventure" is "action-adventure". */
+export const slugify = (s: string) =>
+	s
+		.toLowerCase()
+		.replace(/&/g, " ")
+		.replace(/\+/g, " plus ")
+		.replace(/[^a-z0-9]+/g, "-")
+		.replace(/^-|-$/g, "")
+
+export const categoryPath = (kind: Kind, family: Family, name: string) =>
+	browsePath(place(kind, [ing(family, slugify(name))]))

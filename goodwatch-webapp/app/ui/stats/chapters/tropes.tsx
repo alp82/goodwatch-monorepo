@@ -2,7 +2,7 @@
 // effect), the trope-richest shows, and what title analysis says about shows and movies.
 import { Link } from "@remix-run/react"
 import type { StatsSnapshot } from "~/domain/stats/snapshot"
-import { tropeDiscoverPath } from "~/domain/trope-filter"
+import { tropePath } from "~/domain/tropes/destination"
 import { TROPE_SPOTS } from "../effects/trope-spots"
 import { count, titleHref } from "../format"
 import { Chapter, LABEL, PANEL, RankRows, titleRows } from "../parts"
@@ -33,22 +33,18 @@ export function Tropes({ s }: { s: StatsSnapshot }) {
 			sub={`${count(t.mentions)} trope mentions in all. Title analysis has read ${count(s.sources.titleAnalysis)} titles for their feel.`}
 		>
 			<div className={`${PANEL} p-4 sm:p-6`}>
-				<p className="mb-4 text-sm font-bold text-gray-200">
-					The most common tropes
-				</p>
+				<p className="mb-4 text-sm font-bold text-gray-200">The most common tropes</p>
 				<ul className="flex flex-wrap items-center gap-2">
 					{t.top.map((x) => (
 						<li key={x.url}>
 							<Link
-								to={tropeDiscoverPath(x.url)}
+								to={tropePath(x.url)}
 								prefetch="intent"
 								data-fx-spot={TROPE_SPOTS[x.url.split("/").at(-1) ?? ""]}
 								className={`inline-flex items-baseline gap-1.5 rounded-full bg-white/[0.06] text-gray-200 ring-1 ring-white/10 transition-colors hover:bg-white/10 hover:text-white ${step(x.titles)}`}
 							>
 								{x.name}
-								<b className="text-[0.75em] text-white tabular-nums">
-									{count(x.titles)}
-								</b>
+								<b className="text-[0.75em] text-white tabular-nums">{count(x.titles)}</b>
 							</Link>
 						</li>
 					))}
@@ -57,13 +53,12 @@ export function Tropes({ s }: { s: StatsSnapshot }) {
 			<div className="grid gap-4 lg:grid-cols-2">
 				<RankRows
 					heading="Most tropes on one show"
-					rows={titleRows(
-						s.records.mostTropes,
-						(x) => `${count(x.tropes)} tropes`,
-					).map((row, i) => ({
-						...row,
-						href: `${titleHref(s.records.mostTropes[i])}/tropes`,
-					}))}
+					rows={titleRows(s.records.mostTropes, (x) => `${count(x.tropes)} tropes`).map(
+						(row, i) => ({
+							...row,
+							href: `${titleHref(s.records.mostTropes[i])}/tropes`,
+						}),
+					)}
 				/>
 				<div className={`${PANEL} flex flex-col gap-4 p-4`}>
 					<p className={LABEL}>Shows, by title analysis</p>
@@ -71,9 +66,7 @@ export function Tropes({ s }: { s: StatsSnapshot }) {
 						{moods.map(([label, n]) => (
 							<div key={label} className="flex flex-col">
 								<dt className="order-2 text-[11px] text-gray-500">{label}</dt>
-								<dd className="text-xl font-black text-white tabular-nums">
-									{count(n)}
-								</dd>
+								<dd className="text-xl font-black text-white tabular-nums">{count(n)}</dd>
 							</div>
 						))}
 					</dl>
@@ -84,8 +77,7 @@ export function Tropes({ s }: { s: StatsSnapshot }) {
 								key={e.name}
 								className="rounded-full bg-white/[0.06] px-2.5 py-1 text-xs text-gray-300 ring-1 ring-white/10"
 							>
-								{e.name}{" "}
-								<b className="text-white tabular-nums">{count(e.titles)}</b>
+								{e.name} <b className="text-white tabular-nums">{count(e.titles)}</b>
 							</li>
 						))}
 					</ul>

@@ -1,4 +1,10 @@
-import { GUEST, type PathViewer, TASTE_FALLBACK_PATH, WATCH_PATHS, tasteHome } from "../../../domain/member-paths.ts"
+import {
+	GUEST,
+	type PathViewer,
+	TASTE_FALLBACK_PATH,
+	WATCH_PATHS,
+	tasteHome,
+} from "../../../domain/member-paths.ts"
 // The "Go deeper" doors under a member's start: Continue watching, Wishlist, For you, Hot on socials. Pure, so the
 // order, the open door and the grid's rows are tested without React (doors.test.ts); Doors.tsx draws them.
 //
@@ -10,11 +16,7 @@ import { GUEST, type PathViewer, TASTE_FALLBACK_PATH, WATCH_PATHS, tasteHome } f
 // - An open section with few or no titles says why in one slim strip and where to go next, then shows one grid where
 //   the posters, "add more" ghosts and the page tile always fill whole rows at every width.
 import type { TitleCard } from "~/server/title-cards.server"
-import {
-	MEMBER_LIST_SIZE,
-	type MemberStartData,
-	PERSONAL_AT,
-} from "./member-data"
+import { MEMBER_LIST_SIZE, type MemberStartData, PERSONAL_AT } from "./member-data"
 
 export type DoorKey = "continue" | "wishlist" | "forYou" | "hot"
 
@@ -29,7 +31,7 @@ export const MEMBER_HREF = {
 	watchNext: WATCH_PATHS.tonight,
 	taste: TASTE_FALLBACK_PATH,
 	imports: "/settings/imports",
-	findShow: "/discover?type=show",
+	findShow: "/shows",
 	discover: "/discover",
 }
 
@@ -83,8 +85,7 @@ export type DoorFilter = {
 
 const ALL: DoorFilter = { key: "all", label: "All", keep: () => true }
 
-const plural = (n: number, one: string, many = `${one}s`) =>
-	`${n} ${n === 1 ? one : many}`
+const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`
 
 const UNREAD: Strip = {
 	title: "Couldn't load this right now",
@@ -121,10 +122,7 @@ export function doorsOf(data: MemberStartData, viewer: PathViewer = GUEST): Door
 					: {
 							title: "No shows yet",
 							body: "Track a show and its next episode waits here.",
-							ctas: [
-								{ label: "Find a show", href: MEMBER_HREF.findShow },
-								BRING,
-							],
+							ctas: [{ label: "Find a show", href: MEMBER_HREF.findShow }, BRING],
 						},
 			ghost: { label: "Track a show", href: MEMBER_HREF.findShow },
 			filters: null,
@@ -152,7 +150,7 @@ export function doorsOf(data: MemberStartData, viewer: PathViewer = GUEST): Door
 								{ label: "See For you", href: MEMBER_HREF.forYou },
 							],
 						},
-			ghost: { label: "Save a movie", href: MEMBER_HREF.discover },
+			ghost: { label: "Save a movie", href: "/movies" },
 			filters: [
 				ALL,
 				{
@@ -258,8 +256,7 @@ export function orderDoors(doors: readonly Door[]): Door[] {
 }
 
 /** The door open on load. */
-export const openDoorOf = (data: MemberStartData): DoorKey =>
-	orderDoors(doorsOf(data))[0].key
+export const openDoorOf = (data: MemberStartData): DoorKey => orderDoors(doorsOf(data))[0].key
 
 /**
  * The room a section keeps while its list is on its way, and keeps after the list arrives: the strip it shows while it
@@ -270,9 +267,7 @@ export const openDoorOf = (data: MemberStartData): DoorKey =>
 export type Reserve = { strip: Strip | null; filters: boolean; lines: boolean }
 
 export function reserveOf(data: MemberStartData, key: DoorKey): Reserve | null {
-	const door = doorsOf({ ...data, forYou: undefined, hot: undefined }).find(
-		(d) => d.key === key,
-	)
+	const door = doorsOf({ ...data, forYou: undefined, hot: undefined }).find((d) => d.key === key)
 	if (!door?.pending) return null
 	// Hot on socials says why each title is talked about, in up to two lines under its poster.
 	return {
@@ -328,8 +323,7 @@ export function gridPlan(n: number, columns: number, ghost: boolean): GridPlan {
 			return { ...none, posters: slots - columns - 1, tile: true }
 		return { ...none, posters: n, ghosts, tile: true }
 	}
-	if (n + 1 <= columns)
-		return { ...none, posters: n, blanks: columns - n - 1, tile: true }
+	if (n + 1 <= columns) return { ...none, posters: n, blanks: columns - n - 1, tile: true }
 	return {
 		...none,
 		posters: Math.floor((n + 1) / columns) * columns - 1,
@@ -342,10 +336,7 @@ export const cellsOf = (plan: GridPlan) =>
 	plan.posters + plan.ghosts + plan.blanks + (plan.tile ? 1 : 0)
 
 /** The end tile's two lines: a count only when the tile stands for more titles than the grid shows. */
-export function tileText(
-	door: Door,
-	shown: number,
-): { top: string; sub: string } {
+export function tileText(door: Door, shown: number): { top: string; sub: string } {
 	if (door.key === "hot") return { top: "See all", sub: `on ${door.pageName}` }
 	if (!door.counted) return { top: "More", sub: `in ${door.pageName}` }
 	if (door.total >= GRID - 1 || door.total > shown)

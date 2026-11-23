@@ -432,7 +432,7 @@ function TropeArticle({
 				<InTitle t={t} title={info.title} />
 			</div>
 			<WhatItIs t={t} className="mt-8" />
-			<NextLinks t={t} className="mt-4" />
+			<NextLinks t={t} type={skip.type} className="mt-4" />
 			<AlsoIn
 				t={t}
 				skip={skip}
