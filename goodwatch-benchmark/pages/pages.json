@@ -103,7 +103,13 @@
     {
       "id": "type-best-tsx",
       "route": "$type.top.tsx",
-      "examples": ["/movies/top", "/shows/top"],
+      "examples": [
+        "/movies/top",
+        "/shows/top",
+        "/all/top",
+        "/all/top?year=1996",
+        "/movies/top?page=2"
+      ],
       "tier": "P1",
       "audience": ["guest", "member"],
       "verification": [
@@ -124,7 +130,7 @@
     {
       "id": "type-index-tsx",
       "route": "$type._index.tsx",
-      "examples": ["/movies", "/shows"],
+      "examples": ["/movies", "/shows", "/all"],
       "tier": "P1",
       "audience": ["guest", "member"],
       "verification": [
@@ -160,8 +166,33 @@
     {
       "id": "type-category-page-tsx",
       "route": "$type.$.tsx",
-      "examples": ["/movies/genres/drama", "/shows/moods/funny"],
-      "tier": "P2",
+      "examples": [
+        "/movies/genres/drama",
+        "/shows/moods/funny",
+        "/movies/genres",
+        "/shows/moods",
+        "/movies/moods",
+        "/movies/moods/cozy",
+        "/movies/moods/cozy/comedy",
+        "/movies/decades",
+        "/movies/decades/1990s",
+        "/movies/countries",
+        "/movies/countries/japan",
+        "/movies/streaming/us",
+        "/movies/streaming/us/netflix",
+        "/movies/tropes",
+        "/movies/tropes/final-girl",
+        "/movies/themes/crime",
+        "/movies/styles/animated",
+        "/movies/moods/cozy/comedy?at=12&with=decade%3A1990s",
+        "/movies/moods/cozy?at=12",
+        "/movies/genres/drama?k=wholesome",
+        "/movies/streaming/nl",
+        "/movies/streaming/gb/disney-plus",
+        "/all/tropes/chekhovs-gun",
+        "/shows/countries/germany"
+      ],
+      "tier": "P1",
       "audience": ["guest", "member"],
       "verification": [
         {
@@ -170,21 +201,6 @@
           "checkedAt": "2026-10-29T08:18:39.469Z",
           "audience": "guest"
         },
-        {
-          "path": "/shows/moods/funny",
-          "status": 200,
-          "checkedAt": "2026-10-29T08:18:39.469Z",
-          "audience": "guest"
-        }
-      ]
-    },
-    {
-      "id": "type-category-index-tsx",
-      "route": "$type.$.tsx",
-      "examples": ["/movies/genres", "/shows/moods"],
-      "tier": "P2",
-      "audience": ["guest", "member"],
-      "verification": [
         {
           "path": "/movies/genres",
           "status": 200,
@@ -195,6 +211,12 @@
           "path": "/shows/moods",
           "status": 200,
           "checkedAt": "2026-10-29T08:18:39.469Z",
+          "audience": "guest"
+        },
+        {
+          "path": "/shows/moods/funny",
+          "status": 200,
+          "checkedAt": "2026-11-23T07:51:43.257Z",
           "audience": "guest"
         }
       ]
@@ -238,9 +260,10 @@
       "verification": [
         {
           "path": "/lists/o1H79d4fVu",
-          "status": 200,
-          "checkedAt": "2026-10-29T08:18:39.469Z",
-          "audience": "guest"
+          "status": 503,
+          "checkedAt": "2026-11-23T07:51:30.787Z",
+          "audience": "guest",
+          "reason": "Live document request returned this status."
         }
       ]
     },
@@ -249,13 +272,14 @@
       "route": "lists.new.tsx",
       "examples": ["/lists/new"],
       "tier": "P2",
-      "audience": ["guest", "member"],
+      "audience": ["guest"],
       "verification": [
         {
           "path": "/lists/new",
-          "status": 200,
-          "checkedAt": "2026-10-29T08:18:39.469Z",
-          "audience": "guest"
+          "status": 503,
+          "checkedAt": "2026-11-23T07:51:35.088Z",
+          "audience": "guest",
+          "reason": "Live document request returned this status."
         }
       ]
     },
@@ -264,26 +288,19 @@
       "route": "watch.seen.tsx",
       "examples": ["/watch/seen"],
       "tier": "P2",
-      "audience": ["member"],
+      "audience": ["guest", "member"],
       "verification": [
         {
           "path": "/watch/seen",
           "status": null,
           "reason": "Member credentials required; not checked in guest baseline"
-        }
-      ]
-    },
-    {
-      "id": "my-library-index-tsx",
-      "route": "u.$handle._index.tsx",
-      "examples": ["/u/alp82"],
-      "tier": "P2",
-      "audience": ["member"],
-      "verification": [
+        },
         {
-          "path": "/u/alp82",
-          "status": null,
-          "reason": "Member credentials required; not checked in guest baseline"
+          "path": "/watch/seen",
+          "status": 503,
+          "checkedAt": "2026-11-23T07:51:35.625Z",
+          "audience": "guest",
+          "reason": "Live document request returned this status."
         }
       ]
     },
@@ -302,44 +319,22 @@
       ]
     },
     {
-      "id": "my-library-scores-tsx",
-      "route": "u.$handle.scores.tsx",
-      "examples": ["/u/alp82/scores"],
-      "tier": "P2",
-      "audience": ["member"],
-      "verification": [
-        {
-          "path": "/u/alp82/scores",
-          "status": null,
-          "reason": "Member credentials required; not checked in guest baseline"
-        }
-      ]
-    },
-    {
-      "id": "my-movies-tsx",
-      "route": "watch.movies._index.tsx",
-      "examples": ["/watch/movies"],
-      "tier": "P2",
-      "audience": ["member"],
-      "verification": [
-        {
-          "path": "/watch/movies",
-          "status": null,
-          "reason": "Member credentials required; not checked in guest baseline"
-        }
-      ]
-    },
-    {
       "id": "my-shows-tsx",
       "route": "watch.shows._index.tsx",
       "examples": ["/watch/shows"],
       "tier": "P2",
-      "audience": ["member"],
+      "audience": ["guest", "member"],
       "verification": [
         {
           "path": "/watch/shows",
           "status": null,
           "reason": "Member credentials required; not checked in guest baseline"
+        },
+        {
+          "path": "/watch/shows",
+          "status": 200,
+          "checkedAt": "2026-11-23T07:51:37.239Z",
+          "audience": "guest"
         }
       ]
     },
@@ -393,7 +388,7 @@
       "route": "taste._index.tsx",
       "examples": ["/taste"],
       "tier": "P2",
-      "audience": ["guest", "member"],
+      "audience": ["guest"],
       "verification": [
         {
           "path": "/taste",
@@ -408,7 +403,7 @@
       "route": "taste.quiz.tsx",
       "examples": ["/taste/quiz"],
       "tier": "P2",
-      "audience": ["guest", "member"],
+      "audience": ["guest"],
       "verification": [
         {
           "path": "/taste/quiz",
@@ -427,9 +422,10 @@
       "verification": [
         {
           "path": "/u/alperortac",
-          "status": 200,
-          "checkedAt": "2026-10-29T08:18:39.469Z",
-          "audience": "guest"
+          "status": 503,
+          "checkedAt": "2026-11-23T07:51:29.138Z",
+          "audience": "guest",
+          "reason": "Live document request returned this status."
         }
       ]
     },
@@ -443,7 +439,7 @@
         {
           "path": "/u/alperortac/lists/o1H79d4fVu",
           "status": 200,
-          "checkedAt": "2026-10-29T08:18:39.469Z",
+          "checkedAt": "2026-11-23T07:51:34.569Z",
           "audience": "guest"
         }
       ]
@@ -465,16 +461,17 @@
     },
     {
       "id": "u-handle-scores-tsx",
-      "route": "u.$handle.scores.tsx",
+      "route": "u.$handle.scores._index.tsx",
       "examples": ["/u/alperortac/scores"],
       "tier": "P2",
       "audience": ["guest", "member"],
       "verification": [
         {
           "path": "/u/alperortac/scores",
-          "status": 200,
-          "checkedAt": "2026-10-29T08:18:39.469Z",
-          "audience": "guest"
+          "status": 503,
+          "checkedAt": "2026-11-23T07:51:29.643Z",
+          "audience": "guest",
+          "reason": "Live document request returned this status."
         }
       ]
     },
@@ -555,11 +552,11 @@
     },
     {
       "id": "u-handle-lists-id-edit-tsx",
-      "route": "u.$handle_.lists.$id_.edit.tsx",
+      "route": "u.$handle.lists.$id_.edit.tsx",
       "examples": [],
       "tier": "P2",
       "audience": ["member"],
-      "unavailable": "Requires an owned editable list and member cookie; public GET baseline does not open edit handlers",
+      "unavailable": "Requires the signed-in benchmark member’s own editable list; no owned list fixture is configured.",
       "verification": []
     },
     {
@@ -567,13 +564,14 @@
       "route": "watch.movies._index.tsx",
       "examples": ["/watch/movies"],
       "tier": "P2",
-      "audience": ["guest"],
+      "audience": ["guest", "member"],
       "verification": [
         {
           "path": "/watch/movies",
-          "status": 200,
-          "checkedAt": "2026-10-29T08:18:39.469Z",
-          "audience": "guest"
+          "status": 503,
+          "checkedAt": "2026-11-23T07:51:36.117Z",
+          "audience": "guest",
+          "reason": "Live document request returned this status."
         }
       ]
     },
@@ -582,12 +580,19 @@
       "route": "watch.movies.$list.tsx",
       "examples": ["/watch/movies/want"],
       "tier": "P2",
-      "audience": ["member"],
+      "audience": ["guest", "member"],
       "verification": [
         {
           "path": "/watch/movies/want",
           "status": null,
           "reason": "Member credentials required; not checked in guest baseline"
+        },
+        {
+          "path": "/watch/movies/want",
+          "status": 503,
+          "checkedAt": "2026-11-23T07:51:36.613Z",
+          "audience": "guest",
+          "reason": "Live document request returned this status."
         }
       ]
     },
@@ -877,25 +882,11 @@
       ]
     },
     {
-      "id": "settings-tsx",
-      "route": "settings.tsx",
-      "examples": ["/settings"],
-      "tier": "P3",
-      "audience": ["member"],
-      "verification": [
-        {
-          "path": "/settings",
-          "status": null,
-          "reason": "Member credentials required; not checked in guest baseline"
-        }
-      ]
-    },
-    {
       "id": "sign-in-tsx",
       "route": "sign-in.tsx",
       "examples": ["/sign-in"],
       "tier": "P3",
-      "audience": ["guest", "member"],
+      "audience": ["guest"],
       "verification": [
         {
           "path": "/sign-in",
@@ -910,7 +901,7 @@
       "route": "sign-up.tsx",
       "examples": ["/sign-up"],
       "tier": "P3",
-      "audience": ["guest", "member"],
+      "audience": ["guest"],
       "verification": [
         {
           "path": "/sign-up",
@@ -979,6 +970,269 @@
           "audience": "guest"
         }
       ]
+    },
+    {
+      "id": "u-handle-lists-new-tsx",
+      "route": "u.$handle.lists.new.tsx",
+      "examples": [],
+      "tier": "P2",
+      "audience": ["member"],
+      "unavailable": "Requires the signed-in benchmark member’s own profile handle; no owner fixture is configured.",
+      "verification": []
+    },
+    {
+      "id": "u-handle-scores-not-rated-tsx",
+      "route": "u.$handle.scores.not-rated.tsx",
+      "examples": [],
+      "tier": "P2",
+      "audience": ["member"],
+      "unavailable": "Requires the signed-in benchmark member’s own profile handle; no owner fixture is configured.",
+      "verification": []
+    },
+    {
+      "id": "u-handle-scores-rate-tsx",
+      "route": "u.$handle.scores.rate.tsx",
+      "examples": [],
+      "tier": "P2",
+      "audience": ["member"],
+      "unavailable": "Requires the signed-in benchmark member’s own profile handle; no owner fixture is configured.",
+      "verification": []
+    },
+    {
+      "id": "settings-export-tsx",
+      "route": "settings.export.tsx",
+      "examples": ["/settings/export"],
+      "tier": "P3",
+      "audience": ["member"],
+      "verification": []
+    },
+    {
+      "id": "new-index-tsx",
+      "route": "new._index.tsx",
+      "examples": ["/new"],
+      "tier": "P2",
+      "audience": ["member"],
+      "verification": []
+    },
+    {
+      "id": "signed-out-tsx",
+      "route": "signed-out.tsx",
+      "examples": ["/signed-out"],
+      "tier": "P3",
+      "audience": ["guest"],
+      "verification": [
+        {
+          "path": "/signed-out",
+          "status": 503,
+          "checkedAt": "2026-11-23T07:51:44.302Z",
+          "audience": "guest",
+          "reason": "Live document request returned this status."
+        }
+      ]
+    },
+    {
+      "id": "stats-tsx",
+      "route": "stats.tsx",
+      "examples": ["/stats"],
+      "tier": "P2",
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/stats",
+          "status": 503,
+          "checkedAt": "2026-11-23T07:51:43.761Z",
+          "audience": "guest",
+          "reason": "Live document request returned this status."
+        }
+      ]
+    },
+    {
+      "id": "watch-for-you-tropes-tsx",
+      "route": "watch.for-you_.tropes.tsx",
+      "examples": ["/watch/for-you/tropes"],
+      "tier": "P2",
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/watch/for-you/tropes",
+          "status": 200,
+          "checkedAt": "2026-11-23T07:51:38.732Z",
+          "audience": "guest"
+        }
+      ]
+    },
+    {
+      "id": "watch-shows-list-tsx",
+      "route": "watch.shows.$list.tsx",
+      "examples": ["/watch/shows/watching", "/watch/shows/not-started"],
+      "tier": "P2",
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/watch/shows/watching",
+          "status": 200,
+          "checkedAt": "2026-11-23T07:51:37.991Z",
+          "audience": "guest"
+        }
+      ]
+    },
+    {
+      "id": "awards-index-tsx",
+      "route": "awards._index.tsx",
+      "examples": ["/awards"],
+      "tier": "P2",
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/awards",
+          "status": 200,
+          "checkedAt": "2026-11-23T07:51:26.018Z",
+          "audience": "guest"
+        }
+      ]
+    },
+    {
+      "id": "awards-body-index-tsx",
+      "route": "awards.$body._index.tsx",
+      "examples": ["/awards/oscars"],
+      "tier": "P2",
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/awards/oscars",
+          "status": 503,
+          "checkedAt": "2026-11-23T07:51:26.798Z",
+          "audience": "guest",
+          "reason": "Live document request returned this status."
+        }
+      ]
+    },
+    {
+      "id": "awards-body-year-tsx",
+      "route": "awards.$body.$year.tsx",
+      "examples": ["/awards/oscars/2024"],
+      "tier": "P2",
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/awards/oscars/2024",
+          "status": 503,
+          "checkedAt": "2026-11-23T07:51:27.521Z",
+          "audience": "guest",
+          "reason": "Live document request returned this status."
+        }
+      ]
+    },
+    {
+      "id": "awards-body-category-category-tsx",
+      "route": "awards.$body.category.$category.tsx",
+      "examples": ["/awards/oscars/category/best-picture"],
+      "tier": "P2",
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/awards/oscars/category/best-picture",
+          "status": 503,
+          "checkedAt": "2026-11-23T07:51:28.103Z",
+          "audience": "guest",
+          "reason": "Live document request returned this status."
+        }
+      ]
+    },
+    {
+      "id": "movie-moviekey-at-a-glance-tsx",
+      "route": "movie.$movieKey_.at-a-glance.tsx",
+      "examples": ["/movie/603-the-matrix/at-a-glance"],
+      "tier": "P2",
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/movie/603-the-matrix/at-a-glance",
+          "status": 503,
+          "checkedAt": "2026-11-23T07:51:44.835Z",
+          "audience": "guest",
+          "reason": "Live document request returned this status."
+        }
+      ]
+    },
+    {
+      "id": "movie-moviekey-fingerprint-tsx",
+      "route": "movie.$movieKey_.fingerprint.tsx",
+      "examples": ["/movie/603-the-matrix/fingerprint"],
+      "tier": "P2",
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/movie/603-the-matrix/fingerprint",
+          "status": 503,
+          "checkedAt": "2026-11-23T07:51:45.356Z",
+          "audience": "guest",
+          "reason": "Live document request returned this status."
+        }
+      ]
+    },
+    {
+      "id": "movie-moviekey-tropes-tsx",
+      "route": "movie.$movieKey_.tropes.tsx",
+      "examples": ["/movie/603-the-matrix/tropes"],
+      "tier": "P2",
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/movie/603-the-matrix/tropes",
+          "status": 200,
+          "checkedAt": "2026-11-23T07:51:48.543Z",
+          "audience": "guest"
+        }
+      ]
+    },
+    {
+      "id": "show-showkey-at-a-glance-tsx",
+      "route": "show.$showKey_.at-a-glance.tsx",
+      "examples": ["/show/1396-breaking-bad/at-a-glance"],
+      "tier": "P2",
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/show/1396-breaking-bad/at-a-glance",
+          "status": 503,
+          "checkedAt": "2026-11-23T07:51:49.525Z",
+          "audience": "guest",
+          "reason": "Live document request returned this status."
+        }
+      ]
+    },
+    {
+      "id": "show-showkey-fingerprint-tsx",
+      "route": "show.$showKey_.fingerprint.tsx",
+      "examples": ["/show/1396-breaking-bad/fingerprint"],
+      "tier": "P2",
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/show/1396-breaking-bad/fingerprint",
+          "status": 503,
+          "checkedAt": "2026-11-23T07:51:50.016Z",
+          "audience": "guest",
+          "reason": "Live document request returned this status."
+        }
+      ]
+    },
+    {
+      "id": "show-showkey-tropes-tsx",
+      "route": "show.$showKey_.tropes.tsx",
+      "examples": ["/show/1396-breaking-bad/tropes"],
+      "tier": "P2",
+      "audience": ["guest", "member"],
+      "verification": [
+        {
+          "path": "/show/1396-breaking-bad/tropes",
+          "status": 503,
+          "checkedAt": "2026-11-23T07:51:50.513Z",
+          "audience": "guest",
+          "reason": "Live document request returned this status."
+        }
+      ]
     }
   ],
   "skippedRoutes": [
@@ -999,6 +1253,10 @@
       "reason": "File, protocol, or outbound redirect resource"
     },
     {
+      "route": "api.account-lists.ts",
+      "reason": "API resource; no HTML page"
+    },
+    {
       "route": "api.account-summary.ts",
       "reason": "API resource, not an HTML page"
     },
@@ -1015,6 +1273,10 @@
       "reason": "API resource, not an HTML page"
     },
     {
+      "route": "api.award-marks.ts",
+      "reason": "API resource; no HTML page"
+    },
+    {
       "route": "api.cast.tsx",
       "reason": "API resource, not an HTML page"
     },
@@ -1023,8 +1285,20 @@
       "reason": "API resource, not an HTML page"
     },
     {
+      "route": "api.character-portraits.ts",
+      "reason": "API resource; no HTML page"
+    },
+    {
+      "route": "api.cinema-numbers.ts",
+      "reason": "API resource; no HTML page"
+    },
+    {
       "route": "api.combined-search.ts",
       "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.command-palette-start.ts",
+      "reason": "API resource; no HTML page"
     },
     {
       "route": "api.command-palette.ts",
@@ -1041,6 +1315,14 @@
     {
       "route": "api.discover.tsx",
       "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.discover_.interpret.ts",
+      "reason": "API resource; no HTML page"
+    },
+    {
+      "route": "api.discover_.panel.ts",
+      "reason": "API resource; no HTML page"
     },
     {
       "route": "api.discover_.results.ts",
@@ -1343,6 +1625,10 @@
       "reason": "API resource, not an HTML page"
     },
     {
+      "route": "api.profile.avatar-refresh.ts",
+      "reason": "API resource; no HTML page"
+    },
+    {
       "route": "api.profile.avatar.ts",
       "reason": "API resource, not an HTML page"
     },
@@ -1431,6 +1717,10 @@
       "reason": "API resource, not an HTML page"
     },
     {
+      "route": "api.title-awards.ts",
+      "reason": "API resource; no HTML page"
+    },
+    {
       "route": "api.title-cards.ts",
       "reason": "API resource, not an HTML page"
     },
@@ -1439,8 +1729,16 @@
       "reason": "API resource, not an HTML page"
     },
     {
+      "route": "api.title-more-like-this.ts",
+      "reason": "API resource; no HTML page"
+    },
+    {
       "route": "api.title-people.ts",
       "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.title-tropes.ts",
+      "reason": "API resource; no HTML page"
     },
     {
       "route": "api.tonight.ts",
@@ -1449,6 +1747,22 @@
     {
       "route": "api.tracking.show.ts",
       "reason": "API resource, not an HTML page"
+    },
+    {
+      "route": "api.trope-recs.ts",
+      "reason": "API resource; no HTML page"
+    },
+    {
+      "route": "api.trope-recs_.excerpts.ts",
+      "reason": "API resource; no HTML page"
+    },
+    {
+      "route": "api.trope-recs_.tropes.ts",
+      "reason": "API resource; no HTML page"
+    },
+    {
+      "route": "api.trope-titles.ts",
+      "reason": "API resource; no HTML page"
     },
     {
       "route": "api.tv-title.ts",
@@ -1539,7 +1853,11 @@
       "reason": "Removed browser gate; returns 410"
     },
     {
-      "route": "dev.filter-bar.tsx",
+      "route": "dev.discover-bar.tsx",
+      "reason": "Development-only route"
+    },
+    {
+      "route": "dev.discover-page.($type).tsx",
       "reason": "Development-only route"
     },
     {
@@ -1571,8 +1889,24 @@
       "reason": "Legacy category redirect"
     },
     {
+      "route": "explorer.tsx",
+      "reason": "Compatibility redirect to the current address"
+    },
+    {
+      "route": "for-you.tsx",
+      "reason": "Compatibility redirect to the current address"
+    },
+    {
+      "route": "for-you_.tropes.tsx",
+      "reason": "Compatibility redirect to the current address"
+    },
+    {
       "route": "go.stream.$media.$tmdbId.$providerId.ts",
       "reason": "File, protocol, or outbound redirect resource"
+    },
+    {
+      "route": "hot-on-socials.tsx",
+      "reason": "Compatibility redirect to the current address"
     },
     {
       "route": "living-room.tsx",
@@ -1583,8 +1917,28 @@
       "reason": "File, protocol, or outbound redirect resource"
     },
     {
-      "route": "new._index.tsx",
-      "reason": "302 to /new/us for browser requests"
+      "route": "my-library.$list.tsx",
+      "reason": "Compatibility redirect to the current address"
+    },
+    {
+      "route": "my-library._index.tsx",
+      "reason": "Compatibility redirect to the current address"
+    },
+    {
+      "route": "my-library.hidden.tsx",
+      "reason": "Compatibility redirect to the current address"
+    },
+    {
+      "route": "my-library.scores.tsx",
+      "reason": "Compatibility redirect to the current address"
+    },
+    {
+      "route": "my-movies.tsx",
+      "reason": "Compatibility redirect to the current address"
+    },
+    {
+      "route": "my-shows.tsx",
+      "reason": "Compatibility redirect to the current address"
     },
     {
       "route": "og.$.tsx",
@@ -1605,6 +1959,10 @@
     {
       "route": "og.lists.$id.$file.tsx",
       "reason": "File, protocol, or outbound redirect resource"
+    },
+    {
+      "route": "old-addresses.test.ts",
+      "reason": "Test file excluded from the Remix route manifest"
     },
     {
       "route": "pmwiki.$.tsx",
@@ -1863,12 +2221,12 @@
       "reason": "Data/action resource or legacy redirect, not an HTML page"
     },
     {
-      "route": "settings.where-you-watch.ts",
-      "reason": "Data/action resource or legacy redirect, not an HTML page"
+      "route": "settings.tsx",
+      "reason": "Parent layout rendered by its index and child pages"
     },
     {
-      "route": "signed-out.tsx",
-      "reason": "Noindex confirmation page shown after sign-out"
+      "route": "settings.where-you-watch.ts",
+      "reason": "Data/action resource or legacy redirect, not an HTML page"
     },
     {
       "route": "sitemap[.]xml.ts",
@@ -1907,6 +2265,10 @@
       "reason": "Legacy show redirect"
     },
     {
+      "route": "u.$handle.scores.tsx",
+      "reason": "Parent layout rendered by its index and child pages"
+    },
+    {
       "route": "u.$handle.taste.($view).tsx",
       "reason": "Legacy Taste tab redirect"
     },
@@ -1921,6 +2283,30 @@
     {
       "route": "u.$handle.tropes_.excerpts.ts",
       "reason": "Data/action resource or legacy redirect, not an HTML page"
+    },
+    {
+      "route": "u.$handle.tsx",
+      "reason": "Parent layout rendered by its index and child pages"
+    },
+    {
+      "route": "u.$handle.wishlist.tsx",
+      "reason": "Compatibility redirect to the current address"
+    },
+    {
+      "route": "watch-next.tsx",
+      "reason": "Compatibility redirect to the current address"
+    },
+    {
+      "route": "watch._index.tsx",
+      "reason": "Compatibility redirect to the current address"
+    },
+    {
+      "route": "watch.tsx",
+      "reason": "Parent layout rendered by its index and child pages"
+    },
+    {
+      "route": "wishlist.tsx",
+      "reason": "Compatibility redirect to the current address"
     }
   ]
 }
