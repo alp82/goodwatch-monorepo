@@ -1,3 +1,4 @@
+import { TitleKindControl } from "~/ui/title-kind/TitleKindControl"
 // You vs everyone: the titles the member rates far above and below the GoodWatch score, after their usual generosity,
 // then where they part ways by genre and by trait. Movies, Shows or All; a filter never moves the page: every slot
 // keeps the height of the unfiltered row it holds, and an emptied slot holds that row, invisible.
@@ -7,7 +8,6 @@ import type { Score } from "~/server/scores.server"
 import { RowScores, rowMark, useRowMarks } from "~/ui/list-row/RowScores"
 import { PosterImg, backdropUrl } from "~/ui/profile/parts"
 import { type CrowdRow, type TasteTitle, signed, useTaste } from "~/ui/profile/taste/model"
-import { Pills } from "~/ui/profile/taste/parts"
 import { vibe } from "../tabs/parts"
 import { type GapRow, gapRows } from "./gaps"
 import { SectionHeading } from "~/ui/heading"
@@ -47,15 +47,10 @@ export function VsEveryone() {
 			<Kicker className="mb-1">Where your scores differ from the GoodWatch score</Kicker>
 			<SectionHeading id="everyone-head">You vs everyone</SectionHeading>
 			<div className="mt-8 flex flex-wrap items-center gap-2">
-				<Pills
-					label="Show"
+				<TitleKindControl
 					value={kind}
 					onChange={setKind}
-					options={[
-						{ value: "all", label: "All", count: count("all") },
-						{ value: "movie", label: "Movies", count: count("movie") },
-						{ value: "show", label: "Shows", count: count("show") },
-					]}
+					counts={{ all: count("all"), movie: count("movie"), show: count("show") }}
 				/>
 				<span className="ml-auto flex items-center gap-4 text-xs text-gray-400">
 					<span className="flex items-center gap-1.5">

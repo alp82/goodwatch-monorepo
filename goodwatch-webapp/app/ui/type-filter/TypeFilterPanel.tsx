@@ -1,3 +1,4 @@
+import { TitleKindControl } from "~/ui/title-kind/TitleKindControl"
 // The type filter's choices: a popover from md up, a bottom sheet on phones. TypeFilter.tsx loads this module, and
 // the animation library with it, when a visitor reaches for the filter's button.
 import { AnimatePresence, motion } from "framer-motion"
@@ -7,8 +8,6 @@ import {
 	ALL_TITLE_TYPES,
 	ANIME_CHOICES,
 	ANIME_SHORT_NAMES,
-	TITLE_FORMATS,
-	TITLE_FORMAT_NAMES,
 	isAllTitleTypes,
 } from "~/domain/title-type"
 import { SnapSheet } from "~/ui/filter-bar/SnapSheet"
@@ -62,10 +61,7 @@ function Segmented<K extends string>({
 const ROW_LABEL = "text-xs font-semibold uppercase tracking-wide text-gray-400"
 
 /** Both choices as labeled rows of segments, and Reset once one is made: the body of the sheet and of the popover. */
-function Rows({
-	value,
-	onChange,
-}: Pick<TypeFilterProps, "value" | "onChange">) {
+function Rows({ value, onChange }: Pick<TypeFilterProps, "value" | "onChange">) {
 	const root = useRef<HTMLDivElement>(null)
 	return (
 		<div ref={root} className="flex flex-col gap-4">
@@ -82,7 +78,7 @@ function Rows({
 								// Reset goes with the choice; the focus stays in the choices.
 								requestAnimationFrame(() =>
 									root.current
-										?.querySelector<HTMLElement>('[aria-checked="true"]')
+										?.querySelector<HTMLElement>('input:checked, [aria-checked="true"]')
 										?.focus(),
 								)
 							}}
@@ -92,12 +88,9 @@ function Rows({
 						</button>
 					)}
 				</div>
-				<Segmented
-					label="Type"
-					options={TITLE_FORMATS}
-					names={TITLE_FORMAT_NAMES}
+				<TitleKindControl
 					value={value.format}
-					onPick={(format) => onChange({ ...value, format })}
+					onChange={(format) => onChange({ ...value, format })}
 				/>
 			</div>
 			<div className="flex flex-col gap-1.5">
@@ -119,8 +112,10 @@ function Rows({
 // Room for the two rows; a shorter screen scrolls them.
 const SHEET_SNAPS = [0.42]
 
-export interface TypeFilterPanelProps
-	extends Pick<TypeFilterProps, "value" | "onChange" | "align"> {
+export interface TypeFilterPanelProps extends Pick<
+	TypeFilterProps,
+	"value" | "onChange" | "align"
+> {
 	/** Which of the two is open. */
 	shown: "sheet" | "popover" | null
 	onShown: (shown: "sheet" | "popover" | null) => void
@@ -181,9 +176,7 @@ export default function TypeFilterPanel({
 						label="Type"
 						snaps={SHEET_SNAPS}
 						header={
-							<h2 className="px-4 pb-3 text-base font-bold text-white">
-								Movies, shows, and anime
-							</h2>
+							<h2 className="px-4 pb-3 text-base font-bold text-white">Movies, shows, and anime</h2>
 						}
 					>
 						<div className="px-4 pt-1 pb-6">

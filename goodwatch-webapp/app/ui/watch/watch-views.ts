@@ -25,13 +25,10 @@ export interface WatchViewCounts {
 }
 
 const trim = (pathname: string) =>
-	pathname.length > 1 && pathname.endsWith("/")
-		? pathname.slice(0, -1)
-		: pathname
+	pathname.length > 1 && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname
 
 /** True on the Seen tab's page: /watch/seen. */
-export const onSeenTab = (pathname: string) =>
-	trim(pathname) === WATCH_PATHS.showsSeen
+export const onSeenTab = (pathname: string) => trim(pathname) === WATCH_PATHS.showsSeen
 
 /** The Watch tab a page belongs to: /watch/seen is the Seen tab. */
 export function watchTabOf(pathname: string): WatchTabKey | "seen" | null {
@@ -54,9 +51,7 @@ export function seenTab(pathname: string): AreaTab {
 /** Watch's first three tabs: on the Seen tab's page, none of them is current. */
 export function watchTabsFor(pathname: string): AreaTab[] {
 	const tabs = watchTabs(pathname)
-	return onSeenTab(pathname)
-		? tabs.map((tab) => ({ ...tab, here: false }))
-		: tabs
+	return onSeenTab(pathname) ? tabs.map((tab) => ({ ...tab, here: false })) : tabs
 }
 
 /** Up next's views: Next episodes, then the four statuses, with the page's view current. Null off Up next. */
@@ -66,9 +61,7 @@ export function upNextViews(
 	news?: AreaTab["news"],
 ): NavChoice[] | null {
 	if (watchTabOf(pathname) !== "up-next") return null
-	return (
-		watchChips(WATCH_PATHS.nextEpisodes, counts?.chips)?.choices ?? []
-	).map((choice) => ({
+	return (watchChips(WATCH_PATHS.nextEpisodes, counts?.chips)?.choices ?? []).map((choice) => ({
 		...choice,
 		here: choice.href === trim(pathname),
 		...(choice.key === "next-episodes" && news ? { news } : {}),
@@ -82,13 +75,11 @@ export function readyViews(
 	news?: AreaTab["news"],
 ): NavChoice[] | null {
 	if (watchTabOf(pathname) !== "ready") return null
-	return (watchChips(WATCH_PATHS.tonight, counts?.chips)?.choices ?? []).map(
-		(choice) => ({
-			...choice,
-			here: choice.href === trim(pathname),
-			...(choice.key === "tonight" && news ? { news } : {}),
-		}),
-	)
+	return (watchChips(WATCH_PATHS.tonight, counts?.chips)?.choices ?? []).map((choice) => ({
+		...choice,
+		here: choice.href === trim(pathname),
+		...(choice.key === "tonight" && news ? { news } : {}),
+	}))
 }
 
 /** The status pages All shows covers: every Up next view but Next episodes. */
@@ -109,9 +100,7 @@ export function upNextSplit(views: NavChoice[]): NavChoice[] {
 			label: "All shows",
 			href: ALL_SHOWS_PATH,
 			here: statuses.some((view) => view.here),
-			count: counted
-				? statuses.reduce((sum, view) => sum + (view.count ?? 0), 0)
-				: undefined,
+			count: counted ? statuses.reduce((sum, view) => sum + (view.count ?? 0), 0) : undefined,
 		},
 	]
 }
@@ -120,7 +109,7 @@ export function upNextSplit(views: NavChoice[]): NavChoice[] {
 export function seenKinds(
 	search: string,
 	counts?: WatchViewCounts | null,
-): NavChoice[] {
+): (NavChoice & { key: "all" | "movie" | "show" })[] {
 	const params = new URLSearchParams(search)
 	const type = params.get("type")
 	const here = type === "movie" || type === "show" ? type : "all"

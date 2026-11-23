@@ -1,3 +1,4 @@
+import { TitleKindControl } from "~/ui/title-kind/TitleKindControl"
 // A library list (#385): every title a member has marked under one status, on a page of its own (Watch's chips and
 // Seen pages, Taste's Not rated). The page's tabs and chips choose the list, so the body has no head and no status
 // choice of its own. A page can fix the kind (Seen shows, Start, Want to Watch) and the sort.
@@ -5,17 +6,9 @@
 // The controls: a movies/shows filter (unless the page fixes the kind), a search over the list, and a sort. A list is
 // drawn in steps of 60, also with 1,500 Seen titles. The choice lives in the URL (`/watch/seen?sort=score&q=alien`),
 // and each step is one read of /api/my-library.
-import {
-	ChevronRightIcon,
-	MagnifyingGlassIcon,
-	XMarkIcon,
-} from "@heroicons/react/20/solid"
+import { ChevronRightIcon, MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/20/solid"
 import { Link, useSearchParams } from "@remix-run/react"
-import {
-	keepPreviousData,
-	useInfiniteQuery,
-	useQueryClient,
-} from "@tanstack/react-query"
+import { keepPreviousData, useInfiniteQuery, useQueryClient } from "@tanstack/react-query"
 import {
 	type ReactNode,
 	Suspense,
@@ -28,7 +21,6 @@ import {
 } from "react"
 import {
 	type LibraryChoice,
-	type LibraryKind,
 	type LibrarySort,
 	type LibraryStatus,
 	SORT_HINT,
@@ -46,12 +38,7 @@ import type { LibraryListLoaded } from "~/server/library-list-route.server"
 import type { LibraryItem, LibraryPage } from "~/server/my-library.server"
 import type { Score } from "~/server/scores.server"
 import { SortControl } from "~/ui/filter-bar/controls"
-import {
-	RowLogos,
-	RowScores,
-	rowMark,
-	useRowMarks,
-} from "~/ui/list-row/RowScores"
+import { RowLogos, RowScores, rowMark, useRowMarks } from "~/ui/list-row/RowScores"
 import { Empty, Poster, WRAP } from "~/ui/my-pages/bits"
 import type { PillMark } from "~/ui/poster-card/pill-mark"
 import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
@@ -75,9 +62,7 @@ async function fetchLibrary(
 ): Promise<LibraryPage> {
 	const params = libraryParams(choice)
 	if (offset) params.set("offset", String(offset))
-	const response = await fetch(
-		mediaLanguageUrl(`/api/my-library?${params}`, language),
-	)
+	const response = await fetch(mediaLanguageUrl(`/api/my-library?${params}`, language))
 	if (!response.ok) throw new Error(`My library answered ${response.status}`)
 	return (await response.json()) as LibraryPage
 }
@@ -91,54 +76,15 @@ const titleHref = (item: LibraryItem) =>
 // ---------------------------------------------------------------------------------------------------------
 // The list's controls
 
-function KindFilter({
-	kind,
-	kinds,
-	onPick,
-}: {
-	kind: LibraryKind
-	kinds: LibraryPage["kinds"]
-	onPick: (kind: LibraryKind) => void
-}) {
-	const options: [LibraryKind, string][] = [
-		["all", "All"],
-		["movie", "Movies"],
-		["show", "Shows"],
-	]
-	return (
-		<div
-			role="tablist"
-			aria-label="Movies or shows"
-			className="inline-flex max-w-full gap-1 rounded-full bg-white/[0.06] p-1 ring-1 ring-white/10"
-			data-kind-filter
-		>
-			{options.map(([key, label]) => (
-				<button
-					key={key}
-					type="button"
-					role="tab"
-					aria-selected={kind === key}
-					data-kind={key}
-					onClick={() => onPick(key)}
-					className={`flex h-9 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-sm font-bold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${kind === key ? "bg-white text-black" : "text-gray-300 hover:bg-white/10"}`}
-				>
-					{label}
-					<span
-						className={`text-xs tabular-nums ${kind === key ? "text-black/60" : "text-gray-400"}`}
-					>
-						{count(kinds[key])}
-					</span>
-				</button>
-			))}
-		</div>
-	)
-}
-
 function SearchField({
 	q,
 	placeholder,
 	onChange,
-}: { q: string; placeholder: string; onChange: (q: string) => void }) {
+}: {
+	q: string
+	placeholder: string
+	onChange: (q: string) => void
+}) {
 	const [text, setText] = useState(q)
 	// The URL follows a moment after the typing, so each key doesn't ask the server.
 	useEffect(() => {
@@ -226,13 +172,7 @@ function ScoreKey({
 	score: number | null
 	onAsk: (item: LibraryItem) => void
 }) {
-	const pill = (
-		<RowScores
-			goodwatch={item.goodwatch}
-			score={score as Score | null}
-			mark={null}
-		/>
-	)
+	const pill = <RowScores goodwatch={item.goodwatch} score={score as Score | null} mark={null} />
 	return score !== null ? (
 		<button
 			type="button"
@@ -263,10 +203,7 @@ function ScoreKey({
 
 const Progress = ({ item }: { item: LibraryItem }) =>
 	item.airedEpisodes ? (
-		<span
-			className="block h-1.5 overflow-hidden rounded-full bg-white/10"
-			aria-hidden
-		>
+		<span className="block h-1.5 overflow-hidden rounded-full bg-white/10" aria-hidden>
 			<span
 				className="block h-full rounded-full bg-sky-400"
 				style={{
@@ -293,12 +230,9 @@ function Row({
 	onAsk: (item: LibraryItem) => void
 }) {
 	const show = item.mediaType === "show"
-	const inProgress =
-		status === "watching" || status === "on_hold" || status === "dropped"
+	const inProgress = status === "watching" || status === "on_hold" || status === "dropped"
 	const seen = status === "seen" || status === "unrated"
-	const kind = [show ? "Show" : "Movie", item.release_year]
-		.filter(Boolean)
-		.join(" · ")
+	const kind = [show ? "Show" : "Movie", item.release_year].filter(Boolean).join(" · ")
 	const episodes =
 		item.episodesWatched === null
 			? null
@@ -308,18 +242,12 @@ function Row({
 	// The fact the list's order goes by.
 	const watchedOn = item.state
 		? // A show's log rows are its episodes: only a movie says how often it was watched.
-			watchedWords(
-				{ watchedAt: item.watchedAt, count: show ? 1 : item.watches },
-				now,
-			)
+			watchedWords({ watchedAt: item.watchedAt, count: show ? 1 : item.watches }, now)
 		: watchedWords(null, now)
 	const fact =
 		status === "want"
 			? // A Seen title on the Wishlist is Want to rewatch: the list says so before when it was added.
-				[
-					item.state === "seen" ? "Rewatch" : "",
-					item.addedAt ? addedWords(item.addedAt, now) : "",
-				]
+				[item.state === "seen" ? "Rewatch" : "", item.addedAt ? addedWords(item.addedAt, now) : ""]
 					.filter(Boolean)
 					.join(" · ")
 			: // A show in progress says that the day is its last watch's.
@@ -332,8 +260,7 @@ function Row({
 		<span className="font-semibold text-sky-200">{newOn(item.newOn.name)}</span>
 	)
 	const logos =
-		item.newOn &&
-		!item.services?.some((service) => service.id === item.newOn?.id)
+		item.newOn && !item.services?.some((service) => service.id === item.newOn?.id)
 			? [
 					{
 						id: item.newOn.id,
@@ -344,19 +271,13 @@ function Row({
 				]
 			: item.services
 	return (
-		<li
-			className="flex items-center gap-2 border-b border-white/5"
-			data-item={item.key}
-		>
+		<li className="flex items-center gap-2 border-b border-white/5" data-item={item.key}>
 			<Link
 				to={titleHref(item)}
 				prefetch="intent"
 				className="group flex min-w-0 flex-1 items-center gap-3 py-2 hover:bg-white/[0.03]"
 			>
-				<Poster
-					path={item.poster_path}
-					className="h-[60px] w-10 shrink-0 rounded"
-				/>
+				<Poster path={item.poster_path} className="h-[60px] w-10 shrink-0 rounded" />
 				<span className="min-w-0 flex-1">
 					<b className="block truncate text-sm text-white group-hover:text-amber-200 md:text-base">
 						<span lang={mediaFieldLanguage(item)}>{item.title}</span>
@@ -372,10 +293,7 @@ function Row({
 							<Progress item={item} />
 						</span>
 					)}
-					<span
-						className="block truncate text-xs text-gray-400 sm:hidden"
-						data-fact
-					>
+					<span className="block truncate text-xs text-gray-400 sm:hidden" data-fact>
 						{fresh}
 						{fresh && fact && " · "}
 						{fact}
@@ -386,11 +304,7 @@ function Row({
 					<span className="block truncate">{fact}</span>
 				</span>
 				{!seen && (
-					<RowScores
-						goodwatch={item.goodwatch}
-						score={score as Score | null}
-						mark={mark}
-					/>
+					<RowScores goodwatch={item.goodwatch} score={score as Score | null} mark={mark} />
 				)}
 				{!seen && (
 					<ChevronRightIcon
@@ -410,19 +324,13 @@ const EMPTY: Record<LibraryStatus, [title: string, text: string]> = {
 		"Nothing Seen yet",
 		"A movie you mark as watched, a show you watch through, and every title you rate appears here.",
 	],
-	watching: [
-		"No show is Watching",
-		"The first episode you mark watched puts its show here.",
-	],
+	watching: ["No show is Watching", "The first episode you mark watched puts its show here."],
 	on_hold: ["No show is On hold", "A show you set aside waits here."],
 	dropped: [
 		"No show is Dropped",
 		"A show you gave up on stays here and out of your recommendations.",
 	],
-	unrated: [
-		"Everything Seen has a score",
-		"A title you have Seen and not rated appears here.",
-	],
+	unrated: ["Everything Seen has a score", "A title you have Seen and not rated appears here."],
 }
 
 // ---------------------------------------------------------------------------------------------------------
@@ -481,8 +389,7 @@ export function MyLibraryPage({
 
 	const result = useInfiniteQuery({
 		queryKey: [...libraryQueryKey, viewer, query, locale.language],
-		queryFn: ({ pageParam }) =>
-			fetchLibrary(choice, pageParam, locale.language),
+		queryFn: ({ pageParam }) => fetchLibrary(choice, pageParam, locale.language),
 		initialPageParam: 0,
 		getNextPageParam: (last) => last.next ?? undefined,
 		initialData:
@@ -511,11 +418,7 @@ export function MyLibraryPage({
 					const kept = new URLSearchParams(current)
 					for (const key of ["status", "sort", "type", "q"]) kept.delete(key)
 					for (const [key, value] of libraryParams(merged))
-						if (
-							key !== "status" &&
-							!(key === "type" && lockKind) &&
-							!(key === "sort" && lockSort)
-						)
+						if (key !== "status" && !(key === "type" && lockKind) && !(key === "sort" && lockSort))
 							kept.set(key, value)
 					return kept
 				},
@@ -528,14 +431,11 @@ export function MyLibraryPage({
 	// A score given here shows on its row at once; the lists and the counts are read again after it is stored.
 	const [asked, setAsked] = useState<LibraryItem | null>(null)
 	const [given, setGiven] = useState<Record<string, number | null>>({})
-	const scoreOf = (item: LibraryItem) =>
-		item.key in given ? given[item.key] : item.score
+	const scoreOf = (item: LibraryItem) => (item.key in given ? given[item.key] : item.score)
 	// The list's own status would be every row's icon: only a Want to See show says how far it got.
 	const marksOf = useRowMarks()
 	const markOf = (item: LibraryItem) =>
-		pageStatus === "want"
-			? rowMark(marksOf(item.mediaType, item.tmdbId), { want: true })
-			: null
+		pageStatus === "want" ? rowMark(marksOf(item.mediaType, item.tmdbId), { want: true }) : null
 	// The app's score mutation, as from every other page.
 	const { mutate: rate } = useScoreMutation()
 	const onRated = useCallback(
@@ -561,10 +461,8 @@ export function MyLibraryPage({
 	const closeBar = useCallback(() => setAsked(null), [])
 
 	const status = pageStatus
-	const showsOnly =
-		status === "watching" || status === "on_hold" || status === "dropped"
-	const waiting =
-		result.isPlaceholderData || (result.isFetching && !items.length)
+	const showsOnly = status === "watching" || status === "on_hold" || status === "dropped"
+	const waiting = result.isPlaceholderData || (result.isFetching && !items.length)
 	const [emptyTitle, emptyText] = EMPTY[status]
 	const listName = name ?? STATUS_LABEL[status]
 	return (
@@ -578,19 +476,15 @@ export function MyLibraryPage({
 				<div className="flex flex-wrap items-center gap-2" data-controls>
 					{filter}
 					{kindControl && !showsOnly && !lockKind && (
-						<KindFilter
-							kind={choice.kind}
-							kinds={first.kinds}
-							onPick={(kind) => setChoice({ kind })}
+						<TitleKindControl
+							value={choice.kind}
+							counts={first.kinds}
+							onChange={(kind) => setChoice({ kind })}
 						/>
 					)}
 					<SearchField
 						q={choice.q}
-						placeholder={
-							status === "seen"
-								? "Have I seen…?"
-								: `Search ${listName.toLowerCase()}`
-						}
+						placeholder={status === "seen" ? "Have I seen…?" : `Search ${listName.toLowerCase()}`}
 						onChange={setQuery}
 					/>
 					<span className="hidden grow sm:block" />
@@ -607,9 +501,7 @@ export function MyLibraryPage({
 						{count(first.total)} {first.total === 1 ? "title" : "titles"}
 						{first.q.trim() ? ` for "${first.q.trim()}"` : ""}
 					</span>
-					{status === "unrated" && (
-						<span>A score takes a title off this list.</span>
-					)}
+					{status === "unrated" && <span>A score takes a title off this list.</span>}
 				</p>
 				{result.isError && !result.data ? (
 					<p role="alert" className="text-sm text-gray-300">
@@ -623,10 +515,7 @@ export function MyLibraryPage({
 						</button>
 					</p>
 				) : items.length ? (
-					<ul
-						data-rows={status}
-						className={`transition-opacity ${waiting ? "opacity-60" : ""}`}
-					>
+					<ul data-rows={status} className={`transition-opacity ${waiting ? "opacity-60" : ""}`}>
 						{items.map((item) => (
 							<Row
 								key={item.key}
@@ -655,20 +544,13 @@ export function MyLibraryPage({
 						className="mt-2 h-11 cursor-pointer self-start rounded-lg bg-white/5 px-4 text-sm font-bold text-gray-300 hover:bg-white/10 disabled:opacity-60"
 					>
 						Show {count(Math.min(last.left, 60))} more{" "}
-						<span className="font-medium text-gray-500">
-							· {count(last.left)} left
-						</span>
+						<span className="font-medium text-gray-500">· {count(last.left)} left</span>
 					</button>
 				)}
 			</div>
 			{asked && (
 				<Suspense fallback={null}>
-					<RateBar
-						item={asked}
-						score={scoreOf(asked)}
-						onRated={onRated}
-						onClose={closeBar}
-					/>
+					<RateBar item={asked} score={scoreOf(asked)} onRated={onRated} onClose={closeBar} />
 				</Suspense>
 			)}
 		</div>
@@ -697,12 +579,7 @@ export function LibraryListBody({
 	if (!loaded.page || !loaded.viewer)
 		return (
 			<div className={`${WRAP} pb-24`} data-guest-page>
-				<SignUpPrompt
-					feature="watchNext"
-					words={guest}
-					size="card"
-					className="max-w-xl"
-				/>
+				<SignUpPrompt feature="watchNext" words={guest} size="card" className="max-w-xl" />
 			</div>
 		)
 	return (

@@ -1,3 +1,4 @@
+import { TitleKindControl } from "~/ui/title-kind/TitleKindControl"
 import { ratePath } from "~/domain/member-paths"
 import { usePathViewer } from "~/ui/navigation/NavigationContext"
 import useLocale from "~/utils/locale"
@@ -30,9 +31,7 @@ export default function ExploreBar({ current }: { current: CurrentTitle }) {
 	// Only the taste quiz stores titles to explore, and only a title from that list shows the bar, so a
 	// title page reached any other way (the living room's TV, search) never offers "Start exploring".
 	const pool = uniqueTitles(origin?.titles ?? [])
-	const genres = [
-		...new Set(pool.flatMap((title) => title.genres || [])),
-	].sort()
+	const genres = [...new Set(pool.flatMap((title) => title.genres || []))].sort()
 	const candidates = pool.filter(
 		(title) =>
 			(filters.type === "all" || title.media_type === filters.type) &&
@@ -48,14 +47,11 @@ export default function ExploreBar({ current }: { current: CurrentTitle }) {
 		})
 	}
 	const index = candidates.findIndex(
-		(title) =>
-			title.tmdb_id === current.tmdb_id &&
-			title.media_type === current.media_type,
+		(title) => title.tmdb_id === current.tmdb_id && title.media_type === current.media_type,
 	)
 	const previous = index > 0 ? candidates[index - 1] : undefined
 	const next = index >= 0 ? candidates[index + 1] : candidates[0]
-	const filtered =
-		filters.type !== "all" || filters.genre !== "" || filters.order !== "queue"
+	const filtered = filters.type !== "all" || filters.genre !== "" || filters.order !== "queue"
 	function update(nextFilters: ExploreFilters) {
 		setFilters(nextFilters)
 		rememberExploration({ filters: nextFilters })
@@ -69,16 +65,11 @@ export default function ExploreBar({ current }: { current: CurrentTitle }) {
 	const select =
 		"min-w-0 rounded-md border border-gray-600 bg-gray-800 px-2 py-1.5 text-sm text-gray-100 focus-visible:outline focus-visible:outline-cyan-300"
 	const fromQuiz = pool.some(
-		(title) =>
-			title.tmdb_id === current.tmdb_id &&
-			title.media_type === current.media_type,
+		(title) => title.tmdb_id === current.tmdb_id && title.media_type === current.media_type,
 	)
 	if (!fromQuiz) return null
 	return (
-		<nav
-			aria-label="Explore titles"
-			className="border-b border-cyan-400/20 bg-gray-900"
-		>
+		<nav aria-label="Explore titles" className="border-b border-cyan-400/20 bg-gray-900">
 			<div className="mx-auto max-w-7xl px-4 py-3 text-sm">
 				<div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
 					<Link
@@ -127,8 +118,7 @@ export default function ExploreBar({ current }: { current: CurrentTitle }) {
 							onClick={() => update(defaultExploreFilters)}
 						>
 							{pool.length - candidates.length} more{" "}
-							{pool.length - candidates.length === 1 ? "result" : "results"}{" "}
-							without filters
+							{pool.length - candidates.length === 1 ? "result" : "results"} without filters
 						</button>
 					)}
 					<button
@@ -143,36 +133,21 @@ export default function ExploreBar({ current }: { current: CurrentTitle }) {
 					</button>
 				</div>
 				{expanded && (
-					<div
-						id="explore-title-options"
-						className="mt-3 border-t border-gray-700/60 pt-3"
-					>
+					<div id="explore-title-options" className="mt-3 border-t border-gray-700/60 pt-3">
 						<div className="grid grid-cols-2 items-end gap-3 sm:flex sm:flex-wrap">
-							<label className="flex min-w-0 flex-col gap-1 text-xs text-gray-400">
-								Titles
-								<select
-									className={select}
+							<div className="col-span-2 flex flex-col items-start gap-1 text-xs text-gray-400">
+								<span>Titles</span>
+								<TitleKindControl
 									value={filters.type}
-									onChange={(event) =>
-										update({
-											...filters,
-											type: event.target.value as ExploreFilters["type"],
-										})
-									}
-								>
-									<option value="all">Movies & shows</option>
-									<option value="movie">Movies</option>
-									<option value="show">Shows</option>
-								</select>
-							</label>
+									onChange={(type) => update({ ...filters, type })}
+								/>
+							</div>
 							<label className="flex min-w-0 flex-col gap-1 text-xs text-gray-400">
 								Genre
 								<select
 									className={select}
 									value={filters.genre}
-									onChange={(event) =>
-										update({ ...filters, genre: event.target.value })
-									}
+									onChange={(event) => update({ ...filters, genre: event.target.value })}
 								>
 									<option value="">Any genre</option>
 									{genres.map((genre) => (
@@ -210,9 +185,8 @@ export default function ExploreBar({ current }: { current: CurrentTitle }) {
 							)}
 						</div>
 						<p className="mt-3 text-xs text-gray-400">
-							These controls narrow the {pool.length} titles in this
-							exploration. Your current title stays open until you choose
-							another.
+							These controls narrow the {pool.length} titles in this exploration. Your current title
+							stays open until you choose another.
 						</p>
 					</div>
 				)}

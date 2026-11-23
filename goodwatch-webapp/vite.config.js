@@ -246,6 +246,9 @@ const STYLE_SHEET = /\.css($|\?)/
 // rule names is pulled into the group, for every page that uses it. That is why the mutation hooks, which the home page
 // also loads, are a group of their own.
 const FEATURE_CHUNKS = [
+	// Home, title pages, Discover and Browse all import the format switch on their initial route.
+	// It uses only React and the router. Serve it in the existing shell request.
+	["shell", /\/app\/ui\/title-kind\/TitleKindControl\.tsx$/],
 	// The Discover form uses the request, filter and exact-match helpers together. Other search entry points share them.
 	[
 		"discover-query",

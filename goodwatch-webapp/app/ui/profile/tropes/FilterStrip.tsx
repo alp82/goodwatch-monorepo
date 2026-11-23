@@ -1,3 +1,4 @@
+import { TitleKindControl } from "~/ui/title-kind/TitleKindControl"
 // The Tropes tab's filters, drawn the way My movies draws its controls.
 // - From lg: one strip with Movies or shows, the genre picks as chips and a genre button whose dropdown holds the
 //   picture tiles, how many tropes, then era and score as selects and the shared SortControl.
@@ -7,11 +8,7 @@ import { ChevronDownIcon } from "@heroicons/react/20/solid"
 import { AnimatePresence, MotionConfig, motion } from "framer-motion"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
-import {
-	FilterGroup,
-	FilterSheet,
-	FilterSummaryRow,
-} from "~/ui/filter-bar/PhoneFilters"
+import { FilterGroup, FilterSheet, FilterSummaryRow } from "~/ui/filter-bar/PhoneFilters"
 import { SortControl } from "~/ui/filter-bar/controls"
 import { MENU } from "~/ui/filter-bar/motion"
 import { plural } from "~/ui/my-pages/bits"
@@ -22,37 +19,6 @@ import type { TropeFacets } from "./useTropeFacets"
 
 const PILL =
 	"inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-sm font-semibold ring-1 transition-colors"
-
-function TypePills({ m }: { m: TropeFacets }) {
-	return (
-		<div
-			role="radiogroup"
-			aria-label="Movies or shows"
-			className="flex shrink-0 rounded-full bg-white/[0.06] p-0.5 ring-1 ring-white/10"
-		>
-			{m.kindChoices.map((c) => (
-				<button
-					key={c.id}
-					type="button"
-					// biome-ignore lint/a11y/useSemanticElements: a segmented control
-					role="radio"
-					aria-checked={c.on}
-					onClick={c.toggle}
-					className={`relative h-8 cursor-pointer rounded-full px-3 text-sm font-semibold transition-colors ${c.on ? "text-gray-950" : "text-gray-300 hover:text-white"}`}
-				>
-					{c.on && (
-						<motion.span
-							layoutId="trope-kind"
-							transition={{ duration: 0.22, ease: EASE }}
-							className="absolute inset-0 rounded-full bg-white"
-						/>
-					)}
-					<span className="relative">{c.label}</span>
-				</button>
-			))}
-		</div>
-	)
-}
 
 /** My movies' "How long?" select, for era or score. */
 function FacetSelect({
@@ -79,11 +45,7 @@ function FacetSelect({
 				className="h-full cursor-pointer appearance-none bg-transparent pr-8 font-bold outline-none"
 			>
 				{options.map((o) => (
-					<option
-						key={o.value}
-						value={o.value}
-						className="bg-gray-900 text-gray-100"
-					>
+					<option key={o.value} value={o.value} className="bg-gray-900 text-gray-100">
 						{o.label}
 					</option>
 				))}
@@ -96,8 +58,7 @@ function FacetSelect({
 	)
 }
 
-const eraValue = (m: TropeFacets) =>
-	m.f.eras.length === 1 ? String(m.f.eras[0]) : ""
+const eraValue = (m: TropeFacets) => (m.f.eras.length === 1 ? String(m.f.eras[0]) : "")
 const eraOptions = (m: TropeFacets) => [
 	{ value: "", label: "Any era" },
 	...m.eraChoices.map((c) => ({ value: c.id.slice(1), label: c.label })),
@@ -154,8 +115,7 @@ function GenrePanel({
 		if (!open) return
 		const down = (e: PointerEvent) => {
 			const t = e.target as Node
-			if (!panel.current?.contains(t) && !button.current?.contains(t))
-				setOpen(false)
+			if (!panel.current?.contains(t) && !button.current?.contains(t)) setOpen(false)
 		}
 		const key = (e: KeyboardEvent) => {
 			if (e.key !== "Escape") return
@@ -192,12 +152,8 @@ function GenrePanel({
 					}}
 				>
 					<div className="flex min-h-11 shrink-0 items-center gap-3 border-b border-white/8 px-3 py-1">
-						<p className="min-w-0 flex-1 text-sm font-semibold text-white">
-							Genres
-						</p>
-						<span className="text-sm text-gray-400 tabular-nums">
-							{k} picked
-						</span>
+						<p className="min-w-0 flex-1 text-sm font-semibold text-white">Genres</p>
+						<span className="text-sm text-gray-400 tabular-nums">{k} picked</span>
 						{k > 0 && (
 							<button
 								type="button"
@@ -242,7 +198,7 @@ function DesktopStrip({ m }: { m: TropeFacets }) {
 			className="hidden min-h-14 items-center gap-2 rounded-2xl bg-black/45 p-2 ring-1 ring-white/10 lg:flex"
 		>
 			<div className="flex min-w-0 flex-1 items-center gap-1.5">
-				<TypePills m={m} />
+				<TitleKindControl value={m.f.kind} onChange={(kind) => m.set({ kind })} />
 				{genres.length > 0 && (
 					// biome-ignore lint/a11y/useSemanticElements: a fieldset can't scroll sideways as a flex row
 					<div
@@ -304,22 +260,14 @@ function DesktopStrip({ m }: { m: TropeFacets }) {
 					onChange={(sort) => m.set({ sort })}
 				/>
 			</div>
-			<GenrePanel
-				m={m}
-				open={open}
-				setOpen={setOpen}
-				anchor={anchor}
-				button={button}
-			/>
+			<GenrePanel m={m} open={open} setOpen={setOpen} anchor={anchor} button={button} />
 		</div>
 	)
 }
 
 function Count({ m, className = "" }: { m: TropeFacets; className?: string }) {
 	return (
-		<span
-			className={`whitespace-nowrap text-sm text-gray-400 tabular-nums ${className}`}
-		>
+		<span className={`whitespace-nowrap text-sm text-gray-400 tabular-nums ${className}`}>
 			<motion.span
 				key={m.total}
 				initial={{ opacity: 0.4 }}
@@ -359,29 +307,12 @@ function PhoneSlab({ m }: { m: TropeFacets }) {
 				show={n ? `Show ${plural(n, "trope")}` : "Done"}
 			>
 				<FilterGroup title="Movies or shows">
-					<div
-						role="radiogroup"
-						aria-label="Movies or shows"
-						className="grid grid-cols-3 gap-2 px-4 pb-4"
-					>
-						{m.kindChoices.map((c) => (
-							<button
-								key={c.id}
-								type="button"
-								// biome-ignore lint/a11y/useSemanticElements: a tile grid, as My movies' drawers
-								role="radio"
-								aria-checked={c.on}
-								onClick={c.toggle}
-								className={RADIO_TILE(c.on)}
-							>
-								{c.label}
-								<span
-									className={`text-[11px] font-semibold tabular-nums ${c.on ? "text-black/60" : "text-gray-400"}`}
-								>
-									{c.count === 1 ? "1 title" : `${c.count} titles`}
-								</span>
-							</button>
-						))}
+					<div className="px-4 pb-4">
+						<TitleKindControl
+							value={m.f.kind}
+							onChange={(kind) => m.set({ kind })}
+							counts={Object.fromEntries(m.kindChoices.map((c) => [c.id, c.count]))}
+						/>
 					</div>
 				</FilterGroup>
 				<FilterGroup title="Genres">
@@ -405,11 +336,7 @@ function PhoneSlab({ m }: { m: TropeFacets }) {
 							<h3 className="mb-2 text-sm font-bold text-white">
 								{m.owner ? "Your score" : "Their score"}
 							</h3>
-							<div
-								role="radiogroup"
-								aria-label="Score"
-								className="grid grid-cols-2 gap-2"
-							>
+							<div role="radiogroup" aria-label="Score" className="grid grid-cols-2 gap-2">
 								{m.minChoices.map((c) => (
 									<button
 										key={c.id}
@@ -433,11 +360,7 @@ function PhoneSlab({ m }: { m: TropeFacets }) {
 					</div>
 				</section>
 				<FilterGroup title="Sort">
-					<div
-						role="radiogroup"
-						aria-label="Sort"
-						className="grid grid-cols-2 gap-2 px-4 pb-4"
-					>
+					<div role="radiogroup" aria-label="Sort" className="grid grid-cols-2 gap-2 px-4 pb-4">
 						{SORTS.map((s) => {
 							const on = s.key === m.f.sort
 							return (

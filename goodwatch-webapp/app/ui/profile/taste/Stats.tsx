@@ -1,14 +1,11 @@
+import { TitleKindControl } from "~/ui/title-kind/TitleKindControl"
 // The Stats tab's numbers: top genres as one ribbon, the people they keep coming back to, eras and favorite classics,
 // where it comes from, fun facts, and how they score against the crowd (not another score
 // histogram: the Scores tab has that). Country and language names come from the loader, so server and browser agree.
 import { Link } from "@remix-run/react"
 import { useState } from "react"
 import { genreColor, movieGenre } from "~/domain/genre-colors"
-import {
-	DECADE_TITLES,
-	type TastePerson as Person,
-	type TasteStats,
-} from "~/domain/profile-taste"
+import { DECADE_TITLES, type TastePerson as Person, type TasteStats } from "~/domain/profile-taste"
 import { PosterImg, count, posterUrl, vibe } from "../parts"
 import { type Kind, flag, money, pct, signed, useTaste } from "./model"
 import { PANEL, Pills, SectionHead, TastePoster } from "./parts"
@@ -31,8 +28,7 @@ const slug = (s: string) =>
 		.toLowerCase()
 		.replace(/[^a-z0-9]+/g, "-")
 		.replace(/^-|-$/g, "")
-const personHref = (p: { id: number; name: string }) =>
-	`/person/${p.id}-${slug(p.name)}`
+const personHref = (p: { id: number; name: string }) => `/person/${p.id}-${slug(p.name)}`
 
 // ---------- Genres ----------
 
@@ -47,9 +43,7 @@ export function Genres() {
 	const rows = mergeTvGenres(stats.genres)
 		.map((g) => ({ ...g, n: kind === "all" ? g.count : (g.kinds[kind] ?? 0) }))
 		.filter((g) => g.n > 0)
-		.sort((a, b) =>
-			by === "titles" ? b.n - a.n : (b.average ?? 0) - (a.average ?? 0),
-		)
+		.sort((a, b) => (by === "titles" ? b.n - a.n : (b.average ?? 0) - (a.average ?? 0)))
 		.slice(0, 10)
 	const total = rows.reduce((s, g) => s + g.n, 0)
 	const top = [...rows].sort((a, b) => b.n - a.n)
@@ -62,16 +56,7 @@ export function Genres() {
 				sub={`Most ${top[0]?.name ?? ""}, least ${top.at(-1)?.name ?? ""} of the top ten. A title counts for each of its genres.`}
 				right={
 					<div className="flex flex-wrap gap-2">
-						<Pills
-							label="Kind"
-							value={kind}
-							onChange={setKind}
-							options={[
-								{ value: "all", label: "All" },
-								{ value: "movie", label: "Movies" },
-								{ value: "show", label: "Shows" },
-							]}
-						/>
+						<TitleKindControl value={kind} onChange={setKind} />
 						{scored && (
 							<Pills
 								label="Order"
@@ -182,9 +167,7 @@ function GenreRibbon({ rows, total }: { rows: RibbonRow[]; total: number }) {
 								className="size-3 shrink-0 rounded-sm"
 								style={{ background: genreColor(g.name) }}
 							/>
-							<span className="min-w-0 flex-1 truncate font-semibold text-gray-200">
-								{g.name}
-							</span>
+							<span className="min-w-0 flex-1 truncate font-semibold text-gray-200">{g.name}</span>
 							<span className="text-xs text-gray-500 tabular-nums">{g.n}</span>
 							{g.average != null && (
 								<span
@@ -215,9 +198,7 @@ function mergeTvGenres(genres: GenreRow[]): GenreRow[] {
 		const count = known.count + g.count
 		const average =
 			known.average != null && g.average != null
-				? Math.round(
-						((known.average * known.count + g.average * g.count) / count) * 10,
-					) / 10
+				? Math.round(((known.average * known.count + g.average * g.count) / count) * 10) / 10
 				: (known.average ?? g.average)
 		const kinds = { ...known.kinds }
 		for (const [k, v] of Object.entries(g.kinds))
@@ -238,9 +219,7 @@ export function People() {
 	// Best rated needs the owner's scores and directors with three rated films; without it, Most watched is the list.
 	const rankable = people.bestDirectors.length > 0
 	const by = rankable ? byChoice : "watched"
-	const shown = rankable
-		? (["rated", "watched"] as const)
-		: (["watched"] as const)
+	const shown = rankable ? (["rated", "watched"] as const) : (["watched"] as const)
 	if (!lists[by].length && !people.actors.length) return null
 	return (
 		<section aria-labelledby="people" className="flex flex-col gap-5">
@@ -294,9 +273,7 @@ export function People() {
 								<span className="mt-1.5 block truncate text-xs font-semibold text-gray-200 group-hover:text-white">
 									{p.name}
 								</span>
-								<span className="block text-[11px] text-gray-500">
-									{p.count} titles
-								</span>
+								<span className="block text-[11px] text-gray-500">{p.count} titles</span>
 							</Link>
 						</li>
 					))}
@@ -309,7 +286,10 @@ export function People() {
 function Directors({
 	directors,
 	people,
-}: { directors: Person[]; people: NamedTasteStats["people"] }) {
+}: {
+	directors: Person[]
+	people: NamedTasteStats["people"]
+}) {
 	return (
 		<div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
 			<ol className="grid gap-4 sm:grid-cols-2">
@@ -351,9 +331,7 @@ function Directors({
 								{String(i + 5).padStart(2, "0")}
 							</span>
 							<span className="block w-7 shrink-0">
-								{p.titles[0] && (
-									<PosterImg title={p.titles[0]} className="rounded-sm" />
-								)}
+								{p.titles[0] && <PosterImg title={p.titles[0]} className="rounded-sm" />}
 							</span>
 							<Link
 								to={personHref(p)}
@@ -372,16 +350,10 @@ function Directors({
 	)
 }
 
-function Compact({
-	title,
-	people,
-	unit,
-}: { title: string; people: Person[]; unit: string }) {
+function Compact({ title, people, unit }: { title: string; people: Person[]; unit: string }) {
 	return (
 		<div className="mt-4">
-			<p className="mb-1 text-xs font-bold tracking-[0.16em] text-gray-500 uppercase">
-				{title}
-			</p>
+			<p className="mb-1 text-xs font-bold tracking-[0.16em] text-gray-500 uppercase">{title}</p>
 			<ul className="flex flex-col gap-0.5 text-sm">
 				{people.slice(0, 3).map((p, i, shown) => (
 					<li key={p.id} className="flex gap-2">
@@ -426,11 +398,7 @@ export function Eras() {
 			/>
 			<div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
 				<div className={`${PANEL} flex flex-col p-4 sm:p-5`}>
-					<div
-						className="flex h-52 items-stretch gap-1.5"
-						role="group"
-						aria-label="Decades"
-					>
+					<div className="flex h-52 items-stretch gap-1.5" role="group" aria-label="Decades">
 						{d.map((x) => {
 							const on = x.decade === decade
 							return (
@@ -482,10 +450,7 @@ export function Eras() {
 						{Array.from({ length: DECADE_TITLES }, (_, i) => {
 							const t = titles[i]
 							return (
-								<li
-									key={t?.key ?? `empty-${i}`}
-									className={i >= 8 ? "max-sm:hidden" : ""}
-								>
+								<li key={t?.key ?? `empty-${i}`} className={i >= 8 ? "max-sm:hidden" : ""}>
 									{t ? (
 										<TastePoster title={t} sizes={DECADE_SIZES} />
 									) : (
@@ -512,9 +477,7 @@ export function World() {
 		<section aria-labelledby="world" className="flex flex-col gap-5">
 			<SectionHead
 				id="world"
-				lead={
-					owner ? "Your watching, around the" : "Their watching, around the"
-				}
+				lead={owner ? "Your watching, around the" : "Their watching, around the"}
 				accent="world"
 				sub={`Production countries: ${w.totalCountries} in all. A co-production counts for each country.`}
 			/>
@@ -529,9 +492,7 @@ export function World() {
 								<span aria-hidden>{flag(first.code)} </span>
 								{first.name}
 							</span>
-							<span className="text-3xl font-black tabular-nums">
-								{pct(first.share)}
-							</span>
+							<span className="text-3xl font-black tabular-nums">{pct(first.share)}</span>
 						</div>
 					)}
 					{rest.slice(0, 5).map((c) => (
@@ -544,9 +505,7 @@ export function World() {
 							<span aria-hidden className="text-lg">
 								{flag(c.code)}
 							</span>
-							<span className="text-[11px] font-bold tabular-nums">
-								{pct(c.share)}
-							</span>
+							<span className="text-[11px] font-bold tabular-nums">{pct(c.share)}</span>
 						</div>
 					))}
 				</div>
@@ -588,9 +547,7 @@ export function Facts() {
 	if (!stats?.facts) return null
 	const f = stats.facts
 	const hm = (minutes: number) =>
-		minutes >= 60
-			? `${Math.floor(minutes / 60)} h ${minutes % 60} min`
-			: `${minutes} min`
+		minutes >= 60 ? `${Math.floor(minutes / 60)} h ${minutes % 60} min` : `${minutes} min`
 	const facts = [
 		f.longest?.minutes && {
 			t: f.longest,
@@ -628,44 +585,30 @@ export function Facts() {
 						<p className="text-xs font-bold tracking-[0.16em] text-gray-500 uppercase">
 							Movie budgets
 						</p>
-						<p className="mt-1 text-4xl font-black text-white tabular-nums">
-							{money(f.budget)}
-						</p>
+						<p className="mt-1 text-4xl font-black text-white tabular-nums">{money(f.budget)}</p>
 						<p className="text-sm text-gray-400">
-							spent by studios on the movies {owner ? "you've" : "they've"}{" "}
-							seen.
+							spent by studios on the movies {owner ? "you've" : "they've"} seen.
 							{f.revenue > 0 && ` They earned ${money(f.revenue)}.`}
 						</p>
 						{f.averageRuntime != null && (
 							<p className="mt-4 text-sm text-gray-400">
-								Average movie:{" "}
-								<b className="text-white">{f.averageRuntime} min</b>
+								Average movie: <b className="text-white">{f.averageRuntime} min</b>
 							</p>
 						)}
 					</div>
 				)}
 				<ul className="grid grid-cols-2 gap-3 sm:grid-cols-5">
 					{facts.map((x) => (
-						<li
-							key={x.label}
-							className={`${PANEL} flex min-w-0 flex-col gap-2 p-3`}
-						>
+						<li key={x.label} className={`${PANEL} flex min-w-0 flex-col gap-2 p-3`}>
 							<span className="text-[11px] font-bold tracking-wider text-gray-500 uppercase">
 								{x.label}
 							</span>
-							<span className="text-xl font-black text-white tabular-nums">
-								{x.value}
-							</span>
-							<Link
-								to={x.t.href}
-								className="mt-auto flex min-w-0 items-center gap-2"
-							>
+							<span className="text-xl font-black text-white tabular-nums">{x.value}</span>
+							<Link to={x.t.href} className="mt-auto flex min-w-0 items-center gap-2">
 								<span className="block w-8 shrink-0">
 									<PosterImg title={x.t} className="rounded-sm" />
 								</span>
-								<span className="truncate text-xs font-semibold text-gray-300">
-									{x.t.title}
-								</span>
+								<span className="truncate text-xs font-semibold text-gray-300">{x.t.title}</span>
 							</Link>
 						</li>
 					))}
@@ -715,15 +658,8 @@ export function RatingStyle() {
 						</span>
 					</div>
 					<div className="relative mt-8 mb-2 h-2 rounded-full bg-white/[0.08]">
-						<Marker
-							at={pos(s.crowdAverage)}
-							label={`Everyone ${s.crowdAverage}`}
-							below
-						/>
-						<Marker
-							at={pos(s.average)}
-							label={`${owner ? "You" : "They"} ${s.average}`}
-						/>
+						<Marker at={pos(s.crowdAverage)} label={`Everyone ${s.crowdAverage}`} below />
+						<Marker at={pos(s.average)} label={`${owner ? "You" : "They"} ${s.average}`} />
 					</div>
 					<div className="mt-7 flex justify-between text-[10px] font-bold text-gray-600">
 						<span>1</span>
@@ -731,18 +667,11 @@ export function RatingStyle() {
 					</div>
 					{compare && compare.yourUsual != null && (
 						<p className="mt-4 flex items-center gap-2 rounded-lg bg-sky-400/[0.07] px-3 py-2 text-sm text-sky-100 ring-1 ring-sky-400/25">
-							<span
-								aria-hidden
-								className="size-2.5 shrink-0 rounded-full bg-sky-400"
-							/>
+							<span aria-hidden className="size-2.5 shrink-0 rounded-full bg-sky-400" />
 							<span>
-								Your usual is <b>{compare.yourUsual}</b>. On the {shared.length}{" "}
-								titles you both rated, you score{" "}
-								<b>
-									{Math.abs(gapToThem) < 0.1
-										? "the same"
-										: `${signed(gapToThem)} points`}
-								</b>{" "}
+								Your usual is <b>{compare.yourUsual}</b>. On the {shared.length} titles you both
+								rated, you score{" "}
+								<b>{Math.abs(gapToThem) < 0.1 ? "the same" : `${signed(gapToThem)} points`}</b>{" "}
 								against them.
 							</span>
 						</p>
@@ -750,11 +679,7 @@ export function RatingStyle() {
 					<dl className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
 						<Mini label="Scored 8 or more" value={pct(s.share8)} />
 						{s.kindest && (
-							<Mini
-								label="Kindest genre"
-								value={s.kindest.genre}
-								sub={String(s.kindest.average)}
-							/>
+							<Mini label="Kindest genre" value={s.kindest.genre} sub={String(s.kindest.average)} />
 						)}
 						{s.harshest && (
 							<Mini
@@ -778,10 +703,7 @@ export function RatingStyle() {
 						{kinds.map((k) => {
 							const v = s.byKind[k] as number
 							return (
-								<li
-									key={k}
-									className="grid grid-cols-[4rem_1fr_2rem] items-center gap-2 text-sm"
-								>
+								<li key={k} className="grid grid-cols-[4rem_1fr_2rem] items-center gap-2 text-sm">
 									<span className="text-gray-300">{KIND[k]}</span>
 									<span className="h-2 rounded-full bg-white/[0.06]">
 										<span
@@ -789,9 +711,7 @@ export function RatingStyle() {
 											style={{ width: pos(v), background: vibe(v) }}
 										/>
 									</span>
-									<span className="text-right font-bold text-white tabular-nums">
-										{v}
-									</span>
+									<span className="text-right font-bold text-white tabular-nums">{v}</span>
 								</li>
 							)
 						})}
@@ -802,16 +722,9 @@ export function RatingStyle() {
 	)
 }
 
-function Marker({
-	at,
-	label,
-	below = false,
-}: { at: string; label: string; below?: boolean }) {
+function Marker({ at, label, below = false }: { at: string; label: string; below?: boolean }) {
 	return (
-		<span
-			className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2"
-			style={{ left: at }}
-		>
+		<span className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ left: at }}>
 			<span
 				className={`block size-4 rounded-full ring-2 ring-gray-950 ${below ? "bg-gray-300" : "bg-amber-400"}`}
 			/>
@@ -824,19 +737,12 @@ function Marker({
 	)
 }
 
-function Mini({
-	label,
-	value,
-	sub,
-}: { label: string; value: string; sub?: string }) {
+function Mini({ label, value, sub }: { label: string; value: string; sub?: string }) {
 	return (
 		<div className="min-w-0">
 			<dt className="text-[11px] text-gray-500">{label}</dt>
 			<dd className="truncate font-bold text-white">
-				{value}{" "}
-				{sub && (
-					<span className="text-xs font-normal text-gray-500">{sub}</span>
-				)}
+				{value} {sub && <span className="text-xs font-normal text-gray-500">{sub}</span>}
 			</dd>
 		</div>
 	)

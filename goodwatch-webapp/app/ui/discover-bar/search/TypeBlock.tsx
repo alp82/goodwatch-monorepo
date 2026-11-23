@@ -1,7 +1,8 @@
+import { TitleKindControl } from "~/ui/title-kind/TitleKindControl"
 // Movies or shows with the anime switch under it, as the sheet's type card has them, with live counts on the options
 // not chosen. The counts hide in place while they are stale, so no old count shows and nothing moves.
 import { Segmented } from "~/ui/filter-bar/SheetControls"
-import { ANIME_LABELS, TYPE_LABELS } from "~/ui/filter-bar/labels"
+import { ANIME_LABELS } from "~/ui/filter-bar/labels"
 import type { FilterBarCounts } from "~/ui/filter-bar/types"
 import type { FilterStateBinding } from "~/ui/filter-bar/useFilterState"
 
@@ -23,16 +24,15 @@ export function TypeBlock({
 	return (
 		<div className={`flex flex-col gap-2 ${className}`}>
 			<div className="flex">
-				<Segmented
-					label="Movies or shows"
-					pending={!fresh}
+				<TitleKindControl
 					value={state.type}
 					onChange={(type) => filters.set({ type })}
-					options={(["all", "movie", "show"] as const).map((id) => ({
-						id,
-						label: id === "all" ? "Both" : TYPE_LABELS[id],
-						count: count("type", id),
-					}))}
+					counts={{
+						all: count("type", "all"),
+						movie: count("type", "movie"),
+						show: count("type", "show"),
+					}}
+					pending={!fresh}
 				/>
 			</div>
 			<div className="flex">

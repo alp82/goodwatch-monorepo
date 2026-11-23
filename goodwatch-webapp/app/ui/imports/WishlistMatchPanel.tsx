@@ -1,3 +1,4 @@
+import { TitleKindControl } from "~/ui/title-kind/TitleKindControl"
 // Reviewing a wishlist preview's entries, loaded on first use. The server groups the entries and lists the ones a
 // member can match. For the entries shown, GoodWatch suggests a title when the file's Netflix ID matches one; the
 // member accepts a suggestion, one by one or all shown at once, or searches the GoodWatch catalog and picks the title.
@@ -32,13 +33,7 @@ import {
 	tvtimeSuggestionEvidence,
 	tvtimeSuggestionNote,
 } from "./TvTimeMatchCopy"
-import {
-	errorBox,
-	formatCount,
-	primaryButton,
-	secondaryButton,
-	textLink,
-} from "./shared"
+import { errorBox, formatCount, primaryButton, secondaryButton, textLink } from "./shared"
 
 /** A title shown as a match: the member's pending pick, or the one the preview already holds. */
 export type MatchTitle = WishlistMatchCandidate
@@ -54,10 +49,8 @@ const MAX_CANDIDATES = 20
 const MAX_EXCEPTION_LINKS = 10
 const POSTER_WIDTH = 46
 
-const typeName = (mediaType: MatchTitle["mediaType"]) =>
-	mediaType === "show" ? "Show" : "Movie"
-const describe = (title: MatchTitle) =>
-	`${title.title}${title.year ? ` (${title.year})` : ""}`
+const typeName = (mediaType: MatchTitle["mediaType"]) => (mediaType === "show" ? "Show" : "Movie")
+const describe = (title: MatchTitle) => `${title.title}${title.year ? ` (${title.year})` : ""}`
 const sameTitle = (a: MatchTitle | null, b: MatchTitle | null) =>
 	a?.mediaType === b?.mediaType && a?.tmdbId === b?.tmdbId
 const titleKey = (title: MatchTitle) => `${title.mediaType}:${title.tmdbId}`
@@ -65,19 +58,16 @@ const titleKey = (title: MatchTitle) => `${title.mediaType}:${title.tmdbId}`
 /** The file's title for an entry, never the chosen catalog title. */
 export const fileTitle = (group: WishlistMatchGroup) =>
 	(group.item.wishlistOriginal?.title ?? group.item.title).trim()
-const entryName = (group: WishlistMatchGroup) =>
-	fileTitle(group) || "This entry"
+const entryName = (group: WishlistMatchGroup) => fileTitle(group) || "This entry"
 const evidenceOf = (group: WishlistMatchGroup) =>
 	group.item.wishlistOriginal?.wishlistEvidence ?? group.item.wishlistEvidence
 /** An entry the server lets the member match to a movie only, such as a movie named in TV Time's own export. */
 const movieOnly = (group: WishlistMatchGroup) =>
-	group.allowedMediaTypes?.length === 1 &&
-	group.allowedMediaTypes[0] === "movie"
+	group.allowedMediaTypes?.length === 1 && group.allowedMediaTypes[0] === "movie"
 /** The source's release date for an entry, as a calendar day, when it has one. */
 const releaseDateOf = (group: WishlistMatchGroup) =>
 	tvtimeReleaseDate(
-		group.item.wishlistOriginal?.tvtimeMovie?.releaseDate ??
-			group.evidenceVariants[0]?.releaseDate,
+		group.item.wishlistOriginal?.tvtimeMovie?.releaseDate ?? group.evidenceVariants[0]?.releaseDate,
 	)
 const SOURCE_NAMES: Record<string, string> = { tvtime: "TV Time" }
 
@@ -106,15 +96,12 @@ const httpsHost = (url: string | undefined) => {
 }
 
 const isRestart = (error: ImportRequestError | null) =>
-	!!error?.code &&
-	(WISHLIST_MATCH_RESTART_CODES as readonly string[]).includes(error.code)
+	!!error?.code && (WISHLIST_MATCH_RESTART_CODES as readonly string[]).includes(error.code)
 
 type Focus = { index: number; on: "toggle" | "search" | "accept" } | null
 
 /** The suggestion as a title the member can accept. */
-const suggestedTitle = (
-	suggestion: WishlistRowSuggestion | undefined,
-): MatchTitle | null =>
+const suggestedTitle = (suggestion: WishlistRowSuggestion | undefined): MatchTitle | null =>
 	suggestion?.state === "suggested" ? { ...suggestion.proposal } : null
 
 export default function WishlistMatchPanel({
@@ -151,9 +138,7 @@ export default function WishlistMatchPanel({
 	/** Takes back an entry's pending change. Returns false while locked. */
 	onRevert: (group: WishlistMatchGroup) => boolean
 	/** Accepts all the given suggestions as one change, or none: while locked, or past the per-update limit. */
-	onAcceptAll: (
-		accepted: readonly { group: WishlistMatchGroup; title: MatchTitle }[],
-	) => boolean
+	onAcceptAll: (accepted: readonly { group: WishlistMatchGroup; title: MatchTitle }[]) => boolean
 	/** Takes back the bulk accepts not changed since, and returns how many. */
 	onUndoAccepted: () => number
 	/** How many bulk accepts are still pending as accepted. */
@@ -179,10 +164,7 @@ export default function WishlistMatchPanel({
 	const groups = [
 		...loaded,
 		...extras.filter(
-			(extra) =>
-				!loaded.some(
-					(group) => group.representativeIndex === extra.representativeIndex,
-				),
+			(extra) => !loaded.some((group) => group.representativeIndex === extra.representativeIndex),
 		),
 	]
 	// The row a Change asked for while the server finds its entry.
@@ -217,9 +199,7 @@ export default function WishlistMatchPanel({
 	useEffect(() => {
 		if (!found) return
 		setExtras((current) =>
-			current.some(
-				(group) => group.representativeIndex === found.representativeIndex,
-			)
+			current.some((group) => group.representativeIndex === found.representativeIndex)
 				? current
 				: [...current, found],
 		)
@@ -260,24 +240,18 @@ export default function WishlistMatchPanel({
 	const fullId = `${id}-full`
 	const bulkFullId = `${id}-bulk-full`
 	const suggestionOf = (group: WishlistMatchGroup) =>
-		savedMatch(group)
-			? undefined
-			: suggestions.rows.get(group.representativeIndex)
+		savedMatch(group) ? undefined : suggestions.rows.get(group.representativeIndex)
 	const isAccepted = (group: WishlistMatchGroup) => {
 		const suggested = suggestedTitle(suggestionOf(group))
 		const pending = draft.get(group.representativeIndex)
 		return !!suggested && !!pending && sameTitle(suggested, pending)
 	}
 	const acceptedCount = groups.filter(isAccepted).length
-	const suggestedCount = groups.filter(
-		(group) => suggestionOf(group)?.state === "suggested",
-	).length
+	const suggestedCount = groups.filter((group) => suggestionOf(group)?.state === "suggested").length
 	// Bulk accept covers suggestions shown that the member hasn't accepted, changed, or chosen yet.
 	const acceptable = groups.flatMap((group) => {
 		const title = suggestedTitle(suggestionOf(group))
-		return title && !draft.has(group.representativeIndex)
-			? [{ group, title }]
-			: []
+		return title && !draft.has(group.representativeIndex) ? [{ group, title }] : []
 	})
 	const changedByMember = groups.filter(
 		(group) =>
@@ -286,22 +260,17 @@ export default function WishlistMatchPanel({
 			!isAccepted(group),
 	).length
 	const bulkTooMany =
-		acceptable.length > 0 &&
-		draft.size + acceptable.length > WISHLIST_MATCH_MAX_CHANGES
+		acceptable.length > 0 && draft.size + acceptable.length > WISHLIST_MATCH_MAX_CHANGES
 	const unchecked = groups.filter((group) =>
 		["failed", "unavailable"].includes(suggestionOf(group)?.state ?? ""),
 	).length
 	// The few entries GoodWatch had no suggestion for, named above a long list of suggestions so they're easy to reach.
 	// A long list of them is the list itself, so the shortcut shows only beside suggestions and up to a handful.
 	const exceptions = groups.filter(
-		(group) =>
-			suggestionOf(group)?.state === "manual" &&
-			!draft.has(group.representativeIndex),
+		(group) => suggestionOf(group)?.state === "manual" && !draft.has(group.representativeIndex),
 	)
 	const showExceptions =
-		suggestedCount > 0 &&
-		exceptions.length > 0 &&
-		exceptions.length <= MAX_EXCEPTION_LINKS
+		suggestedCount > 0 && exceptions.length > 0 && exceptions.length <= MAX_EXCEPTION_LINKS
 	useEffect(() => {
 		if (wasLoading.current && !suggestions.loading && suggestedCount > 0)
 			setSaid(
@@ -334,11 +303,7 @@ export default function WishlistMatchPanel({
 
 	return (
 		<div className="flex flex-col gap-4 rounded-lg border border-slate-700 bg-slate-900/60 p-4">
-			<h4
-				ref={headingRef}
-				tabIndex={-1}
-				className="font-semibold text-gray-100 outline-none"
-			>
+			<h4 ref={headingRef} tabIndex={-1} className="font-semibold text-gray-100 outline-none">
 				Review matches
 			</h4>
 			{note && <p className="text-sm text-gray-300">{note}</p>}
@@ -355,20 +320,14 @@ export default function WishlistMatchPanel({
 					<p className={errorBox}>{query.error.message}</p>
 					<div className="flex flex-wrap gap-3">
 						{isRestart(query.error as ImportRequestError) ? (
-							<button
-								type="button"
-								className={secondaryButton}
-								onClick={onBack}
-							>
+							<button type="button" className={secondaryButton} onClick={onBack}>
 								Choose the file again
 							</button>
 						) : (
 							<button
 								type="button"
 								className={secondaryButton}
-								onClick={() =>
-									groups.length ? query.fetchNextPage() : query.refetch()
-								}
+								onClick={() => (groups.length ? query.fetchNextPage() : query.refetch())}
 							>
 								Try again
 							</button>
@@ -386,19 +345,11 @@ export default function WishlistMatchPanel({
 					<div className="space-y-3">
 						<p className={errorBox}>{entry.error.message}</p>
 						{isRestart(entry.error as ImportRequestError) ? (
-							<button
-								type="button"
-								className={secondaryButton}
-								onClick={onBack}
-							>
+							<button type="button" className={secondaryButton} onClick={onBack}>
 								Choose the file again
 							</button>
 						) : (
-							<button
-								type="button"
-								className={secondaryButton}
-								onClick={() => entry.refetch()}
-							>
+							<button type="button" className={secondaryButton} onClick={() => entry.refetch()}>
 								Try again
 							</button>
 						)}
@@ -408,8 +359,7 @@ export default function WishlistMatchPanel({
 			{query.isSuccess && groups.length === 0 && lookup === null && (
 				<div className="space-y-3">
 					<p className="text-gray-300">
-						There's nothing to match in this preview. To start over, choose the
-						file again.
+						There's nothing to match in this preview. To start over, choose the file again.
 					</p>
 					<button type="button" className={secondaryButton} onClick={onBack}>
 						Choose the file again
@@ -476,8 +426,8 @@ export default function WishlistMatchPanel({
 			{tvtimeBulkAccept && snapshot?.token && snapshot.eligibleCount > 0 && (
 				<div className="flex flex-col gap-2">
 					<p className="text-sm text-gray-300">
-						Review the suggestions before accepting them. Nothing is imported
-						until you start the import.
+						Review the suggestions before accepting them. Nothing is imported until you start the
+						import.
 					</p>
 					<button
 						type="button"
@@ -490,8 +440,7 @@ export default function WishlistMatchPanel({
 					</button>
 					{draft.size > 0 && (
 						<p className="text-sm text-gray-300">
-							Update the preview or discard your changes before accepting all
-							suggestions.
+							Update the preview or discard your changes before accepting all suggestions.
 						</p>
 					)}
 				</div>
@@ -499,9 +448,7 @@ export default function WishlistMatchPanel({
 			{!tvtimeBulkAccept && (acceptable.length > 0 || bulkAccepted > 0) && (
 				<div className="flex flex-col gap-2">
 					{acceptable.length > 0 && (
-						<p className="text-sm text-gray-300">
-							{WISHLIST_SUGGESTION_COPY.check}
-						</p>
+						<p className="text-sm text-gray-300">{WISHLIST_SUGGESTION_COPY.check}</p>
 					)}
 					<div className="flex flex-wrap gap-3">
 						<button
@@ -519,26 +466,17 @@ export default function WishlistMatchPanel({
 								: "Undo accept all"}
 						</button>
 						{acceptable.length > 0 && bulkAccepted > 0 && (
-							<button
-								type="button"
-								className={secondaryButton}
-								disabled={locked}
-								onClick={undoAll}
-							>
+							<button type="button" className={secondaryButton} disabled={locked} onClick={undoAll}>
 								Undo accept all
 							</button>
 						)}
 					</div>
 					{bulkTooMany && (
 						<p id={bulkFullId} className="text-sm text-gray-300">
-							There's room for{" "}
-							{formatCount(WISHLIST_MATCH_MAX_CHANGES - draft.size)} more{" "}
-							{WISHLIST_MATCH_MAX_CHANGES - draft.size === 1
-								? "change"
-								: "changes"}{" "}
-							in this update, so GoodWatch can't accept all{" "}
-							{formatCount(acceptable.length)}. Update the preview first, or
-							accept them one at a time.
+							There's room for {formatCount(WISHLIST_MATCH_MAX_CHANGES - draft.size)} more{" "}
+							{WISHLIST_MATCH_MAX_CHANGES - draft.size === 1 ? "change" : "changes"} in this update,
+							so GoodWatch can't accept all {formatCount(acceptable.length)}. Update the preview
+							first, or accept them one at a time.
 						</p>
 					)}
 				</div>
@@ -549,17 +487,11 @@ export default function WishlistMatchPanel({
 						{groups.map((group) => {
 							const index = group.representativeIndex
 							const title = current(group)
-							const others = title
-								? (chosenBy.get(titleKey(title)) ?? []).length - 1
-								: 0
+							const others = title ? (chosenBy.get(titleKey(title)) ?? []).length - 1 : 0
 							const otherName = title
 								? chosenBy
 										.get(titleKey(title))
-										?.find(
-											(name) =>
-												name !==
-												(fileTitle(group) || "an entry without a title"),
-										)
+										?.find((name) => name !== (fileTitle(group) || "an entry without a title"))
 								: undefined
 							return (
 								<Entry
@@ -703,23 +635,18 @@ export default function WishlistMatchPanel({
 						{error && (
 							<div className="space-y-3">
 								<p className={errorBox}>{error.message}</p>
-								{tvtimeBulkAccept &&
-									error.code?.startsWith("tvtime_suggestion_") && (
-										<button
-											type="button"
-											className={secondaryButton}
-											disabled={locked || suggestions.loading}
-											onClick={suggestions.refresh}
-										>
-											Refresh suggestions
-										</button>
-									)}
-								{isRestart(error) && (
+								{tvtimeBulkAccept && error.code?.startsWith("tvtime_suggestion_") && (
 									<button
 										type="button"
 										className={secondaryButton}
-										onClick={onBack}
+										disabled={locked || suggestions.loading}
+										onClick={suggestions.refresh}
 									>
+										Refresh suggestions
+									</button>
+								)}
+								{isRestart(error) && (
+									<button type="button" className={secondaryButton} onClick={onBack}>
 										Choose the file again
 									</button>
 								)}
@@ -782,13 +709,10 @@ function Entry({
 		title || pending || !suggestion || suggestion.state === "suggested"
 			? null
 			: movieOnly(group)
-				? (tvtimeSuggestionNote(suggestion.reason) ??
-					wishlistSuggestionNote(suggestion.state))
+				? (tvtimeSuggestionNote(suggestion.reason) ?? wishlistSuggestionNote(suggestion.state))
 				: wishlistSuggestionNote(suggestion.state)
 	const shown = title ?? suggested
-	const poster = shown?.posterPath
-		? tmdbFixedImage("poster", shown.posterPath, POSTER_WIDTH)
-		: null
+	const poster = shown?.posterPath ? tmdbFixedImage("poster", shown.posterPath, POSTER_WIDTH) : null
 	const name = fileTitle(group)
 	const evidence = evidenceOf(group)
 	const year = group.item.wishlistOriginal?.year ?? group.item.year
@@ -801,9 +725,7 @@ function Entry({
 					year,
 					evidence?.mediaType === "unknown" ? "Type unknown" : null,
 					evidence?.sourceId ? `ID ${evidence.sourceId}` : null,
-					group.entryCount > 1
-						? `Listed ${formatCount(group.entryCount)} times`
-						: null,
+					group.entryCount > 1 ? `Listed ${formatCount(group.entryCount)} times` : null,
 				]
 	)
 		.filter(Boolean)
@@ -832,14 +754,14 @@ function Entry({
 					<p className="mt-1 break-words text-gray-200">
 						{title ? (
 							<>
-								<span className="font-semibold">Your match:</span>{" "}
-								{describe(title)} · {typeName(title.mediaType)}
+								<span className="font-semibold">Your match:</span> {describe(title)} ·{" "}
+								{typeName(title.mediaType)}
 								{accepted && " · Accepted"}
 							</>
 						) : suggested ? (
 							<>
-								<span className="font-semibold">Suggested:</span>{" "}
-								{describe(suggested)} · {typeName(suggested.mediaType)} ·{" "}
+								<span className="font-semibold">Suggested:</span> {describe(suggested)} ·{" "}
+								{typeName(suggested.mediaType)} ·{" "}
 								{suggestion?.proof
 									? tvtimeSuggestionEvidence(suggestion.proof)
 									: WISHLIST_SUGGESTION_COPY.reason}
@@ -851,9 +773,7 @@ function Entry({
 						) : (
 							(note ?? "Not matched")
 						)}
-						{pending && (
-							<span className="text-gray-400"> · Not in this preview yet</span>
-						)}
+						{pending && <span className="text-gray-400"> · Not in this preview yet</span>}
 					</p>
 				</div>
 			</div>
@@ -948,12 +868,6 @@ function Entry({
 	)
 }
 
-const TYPES = [
-	{ value: null, label: "Movies and shows" },
-	{ value: "movie", label: "Movies" },
-	{ value: "show", label: "Shows" },
-] as const
-
 function Editor({
 	importId,
 	group,
@@ -1042,9 +956,7 @@ function Editor({
 					{evidence?.sourceId && (
 						<>
 							<dt className="text-gray-400">
-								{SOURCE_NAMES[evidence.source]
-									? `${SOURCE_NAMES[evidence.source]} ID`
-									: "ID"}
+								{SOURCE_NAMES[evidence.source] ? `${SOURCE_NAMES[evidence.source]} ID` : "ID"}
 							</dt>
 							<dd className="break-words">
 								{evidence.sourceId}
@@ -1056,8 +968,8 @@ function Editor({
 				{group.entryCount > 1 && (
 					<div className="mt-2">
 						<p>
-							Listed {formatCount(group.entryCount)} times in your file. Your
-							match applies to every one.
+							Listed {formatCount(group.entryCount)} times in your file. Your match applies to every
+							one.
 						</p>
 						{group.evidenceVariants.length > 1 && (
 							<ul className="mt-1 list-disc pl-5 text-gray-300">
@@ -1113,37 +1025,18 @@ function Editor({
 				{!movie && (
 					<fieldset disabled={disabled}>
 						<legend className="mb-1 text-gray-400">Show</legend>
-						<div className="grid grid-cols-3 gap-2 max-[340px]:grid-cols-1">
-							{TYPES.map((type) => (
-								<label
-									key={type.label}
-									className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-md border px-2 ${mediaType === type.value ? "border-indigo-500 bg-indigo-950/50" : "border-slate-700"}`}
-								>
-									<input
-										type="radio"
-										name={`${id}-type`}
-										checked={mediaType === type.value}
-										onChange={() => setMediaType(type.value)}
-										className="size-4 accent-indigo-500"
-									/>
-									{type.label}
-								</label>
-							))}
-						</div>
+						<TitleKindControl
+							value={mediaType ?? "all"}
+							onChange={(kind) => setMediaType(kind === "all" ? null : kind)}
+						/>
 					</fieldset>
 				)}
-				<button
-					type="submit"
-					className={`${secondaryButton} self-start`}
-					disabled={disabled}
-				>
+				<button type="submit" className={`${secondaryButton} self-start`} disabled={disabled}>
 					Search
 				</button>
 			</form>
 			<div aria-live="polite" className="text-gray-300">
-				{tooShort && (
-					<p>{WISHLIST_MATCH_ERROR_MESSAGES.wishlist_search_invalid}</p>
-				)}
+				{tooShort && <p>{WISHLIST_MATCH_ERROR_MESSAGES.wishlist_search_invalid}</p>}
 				{!search && !tooShort && !name && (
 					<p>
 						Your file has no title for this entry. Search by name
@@ -1165,40 +1058,30 @@ function Editor({
 					</p>
 				)}
 			</div>
-			{search &&
-				query.isSuccess &&
-				candidates.length === 0 &&
-				search.mediaType &&
-				!movie && (
-					<button
-						type="button"
-						className={`${textLink} min-h-11 self-start`}
-						disabled={disabled}
-						onClick={() => {
-							setMediaType(null)
-							run(null)
-						}}
-					>
-						Search movies and shows
-					</button>
-				)}
+			{search && query.isSuccess && candidates.length === 0 && search.mediaType && !movie && (
+				<button
+					type="button"
+					className={`${textLink} min-h-11 self-start`}
+					disabled={disabled}
+					onClick={() => {
+						setMediaType(null)
+						run(null)
+					}}
+				>
+					Search movies and shows
+				</button>
+			)}
 			{search && query.isError && (
 				<div className="space-y-2">
 					<p className={errorBox}>{query.error.message}</p>
-					<button
-						type="button"
-						className={secondaryButton}
-						onClick={() => query.refetch()}
-					>
+					<button type="button" className={secondaryButton} onClick={() => query.refetch()}>
 						Try again
 					</button>
 				</div>
 			)}
 			{candidates.length > 0 && (
 				<fieldset disabled={disabled}>
-					<legend className="mb-2 break-words font-semibold text-gray-100">
-						{question}
-					</legend>
+					<legend className="mb-2 break-words font-semibold text-gray-100">{question}</legend>
 					<div className="grid gap-2 sm:grid-cols-2">
 						{candidates.map((candidate) => {
 							const key = titleKey(candidate)
@@ -1228,19 +1111,14 @@ function Editor({
 											className="h-[69px] w-[46px] shrink-0 rounded bg-slate-800 object-cover"
 										/>
 									) : (
-										<span
-											aria-hidden
-											className="h-[69px] w-[46px] shrink-0 rounded bg-slate-800"
-										/>
+										<span aria-hidden className="h-[69px] w-[46px] shrink-0 rounded bg-slate-800" />
 									)}
 									<span className="min-w-0">
 										<span className="block break-words font-semibold text-gray-100">
 											{candidate.title}
 										</span>
 										<span className="block text-gray-400">
-											{[candidate.year, typeName(candidate.mediaType)]
-												.filter(Boolean)
-												.join(" · ")}
+											{[candidate.year, typeName(candidate.mediaType)].filter(Boolean).join(" · ")}
 										</span>
 										{sameTitle(candidate, current) && (
 											<span className="block text-gray-300">Your match</span>

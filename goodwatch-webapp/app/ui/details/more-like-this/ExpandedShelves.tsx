@@ -1,3 +1,4 @@
+import { TitleKindControl } from "~/ui/title-kind/TitleKindControl"
 // A shelf's block in More like this's expanded view: its caption, heading and note (where the shelf's were: the
 // heading moves from the shelf's), a Show all into Discover filtered the nearest way Discover can (`discover`,
 // discover-links.ts), then one row of the shelf's own control, a Movies / Shows filter for a mixed list and the sort
@@ -7,7 +8,6 @@ import { ChevronRightIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import { type ReactNode, Suspense, lazy, useEffect, useMemo, useState } from "react"
 import { MovieTvCard } from "~/ui/MovieTvCard"
-import { SegmentedTabs } from "~/ui/details/SegmentedTabs"
 import { CAPTION } from "~/ui/details/page-ui"
 import { SortControl } from "~/ui/filter-bar/controls"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
@@ -205,19 +205,10 @@ function CardGrid({
 					<div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-2">
 						{controls}
 						{mixed && (
-							<SegmentedTabs
-								label="Kind"
+							<TitleKindControl
 								value={type}
-								onChange={(k) => setType(k as "all" | "movie" | "show")}
-								tabs={[
-									{ key: "all", label: "All", count: titles.length },
-									{ key: "movie", label: "Movies", count: movies },
-									{
-										key: "show",
-										label: "Shows",
-										count: titles.length - movies,
-									},
-								]}
+								onChange={setType}
+								counts={{ all: titles.length, movie: movies, show: titles.length - movies }}
 							/>
 						)}
 					</div>

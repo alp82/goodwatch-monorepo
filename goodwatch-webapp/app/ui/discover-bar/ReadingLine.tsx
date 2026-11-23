@@ -1,6 +1,7 @@
+import { TitleKindControl } from "~/ui/title-kind/TitleKindControl"
 // How a search was read, on one line that never wraps and scrolls sideways when long: the fingerprint qualities the
 // ranking favors or ranks lower, then every filter. A filter's × removes it, and in Advanced its name opens it. With
-// nothing to show the line offers the moods. Both | Movies | Shows joins when a search or filter set a type.
+// nothing to show the line offers the moods. The format switch appears when a search or filter sets a type.
 import { LockClosedIcon, XMarkIcon } from "@heroicons/react/20/solid"
 import type { CSSProperties } from "react"
 import type { FilterState } from "~/domain/filter-state"
@@ -8,7 +9,6 @@ import { WORDS } from "~/domain/taste-picker"
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
 import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
 import type { BarChip } from "./chips"
-import { SELECTED_SOLID } from "~/ui/selection/selected"
 
 const MOODS = WORDS.filter((word) => word.kind === "mood").slice(0, 8)
 
@@ -43,41 +43,6 @@ const FIELDS: Record<string, string> = {
 }
 const fieldOf = (chip: BarChip) =>
 	chip.prefix ?? (chip.group ? (FIELDS[chip.group] ?? chip.group) : "Search")
-
-const TYPES = [
-	["all", "Both"],
-	["movie", "Movies"],
-	["show", "Shows"],
-] as const
-
-function TypePicker({
-	type,
-	onChange,
-}: {
-	type: FilterState["type"]
-	onChange: (type: FilterState["type"]) => void
-}) {
-	return (
-		<span
-			role="radiogroup"
-			aria-label="Movies or shows"
-			className="flex shrink-0 rounded-full bg-white/[0.04] p-0.5 ring-1 ring-white/10"
-		>
-			{TYPES.map(([key, label]) => (
-				<button
-					key={key}
-					type="button"
-					role="radio"
-					aria-checked={type === key}
-					onClick={() => onChange(key)}
-					className={`cursor-pointer rounded-full px-3 py-1 text-[12px] font-semibold ${type === key ? SELECTED_SOLID : "text-gray-400 hover:text-white"}`}
-				>
-					{label}
-				</button>
-			))}
-		</span>
-	)
-}
 
 function Quality({ chip }: { chip: ReadingChip }) {
 	const meta = getFingerprintMeta(chip.key as string)
@@ -183,7 +148,7 @@ export function ReadingLine({
 	)
 	// A guest's Ready covers services only: Not seen yet waits for an account.
 	const lockedUnseen = !member && state.onMyServices
-	const typePicker = picker && <TypePicker type={state.type} onChange={onType} />
+	const typePicker = picker && <TitleKindControl value={state.type} onChange={onType} />
 	const line = "flex h-8 min-w-0 flex-1 items-center gap-4 overflow-x-auto [scrollbar-width:none]"
 	if (!qualities.length && !filters.length)
 		return (

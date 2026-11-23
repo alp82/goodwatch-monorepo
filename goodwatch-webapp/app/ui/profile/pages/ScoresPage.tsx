@@ -1,3 +1,4 @@
+import { TitleKindControl } from "~/ui/title-kind/TitleKindControl"
 import { useEffect, useState } from "react"
 import { useSearchParams, useRevalidator } from "@remix-run/react"
 import { useInfiniteQuery } from "@tanstack/react-query"
@@ -14,7 +15,6 @@ import { ScorePill } from "~/ui/poster-card/ScorePill"
 import { scoreLabels } from "~/utils/ratings"
 import { ImportCta } from "../ImportCta"
 import { ProfilePoster, ScoreChip, SortSelect, SpreadBars, TILE, count } from "../parts"
-import { Segmented } from "~/ui/selection/Segmented"
 import { SectionHeading } from "~/ui/heading"
 
 const TIER_SIZES: [string | null, string][] = [
@@ -105,16 +105,10 @@ export function ScoresPage({
 			<div
 				className={`sticky top-[calc(4rem_+_var(--visitor-bar-h,0px))] ${STICKY_SUBBAR} ${FOLLOW_PHONE_BAR} -mx-4 flex flex-wrap items-center gap-3 bg-gray-950/90 px-4 py-2 sm:-mx-6 sm:px-6 lg:top-28 lg:-mx-8 lg:px-8`}
 			>
-				<Segmented
-					size="sm"
-					label="Movies or shows"
+				<TitleKindControl
 					value={kind}
 					onChange={(kind) => setChoice({ kind })}
-					options={[
-						{ key: "all", label: "All", count: page.counts.all },
-						{ key: "movie", label: "Movies", count: page.counts.movie },
-						{ key: "show", label: "Shows", count: page.counts.show },
-					]}
+					counts={page.counts}
 				/>
 				<span className="grow" />
 				<SortSelect

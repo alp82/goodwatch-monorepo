@@ -1,3 +1,4 @@
+import { TitleKindControl } from "~/ui/title-kind/TitleKindControl"
 // By your tropes (/watch/for-you/tropes): unseen picks ranked by the member's top tropes, as a poster grid.
 // - Every poster is the site's poster card with its standard actions (a panel on hover) and one quiet gray line under
 //   it: "#n · match · N of your tropes". A click or a tap on the poster opens why the pick is there, with how each of
@@ -13,7 +14,6 @@ import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react"
 import { ratePath } from "~/domain/member-paths"
 import {
 	type MemberTropeRef,
-	REC_KINDS,
 	type RecKind,
 	findTrope,
 	rankLine,
@@ -28,7 +28,6 @@ import { LicenseCredit } from "~/ui/profile/tropes/parts"
 import { useUser } from "~/utils/auth"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import { openingLead } from "~/utils/trope-opening"
-import { Segmented } from "~/ui/selection/Segmented"
 import { RecsSwitch } from "./RecsSwitch"
 import { NotYourTrope, type RecTitle, useMyTropes, useRecs, useTropeDescription } from "./api"
 import { cardTitle } from "./card"
@@ -135,13 +134,7 @@ function MemberView() {
 		<div className={WRAP}>
 			<div className="mb-4 flex flex-wrap items-center justify-between gap-3">
 				<RecsSwitch here="tropes" />
-				<Segmented
-					size="sm"
-					label="Movies or shows"
-					value={query.kind}
-					onChange={setKind}
-					options={REC_KINDS.map(([key, label]) => ({ key, label }))}
-				/>
+				<TitleKindControl value={query.kind} onChange={setKind} />
 			</div>
 			{trope ? (
 				<TropeHead trope={trope} kind={query.kind} />

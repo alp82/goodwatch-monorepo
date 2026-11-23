@@ -1,3 +1,4 @@
+import { TitleKindControl } from "~/ui/title-kind/TitleKindControl"
 // The Hot on socials page (routes/hot.tsx): every title of the latest buzz ranking, with any available posts,
 // one block each with its two best posts (one on a phone), most talked about first. "All N posts" narrows the page
 // to that title. Search (title, headline, post, publisher), source, movie or show, and the title narrow everything;
@@ -421,7 +422,7 @@ function PhoneBar({
 							label="Source"
 						/>
 						<p className="hx-label">Type</p>
-						<Seg value={f.kind} options={KINDS} onChange={(kind) => set({ kind })} label="Type" />
+						<TitleKindControl value={f.kind} onChange={(kind) => set({ kind })} />
 						<p className="hx-label">Sort</p>
 						<Seg
 							value={f.sort}
@@ -469,7 +470,7 @@ function Clusters({ row }: { row: TalkedRow }) {
 						onChange={(source) => set({ source })}
 						label="Source"
 					/>
-					<Seg value={f.kind} options={KINDS} onChange={(kind) => set({ kind })} label="Type" />
+					<TitleKindControl value={f.kind} onChange={(kind) => set({ kind })} />
 				</div>
 				<PhoneBar f={f} set={set} titles={row.titles} day={row.day} count={posts.length} />
 			</div>

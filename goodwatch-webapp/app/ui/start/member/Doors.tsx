@@ -1,3 +1,4 @@
+import { TitleKindControl } from "~/ui/title-kind/TitleKindControl"
 import { usePathViewer } from "~/ui/navigation/NavigationContext"
 // The "Go deeper" doors under a member's start (doors.ts has the rules): four fixed-size doors, the open one filled
 // amber with a notch into its section; the section links to its page from its header and from a last tile. The open
@@ -163,7 +164,17 @@ export function DoorSection({
 			<>
 				{door.strip ? <Strip strip={door.strip} /> : null}
 
-				{filters ? (
+				{filters && door.key === "forYou" ? (
+					<div className="mb-4 flex">
+						<TitleKindControl
+							value={filter === "movie" || filter === "show" ? filter : "all"}
+							onChange={onFilter}
+							counts={Object.fromEntries(
+								filters.map((f) => [f.key, door.titles.filter((t) => f.keep(t.card)).length]),
+							)}
+						/>
+					</div>
+				) : filters ? (
 					<fieldset className="-mx-4 mb-4 flex min-w-0 gap-2 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0">
 						<legend className="sr-only">Filter</legend>
 						{filters.map((f) => {
@@ -244,7 +255,7 @@ export function ReservedRoom({ reserve }: { reserve: Reserve }) {
 		<div data-door-room>
 			{reserve.strip ? <Strip strip={reserve.strip} /> : null}
 			{reserve.filters ? (
-				<div aria-hidden className="mb-4 flex h-9 gap-2 overflow-hidden">
+				<div aria-hidden className="mb-4 flex h-10 items-center gap-2 overflow-hidden">
 					{["w-14", "w-20", "w-[4.5rem]"].map((width) => (
 						<span key={width} className={`h-9 ${width} shrink-0 rounded-full bg-white/[0.04]`} />
 					))}

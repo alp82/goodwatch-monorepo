@@ -1,3 +1,4 @@
+import { TitleKindControl } from "~/ui/title-kind/TitleKindControl"
 import { useMemo, useState } from "react"
 // The profile's Seen tab: a diary, latest first, one group per month; titles without a watch date (older imports,
 // most shows) close the page under "No date". Each row ends in the score pill (GoodWatch and the viewer's own score);
@@ -9,7 +10,6 @@ import type { RowServices } from "~/server/row-services.server"
 import type { Score } from "~/server/scores.server"
 import { RowLogos, RowScores, rowMark, useRowMarks } from "~/ui/list-row/RowScores"
 import { TILE, TitleRow, count } from "../parts"
-import { Segmented } from "~/ui/selection/Segmented"
 import { SectionHeading } from "~/ui/heading"
 
 type Kind = LibraryKind
@@ -73,16 +73,10 @@ export function SeenPage({
 	return (
 		<>
 			<div className="flex flex-wrap items-center gap-3">
-				<Segmented
-					size="sm"
-					label="Movies or shows"
+				<TitleKindControl
 					value={kind}
 					onChange={setKind}
-					options={[
-						{ key: "all", label: "All", count: page.titles.length },
-						{ key: "movie", label: "Movies", count: movies },
-						{ key: "show", label: "Shows", count: page.titles.length - movies },
-					]}
+					counts={{ all: page.titles.length, movie: movies, show: page.titles.length - movies }}
 				/>
 				<span className="grow" />
 			</div>

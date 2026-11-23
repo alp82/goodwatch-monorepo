@@ -1,3 +1,4 @@
+import { TitleKindControl } from "~/ui/title-kind/TitleKindControl"
 // The top bar: the control that moves the map ("Viewing: Whole map", a menu of the places), the selection once islands
 // are picked, and the filters behind one Filters button, built from the filter bar's controls (ui/filter-bar): a strip
 // of controls under the bar, on phones the bottom sheet.
@@ -6,27 +7,16 @@ import { MapIcon, MapPinIcon } from "@heroicons/react/20/solid"
 import { AnimatePresence, motion } from "framer-motion"
 import { type ReactNode, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
-import {
-	type ExplorerService,
-	GROUPING_NAMES,
-	type Grouping,
-} from "~/domain/explorer"
+import { type ExplorerService, GROUPING_NAMES, type Grouping } from "~/domain/explorer"
 import {
 	ALL_TITLE_TYPES,
 	ANIME_CHOICES,
 	ANIME_SHORT_NAMES,
-	TITLE_FORMATS,
-	TITLE_FORMAT_NAMES,
 	type TitleTypeFilter,
 	isAllTitleTypes,
 } from "~/domain/title-type"
 import { SnapSheet } from "~/ui/filter-bar/SnapSheet"
-import {
-	FiltersButton,
-	NotSeenSwitch,
-	ServicesControl,
-	radioKeys,
-} from "~/ui/filter-bar/controls"
+import { FiltersButton, NotSeenSwitch, ServicesControl, radioKeys } from "~/ui/filter-bar/controls"
 import { MENU } from "~/ui/filter-bar/motion"
 import { useModalDialog } from "~/ui/filter-bar/useModalDialog"
 import { REGION_COLORS } from "./regions"
@@ -59,8 +49,7 @@ interface TopBarProps {
 	onTitleType: (type: TitleTypeFilter) => void
 }
 
-const FOCUS =
-	"outline-none focus-visible:ring-2 focus-visible:ring-amber-400 cursor-pointer"
+const FOCUS = "outline-none focus-visible:ring-2 focus-visible:ring-amber-400 cursor-pointer"
 const GLASS = "bg-[#0a0e1a]/60 ring-1 ring-inset ring-white/10 backdrop-blur-xl"
 const CAPTION = "text-xs font-semibold uppercase tracking-wide text-gray-400"
 
@@ -135,33 +124,20 @@ const activeCount = (p: FilterProps) =>
 	(p.notSeenYet ? 1 : 0)
 
 /** The filters, built from Discover's controls: stacked (a popover, a sheet) or in a row (the strip). */
-function FilterControls({
-	p,
-	row = false,
-}: {
-	p: FilterProps
-	row?: boolean
-}) {
+function FilterControls({ p, row = false }: { p: FilterProps; row?: boolean }) {
 	const mine = p.services
 		.filter((s) => s.mine && s.logo)
 		.map((s) => ({ id: s.id, logo_path: s.logo as string }))
 	const group = row ? "flex flex-col gap-1.5" : "flex flex-col gap-1.5"
 	return (
-		<div
-			className={
-				row ? "flex flex-wrap items-end gap-x-4 gap-y-3" : "flex flex-col gap-4"
-			}
-		>
+		<div className={row ? "flex flex-wrap items-end gap-x-4 gap-y-3" : "flex flex-col gap-4"}>
 			<div className={group}>
 				<span aria-hidden className={CAPTION}>
 					Type
 				</span>
-				<Segmented
-					label="Type"
-					options={TITLE_FORMATS}
-					names={TITLE_FORMAT_NAMES}
+				<TitleKindControl
 					value={p.titleType.format}
-					onPick={(format) => p.onTitleType({ ...p.titleType, format })}
+					onChange={(format) => p.onTitleType({ ...p.titleType, format })}
 				/>
 			</div>
 			<div className={group}>
@@ -242,11 +218,7 @@ function Filters({
 	useEffect(() => setBody(true), [])
 	return (
 		<div className="relative shrink-0">
-			<FiltersButton
-				count={activeCount(p)}
-				expanded={open}
-				onClick={() => onOpen(!open)}
-			/>
+			<FiltersButton count={activeCount(p)} expanded={open} onClick={() => onOpen(!open)} />
 			{body &&
 				phone &&
 				createPortal(
@@ -386,11 +358,7 @@ function PlaceMenu({
 								className="h-11 w-full px-2.5"
 							>
 								<span className="flex-1 text-left">{place.name}</span>
-								{place.sub && (
-									<span className="text-xs font-medium opacity-60">
-										{place.sub}
-									</span>
-								)}
+								{place.sub && <span className="text-xs font-medium opacity-60">{place.sub}</span>}
 							</PlaceButton>
 						))}
 					</motion.div>
@@ -434,9 +402,7 @@ export function TopBar(props: TopBarProps) {
 			</div>
 			{/* On phones the selection takes a line of its own; it scrolls sideways where the screen is narrow. */}
 			{phone && selection && (
-				<div className="ex-row mt-2 overflow-x-auto [scrollbar-width:none]">
-					{selection}
-				</div>
+				<div className="ex-row mt-2 overflow-x-auto [scrollbar-width:none]">{selection}</div>
 			)}
 			{/* The strip: the filters in a row under the bar, as Discover's row shows them. */}
 			<AnimatePresence initial={false}>

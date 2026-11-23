@@ -1,3 +1,4 @@
+import { TitleKindControl } from "~/ui/title-kind/TitleKindControl"
 // Your scores' filters in Discover's design: the row (search, Only what I changed, Group, Filters), the removable
 // chips under it, and the Filters side sheet with the groups that fit your own scores. The sheet and the chips are
 // drawn with the shared ui/filter-bar controls (Filters button, the sort menu's items, the switch's knob, Show N titles).
@@ -454,9 +455,21 @@ export function FiltersSheet({
 												)}
 											</header>
 											<div className="flex flex-wrap gap-2">
-												{g.options.map((o) => (
-													<OptionChip key={o.id} option={o} counted={shown != null} />
-												))}
+												{g.key === "kind" && g.options.length === 2 ? (
+													<TitleKindControl
+														value={f.kind}
+														onChange={(kind) => set({ ...f, kind })}
+														counts={
+															shown === null
+																? undefined
+																: Object.fromEntries(g.options.map((o) => [o.id, o.count]))
+														}
+													/>
+												) : (
+													g.options.map((o) => (
+														<OptionChip key={o.id} option={o} counted={shown != null} />
+													))
+												)}
 											</div>
 										</section>
 									))}

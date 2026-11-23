@@ -1,3 +1,4 @@
+import { TitleKindControl } from "~/ui/title-kind/TitleKindControl"
 import { useMemo, useState } from "react"
 // The profile's Wishlist tab. The owner sees "Watch now" first (wishlist titles on their services, best match first),
 // the import call to action and the way to the editable page; a signed-in visitor sees the titles they've already
@@ -8,7 +9,6 @@ import type { ProfileShell, ProfileTitle, ProfileWishlistPage } from "~/domain/p
 import { ImportCta } from "../ImportCta"
 import { ProfileCard } from "../ProfileCard"
 import { SortSelect, TILE, count, shortDate } from "../parts"
-import { Segmented } from "~/ui/selection/Segmented"
 import { SectionHeading } from "~/ui/heading"
 
 type Kind = LibraryKind
@@ -59,16 +59,10 @@ export function WishlistPage({
 	return (
 		<>
 			<div className="flex flex-wrap items-center gap-3">
-				<Segmented
-					size="sm"
-					label="Movies or shows"
+				<TitleKindControl
 					value={kind}
 					onChange={setKind}
-					options={[
-						{ key: "all", label: "All", count: page.titles.length },
-						{ key: "movie", label: "Movies", count: movies },
-						{ key: "show", label: "Shows", count: page.titles.length - movies },
-					]}
+					counts={{ all: page.titles.length, movie: movies, show: page.titles.length - movies }}
 				/>
 				<span className="grow" />
 				<SortSelect

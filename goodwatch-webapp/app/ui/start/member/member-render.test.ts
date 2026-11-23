@@ -45,10 +45,7 @@ const section = (html: string) =>
 test("one H1, the page's heading; every other heading is an H2 or H3", () => {
 	for (const [name, html] of all) {
 		assert.equal(html.match(/<h1\b/g)?.length, 1, name)
-		assert.match(
-			html,
-			/<h1 id="start-heading"[^>]*>Find something to watch<\/h1>/,
-		)
+		assert.match(html, /<h1 id="start-heading"[^>]*>Find something to watch<\/h1>/)
 		assert.ok(!/<h[4-6]\b/.test(html), name)
 	}
 })
@@ -68,20 +65,10 @@ test("the ledge is one big button, with My movies and My shows under it and as t
 		rendered.full,
 		/<button type="button" class="start-ledge-go" aria-controls="start-card">[\s\S]*?Choose what to watch next/,
 	)
-	assert.match(
-		rendered.new,
-		/class="start-ledge-go"[\s\S]*?Get your first picks/,
-	)
+	assert.match(rendered.new, /class="start-ledge-go"[\s\S]*?Get your first picks/)
 	for (const [name, html] of all)
-		assert.equal(
-			html.match(/class="start-list-link"[^>]*href="\/watch\/movies"/g)?.length,
-			2,
-			name,
-		)
-	assert.match(
-		rendered.full,
-		/My movies<\/span><span class="start-list-note">\d+ to see</,
-	)
+		assert.equal(html.match(/class="start-list-link"[^>]*href="\/watch\/movies"/g)?.length, 2, name)
+	assert.match(rendered.full, /My movies<\/span><span class="start-list-note">\d+ to see</)
 })
 
 test("a member searches with the mood picker under the bar, as a guest does", () => {
@@ -118,11 +105,7 @@ test("the doors follow what the member has, and the first is open in the server'
 test("doors never change height: every door has the same fixed height, open or not", () => {
 	for (const [name, html] of all)
 		for (const door of doors(html)) {
-			assert.match(
-				door.classes,
-				/(^| )h-\[6\.5rem\]( |$)/,
-				`${name} ${door.label}`,
-			)
+			assert.match(door.classes, /(^| )h-\[6\.5rem\]( |$)/, `${name} ${door.label}`)
 			assert.match(door.classes, /(^| )sm:h-28( |$)/, `${name} ${door.label}`)
 		}
 })
@@ -134,9 +117,7 @@ test("the open section's titles and its page are real links in the HTML", () => 
 	assert.match(open, /href="\/show\/1-show-1"/)
 	assert.match(open, /S1 E1 · Pilot/)
 	// New members open Hot on socials: its ranked titles with why each is talked about.
-	const hot = rendered.new.slice(
-		rendered.new.indexOf('id="start-door-section"'),
-	)
+	const hot = rendered.new.slice(rendered.new.indexOf('id="start-door-section"'))
 	assert.match(hot, /href="\/movie\/301-movie-301"/)
 	assert.match(hot, /New trailer · today/)
 	assert.match(hot, /href="\/hot"/)
@@ -159,9 +140,7 @@ test("the card: this or that from the member's lists, the first steps for a new 
 test("empty and sparse sections say why in one strip, with the way forward", () => {
 	// No shows: the Wishlist is open with titles and no strip; the Continue door says it has none.
 	assert.match(rendered.noShows, />No shows yet</)
-	assert.ok(
-		!/Track a show and its next episode waits here/.test(rendered.noShows),
-	)
+	assert.ok(!/Track a show and its next episode waits here/.test(rendered.noShows))
 	// Few: For you's door counts the ratings so far.
 	assert.match(rendered.few, />4 of 10 ratings</)
 	// New: For you needs ratings; the Wishlist says nothing is saved.
@@ -179,8 +158,7 @@ test("nothing on the page writes: no form but the search bar's", () => {
 test("For you and Hot on socials on their way: the page is the same around them, the open section complete", () => {
 	const html = rendered.later
 	const full = rendered.full
-	const open = (page: string) =>
-		page.slice(page.indexOf('id="start-door-section"'))
+	const open = (page: string) => page.slice(page.indexOf('id="start-door-section"'))
 	assert.equal(open(html), open(full))
 	assert.match(html, />Your taste</)
 	assert.match(html, />Right now</)
@@ -190,18 +168,13 @@ test("For you and Hot on socials on their way: the page is the same around them,
 
 test("a door whose list comes later keeps one room from the skeleton to every answer, so nothing moves", () => {
 	for (const [name, states] of Object.entries(sections)) {
-		const cells = (html: string) =>
-			html.match(/<li class="min-w-0"/g)?.length ?? 0
+		const cells = (html: string) => html.match(/<li class="min-w-0"/g)?.length ?? 0
 		// The skeleton is the room itself: the chips' row where the list can have chips, a full grid of twelve.
 		assert.ok(states.pending.includes(states.room), name)
 		assert.equal(cells(states.room), 12, name)
-		assert.equal(/class="mb-4 flex h-9/.test(states.room), name !== "hot", name)
+		assert.equal(/class="mb-4 flex h-10/.test(states.room), name !== "hot", name)
 		// Hot on socials' slots keep room for the two lines of why under each poster.
-		assert.equal(
-			/h-\[calc\(2\*1\.375\*0\.75rem\)\]/.test(states.room),
-			name === "hot",
-			name,
-		)
+		assert.equal(/h-\[calc\(2\*1\.375\*0\.75rem\)\]/.test(states.room), name === "hot", name)
 		for (const answer of ["full", "sparse", "error"] as const) {
 			const html = states[answer]
 			// The answer lies over the same room, unseen, in one grid cell.
@@ -211,10 +184,7 @@ test("a door whose list comes later keeps one room from the skeleton to every an
 				`${name} ${answer}`,
 			)
 			assert.ok(html.includes(states.room), `${name} ${answer}`)
-			assert.ok(
-				!/aria-busy/.test(html.replace(states.room, "")),
-				`${name} ${answer}`,
-			)
+			assert.ok(!/aria-busy/.test(html.replace(states.room, "")), `${name} ${answer}`)
 		}
 		// The caption under the heading keeps its line, also when the list couldn't be read.
 		const note = /<p[^>]*class="[^"]*mt-0\.5 text-sm[^"]*"[^>]*>([^<]+)<\/p>/
@@ -225,7 +195,7 @@ test("a door whose list comes later keeps one room from the skeleton to every an
 		assert.match(states.error, /Couldn&#x27;t load this right now/, name)
 	}
 	// A full answer has the titles and, where the list has them, the chips the room kept a row for.
-	assert.match(sections.forYou.full, /<legend class="sr-only">Filter<\/legend>/)
+	assert.match(sections.forYou.full, /aria-label="Movies or shows" role="radiogroup"/)
 	assert.match(sections.hot.full, /New trailer · today/)
 })
 

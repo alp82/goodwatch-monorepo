@@ -2,13 +2,16 @@
 // My movies / Ready to watch, Recommendations / Curated For You, and Seen / History at the row's end on desktop), sticky under
 // the header, then the tab's third level, all chosen from the path, then the page:
 // - Ready to watch: SubNav with Next Movie · Want to Watch.
-// - Seen: SubNav with All · Movies · Shows (`?type=` on /watch/seen).
+// - Seen: Movies & Shows switch (`?type=` on /watch/seen).
 // - Up next: SubNav with Next episodes | All shows (the status pages, each with a status filter).
 // It has no loader: the counts come from the member data the root loader already read, the new-episodes badge from
 // the navigation's own read.
 import { PlayIcon } from "@heroicons/react/24/solid"
 import { Outlet, useLocation } from "@remix-run/react"
-import { AreaTabs } from "~/ui/navigation/AreaTabs"
+import { KindControl } from "~/ui/browse/KindControl"
+import { STICKY_SUBBAR } from "~/ui/layers"
+import { SUBNAV_BAR } from "~/ui/navigation/bar-layers"
+import { AreaTabs, UNDER_TABS } from "~/ui/navigation/AreaTabs"
 import { SubNav } from "~/ui/navigation/SubNav"
 import { useWatchNews } from "~/ui/navigation/useWhatsNew"
 import { withWatchNews } from "~/ui/navigation/watch-news"
@@ -30,15 +33,14 @@ export default function WatchLayout() {
 	const history = seenTab(pathname)
 	const upNext = upNextViews(pathname, counts, news.shows)
 	const ready = readyViews(pathname, counts, news.movies)
-	const sub = history.here
-		? { label: "Seen: movies or shows", items: seenKinds(search, counts) }
-		: ready
-			? { label: "Movies to watch", items: ready }
-			: upNext
-				? { label: "Your shows", items: upNextSplit(upNext) }
-				: null
+	const kinds = history.here ? seenKinds(search, counts) : null
+	const sub = ready
+		? { label: "Movies to watch", items: ready }
+		: upNext
+			? { label: "Your shows", items: upNextSplit(upNext) }
+			: null
 	const here = history.here ? history : tabs.find((tab) => tab.here)
-	const view = sub?.items.find((item) => item.here)?.label
+	const view = (kinds ?? sub?.items)?.find((item) => item.here)?.label
 	return (
 		<>
 			<AreaTabs
@@ -49,11 +51,24 @@ export default function WatchLayout() {
 				trailingEnd="desktop"
 			/>
 			<h1 className="sr-only">
-				{[here ? `${here.label}: ${here.sub}` : "Watch", view]
-					.filter(Boolean)
-					.join(", ")}
+				{[here ? `${here.label}: ${here.sub}` : "Watch", view].filter(Boolean).join(", ")}
 			</h1>
-			{sub && (
+			{kinds && (
+				<div className={`lg:sticky ${UNDER_TABS.two} ${STICKY_SUBBAR} ${SUBNAV_BAR}`}>
+					<div className="mx-auto flex h-11 max-w-7xl items-center px-4 sm:px-6 lg:px-8">
+						<KindControl
+							kinds={kinds.map((k) => ({
+								kind: k.key,
+								label: k.label,
+								href: k.href,
+								on: k.here,
+								count: k.count,
+							}))}
+						/>
+					</div>
+				</div>
+			)}
+			{!kinds && sub && (
 				<SubNav
 					label={sub.label}
 					items={sub.items}
