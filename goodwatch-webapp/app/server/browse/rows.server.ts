@@ -674,7 +674,11 @@ export function countOf(
 	if (hit !== undefined) return hit
 	const plan = blendPlan(b, catalog, parts, country, added)
 	let n = 0
-	if (plan)
+	if (plan?.masks.length === 1) {
+		// Two ingredients, or a selection with one new ingredient: each byte is already 0 or 1.
+		const mask = plan.masks[0]
+		for (const r of plan.start) n += mask[r]
+	} else if (plan)
 		for (const r of plan.start) {
 			let all = true
 			for (const m of plan.masks)
