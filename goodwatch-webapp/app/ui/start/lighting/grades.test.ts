@@ -22,14 +22,7 @@ const { MOOD_BY_KEY } = await import("~/domain/moods")
 const { querySignature } = await import("../stage/start-query.ts")
 const { pickMix } = await import("../moods/mixes.ts")
 
-const BLENDS = [
-	"soft-light",
-	"screen",
-	"multiply",
-	"saturation",
-	"color",
-	"overlay",
-]
+const BLENDS = ["soft-light", "screen", "multiply", "saturation", "color", "overlay"]
 
 test("every grade has layers with a known blend and an opacity in (0, 1]", () => {
 	for (const key of GRADE_KEYS) {
@@ -39,12 +32,12 @@ test("every grade has layers with a known blend and an opacity in (0, 1]", () =>
 			assert.ok(layer.o > 0 && layer.o <= 1, `${key} ${layer.o}`)
 		}
 	}
-	assert.equal(GRADES.mystery, GRADES.crime)
+	assert.equal(GRADES.mystery, GRADES.mysterious)
 })
 
 test("the spec's values, exactly: crime multiplies at 0.37, the bright moods lift gently", () => {
 	assert.deepEqual(
-		GRADES.crime.map((l) => [l.blend, l.o]),
+		GRADES.mysterious.map((l) => [l.blend, l.o]),
 		[
 			["saturation", 0.72],
 			["color", 0.5],
@@ -80,7 +73,7 @@ test("every picker word lights the room: a mood its own grade, a theme or style 
 	}
 	// The table names only picker words.
 	for (const id of Object.keys(GRADE_OF_WORD)) assert.ok(WORD_BY_ID[id], id)
-	assert.equal(gradeOfWord("t:crime"), "crime")
+	assert.equal(gradeOfWord("t:crime"), "mysterious")
 	assert.equal(gradeOfWord("s:slow"), "heavy")
 	const documentary = gradeOfWord("s:documentary")
 	assert.equal(documentary, `color:${WORD_BY_ID["s:documentary"].hue}`)
@@ -105,10 +98,7 @@ test("a reading's grade: the most want chips win, the first seen on a tie; other
 	const want = (key: string) => ({ text: key, kind: "want" as const, key })
 	assert.equal(gradeOfReading(null), null)
 	assert.equal(gradeOfReading([]), null)
-	assert.equal(
-		gradeOfReading([want("mystery"), want("wit_wordplay"), want("intrigue")]),
-		"mystery",
-	)
+	assert.equal(gradeOfReading([want("mystery"), want("wit_wordplay"), want("intrigue")]), "mystery")
 	assert.equal(gradeOfReading([want("romance"), want("scare")]), "romance")
 	assert.equal(
 		gradeOfReading([
@@ -133,30 +123,18 @@ test("what lights the room: the picks' lead word, else the reading once it arriv
 
 	// A mix leads with its first part, over a search's reading.
 	const mixed = { text: "rainy day whodunit", picks: pickMix([], "g8") }
-	assert.equal(
-		roomGrade(mixed, results(mixed, "ready", [want("mystery")])),
-		"worlds",
-	)
+	assert.equal(roomGrade(mixed, results(mixed, "ready", [want("mystery")])), "otherworldly")
 
 	// A typed search: undefined (keep the last grade) until its reading arrives.
 	const typed = { text: "rainy day whodunit", picks: [] }
 	assert.equal(roomGrade(typed, results(none, "idle", null)), undefined)
 	assert.equal(roomGrade(typed, results(typed, "loading", null)), undefined)
-	assert.equal(
-		roomGrade(typed, results(typed, "loading", [want("mystery")])),
-		"mystery",
-	)
+	assert.equal(roomGrade(typed, results(typed, "loading", [want("mystery")])), "mystery")
 	// Results for another query don't light this one.
 	const other = { text: "cheer me up", picks: [] }
-	assert.equal(
-		roomGrade(typed, results(other, "ready", [want("wholesome")])),
-		undefined,
-	)
+	assert.equal(roomGrade(typed, results(other, "ready", [want("wholesome")])), undefined)
 	// Answered without a reading, or failed: the resting room.
 	assert.equal(roomGrade(typed, results(typed, "ready", null)), null)
 	assert.equal(roomGrade(typed, results(typed, "error", null)), null)
-	assert.equal(
-		roomGrade(typed, results(typed, "ready", [want("unknown_key")])),
-		null,
-	)
+	assert.equal(roomGrade(typed, results(typed, "ready", [want("unknown_key")])), null)
 })

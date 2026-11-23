@@ -52,8 +52,8 @@ const TWIN: Record<string, string[]> = {
 	romance: ["romantic"],
 	comedy: ["funny"],
 	horror: ["scary"],
-	mystery: ["crime-mystery"],
-	crime: ["crime-mystery"],
+	mystery: ["mysterious"],
+	crime: ["mysterious"],
 	history: ["history"],
 	thriller: ["thrilling"],
 }

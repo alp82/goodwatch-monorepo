@@ -11,9 +11,7 @@ import "../title-filter/test-alias.ts"
 import type { Layout } from "./groupings.server.ts"
 import type { ExplorerPool } from "./pool.server.ts"
 
-const { encodeSnapshot, joinChunks } = await import(
-	"../title-snapshot/format.server.ts"
-)
+const { encodeSnapshot, joinChunks } = await import("../title-snapshot/format.server.ts")
 const { buildSnapshot } = await import("../title-snapshot/snapshot.server.ts")
 const { VALID_FINGERPRINT_KEYS } = await import("../utils/fingerprint.ts")
 const { sharedLayout } = await import("./groupings.server.ts")
@@ -21,16 +19,7 @@ const { DIMENSIONS, DESCRIPTIVE } = await import("./pool.server.ts")
 
 const TITLES = 1200
 const MISSING = 255
-const GENRES = [
-	"Animation",
-	"Comedy",
-	"Documentary",
-	"Drama",
-	"Horror",
-	"News",
-	"Reality",
-	"Talk",
-]
+const GENRES = ["Animation", "Comedy", "Documentary", "Drama", "Horror", "News", "Reality", "Talk"]
 
 /** The same numbers on every run. */
 function seeded(seed: number) {
@@ -44,13 +33,7 @@ function seeded(seed: number) {
 }
 
 // Attributes hardly any title scores on, so their islands fall under the Explorer's least size.
-const RARE = new Set([
-	"sports",
-	"showbiz",
-	"slow_burn",
-	"non_linear_narrative",
-	"wholesome",
-])
+const RARE = new Set(["sports", "showbiz", "slow_burn", "non_linear_narrative", "wholesome"])
 
 /**
  * A pool of made-up titles. Most attributes are common enough that their islands go over the Explorer's most and
@@ -65,9 +48,7 @@ function fixedPool(): ExplorerPool {
 			const r = random()
 			if (bare ? k >= 6 : random() < 0.02) return MISSING
 			const key = VALID_FINGERPRINT_KEYS[k]
-			return Math.floor(
-				(RARE.has(key) ? r ** 60 : k % 3 === 0 ? r ** 6 : r) * 11,
-			)
+			return Math.floor((RARE.has(key) ? r ** 60 : k % 3 === 0 ? r ** 6 : r) * 11)
 		})
 		return {
 			pointId: (i % 4 === 0 ? 2e12 : 1e12) + i + 1,
@@ -198,7 +179,7 @@ test("the Style islands of a fixed pool are what they were before the rules move
 	})
 })
 
-test("the Mood islands of a fixed pool are unchanged", () => {
+test("the Mood islands include mysterious and otherworldly titles in the fixed pool", () => {
 	assert.deepEqual(read(sharedLayout(pool, "mood")), {
 		sizes: {
 			funny: 302,
@@ -211,8 +192,10 @@ test("the Mood islands of a fixed pool are unchanged", () => {
 			trippy: 211,
 			deep: 64,
 			magical: 210,
+			mysterious: 193,
+			otherworldly: 208,
 			quirky: 205,
 		},
-		digest: "0ad41eab904905ff472fc104c9e13d78c7ca2ac84e8584738eb3ae34180c7fa4",
+		digest: "17cfebf281250957e8dc5503d705aab7a06c411d3611ebbdb5d4c98ca72587da",
 	})
 })

@@ -89,8 +89,6 @@ export const demonym = (code: string | undefined) => (code ? (DEMONYM[code] ?? n
 
 /** Moods and themes whose name works as an adjective before the noun; the others go after it ("about …"). */
 const MOOD_AFTER: Record<string, string> = {
-	"crime-mystery": "with a mystery to crack",
-	"other-worlds": "set in other worlds",
 	history: "about real history",
 	"coming-of-age": "about growing up",
 }

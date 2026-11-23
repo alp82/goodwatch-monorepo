@@ -31,8 +31,6 @@ const GENRE_ADJ: Record<string, string> = {
 }
 /** Moods that read better behind the noun: the lead-in word and the token's own words. */
 const MOOD_AFTER: Record<string, [string, string]> = {
-	"crime-mystery": ["with", "a mystery to crack"],
-	"other-worlds": ["set in", "other worlds"],
 	history: ["about", "real history"],
 	"coming-of-age": ["about", "growing up"],
 }

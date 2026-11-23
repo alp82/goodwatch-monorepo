@@ -19,7 +19,7 @@ import {
 } from "@heroicons/react/24/solid"
 import type { ComponentType } from "react"
 // What the filter bar says: sort options, option labels, chip labels, and the recovery wording. Every label is a
-// proper, capitalized label ("Top rated", "Crime & mystery", "Philosophical").
+// proper, capitalized label ("Top rated", "Mysterious", "Philosophical").
 import {
 	CONTENT_KINDS,
 	type ContentKind,
@@ -40,11 +40,7 @@ import {
 } from "~/domain/filter-state"
 import { MOOD_BY_KEY } from "~/domain/moods"
 import { STYLE_BY_KEY, THEME_BY_KEY } from "~/domain/themes-styles"
-import {
-	ANIME_NAMES,
-	ANIME_STATE_NAMES,
-	type AnimeChoice,
-} from "~/domain/title-type"
+import { ANIME_NAMES, ANIME_STATE_NAMES, type AnimeChoice } from "~/domain/title-type"
 
 export interface SortOption<K extends string = string> {
 	key: K
@@ -88,8 +84,7 @@ export const tasteStateOf = (
 export const RATE_TITLES_PATH = ratePath(GUEST)
 
 /** Best match's line while the person has too few liked titles. */
-export const RATE_MORE =
-	"Rate a few more titles you love and Best match learns your taste."
+export const RATE_MORE = "Rate a few more titles you love and Best match learns your taste."
 
 export const DISCOVER_SORTS: Record<SortKey, SortOption<SortKey>> = {
 	relevance: {
@@ -153,16 +148,8 @@ export const discoverSorts = (
  * The sort the sort control shows. Best match needs taste: without it the results are in Popular (Relevance while
  * searching), as the server's `sortUsed` says, and so is the control, whatever the URL asked for.
  */
-export const sortShown = (
-	sort: SortKey,
-	searching: boolean,
-	taste: TasteState,
-): SortKey =>
-	sort === "match" && taste !== "ready"
-		? searching
-			? "relevance"
-			: "popular"
-		: sort
+export const sortShown = (sort: SortKey, searching: boolean, taste: TasteState): SortKey =>
+	sort === "match" && taste !== "ready" ? (searching ? "relevance" : "popular") : sort
 
 /** "953", "1.2k", "12k": a count short enough for a fixed slot. Say the full number where there's room. */
 export function compactCount(n: number): string {
@@ -208,10 +195,7 @@ export const RELEASED_LABELS: Record<Released, string> = {
  * The kinds of content in words: `full` in the checklist, `short` inside a sentence ("no violence", "drugs OK"), and
  * `words` the filter search also finds the kind by.
  */
-export const CONTENT_LABELS: Record<
-	ContentKind,
-	{ full: string; short: string; words: string }
-> = {
+export const CONTENT_LABELS: Record<ContentKind, { full: string; short: string; words: string }> = {
 	violence: {
 		full: "Graphic violence",
 		short: "violence",
@@ -246,39 +230,38 @@ const capitalized = (text: string) => text[0].toUpperCase() + text.slice(1)
  * Each filter group's color: the dot on its chip and the bar on its sheet section. Amber is what taste decides, so it
  * is the Taste match group's; genres are fuchsia.
  */
-export const FILTER_ACCENTS: Record<FilterName, { dot: string; bar: string }> =
-	{
-		years: { dot: "bg-cyan-400", bar: "bg-cyan-500" },
-		runtime: { dot: "bg-sky-400", bar: "bg-sky-500" },
-		sourceScores: { dot: "bg-yellow-400", bar: "bg-yellow-500" },
-		budget: { dot: "bg-emerald-400", bar: "bg-emerald-500" },
-		shows: { dot: "bg-violet-400", bar: "bg-violet-500" },
-		popularity: { dot: "bg-cyan-400", bar: "bg-cyan-500" },
-		scoreGap: { dot: "bg-rose-400", bar: "bg-rose-500" },
-		services: { dot: "bg-emerald-400", bar: "bg-emerald-500" },
-		tasteGroups: { dot: "bg-amber-400", bar: "bg-amber-500" },
-		wishlist: { dot: "bg-blue-400", bar: "bg-blue-500" },
-		notSeenYet: { dot: "bg-blue-400", bar: "bg-blue-500" },
-		type: { dot: "bg-teal-400", bar: "bg-teal-500" },
-		anime: { dot: "bg-pink-400", bar: "bg-pink-500" },
-		moods: { dot: "bg-indigo-400", bar: "bg-indigo-500" },
-		themes: { dot: "bg-orange-400", bar: "bg-orange-500" },
-		styles: { dot: "bg-green-400", bar: "bg-green-500" },
-		genres: { dot: "bg-fuchsia-400", bar: "bg-fuchsia-500" },
-		minScore: { dot: "bg-lime-400", bar: "bg-lime-500" },
-		minMatch: { dot: "bg-amber-400", bar: "bg-amber-500" },
-		released: { dot: "bg-cyan-400", bar: "bg-cyan-500" },
-		trope: { dot: "bg-rose-400", bar: "bg-rose-500" },
-		similarTo: { dot: "bg-rose-400", bar: "bg-rose-500" },
-		loved: { dot: "bg-emerald-300", bar: "bg-emerald-500" },
-		disliked: { dot: "bg-red-400", bar: "bg-red-500" },
-		productionCountries: { dot: "bg-yellow-400", bar: "bg-yellow-500" },
-		people: { dot: "bg-purple-400", bar: "bg-purple-500" },
-		legacy: { dot: "bg-gray-400", bar: "bg-gray-500" },
-		ageLimit: { dot: "bg-violet-400", bar: "bg-violet-500" },
-		content: { dot: "bg-sky-400", bar: "bg-sky-500" },
-		awards: { dot: "bg-yellow-300", bar: "bg-yellow-500" },
-	}
+export const FILTER_ACCENTS: Record<FilterName, { dot: string; bar: string }> = {
+	years: { dot: "bg-cyan-400", bar: "bg-cyan-500" },
+	runtime: { dot: "bg-sky-400", bar: "bg-sky-500" },
+	sourceScores: { dot: "bg-yellow-400", bar: "bg-yellow-500" },
+	budget: { dot: "bg-emerald-400", bar: "bg-emerald-500" },
+	shows: { dot: "bg-violet-400", bar: "bg-violet-500" },
+	popularity: { dot: "bg-cyan-400", bar: "bg-cyan-500" },
+	scoreGap: { dot: "bg-rose-400", bar: "bg-rose-500" },
+	services: { dot: "bg-emerald-400", bar: "bg-emerald-500" },
+	tasteGroups: { dot: "bg-amber-400", bar: "bg-amber-500" },
+	wishlist: { dot: "bg-blue-400", bar: "bg-blue-500" },
+	notSeenYet: { dot: "bg-blue-400", bar: "bg-blue-500" },
+	type: { dot: "bg-teal-400", bar: "bg-teal-500" },
+	anime: { dot: "bg-pink-400", bar: "bg-pink-500" },
+	moods: { dot: "bg-indigo-400", bar: "bg-indigo-500" },
+	themes: { dot: "bg-orange-400", bar: "bg-orange-500" },
+	styles: { dot: "bg-green-400", bar: "bg-green-500" },
+	genres: { dot: "bg-fuchsia-400", bar: "bg-fuchsia-500" },
+	minScore: { dot: "bg-lime-400", bar: "bg-lime-500" },
+	minMatch: { dot: "bg-amber-400", bar: "bg-amber-500" },
+	released: { dot: "bg-cyan-400", bar: "bg-cyan-500" },
+	trope: { dot: "bg-rose-400", bar: "bg-rose-500" },
+	similarTo: { dot: "bg-rose-400", bar: "bg-rose-500" },
+	loved: { dot: "bg-emerald-300", bar: "bg-emerald-500" },
+	disliked: { dot: "bg-red-400", bar: "bg-red-500" },
+	productionCountries: { dot: "bg-yellow-400", bar: "bg-yellow-500" },
+	people: { dot: "bg-purple-400", bar: "bg-purple-500" },
+	legacy: { dot: "bg-gray-400", bar: "bg-gray-500" },
+	ageLimit: { dot: "bg-violet-400", bar: "bg-violet-500" },
+	content: { dot: "bg-sky-400", bar: "bg-sky-500" },
+	awards: { dot: "bg-yellow-300", bar: "bg-yellow-500" },
+}
 
 /**
  * The hidden meter's segment color per recovery. The meter's first segment (what shows) is amber, so the Taste match
@@ -313,8 +296,7 @@ export function recoveryLabel(
 	const n = titles.toLocaleString("en")
 	if (short && filter === "services") return `${n} other services`
 	const hidesAnime = filter === "anime" && state.anime === "none"
-	if (short && filter !== "notSeenYet" && filter !== "type" && !hidesAnime)
-		return `${n} more`
+	if (short && filter !== "notSeenYet" && filter !== "type" && !hidesAnime) return `${n} more`
 	switch (filter) {
 		case "services":
 			return `${n} on other services`
@@ -331,21 +313,13 @@ export function recoveryLabel(
 		case "anime":
 			return hidesAnime ? `${n} anime` : `${n} that aren't anime`
 		case "moods":
-			return state.allOf?.includes("moods")
-				? `${n} without every mood`
-				: `${n} in other moods`
+			return state.allOf?.includes("moods") ? `${n} without every mood` : `${n} in other moods`
 		case "themes":
-			return state.allOf?.includes("themes")
-				? `${n} without every theme`
-				: `${n} in other themes`
+			return state.allOf?.includes("themes") ? `${n} without every theme` : `${n} in other themes`
 		case "styles":
-			return state.allOf?.includes("styles")
-				? `${n} without every style`
-				: `${n} in other styles`
+			return state.allOf?.includes("styles") ? `${n} without every style` : `${n} in other styles`
 		case "genres":
-			return state.allOf?.includes("genres")
-				? `${n} without every genre`
-				: `${n} in other genres`
+			return state.allOf?.includes("genres") ? `${n} without every genre` : `${n} in other genres`
 		case "minScore":
 			return `${n} below ${state.minScore}`
 		case "minMatch":
@@ -428,10 +402,7 @@ const without = <T>(list: T[] | undefined, value: T) => {
  * ("Age limit FSK 12"), and so is every kind the person changed from what the limit sets ("No disturbing scenes",
  * "Violence OK").
  */
-export function activeChips(
-	state: FilterState,
-	names: FilterNames = {},
-): ActiveChip[] {
+export function activeChips(state: FilterState, names: FilterNames = {}): ActiveChip[] {
 	const chips: ActiveChip[] = []
 	for (const key of state.tasteGroups ?? []) {
 		const name = names.tasteGroup?.(key)
@@ -485,10 +456,8 @@ export function activeChips(
 		const displayMax =
 			range.max === undefined
 				? undefined
-				: (stops.find(
-						(stop) =>
-							Math.abs(range.max! - (stop - (money ? 0.001 : 1 / 60))) < 1e-9,
-					) ?? range.max)
+				: (stops.find((stop) => Math.abs(range.max! - (stop - (money ? 0.001 : 1 / 60))) < 1e-9) ??
+					range.max)
 		const span =
 			range.min === range.max
 				? fmt(range.min!)
@@ -499,10 +468,8 @@ export function activeChips(
 						: `${fmt(range.min)} to ${fmt(displayMax!)}`
 		const sameRange = (preset: { range: FilterRange }) =>
 			preset.range.min === range.min && preset.range.max === range.max
-		const budgetPreset =
-			field === "budget" ? BUDGET_PRESETS.find(sameRange) : undefined
-		const hoursPreset =
-			field === "hours" ? HOURS_PRESETS.find(sameRange) : undefined
+		const budgetPreset = field === "budget" ? BUDGET_PRESETS.find(sameRange) : undefined
+		const hoursPreset = field === "hours" ? HOURS_PRESETS.find(sameRange) : undefined
 		chips.push({
 			key: field,
 			group: money ? "budget" : "shows",
@@ -545,9 +512,7 @@ export function activeChips(
 		chips.push({
 			key: "showStatus",
 			group: "shows",
-			label: { running: "Still running", ended: "Ended", canceled: "Canceled" }[
-				state.showStatus
-			],
+			label: { running: "Still running", ended: "Ended", canceled: "Canceled" }[state.showStatus],
 			remove: (s) => ({ ...s, showStatus: undefined }),
 		})
 	for (const field of ["votes", "popularityRank"] as const) {
@@ -568,18 +533,14 @@ export function activeChips(
 						? `${k(min ?? 0)}+ ratings`
 						: min === undefined
 							? `Up to ${k(max)} ratings`
-							: `${min.toLocaleString("en-US")} to ${max.toLocaleString(
-									"en-US",
-								)} ratings`
+							: `${min.toLocaleString("en-US")} to ${max.toLocaleString("en-US")} ratings`
 				: (min === undefined || min <= 1) && max !== undefined
 					? `Top ${max.toLocaleString("en-US")}`
 					: max === undefined
 						? min !== undefined && min > 1
 							? `Past #${(min - 1).toLocaleString("en-US")}`
 							: "#1+"
-						: `#${(min ?? 1).toLocaleString("en-US")} to #${max.toLocaleString(
-								"en-US",
-							)}`
+						: `#${(min ?? 1).toLocaleString("en-US")} to #${max.toLocaleString("en-US")}`
 		chips.push({
 			key: field,
 			group: "popularity",
@@ -592,13 +553,10 @@ export function activeChips(
 		if (!range || (range.min === undefined && range.max === undefined)) continue
 		const { min, max } = range
 		const minutes = (n: number) =>
-			n >= 60
-				? `${Math.floor(n / 60)} h${n % 60 ? ` ${n % 60}` : ""}`
-				: `${n} min`
+			n >= 60 ? `${Math.floor(n / 60)} h${n % 60 ? ` ${n % 60}` : ""}` : `${n} min`
 		const kind = group === "episodeRuntime" ? "Episodes" : "Movies"
 		const label =
-			group !== "years" &&
-			(group === "episodeRuntime" || state.episodeRuntime !== undefined)
+			group !== "years" && (group === "episodeRuntime" || state.episodeRuntime !== undefined)
 				? max === undefined
 					? `${kind} ${minutes(min!)} or more`
 					: min === undefined || min === 0
@@ -648,9 +606,7 @@ export function activeChips(
 				delete sourceScores[source]
 				return {
 					...s,
-					sourceScores: Object.keys(sourceScores).length
-						? sourceScores
-						: undefined,
+					sourceScores: Object.keys(sourceScores).length ? sourceScores : undefined,
 				}
 			},
 		})
@@ -689,9 +645,7 @@ export function activeChips(
 			label: ANIME_STATE_NAMES[state.anime],
 			remove: (s) => ({ ...s, anime: "any" }),
 		})
-	const allGroups = new Set(
-		state.allOf?.filter((group) => state[group].length >= 2),
-	)
+	const allGroups = new Set(state.allOf?.filter((group) => state[group].length >= 2))
 	for (const group of allGroups) {
 		const labels =
 			group === "moods"
@@ -762,15 +716,12 @@ export function activeChips(
 			remove: (s) => ({ ...s, released: "any" }),
 		})
 	if (!state.anyService && !state.onMyServices && state.services?.length) {
-		const serviceNames = state.services
-			.map((id) => names.service?.(id))
-			.filter(Boolean)
+		const serviceNames = state.services.map((id) => names.service?.(id)).filter(Boolean)
 		chips.push({
 			key: "services",
 			group: "services",
 			label:
-				serviceNames.length === state.services.length &&
-				serviceNames.length <= 2
+				serviceNames.length === state.services.length && serviceNames.length <= 2
 					? serviceNames.join(" or ")
 					: plural(state.services.length, "service", "services"),
 			preview: state.services.map((id) => ({
@@ -807,10 +758,13 @@ export function activeChips(
 					remove: (s) => ({ ...s, [group]: without(s[group], key) }),
 				})
 	}
-	if (state.trope) chips.push({
-  key: `trope-${state.trope}`, group: "trope", label: tropeLabel(state.trope),
-  remove: s => ({ ...s, trope: undefined }),
- })
+	if (state.trope)
+		chips.push({
+			key: `trope-${state.trope}`,
+			group: "trope",
+			label: tropeLabel(state.trope),
+			remove: (s) => ({ ...s, trope: undefined }),
+		})
 	for (const key of state.similarTo ?? [])
 		chips.push({
 			key: `similar-${key}`,
@@ -849,10 +803,7 @@ export function activeChips(
 			label: names.person?.(id) ?? "Cast or crew",
 			remove: (s) => ({ ...s, people: without(s.people, id) }),
 		})
-	for (const [param, value] of Object.entries(state.legacy ?? {}) as [
-		LegacyParam,
-		string,
-	][])
+	for (const [param, value] of Object.entries(state.legacy ?? {}) as [LegacyParam, string][])
 		chips.push({
 			key: `legacy-${param}`,
 			group: "legacy",

@@ -1,4 +1,4 @@
-// Members' portraits, cached in Redis per person and tab for 10 minutes at `taste-portrait:v13:<user_id>:<tab>`, and
+// Members' portraits, cached in Redis per person and tab for 10 minutes at `taste-portrait:v14:<user_id>:<tab>`, and
 // cleared when their taste changes (markTasteChanged calls clearTastePortrait).
 //
 // A cached view is used only when it was built after the person's latest write had settled: Crate shows a write to
@@ -11,7 +11,7 @@ import Redis from "ioredis"
 import { PORTRAIT_TABS, type PortraitTab, type PortraitView } from "./view"
 
 // Bump when a view's shape or computation changes, so cached views of the old kind are never read.
-const CACHE_VERSION = "v13"
+const CACHE_VERSION = "v14"
 const TTL_SECONDS = 10 * 60
 const SETTLE_MS = 1_500
 
@@ -21,12 +21,7 @@ const touchedKey = (userId: string) => `taste:touched:${userId}`
 
 interface PortraitRedis {
 	get(key: string): Promise<string | null>
-	set(
-		key: string,
-		value: string,
-		expiry: "EX",
-		seconds: number,
-	): Promise<unknown>
+	set(key: string, value: string, expiry: "EX", seconds: number): Promise<unknown>
 	del(key: string): Promise<number>
 }
 
@@ -84,12 +79,7 @@ export async function writeCachedPortrait(
 	if (!redis) return
 	try {
 		const entry: Entry = { readFrom, view, hiddenKey }
-		await redis.set(
-			cacheKey(userId, view.tab),
-			JSON.stringify(entry),
-			"EX",
-			ttlSeconds,
-		)
+		await redis.set(cacheKey(userId, view.tab), JSON.stringify(entry), "EX", ttlSeconds)
 	} catch (error) {
 		console.error("Taste portrait: writing the cache failed:", error)
 	}
@@ -100,9 +90,7 @@ export async function clearTastePortrait(userId: string): Promise<void> {
 	try {
 		const redis = await portraitRedis()
 		if (!redis) return
-		await Promise.all(
-			PORTRAIT_TABS.map((tab) => redis.del(cacheKey(userId, tab))),
-		)
+		await Promise.all(PORTRAIT_TABS.map((tab) => redis.del(cacheKey(userId, tab))))
 	} catch (error) {
 		console.error("Taste portrait: clearing the cache failed:", error)
 	}

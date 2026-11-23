@@ -109,9 +109,7 @@
 		"expect": {
 			"genres": "Family,Drama"
 		},
-		"absent": [
-			"age"
-		]
+		"absent": ["age"]
 	},
 	{
 		"group": "Content",
@@ -226,9 +224,7 @@
 			"services": "all",
 			"ok": "sex"
 		},
-		"absent": [
-			"hide"
-		]
+		"absent": ["hide"]
 	},
 	{
 		"group": "Existing wins",
@@ -243,10 +239,7 @@
 		"group": "Titles",
 		"query": "\"Modern Family\"",
 		"expect": {},
-		"absent": [
-			"age",
-			"genres"
-		]
+		"absent": ["age", "genres"]
 	},
 	{
 		"group": "Titles",
@@ -278,9 +271,7 @@
 		"group": "Limits",
 		"query": "no horror",
 		"expect": {},
-		"absent": [
-			"genres"
-		],
+		"absent": ["genres"],
 		"residualContains": "no horror"
 	},
 	{
@@ -289,10 +280,7 @@
 		"expect": {
 			"type": "movie"
 		},
-		"absent": [
-			"minYear",
-			"maxYear"
-		],
+		"absent": ["minYear", "maxYear"],
 		"residualContains": "set in"
 	},
 	{
@@ -317,9 +305,7 @@
 		"expect": {
 			"type": "movie"
 		},
-		"absent": [
-			"productionCountries"
-		],
+		"absent": ["productionCountries"],
 		"residualContains": "in German"
 	},
 	{
@@ -335,7 +321,7 @@
 		"group": "Mood & style",
 		"query": "other worlds",
 		"expect": {
-			"moods": "worlds"
+			"moods": "otherworldly"
 		}
 	},
 	{
@@ -345,9 +331,7 @@
 			"type": "movie",
 			"minYear": "2001"
 		},
-		"absent": [
-			"maxYear"
-		],
+		"absent": ["maxYear"],
 		"residualContains": "set in"
 	},
 	{
@@ -448,20 +432,14 @@
 		"expect": {
 			"released": "2010s"
 		},
-		"absent": [
-			"minYear",
-			"maxYear"
-		],
+		"absent": ["minYear", "maxYear"],
 		"residualEquals": "matrix"
 	},
 	{
 		"group": "Bare years",
 		"query": "\"Blade Runner 2049\"",
 		"expect": {},
-		"absent": [
-			"minYear",
-			"maxYear"
-		],
+		"absent": ["minYear", "maxYear"],
 		"residualEquals": "\"Blade Runner 2049\""
 	},
 	{
@@ -470,10 +448,7 @@
 		"expect": {
 			"type": "movie"
 		},
-		"absent": [
-			"minYear",
-			"maxYear"
-		],
+		"absent": ["minYear", "maxYear"],
 		"residualEquals": "set in 1999"
 	},
 	{
@@ -608,9 +583,7 @@
 			"genres": "Comedy",
 			"moods": "funny"
 		},
-		"absent": [
-			"similar"
-		],
+		"absent": ["similar"],
 		"residualEquals": ""
 	},
 	{
@@ -619,9 +592,7 @@
 		"expect": {
 			"moods": "funny"
 		},
-		"absent": [
-			"similar"
-		],
+		"absent": ["similar"],
 		"residualEquals": ""
 	},
 	{
@@ -648,9 +619,7 @@
 		"expect": {
 			"maxScore": "50"
 		},
-		"absent": [
-			"people"
-		],
+		"absent": ["people"],
 		"residualEquals": "fight club bad",
 		"noWarningContains": "Unresolved person"
 	},
@@ -660,9 +629,7 @@
 		"expect": {
 			"maxScore": "50"
 		},
-		"absent": [
-			"people"
-		],
+		"absent": ["people"],
 		"residualEquals": "",
 		"noWarningContains": "Unresolved person"
 	},
@@ -672,18 +639,14 @@
 		"expect": {
 			"score": "70"
 		},
-		"absent": [
-			"people"
-		],
+		"absent": ["people"],
 		"residualEquals": "",
 		"noWarningContains": "Unresolved person"
 	},
 	{
 		"group": "With attributes versus people",
 		"query": "with strong female leads",
-		"absent": [
-			"people"
-		],
+		"absent": ["people"],
 		"residualEquals": "with strong female leads",
 		"noWarningContains": "Unresolved person"
 	},
@@ -704,9 +667,7 @@
 			"moods": "funny",
 			"maxScore": "50"
 		},
-		"absent": [
-			"people"
-		],
+		"absent": ["people"],
 		"residualEquals": ""
 	},
 	{
@@ -716,10 +677,7 @@
 		"expect": {
 			"score": "80"
 		},
-		"absent": [
-			"maxScore",
-			"people"
-		],
+		"absent": ["maxScore", "people"],
 		"residualEquals": ""
 	},
 	{
@@ -730,9 +688,7 @@
 			"maxScore": "50",
 			"type": "movie"
 		},
-		"absent": [
-			"score"
-		],
+		"absent": ["score"],
 		"residualEquals": ""
 	},
 	{
@@ -741,9 +697,7 @@
 		"expect": {
 			"maxScore": "49"
 		},
-		"absent": [
-			"people"
-		],
+		"absent": ["people"],
 		"residualEquals": ""
 	},
 	{
@@ -753,9 +707,7 @@
 			"people": "287",
 			"type": "movie"
 		},
-		"absent": [
-			"similar"
-		],
+		"absent": ["similar"],
 		"residualEquals": "",
 		"noWarningContains": "Unresolved"
 	},
@@ -765,9 +717,7 @@
 		"expect": {
 			"people": "287"
 		},
-		"absent": [
-			"similar"
-		],
+		"absent": ["similar"],
 		"residualEquals": ""
 	},
 	{
@@ -777,9 +727,7 @@
 			"people": "287",
 			"type": "movie"
 		},
-		"absent": [
-			"similar"
-		],
+		"absent": ["similar"],
 		"residualEquals": ""
 	},
 	{
@@ -789,9 +737,7 @@
 			"people": "31",
 			"type": "movie"
 		},
-		"absent": [
-			"similar"
-		],
+		"absent": ["similar"],
 		"residualEquals": ""
 	},
 	{
@@ -801,9 +747,7 @@
 			"similar": "1000000000550",
 			"type": "movie"
 		},
-		"absent": [
-			"people"
-		],
+		"absent": ["people"],
 		"residualEquals": ""
 	},
 	{
@@ -822,10 +766,7 @@
 		"expect": {
 			"similar": "1000000004247"
 		},
-		"absent": [
-			"people",
-			"type"
-		],
+		"absent": ["people", "type"],
 		"residualEquals": ""
 	},
 	{
@@ -834,10 +775,7 @@
 		"expect": {
 			"similar": "1000000004247"
 		},
-		"absent": [
-			"people",
-			"type"
-		],
+		"absent": ["people", "type"],
 		"residualEquals": ""
 	},
 	{
@@ -848,9 +786,7 @@
 			"people": "31",
 			"type": "movie"
 		},
-		"absent": [
-			"similar"
-		],
+		"absent": ["similar"],
 		"residualEquals": ""
 	},
 	{
@@ -867,9 +803,7 @@
 		"expect": {
 			"people": "287"
 		},
-		"absent": [
-			"styles"
-		],
+		"absent": ["styles"],
 		"residualEquals": ""
 	},
 	{
@@ -936,9 +870,7 @@
 	{
 		"group": "Bare people and style",
 		"query": "about robots",
-		"absent": [
-			"people"
-		],
+		"absent": ["people"],
 		"residualEquals": "about robots"
 	},
 	{
@@ -947,9 +879,7 @@
 		"expect": {
 			"people": "287"
 		},
-		"absent": [
-			"similar"
-		],
+		"absent": ["similar"],
 		"residualEquals": ""
 	},
 	{
@@ -966,9 +896,7 @@
 		"expect": {
 			"similar": "1000000000603"
 		},
-		"absent": [
-			"people"
-		],
+		"absent": ["people"],
 		"residualEquals": ""
 	},
 	{
@@ -977,9 +905,7 @@
 		"expect": {
 			"similar": "1000000000603"
 		},
-		"absent": [
-			"people"
-		],
+		"absent": ["people"],
 		"residualEquals": ""
 	},
 	{
@@ -988,9 +914,7 @@
 		"expect": {
 			"similar": "1000000000603"
 		},
-		"absent": [
-			"people"
-		],
+		"absent": ["people"],
 		"residualEquals": ""
 	},
 	{
@@ -1018,9 +942,7 @@
 		"expect": {
 			"similar": "1000000000550"
 		},
-		"absent": [
-			"people"
-		],
+		"absent": ["people"],
 		"residualEquals": ""
 	},
 	{
@@ -1243,9 +1165,7 @@
 			"maxYear": "1989",
 			"people": "287"
 		},
-		"absent": [
-			"score"
-		],
+		"absent": ["score"],
 		"residualEquals": ""
 	},
 	{
@@ -1256,9 +1176,7 @@
 			"maxYear": "1980",
 			"people": "287"
 		},
-		"absent": [
-			"score"
-		],
+		"absent": ["score"],
 		"residualEquals": ""
 	},
 	{
@@ -1268,9 +1186,7 @@
 			"maxRuntime": "79",
 			"people": "287"
 		},
-		"absent": [
-			"score"
-		],
+		"absent": ["score"],
 		"residualEquals": ""
 	},
 	{
@@ -1279,9 +1195,7 @@
 		"expect": {
 			"age": "8"
 		},
-		"absent": [
-			"score"
-		]
+		"absent": ["score"]
 	},
 	{
 		"group": "Bare score shorthand",
@@ -1289,9 +1203,7 @@
 		"expect": {
 			"match": "80"
 		},
-		"absent": [
-			"score"
-		],
+		"absent": ["score"],
 		"residualEquals": ""
 	},
 	{
@@ -1307,25 +1219,19 @@
 	{
 		"group": "Bare score shorthand",
 		"query": "\"80\"",
-		"absent": [
-			"score"
-		],
+		"absent": ["score"],
 		"residualEquals": "\"80\""
 	},
 	{
 		"group": "Bare score shorthand",
 		"query": "101",
-		"absent": [
-			"score"
-		],
+		"absent": ["score"],
 		"residualEquals": "101"
 	},
 	{
 		"group": "Bare score shorthand",
 		"query": "80.5",
-		"absent": [
-			"score"
-		],
+		"absent": ["score"],
 		"residualEquals": "80.5"
 	},
 	{
@@ -1334,11 +1240,7 @@
 		"expect": {
 			"people": "31"
 		},
-		"absent": [
-			"score",
-			"minRuntime",
-			"maxRuntime"
-		],
+		"absent": ["score", "minRuntime", "maxRuntime"],
 		"residualEquals": "200"
 	},
 	{
@@ -1347,11 +1249,7 @@
 		"expect": {
 			"people": "31"
 		},
-		"absent": [
-			"score",
-			"minRuntime",
-			"maxRuntime"
-		],
+		"absent": ["score", "minRuntime", "maxRuntime"],
 		"residualEquals": "200 million"
 	},
 	{
@@ -1360,10 +1258,7 @@
 		"expect": {
 			"people": "31"
 		},
-		"absent": [
-			"score",
-			"minYear"
-		],
+		"absent": ["score", "minYear"],
 		"residualEquals": "200 million"
 	},
 	{
@@ -1372,9 +1267,7 @@
 		"expect": {
 			"people": "31"
 		},
-		"absent": [
-			"score"
-		],
+		"absent": ["score"],
 		"residualEquals": "80 million"
 	},
 	{
@@ -1383,11 +1276,7 @@
 		"expect": {
 			"people": "31"
 		},
-		"absent": [
-			"score",
-			"minYear",
-			"maxYear"
-		],
+		"absent": ["score", "minYear", "maxYear"],
 		"residualEquals": "2000 million"
 	},
 	{
@@ -1396,9 +1285,7 @@
 		"expect": {
 			"people": "31"
 		},
-		"absent": [
-			"score"
-		],
+		"absent": ["score"],
 		"residualEquals": "$200 million"
 	},
 	{
@@ -1413,10 +1300,7 @@
 	{
 		"group": "Unknown numbers preserve people",
 		"query": "\"Tom Hanks 200 million\"",
-		"absent": [
-			"people",
-			"score"
-		],
+		"absent": ["people", "score"],
 		"residualEquals": "\"Tom Hanks 200 million\""
 	},
 	{
@@ -1425,9 +1309,7 @@
 		"expect": {
 			"people": "31"
 		},
-		"absent": [
-			"score"
-		],
+		"absent": ["score"],
 		"residualContains": "$200 million",
 		"noWarningContains": "Unresolved person"
 	},
@@ -1438,9 +1320,7 @@
 			"people": "31",
 			"services": "8"
 		},
-		"absent": [
-			"score"
-		],
+		"absent": ["score"],
 		"residualEquals": "200 million"
 	}
 ]

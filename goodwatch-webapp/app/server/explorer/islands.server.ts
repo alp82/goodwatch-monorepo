@@ -15,10 +15,7 @@
 // An island's titles are ordered by how well they fit it together with how good and well known they are (FIT_WEIGHT).
 // Each layout build logs "Explorer <grouping> islands: ..." with every island's size, any threshold that moved, and
 // the share of the pool that sits on an island.
-import {
-	STYLES as STYLE_RULES,
-	THEMES as THEME_RULES,
-} from "~/domain/themes-styles"
+import { STYLES as STYLE_RULES, THEMES as THEME_RULES } from "~/domain/themes-styles"
 import type { CoreScores } from "~/server/utils/fingerprint"
 import type { OccasionFlag } from "./pool.server"
 
@@ -75,8 +72,7 @@ export const MOODS: RuleIsland[] = [
 		id: "cozy",
 		name: "Cozy",
 		color: "#8ccf4d",
-		level: (s) =>
-			s("bleakness") <= 3 ? Math.min(s("wholesome"), s("hopefulness")) : 0,
+		level: (s) => (s("bleakness") <= 3 ? Math.min(s("wholesome"), s("hopefulness")) : 0),
 		from: 7,
 	},
 	{
@@ -141,6 +137,20 @@ export const MOODS: RuleIsland[] = [
 		color: "#e9a23b",
 		level: (s) => s("wonder"),
 		from: 8,
+	},
+	{
+		id: "mysterious",
+		name: "Mysterious",
+		color: "#60a5fa",
+		level: (s) => s("mystery"),
+		from: 8,
+	},
+	{
+		id: "otherworldly",
+		name: "Otherworldly",
+		color: "#2dd4bf",
+		level: (s) => Math.min(Math.max(s("fantasy"), s("futuristic")), s("world_immersion") + 1),
+		from: 7,
 	},
 	{
 		id: "quirky",

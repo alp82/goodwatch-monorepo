@@ -6,6 +6,8 @@ const { MOODS, MOOD_KEYS, moodsInText, parseMoods, moodsOf, moodMaskOf, moodsInM
 	await import("./moods.ts")
 
 const renamed = [
+	["mysterious", "Mysterious", "Crime & mystery"],
+	["otherworldly", "Otherworldly", "Other worlds"],
 	["feelgood", "Cozy", "Feel-good"],
 	["romance", "Romantic", "Romance"],
 	["action", "Thrilling", "Action"],
@@ -21,10 +23,10 @@ test("mood URL keys stay stable", () => {
 		"romance",
 		"action",
 		"scary",
-		"crime",
+		"mysterious",
 		"mind",
 		"heavy",
-		"worlds",
+		"otherworldly",
 		"history",
 		"growing",
 		"tense",
@@ -55,12 +57,12 @@ test("mood text matching recognizes old and new mood words without matching part
 	)
 })
 
-test("only the four topic moods are reserved to stay outside the future Feel column", () => {
+test("only the two topic moods are reserved to stay outside the future Feel column", () => {
 	assert.deepEqual(
 		MOODS.filter((mood) => !mood.feel).map((mood) => mood.key),
-		["crime", "worlds", "history", "growing"],
+		["history", "growing"],
 	)
-	assert.equal(MOODS.filter((mood) => mood.feel).length, 12)
+	assert.equal(MOODS.filter((mood) => mood.feel).length, 14)
 })
 
 const { VALID_FINGERPRINT_KEYS } = await import("../server/utils/fingerprint.ts")
@@ -70,6 +72,15 @@ const fingerprint = (scores: Record<string, number>) =>
 test("new moods match their rules on object and ordered fingerprints; Tense, Dark and Deep keep Explorer's starting thresholds", async () => {
 	const { MOODS: islands } = await import("../server/explorer/islands.server.ts")
 	const fixtures = [
+		["mysterious", { mystery: 8 }, [{ mystery: 7, crime: 9, intrigue: 9 }]],
+		[
+			"otherworldly",
+			{ futuristic: 7, world_immersion: 6 },
+			[
+				{ fantasy: 8, world_immersion: 5 },
+				{ historical: 10, world_immersion: 10 },
+			],
+		],
 		[
 			"tense",
 			{ tension: 8, adrenaline: 6, scare: 6 },
@@ -95,7 +106,7 @@ test("new moods match their rules on object and ordered fingerprints; Tense, Dar
 			[{ eccentricity: 7 }, { eccentricity: 8, violence: 6 }, { eccentricity: 8, bleakness: 7 }],
 		],
 	] as const
-	const explorerParity = new Set(["tense", "dark", "deep"])
+	const explorerParity = new Set(["tense", "dark", "deep", "mysterious", "otherworldly"])
 	for (const [key, matching, counters] of fixtures) {
 		const island = islands.find((island) => island.id === key)
 		assert.ok(island, key)
@@ -149,9 +160,9 @@ test("older moods leave out the near misses that read wrong", () => {
 	assert.equal(fits("scary", { scare: 7 }), false)
 	assert.equal(fits("scary", { scare: 8, uncanny: 6 }), true)
 	assert.equal(fits("scary", { scare: 5 }, ["Horror"]), true)
-	// Crime & mystery: a puzzle needs a crime.
-	assert.equal(fits("crime", { mystery: 9 }), false)
-	assert.equal(fits("crime", { mystery: 8 }, ["Mystery"]), true)
+	// Mysterious spans genres, while a straightforward heist stays under Crime.
+	assert.equal(fits("mysterious", { mystery: 8 }, ["Science Fiction"]), true)
+	assert.equal(fits("mysterious", { mystery: 7, intrigue: 9, crime: 9 }, ["Crime"]), false)
 	// Sad: big emotions, not big battles.
 	assert.equal(fits("heavy", { pathos: 9, melancholy: 7, adrenaline: 8 }), false)
 	assert.equal(fits("heavy", { pathos: 8, melancholy: 6 }), true)

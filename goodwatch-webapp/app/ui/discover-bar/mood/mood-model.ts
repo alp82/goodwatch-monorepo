@@ -70,29 +70,22 @@ const moodOption = (key: (typeof MOODS)[number]["key"]): MoodOption => {
 }
 
 /**
- * Feel lists the feel moods; a topic mood (Crime & mystery, History, ...) shows only while picked, since About covers
+ * Feel lists the feel moods; a topic mood (History or Coming of age) shows only while picked, since About covers
  * it, so a link that has one can still drop it here.
  */
 function moodOptions(state: FilterState): MoodOption[] {
-	return MOODS.filter(
-		(mood) => mood.feel || state.moods.includes(mood.key),
-	).map((mood) => moodOption(mood.key))
+	return MOODS.filter((mood) => mood.feel || state.moods.includes(mood.key)).map((mood) =>
+		moodOption(mood.key),
+	)
 }
 
 /** Genre units: the folded pairs (as one row each), then every other genre the counts know or the state picks. */
-export function genreOptions(
-	state: FilterState,
-	known: readonly string[],
-): MoodOption[] {
+export function genreOptions(state: FilterState, known: readonly string[]): MoodOption[] {
 	const names = [...new Set([...known, ...state.genres])]
-	const folds = GENRE_FOLDS.filter((fold) =>
-		fold.names.some((name) => names.includes(name)),
-	)
+	const folds = GENRE_FOLDS.filter((fold) => fold.names.some((name) => names.includes(name)))
 	return [
 		...folds.map((fold) => ({ label: fold.label, values: fold.names })),
-		...names
-			.filter((name) => !FOLDED.has(name))
-			.map((name) => ({ label: name, values: [name] })),
+		...names.filter((name) => !FOLDED.has(name)).map((name) => ({ label: name, values: [name] })),
 	].map(({ label, values }) => ({
 		id: label,
 		group: "genres" as const,
@@ -130,8 +123,7 @@ export function moodOptionsOf(
 	}
 }
 
-const picksIn = (state: FilterState, group: TagGroup): readonly string[] =>
-	state[group]
+const picksIn = (state: FilterState, group: TagGroup): readonly string[] => state[group]
 
 export const isPicked = (state: FilterState, option: MoodOption): boolean =>
 	picksIn(state, option.group).includes(option.values[0])
@@ -143,9 +135,7 @@ export function pickCount(state: FilterState, group: TagGroup): number {
 	const counted = units.filter((unit) => isPicked(state, unit)).length
 	// A combined TV genre picked on its own (an older link) is still a pick.
 	const covered = new Set(
-		units
-			.filter((unit) => isPicked(state, unit))
-			.flatMap((unit) => unit.values),
+		units.filter((unit) => isPicked(state, unit)).flatMap((unit) => unit.values),
 	)
 	return counted + state.genres.filter((name) => !covered.has(name)).length
 }
@@ -154,26 +144,17 @@ export const atCap = (state: FilterState, group: TagGroup): boolean =>
 	pickCount(state, group) >= CAPS[group]
 
 /** How a group's picks join now: from the filter state from two picks on, else the switch as last set. */
-export function modeOf(
-	state: FilterState,
-	group: TagGroup,
-	prefs: ModePrefs,
-): Mode {
-	if (pickCount(state, group) >= 2)
-		return state.allOf?.includes(group) ? "all" : "any"
+export function modeOf(state: FilterState, group: TagGroup, prefs: ModePrefs): Mode {
+	if (pickCount(state, group) >= 2) return state.allOf?.includes(group) ? "all" : "any"
 	return prefs[group] ?? "all"
 }
 
 export const modesOf = (state: FilterState, prefs: ModePrefs): Modes =>
-	Object.fromEntries(
-		TAG_GROUPS.map((group) => [group, modeOf(state, group, prefs)]),
-	) as Modes
+	Object.fromEntries(TAG_GROUPS.map((group) => [group, modeOf(state, group, prefs)])) as Modes
 
 /** `allOf` for these modes: the groups on all of with two picks or more. */
 export function withAllOf(state: FilterState, modes: Modes): FilterState {
-	const allOf = TAG_GROUPS.filter(
-		(group) => modes[group] === "all" && pickCount(state, group) >= 2,
-	)
+	const allOf = TAG_GROUPS.filter((group) => modes[group] === "all" && pickCount(state, group) >= 2)
 	return { ...state, allOf: allOf.length ? allOf : undefined }
 }
 
@@ -204,8 +185,7 @@ export function togglePick(
 				.flatMap((unit) => unit.values),
 		)
 		next = picksIn(state, group).filter(
-			(value) =>
-				!values.includes(value) || (group === "genres" && needed.has(value)),
+			(value) => !values.includes(value) || (group === "genres" && needed.has(value)),
 		)
 	} else next = [...new Set([...picksIn(state, group), ...values])]
 	return {
@@ -226,22 +206,16 @@ export function setMode(
 }
 
 /** The groups whose counts need the answer without their pick: one pick, on all of. */
-export const groupsNeedingCleared = (
-	state: FilterState,
-	prefs: ModePrefs,
-): TagGroup[] =>
+export const groupsNeedingCleared = (state: FilterState, prefs: ModePrefs): TagGroup[] =>
 	TAG_GROUPS.filter(
-		(group) =>
-			pickCount(state, group) === 1 && modeOf(state, group, prefs) === "all",
+		(group) => pickCount(state, group) === 1 && modeOf(state, group, prefs) === "all",
 	)
 
 /** The results parameters without a group's picks (and without its `all` entry). */
 export function clearedQuery(query: string, group: TagGroup): string {
 	const params = new URLSearchParams(query)
 	params.delete(group)
-	const all = (params.get("all") ?? "")
-		.split(",")
-		.filter((name) => name && name !== group)
+	const all = (params.get("all") ?? "").split(",").filter((name) => name && name !== group)
 	if (all.length) params.set("all", all.join(","))
 	else params.delete("all")
 	params.delete("page")
@@ -284,10 +258,7 @@ function anyOfUnit(
  * What an option would leave, the rest as it is, under its column's mode: all of counts the titles with every pick and
  * the option, any of the widening. A picked option counts removing it; null while unknown.
  */
-export function optionCount(
-	option: MoodOption,
-	inputs: CountInputs,
-): number | null {
+export function optionCount(option: MoodOption, inputs: CountInputs): number | null {
 	const { state, prefs, total, counts, cleared } = inputs
 	const { group } = option
 	const oc = counts?.[group]
@@ -297,15 +268,12 @@ export function optionCount(
 	const genre = group === "genres"
 	if (isPicked(state, option)) {
 		// The server counts removal of each picked all-of unit and each individual any-of name.
-		if (!genre || state.allOf?.includes(group))
-			return oc[option.values[0]] ?? null
+		if (!genre || state.allOf?.includes(group)) return oc[option.values[0]] ?? null
 		if (total === null) return null
 		const next = togglePick(state, option, prefs)!.state.genres
 		if (!next.length) {
 			if (!inputs.recoveries) return null
-			return (
-				total + (inputs.recoveries.find((r) => r.filter === group)?.titles ?? 0)
-			)
+			return total + (inputs.recoveries.find((r) => r.filter === group)?.titles ?? 0)
 		}
 		// Movie and TV names of a fold are disjoint. Subtract each removed name's exclusive loss,
 		// keeping the combined TV name when another picked unit still needs it.
@@ -323,8 +291,7 @@ export function optionCount(
 			? option.values.reduce((n, name) => n + (zero[name] ?? 0), 0)
 			: zero[option.id]
 		const either = genre ? anyOfUnit(option, state, oc, total) : oc[option.id]
-		if (alone === undefined || either === undefined || either === null)
-			return null
+		if (alone === undefined || either === undefined || either === null) return null
 		return Math.max(0, total + alone - either)
 	}
 	if (!genre) return oc[option.id] ?? null
@@ -342,10 +309,7 @@ export interface MoodRow extends MoodOption {
 	dead: boolean
 }
 
-export function moodRows(
-	options: readonly MoodOption[],
-	inputs: CountInputs,
-): MoodRow[] {
+export function moodRows(options: readonly MoodOption[], inputs: CountInputs): MoodRow[] {
 	const full = options.length ? atCap(inputs.state, options[0].group) : false
 	return options
 		.map((option) => {
@@ -363,11 +327,7 @@ export function moodRows(
 }
 
 /** Bars share a scale large enough for additions and removals in either mode. */
-export function barScale(
-	rows: readonly MoodRow[],
-	total: number | null,
-	_mode: Mode,
-): number {
+export function barScale(rows: readonly MoodRow[], total: number | null, _mode: Mode): number {
 	const widest = Math.max(0, ...rows.map((row) => row.n ?? 0))
 	return Math.max(total ?? 0, widest, 1)
 }
@@ -417,11 +377,7 @@ export function mixOn(state: FilterState, mix: MoodMix): boolean {
 }
 
 /** Applying a mix: its tags replace Feel, About and Style (genres stay); a mix that is on clears them. */
-export function applyMix(
-	state: FilterState,
-	mix: MoodMix,
-	prefs: ModePrefs,
-): FilterState {
+export function applyMix(state: FilterState, mix: MoodMix, prefs: ModePrefs): FilterState {
 	const modes = modesOf(state, prefs)
 	const next = mixOn(state, mix)
 		? { ...state, moods: [], themes: [], styles: [] }
@@ -459,31 +415,25 @@ export function comboCards({
 			for (const row of rows) if (row.group === group && row.on) return row.hue
 		return null
 	})()
-	const mixCards = mixes.map(
-		(mix): ComboCard => ({
-			id: `mix:${mix.id}`,
-			name: mixName(mix),
-			hues: mix.tags.map((id) => WORD_BY_ID[id]?.hue ?? GENRE_HUE),
-			path: mix.topTitle?.backdrop_path ?? null,
-			island: null,
-			n: searching ? null : mix.count,
-			share: null,
-			on: mixOn(state, mix),
-			line: !searching && mix.topTitle ? `Like ${mix.topTitle.title}` : null,
-			mix,
-		}),
-	)
-	const leads = (card: ComboCard) =>
-		card.n === null ? total !== 0 : card.n > 0
+	const mixCards = mixes.map((mix): ComboCard => ({
+		id: `mix:${mix.id}`,
+		name: mixName(mix),
+		hues: mix.tags.map((id) => WORD_BY_ID[id]?.hue ?? GENRE_HUE),
+		path: mix.topTitle?.backdrop_path ?? null,
+		island: null,
+		n: searching ? null : mix.count,
+		share: null,
+		on: mixOn(state, mix),
+		line: !searching && mix.topTitle ? `Like ${mix.topTitle.title}` : null,
+		mix,
+	}))
+	const leads = (card: ComboCard) => (card.n === null ? total !== 0 : card.n > 0)
 	const fill = (lead: ComboCard[]) => {
 		const shown = new Set(lead.map((card) => card.id))
 		const rest = mixCards
 			.filter((card) => !shown.has(card.id))
 			.sort((a, b) => Number(a.on) - Number(b.on))
-		return [
-			...lead,
-			...rest.map((card) => ({ ...card, n: null, line: null })),
-		].slice(0, slots)
+		return [...lead, ...rest.map((card) => ({ ...card, n: null, line: null }))].slice(0, slots)
 	}
 	if (!hasMoodPicks(state)) return fill(mixCards.filter(leads))
 	const adds = rows
@@ -498,19 +448,17 @@ export function comboCards({
 				(total === null || row.n < total),
 		)
 		.sort((a, b) => (b.n ?? 0) - (a.n ?? 0))
-		.map(
-			(row): ComboCard => ({
-				id: `add:${row.group}:${row.id}`,
-				name: `+ ${row.name}`,
-				hues: [row.hue, firstHue ?? row.hue],
-				path: null,
-				island: row.island,
-				n: row.n,
-				share: total ? (row.n ?? 0) / total : null,
-				on: false,
-				line: null,
-				option: row,
-			}),
-		)
+		.map((row): ComboCard => ({
+			id: `add:${row.group}:${row.id}`,
+			name: `+ ${row.name}`,
+			hues: [row.hue, firstHue ?? row.hue],
+			path: null,
+			island: row.island,
+			n: row.n,
+			share: total ? (row.n ?? 0) / total : null,
+			on: false,
+			line: null,
+			option: row,
+		}))
 	return fill([...adds, ...mixCards.filter((card) => !card.on && leads(card))])
 }

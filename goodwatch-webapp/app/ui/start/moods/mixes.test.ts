@@ -23,11 +23,11 @@ test("eight mixes of two or three of the picker's words, as the spec names them"
 		MIXES.map((m) => [m.name, mixLine(m.id)]),
 		[
 			["Warm, easy comedies", "Funny · Cozy"],
-			["Dark, gritty crime", "Crime & mystery · Scary · Graphic"],
+			["Dark, gritty crime", "Crime · Scary · Graphic"],
 			["Eerie, mind-bending stories", "Trippy · Scary"],
 			["Funny love stories", "Romantic · Funny"],
 			["Smart, high-stakes action", "Thrilling · Trippy · Fast-paced"],
-			["Warm coming-of-age stories", "Coming of age · Cozy"],
+			["Warm coming-of-age stories", "Growing up · Cozy"],
 			["Moving period dramas", "History · Sad · Slow burn"],
 			["Dark fantasy epics", "Fantasy · Sad · Spectacle"],
 		],
@@ -53,19 +53,12 @@ test("only one mix is on at a time: the one whose parts were all picked first", 
 	// Funny + Cozy completes g1 at the second pick; Romance then completes g4 at the third.
 	assert.equal(activeMix(["m:funny", "m:feelgood", "m:romance"])?.id, "g1")
 	assert.equal(activeMix(["m:romance", "m:funny", "m:feelgood"])?.id, "g4")
-	assert.deepEqual(displayPicks(["m:romance", "m:funny", "m:feelgood"]), [
-		"g4",
-		"m:feelgood",
-	])
+	assert.deepEqual(displayPicks(["m:romance", "m:funny", "m:feelgood"]), ["g4", "m:feelgood"])
 })
 
 test("tapping a mix swaps the one that is on for it, its parts first, other words kept while they fit", () => {
 	// Another word stays beside a two-part mix.
-	assert.deepEqual(pickMix(["s:animated"], "g1"), [
-		"m:funny",
-		"m:feelgood",
-		"s:animated",
-	])
+	assert.deepEqual(pickMix(["s:animated"], "g1"), ["m:funny", "m:feelgood", "s:animated"])
 	// The mix that is on comes off by its parts; the latest other words stay.
 	assert.deepEqual(pickMix(["m:funny", "m:feelgood", "s:animated"], "g3"), [
 		"m:mind",
@@ -73,30 +66,16 @@ test("tapping a mix swaps the one that is on for it, its parts first, other word
 		"s:animated",
 	])
 	// Two other words, room for one: the latest stays.
-	assert.deepEqual(pickMix(["s:animated", "t:war"], "g4"), [
-		"m:romance",
-		"m:funny",
-		"t:war",
-	])
+	assert.deepEqual(pickMix(["s:animated", "t:war"], "g4"), ["m:romance", "m:funny", "t:war"])
 	// A three-part mix replaces everything.
-	assert.deepEqual(pickMix(["m:funny", "s:animated"], "g7"), [
-		"m:history",
-		"m:heavy",
-		"s:slow",
-	])
+	assert.deepEqual(pickMix(["m:funny", "s:animated"], "g7"), ["t:history", "m:heavy", "s:slow"])
 	// A part both mixes share isn't doubled.
-	assert.deepEqual(pickMix(pickMix([], "g3"), "g2"), [
-		"m:crime",
-		"m:scary",
-		"s:graphic",
-	])
+	assert.deepEqual(pickMix(pickMix([], "g3"), "g2"), ["t:crime", "m:scary", "s:graphic"])
 })
 
 test("tapping the mix that is on removes its parts and keeps the other words", () => {
-	assert.deepEqual(pickMix(["m:funny", "m:feelgood", "s:animated"], "g1"), [
-		"s:animated",
-	])
-	assert.deepEqual(pickMix(["m:history", "m:heavy", "s:slow"], "g7"), [])
+	assert.deepEqual(pickMix(["m:funny", "m:feelgood", "s:animated"], "g1"), ["s:animated"])
+	assert.deepEqual(pickMix(["t:history", "m:heavy", "s:slow"], "g7"), [])
 	// The chip's × is the same tap.
 	assert.deepEqual(tapPick(["m:feelgood", "m:funny", "t:war"], "g1"), {
 		picks: ["t:war"],
@@ -105,10 +84,10 @@ test("tapping the mix that is on removes its parts and keeps the other words", (
 })
 
 test("unticking a part turns the mix off and keeps the rest", () => {
-	const { picks } = tapPick(["m:crime", "m:scary", "s:graphic"], "m:scary")
-	assert.deepEqual(picks, ["m:crime", "s:graphic"])
+	const { picks } = tapPick(["t:crime", "m:scary", "s:graphic"], "m:scary")
+	assert.deepEqual(picks, ["t:crime", "s:graphic"])
 	assert.equal(activeMix(picks), null)
-	assert.deepEqual(displayPicks(picks), ["m:crime", "s:graphic"])
+	assert.deepEqual(displayPicks(picks), ["t:crime", "s:graphic"])
 })
 
 test("mix tiles are never refused; words are at three", () => {

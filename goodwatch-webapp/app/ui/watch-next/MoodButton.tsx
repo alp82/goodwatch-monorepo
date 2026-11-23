@@ -8,16 +8,10 @@ import { MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
 import { MAX_PICKS } from "~/domain/taste-picker"
 import type { MoodControl } from "./MoodPicker"
 
-export const refusalText = (name: string) =>
-	`Three is the most. Remove one to add ${name}.`
+export const refusalText = (name: string) => `Three is the most. Remove one to add ${name}.`
 
 /** The mood colors that stand for "Any mood". */
-export const SPECTRUM: readonly MoodKey[] = [
-	"funny",
-	"romance",
-	"crime",
-	"worlds",
-]
+export const SPECTRUM: readonly MoodKey[] = ["funny", "romance", "mysterious", "otherworldly"]
 
 // Four mood colors in a small fan, for the "Any mood" button.
 function Spectrum() {

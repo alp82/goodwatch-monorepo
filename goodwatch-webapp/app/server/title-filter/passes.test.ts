@@ -647,10 +647,10 @@ function pick(c: ReturnType<typeof ruleColumns>, rows: number[], picks: Picks) {
 }
 
 // Rows 0 to 5; what each has by the rules:
-// 0 crime 9, mystery 8, slow burn 8     themes crime, mystery   style slow       mood Crime & mystery
+// 0 crime 9, mystery 8, slow burn 8     themes crime, mystery   style slow       mood Mysterious
 // 1 crime 8, fast pace 9                theme crime             style fast
 // 2 warfare 8, slow burn 9, pathos 9, melancholy 6  theme war  style slow       mood Heavy
-// 3 warfare 7, mystery 8, crime 5, Animation  themes mystery, war  style animated  mood Crime & mystery
+// 3 warfare 7, mystery 8, crime 5, Animation  themes mystery, war  style animated  mood Mysterious
 // 4 futuristic 8, fast pace 8           theme future            style fast       mood Other worlds
 // 5 nothing above its threshold
 const told = ruleColumns([
@@ -678,7 +678,7 @@ test("a theme or style filter keeps the titles with one of the chosen, and the g
 	// And with a mood.
 	assert.deepEqual(
 		pick(told, everyRow, {
-			moods: ["crime"],
+			moods: ["mysterious"],
 			themes: ["crime", "war"],
 			styles: ["slow"],
 		}).rows,
@@ -699,9 +699,9 @@ test("a title the snapshot doesn't hold has no theme and no style", () => {
 })
 
 test("the theme and style options count what each would leave, with a mood, a theme and a style chosen together", () => {
-	// Mood Crime & mystery keeps rows 0 and 3; theme War keeps 2 and 3; style Animated keeps 3.
+	// Mood Mysterious keeps rows 0 and 3; theme War keeps 2 and 3; style Animated keeps 3.
 	const out = pick(told, everyRow, {
-		moods: ["crime"],
+		moods: ["mysterious"],
 		themes: ["war"],
 		styles: ["animated"],
 	})
@@ -718,7 +718,7 @@ test("the theme and style options count what each would leave, with a mood, a th
 	assert.equal(out.optionCounts.styles.animated, 1)
 	assert.equal(out.optionCounts.styles.slow, 1)
 	// Moods over the titles of War that are Animated: row 3; a second mood can only add to it.
-	assert.equal(out.optionCounts.moods.crime, 1)
+	assert.equal(out.optionCounts.moods.mysterious, 1)
 	assert.equal(out.optionCounts.moods.heavy, 1)
 
 	// Without the mood: War keeps rows 2 and 3, Slow burn rows 0 and 2.

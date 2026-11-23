@@ -9,8 +9,7 @@ import { useEffect, useRef, useState } from "react"
 import { type Grade, REST_DIM, layersOf } from "./grades"
 
 /** Grades that share their layers mount once (mystery looks like crime). */
-const layerKey = (grade: Exclude<Grade, null>) =>
-	grade === "mystery" ? "crime" : grade
+const layerKey = (grade: Exclude<Grade, null>) => (grade === "mystery" ? "mysterious" : grade)
 
 export function RoomGrade({
 	grade,

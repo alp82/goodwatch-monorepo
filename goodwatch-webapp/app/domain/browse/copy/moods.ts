@@ -72,18 +72,18 @@ export const MOODS: Deck = {
 			lede: "Stories that want your pulse up and your feet off the floor. A movie can jump out screaming; a series lets the thing in the dark wait a whole season. Watch with someone you can grab, and maybe not right before sleep.",
 		},
 	},
-	crime: {
+	mysterious: {
 		movies: {
-			short: "A puzzle, a suspect, and a twist coming.",
-			lede: "Somebody did it, and you get to work out who before the detective does. Heists that click together, investigations that go somewhere ugly, and endings that make you replay the whole thing in your head. Pay attention to the small stuff.",
+			short: "Something doesn't add up.",
+			lede: "An impossible message arrives, a witness changes their story, or a stranger knows too much. These movies give you a question early and let you piece together the answer.",
 		},
 		shows: {
-			short: "One case, one season, no chance of stopping.",
-			lede: "Detectives worth following for years and cases that pull tighter with every episode. You get the clues, the wrong turns, and the long nights at the station. Best watched with someone who likes to guess out loud.",
+			short: "Every episode gives you another clue.",
+			lede: "A small detail in the first episode can change the way you see the whole season. Pick a series to trade theories about between episodes.",
 		},
 		all: {
-			short: "A puzzle, a suspect, and a twist coming.",
-			lede: "Somebody did it, and you get to work out who before the detective does. Heists that click together, cases that pull tighter with every hour, and endings that make you replay the whole thing in your head. Best watched with someone who likes to guess out loud.",
+			short: "For the pleasure of figuring it out.",
+			lede: "A disappearance in a small town and a strange signal from space have something in common. Both invite you to follow the clues and wonder what else you missed.",
 		},
 	},
 	mind: {
@@ -114,7 +114,7 @@ export const MOODS: Deck = {
 			lede: "Stories about loss, longing, and the things people don't get to say in time. They hurt, and that is the point: a good one leaves you wrung out and oddly lighter. Two hours or twenty, keep tissues within reach.",
 		},
 	},
-	worlds: {
+	otherworldly: {
 		movies: {
 			short: "Leave Earth, or at least this version of it.",
 			lede: "Kingdoms with their own maps, starships, cities a few centuries from now. These movies build a place that doesn't exist and make it feel lived in. The scale pulls you in, and the details are what you'll remember.",
@@ -234,11 +234,8 @@ export const MOOD_ALIASES: Record<string, string> = {
 	"feel-good": "feelgood",
 	romantic: "romance",
 	thrilling: "action",
-	"crime-mystery": "crime",
-	"crime-and-mystery": "crime",
 	trippy: "mind",
 	"mind-bending": "mind",
 	sad: "heavy",
-	"other-worlds": "worlds",
 	"coming-of-age": "growing",
 }

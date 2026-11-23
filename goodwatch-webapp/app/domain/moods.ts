@@ -1,4 +1,4 @@
-// Moods: named kinds of evening, such as Funny or Crime & mystery. A title belongs to a mood by a fixed rule over its
+// Moods: named kinds of evening, such as Funny or Mysterious. A title belongs to a mood by a fixed rule over its
 // fingerprint (and, for Scary, its genres). A title can belong to several moods or to none, and a person picks up to
 // three. Pure and shared by the server and the browser.
 //
@@ -12,10 +12,10 @@ export const MOOD_KEYS = [
 	"romance",
 	"action",
 	"scary",
-	"crime",
+	"mysterious",
 	"mind",
 	"heavy",
-	"worlds",
+	"otherworldly",
 	"history",
 	"growing",
 	"tense",
@@ -158,17 +158,14 @@ const MOOD_RULES: readonly MoodRule[] = [
 			(score("scare") >= 8 && (score("uncanny") >= 6 || score("grotesque") >= 6)),
 	},
 	{
-		key: "crime",
-		name: "Crime & mystery",
-		aliases: [],
-		feel: false,
-		description: "Puzzles, investigations and heists.",
+		key: "mysterious",
+		name: "Mysterious",
+		aliases: ["Crime & mystery"],
+		feel: true,
+		description: "Clues and unanswered questions draw you in.",
 		hue: "#60a5fa",
-		rule: "Mystery 8 or more with crime 5 or more or the Crime or Mystery genre, or crime 8 or more with intrigue 8 or more and spectacle 7 or less",
-		// Mystery alone also scores science fiction puzzles (The Matrix, Arrival).
-		test: (score, genres) =>
-			(score("mystery") >= 8 && (score("crime") >= 5 || has(genres, "Crime", "Mystery"))) ||
-			(score("crime") >= 8 && score("intrigue") >= 8 && score("spectacle") <= 7),
+		rule: "Mystery 8 or more",
+		test: (score) => score("mystery") >= 8,
 	},
 	{
 		key: "mind",
@@ -201,10 +198,10 @@ const MOOD_RULES: readonly MoodRule[] = [
 				(score("pathos") >= 8 && score("melancholy") >= 6)),
 	},
 	{
-		key: "worlds",
-		name: "Other worlds",
-		aliases: [],
-		feel: false,
+		key: "otherworldly",
+		name: "Otherworldly",
+		aliases: ["Other worlds"],
+		feel: true,
 		description: "Fantasy realms and imagined futures.",
 		hue: "#2dd4bf",
 		rule: "Fantasy 7 or more or futuristic 7 or more, with world immersion 6 or more",

@@ -19,8 +19,7 @@ const {
 } = await import("./filter-state.ts")
 
 const defaults = { onMyServices: false, notSeenYet: false }
-const parse = (query: string) =>
-	filterStateFromParams(new URLSearchParams(query), defaults)
+const parse = (query: string) => filterStateFromParams(new URLSearchParams(query), defaults)
 
 test("guest shared links hide member-only filters without changing Not seen yet", () => {
 	for (const notSeenYet of [false, true]) {
@@ -33,9 +32,7 @@ test("guest shared links hide member-only filters without changing Not seen yet"
 		]) {
 			const params = new URLSearchParams(query)
 			const state = filterStateFromParams(params, guestDefaults, false)
-			const expectedUnseen = params.has("unseen")
-				? params.get("unseen") === "1"
-				: notSeenYet
+			const expectedUnseen = params.has("unseen") ? params.get("unseen") === "1" : notSeenYet
 			assert.equal(state.notSeenYet, expectedUnseen, query)
 			assert.equal(state.seenBefore, undefined, query)
 			const applied = stateAsApplied(state, null, false)
@@ -72,24 +69,14 @@ test("the taste match filter reads from and writes to `match`", () => {
 		const state = parse(`match=${min}`)
 		assert.equal(state.minMatch, min)
 		assert.equal(filterStateToParams(state, defaults).get("match"), String(min))
-		assert.deepEqual(
-			filterStateFromParams(filterStateToParams(state, defaults), defaults),
-			state,
-		)
+		assert.deepEqual(filterStateFromParams(filterStateToParams(state, defaults), defaults), state)
 	}
 	// 0 is left out, and so is anything that isn't an option.
-	assert.equal(
-		filterStateToParams(parse("match=0"), defaults).has("match"),
-		false,
-	)
+	assert.equal(filterStateToParams(parse("match=0"), defaults).has("match"), false)
 	assert.equal(parse("match=85").minMatch, 0)
 	assert.equal(parse("match=abc").minMatch, 0)
 	// Writing over existing parameters removes a `match` that no longer applies.
-	const params = filterStateToParams(
-		parse(""),
-		defaults,
-		new URLSearchParams("match=80&q=heat"),
-	)
+	const params = filterStateToParams(parse(""), defaults, new URLSearchParams("match=80&q=heat"))
 	assert.equal(params.toString(), "q=heat")
 })
 
@@ -198,12 +185,7 @@ test("the age limit sets what content hides, and overrides survive a change of t
 	// Violence is OK and disturbing scenes aren't, whatever the limit.
 	const content = { violence: "show", disturbing: "hide" } as const
 	assert.deepEqual(hiddenKinds(12, content), ["sex", "disturbing"])
-	assert.deepEqual(hiddenKinds(6, content), [
-		"sex",
-		"disturbing",
-		"language",
-		"drugs",
-	])
+	assert.deepEqual(hiddenKinds(6, content), ["sex", "disturbing", "language", "drugs"])
 	assert.deepEqual(hiddenKinds(16, content), ["disturbing"])
 	assert.deepEqual(hiddenKinds(undefined, content), ["disturbing"])
 	assert.equal(hiddenContentBits(12, content), 0b00110)
@@ -259,28 +241,21 @@ test("the age limit and content are filters of the Filters sheet", () => {
 	assert.equal(secondaryFilterCount(noLimit), 2)
 	// Switched on again, violence is still OK.
 	assert.deepEqual(
-		filterStateFromParams(
-			filterStateToParams({ ...noLimit, ageLimit: 12 }, defaults),
-			defaults,
-		),
+		filterStateFromParams(filterStateToParams({ ...noLimit, ageLimit: 12 }, defaults), defaults),
 		state,
 	)
 	// Content at its widest shows every kind under the limit.
 	const widest = dropFilter(state, "content")
 	assert.equal(widest.ageLimit, 12)
 	assert.deepEqual(widest.content, { violence: "show", sex: "show" })
-	assert.equal(
-		dropFilter(parse("hide=disturbing"), "content").content,
-		undefined,
-	)
+	assert.equal(dropFilter(parse("hide=disturbing"), "content").content, undefined)
 	const cleared = clearSecondaryFilters(state)
 	assert.equal(cleared.ageLimit, undefined)
 	assert.equal(cleared.content, undefined)
 })
 
 test("an age picks its ladder step, and a title its label", async () => {
-	const { PLAIN_LADDER, ladderStepFor, ratingBadge, ratingLabel } =
-		await import("./age-content.ts")
+	const { PLAIN_LADDER, ladderStepFor, ratingBadge, ratingLabel } = await import("./age-content.ts")
 	const US = [
 		{ age: 0, label: "G", show: "TV-G" },
 		{ age: 8, label: "PG", show: "TV-PG" },
@@ -293,10 +268,7 @@ test("an age picks its ladder step, and a title its label", async () => {
 	assert.equal(ladderStepFor(US, 14).label, "PG-13")
 	assert.equal(ladderStepFor(US, 18).label, "R")
 	assert.equal(ladderStepFor(DE, 17).label, "FSK 16")
-	assert.equal(
-		ladderStepFor([{ age: 6, label: "6" }, ...DE.slice(2)], 0).age,
-		6,
-	)
+	assert.equal(ladderStepFor([{ age: 6, label: "6" }, ...DE.slice(2)], 0).age, 6)
 	assert.deepEqual(
 		PLAIN_LADDER.map((step) => step.label),
 		["0+", "6+", "12+", "16+", "18+"],
@@ -322,8 +294,7 @@ test("a content choice survives the limits that set the same by themselves", asy
 	// Every step goes through the URL, as in the browser.
 	const through = (state: ReturnType<typeof parse>) =>
 		filterStateFromParams(filterStateToParams(state, defaults), defaults)
-	const hidden = (state: ReturnType<typeof parse>) =>
-		hiddenKinds(state.ageLimit, state.content)
+	const hidden = (state: ReturnType<typeof parse>) => hiddenKinds(state.ageLimit, state.content)
 
 	// Limit off, hide drugs.
 	let state = parse("")
@@ -335,10 +306,7 @@ test("a content choice survives the limits that set the same by themselves", asy
 	// The age 6 step hides drugs anyway: the choice stays, and isn't shown as a change.
 	state = through({ ...state, ageLimit: 6 })
 	assert.deepEqual(state.content, { drugs: "hide" })
-	assert.equal(
-		filterStateToParams(state, defaults).toString(),
-		"age=6&hide=drugs",
-	)
+	assert.equal(filterStateToParams(state, defaults).toString(), "age=6&hide=drugs")
 	assert.equal(secondaryFilterCount(state), 1)
 	// The age 16 step: drugs are still hidden.
 	state = through({ ...state, ageLimit: 16 })
@@ -399,27 +367,16 @@ test("themes and styles read from and write to `themes` and `styles`, three of e
 	)
 
 	// Three at most, in the order given; a key named twice counts once.
-	assert.deepEqual(parse("themes=war,future,crime,mind").themes, [
-		"war",
-		"future",
-		"crime",
-	])
-	assert.deepEqual(parse("styles=slow,slow,fast,talky,graphic").styles, [
-		"slow",
-		"fast",
-		"talky",
-	])
+	assert.deepEqual(parse("themes=war,future,crime,mind").themes, ["war", "future", "crime"])
+	assert.deepEqual(parse("styles=slow,slow,fast,talky,graphic").styles, ["slow", "fast", "talky"])
 	// An unknown key is dropped, and so is a key of the other group or of the moods.
 	assert.deepEqual(parse("themes=war,nope,slow,funny").themes, ["war"])
 	assert.deepEqual(parse("styles=war,slow,feelgood").styles, ["slow"])
 	assert.deepEqual(parse("themes=nope").themes, [])
-	assert.equal(
-		filterStateToParams(parse("themes=nope&styles=,"), defaults).toString(),
-		"",
-	)
+	assert.equal(filterStateToParams(parse("themes=nope&styles=,"), defaults).toString(), "")
 	// A mood and a theme can share a key: each parameter reads its own.
-	const shared = parse("moods=crime,history&themes=crime,history")
-	assert.deepEqual(shared.moods, ["crime", "history"])
+	const shared = parse("moods=mysterious,history&themes=crime,history")
+	assert.deepEqual(shared.moods, ["mysterious", "history"])
 	assert.deepEqual(shared.themes, ["crime", "history"])
 	// Writing over existing parameters removes the ones that no longer apply.
 	assert.equal(
@@ -452,10 +409,7 @@ test("inline preferences preserve arbitrary lists, reject invalid ids, and clear
 	const state = parse(`loved=${loved.join(",")},1,-2,nope&disliked=46,47,47`)
 	assert.deepEqual(state.loved, loved)
 	assert.deepEqual(state.disliked, [46, 47])
-	assert.deepEqual(
-		parse(filterStateToParams(state, defaults).toString()),
-		state,
-	)
+	assert.deepEqual(parse(filterStateToParams(state, defaults).toString()), state)
 	assert.equal(secondaryFilterCount(state), 47)
 	assert.equal(dropFilter(state, "loved").loved, undefined)
 	assert.equal(clearSecondaryFilters(state).disliked, undefined)
@@ -474,30 +428,19 @@ test("preferences expose typed TMDB ids while existing internal-key links still 
 test("production countries round-trip, normalize, clear, and have no selection limit", () => {
 	const state = parse("productionCountries=us, GB,us,nope,123,DE")
 	assert.deepEqual(state.productionCountries, ["US", "GB", "DE"])
-	assert.deepEqual(
-		parse(filterStateToParams(state, defaults).toString()),
-		state,
-	)
+	assert.deepEqual(parse(filterStateToParams(state, defaults).toString()), state)
 	assert.equal(secondaryFilterCount(state), 3)
-	assert.equal(
-		dropFilter(state, "productionCountries").productionCountries,
-		undefined,
-	)
+	assert.equal(dropFilter(state, "productionCountries").productionCountries, undefined)
 	assert.equal(clearSecondaryFilters(state).productionCountries, undefined)
 })
 
 test("manual services and streaming country travel together without changing production countries", () => {
-	const state = parse(
-		"services=8,337&streamingCountry=de&productionCountries=US,GB",
-	)
+	const state = parse("services=8,337&streamingCountry=de&productionCountries=US,GB")
 	assert.equal(state.onMyServices, false)
 	assert.deepEqual(state.services, [8, 337])
 	assert.equal(state.streamingCountry, "DE")
 	assert.deepEqual(state.productionCountries, ["US", "GB"])
-	assert.deepEqual(
-		parse(filterStateToParams(state, defaults).toString()),
-		state,
-	)
+	assert.deepEqual(parse(filterStateToParams(state, defaults).toString()), state)
 	assert.equal(dropFilter(state, "services").streamingCountry, undefined)
 	assert.equal(clearSecondaryFilters(state).streamingCountry, undefined)
 	assert.equal(parse("streamingCountry=bad").streamingCountry, undefined)
@@ -516,10 +459,7 @@ test("new filter URLs round trip and old range names become first-class filters"
 		"services=any&streamingCountry=DE",
 	]) {
 		const state = parse(query)
-		assert.deepEqual(
-			parse(filterStateToParams(state, defaults).toString()),
-			state,
-		)
+		assert.deepEqual(parse(filterStateToParams(state, defaults).toString()), state)
 	}
 	const old = new URLSearchParams(
 		"minYear=1990&maxYear=2005&minRuntime=0&maxRuntime=90&maxScore=80",
@@ -535,20 +475,12 @@ test("new filter URLs round trip and old range names become first-class filters"
 		assert.equal(next.has(name), false)
 	assert.equal(parse("years=1990-&released=recent").released, "any")
 	assert.deepEqual(parse("years=-2005&minYear=1990").years, { max: 2005 })
-	for (const value of [
-		"-",
-		"-5-90",
-		"90-0",
-		"1.5-2",
-		"NaN-",
-		"9007199254740992-",
-	])
+	for (const value of ["-", "-5-90", "90-0", "1.5-2", "NaN-", "9007199254740992-"])
 		assert.equal(parse(`runtime=${value}`).runtime, undefined)
-	assert.deepEqual(
-		parse("sources=unknown:90,imdb:101,rtAudience:0,metacritic:75")
-			.sourceScores,
-		{ rtAudience: 0, metacritic: 75 },
-	)
+	assert.deepEqual(parse("sources=unknown:90,imdb:101,rtAudience:0,metacritic:75").sourceScores, {
+		rtAudience: 0,
+		metacritic: 75,
+	})
 	assert.equal(parse("gap=invalid").scoreGap, undefined)
 })
 
@@ -557,12 +489,7 @@ test("each new group drops independently and any service overrides saved service
 		"years=1990-&runtime=0-90&sources=imdb:80&gap=agree&services=any&streamingCountry=DE",
 	)
 	assert.equal(secondaryFilterCount(state), 5)
-	for (const name of [
-		"years",
-		"runtime",
-		"sourceScores",
-		"scoreGap",
-	] as const) {
+	for (const name of ["years", "runtime", "sourceScores", "scoreGap"] as const) {
 		assert.deepEqual(dropFilter(state, name), {
 			...state,
 			[name]: undefined,
@@ -573,10 +500,7 @@ test("each new group drops independently and any service overrides saved service
 	assert.equal(dropFilter(state, "services").anyService, undefined)
 	assert.equal(clearSecondaryFilters(state).anyService, undefined)
 	const mineDefaults = { onMyServices: true, notSeenYet: true }
-	const any = filterStateFromParams(
-		new URLSearchParams("services=any"),
-		mineDefaults,
-	)
+	const any = filterStateFromParams(new URLSearchParams("services=any"), mineDefaults)
 	assert.equal(any.onMyServices, false)
 	assert.equal(any.services, undefined)
 	assert.equal(filterStateToParams(any, mineDefaults).get("services"), "any")
@@ -621,17 +545,11 @@ test("Seen before and Not seen yet exclude each other; the last enabled URL choi
 			["seen=1&unseen=bogus", true, false],
 			["seen=1&seen=0&unseen=0", false, false],
 		] as const) {
-			const state = filterStateFromParams(
-				new URLSearchParams(query),
-				memberDefaults,
-			)
+			const state = filterStateFromParams(new URLSearchParams(query), memberDefaults)
 			assert.equal(!!state.seenBefore, seen, query)
 			assert.equal(state.notSeenYet, unseen, query)
 			assert.deepEqual(
-				filterStateFromParams(
-					filterStateToParams(state, memberDefaults),
-					memberDefaults,
-				),
+				filterStateFromParams(filterStateToParams(state, memberDefaults), memberDefaults),
 				state,
 			)
 		}
@@ -640,10 +558,7 @@ test("Seen before and Not seen yet exclude each other; the last enabled URL choi
 	const seen = resolveFilterChange(unseen, { ...unseen, seenBefore: true })
 	assert.equal(seen.notSeenYet, false)
 	assert.equal(seen.seenBefore, true)
-	assert.equal(
-		resolveFilterChange(seen, { ...seen, notSeenYet: true }).seenBefore,
-		undefined,
-	)
+	assert.equal(resolveFilterChange(seen, { ...seen, notSeenYet: true }).seenBefore, undefined)
 	assert.equal(dropFilter(seen, "notSeenYet").seenBefore, undefined)
 })
 
@@ -656,10 +571,7 @@ test("Wishlist and outside choices round trip, clear and count as secondary filt
 		"seen=1&wishlist=1&match=outside",
 	]) {
 		const state = parse(query)
-		assert.deepEqual(
-			parse(filterStateToParams(state, defaults).toString()),
-			state,
-		)
+		assert.deepEqual(parse(filterStateToParams(state, defaults).toString()), state)
 	}
 	const state = parse("seen=1&wishlist=1&match=outside")
 	assert.equal(state.minMatch, 0)
@@ -676,10 +588,7 @@ test("Wishlist and outside choices round trip, clear and count as secondary filt
 		outsideUsual: true,
 	})
 	assert.equal(outside.minMatch, 0)
-	assert.equal(
-		resolveFilterChange(outside, { ...outside, minMatch: 60 }).outsideUsual,
-		undefined,
-	)
+	assert.equal(resolveFilterChange(outside, { ...outside, minMatch: 60 }).outsideUsual, undefined)
 	assert.equal(
 		filterStateToParams(
 			cleared,
@@ -698,18 +607,12 @@ test("Metacritic users round trip alongside older arbitrary source thresholds", 
 		metacriticUsers: 70,
 	})
 	const params = filterStateToParams(state, defaults)
-	assert.equal(
-		params.get("sources"),
-		"imdb:65,metacritic:81,metacriticUsers:70",
-	)
+	assert.equal(params.get("sources"), "imdb:65,metacritic:81,metacriticUsers:70")
 	assert.deepEqual(parse(params.toString()), state)
 	assert.equal(secondaryFilterCount(state), 3)
 	assert.equal(dropFilter(state, "sourceScores").sourceScores, undefined)
 	for (const invalid of ["-1", "101", "7.5", "NaN"])
-		assert.equal(
-			parse(`sources=metacriticUsers:${invalid}`).sourceScores,
-			undefined,
-		)
+		assert.equal(parse(`sources=metacriticUsers:${invalid}`).sourceScores, undefined)
 })
 
 test("rating country codec, defaults, validation and clearing", () => {
@@ -719,35 +622,21 @@ test("rating country codec, defaults, validation and clearing", () => {
 	assert.equal(state.streamingCountry, "US")
 	assert.equal(state.ageLimit, 12)
 	assert.equal(
-		new URLSearchParams(filterQuery(state, "popular", defaults)).get(
-			"ratingCountry",
-		),
+		new URLSearchParams(filterQuery(state, "popular", defaults)).get("ratingCountry"),
 		"DE",
 	)
 	assert.deepEqual(parse(filterQuery(state, "popular", defaults)), state)
 	assert.equal(parse("").ratingCountry, undefined)
 	assert.equal(
-		new URLSearchParams(filterQuery(parse(""), "popular", defaults)).has(
-			"ratingCountry",
-		),
+		new URLSearchParams(filterQuery(parse(""), "popular", defaults)).has("ratingCountry"),
 		false,
 	)
 	assert.equal(ratingCountryFor(state, "GB", countries), "DE")
-	assert.equal(
-		ratingCountryFor(parse("streamingCountry=DE"), "US", countries),
-		"DE",
-	)
+	assert.equal(ratingCountryFor(parse("streamingCountry=DE"), "US", countries), "DE")
 	assert.equal(ratingCountryFor(parse(""), "US", countries), "US")
+	assert.equal(ratingCountryFor(parse("ratingCountry=ZZ"), "US", countries), "US")
 	assert.equal(
-		ratingCountryFor(parse("ratingCountry=ZZ"), "US", countries),
-		"US",
-	)
-	assert.equal(
-		ratingCountryFor(
-			parse("ratingCountry=ZZ&streamingCountry=DE"),
-			"US",
-			countries,
-		),
+		ratingCountryFor(parse("ratingCountry=ZZ&streamingCountry=DE"), "US", countries),
 		"DE",
 	)
 	assert.equal(ratingCountryFor(state, "GB", []), "US")
@@ -759,10 +648,7 @@ test("rating country codec, defaults, validation and clearing", () => {
 		steps: [{ age: 12, label: "FSK 12" }],
 		local: true,
 	}
-	assert.equal(
-		secondaryFilterCount(stateAsApplied(state, ladder, true, "US")),
-		3,
-	)
+	assert.equal(secondaryFilterCount(stateAsApplied(state, ladder, true, "US")), 3)
 	assert.equal(stateAsApplied(state, null, true, "US").ratingCountry, undefined)
 	assert.equal(
 		stateAsApplied(parse("ratingCountry=ZZ"), ladder, true, "US").ratingCountry,
@@ -775,9 +661,7 @@ test("rating country codec, defaults, validation and clearing", () => {
 })
 
 test("episode length and Rest of the world round trip, reject malformed values, and clear with their groups", () => {
-	const state = parse(
-		"runtime=-120&episodeRuntime=20-45&restOfWorld=1&productionCountries=US",
-	)
+	const state = parse("runtime=-120&episodeRuntime=20-45&restOfWorld=1&productionCountries=US")
 	assert.deepEqual(state.episodeRuntime, { min: 20, max: 45 })
 	assert.equal(state.restOfWorld, true)
 	assert.deepEqual(parse(filterQuery(state, "popular", defaults)), state)
@@ -796,30 +680,18 @@ test("episode length and Rest of the world round trip, reject malformed values, 
 	const cleared = clearSecondaryFilters(state)
 	assert.equal(cleared.episodeRuntime, undefined)
 	assert.equal(cleared.restOfWorld, undefined)
-	assert.equal(
-		secondaryFilterCount(parse("episodeRuntime=-35&restOfWorld=1")),
-		2,
-	)
+	assert.equal(secondaryFilterCount(parse("episodeRuntime=-35&restOfWorld=1")), 2)
 })
 
 test("unlimited episodes serialize only while a movie runtime bound remains", () => {
 	const base = defaultFilterState({ onMyServices: false, notSeenYet: false })
 	for (const runtime of [undefined, {}, { min: undefined, max: undefined }]) {
-		const params = filterStateToParams(
-			{ ...base, runtime, episodeRuntime: null },
-			defaults,
-		)
+		const params = filterStateToParams({ ...base, runtime, episodeRuntime: null }, defaults)
 		assert.equal(params.has("episodeRuntime"), false)
-		assert.equal(
-			filterStateFromParams(params, defaults).episodeRuntime,
-			undefined,
-		)
+		assert.equal(filterStateFromParams(params, defaults).episodeRuntime, undefined)
 	}
 	for (const runtime of [{ min: 0 }, { max: 120 }, { min: 120, max: 180 }]) {
-		const params = filterStateToParams(
-			{ ...base, runtime, episodeRuntime: null },
-			defaults,
-		)
+		const params = filterStateToParams({ ...base, runtime, episodeRuntime: null }, defaults)
 		assert.equal(params.get("episodeRuntime"), "any")
 		assert.equal(filterStateFromParams(params, defaults).episodeRuntime, null)
 	}
@@ -831,35 +703,20 @@ test("popularity ranges round trip, validate and clear together", () => {
 	assert.deepEqual(state.popularityRank, { min: 1, max: 1000 })
 	assert.deepEqual(parse(filterQuery(state, "popular", defaults)), state)
 	assert.equal(secondaryFilterCount(state), 2)
-	for (const cleared of [
-		dropFilter(state, "popularity"),
-		clearSecondaryFilters(state),
-	]) {
+	for (const cleared of [dropFilter(state, "popularity"), clearSecondaryFilters(state)]) {
 		assert.equal(cleared.votes, undefined)
 		assert.equal(cleared.popularityRank, undefined)
 	}
-	for (const value of [
-		"-",
-		"-1-1000",
-		"1000-1",
-		"1.5-1000",
-		"x-1000",
-		"9007199254740992-",
-	]) {
+	for (const value of ["-", "-1-1000", "1000-1", "1.5-1000", "x-1000", "9007199254740992-"]) {
 		assert.equal(parse(`votes=${value}&rank=${value}`).votes, undefined)
-		assert.equal(
-			parse(`votes=${value}&rank=${value}`).popularityRank,
-			undefined,
-		)
+		assert.equal(parse(`votes=${value}&rank=${value}`).popularityRank, undefined)
 	}
 	assert.deepEqual(parse("votes=-9999&rank=10001-").votes, { max: 9999 })
 	assert.deepEqual(parse("votes=-9999&rank=10001-").popularityRank, {
 		min: 10001,
 	})
 	assert.equal(
-		filterQuery(defaultFilterState(defaults), "popular", defaults).includes(
-			"rank=",
-		),
+		filterQuery(defaultFilterState(defaults), "popular", defaults).includes("rank="),
 		false,
 	)
 })
@@ -873,10 +730,8 @@ test("budget and shows decimal ranges round trip, clear and recover as groups", 
 	assert.equal(secondaryFilterCount(s), 6)
 	const b = dropFilter(s, "budget"),
 		h = dropFilter(s, "shows")
-	for (const field of ["budget", "boxOffice", "returns"] as const)
-		assert.equal(b[field], undefined)
-	for (const field of ["seasons", "showStatus", "hours"] as const)
-		assert.equal(h[field], undefined)
+	for (const field of ["budget", "boxOffice", "returns"] as const) assert.equal(b[field], undefined)
+	for (const field of ["seasons", "showStatus", "hours"] as const) assert.equal(h[field], undefined)
 	assert.equal(secondaryFilterCount(clearSecondaryFilters(s)), 0)
 	for (const query of [
 		"budget=-1-5",
@@ -886,13 +741,7 @@ test("budget and shows decimal ranges round trip, clear and recover as groups", 
 		"returns=unknown&showStatus=unknown",
 	]) {
 		const invalid = parse(query)
-		for (const field of [
-			"budget",
-			"hours",
-			"seasons",
-			"returns",
-			"showStatus",
-		] as const)
+		for (const field of ["budget", "hours", "seasons", "returns", "showStatus"] as const)
 			assert.equal(invalid[field], undefined, query)
 	}
 })
@@ -922,37 +771,18 @@ test("absent or invalid returns and show status do not add parser properties", (
 	for (const query of ["", "returns=unknown&showStatus=running,ended"]) {
 		const state = parse(query)
 		assert.equal(Object.prototype.hasOwnProperty.call(state, "returns"), false)
-		assert.equal(
-			Object.prototype.hasOwnProperty.call(state, "showStatus"),
-			false,
-		)
+		assert.equal(Object.prototype.hasOwnProperty.call(state, "showStatus"), false)
 	}
 })
 
 test("taste keys parse, deduplicate, cap at three and round trip including legacy references", () => {
-	const state = parse(
-		"taste=bad,movie-603,show-1399,movie-603,2,show-3,0,movie-0,movie--1",
-	)
+	const state = parse("taste=bad,movie-603,show-1399,movie-603,2,show-3,0,movie-0,movie--1")
 	assert.deepEqual(state.tasteGroups, ["movie-603", "show-1399", "2"])
-	assert.equal(
-		filterStateToParams(state, defaults).get("taste"),
-		"movie-603,show-1399,2",
-	)
-	assert.deepEqual(
-		parse(filterStateToParams(state, defaults).toString()),
-		state,
-	)
-	assert.equal(
-		parse("taste=none,g1,movie-0,movie-12345678901").tasteGroups,
-		undefined,
-	)
+	assert.equal(filterStateToParams(state, defaults).get("taste"), "movie-603,show-1399,2")
+	assert.deepEqual(parse(filterStateToParams(state, defaults).toString()), state)
+	assert.equal(parse("taste=none,g1,movie-0,movie-12345678901").tasteGroups, undefined)
 	assert.equal(dropFilter(state, "tasteGroups").tasteGroups, undefined)
-	assert.equal(
-		filterStateToParams(dropFilter(state, "tasteGroups"), defaults).get(
-			"taste",
-		),
-		null,
-	)
+	assert.equal(filterStateToParams(dropFilter(state, "tasteGroups"), defaults).get("taste"), null)
 })
 
 test("taste picks stay in guest URLs but are omitted from applied chips", () => {
@@ -980,11 +810,11 @@ test("the awards filter round trips through the URL, clears, drops and counts as
 	}
 })
 
- test("canonical trope filters round-trip, clear independently, and reject unrelated URLs", () => {
-  const url = "https://tvtropes.org/pmwiki/pmwiki.php/Main/ApocalypseAnarchy"
-  const state = parse(new URLSearchParams({ trope: url, services: "8" }).toString())
-  assert.equal(state.trope, url)
-  assert.equal(filterStateToParams(state, defaults).get("trope"), url)
-  assert.equal(dropFilter(state, "trope").trope, undefined)
-  assert.equal(parse("trope=https%3A%2F%2Fevil.example%2FMain%2FFoo").trope, undefined)
- })
+test("canonical trope filters round-trip, clear independently, and reject unrelated URLs", () => {
+	const url = "https://tvtropes.org/pmwiki/pmwiki.php/Main/ApocalypseAnarchy"
+	const state = parse(new URLSearchParams({ trope: url, services: "8" }).toString())
+	assert.equal(state.trope, url)
+	assert.equal(filterStateToParams(state, defaults).get("trope"), url)
+	assert.equal(dropFilter(state, "trope").trope, undefined)
+	assert.equal(parse("trope=https%3A%2F%2Fevil.example%2FMain%2FFoo").trope, undefined)
+})

@@ -11,11 +11,7 @@ import type { Person, PoolTitle, RatedTitle } from "./person.server"
 // the craft keys of one, and nothing of the other while the person has no services.
 const { registerHooks } = nodeModule as unknown as {
 	registerHooks(hooks: {
-		resolve(
-			specifier: string,
-			context: unknown,
-			next: (s: string, c: unknown) => unknown,
-		): unknown
+		resolve(specifier: string, context: unknown, next: (s: string, c: unknown) => unknown): unknown
 	}): void
 }
 registerHooks({
@@ -26,9 +22,7 @@ registerHooks({
 					shortCircuit: true,
 				}
 			: next(
-					specifier === "~/server/taste/index.server"
-						? "~/server/taste/taste.server"
-						: specifier,
+					specifier === "~/server/taste/index.server" ? "~/server/taste/taste.server" : specifier,
 					context,
 				),
 })
@@ -58,8 +52,7 @@ const noise = () => {
 
 function z(strong: Record<string, number>) {
 	const v = new Float64Array(K).map(() => noise())
-	for (const [key, value] of Object.entries(strong))
-		v[at(key)] = value + noise() * 0.3
+	for (const [key, value] of Object.entries(strong)) v[at(key)] = value + noise() * 0.3
 	return v
 }
 
@@ -106,10 +99,7 @@ function rated(
 	}
 }
 
-function unseen(
-	strong: Record<string, number>,
-	over: Partial<TitleFacts> = {},
-): PoolTitle {
+function unseen(strong: Record<string, number>, over: Partial<TitleFacts> = {}): PoolTitle {
 	const key = 1e12 + next++
 	return { key, z: z(strong), facts: facts(over) }
 }
@@ -117,9 +107,7 @@ function unseen(
 function person(ratedTitles: RatedTitle[], pool: PoolTitle[]): Person {
 	const scores = ratedTitles.map((r) => r.score)
 	const mu = scores.reduce((a, b) => a + b, 0) / scores.length
-	const sigma =
-		Math.sqrt(scores.reduce((a, b) => a + (b - mu) ** 2, 0) / scores.length) ||
-		1
+	const sigma = Math.sqrt(scores.reduce((a, b) => a + (b - mu) ** 2, 0) / scores.length) || 1
 	return {
 		input: {
 			kind: "member",
@@ -152,7 +140,7 @@ function person(ratedTitles: RatedTitle[], pool: PoolTitle[]): Person {
 function twoStrands() {
 	const titles = [
 		...Array.from({ length: 30 }, () =>
-			rated(CRIME, 9, { moods: ["crime"], genres: ["Crime", "Drama"] }),
+			rated(CRIME, 9, { moods: ["mysterious"], genres: ["Crime", "Drama"] }),
 		),
 		...Array.from({ length: 30 }, () =>
 			rated(COMEDY, 9, { moods: ["funny", "feelgood"], genres: ["Comedy"] }),
@@ -175,15 +163,9 @@ describe("franchiseOf", () => {
 			franchiseOf("The Lord of the Rings: The Return of the King"),
 		)
 		assert.equal(franchiseOf("Toy Story"), franchiseOf("Toy Story 2"))
-		assert.equal(
-			franchiseOf("The Godfather"),
-			franchiseOf("The Godfather Part II"),
-		)
+		assert.equal(franchiseOf("The Godfather"), franchiseOf("The Godfather Part II"))
 		assert.notEqual(franchiseOf("Star Wars"), franchiseOf("Star Trek"))
-		assert.notEqual(
-			franchiseOf("The Dark Knight"),
-			franchiseOf("The Dark Crystal"),
-		)
+		assert.notEqual(franchiseOf("The Dark Knight"), franchiseOf("The Dark Crystal"))
 		assert.notEqual(
 			franchiseOf("Once Upon a Time in America"),
 			franchiseOf("Once Upon a Time in Hollywood"),
@@ -215,13 +197,9 @@ describe("buildSides", () => {
 		const view = buildSides(person(titles, pool))
 		const names = view.sides.map((s) => s.name)
 		assert.notEqual(names[0], names[1])
-		const crime = view.sides.find((s) =>
-			s.attributes.some((a) => a.key === "crime"),
-		)
+		const crime = view.sides.find((s) => s.attributes.some((a) => a.key === "crime"))
 		const comedy = view.sides.find((s) =>
-			s.attributes.some(
-				(a) => a.key === "situational_comedy" || a.key === "physical_comedy",
-			),
+			s.attributes.some((a) => a.key === "situational_comedy" || a.key === "physical_comedy"),
 		)
 		assert.ok(crime && comedy && crime !== comedy)
 		assert.equal(crime.name, "Dark, tense crime")
@@ -231,20 +209,16 @@ describe("buildSides", () => {
 	it("opens Watch next with the moods most of a side's titles carry", () => {
 		const { titles, pool } = twoStrands()
 		const view = buildSides(person(titles, pool))
-		const crime = view.sides.find((s) =>
-			s.attributes.some((a) => a.key === "crime"),
-		)
+		const crime = view.sides.find((s) => s.attributes.some((a) => a.key === "crime"))
 		const comedy = view.sides.find((s) => s !== crime)
-		assert.deepEqual(crime?.moods, ["crime"])
+		assert.deepEqual(crime?.moods, ["mysterious"])
 		assert.deepEqual([...(comedy?.moods ?? [])].sort(), ["feelgood", "funny"])
 	})
 
 	it("finds a place right next to a side that the person hasn't rated, and only on that side", () => {
 		const { titles, pool } = twoStrands()
 		const view = buildSides(person(titles, pool))
-		const crime = view.sides.find((s) =>
-			s.attributes.some((a) => a.key === "crime"),
-		)
+		const crime = view.sides.find((s) => s.attributes.some((a) => a.key === "crime"))
 		const korea = crime?.edges.find((e) => e.kind === "country")
 		assert.ok(korea, "the crime side has a country edge")
 		assert.equal(korea.name, "From South Korea")
@@ -258,33 +232,24 @@ describe("buildSides", () => {
 	it("never offers a place the person rates below their usual", () => {
 		const { titles, pool } = twoStrands()
 		// Two Korean crime titles rated 3: Korea is no longer an invitation.
-		titles.push(
-			rated(CRIME, 3, { origin: "KR" }),
-			rated(CRIME, 3, { origin: "KR" }),
-		)
+		titles.push(rated(CRIME, 3, { origin: "KR" }), rated(CRIME, 3, { origin: "KR" }))
 		const view = buildSides(person(titles, pool))
-		for (const side of view.sides)
-			assert.ok(!side.edges.some((e) => e.id.endsWith("country-KR")))
+		for (const side of view.sides) assert.ok(!side.edges.some((e) => e.id.endsWith("country-KR")))
 	})
 
 	it("never offers a place rated even a little below the usual", () => {
 		const { titles, pool } = twoStrands()
 		const mu = titles.reduce((a, t) => a + t.score, 0) / titles.length
 		// Between the old tolerance (0.3 below) and the usual itself.
-		titles.push(
-			rated(CRIME, Math.round((mu - 0.1) * 10) / 10, { origin: "KR" }),
-		)
+		titles.push(rated(CRIME, Math.round((mu - 0.1) * 10) / 10, { origin: "KR" }))
 		const view = buildSides(person(titles, pool))
-		for (const side of view.sides)
-			assert.ok(!side.edges.some((e) => e.id.endsWith("country-KR")))
+		for (const side of view.sides) assert.ok(!side.edges.some((e) => e.id.endsWith("country-KR")))
 	})
 
 	it("adds the way toward the other side once per pair, and no step twice", () => {
 		const { titles, pool } = twoStrands()
 		const view = buildSides(person(titles, pool))
-		const bridges = view.sides.flatMap((s) =>
-			s.edges.filter((e) => e.kind === "bridge"),
-		)
+		const bridges = view.sides.flatMap((s) => s.edges.filter((e) => e.kind === "bridge"))
 		assert.ok(bridges.length <= 1)
 		for (const bridge of bridges) {
 			assert.equal(bridge.tail, null)
@@ -302,8 +267,7 @@ describe("buildSides", () => {
 		const view = buildSides(person(titles, pool), reverse)
 		for (const side of view.sides) {
 			assert.deepEqual(side.moreOfThis, reverse(side.moreOfThis))
-			for (const edge of side.edges)
-				assert.deepEqual(edge.suggestions, reverse(edge.suggestions))
+			for (const edge of side.edges) assert.deepEqual(edge.suggestions, reverse(edge.suggestions))
 		}
 	})
 
@@ -352,9 +316,7 @@ describe("buildSides", () => {
 		const AGAINST = { bleakness: -1.2, tension: -1.2, intrigue: -1.2 }
 		const titles = [
 			...Array.from({ length: 22 }, () => rated(STRONG_CRIME, 9)),
-			...Array.from({ length: 12 }, () =>
-				rated({ ...STRONG_CRIME, ...AGAINST }, 9),
-			),
+			...Array.from({ length: 12 }, () => rated({ ...STRONG_CRIME, ...AGAINST }, 9)),
 			...Array.from({ length: 30 }, () => rated(COMEDY, 9)),
 			...Array.from({ length: 10 }, () => rated({}, 5)),
 		]
@@ -376,8 +338,7 @@ describe("buildSides", () => {
 		const { titles, pool } = twoStrands()
 		const plain = buildSides(person(titles, pool))
 		const crimeCount = () =>
-			plain.sides.find((side) => side.attributes.some((a) => a.key === "crime"))
-				?.count ?? 0
+			plain.sides.find((side) => side.attributes.some((a) => a.key === "crime"))?.count ?? 0
 		// A little crime in a title about something else: about 0.2 close to the crime side.
 		const loose = rated(
 			{
@@ -391,9 +352,7 @@ describe("buildSides", () => {
 			9,
 		)
 		const view = buildSides(person([...titles, loose], pool))
-		const crime = view.sides.find((side) =>
-			side.attributes.some((a) => a.key === "crime"),
-		)
+		const crime = view.sides.find((side) => side.attributes.some((a) => a.key === "crime"))
 		assert.equal(crime?.count, crimeCount())
 	})
 
@@ -453,15 +412,12 @@ describe("sideOfTitle", () => {
 	const named = namedSides(person(titles, pool))
 	assert.ok(named)
 	const crimeSide = named.sides.findIndex((side) =>
-		side.members.some((r) => r.facts.moods.includes("crime")),
+		side.members.some((r) => r.facts.moods.includes("mysterious")),
 	)
 
 	it("puts a title near a side's center on that side", () => {
 		assert.equal(sideOfTitle(named, title(z(CRIME))), crimeSide)
-		assert.equal(
-			sideOfTitle(named, title(z(COMEDY), ["Comedy"])),
-			1 - crimeSide,
-		)
+		assert.equal(sideOfTitle(named, title(z(COMEDY), ["Comedy"])), 1 - crimeSide)
 	})
 
 	it("leaves a title less than 0.3 close to its nearest side on no side", () => {
@@ -488,7 +444,7 @@ describe("placeTitle", () => {
 	assert.ok(named)
 	const built = buildSides(someone).sides
 	const crimeSide = named.sides.findIndex((side) =>
-		side.members.some((r) => r.facts.moods.includes("crime")),
+		side.members.some((r) => r.facts.moods.includes("mysterious")),
 	)
 	const comedySide = 1 - crimeSide
 	const claimed = named.sides[crimeSide].keys[0]
@@ -509,19 +465,14 @@ describe("placeTitle", () => {
 			side: crimeSide,
 		})
 		// On the side even in a place just past it: on comes first.
-		assert.deepEqual(
-			await placeTitle(named, z(CRIME), facts({ origin: "KR" }), never),
-			{ at: "on", side: crimeSide },
-		)
+		assert.deepEqual(await placeTitle(named, z(CRIME), facts({ origin: "KR" }), never), {
+			at: "on",
+			side: crimeSide,
+		})
 	})
 
 	it("puts a title on no side in a place just past its nearest side", async () => {
-		const place = await placeTitle(
-			named,
-			notDescribed(),
-			facts({ origin: "KR" }),
-			sides,
-		)
+		const place = await placeTitle(named, notDescribed(), facts({ origin: "KR" }), sides)
 		assert.equal(place?.at, "edge")
 		assert.ok(place?.at === "edge")
 		assert.equal(place.side, crimeSide)
@@ -536,10 +487,7 @@ describe("placeTitle", () => {
 		const far = new Float64Array(K)
 		far[at("romance")] = 2
 		far[at("historical")] = 2
-		assert.equal(
-			await placeTitle(named, far, facts({ origin: "KR" }), sides),
-			null,
-		)
+		assert.equal(await placeTitle(named, far, facts({ origin: "KR" }), sides), null)
 	})
 
 	// The edge alone, for a title placeTitle found on no side.
@@ -563,10 +511,7 @@ describe("placeTitle", () => {
 		const place = edgeOfTitle(named, bridged, mix, facts())
 		assert.ok(place, "between the two sides")
 		assert.equal(place.edge.kind, "bridge")
-		assert.deepEqual(
-			[place.side, place.other].sort(),
-			[crimeSide, comedySide].sort(),
-		)
+		assert.deepEqual([place.side, place.other].sort(), [crimeSide, comedySide].sort())
 		const unbridged = built.map((side) => ({
 			...side,
 			edges: side.edges.filter((e) => e.kind !== "bridge"),
@@ -582,7 +527,7 @@ describe("placeTitle with a place's own bars", () => {
 	assert.ok(named)
 	const built = buildSides(someone).sides
 	const crimeSide = named.sides.findIndex((side) =>
-		side.members.some((r) => r.facts.moods.includes("crime")),
+		side.members.some((r) => r.facts.moods.includes("mysterious")),
 	)
 	const center = named.sides[crimeSide].center
 	// Along the crime side's center, plus enough of something else to bring the closeness down to about `closeness`.
@@ -599,41 +544,23 @@ describe("placeTitle with a place's own bars", () => {
 		// Facts like the crime strand's, so the side's name ("crime dramas") describes the title.
 		const crime = () => facts({ genres: ["Crime", "Drama"] })
 		const close = at(0.8)
-		assert.deepEqual(
-			await placeTitle(named, close, crime(), async () => built, bars),
-			{
-				at: "on",
-				side: crimeSide,
-			},
-		)
+		assert.deepEqual(await placeTitle(named, close, crime(), async () => built, bars), {
+			at: "on",
+			side: crimeSide,
+		})
 		// On the side by its own rule, but below the bar: in no place just past it either, so nothing.
 		const loose = at(0.5)
 		assert.equal(sideOfTitle(named, { z: loose, facts: crime() }), crimeSide)
-		assert.equal(
-			await placeTitle(named, loose, crime(), async () => built, bars),
-			null,
-		)
+		assert.equal(await placeTitle(named, loose, crime(), async () => built, bars), null)
 	})
 
 	it("is just past the side between the bars, in a place just past it", async () => {
-		const place = await placeTitle(
-			named,
-			at(0.5),
-			facts({ origin: "KR" }),
-			async () => built,
-			bars,
-		)
+		const place = await placeTitle(named, at(0.5), facts({ origin: "KR" }), async () => built, bars)
 		assert.ok(place?.at === "edge")
 		assert.equal(place.edge.kind, "country")
 		// Below the past bar: nothing.
 		assert.equal(
-			await placeTitle(
-				named,
-				at(0.35),
-				facts({ origin: "KR" }),
-				async () => built,
-				bars,
-			),
+			await placeTitle(named, at(0.35), facts({ origin: "KR" }), async () => built, bars),
 			null,
 		)
 	})
@@ -644,10 +571,7 @@ describe("placeTitle with a place's own bars", () => {
 			asked++
 			return built
 		}
-		assert.equal(
-			await placeTitle(named, at(0.35), facts({ origin: "KR" }), edges, bars),
-			null,
-		)
+		assert.equal(await placeTitle(named, at(0.35), facts({ origin: "KR" }), edges, bars), null)
 		assert.equal(asked, 0)
 		await placeTitle(named, at(0.5), facts({ origin: "KR" }), edges, bars)
 		assert.equal(asked, 1)
@@ -664,7 +588,7 @@ describe("the edges alone and Close to your taste", () => {
 	const built = buildSides(someone).sides
 	const edges = sideEdges(someone, named)
 	const crimeSide = named.sides.findIndex((side) =>
-		side.members.some((r) => r.facts.moods.includes("crime")),
+		side.members.some((r) => r.facts.moods.includes("mysterious")),
 	)
 	const comedySide = 1 - crimeSide
 	const center = named.sides[crimeSide].center
@@ -692,36 +616,17 @@ describe("the edges alone and Close to your taste", () => {
 
 	it("is close to the side whose edge it sits at, by the bars members read", () => {
 		// Between the bars, from South Korea (a place just past the crime side): close to it.
-		assert.deepEqual(
-			closeSides(named, edges, near(0.5), facts({ origin: "KR" }), MEMBER_BARS),
-			[crimeSide],
-		)
+		assert.deepEqual(closeSides(named, edges, near(0.5), facts({ origin: "KR" }), MEMBER_BARS), [
+			crimeSide,
+		])
 		// On the side: not close, it fits.
 		assert.deepEqual(
-			closeSides(
-				named,
-				edges,
-				near(0.8),
-				facts({ genres: ["Crime", "Drama"] }),
-				MEMBER_BARS,
-			),
+			closeSides(named, edges, near(0.8), facts({ genres: ["Crime", "Drama"] }), MEMBER_BARS),
 			[],
 		)
 		// Below the past bar, or in no place just past the side: nothing.
-		assert.deepEqual(
-			closeSides(
-				named,
-				edges,
-				near(0.35),
-				facts({ origin: "KR" }),
-				MEMBER_BARS,
-			),
-			[],
-		)
-		assert.deepEqual(
-			closeSides(named, edges, near(0.5), facts(), MEMBER_BARS),
-			[],
-		)
+		assert.deepEqual(closeSides(named, edges, near(0.35), facts({ origin: "KR" }), MEMBER_BARS), [])
+		assert.deepEqual(closeSides(named, edges, near(0.5), facts(), MEMBER_BARS), [])
 	})
 
 	it("is close to both sides of a bridge it sits on", () => {
@@ -742,9 +647,7 @@ describe("the edges alone and Close to your taste", () => {
 		// About as close to both (0.4 or so): below the bar for a place or a step, so only the bridge can place it.
 		const between = meanOf([z(CRIME), z(COMEDY)])
 		const length = Math.sqrt([...between].reduce((a, x) => a + x * x, 0))
-		const mix = between.map((x, k) =>
-			k === KEYS.indexOf("romance") ? x + 1.4 * length : x,
-		)
+		const mix = between.map((x, k) => (k === KEYS.indexOf("romance") ? x + 1.4 * length : x))
 		const closeness = named.sides.map((side) => cosine(mix, side.center))
 		assert.ok(closeness.every((c) => c > 0.2 && c < MEMBER_BARS.past))
 		assert.deepEqual(
@@ -766,10 +669,7 @@ describe("the edges alone and Close to your taste", () => {
 				side: g.side === null ? null : named.sides.length - 1 - g.side,
 			})),
 		}
-		assert.equal(
-			sideOfAnchor(swapped, anchor, null),
-			named.sides.length - 1 - crimeSide,
-		)
+		assert.equal(sideOfAnchor(swapped, anchor, null), named.sides.length - 1 - crimeSide)
 		// A title no side holds: the side it fits, else the closest; nothing without its fingerprint.
 		const outside = 1e12 + 999_999
 		assert.equal(
@@ -779,10 +679,7 @@ describe("the edges alone and Close to your taste", () => {
 			}),
 			comedySide,
 		)
-		assert.equal(
-			sideOfAnchor(named, outside, { z: near(0.35), facts: facts() }),
-			crimeSide,
-		)
+		assert.equal(sideOfAnchor(named, outside, { z: near(0.35), facts: facts() }), crimeSide)
 		assert.equal(sideOfAnchor(named, outside, null), null)
 	})
 })

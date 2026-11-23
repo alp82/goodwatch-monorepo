@@ -12,6 +12,15 @@ for (const query of ["scary", "scary dark", "scary horror"]) {
 		assert(result.filters.moods.split(",").includes("scary"))
 	})
 }
+test("mood names and their previous phrases resolve to the new keys", () => {
+	for (const query of ["mysterious", "crime & mystery"])
+		assert.equal(interpret(query).filters.moods, "mysterious")
+	for (const query of ["otherworldly", "other worlds"])
+		assert.equal(interpret(query).filters.moods, "otherworldly")
+	assert.equal(interpret("coming of age").filters.themes, "growing")
+	assert.equal(interpret("crime").filters.moods, undefined)
+})
+
 test("hard filters alone do not become semantic searches", () => {
 	assert.equal(interpret("netflix 80 under 90 minutes").semanticQuery, "")
 })
@@ -73,12 +82,7 @@ test("explicit score cues still work beside title text", () => {
 })
 
 test("bare score shorthand still works alone or beside filter words in either order", () => {
-	for (const query of [
-		"80",
-		"80 scary Netflix",
-		"scary Netflix 80",
-		"Netflix 80 scary",
-	]) {
+	for (const query of ["80", "80 scary Netflix", "scary Netflix 80", "Netflix 80 scary"]) {
 		const result = interpret(query)
 		assert.equal(result.filters.score, "80", query)
 		assert(!result.residual.includes("80"), query)
@@ -99,9 +103,7 @@ test("a year cited after a title's words stays in the search text; a year after 
 		assert.equal(new URLSearchParams(view.filters).get("minYear"), "1999", q)
 		assert.equal(view.residual.includes("1999"), false, q)
 	}
-	const phrase = new URLSearchParams(
-		interpret("time travel movies from 2011", "", now).filters,
-	)
+	const phrase = new URLSearchParams(interpret("time travel movies from 2011", "", now).filters)
 	assert.equal(phrase.get("minYear"), "2011")
 })
 
@@ -111,18 +113,11 @@ test("a negation ends with the filter it went to: the next words are a new reque
 	assert.equal(pirates.filters.moods, "funny")
 	assert.equal(pirates.residual, "pirates")
 	assert.equal(interpret("netflix no anime scary").filters.moods, "scary")
-	assert.equal(
-		interpret("no anime funny or romantic").filters.moods,
-		"funny,romance",
-	)
+	assert.equal(interpret("no anime funny or romantic").filters.moods, "funny,romance")
 	assert.equal(interpret("no anime and no gore funny").filters.moods, "funny")
 })
 test("a negation still reaches words joined to its phrase, and descriptive wording", () => {
-	for (const query of [
-		"no comedy or horror",
-		"nothing scary or sad",
-		"not very scary",
-	])
+	for (const query of ["no comedy or horror", "nothing scary or sad", "not very scary"])
 		assert(!interpret(query).filters.moods, query)
 	assert.match(interpret("no comedy or horror").residual, /no comedy or horror/)
 	const both = interpret("no anime, no gore")
@@ -130,9 +125,6 @@ test("a negation still reaches words joined to its phrase, and descriptive wordi
 	assert.equal(both.filters.hide, "violence")
 })
 test("quoted text after a negated filter keeps the negation's end in place", () => {
-	assert.equal(
-		interpret('no anime "a very long title" scary').filters.moods,
-		"scary",
-	)
+	assert.equal(interpret('no anime "a very long title" scary').filters.moods, "scary")
 	assert.equal(interpret('no anime "x" scary').filters.moods, "scary")
 })

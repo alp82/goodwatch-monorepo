@@ -3,12 +3,8 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import "../../../server/title-filter/test-alias.ts"
 
-const { panelBox, startPicker, startShelfLines } = await import(
-	"./start-picker.ts"
-)
-const { countText, countsOfResults, countsQuery, readCounts } = await import(
-	"./mood-counts.ts"
-)
+const { panelBox, startPicker, startShelfLines } = await import("./start-picker.ts")
+const { countText, countsOfResults, countsQuery, readCounts } = await import("./mood-counts.ts")
 const { resultsPath } = await import("../search/start-search.ts")
 const { querySignature } = await import("../stage/start-query.ts")
 const { pickMix } = await import("./mixes.ts")
@@ -16,10 +12,7 @@ const { WORDS } = await import("~/domain/taste-picker")
 
 const counts = {
 	query: "",
-	byWord: { "m:funny": 120, "m:scary": 40, "t:war": 0 } as Record<
-		string,
-		number
-	>,
+	byWord: { "m:funny": 120, "m:scary": 40, "t:war": 0 } as Record<string, number>,
 	total: 75,
 }
 
@@ -46,13 +39,10 @@ test("mix tiles show their parts line, never a count, and are never dimmed", () 
 	assert.deepEqual(lines("g2"), {
 		on: false,
 		full: false,
-		line: "Crime & mystery · Scary · Graphic",
+		line: "Crime · Scary · Graphic",
 		tap: null,
 	})
-	assert.equal(
-		startShelfLines(pickMix([], "g2"), counts, "any").lines("g2").on,
-		true,
-	)
+	assert.equal(startShelfLines(pickMix([], "g2"), counts, "any").lines("g2").on, true)
 })
 
 test("word tiles: counts in titles or on your services; a picked word says what is on show; dimmed at three", () => {
@@ -82,9 +72,7 @@ test("the counts' wording follows the results' scope", () => {
 })
 
 test("one counts request: the results request's own query, with the picks by kind, the scope, and the search's ranked list", () => {
-	const q = new URLSearchParams(
-		countsQuery(["m:funny", "t:war", "s:slow"], "any", null),
-	)
+	const q = new URLSearchParams(countsQuery(["m:funny", "t:war", "s:slow"], "any", null))
 	assert.equal(q.get("moods"), "funny")
 	assert.equal(q.get("themes"), "war")
 	assert.equal(q.get("styles"), "slow")
@@ -97,17 +85,12 @@ test("one counts request: the results request's own query, with the picks by kin
 		`/api/discover/results?${countsQuery(["m:funny"], "mine", null)}`,
 		resultsPath({ picks: ["m:funny"], scope: "mine", ranked: null }),
 	)
-	const searched = new URLSearchParams(
-		countsQuery([], "mine", [1000000000603, 2000000001399]),
-	)
+	const searched = new URLSearchParams(countsQuery([], "mine", [1000000000603, 2000000001399]))
 	assert.equal(searched.get("ranked"), "1000000000603,2000000001399")
 	assert.equal(searched.get("services"), "all")
 	assert.equal(searched.has("moods"), false)
 	// A search that found nothing still searches.
-	assert.equal(
-		new URLSearchParams(countsQuery([], "mine", [])).get("ranked"),
-		"",
-	)
+	assert.equal(new URLSearchParams(countsQuery([], "mine", [])).get("ranked"), "")
 })
 
 test("while a query is on, the counts are its results' own; another query's or unfinished results give none", () => {
@@ -123,11 +106,7 @@ test("while a query is on, the counts are its results' own; another query's or u
 		byWord: { "m:funny": 12, "m:scary": 3 },
 		total: 12,
 	})
-	assert.equal(
-		countsOfResults({ ...query, picks: ["m:scary"] }, ready),
-		null,
-		"another query's",
-	)
+	assert.equal(countsOfResults({ ...query, picks: ["m:scary"] }, ready), null, "another query's")
 	assert.equal(countsOfResults(query, { ...ready, status: "loading" }), null)
 	assert.equal(countsOfResults(query, { ...ready, optionCounts: null }), null)
 })

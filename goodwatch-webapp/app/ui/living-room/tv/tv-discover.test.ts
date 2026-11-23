@@ -4,20 +4,12 @@ import "../../../server/title-filter/test-alias.ts"
 import type { TitleCard } from "~/server/title-cards.server"
 
 const { MOOD_BY_KEY, MOOD_KEYS } = await import("../../../domain/moods.ts")
-const { STYLE_BY_KEY, STYLE_KEYS, THEME_BY_KEY, THEME_KEYS } = await import(
-	"../../../domain/themes-styles.ts"
-)
-const { filterStateFromParams, filterStateToParams } = await import(
-	"../../../domain/filter-state.ts"
-)
-const {
-	DISCOVER_TABS,
-	LIST_TITLES,
-	destinationHref,
-	readTvState,
-	tvItems,
-	EMPTY_CONTEXT,
-} = await import("./tv-machine.ts")
+const { STYLE_BY_KEY, STYLE_KEYS, THEME_BY_KEY, THEME_KEYS } =
+	await import("../../../domain/themes-styles.ts")
+const { filterStateFromParams, filterStateToParams } =
+	await import("../../../domain/filter-state.ts")
+const { DISCOVER_TABS, LIST_TITLES, destinationHref, readTvState, tvItems, EMPTY_CONTEXT } =
+	await import("./tv-machine.ts")
 const {
 	DISCOVER_STYLES,
 	DISCOVER_TAB_KEYS,
@@ -50,14 +42,7 @@ describe("the options of mini Discover's tabs", () => {
 	it("are the decided six per tab, by the app's own names", () => {
 		const names = (tab: "moods" | "themes" | "styles") =>
 			discoverOptions(tab).map((option) => option.name)
-		assert.deepEqual(names("moods"), [
-			"Funny",
-			"Cozy",
-			"Romantic",
-			"Thrilling",
-			"Scary",
-			"Trippy",
-		])
+		assert.deepEqual(names("moods"), ["Funny", "Cozy", "Romantic", "Thrilling", "Scary", "Trippy"])
 		assert.deepEqual(names("themes"), [
 			"Crime",
 			"Mystery",
@@ -84,7 +69,7 @@ describe("the options of mini Discover's tabs", () => {
 		for (const name of [
 			"Sad",
 			"History",
-			"Crime & mystery",
+			"Mysterious",
 			"Any mood",
 			"Tense",
 			"Dark",
@@ -123,13 +108,10 @@ describe("the options of mini Discover's tabs", () => {
 			assert.equal(words.name, style.name, key)
 			assert.equal(words.color, style.color, key)
 		}
-		for (const option of [
-			...discoverOptions("themes"),
-			...discoverOptions("styles"),
-		]) {
-			const words = (
-				option.item.startsWith("theme:") ? DISCOVER_THEMES : DISCOVER_STYLES
-			)[option.key]
+		for (const option of [...discoverOptions("themes"), ...discoverOptions("styles")]) {
+			const words = (option.item.startsWith("theme:") ? DISCOVER_THEMES : DISCOVER_STYLES)[
+				option.key
+			]
 			assert.deepEqual(
 				[option.name, option.color, option.line],
 				[words.name, words.color, words.line],
@@ -139,11 +121,7 @@ describe("the options of mini Discover's tabs", () => {
 
 	it("the TV's own words do not read the themes' and styles' rules, which are the Discover page's code", async () => {
 		const { readFileSync } = await import("node:fs")
-		for (const file of [
-			"tv-discover.ts",
-			"use-tv-discover.ts",
-			"screens/Discover.tsx",
-		]) {
+		for (const file of ["tv-discover.ts", "use-tv-discover.ts", "screens/Discover.tsx"]) {
 			const source = readFileSync(new URL(file, import.meta.url), "utf8")
 			assert.ok(!/from ".*themes-styles/.test(source), file)
 		}
@@ -209,14 +187,8 @@ describe("the titles of one choice", () => {
 					EMPTY_CONTEXT,
 				).screen
 				// The page behind Expand shows the same filter the TV's titles were asked with.
-				assert.equal(
-					destinationHref(screen, EMPTY_CONTEXT),
-					`/discover?${query}`,
-				)
-				const state = filterStateFromParams(
-					new URLSearchParams(query),
-					defaults,
-				)
+				assert.equal(destinationHref(screen, EMPTY_CONTEXT), `/discover?${query}`)
+				const state = filterStateFromParams(new URLSearchParams(query), defaults)
 				assert.deepEqual(state[tab], [key], query)
 				for (const other of ["moods", "themes", "styles"] as const)
 					if (other !== tab) assert.deepEqual(state[other], [], query)
@@ -252,10 +224,7 @@ describe("a title's line of facts", () => {
 		}) as TitleCard
 
 	it("year, kind, length, score and where it streams", () => {
-		assert.equal(
-			listFacts(card()),
-			"2001 · Movie · 1h 56m · 82 score · On Netflix",
-		)
+		assert.equal(listFacts(card()), "2001 · Movie · 1h 56m · 82 score · On Netflix")
 	})
 
 	it("the taste match once the person has one", () => {

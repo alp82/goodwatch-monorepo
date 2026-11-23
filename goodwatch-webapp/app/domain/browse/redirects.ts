@@ -20,7 +20,7 @@ import {
 export const OLD_MOODS: Readonly<Record<string, string>> = {
 	scary: "scary",
 	"feel-good": "cozy",
-	suspense: "crime-mystery",
+	suspense: "mysterious",
 	motivational: "history",
 	funny: "funny",
 	psychological: "dark",
@@ -32,7 +32,7 @@ export const OLD_MOODS: Readonly<Record<string, string>> = {
 	adrenaline: "thrilling",
 	epic: "thrilling",
 	romantic: "romantic",
-	gritty: "crime-mystery",
+	gritty: "mysterious",
 	"mind-bending": "deep",
 	"morally-complex": "deep",
 	atmospheric: "sad",

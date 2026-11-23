@@ -9,19 +9,9 @@ import { WORD_BY_ID } from "~/domain/taste-picker"
 // not per keystroke. Pure, so the mapping is tested without React (grades.test.ts).
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
 import { leadWord } from "../moods/mixes"
-import {
-	type StartQuery,
-	type StartResults,
-	querySignature,
-} from "../stage/start-query"
+import { type StartQuery, type StartResults, querySignature } from "../stage/start-query"
 
-export type Blend =
-	| "soft-light"
-	| "screen"
-	| "multiply"
-	| "saturation"
-	| "color"
-	| "overlay"
+export type Blend = "soft-light" | "screen" | "multiply" | "saturation" | "color" | "overlay"
 
 /** One full-size layer over the room: a color, how it blends with the room under it, at an opacity. */
 export interface Layer {
@@ -36,11 +26,11 @@ export const GRADE_KEYS = [
 	"romance",
 	"action",
 	"scary",
-	"crime",
+	"mysterious",
 	"mystery",
 	"mind",
 	"heavy",
-	"worlds",
+	"otherworldly",
 	"history",
 	"growing",
 	"tense",
@@ -65,7 +55,7 @@ const hue = (mood: MoodKey) => MOOD_BY_KEY[mood].hue
  */
 const CRIME: Layer[] = [
 	{ bg: GRAY, blend: "saturation", o: 0.72 },
-	{ bg: hue("crime"), blend: "color", o: 0.5 },
+	{ bg: hue("mysterious"), blend: "color", o: 0.5 },
 	{ bg: "rgb(20 30 50)", blend: "multiply", o: 0.37 },
 ]
 
@@ -91,7 +81,7 @@ export const GRADES: Readonly<Record<GradeKey, readonly Layer[]>> = {
 		{ bg: "rgb(30 52 72)", blend: "multiply", o: 0.88 },
 		{ bg: hue("scary"), blend: "soft-light", o: 0.32 },
 	],
-	crime: CRIME,
+	mysterious: CRIME,
 	mystery: CRIME,
 	mind: [
 		{ bg: hue("mind"), blend: "color", o: 0.5 },
@@ -101,8 +91,8 @@ export const GRADES: Readonly<Record<GradeKey, readonly Layer[]>> = {
 		{ bg: GRAY, blend: "saturation", o: 0.92 },
 		{ bg: "rgb(52 58 70)", blend: "multiply", o: 0.72 },
 	],
-	worlds: [
-		{ bg: hue("worlds"), blend: "soft-light", o: 0.36 },
+	otherworldly: [
+		{ bg: hue("otherworldly"), blend: "soft-light", o: 0.36 },
 		{ bg: "rgb(20 60 80)", blend: "multiply", o: 0.12 },
 	],
 	history: [
@@ -148,19 +138,20 @@ export const COLOR_STRONG = 0.72
 
 /** Themes and styles onto a grade (by taste picker id); null tints with the word's own color. Moods are their own. */
 export const GRADE_OF_WORD: Readonly<Record<string, GradeKey | null>> = {
-	"t:crime": "crime",
+	"t:crime": "mysterious",
 	"t:mystery": "mystery",
 	"t:war": "heavy",
-	"t:politics": "crime",
+	"t:politics": "mysterious",
 	"t:true": "history",
 	"t:history": "history",
+	"t:growing": "growing",
 	"t:family": "feelgood",
 	"t:mind": "mind",
 	"t:showbiz": "funny",
 	"t:sports": "action",
-	"t:money": "crime",
-	"t:future": "worlds",
-	"t:fantasy": "worlds",
+	"t:money": "mysterious",
+	"t:future": "otherworldly",
+	"t:fantasy": "otherworldly",
 	"s:animated": "growing",
 	"s:documentary": null,
 	"s:spectacle": "action",
@@ -178,8 +169,8 @@ export const GRADE_OF_KEY: Readonly<Record<string, GradeKey>> = {
 	scare: "scary",
 	uncanny: "scary",
 	grotesque: "scary",
-	tension: "crime",
-	crime: "crime",
+	tension: "mysterious",
+	crime: "mysterious",
 	mystery: "mystery",
 	intrigue: "mystery",
 	adrenaline: "action",
@@ -201,10 +192,10 @@ export const GRADE_OF_KEY: Readonly<Record<string, GradeKey>> = {
 	bleakness: "heavy",
 	catharsis: "heavy",
 	warfare: "heavy",
-	wonder: "worlds",
-	fantasy: "worlds",
-	futuristic: "worlds",
-	world_immersion: "worlds",
+	wonder: "otherworldly",
+	fantasy: "otherworldly",
+	futuristic: "otherworldly",
+	world_immersion: "otherworldly",
 	psychological: "mind",
 	surrealism: "mind",
 	psychedelic: "mind",
@@ -218,8 +209,7 @@ export const GRADE_OF_KEY: Readonly<Record<string, GradeKey>> = {
 	family_dynamics: "growing",
 }
 
-const isGradeKey = (key: string): key is GradeKey =>
-	(GRADE_KEYS as readonly string[]).includes(key)
+const isGradeKey = (key: string): key is GradeKey => (GRADE_KEYS as readonly string[]).includes(key)
 
 /** A word's grade: a mood's own, a theme's or style's from GRADE_OF_WORD, else its own color; null for no word. */
 export function gradeOfWord(id: string): Grade {
@@ -230,19 +220,15 @@ export function gradeOfWord(id: string): Grade {
 }
 
 /** A reading's grade: the grade with the most "want" chips, the first seen on a tie; null when none has one. */
-export function gradeOfReading(
-	reading: readonly ReadingChip[] | null,
-): GradeKey | null {
+export function gradeOfReading(reading: readonly ReadingChip[] | null): GradeKey | null {
 	if (!reading) return null
 	const tally = new Map<GradeKey, number>()
 	for (const chip of reading) {
-		const grade =
-			chip.kind === "want" && chip.key ? GRADE_OF_KEY[chip.key] : undefined
+		const grade = chip.kind === "want" && chip.key ? GRADE_OF_KEY[chip.key] : undefined
 		if (grade) tally.set(grade, (tally.get(grade) ?? 0) + 1)
 	}
 	let best: GradeKey | null = null
-	for (const [grade, n] of tally)
-		if (!best || n > (tally.get(best) ?? 0)) best = grade
+	for (const [grade, n] of tally) if (!best || n > (tally.get(best) ?? 0)) best = grade
 	return best
 }
 
@@ -259,8 +245,7 @@ export function roomGrade(
 	if (!query.text) return null
 	const current = results.signature === querySignature(query)
 	if (current && results.reading) return gradeOfReading(results.reading)
-	if (current && (results.status === "ready" || results.status === "error"))
-		return null
+	if (current && (results.status === "ready" || results.status === "error")) return null
 	return undefined
 }
 

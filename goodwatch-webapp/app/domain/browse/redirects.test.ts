@@ -12,13 +12,13 @@ const { parse, browsePath, canonicalPath } = await import("./address.ts")
 const MOODS = [
 	"coming-of-age",
 	"cozy",
-	"crime-mystery",
+	"mysterious",
 	"dark",
 	"deep",
 	"funny",
 	"history",
 	"magical",
-	"other-worlds",
+	"otherworldly",
 	"quirky",
 	"romantic",
 	"sad",
@@ -228,7 +228,7 @@ test("the older /explore and /tv-shows addresses land on the final address in on
 	assert.equal(finalAddress(explore), "/movies/moods/cozy")
 	assert.equal(
 		finalAddress(formerExplorePath("tv", "moods", "suspense") ?? ""),
-		"/shows/moods/crime-mystery",
+		"/shows/moods/mysterious",
 	)
 	const [path, q = ""] = formerTvShowsPath("/tv-shows/genres/scifi-and-fantasy", "?page=2").split(
 		"?",

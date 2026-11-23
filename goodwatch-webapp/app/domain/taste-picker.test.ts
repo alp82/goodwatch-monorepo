@@ -19,11 +19,11 @@ const { watchNextChoiceOf } = await import("./watch-next.ts")
 
 const NONE = { moods: [], themes: [], styles: [], taste: [] }
 
-test("the words: 16 moods, 13 themes (Growing up is Coming of age), 10 styles, with Discover's names (#680)", () => {
-	assert.equal(WORDS.filter((w) => w.kind === "mood").length, 16)
-	assert.equal(WORDS.filter((w) => w.kind === "theme").length, 13)
+test("the words: 14 feel moods, 14 themes, 10 styles, with Discover's names (#680)", () => {
+	assert.equal(WORDS.filter((w) => w.kind === "mood").length, 14)
+	assert.equal(WORDS.filter((w) => w.kind === "theme").length, 14)
 	assert.equal(WORDS.filter((w) => w.kind === "style").length, 10)
-	assert.equal(WORD_BY_ID["t:growing"], undefined)
+	assert.equal(WORD_BY_ID["t:growing"].name, "Growing up")
 	assert.equal(WORD_BY_ID["t:history"].name, "History")
 	assert.equal(WORD_BY_ID["t:mind"].name, "The mind")
 	for (const w of WORDS) assert.match(w.hue, /^#[0-9a-f]{6}$/i)
@@ -52,10 +52,11 @@ test("picks round-trip as ids, taste groups first, and a fourth is refused", () 
 })
 
 test("the URL names a taste group by its key, or by its size order in older links (#680)", () => {
-	assert.deepEqual(
-		tasteRefsOf("movie-1949, show-1396,3,0,10,x,movie-0,movie-1949"),
-		["movie-1949", "show-1396", "3"],
-	)
+	assert.deepEqual(tasteRefsOf("movie-1949, show-1396,3,0,10,x,movie-0,movie-1949"), [
+		"movie-1949",
+		"show-1396",
+		"3",
+	])
 	assert.equal(titleOfGroupKey("movie-1949"), 1_000_000_001_949)
 	assert.equal(titleOfGroupKey("show-1396"), 2_000_000_001_396)
 	assert.equal(titleOfGroupKey("person-1"), null)
@@ -76,23 +77,19 @@ test("the URL names a taste group by its key, or by its size order in older link
 
 test("the URL holds at most three picks, taste groups first", () => {
 	const choice = watchNextChoiceOf(
-		new URLSearchParams(
-			"moods=funny,scary&themes=crime&styles=slow&taste=1,1,x",
-		),
+		new URLSearchParams("moods=funny,scary&themes=crime&styles=slow&taste=1,1,x"),
 	)
 	assert.deepEqual(
 		[choice.taste, choice.moods, choice.themes, choice.styles],
 		[["1"], ["funny", "scary"], ["crime"], []],
 	)
-	assert.deepEqual(
-		trimPicks({ ...NONE, moods: ["funny", "scary", "heavy", "romance"] }).moods,
-		["funny", "scary", "heavy"],
-	)
+	assert.deepEqual(trimPicks({ ...NONE, moods: ["funny", "scary", "heavy", "romance"] }).moods, [
+		"funny",
+		"scary",
+		"heavy",
+	])
 	// Moods only: as before.
-	assert.deepEqual(
-		watchNextChoiceOf(new URLSearchParams("moods=funny")).moods,
-		["funny"],
-	)
+	assert.deepEqual(watchNextChoiceOf(new URLSearchParams("moods=funny")).moods, ["funny"])
 })
 
 test("Discover's rule: the same kind adds, another kind narrows", () => {

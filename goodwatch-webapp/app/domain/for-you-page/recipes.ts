@@ -74,12 +74,12 @@ export const LIBRARY: Recipe[] = [
 		},
 	},
 	{
-		// Crime & mystery rule plus tension and pace.
+		// Mysterious rule plus tension and pace.
 		id: "seat",
 		name: "Edge of my seat",
 		sub: "Tense and twisty",
 		word: "gripping",
-		lean: "crime",
+		lean: "mysterious",
 		hue: "#60a5fa",
 		tone: "tenser",
 		shape: shapeOf({ feel: 2, story: 1 }),
@@ -157,7 +157,7 @@ export const LIBRARY: Recipe[] = [
 		name: "A proper whodunit",
 		sub: "Clues, suspects, a reveal",
 		word: "puzzling",
-		lean: "crime",
+		lean: "mysterious",
 		hue: "#5b7fa8",
 		shape: shapeOf({ world: 1, story: 2 }),
 
@@ -210,12 +210,12 @@ export const LIBRARY: Recipe[] = [
 		},
 	},
 	{
-		// Other worlds rule: fantasy or futuristic 7 or more; immersion makes it a place.
+		// Otherworldly rule: fantasy or futuristic 7 or more; immersion makes it a place.
 		id: "elsewhere",
 		name: "Somewhere else",
 		sub: "Other worlds, wonder",
 		word: "otherworldly",
-		lean: "worlds",
+		lean: "otherworldly",
 		hue: "#d4508a",
 		shape: shapeOf({ world: 2, craft: 1, feel: 1 }),
 
@@ -233,7 +233,7 @@ export const LIBRARY: Recipe[] = [
 		name: "Tomorrow's problems",
 		sub: "Sci-fi with ideas",
 		word: "sci-fi",
-		lean: "worlds",
+		lean: "otherworldly",
 		hue: "#3fc1b0",
 		shape: shapeOf({ world: 2, story: 1 }),
 
@@ -444,7 +444,7 @@ export const LIBRARY: Recipe[] = [
 		},
 	},
 	{
-		// Other worlds rule reversed: realism over fantasy, with character depth.
+		// Otherworldly rule reversed: realism over fantasy, with character depth.
 		id: "real",
 		name: "Real life",
 		sub: "Grounded, human, now",
@@ -486,9 +486,7 @@ export function ownRecipes(sides: ForYouTaste["groups"]): Recipe[] {
 				hue: FAMILY_COLOR[familyOf(s.keys[0]) ?? "feel"],
 				yours: true,
 				shape,
-				attrs: Object.fromEntries(
-					s.keys.map((k, i) => [k, i === 0 ? 0.95 : 0.8]),
-				),
+				attrs: Object.fromEntries(s.keys.map((k, i) => [k, i === 0 ? 0.95 : 0.8])),
 			}
 		})
 }

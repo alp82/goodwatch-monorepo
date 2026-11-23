@@ -40,11 +40,8 @@ export interface Word {
 	description: string | null
 }
 
-/** The same rule as a mood (Growing up is Coming of age). */
-const LEFT_OUT_THEMES: readonly ThemeKey[] = ["growing"]
-
 export const WORDS: readonly Word[] = [
-	...MOODS.map((m) => ({
+	...MOODS.filter((m) => m.feel).map((m) => ({
 		id: `m:${m.key}`,
 		kind: "mood" as const,
 		key: m.key,
@@ -52,7 +49,7 @@ export const WORDS: readonly Word[] = [
 		hue: m.hue,
 		description: m.description,
 	})),
-	...THEMES.filter((t) => !LEFT_OUT_THEMES.includes(t.id)).map((t) => ({
+	...THEMES.map((t) => ({
 		id: `t:${t.id}`,
 		kind: "theme" as const,
 		key: t.id,
@@ -114,12 +111,9 @@ export function picksOf(ids: readonly string[]): Picks {
 	for (const id of [...new Set(ids)].slice(0, MAX_PICKS)) {
 		const group = groupNumber(id)
 		if (group !== null) picks.taste.push(group)
-		else if (WORD_BY_ID[id]?.kind === "mood")
-			picks.moods.push(WORD_BY_ID[id].key as MoodKey)
-		else if (WORD_BY_ID[id]?.kind === "theme")
-			picks.themes.push(WORD_BY_ID[id].key as ThemeKey)
-		else if (WORD_BY_ID[id]?.kind === "style")
-			picks.styles.push(WORD_BY_ID[id].key as StyleKey)
+		else if (WORD_BY_ID[id]?.kind === "mood") picks.moods.push(WORD_BY_ID[id].key as MoodKey)
+		else if (WORD_BY_ID[id]?.kind === "theme") picks.themes.push(WORD_BY_ID[id].key as ThemeKey)
+		else if (WORD_BY_ID[id]?.kind === "style") picks.styles.push(WORD_BY_ID[id].key as StyleKey)
 	}
 	return picks
 }
@@ -128,13 +122,9 @@ export function picksOf(ids: readonly string[]): Picks {
 export const trimPicks = (picks: Picks): Picks => picksOf(pickIds(picks))
 
 /** Picks or unpicks a choice; a fourth pick is refused and changes nothing. */
-export function togglePick(
-	picks: Picks,
-	id: string,
-): { picks: Picks; refused: boolean } {
+export function togglePick(picks: Picks, id: string): { picks: Picks; refused: boolean } {
 	const ids = pickIds(picks)
-	if (ids.includes(id))
-		return { picks: picksOf(ids.filter((x) => x !== id)), refused: false }
+	if (ids.includes(id)) return { picks: picksOf(ids.filter((x) => x !== id)), refused: false }
 	if (ids.length >= MAX_PICKS) return { picks, refused: true }
 	return { picks: picksOf([...ids, id]), refused: false }
 }
@@ -168,10 +158,7 @@ export function tasteRefsOf(value: string | null | undefined): string[] {
  * Whether a title has the picks, by Discover's rule: for every kind picked, it has at least one pick of that kind.
  * `has` says whether the title has one choice. No picks: every title fits.
  */
-export function fitsPicks(
-	ids: readonly string[],
-	has: (id: string) => boolean,
-): boolean {
+export function fitsPicks(ids: readonly string[], has: (id: string) => boolean): boolean {
 	const kinds = new Map<ChoiceKind, string[]>()
 	for (const id of ids) {
 		const kind = kindOf(id)
@@ -202,13 +189,9 @@ export function kindsMet(
  * picker never suggests one next to the other, and a group's colors never pair them.
  */
 const SAME_GROUND: readonly [string, string][] = [
-	["m:crime", "t:mystery"],
-	["m:crime", "t:crime"],
-	["m:worlds", "t:fantasy"],
-	["m:worlds", "t:future"],
-	["m:history", "t:true"],
-	["m:history", "t:history"],
-	["m:history", "t:war"],
+	["m:mysterious", "t:mystery"],
+	["m:otherworldly", "t:fantasy"],
+	["m:otherworldly", "t:future"],
 	["m:action", "s:fast"],
 	["m:action", "s:spectacle"],
 ]
@@ -229,8 +212,6 @@ export function hasWord(masks: WordMasks, word: Word): boolean {
 	if (word.kind === "mood")
 		return (masks.moods & (1 << MOOD_KEYS.indexOf(word.key as MoodKey))) !== 0
 	if (word.kind === "theme")
-		return (
-			(masks.themes & (1 << THEME_KEYS.indexOf(word.key as ThemeKey))) !== 0
-		)
+		return (masks.themes & (1 << THEME_KEYS.indexOf(word.key as ThemeKey))) !== 0
 	return (masks.styles & (1 << STYLE_KEYS.indexOf(word.key as StyleKey))) !== 0
 }

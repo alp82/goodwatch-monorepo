@@ -25,11 +25,7 @@ type State = ReturnType<typeof defaultFilterState>
 const defaults = { onMyServices: false, notSeenYet: false }
 const empty = defaultFilterState(defaults)
 const url = (state: State) => filterStateToParams(state, defaults).toString()
-const optionOf = (
-	state: State,
-	group: "moods" | "themes" | "styles" | "genres",
-	id: string,
-) => {
+const optionOf = (state: State, group: "moods" | "themes" | "styles" | "genres", id: string) => {
 	const option = moodOptionsOf(state, {
 		genres: { Action: 1, "Action & Adventure": 1, Drama: 1, Adventure: 1 },
 	})[group].find((o) => o.id === id)
@@ -45,27 +41,24 @@ test("Feel lists the feel moods; a picked topic mood shows too", () => {
 		"Romantic",
 		"Thrilling",
 		"Scary",
+		"Mysterious",
 		"Trippy",
 		"Sad",
+		"Otherworldly",
 		"Tense",
 		"Dark",
 		"Deep",
 		"Magical",
 		"Quirky",
 	])
-	const withCrime = { ...empty, moods: ["crime" as const] }
-	assert.ok(moodOptionsOf(withCrime, null).moods.some((o) => o.id === "crime"))
+	const withHistory = { ...empty, moods: ["history" as const] }
+	assert.ok(moodOptionsOf(withHistory, null).moods.some((o) => o.id === "history"))
 	assert.equal(moodOptionsOf(empty, null).themes.length, 14)
 	assert.equal(moodOptionsOf(empty, null).styles.length, 10)
 })
 
 test("folded genres are one unit", () => {
-	const units = genreOptions(empty, [
-		"Action",
-		"Action & Adventure",
-		"Drama",
-		"Adventure",
-	])
+	const units = genreOptions(empty, ["Action", "Action & Adventure", "Drama", "Adventure"])
 	assert.deepEqual(
 		units.map((u) => [u.id, u.values]),
 		[
@@ -80,18 +73,10 @@ test("folded genres are one unit", () => {
 	assert.deepEqual(picked.state.genres, ["Action", "Action & Adventure"])
 	assert.equal(pickCount(picked.state, "genres"), 1)
 	// Adventure shares Action & Adventure: dropping Adventure keeps it for Action.
-	const both = togglePick(
-		picked.state,
-		optionOf(picked.state, "genres", "Adventure"),
-		picked.prefs,
-	)
+	const both = togglePick(picked.state, optionOf(picked.state, "genres", "Adventure"), picked.prefs)
 	assert.ok(both)
 	assert.equal(pickCount(both.state, "genres"), 2)
-	const back = togglePick(
-		both.state,
-		optionOf(both.state, "genres", "Adventure"),
-		both.prefs,
-	)
+	const back = togglePick(both.state, optionOf(both.state, "genres", "Adventure"), both.prefs)
 	assert.ok(back)
 	assert.deepEqual(back.state.genres, ["Action", "Action & Adventure"])
 })
@@ -101,11 +86,7 @@ test("the URL gets all=<group> only from two picks on an all-of column", () => {
 	const one = togglePick(empty, funny, {})
 	assert.ok(one)
 	assert.equal(new URLSearchParams(url(one.state)).has("all"), false)
-	const two = togglePick(
-		one.state,
-		optionOf(one.state, "moods", "feelgood"),
-		one.prefs,
-	)
+	const two = togglePick(one.state, optionOf(one.state, "moods", "feelgood"), one.prefs)
 	assert.ok(two)
 	assert.equal(new URLSearchParams(url(two.state)).get("all"), "moods")
 	// The switch to any of drops it; back to all of brings it back.
@@ -115,21 +96,14 @@ test("the URL gets all=<group> only from two picks on an all-of column", () => {
 	const all = setMode(any.state, "moods", "all", any.prefs)
 	assert.equal(new URLSearchParams(url(all.state)).get("all"), "moods")
 	// Down to one pick: no all, the switch stays where it was.
-	const down = togglePick(
-		all.state,
-		optionOf(all.state, "moods", "funny"),
-		all.prefs,
-	)
+	const down = togglePick(all.state, optionOf(all.state, "moods", "funny"), all.prefs)
 	assert.ok(down)
 	assert.equal(new URLSearchParams(url(down.state)).has("all"), false)
 	assert.equal(modeOf(down.state, "moods", down.prefs), "all")
 })
 
 test("a link without all is any of, and a third pick keeps it any of", () => {
-	const linked = filterStateFromParams(
-		new URLSearchParams("moods=funny,feelgood"),
-		defaults,
-	)
+	const linked = filterStateFromParams(new URLSearchParams("moods=funny,feelgood"), defaults)
 	assert.equal(modeOf(linked, "moods", {}), "any")
 	const three = togglePick(linked, optionOf(linked, "moods", "romance"), {})
 	assert.ok(three)
@@ -230,10 +204,7 @@ test("genre units count once under each mode", () => {
 		counts,
 		cleared,
 	})
-	assert.equal(
-		optionCount(optionOf(empty, "genres", "Action"), inputs(empty, 2000)),
-		150,
-	)
+	assert.equal(optionCount(optionOf(empty, "genres", "Action"), inputs(empty, 2000)), 150)
 	// Drama picked, any of: Action widens the list by what both names add.
 	const drama = { ...empty, genres: ["Drama"] }
 	const anyOf = { ...inputs(drama, 500), prefs: { genres: "any" as const } }
@@ -265,18 +236,12 @@ test("genre units count once under each mode", () => {
 		genres: ["Drama", "Comedy"],
 		allOf: ["genres" as const],
 	}
-	assert.equal(
-		optionCount(optionOf(two, "genres", "Action"), inputs(two, 40)),
-		120,
-	)
+	assert.equal(optionCount(optionOf(two, "genres", "Action"), inputs(two, 40)), 120)
 })
 
 test("cleared queries drop the group and its all entry", () => {
 	assert.equal(
-		clearedQuery(
-			"moods=funny&themes=war,future&all=moods,themes&page=2&ranked=1,2",
-			"moods",
-		),
+		clearedQuery("moods=funny&themes=war,future&all=moods,themes&page=2&ranked=1,2", "moods"),
 		"themes=war%2Cfuture&all=themes&ranked=1%2C2",
 	)
 	assert.equal(clearedQuery("moods=funny&all=moods", "moods"), "")
@@ -423,10 +388,7 @@ test("picked folded genres remove whole units and keep shared names", () => {
 		}),
 		500,
 	)
-	assert.equal(
-		optionCount(action, { ...inputs, state: { ...state, allOf: ["genres"] } }),
-		80,
-	)
+	assert.equal(optionCount(action, { ...inputs, state: { ...state, allOf: ["genres"] } }), 80)
 	assert.equal(optionCount(action, { ...inputs, counts: null }), null)
 })
 

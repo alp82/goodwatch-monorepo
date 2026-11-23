@@ -1709,7 +1709,7 @@ export class Places {
 					if (both < 120) continue
 					const na = this.count([parts[0]])
 					const nb = this.count([parts[1]])
-					// Two names for one thing (Fantasy and Other worlds) are not a blend.
+					// Two names for one thing (Fantasy and Otherworldly) are not a blend.
 					if (both > Math.min(na, nb) * 0.5) continue
 					if (similarity(this.b, this.mean([parts[0]]), this.mean([parts[1]])) > 0.78) continue
 					const lift = both / ((na * nb) / total)

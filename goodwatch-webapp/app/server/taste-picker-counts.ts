@@ -5,7 +5,7 @@
 //   common there as in everything the member loves. A group's colors are the mood, and the theme or style, it carries
 //   most; its line lists the words it carries most, one per ground.
 // - Picks combine by Discover's rule (domain/taste-picker.ts).
-import { MOOD_KEYS, maskOfMoods } from "~/domain/moods"
+import { maskOfMoods } from "~/domain/moods"
 import {
 	MAX_PICKS,
 	NEVER_APART,
@@ -50,10 +50,7 @@ export interface PickerGroup {
 }
 
 /** A title's words, from the snapshot; null when it has no title analysis. */
-export function masksOf(
-	snapshot: TitleSnapshot,
-	key: TitleKey,
-): WordMasks | null {
+export function masksOf(snapshot: TitleSnapshot, key: TitleKey): WordMasks | null {
 	const row = snapshot.rowOf(key)
 	const facts = row < 0 ? null : snapshot.facts(key)
 	if (!facts) return null
@@ -68,9 +65,7 @@ export function masksOf(
  * What each group carries, from its loved titles' words: the words by how much they set it apart, its colors, and the
  * words its line names. `loved` holds each group's loved titles, largest group first.
  */
-export function describeGroups(
-	loved: WordMasks[][],
-): Omit<PickerGroup, "id" | "key" | "name">[] {
+export function describeGroups(loved: WordMasks[][]): Omit<PickerGroup, "id" | "key" | "name">[] {
 	const all = loved.flat()
 	const share = (list: WordMasks[], word: Word) =>
 		list.length ? list.filter((m) => hasWord(m, word)).length / list.length : 0
@@ -102,9 +97,7 @@ export function describeGroups(
 export function carriedColorWords(carries: readonly string[]): Word[] {
 	const ranked = carries.map((id) => WORD_BY_ID[id]).filter((word) => !!word)
 	const mood = ranked.find((w) => w.kind === "mood")
-	const other = ranked.find(
-		(w) => w.kind !== "mood" && !(mood && sameGround(mood.id, w.id)),
-	)
+	const other = ranked.find((w) => w.kind !== "mood" && !(mood && sameGround(mood.id, w.id)))
 	return [mood, other].filter((w): w is Word => !!w)
 }
 
@@ -169,10 +162,7 @@ export function pickerCounts(
 		// The moods always show, as they always have (an empty list too); themes and styles when the list holds them.
 		.filter(
 			(c) =>
-				kindOf(c.id) === "taste" ||
-				kindOf(c.id) === "mood" ||
-				c.count > 0 ||
-				picks.includes(c.id),
+				kindOf(c.id) === "taste" || kindOf(c.id) === "mood" || c.count > 0 || picks.includes(c.id),
 		)
 	const byId = new Map(choices.map((c) => [c.id, c]))
 
@@ -180,10 +170,7 @@ export function pickerCounts(
 	// most of its titles in the groups that carry them first, then the moods with most titles.
 	const inTaste = (id: string) =>
 		counted.filter(
-			(e) =>
-				e.group !== null &&
-				hasChoice(e, id) &&
-				groups[e.group - 1]?.carries.includes(id),
+			(e) => e.group !== null && hasChoice(e, id) && groups[e.group - 1]?.carries.includes(id),
 		).length
 	const carried = WORDS.map((w) => w.id)
 		.filter((id) => groups.some((g) => g.carries.includes(id)))
@@ -191,16 +178,14 @@ export function pickerCounts(
 		.filter((x) => x.n > 0)
 		.sort((a, b) => b.n - a.n)
 		.map((x) => x.id)
-	const moods = MOOD_KEYS.map((m) => `m:${m}`).sort(
-		(a, b) => (byId.get(b)?.count ?? 0) - (byId.get(a)?.count ?? 0),
-	)
-	const forYou = [
-		...new Set([...groups.map((g) => g.id), ...carried, ...moods]),
-	].slice(0, FOR_YOU)
+	const moods = WORDS.filter((w) => w.kind === "mood")
+		.map((w) => w.id)
+		.sort((a, b) => (byId.get(b)?.count ?? 0) - (byId.get(a)?.count ?? 0))
+	const forYou = [...new Set([...groups.map((g) => g.id), ...carried, ...moods])].slice(0, FOR_YOU)
 
 	// Narrow it: only once something is picked and there is room for another pick.
 	const pickedKinds = new Set(picks.map(kindOf))
-	// One per ground: Crime & mystery, not also Crime and Mystery.
+	// One per ground: Mysterious, not also Mystery.
 	const narrow: string[] = []
 	if (picks.length && picks.length < MAX_PICKS)
 		for (const c of choices

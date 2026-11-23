@@ -134,8 +134,8 @@ export const FAVORITES: Record<Two, Curated[]> = {
 			pitch: "Cliffhangers built to ruin your bedtime.",
 		},
 		{
-			parts: [m("crime-mystery"), c("united-kingdom")],
-			pitch: "Rain, tea, and a body in the village.",
+			parts: [m("mysterious"), c("united-kingdom")],
+			pitch: "British mysteries to piece together.",
 		},
 		{
 			parts: [m("coming-of-age"), g("comedy")],

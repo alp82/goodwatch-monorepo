@@ -11,7 +11,7 @@ export interface Mix {
 	/** The picker's group id ("g1"...): the picker draws a mix as it draws a taste group. */
 	id: string
 	name: string
-	/** Word ids ("m:crime", "t:fantasy", "s:slow"); the first one lights the room. */
+	/** Word ids ("t:crime", "t:fantasy", "s:slow"); the first one lights the room. */
 	parts: readonly string[]
 }
 
@@ -20,7 +20,7 @@ export const MIXES: readonly Mix[] = [
 	{
 		id: "g2",
 		name: "Dark, gritty crime",
-		parts: ["m:crime", "m:scary", "s:graphic"],
+		parts: ["t:crime", "m:scary", "s:graphic"],
 	},
 	{
 		id: "g3",
@@ -36,12 +36,12 @@ export const MIXES: readonly Mix[] = [
 	{
 		id: "g6",
 		name: "Warm coming-of-age stories",
-		parts: ["m:growing", "m:feelgood"],
+		parts: ["t:growing", "m:feelgood"],
 	},
 	{
 		id: "g7",
 		name: "Moving period dramas",
-		parts: ["m:history", "m:heavy", "s:slow"],
+		parts: ["t:history", "m:heavy", "s:slow"],
 	},
 	{
 		id: "g8",
@@ -54,12 +54,10 @@ const MIX_BY_ID: ReadonlyMap<string, Mix> = new Map(MIXES.map((m) => [m.id, m]))
 
 export const mixOf = (id: string): Mix | null => MIX_BY_ID.get(id) ?? null
 
-export const isMix = (id: string) =>
-	groupNumber(id) !== null && MIX_BY_ID.has(id)
+export const isMix = (id: string) => groupNumber(id) !== null && MIX_BY_ID.has(id)
 
 /** The words a pick on show stands for: a mix's parts, or the word itself. */
-export const wordsOf = (id: string): readonly string[] =>
-	MIX_BY_ID.get(id)?.parts ?? [id]
+export const wordsOf = (id: string): readonly string[] => MIX_BY_ID.get(id)?.parts ?? [id]
 
 /** The mix that is on: all its parts picked; of two, the one whose parts were all picked first. */
 export function activeMix(picks: readonly string[]): Mix | null {
@@ -79,9 +77,7 @@ export function activeMix(picks: readonly string[]): Mix | null {
 /** The picks as the chips show them: the mix that is on (by its id), then the other words. */
 export function displayPicks(picks: readonly string[]): string[] {
 	const mix = activeMix(picks)
-	return mix
-		? [mix.id, ...picks.filter((p) => !mix.parts.includes(p))]
-		: [...picks]
+	return mix ? [mix.id, ...picks.filter((p) => !mix.parts.includes(p))] : [...picks]
 }
 
 /** The word that lights the room: the first pick on show's first word (a mix leads with its first part). */
@@ -99,9 +95,7 @@ export function pickMix(picks: readonly string[], id: string): string[] {
 	const mix = MIX_BY_ID.get(id)
 	if (!mix) return [...picks]
 	const on = activeMix(picks)
-	const others = picks.filter(
-		(p) => !on?.parts.includes(p) && !mix.parts.includes(p),
-	)
+	const others = picks.filter((p) => !on?.parts.includes(p) && !mix.parts.includes(p))
 	if (on?.id === id) return others
 	const room = MAX_PICKS - mix.parts.length
 	return [...mix.parts, ...(room > 0 ? others.slice(-room) : [])]
@@ -117,15 +111,13 @@ export function tapPick(
 ): { picks: string[]; refused: boolean } {
 	if (isMix(id)) return { picks: pickMix(picks, id), refused: false }
 	if (!WORD_BY_ID[id]) return { picks: [...picks], refused: false }
-	if (picks.includes(id))
-		return { picks: picks.filter((p) => p !== id), refused: false }
+	if (picks.includes(id)) return { picks: picks.filter((p) => p !== id), refused: false }
 	if (picks.length >= MAX_PICKS) return { picks: [...picks], refused: true }
 	return { picks: [...picks, id], refused: false }
 }
 
 /** A pick's name: the mix's or the word's. */
-export const pickLabel = (id: string) =>
-	MIX_BY_ID.get(id)?.name ?? WORD_BY_ID[id]?.name ?? id
+export const pickLabel = (id: string) => MIX_BY_ID.get(id)?.name ?? WORD_BY_ID[id]?.name ?? id
 
 /** The picks in one line, as the chips show them ("Warm, easy comedies · Animated"). */
 export const picksLine = (picks: readonly string[]) =>
@@ -138,8 +130,6 @@ export const picksLine = (picks: readonly string[]) =>
 export const shownLabel = (query: { text: string; picks: readonly string[] }) =>
 	[query.text, picksLine(query.picks)].filter(Boolean).join(" · ")
 
-/** A mix's line: its parts by name ("Crime & mystery · Scary · Graphic"). */
+/** A mix's line: its parts by name ("Crime · Scary · Graphic"). */
 export const mixLine = (id: string) =>
-	(MIX_BY_ID.get(id)?.parts ?? [])
-		.map((w) => WORD_BY_ID[w]?.name ?? w)
-		.join(" · ")
+	(MIX_BY_ID.get(id)?.parts ?? []).map((w) => WORD_BY_ID[w]?.name ?? w).join(" · ")
