@@ -223,7 +223,13 @@ async function main() {
       }
       for (const path of p.examples) {
         if (o.only && o.only !== path) continue;
-        if (summary.pages.some((p) => p.path === path && p.complete)) continue;
+        const finished = summary.pages.find((p) => p.path === path && p.complete);
+        // Older summaries have raw Lighthouse files but only store the median LCP.
+        if (
+          finished &&
+          (o.serverOnly || o.verify ||
+            ["mobile", "desktop"].every((device) => finished[device]?.lcpVisitsMs))
+        ) continue;
         let entry = summary.pages.find((p) => p.path === path);
         if (!entry) {
           entry = { id: p.id, path, tier: p.tier, route: p.route, errors: [] };

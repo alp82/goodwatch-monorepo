@@ -1,3 +1,4 @@
+import { slowResponse } from "./metrics.mjs";
 import http from "node:http";
 import https from "node:https";
 import { performance } from "node:perf_hooks";
@@ -58,7 +59,7 @@ export function responseRecord(r) {
     ttfb: r.ttfb,
     totalMs: r.totalMs,
     bytes: r.bytes,
-    slow: r.ttfb > 1000 || r.totalMs > 1000,
+    slow: slowResponse(r),
     headers: Object.fromEntries(
       [
         "gw-page-cache",

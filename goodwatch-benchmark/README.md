@@ -207,6 +207,7 @@ The lines, all for a first-time mobile visitor who doesn't scroll:
 | `third_party_origins` | Origins other than the site and static hostname |
 | `total_bytes` | Transfer size of all requests |
 | `lcp_ms`, `tbt_ms`, `cls`, `score` | Lighthouse's simulated LCP and TBT, CLS, and the performance score |
+| `visit_ttfb_ms`, `visit_document_ms`, `visit_lcp_ms` | Maximum across individual visits for observed first byte, observed full HTML request, and simulated mobile LCP. Both release budget files set `per_visit_max_ms` to 300. A missing measurement or unsuccessful document fails the check. |
 | `lcp_element` | The LCP element's tag, and a text that its markup must contain. It passes when more than half of the runs match. |
 
 The static origin comes from `BENCH_STATIC_HOST`, or from an origin that serves `/assets/*.js` scripts and has the site's hostname or a subdomain of it. An unrelated third party is never inferred as the static hostname. The combined request limit stays the same in both modes. `origin_requests` and `static_requests` print `info`, never fail a surface, and have `info: true` in the run's `budget.json`. Adding a limit makes either line a budget check.

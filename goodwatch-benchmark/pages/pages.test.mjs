@@ -10,7 +10,7 @@ import {
   categories,
 } from "./metrics.mjs";
 import { allowedRequest, installGuard, redactCredentials } from "./guard.mjs";
-import { request } from "./network.mjs";
+import { request, responseRecord } from "./network.mjs";
 import { EventEmitter } from "node:events";
 import http from "node:http";
 const inventory = JSON.parse(
@@ -110,6 +110,20 @@ test("markdown includes errors, all tiers, missing measurements, and escapes tab
   assert.match(text, /No cookie/);
   assert.match(text, /failure/);
   assert.match(text, /n\/a/);
+});
+test("the 300 ms limit keeps slow individual visits visible in new and resumed reports", () => {
+  const onLimit = responseRecord({ttfb: 300, totalMs: 300, headers: {}});
+  const over = responseRecord({ttfb: 290, totalMs: 300.1, headers: {}});
+  assert.equal(onLimit.slow, false);
+  assert.equal(over.slow, true);
+  const text = markdown({
+    skipped: [],
+    pages: [{ path: "/slow", tier: "P1", server: {samples: [onLimit, {...over, slow: false}]},
+      mobile: {lcpVisitsMs: [300, 301]} }],
+  });
+  assert.doesNotMatch(text, /Browser 1/);
+  assert.match(text, /Browser 2/);
+  assert.match(text, /mobile \| 2 \| 301/);
 });
 test("guard blocks writes, stateful GETs, sockets and optional analytics", () => {
   for (const m of ["POST", "PUT", "DELETE", "PATCH", "OPTIONS"])

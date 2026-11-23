@@ -6,6 +6,12 @@ import {
   medianMetrics,
 } from "../scripts/budget.mjs";
 export { median };
+export const PAGE_TIME_LIMIT_MS = 300;
+
+export function slowResponse(sample) {
+  return sample.ttfb > PAGE_TIME_LIMIT_MS || sample.totalMs > PAGE_TIME_LIMIT_MS;
+}
+
 export const categories = [
   "performance",
   "accessibility",
@@ -76,6 +82,9 @@ export function summarizeLighthouse(reports) {
   return {
     warnings: reports.flatMap((r, index) =>
       (r.runWarnings ?? []).map((message) => ({ run: index + 1, message })),
+    ),
+    lcpVisitsMs: valid.map(
+      (r) => r.audits["largest-contentful-paint"]?.numericValue ?? null,
     ),
     runs: valid.length,
     attempted: reports.length,
@@ -166,7 +175,7 @@ export function markdown(summary) {
     out.push("");
   }
   out.push(
-    "## Slow server responses",
+    `## Server responses over ${PAGE_TIME_LIMIT_MS} ms`,
     "",
     "| Page | Request | Status | TTFB ms | Full response ms |",
     "| --- | --- | --- | --- | --- |",
@@ -177,10 +186,22 @@ export function markdown(summary) {
       ["Uncompressed", p.server?.uncompressed],
       ["Googlebot", p.server?.googlebot],
     ])
-      if (r?.slow)
+      if (r && slowResponse(r))
         out.push(
           `| ${[p.path, label, r.status, fmt(r.ttfb), fmt(r.totalMs)].map(cell).join(" | ")} |`,
         );
+  out.push(
+    "",
+    `## Browser paints over ${PAGE_TIME_LIMIT_MS} ms`,
+    "",
+    "| Page | Device | Successful visit | LCP ms |",
+    "| --- | --- | --- | ---: |",
+  );
+  for (const p of summary.pages)
+    for (const device of ["mobile", "desktop"])
+      for (const [index, ms] of (p[device]?.lcpVisitsMs ?? []).entries())
+        if (ms > PAGE_TIME_LIMIT_MS)
+          out.push(`| ${[p.path, device, index + 1, fmt(ms)].map(cell).join(" | ")} |`);
   out.push(
     "",
     "## Skipped and unavailable",
