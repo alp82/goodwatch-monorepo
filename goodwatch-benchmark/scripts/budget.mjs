@@ -20,6 +20,9 @@ export const LINES = {
   blocking_requests: { label: "Render-blocking requests", unit: "count" },
   third_party_origins: { label: "Third-party origins", unit: "count" },
   total_bytes: { label: "Total bytes", unit: "bytes" },
+  visit_ttfb_ms: { label: "Slowest visit: document first byte (observed)", unit: "ms" },
+  visit_document_ms: { label: "Slowest visit: full HTML request (observed)", unit: "ms" },
+  visit_lcp_ms: { label: "Slowest visit: mobile Lighthouse LCP", unit: "ms" },
   lcp_ms: { label: "LCP", unit: "ms" },
   tbt_ms: { label: "TBT", unit: "ms" },
   cls: { label: "CLS", unit: "score" },
@@ -27,7 +30,7 @@ export const LINES = {
 };
 
 // The lines that Lighthouse's CPU slowdown changes. Bytes, requests, and CLS don't depend on it.
-export const SLOWDOWN_LINES = ["lcp_ms", "tbt_ms", "score"];
+export const SLOWDOWN_LINES = ["lcp_ms", "visit_lcp_ms", "tbt_ms", "score"];
 
 const isHttp = (url) => /^https?:\/\//.test(url);
 const sum = (items, key) => items.reduce((total, item) => total + (item[key] || 0), 0);
@@ -50,10 +53,21 @@ export function extractMetrics(lhr, { staticOrigin } = {}) {
   const originRequests = requests.filter((r) => new URL(r.url).origin === origin).length;
   const staticRequests = requests.filter((r) => new URL(r.url).origin === staticOrigin && staticOrigin !== origin).length;
   const ofType = (type) => requests.filter((r) => r.resourceType === type);
-  const documentRequest = requests.find((r) => r.resourceType === "Document" && r.url === (lhr.mainDocumentUrl || lhr.finalDisplayedUrl));
+  const documentRequest = requests.find((r) => r.resourceType === "Document" && r.experimentalFromMainFrame !== false && r.url === (lhr.mainDocumentUrl || lhr.finalDisplayedUrl));
   const audit = (id) => lhr.audits?.[id]?.numericValue;
   const observed = lhr.audits?.metrics?.details?.items?.[0] ?? {};
+  // Lighthouse's LCP breakdown contains observed navigation-to-first-byte timing. Its metrics.timeToFirstByte
+  // is simulated and server-response-time omits connection setup. Neither is interchangeable with this value.
+  const ttfb = lhr.audits?.["lcp-breakdown-insight"]?.details?.items
+    ?.find((item) => item.type === "table")?.items?.find((item) => item.subpart === "timeToFirstByte")?.duration;
+  const validDocument = !lhr.runtimeError && documentRequest?.finished === true && documentRequest.statusCode === 200 &&
+    (!documentRequest.mimeType || documentRequest.mimeType === "text/html");
+  const start = documentRequest?.rendererStartTime;
+  const end = documentRequest?.networkEndTime;
   return {
+    visit_ttfb_ms: validDocument ? ttfb : undefined,
+    visit_document_ms: validDocument && Number.isFinite(start) && Number.isFinite(end) ? end - start : undefined,
+    visit_lcp_ms: validDocument ? audit("largest-contentful-paint") : undefined,
     html_bytes: documentRequest?.transferSize,
     host_requests: originRequests + staticRequests,
     origin_requests: originRequests,
@@ -159,10 +173,25 @@ export function compareRun(budget, reports, { staticOrigin } = {}) {
       surfaces[name] = { pass: false, runs: 0, lines: [], measured: {}, error: "no Lighthouse report" };
       continue;
     }
-    const measured = medianMetrics(runs.map((run) => extractMetrics(run, { staticOrigin })));
+    const metrics = runs.map((run) => extractMetrics(run, { staticOrigin }));
+    const measured = medianMetrics(metrics);
     const result = compareSurface(measured, runs.map(lcpElement), surface, budget.targets);
+    if (budget.per_visit_max_ms != null) {
+      const max = budget.per_visit_max_ms;
+      if (!Number.isFinite(max) || max <= 0) throw new Error("per_visit_max_ms must be a positive number");
+      for (const key of ["visit_ttfb_ms", "visit_document_ms", "visit_lcp_ms"]) {
+        const samples = metrics.map((visit) => visit[key]);
+        const complete = samples.every((value) => Number.isFinite(value) && value >= 0);
+        // A missing or invalid visit cannot be dropped from a worst-visit limit.
+        const value = complete ? Math.max(...samples) : undefined;
+        const pass = complete && value <= max;
+        measured[key] = value;
+        result.lines.push({ key, value, max, pass, samples });
+        if (!pass) result.pass = false;
+      }
+    }
     // The time lines are calibrated for one CPU slowdown. Reports with another one can't be compared with them.
-    const slowdowns = [...new Set(runs.map((run) => extractMetrics(run).cpu_slowdown))];
+    const slowdowns = [...new Set(metrics.map((run) => run.cpu_slowdown))];
     const other = budget.cpu_slowdown == null ? [] : slowdowns.filter((value) => value !== budget.cpu_slowdown);
     if (other.length) {
       for (const line of result.lines) if (SLOWDOWN_LINES.includes(line.key)) line.pass = false;
@@ -179,6 +208,7 @@ export function formatValue(key, value) {
   if (typeof value !== "number") return value ?? "not measured";
   const unit = LINES[key]?.unit;
   if (unit === "bytes") return `${(value / 1024).toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} KB`;
+  if (key.startsWith("visit_") && unit === "ms") return `${value.toLocaleString("en-US", { maximumFractionDigits: 3 })} ms`;
   if (unit === "ms") return `${number(value)} ms`;
   if (unit === "score") return value.toFixed(3);
   return number(value);

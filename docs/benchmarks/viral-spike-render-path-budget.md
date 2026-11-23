@@ -5,6 +5,13 @@ stands between today's pages and good mobile Core Web Vitals. It belongs to the 
 The limits are in [`goodwatch-benchmark/urls/budget.json`](../../goodwatch-benchmark/urls/budget.json), and
 `./bench.sh budget` checks them (see the [benchmark README](../../goodwatch-benchmark/README.md#render-path-budget)).
 
+The legacy and Explore budgets enforce `per_visit_max_ms` (300 ms) on each recorded visit.
+Three separate rows report the slowest observed navigation to first byte, observed main HTML request
+from initiation until the last byte, and Lighthouse mobile LCP under the configured throttling.
+The HTML timings include transport between the generator and its target. A fixture uses its local
+origin. Missing timings or an unsuccessful HTML response fail these rows. The calibrated median
+checks and element assertions still run independently.
+
 ## Summary
 
 - **The budget has 15 lines per surface** for a first-time mobile visitor who doesn't scroll: bytes, requests, the LCP

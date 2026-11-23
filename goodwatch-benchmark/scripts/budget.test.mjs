@@ -228,3 +228,31 @@ test("compareRun passes the static setting on and keeps the existing combined li
   lhr.audits["network-requests"].details.items.push(request("https://static.example.com/assets/extra.js", "Script", 1));
   assert.equal(compareRun(limits, { movie: [lhr] }, { staticOrigin: "https://static.example.com" }).pass, false);
 });
+
+test("all three per-visit timings must pass on every sample, alongside the old median limits", () => {
+  const timed = (ms) => {
+    const run = report({ lcp: ms });
+    run.audits["lcp-breakdown-insight"].details.items[0].items.push({ subpart: "timeToFirstByte", duration: ms });
+    Object.assign(run.audits["network-requests"].details.items[0], { rendererStartTime: 12, networkEndTime: 12 + ms });
+    return run;
+  };
+  const config = { per_visit_max_ms: 300, surfaces: { movie: { budget: { lcp_ms: { max: 3500 } } } } };
+  const compare = (...runs) => compareRun(config, { movie: runs }).surfaces.movie;
+  assert.equal(compare(timed(300)).pass, true);
+  const failed = compare(timed(5), timed(10), timed(300.1));
+  assert.equal(failed.pass, false);
+  assert.equal(failed.measured.lcp_ms, 10);
+  const perVisit = failed.lines.filter((row) => row.key.startsWith("visit_"));
+  assert.deepEqual(perVisit.map((line) => line.key), ["visit_ttfb_ms", "visit_document_ms", "visit_lcp_ms"]);
+  for (const line of perVisit) {
+    assert.equal(line.pass, false);
+    assert.deepEqual(line.samples, [5, 10, 300.1]);
+    assert.equal(line.value, 300.1);
+  }
+  const missing = timed(10);
+  delete missing.audits["network-requests"].details.items[0].networkEndTime;
+  assert.equal(compare(timed(10), missing).lines.find((row) => row.key === "visit_document_ms").pass, false);
+  const errorPage = timed(5);
+  errorPage.audits["network-requests"].details.items[0].statusCode = 503;
+  assert.ok(compare(errorPage).lines.filter((row) => row.key.startsWith("visit_")).every((row) => !row.pass));
+});

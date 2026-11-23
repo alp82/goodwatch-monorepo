@@ -2,6 +2,7 @@
   "name": "render-path-budget",
   "description": "Limits per landing surface for a first-time mobile visitor who doesn't scroll, checked by ./bench.sh budget (Lighthouse on the generator, median of the runs). A limit is a measured value plus a margin, so the budget passes today and fails on a regression. Byte limits are in bytes. targets holds what counts as good and never fails a run. cpu_slowdown is Lighthouse's CPU slowdown that the LCP, TBT, and score limits are calibrated for: a run with another one fails those lines. See docs/benchmarks/viral-spike-render-path-budget.md.",
   "calibrated": "2026-10-09",
+  "per_visit_max_ms": 300,
   "cpu_slowdown": 2.7,
   "targets": {
     "lcp_ms": 2500,

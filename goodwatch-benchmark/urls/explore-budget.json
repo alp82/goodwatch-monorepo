@@ -1,6 +1,7 @@
 {
   "name": "explore-mobile",
   "description": "Median mobile first visits across the Browse layouts. Run ./bench.sh budget --budget urls/explore-budget.json --runs 3.",
+  "per_visit_max_ms": 300,
   "cpu_slowdown": 2.7,
   "surfaces": {
     "movies": {"path": "/movies", "budget": {"lcp_ms": {"max": 2500}, "tbt_ms": {"max": 200}, "cls": {"max": 0.1}, "score": {"min": 90}}},
