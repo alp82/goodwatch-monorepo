@@ -82,39 +82,29 @@ async function readTitles(kind: TitleKind) {
 	)
 }
 
-async function readLists() {
-	const [movieRows, showRows] = await Promise.all([readTitles("movie"), readTitles("show")])
-	const lists = {} as Record<TitleKind, RankedList>
-	const votes = new Map<string, number>()
-	const titles = new Map<string, ListTitle>()
-	for (const [kind, rows] of [
-		["movie", movieRows],
-		["show", showRows],
-	] as const) {
-		const { paths, attention } = cohorts[kind]
-		// A title the catalog no longer has is left out; the sitemap's next run drops it too.
-		const ranked = rankTitles(rows).map((row): ListTitle => ({
-			tmdb_id: row.tmdb_id,
-			media_type: kind,
-			title: row.title,
-			release_year: row.release_year,
-			poster_path: row.poster_path,
-			genres: (row.genres ?? []).slice(0, 2),
-			goodwatch_overall_score_normalized_percent: row.goodwatch_overall_score_normalized_percent,
-			path: paths.get(row.tmdb_id) as string,
-		}))
-		for (const row of rows)
-			votes.set(`${kind}:${row.tmdb_id}`, row.goodwatch_overall_score_voting_count ?? 0)
-		for (const title of ranked) titles.set(`${kind}:${title.tmdb_id}`, title)
-		// All time: this year's and last year's titles wait until their scores settle (domain/top-lists.ts). The people
-		// list above still counts them.
-		const settled = ranked.filter((t) => isSettled(t.release_year))
-		lists[kind] = {
-			titles: settled,
-			popular: settled.filter((t) => attention.has(t.tmdb_id)).length,
-		}
+async function readCohort(kind: TitleKind) {
+	const rows = await readTitles(kind)
+	const { paths, attention } = cohorts[kind]
+	// The people list also uses the unsettled titles when selecting a person's known-for credits.
+	const ranked = rankTitles(rows).map((row): ListTitle => ({
+		tmdb_id: row.tmdb_id,
+		media_type: kind,
+		title: row.title,
+		release_year: row.release_year,
+		poster_path: row.poster_path,
+		genres: (row.genres ?? []).slice(0, 2),
+		goodwatch_overall_score_normalized_percent: row.goodwatch_overall_score_normalized_percent,
+		path: paths.get(row.tmdb_id) as string,
+	}))
+	const settled = ranked.filter((t) => isSettled(t.release_year))
+	const list: RankedList = {
+		titles: settled,
+		popular: settled.filter((t) => attention.has(t.tmdb_id)).length,
 	}
-	return { lists, people: await readPeople(titles, votes) }
+	const votes = new Map(
+		rows.map((row) => [row.tmdb_id, row.goodwatch_overall_score_voting_count ?? 0]),
+	)
+	return { ranked, votes, list }
 }
 
 // The same credits the sitemap's person selection counts (scripts/sitemap_people.py).
@@ -181,22 +171,51 @@ async function readPeople(
 	})
 }
 
-let cached: { at: number; value: ReturnType<typeof readLists> } | null = null
+// One lifetime for all projections. A movies-only request needs neither show titles nor people's credits.
+interface ListGeneration {
+	at: number
+	titles: Partial<Record<TitleKind, ReturnType<typeof readCohort>>>
+	people?: Promise<ListPerson[]>
+}
 
-function lists() {
+let cached: ListGeneration | undefined
+
+function generation(): ListGeneration {
 	if (!cached || Date.now() - cached.at > LIFETIME_MS) {
-		const value = readLists()
-		cached = { at: Date.now(), value }
-		// A failed read is tried again on the next request, not kept for an hour.
-		value.catch(() => {
-			if (cached?.value === value) cached = null
-		})
+		cached = { at: Date.now(), titles: {} }
 	}
-	return cached.value
+	return cached
+}
+
+function cohort(current: ListGeneration, kind: TitleKind) {
+	return (current.titles[kind] ??= readCohort(kind).catch((error) => {
+		delete current.titles[kind]
+		throw error
+	}))
 }
 
 /** The cohort's movies or shows, best first. */
-export const getRankedList = async (kind: TitleKind) => (await lists()).lists[kind]
+export const getRankedList = async (kind: TitleKind) => (await cohort(generation(), kind)).list
 
 /** The cohort's people, in the sitemap's order. */
-export const getListPeople = async () => (await lists()).people
+export function getListPeople() {
+	const current = generation()
+	return (current.people ??= peopleIn(current).catch((error) => {
+		delete current.people
+		throw error
+	}))
+}
+
+async function peopleIn(current: ListGeneration) {
+	const cohorts = await Promise.all([cohort(current, "movie"), cohort(current, "show")])
+	const titles = new Map<string, ListTitle>()
+	const votes = new Map<string, number>()
+	for (const { ranked, votes: cohortVotes } of cohorts) {
+		for (const title of ranked) {
+			const key = `${title.media_type}:${title.tmdb_id}`
+			titles.set(key, title)
+			votes.set(key, cohortVotes.get(title.tmdb_id) ?? 0)
+		}
+	}
+	return readPeople(titles, votes)
+}
