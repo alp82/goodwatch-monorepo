@@ -3,6 +3,7 @@
 // cell, so nothing overlaps; the page's own place is the white one, and the more alike a place is, the brighter its
 // name. Each cell is a link; hovering or focusing one shows its posters and the word that sets it apart.
 import { moodGrid } from "~/domain/browse/mood-grid"
+import { createPortal } from "react-dom"
 import { Link } from "@remix-run/react"
 import { useEffect, useRef, useState } from "react"
 import { CAPTION } from "~/ui/eyebrow"
@@ -163,30 +164,34 @@ export function Field({
 					</div>
 				</div>
 			</div>
-			{hot && (
-				<div
-					aria-hidden
-					className={`pointer-events-none fixed z-50 rounded-xl bg-gray-900 p-3 shadow-2xl shadow-black/60 ring-1 ring-white/15 transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none ${
-						shown ? "opacity-100" : "opacity-0"
-					}`}
-					style={{
-						width: CARD_W,
-						left: hot.left,
-						top: hot.top,
-						transform: `translateY(${hot.below ? (shown ? "0" : "-4px") : shown ? "-100%" : "calc(-100% + 4px)"})`,
-					}}
-				>
-					<p className="flex items-center gap-1.5 text-sm font-bold text-white">
-						<PlaceMark place={hot.p.place} size={13} />
-						{hot.p.place.label}
-						{hot.p.differs && <span className="font-medium text-gray-400">· {hot.p.differs}</span>}
-					</p>
-					{hot.p.line && (
-						<p className="mt-1 text-[13px] leading-snug text-gray-300">{hot.p.line}</p>
-					)}
-					<PosterTrio titles={hot.p.titles} className="mt-2.5" />
-				</div>
-			)}
+			{hot &&
+				createPortal(
+					<div
+						aria-hidden
+						className={`pointer-events-none fixed z-[1001] rounded-xl bg-gray-900 p-3 shadow-2xl shadow-black/60 ring-1 ring-white/15 transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none ${
+							shown ? "opacity-100" : "opacity-0"
+						}`}
+						style={{
+							width: CARD_W,
+							left: hot.left,
+							top: hot.top,
+							transform: `translateY(${hot.below ? (shown ? "0" : "-4px") : shown ? "-100%" : "calc(-100% + 4px)"})`,
+						}}
+					>
+						<p className="flex items-center gap-1.5 text-sm font-bold text-white">
+							<PlaceMark place={hot.p.place} size={13} />
+							{hot.p.place.label}
+							{hot.p.differs && (
+								<span className="font-medium text-gray-400">· {hot.p.differs}</span>
+							)}
+						</p>
+						{hot.p.line && (
+							<p className="mt-1 text-[13px] leading-snug text-gray-300">{hot.p.line}</p>
+						)}
+						<PosterTrio titles={hot.p.titles} className="mt-2.5" />
+					</div>,
+					document.body,
+				)}
 		</div>
 	)
 }
