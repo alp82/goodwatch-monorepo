@@ -340,14 +340,8 @@ function positions(
 	family: Family,
 ): Map<string, { tone: number; pace: number; all: number[] }> {
 	const out = new Map<string, { tone: number; pace: number; all: number[] }>()
-	for (const m of atlas.members(family)) {
-		const dials = atlas.dials(m)
-		const at = (key: string) => dials.find((d) => d.key === key)?.at ?? 0.5
-		out.set(m.slug, {
-			tone: at("tone"),
-			pace: at("pace"),
-			all: AXIS_KEYS.map((k) => at(k)),
-		})
+	for (const [slug, at] of atlas.dialPositions(family)) {
+		out.set(slug, { tone: at.tone, pace: at.pace, all: AXIS_KEYS.map((k) => at[k]) })
 	}
 	return out
 }

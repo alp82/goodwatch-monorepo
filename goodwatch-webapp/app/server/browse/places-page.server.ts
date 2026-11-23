@@ -57,6 +57,7 @@ const BLURBS: Record<Axis, string[]> = {
 
 export const loadPlacesPage: BrowseLoader<TunedData> = async ({ atlas, url }) => {
 	const cards = await cardData(atlas, "country", { titles: 3 })
+	const positions = atlas.dialPositions("country")
 	const link = (id: string, value: string | undefined) => {
 		const params = new URLSearchParams(url.searchParams)
 		if (value === undefined) params.delete(id)
@@ -94,11 +95,11 @@ export const loadPlacesPage: BrowseLoader<TunedData> = async ({ atlas, url }) =>
 		lede: pageCopy(atlas.kind, "hub", "countries")?.lede ?? null,
 		countries: cards.map((c) => {
 			const part = ing("country", c.place.slug)
-			const found = atlas.dials(part)
+			const at = positions.get(part.slug)
 			return {
 				...c,
 				name: atlas.name([part]),
-				at: AXES.map((axis) => found.find((d) => d.key === axis)?.at ?? 0.5),
+				at: AXES.map((axis) => at?.[axis] ?? 0.5),
 			}
 		}),
 		dials,

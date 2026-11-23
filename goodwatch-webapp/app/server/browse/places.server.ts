@@ -153,6 +153,10 @@ export const AXES = {
 export type AxisKey = keyof typeof AXES
 export const AXIS_KEYS = Object.keys(AXES) as AxisKey[]
 
+function dialPosition(value: number, low: number, high: number): number {
+	return high > low ? Math.round(((value - low) / (high - low)) * 100) / 100 : 0.5
+}
+
 function axisOf(v: ArrayLike<number>, axis: AxisKey): number {
 	const mean = (keys: readonly string[]) => {
 		let s = 0
@@ -1096,6 +1100,27 @@ export class Places {
 		return { trait, bands }
 	}
 
+	/** Positions of all full-page members, scaled against the same family on each axis. */
+	dialPositions(family: Family): Map<string, Record<AxisKey, number>> {
+		const positions = new Map<string, Record<AxisKey, number>>()
+		for (const member of this.members(family)) {
+			const mean = this.mean([member])
+			positions.set(member.slug, {
+				tone: axisOf(mean, "tone"),
+				pace: axisOf(mean, "pace"),
+				world: axisOf(mean, "world"),
+				mind: axisOf(mean, "mind"),
+			})
+		}
+		for (const axis of AXIS_KEYS) {
+			const values = Array.from(positions.values(), (p) => p[axis])
+			const low = Math.min(...values)
+			const high = Math.max(...values)
+			for (const p of positions.values()) p[axis] = dialPosition(p[axis], low, high)
+		}
+		return positions
+	}
+
 	/**
 	 * The place on the four named directions (lighter-darker, calmer-more intense, grounded-fantastic, easier-more
 	 * demanding), 0-1 across its family, with the nearest place of its family further each way.
@@ -1116,7 +1141,7 @@ export class Places {
 				key: axis,
 				low: AXES[axis].low,
 				high: AXES[axis].high,
-				at: hi > lo ? Math.round(((mine - lo) / (hi - lo)) * 100) / 100 : 0.5,
+				at: dialPosition(mine, lo, hi),
 				lower: below ? this.ref(below.x) : null,
 				higher: above ? this.ref(above.x) : null,
 			}
