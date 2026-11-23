@@ -27,7 +27,7 @@ test("mood URL keys stay stable", () => {
 		"mind",
 		"heavy",
 		"otherworldly",
-		"history",
+		"adventurous",
 		"growing",
 		"tense",
 		"dark",
@@ -57,12 +57,9 @@ test("mood text matching recognizes old and new mood words without matching part
 	)
 })
 
-test("only the two topic moods are reserved to stay outside the future Feel column", () => {
-	assert.deepEqual(
-		MOODS.filter((mood) => !mood.feel).map((mood) => mood.key),
-		["history", "growing"],
-	)
-	assert.equal(MOODS.filter((mood) => mood.feel).length, 14)
+test("all sixteen moods appear under Feel and History is only a theme", () => {
+	assert.equal(MOODS.filter((mood) => mood.feel).length, 16)
+	assert.deepEqual(parseMoods("adventurous,history,growing"), ["adventurous", "growing"])
 })
 
 const { VALID_FINGERPRINT_KEYS } = await import("../server/utils/fingerprint.ts")
@@ -166,4 +163,15 @@ test("older moods leave out the near misses that read wrong", () => {
 	// Sad: big emotions, not big battles.
 	assert.equal(fits("heavy", { pathos: 9, melancholy: 7, adrenaline: 8 }), false)
 	assert.equal(fits("heavy", { pathos: 8, melancholy: 6 }), true)
+})
+
+test("Adventurous requires an adventure genre, wonder and immersion", () => {
+	const scores = { wonder: 6, world_immersion: 6 }
+	const fits = (genres: string[], fp = scores) =>
+		moodsOf(fingerprint(fp), genres).includes("adventurous")
+	assert.ok(fits(["Adventure"]))
+	assert.ok(fits(["Action & Adventure"]))
+	assert.equal(fits(["Action"]), false)
+	assert.equal(fits(["Adventure"], { ...scores, wonder: 5 }), false)
+	assert.equal(fits(["Adventure"], { ...scores, world_immersion: 5 }), false)
 })

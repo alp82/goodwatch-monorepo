@@ -190,6 +190,7 @@ export function kindsMet(
  */
 const SAME_GROUND: readonly [string, string][] = [
 	["m:mysterious", "t:mystery"],
+	["m:growing", "t:growing"],
 	["m:otherworldly", "t:fantasy"],
 	["m:otherworldly", "t:future"],
 	["m:action", "s:fast"],

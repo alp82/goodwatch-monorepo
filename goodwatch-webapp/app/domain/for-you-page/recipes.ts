@@ -250,7 +250,6 @@ export const LIBRARY: Recipe[] = [
 		name: "Back in time",
 		sub: "History, true stories",
 		word: "historical",
-		lean: "history",
 		hue: "#d4a373",
 		shape: shapeOf({ world: 2, craft: 1, humor: -1 }),
 

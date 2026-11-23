@@ -146,6 +146,23 @@ export const MOODS: RuleIsland[] = [
 		from: 8,
 	},
 	{
+		id: "adventurous",
+		name: "Adventurous",
+		color: "#d4a373",
+		level: (s, genres) =>
+			genres.some((g) => g === "Adventure" || g === "Action & Adventure")
+				? Math.min(s("wonder"), s("world_immersion"))
+				: 0,
+		from: 6,
+	},
+	{
+		id: "growing-up",
+		name: "Growing up",
+		color: "#f5d0fe",
+		level: (s) => s("coming_of_age"),
+		from: 8,
+	},
+	{
 		id: "otherworldly",
 		name: "Otherworldly",
 		color: "#2dd4bf",

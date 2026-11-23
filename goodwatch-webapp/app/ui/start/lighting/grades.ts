@@ -31,6 +31,7 @@ export const GRADE_KEYS = [
 	"mind",
 	"heavy",
 	"otherworldly",
+	"adventurous",
 	"history",
 	"growing",
 	"tense",
@@ -95,9 +96,10 @@ export const GRADES: Readonly<Record<GradeKey, readonly Layer[]>> = {
 		{ bg: hue("otherworldly"), blend: "soft-light", o: 0.36 },
 		{ bg: "rgb(20 60 80)", blend: "multiply", o: 0.12 },
 	],
+	adventurous: [{ bg: hue("adventurous"), blend: "soft-light", o: 0.45 }],
 	history: [
 		{ bg: GRAY, blend: "saturation", o: 0.72 },
-		{ bg: hue("history"), blend: "soft-light", o: 1 },
+		{ bg: "#d4a373", blend: "soft-light", o: 1 },
 	],
 	growing: [
 		{ bg: hue("growing"), blend: "soft-light", o: 0.31 },

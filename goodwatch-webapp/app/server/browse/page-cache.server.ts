@@ -53,8 +53,8 @@ export function browseCacheEntry(
 	day: number,
 ) {
 	return {
-		// Earlier single-trope entries can have underfilled rows from concurrent poster selection.
-		name: `browse-page-${name}-v${name === "trope" ? 2 : 1}`,
+		// Earlier pages can contain the previous mood names and membership.
+		name: `browse-page-${name}-v3`,
 		params: { snapshot, day, key: `${key}|${viewerKey(ctx)}` },
 	}
 }

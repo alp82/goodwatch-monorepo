@@ -128,18 +128,18 @@ export const MOODS: Deck = {
 			lede: "Kingdoms with their own maps, starships, cities a few centuries from now. A movie drops you there for an evening; a series lets you move in and learn the politics. The scale pulls you in, and the details are what you'll remember.",
 		},
 	},
-	history: {
+	adventurous: {
 		movies: {
-			short: "It happened, more or less like this.",
-			lede: "Real people and real eras, brought back with all the costume and consequence. Kings, soldiers, artists, and ordinary people caught in big moments. You'll come out knowing something and wanting to look up the rest.",
+			short: "Set out for somewhere new.",
+			lede: "Follow an expedition into unfamiliar country, chase a clue across borders, or take the long way home. The pleasure is in what turns up along the way.",
 		},
 		shows: {
-			short: "The past, told one chapter at a time.",
-			lede: "History has room to sprawl in a series: decades of a reign, a whole war, a life from start to finish. Expect court intrigue, period detail, and events you half remember from school turning out stranger than you thought.",
+			short: "A new stretch of the journey each episode.",
+			lede: "Travel with characters who venture beyond familiar territory. Each stop brings another discovery, a detour, or a companion for the road.",
 		},
 		all: {
-			short: "It happened, more or less like this.",
-			lede: "Real people and real eras, brought back with all the costume and consequence. Kings, soldiers, artists, and ordinary people caught in big moments, told in one sitting or across a whole reign. You'll come out knowing something and wanting to look up the rest.",
+			short: "Quests, expeditions, and the thrill of discovery.",
+			lede: "These stories set out with a destination in mind. A wrong turn, a strange encounter, or an unexpected discovery can be what makes the journey.",
 		},
 	},
 	growing: {
@@ -237,5 +237,5 @@ export const MOOD_ALIASES: Record<string, string> = {
 	trippy: "mind",
 	"mind-bending": "mind",
 	sad: "heavy",
-	"coming-of-age": "growing",
+	"growing-up": "growing",
 }

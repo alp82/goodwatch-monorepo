@@ -2,6 +2,7 @@
 // people steer by. Left is lighter and right is darker; up is calmer and down is more intense. Every place has one
 // cell, so nothing overlaps; the page's own place is the white one, and the more alike a place is, the brighter its
 // name. Each cell is a link; hovering or focusing one shows its posters and the word that sets it apart.
+import { moodGrid } from "~/domain/browse/mood-grid"
 import { Link } from "@remix-run/react"
 import { useEffect, useRef, useState } from "react"
 import { CAPTION } from "~/ui/eyebrow"
@@ -13,7 +14,14 @@ import type { FieldPlace } from "~/server/browse/dials.server"
  * One cell per place, and no empty cells: the family is cut into columns from the lightest to the darkest, and each
  * column runs from its calmest place at the top to its most intense at the bottom.
  */
-export function lattice<T extends Pick<FieldPlace, "tone" | "pace">>(places: T[], cols: number) {
+export function lattice<T extends Pick<FieldPlace, "place" | "tone" | "pace">>(
+	places: T[],
+	cols: number,
+) {
+	if (places.length && places.every((p) => p.place.family === "mood")) {
+		const cells = moodGrid(places, cols).map(({ mood, row, col }) => ({ place: mood, row, col }))
+		return { rows: Math.max(1, ...cells.map((c) => c.row + 1)), cells }
+	}
 	const n = places.length
 	const rows = Math.max(1, Math.ceil(n / cols))
 	const byTone = [...places].sort((a, b) => a.tone - b.tone || a.pace - b.pace)

@@ -65,18 +65,8 @@ const moodOption = (key: (typeof MOODS)[number]["key"]): MoodOption => {
 		hue: mood.hue,
 		values: [key],
 		// The Explorer's mood islands are named like the feel moods ("cozy" is Cozy).
-		island: mood.feel ? `mood:${mood.name.toLowerCase()}` : null,
+		island: mood.feel ? `mood:${mood.name.toLowerCase().replace(/ /g, "-")}` : null,
 	}
-}
-
-/**
- * Feel lists the feel moods; a topic mood (History or Coming of age) shows only while picked, since About covers
- * it, so a link that has one can still drop it here.
- */
-function moodOptions(state: FilterState): MoodOption[] {
-	return MOODS.filter((mood) => mood.feel || state.moods.includes(mood.key)).map((mood) =>
-		moodOption(mood.key),
-	)
 }
 
 /** Genre units: the folded pairs (as one row each), then every other genre the counts know or the state picks. */
@@ -102,7 +92,7 @@ export function moodOptionsOf(
 	counts: Partial<FilterOptionCounts> | null,
 ): Record<TagGroup, MoodOption[]> {
 	return {
-		moods: moodOptions(state),
+		moods: MOODS.map((mood) => moodOption(mood.key)),
 		themes: THEMES.map((theme) => ({
 			id: theme.id,
 			group: "themes" as const,

@@ -33,7 +33,7 @@ const optionOf = (state: State, group: "moods" | "themes" | "styles" | "genres",
 	return option
 }
 
-test("Feel lists the feel moods; a picked topic mood shows too", () => {
+test("Feel lists the sixteen moods and About includes History", () => {
 	const names = moodOptionsOf(empty, null).moods.map((o) => o.name)
 	assert.deepEqual(names, [
 		"Funny",
@@ -45,14 +45,15 @@ test("Feel lists the feel moods; a picked topic mood shows too", () => {
 		"Trippy",
 		"Sad",
 		"Otherworldly",
+		"Adventurous",
+		"Growing up",
 		"Tense",
 		"Dark",
 		"Deep",
 		"Magical",
 		"Quirky",
 	])
-	const withHistory = { ...empty, moods: ["history" as const] }
-	assert.ok(moodOptionsOf(withHistory, null).moods.some((o) => o.id === "history"))
+	assert.ok(moodOptionsOf(empty, null).themes.some((o) => o.id === "history"))
 	assert.equal(moodOptionsOf(empty, null).themes.length, 14)
 	assert.equal(moodOptionsOf(empty, null).styles.length, 10)
 })

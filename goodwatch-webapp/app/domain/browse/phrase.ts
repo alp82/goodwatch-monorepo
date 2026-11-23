@@ -31,8 +31,7 @@ const GENRE_ADJ: Record<string, string> = {
 }
 /** Moods that read better behind the noun: the lead-in word and the token's own words. */
 const MOOD_AFTER: Record<string, [string, string]> = {
-	history: ["about", "real history"],
-	"coming-of-age": ["about", "growing up"],
+	"growing-up": ["about", "growing up"],
 }
 const STYLE_ADJ: Record<string, string> = {
 	spectacle: "big-spectacle",

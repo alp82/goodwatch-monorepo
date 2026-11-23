@@ -193,9 +193,10 @@ test("the Mood islands include mysterious and otherworldly titles in the fixed p
 			deep: 64,
 			magical: 210,
 			mysterious: 193,
+			"growing-up": 73,
 			otherworldly: 208,
 			quirky: 205,
 		},
-		digest: "17cfebf281250957e8dc5503d705aab7a06c411d3611ebbdb5d4c98ca72587da",
+		digest: "61ea0f38e6c582b625a72f8c2e1bc1d0a80f669b97973e70eff65c9f64acb5fe",
 	})
 })

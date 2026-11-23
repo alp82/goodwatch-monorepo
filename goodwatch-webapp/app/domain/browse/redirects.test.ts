@@ -10,13 +10,13 @@ const { parse, browsePath, canonicalPath } = await import("./address.ts")
 // The slugs the new tree has, as the title snapshot gives them (16 moods, TMDB genres slugged, decades, a few
 // countries and tropes).
 const MOODS = [
-	"coming-of-age",
+	"growing-up",
 	"cozy",
 	"mysterious",
 	"dark",
 	"deep",
 	"funny",
-	"history",
+	"adventurous",
 	"magical",
 	"otherworldly",
 	"quirky",
@@ -70,7 +70,7 @@ const index = {
 				country: COUNTRIES,
 				trope: TROPES,
 				service: SERVICES,
-				theme: ["crime"],
+				theme: ["crime", "history"],
 				style: [],
 				trait: [],
 			} as Record<string, string[]>

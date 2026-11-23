@@ -2,13 +2,8 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import "../../server/title-filter/test-alias.ts"
 
-const {
-	FILTER_NAMES,
-	MIN_MATCHES,
-	defaultFilterState,
-	filterStateFromParams,
-	stateAsApplied,
-} = await import("~/domain/filter-state")
+const { FILTER_NAMES, MIN_MATCHES, defaultFilterState, filterStateFromParams, stateAsApplied } =
+	await import("~/domain/filter-state")
 const { CONTENT_KINDS } = await import("~/domain/age-content")
 const {
 	CONTENT_LABELS,
@@ -84,10 +79,8 @@ test("the control shows the sort in use when Best match can't sort", () => {
 
 test("the taste state follows the results", () => {
 	assert.equal(tasteStateOf(null), "ready")
-	const results = (
-		hasTaste: boolean,
-		status: "ready" | "needsTaste" | "signUp",
-	) => tasteStateOf({ hasTaste, forYou: { status } })
+	const results = (hasTaste: boolean, status: "ready" | "needsTaste" | "signUp") =>
+		tasteStateOf({ hasTaste, forYou: { status } })
 	assert.equal(results(true, "ready"), "ready")
 	assert.equal(results(false, "needsTaste"), "rateMore")
 	assert.equal(results(false, "signUp"), "signUp")
@@ -146,10 +139,7 @@ test("the taste match filter has a label per option, a chip, and its recovery wo
 
 	const filtered = { ...state, minMatch: 80 as const }
 	assert.equal(recoveryLabel("minMatch", 12, filtered), "12 below 80% match")
-	assert.equal(
-		recoveryLabel("minMatch", 12_345, filtered),
-		"12,345 below 80% match",
-	)
+	assert.equal(recoveryLabel("minMatch", 12_345, filtered), "12,345 below 80% match")
 	assert.equal(recoveryLabel("minMatch", 12, filtered, true), "12 more")
 })
 
@@ -168,23 +158,11 @@ test("every kind of content has its words", () => {
 	assert.deepEqual(Object.keys(CONTENT_LABELS), [...CONTENT_KINDS])
 	assert.deepEqual(
 		CONTENT_KINDS.map((kind) => CONTENT_LABELS[kind].full),
-		[
-			"Graphic violence",
-			"Sex & nudity",
-			"Disturbing scenes",
-			"Strong language",
-			"Drugs & alcohol",
-		],
+		["Graphic violence", "Sex & nudity", "Disturbing scenes", "Strong language", "Drugs & alcohol"],
 	)
 	assert.deepEqual(
 		CONTENT_KINDS.map((kind) => CONTENT_LABELS[kind].short),
-		[
-			"violence",
-			"sex & nudity",
-			"disturbing scenes",
-			"strong language",
-			"drugs",
-		],
+		["violence", "sex & nudity", "disturbing scenes", "strong language", "drugs"],
 	)
 	// The filter search still finds disturbing scenes by "scary".
 	assert.ok(CONTENT_LABELS.disturbing.words.split(" ").includes("scary"))
@@ -271,12 +249,12 @@ test("each chosen theme and style is a chip that removes itself, after the moods
 	// A mood and a theme with the same key are two chips with keys of their own.
 	const both = activeChips({
 		...state,
-		moods: ["history"],
-		themes: ["history"],
+		moods: ["growing"],
+		themes: ["growing"],
 	})
 	assert.deepEqual(
 		both.map((chip) => chip.key),
-		["mood-history", "theme-history"],
+		["mood-growing", "theme-growing"],
 	)
 	assert.equal(new Set(both.map((chip) => chip.group)).size, 2)
 })
@@ -295,10 +273,7 @@ test("preference chips group more than two titles and retain poster previews", (
 		title: (key: number) => `Title ${key}`,
 		poster: (key: number) => `/${key}.jpg`,
 	}
-	const chips = activeChips(
-		{ ...state, loved: [1, 2, 3], disliked: [4, 5] },
-		names,
-	)
+	const chips = activeChips({ ...state, loved: [1, 2, 3], disliked: [4, 5] }, names)
 	assert.equal(chips[0].label, "Loved: 3 titles")
 	assert.deepEqual(
 		chips[0].preview?.map((t) => t.title),
@@ -377,14 +352,12 @@ test("range, source, gap and any-service chips use the agreed wording and remove
 			"Streaming in Germany",
 		],
 	)
-	assert.deepEqual(
-		chips.find((c) => c.key === "source-imdb")?.remove(chosen).sourceScores,
-		{ rtCritics: 90, rtAudience: 85, metacritic: 75 },
-	)
-	assert.equal(
-		chips.find((c) => c.key === "anyService")?.remove(chosen).anyService,
-		undefined,
-	)
+	assert.deepEqual(chips.find((c) => c.key === "source-imdb")?.remove(chosen).sourceScores, {
+		rtCritics: 90,
+		rtAudience: 85,
+		metacritic: 75,
+	})
+	assert.equal(chips.find((c) => c.key === "anyService")?.remove(chosen).anyService, undefined)
 	for (const [fields, label] of [
 		[{ years: { min: 1990 } }, "From 1990"],
 		[{ years: { max: 2005 } }, "Until 2005"],
@@ -412,14 +385,8 @@ test("all-of tag chips join picks with and; any-of chips retain their individual
 		genres: ["Drama", "Comedy"],
 	}
 	const chips = activeChips({ ...picks, allOf: ["moods", "genres"] })
-	assert.equal(
-		chips.find((chip) => chip.group === "moods")?.label,
-		"Funny and Cozy",
-	)
-	assert.equal(
-		chips.find((chip) => chip.group === "genres")?.label,
-		"Drama and Comedy",
-	)
+	assert.equal(chips.find((chip) => chip.group === "moods")?.label, "Funny and Cozy")
+	assert.equal(chips.find((chip) => chip.group === "genres")?.label, "Drama and Comedy")
 	assert.deepEqual(chips[0].remove(picks).moods, [])
 	assert.deepEqual(
 		activeChips(picks)
@@ -437,10 +404,7 @@ test("all-of recoveries describe titles missing any required tag", () => {
 		["genres", "genre"],
 	] as const) {
 		const filtered = { ...state, allOf: [group] }
-		assert.equal(
-			recoveryLabel(group, 12, filtered),
-			`12 without every ${singular}`,
-		)
+		assert.equal(recoveryLabel(group, 12, filtered), `12 without every ${singular}`)
 		assert.equal(recoveryLabel(group, 12, filtered, true), "12 more")
 	}
 })
@@ -485,10 +449,7 @@ test("list and outside chips use production wording and remove their own choice"
 	assert.equal(chips[2].remove(chosen).outsideUsual, undefined)
 	assert.equal(recoveryLabel("notSeenYet", 4, chosen), "4 you haven't seen")
 	assert.equal(recoveryLabel("wishlist", 4, chosen), "4 outside your wishlist")
-	assert.equal(
-		recoveryLabel("minMatch", 4, chosen),
-		"4 with other taste matches",
-	)
+	assert.equal(recoveryLabel("minMatch", 4, chosen), "4 with other taste matches")
 })
 
 test("source score steps use each source's notation and user chips remove independently", async () => {
@@ -540,9 +501,9 @@ test("a non-default rating country has a removable production chip", () => {
 	assert.equal(removed.streamingCountry, "US")
 	assert.equal(removed.ageLimit, 12)
 	assert.equal(
-		activeChips(
-			stateAsApplied({ ...state, streamingCountry: "DE" }, ladder, true, "US"),
-		).some((chip) => chip.key === "ratingCountry"),
+		activeChips(stateAsApplied({ ...state, streamingCountry: "DE" }, ladder, true, "US")).some(
+			(chip) => chip.key === "ratingCountry",
+		),
 		false,
 	)
 })
@@ -577,26 +538,17 @@ test("independent length chips format both range endpoints in hours and minutes"
 		episodeRuntime: { min: 35, max: 55 },
 	}
 	const chips = activeChips(chosen)
-	assert.equal(
-		chips.find((c) => c.key === "runtime")?.label,
-		"Movies 2 h to 3 h",
-	)
-	assert.equal(
-		chips.find((c) => c.key === "episodeRuntime")?.label,
-		"Episodes 35 min to 55 min",
-	)
+	assert.equal(chips.find((c) => c.key === "runtime")?.label, "Movies 2 h to 3 h")
+	assert.equal(chips.find((c) => c.key === "episodeRuntime")?.label, "Episodes 35 min to 55 min")
 	const mixed = activeChips({ ...chosen, runtime: { min: 90, max: 150 } })
-	assert.equal(
-		mixed.find((c) => c.key === "runtime")?.label,
-		"Movies 1 h 30 to 2 h 30",
-	)
+	assert.equal(mixed.find((c) => c.key === "runtime")?.label, "Movies 1 h 30 to 2 h 30")
 })
 
 test("popularity chips name both ranges and remove each independently", () => {
-	const state = filterStateFromParams(
-		new URLSearchParams("votes=-9999&rank=1-1000"),
-		{ onMyServices: false, notSeenYet: false },
-	)
+	const state = filterStateFromParams(new URLSearchParams("votes=-9999&rank=1-1000"), {
+		onMyServices: false,
+		notSeenYet: false,
+	})
 	const chips = activeChips(state).filter((c) => c.group === "popularity")
 	assert.deepEqual(
 		chips.map((c) => c.label),
@@ -659,20 +611,12 @@ test("budget and shows chips remove only their own choice and recover by group",
 		assert.equal(chip.remove(selected)[key], undefined)
 		assert.equal(chip.remove(selected).minScore, selected.minScore)
 	}
-	assert.equal(
-		recoveryLabel("budget", 12, selected),
-		"12 outside your budget choices",
-	)
-	assert.equal(
-		recoveryLabel("shows", 12, selected),
-		"12 outside your show choices",
-	)
+	assert.equal(recoveryLabel("budget", 12, selected), "12 outside your budget choices")
+	assert.equal(recoveryLabel("shows", 12, selected), "12 outside your show choices")
 })
 
 test("fact range chips display stops at encoded exclusive seams", () => {
-	const labels = (
-		state: Partial<import("~/domain/filter-state").FilterState>,
-	) =>
+	const labels = (state: Partial<import("~/domain/filter-state").FilterState>) =>
 		activeChips({
 			...defaultFilterState({ onMyServices: false, notSeenYet: false }),
 			...state,
@@ -689,10 +633,10 @@ test("fact range chips display stops at encoded exclusive seams", () => {
 		"Blockbuster budget",
 		"Box office flop",
 	])
-	assert.deepEqual(
-		labels({ budget: { min: 5, max: 9.5 }, hours: { min: 10, max: 19.5 } }),
-		["Budget $5M to $9.5M", "10 to 19.5 h to finish"],
-	)
+	assert.deepEqual(labels({ budget: { min: 5, max: 9.5 }, hours: { min: 10, max: 19.5 } }), [
+		"Budget $5M to $9.5M",
+		"10 to 19.5 h to finish",
+	])
 	assert.deepEqual(
 		activeChips(
 			stateAsApplied(
@@ -713,13 +657,12 @@ test("fact range chips display stops at encoded exclusive seams", () => {
 })
 
 test("taste-group chips use resolved names and remove just their pick", () => {
-	const state = filterStateFromParams(
-		new URLSearchParams("taste=movie-603,2"),
-		{ onMyServices: false, notSeenYet: false },
-	)
+	const state = filterStateFromParams(new URLSearchParams("taste=movie-603,2"), {
+		onMyServices: false,
+		notSeenYet: false,
+	})
 	const chips = activeChips(state, {
-		tasteGroup: (key) =>
-			key === "movie-603" ? "Dark thrillers" : "Gentle comedy",
+		tasteGroup: (key) => (key === "movie-603" ? "Dark thrillers" : "Gentle comedy"),
 	})
 	assert.deepEqual(
 		chips.map((c) => c.label),

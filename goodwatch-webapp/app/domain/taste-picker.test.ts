@@ -19,8 +19,8 @@ const { watchNextChoiceOf } = await import("./watch-next.ts")
 
 const NONE = { moods: [], themes: [], styles: [], taste: [] }
 
-test("the words: 14 feel moods, 14 themes, 10 styles, with Discover's names (#680)", () => {
-	assert.equal(WORDS.filter((w) => w.kind === "mood").length, 14)
+test("the words: 16 feel moods, 14 themes, 10 styles, with Discover's names (#680)", () => {
+	assert.equal(WORDS.filter((w) => w.kind === "mood").length, 16)
 	assert.equal(WORDS.filter((w) => w.kind === "theme").length, 14)
 	assert.equal(WORDS.filter((w) => w.kind === "style").length, 10)
 	assert.equal(WORD_BY_ID["t:growing"].name, "Growing up")

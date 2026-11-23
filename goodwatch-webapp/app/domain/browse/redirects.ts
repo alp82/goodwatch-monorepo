@@ -21,7 +21,6 @@ export const OLD_MOODS: Readonly<Record<string, string>> = {
 	scary: "scary",
 	"feel-good": "cozy",
 	suspense: "mysterious",
-	motivational: "history",
 	funny: "funny",
 	psychological: "dark",
 	nostalgic: "cozy",
@@ -37,7 +36,6 @@ export const OLD_MOODS: Readonly<Record<string, string>> = {
 	"morally-complex": "deep",
 	atmospheric: "sad",
 	"visually-stunning": "thrilling",
-	educational: "history",
 }
 
 /** Old genre slugs whose new slug differs (the TMDB name, slugged the new way). */
@@ -124,6 +122,8 @@ export function browseRedirect(pathname: string, search = ""): string | null {
 
 	// Old category pages: their own query (pages, filters) means nothing to the new page.
 	if (family === "moods" && slug && !more) {
+		if (slug === "motivational" || slug === "educational" || slug === "history")
+			return `${t}/themes/history`
 		const now = OLD_MOODS[slug]
 		if (now && now !== slug) return `${t}/moods/${now}`
 	}

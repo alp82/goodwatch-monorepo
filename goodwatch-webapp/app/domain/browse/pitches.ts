@@ -138,7 +138,7 @@ export const FAVORITES: Record<Two, Curated[]> = {
 			pitch: "British mysteries to piece together.",
 		},
 		{
-			parts: [m("coming-of-age"), g("comedy")],
+			parts: [m("growing-up"), g("comedy")],
 			pitch: "First jobs, first loves, bad haircuts.",
 		},
 		{

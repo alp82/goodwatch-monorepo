@@ -70,7 +70,7 @@ test("counts, what a pick leaves, For you, and Narrow it", () => {
 	assert.deepEqual(pickerCounts(list, [], five).forYou.slice(0, 5), ["g1", "g2", "g3", "g4", "g5"])
 	// An empty list still offers the moods.
 	assert.equal(pickerCounts([], [], []).forYou.length, 8)
-	assert.equal(pickerCounts([], [], []).choices.length, 14)
+	assert.equal(pickerCounts([], [], []).choices.length, 16)
 	// Groups first, then the words the groups carry (most of their titles first), then the biggest moods.
 	assert.deepEqual(none.forYou, [
 		"g1",

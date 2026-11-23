@@ -2,6 +2,7 @@
 // directions (left lighter, right darker, top calmer, bottom more intense), the dials above it, amber marks on the
 // axes. Every card gets the same state: `c` is how close the mood is
 // to what is pointed at or dialed (1 the closest, 0 the farthest, null at rest), `focus` is the one mood that leads.
+import { moodGrid } from "~/domain/browse/mood-grid"
 import { Link } from "@remix-run/react"
 import { type ComponentType, useState } from "react"
 import { CAPTION } from "~/ui/eyebrow"
@@ -31,20 +32,6 @@ export interface MoodCardProps {
 	size: "s" | "m"
 }
 export type MoodCardView = ComponentType<MoodCardProps>
-
-/** One cell per mood, no empty cells: columns from lightest to darkest, each from calmest to most intense. */
-function lattice(moods: MoodCard[], cols: number) {
-	const n = moods.length
-	const byTone = [...moods].sort((a, b) => a.tone - b.tone || a.pace - b.pace)
-	const cells: { mood: MoodCard; row: number; col: number }[] = []
-	for (let c = 0; c < cols; c++) {
-		byTone
-			.slice(Math.round((c * n) / cols), Math.round(((c + 1) * n) / cols))
-			.sort((a, b) => a.pace - b.pace)
-			.forEach((mood, row) => cells.push({ mood, row, col: c }))
-	}
-	return cells
-}
 
 /** Spread a cost per mood over 0-1: the nearest mood is 1, the farthest 0. */
 function spread(cost: Map<string, number>) {
@@ -145,7 +132,7 @@ function Cells({
 			style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
 			onPointerLeave={() => onFocus(null)}
 		>
-			{lattice(moods, cols).map(({ mood, row, col }) => (
+			{moodGrid(moods, cols).map(({ mood, row, col }) => (
 				// oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- hover and focus of the card's own link, caught here to light its neighbors
 				<li
 					key={mood.place.slug}

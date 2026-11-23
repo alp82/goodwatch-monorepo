@@ -376,7 +376,7 @@ test("themes and styles read from and write to `themes` and `styles`, three of e
 	assert.equal(filterStateToParams(parse("themes=nope&styles=,"), defaults).toString(), "")
 	// A mood and a theme can share a key: each parameter reads its own.
 	const shared = parse("moods=mysterious,history&themes=crime,history")
-	assert.deepEqual(shared.moods, ["mysterious", "history"])
+	assert.deepEqual(shared.moods, ["mysterious"])
 	assert.deepEqual(shared.themes, ["crime", "history"])
 	// Writing over existing parameters removes the ones that no longer apply.
 	assert.equal(

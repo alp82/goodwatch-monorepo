@@ -5,6 +5,7 @@
 //   - MoodLattice, EraRibbon, BestSwitcher, FlagMap (+ FlagRail), GenreShelf, ServiceRow, Occasions.
 // Previews say what a place is with fingerprint words and defining tropes instead of repeating its
 // name; poster groups are links to their category; the map zooms and pans; every country with a page is on it.
+import { moodGrid } from "~/domain/browse/mood-grid"
 import type { SizeRule } from "~/utils/tmdb-image"
 import { TmdbImage } from "~/ui/TmdbImage"
 import { Link, useNavigate } from "@remix-run/react"
@@ -274,19 +275,6 @@ const hot = (set: () => void, on = false) => ({
 // ---------------------------------------------------------------------------------------------------------
 // Moods: the lattice
 
-/** Columns from lightest to darkest, each from its calmest mood down to its most intense (no empty cells). */
-function cellsOf(moods: HubViewData["moods"], cols: number) {
-	const n = moods.length
-	const byTone = [...moods].sort((a, b) => a.tone - b.tone || a.pace - b.pace)
-	const out: { mood: HubViewData["moods"][number]; row: number; col: number }[] = []
-	for (let c = 0; c < cols; c++)
-		byTone
-			.slice(Math.round((c * n) / cols), Math.round(((c + 1) * n) / cols))
-			.sort((a, b) => a.pace - b.pace)
-			.forEach((mood, row) => out.push({ mood, row, col: c }))
-	return out
-}
-
 export function MoodLattice({
 	moods,
 	start,
@@ -298,7 +286,7 @@ export function MoodLattice({
 	href: (p: PlaceRef) => string
 	tropeHref: (slug: string) => string
 }) {
-	const cells = useMemo(() => cellsOf(moods, 4), [moods])
+	const cells = useMemo(() => moodGrid(moods, 4), [moods])
 	const [slug, setSlug] = useState(start)
 	const at = cells.find((c) => c.mood.place.slug === slug) ?? cells[0]
 	if (!at) return null
