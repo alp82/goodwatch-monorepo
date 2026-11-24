@@ -47,14 +47,20 @@ class BudgetedHTTP:
         )
 
     def get(self, url, **kwargs):
+        return self._request("get", url, **kwargs)
+
+    def post(self, url, **kwargs):
+        return self._request("post", url, **kwargs)
+
+    def _request(self, method, url, **kwargs):
         for _ in range(90):
             try:
-                return self._get(url, **kwargs)
+                return self._send(method, url, **kwargs)
             except Busy:
                 self.sleep(2)
         raise Deferred("Wikidata query budget stayed busy")
 
-    def _get(self, url, **kwargs):
+    def _send(self, method, url, **kwargs):
         with exclusive(self.db, "wikidata-query", 3):
             state = self.db.award_state.find_one({"_id": "wikidata-budget"}) or {}
             now = utc_now()
@@ -65,11 +71,11 @@ class BudgetedHTTP:
             start = self.timer()
             try:
                 params = kwargs.get("params") or {}
-                if url == ENDPOINT and len(params.get("query", "")) > 3500:
+                if method == "get" and url == ENDPOINT and len(params.get("query", "")) > 3500:
                     kwargs["data"] = kwargs.pop("params")
                     response = self.http.post(url, **kwargs)
                 else:
-                    response = self.http.get(url, **kwargs)
+                    response = getattr(self.http, method)(url, **kwargs)
                 if response.status_code == 429:
                     try:
                         retry = max(60, int(response.headers.get("Retry-After", "60")))

@@ -13,9 +13,21 @@ def main(report: dict):
     if report.get('hard_budget_exceeded') or any(row.get('error') == 'RequestBudgetExceeded' for row in failures):
         raise RuntimeError('Daily list hard request budget exhausted; completed checkpoints retained')
     refresh = report.get('offer_refresh') or {}
-    if refresh.get('remaining'):
-        warnings.warn(f"{refresh['remaining']} title offer refreshes remain queued; {refresh.get('deferred_reason', 'batch_limit_or_retry')}", RuntimeWarning)
-    if (refresh.get('failed', 0) * 100 > refresh.get('selected', 0)
+    blocked = refresh.get('blocked_remaining', 0)
+    ready = max(0, refresh.get('remaining', 0) - blocked)
+    if ready or blocked:
+        warnings.warn(
+            f"Provider lists read: {report.get('lists_completed', 0)}. "
+            f"Title offer refreshes: {ready} ready, {blocked} waiting for recheck; "
+            f"{refresh.get('deferred_reason', 'batch_limit_or_retry')}",
+            RuntimeWarning,
+        )
+    failures_count = refresh.get('failed', 0)
+    attempted_refreshes = (
+        refresh['published'] + failures_count
+        if 'published' in refresh else refresh.get('selected', 0)
+    )
+    if (failures_count * 100 > attempted_refreshes
             or refresh.get('max_failure_days', 0) >= 3
             or any(row.get('consecutive_failure_days', 0) >= 3 for row in refresh.get('failures', []))):
         raise RuntimeError(f'Title offer refresh exceeded 1% failures or failed for 3 days: {refresh}')

@@ -80,6 +80,30 @@ class RefreshTests(unittest.TestCase):
         self.assertTrue(source['is_selected'])
         self.assertEqual(result['remaining'], 0)
 
+    def test_quarantined_titles_cool_down_without_blocking_ready_publication(self):
+        self.seed_work(24)
+        self.db.tmdb_list_offer_refresh.update_many({'tmdb_id': {'$lte': 20}}, {'$set': {'priority': 1}})
+        self.publish.side_effect = lambda connector, media, ids: {
+            tmdb_id: 'quarantined_or_unpublishable' for tmdb_id in ids if tmdb_id <= 20
+        }
+        result = self.drain()
+        self.assertEqual((result['published'], result['failed']), (4, 0))
+        self.assertEqual((result['remaining'], result['blocked_remaining']), (20, 20))
+        blocked = self.db.tmdb_list_offer_refresh.find_one({'_id': 'movie:1'})
+        self.assertTrue(blocked['pending'])
+        self.assertEqual(blocked['recheck_at'], utc_ms(self.now + timedelta(days=1)))
+
+        # New scope evidence keeps the version fence and the cooldown.
+        refresh.enqueue(self.db, 'movie', 1, {'US_8': utc_ms(self.now)})
+        self.assertEqual(self.drain()['selected'], 0)
+        self.now += timedelta(days=1)
+        self.publish.side_effect = None
+        result = self.drain()
+        self.assertEqual((result['published'], result['remaining']), (20, 0))
+        recovered = self.db.tmdb_list_offer_refresh.find_one({'_id': 'movie:1'})
+        self.assertNotIn('recheck_at', recovered)
+        self.assertIn('US_8', recovered['scopes'])
+
     def test_dry_run_has_no_network_publication_or_mongo_writes(self):
         self.enqueue()
         before = list(self.db.tmdb_list_offer_refresh.find())
@@ -331,7 +355,7 @@ class RefreshTests(unittest.TestCase):
         self.enqueue()
         self.db.tmdb_movie_details.insert_one({'tmdb_id': 42})
         result = self.drain()
-        self.assertEqual(result['failures'][0]['reason'], 'duplicate_details_identity')
+        self.assertEqual(result['deferrals'][0]['reason'], 'duplicate_details_identity')
         self.assertEqual(self.api.calls, [])
 
     def test_daily_work_precedes_backfill_and_lease_loss_is_not_swallowed(self):
@@ -562,6 +586,15 @@ class BackfillTests(unittest.TestCase):
             report['offer_refresh'].update(failed=failed, max_failure_days=days)
             with self.assertRaises(RuntimeError):
                 module.main(deepcopy(report))
+
+    def test_blocked_titles_do_not_dilute_true_refresh_failures(self):
+        path = Path(__file__).parents[1] / 'windmill/f/tmdb_api/read_daily_provider_lists.flow/report.inline_script.py'
+        spec = importlib.util.spec_from_file_location('daily_list_report', path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with self.assertRaisesRegex(RuntimeError, 'Title offer refresh'):
+            module.main(dict(lists_completed=4170, lists_failed=0,
+                             offer_refresh=dict(selected=200, published=49, failed=1, deferred=150)))
 
     def test_source_preflight_reports_duplicate_deleted_and_quarantined_identities_without_writes(self):
         db = mongomock.MongoClient().db

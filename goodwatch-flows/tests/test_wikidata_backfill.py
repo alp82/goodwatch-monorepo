@@ -86,6 +86,23 @@ class ExportTests(unittest.TestCase):
         self.assertEqual(call["headers"]["Accept"], "text/csv")
         self.assertIn("P4983", call["data"]["query"])
 
+    def test_export_post_uses_the_shared_budget_and_cooldown(self):
+        from f.awards.client import BudgetedHTTP, Deferred
+
+        db = mongomock.MongoClient().db
+        transport = FakeHttp([
+            FakeResponse(200, csv_export([row("Q1", 1396)])),
+            FakeResponse(429, headers={"Retry-After": "120"}),
+        ])
+        http = BudgetedHTTP(db, transport, sleep=lambda _: None)
+        self.assertEqual(wikidata.run_export("tv", http=http, min_rows=0)[0]["item"], "Q1")
+        with self.assertRaises(Deferred):
+            wikidata.run_export("movie", http=http, min_rows=0)
+        with self.assertRaises(Deferred):
+            wikidata.run_export("tv", http=http, min_rows=0)
+        self.assertEqual(len(transport.calls), 2)
+        self.assertIn("blocked_until", db.award_state.find_one({"_id": "wikidata-budget"}))
+
     def test_movie_export_reads_the_tmdb_movie_property(self):
         self.assertIn("P4947", wikidata.QUERIES["movie"])
         for prop in ("P345", "P1258", "P1712"):

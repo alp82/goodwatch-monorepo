@@ -7,7 +7,7 @@
 # pydantic==2.13.5
 # qdrant-client==1.19.1
 """Durable list-to-title handoff. The shared streaming copier owns offer writes."""
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
@@ -27,6 +27,14 @@ QUEUE_SORT = [('priority', -1), ('last_attempt_at', 1), ('_id', 1)]
 PUBLISH_BATCH_SIZE = 20
 MAX_CONSECUTIVE_FAILURES = 20
 PREPARE_WORKERS = 6
+BLOCKED_RECHECK_DELAY = timedelta(days=1)
+BLOCKED_TITLE_REASONS = {
+    'catalog_title_missing',
+    'duplicate_details_identity',
+    'provider_reports_deleted',
+    'quarantined_or_unpublishable',
+    'source_title_deleted',
+}
 
 
 @contextmanager
@@ -256,7 +264,10 @@ def drain(client, db, connector, *, dry_run=True, limit=20000, max_seconds=None,
         work.create_index([('pending', 1), *QUEUE_SORT])
     # Freeze this bounded selection before changing indexed sort keys. Otherwise
     # a failed item moved to the end of the index can be read again in this run.
-    items = list(work.find({'pending': True}).sort(QUEUE_SORT).limit(limit))
+    eligible = {'pending': True, '$or': [
+        {'recheck_at': {'$exists': False}}, {'recheck_at': {'$lte': utc_ms(clock())}},
+    ]}
+    items = list(work.find(eligible).sort(QUEUE_SORT).limit(limit))
     consecutive_failures = 0
 
     def out_of_time():
@@ -272,6 +283,9 @@ def drain(client, db, connector, *, dry_run=True, limit=20000, max_seconds=None,
             report['deferred_reason'] = 'consecutive_failures'
 
     def record_failure(item, error, *, advance_streak=True):
+        if isinstance(error, RefreshDeferred) and str(error) in BLOCKED_TITLE_REASONS:
+            record_deferral(item, str(error), blocked=True)
+            return
         check_owned()
         day = utc_day(utc_ms(clock()))
         streak = item.get('consecutive_failure_days', 0)
@@ -298,13 +312,18 @@ def drain(client, db, connector, *, dry_run=True, limit=20000, max_seconds=None,
             record_failure(item, error, advance_streak=False)
         advance_failure_streak()
 
-    def record_busy(item):
+    def record_deferral(item, reason, *, blocked=False):
         check_owned()
-        work.update_one({'_id': item['_id'], 'version': item['version']}, {
-            '$set': {'last_attempt_at': utc_ms(clock())}})
+        now = clock()
+        patch = {'$set': {'last_attempt_at': utc_ms(now)}}
+        if blocked:
+            patch['$set'].update(recheck_at=utc_ms(now + BLOCKED_RECHECK_DELAY),
+                                 blocked_reason=reason, consecutive_failure_days=0)
+            patch['$unset'] = {'error': '', 'message': '', 'traceback': '', 'causes': '', 'failure_day': ''}
+        work.update_one({'_id': item['_id'], 'version': item['version']}, patch)
         report['deferred'] += 1
         if len(report['deferrals']) < 20:
-            report['deferrals'].append(dict(identity=item['_id'], reason='publication_busy'))
+            report['deferrals'].append(dict(identity=item['_id'], reason=reason))
 
     stopped = threading.Event()
 
@@ -322,9 +341,11 @@ def drain(client, db, connector, *, dry_run=True, limit=20000, max_seconds=None,
                 sources = list(details.find({'tmdb_id': tmdb_id}, {'_id': 1, 'tmdb_deleted': 1}).limit(2))
             if len(sources) > 1:
                 raise RefreshDeferred('duplicate_details_identity')
-            if not sources or sources[0].get('tmdb_deleted') is True:
+            if not sources:
                 raise RefreshDeferred('active_details_missing')
             source = sources[0]
+            if source.get('tmdb_deleted') is True:
+                raise RefreshDeferred('source_title_deleted')
             with timed_stage(timings, 'tmdb_worker_seconds', timing_lock):
                 _, payload, proof = title_checks(client, 'tv' if media == 'show' else 'movie', [tmdb_id], clock)[0]
             if proof.get('deleted'):
@@ -430,7 +451,7 @@ def drain(client, db, connector, *, dry_run=True, limit=20000, max_seconds=None,
             for item in batch:
                 reason = failed.get(item['tmdb_id'])
                 if reason == 'publication_busy':
-                    record_busy(item)
+                    record_deferral(item, reason)
                     continue
                 if reason:
                     record_failure(item, RefreshDeferred(reason))
@@ -446,12 +467,16 @@ def drain(client, db, connector, *, dry_run=True, limit=20000, max_seconds=None,
                                              for item in acknowledged]}, {
                         '$set': {'pending': False, 'published_at': utc_ms(clock()), 'last_attempt_at': utc_ms(clock()),
                                  'consecutive_failure_days': 0},
-                        '$unset': {'error': '', 'failure_day': ''}})
+                        '$unset': {'error': '', 'message': '', 'traceback': '', 'causes': '', 'failure_day': '',
+                                    'recheck_at': '', 'blocked_reason': ''}})
                     check_owned()
                 report['published'] += len(acknowledged)
         if report.get('deferred_reason'):
             break
     report['remaining'] = work.count_documents({'pending': True})
+    report['blocked_remaining'] = work.count_documents(
+        {'pending': True, 'recheck_at': {'$gt': utc_ms(clock())}}
+    )
     report['seconds'] = round(time.monotonic() - started, 6)
     report['seconds_per_published_title'] = (round(report['seconds'] / report['published'], 6)
                                            if report['published'] else None)

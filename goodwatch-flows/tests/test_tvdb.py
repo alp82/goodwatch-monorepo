@@ -244,6 +244,19 @@ class TransportTests(unittest.TestCase):
             NOW + timedelta(seconds=120),
         )
 
+    def test_request_uses_remaining_budget_and_skips_a_slot_beyond_it(self):
+        from unittest.mock import patch
+
+        self.client.deadline = 12
+        self.session.request.return_value = self.response(200, {"status": "success", "data": []})
+        with patch.object(api.time, "monotonic", return_value=10):
+            self.client.get("/awards")
+            self.assertEqual(self.session.request.call_args.kwargs["timeout"].total, 2)
+            with patch.object(api, "claim_slot", return_value=NOW + timedelta(seconds=3)):
+                with self.assertRaises(api.Deferred):
+                    self.client.get("/awards")
+        self.assertEqual(self.session.request.call_count, 1)
+
     def test_401_refreshes_token_once(self):
         self.session.request.side_effect = [
             self.response(401),
@@ -289,6 +302,47 @@ class FeedTests(unittest.TestCase):
         changes.run(db, client)
         self.assertIn("through", db.tvdb_state.find_one({"_id": "updates:movies"}))
         self.assertNotIn("page", db.tvdb_state.find_one({"_id": "updates:movies"}))
+
+    def test_feed_batches_page_writes_and_routes_previous_source_ids(self):
+        from unittest.mock import patch
+        from f.tvdb import changes
+
+        db = mongomock.MongoClient().db
+        db.tvdb_titles.insert_many([
+            {"_id": "movie:1", "media_type": "movie", "tvdb_id": 41, "due_at": NOW},
+            {"_id": "movie:2", "media_type": "movie", "source_tvdb_id": 42, "due_at": NOW},
+        ])
+        client = Mock(requests=0)
+        client.get.side_effect = lambda path: {
+            "data": [{"recordId": i, "methodInt": 2} for i in (41, 42, 42)]
+            if "type=movies" in path else [],
+            "links": {"next": None},
+        }
+        with patch.object(db.tvdb_titles, "update_many", wraps=db.tvdb_titles.update_many) as write:
+            result = changes.run(db, client)
+        self.assertEqual(write.call_count, 1)
+        self.assertEqual(result["events"], 3)
+        self.assertEqual(db.tvdb_titles.count_documents({"due_at": store.EPOCH}), 2)
+
+    def test_expired_budget_after_fetch_does_not_apply_or_checkpoint_page(self):
+        from f.tvdb import changes
+
+        db = mongomock.MongoClient().db
+        db.tvdb_titles.insert_one({"_id": "movie:1", "media_type": "movie",
+                                  "tvdb_id": 41, "due_at": NOW})
+        clock = [0]
+        client = Mock(requests=0)
+
+        def delayed_page(path):
+            clock[0] = 10
+            return {"data": [{"recordId": 41, "methodInt": 2}], "links": {"next": None}}
+
+        client.get.side_effect = delayed_page
+        report = changes.run(db, client, max_seconds=10, timer=lambda: clock[0])
+        self.assertTrue(report["incomplete"])
+        self.assertEqual(report["pages"], 0)
+        self.assertEqual(db.tvdb_titles.find_one({})["due_at"], NOW)
+        self.assertIsNone(db.tvdb_state.find_one({"_id": "updates:movies"}))
 
     def test_feed_routes_known_character_edits_without_enumerating_world_cast(self):
         from f.tvdb import changes
