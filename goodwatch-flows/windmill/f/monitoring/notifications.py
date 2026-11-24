@@ -13,6 +13,8 @@ DELIVERY_CLIENT_IDENTITY = (
     "DiscordBot (https://github.com/alp82/goodwatch-monorepo, 1.0.0)"
 )
 
+TMDB_UPSTREAM_ALERT_HOURS = 8
+
 
 class NoRedirect(HTTPRedirectHandler):
     def redirect_request(
@@ -98,7 +100,7 @@ def format_notification(notice: dict[str, Any]) -> str:
         return f"{prefix}Resolved: {name}. Checks are back to normal."
     causes = set(notice["causes"])
     if "upstream_blocked" in causes:
-        problem = "TMDB has blocked availability refreshes for at least 2 hours."
+        problem = f"TMDB has blocked availability refreshes for at least {TMDB_UPSTREAM_ALERT_HOURS} hours."
         action = "Inspect the upstream reason and next health probe in the monitor; the crawler will reopen after a verified fetch."
     elif "crate_checkpoint_stalled" in causes:
         problem = "A replica has stopped catching up for at least 1 hour; retained writes can grow disk use."

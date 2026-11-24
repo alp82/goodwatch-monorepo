@@ -24,6 +24,26 @@ class AttentionTests(unittest.TestCase):
         self.assertEqual(observed['missing_descendants'], [])
         self.assertEqual(observed['unresolved_descendants'], [])
 
+    def test_letterboxd_backfill_runtime_matches_its_24_hour_work_budget(self):
+        from f.monitoring.check import pipeline_thresholds
+        from f.monitoring.health import assess_pipeline
+
+        schedule = {"path": "f/letterboxd/backfill", "schedule": "0 * * * * *",
+                    "timezone": "UTC", "enabled": True}
+        for hours, expected in [(24, []), (24.5, []), (24.75, ["excessive_runtime"])]:
+            with self.subTest(hours=hours):
+                started = NOW - timedelta(hours=hours, seconds=4 if hours == 24 else 0)
+                job = {"id": "backfill", "running": True, "parent_resolved": True,
+                       "started_at": started.isoformat(), "scheduled_for": started.isoformat()}
+                report = assess_pipeline(schedule, [job], NOW, NOW - timedelta(days=2),
+                                         pipeline_thresholds(schedule, NOW))
+                sent = []
+                def send(url, notice):
+                    sent.extend(notice["causes"])
+                    return {"delivered": True, "retry_after_seconds": 0}
+                record_incident(MemoryStore(), report, NOW, "private-url", send)
+                self.assertEqual(sent, expected)
+
     def test_unchanged_incident_never_sends_periodic_reminder(self):
         report = {'path': 'f/demo/run', 'status': 'unhealthy', 'causes': ['consecutive_failures']}
         state = {'active': True, 'causes': report['causes'], 'opened_at': NOW.isoformat(),
@@ -54,6 +74,9 @@ class AttentionTests(unittest.TestCase):
         record_incident(store, report, NOW, 'private-url', send)
         self.assertEqual(sent, [])
         record_incident(store, {**report, 'causes': ['material_child_failures', 'consecutive_failures']}, NOW, 'private-url', send)
+        self.assertEqual(sent, [])
+        record_incident(store, {**report, 'causes': ['consecutive_failures', 'lack_of_progress']},
+                        NOW + timedelta(hours=6), 'private-url', send)
         self.assertEqual(len(sent), 1)
 
     def test_real_incident_escalates_once_and_recovers_once(self):
@@ -64,7 +87,7 @@ class AttentionTests(unittest.TestCase):
             return {'delivered': True, 'message_id': str(len(sent)), 'retry_after_seconds': 0}
         report = {'path': 'f/demo/run', 'status': 'unhealthy', 'causes': ['excessive_runtime']}
         record_incident(store, report, NOW, 'private-url', send)
-        worse = {**report, 'causes': ['excessive_runtime', 'consecutive_failures']}
+        worse = {**report, 'causes': ['excessive_runtime', 'consecutive_failures', 'lack_of_progress']}
         record_incident(store, worse, NOW + timedelta(hours=1), 'private-url', send)
         record_incident(store, report, NOW + timedelta(hours=2), 'private-url', send)
         record_incident(store, worse, NOW + timedelta(days=7), 'private-url', send)
@@ -74,6 +97,21 @@ class AttentionTests(unittest.TestCase):
         self.assertEqual([n['kind'] for n in sent], ['incident', 'escalation', 'recovery'])
         from f.monitoring.notifications import format_notification
         self.assertEqual(format_notification(sent[-1]), 'Resolved: Run. Checks are back to normal.')
+
+    def test_pending_alert_is_replanned_when_only_a_different_cause_qualifies(self):
+        store = MemoryStore()
+        report = {'path': 'f/demo/run', 'status': 'unhealthy',
+                  'causes': ['consecutive_failures', 'lack_of_progress']}
+        record_incident(store, report, NOW, None)
+
+        sent = []
+        def send(url, notice):
+            sent.extend(notice['causes'])
+            return {'delivered': True, 'retry_after_seconds': 0}
+
+        record_incident(store, {**report, 'causes': ['consecutive_failures', 'excessive_runtime']},
+                        NOW + timedelta(minutes=5), 'private-url', send)
+        self.assertEqual(sent, ['excessive_runtime'])
 
     def test_undelivered_incident_does_not_generate_recovery(self):
         report = {'path': 'f/demo/run', 'status': 'unhealthy', 'causes': ['consecutive_failures']}

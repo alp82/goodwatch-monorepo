@@ -20,6 +20,7 @@ Api = Callable[[str], Any]
 STATE_PATH = "f/monitoring/failing_schedules_state"
 RUNS_INSPECTED = 10
 FAILURE_STREAK = 3
+MIN_TIME_WITHOUT_SUCCESS = timedelta(hours=1)
 STALE_SUCCESS = timedelta(hours=20)
 SCHEDULE_PAGE = 100
 RUN_FILTER = "has_null_parent=true&is_skipped=false"
@@ -40,12 +41,18 @@ def assess(
     runs: list[dict[str, Any]], last_success: datetime | None, now: datetime
 ) -> bool:
     """Runs are newest first. No completed run is not a failure."""
-    if not runs or runs[0]["success"]:
-        return False
-    streak = runs[:FAILURE_STREAK]
-    if len(streak) == FAILURE_STREAK and not any(run["success"] for run in streak):
-        return True
-    return last_success is None or now - last_success >= STALE_SUCCESS
+    failures = 0
+    for run in runs:
+        if run["success"]:
+            break
+        failures += 1
+    if last_success is None:
+        return failures >= FAILURE_STREAK
+    success_age = now - last_success
+    return (
+        (failures >= FAILURE_STREAK and success_age >= MIN_TIME_WITHOUT_SUCCESS)
+        or (failures >= 2 and success_age >= STALE_SUCCESS)
+    )
 
 
 def observe_schedule(api: Api, path: str, now: datetime) -> dict[str, Any]:
@@ -53,8 +60,9 @@ def observe_schedule(api: Api, path: str, now: datetime) -> dict[str, Any]:
         f"jobs/completed/list?schedule_path={path}&{RUN_FILTER}"
         f"&per_page={RUNS_INSPECTED}"
     )
+    runs = [run for run in runs if not run.get("canceled")]
     success = next((run for run in runs if run["success"]), None)
-    if success is None and runs and not runs[0]["success"]:
+    if runs and success is None:
         # The last success is older than the inspected window, or never was.
         older = api(
             f"jobs/completed/list?schedule_path={path}&{RUN_FILTER}"
@@ -64,6 +72,7 @@ def observe_schedule(api: Api, path: str, now: datetime) -> dict[str, Any]:
     last_success = finished_at(success) if success else None
     return {
         "failing": assess(runs, last_success, now),
+        "latest_succeeded": bool(runs and runs[0]["success"]),
         "failed_runs": sum(not run["success"] for run in runs),
         "runs": len(runs),
         "newest_job_id": runs[0]["id"] if runs else None,
@@ -116,10 +125,13 @@ def plan(
             owed.append({"kind": "incident", "pipeline": path,
                          "job_id": state[path]["job_id"]})
         elif status in {"alerted", "recovery_pending"}:
-            state[path] = {**entry, "status": "recovery_pending",
-                           "recovery_job_id": seen["newest_job_id"]}
-            owed.append({"kind": "recovery", "pipeline": path,
-                         "job_id": seen["newest_job_id"]})
+            if seen["latest_succeeded"]:
+                state[path] = {**entry, "status": "recovery_pending",
+                               "recovery_job_id": seen["newest_job_id"]}
+                owed.append({"kind": "recovery", "pipeline": path,
+                             "job_id": seen["newest_job_id"]})
+            else:
+                state[path] = entry
         # A pending incident that was never delivered needs no recovery.
     return state, owed
 

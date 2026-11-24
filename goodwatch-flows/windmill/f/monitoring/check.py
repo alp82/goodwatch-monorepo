@@ -61,6 +61,8 @@ RUNTIME_HOURS = {
     "f/tmdb_api/tmdb_init_details": 6,
     "f/tmdb_daily/tmdb_check_daily_dump_availability": 2,
     "f/monitoring/backup_check": 0.25,
+    # The 24-hour schedule may need time to finish its last batch before the 25-hour hard timeout.
+    "f/letterboxd/backfill": 24.5,
 }
 
 

@@ -96,22 +96,25 @@ def check(api, store, discord, webhook=WEBHOOK, now=NOW):
 
 
 class AssessTests(unittest.TestCase):
-    def test_three_failures_in_a_row_are_failing_despite_a_recent_success(self) -> None:
-        recent = NOW - timedelta(minutes=20)
-        self.assertTrue(assess(runs(False, False, False, True), recent, NOW))
+    def test_three_failures_alert_once_an_hour_has_passed_without_success(self) -> None:
+        history = runs(False, False, False, True)
+        self.assertFalse(assess(history, NOW - timedelta(minutes=59), NOW))
+        self.assertTrue(assess(history, NOW - timedelta(hours=1), NOW))
 
     def test_two_failures_after_a_recent_success_are_not_failing(self) -> None:
         recent = NOW - timedelta(minutes=15)
         self.assertFalse(assess(runs(False, False, True), recent, NOW))
 
-    def test_one_failure_after_a_success_20_hours_old_is_failing(self) -> None:
-        self.assertTrue(assess(runs(False, True), NOW - timedelta(hours=20), NOW))
-        self.assertFalse(
-            assess(runs(False, True), NOW - timedelta(hours=19, minutes=59), NOW)
-        )
+    def test_two_failures_alert_when_the_last_success_is_at_least_20_hours_old(self) -> None:
+        history = runs(False, False, True)
+        self.assertTrue(assess(history, NOW - timedelta(hours=20), NOW))
+        self.assertFalse(assess(history, NOW - timedelta(hours=19, minutes=59), NOW))
+        self.assertFalse(assess(runs(False, True), NOW - timedelta(days=7), NOW))
 
-    def test_a_failure_with_no_success_ever_is_failing(self) -> None:
-        self.assertTrue(assess(runs(False), None, NOW))
+    def test_no_prior_success_still_needs_three_failures(self) -> None:
+        self.assertFalse(assess(runs(False), None, NOW))
+        self.assertFalse(assess(runs(False, False), None, NOW))
+        self.assertTrue(assess(runs(False, False, False), None, NOW))
 
     def test_a_successful_newest_run_or_no_run_is_not_failing(self) -> None:
         self.assertFalse(assess(runs(True, False, False, False), NOW, NOW))
@@ -134,9 +137,9 @@ class ObservationTests(unittest.TestCase):
         check(api, StateStore(), Discord(), webhook=None)
         self.assertFalse(any("success=true" in call for call in api.calls))
 
-    def test_weekly_schedule_that_never_succeeded_is_failing(self) -> None:
+    def test_weekly_schedule_that_never_succeeded_alerts_after_three_failures(self) -> None:
         week = timedelta(days=7)
-        api = Windmill({CRITICS: runs(False, False, every=week)})
+        api = Windmill({CRITICS: runs(False, False, False, every=week)})
         result = check(api, StateStore(), Discord(), webhook=None)
         self.assertEqual(result["failing"], [CRITICS])
         self.assertIsNone(result["observed"][CRITICS]["last_success_at"])
@@ -153,6 +156,23 @@ class TransitionTests(unittest.TestCase):
         }])
         self.assertEqual(store.value["schedules"][EPISODES]["status"], "alerted")
         self.assertEqual(result["deliveries"][0]["message_id"], "1")
+
+    def test_single_daily_failure_does_not_send_incident_or_recovery(self) -> None:
+        api = Windmill({CRITICS: runs(False, True, every=timedelta(days=1))})
+        store, discord = StateStore(), Discord()
+        check(api, store, discord)
+        api.schedules[CRITICS] = runs(True, False, True, every=timedelta(days=1))
+        check(api, store, discord, now=NOW + timedelta(days=1))
+        self.assertEqual(discord.sent, [])
+
+    def test_short_catalog_failure_streak_recovers_without_posting(self) -> None:
+        catalog = "f/priority/crawl_all"
+        api = Windmill({catalog: runs(False, False, False, True)})
+        store, discord = StateStore(), Discord()
+        check(api, store, discord)
+        api.schedules[catalog] = runs(True, False, False, False)
+        check(api, store, discord, now=NOW + timedelta(minutes=40))
+        self.assertEqual(discord.sent, [])
 
     def test_still_failing_sends_nothing_more(self) -> None:
         api = Windmill({EPISODES: runs(False, False, False)})
@@ -172,6 +192,20 @@ class TransitionTests(unittest.TestCase):
         check(api, store, discord)
         self.assertEqual([n["kind"] for n in discord.sent], ["incident", "recovery"])
         self.assertEqual(store.value["schedules"], {})
+
+    def test_cancellations_do_not_count_as_failures_or_prove_recovery(self) -> None:
+        canceled = {**runs(False)[0], "canceled": True}
+        api = Windmill({EPISODES: [canceled, *runs(False, False)]})
+        store, discord = StateStore(), Discord()
+        check(api, store, discord)
+        self.assertEqual(discord.sent, [])
+
+        api.schedules[EPISODES] = runs(False, False, False)
+        check(api, store, discord)
+        api.schedules[EPISODES] = [canceled]
+        check(api, store, discord)
+        self.assertEqual([notice["kind"] for notice in discord.sent], ["incident"])
+        self.assertEqual(store.value["schedules"][EPISODES]["status"], "alerted")
 
     def test_failed_incident_delivery_is_retried_on_the_next_run(self) -> None:
         api = Windmill({EPISODES: runs(False, False, False)})

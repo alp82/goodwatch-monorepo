@@ -7,6 +7,7 @@ from typing import Any, Callable
 from f.monitoring.health import incident_transition, timestamp
 from f.monitoring.notifications import (
     DELIVERY_CLIENT_IDENTITY,
+    TMDB_UPSTREAM_ALERT_HOURS,
     deliver_notification,
 )
 
@@ -15,7 +16,7 @@ def actionable_causes(report: dict[str, Any]) -> list[str]:
     """Separate evidence worth interrupting a person for from diagnostics."""
     causes = set(report.get("causes", []))
     actionable = causes & {
-        "consecutive_failures", "excessive_runtime", "controlled_failure",
+        "excessive_runtime", "controlled_failure",
         "availability_opened_overdue", "availability_changed_overdue", "sustained_parse_errors",
         "country_backlog_stalled", "publication_unacknowledged",
         "publication_retry_exhausted", "publication_failed",
@@ -24,10 +25,10 @@ def actionable_causes(report: dict[str, Any]) -> list[str]:
     }
     if (report.get("path") == "f/monitoring/tmdb_watch_upstream"
             and "upstream_blocked" in causes
-            and (report.get("blocked_seconds") or 0) >= 2 * 3600):
+            and (report.get("blocked_seconds") or 0) >= TMDB_UPSTREAM_ALERT_HOURS * 3600):
         actionable.add("upstream_blocked")
-    if {"missing_execution", "lack_of_progress"} <= causes:
-        actionable.add("missing_execution")
+    if "lack_of_progress" in causes:
+        actionable.update(causes & {"consecutive_failures", "missing_execution"})
     return sorted(actionable)
 
 
@@ -56,7 +57,12 @@ def record_incident(
                  "last_notified_at": None, "announced_causes": []}
     if report["status"] == "unhealthy" and not attention["causes"]:
         attention["status"] = "unknown"
-    if prior and attention["status"] == "unknown":
+    pending = (prior or {}).get("pending_notification") or {}
+    if prior and (
+        attention["status"] == "unknown"
+        or (pending.get("kind") in {"incident", "escalation"}
+            and not set(pending["causes"]).issubset(attention["causes"]))
+    ):
         prior = {**prior, "pending_notification": None}
     planned = incident_transition(prior, attention, now)
     state = planned["state"]

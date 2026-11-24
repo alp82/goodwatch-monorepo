@@ -50,16 +50,19 @@ class UpstreamMonitorTests(unittest.TestCase):
         self.assertEqual(assess_upstream(result, NOW)['status'], 'unhealthy')
         self.assertNotIn('partitions', result)
 
-    def test_two_hour_threshold_deduplication_unknown_and_one_recovery(self):
+    def test_eight_hour_threshold_deduplication_unknown_and_one_recovery(self):
         store, sent = MemoryStore(), []
         def deliver(url, notice):
             sent.append(notice)
             return {'delivered': True, 'message_id': str(len(sent)), 'retry_after_seconds': 0}
-        for age in [0, 1, 1.99, 2, 3, 5, 24]:
+        for age in [0, 2, 7.99]:
+            record_incident(store, assess_upstream(snapshot(age), NOW), NOW, 'test-webhook', deliver)
+        self.assertEqual(sent, [])
+        for age in [8, 10, 24]:
             report = assess_upstream(snapshot(age), NOW)
             record_incident(store, report, NOW, 'test-webhook', deliver)
         self.assertEqual([n['kind'] for n in sent], ['incident'])
-        self.assertIn('at least 2 hours', format_notification(sent[0]))
+        self.assertIn('at least 8 hours', format_notification(sent[0]))
         record_incident(store, assess_upstream({}, NOW), NOW, 'test-webhook', deliver)
         self.assertEqual(len(sent), 1)
         open_report = assess_upstream({'upstream': {}}, NOW)
@@ -71,7 +74,7 @@ class UpstreamMonitorTests(unittest.TestCase):
     def test_short_block_does_not_send_alert_or_recovery(self):
         store = MemoryStore()
         with patch('f.monitoring.notifications.build_opener') as http:
-            for report in [assess_upstream(snapshot(1), NOW), assess_upstream({'upstream': {}}, NOW)]:
+            for report in [assess_upstream(snapshot(2.35), NOW), assess_upstream({'upstream': {}}, NOW)]:
                 record_incident(store, report, NOW, 'test-webhook', lambda *_: self.fail('False alert'))
             http.assert_not_called()
 
