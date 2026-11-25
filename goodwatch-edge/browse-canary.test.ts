@@ -5,7 +5,7 @@ import { BROWSE_EDGE_PATH as path, BROWSE_EDGE_HEADER as header, BROWSE_EDGE_STA
 
 const generation = 'e'.repeat(40) + '.static'
 const url = 'https://goodwatch.app' + path
-const enabled = { ENABLE_CACHE: 'true' }
+const enabled = { ENABLE_CACHE: 'true', BROWSE_FILL_TOKEN: '0'.repeat(64) }
 const req = (extra: HeadersInit = {}, suffix = '') => new Request(url + suffix, {
 	headers: { accept: 'text/html', 'user-agent': 'Mozilla/5.0 Chrome/130.0.0.0 Safari/537.36', ...extra },
 })
@@ -19,6 +19,7 @@ test('only canonical anonymous HTML reaches a CDN lookup; other requests keep th
 		const request = r as Request
 		assert.equal(request.headers.get(header), null)
 		assert.equal(request.headers.get('gw-cache-identity'), null)
+		assert.equal(request.headers.get('gw-edge-key'), null)
 		assert.deepEqual(options, { cache: 'no-store' })
 		return new Response('bypass')
 	})
@@ -48,6 +49,8 @@ test('generation and effective locale partition the native key; only reviewed in
 		assert.deepEqual(options, { cf: { cacheEverything: true, cacheTtlByStatus: { '100-199': -1, '201-303': -1, '305-599': -1 } } })
 		const variant = request.headers.get(header)!
 		assert.equal(request.url, url + '?__gw_sad=' + variant)
+		assert.equal(request.headers.get('gw-browse-proof'), enabled.BROWSE_FILL_TOKEN)
+		assert.equal(request.headers.get('gw-edge-key'), null)
 		assert.equal(request.headers.get('gw-cache-identity'), null)
 		assert.equal(request.headers.get('x-unreviewed-context'), null)
 		assert.equal(request.headers.get('cookie'), 'gw_browser=1')
@@ -138,4 +141,16 @@ test('a failed internal fetch falls back to the public origin URL', async () => 
 	assert.equal(response.headers.get('gw-edge'), 'bypass-fetch')
 	assert.equal(await response.text(), 'normal')
 	assert.equal(requested.length, 3)
+})
+
+test('a public caller cannot supply the private Worker credential, even on bypass', async () => {
+	const run = createBrowseCanary(async r => {
+		const request = r as Request
+		assert.equal(request.url, url)
+		assert.equal(request.headers.get('gw-browse-proof'), null)
+		assert.equal(request.headers.get('gw-edge-key'), null)
+		return new Response('public')
+	})
+	const result = await run(req({ 'gw-browse-proof': enabled.BROWSE_FILL_TOKEN, 'gw-edge-key': 'pretend' }), { ENABLE_CACHE: 'true' })
+	assert.equal(result.headers.get('gw-edge'), 'bypass-unconfigured')
 })

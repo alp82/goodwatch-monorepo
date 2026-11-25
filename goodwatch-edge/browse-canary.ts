@@ -1,7 +1,7 @@
 import { isbot } from 'isbot'
 import { edgeIdentity } from './worker.ts'
 import {
-	BROWSE_EDGE_GENERATION, BROWSE_EDGE_HEADER, BROWSE_EDGE_PATH, BROWSE_EDGE_QUERY, BROWSE_EDGE_STATE,
+	BROWSE_EDGE_GENERATION, BROWSE_EDGE_HEADER, BROWSE_EDGE_PROOF, BROWSE_EDGE_PATH, BROWSE_EDGE_QUERY, BROWSE_EDGE_STATE,
 } from '../goodwatch-webapp/app/utils/browse-edge.ts'
 
 const stateLifetime = 10_000
@@ -27,6 +27,9 @@ function observed(response: Response, outcome: string, state: string) {
 	result.headers.set('GW-Edge', outcome)
 	result.headers.set('GW-Edge-State', state)
 	result.headers.delete(BROWSE_EDGE_HEADER)
+	result.headers.delete(BROWSE_EDGE_PROOF)
+		headers.delete(BROWSE_EDGE_PROOF)
+		headers.delete('gw-edge-key')
 	result.headers.delete('Cloudflare-CDN-Cache-Control')
 	return result
 }
@@ -34,18 +37,21 @@ function observed(response: Response, outcome: string, state: string) {
 export function createBrowseCanary(fetcher: typeof fetch = fetch, now: () => number = Date.now) {
 	let checkingUntil = 0
 	let lastState: { generation: string | null, expires: number } | undefined
-	return async (request: Request, env: { ENABLE_CACHE?: string }) => {
+	return async (request: Request, env: { ENABLE_CACHE?: string; BROWSE_FILL_TOKEN?: string }) => {
 		const headers = new Headers(request.headers)
 		headers.delete(BROWSE_EDGE_HEADER)
+		headers.delete(BROWSE_EDGE_PROOF)
+		headers.delete('gw-edge-key')
 		headers.delete('GW-Cache-Identity')
 		const original = new Request(request, { headers, redirect: 'manual' })
 		const forward = async (reason: string, state: string) =>
 			observed(await fetcher(original, { cache: 'no-store' }), 'bypass-' + reason, state)
 		const reason = env.ENABLE_CACHE === 'true' ? bypass(request) : 'disabled'
 		if (reason) return forward(reason, 'unused')
+		if (!/^[a-f0-9]{64}$/.test(env.BROWSE_FILL_TOKEN ?? '')) return forward('unconfigured', 'unused')
 
 		const common = new Headers()
-		for (const name of ['gw-edge-key', 'cf-connecting-ip']) {
+		for (const name of ['cf-connecting-ip']) {
 			const value = headers.get(name)
 			if (value) common.set(name, value)
 		}
@@ -79,6 +85,7 @@ export function createBrowseCanary(fetcher: typeof fetch = fetch, now: () => num
 		const variant = [lastState.generation, identity.country, identity.language].join('.')
 		const target = new URL(BROWSE_EDGE_PATH + BROWSE_EDGE_QUERY + variant, request.url)
 		common.set(BROWSE_EDGE_HEADER, variant)
+		common.set(BROWSE_EDGE_PROOF, env.BROWSE_FILL_TOKEN!)
 		common.set('accept', 'text/html')
 		common.set('user-agent', headers.get('user-agent')!)
 		for (const name of ['accept-language', 'accept-encoding']) {
@@ -123,4 +130,4 @@ export function createBrowseCanary(fetcher: typeof fetch = fetch, now: () => num
 }
 
 const handle = createBrowseCanary()
-export default { fetch: (request: Request, env: { ENABLE_CACHE?: string }) => handle(request, env) }
+export default { fetch: (request: Request, env: { ENABLE_CACHE?: string; BROWSE_FILL_TOKEN?: string }) => handle(request, env) }

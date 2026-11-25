@@ -26,8 +26,8 @@
 //
 // Settings: EDGE_ORIGIN_KEYS (see above); EDGE_CLIENT_ADDRESS=off stops the address rewriting (the key header is
 // still removed). The metric goodwatch_edge_client_address_total counts the outcomes.
-import { BROWSE_EDGE_HEADER, BROWSE_EDGE_PATH } from "../utils/browse-edge.ts"
-import { canonicalBrowseTarget } from "./browse-edge.server.ts"
+import { BROWSE_EDGE_HEADER, BROWSE_EDGE_PATH, BROWSE_EDGE_PROOF } from "../utils/browse-edge.ts"
+import { browseProofs, canonicalBrowseTarget, trustedBrowseProof } from "./browse-edge.server.ts"
 import { createHash, timingSafeEqual } from "node:crypto"
 import { subscribe } from "node:diagnostics_channel"
 import type { IncomingHttpHeaders, IncomingMessage } from "node:http"
@@ -191,6 +191,7 @@ export function startEdgeClientAddress(): void {
 	started = true
 	const restore = process.env.EDGE_CLIENT_ADDRESS !== "off"
 	const keys = edgeKeys(process.env.EDGE_ORIGIN_KEYS)
+	const proofKeys = browseProofs(process.env.EDGE_ORIGIN_KEYS)
 	if (restore && !keys.length)
 		console.warn(
 			`EDGE_ORIGIN_KEYS has no key of at least ${MIN_KEY_LENGTH} characters: visitor addresses behind Cloudflare are not restored`,
@@ -200,11 +201,20 @@ export function startEdgeClientAddress(): void {
 	subscribe("http.server.request.start", (message) => {
 		const request = (message as { request: IncomingMessage }).request
 		const outcome = sanitizeRequest(request, keys, restore)
+		const proof = request.headers[BROWSE_EDGE_PROOF]
+		if (proof !== undefined) {
+			delete request.headers[BROWSE_EDGE_PROOF]
+			dropOtherRepresentations(request, [BROWSE_EDGE_PROOF])
+		}
 		const variant = request.headers[BROWSE_EDGE_HEADER]
 		if (variant !== undefined) {
 			if (
 				request.method === "GET" &&
-				canonicalBrowseTarget(request.url, variant, outcome === "cloudflare")
+				canonicalBrowseTarget(
+					request.url,
+					variant,
+					outcome === "cloudflare" && trustedBrowseProof(proof, proofKeys),
+				)
 			) {
 				request.url = BROWSE_EDGE_PATH
 			} else {

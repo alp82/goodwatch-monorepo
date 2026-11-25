@@ -1,3 +1,5 @@
+import { createHmac, timingSafeEqual } from "node:crypto"
+import { isbot } from "isbot"
 import {
 	BROWSE_EDGE_HEADER,
 	BROWSE_EDGE_PATH,
@@ -5,6 +7,22 @@ import {
 	BROWSE_EDGE_VARIANT,
 } from "../utils/browse-edge.ts"
 import { cacheIdentity, pageLifetime, type CacheDecision } from "./cache-identity.server.ts"
+
+/** Derive a single-purpose Worker credential without giving it the zone-wide origin key. */
+export const browseProofs = (keys: string | undefined) =>
+	(keys ?? "")
+		.split(",")
+		.map((key) => key.trim())
+		.filter((key) => key.length >= 32)
+		.map((key) => createHmac("sha256", key).update("goodwatch:edge:public-browse-fill:v1").digest())
+
+export function trustedBrowseProof(value: string | string[] | undefined, expected: Buffer[]) {
+	if (typeof value !== "string" || !/^[a-f0-9]{64}$/.test(value)) return false
+	const proof = Buffer.from(value, "hex")
+	let match = false
+	for (const token of expected) match = timingSafeEqual(proof, token) || match
+	return match
+}
 
 export function browseGeneration(commit: string | undefined, assetBase: string) {
 	if (!commit || !/^[0-9a-f]{40}$/.test(commit)) return null
@@ -44,8 +62,22 @@ export function applyBrowseEdgePolicy(
 		decision !== "keyed" ||
 		request.method !== "GET" ||
 		new URL(request.url).pathname !== BROWSE_EDGE_PATH ||
-		request.headers.has("Authorization") ||
-		request.headers.has("Proxy-Authorization") ||
+		request.headers.get("Accept") !== "text/html" ||
+		!request.headers.get("User-Agent") ||
+		isbot(request.headers.get("User-Agent")) ||
+		[
+			"authorization",
+			"proxy-authorization",
+			"range",
+			"upgrade",
+			"if-match",
+			"if-range",
+			"if-unmodified-since",
+			"cache-control",
+			"pragma",
+			"if-modified-since",
+			"if-none-match",
+		].some((h) => request.headers.has(h)) ||
 		!["", "gw_browser=1"].includes(request.headers.get("Cookie") ?? "") ||
 		!generation ||
 		variant !== [generation, identity.country, identity.language].join(".") ||
