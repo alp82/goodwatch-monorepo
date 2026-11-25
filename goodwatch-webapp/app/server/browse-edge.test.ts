@@ -136,7 +136,9 @@ test("public zone traffic cannot activate a fill by naming the known variant", a
 				[marker]: variant,
 			})
 			if (sentProof) headers.set("gw-browse-proof", sentProof)
-			const response = await fetch(`http://127.0.0.1:${address.port}${target}`, { headers })
+			const response: Response = await fetch(`http://127.0.0.1:${address.port}${target}`, {
+				headers,
+			})
 			assert.deepEqual(
 				await response.json(),
 				approved
