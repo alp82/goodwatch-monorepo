@@ -969,7 +969,11 @@ export class Places {
 	}
 
 	/** Load one page's kinds together, then give each place first pick in display order. */
-	async kindsByPlace(groups: Ingredient[][], titles: number): Promise<KindOf[][]> {
+	async kindsByPlace(
+		groups: Ingredient[][],
+		titles: number,
+		firstVisible = 0,
+	): Promise<KindOf[][]> {
 		const plans = []
 		for (const parts of groups) plans.push(await this.kindPlans(parts, titles))
 
@@ -981,13 +985,19 @@ export class Places {
 		}
 
 		const out = []
-		for (const group of plans) {
+		for (const [index, group] of plans.entries()) {
+			// Hidden genres still claim the same posters, but the panel never displays their descriptions.
+			if (index < firstVisible) {
+				await Promise.all(group.map(({ order }) => this.distinct(order(), titles, this.used)))
+				out.push([])
+				continue
+			}
 			// Earlier places have claimed their titles. Rank against the current used set so overlapping
 			// genres get exactly the same candidates as individual calls, including any extra card reads.
 			out.push(
 				await Promise.all(
-					group.map(async ({ kind, order }) => ({
-						...kind,
+					group.map(async ({ describe, order }) => ({
+						...describe(),
 						titles:
 							titles > 0 ? await this.titles(await this.distinct(order(), titles, this.used)) : [],
 					})),
@@ -1029,16 +1039,25 @@ export class Places {
 		return Promise.all(
 			named.map(async ({ g, name }) => {
 				await breathe()
-				const m = meanOf(this.b.snap, g.rows)
-				const words = g.ks.map((k) => this.word(k, m, mine))
-				const moodHit = MOODS.map((md, i) => ({
-					md,
-					n: g.rows.filter((r) => c.moods[r] & (1 << i)).length,
-				})).sort((x, y) => y.n - x.n)[0]
-				const moodVal =
-					moodHit && moodHit.n / g.rows.length >= 0.35
-						? this.catalog.mood.find((v) => v.id === moodHit.md.key)
-						: undefined
+				const m = meanOf(this.b.snap, g.rows, g.ks)
+				const describe = () => {
+					const words = g.ks.map((k) => this.word(k, m, mine))
+					const moodHit = MOODS.map((md, i) => ({
+						md,
+						n: g.rows.filter((r) => c.moods[r] & (1 << i)).length,
+					})).sort((x, y) => y.n - x.n)[0]
+					const moodVal =
+						moodHit && moodHit.n / g.rows.length >= 0.35
+							? this.catalog.mood.find((v) => v.id === moodHit.md.key)
+							: undefined
+					return {
+						id: g.id,
+						name,
+						share: g.rows.length / total,
+						traits: words,
+						mood: moodVal ? this.ref(moodVal) : null,
+					}
+				}
 				// Typical titles: fit on the kind's own traits, drawn from the kind's rows.
 				const ws = g.ks.map((k) => Math.max(0.2, m[k] - mine[k]))
 				const order = () =>
@@ -1048,16 +1067,7 @@ export class Places {
 						.map((r) => ({ r, s: fitOf(this.b, r, g.ks, ws), t: home?.get(r) ?? (home ? 2 : 0) }))
 						.sort((x, y) => x.t - y.t || y.s - x.s)
 						.map((x) => x.r)
-				return {
-					order,
-					kind: {
-						id: g.id,
-						name,
-						share: g.rows.length / total,
-						traits: words,
-						mood: moodVal ? this.ref(moodVal) : null,
-					},
-				}
+				return { order, describe }
 			}),
 		)
 	}

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { Places } from "./places.server"
-import type { Base, Catalog } from "./rows.server"
+import { MISSING, meanOf, type Base, type Catalog } from "./rows.server"
 import type { TitleCard } from "../title-cards.server"
 import { guestContext, type ViewerContext } from "../viewer.server"
 
@@ -236,4 +236,12 @@ for (const skip of [0, 160, 800, 2000]) {
 		assert.deepEqual(available(limited["voteHead"](cohort, limit, used)), available(fullOrder))
 	}
 }
+// Sparse means retain the full calculation's missing-data denominator, including all-missing traits.
+const sample = {
+	...base.snap,
+	fingerprintAt: (r: number) => Uint8Array.from([MISSING, r % 3 ? MISSING : r, r % 5]),
+}
+const means = meanOf(sample, rows)
+const namedMeans = meanOf(sample, rows, [0, 1, 2])
+assert.deepEqual([...namedMeans.slice(0, 3)], [...means.slice(0, 3)])
 console.log("showcase selection preserved")

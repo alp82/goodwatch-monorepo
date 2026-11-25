@@ -731,8 +731,22 @@ export function brandRows(b: Base, country: string): Map<string, number[]> | nul
 // ---------------------------------------------------------------------------------------------------------
 // Fingerprint math
 
-export function meanOf(snap: Snap, rows: number[]): Float64Array {
+export function meanOf(snap: Snap, rows: number[], traits?: readonly number[]): Float64Array {
 	const sum = new Float64Array(K)
+	// A named kind already identified its two traits. Its display and poster weights only use those means.
+	if (traits) {
+		for (const k of traits) {
+			let count = 0
+			for (const row of rows) {
+				const value = snap.fingerprintAt(row)[k]
+				if (value === MISSING) continue
+				sum[k] += value
+				count++
+			}
+			if (count) sum[k] /= count
+		}
+		return sum
+	}
 	const cnt = new Float64Array(K)
 	for (const r of rows) {
 		const v = snap.fingerprintAt(r)
