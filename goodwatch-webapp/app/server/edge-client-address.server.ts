@@ -26,6 +26,8 @@
 //
 // Settings: EDGE_ORIGIN_KEYS (see above); EDGE_CLIENT_ADDRESS=off stops the address rewriting (the key header is
 // still removed). The metric goodwatch_edge_client_address_total counts the outcomes.
+import { BROWSE_EDGE_HEADER, BROWSE_EDGE_PATH } from "../utils/browse-edge.ts"
+import { canonicalBrowseTarget } from "./browse-edge.server.ts"
 import { createHash, timingSafeEqual } from "node:crypto"
 import { subscribe } from "node:diagnostics_channel"
 import type { IncomingHttpHeaders, IncomingMessage } from "node:http"
@@ -61,11 +63,7 @@ export const CLOUDFLARE_RANGES = [
 const cloudflare = new BlockList()
 for (const range of CLOUDFLARE_RANGES) {
 	const [network, prefix] = range.split("/")
-	cloudflare.addSubnet(
-		network,
-		Number(prefix),
-		isIPv4(network) ? "ipv4" : "ipv6",
-	)
+	cloudflare.addSubnet(network, Number(prefix), isIPv4(network) ? "ipv4" : "ipv6")
 }
 
 // Headers only Cloudflare may set. Removed from requests that didn't come through the zone.
@@ -102,12 +100,7 @@ const keyMatches = (value: string | string[] | undefined, keys: Buffer[]) => {
 	return match
 }
 
-export type EdgeOutcome =
-	| "cloudflare"
-	| "unkeyed"
-	| "invalid"
-	| "direct"
-	| "unknown"
+export type EdgeOutcome = "cloudflare" | "unkeyed" | "invalid" | "direct" | "unknown"
 
 /**
  * Rewrites the request's address headers in place and removes the key header. Returns what it found: `cloudflare`
@@ -116,13 +109,9 @@ export type EdgeOutcome =
  * `unknown` (no single connecting address). Only `cloudflare` changes X-Real-Ip and X-Forwarded-For; every other
  * outcome removes CF-Connecting-IP and True-Client-IP.
  */
-export function restoreClientAddress(
-	headers: IncomingHttpHeaders,
-	keys: Buffer[],
-): EdgeOutcome {
+export function restoreClientAddress(headers: IncomingHttpHeaders, keys: Buffer[]): EdgeOutcome {
 	const peer = single(headers["x-real-ip"])
-	const fromCloudflare =
-		peer !== null && cloudflare.check(peer, isIPv4(peer) ? "ipv4" : "ipv6")
+	const fromCloudflare = peer !== null && cloudflare.check(peer, isIPv4(peer) ? "ipv4" : "ipv6")
 	const keyed = fromCloudflare && keyMatches(headers[EDGE_KEY_HEADER], keys)
 	Reflect.deleteProperty(headers, EDGE_KEY_HEADER)
 	const visitor = keyed ? single(headers["cf-connecting-ip"]) : null
@@ -150,8 +139,7 @@ export function dropOtherRepresentations(
 ): void {
 	const raw = request.rawHeaders
 	let found = false
-	for (let i = 0; i < raw.length && !found; i += 2)
-		found = names.includes(raw[i].toLowerCase())
+	for (let i = 0; i < raw.length && !found; i += 2) found = names.includes(raw[i].toLowerCase())
 	if (!found) return
 	const distinct = request.headersDistinct
 	for (const name of names) Reflect.deleteProperty(distinct, name)
@@ -210,11 +198,27 @@ export function startEdgeClientAddress(): void {
 	// Node publishes this before it emits "request", so the shedder, page cache, browser gate and Remix all see the
 	// rewritten headers.
 	subscribe("http.server.request.start", (message) => {
-		const outcome = sanitizeRequest(
-			(message as { request: IncomingMessage }).request,
-			keys,
-			restore,
-		)
+		const request = (message as { request: IncomingMessage }).request
+		const outcome = sanitizeRequest(request, keys, restore)
+		const variant = request.headers[BROWSE_EDGE_HEADER]
+		if (variant !== undefined) {
+			if (
+				request.method === "GET" &&
+				canonicalBrowseTarget(request.url, variant, outcome === "cloudflare")
+			) {
+				request.url = BROWSE_EDGE_PATH
+			} else {
+				delete request.headers[BROWSE_EDGE_HEADER]
+				dropOtherRepresentations(request, [BROWSE_EDGE_HEADER])
+			}
+		}
+		if (
+			(request.url === BROWSE_EDGE_PATH || variant !== undefined) &&
+			request.headers["gw-cache-identity"] !== undefined
+		) {
+			delete request.headers["gw-cache-identity"]
+			dropOtherRepresentations(request, ["gw-cache-identity"])
+		}
 		if (outcome) outcomes.inc([outcome])
 	})
 }

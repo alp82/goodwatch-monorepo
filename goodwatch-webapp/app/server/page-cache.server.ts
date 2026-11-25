@@ -1,7 +1,5 @@
-import {
-	withMediaRequestHealth,
-	mediaReadHealthProbe,
-} from "./media-read-health.server.ts"
+import { BROWSE_EDGE_HEADER } from "../utils/browse-edge.ts"
+import { withMediaRequestHealth, mediaReadHealthProbe } from "./media-read-health.server.ts"
 import { isbot } from "isbot"
 // Keeps complete anonymous HTML pages in this Node process and answers repeated requests for them before Express and
 // Remix: no loader, no React, no compression. A viral spike asks for one or a few URLs over and over, and a render
@@ -95,8 +93,7 @@ export function stripTracking(raw: string): { url: string; dropped: string } {
 	if (at < 0) return { url: raw, dropped: "" }
 	const kept: string[] = []
 	const dropped: string[] = []
-	for (const part of raw.slice(at + 1).split("&"))
-		(isTracking(part) ? dropped : kept).push(part)
+	for (const part of raw.slice(at + 1).split("&")) (isTracking(part) ? dropped : kept).push(part)
 	if (!dropped.length && kept.some(Boolean)) return { url: raw, dropped: "" }
 	const query = kept.filter(Boolean).join("&")
 	return {
@@ -118,8 +115,7 @@ export function normalizePageUrl(raw: string): string {
 
 /** Puts the tracking parameters back on a redirect to this site, so that the browser's analytics still see them. */
 export function restoreTracking(location: string, dropped: string): string {
-	if (!dropped || !location.startsWith("/") || location.startsWith("//"))
-		return location
+	if (!dropped || !location.startsWith("/") || location.startsWith("//")) return location
 	const hash = location.indexOf("#")
 	const base = hash < 0 ? location : location.slice(0, hash)
 	return `${base}${base.includes("?") ? "&" : "?"}${dropped}${hash < 0 ? "" : location.slice(hash)}`
@@ -137,9 +133,7 @@ type KeyInput = {
 	assets?: string
 }
 type PageKey = { key: string; path: string }
-export function pageCacheKey(
-	input: KeyInput,
-): PageKey | { bypass: string; path: string } | null {
+export function pageCacheKey(input: KeyInput): PageKey | { bypass: string; path: string } | null {
 	const { method = "GET", url } = input
 	if (method !== "GET" && method !== "HEAD") return null
 	const parsed = parseTarget(url)
@@ -152,9 +146,7 @@ export function pageCacheKey(
 		path.split("/").at(-1)?.includes(".")
 	)
 		return null
-	if (
-		(url.startsWith("/") ? url : parsed.pathname + parsed.search).length > 2048
-	)
+	if ((url.startsWith("/") ? url : parsed.pathname + parsed.search).length > 2048)
 		return { bypass: "long_url", path }
 	// The gate's own decision, for the target as it arrived and as Remix will parse it.
 	const gateHeaders = {
@@ -314,14 +306,11 @@ export function createPageCache(options: PageCacheOptions = {}) {
 	const enabled = () => !stopped && (options.enabled?.() ?? true)
 	const draining = () => stopped || (options.draining?.() ?? false)
 	const routeLabel = (path: string) => options.routeLabel?.(path, 200) ?? "page"
-	const alive = (flight: Flight) =>
-		!flight.cancelled && flights.get(flight.key) === flight
+	const alive = (flight: Flight) => !flight.cancelled && flights.get(flight.key) === flight
 	const admitted = (key: string) => {
 		const row = admission.get(key)
 		return (
-			!!row &&
-			now() - row.windowStart < limits.ADMIT_WINDOW_MS &&
-			row.count >= limits.ADMIT_AFTER
+			!!row && now() - row.windowStart < limits.ADMIT_WINDOW_MS && row.count >= limits.ADMIT_AFTER
 		)
 	}
 	function count(key: string): Admission {
@@ -329,10 +318,7 @@ export function createPageCache(options: PageCacheOptions = {}) {
 		if (!row) {
 			if (admission.size >= limits.ADMIT_MAX_KEYS) {
 				for (const [key, row] of admission)
-					if (
-						now() - row.windowStart >= limits.ADMIT_WINDOW_MS &&
-						now() >= row.passUntil
-					)
+					if (now() - row.windowStart >= limits.ADMIT_WINDOW_MS && now() >= row.passUntil)
 						admission.delete(key)
 				if (admission.size >= limits.ADMIT_MAX_KEYS)
 					admission.delete(admission.keys().next().value as string)
@@ -360,8 +346,7 @@ export function createPageCache(options: PageCacheOptions = {}) {
 		if (flight.kind === "refresh") refreshFlights--
 		flight.cancelled = true
 		clearTimeout(flight.timer)
-		for (const waiter of [...flight.waiters])
-			if (waiter.flight === flight) waiter.finish(entry)
+		for (const waiter of [...flight.waiters]) if (waiter.flight === flight) waiter.finish(entry)
 	}
 	function pause(key: string) {
 		pauses.delete(key)
@@ -379,11 +364,7 @@ export function createPageCache(options: PageCacheOptions = {}) {
 		refreshes.inc([flight.route, result])
 		end(flight)
 	}
-	function newFlight(
-		page: PageKey,
-		kind: Flight["kind"],
-		joinable: boolean,
-	): Flight {
+	function newFlight(page: PageKey, kind: Flight["kind"], joinable: boolean): Flight {
 		const flight: Flight = {
 			...page,
 			route: routeLabel(page.path),
@@ -415,10 +396,7 @@ export function createPageCache(options: PageCacheOptions = {}) {
 		pauses.delete(entry.key)
 		const flight = newFlight(entry, "refresh", false)
 		activeRefreshes++
-		flight.timer = setTimeout(
-			() => failedRefresh(flight, "error"),
-			limits.REFRESH_TIMEOUT_MS,
-		)
+		flight.timer = setTimeout(() => failedRefresh(flight, "error"), limits.REFRESH_TIMEOUT_MS)
 		flight.timer.unref()
 		void context.run(flight, async () => {
 			try {
@@ -430,11 +408,7 @@ export function createPageCache(options: PageCacheOptions = {}) {
 						.map((s) => s.trim()),
 				)
 				for (const [name, value] of Object.entries(request.headers)) {
-					if (
-						value !== undefined &&
-						!hopHeaders.test(name) &&
-						!connection.has(name)
-					)
+					if (value !== undefined && !hopHeaders.test(name) && !connection.has(name))
 						headers.set(name, Array.isArray(value) ? value.join(", ") : value)
 				}
 				const result = await options.render?.(
@@ -466,19 +440,12 @@ export function createPageCache(options: PageCacheOptions = {}) {
 		result: string,
 	) {
 		const encoding = accepted(request.headers["accept-encoding"] ?? "")
-		const variant = encoding.br
-			? entry.br
-			: encoding.gzip
-				? entry.gzip
-				: undefined
+		const variant = encoding.br ? entry.br : encoding.gzip ? entry.gzip : undefined
 		const etag = variant?.etag ?? entry.identityEtag
 		const tags = [entry.br.etag, entry.gzip.etag, entry.identityEtag]
 		const matched = request.headers["if-none-match"]
 			?.split(",")
-			.some(
-				(tag) =>
-					tag.trim() === "*" || tags.includes(tag.trim().replace(/^W\//, "")),
-			)
+			.some((tag) => tag.trim() === "*" || tags.includes(tag.trim().replace(/^W\//, "")))
 		const send = (body?: Buffer) => {
 			if (response.destroyed || response.writableEnded) return
 			if (entries.get(entry.key) === entry) {
@@ -495,8 +462,7 @@ export function createPageCache(options: PageCacheOptions = {}) {
 					}
 			if (matched) {
 				for (const name of ["cache-control", "vary", "gw-cache-identity"])
-					if (entry.headers[name] !== undefined)
-						headers[name] = entry.headers[name]
+					if (entry.headers[name] !== undefined) headers[name] = entry.headers[name]
 				notModified.inc([entry.route])
 			}
 			headers["Server-Timing"] = `page_cache;desc="${result}"`
@@ -509,12 +475,9 @@ export function createPageCache(options: PageCacheOptions = {}) {
 		// Synchronous decompression avoids waiting behind unrelated worker-pool jobs.
 		else send(gunzipSync(entry.gzip.body))
 	}
-	function handle(
-		request: IncomingMessage,
-		response: ServerResponse,
-		next: () => void,
-	) {
-		if (!enabled() && !stopped) return next()
+	function handle(request: IncomingMessage, response: ServerResponse, next: () => void) {
+		// CDN fills need a fresh complete render and their own response policy.
+		if (request.headers[BROWSE_EDGE_HEADER] || (!enabled() && !stopped)) return next()
 		let page: ReturnType<typeof pageCacheKey> = null
 		try {
 			page = pageCacheKey({
@@ -538,8 +501,7 @@ export function createPageCache(options: PageCacheOptions = {}) {
 			bypasses.inc([route, page.bypass])
 			return next()
 		}
-		const full = () =>
-			(renders.get(page.key) ?? 0) >= limits.MAX_RENDERS_PER_KEY
+		const full = () => (renders.get(page.key) ?? 0) >= limits.MAX_RENDERS_PER_KEY
 		// The answer for a request that would be one render too many for its key. No cache may keep it.
 		const busy = (reason: string) => {
 			if (response.destroyed || response.writableEnded) return
@@ -618,18 +580,13 @@ export function createPageCache(options: PageCacheOptions = {}) {
 				const route = flight.route
 				const finished = response.writableFinished
 				const status = response.statusCode
-				notStored.inc([
-					route,
-					!finished ? "aborted" : status !== 200 ? "status" : "unstorable",
-				])
+				notStored.inc([route, !finished ? "aborted" : status !== 200 ? "status" : "unstorable"])
 				if (
 					finished &&
-					((status === 200 && admitted(page.key)) ||
-						(status !== 200 && status < 500))
+					((status === 200 && admitted(page.key)) || (status !== 200 && status < 500))
 				) {
 					row.passStreak++
-					row.passUntil =
-						now() + Math.min(5000 * 2 ** (row.passStreak - 1), 300_000)
+					row.passUntil = now() + Math.min(5000 * 2 ** (row.passStreak - 1), 300_000)
 				}
 				end(flight)
 			})
@@ -660,23 +617,14 @@ export function createPageCache(options: PageCacheOptions = {}) {
 					clearTimeout(timer)
 					response.removeListener("close", closed)
 					waiters--
-					if (entry)
-						serve(entry, request, response, "joined")
-					else if (
-						retry &&
-						!flights.has(page.key) &&
-						!full() &&
-						flights.size < limits.MAX_FLIGHTS
-					)
+					if (entry) serve(entry, request, response, "joined")
+					else if (retry && !flights.has(page.key) && !full() && flights.size < limits.MAX_FLIGHTS)
 						lead("retry", previous)
 					else if (reason !== "closed") pass(reason)
 				},
 			}
 			const closed = () => waiter.finish(undefined, "closed")
-			const timer = setTimeout(
-				() => waiter.finish(undefined, "wait_timeout"),
-				limits.JOIN_WAIT_MS,
-			)
+			const timer = setTimeout(() => waiter.finish(undefined, "wait_timeout"), limits.JOIN_WAIT_MS)
 			timer.unref()
 			response.once("close", closed)
 			existing.waiters.add(waiter)
@@ -684,11 +632,7 @@ export function createPageCache(options: PageCacheOptions = {}) {
 			return
 		}
 		if (!existing && flights.size < limits.MAX_FLIGHTS) {
-			const reason = !admitted(page.key)
-				? "not_admitted"
-				: row.passStreak === 0
-					? "lead"
-					: "probe"
+			const reason = !admitted(page.key) ? "not_admitted" : row.passStreak === 0 ? "lead" : "probe"
 			if (full()) return busy(reason)
 			return lead(reason)
 		}
@@ -721,11 +665,7 @@ export function createPageCache(options: PageCacheOptions = {}) {
 		}
 		if (!page || !("key" in page)) return null
 		const flight = flights.get(page.key)
-		if (
-			!flight ||
-			flight.offered ||
-			(context.getStore() && context.getStore() !== flight)
-		)
+		if (!flight || flight.offered || (context.getStore() && context.getStore() !== flight))
 			return null
 		const unhealthyMedia = mediaReadHealthProbe()
 		if (unhealthyMedia()) return null
@@ -736,22 +676,15 @@ export function createPageCache(options: PageCacheOptions = {}) {
 				if (!alive(flight)) return
 				notStored.inc([flight.route, reason])
 				if (flight.kind === "refresh")
-					failedRefresh(
-						flight,
-						reason === "compress_error" ? "error" : "not_storable",
-					)
+					failedRefresh(flight, reason === "compress_error" ? "error" : "not_storable")
 				else end(flight)
 			}
 			if (unhealthyMedia()) return refuse("media_read_error")
-			if (flight.kind !== "refresh" && !admitted(page.key))
-				return refuse("not_admitted")
+			if (flight.kind !== "refresh" && !admitted(page.key)) return refuse("not_admitted")
 			if (html.length > limits.MAX_HTML_BYTES) return refuse("too_large")
 			flight.offered = true
 			const identityLength = html.length
-			const tag = createHash("sha1")
-				.update(html)
-				.digest("base64url")
-				.slice(0, 20)
+			const tag = createHash("sha1").update(html).digest("base64url").slice(0, 20)
 			void Promise.resolve()
 				.then(() => (options.compress ?? compressHtml)(html))
 				.then(
@@ -766,8 +699,7 @@ export function createPageCache(options: PageCacheOptions = {}) {
 								? routePolicy
 								: snapshot.get("cache-control"),
 						)
-						const freshUntil =
-							storedAt + Math.min(lifetime.fresh * 1000, limits.MAX_FRESH_MS)
+						const freshUntil = storedAt + Math.min(lifetime.fresh * 1000, limits.MAX_FRESH_MS)
 						const staleUntil = freshUntil + lifetime.stale * 1000
 						if (now() >= staleUntil) return refuse("expired")
 						const storedHeaders: HeadersObject = {}
@@ -776,11 +708,7 @@ export function createPageCache(options: PageCacheOptions = {}) {
 						storedHeaders.vary = [snapshot.get("vary"), "Accept-Encoding"]
 							.filter(Boolean)
 							.join(", ")
-						const variant = (
-							body: Buffer,
-							encoding: string,
-							suffix: string,
-						): Variant => ({
+						const variant = (body: Buffer, encoding: string, suffix: string): Variant => ({
 							body,
 							etag: `"${tag}${suffix}"`,
 							headers: {
@@ -806,10 +734,7 @@ export function createPageCache(options: PageCacheOptions = {}) {
 						entries.delete(page.key)
 						entries.set(page.key, entry)
 						bytes += size
-						while (
-							entries.size > limits.MAX_ENTRIES ||
-							bytes > limits.MAX_BYTES
-						)
+						while (entries.size > limits.MAX_ENTRIES || bytes > limits.MAX_BYTES)
 							remove(entries.keys().next().value as string, "lru")
 						const row = admission.get(page.key)
 						if (row) {
@@ -841,13 +766,9 @@ export function createPageCache(options: PageCacheOptions = {}) {
 		return deleted
 	}
 	function sweep() {
-		for (const [key, entry] of entries)
-			if (now() >= entry.staleUntil) remove(key, "expired")
+		for (const [key, entry] of entries) if (now() >= entry.staleUntil) remove(key, "expired")
 		for (const [key, row] of admission)
-			if (
-				now() - row.windowStart >= limits.ADMIT_WINDOW_MS &&
-				now() >= row.passUntil
-			)
+			if (now() - row.windowStart >= limits.ADMIT_WINDOW_MS && now() >= row.passUntil)
 				admission.delete(key)
 		for (const [key, until] of pauses) if (until <= now()) pauses.delete(key)
 	}
@@ -883,8 +804,7 @@ export function createPageCache(options: PageCacheOptions = {}) {
 export type PageCache = ReturnType<typeof createPageCache>
 export function pageCacheEnabled() {
 	return (
-		process.env.NODE_ENV === "production" &&
-		!/^(off|0|false)$/i.test(process.env.PAGE_CACHE ?? "")
+		process.env.NODE_ENV === "production" && !/^(off|0|false)$/i.test(process.env.PAGE_CACHE ?? "")
 	)
 }
 function envLimit(name: string, fallback: number) {
@@ -896,10 +816,7 @@ export const pageCache = createPageCache({
 	draining: isShuttingDown,
 	limits: {
 		MAX_BYTES: envLimit("PAGE_CACHE_MAX_BYTES", PAGE_CACHE_LIMITS.MAX_BYTES),
-		MAX_ENTRIES: envLimit(
-			"PAGE_CACHE_MAX_ENTRIES",
-			PAGE_CACHE_LIMITS.MAX_ENTRIES,
-		),
+		MAX_ENTRIES: envLimit("PAGE_CACHE_MAX_ENTRIES", PAGE_CACHE_LIMITS.MAX_ENTRIES),
 		MAX_FRESH_MS: process.env.PAGE_CACHE_MAX_FRESH_SECONDS
 			? envLimit("PAGE_CACHE_MAX_FRESH_SECONDS", 1800) * 1000
 			: PAGE_CACHE_LIMITS.MAX_FRESH_MS,
@@ -913,10 +830,7 @@ export const configurePageCache = (next: Parameters<typeof pageCache.configure>[
 export const pageCacheWants = pageCache.wants
 export const resetPageCache = pageCache.reset
 const wrapped = new WeakSet<Server>()
-export function putPageCacheFirst(
-	server: Server,
-	cache: PageCache = pageCache,
-) {
+export function putPageCacheFirst(server: Server, cache: PageCache = pageCache) {
 	if (wrapped.has(server)) return
 	wrapped.add(server)
 	const listeners = server.listeners("request")
@@ -926,8 +840,7 @@ export function putPageCacheFirst(
 			const serve = () =>
 				cache.handle(request, response, () => {
 					withMediaRequestHealth(() => {
-						for (const listener of listeners)
-							Reflect.apply(listener, server, [request, response])
+						for (const listener of listeners) Reflect.apply(listener, server, [request, response])
 					})
 				})
 			if (!/^\/(movie|show|person)\//.test(request.url ?? "")) return serve()
@@ -945,10 +858,11 @@ export function putMediaHealthFirst(server: Server) {
 	const listeners = server.listeners("request")
 	server.removeAllListeners("request")
 	server.on("request", (request, response) =>
-		withCrateHttpRequest(request, response, crateRouteLabel, () => withMediaRequestHealth(() => {
-			for (const listener of listeners)
-				Reflect.apply(listener, server, [request, response])
-		})),
+		withCrateHttpRequest(request, response, crateRouteLabel, () =>
+			withMediaRequestHealth(() => {
+				for (const listener of listeners) Reflect.apply(listener, server, [request, response])
+			}),
+		),
 	)
 }
 let started = false
@@ -963,8 +877,11 @@ async function render(request: Request) {
 			"production",
 		)
 	}
-	const response = await withCrateRequest(crateRouteLabel(new URL(request.url).pathname, 200), request.method,
-		() => withMediaRequestHealth(() => handler!(request)))
+	const response = await withCrateRequest(
+		crateRouteLabel(new URL(request.url).pathname, 200),
+		request.method,
+		() => withMediaRequestHealth(() => handler!(request)),
+	)
 	await response.arrayBuffer()
 	return { status: response.status }
 }
@@ -977,22 +894,14 @@ export function startPageCache() {
 			request: IncomingMessage
 		}
 		if (request.socket.localPort === (Number(process.env.PORT) || 3000))
-			pageCacheEnabled()
-				? putPageCacheFirst(server)
-				: putMediaHealthFirst(server)
+			pageCacheEnabled() ? putPageCacheFirst(server) : putMediaHealthFirst(server)
 	})
 	if (!pageCacheEnabled()) return
 	configurePageCache({ render })
 	console.info(
 		`Page cache: ${pageCache.limits.MAX_ENTRIES} entries, ${pageCache.limits.MAX_BYTES} bytes, ${PAGE_CACHE_LIMITS.MAX_ENTRY_BYTES} bytes per entry`,
 	)
-	for (const name of [
-		"entries",
-		"bytes",
-		"flights",
-		"waiters",
-		"admission_keys",
-	] as const)
+	for (const name of ["entries", "bytes", "flights", "waiters", "admission_keys"] as const)
 		gauge(`goodwatch_page_cache_${name}`, `Page cache ${name}.`, [], () => [
 			{ labels: [], value: pageCache.stats()[name] },
 		])

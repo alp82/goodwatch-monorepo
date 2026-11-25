@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test worker.test.ts"
+    "test": "node --test *.test.ts"
   },
   "dependencies": {
     "isbot": "5.1.17"

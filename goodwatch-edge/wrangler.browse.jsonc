@@ -1,0 +1,10 @@
+{
+  "name": "goodwatch-browse-cache",
+  "main": "browse-canary.ts",
+  "compatibility_date": "2026-10-29",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [{ "pattern": "goodwatch.app/shows/moods/sad*", "zone_name": "goodwatch.app" }],
+  "vars": { "ENABLE_CACHE": "true" }
+}

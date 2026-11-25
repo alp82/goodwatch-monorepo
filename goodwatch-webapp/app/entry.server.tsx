@@ -1,3 +1,5 @@
+import { applyBrowseEdgePolicy, browseGeneration } from "~/server/browse-edge.server"
+import { BROWSE_EDGE_HEADER } from "~/utils/browse-edge"
 import { startBrowserGate } from "~/server/browser-gate.server"
 import { identifyProductUser } from "./telemetry/product-analytics.server.ts"
 import { registerSessionUserObserver } from "./utils/auth-session.ts"
@@ -137,7 +139,7 @@ export default function handleRequest(
 		manifest: manifestForBase(remixContext.manifest, assetBase),
 	}
 	return renderWithAssetBase(assetBase, () =>
-		renderDocument(request, responseStatusCode, responseHeaders, context),
+		renderDocument(request, responseStatusCode, responseHeaders, context, assetBase),
 	)
 }
 
@@ -146,10 +148,13 @@ function renderDocument(
 	responseStatusCode: number,
 	responseHeaders: Headers,
 	remixContext: EntryContext,
+	assetBase: string,
 ) {
 	const renderStarted = performance.now()
 	// Crawlers get the complete document in one piece. Browsers get the shell first and suspended parts as they finish.
-	const waitForAll = isbot(request.headers.get("user-agent") ?? "") || remixContext.isSpaMode
+	const browseFill = request.headers.has(BROWSE_EDGE_HEADER)
+	const waitForAll =
+		browseFill || isbot(request.headers.get("user-agent") ?? "") || remixContext.isSpaMode
 
 	return new Promise((resolve, reject) => {
 		let shellRendered = false
@@ -168,9 +173,22 @@ function renderDocument(
 				`render;dur=${(performance.now() - renderStarted).toFixed(1)}`,
 			)
 			protectMediaResponse(responseHeaders)
+			if (browseFill && errored) responseHeaders.set("Cache-Control", "private, no-store")
 			const routePolicy = responseHeaders.get("Cache-Control")
+			const routeVary = responseHeaders.get("Vary")
 			const decision = applyCachePolicy(request, status, responseHeaders)
-			const offer = pageCacheWants(request, status, responseHeaders, decision, routePolicy)
+			if (browseFill) {
+				applyBrowseEdgePolicy(
+					request,
+					responseHeaders,
+					decision,
+					routePolicy,
+					routeVary,
+					browseGeneration(process.env.SOURCE_COMMIT, assetBase),
+				)
+			}
+			const offer =
+				!browseFill && pageCacheWants(request, status, responseHeaders, decision, routePolicy)
 			const body = new HtmlStream(
 				offer
 					? (html) => {
