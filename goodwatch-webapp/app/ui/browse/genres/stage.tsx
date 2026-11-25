@@ -2,31 +2,35 @@
 // genre picked at a time, the keys that move the pick, and what opens with it (the genre's card with its kinds, then
 // picks beyond the obvious. A picker only draws
 // itself, and says whether it sits above the card ("below") or beside it on a laptop ("side").
-import { AnimatePresence, MotionConfig } from "framer-motion"
+import { MotionConfig } from "framer-motion"
 import {
 	type ComponentType,
 	type KeyboardEvent,
+	type PointerEvent,
 	type ReactNode,
 	type RefObject,
 	useEffect,
 	useRef,
 	useState,
 } from "react"
-import { EASE, WRAP, wash } from "~/ui/browse/index"
-import { GLIDE_T, motion } from "~/ui/browse/motion"
+import { FOCUS, WRAP, wash } from "~/ui/browse/index"
+import { GLIDE_T } from "~/ui/browse/motion"
 import type { BrowseViewProps } from "~/ui/browse/view"
-import type { AtlasData, AtlasGenre } from "~/server/browse/genres.server"
+import type { AtlasData, AtlasGenreSummary } from "~/server/browse/genres.server"
+import { useGenrePanels } from "./use-genre-panels"
 import { GenreOpen } from "~/ui/browse/genres/open"
 import { GenrePicks } from "~/ui/browse/genres/picks"
 import { GenresHead } from "~/ui/browse/genres/pieces"
 
 export interface PickerProps {
-	genres: AtlasGenre[]
+	genres: AtlasGenreSummary[]
 	/** The picked genre's slug. */
 	at: string
 	/** The biggest genre's title count, for sizes honest to it. */
 	max: number
 	pick: (slug: string) => void
+	intent: (slug: string) => void
+	cancelIntent: () => void
 	/** Arrow keys, Home and End on any genre control. */
 	onKey: (e: KeyboardEvent<HTMLElement>) => void
 	/** The picker's scrolling box, if it has one: the picked genre is kept in view inside it. */
@@ -44,6 +48,12 @@ export const tabProps = (p: PickerProps, slug: string) => ({
 	tabIndex: slug === p.at ? 0 : -1,
 	"data-genre": slug,
 	onClick: () => p.pick(slug),
+	onFocus: () => p.intent(slug),
+	onBlur: p.cancelIntent,
+	onPointerEnter: (event: PointerEvent<HTMLButtonElement>) => {
+		if (event.pointerType === "mouse" || event.pointerType === "pen") p.intent(slug)
+	},
+	onPointerLeave: p.cancelIntent,
 	onKeyDown: p.onKey,
 })
 
@@ -54,7 +64,7 @@ const shownControl = (slug: string) =>
 	)
 
 /** A genre's most telling word: the first that doesn't repeat its name (Romance → not "romantic"). */
-export const tellingWord = (g: AtlasGenre) =>
+export const tellingWord = (g: AtlasGenreSummary) =>
 	g.words.find((w) => !w.word.toLowerCase().startsWith(g.place.label.toLowerCase().slice(0, 4))) ??
 	null
 
@@ -76,10 +86,24 @@ export function GenreStage({
 	layout?: "below" | "side"
 }) {
 	const kind = address.kind
-	const [at, setAt] = useState(data.genres[0]?.place.slug ?? "")
+	const { at, panel, failed, pick: choose, intent, cancelIntent } = useGenrePanels(data, kind)
+	const cardBox = useRef<HTMLDivElement>(null)
+	const picksBox = useRef<HTMLDivElement>(null)
+	const [reserved, setReserved] = useState<{ card: number; picks: number } | null>(null)
+	function pick(slug: string) {
+		if (slug !== at && cardBox.current && picksBox.current) {
+			setReserved({
+				card: cardBox.current.getBoundingClientRect().height,
+				picks: picksBox.current.getBoundingClientRect().height,
+			})
+		}
+		choose(slug)
+	}
 	useEffect(() => {
-		if (!data.genres.some((g) => g.place.slug === at)) setAt(data.genres[0]?.place.slug ?? "")
-	}, [data.genres, at])
+		const reset = () => setReserved(null)
+		window.addEventListener("resize", reset)
+		return () => window.removeEventListener("resize", reset)
+	}, [])
 	const box = useRef<HTMLDivElement>(null)
 	const g = data.genres.find((x) => x.place.slug === at) ?? data.genres[0]
 	const max = Math.max(...data.genres.map((x) => x.n), 1)
@@ -96,7 +120,7 @@ export function GenreStage({
 		if (!by && end < 0) return
 		e.preventDefault()
 		const next = data.genres[end >= 0 ? end : (i + by + data.genres.length) % data.genres.length]
-		setAt(next.place.slug)
+		pick(next.place.slug)
 		shownControl(next.place.slug)?.focus({ preventScroll: true })
 	}
 	// The picked genre stays in view when the picker scrolls sideways.
@@ -120,7 +144,9 @@ export function GenreStage({
 			genres={data.genres}
 			at={g.place.slug}
 			max={max}
-			pick={setAt}
+			pick={pick}
+			intent={intent}
+			cancelIntent={cancelIntent}
 			onKey={onKey}
 			box={box}
 			kind={kind}
@@ -130,38 +156,44 @@ export function GenreStage({
 	const opened = (
 		<>
 			<div
+				ref={cardBox}
 				role="tabpanel"
+				aria-busy={!panel && !failed}
 				aria-label={g.place.label}
 				className={`relative rounded-2xl p-5 ring-1 ring-white/10 sm:p-7 ${side ? "max-lg:mt-6" : "mt-8"} ${GLIDE_T}`}
 				style={{
+					minHeight: reserved?.card,
 					background: `linear-gradient(180deg, ${wash(g.color, 12)} 0%, rgb(255 255 255 / 0.02) 70%)`,
 					boxShadow: `inset 0 2px 0 ${g.color}`,
 				}}
 			>
-				<AnimatePresence mode="wait" initial={false}>
-					<motion.div
-						key={g.place.slug}
-						initial={{ opacity: 0, y: 6 }}
-						animate={{ opacity: 1, y: 0 }}
-						exit={{ opacity: 0, y: -4 }}
-						transition={{ duration: 0.16, ease: EASE }}
-					>
-						<GenreOpen g={g} to={to} kind={kind} />
-					</motion.div>
-				</AnimatePresence>
+				<GenreOpen
+					g={g}
+					panel={panel}
+					kind={kind}
+					to={to}
+					pending={
+						<output className="mt-3 block text-sm text-gray-400">
+							{failed ? (
+								<>
+									Couldn’t load this genre.{" "}
+									<button
+										type="button"
+										className={`rounded text-amber-300 underline ${FOCUS}`}
+										onClick={() => pick(at)}
+									>
+										Try again
+									</button>
+								</>
+							) : (
+								"Loading…"
+							)}
+						</output>
+					}
+				/>
 			</div>
-			<div className="mt-10 mb-16">
-				<AnimatePresence mode="wait" initial={false}>
-					<motion.div
-						key={g.place.slug}
-						initial={{ opacity: 0 }}
-						animate={{ opacity: 1 }}
-						exit={{ opacity: 0 }}
-						transition={{ duration: 0.18, ease: EASE }}
-					>
-						<GenrePicks g={g} />
-					</motion.div>
-				</AnimatePresence>
+			<div ref={picksBox} className="mt-10 mb-16" style={{ minHeight: reserved?.picks }}>
+				{panel && <GenrePicks g={panel} />}
 			</div>
 		</>
 	)

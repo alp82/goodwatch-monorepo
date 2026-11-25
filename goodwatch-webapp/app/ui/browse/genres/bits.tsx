@@ -40,4 +40,4 @@ export function Stack({
 	)
 }
 
-export const genreCount = (g: AtlasGenre) => count(g.n)
+export const genreCount = (g: { n: number }) => count(g.n)

@@ -1,26 +1,27 @@
 // One genre opened up: what it is, and the kinds inside
 // it. Posters come as fans, each one link to its genre or kind.
+import type { ReactNode } from "react"
 import { Link } from "@remix-run/react"
 import { type Kind, ing, kindNoun, place } from "~/domain/browse/address"
 import { count } from "~/domain/browse/count"
 import { FOCUS } from "~/ui/browse/index"
 import { QUICK_T } from "~/ui/browse/motion"
 import type { BrowseViewProps } from "~/ui/browse/view"
-import type { AtlasGenre, AtlasKind } from "~/server/browse/genres.server"
+import type { AtlasGenre, AtlasGenreSummary, AtlasKind } from "~/server/browse/genres.server"
 import { PosterFan } from "~/ui/browse/genres/fan"
 import { GenreName, Words } from "~/ui/browse/genres/pieces"
 import { low, onlyOf } from "~/ui/browse/genres/shared"
 
 type To = BrowseViewProps["to"]
 
-export const genreTo = (to: To, kind: Kind, g: AtlasGenre) =>
+export const genreTo = (to: To, kind: Kind, g: AtlasGenreSummary) =>
 	to(place(kind, [ing("genre", g.place.slug)]))
-export const kindTo = (to: To, kind: Kind, g: AtlasGenre, k: AtlasKind) =>
+export const kindTo = (to: To, kind: Kind, g: AtlasGenreSummary, k: AtlasKind) =>
 	`${to({ ...place(kind, [ing("genre", g.place.slug)]), kind_: k.id })}#titles`
 
 const pct = (share: number) => `${Math.max(1, Math.round(share * 100))}%`
 
-function KindRow({ g, k, to, kind }: { g: AtlasGenre; k: AtlasKind; to: To; kind: Kind }) {
+function KindRow({ g, k, to, kind }: { g: AtlasGenreSummary; k: AtlasKind; to: To; kind: Kind }) {
 	return (
 		<li className="flex items-center gap-4 py-3.5 first:pt-0 last:pb-0">
 			<Link
@@ -61,9 +62,13 @@ export function GenreOpen({
 	g,
 	to,
 	kind,
+	panel,
+	pending,
 	compact = false,
 }: {
-	g: AtlasGenre
+	g: AtlasGenreSummary
+	panel?: AtlasGenre
+	pending: ReactNode
 	to: To
 	kind: Kind
 	compact?: boolean
@@ -94,10 +99,10 @@ export function GenreOpen({
 						›
 					</span>
 				</Link>
-				{!compact && g.titles.length > 0 && (
+				{!compact && panel && panel.titles.length > 0 && (
 					<div className="mt-8 pl-6 max-lg:hidden">
 						<PosterFan
-							titles={g.titles}
+							titles={panel.titles}
 							to={genreTo(to, kind, g)}
 							label={`All ${low(g.plural)}`}
 							size="l"
@@ -110,9 +115,11 @@ export function GenreOpen({
 				<p className="text-xs font-bold tracking-[0.12em] text-gray-500 uppercase">
 					Kinds of {g.place.label.toLowerCase()} {kindNoun(kind)}
 				</p>
-				{g.kinds.length ? (
+				{!panel ? (
+					pending
+				) : panel.kinds.length ? (
 					<ul className="mt-3 divide-y divide-white/[0.07]">
-						{g.kinds.map((k) => (
+						{panel.kinds.map((k) => (
 							<KindRow key={k.id} g={g} k={k} to={to} kind={kind} />
 						))}
 					</ul>
