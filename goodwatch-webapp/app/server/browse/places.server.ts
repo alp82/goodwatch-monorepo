@@ -99,6 +99,7 @@ import { BAND_WORDS, blendName, comparative } from "~/domain/browse/words"
 import { kindNameOf } from "~/domain/browse/kind-names"
 import { groupOf, tropeById } from "~/domain/tropes/catalog"
 import { breathe, mapBreathing } from "./breathe"
+import { createVersionMemo } from "./version-memo"
 
 export class PlacesNotReady extends Error {
 	constructor() {
@@ -220,6 +221,12 @@ function knownRows(b: Base): Set<number> {
 	}
 	return set
 }
+
+type IntensityBands = Record<Level, number[]>
+// Single-mood pages and their level/sort variants select from the same public catalog rows.
+// Keep six recently used partitions per process. Their vote orders are built only if a showcase asks.
+const moodBands = createVersionMemo<IntensityBands>(6)
+const moodBandVoteOrders = new WeakMap<number[], readonly number[] | undefined>()
 
 export class Places {
 	/** Every title a showcase has handed out on this page. Pass your own set to a call to scope it differently. */
@@ -487,15 +494,15 @@ export class Places {
 		return this.rank(rows, parts, by, used, await this.homeTiers(parts, rows))
 	}
 
-	// Cohort arrays belong to this catalog snapshot. Keep their stable vote order within the request;
-	// poster reservations are applied later, as each section makes its own picks.
+	// Only public, versioned mood band arrays share their vote order. Poster reservations stay request-local.
 	private voteOrders = new WeakMap<number[], readonly number[]>()
 	private releasedByVotes(rows: number[]): readonly number[] {
-		let order = this.voteOrders.get(rows)
+		const memo = moodBandVoteOrders.has(rows) ? moodBandVoteOrders : this.voteOrders
+		let order = memo.get(rows)
 		if (!order) {
 			const b = this.b
 			order = rows.filter((r) => released(b, r)).sort((x, y) => votesOf(b, y) - votesOf(b, x))
-			this.voteOrders.set(rows, order)
+			memo.set(rows, order)
 		}
 		return order
 	}
@@ -1093,7 +1100,7 @@ export class Places {
 		rows: number[]
 		lead: Ingredient
 		trait: number
-		bands: Record<Level, number[]>
+		bands: IntensityBands
 	}
 
 	/** The rows of an intensity band: titles of the kind (and the blend's other parts) with that much of the lead. */
@@ -1111,6 +1118,20 @@ export class Places {
 		if (previous && previous.rows === rows && previous.trait === k && same(previous.lead, lead))
 			return previous.bands[level]
 
+		const partition = () => this.partitionIntensity(rows, lead, k)
+		const bands =
+			parts.length === 1 && lead.family === "mood"
+				? moodBands.get(this.b.snap.version, `${this.kind}|${this.b.today}|${k}`, () => {
+						const grouped = partition()
+						for (const band of LEVELS) moodBandVoteOrders.set(grouped[band], undefined)
+						return grouped
+					})
+				: partition()
+		this.intensityBands = { rows, lead, trait: k, bands }
+		return bands[level]
+	}
+
+	private partitionIntensity(rows: number[], lead: Ingredient, k: number): IntensityBands {
 		const score = levelOf(this.b.snap, this.catalog, lead, VALID_FINGERPRINT_KEYS[k])
 		const bands: Record<Level, number[]> = { touch: [], plenty: [], full: [] }
 		for (const row of rows) {
@@ -1123,8 +1144,7 @@ export class Places {
 				}
 			}
 		}
-		this.intensityBands = { rows, lead, trait: k, bands }
-		return bands[level]
+		return bands
 	}
 
 	/** The trait used by the intensity dial, without constructing its three lists of titles. */

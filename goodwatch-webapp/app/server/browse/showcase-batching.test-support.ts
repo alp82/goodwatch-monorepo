@@ -148,8 +148,19 @@ assert.deepEqual(
 	expected(9, 10, evens),
 )
 assert.equal(scoresRead, count + evens.length)
-await bandAtlas().list([tense], { level: "touch" })
-assert.equal(scoresRead, count * 2 + evens.length, "a new request computes its own bands")
+const repeatAtlas = bandAtlas()
+assert.deepEqual(titleKeys(await repeatAtlas.list([tense], { level: "touch" })), touch)
+const firstBand = atlas["bandRows"]([tense], "touch")
+const repeatBand = repeatAtlas["bandRows"]([tense], "touch")
+assert.equal(firstBand, repeatBand)
+assert.equal(atlas["releasedByVotes"](firstBand), repeatAtlas["releasedByVotes"](repeatBand))
+assert.equal(scoresRead, count + evens.length, "a new mood request reuses the public bands")
+await bandAtlas().list([tense, comedy], { level: "touch" })
+assert.equal(scoresRead, count + 2 * evens.length, "blends keep their partitions per request")
+const nextBase = { ...bandBase, snap: { ...bandBase.snap, version: "replacement-bands" } }
+const nextAtlas = new Places(nextBase, bandCatalog, bandViewer, "us", new Map(), async () => [])
+await nextAtlas.list([tense], { level: "full" })
+assert.equal(scoresRead, 2 * count + 2 * evens.length, "the next snapshot rebuilds the bands")
 
 // Reusing vote order must promote eligible titles past the original 240-row shortlist.
 const wide = Array.from({ length: 320 }, (_, i) => i)
