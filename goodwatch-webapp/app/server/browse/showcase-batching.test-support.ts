@@ -101,6 +101,7 @@ const bandBase: Base = {
 		version: "request-bands",
 		columns: {
 			...base.snap.columns,
+			releaseDays: Int32Array.from(rows, (r) => (r === 2 ? base.today + 1 : base.today)),
 			moods: new Uint32Array(count),
 			genreNames: ["Comedy"],
 			genres: Uint32Array.from(rows, (i) => (i % 2 === 0 ? 1 : 0)),
@@ -157,10 +158,18 @@ assert.equal(atlas["releasedByVotes"](firstBand), repeatAtlas["releasedByVotes"]
 assert.equal(scoresRead, count + evens.length, "a new mood request reuses the public bands")
 await bandAtlas().list([tense, comedy], { level: "touch" })
 assert.equal(scoresRead, count + 2 * evens.length, "blends keep their partitions per request")
+const tomorrowBase = { ...bandBase, today: bandBase.today + 1 }
+const tomorrowAtlas = new Places(tomorrowBase, bandCatalog, bandViewer, "us", new Map())
+const tomorrowBand = tomorrowAtlas["bandRows"]([tense], "touch")
+assert.deepEqual(tomorrowBand, firstBand)
+assert.ok(!atlas["releasedByVotes"](firstBand).includes(2))
+assert.ok(tomorrowAtlas["releasedByVotes"](tomorrowBand).includes(2))
+assert.equal(scoresRead, 2 * count + 2 * evens.length, "the next release day gets fresh groups")
+
 const nextBase = { ...bandBase, snap: { ...bandBase.snap, version: "replacement-bands" } }
 const nextAtlas = new Places(nextBase, bandCatalog, bandViewer, "us", new Map(), async () => [])
 await nextAtlas.list([tense], { level: "full" })
-assert.equal(scoresRead, 2 * count + 2 * evens.length, "the next snapshot rebuilds the bands")
+assert.equal(scoresRead, 3 * count + 2 * evens.length, "the next snapshot rebuilds the bands")
 
 // Reusing vote order must promote eligible titles past the original 240-row shortlist.
 const wide = Array.from({ length: 320 }, (_, i) => i)

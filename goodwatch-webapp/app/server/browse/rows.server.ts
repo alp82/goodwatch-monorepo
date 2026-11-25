@@ -124,7 +124,15 @@ export function base(kind: Kind): Base | null {
 	if (!snap) return null
 	const id = `${snap.version}|${kind}`
 	const hit = baseCache.get(id)
-	if (hit) return hit
+	const today = Math.floor(Date.now() / 864e5)
+	if (hit) {
+		if (hit.today === today) return hit
+		// Release eligibility changes at midnight UTC even when the publisher retains the same snapshot.
+		// In-flight requests keep their own date; only the wrapper needs replacing.
+		const refreshed = { ...hit, today }
+		baseCache.set(id, refreshed)
+		return refreshed
+	}
 	const c = snap.columns
 	const rows: number[] = []
 	for (let r = 0; r < snap.count; r++) {
@@ -182,7 +190,7 @@ export function base(kind: Kind): Base | null {
 		mean,
 		sd,
 		showVotes,
-		today: Math.floor(Date.now() / 864e5),
+		today,
 	}
 	if (baseCache.size > 8) baseCache.clear()
 	baseCache.set(id, out)
