@@ -12,11 +12,14 @@ export function genrePanelDataUrl(url: URL) {
 	return target
 }
 
-/** Remix strips _data before route loaders run; its response hook receives the original URL. */
+/** The response hook also covers Remix adapters that did not pass through Node ingress. */
 export function legacyGenreDocument(request: Request, response: Response) {
 	if (request.method !== "GET" || response.status !== 200 || !request.url.includes("/genres"))
 		return null
-	const url = new URL(request.url)
+	return legacyDocumentPath(new URL(request.url))
+}
+
+export function legacyDocumentPath(url: URL) {
 	if (!isGenreIndexDataUrl(url) || url.searchParams.get(panelParam) === "1") return null
 	url.searchParams.delete("_data")
 	url.searchParams.delete(panelParam)

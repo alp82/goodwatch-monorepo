@@ -2,7 +2,12 @@
 // `/movies/streaming/us/netflix`, ...). An old address answers 301 straight to its final new address
 // (domain/browse/redirects.ts); an address the tree doesn't know answers 404, never a redirect to a hub.
 // docs/implementation/explore-rethink/spec.md
-import { type LoaderFunctionArgs, type MetaFunction, redirect } from "@remix-run/node"
+import {
+	type LoaderFunctionArgs,
+	type MetaFunction,
+	redirect,
+	redirectDocument,
+} from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
 import type { CSSProperties } from "react"
 import {
@@ -38,6 +43,7 @@ import { tropesRoute } from "~/server/browse/tropes-route.server"
 import { TropesRoute } from "~/ui/browse/tropes/TropesRoute"
 import { crumbsOf } from "~/ui/browse/place/PlaceHead"
 import { StreamingPage, streamingMeta } from "~/ui/browse/streaming/StreamingRoute"
+import { legacyGenreDocumentForLoader } from "~/server/browse/genre-data-request.server"
 import { buildMeta } from "~/utils/meta"
 import { EXPLORE_AFTER_PAINT } from "~/utils/start-after-paint"
 
@@ -122,6 +128,10 @@ const canonicalLoader = async ({ params, request }: LoaderFunctionArgs) => {
 	}
 	const index = indexPageOf(address)
 	if (index && index !== "hub") {
+		// Native Remix link prefetches can use the old data URL as well as open tabs from a prior build.
+		const legacyDocument = legacyGenreDocumentForLoader()
+		if (index === "genres" && legacyDocument)
+			throw redirectDocument(legacyDocument, { headers: { "Cache-Control": "private, no-store" } })
 		// A service without titles in this country has no page here.
 		if (index === "service" && atlas.streamingReady && atlas.count(address.parts) === 0)
 			throw notFound()

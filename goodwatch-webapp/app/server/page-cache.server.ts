@@ -1,3 +1,4 @@
+import { withGenreDataRequest } from "./browse/genre-data-request.server.ts"
 import { BROWSE_EDGE_HEADER } from "../utils/browse-edge.ts"
 import { withMediaRequestHealth, mediaReadHealthProbe } from "./media-read-health.server.ts"
 import { isbot } from "isbot"
@@ -829,20 +830,25 @@ export const configurePageCache = (next: Parameters<typeof pageCache.configure>[
 }
 export const pageCacheWants = pageCache.wants
 export const resetPageCache = pageCache.reset
+// Both HTTP configurations dispatch to the same Express/Remix listeners under the request's read scopes.
+function appListener(server: Server) {
+	const listeners = server.listeners("request")
+	server.removeAllListeners("request")
+	return (request: IncomingMessage, response: ServerResponse) =>
+		withMediaRequestHealth(() =>
+			withGenreDataRequest(request, () => {
+				for (const listener of listeners) Reflect.apply(listener, server, [request, response])
+			}),
+		)
+}
 const wrapped = new WeakSet<Server>()
 export function putPageCacheFirst(server: Server, cache: PageCache = pageCache) {
 	if (wrapped.has(server)) return
 	wrapped.add(server)
-	const listeners = server.listeners("request")
-	server.removeAllListeners("request")
+	const serveApp = appListener(server)
 	server.on("request", (request, response) =>
 		withCrateHttpRequest(request, response, crateRouteLabel, () => {
-			const serve = () =>
-				cache.handle(request, response, () => {
-					withMediaRequestHealth(() => {
-						for (const listener of listeners) Reflect.apply(listener, server, [request, response])
-					})
-				})
+			const serve = () => cache.handle(request, response, () => serveApp(request, response))
 			if (!/^\/(movie|show|person)\//.test(request.url ?? "")) return serve()
 			// A correction announced by another process drops the pages it names before this one is served.
 			void import("./feedback/cache-revision.server.ts")
@@ -855,14 +861,9 @@ const healthWrapped = new WeakSet<Server>()
 export function putMediaHealthFirst(server: Server) {
 	if (healthWrapped.has(server)) return
 	healthWrapped.add(server)
-	const listeners = server.listeners("request")
-	server.removeAllListeners("request")
+	const serveApp = appListener(server)
 	server.on("request", (request, response) =>
-		withCrateHttpRequest(request, response, crateRouteLabel, () =>
-			withMediaRequestHealth(() => {
-				for (const listener of listeners) Reflect.apply(listener, server, [request, response])
-			}),
-		),
+		withCrateHttpRequest(request, response, crateRouteLabel, () => serveApp(request, response)),
 	)
 }
 let started = false
