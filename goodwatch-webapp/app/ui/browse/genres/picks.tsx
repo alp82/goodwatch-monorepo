@@ -68,7 +68,7 @@ export function GenrePicks({ g }: { g: AtlasGenre }) {
 			<h2 className="text-xl font-bold tracking-tight text-white">
 				Beyond the obvious {low(g.plural)}
 			</h2>
-			<ul className="-mx-4 mt-4 flex snap-x scroll-px-4 gap-3.5 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-3 sm:overflow-visible sm:px-0 lg:grid-cols-5">
+			<ul className="relative -mx-4 mt-4 flex snap-x scroll-px-4 gap-3.5 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-3 sm:overflow-visible sm:px-0 lg:grid-cols-5">
 				{g.picks.map((p) => (
 					<PickCard key={p.key} p={p} />
 				))}
