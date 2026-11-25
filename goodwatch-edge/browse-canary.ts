@@ -28,8 +28,7 @@ function observed(response: Response, outcome: string, state: string) {
 	result.headers.set('GW-Edge-State', state)
 	result.headers.delete(BROWSE_EDGE_HEADER)
 	result.headers.delete(BROWSE_EDGE_PROOF)
-		headers.delete(BROWSE_EDGE_PROOF)
-		headers.delete('gw-edge-key')
+	result.headers.delete('gw-edge-key')
 	result.headers.delete('Cloudflare-CDN-Cache-Control')
 	return result
 }
@@ -51,12 +50,11 @@ export function createBrowseCanary(fetcher: typeof fetch = fetch, now: () => num
 		if (!/^[a-f0-9]{64}$/.test(env.BROWSE_FILL_TOKEN ?? '')) return forward('unconfigured', 'unused')
 
 		const common = new Headers()
-		for (const name of ['cf-connecting-ip']) {
-			const value = headers.get(name)
-			if (value) common.set(name, value)
+		const client = headers.get('cf-connecting-ip')
+		if (client) {
+			common.set('cf-connecting-ip', client)
+			common.set('x-real-ip', client)
 		}
-		const client = common.get('cf-connecting-ip')
-		if (client) common.set('x-real-ip', client)
 		const checkedAt = now()
 		let state = 'memory'
 		if (!lastState || lastState.expires <= checkedAt) {
