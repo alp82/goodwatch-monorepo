@@ -2,7 +2,6 @@
 // genre picked at a time, the keys that move the pick, and what opens with it (the genre's card with its kinds, then
 // picks beyond the obvious. A picker only draws
 // itself, and says whether it sits above the card ("below") or beside it on a laptop ("side").
-import { MotionConfig } from "framer-motion"
 import {
 	type ComponentType,
 	type KeyboardEvent,
@@ -198,7 +197,7 @@ export function GenreStage({
 		</>
 	)
 	return (
-		<MotionConfig reducedMotion="user">
+		<>
 			<GenresHead kicker={kicker} title={title} lede={lede} />
 			<div className={WRAP}>
 				{side ? (
@@ -213,6 +212,6 @@ export function GenreStage({
 					</>
 				)}
 			</div>
-		</MotionConfig>
+		</>
 	)
 }
