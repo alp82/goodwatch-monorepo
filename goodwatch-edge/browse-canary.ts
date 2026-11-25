@@ -32,7 +32,7 @@ function observed(response: Response, outcome: string, state: string) {
 }
 
 export function createBrowseCanary(fetcher: typeof fetch = fetch, now: () => number = Date.now) {
-	let checkingState = false
+	let checkingUntil = 0
 	let lastState: { generation: string | null, expires: number } | undefined
 	return async (request: Request, env: { ENABLE_CACHE?: string }) => {
 		const headers = new Headers(request.headers)
@@ -56,8 +56,9 @@ export function createBrowseCanary(fetcher: typeof fetch = fetch, now: () => num
 		if (!lastState || lastState.expires <= checkedAt) {
 			// Worker I/O belongs to the initiating request. Concurrent visitors use their normal page
 			// instead of borrowing its pending fetch or issuing another representation probe.
-			if (checkingState) return forward('state-pending', 'pending')
-			checkingState = true
+			if (checkedAt < checkingUntil) return forward('state-pending', 'pending')
+			const deadline = checkedAt + stateLifetime
+			checkingUntil = deadline
 			state = 'origin'
 			let generation: string | null = null
 			try {
@@ -69,7 +70,7 @@ export function createBrowseCanary(fetcher: typeof fetch = fetch, now: () => num
 					if (BROWSE_EDGE_GENERATION.test(value)) generation = value
 				} else await check.body?.cancel()
 			} catch { /* Continue to the normal origin page if its representation is unknown. */ }
-			finally { checkingState = false }
+			finally { if (checkingUntil === deadline) checkingUntil = 0 }
 			lastState = { generation, expires: checkedAt + stateLifetime }
 		}
 		if (!lastState.generation) return forward('state', state)
@@ -86,7 +87,9 @@ export function createBrowseCanary(fetcher: typeof fetch = fetch, now: () => num
 		}
 		if ((headers.get('cookie') ?? '').split(';').some(s => s.trim() === 'gw_browser=1')) common.set('cookie', 'gw_browser=1')
 
-		const response = await fetcher(new Request(target, { headers: common, redirect: 'manual' }), {
+		let response: Response
+		try {
+			response = await fetcher(new Request(target, { headers: common, redirect: 'manual' }), {
 			cf: {
 				cacheEverything: true,
 				// Successful documents require explicit approval from this version of the origin.
@@ -94,6 +97,9 @@ export function createBrowseCanary(fetcher: typeof fetch = fetch, now: () => num
 				cacheTtlByStatus: { '100-199': -1, '201-303': -1, '305-599': -1 },
 			},
 		} as RequestInit)
+		} catch {
+			return forward('fetch', state)
+		}
 		const confirmed = response.headers.get(BROWSE_EDGE_HEADER)
 		const status = response.headers.get('cf-cache-status')?.toUpperCase()
 		if (response.status === 200 && confirmed === 'private' && !['HIT', 'UPDATING', 'STALE', 'REVALIDATED'].includes(status ?? '')) {

@@ -124,3 +124,18 @@ test('five requests on an uninitialized isolate make one control read, including
 		assert.equal(normal, fail ? 5 : 4)
 	}
 })
+
+test('a failed internal fetch falls back to the public origin URL', async () => {
+	const requested: string[] = []
+	const run = createBrowseCanary(async r => {
+		const urlString = (r as Request).url
+		requested.push(urlString)
+		if (urlString.endsWith(state)) return probe()
+		if (urlString === url) return new Response('normal')
+		throw new Error('edge fetch failed')
+	})
+	const response = await run(req(), enabled)
+	assert.equal(response.headers.get('gw-edge'), 'bypass-fetch')
+	assert.equal(await response.text(), 'normal')
+	assert.equal(requested.length, 3)
+})
