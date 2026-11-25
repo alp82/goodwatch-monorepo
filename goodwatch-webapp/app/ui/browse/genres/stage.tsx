@@ -167,6 +167,7 @@ export function GenreStage({
 				}}
 			>
 				<GenreOpen
+					key={g.place.slug}
 					g={g}
 					panel={panel}
 					kind={kind}
@@ -192,7 +193,7 @@ export function GenreStage({
 				/>
 			</div>
 			<div ref={picksBox} className="mt-10 mb-16" style={{ minHeight: reserved?.picks }}>
-				{panel && <GenrePicks g={panel} />}
+				{panel && <GenrePicks key={panel.place.slug} g={panel} />}
 			</div>
 		</>
 	)
