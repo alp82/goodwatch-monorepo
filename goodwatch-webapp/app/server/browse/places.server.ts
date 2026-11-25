@@ -487,6 +487,19 @@ export class Places {
 		return this.rank(rows, parts, by, used, await this.homeTiers(parts, rows))
 	}
 
+	// Cohort arrays belong to this catalog snapshot. Keep their stable vote order within the request;
+	// poster reservations are applied later, as each section makes its own picks.
+	private voteOrders = new WeakMap<number[], readonly number[]>()
+	private releasedByVotes(rows: number[]): readonly number[] {
+		let order = this.voteOrders.get(rows)
+		if (!order) {
+			const b = this.b
+			order = rows.filter((r) => released(b, r)).sort((x, y) => votesOf(b, y) - votesOf(b, x))
+			this.voteOrders.set(rows, order)
+		}
+		return order
+	}
+
 	/** A place's released, well-known, not yet shown rows, best candidates first. */
 	private rank(
 		rows: number[],
@@ -498,16 +511,21 @@ export class Places {
 	): number[] {
 		const b = this.b
 		// Well-known for real: the place's most-rated released titles.
-		let pool = rows
-			.filter((r) => released(b, r) && !used.has(this.keyOf(r)))
-			.sort((x, y) => votesOf(b, y) - votesOf(b, x))
+		const ordered = this.releasedByVotes(rows)
+		let pool: number[] = []
 		if (home) {
 			// The country's own titles stand for it; a co-production fills in only where they run short.
-			const own = pool.filter((r) => home.get(r) === 0)
-			pool =
-				own.length >= 30 ? own : [...pool].sort((x, y) => (home.get(x) ?? 2) - (home.get(y) ?? 2))
+			const available = ordered.filter((r) => !used.has(this.keyOf(r)))
+			const own = available.filter((r) => home.get(r) === 0)
+			pool = (
+				own.length >= 30 ? own : available.sort((x, y) => (home.get(x) ?? 2) - (home.get(y) ?? 2))
+			).slice(0, 240)
+		} else {
+			for (const r of ordered) {
+				if (!used.has(this.keyOf(r))) pool.push(r)
+				if (pool.length === 240) break
+			}
 		}
-		pool = pool.slice(0, 240)
 		const tier = (r: number) => (home ? (home.get(r) ?? 2) : 0)
 		const tiered = (order: number[]) =>
 			home
@@ -532,11 +550,7 @@ export class Places {
 	 */
 	/** A place's most-rated released rows, the ones `homeTiers` reads the original language of. */
 	private homeTop(rows: number[]): number[] {
-		const b = this.b
-		return rows
-			.filter((r) => released(b, r))
-			.sort((x, y) => votesOf(b, y) - votesOf(b, x))
-			.slice(0, 700)
+		return this.releasedByVotes(rows).slice(0, 700)
 	}
 
 	/**
@@ -985,12 +999,7 @@ export class Places {
 						: undefined
 				// Typical titles: fit on the kind's own traits, drawn from the kind's rows.
 				const ws = g.ks.map((k) => Math.max(0.2, m[k] - mine[k]))
-				const popular =
-					titles > 0
-						? g.rows
-								.filter((r) => released(this.b, r))
-								.sort((x, y) => votesOf(this.b, y) - votesOf(this.b, x))
-						: []
+				const popular = titles > 0 ? this.releasedByVotes(g.rows) : []
 				const order = () =>
 					popular
 						.filter((r) => !this.used.has(this.keyOf(r)))
@@ -1078,6 +1087,15 @@ export class Places {
 		return key ? KEY_AT.get(key) : undefined
 	}
 
+	// The room and tuning controls read the same three bands. A changed source row set (for
+	// example, freshly loaded service membership) must produce a new partition for this request.
+	private intensityBands?: {
+		rows: number[]
+		lead: Ingredient
+		trait: number
+		bands: Record<Level, number[]>
+	}
+
 	/** The rows of an intensity band: titles of the kind (and the blend's other parts) with that much of the lead. */
 	private bandRows(parts: Ingredient[], level: Level): number[] {
 		const lead =
@@ -1085,15 +1103,28 @@ export class Places {
 			parts.find((p) => ["mood", "theme", "style", "genre"].includes(p.family)) ??
 			parts[0]
 		const k = this.leadTrait(parts)
-		const score = levelOf(this.b.snap, this.catalog, lead, VALID_FINGERPRINT_KEYS[k])
 		// A genre, decade, country or service stays a hard filter; a mood, theme, style or trait IS the intensity.
 		const soft = ["mood", "theme", "style", "trait"].includes(lead.family)
 		const others = soft ? parts.filter((p) => !same(p, lead)) : parts
-		const [lo, hi] = BAND[level]
-		return this.rows(others).filter((r) => {
-			const x = score(r)
-			return x >= lo && x <= hi
-		})
+		const rows = this.rows(others)
+		const previous = this.intensityBands
+		if (previous && previous.rows === rows && previous.trait === k && same(previous.lead, lead))
+			return previous.bands[level]
+
+		const score = levelOf(this.b.snap, this.catalog, lead, VALID_FINGERPRINT_KEYS[k])
+		const bands: Record<Level, number[]> = { touch: [], plenty: [], full: [] }
+		for (const row of rows) {
+			const value = score(row)
+			for (const band of LEVELS) {
+				const [lo, hi] = BAND[band]
+				if (value >= lo && value <= hi) {
+					bands[band].push(row)
+					break
+				}
+			}
+		}
+		this.intensityBands = { rows, lead, trait: k, bands }
+		return bands[level]
 	}
 
 	/** The trait used by the intensity dial, without constructing its three lists of titles. */
