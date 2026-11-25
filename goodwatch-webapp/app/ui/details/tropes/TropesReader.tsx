@@ -3,7 +3,7 @@
 // (the write-up at a reading measure, what it is, Also in posters, the next trope). A phone opens the article as a
 // full-screen reading sheet. J and K step through the list, Escape closes.
 import { ChevronLeftIcon, ChevronRightIcon, XMarkIcon } from "@heroicons/react/20/solid"
-import { type ReactNode, type Ref, type RefObject, useEffect, useMemo, useRef } from "react"
+import { type ReactNode, type Ref, type RefObject, useEffect, useId, useMemo, useRef } from "react"
 import { SegmentedTabs } from "~/ui/details/SegmentedTabs"
 import { CAPTION, Kbd, Reveal, SearchField, fmt } from "~/ui/details/page-ui"
 import type { TitleInfo } from "~/ui/details/sub-page/paths"
@@ -115,8 +115,6 @@ function Find({ s }: { s: TropesPageState }) {
 }
 
 const isSignature = (s: TropesPageState, t: Row) => s.signature.some((x) => x.id === t.id)
-const findRow = (s: TropesPageState, id: string | null) =>
-	id ? (s.rows.find((r) => r.id === id) ?? s.signature.find((r) => r.id === id) ?? null) : null
 
 /** J and K (and the arrow-free Escape) for the opened trope. */
 function useStepKeys(s: TropesPageState, on: boolean) {
@@ -126,7 +124,8 @@ function useStepKeys(s: TropesPageState, on: boolean) {
 			if ((e.target as HTMLElement).closest("input, textarea")) return
 			if (e.key === "Escape") return s.setOpen(null)
 			if (e.key !== "j" && e.key !== "k") return
-			const at = s.rows.findIndex((t) => t.id === s.open)
+			const at = s.rows.findIndex((t) => t.id === s.open?.id)
+			if (at < 0) return
 			const next = s.rows[at + (e.key === "j" ? 1 : -1)]
 			if (!next) return
 			e.preventDefault()
@@ -191,7 +190,8 @@ export function TropesReader({ s, info }: Props) {
 	const desktop = useDesktop()
 	const groups = useGroups(s.rows)
 	const skip: Skip = { type: info.type, id: info.id }
-	const sel = findRow(s, s.open)
+	const sel = s.open
+	const openId = sel?.id
 	const at = sel ? s.rows.findIndex((r) => r.id === sel.id) : -1
 	const prev = at > 0 ? s.rows[at - 1] : null
 	const next = at >= 0 ? (s.rows[at + 1] ?? null) : null
@@ -203,7 +203,7 @@ export function TropesReader({ s, info }: Props) {
 
 	// Desktop: a newly opened trope starts at its top, and its index row stays in view.
 	useEffect(() => {
-		if (!desktop || !s.open) return
+		if (!desktop || !openId) return
 		const top = article.current?.getBoundingClientRect().top ?? 0
 		if (top < 64)
 			window.scrollTo({
@@ -212,13 +212,13 @@ export function TropesReader({ s, info }: Props) {
 			})
 		// Only the index scrolls to the row (scrollIntoView would move the page too).
 		const box = list.current
-		const row = document.getElementById(rowId(s.open))
+		const row = document.getElementById(rowId(openId))
 		if (!box || !row) return
 		const r = row.getBoundingClientRect()
 		const b = box.getBoundingClientRect()
 		if (r.top < b.top + 40) box.scrollTop += r.top - b.top - 48
 		else if (r.bottom > b.bottom) box.scrollTop += r.bottom - b.bottom + 16
-	}, [s.open, desktop])
+	}, [openId, desktop])
 
 	const open = (t: Row) => {
 		if (!s.rows.some((r) => r.id === t.id)) s.clear()
@@ -418,11 +418,12 @@ function TropeArticle({
 	next: Row | null
 	top?: ReactNode
 }) {
+	const headingId = useId()
 	return (
-		<article aria-labelledby="trope-article-name">
+		<article aria-labelledby={headingId}>
 			{top}
 			<h2
-				id="trope-article-name"
+				id={headingId}
 				className="mt-5 text-balance text-[1.75rem] leading-tight font-semibold tracking-tight text-white sm:text-[2.1rem]"
 			>
 				{t.name}
@@ -503,7 +504,7 @@ function ReadingSheet(props: {
 			role="dialog"
 			aria-modal="true"
 			aria-label={t.name}
-			className="fixed inset-0 z-[70] flex flex-col bg-gray-900"
+			className="fixed inset-0 z-[70] flex flex-col bg-gray-900 lg:hidden"
 		>
 			<div className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-white/[0.07] px-2">
 				<button

@@ -9,6 +9,7 @@
 //   and leaves a PageGo, which the title page takes the same way (TitlePage.tsx).
 import { openedFromTitlePage } from "~/ui/details/sub-page/way-back"
 import { writeJump } from "~/ui/details/sub-page/way-in"
+import { withTrope } from "~/ui/details/tropes/selection"
 import { flash, locate, visible } from "./highlight"
 import { carryHl, withHl } from "./marks"
 
@@ -54,10 +55,7 @@ const KEY = "find-landing"
 
 function leave(path: string, go: Go | PageGo, kind: "sub" | "page") {
 	try {
-		sessionStorage.setItem(
-			KEY,
-			JSON.stringify({ path, go, kind, at: Date.now() }),
-		)
+		sessionStorage.setItem(KEY, JSON.stringify({ path, go, kind, at: Date.now() }))
 	} catch {}
 }
 
@@ -89,13 +87,8 @@ export const takePageGo = (path: string) => take<PageGo>(path, "page")
  * way in takes any click on a link to a sub-page (sub-page/SubPageLinks.tsx); `from` is where the link sits (the
  * rail, so the way back keeps the page's place; its section otherwise). From a sub-page, pass the router's navigate.
  */
-export function goSub(
-	to: string,
-	go: Go,
-	from: Element | null,
-	navigate?: (to: string) => void,
-) {
-	const href = withHl(to)
+export function goSub(to: string, go: Go, from: Element | null, navigate?: (to: string) => void) {
+	const href = withHl(go.trope ? withTrope(to, go.trope) : to)
 	const path = new URL(href, window.location.href).pathname
 	leave(path, go, "sub")
 	if (navigate) return navigate(href)
@@ -108,11 +101,7 @@ export function goSub(
 }
 
 /** From a sub-page: back to the title page at `pagePath`, landing on `go` there. */
-export function goPage(
-	pagePath: string,
-	go: PageGo,
-	navigate: (to: string) => void,
-) {
+export function goPage(pagePath: string, go: PageGo, navigate: (to: string) => void) {
 	const path = pagePath.split(/[?#]/)[0]
 	leave(path, go, "page")
 	carryHl(path)
@@ -128,9 +117,7 @@ const transitionRuns = () =>
 	document
 		.getAnimations()
 		.some((a) =>
-			((a.effect as KeyframeEffect | null)?.pseudoElement ?? "").startsWith(
-				"::view-transition",
-			),
+			((a.effect as KeyframeEffect | null)?.pseudoElement ?? "").startsWith("::view-transition"),
 		)
 
 /**
@@ -154,15 +141,12 @@ export function land(go: Go, root: () => HTMLElement | null): () => void {
 		const base = root()
 		if (pointed && base && !transitionRuns()) {
 			const scope = (go.scope && document.getElementById(go.scope)) || base
-			const bySelector = go.selector
-				? scope.querySelector<HTMLElement>(go.selector)
-				: null
+			const bySelector = go.selector ? scope.querySelector<HTMLElement>(go.selector) : null
 			const el =
 				(bySelector && visible(bySelector) ? bySelector : null) ??
 				(go.needle ? locate(scope, go.needle) : null)
 			// A part that is there without the words (they are drawn, not written): the part itself.
-			const fallback =
-				!el && n > 25 && go.scope ? document.getElementById(go.scope) : null
+			const fallback = !el && n > 25 && go.scope ? document.getElementById(go.scope) : null
 			if (el || fallback) {
 				// One more frame for whatever the pointing changed.
 				requestAnimationFrame(() =>

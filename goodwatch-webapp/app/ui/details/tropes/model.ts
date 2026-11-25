@@ -32,10 +32,7 @@ async function getJson<T>(
 	signal: AbortSignal,
 	what: string,
 ): Promise<T> {
-	const response = await fetch(
-		`/api/title-tropes?${new URLSearchParams(params)}`,
-		{ signal },
-	)
+	const response = await fetch(`/api/title-tropes?${new URLSearchParams(params)}`, { signal })
 	if (!response.ok) throw new Error(`Loading ${what} failed.`)
 	return response.json()
 }
@@ -46,8 +43,7 @@ export function useTropesIndex(type: Kind, id: number, enabled = true) {
 		queryKey: tropesIndexKey(type, id),
 		enabled,
 		staleTime: 5 * 60_000,
-		queryFn: ({ signal }) =>
-			getJson({ type, id: String(id) }, signal, "the tropes"),
+		queryFn: ({ signal }) => getJson({ type, id: String(id) }, signal, "the tropes"),
 	})
 }
 
@@ -66,12 +62,7 @@ export function useTropeTexts(type: Kind, id: number, enabled: boolean) {
  * Every trope with its text: the index at once, the write-ups merged in once `texts` asks for them (by default as
  * soon as the index is there). `enabled` false waits for both.
  */
-export function useAllTropes(
-	type: Kind,
-	id: number,
-	enabled = true,
-	texts = true,
-) {
+export function useAllTropes(type: Kind, id: number, enabled = true, texts = true) {
 	const index = useTropesIndex(type, id, enabled)
 	const all = useTropeTexts(type, id, enabled && texts && !!index.data)
 	const data = useMemo(
@@ -107,14 +98,11 @@ export function useTropeOpening(url: string, enabled: boolean) {
 	})
 }
 
-const fold = (s: string) =>
-	s.normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase()
+const fold = (s: string) => s.normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase()
 
 /** The write-up without its spoilers, for finding and for snippets: nothing covered ever shows uncovered. */
 export const openText = (ps: Paragraph[] | null | undefined) =>
-	(ps ?? [])
-		.map((p) => p.map((r) => (r.spoiler ? " … " : r.text)).join(""))
-		.join(" ")
+	(ps ?? []).map((p) => p.map((r) => (r.spoiler ? " … " : r.text)).join("")).join(" ")
 
 /** A–Z ignores leading quotes ("\"Bringer of War\" Music" sorts under B); digits go under #. */
 export const letterOf = (name: string) => {
@@ -138,10 +126,13 @@ export interface Row extends PageTrope {
 	lineFromWriteUp: boolean
 }
 
-export function useTropesPage(data: AllTropesResponse | undefined) {
+export function useTropesPage(
+	data: AllTropesResponse | undefined,
+	selectedId: string | null,
+	setOpen: (id: string | null) => void,
+) {
 	const [q, setQ] = useState("")
 	const [filter, setFilter] = useState<Filter>("all")
-	const [open, setOpen] = useState<string | null>(null)
 	const mine = useMyTropes(true).data?.tropes
 
 	const base = useMemo(() => {
@@ -161,10 +152,7 @@ export function useTropesPage(data: AllTropesResponse | undefined) {
 	const signatureIds = data?.signature ?? []
 	const signatureSet = useMemo(() => new Set(signatureIds), [signatureIds])
 
-	const keeps: Record<
-		Filter,
-		(t: Pick<Row, "id" | "rare" | "picks">) => boolean
-	> = {
+	const keeps: Record<Filter, (t: Pick<Row, "id" | "rare" | "picks">) => boolean> = {
 		all: () => true,
 		signature: (t) => signatureSet.has(t.id),
 		rare: (t) => t.rare,
@@ -196,15 +184,16 @@ export function useTropesPage(data: AllTropesResponse | undefined) {
 			count: found.filter(keeps.signature).length,
 		},
 		{ key: "rare", label: "Rare", count: found.filter(keeps.rare).length },
-		...(yours || filter === "yours"
-			? [{ key: "yours", label: "Yours", count: yours }]
-			: []),
+		...(yours || filter === "yours" ? [{ key: "yours", label: "Yours", count: yours }] : []),
 	]
 	const byId = new Map(base.map((t) => [t.id, t]))
 	const signature = signatureIds.flatMap((id) => {
 		const t = byId.get(id)
 		return t ? [{ ...t, line: t.meaning, lineFromWriteUp: false } as Row] : []
 	})
+
+	const selected = selectedId ? byId.get(selectedId) : undefined
+	const open = selected ? { ...selected, line: selected.meaning, lineFromWriteUp: false } : null
 
 	return {
 		q,
@@ -217,7 +206,6 @@ export function useTropesPage(data: AllTropesResponse | undefined) {
 		signature,
 		open,
 		setOpen,
-		toggle: (id: string) => setOpen((now) => (now === id ? null : id)),
 		clear: () => {
 			setQ("")
 			setFilter("all")
@@ -234,8 +222,7 @@ export function snippet(text: string, at: number, length: number) {
 }
 
 /** The DOM id of a trope's row, for jumping to it. */
-export const rowId = (id: string) =>
-	`trope-${id.replace(/[^A-Za-z0-9]+/g, "-").slice(-80)}`
+export const rowId = (id: string) => `trope-${id.replace(/[^A-Za-z0-9]+/g, "-").slice(-80)}`
 
 /** The DOM id of a letter's group in the list. */
 export const letterId = (l: string) => `tropes-letter-${l === "#" ? "0" : l}`
@@ -249,11 +236,7 @@ export interface AlsoInTitle {
 	poster_path: string | null
 	goodwatch_overall_score_normalized_percent: number | null
 }
-export function useAlsoIn(
-	url: string,
-	enabled: boolean,
-	skip: { type: Kind; id: number },
-) {
+export function useAlsoIn(url: string, enabled: boolean, skip: { type: Kind; id: number }) {
 	return useQuery<{ titles: AlsoInTitle[] }>({
 		queryKey: ["trope-titles", url, skip.type, skip.id],
 		enabled: enabled && !!url,
@@ -276,9 +259,5 @@ export function useAlsoIn(
 export const commonness = (titles: number) =>
 	// Rounded: the server's and the browser's logarithms can differ in the last digit (a hydration mismatch).
 	Math.round(
-		1000 *
-			Math.min(
-				1,
-				Math.max(0.04, Math.log10(Math.max(2, titles)) / Math.log10(20_000)),
-			),
+		1000 * Math.min(1, Math.max(0.04, Math.log10(Math.max(2, titles)) / Math.log10(20_000))),
 	) / 1000

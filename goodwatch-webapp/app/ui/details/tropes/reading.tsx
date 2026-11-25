@@ -3,7 +3,7 @@
 // meter and the tiny poster stack are the cards' (TropeCard.tsx).
 import { ArrowUpRightIcon } from "@heroicons/react/20/solid"
 import { tropePath } from "~/domain/tropes/destination"
-import { Link } from "@remix-run/react"
+import { Link, useNavigate } from "@remix-run/react"
 import { useEffect, useRef, useState } from "react"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import { TmdbImage } from "~/ui/TmdbImage"
@@ -15,6 +15,7 @@ import type { SizeRule } from "~/utils/tmdb-image"
 import { PosterStack, RarityMeter, type Skip, YoursMark, useSeen } from "./TropeCard"
 import type { Paragraph } from "./excerpt"
 import { type Row, useAlsoIn, useTropeOpening } from "./model"
+import { withTrope } from "./selection"
 
 const ALSO_IN_SIZES: Record<"wide" | "narrow" | "rail", SizeRule[]> = {
 	wide: [
@@ -33,7 +34,7 @@ const ALSO_IN_SIZES: Record<"wide" | "narrow" | "rail", SizeRule[]> = {
 
 /**
  * "Also in": the site's poster cards of other titles with the trope, loaded when asked (`enabled`). Each poster goes to
- * that title's tropes page, so a reader stays on tropes from title to title.
+ * the same trope on that title's tropes page.
  */
 export function AlsoIn({
 	t,
@@ -54,6 +55,7 @@ export function AlsoIn({
 	heading?: boolean
 	className?: string
 }) {
+	const navigate = useNavigate()
 	const q = useAlsoIn(t.url, enabled, skip)
 	if (!t.url) return null
 	const titles = q.data?.titles.slice(0, count)
@@ -80,18 +82,23 @@ export function AlsoIn({
 			)}
 			<ul className={`grid gap-2 ${grid}`}>
 				{titles
-					? titles.map((x) => (
-							<li key={`${x.type}-${x.tmdb_id}`} className="min-w-0">
-								<Reveal>
-									<MovieTvCard
-										details={x}
-										mediaType={x.type}
-										posterSizes={ALSO_IN_SIZES[sizes]}
-										href={`${titlePath(x.type, x.tmdb_id, canonicalMediaTitle(x))}/tropes`}
-									/>
-								</Reveal>
-							</li>
-						))
+					? titles.map((x) => {
+							const path = titlePath(x.type, x.tmdb_id, canonicalMediaTitle(x))
+							const href = withTrope(`${path}/tropes`, t.id)
+							return (
+								<li key={`${x.type}-${x.tmdb_id}`} className="min-w-0">
+									<Reveal>
+										<MovieTvCard
+											details={x}
+											mediaType={x.type}
+											posterSizes={ALSO_IN_SIZES[sizes]}
+											href={href}
+											onOpen={() => navigate(href)}
+										/>
+									</Reveal>
+								</li>
+							)
+						})
 					: Array.from({ length: count }, (_, i) => (
 							<li
 								// biome-ignore lint/suspicious/noArrayIndexKey: placeholders

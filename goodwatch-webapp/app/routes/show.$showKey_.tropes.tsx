@@ -8,6 +8,7 @@ import { withRequestTiming } from "~/utils/request-work"
 import { TITLE_TINT } from "~/ui/details/tint-surface"
 import { START_AFTER_PAINT } from "~/utils/start-after-paint"
 
+export { shouldRevalidateTropes as shouldRevalidate } from "~/ui/details/tropes/selection"
 export { pageHeaders as headers } from "~/utils/headers"
 // The page paints from the server's HTML alone; its scripts start after that (utils/start-after-paint.ts).
 export const handle = { ...START_AFTER_PAINT, ...TITLE_TINT }
