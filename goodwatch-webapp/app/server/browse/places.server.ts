@@ -507,6 +507,41 @@ export class Places {
 		return order
 	}
 
+	/** The genre index only reads the first 240 headliner candidates or 160 kind candidates.
+	 * Keep their exact vote order without sorting every released title in each overlapping genre. */
+	private genreVoteHeads?: WeakMap<number[], { capacity: number; rows: number[] }>
+	limitGenreRankings(): void {
+		this.genreVoteHeads ??= new WeakMap()
+	}
+
+	private voteHead(rows: number[], limit: number, used: Set<TitleKey>): readonly number[] {
+		if (!this.genreVoteHeads) return this.releasedByVotes(rows)
+		// At worst every existing reservation occurs in this cohort's head. Keep some room for
+		// later reservations from the same page, and extend on demand if that margin is used up.
+		const needed = limit + used.size
+		const hit = this.genreVoteHeads.get(rows)
+		if (hit && hit.capacity >= needed) return hit.rows
+		const capacity = needed + limit
+		const head: number[] = []
+		const b = this.b
+		const byVotes = (left: number, right: number) => votesOf(b, right) - votesOf(b, left)
+		let floor = -Infinity
+		for (const row of rows) {
+			if (!released(b, row) || votesOf(b, row) <= floor) continue
+			head.push(row)
+			if (head.length === 2 * capacity) {
+				head.sort(byVotes)
+				head.length = capacity
+				// Stable sort keeps earlier rows on ties. Later rows tying this floor cannot win.
+				floor = votesOf(b, head[capacity - 1])
+			}
+		}
+		head.sort(byVotes)
+		if (head.length > capacity) head.length = capacity
+		this.genreVoteHeads.set(rows, { capacity, rows: head })
+		return head
+	}
+
 	/** A place's released, well-known, not yet shown rows, best candidates first. */
 	private rank(
 		rows: number[],
@@ -518,7 +553,7 @@ export class Places {
 	): number[] {
 		const b = this.b
 		// Well-known for real: the place's most-rated released titles.
-		const ordered = this.releasedByVotes(rows)
+		const ordered = home ? this.releasedByVotes(rows) : this.voteHead(rows, 240, used)
 		let pool: number[] = []
 		if (home) {
 			// The country's own titles stand for it; a co-production fills in only where they run short.
@@ -1006,9 +1041,8 @@ export class Places {
 						: undefined
 				// Typical titles: fit on the kind's own traits, drawn from the kind's rows.
 				const ws = g.ks.map((k) => Math.max(0.2, m[k] - mine[k]))
-				const popular = titles > 0 ? this.releasedByVotes(g.rows) : []
 				const order = () =>
-					popular
+					this.voteHead(g.rows, 160, this.used)
 						.filter((r) => !this.used.has(this.keyOf(r)))
 						.slice(0, 160)
 						.map((r) => ({ r, s: fitOf(this.b, r, g.ks, ws), t: home?.get(r) ?? (home ? 2 : 0) }))

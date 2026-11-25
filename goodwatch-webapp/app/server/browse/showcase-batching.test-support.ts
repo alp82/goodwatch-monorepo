@@ -208,4 +208,32 @@ assert.deepEqual(
 	wide,
 	Array.from({ length: 320 }, (_, i) => i),
 )
+// A wide, overlapping mixed-kind cohort crosses several pruning boundaries. Repeated vote
+// totals exercise stable ties, including ties between a movie and a normalized show.
+const cohort = Array.from({ length: 5000 }, (_, i) => (i * 73) % 5000)
+const mixedKeys = cohort.map((_, i) => (i % 2 ? 2e12 : 1e12) + i)
+const mixed: Base = {
+	...wideBase,
+	showVotes: 2,
+	snap: {
+		...wideBase.snap,
+		columns: {
+			...wideBase.snap.columns,
+			pointIds: Float64Array.from(mixedKeys),
+			votes: Uint32Array.from(mixedKeys, (_, i) => ((i * 13) % 50) * 2),
+			releaseDays: Int32Array.from(mixedKeys, (_, i) => (i % 7 ? base.today : base.today + 1)),
+		},
+	},
+}
+const limited = new Places(mixed, bandCatalog, bandViewer, "us", new Map())
+const fullOrder = limited["releasedByVotes"](cohort)
+limited.limitGenreRankings()
+for (const skip of [0, 160, 800, 2000]) {
+	const used = new Set(fullOrder.slice(0, skip).map((r) => mixedKeys[r]))
+	for (const limit of [160, 240]) {
+		const available = (order: readonly number[]) =>
+			order.filter((r) => !used.has(mixedKeys[r])).slice(0, limit)
+		assert.deepEqual(available(limited["voteHead"](cohort, limit, used)), available(fullOrder))
+	}
+}
 console.log("showcase selection preserved")
