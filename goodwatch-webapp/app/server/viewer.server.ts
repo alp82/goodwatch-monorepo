@@ -18,9 +18,7 @@ export interface GuestProgress {
 	services?: string | number[] | null // comma-separated ids, as the browser stores them, or a list
 }
 
-export type Viewer =
-	| { kind: "member"; userId: string }
-	| { kind: "guest"; progress: GuestProgress }
+export type Viewer = { kind: "member"; userId: string } | { kind: "guest"; progress: GuestProgress }
 
 export interface ViewerContext {
 	/** Absent for canonical script/static readers. */
@@ -71,16 +69,18 @@ export async function getViewerContext(
 	guest?: GuestProgress,
 	// The signed-in member's id when the caller has already read it (null for a guest), to skip a second auth check.
 	knownUserId?: string | null,
+	// Private panel requests use the same effective language as their parent document.
+	presentation?: "page",
 ): Promise<ViewerContext> {
-	const userId =
-		knownUserId === undefined
-			? await getUserIdFromRequest({ request })
-			: knownUserId
+	const userId = knownUserId === undefined ? await getUserIdFromRequest({ request }) : knownUserId
 	const guessedCountry = getLocaleFromRequest(request).locale.country
-	const ctx = !userId ? guestContext(guest, guessedCountry) : await getMemberViewerContext(userId, guessedCountry)
-	const api = new URL(request.url).pathname.startsWith("/api/")
+	const ctx = !userId
+		? guestContext(guest, guessedCountry)
+		: await getMemberViewerContext(userId, guessedCountry)
+	const api = !presentation && new URL(request.url).pathname.startsWith("/api/")
 	const language = api ? apiDisplayLanguage(request) : await liveMediaLanguage(request, userId)
-	return { ...ctx,
+	return {
+		...ctx,
 		country: countryCode(new URL(request.url).searchParams.get("streamingCountry")) ?? ctx.country,
 		language: isbot(request.headers.get("user-agent")) ? undefined : language,
 	}
@@ -110,9 +110,7 @@ export async function getMemberViewerContext(
 		...seenAndHidden(userData),
 		ratings,
 		wishlist,
-		skipped: new Set(
-			Object.keys(userData.skipped).map((key) => toTitleKey(key as MediaKey)),
-		),
+		skipped: new Set(Object.keys(userData.skipped).map((key) => toTitleKey(key as MediaKey))),
 		forYou: settings.for_you !== "no",
 	}
 }
@@ -181,9 +179,5 @@ function expandServices(value: string | number[] | null | undefined): number[] {
 	const ids = (Array.isArray(value) ? value : (value ?? "").split(","))
 		.map((id) => Number(id))
 		.filter((id) => Number.isSafeInteger(id) && id > 0)
-	return [
-		...new Set(
-			ids.flatMap((id) => [id, ...(duplicateProviderMapping[id] ?? [])]),
-		),
-	]
+	return [...new Set(ids.flatMap((id) => [id, ...(duplicateProviderMapping[id] ?? [])]))]
 }

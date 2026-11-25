@@ -14,7 +14,8 @@ import { registerSessionUserObserver } from "./utils/auth-session.ts"
 import "~/server/web-fetch-gaps.server"
 
 import type { AppLoadContext, EntryContext } from "@remix-run/node"
-import { createReadableStreamFromReadable } from "@remix-run/node"
+import { createReadableStreamFromReadable, redirectDocument } from "@remix-run/node"
+import { legacyGenreDocument } from "~/utils/genre-panel-data"
 import { RemixServer } from "@remix-run/react"
 import { isbot } from "isbot"
 import { renderToPipeableStream } from "react-dom/server"
@@ -230,6 +231,9 @@ function renderDocument(
 }
 
 export function handleDataRequest(response: Response, { request }: { request: Request }) {
+	const document = legacyGenreDocument(request, response)
+	if (document)
+		return redirectDocument(document, { headers: { "Cache-Control": "private, no-store" } })
 	protectMediaResponse(response.headers)
 	// An incomplete page says no-store before the cache policy below makes every private answer say it. The
 	// browser's loader cache shows such data once but doesn't keep it (navigation/loader-cache.ts).

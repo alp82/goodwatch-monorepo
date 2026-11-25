@@ -6,7 +6,7 @@ import { copyFor, pageCopy } from "~/domain/browse/copy-lookup"
 import type { Copy } from "~/domain/browse/types"
 import type { Places } from "~/server/browse/places.server"
 import type { Ingredient } from "~/domain/browse/address"
-import type { KindOf, ShowTitle } from "~/domain/browse/types"
+import type { KindOf, PlaceRef, ShowTitle } from "~/domain/browse/types"
 import { type GenreHead, type Lite, type Word, lite, word } from "~/ui/browse/genres/shared"
 
 /** Why a pick is on the row, in two words a person reads at a glance. */
@@ -27,12 +27,15 @@ export interface AtlasKind {
 	titles: Lite[]
 }
 
-export interface AtlasGenre extends GenreHead {
+export interface AtlasGenreSummary extends GenreHead {
 	/** Well-known titles that carry the genre (a title can carry several genres). */
 	n: number
 	/** The color of what sets the genre apart most (its lead trait's family). */
 	color: string
 	words: Word[]
+}
+
+export interface AtlasGenre extends AtlasGenreSummary {
 	kinds: AtlasKind[]
 	/** The titles that define it most (fit, not popularity). */
 	titles: Lite[]
@@ -42,59 +45,78 @@ export interface AtlasGenre extends GenreHead {
 
 export interface AtlasData {
 	copy: Copy | null
-	genres: AtlasGenre[]
+	genres: AtlasGenreSummary[]
+	initial: AtlasGenre | null
 	/** Well-known titles of this kind in all. */
 	total: number
 }
 
-export async function loadAtlas(atlas: Places, perKind = 4, tops = 6): Promise<AtlasData> {
-	const members = atlas.members("genre")
-	// Showcases first, so each genre's famous titles are its own and not spent on another genre's kind.
-	const showcases = new Map<string, Lite[]>()
-	const groups = members.map((g) => [g])
+function genreSummary(atlas: Places, g: PlaceRef): AtlasGenreSummary {
+	const words = atlas.traits([g], { n: 3 }).more.map(word)
+	return {
+		place: g,
+		short: copyFor(atlas.kind, "genre", g.slug)?.short ?? null,
+		plural: atlas.name([g]),
+		n: atlas.count([g]),
+		color: words[0]?.color ?? "#fbbf24",
+		words,
+	}
+}
+
+/** The shelf deliberately assigns all headliners before kind posters, then allocates kind posters
+ * in picker order. Reproduce those reservations through the selected genre. The large ranked
+ * lists and final picks are only read for the panel the visitor requested. */
+async function panelFor(
+	atlas: Places,
+	members: PlaceRef[],
+	at: number,
+	summary: AtlasGenreSummary,
+): Promise<AtlasGenre> {
+	atlas.limitGenreRankings()
+	const groups = members.map((genre) => [genre])
+	const tops = 6
 	await atlas.readShowcaseCandidates(groups, tops)
-	for (const g of members) showcases.set(g.slug, (await atlas.showcase([g], tops)).map(lite))
-	const kindsByGenre = await atlas.kindsByPlace(groups, perKind)
-	// Picks only read ranked lists. Resolve them together so a title in several genres is read once.
-	const genres = await Promise.all(
-		members.map(async (g, index) => {
-			const words = atlas.traits([g], { n: 3 }).more.map(word)
-			const kinds = kindsByGenre[index]
-			const titles = showcases.get(g.slug) ?? []
-			const shown = new Set(
-				[...titles, ...kinds.flatMap((k) => k.titles.map(lite))].map((t) => t.key),
-			)
-			const picks = await picksFor(
-				atlas,
-				[g],
-				shown,
-				kinds.filter((k) => k.titles.length >= 2),
-			)
-			return {
-				place: g,
-				short: copyFor(atlas.kind, "genre", g.slug)?.short ?? null,
-				plural: atlas.name([g]),
-				n: atlas.count([g]),
-				color: words[0]?.color ?? "#fbbf24",
-				words,
-				titles,
-				picks,
-				kinds: kinds
-					.filter((k) => k.titles.length >= 2)
-					.sort((a, b) => b.share - a.share)
-					.map((k) => ({
-						id: k.id,
-						name: k.name,
-						share: k.share,
-						words: k.traits.slice(0, 2).map(word),
-						titles: k.titles.map(lite),
-					})),
-			}
-		}),
-	)
+	let titles: Lite[] = []
+	for (const [index, group] of groups.entries()) {
+		const selected = await atlas.showcase(group, tops)
+		if (index === at) titles = selected.map(lite)
+	}
+	const kinds = (await atlas.kindsByPlace(groups.slice(0, at + 1), 4, at))[at]
+	const shown = new Set([
+		...titles.map((t) => t.key),
+		...kinds.flatMap((k) => k.titles.map((t) => String(t.card.key))),
+	])
+	const visibleKinds = kinds.filter((k) => k.titles.length >= 2)
+	const picks = await picksFor(atlas, groups[at], shown, visibleKinds)
+	return {
+		...summary,
+		titles,
+		picks,
+		kinds: visibleKinds
+			.sort((a, b) => b.share - a.share)
+			.map((k) => ({
+				id: k.id,
+				name: k.name,
+				share: k.share,
+				words: k.traits.slice(0, 2).map(word),
+				titles: k.titles.map(lite),
+			})),
+	}
+}
+
+export async function loadGenrePanel(atlas: Places, slug: string): Promise<AtlasGenre | null> {
+	const members = atlas.members("genre")
+	const at = members.findIndex((g) => g.slug === slug)
+	return at < 0 ? null : panelFor(atlas, members, at, genreSummary(atlas, members[at]))
+}
+
+export async function loadAtlas(atlas: Places): Promise<AtlasData> {
+	const members = atlas.members("genre")
+	const genres = members.map((g) => genreSummary(atlas, g))
 	return {
 		copy: pageCopy(atlas.kind, "hub", "genres"),
 		genres,
+		initial: genres.length ? await panelFor(atlas, members, 0, genres[0]) : null,
 		total: atlas.count([]),
 	}
 }
@@ -131,7 +153,7 @@ async function picksFor(
 	// "classic") and not what people watch now.
 	const score = (t: ShowTitle) => t.card.goodwatch_overall_score_normalized_percent ?? 0
 	const deep = top.titles.slice(60)
-	const bar = Math.max(72, score(top.titles[30] ?? top.titles[0]) - 6)
+	const bar = Math.max(72, (top.titles.length ? score(top.titles[30] ?? top.titles[0]) : 0) - 6)
 	take(
 		"gem",
 		[...deep].sort((x, y) => score(y) - score(x)),
@@ -161,5 +183,5 @@ async function picksFor(
 	return out
 }
 
-/** The genres index: every genre with its kinds, the opened genre's card, and the picks beyond the obvious. */
-export const loadGenresPage: BrowseLoader<AtlasData> = ({ atlas }) => loadAtlas(atlas, 4, 6)
+/** The genres index: all picker labels and the complete first panel. */
+export const loadGenresPage: BrowseLoader<AtlasData> = ({ atlas }) => loadAtlas(atlas)

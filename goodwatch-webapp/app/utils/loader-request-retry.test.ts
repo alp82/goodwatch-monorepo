@@ -44,8 +44,7 @@ const fail: Step = () => {
 }
 
 test("only same-origin GET requests for loader data are loader requests", () => {
-	const is = (url: string, init?: RequestInit) =>
-		loaderRequestUrl(url, init, ORIGIN) !== null
+	const is = (url: string, init?: RequestInit) => loaderRequestUrl(url, init, ORIGIN) !== null
 	assert.equal(is("/?_data=routes%2F_index"), true)
 	assert.equal(is(`${ORIGIN}/movie/603?_data=routes%2Fmovie.%24movieKey`), true)
 	assert.equal(is("/api/streaming-providers"), false)
@@ -95,9 +94,7 @@ test("a cancelled request is not retried", async () => {
 			throw networkError()
 		},
 	])
-	await assert.rejects(() =>
-		fetch("/?_data=root", { signal: controller.signal }),
-	)
+	await assert.rejects(() => fetch("/?_data=root", { signal: controller.signal }))
 	assert.equal(calls.length, 1)
 })
 
@@ -116,10 +113,7 @@ test("a navigation that fails twice reports the failure", async () => {
 		url: "/",
 		data: { root: { user: null } },
 	})
-	await assert.rejects(
-		() => fetch("/movie/603?_data=routes%2Fmovie.%24movieKey"),
-		TypeError,
-	)
+	await assert.rejects(() => fetch("/movie/603?_data=routes%2Fmovie.%24movieKey"), TypeError)
 	assert.equal(calls.length, 2)
 })
 
@@ -151,5 +145,39 @@ test("a revalidation without data to keep reports the failure", async () => {
 	]) {
 		const { fetch } = setup([fail, fail], { url: "/x", data })
 		await assert.rejects(() => fetch("/x?_data=routes%2Fx"), TypeError)
+	}
+})
+
+test("only the genre index data request opts into panels, preserving request options and retries", async () => {
+	const url = ORIGIN + "/shows/genres?sort=top&_data=routes%2F%24type.%24"
+	const requests: Request[] = []
+	const env: LoaderRetryEnv = {
+		origin: ORIGIN,
+		wait: async () => {},
+		currentPage: () => null,
+		currentLoaderData: () => undefined,
+		fetch: async (input, init) => {
+			requests.push(new Request(input, init))
+			if (requests.length === 1) throw networkError()
+			return new Response("{}")
+		},
+	}
+	const fetch = withLoaderRetry(env)
+	await fetch(new Request(url, { headers: { "Accept-Language": "de-DE" }, credentials: "include" }))
+	assert.equal(requests.length, 2)
+	for (const request of requests) {
+		const sent = new URL(request.url)
+		assert.equal(sent.searchParams.get("_genrePanel"), "1")
+		assert.equal(sent.searchParams.get("sort"), "top")
+		assert.equal(request.headers.get("Accept-Language"), "de-DE")
+		assert.equal(request.credentials, "include")
+	}
+	for (const target of [
+		url.replace("/genres?", "/genres/drama?"),
+		url.replace("%24type.%24", "other"),
+		url.replace(ORIGIN, "https://other.test"),
+	]) {
+		await fetch(target)
+		assert.equal(requests.at(-1)?.url, target)
 	}
 })

@@ -9,6 +9,8 @@
 // - Any other failure goes to Remix as before: a navigation to another page has no data to fall back on.
 // Requests that change something (form posts) pass through untouched: sending them twice isn't safe.
 
+import { genrePanelDataUrl, isGenreIndexDataUrl } from "./genre-panel-data.ts"
+
 export const LOADER_RETRY_DELAY_MS = 400
 
 /** What the wrapper needs from the browser. Tests pass a stand-in. */
@@ -38,8 +40,7 @@ export function loaderRequestUrl(
 	init: RequestInit | undefined,
 	origin: string,
 ): URL | null {
-	const method =
-		init?.method ?? (input instanceof Request ? input.method : "GET")
+	const method = init?.method ?? (input instanceof Request ? input.method : "GET")
 	if (method.toUpperCase() !== "GET") return null
 	let url: URL
 	try {
@@ -69,8 +70,7 @@ function asResponse(data: unknown): Response | null {
 		data !== null &&
 		typeof data === "object" &&
 		Object.values(data).some(
-			(value) =>
-				typeof (value as { then?: unknown } | null)?.then === "function",
+			(value) => typeof (value as { then?: unknown } | null)?.then === "function",
 		)
 	)
 		return null
@@ -93,10 +93,14 @@ export function withLoaderRetry(env: LoaderRetryEnv): typeof fetch {
 		const url = loaderRequestUrl(input, init, env.origin)
 		if (!url) return env.fetch(input, init)
 		const routeId = url.searchParams.get(DATA_PARAM) ?? ""
-		const signal =
-			init?.signal ?? (input instanceof Request ? input.signal : undefined)
+		let target = input
+		if (isGenreIndexDataUrl(url)) {
+			const versioned = genrePanelDataUrl(url)
+			target = input instanceof Request ? new Request(versioned, input) : versioned
+		}
+		const signal = init?.signal ?? (input instanceof Request ? input.signal : undefined)
 		const send = async () => {
-			const response = await env.fetch(input, init)
+			const response = await env.fetch(target, init)
 			kept.delete(routeId)
 			return response
 		}
@@ -129,8 +133,7 @@ type RemixRouter = {
 
 /** Installs the wrapper in a browser. Call it once, before the app hydrates. */
 export function installLoaderRetry(): void {
-	const router = () =>
-		(window as unknown as { __remixRouter?: RemixRouter }).__remixRouter
+	const router = () => (window as unknown as { __remixRouter?: RemixRouter }).__remixRouter
 	const browserFetch = window.fetch.bind(window)
 	window.fetch = withLoaderRetry({
 		fetch: browserFetch,
