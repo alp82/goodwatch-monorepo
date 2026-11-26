@@ -4,7 +4,7 @@ import type { EpisodeTextPresentation } from "~/server/episode-text-overlay.serv
 // (docs/implementation/tracking/data-model.md, "The browser").
 //
 // The browser holds the member's state row and log rows of one show and the show's episode list. It runs the same
-// state machine as the server on them, with "aired" by the date on the device, shows the result, and sends the
+// state machine as the server on them, with "aired" by `airedThrough`, shows the result, and sends the
 // action with the ids it made. The server's answer then replaces the guess. Pure: no clock, no request.
 import type { EpisodeRating } from "./episode-ratings.ts"
 import {
@@ -124,7 +124,7 @@ export interface ShowCopy {
 export interface LocalContext {
 	showId: number
 	episodes: readonly ListedEpisode[]
-	/** The date on the device, "YYYY-MM-DD": what has aired for this member. */
+	/** The last air date that has aired for this member, "YYYY-MM-DD" (`airedThrough`). */
 	today: string
 	/** The time of the action, in milliseconds. */
 	now: number
@@ -240,7 +240,7 @@ export interface ShowView {
 	watched: Set<number>
 	/** Every watch of each listed episode, in every pass, newest first and undated last. */
 	watchesOf: Map<number, LogRow[]>
-	/** Regular episodes that have not aired, by the date on the device. */
+	/** Regular episodes that have not aired, by `airedThrough`. */
 	unaired: number
 	/** Specials watched in the current pass. They count toward nothing. */
 	specialsWatched: number

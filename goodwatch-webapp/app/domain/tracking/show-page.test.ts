@@ -1,6 +1,12 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { type ListedEpisode, PRESS_NOT_RESTORABLE } from "./machine.ts"
+import {
+	type ListedEpisode,
+	PRESS_NOT_RESTORABLE,
+	airedThrough,
+	serverShow,
+	utcDay,
+} from "./machine.ts"
 import {
 	type ActionAnswer,
 	type PageAction,
@@ -126,6 +132,54 @@ test("what can be ticked goes by the date on the device", () => {
 		}).refused,
 		null,
 	)
+})
+
+test("an episode can be ticked from UTC midnight of its air date: the US evening before, when streaming releases drop", () => {
+	// A member's report: episode 6 airs November 26, out on the streaming service the evening before in the US.
+	const episodes: ListedEpisode[] = [
+		{ id: 605, season: 1, number: 5, airDate: "2026-11-19" },
+		{ id: 606, season: 1, number: 6, airDate: "2026-11-26" },
+		{ id: 607, season: 1, number: 7, airDate: "2026-12-03" },
+	]
+	const at = (iso: string, timeZone: string) => {
+		const now = Date.parse(iso)
+		const today = airedThrough(now, timeZone)
+		const context = { showId: SHOW, episodes, today, now }
+		return {
+			today,
+			refused: applyLocally(EMPTY, watch(1, 6), "watch-000001", context)
+				.refused,
+			unaired: viewOf(EMPTY, episodes, { today, running: false, score: null })
+				.unaired,
+			server: serverShow(
+				episodes,
+				{ type: "markSeason", season: 1, today },
+				utcDay(now),
+			).episodes.filter((e) => e.aired).length,
+		}
+	}
+
+	// 8:51 pm on November 25 in Los Angeles is 04:51 on November 26 in UTC.
+	const evening = at("2026-11-26T04:51:00Z", "America/Los_Angeles")
+	assert.equal(evening.today, "2026-11-26")
+	assert.equal(evening.refused, null)
+	assert.equal(evening.unaired, 1, "episode 7 only")
+	assert.equal(evening.server, 2, "the server marks what the browser shows")
+
+	// 8:51 pm on November 25 in New York is 01:51 on November 26 in UTC.
+	assert.equal(at("2026-11-26T01:51:00Z", "America/New_York").refused, null)
+
+	// 3 pm on November 25 in Los Angeles is still November 25 in UTC: not out yet.
+	const afternoon = at("2026-11-25T23:00:00Z", "America/Los_Angeles")
+	assert.equal(afternoon.today, "2026-11-25")
+	assert.equal(afternoon.refused, "It has not aired yet.")
+	assert.equal(afternoon.unaired, 2)
+
+	// Ahead of UTC the date on the device comes first: 7 am on November 26 in Tokyo is November 25 in UTC.
+	const tokyo = at("2026-11-25T22:00:00Z", "Asia/Tokyo")
+	assert.equal(tokyo.today, "2026-11-26")
+	assert.equal(tokyo.refused, null)
+	assert.equal(tokyo.server, 2)
 })
 
 test("Mark season and the Seen press mark what has aired on the device, as one group without dates", () => {

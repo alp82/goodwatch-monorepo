@@ -31,7 +31,7 @@ interface Waiting extends SentAction {
 export interface ActOptions {
 	/** The id the browser made for the action: the watch id of a `watch`, the group id of a group action. */
 	actionId?: string
-	/** The date on the device, "YYYY-MM-DD". */
+	/** The last air date that has aired for this member, "YYYY-MM-DD" (`airedThrough`). */
 	today: string
 	/** The time of the action, in milliseconds. */
 	now: number

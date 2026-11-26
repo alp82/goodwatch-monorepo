@@ -5,7 +5,11 @@ import { productAnalyticsFetch } from "~/telemetry/product-analytics"
 // episode in the list. Loaded on first use, never with the page.
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useMemo, useSyncExternalStore } from "react"
-import { displayNumber, displaySeason } from "~/domain/tracking/machine"
+import {
+	airedThrough,
+	displayNumber,
+	displaySeason,
+} from "~/domain/tracking/machine"
 import type { DateWords } from "~/domain/tracking/seen-press"
 import { afterShowTracking } from "~/domain/tracking/show-member-data"
 import {
@@ -40,10 +44,12 @@ const OPEN_EPISODES_EVENT = "gw:open-episodes"
 
 const two = (value: number) => String(value).padStart(2, "0")
 
-/** The clock of the device. What has aired for a member goes by its date, not by UTC. */
+/** The clock of the device. */
 export const deviceClock = {
 	now: () => Date.now(),
-	/** The calendar date on the device, "YYYY-MM-DD". */
+	/** The last air date that has aired for the member: the later of the device's date and the UTC date. */
+	airedThrough: () => airedThrough(deviceClock.now()),
+	/** The calendar date on the device, "YYYY-MM-DD": the day of a watch. */
 	today: () => {
 		const at = new Date(deviceClock.now())
 		return `${at.getFullYear()}-${two(at.getMonth() + 1)}-${two(at.getDate())}`
@@ -197,7 +203,7 @@ export class ShowStore {
 		if (!this.session) return { ok: false, done: Promise.resolve(null) }
 		const acted = this.session.act(action, {
 			...options,
-			today: deviceClock.today(),
+			today: deviceClock.airedThrough(),
 			now: deviceClock.now(),
 		})
 		if (acted.refused) this.say(acted.refused, [], "error")
@@ -283,6 +289,8 @@ export interface ShowTracking {
 	seasons: Season[]
 	/** The date on the device. */
 	today: string
+	/** The last air date that has aired for the member (`deviceClock.airedThrough`). */
+	airedThrough: string
 	toast: TrackingToast | null
 	dateRequest: DateRequest | null
 	open: OpenRequest | null
@@ -321,18 +329,19 @@ export function useShowTracking(showId: number): ShowTracking {
 	const score = useUserScore("show", showId)?.score ?? null
 	const wantToSee = useIsOnWishlist("show", showId)
 	const today = deviceClock.today()
+	const aired = deviceClock.airedThrough()
 	const view = useMemo(
 		() =>
 			page && copy && page.episodes.length
 				? viewOf(copy, page.episodes, {
-						today,
+						today: aired,
 						running: page.running,
 						score,
 						wantToSee,
 						words: LOCALE_DATES,
 					})
 				: null,
-		[page, copy, today, score, wantToSee],
+		[page, copy, aired, score, wantToSee],
 	)
 	const seasons = useMemo(() => {
 		const byNumber = new Map<number, PageEpisode[]>()
@@ -374,6 +383,7 @@ export function useShowTracking(showId: number): ShowTracking {
 		view,
 		seasons,
 		today,
+		airedThrough: aired,
 		toast: snapshot.toast,
 		dateRequest: snapshot.dateRequest,
 		open: snapshot.open,

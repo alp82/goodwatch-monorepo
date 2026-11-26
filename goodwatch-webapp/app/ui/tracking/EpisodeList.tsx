@@ -173,7 +173,10 @@ export interface Model {
 	/** The member's own season, episode and part scores (#759). */
 	scores: EpisodeScoreStore
 	showTitle: string
+	/** The date on the device: the day of a watch. */
 	today: string
+	/** The last air date that has aired for the member. */
+	airedThrough: string
 	seasons: Season[]
 	/** The member has a state for the show or a watch of it: marks are drawn. */
 	tracked: boolean
@@ -317,20 +320,21 @@ function useModel(
 	actions: TrackingActions,
 	showTitle: string,
 ): Model {
-	const { page, seasons, today } = tracking
+	const { page, seasons, today, airedThrough } = tracking
 	const { store: scores, version } = useEpisodeScores(
 		tracking.store,
 		page?.episodeScores,
 	)
 	const model = useMemo<Model>(() => {
 		const aired = (episode: PageEpisode) =>
-			episode.airDate !== null && episode.airDate <= today
+			episode.airDate !== null && episode.airDate <= airedThrough
 		return {
 			view,
 			actions,
 			scores,
 			showTitle,
 			today,
+			airedThrough,
 			seasons,
 			tracked: view.tracked,
 			nextId: view.derived.next?.id ?? null,
@@ -351,7 +355,17 @@ function useModel(
 			},
 		}
 		// The scores' version: a changed score draws the list again.
-	}, [view, actions, today, seasons, page, scores, showTitle, version])
+	}, [
+		view,
+		actions,
+		today,
+		airedThrough,
+		seasons,
+		page,
+		scores,
+		showTitle,
+		version,
+	])
 	return model
 }
 

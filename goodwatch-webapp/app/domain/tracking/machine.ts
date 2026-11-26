@@ -1712,7 +1712,7 @@ export function seenButton(world: World): {
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// Aired: UTC on the server, the device's date in the browser (C4 of the data model)
+// Aired: UTC on the server, `airedThrough` in the browser (C4 of the data model)
 // ---------------------------------------------------------------------------------------------------------
 
 /** An episode as the catalog lists it. `airDate` is TMDB's calendar date, "YYYY-MM-DD", or null when unknown. */
@@ -1738,7 +1738,31 @@ export const utcDay = (at: Date | number) =>
 const dayAfter = (day: string) =>
 	utcDay(Date.parse(`${day}T00:00:00Z`) + 86_400_000)
 
-/** The show with every episode aired whose air date is on or before `day`. The browser passes the device's date. */
+/** The calendar date on the device at `now`, or in `timeZone` when given. */
+const deviceDay = (now: number, timeZone?: string) => {
+	const parts = new Intl.DateTimeFormat("en-CA", {
+		year: "numeric",
+		month: "2-digit",
+		day: "2-digit",
+		timeZone,
+	}).formatToParts(now)
+	const part = (type: string) => parts.find((p) => p.type === type)?.value
+	return `${part("year")}-${part("month")}-${part("day")}`
+}
+
+/**
+ * The last air date that counts as aired in the browser: the later of the device's date and the UTC date. An air
+ * date has no time, and streaming releases come out from midnight UTC of it, the evening before in the Americas, so
+ * a member there can mark the episode while watching it. Ahead of UTC the device's date comes first. Both stay
+ * within what `serverShow` accepts. The watch menu's dates still go by the device's date alone.
+ */
+export function airedThrough(now: number, timeZone?: string): string {
+	const device = deviceDay(now, timeZone)
+	const utc = utcDay(now)
+	return device > utc ? device : utc
+}
+
+/** The show with every episode aired whose air date is on or before `day`. The browser passes `airedThrough`. */
 export function showAiredBy(
 	episodes: readonly ListedEpisode[],
 	day: string,

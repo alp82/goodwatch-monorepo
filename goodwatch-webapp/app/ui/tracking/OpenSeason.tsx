@@ -73,7 +73,7 @@ export default function OpenSeason({
 	const left = count.aired - count.watched
 	const desktop = useIsDesktop()
 	const float = useFloat()
-	const aired = special ? null : airedRange(season, model.today, !desktop)
+	const aired = special ? null : airedRange(season, model.airedThrough, !desktop)
 	const sites = grid?.seasons.find((each) => each.number === season.number)?.scores
 	const score = sites?.imdb?.score ?? model.seasonScore(season.number)
 	const title = special ? "Specials" : seasonTitle(season.number)

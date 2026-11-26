@@ -53,7 +53,7 @@ Decided by the owner on October 7, 2026. The label in the first column is the on
 | C1 | The new state table replaces `user_watch_history`, which stayed untouched as the backup until it was dropped on 2026-10-11 (planned: 30 days after the switch; the owner decided to drop it earlier) | Adding columns to the old table, where every reader takes a row to mean Seen; or keeping it for good |
 | C2 | Rating a movie that has no watch records one: no date, origin `score`. Clearing the score deletes it; a watch the member logs replaces it. Rating a show records nothing and never changes its state. Scoring an episode is not rating the show: since October 24, 2026 it records one undated watch of the episode when no pass has one (see "An episode score's watch") | A scored title with no row at all, Seen only where the score is read (the proposal's recommendation); or today's rule, a watch dated "now" for movies and shows alike |
 | C3 | "Active in the last 90 days" is the later of two times. The last watch: the latest of the dated watches' dates and, for undated watches not from an import, the time they were recorded. And the member's own move of the show to Watching, by Resume or Watch again: the time the state changed to Watching. An import and the migration never count, and neither does taking watches or a Seen press away. (30 days and watches only until 2026-10-12, when the owner decided both; section 10, "Activity") | Dated watches only (a "Watched up to here" tonight would not count); or the time anything was recorded (an import of a 2019 history would fill Continue); or watches only (a show whose last season was unmarked today went to the shows not watched for 30 days) |
-| C4 | UTC in the database and the API, the member's time zone only in the interface. The browser decides "aired for you" by the date on the device; the server accepts a watch for an episode that airs up to one day after the UTC date | Aired by UTC everywhere (a device ahead of UTC could not tick tonight's episode); or aired by the member's date on the server (a count per time zone can't be stored) |
+| C4 | UTC in the database and the API, the member's time zone only in the interface. The browser decides "aired for you" by the later of the date on the device and the UTC date; the server accepts a watch for an episode that airs up to one day after the UTC date | Aired by UTC everywhere (a device ahead of UTC could not tick tonight's episode); or aired by the member's date on the server (a count per time zone can't be stored) |
 | C5 | A show marked Seen while it had no episode list gets the press's group filled once the list exists: undated watches for the regular episodes that had aired by the day of the press | Leaving it Seen with every episode reading as new, as the machine alone would |
 | C6 | An import inserts log rows. It sets the state only for a show that had no row before the import, or whose state is Not started or Watching. On hold, Dropped and Seen set here are never changed by an import | Replaying the file as if the member acted now, so that an old watch resumes an On hold or Dropped show |
 | F1 | A watch marked on its own has origin `single` | `hand` |
@@ -323,7 +323,7 @@ episode list of a show and `show.aired_episode_count`. "The entry" is the title'
 | Tonight's pick | Derived | The first row of Continue; without one the first movie of My movies; without one the first show of Start | Every read; its cache is reset with the member data |
 | Season matrix cell: rating | Not member data | The catalog and the IMDb ratings, as today's episode grid | With the catalog |
 | Season matrix cell: watched | Derived | Show page only: the log rows of the show in the current pass, matched to listed episodes by id, or by season and number when exactly one listed episode has them | Every read of the show page |
-| Aired for you: what can be ticked, what is greyed | Derived | Browser: the episode's air date against the date on the device (C4) | Every render |
+| Aired for you: what can be ticked, what is greyed | Derived | Browser: the episode's air date against the later of the device's date and the UTC date (C4) | Every render |
 
 ### The grouped query
 
@@ -447,19 +447,23 @@ shows:
 - **Next episode.** The show's episode list is public data, the same for everyone, and is cached per show. The
   member's side is `furthest`.
 
-### Aired: UTC on the server, the device's date in the browser
+### Aired: UTC on the server, the later of the device's date and UTC in the browser
 
 C4. The database and the API know one calendar, UTC. The member's time zone exists only in the interface.
 
 - **The server.** An episode has aired when its air date is on or before the UTC date. `show.aired_episode_count`,
   the machine's set of aired episodes, "up to date", and the new episodes and the Next episode in lists all use this.
-- **The browser.** The episode list carries each episode's air date. The browser decides "aired for you" by the date
-  on the device: what can be ticked and what is greyed, and the optimistic result of an action on the show page.
+- **The browser.** The episode list carries each episode's air date. The browser decides "aired for you" by the later
+  of the device's date and the UTC date (`airedThrough` in `machine.ts`): what can be ticked and what is greyed, and
+  the optimistic result of an action on the show page. An air date has no time, and streaming releases come out from
+  midnight UTC of it, the evening before in the Americas, so a member there can tick the episode while watching it
+  (a member's report, November 25, 2026: an episode dated November 26 was out at 8:51 pm US time and locked). The
+  watch menu's dates ("Watched today", the date picker) still use the device's date.
 - **The tolerance.** The server accepts a watch for an episode whose air date is at most one day after the UTC date.
   No time zone is more than 14 hours ahead of UTC, so a device's date is never more than one day ahead, and a tick
   the browser offers is never refused. In the step that records it, the ticked episode counts as aired, so the first
   watch of a premiere gives the same state on both sides. A group action (the Seen press, Mark season, "Watched up
-  to here") sends the device's date; the server marks the episodes aired by the later of the UTC date and that date,
+  to here") sends that browser date; the server marks the episodes aired by the later of the UTC date and that date,
   at most the UTC date plus one. A request without a date, such as a Seen press on a card, uses the UTC date.
 
 What a member can observe while the two dates differ:
@@ -467,7 +471,7 @@ What a member can observe while the two dates differ:
 | The device is | When | What differs |
 | --- | --- | --- |
 | Ahead of UTC (Europe, Asia, the Pacific) | From local midnight until midnight UTC: one or two hours in central Europe, nine in Japan | An episode dated today on the device can be ticked on the show page. Home and My shows do not count it as aired yet: no "1 new", and it is not the Next episode there. Once ticked, a list shows the progress capped ("26 of 26") until midnight UTC. Ticking the episode before it reads Watching for an instant in the browser (one is left, for you) and the response sets Seen, shown as Caught up; the new episode stays tickable |
-| Behind UTC (the Americas) | From midnight UTC until local midnight: the last four to ten hours of the evening | The server counts tomorrow's episode as aired: home can show it as the Next episode or as "1 new" while the show page greys it until local midnight. Ticking the episode before it reads Seen for an instant in the browser and the response sets Watching |
+| Behind UTC (the Americas) | From midnight UTC until local midnight: the last four to ten hours of the evening | Nothing: the browser and the server both count tomorrow's episode as aired, so it can be ticked on the show page, and home can show it as the Next episode or as "1 new" |
 
 In both cases the response's row replaces the optimistic state, and the difference ends at the next midnight. TMDB's
 air dates are calendar dates of the first broadcast without a time zone, so neither side is the true one.

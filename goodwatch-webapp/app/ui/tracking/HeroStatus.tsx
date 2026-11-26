@@ -380,7 +380,8 @@ function EpisodePicker({
 			...season,
 			episodes: season.episodes.filter(
 				(episode) =>
-					episode.airDate !== null && episode.airDate <= tracking.today,
+					episode.airDate !== null &&
+					episode.airDate <= tracking.airedThrough,
 			),
 		}))
 		.filter((season) => season.episodes.length > 0)

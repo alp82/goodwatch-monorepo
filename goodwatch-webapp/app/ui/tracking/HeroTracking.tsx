@@ -402,7 +402,7 @@ function StartLine({
 		(episode) =>
 			episode.season > 0 &&
 			episode.airDate !== null &&
-			episode.airDate <= tracking.today,
+			episode.airDate <= tracking.airedThrough,
 	)
 	if (!aired.length) return null
 	const first = aired.reduce((a, b) =>
@@ -453,7 +453,7 @@ function StatusLine({
 			(episode) =>
 				episode.season > 0 &&
 				episode.airDate !== null &&
-				episode.airDate > tracking.today,
+				episode.airDate > tracking.airedThrough,
 		)
 		.sort((a, b) => (a.airDate ?? "").localeCompare(b.airDate ?? ""))[0]
 	const extras = [
@@ -475,7 +475,7 @@ function StatusLine({
 					? `${plural(derived.aired - derived.watched, "episode")} left.`
 					: `You've watched every episode.${
 							upcoming?.airDate
-								? ` ${episodeLabel(upcoming)} airs ${upcoming.airDate === tracking.today ? "today" : upcoming.airDate}.`
+								? ` ${episodeLabel(upcoming)} airs ${upcoming.airDate}.`
 								: ""
 						}`
 	const progress = (

@@ -59,7 +59,7 @@ export function useTrackingActions(store: ShowStore, title: string) {
 	const userId = user?.id
 	return useMemo(() => {
 		const key = createMediaKey("show", store.showId)
-		const today = () => deviceClock.today()
+		const airedThrough = () => deviceClock.airedThrough()
 
 		/** The member data map gets back what a first watch took off it. */
 		const putBack = (cleared: ActionAnswer["cleared"]) =>
@@ -221,7 +221,7 @@ export function useTrackingActions(store: ShowStore, title: string) {
 								(e.displaySeason ?? e.season) === season &&
 								e.season > 0 &&
 								e.airDate !== null &&
-								e.airDate <= today(),
+								e.airDate <= airedThrough(),
 						)
 						.map((e) => e.id)
 					group(
@@ -230,14 +230,14 @@ export function useTrackingActions(store: ShowStore, title: string) {
 							episodeIds,
 							displaySeason: season,
 							presentationVersion: page.presentation.version,
-							today: today(),
+							today: airedThrough(),
 						},
 						(count) => `${plural(count, "episode")} marked, date unknown`,
 					)
 					return
 				}
 				group(
-					{ type: "markSeason", season, today: today() },
+					{ type: "markSeason", season, today: airedThrough() },
 					(count) => `${plural(count, "episode")} marked, date unknown`,
 				)
 			},
@@ -338,7 +338,7 @@ export function useTrackingActions(store: ShowStore, title: string) {
 						type: "watchUpTo",
 						season: episode.season,
 						number: episode.number,
-						today: today(),
+						today: airedThrough(),
 					},
 					(count) => `${plural(count, "episode")} marked, date unknown`,
 				)
@@ -346,7 +346,7 @@ export function useTrackingActions(store: ShowStore, title: string) {
 
 			/** The Seen button's press: marks every aired episode that is not watched yet, as one group. */
 			pressSeen() {
-				group({ type: "pressSeen", today: today() }, (count) =>
+				group({ type: "pressSeen", today: airedThrough() }, (count) =>
 					count > 0
 						? `Seen: ${plural(count, "episode")} marked, date unknown`
 						: `${title} is marked as Seen`,
@@ -384,7 +384,7 @@ export function useTrackingActions(store: ShowStore, title: string) {
 
 			hold() {
 				const from = stateOf(store)
-				if (!store.act({ type: "hold", today: today() }).ok) return
+				if (!store.act({ type: "hold", today: airedThrough() }).ok) return
 				// From Seen (row 28) there is no way back to Seen but the episodes: Resume leads to Watching.
 				if (from === "seen")
 					return store.say(
@@ -403,7 +403,7 @@ export function useTrackingActions(store: ShowStore, title: string) {
 
 			drop() {
 				const from = stateOf(store)
-				if (!store.act({ type: "drop", today: today() }).ok) return
+				if (!store.act({ type: "drop", today: airedThrough() }).ok) return
 				const said = `${title} is dropped and hidden from your recommendations`
 				// From Seen (row 29), as for On hold above.
 				if (from === "seen")
@@ -470,7 +470,7 @@ export function useTrackingActions(store: ShowStore, title: string) {
 			 */
 			markFromMenu(episode: PageEpisode, choice: WatchChoice): MenuMark | null {
 				const id = newActionId()
-				const plan = markPlan(episode, choice, id, today())
+				const plan = markPlan(episode, choice, id, airedThrough())
 				const acted = store.act(plan.first, { actionId: id })
 				if (!acted.ok) return null
 				if (plan.after) store.act(plan.after)
