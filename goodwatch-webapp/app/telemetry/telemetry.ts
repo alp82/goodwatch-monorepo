@@ -8,6 +8,7 @@ import { loadGoogleTag } from "./google-tag"
 import {
 	type LoadReason,
 	browserLoadTriggerEnv,
+	landsOnFilteredPersonPage,
 	whenPageIsInteractive,
 } from "./load-trigger"
 import {
@@ -128,7 +129,13 @@ export function startTelemetry(faststatsSiteKey?: string): void {
 	whenPageIsInteractive(
 		(reason) => void loadTools(reason, faststatsSiteKey),
 		browserLoadTriggerEnv(window),
-		{ ...TELEMETRY_LOAD, afterInteraction: TELEMETRY_AFTER_INTERACTION },
+		{
+			...TELEMETRY_LOAD,
+			afterInteraction: TELEMETRY_AFTER_INTERACTION,
+			interactionOnly: landsOnFilteredPersonPage(
+				readEarlyTelemetry(window).landing.href,
+			),
+		},
 	)
 }
 
