@@ -17,6 +17,8 @@ export interface ServicesDraft {
   country: string | null;
   /** Your services, when you changed them. */
   picked: number[] | null;
+  /** A friend's own country for their services, when it isn't the room's: never changes the room. */
+  catalog?: string | null;
 }
 export interface Drafts { services?: ServicesDraft; kinds?: Kind[] }
 export type DraftKey = keyof Drafts;
@@ -24,7 +26,7 @@ const KEYS: DraftKey[] = ['services', 'kinds'];
 
 export type SaveStep =
   | { type: 'country'; country: string }
-  | { type: 'services'; serviceIds: number[] }
+  | { type: 'services'; serviceIds: number[]; country?: string }
   | { type: 'kinds'; constraints: RoomConstraints };
 
 const sameSet = <T,>(a: readonly T[], b: readonly T[]) => {
@@ -33,12 +35,27 @@ const sameSet = <T,>(a: readonly T[], b: readonly T[]) => {
   return x.size === y.size && [...x].every((v) => y.has(v));
 };
 
-/** What a closing Your services page saves: null when nothing changed. */
-export function servicesOnLeave(draft: ServicesDraft | undefined, view: RoomView, shown: string): ServicesDraft | undefined {
+/**
+ * The country Your services shows: `own` is this person's own country (GoodWatch's, else the device's).
+ * The host's is the room's country. A friend's is their own, since they may join from another country
+ * and pick from what they can stream there; the room's country is only the last resort.
+ */
+export function servicesCountry(draft: ServicesDraft | undefined, view: RoomView | null, own: string | null): string {
+  if (view && !view.isHost) return draft?.catalog ?? own ?? view.country ?? 'US';
+  return draft?.country ?? view?.country ?? own ?? 'US';
+}
+
+/**
+ * What a closing Your services page saves: null when nothing changed. `roomServiceIds`: the room
+ * country's catalog, when loaded. A friend's country goes along only when a pick isn't in it, so
+ * picks the room already knows save the same way as before.
+ */
+export function servicesOnLeave(draft: ServicesDraft | undefined, view: RoomView, shown: string, roomServiceIds?: ReadonlySet<number>): ServicesDraft | undefined {
   if (!draft) return undefined;
   const servicesChanged = draft.picked !== null && (view.myServiceIds === null || !sameSet(draft.picked, view.myServiceIds));
   const country = view.isHost && ((draft.country !== null && draft.country !== view.country) || (!view.country && servicesChanged)) ? shown : null;
-  return country || servicesChanged ? { country, picked: servicesChanged ? draft.picked : null } : undefined;
+  const catalog = !view.isHost && servicesChanged && shown !== view.country && draft.picked!.some((id) => !roomServiceIds?.has(id)) ? shown : null;
+  return country || servicesChanged ? { country, picked: servicesChanged ? draft.picked : null, ...(catalog ? { catalog } : {}) } : undefined;
 }
 
 /** What a closing Movies and shows page saves: undefined when nothing changed (or nothing is picked). */
@@ -54,7 +71,8 @@ export function saveSteps(key: DraftKey, drafts: Drafts, view: RoomView, snapsho
     const country = d.country && view.isHost && d.country !== view.country ? d.country : null;
     const steps: SaveStep[] = country ? [{ type: 'country', country }] : [];
     // After a new country the services go again: the room's answer to the country isn't known yet.
-    if (d.picked && (country || view.myServiceIds === null || !sameSet(d.picked, view.myServiceIds))) steps.push({ type: 'services', serviceIds: d.picked });
+    const catalog = d.catalog && !view.isHost && d.catalog !== view.country ? d.catalog : null;
+    if (d.picked && (country || view.myServiceIds === null || !sameSet(d.picked, view.myServiceIds))) steps.push({ type: 'services', serviceIds: d.picked, ...(catalog ? { country: catalog } : {}) });
     return steps;
   }
   const kinds = drafts.kinds;
@@ -80,7 +98,7 @@ export function stepsOnExit(drafts: Drafts, open: Partial<Record<DraftKey, numbe
 }
 
 const sendStep = (cmd: RoomCommands, step: SaveStep) => (step.type === 'country' ? cmd.configure({ country: step.country })
-  : step.type === 'services' ? cmd.setServices(step.serviceIds)
+  : step.type === 'services' ? cmd.setServices(step.serviceIds, step.country)
     : cmd.configure({ constraints: step.constraints }));
 
 /** The room with closed drafts already in it: a page's change shows everywhere the moment it closes. */

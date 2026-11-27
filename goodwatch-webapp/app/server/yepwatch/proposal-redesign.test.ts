@@ -806,6 +806,29 @@ test("linked service picks accept the union of room and prefill countries; guest
 	})
 	await f.send({ type: "set_services", serviceIds: [2] })
 })
+test("a guest friend in another country picks from their own catalog; the room keeps its country", async () => {
+	const f = await fixture(true)
+	const s = await f.service.read(f.id, f.a.credential)
+	await f.send({
+		type: "configure",
+		expectedContextVersion: s.shared.contextVersion,
+		country: "DE",
+	})
+	// Without their country, a service only their country has is refused (the room is in Germany).
+	await assert.rejects(f.send({ type: "set_services", serviceIds: [3] }, f.b), {
+		code: "invalid_request",
+	})
+	await f.send({ type: "set_services", serviceIds: [1, 3], country: "US" }, f.b)
+	const room = (await f.repo.read(f.id))!.room
+	assert.deepEqual(room.participants[1].serviceIds, [1, 3])
+	assert.equal(room.screens[0].country, "DE")
+	await assert.rejects(f.send({ type: "set_services", serviceIds: [1], country: "XX" }, f.b), {
+		code: "invalid_request",
+	})
+	await assert.rejects(f.send({ type: "set_services", serviceIds: [999], country: "US" }, f.b), {
+		code: "invalid_request",
+	})
+})
 test("a deck waiting for answers reopens once a vote lets a card retire, so the next refill can run", async () => {
 	const f = await fixture()
 	await f.start()

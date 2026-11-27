@@ -287,7 +287,8 @@ export type RoomCommand =
 	| { type: "edit_idea"; ideaId: string; text: string }
 	| { type: "remove_idea"; ideaId: string }
 	| { type: "set_idea"; ideaId: string; on: boolean }
-	| { type: "set_services"; serviceIds: number[] }
+	/** `country`: the catalog the services came from, when it isn't the room's (a friend in another country). The room's country stays. */
+	| { type: "set_services"; serviceIds: number[]; country?: string }
 	| { type: "set_service_enabled"; serviceIds: number[]; enabled: boolean }
 	| { type: "rename"; nickname: string }
 	| { type: "set_show_seen"; show: boolean }

@@ -28,7 +28,7 @@ import { useRoom, type RoomSheet } from './RoomProvider';
 import { HowItWorksSheet } from './HowItWorks';
 import { InviteSurface } from './invite';
 import { RoomNotes } from './RoomStatus';
-import { kindsOnLeave, servicesOnLeave, type DraftKey, type Drafts } from './settings-save';
+import { kindsOnLeave, servicesCountry, servicesOnLeave, type DraftKey, type Drafts } from './settings-save';
 import { namesLine, servicesIn, toggleService } from './services';
 import { Button, KindIcons, Label, Logos, NewBadge, Small, Switch, TextLink, kindsLabel, useServices } from './ui';
 import { noun } from '../shell/noun';
@@ -217,22 +217,26 @@ function ServicesSheet() {
   const { view, prefillCountry, saves, closeSheet, signin, memberBusy, memberLapsed, disabled } = useRoom();
   // An unsaved change (from this visit or one still being saved) wins; otherwise the confirmed room.
   const draft = saves.drafts.services;
-  const fallback = prefillCountry ?? deviceCountryHint() ?? 'US';
-  const shown = draft?.country ?? view?.country ?? fallback;
+  const shown = servicesCountry(draft, view, prefillCountry ?? deviceCountryHint());
   const { all, metadata } = useServices(shown);
+  // A friend in another country: the room's catalog says which of their picks it already knows.
+  const room = useServices(view?.country).metadata.data;
   const selected = draft?.picked ?? view?.myServiceIds ?? [];
-  useDraftSheet('services', () => (view ? servicesOnLeave(draft, view, shown) : draft));
+  useDraftSheet('services', () => (view ? servicesOnLeave(draft, view, shown, room ? new Set(room.services.map((s) => s.id)) : undefined) : draft));
   if (!view) return null;
+  // The host changes the room's country; a friend changes only their own (where they stream).
+  const catalog = view.isHost ? null : shown;
+  const changeCountry = (code: string) => saves.edit('services', view.isHost ? { country: code, picked: [] } : { country: null, catalog: code, picked: [] });
   return (
     <Sheet testID="services-sheet" title="Your services" onClose={closeSheet} actions={<Done />}>
       <RoomNotes />
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <View style={{ flex: 1 }}>
-          <CountryLine country={shown} countries={metadata.data?.countries ?? []} onChange={view.isHost ? (code) => saves.edit('services', { country: code, picked: [] }) : undefined} />
+          <CountryLine country={shown} countries={metadata.data?.countries ?? []} onChange={changeCountry} />
         </View>
         {view.member ? <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><GoodWatchMark size={16} /><Small>From GoodWatch</Small></View> : null}
       </View>
-      <ServiceGrid all={all} loading={metadata.isPending} selected={selected} toggle={(s) => saves.edit('services', { country: draft?.country ?? null, picked: toggleService(selected, s) })} />
+      <ServiceGrid all={all} loading={metadata.isPending} selected={selected} toggle={(s) => saves.edit('services', { country: draft?.country ?? null, catalog, picked: toggleService(selected, s) })} />
       {metadata.error ? <TextLink label="Retry" onPress={() => void metadata.refetch()} /> : null}
       {/* Guests can bring the services saved on GoodWatch instead; signing in comes back to this room. */}
       {!guestOnly && !view.member ? (

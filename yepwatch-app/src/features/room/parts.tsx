@@ -106,7 +106,7 @@ export function ServiceGrid({ all, loading, selected, toggle }: { all: ServiceCh
   );
 }
 
-/** The room's country: the host's opens a short search list; everyone else just sees it. */
+/** A country with a short search list to change it; without `onChange` it's only shown. */
 export function CountryLine({ country, countries, onChange }: { country: string; countries: { code: string; name: string }[]; onChange?: (code: string) => void }) {
   const { z } = useLayout();
   const [open, setOpen] = useState(false);

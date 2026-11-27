@@ -11,7 +11,7 @@ const screen = z
 			.regex(/^[A-Z]{2}$/)
 			.nullable(),
 		serviceIds: z.array(z.number().int().positive()).max(2000),
-		confirmed: z.boolean()
+		confirmed: z.boolean(),
 	})
 	.strict()
 const constraints = z
@@ -21,7 +21,7 @@ const constraints = z
 			.min(1)
 			.max(3),
 		maxMinutes: z.number().int().positive().max(1440).nullable(),
-		moods: z.array(z.string().max(80)).max(20)
+		moods: z.array(z.string().max(80)).max(20),
 	})
 	.strict()
 export const proposalAdmissionSchema = z
@@ -29,7 +29,7 @@ export const proposalAdmissionSchema = z
 		contractVersion: z.literal(3),
 		commandId: id,
 		admissionSecret: z.string().regex(/^[A-Za-z0-9_-]{43,128}$/),
-		nickname: z.string().trim().max(40)
+		nickname: z.string().trim().max(40),
 	})
 	.strict()
 /** Room creation: an admission plus the first setup (one round trip to the room page). */
@@ -37,63 +37,78 @@ export const proposalCreateSchema = proposalAdmissionSchema.extend({
 	setup: z
 		.object({
 			country: z.string().regex(/^[A-Z]{2}$/),
-			idea: z.string().trim().min(2).max(200).optional()
+			idea: z.string().trim().min(2).max(200).optional(),
 		})
 		.strict()
-		.optional()
+		.optional(),
 })
 export const proposalJoinSchema = proposalAdmissionSchema.extend({
 	nickname: z.string().trim().min(1).max(40),
 	inviteCode: z.string().max(200),
-	screenId: id.optional()
+	screenId: id.optional(),
 })
 export const proposalCommandSchema = z
 	.object({
 		commandId: id,
 		sequence: n.min(1),
 		command: z.discriminatedUnion("type", [
-			z.object({ type: z.literal("set_in"), generation: n, candidateId: id, in: z.boolean(), expectedOwnInRevision: n }).strict(),
+			z
+				.object({
+					type: z.literal("set_in"),
+					generation: n,
+					candidateId: id,
+					in: z.boolean(),
+					expectedOwnInRevision: n,
+				})
+				.strict(),
 			z.object({ type: z.literal("confirm_in"), generation: n, inVersion: n }).strict(),
-			z.object({ type: z.literal("pick_favorite"), generation: n, tiebreakVersion: n, candidateId: id.nullable() }).strict(),
+			z
+				.object({
+					type: z.literal("pick_favorite"),
+					generation: n,
+					tiebreakVersion: n,
+					candidateId: id.nullable(),
+				})
+				.strict(),
 			z
 				.object({
 					type: z.literal("add_idea"),
-					text: z.string().trim().min(2).max(200)
+					text: z.string().trim().min(2).max(200),
 				})
 				.strict(),
 			z
 				.object({
 					type: z.literal("edit_idea"),
 					ideaId: id,
-					text: z.string().trim().min(2).max(200)
+					text: z.string().trim().min(2).max(200),
 				})
 				.strict(),
 			z.object({ type: z.literal("remove_idea"), ideaId: id }).strict(),
-			z
-				.object({ type: z.literal("set_idea"), ideaId: id, on: z.boolean() })
-				.strict(),
+			z.object({ type: z.literal("set_idea"), ideaId: id, on: z.boolean() }).strict(),
 			z
 				.object({
 					type: z.literal("set_services"),
-					serviceIds: z.array(z.number().int().positive()).max(100)
+					serviceIds: z.array(z.number().int().positive()).max(100),
+					country: z
+						.string()
+						.regex(/^[A-Z]{2}$/)
+						.optional(),
 				})
 				.strict(),
 			z
 				.object({
 					type: z.literal("set_service_enabled"),
 					serviceIds: z.array(z.number().int().positive()).max(100),
-					enabled: z.boolean()
+					enabled: z.boolean(),
 				})
 				.strict(),
 			z
 				.object({
 					type: z.literal("rename"),
-					nickname: z.string().trim().min(1).max(40)
+					nickname: z.string().trim().min(1).max(40),
 				})
 				.strict(),
-			z
-				.object({ type: z.literal("set_show_seen"), show: z.boolean() })
-				.strict(),
+			z.object({ type: z.literal("set_show_seen"), show: z.boolean() }).strict(),
 			z.object({ type: z.literal("leave") }).strict(),
 			z
 				.object({
@@ -103,7 +118,7 @@ export const proposalCommandSchema = z
 						.string()
 						.regex(/^[A-Z]{2}$/)
 						.optional(),
-					constraints: constraints.optional()
+					constraints: constraints.optional(),
 				})
 				.strict(),
 			z
@@ -112,21 +127,21 @@ export const proposalCommandSchema = z
 					expectedContextVersion: n,
 					screens: z.array(screen).min(1).max(12),
 					constraints,
-					screenId: id.nullable()
+					screenId: id.nullable(),
 				})
 				.strict(),
 			z
 				.object({
 					type: z.literal("assign_screen"),
 					expectedContextVersion: n,
-					screenId: id
+					screenId: id,
 				})
 				.strict(),
 			z
 				.object({
 					type: z.literal("ready"),
 					expectedContextVersion: n,
-					ready: z.boolean()
+					ready: z.boolean(),
 				})
 				.strict(),
 			z
@@ -135,7 +150,7 @@ export const proposalCommandSchema = z
 					expectedGeneration: n.optional(),
 					expectedRosterVersion: n,
 					expectedContextVersion: n,
-					hostReady: z.boolean().optional()
+					hostReady: z.boolean().optional(),
 				})
 				.strict(),
 			z
@@ -144,14 +159,8 @@ export const proposalCommandSchema = z
 					generation: n,
 					candidateId: id,
 					expectedVoteRevision: n,
-					activeExposureMs: z
-						.number()
-						.int()
-						.min(0)
-						.max(1200000)
-						.nullable()
-						.optional(),
-					value: z.enum(["watch", "pass"]).nullable()
+					activeExposureMs: z.number().int().min(0).max(1200000).nullable().optional(),
+					value: z.enum(["watch", "pass"]).nullable(),
 				})
 				.strict(),
 			z
@@ -160,7 +169,7 @@ export const proposalCommandSchema = z
 					generation: n,
 					expectedRosterVersion: n,
 					expectedProposalVersion: n,
-					candidateId: id
+					candidateId: id,
 				})
 				.strict(),
 			z
@@ -171,14 +180,14 @@ export const proposalCommandSchema = z
 					expectedProposalVersion: n,
 					candidateId: id,
 					expectedOwnAgreementRevision: n,
-					agreed: z.boolean()
+					agreed: z.boolean(),
 				})
 				.strict(),
 			z
 				.object({
 					type: z.literal("refill"),
 					generation: n,
-					expectedStreamVersion: n
+					expectedStreamVersion: n,
 				})
 				.strict(),
 			z
@@ -186,14 +195,18 @@ export const proposalCommandSchema = z
 					type: z.literal("retry_agreement"),
 					generation: n,
 					expectedAgreementVersion: n,
-					expectedProposalVersion: n
+					expectedProposalVersion: n,
 				})
 				.strict(),
-			z.object({ type: z.literal("restart"), expectedRevision: n, expectedGeneration: n.optional() }).strict(),
 			z
-				.object({ type: z.literal("resume_voting"), expectedRevision: n })
-				.strict()
-		])
+				.object({
+					type: z.literal("restart"),
+					expectedRevision: n,
+					expectedGeneration: n.optional(),
+				})
+				.strict(),
+			z.object({ type: z.literal("resume_voting"), expectedRevision: n }).strict(),
+		]),
 	})
 	.strict()
 
@@ -201,11 +214,14 @@ export const proposalPreviewSchema = z
 	.object({
 		prompt: z.string().trim().min(2).max(1000),
 		country: z.string().regex(/^[A-Z]{2}$/),
-		serviceIds: z.array(z.number().int().positive()).max(100)
+		serviceIds: z.array(z.number().int().positive()).max(100),
 	})
 	.strict()
 
 /** The gateway's one read of a room for every lease it holds on it (leases as the single view takes them). */
 export const realtimeViewsSchema = z
-	.object({ leases: z.array(z.string().min(1).max(2048)).min(1).max(REALTIME_VIEWS_MAX), roomId: id })
+	.object({
+		leases: z.array(z.string().min(1).max(2048)).min(1).max(REALTIME_VIEWS_MAX),
+		roomId: id,
+	})
 	.strict()

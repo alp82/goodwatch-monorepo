@@ -1433,6 +1433,16 @@ export class ProposalService {
 				if (command.type === "set_services") {
 					const prefillCountry = p.member.state === "linked" ? p.member.prefill?.country : null
 					if (prefillCountry && prefillCountry !== country) countries.add(prefillCountry)
+					// A friend in another country picks from their own catalog; the room's country stays.
+					if (command.country && command.country !== country) {
+						requireRoom(
+							metadata.countries.some((v) => v.code === command.country),
+							"invalid_request",
+							"Choose a valid country",
+							400,
+						)
+						countries.add(command.country)
+					}
 				}
 				const catalogs = await Promise.all([...countries].map((c) => this.catalog.metadata(c)))
 				const validIds = new Set(

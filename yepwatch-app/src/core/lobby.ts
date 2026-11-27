@@ -1,4 +1,5 @@
 import { GUEST_CANDIDATE_KINDS, type RoomSnapshot } from '@goodwatch/yepwatch-contracts';
+import { timeZoneCountry } from './time-zone-country';
 /** A locale is a suggestion for the playback country, never confirmation or a subscription. */
 export function countryHint(locale: string): string | null {
   try { return new Intl.Locale(locale).region ?? null; } catch { return null; }
@@ -22,8 +23,15 @@ export function rankedCountries<T extends { code: string; name: string }>(countr
   const rank = (code: string) => { const index = priority.indexOf(code); return index < 0 ? priority.length : index; };
   return [...countries].sort((a, b) => rank(a.code) - rank(b.code) || a.name.localeCompare(b.name));
 }
-/** Region from the device's configured locale, without GPS or permission requests. */
-export function deviceCountryHint(): string | null {
+/**
+ * The device's own country, without GPS or permission requests: its time zone first (where it is,
+ * whatever language it speaks), then the region of its configured locale.
+ */
+export function deviceCountryHint(timeZone?: string): string | null {
+  try {
+    const zone = timeZoneCountry(timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone);
+    if (zone) return zone;
+  } catch { /* No time zone: the locale may still name a region. */ }
   try {
     const locales = typeof navigator !== 'undefined' && navigator.languages?.length
       ? navigator.languages : [Intl.DateTimeFormat().resolvedOptions().locale];
