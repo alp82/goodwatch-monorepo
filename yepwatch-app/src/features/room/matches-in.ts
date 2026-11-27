@@ -27,6 +27,23 @@ export function inRows(matchIds: readonly string[], ins: SharedRoomSnapshot['ins
 /** Titles everyone's in for, in the matches' order. */
 export const everyoneIn = (rows: readonly InRow[], required: number) => (required > 0 ? rows.filter((r) => r.count >= required).map((r) => r.id) : []);
 
+/**
+ * Who Matches waits on before anyone can Watch: `you` while you're in for no match yet (saying Yep while
+ * swiping isn't I'm in), `others` with how many people the closest title you're in for still needs, or
+ * `none` (no matches, or everyone's in on one already). Counts only, never who.
+ */
+export type InWait = { kind: 'you' } | { kind: 'others'; people: number } | { kind: 'none' };
+export function inWait(rows: readonly InRow[], required: number): InWait {
+  if (!rows.length || everyoneIn(rows, required).length) return { kind: 'none' };
+  const mine = rows.filter((r) => r.mine);
+  if (!mine.length) return { kind: 'you' };
+  return { kind: 'others', people: Math.max(1, required - Math.max(...mine.map((r) => r.count))) };
+}
+
+/** The Matches status line for a wait (empty for `none`). */
+export const inWaitLine = (wait: InWait, matches: number) => (wait.kind === 'you' ? (matches > 1 ? 'Waiting for you · Tap the ones you’re in for' : 'Waiting for you · Tap I’m in')
+  : wait.kind === 'others' ? `Waiting for ${wait.people === 1 ? '1 more person' : `${wait.people} more people`} to tap I’m in` : '');
+
 // ——— Tiebreak: everyone's in for two or more ———
 
 export interface TieOutcome {

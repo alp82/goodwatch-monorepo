@@ -1,6 +1,24 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { everyoneIn, inRows, SPIN_STEPS, spinPath, tiebreakView } from '../src/features/room/matches-in';
+import { everyoneIn, inRows, inWait, inWaitLine, SPIN_STEPS, spinPath, tiebreakView } from '../src/features/room/matches-in';
+
+test('the wait: you until you’re in for a match, then how many more the closest title you’re in for needs', () => {
+  assert.deepEqual(inWait([], 3), { kind: 'none' });
+  // Everyone said Yep, but nobody tapped I'm in: Matches waits on you.
+  assert.deepEqual(inWait([{ id: 'a', count: 2, mine: false }], 3), { kind: 'you' });
+  assert.deepEqual(inWait([{ id: 'a', count: 1, mine: true }, { id: 'b', count: 2, mine: true }, { id: 'c', count: 2, mine: false }], 4), { kind: 'others', people: 2 });
+  assert.deepEqual(inWait([{ id: 'a', count: 3, mine: true }], 3), { kind: 'none' });
+  // Everyone's in on a title you aren't in for: nothing waits on you.
+  assert.deepEqual(inWait([{ id: 'a', count: 2, mine: false }, { id: 'b', count: 1, mine: true }], 2), { kind: 'none' });
+});
+
+test('the wait line names the step left, counts only', () => {
+  assert.equal(inWaitLine({ kind: 'you' }, 1), 'Waiting for you · Tap I’m in');
+  assert.equal(inWaitLine({ kind: 'you' }, 3), 'Waiting for you · Tap the ones you’re in for');
+  assert.equal(inWaitLine({ kind: 'others', people: 1 }, 1), 'Waiting for 1 more person to tap I’m in');
+  assert.equal(inWaitLine({ kind: 'others', people: 2 }, 2), 'Waiting for 2 more people to tap I’m in');
+  assert.equal(inWaitLine({ kind: 'none' }, 2), '');
+});
 
 test('rows come from the room’s counts and your own I’m ins, in the matches’ order', () => {
   const rows = inRows(['a', 'b', 'c'], [{ candidateId: 'b', count: 2 }, { candidateId: 'a', count: 1 }], { candidateIds: ['b'], revision: 4 });

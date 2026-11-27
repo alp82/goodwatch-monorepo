@@ -19,8 +19,8 @@ import { leavePage, matchesInFront, openPage, toRooms } from './nav';
 import { useRoom, useRoomLive } from './RoomProvider';
 import { RoomNotes, RoomStatus } from './RoomStatus';
 import { servicesIn } from './services';
-import { everyoneIn } from './matches-in';
-import { useHover, useOn } from './matches-motion';
+import { everyoneIn, inWait, inWaitLine } from './matches-in';
+import { useHover, useNudge, useOn } from './matches-motion';
 import { Tiebreak } from './Tiebreak';
 import { Actions, Button, Dots, Label, Logos, Screen, usePinnedActions, useServices } from './ui';
 import { PosterCopy } from './vote/shapes';
@@ -115,8 +115,9 @@ const BLUR = { css: 'blur(22px) saturate(1.4) brightness(0.7)', blur: 22, tints:
 const MAX_SEATS = 5;
 
 /** The poster as the checkbox: off, dimmed with an empty round box in its center; on, full brightness, an amber check pops in and an amber frame. */
-function CheckPoster({ c, width, on, hover, hero }: { c: Candidate; width: number; on: boolean; hover: Animated.Value; hero?: boolean }) {
+function CheckPoster({ c, width, on, hover, hero, nudge }: { c: Candidate; width: number; on: boolean; hover: Animated.Value; hero?: boolean; /** Matches waits on you: the empty box pulses. */ nudge: Animated.Value }) {
   const v = useOn(on, 220);
+  const pulse = { transform: [{ scale: nudge.interpolate({ inputRange: [0, 1], outputRange: [1, 1.14] }) }] };
   const radius = hero ? 12 : 8;
   const b = hero ? Math.min(72, Math.max(44, Math.round(width * 0.24))) : Math.max(28, Math.round(width * 0.46));
   const disc = { ...FILL, borderRadius: b / 2 };
@@ -132,8 +133,9 @@ function CheckPoster({ c, width, on, hover, hero }: { c: Candidate; width: numbe
       <Animated.View pointerEvents="none" style={{ position: 'absolute', left: -3, right: -3, top: -3, bottom: -3, borderRadius: radius + 3, borderWidth: 3, borderColor: glow.amber, opacity: v }} />
       <View pointerEvents="none" style={[FILL, { alignItems: 'center', justifyContent: 'center' }]}>
         <View style={{ width: b, height: b }}>
-          <Animated.View style={[disc, { backgroundColor: '#00000080', borderWidth: hero ? 2.5 : 2, borderColor: '#ffffffd9', opacity: off }]} />
-          <Animated.View style={[disc, { borderWidth: hero ? 2.5 : 2, borderColor: glow.amber, opacity: Animated.multiply(off, hover) }]} />
+          <Animated.View style={[disc, pulse, { backgroundColor: '#00000080', borderWidth: hero ? 2.5 : 2, borderColor: '#ffffffd9', opacity: off }]} />
+          {/* Amber on hover, and with each pulse of the nudge. */}
+          <Animated.View style={[disc, pulse, { borderWidth: hero ? 2.5 : 2, borderColor: glow.amber, opacity: Animated.multiply(off, Animated.add(hover, nudge).interpolate({ inputRange: [0, 1, 2], outputRange: [0, 1, 1] })) }]} />
           <Animated.View style={[disc, { backgroundColor: glow.amber, borderWidth: 2, borderColor: '#0d0d0d', alignItems: 'center', justifyContent: 'center', opacity: v, transform: [{ scale: v.interpolate({ inputRange: [0, 0.7, 1], outputRange: [0.3, 1.18, 1] }) }] }]}>
             <Icon name="check" size={b * 0.58} color={warm.ink} />
           </Animated.View>
@@ -218,7 +220,7 @@ function OnLayer({ on, radius }: { on: boolean; radius: number }) {
   return <Animated.View pointerEvents="none" style={[FILL, { borderRadius: radius, backgroundColor: '#fbbf240d', borderWidth: 1.5, borderColor: '#fbbf2499', opacity: v }]} />;
 }
 
-interface MatchProps { c: Candidate; on: boolean; n: number; of: number; box: number; name: string; onToggle: () => void; disabled: boolean }
+interface MatchProps { c: Candidate; on: boolean; n: number; of: number; box: number; name: string; onToggle: () => void; disabled: boolean; nudge: Animated.Value }
 
 /**
  * A whole match as one checkbox (role checkbox, checked state, Space toggles on the web). Hover: the tall
@@ -242,7 +244,7 @@ function Toggle({ on, label, onToggle, disabled, lift, inner, children }: { on: 
 const inName = (c: Candidate, n: number, of: number) => `I’m in for ${c.title}, ${n} of ${of} in`;
 
 /** Two or more matches: one wide row each on a blurred band of its own poster. The poster is the checkbox; the whole row toggles. */
-function MatchRow({ c, on, n, of, box, name, onToggle, disabled }: MatchProps) {
+function MatchRow({ c, on, n, of, box, name, onToggle, disabled, nudge }: MatchProps) {
   const { phone, z } = useLayout();
   const cw = phone ? 78 : z(112);
   const pw = phone ? 60 : z(72);
@@ -261,7 +263,7 @@ function MatchRow({ c, on, n, of, box, name, onToggle, disabled }: MatchProps) {
           </Animated.View>
           <OnLayer on={on} radius={R.card} />
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: phone ? 12 : z(18), padding: phone ? 10 : z(12), paddingRight: phone ? 8 : z(18) }}>
-            <CheckPoster c={c} width={pw} on={on} hover={hover} />
+            <CheckPoster c={c} width={pw} on={on} hover={hover} nudge={nudge} />
             <View style={{ flex: 1, minWidth: 0, gap: phone ? 4 : z(5) }}>
               <GText bold size={phone ? 16 : z(20)} lines={phone ? 2 : 1} style={{ letterSpacing: -0.3 }}>{c.title}</GText>
               <GText size={phone ? 12 : z(13)} color={glow.muted} lines={1}>{phone ? meta(c) : why}</GText>
@@ -285,7 +287,7 @@ function MatchRow({ c, on, n, of, box, name, onToggle, disabled }: MatchProps) {
 }
 
 /** One match, editorial: big poster beside its facts, filling a phone and sitting wide on desktop. The poster is the checkbox; the whole card toggles. */
-function SingleMatch({ c, on, n, of, box, name, onToggle, disabled }: MatchProps) {
+function SingleMatch({ c, on, n, of, box, name, onToggle, disabled, nudge }: MatchProps) {
   const { phone, z, max } = useLayout();
   const pad = phone ? 12 : z(24);
   const width = phone ? max : Math.min(max, z(880));
@@ -310,7 +312,7 @@ function SingleMatch({ c, on, n, of, box, name, onToggle, disabled }: MatchProps
               <View style={{ flex: 1, height: 1, backgroundColor: warm.lineStrong }} />
             </View>
             <View style={{ flexDirection: 'row', gap: phone ? 14 : z(32), alignItems: phone ? 'flex-start' : 'stretch' }}>
-              <View style={{ boxShadow: '0 8px 18px #00000080', borderRadius: 12 }}><CheckPoster c={c} width={posterW} on={on} hover={hover} hero /></View>
+              <View style={{ boxShadow: '0 8px 18px #00000080', borderRadius: 12 }}><CheckPoster c={c} width={posterW} on={on} hover={hover} hero nudge={nudge} /></View>
               <View style={{ flex: 1, minWidth: 0, gap: phone ? 8 : z(12) }}>
                 <GText bold size={phone ? 24 : z(46)} lines={4} style={{ letterSpacing: phone ? -0.6 : -1.4 }}>{c.title}</GText>
                 <GText size={phone ? 13 : z(15)} color={glow.soft}>{meta(c)}</GText>
@@ -408,9 +410,14 @@ function Matches({ id, view, tiebreak, held, onLanded, onSkip }: { id: string; v
   const sub = count === 0 ? 'When everyone says Yep to a title, it shows up here.' : count === 1 ? '1 match · Tap it if you’re in' : `${count} matches · Tap every one you’re in for`;
   const one = count === 1 ? matches[0] : null;
   const name = view.me.nickname;
-  const props = (c: Candidate): MatchProps => ({ c, on: byId.get(c.id)?.mine ?? false, n: byId.get(c.id)?.count ?? 0, of: required, box: box.seats, name, onToggle: () => toggle(c.id), disabled });
+  // Saying Yep while swiping isn't I'm in: until you tap one, the room waits on you, the empty boxes pulse after a
+  // while, and with one match the main button is I'm in itself. Once you're in, the line counts who's left.
+  const wait = held ? { kind: 'none' as const } : inWait(rows, required);
+  const nudge = useNudge(wait.kind === 'you');
+  const props = (c: Candidate): MatchProps => ({ c, on: byId.get(c.id)?.mine ?? false, n: byId.get(c.id)?.count ?? 0, of: required, box: box.seats, name, onToggle: () => toggle(c.id), disabled, nudge });
   const single = tied.length === 1 ? tied[0] : null;
   const many = tied.length > 1;
+  const sayIn = one && wait.kind === 'you' ? one : null;
   // Watch starts the room's check of where to watch (then Tonight); it can fail, and Watch tries again.
   const check = single ? agreement?.state ?? 'none' : 'none';
   const keep = <Button secondary label="Keep swiping" onPress={() => leavePage(id)} />;
@@ -421,17 +428,18 @@ function Matches({ id, view, tiebreak, held, onLanded, onSkip }: { id: string; v
       <View style={{ width: 16 }}><Icon name="check" size={16} color={glow.amber} /></View>
       <GText key={single?.id ?? `many-${tied.length}`} bold size={z(14)} color={glow.amber} lines={1} style={{ flex: 1, textAlign: 'center' }}>{single ? `Everyone’s in on ${single.title}` : `Everyone’s in on ${tied.length}`}</GText>
       <View style={{ width: 54 }}>{many ? <MiniPosters cs={tied} /> : null}</View>
-    </> : null;
+    </> : wait.kind !== 'none' ? <GText bold={wait.kind === 'you'} size={z(14)} color={wait.kind === 'you' ? glow.amber : glow.soft} lines={1}>{inWaitLine(wait, count)}</GText> : null;
   const footer = (
     <View style={{ gap: 10, width: phone ? '100%' : z(520), alignSelf: 'center' }}>
       {/* One line, always there: everyone getting in on a title, or the check of where to watch, moves nothing. */}
       <View accessibilityLiveRegion="polite" style={{ height: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>{status}</View>
-      {/* Both buttons always there, so everyone getting in moves nothing: Watch waits, quiet, until everyone's in on a
-          title; on two or more it's Pick one of N. */}
+      {/* Both buttons always there, so everyone getting in moves nothing: with one match it's I'm in until you are;
+          then Watch waits, quiet, until everyone's in on a title; on two or more it's Pick one of N. */}
       <Actions>
         {keep}
         {many ? <Button key="pick" label={`Pick one of ${tied.length}`} icon={<Icon name="dice" size={17} color={warm.ink} />} disabled={disabled}
           onPress={() => (tiebreak ? setClosed(null) : confirm())} />
+          : sayIn ? <Button key="in" label="I’m in" name={`I’m in on ${sayIn.title}`} icon={<Icon name="check" size={18} color={warm.ink} />} disabled={disabled} onPress={() => toggle(sayIn.id)} />
           : <Button key="watch" label="Watch" name={single ? `Watch ${single.title}` : 'Watch'} secondary={!single} disabled={!single || disabled || check === 'checking'} onPress={confirm} />}
       </Actions>
     </View>
